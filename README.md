@@ -14,7 +14,7 @@ This is probably more than is required to just run in a notebook but for now, tr
 
   * Install NPM (https://nodejs.org/en/) system wide (*not* a pip install)
   * `conda create -n jdaviz-dev`
-  * `conda activate jdaviz-dev`
+  * `conda activate jdaviz-dev`  if conda is kinda new else: `source activate jdaviz-dev`
   * `pip install specutils`  # Forgot it
   * `git clone https://github.com/<your username>/jdaviz`
   * `cd jdaviz`
