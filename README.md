@@ -16,6 +16,8 @@ This is probably more than is required to just run in a notebook but for now, tr
   * `conda create -n jdaviz-dev`
   * `conda activate jdaviz-dev`
   * `pip install specutils`  # Forgot it
+  * `git clone https://github.com/<your username>/jdaviz`
+  * `cd jdaviz`
   * `pip install -e .`
 
 ## Example CubeViz Notebook
