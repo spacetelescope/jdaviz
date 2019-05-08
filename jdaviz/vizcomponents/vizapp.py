@@ -1,10 +1,9 @@
 import inspect
 import logging
 
+import glue_jupyter as gj
 import numpy as np
 import scipy.signal
-import glue_jupyter as gj
-
 
 logging.basicConfig(filename='/tmp/vizapp.log',
                             filemode='a',
