@@ -20,3 +20,10 @@ This is probably more than is required to just run in a notebook but for now, tr
 
 There is an example CubeViz notebook in the `examples/` directory to try out.  Change the filename location to point to 
 a dataset on your system.
+
+To run the notebook:
+  * `conda activate jdaviz-dev`
+  * `cd jdaviz/exmaples`
+  * `jupyter notebook`
+  
+Then go into your favorite browser, go into the `cubeviz-example.ipynb` and execute each cell.
