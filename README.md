@@ -12,11 +12,9 @@ analysis for Astronomy with glue-Viz".
 
 This is probably more than is required to just run in a notebook but for now, try this...
 
-`conda create -n jdaviz-dev`
-`conda activate jdaviz-dev`
-`pip install -e .`
-
-`<cross your fingers>`
+  * `conda create -n jdaviz-dev`
+  * `conda activate jdaviz-dev`
+  * `pip install -e .`
 
 ## Example CubeViz Notebook
 
