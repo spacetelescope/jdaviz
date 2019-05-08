@@ -1,5 +1,6 @@
 import logging
 
+from ipywidgets import Box
 from .simple_bqplot_image import simple_imshow
 from .viewer import Viewer
 
@@ -19,4 +20,4 @@ class ViewerND(Viewer):
         self._v3d = simple_imshow(self._glue_app, data=self._glue_app.data_collection[0])
 
     def show(self):
-        return self._v3d.main_widget
+        return Box([self._v3d.main_widget])

@@ -1,7 +1,9 @@
 import logging
+
+from ipywidgets import Box
+from astropy import units as u
 from glue.core.subset import RangeSubsetState
 from specutils import Spectrum1D, SpectralRegion
-from astropy import units as u
 
 from .simple_bqplot_profile import simple_profile
 from .viewer import Viewer
@@ -22,7 +24,7 @@ class Viewer1D(Viewer):
         self._v1d = simple_profile(self._glue_app, data=self._glue_app.data_collection[0])
 
     def show(self):
-        return self._v1d.main_widget
+        return Box([self._v1d.main_widget])
 
     def getRegion(self, index=None):
 
