@@ -1,4 +1,5 @@
 __pycache__
 *pyc
-*.egg-info
-.eggs
+**/web/node_modules
+**/web/lib
+**/web/built
