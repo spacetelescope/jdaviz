@@ -7,7 +7,7 @@ page is hosted using yarn `http-server`.
 
 # Usage
 
-1. Move to the `web` directory and run `yarn run install`.
+1. Move to the `web` directory and run `yarn install`.
 2. Build the compiled output files by running `yarn run build`.
 4. Run `yarn run host`
 5. In a new terminal run `python -m notebook --no-browser --NotebookApp.allow_origin="*" --NotebookApp.disable_check_xsrf=True --NotebookApp.token=''`. **WARNING: This starts an insecure Jupyter notebook server. Do not do this in production.**
