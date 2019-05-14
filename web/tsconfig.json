@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "declaration": true,
+    // "noImplicitAny": true,
+    "baseUrl": ".",
+    "sourceMap": true,
+    "lib": ["dom", "es5", "es2015.promise", "es2015.iterable"],
+    // "types": ["requirejs"],
+    "noEmitOnError": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "ES5",
+    "outDir": "./dist",
+    "paths": {
+      "*": ["./node_modules/*"]
+    }
+  },
+  "include": [
+    "src/**/*"
+  ]
+}
