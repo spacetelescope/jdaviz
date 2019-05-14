@@ -1,14 +1,7 @@
 [
-    "from ipywidgets import IntSlider, Text, VBox",
+    "from cubelab_notebook.app import Application",
     "from IPython.display import display",
     "",
-    "s = IntSlider(max=200, value=100)",
-    "t = Text()",
-    "",
-    "def update_text(change=None):",
-    "    t.value = str(s.value ** 2)",
-    "",
-    "s.observe(update_text, names='value')",
-    "update_text()",
-    "display(VBox([s, t]))"
+    "app = Application()",
+    "display(app)"
 ]
