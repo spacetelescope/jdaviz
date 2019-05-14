@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+
+<!-- temporary html page to assess ASB/DATB prototype needs.  eventually convert to templating html, e.g. Jinja -->
+
+<html lang="en">
+
+<head>
+    <!-- CSS sources-->
+    <meta charset="UTF-8">
+    <title>MAST-test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href="https://stackpath.bootstrapcdn.com/bootswatch/4.1.1/pulse/bootstrap.min.css" rel="stylesheet" integrity="sha384-w1P8UfRjdTYLTgdq8Y19zjdV25oYPMGNzwtm3tIyZ/gK8JPu+8ZW9OVkKhnBuydY" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.14.2/dist/bootstrap-table.min.css">
+
+</head>
+
+<body class='home' data-spy="scroll" data-target=".navbar">
+
+    <!-- Header section -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark" id='header'>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor02"
+        aria-controls="navbarColor02" aria-expanded="false" aria-label="Toggle navigation" style="">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarColor02">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+                <a class="nav-link" href="http://archive.stsci.edu">STScI</a>
+            </li>
+            <li class="nav-item active">
+                <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+    <!-- Main Body -->
+    <div class="container-fluid p-0" id="content base">
+        <section id='cubeviz'>
+        <div class="intro-header">
+        
+            <div class="container">
+                <!-- CubeViz -->
+                <div class='row'><div class='col-md-12'><h1>CubeViz <small class="text-muted">area for cubeviz widget</small></h1></div></div>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <!-- Empty div where CubeViz ipywidget hooks into -->
+                        <div id='cube'></div>
+                    </div>
+                </div>
+
+
+                <!-- HTML Table -->
+                <div class='row'><div class='col-md-12'><h1>Table <small class="text-muted">html table of stuff</small></h1></div></div>
+                <div class='table-responsive' id='boottable'>
+                    <!-- custom toolbar -->
+                    <div id='toolbar'>
+                        <button class="btn btn-primary" id='dostuff' onclick="get_rows()">DoStuff</button>
+                        <button class="btn btn-info" id='getstuff' onclick="get_stuff()">GetStuff</button>
+                    </div>
+
+                    <!-- table -->
+                    <table class="table table-hover table-bordered" id='table'
+                    data-toggle="table" data-search="true"
+                    data-sortable="true" data-sort-name="first" data-sort-order="asc"
+                    data-id-field="id" data-select-item-name="id" data-click-to-select="true" data-maintain-selected='true'
+                    data-toolbar="#toolbar"
+                    >
+                        <thead>
+                            <tr>
+                                <th scope='col' data-field="state" data-checkbox="true"></th>
+                                <th scope="col" data-field="id" data-sortable="true">ID</th>
+                                <th scope="col" data-field="first" data-sortable="true">First</th>
+                                <th scope="col" data-field="last" data-sortable="true">Last</th>
+                                <th scope="col" data-field="handle" data-sortable="true">Handle</th>
+                                <th scope="col" data-field="price" data-sortable="true">Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td scope='row'></td>
+                                <td>1</td>
+                                <td>Mark</td>
+                                <td>Otto</td>
+                                <td>@mdo</td>
+                                <td>$1</td>
+                            </tr>
+                            <tr>
+                                <td scope='row'></td>
+                                <td>2</td>
+                                <td>Jacob</td>
+                                <td>Thornton</td>
+                                <td>@fat</td>
+                                <td>$2</td>
+                            </tr>
+                            <tr>
+                                <td scope='row'></td>
+                                <td>3</td>
+                                <td>Larry</td>
+                                <td>the Bird</td>
+                                <td>@twitter</td>
+                                <td>$3</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div> <!-- end table -->
+
+                <!-- Spot for Table Widget test -->
+                <div class='row'>
+                    <div class='col-md-12'>
+                        <h1>Table Widget <small class="text-muted">a table widget could go here</small></h1>
+                    </div>
+                </div>
+                <div class='row' id='newtable'>
+                    <div class='col-md-12'>
+                        <div id='tablewidget'></div>
+                    </div>
+                </div>
+
+            </div> <!-- end container -->
+        </div>
+        </section>
+    </div>
+
+    <!-- Footer section -->
+<div class="container-fluid" id="footer-content">
+
+    <footer class='bg-light navbar-light' id='footer'>
+
+        <div class="row d-flex align-items-center">
+
+            <!-- Grid column -->
+            <div class="col-md-2 col-lg-2">
+                <!--Copyright and image credit-->
+                <p class="text-center text-md-left">© 2018 Copyright: <a target="_blank"
+                        href="https://archive.stsci.edu"><strong>stsci</strong></a></p>
+            </div>
+
+            <!-- Grid column -->
+            <div class="col-md-4 col-lg-4 ml-lg-0">
+
+                <!-- Social buttons -->
+                <div class="text-center text-md-right">
+                    <ul class="list-unstyled list-inline">
+                        <li class="list-inline-item"><a target='_blank' href="https://github.com/spacetelescope/jdaviz"><i class="fa fa-github"
+                                    aria-hidden="true"></i></a>
+                        <li class="list-inline-item"><a class="btn-default btn-lg" href='#'><i
+                                    class="fa fa-arrow-circle-up fa-fw" aria-hidden="true"></i></a></li>
+                    </ul>
+                </div>
+
+            </div>
+            <!-- Grid column -->
+
+        </div>
+        <!-- Grid row -->
+
+    </footer>
+
+</div>
+
+    <!-- Javascript sources-->
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
+        integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"
+        integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T"
+        crossorigin="anonymous"></script>
+    <script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.3/jquery.easing.min.js"></script>
+    
+    <script src="https://unpkg.com/bootstrap-table@1.14.2/dist/bootstrap-table.min.js"></script>
+
+    <!-- custom javascript to handle stuff on page; move to standalone js file -->
+    <script>
+        let table = $('#table');
+        console.log('table', table);
+
+        // this function gets rows of table and makes server request to do stuff (interact with cubeviz?)
+        function get_rows() {
+            let selects = table.bootstrapTable('getSelections');
+            if (selects === undefined || selects.length == 0) {
+                return;
+            }
+            let ids = selects.map(x => x.id);
+            console.log('rows', ids);
+            alert('Temporary: you have selected rows: ' + ids + '. This function should make AJAX request to server');
+        }
+
+        // this function makes call to server to do stuff (interact with astroquery? and return stuff to table and/or widget?)
+        function get_stuff() {
+            alert("I'm about to get stuff from the server!");
+        }
+    </script>
+
+
+</body>
+</html>
