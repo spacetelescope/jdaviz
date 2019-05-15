@@ -2,6 +2,7 @@
   "compilerOptions": {
     "declaration": true,
     // "noImplicitAny": true,
+    "skipLibCheck": true, // TEMOPORARY WORKAROUND
     "baseUrl": ".",
     "sourceMap": true,
     "lib": ["dom", "es5", "es2015.promise", "es2015.iterable"],
