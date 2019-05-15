@@ -51,6 +51,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var base = require("@jupyter-widgets/base");
 var pWidget = require("@phosphor/widgets");
 var plotlywidget = require("plotlywidget");
+var bqplot = require("bqplot");
+var jmaterialui = require("jupyter-materialui");
 var html_manager_1 = require("@jupyter-widgets/html-manager");
 require("./widgets.css");
 var WidgetManager = /** @class */ (function (_super) {
@@ -117,6 +119,32 @@ var WidgetManager = /** @class */ (function (_super) {
             console.log("Loading class plotlywidget.");
             return new Promise(function (resolve, reject) {
                 resolve(plotlywidget);
+            }).then(function (module) {
+                if (module[className]) {
+                    return module[className];
+                }
+                else {
+                    return Promise.reject("Class " + className + " not found in module " + moduleName + "@" + moduleVersion);
+                }
+            });
+        }
+        else if (moduleName == 'bqplot') {
+            console.log("Loading class plotlywidget.");
+            return new Promise(function (resolve, reject) {
+                resolve(bqplot);
+            }).then(function (module) {
+                if (module[className]) {
+                    return module[className];
+                }
+                else {
+                    return Promise.reject("Class " + className + " not found in module " + moduleName + "@" + moduleVersion);
+                }
+            });
+        }
+        else if (moduleName == 'jupyter-materialui') {
+            console.log("Loading class plotlywidget.");
+            return new Promise(function (resolve, reject) {
+                resolve(jmaterialui);
             }).then(function (module) {
                 if (module[className]) {
                     return module[className];

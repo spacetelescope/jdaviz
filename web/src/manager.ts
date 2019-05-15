@@ -1,6 +1,8 @@
 import * as base from '@jupyter-widgets/base';
 import * as pWidget from '@phosphor/widgets';
 import * as plotlywidget from 'plotlywidget';
+import * as bqplot from 'bqplot';
+import * as jmaterialui from 'jupyter-materialui';
 
 import {
   Kernel
@@ -63,6 +65,30 @@ class WidgetManager extends HTMLManager {
             console.log("Loading class plotlywidget.");
             return new Promise((resolve, reject) => {
                 resolve(plotlywidget);
+            }).then((module) => {
+                if (module[className]) {
+                    return module[className];
+                } else {
+                    return Promise.reject(`Class ${className} not found in module ${moduleName}@${moduleVersion}`);
+                }
+            });
+        }
+        else if (moduleName == 'bqplot') {
+            console.log("Loading class plotlywidget.");
+            return new Promise((resolve, reject) => {
+                resolve(bqplot);
+            }).then((module) => {
+                if (module[className]) {
+                    return module[className];
+                } else {
+                    return Promise.reject(`Class ${className} not found in module ${moduleName}@${moduleVersion}`);
+                }
+            });
+        }
+        else if (moduleName == 'jupyter-materialui') {
+            console.log("Loading class plotlywidget.");
+            return new Promise((resolve, reject) => {
+                resolve(jmaterialui);
             }).then((module) => {
                 if (module[className]) {
                     return module[className];

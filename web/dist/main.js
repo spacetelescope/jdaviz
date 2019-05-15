@@ -9,7 +9,8 @@ function createWindow() {
         height: 600,
         width: 800,
         webPreferences: {
-            nodeIntegration: true
+            nodeIntegration: true // Needed for using 'require' in html file
+            // https://stackoverflow.com/a/44394999/2434951
         }
     });
     // and load the index.html of the app.
