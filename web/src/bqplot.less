@@ -1,0 +1,342 @@
+/* Copyright 2015 Bloomberg Finance L.P.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+ :root {
+    --bq-content-font-color: var(--jp-content-font-color1);
+    --bq-plotarea-background-fill: var(--jp-layout-color1);
+    --bq-background: var(--jp-layout-color0);
+
+    --bq-axislabel-font: 14px sans-serif;
+
+    --bq-axis-rect-opacity: 1.0;
+    --bq-axis-tick-stroke-width: 1.0;
+    --bq-axis-tick-opacity: 1.0;
+    --bq-axis-tick-text-font: 12px sans-serif;
+
+    --bq-mark-tooltip-border-radius : 5px;
+    --bq-mark-tooltip--webkit-user-select: none;
+    --bq-mark-tooltip--moz-user-select: none;
+
+    --bq-mainheading-font: 16px sans-serif;
+    --bq-mainheading-font-size: large;
+
+    --bq-world-map-path-stroke-width: 0.25px;
+
+    --bq-pie-polyline-stroke-width: 1px;
+    --bq-pie-polyline-fill: none;
+
+    --bq-network-node-element-stroke: #000;
+    --bq-network-node-element-stroke-width: 1.5px;
+
+    --bq-network-link-fill: none;
+    --bq-network-link-stroke: #666;
+    --bq-network-link-stroke-width: 1.5px;
+
+    --bq-network-node-label-pointer-events: none;
+    --bq-network-node-label-font: 12px sans-serif;
+
+    --bq-selector-fill: var(--jp-border-color1);
+
+    --bq-mark-tooltip-border: 2px solid whitesmoke;
+    --bq-mark-tooltip-box-shadow: 1px 1px 2px rgba(245, 245, 245, 0.8);
+    --bq-mark-tooltip-background-color: black;
+    --bq-mark-tooltip-td-border: thin solid whitesmoke;
+    --bq-mark-tooltip-table: black;
+
+    --bq-world-map-path-stroke: black;
+    --bq-world-map-path-fill: seagreen;
+
+    --bq-pie-polyline-opacity: .3;
+    --bq-pie-polyline-stroke: var(--bq-content-font-color);
+
+    --bq-network-node-element-fill: #666;
+    --bq-network-node-label-text-shadow: 0 1px 0 #000, 1px 0 0 #000, 0 -1px 0 #000, -1px 0 0 #000;
+    --bq-linkarrow-fill: #ccc;
+}
+
+/* Ideally this should be in :root */
+.common() {
+    --bq-axis-rect-stroke: var(--bq-tick-color);
+    --bq-axis-path-stroke: var(--bq-tick-color);
+    --bq-axis-tick-stroke: var(--bq-tick-color);
+    --bq-axis-tick-short-stroke: var(--bq-tick-color);
+
+    --bq-mainheading-fill: var(--bq-content-font-color);
+    --bq-axislabel-fill: var(--bq-content-font-color);
+
+    --bq-stick-stroke: var(--bq-content-font-color);
+    --bq-stick-fill: var(--bq-content-font-color);
+    --bq-sticktext-fill: var(--bq-content-font-color);
+    --bq-default-stroke: var(--bq-content-font-color);
+}
+
+.gg {
+    --bq-axis-lines-color: var(--jp-layout-color1);
+    --bq-plotarea-background-fill: var(--jp-layout-color2);
+    --bq-tick-color: var(--bq-axis-lines-color);
+    --bq-axis-tick-text-fill: var(--jp-content-font-color2);
+
+    .common()
+}
+
+.classic {
+    --bq-axis-lines-color: var(--jp-ui-font-color3);
+    --bq-tick-color: var(--bq-axis-lines-color);
+    --bq-axis-tick-text-fill: var(--jp-ui-font-color2);
+
+    .common()
+}
+
+.bbg, [data-theme-light="false"] {
+    --bq-content-font-color: orange;
+
+    .common()
+   }
+
+.bqplot {
+    box-sizing: border-box;
+    display: flex;
+    width: 640px;
+    height: 480px;
+}
+.bqplot > svg {
+    font: 11px sans-serif;
+    user-select: none;
+    -ms-user-select: none;
+    -khtml-user-select: none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    flex-grow: 1;
+
+    .svg-figure {
+        background: var(--bq-background);
+    }
+
+    .axis {
+        rect {
+            stroke: var(--bq-axis-rect-stroke);
+            opacity: var(--bq-axis-rect-opacity);
+        }
+        .tick line {
+            stroke: var(--bq-axis-tick-stroke);
+            stroke-width: var(--bq-axis-tick-stroke-width);
+            opacity: var(--bq-axis-tick-opacity);
+        }
+        .tick.short line {
+            stroke: var(--bq-axis-tick-short-stroke);
+        }
+        .tick text {
+            fill: var(--bq-axis-tick-text-fill);
+            font: var(--bq-axis-tick-text-font);
+        }
+        line {
+            shape-rendering: crispEdges;
+            font: 10px sans-serif;
+            stroke-width: 1px;
+        }
+        path, line { fill: none; }
+        path {
+            stroke: var(--bq-axis-path-stroke);
+        }
+
+        text.axislabel, tspan.axislabel {
+            text-anchor: end;
+            fill: var(--bq-axislabel-fill);
+            font: var(--bq-axislabel-font);
+        }
+        .tick text {
+            cursor: default;
+        }
+    }
+    .axis.axisbold path {
+        stroke-width: 3px;
+    }
+    .axis.axisbold text,
+    .axis.axisbold text.axislabel {
+        font-weight: bolder;
+    }
+    .stick, .zeroLine {
+        stroke: var(--bq-stick-stroke);
+        fill: var(--bq-stick-fill);
+    }
+    .sticktext {
+        fill: var(--bq-sticktext-fill);
+    }
+    .bargroup, .boxplot, .slice {
+        rect, path, line {
+            stroke: var(--bq-default-stroke);
+        }
+    }
+    .zeroLine {
+        shape-rendering: crispEdges;
+    }
+    text.mainheading {
+        text-anchor: middle;
+        fill: var(--bq-mainheading-fill);
+        font: var(--bq-mainheading-font);
+        font-size: var(--bq-mainheading-font-size);
+    }
+    text.legendtext {
+        text-anchor: start;
+        font: 14px sans-serif;
+    }
+    text.dot_text {
+        fill: var(--bq-content-font-color);
+    }
+    .indsel {
+        stroke: red;
+    }
+    .brushintsel {
+        .selection {
+            fill: var(--bq-selector-fill);
+            stroke: none;
+        }
+    }
+    .intsel {
+        fill: var(--bq-selector-fill);
+        stroke: none;
+        fill-opacity: 0.3;
+    }
+    .intselmouse {
+        visibility: hidden;
+        pointer-events: all; /*none?*/
+    }
+    .multiselector {
+        .active {
+            pointer-events: all;
+            .selection {
+                stroke: green;
+            }
+            .overlay {
+                pointer-events: all;
+            }
+        }
+        .inactive {
+            pointer-events: none;
+            .selection {
+                stroke: red;
+            }
+            .overlay {
+                pointer-events: none;
+            }
+        }
+        .visible {
+            pointer-events: all;
+            .selection
+            {
+                stroke: red;
+            }
+            .overlay {
+                pointer-events: none;
+            }
+        }
+    }
+    .lassoselector {
+       .selected {
+           opacity: 0.3;
+       }
+       path {
+           fill: none;
+           stroke: orange;
+           stroke-width: 4;
+       }
+    }
+    .plotarea_background {
+        fill: var(--bq-plotarea-background-fill);
+    }
+}
+.tooltip_div {
+    z-index: 1001;
+}
+.mark_tooltip {
+    pointer-events: none;
+    z-index: 1001;
+    border: var(--bq-mark-tooltip-border);
+    border-radius : var(--bq-mark-tooltip-border-radius);
+    box-shadow: var(--bq-mark-tooltip-box-shadow);
+    -webkit-user-select: var(--bq-mark-tooltip--webkit-user-select);
+    -moz-user-select: var(--bq-mark-tooltip--moz-user-select);
+    background-color: var(--bq-mark-tooltip-background-color);
+}
+.mark_tooltip td{
+    border: var(--bq-mark-tooltip-td-border);
+}
+.mark_tooltip table {
+    border-radius: 5px;
+    background: var(--bq-mark-tooltip-background);
+}
+.mark_tooltip .tooltiptext {
+    text-align: center;
+    padding: 0.5em;
+}
+.world_map path {
+    stroke: var(--bq-world-map-path-stroke);
+    stroke-width: var(--bq-world-map-path-stroke-width);
+    fill: var(--bq-world-map-path-fill);;
+}
+.world_map .hovered {
+    fill: Orange;
+    stroke: Orange;
+    stroke-width: 2.5px;
+}
+
+.world_map #container {
+    margin:10px 10%;
+    border:2px solid #000;
+    border-radius: 5px;
+    height:100%;
+    overflow:hidden;
+    background: #F0F8FF;
+}
+
+.world_map .graticule {
+    fill: none;
+    stroke: #bbb;
+    stroke-width: .5px;
+    stroke-opacity: .5;
+}
+
+.g_legend {
+    fill: none;
+}
+
+.pie polyline {
+    opacity: var(--bq-pie-polyline-opacity);
+    stroke: var(--bq-pie-polyline-stroke);
+    stroke-width: var(--bq-pie-polyline-stroke-width);
+    fill: var(--bq-pie-polyline-fill);
+}
+
+.network .node .element {
+    fill: var(--bq-network-node-element-fill);
+    stroke: var(--bq-network-node-element-stroke);
+    stroke-width: var(--bq-network-node-element-stroke-width);
+}
+
+.network .link {
+    fill: var(--bq-network-link-fill);
+    stroke: var(--bq-network-link-stroke);
+    stroke-width: var(--bq-network-link-stroke-width);
+}
+
+.network .node .label {
+    font: var(--bq-network-node-label-font);
+    pointer-events: var(--bq-network-node-label-pointer-events);
+    text-shadow: var(--bq-network-node-label-text-shadow);
+}
+
+.linkarrow {
+    fill: var(--bq-linkarrow-fill);
+}

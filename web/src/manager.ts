@@ -3,6 +3,7 @@ import * as pWidget from '@phosphor/widgets';
 import * as plotlywidget from 'plotlywidget';
 import * as bqplot from 'bqplot';
 import * as jmaterialui from 'jupyter-materialui';
+import * as jastroimage from 'jupyter-astroimage';
 
 import {
   Kernel
@@ -74,7 +75,7 @@ class WidgetManager extends HTMLManager {
             });
         }
         else if (moduleName == 'bqplot') {
-            console.log("Loading class plotlywidget.");
+            console.log("Loading class bqplot.");
             return new Promise((resolve, reject) => {
                 resolve(bqplot);
             }).then((module) => {
@@ -86,9 +87,21 @@ class WidgetManager extends HTMLManager {
             });
         }
         else if (moduleName == 'jupyter-materialui') {
-            console.log("Loading class plotlywidget.");
+            console.log("Loading class jupyter-materialui.");
             return new Promise((resolve, reject) => {
                 resolve(jmaterialui);
+            }).then((module) => {
+                if (module[className]) {
+                    return module[className];
+                } else {
+                    return Promise.reject(`Class ${className} not found in module ${moduleName}@${moduleVersion}`);
+                }
+            });
+        }
+        else if (moduleName == 'jupyter-astroimage') {
+            console.log("Loading class jupyter-astroimage.");
+            return new Promise((resolve, reject) => {
+                resolve(jastroimage);
             }).then((module) => {
                 if (module[className]) {
                     return module[className];
