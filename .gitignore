@@ -3,6 +3,7 @@ __pycache__
 **/web/node_modules
 **/web/lib
 **/web/built
+**/web/dist
 /.pytest_cache
 /.eggs
 /*.egg-info
