@@ -1,14 +1,12 @@
 [
-    "from ipywidgets import IntSlider, Text, VBox",
-    "from IPython.display import display",
+    "import numpy as np",
+    "from bqplot import pyplot as plt",
     "",
-    "s = IntSlider(max=200, value=100)",
-    "t = Text()",
-    "",
-    "def update_text(change=None):",
-    "    t.value = str(s.value ** 2)",
-    "",
-    "s.observe(update_text, names='value')",
-    "update_text()",
-    "display(VBox([s, t]))"
+    "plt.figure(1, title='Line Chart')",
+    "np.random.seed(0)",
+    "n = 200",
+    "x = np.linspace(0.0, 10.0, n)",
+    "y = np.cumsum(np.random.randn(n))",
+    "plt.plot(x, y)",
+    "plt.show()"
 ]
