@@ -74,7 +74,7 @@
   dependencies:
     commander "^2.15.1"
 
-"@jupyter-widgets/base@^1.0.0", "@jupyter-widgets/base@^1.2.4":
+"@jupyter-widgets/base@^1.0.0", "@jupyter-widgets/base@^1.1.8", "@jupyter-widgets/base@^1.2.4":
   version "1.2.4"
   resolved "https://registry.yarnpkg.com/@jupyter-widgets/base/-/base-1.2.4.tgz#78fe7bc5b8a2b1aaa6f3b48a48e8c304819ea669"
   integrity sha512-PKJUsy5hTC5DtqWXK4IRKo0C9qqco/bXqOxZgzbh8b0D+TKTrjaRa4ctR3W7N1Tw/l4Al6xbiuPh4nywkaadCw==
@@ -1292,7 +1292,7 @@ box-intersect@^1.0.1:
     bit-twiddle "^1.0.2"
     typedarray-pool "^1.1.0"
 
-bqplot@^0.4.5:
+bqplot@^0.4.3, bqplot@^0.4.5:
   version "0.4.5"
   resolved "https://registry.yarnpkg.com/bqplot/-/bqplot-0.4.5.tgz#e490ab8d67ff35bef80732e6b919185da7fb2a5e"
   integrity sha512-8W38y4gJ/nlOMW1Li4wyaT9hOi+M2ObY/ziLIO5BzypK7Jcwqc+ptv6IfEZIc2e8io1XdZ0HDYR8HOwCoXb86A==
@@ -1721,6 +1721,11 @@ clone@^1.0.2:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/clone/-/clone-1.0.4.tgz#da309cc263df15994c688ca902179ca3c7cd7c7e"
   integrity sha1-2jCcwmPfFZlMaIypAheco8fNfH4=
+
+clone@^2.1.1, clone@^2.1.2:
+  version "2.1.2"
+  resolved "https://registry.yarnpkg.com/clone/-/clone-2.1.2.tgz#1b7f4b9f591f1e8f83670401600345a02887435f"
+  integrity sha1-G39Ln1kfHo+DZwQBYANFoCiHQ18=
 
 co@^4.6.0:
   version "4.6.0"
@@ -2785,7 +2790,7 @@ env-paths@^1.0.0:
   resolved "https://registry.yarnpkg.com/env-paths/-/env-paths-1.0.0.tgz#4168133b42bb05c38a35b1ae4397c8298ab369e0"
   integrity sha1-QWgTO0K7BcOKNbGuQ5fIKYqzaeA=
 
-errno@^0.1.3:
+errno@^0.1.1, errno@^0.1.3:
   version "0.1.7"
   resolved "https://registry.yarnpkg.com/errno/-/errno-0.1.7.tgz#4684d71779ad39af177e3f007996f7c67c852618"
   integrity sha512-MfrRBDWzIWifgq6tJj60gkAwtLNb6sQPlcFrSOflcP1aFmmruKQ2wRnze/8V6kgyz7H3FF8Npzv78mZ7XLLflg==
@@ -4275,6 +4280,11 @@ image-palette@^2.1.0:
     pxls "^2.0.0"
     quantize "^1.0.2"
 
+image-size@~0.5.0:
+  version "0.5.5"
+  resolved "https://registry.yarnpkg.com/image-size/-/image-size-0.5.5.tgz#09dfd4ab9d20e29eb1c3e80b8990378df9e3cb9c"
+  integrity sha1-Cd/Uq50g4p6xw+gLiZA3jfnjy5w=
+
 import-cwd@^2.0.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/import-cwd/-/import-cwd-2.1.0.tgz#aa6cf36e722761285cb371ec6519f53e2435b0a9"
@@ -4614,7 +4624,7 @@ is-symbol@^1.0.2:
   dependencies:
     has-symbols "^1.0.0"
 
-is-typedarray@~1.0.0:
+is-typedarray@^1.0.0, is-typedarray@~1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/is-typedarray/-/is-typedarray-1.0.0.tgz#e479c80858df0c1b11ddda6940f96011fcda4a9a"
   integrity sha1-5HnICFjfDBsR3dppQPlgEfzaSpo=
@@ -4855,6 +4865,26 @@ jss@^9.8.7:
     symbol-observable "^1.1.0"
     warning "^3.0.0"
 
+"jupyter-astroimage@file:../../ipyastroimage/js":
+  version "0.1.0"
+  dependencies:
+    "@jupyter-widgets/base" "^1.0.0"
+    bqplot "^0.4.3"
+    d3 "^3.5.16"
+    is-typedarray "^1.0.0"
+    jupyter-dataserializers "^1.1.2"
+    lodash "^4.17.4"
+    three "^0.91.0"
+
+jupyter-dataserializers@^1.1.2:
+  version "1.3.1"
+  resolved "https://registry.yarnpkg.com/jupyter-dataserializers/-/jupyter-dataserializers-1.3.1.tgz#1c5e95d2d18001e5d53fa7d999ae8ba69f77dcaf"
+  integrity sha512-ExYyNyolkl22zfQfL240AH/A7SiORvOWjU8G8sDo4xSl7EjqyUkecbf80JZaZjnUP9VYKfNpHodalcEmDQg4JA==
+  dependencies:
+    "@jupyter-widgets/base" "^1.1.8"
+    ndarray "^1.0.18"
+    pako "^1.0.6"
+
 jupyter-materialui@^0.0.1-alpha.0:
   version "0.0.1-alpha.0"
   resolved "https://registry.yarnpkg.com/jupyter-materialui/-/jupyter-materialui-0.0.1-alpha.0.tgz#bc69be85b3e79fcd6cf83fcf2ce466ebd52a852b"
@@ -4931,6 +4961,31 @@ lerp@^1.0.3:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/lerp/-/lerp-1.0.3.tgz#a18c8968f917896de15ccfcc28d55a6b731e776e"
   integrity sha1-oYyJaPkXiW3hXM/MKNVaa3Med24=
+
+less-loader@^5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/less-loader/-/less-loader-5.0.0.tgz#498dde3a6c6c4f887458ee9ed3f086a12ad1b466"
+  integrity sha512-bquCU89mO/yWLaUq0Clk7qCsKhsF/TZpJUzETRvJa9KSVEL9SO3ovCvdEHISBhrC81OwC8QSVX7E0bzElZj9cg==
+  dependencies:
+    clone "^2.1.1"
+    loader-utils "^1.1.0"
+    pify "^4.0.1"
+
+less@^3.9.0:
+  version "3.9.0"
+  resolved "https://registry.yarnpkg.com/less/-/less-3.9.0.tgz#b7511c43f37cf57dc87dffd9883ec121289b1474"
+  integrity sha512-31CmtPEZraNUtuUREYjSqRkeETFdyEHSEPAGq4erDlUXtda7pzNmctdljdIagSb589d/qXGWiiP31R5JVf+v0w==
+  dependencies:
+    clone "^2.1.2"
+  optionalDependencies:
+    errno "^0.1.1"
+    graceful-fs "^4.1.2"
+    image-size "~0.5.0"
+    mime "^1.4.1"
+    mkdirp "^0.5.0"
+    promise "^7.1.1"
+    request "^2.83.0"
+    source-map "~0.6.0"
 
 levn@~0.3.0:
   version "0.3.0"
@@ -5300,7 +5355,7 @@ mime@1.3.x:
   resolved "https://registry.yarnpkg.com/mime/-/mime-1.3.6.tgz#591d84d3653a6b0b4a3b9df8de5aa8108e72e5e0"
   integrity sha1-WR2E02U6awtKO5343lqoEI5y5eA=
 
-mime@^1.2.11:
+mime@^1.2.11, mime@^1.4.1:
   version "1.6.0"
   resolved "https://registry.yarnpkg.com/mime/-/mime-1.6.0.tgz#32cd9e5c64553bd58d19a568af452acff04981b1"
   integrity sha512-x0Vn8spI+wuJ1O6S7gnbaQg8Pxh4NNHb7KSINmEWKiPE4RKOplvijn+NkmYmmRgP68mc70j2EbeTFRsrswaQeg==
@@ -5947,7 +6002,7 @@ pad-left@^1.0.2:
   dependencies:
     repeat-string "^1.3.0"
 
-pako@~1.0.5:
+pako@^1.0.6, pako@~1.0.5:
   version "1.0.10"
   resolved "https://registry.yarnpkg.com/pako/-/pako-1.0.10.tgz#4328badb5086a426aa90f541977d4955da5c9732"
   integrity sha512-0DTvPVU3ed8+HNXOu5Bs+o//Mbdj9VNQMUOe9oKCwh8l0GNwpTDMKCWbRjgtD291AWnkAgkqA/LOnQS8AmS1tw==
@@ -6117,6 +6172,11 @@ pify@^2.0.0, pify@^2.3.0:
   version "2.3.0"
   resolved "https://registry.yarnpkg.com/pify/-/pify-2.3.0.tgz#ed141a6ac043a849ea588498e7dca8b15330e90c"
   integrity sha1-7RQaasBDqEnqWISY59yosVMw6Qw=
+
+pify@^4.0.1:
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/pify/-/pify-4.0.1.tgz#4b2cd25c50d598735c50292224fd8c6df41e3231"
+  integrity sha512-uB80kBFb/tfd68bVleG9T5GGsGPjJrLAUpR5PZIrhBnIaRTQRjqdJSsIKkOP6OAIFbj7GOrcudc5pNjZ+geV2g==
 
 pinkie-promise@^2.0.0:
   version "2.0.1"
@@ -7487,7 +7547,7 @@ repeating@^2.0.0:
   dependencies:
     is-finite "^1.0.0"
 
-request@^2.45.0:
+request@^2.45.0, request@^2.83.0:
   version "2.88.0"
   resolved "https://registry.yarnpkg.com/request/-/request-2.88.0.tgz#9c2fca4f7d35b592efe57c7f0a55e81052124fef"
   integrity sha512-NAqBSrijGLZdM0WZNsInLJpkJokL72XYjUpnB0iwsRgxh7dB6COrHnTBNwN0E+lHDAJzu7kLAkDeY08z2/A0hg==
@@ -8026,7 +8086,7 @@ source-map@^0.5.3, source-map@^0.5.6, source-map@~0.5.1:
   resolved "https://registry.yarnpkg.com/source-map/-/source-map-0.5.7.tgz#8a039d2d1021d22d1ea14c80d8ea468ba2ef3fcc"
   integrity sha1-igOdLRAh0i0eoUyA2OpGi6LvP8w=
 
-source-map@^0.6.1, source-map@~0.6.1:
+source-map@^0.6.1, source-map@~0.6.0, source-map@~0.6.1:
   version "0.6.1"
   resolved "https://registry.yarnpkg.com/source-map/-/source-map-0.6.1.tgz#74722af32e9614e9c287a8d0bbde48b5e2f1a263"
   integrity sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==
@@ -8491,6 +8551,11 @@ text-cache@^4.2.1:
   integrity sha512-G52NFRYXEW9BL4E3kBPquefXql9OT3sNT4J16gcpl3/a8y/YioDOR2Iwga5rNs9tY7rH2xv6rF8fAYrbINn6Kg==
   dependencies:
     vectorize-text "^3.2.1"
+
+three@^0.91.0:
+  version "0.91.0"
+  resolved "https://registry.yarnpkg.com/three/-/three-0.91.0.tgz#033fe745b64e56e679a86581957cfd1c5f9fe284"
+  integrity sha512-dzikzdcddNROFZi3vkbV8YonBmqnonbJv2FxlQBEE2wKzZutddnjiS8qBZG2+EB40l505Xw8OMClQm+GmbwI/g==
 
 throttleit@0.0.2:
   version "0.0.2"
