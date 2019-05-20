@@ -1,12 +1,9 @@
 [
-    "import numpy as np",
-    "from bqplot import pyplot as plt",
+    "filename = '/Users/nearl/data/cubeviz/MaNGA/manga-7495-12704-LOGCUBE.fits'",
+    "from jdaviz.vizcomponents.applications import cubeviz",
+    "from jdaviz.vizcomponents.vizapp import VizApp",
+    "vizapp = VizApp()",
+    "c = cubeviz.CubeViz(filename, vizapp)",
     "",
-    "plt.figure(1, title='Line Chart')",
-    "np.random.seed(0)",
-    "n = 200",
-    "x = np.linspace(0.0, 10.0, n)",
-    "y = np.cumsum(np.random.randn(n))",
-    "plt.plot(x, y)",
-    "plt.show()"
+    "c.show()"
 ]
