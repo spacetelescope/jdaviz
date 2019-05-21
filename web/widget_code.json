@@ -5,5 +5,5 @@
     "app = jglue()",
     "data = app.load_data(filename)[0]",
     "",
-    "profile = app.profile1d(data=data, widget='matplotlib')"
+    "image = app.imshow(data=data, widget='bqplot')"
 ]
