@@ -29,6 +29,7 @@
     "font-awesome": "^4.7.0",
     "http-server": "^0.10.0",
     "jupyter-materialui": "^0.0.1-alpha.0",
+    "jupyter-matplotlib": "^0.3.0",
     "less": "^3.9.0",
     "less-loader": "^5.0.0",
     "plotlywidget": "^0.10.0"
