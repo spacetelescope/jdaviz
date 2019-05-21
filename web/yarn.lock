@@ -74,7 +74,7 @@
   dependencies:
     commander "^2.15.1"
 
-"@jupyter-widgets/base@^1.0.0", "@jupyter-widgets/base@^1.1.8", "@jupyter-widgets/base@^1.2.4":
+"@jupyter-widgets/base@^1.0.0", "@jupyter-widgets/base@^1.1.0", "@jupyter-widgets/base@^1.1.8", "@jupyter-widgets/base@^1.2.4":
   version "1.2.4"
   resolved "https://registry.yarnpkg.com/@jupyter-widgets/base/-/base-1.2.4.tgz#78fe7bc5b8a2b1aaa6f3b48a48e8c304819ea669"
   integrity sha512-PKJUsy5hTC5DtqWXK4IRKo0C9qqco/bXqOxZgzbh8b0D+TKTrjaRa4ctR3W7N1Tw/l4Al6xbiuPh4nywkaadCw==
@@ -4701,6 +4701,11 @@ jquery-ui@^1.12.1:
   resolved "https://registry.yarnpkg.com/jquery-ui/-/jquery-ui-1.12.1.tgz#bcb4045c8dd0539c134bc1488cdd3e768a7a9e51"
   integrity sha1-vLQEXI3QU5wTS8FIjN0+dop6nlE=
 
+jquery@^2.1.4:
+  version "2.2.4"
+  resolved "https://registry.yarnpkg.com/jquery/-/jquery-2.2.4.tgz#2c89d6889b5eac522a7eea32c14521559c6cbf02"
+  integrity sha1-LInWiJterFIqfuoywUUhVZxsvwI=
+
 jquery@^3.1.1:
   version "3.4.1"
   resolved "https://registry.yarnpkg.com/jquery/-/jquery-3.4.1.tgz#714f1f8d9dde4bdfa55764ba37ef214630d80ef2"
@@ -4899,6 +4904,16 @@ jupyter-materialui@^0.0.1-alpha.0:
     react "^16.6.3"
     react-dom "^16.6.3"
     typeface-roboto "0.0.54"
+
+jupyter-matplotlib@^0.3.0:
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/jupyter-matplotlib/-/jupyter-matplotlib-0.3.0.tgz#35e71924ebecaf6926eaf52e92c7e206aecbae7f"
+  integrity sha512-uJpU8dCeoRyqyND4fVMwL7i80vKKhqp11JwOLe0YxgXWJgh1/aB1DoFjn0MF48I584RnYE4ixyiygnTrTTqNqg==
+  dependencies:
+    "@jupyter-widgets/base" "^1.1.0"
+    jquery "^2.1.4"
+    jquery-ui "^1.12.1"
+    lodash "^4.17.4"
 
 kdbush@^1.0.1:
   version "1.0.1"

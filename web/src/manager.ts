@@ -4,6 +4,7 @@ import * as plotlywidget from 'plotlywidget';
 import * as bqplot from 'bqplot';
 import * as jmaterialui from 'jupyter-materialui';
 import * as bqImageGL from 'bqplot-image-gl';
+import * as jmatplotlib from 'jupyter-matplotlib';
 
 import {
   Kernel
@@ -90,6 +91,18 @@ class WidgetManager extends HTMLManager {
             console.log("Loading class jupyter-materialui.");
             return new Promise((resolve, reject) => {
                 resolve(jmaterialui);
+            }).then((module) => {
+                if (module[className]) {
+                    return module[className];
+                } else {
+                    return Promise.reject(`Class ${className} not found in module ${moduleName}@${moduleVersion}`);
+                }
+            });
+        }
+        else if (moduleName == 'jupyter-matplotlib') {
+            console.log("Loading class jupyter-matplotlib.");
+            return new Promise((resolve, reject) => {
+                resolve(jmatplotlib);
             }).then((module) => {
                 if (module[className]) {
                     return module[className];
