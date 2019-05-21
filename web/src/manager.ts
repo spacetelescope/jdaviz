@@ -3,7 +3,7 @@ import * as pWidget from '@phosphor/widgets';
 import * as plotlywidget from 'plotlywidget';
 import * as bqplot from 'bqplot';
 import * as jmaterialui from 'jupyter-materialui';
-import * as jastroimage from 'jupyter-astroimage';
+import * as bqImageGL from 'bqplot-image-gl';
 
 import {
   Kernel
@@ -98,10 +98,10 @@ class WidgetManager extends HTMLManager {
                 }
             });
         }
-        else if (moduleName == 'jupyter-astroimage') {
-            console.log("Loading class jupyter-astroimage.");
+        else if (moduleName == 'bqplot-image-gl') {
+            console.log("Loading class bqplot-image-gl.");
             return new Promise((resolve, reject) => {
-                resolve(jastroimage);
+                resolve(bqImageGL);
             }).then((module) => {
                 if (module[className]) {
                     return module[className];

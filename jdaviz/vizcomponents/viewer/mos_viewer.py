@@ -4,7 +4,8 @@ from astropy.io import fits
 from astropy.table import Table
 from ipywidgets import GridBox, Layout, HTML, Textarea, Button, ButtonStyle
 from bqplot.interacts import PanZoom
-from ipyastroimage import AstroImage
+# from ipyastroimage import AstroImage
+from bqplot_image_gl import ImageGL
 from bqplot import ColorScale
 from glue.viewers.common.viewer import BaseViewer
 
@@ -86,12 +87,12 @@ class MOSVizWidget(BaseViewer, GridBox):
         # Set up content of figures
         # =========================
 
-        self.cutout_mark = AstroImage(scales={'x': self.scale_x,
+        self.cutout_mark = ImageGL(scales={'x': self.scale_x,
                                               'y': self.scale_y,
                                               'image': self.scale_cutout_image})
         self.fig_cutout.marks = [self.cutout_mark]
 
-        self.spec2d_mark = AstroImage(scales={'x': self.scale_spec,
+        self.spec2d_mark = ImageGL(scales={'x': self.scale_spec,
                                               'y': self.scale_y,
                                               'image': self.scale_spec2d_image})
         self.fig_spec2d.marks = [self.spec2d_mark]
