@@ -1,6 +1,3 @@
-import * as CodeMirror from 'codemirror';
-import 'codemirror/lib/codemirror.css';
-import 'codemirror/mode/python/python';
 import 'font-awesome/css/font-awesome.css';
 
 import {
@@ -13,6 +10,12 @@ import {
 
 let BASEURL = 'http://localhost:8888';
 let WSURL = 'ws:' + BASEURL.split(':').slice(1).join(':');
+
+var Manager = { kernel: null };
+
+// Mount the manager on the browser window global so the kernel connection
+// can be accessed from other js sources loaded on the page.
+window['Manager'] = Manager;
 
 document.addEventListener('DOMContentLoaded', function(event) {
 
@@ -28,18 +31,9 @@ document.addEventListener('DOMContentLoaded', function(event) {
             serverSettings: connectionInfo
         });
     }).then(kernel => {
+        Manager.kernel = kernel;
 
-        // Create a codemirror instance
         let code = require('../widget_code.json').join('\n');
-        // let inputarea = document.getElementsByClassName('inputarea')[0] as HTMLElement;
-        // let editor = CodeMirror(inputarea, {
-        //     value: code,
-        //     mode: 'python',
-        //     tabSize: 4,
-        //     showCursorWhenSelecting: true,
-        //     viewportMargin: Infinity,
-        //     readOnly: false
-        // });
 
         // Create the widget area and widget manager
         let widgetarea = document.getElementsByClassName('widgetarea')[0] as HTMLElement;
@@ -47,6 +41,7 @@ document.addEventListener('DOMContentLoaded', function(event) {
 
         // Run backend code to create the widgets.
         let execution = kernel.requestExecute({ code: code });
+
         execution.onIOPub = (msg) => {
             // If we have a display message, display the widget.
             if (KernelMessage.isDisplayDataMsg(msg)) {
