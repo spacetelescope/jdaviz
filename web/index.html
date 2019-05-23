@@ -6,7 +6,6 @@
         </style>
     </head>
     <body>
-        <button onclick="test()">CLICK ME</button>
         <div class="jupyter-widgets-example">
             <div class="inputarea"></div>
             <div class="widgetarea"></div>
@@ -14,7 +13,7 @@
         <script>
             function test() {
                 let future = window.Manager.kernel.requestExecute({ code: "image.state.flip_x()" });
-                
+
                 future.done.then(() => {
                     console.log('Future is fulfilled');
                 });

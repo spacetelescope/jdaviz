@@ -1,9 +1,5 @@
 [
-    "filename = '/Users/nearl/data/cubeviz/MaNGA/manga-7495-12704-LOGCUBE.fits'",
-    "from glue_jupyter import jglue",
-    "from IPython.display import display",
-    "app = jglue()",
-    "data = app.load_data(filename)[0]",
-    "",
-    "image = app.imshow(data=data, widget='bqplot')"
+    "from baldr.app import Application",
+    "app = Application()",
+    "app.show()"
 ]

@@ -1,8 +1,10 @@
 const postcss = require('postcss');
 var path = require('path');
+var TerserPlugin = require('terser-webpack-plugin')
 
 module.exports = {
     entry: './dist/index.js',
+    mode: 'development',
     output: {
         filename: 'index.built.js',
         path: path.resolve(__dirname, 'built'),
@@ -30,7 +32,7 @@ module.exports = {
                                 }
                             }),
                             require('postcss-import')(),
-                            require('postcss-cssnext')()
+                            require('postcss-preset-env')()
                         ]
                     }
                 }
@@ -49,4 +51,7 @@ module.exports = {
             }
               ]
     },
+    optimization: {
+        minimizer: [ new TerserPlugin() ]
+    }
 };

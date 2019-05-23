@@ -9,3 +9,4 @@ __pycache__
 /*.egg-info
 **/examples/.ipynb_checkpoints
 **/examples
+node_modules
