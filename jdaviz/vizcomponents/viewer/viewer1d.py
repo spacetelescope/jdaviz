@@ -5,7 +5,6 @@ from astropy import units as u
 from glue.core.subset import RangeSubsetState
 from specutils import Spectrum1D, SpectralRegion
 
-from .simple_bqplot_profile import simple_profile
 from .viewer import Viewer
 
 logging.basicConfig(filename='/tmp/vizapp.log',
@@ -20,11 +19,10 @@ class Viewer1D(Viewer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        self._v1d = simple_profile(self._glue_app, data=self._glue_app.data_collection[0])
+        self._v1d = self._glue_app.profile1d(data=self._glue_app.data_collection[0])
 
     def show(self):
-        return Box([self._v1d.main_widget])
+        return Box([self._v1d.layout])
 
     def getRegion(self, index=None):
 
