@@ -1,31 +1,287 @@
-<html>
-    <head>
-        <script src="built/index.built.js"></script>
-        <link rel="stylesheet" type="text/css" href="dist/bqplot.css" />
-        <meta http-equiv="content-type" content="text/html; charset=UTF8">
-        </style>
-    </head>
-    <body>
-        <button onclick="test()">CLICK ME</button>
-        <div class="jupyter-widgets-example">
-            <div class="inputarea"></div>
-            <div class="widgetarea"></div>
+<!DOCTYPE html>
+
+<!-- temporary html page to assess ASB/DATB prototype needs.  eventually convert to templating html, e.g. Jinja -->
+
+<html lang="en">
+
+<head>
+    <!-- CSS sources-->
+    <meta charset="UTF-8">
+    <title>MAST-test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href="https://stackpath.bootstrapcdn.com/bootswatch/4.1.1/pulse/bootstrap.min.css" rel="stylesheet" integrity="sha384-w1P8UfRjdTYLTgdq8Y19zjdV25oYPMGNzwtm3tIyZ/gK8JPu+8ZW9OVkKhnBuydY" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.14.2/dist/bootstrap-table.min.css">
+
+    <link rel="stylesheet" type="text/css" href="dist/bqplot.css" />
+</head>
+
+<body class='home' data-spy="scroll" data-target=".navbar">
+
+    <!-- Header section -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark" id='header'>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor02"
+        aria-controls="navbarColor02" aria-expanded="false" aria-label="Toggle navigation" style="">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarColor02">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+                <a class="nav-link" href="http://archive.stsci.edu">STScI</a>
+            </li>
+            <li class="nav-item active">
+                <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+    <!-- Main Body -->
+    <div class="container-fluid p-0" id="content base">
+        <section id='cubeviz'>
+        <div class="intro-header">
+        
+            <div class="container">
+                <!-- CubeViz -->
+                <div class='row'><div class='col-md-12'><h1>CubeViz <small class="text-muted">area for cubeviz widget</small></h1></div></div>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <!-- Empty div where CubeViz ipywidget hooks into -->
+                        <div class='widgetarea' id='cube' ondrag="test(event)"></div>
+                    </div>
+                </div>
+
+
+                <!-- HTML Table -->
+                <div class='row'><div class='col-md-12'><h1>Table <small class="text-muted">html table of stuff</small></h1></div></div>
+                <div class='table-responsive' id='boottable'>
+                    <!-- custom toolbar -->
+                    <div id='toolbar'>
+                        <button class="btn btn-primary" id='dostuff' onclick="get_rows()">Overlay Row Data on Widget</button>
+                        <button class="btn btn-info" id='getstuff' onclick="get_stuff()">Get Info From Widget</button>
+                        <button class="btn btn-warning" id='updatestuff' onclick="update_stuff()">Update Widget</button>
+                    </div>
+
+                    <!-- table -->
+                    <table class="table table-hover table-bordered" id='table'
+                    data-toggle="table" data-search="true"
+                    data-sortable="true" data-sort-name="x" data-sort-order="asc"
+                    data-id-field="id" data-select-item-name="id" data-click-to-select="true" data-maintain-selected='true'
+                    data-toolbar="#toolbar"
+                    >
+                        <thead>
+                            <tr>
+                                <th scope='col' data-field="state" data-checkbox="true"></th>
+                                <th scope="col" data-field="id" data-sortable="true">ID</th>
+                                <th scope="col" data-field="x" data-sortable="true">X</th>
+                                <th scope="col" data-field="y" data-sortable="true">Y</th>
+                                <th scope="col" data-field="handle" data-sortable="true">Handle</th>
+                                <th scope="col" data-field="price" data-sortable="true">Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td scope='row'></td>
+                                <td>1</td>
+                                <td>30</td>
+                                <td>20</td>
+                                <td>@mdo</td>
+                                <td>$1</td>
+                            </tr>
+                            <tr>
+                                <td scope='row'></td>
+                                <td>2</td>
+                                <td>40</td>
+                                <td>60</td>
+                                <td>@fat</td>
+                                <td>$2</td>
+                            </tr>
+                            <tr>
+                                <td scope='row'></td>
+                                <td>3</td>
+                                <td>60</td>
+                                <td>50</td>
+                                <td>@twitter</td>
+                                <td>$3</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div> <!-- end table -->
+
+                <!-- Spot for Output Text -->
+                <div class='row'>
+                    <div class='col-md-12'>
+                        <h1>Output Area:<small class="widgetoutput text-muted" id='woutput'></small></h1>
+                    </div>
+                </div>
+            </div> <!-- end container -->
         </div>
-        <script>
-            function test() {
-                let future = window.Manager.kernel.requestExecute({ code: "image.state.flip_x()" });
-                
-                future.done.then(() => {
-                    console.log('Future is fulfilled');
-                });
-                future.onIOPub = msg => {
-                    console.log(msg.content); // Print rich output data.
-                };
-            }
-        </script>
-    </body>
+        </section>
+    </div>
+
+    <!-- Footer section -->
+<div class="container-fluid" id="footer-content">
+
+    <footer class='bg-light navbar-light' id='footer'>
+
+        <div class="row d-flex align-items-center">
+
+            <!-- Grid column -->
+            <div class="col-md-2 col-lg-2">
+                <!--Copyright and image credit-->
+                <p class="text-center text-md-left">© 2018 Copyright: <a target="_blank"
+                        href="https://archive.stsci.edu"><strong>stsci</strong></a></p>
+            </div>
+
+            <!-- Grid column -->
+            <div class="col-md-4 col-lg-4 ml-lg-0">
+
+                <!-- Social buttons -->
+                <div class="text-center text-md-right">
+                    <ul class="list-unstyled list-inline">
+                        <li class="list-inline-item"><a target='_blank' href="https://github.com/spacetelescope/jdaviz"><i class="fa fa-github"
+                                    aria-hidden="true"></i></a>
+                        <li class="list-inline-item"><a class="btn-default btn-lg" href='#'><i
+                                    class="fa fa-arrow-circle-up fa-fw" aria-hidden="true"></i></a></li>
+                    </ul>
+                </div>
+
+            </div>
+            <!-- Grid column -->
+
+        </div>
+        <!-- Grid row -->
+
+    </footer>
+
+</div>
+
+    <!-- Javascript sources-->
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
+        integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"
+        integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T"
+        crossorigin="anonymous"></script>
+    <script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.3/jquery.easing.min.js"></script>
+    
+    <script src="https://unpkg.com/bootstrap-table@1.14.2/dist/bootstrap-table.min.js"></script>
+
+    <!-- custom javascript to handle stuff on page; move to standalone js file -->
+    <script src="built/index.built.js"></script>
     <script>
-        // You can also require other files to run in this process
-        require('./dist/renderer.js')
+        let table = $('#table');
+        console.log('table', table);
+
+        // this function gets rows of table and makes server request to do stuff (interact with cubeviz?)
+        function get_rows() {
+            let selects = table.bootstrapTable('getSelections');
+            if (selects === undefined || selects.length == 0) {
+                alert('No rows selected.');
+                return;
+            }
+            let ids = selects.map(x => x.id);
+            let x = selects.map(x => parseInt(x.x));
+            let y = selects.map(x => parseInt(x.y));
+            console.log('rows', ids, x, y);
+            //alert('Temporary: you have selected rows: ' + ids + '. This function should make AJAX request to server');
+
+            let stuff = ["from glue.core import Data",
+                         `newdata = Data(x=[${x}], y=[${y}], label='rowdata')`,
+                         "newdata.style.color='#00ff00'",
+                         "app.add_data(newdata)",
+                         "from glue.core.component_link import ComponentLink",
+                         "linkx = ComponentLink([newdata.id['x']], data.id['Pixel Axis 2 [x]'])",
+                         "linky = ComponentLink([newdata.id['y']], data.id['Pixel Axis 1 [y]'])",
+                         "app.data_collection.add_link(linkx)",
+                         "app.data_collection.add_link(linky)",
+                         "image.add_data(newdata)"];
+            stuff = stuff.join('\n');
+
+            let future = window.Manager.kernel.requestExecute({ code: stuff });
+            future.done.then(() => {
+                console.log('Future is fulfilled');
+            });
+            future.onIOPub = msg => {
+                console.log('message content', msg.content); // Print rich output data.
+            }
+        }
+
+        // this function makes call to server to do stuff (interact with astroquery? and return stuff to table and/or widget?)
+        function get_stuff() {
+            //alert("I'm about to get stuff from the server!");
+
+            let stuff = ["state = image.state",
+                        "data = state.data_collection[0]",
+                        "plateifu = data.meta['PLATEIFU']", 
+                        "ra = data.meta['OBJRA']",
+                        "dec = data.meta['OBJDEC']",
+                        '{"plateifu": plateifu, "ra": ra, "dec":dec}'];
+            stuff = stuff.join('\n');
+
+            let future = window.Manager.kernel.requestExecute({ code: stuff });
+            future.done.then(() => {
+                console.log('Future is fulfilled');
+            });
+            future.onIOPub = msg => {
+                console.log('message content', msg.content); // Print rich output data.
+
+                if ('data' in msg.content) {
+                    let data = msg.content.data['text/plain'];
+                    console.log(data);
+                    data = data.replace(/'/g, '"');
+                    let jdata = JSON.parse(data);
+                    let dstring = `Plate-IFU: ${jdata.plateifu}, RA: ${jdata.ra}, Dec: ${jdata.dec}`;
+                    let out = document.getElementById('woutput');
+                    out.innerText = dstring;
+                }
+            };
+        }
+
+        // this functions makes a call to the server to replace the widget content entirely 
+        function update_stuff() {
+            let stuff = ["from astropy.io import fits",
+                         "from astroquery.mast import Observations",
+                         "mast_qry = Observations.query_criteria(target_name='PLEIADESFIELD1B', obs_collection='hst')",
+                         "result = Observations.download_products(mast_qry['obsid'][mast_qry['filters']=='F475W'],productSubGroupDescription='DRZ')",
+                         "f475w_image = fits.open(result['Local Path'][0])",
+                         "sciim = app.add_data(f475w=f475w_image)[0]",
+                         "image = app.imshow(data=sciim)"];
+            stuff = stuff.join('\n');
+
+            let future = window.Manager.kernel.requestExecute({ code: stuff });
+            future.done.then(() => {
+                console.log('Future is fulfilled');
+            });
+            future.onIOPub = msg => {
+                console.log('message content', msg.content); // Print rich output data.
+
+                if ('data' in msg.content) {
+                    let widgetData = msg.content.data['application/vnd.jupyter.widget-view+json'];
+                    if (widgetData !== undefined && widgetData.version_major === 2) {
+                        var model = window.Manager.manager.get_model(widgetData.model_id);
+                        if (model !== undefined) {
+                            model.then(function (model) {
+                                document.getElementsByClassName('widgetarea')[0].innerHTML='';
+                                window.Manager.manager.display_model(msg, model);
+                            });
+                        }
+                    }
+                }
+            };
+        }
+
+        // this is a a test function to add a front-end event handler on the widget
+        function test(event) {
+            console.log('event', event);
+        }
     </script>
+
+
+</body>
 </html>
