@@ -1,5 +1,6 @@
 import logging
 
+import numpy as np
 from ipywidgets import Box
 from astropy import units as u
 from glue.core.subset import RangeSubsetState
@@ -38,11 +39,10 @@ class Viewer1D(Viewer):
                     hasattr(l.layer, 'subset_state') and isinstance(l.layer.subset_state, RangeSubsetState)]
 
     def getSpectrum1D(self, index=0):
-        wave = self._v1d.state.layers[0].layer.get_component('Wave')
-        wavelengths = wave.data[0]
-        if index is not None:
-            return Spectrum1D(flux=self._v1d.state.layers[0].layer.subsets[index]['FLUX'] * u.Jy,
-                              wavelength=wavelengths * u.AA)
-        else:
-            return [Spectrum1D(flux=layer.layer.subsets[index]['FLUX'] * u.Jy,
-                               wavelength=wavelengths * u.AA) for layer in self._v1d.state.layers]
+        # this should be replaced by something glue-native... it really only works for the specific cubes in testing
+        dc = self._vizapp.glue_app.data_collection
+        flux_unit = u.Unit(dc[0].meta['BUNIT'].replace('/spaxel', '').replace('Ang', 'angstrom'))
+        wave_unit = u.Unit(dc[0].meta['CUNIT3'])
+
+        x, y = self._v1d.state.layers[0].profile
+        return Spectrum1D(spectral_axis=x*wave_unit, flux=y*flux_unit)
