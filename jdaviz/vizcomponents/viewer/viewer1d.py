@@ -20,7 +20,7 @@ class Viewer1D(Viewer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._v1d = self._glue_app.profile1d(data=self._glue_app.data_collection[0], show=False)
+        self._v1d = self._glue_app.profile1d(data=self._glue_app.data_collection[0], show=False, widget='matplotlib')
 
     def show(self):
         return Box([self._v1d.layout])

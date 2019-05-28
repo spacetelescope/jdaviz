@@ -19,7 +19,7 @@ class ViewerND(Viewer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._v3d = self._glue_app.imshow(data=self._glue_app.data_collection[0], show=False)
+        self._v3d = self._glue_app.imshow(data=self._glue_app.data_collection[0], show=False, widget='matplotlib')
 
     def show(self):
         return Box([self._v3d.layout])

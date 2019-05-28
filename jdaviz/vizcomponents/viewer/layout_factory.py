@@ -54,7 +54,7 @@ class JDAVizStandardLayout(VBox):
 
         if self.advanced:
 
-            self._layout_middle.children = (self.viewer.figure, self._layout_tab)
+            self._layout_middle.children = (self.viewer.figure_widget, self._layout_tab)
             self._layout_toolbar.children = (self.viewer.toolbar_selection_tools,
                                              self.viewer.toolbar_active_subset,
                                              self.viewer.toolbar_selection_mode)
@@ -62,7 +62,7 @@ class JDAVizStandardLayout(VBox):
 
         else:
 
-            self._layout_middle.children = (self.viewer.figure,)
+            self._layout_middle.children = (self.viewer.figure_widget,)
             self._layout_toolbar.children = (self.viewer.toolbar_selection_tools,
                                              self.viewer.toolbar_active_subset)
             self._advanced_button.description = 'Show advanced'
@@ -96,11 +96,11 @@ def jdaviz_layout_factory(viewer):
 
     if isinstance(viewer, (BqplotImageView, ImageJupyterViewer)):
         layout_cls = JDAVizImageLayout
-        viewer.figure.layout.width = '400px'
-        viewer.figure.layout.height = '400px'
+        # viewer.figure.layout.width = '400px'
+        # viewer.figure.layout.height = '400px'
     else:
         layout_cls = JDAVizStandardLayout
-        viewer.figure.layout.width = '600px'
-        viewer.figure.layout.height = '400px'
+        # viewer.figure.layout.width = '600px'
+        # viewer.figure.layout.height = '400px'
 
     return layout_cls(viewer)
