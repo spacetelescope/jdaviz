@@ -1,11 +1,14 @@
 import * as base from '@jupyter-widgets/base';
 import * as pWidget from '@phosphor/widgets';
-import * as plotlywidget from 'plotlywidget';
-import * as bqplot from 'bqplot';
-import * as jmaterialui from 'jupyter-materialui';
-import * as bqImageGL from 'bqplot-image-gl';
-import * as jmatplotlib from 'jupyter-matplotlib';
-import * as jvuetify from 'jupyter-vuetify';
+
+const libs = {
+    'plotlywidget': import('plotlywidget'),
+    'bqplot': import('bqplot'),
+    'jupyter-materialui': import('jupyter-materialui'),
+    'bqplot-image-gl': import('bqplot-image-gl'),
+    'jupyter-matplotlib': import('jupyter-matplotlib'),
+    'jupyter-vuetify': import('jupyter-vuetify')
+};
 
 import {
   Kernel
@@ -64,80 +67,21 @@ class WidgetManager extends HTMLManager {
      * Load a class and return a promise to the loaded object.
      */
     protected loadClass(className: string, moduleName: string, moduleVersion: string) {
-        if (moduleName == 'plotlywidget') {
-            console.log("Loading class plotlywidget.");
+        console.log(`Attempting load of ${moduleName}.${className}.`);
+        return super.loadClass(className, moduleName, moduleVersion).then((result) => {
+                return result;
+            }
+        ).catch((err) => {
             return new Promise((resolve, reject) => {
-                resolve(plotlywidget);
+               resolve(libs[moduleName]);
             }).then((module) => {
-                if (module[className]) {
-                    return module[className];
-                } else {
-                    return Promise.reject(`Class ${className} not found in module ${moduleName}@${moduleVersion}`);
-                }
-            });
-        }
-        else if (moduleName == 'bqplot') {
-            console.log("Loading class bqplot.");
-            return new Promise((resolve, reject) => {
-                resolve(bqplot);
-            }).then((module) => {
-                if (module[className]) {
-                    return module[className];
-                } else {
-                    return Promise.reject(`Class ${className} not found in module ${moduleName}@${moduleVersion}`);
-                }
-            });
-        }
-        else if (moduleName == 'jupyter-materialui') {
-            console.log("Loading class jupyter-materialui.");
-            return new Promise((resolve, reject) => {
-                resolve(jmaterialui);
-            }).then((module) => {
-                if (module[className]) {
-                    return module[className];
-                } else {
-                    return Promise.reject(`Class ${className} not found in module ${moduleName}@${moduleVersion}`);
-                }
-            });
-        }
-        else if (moduleName == 'jupyter-matplotlib') {
-            console.log("Loading class jupyter-matplotlib.");
-            return new Promise((resolve, reject) => {
-                resolve(jmatplotlib);
-            }).then((module) => {
-                if (module[className]) {
-                    return module[className];
-                } else {
-                    return Promise.reject(`Class ${className} not found in module ${moduleName}@${moduleVersion}`);
-                }
-            });
-        }
-        else if (moduleName == 'jupyter-vuetify') {
-            console.log("Loading class jupyter-vuetify.");
-            return new Promise((resolve, reject) => {
-                resolve(jvuetify);
-            }).then((module) => {
-                if (module[className]) {
-                    return module[className];
-                } else {
-                    return Promise.reject(`Class ${className} not found in module ${moduleName}@${moduleVersion}`);
-                }
-            });
-        }
-        else if (moduleName == 'bqplot-image-gl') {
-            console.log("Loading class bqplot-image-gl.");
-            return new Promise((resolve, reject) => {
-                resolve(bqImageGL);
-            }).then((module) => {
-                if (module[className]) {
-                    return module[className];
-                } else {
-                    return Promise.reject(`Class ${className} not found in module ${moduleName}@${moduleVersion}`);
-                }
-            });
-        } else {
-            return super.loadClass(className, moduleName, moduleVersion);
-        }
+               if (module[className]) {
+                   return module[className];
+               } else {
+                   return Promise.reject(`Class ${className} not found in module ${moduleName}@${moduleVersion}`);
+               }
+            }).catch((err) => console.log(`No module named ${moduleName}.`))
+        });
     }
 
     kernel: Kernel.IKernelConnection;
