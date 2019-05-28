@@ -3,6 +3,8 @@ import numpy as np
 
 from ipywidgets import widgets
 
+import ipyvuetify as v
+
 from glue.core.data import Component, Data
 from glue.core.component import CategoricalComponent
 from glue.config import data_factory, qglue_parser
@@ -67,15 +69,39 @@ class MOSViz:
         self.current_cutout = None
 
         #  Create File Menu
-        self._menu_bar_file = widgets.Dropdown(
-            options=['File', 'Load', 'Save'],
-            value='File',
-            description='',
-            layout=widgets.Layout(width='10em'),
-        )
+        # self._menu_bar_file = widgets.Dropdown(
+        #     options=['File', 'Load', 'Save'],
+        #     value='File',
+        #     description='',
+        #     layout=widgets.Layout(width='10em'),
+        # )
+        self.tile_load = v.ListTile(children=[v.ListTileTitle(children=["Load"])])
+        self.tile_save = v.ListTile(children=[v.ListTileTitle(children=["Save"])])
+        self.f_items = [self.tile_load, self.tile_save]
 
-        self._menu_bar_file.observe(self._on_change_menu_bar_file)
-        self._menu_bar = widgets.HBox([self._menu_bar_file])
+        self._menu_bar_file = v.Layout(children=
+                                       [v.Menu(offset_y=True,
+                                               children=[v.Btn(slot='activator', color='primary',
+                                                               children=['File', v.Icon(right=True,
+                                                                                        children=['arrow_drop_down'])]),
+                                                         v.List(children=self.f_items)])
+                                        ])
+
+        self._back_button_vuetify = v.Btn(children=["Back"], color="info")
+        self._next_button_vuetify = v.Btn(children=["Next"], color="info")
+
+        self._current_slit_vuetify = v.OverflowBtn(label="Slit", items=[], width='20em')
+
+        # self._current_slit_vuetify.on_event
+
+        # Add to menu bar
+        self._menu_bar = v.Layout(row=True, wrap=True, children=[
+                                    v.Flex(xs6=True, class_='px-2', children=[self._back_button_vuetify]),
+                                    v.Flex(xs6=True, class_='px-2', children=[self._next_button_vuetify]),
+                                    v.Flex(xs6=True, class_='px-2', children=[self._current_slit_vuetify])
+
+        ])
+
 
         #  Create Navigation Bar
         self._current_slit = widgets.Dropdown(
@@ -87,9 +113,13 @@ class MOSViz:
 
         self._next_button = widgets.Button(description="Next")
         self._next_button.on_click(self._on_next)
+        self._next_button_vuetify.on_event("click", self._on_next)
+
 
         self._back_button = widgets.Button(description="Back")
         self._back_button.on_click(self._on_back)
+        self._back_button_vuetify.on_event("click", self._on_back)
+
 
         self._nav_bar = widgets.HBox([self._current_slit, self._back_button, self._next_button])
 
@@ -98,7 +128,7 @@ class MOSViz:
 
         self._viewer_box = widgets.VBox([self._mos_widget, self._table.show()])
 
-        self._main_box = widgets.Box([widgets.VBox([self._nav_bar, self._table.show(), self._mos_widget])])
+        self._main_box = widgets.Box([widgets.VBox([self._menu_bar, self._nav_bar, self._table.show(), self._mos_widget])])
 
         if filename:
             self._vizapp.glue_app.load_data(filename)
@@ -113,11 +143,22 @@ class MOSViz:
                 self._current_slit.value = options[0]
         self._on_change_current_slit()
 
+    def _populate_dropdown_vuetify(self):
+        if self.data is None:
+            self._current_slit_vuetify.items = []
+        else:
+            options = list([i[0] for i in self._mos_widget._rows])
+            self._current_slit_vuetify.items = options
+            if len(options) > 0:
+                self._current_slit_vuetify.items = options[0]
+        # self._on_change_current_slit()
+
     def add_data(self, data):
         self.data = data
         self._table.add_data(data)
         self._mos_widget.add_data(data)
         self._populate_dropdown()
+        # self._populate_dropdown_vuetify()
         if len(self._current_slit.options) > 0:
             self.current_slit_index = 0
 
@@ -137,6 +178,13 @@ class MOSViz:
 
     def _on_change_current_slit(self, *args):
         target = self._current_slit.value
+        if target is None:
+            return
+        idx = list(self.data['id']).index(target)
+        self.current_slit_index = idx
+
+    def _on_change_current_slit_vuetify(self, *args):
+        target = self._current_slit_vuetify.value
         if target is None:
             return
         idx = list(self.data['id']).index(target)
