@@ -38,7 +38,7 @@ class Viewer1D(Viewer):
                     self._v1d.state.layers if
                     hasattr(l.layer, 'subset_state') and isinstance(l.layer.subset_state, RangeSubsetState)]
 
-    def getSpectrum1D(self, index=0):
+    def get_spectrum1D(self, index=0):
         # this should be replaced by something glue-native... it really only works for the specific cubes in testing
         dc = self._vizapp.glue_app.data_collection
         flux_unit = u.Unit(dc[0].meta['BUNIT'].replace('/spaxel', '').replace('Ang', 'angstrom'))

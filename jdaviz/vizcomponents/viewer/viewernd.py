@@ -24,7 +24,7 @@ class ViewerND(Viewer):
     def show(self):
         return Box([self._v3d.layout])
 
-    def getSpectrum1D(self, index=-1):
+    def get_spectrum1D(self, index=-1):
         # this should be replaced by something glue-native... it really only works for the specific cubes in testing
         dc = self._vizapp.glue_app.data_collection
         flux_unit = u.Unit(dc[0].meta['BUNIT'].replace('/spaxel', '').replace('Ang', 'angstrom'))
