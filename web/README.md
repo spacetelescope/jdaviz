@@ -6,6 +6,19 @@ running jupyter kernel instance used to execute the python code. The html
 page is hosted using yarn `http-server`, while the stand-alone app is run
 using electron.
 
+# Setup
+
+Currently, the dev versions of the bqplot libraries are required. To install,
+please follow the directions below:
+
+1. Clone and install the [bqplot](https://github.com/bloomberg/bqplot) python package.
+2. `cd` to the `bqplot/js` directory and run an `npm install`.
+3. `cd` to `jdaviz/web`.
+4. Install the dev version of the bqplot node package: `yarn add /path/to/bqplot/js`.
+
+Note that there are hard-coded paths to the Manga data cube. Please be sure
+to edit the `widget_code.json` file to point to your local data file.
+
 # Embedded app in web page
 
 1. Move to the `web` directory and run `yarn install`.
