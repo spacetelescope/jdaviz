@@ -8,11 +8,13 @@ from glue.utils.colors import alpha_blend_colors
 class MOSVizTable(BaseViewer):
     LABEL = 'Table Viewer'
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, data, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._main_data = None
+        self._main_data = data
         self._area = Textarea()
-        self._sheet = ipysheet.sheet()
+        self._sheet = ipysheet.sheet(column_headers=[x.label for x in data.main_components])
+
+        self._add_data()
 
         self.register_to_hub(kwargs['session'].hub)
 
@@ -29,12 +31,7 @@ class MOSVizTable(BaseViewer):
         hub.subscribe(self, msg.SubsetDeleteMessage,
                       handler=self._rerender_table)
 
-    def add_data(self, data):
-
-        if self._main_data is None:
-            self._main_data = data
-        else:
-            raise Exception('data is already set')
+    def _add_data(self):
 
         cell_data = []
 
