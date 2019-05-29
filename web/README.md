@@ -8,16 +8,23 @@ using electron.
 
 # Setup
 
+**Note** that there are hard-coded paths to the Manga data cube. Please be sure
+to edit the `widget_code.json` file to point to your local data file.
+
 Currently, the dev versions of the bqplot libraries are required. To install,
 please follow the directions below:
 
 1. Clone and install the [bqplot](https://github.com/bloomberg/bqplot) python package.
 2. `cd` to the `bqplot/js` directory and run an `npm install`.
 3. `cd` to `jdaviz/web`.
-4. Install the dev version of the bqplot node package: `yarn add /path/to/bqplot/js`.
+4. Install the dev version of the `bqplot` node package: `yarn add /path/to/bqplot/js`.
 
-Note that there are hard-coded paths to the Manga data cube. Please be sure
-to edit the `widget_code.json` file to point to your local data file.
+Also, the `jupyter-vuetify` must also be installed. Because it is not yet on
+`npm`, it must also be installed manually:
+
+1. Clone the [ipyvuetify](https://github.com/mariobuikhuizen/ipyvuetify) python package.
+2. `cd` to `jdaviz/web`.
+3. Install the dev version of `ipyvuetify` node page: `yarn add /path/to/ipyvuetify/js`.
 
 # Embedded app in web page
 
