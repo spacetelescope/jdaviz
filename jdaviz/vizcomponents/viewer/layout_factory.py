@@ -96,11 +96,11 @@ def jdaviz_layout_factory(viewer):
 
     if isinstance(viewer, (BqplotImageView, ImageJupyterViewer)):
         layout_cls = JDAVizImageLayout
-        # viewer.figure.layout.width = '400px'
-        # viewer.figure.layout.height = '400px'
+        viewer.figure.layout.width = '400px'
+        viewer.figure.layout.height = '400px'
     else:
         layout_cls = JDAVizStandardLayout
-        # viewer.figure.layout.width = '600px'
-        # viewer.figure.layout.height = '400px'
+        viewer.figure.layout.width = '600px'
+        viewer.figure.layout.height = '400px'
 
     return layout_cls(viewer)
