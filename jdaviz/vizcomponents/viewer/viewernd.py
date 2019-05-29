@@ -1,7 +1,6 @@
 import logging
 
 from ipywidgets import Box
-from .simple_bqplot_image import simple_imshow
 from .viewer import Viewer
 
 logging.basicConfig(filename='/tmp/vizapp.log',
@@ -16,8 +15,7 @@ class ViewerND(Viewer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        self._v3d = simple_imshow(self._glue_app, data=self._glue_app.data_collection[0])
+        self._v3d = self._glue_app.imshow(data=self._glue_app.data_collection[0], show=False)
 
     def show(self):
-        return Box([self._v3d.main_widget])
+        return Box([self._v3d.layout])
