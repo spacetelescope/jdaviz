@@ -1,11 +1,16 @@
+from itertools import cycle
 import numpy as np
-import bqplot
+
 from astropy.io import fits
 from astropy.table import Table
-from ipywidgets import GridBox, Layout, HTML, Textarea, Button, ButtonStyle
-from bqplot.interacts import PanZoom
+
+from ipywidgets import GridBox, HBox, Layout, HTML, Textarea, Button, ButtonStyle
+
+import bqplot
+from bqplot.interacts import PanZoom, BrushIntervalSelector, BrushSelector
 from bqplot_image_gl import ImageGL
 from bqplot import ColorScale
+
 from glue.viewers.common.viewer import BaseViewer
 
 
@@ -73,8 +78,27 @@ class MOSVizWidget(BaseViewer, GridBox):
                                         axes=[self.axis_spec, self.axis_flux],
                                         layout={'width': '500px', 'height': '400px'})
 
-        self.fig_spec1d.interaction = PanZoom(scales={'x': [self.scale_spec],
-                                                      'y': [self.scale_flux]})
+
+        print("@@@@@@  file mos_viewer.py; line 78 - ",  self.fig_spec1d)
+
+        # two interactions that alternate under command from a button.
+        pan_zoom_interaction = PanZoom(scales={'x': [self.scale_spec],
+                                               'y': [self.scale_flux]})
+        self.roi_interaction = BrushSelector(scales={'x': [self.scale_spec],
+                                                     'y': [self.scale_flux]})
+
+
+        # self.roi_interaction = BrushIntervalSelector(orientation='horizontal',
+        #                                              scale=bqplot.LinearScale())
+
+
+
+        self.spec1d_interactions = cycle([self.roi_interaction, pan_zoom_interaction])
+        self.fig_spec1d.interaction = pan_zoom_interaction
+        self.roi_interaction.observe(self._update_ROI_result, 'selected')
+
+        self.text_ROI = HTML()
+        self._update_ROI_result()
 
         # info box
         # --------
@@ -82,6 +106,13 @@ class MOSVizWidget(BaseViewer, GridBox):
         self.info_box.layout.height = '100%'
         self.info_box.layout.width = '100%'
         self.info_box.layout.align_self = 'flex-end'
+
+        # toggle ROI/zoom
+        # ---------------
+        self.toggle_roi_button = Button(description="ROI/Zoom/Pan",
+                                layout=Layout(flex='0 1 auto', width='auto',),
+                                tooltip="Toggle between zoom/pan and ROI")
+        self.toggle_roi_button.on_click(self._on_button_clicked)
 
         # Set up content of figures
         # =========================
@@ -99,18 +130,30 @@ class MOSVizWidget(BaseViewer, GridBox):
         self.spec1d_mark = bqplot.Lines(scales={'x': self.scale_spec, 'y': self.scale_flux},
                                         x=[], y=[])
         self.fig_spec1d.marks = [self.spec1d_mark]
+        # self.roi_interaction.marks = [self.spec1d_mark]
+
+        toggle_roi_widget = HBox([HTML(), self.toggle_roi_button],
+            layout=Layout(width='100%', justify_content='flex-end'))
 
         GridBox.__init__(self,
                          [self.fig_cutout, HTML(), self.fig_spec2d,
-                          HTML(), HTML(), HTML(),
-                          self.info_box, HTML(), self.fig_spec1d],
+                          HTML(), HTML(), toggle_roi_widget,
+                          self.info_box, HTML(), self.fig_spec1d,
+                          self.text_ROI, HTML(), HTML()],
                          layout=Layout(width='100%',
                                        grid_template_columns='35% 5% 35%',
-                                       grid_template_rows='30% 5% 30%',
+                                       grid_template_rows='30% 10% 30% 10%',
                                        grid_gap='30px 30px'))
 
         self.layout.justify_content = "center"
         self.layout.align_items = "center"
+
+    def _on_button_clicked(self, e):
+        self.fig_spec1d.interaction = next(self.spec1d_interactions)
+
+    def _update_ROI_result(self, *args):
+        self.text_ROI.value = "The Brush's selected attribute is {}".format(self.roi_interaction.selected)
+
 
     @property
     def current_index(self):
