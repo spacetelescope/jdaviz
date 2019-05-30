@@ -26,7 +26,7 @@ class Viewer1D(Viewer):
     def show(self):
         return Box([self._v1d.layout])
 
-    def getRegion(self, index=None):
+    def get_region(self, index=None):
 
         if index is not None:
             subset = self._v1d.state.layers[index].layer
