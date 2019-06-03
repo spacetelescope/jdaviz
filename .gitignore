@@ -10,3 +10,4 @@ __pycache__
 **/examples/.ipynb_checkpoints
 **/examples
 node_modules
+/.idea
