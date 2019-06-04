@@ -3,6 +3,8 @@ import numpy as np
 
 from ipywidgets import widgets
 
+import ipyvuetify as v
+
 from glue.core.data import Component, Data
 from glue.core.component import CategoricalComponent
 from glue.config import data_factory, qglue_parser
@@ -66,32 +68,27 @@ class MOSViz:
         self.html = None
         self.current_cutout = None
 
-        #  Create File Menu
-        self._menu_bar_file = widgets.Dropdown(
-            options=['File', 'Load', 'Save'],
-            value='File',
-            description='',
-            layout=widgets.Layout(width='10em'),
-        )
+        # Create control bar with drop down bar (OverflowBtn), back button, and next button
 
-        self._menu_bar_file.observe(self._on_change_menu_bar_file)
-        self._menu_bar = widgets.HBox([self._menu_bar_file])
+        self._back_button = v.Btn(children=["Back"], color="info")
+        self._next_button = v.Btn(children=["Next"], color="info")
 
-        #  Create Navigation Bar
-        self._current_slit = widgets.Dropdown(
-            options=[],
-            description='Slit',
-            layout=widgets.Layout(width='20em'),
-        )
-        self._current_slit.observe(self._on_change_current_slit)
+        self._back_button.on_event("click", self._on_back)
+        self._next_button.on_event("click", self._on_next)
 
-        self._next_button = widgets.Button(description="Next")
-        self._next_button.on_click(self._on_next)
+        self._control_bar = v.Layout(row=True, wrap=True, children=[self._back_button, self._next_button])
 
-        self._back_button = widgets.Button(description="Back")
-        self._back_button.on_click(self._on_back)
+        self._current_slit = v.OverflowBtn(label="Slit", v_model=None,  items=[], width=10)
+        self._current_slit.observe(self._on_change_current_slit, names=['v_model'])
 
-        self._nav_bar = widgets.HBox([self._current_slit, self._back_button, self._next_button])
+        # Add to menu bar
+        self._menu_bar = v.Layout(row=True, wrap=True, children=[
+                                    v.Flex(xs6=True, class_='px-2', children=[self._current_slit]),
+                                    v.Flex(xs6=True, class_='px-2', children=[self._control_bar])
+
+        ])
+
+        # Create table and mos_widget
 
         # the table viewer must be built with the data already in. This allows the
         # column headers to be properly set (it's an ipysheet API constraint). For
@@ -99,9 +96,11 @@ class MOSViz:
         self._table = MOSVizTable(session=self._vizapp.glue_app.session, data=data)
         self._mos_widget = MOSVizWidget(session=self._vizapp.glue_app.session)
 
-        self._viewer_box = widgets.VBox([self._mos_widget, self._table.show()])
+        # Combine into main
 
-        self._main_box = widgets.Box([widgets.VBox([self._nav_bar, self._table.show(), self._mos_widget])])
+        self._main_box = v.Layout(row=True, wrap=True, children=[
+            self._menu_bar, self._table.show(), self._mos_widget
+        ])
 
         if data:
             self.add_data(data)
@@ -113,14 +112,14 @@ class MOSViz:
             self._vizapp.glue_app.load_data(filename)
 
     def _populate_dropdown(self):
+        """
+        Vuetify version of the populate dropdown function
+        """
         if self.data is None:
-            self._current_slit.options = []
+            self._current_slit.items = []
         else:
-            options = list([i[0] for i in self._mos_widget._rows])
-            self._current_slit.options = options
-            if len(options) > 0:
-                self._current_slit.value = options[0]
-        self._on_change_current_slit()
+            self._current_slit.items = list([i[0] for i in self._mos_widget._rows])
+
 
     def add_data(self, data):
         self.data = data
@@ -129,7 +128,7 @@ class MOSViz:
         # headers can be set (it's an ipysheet API constraint).
         self._mos_widget.add_data(data)
         self._populate_dropdown()
-        if len(self._current_slit.options) > 0:
+        if len(self._current_slit.items) > 0:
             self.current_slit_index = 0
 
     @property
@@ -143,14 +142,13 @@ class MOSViz:
             self._mos_widget.current_index = value
             if self._mos_widget.current_index is None:
                 return
-            self._current_slit.index = self._mos_widget.current_index
+            # self._current_slit.index = self._mos_widget.current_index
+            if len(self._current_slit.items) > 0:
+                self._current_slit.v_model = self._current_slit.items[self._mos_widget.current_index]
             self._table._select_row(idx=self._mos_widget.current_index)
 
-    def _on_change_current_slit(self, *args):
-        target = self._current_slit.value
-        if target is None:
-            return
-        idx = list(self.data['id']).index(target)
+    def _on_change_current_slit(self, v):
+        idx = list(self.data['id']).index(v.new)
         self.current_slit_index = idx
 
     def _on_change_menu_bar_file(self):
