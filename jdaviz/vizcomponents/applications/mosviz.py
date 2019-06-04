@@ -58,13 +58,13 @@ class MOSViz:
 
     data = None
 
-    def __init__(self, vizapp, filename=None):
+    def __init__(self, vizapp, data=None, filename=None):
 
         self._vizapp = vizapp
 
         self.mostable = None
         self.mostable_dir = None
-        self.data = None
+        self.data = data
         self.html = None
         self.current_cutout = None
 
@@ -90,7 +90,10 @@ class MOSViz:
 
         # Create table and mos_widget
 
-        self._table = MOSVizTable(session=self._vizapp.glue_app.session)
+        # the table viewer must be built with the data already in. This allows the
+        # column headers to be properly set (it's an ipysheet API constraint). For
+        # now, the code only works when data is not None.
+        self._table = MOSVizTable(session=self._vizapp.glue_app.session, data=data)
         self._mos_widget = MOSVizWidget(session=self._vizapp.glue_app.session)
 
         # Combine into main
@@ -99,6 +102,12 @@ class MOSViz:
             self._menu_bar, self._table.show(), self._mos_widget
         ])
 
+        if data:
+            self.add_data(data)
+
+        # not sure on how this works. Probably depends on what we
+        # want the user interface to look at the notebook level.
+        # It's not being exercised yet.
         if filename:
             self._vizapp.glue_app.load_data(filename)
 
@@ -114,7 +123,9 @@ class MOSViz:
 
     def add_data(self, data):
         self.data = data
-        self._table.add_data(data)
+        # update everything but the table viewer. The table viewer must
+        # be populated at the time it's built, so that the table column
+        # headers can be set (it's an ipysheet API constraint).
         self._mos_widget.add_data(data)
         self._populate_dropdown()
         if len(self._current_slit.items) > 0:
