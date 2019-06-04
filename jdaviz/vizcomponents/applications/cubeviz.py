@@ -7,11 +7,13 @@ from ..viewer.viewer1d import Viewer1D
 
 class CubeViz:
 
-    def __init__(self, filename, vizapp):
+    def __init__(self, filename, vizapp, process_data=None):
 
         self._vizapp = vizapp
 
         self._vizapp.glue_app.load_data(filename)
+        if process_data is not None:
+            process_data(self)
 
         #
         #  Create File Menu
