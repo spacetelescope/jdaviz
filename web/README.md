@@ -9,7 +9,7 @@ using electron.
 # Pre-setup
 
 1. At your command line, clone the `jdaviz` repository via `git clone https://github.com/nmearl/jdaviz`.
-2. Install the `jdaviz` python package in your environment by running `pip install .` at your command line from the cloned directory.
+2. Install the `jdaviz` python package in your environment by running `pip install -e .` at your command line from the cloned directory.
 3. (Optional) Ensure that the `jdaviz` code works properly in your environment by running one of the example notebooks in the `examples` directory of the `jdaviz` repository, or by copy/pasting the widget code in `web/widget_code.json` (with the quotation marks and commas removed) in a jupyter notebook running in the same environment you install the `jdaviz` package. **Note** You must close your Jupyter notebook server after testing these examples as the web-based and electron apps in future steps need to use the `8888` port.
 4. Ensure `nodejs` and `npm` are installed following the installation instructions for the *Current Release* [here](https://nodejs.org/en/).
 5. Install the `yarn` package manager following the platform-specific install instructions [here](https://yarnpkg.com/en/docs/install).
