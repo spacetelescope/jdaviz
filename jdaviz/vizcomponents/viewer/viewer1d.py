@@ -21,11 +21,12 @@ class Viewer1D(Viewer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._v1d = self._glue_app.profile1d(data=self._glue_app.data_collection[0], show=False)
+        self._v1d.state.function = 'mean'  #default to mean-combine
 
     def show(self):
         return Box([self._v1d.layout])
 
-    def getRegion(self, index=None):
+    def get_region(self, index=None):
 
         if index is not None:
             subset = self._v1d.state.layers[index].layer
