@@ -1,4 +1,13 @@
 __pycache__
 *pyc
-*.egg-info
-.eggs
+**/web/node_modules
+**/web/lib
+**/web/built
+**/web/dist
+/.pytest_cache
+/.eggs
+/*.egg-info
+**/examples/.ipynb_checkpoints
+**/examples
+node_modules
+/.idea

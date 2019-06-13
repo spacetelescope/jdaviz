@@ -1,0 +1,30 @@
+<html>
+    <head>
+        <script src="built/index.built.js"></script>
+        <link rel="stylesheet" type="text/css" href="dist/bqplot.css" />
+        <meta http-equiv="content-type" content="text/html; charset=UTF8">
+        </style>
+    </head>
+    <body>
+        <div class="jupyter-widgets-example">
+            <div class="inputarea"></div>
+            <div class="widgetarea"></div>
+        </div>
+        <script>
+            function test() {
+                let future = window.Manager.kernel.requestExecute({ code: "image.state.flip_x()" });
+
+                future.done.then(() => {
+                    console.log('Future is fulfilled');
+                });
+                future.onIOPub = msg => {
+                    console.log(msg.content); // Print rich output data.
+                };
+            }
+        </script>
+    </body>
+    <script>
+        // You can also require other files to run in this process
+        require('./dist/renderer.js')
+    </script>
+</html>

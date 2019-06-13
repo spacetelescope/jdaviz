@@ -54,7 +54,7 @@ class JDAVizStandardLayout(VBox):
 
         if self.advanced:
 
-            self._layout_middle.children = (self.viewer.figure, self._layout_tab)
+            self._layout_middle.children = (self.viewer.figure_widget, self._layout_tab)
             self._layout_toolbar.children = (self.viewer.toolbar_selection_tools,
                                              self.viewer.toolbar_active_subset,
                                              self.viewer.toolbar_selection_mode)
@@ -62,7 +62,7 @@ class JDAVizStandardLayout(VBox):
 
         else:
 
-            self._layout_middle.children = (self.viewer.figure,)
+            self._layout_middle.children = (self.viewer.figure_widget,)
             self._layout_toolbar.children = (self.viewer.toolbar_selection_tools,
                                              self.viewer.toolbar_active_subset)
             self._advanced_button.description = 'Show advanced'
