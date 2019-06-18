@@ -13,9 +13,8 @@ analysis for Astronomy with glue-Viz".
 This is probably more than is required to just run in a notebook but for now, try this...
 
   * Install NPM (https://nodejs.org/en/) system wide (*not* a pip install)
-  * `conda create -n jdaviz-dev`
+  * `conda create -n jdaviz-dev python`
   * `conda activate jdaviz-dev`  if conda is kinda new else: `source activate jdaviz-dev`
-  * `pip install specutils`  # Forgot it
   * `git clone https://github.com/<your username>/jdaviz`
   * `cd jdaviz`
   * `pip install -e .`

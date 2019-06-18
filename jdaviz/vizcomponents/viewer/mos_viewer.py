@@ -4,7 +4,6 @@ from astropy.io import fits
 from astropy.table import Table
 from ipywidgets import GridBox, Layout, HTML, Textarea, Button, ButtonStyle
 from bqplot.interacts import PanZoom
-# from ipyastroimage import AstroImage
 from bqplot_image_gl import ImageGL
 from bqplot import ColorScale
 from glue.viewers.common.viewer import BaseViewer

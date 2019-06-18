@@ -11,12 +11,11 @@ import {
 let BASEURL = 'http://localhost:8888';
 let WSURL = 'ws:' + BASEURL.split(':').slice(1).join(':');
 
-var Manager = { kernel: null, manager: null };
+var Manager = { kernel: null };
 
 // Mount the manager on the browser window global so the kernel connection
 // can be accessed from other js sources loaded on the page.
 window['Manager'] = Manager;
-window['KernelMessage'] = KernelMessage;
 
 document.addEventListener('DOMContentLoaded', function(event) {
 
@@ -39,7 +38,6 @@ document.addEventListener('DOMContentLoaded', function(event) {
         // Create the widget area and widget manager
         let widgetarea = document.getElementsByClassName('widgetarea')[0] as HTMLElement;
         let manager = new WidgetManager(kernel, widgetarea);
-        Manager.manager = manager;
 
         // Run backend code to create the widgets.
         let execution = kernel.requestExecute({ code: code });
@@ -48,7 +46,6 @@ document.addEventListener('DOMContentLoaded', function(event) {
             // If we have a display message, display the widget.
             if (KernelMessage.isDisplayDataMsg(msg)) {
                 let widgetData: any = msg.content.data['application/vnd.jupyter.widget-view+json'];
-                console.log('orig msg', msg);
                 if (widgetData !== undefined && widgetData.version_major === 2) {
                     let model = manager.get_model(widgetData.model_id);
                     if (model !== undefined) {
