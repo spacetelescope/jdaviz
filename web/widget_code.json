@@ -1,5 +1,5 @@
 [
-    "filename = '/Users/bcherinka/Work/notebooks/datab/manga-7495-12704-LOGCUBE.fits'",
+    "filename = '/Users/bcherinka/Work/notebooks/datb/manga-7495-12704-LOGCUBE.fits'",
     "from jdaviz.vizcomponents.applications import cubeviz",
     "from jdaviz.vizcomponents.vizapp import VizApp",
     "vizapp = VizApp()",

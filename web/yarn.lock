@@ -95,6 +95,22 @@
     jquery "^3.1.1"
     lodash "^4.17.4"
 
+"@jupyter-widgets/base@^1.0.0 || ^2.0.0":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@jupyter-widgets/base/-/base-2.0.1.tgz#b31b5c8b2206bb008216f32abd488e5414bce3b7"
+  integrity sha512-jRNeQzvEf6MMGUaEPfBzgZ+IT4XOInpw8Ef+CunNUmUCiQZ8WfNpFR671S0Vu3xO6yGKMTU2QPdk8/aCsJRw9w==
+  dependencies:
+    "@jupyterlab/services" "^4.0.0"
+    "@phosphor/coreutils" "^1.2.0"
+    "@phosphor/messaging" "^1.2.1"
+    "@phosphor/widgets" "^1.3.0"
+    "@types/backbone" "^1.4.1"
+    "@types/lodash" "^4.14.134"
+    backbone "1.2.3"
+    base64-js "^1.2.1"
+    jquery "^3.1.1"
+    lodash "^4.17.4"
+
 "@jupyter-widgets/controls@^1.4.4":
   version "1.4.5"
   resolved "https://registry.yarnpkg.com/@jupyter-widgets/controls/-/controls-1.4.5.tgz#ea8990209e2f2dc0b1d76e5b1f605ce48eba9d33"
@@ -311,6 +327,23 @@
     path-posix "~1.0.0"
     url-parse "~1.4.3"
 
+"@jupyterlab/coreutils@^3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@jupyterlab/coreutils/-/coreutils-3.0.0.tgz#b636e2d478d7098ff12439de3cf4312edd945c09"
+  integrity sha512-l48G1qhff4CZpsxjje92S6caLUixzfDMAD5vjNZL9obexUAMF+344cpVWsm2r2CQROUW7bPB8wjAtFbp8nK/QQ==
+  dependencies:
+    "@phosphor/commands" "^1.6.3"
+    "@phosphor/coreutils" "^1.3.1"
+    "@phosphor/disposable" "^1.2.0"
+    "@phosphor/properties" "^1.1.3"
+    "@phosphor/signaling" "^1.2.3"
+    ajv "^6.5.5"
+    json5 "^2.1.0"
+    minimist "~1.2.0"
+    moment "^2.24.0"
+    path-posix "~1.0.0"
+    url-parse "~1.4.3"
+
 "@jupyterlab/coreutils@^3.0.0-alpha.6", "@jupyterlab/coreutils@^3.0.0-alpha.9":
   version "3.0.0-alpha.9"
   resolved "https://registry.yarnpkg.com/@jupyterlab/coreutils/-/coreutils-3.0.0-alpha.9.tgz#9aa4453a786271c8270c6d800b933d0304714ba8"
@@ -415,6 +448,17 @@
     "@phosphor/disposable" "^1.1.2"
     "@phosphor/messaging" "^1.2.2"
     "@phosphor/signaling" "^1.2.2"
+
+"@jupyterlab/observables@^2.2.0":
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/@jupyterlab/observables/-/observables-2.2.0.tgz#be29c6cadad88c202e7963ace2410bbe7b101226"
+  integrity sha512-/oi7vl70yAX5QTXmZafyDSwU8fT1Oa/MdpDDYGkc5IklW0kU3NDqSoawfLovkdgGZvCOCM+6JQqUPRdhn8VZqg==
+  dependencies:
+    "@phosphor/algorithm" "^1.1.3"
+    "@phosphor/coreutils" "^1.3.1"
+    "@phosphor/disposable" "^1.2.0"
+    "@phosphor/messaging" "^1.2.3"
+    "@phosphor/signaling" "^1.2.3"
 
 "@jupyterlab/observables@^2.2.0-alpha.6", "@jupyterlab/observables@^2.2.0-alpha.9":
   version "2.2.0-alpha.9"
@@ -542,6 +586,20 @@
     "@phosphor/coreutils" "^1.3.0"
     "@phosphor/disposable" "^1.1.2"
     "@phosphor/signaling" "^1.2.2"
+
+"@jupyterlab/services@^4.0.0":
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/@jupyterlab/services/-/services-4.0.0.tgz#f21bc36223023fa750b0e31d142eb6464357db5b"
+  integrity sha512-yCchogfzZqGWXagDJDRxsEMbKwsmf+EFVJRzf5H5OKZs7c/0yNemhG2qjRSmcErD87nUezB3NHkJSVPqz11D3g==
+  dependencies:
+    "@jupyterlab/coreutils" "^3.0.0"
+    "@jupyterlab/observables" "^2.2.0"
+    "@phosphor/algorithm" "^1.1.3"
+    "@phosphor/coreutils" "^1.3.1"
+    "@phosphor/disposable" "^1.2.0"
+    "@phosphor/signaling" "^1.2.3"
+    node-fetch "^2.6.0"
+    ws "^7.0.0"
 
 "@jupyterlab/services@^4.0.0-alpha.6", "@jupyterlab/services@^4.0.0-alpha.9":
   version "4.0.0-alpha.9"
@@ -748,6 +806,18 @@
     "@phosphor/keyboard" "^1.1.3"
     "@phosphor/signaling" "^1.2.3"
 
+"@phosphor/commands@^1.6.3":
+  version "1.6.3"
+  resolved "https://registry.yarnpkg.com/@phosphor/commands/-/commands-1.6.3.tgz#d5481cc35dab34d0e60b3e04a64df00e1bbaffbd"
+  integrity sha512-PYNHWv6tbXAfAtKiqXuT0OBJvwbJ+RRTV60MBykMF7Vqz9UaZ9n2e/eB2EAGEFccF0PnjTCvBEZgarwwMVi8Hg==
+  dependencies:
+    "@phosphor/algorithm" "^1.1.3"
+    "@phosphor/coreutils" "^1.3.1"
+    "@phosphor/disposable" "^1.2.0"
+    "@phosphor/domutils" "^1.1.3"
+    "@phosphor/keyboard" "^1.1.3"
+    "@phosphor/signaling" "^1.2.3"
+
 "@phosphor/coreutils@^1.2.0", "@phosphor/coreutils@^1.3.0", "@phosphor/coreutils@^1.3.1":
   version "1.3.1"
   resolved "https://registry.yarnpkg.com/@phosphor/coreutils/-/coreutils-1.3.1.tgz#441e34f42340f7faa742a88b2a181947a88d7226"
@@ -759,6 +829,14 @@
   integrity sha512-yH5/HZzOyp37y+G/6X1hem3EfQCsUMtiStacG9W5F7mRsO4UuIXGxY3/XyJHAzy9UFrInOJD7alurQc/4wYhbQ==
   dependencies:
     "@phosphor/algorithm" "^1.1.3"
+
+"@phosphor/disposable@^1.2.0":
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/@phosphor/disposable/-/disposable-1.2.0.tgz#878b9b5863f2026bbf2935eb600c7fdc97d0d026"
+  integrity sha512-4PoWoffdrLyWOW5Qv7I8//owvZmv57YhaxetAMWeJl13ThXc901RprL0Gxhtue2ZxL2PtUjM1207HndKo2FVjA==
+  dependencies:
+    "@phosphor/algorithm" "^1.1.3"
+    "@phosphor/signaling" "^1.2.3"
 
 "@phosphor/domutils@^1.1.0", "@phosphor/domutils@^1.1.2", "@phosphor/domutils@^1.1.3":
   version "1.1.3"
@@ -839,6 +917,14 @@
     "@types/jquery" "*"
     "@types/underscore" "*"
 
+"@types/backbone@^1.4.1":
+  version "1.4.1"
+  resolved "https://registry.yarnpkg.com/@types/backbone/-/backbone-1.4.1.tgz#aa03f9f69994bd96646c50cfc70b5f30d38aafaa"
+  integrity sha512-KYfGuQy4d2vvYXbn0uHFZ6brFLndatTMomxBlljpbWf4kFpA3BG/6LA3ec+J9iredrX6eAVI7sm9SVAvwiIM6g==
+  dependencies:
+    "@types/jquery" "*"
+    "@types/underscore" "*"
+
 "@types/dom4@^2.0.1":
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/@types/dom4/-/dom4-2.0.1.tgz#506d5781b9bcab81bd9a878b198aec7dee2a6033"
@@ -858,6 +944,11 @@
   dependencies:
     csstype "^2.0.0"
     indefinite-observable "^1.0.1"
+
+"@types/lodash@^4.14.134":
+  version "4.14.135"
+  resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.135.tgz#d2607c35dd68f70c2b35ba020c667493dedd8447"
+  integrity sha512-Ed+tSZ9qM1oYpi5kzdsBuOzcAIn1wDW+e8TFJ50IMJMlSopGdJgKAbhHzN6h1E1OfjlGOr2JepzEWtg9NIfoNg==
 
 "@types/lodash@^4.14.66":
   version "4.14.133"
@@ -1496,10 +1587,8 @@ box-intersect@^1.0.1:
     bit-twiddle "^1.0.2"
     typedarray-pool "^1.1.0"
 
-bqplot-image-gl@^0.1.4:
-  version "0.1.4"
-  resolved "https://registry.yarnpkg.com/bqplot-image-gl/-/bqplot-image-gl-0.1.4.tgz#277e54e94a524dcfcf992aaff2cb75b05a4b6488"
-  integrity sha512-7QMFaOzhovSHC8cZEHydg/5dJegPEic5TA/Iz8NLB1nsjSlnvmvTzJDXIBC1okFn8hD9jJ0NB1hI2Z/rQhKRAQ==
+"bqplot-image-gl@file:../../../stsci/bqplot-image-gl/js":
+  version "0.2.0"
   dependencies:
     "@jupyter-widgets/base" "^1.0.0"
     bqplot "^0.5.0-alpha.0"
@@ -1513,7 +1602,7 @@ bqplot-image-gl@^0.1.4:
 bqplot@^0.5.0-alpha.0, "bqplot@file:../../../stsci/bqplot/js":
   version "0.5.0-alpha.1"
   dependencies:
-    "@jupyter-widgets/base" "^1.0.0"
+    "@jupyter-widgets/base" "^1.0.0 || ^2.0.0"
     d3 "^5.7.0"
     d3-selection-multi "^1.0.1"
     is-typedarray "^1.0.0"
@@ -5185,8 +5274,19 @@ jupyter-matplotlib@^0.3.0:
     jquery-ui "^1.12.1"
     lodash "^4.17.4"
 
+jupyter-vuetify@/Users/bcherinka/Work/git/stsci/ipyvuetify/js:
+  version "0.1.1"
+  dependencies:
+    "@jupyter-widgets/base" "^1.2.4"
+    "@mariobuikhuizen/vuetify" "1.5.12-alpha"
+    core-js "^3.0.1"
+    lodash "^4.17.11"
+    material-design-icons-iconfont "^5.0.1"
+    typeface-roboto "0.0.54"
+    vue "^2.6.10"
+
 "jupyter-vuetify@file:../../../stsci/ipyvuetify/js":
-  version "0.1.0"
+  version "0.1.1"
   dependencies:
     "@jupyter-widgets/base" "^1.2.4"
     "@mariobuikhuizen/vuetify" "1.5.12-alpha"

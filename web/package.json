@@ -24,7 +24,7 @@
     "@jupyterlab/services": "^3.2.1",
     "@phosphor/widgets": "^1.6.0",
     "bqplot": "/Users/bcherinka/Work/git/stsci/bqplot/js",
-    "bqplot-image-gl": "^0.1.4",
+    "bqplot-image-gl": "/Users/bcherinka/Work/git/stsci/bqplot-image-gl/js",
     "codemirror": "^5.47.0",
     "font-awesome": "^4.7.0",
     "http-server": "^0.11.1",
