@@ -2,18 +2,15 @@ from ipywidgets import widgets
 import ipyvuetify as v
 
 from ..viewer.viewernd import ViewerND
-from ..viewer.viewer1d import Viewer1D
 
 
-class CubeViz:
+class ImageViz:
 
-    def __init__(self, filename, vizapp, process_data=None):
+    def __init__(self, filename, vizapp):
 
         self._vizapp = vizapp
 
         self._vizapp.glue_app.load_data(filename)
-        if process_data is not None:
-            process_data(self)
 
         #
         #  Create File Menu
@@ -36,11 +33,8 @@ class CubeViz:
         #
         self.tile_3d_viewer = v.ListTile(
             children=[v.ListTileTitle(children=["3D Viewer"])])
-        self.tile_1d_viewer = v.ListTile(
-            children=[v.ListTileTitle(children=["1D Viewer"])])
         self.tile_3d_viewer.on_event('click', self._on_change_menu_bar_viewer)
-        self.tile_1d_viewer.on_event('click', self._on_change_menu_bar_viewer)
-        self.v_items = [self.tile_3d_viewer, self.tile_1d_viewer]
+        self.v_items = [self.tile_3d_viewer]
 
 
         self._menu_bar_viewer = v.Layout(children=
@@ -58,13 +52,14 @@ class CubeViz:
 
         self._menu_bar.box_style = 'success'
 
-        self._v1d = Viewer1D(self._vizapp)
         self._v3d = ViewerND(self._vizapp)
+
+        # Going to set the upper percentile rather than use the max value.
+        self._v3d._v3d.state.layers[0].percentile = 99.5
 
         self._main_box = v.Layout(row=True, wrap=True, children=[
                                     v.Flex(xs12=True, class_='px-2', children=[self._menu_bar]),
                                     v.Flex(xs6=True, class_='px-2', children=[self._v3d.show()]),
-                                    v.Flex(xs6=True, class_='px-2', children=[self._v1d.show()]),
                                 ])
 
     def _on_change_menu_bar_file(self, widget, event, data):
@@ -91,7 +86,3 @@ class CubeViz:
 
     def show(self):
         return self._main_box
-
-    @property
-    def pviewer(self):
-        return self._v1d

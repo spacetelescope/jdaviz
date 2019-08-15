@@ -31,7 +31,8 @@
     "jupyter-materialui": "^0.0.1-alpha.0",
     "jupyter-matplotlib": "^0.3.0",
     "jupyter-vuetify": "/Users/bcherinka/Work/git/stsci/ipyvuetify/js",
-    "plotlywidget": "^0.10.0"
+    "plotlywidget": "^0.10.0",
+    "vuetify": "^1.5.16"
   },
   "devDependencies": {
     "css-loader": "^2.1.1",

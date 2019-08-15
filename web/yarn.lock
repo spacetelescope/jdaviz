@@ -5274,17 +5274,6 @@ jupyter-matplotlib@^0.3.0:
     jquery-ui "^1.12.1"
     lodash "^4.17.4"
 
-jupyter-vuetify@/Users/bcherinka/Work/git/stsci/ipyvuetify/js:
-  version "0.1.1"
-  dependencies:
-    "@jupyter-widgets/base" "^1.2.4"
-    "@mariobuikhuizen/vuetify" "1.5.12-alpha"
-    core-js "^3.0.1"
-    lodash "^4.17.11"
-    material-design-icons-iconfont "^5.0.1"
-    typeface-roboto "0.0.54"
-    vue "^2.6.10"
-
 "jupyter-vuetify@file:../../../stsci/ipyvuetify/js":
   version "0.1.1"
   dependencies:
@@ -9392,6 +9381,11 @@ vue@^2.6.10:
   version "2.6.10"
   resolved "https://registry.yarnpkg.com/vue/-/vue-2.6.10.tgz#a72b1a42a4d82a721ea438d1b6bf55e66195c637"
   integrity sha512-ImThpeNU9HbdZL3utgMCq0oiMzAkt1mcgy3/E6zWC/G6AaQoeuFdsl9nDhTDU3X1R6FK7nsIUuRACVcjI+A2GQ==
+
+vuetify@^1.5.16:
+  version "1.5.16"
+  resolved "https://registry.yarnpkg.com/vuetify/-/vuetify-1.5.16.tgz#cc9d0199c389d64d15787ddc85ca47a28225eeee"
+  integrity sha512-yBgOsfurKQkeS+l+rrTQZ2bFk0D9ezjHhkuVM5A/yVzcg62sY2nfYaq/H++uezBWC9WYFrp/5OmSocJQcWn9Qw==
 
 warning@^3.0.0:
   version "3.0.0"
