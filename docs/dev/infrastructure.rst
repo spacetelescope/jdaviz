@@ -4,7 +4,9 @@ jdaviz Design and Infrastructure
 
 This document outlines the top-level structure of jdaviz. At the highest level, jdaviz layers different, sometimes changing technologies in the Jupyter platform to do its visualization, and therefore provides a framework for these technologies to work together.  This document describes that framework, as well as the high-level sets of components needed for the jdaviz use cases at the time of this document's writing. Bear in mind, though, that the fast moving scientific and technical fields jdaviz is aimed at mean that some of the specific details in this document may change faster than the document can be kept up, so the high-level structure is the primary focus of this document, with the specific components best thought of as *examples* rather than a comprehensive list of all components implemented.  (For that, see the documentation itself).
 
-This document lists the layers of the `jdaviz` framework in essentially the order in which they contact users in a typical visualization-heavy workflow.  These layers are: interfaces, applications, component widgets, and libraries. Each is described in more detail below.
+This document lists the layers of the `jdaviz` framework in essentially the order in which they contact users in a typical visualization-heavy workflow.  These layers are: interfaces, applications, component widgets, and libraries. An overview of the layers is in this diagram, and each is described in more detail below:
+
+.. image:: jdaviz.svg
 
 Interfaces
 ==========
@@ -37,7 +39,7 @@ The applications are driven by a shared layer that connects the "high-level" lay
 Component Widgets
 =================
 
-The "component widget" layer is the first of the "low-level" layers - i.e., the layers that actual implement specific visualization and analysis functionality. These widgets are self-contained and while they are meant to be composed in applications, for the notebook interface component widgets can and should be used directly by users for specialized scientific workflows.  Component widgets in principle can be developed in any framework that can be exposed as an `ipywidgets` widget, although currently the plan is that most will be glupyter_ viewers combined with ipyvuetify_ layouts.
+The "component widget" layer is the first of the "low-level" layers - i.e., the layers that actual implement specific visualization and analysis functionality. These widgets are self-contained and while they are meant to be composed in applications, for the notebook interface component widgets can and should be used directly by users for specialized scientific workflows.  Component widgets in principle can be developed in any framework that can be exposed as an `ipywidgets` widget, although currently the plan is that most will be glue-jupyter_ viewers combined with ipyvuetify_ layouts.
 
 Known component widgets for the target applications include:
 
@@ -52,7 +54,7 @@ Libraries
 
 The above layers are focused primaril on visualization.  All actual *operations* and analysis tasks to be applied to visualized data sets are to be implemented in the various Python libraries aimed at these astronomical datasets. It is important to note that these libraries are *independent* efforts from jdaviz, and can therefore be used in whole, part, or not at all with the jdaviz tools. This allows a full range of workflows, while also maintaining transparency to scientific users exactly how an operation in the jdaviz tools actually works.  I.e., they can at any time simply use the library directly instead of accessing it through jdaviz.  Known libraries include:
 
-* `astropy <https://astropy.org>`_
+* astropy_
 * `specutils <https://specutils.readthedocs.io>`_
 * `spectral-cube <https://spectral-cube.readthedocs.io>`_ and/or `NDCube <https://docs.sunpy.org/projects/ndcube>`_
 * `photutils <https://photutils.readthedocs.io>`_
