@@ -104,10 +104,13 @@ release = package.__version__
 # name of a builtin theme or the name of a custom theme in html_theme_path.
 #html_theme = None
 
+html_static_path = ['_static']
+html_style = 'jdaviz.css'
+
 
 html_theme_options = {
-    'logotext1': 'jdaviz',  # white,  semi-bold
-    'logotext2': '',  # orange, light
+    'logotext1': 'jda',  # white,  semi-bold
+    'logotext2': 'viz',  # orange, light
     'logotext3': ':docs'   # white,  light
     }
 
