@@ -23,12 +23,14 @@
     "@jupyter-widgets/jupyterlab-manager": "^0.40.0",
     "@jupyterlab/services": "^3.2.1",
     "@phosphor/widgets": "^1.6.0",
+    "bqplot": "/Users/nearl/projects/bqplot/js",
     "bqplot-image-gl": "^0.1.4",
     "codemirror": "^5.47.0",
     "font-awesome": "^4.7.0",
     "http-server": "^0.11.1",
     "jupyter-materialui": "^0.0.1-alpha.0",
     "jupyter-matplotlib": "^0.3.0",
+    "jupyter-vuetify": "/Users/nearl/projects/ipyvuetify/js",
     "plotlywidget": "^0.10.0"
   },
   "devDependencies": {

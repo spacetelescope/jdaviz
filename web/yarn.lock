@@ -639,6 +639,11 @@
   resolved "https://registry.yarnpkg.com/@mapbox/whoots-js/-/whoots-js-3.1.0.tgz#497c67a1cef50d1a2459ba60f315e448d2ad87fe"
   integrity sha512-Es6WcD0nO5l+2BOQS4uLfNPYQaNDfbot3X1XUoloz+x0mPDS3eeORZJl06HXjwBG1fOGwCRnzK88LMdxKRrd6Q==
 
+"@mariobuikhuizen/vuetify@1.5.12-alpha":
+  version "1.5.12-alpha"
+  resolved "https://registry.yarnpkg.com/@mariobuikhuizen/vuetify/-/vuetify-1.5.12-alpha.tgz#2205fe3fd34b5f77859634e87b4bc9fc0b03ee95"
+  integrity sha512-Pe7nK/FighmaVfDe6t55pweLui2J9Pi9HufUvXJhbI7mQCWi8WhNzsHx7VimZ6VPT3HyTJ9BlGPZozW65GQwDw==
+
 "@material-ui/core@^3.4.1":
   version "3.9.3"
   resolved "https://registry.yarnpkg.com/@material-ui/core/-/core-3.9.3.tgz#d378c1f4beb18df9a534ca7258c2c33fb8e0e51f"
@@ -1519,9 +1524,17 @@ bqplot@^0.5.0-alpha.0:
     topojson "^1.6.24"
     underscore "^1.8.3"
 
-"bqplot@https://github.com/bloomberg/bqplot/":
-  version "0.0.0"
-  resolved "https://github.com/bloomberg/bqplot/#80f3bf05a357280a1ff8b76add8533c00e16d8b4"
+"bqplot@file:../../bqplot/js":
+  version "0.5.0-alpha.0"
+  dependencies:
+    "@jupyter-widgets/base" "^1.0.0"
+    d3 "^5.7.0"
+    d3-selection-multi "^1.0.1"
+    is-typedarray "^1.0.0"
+    popper.js "^1.0.0"
+    three "^0.91.0"
+    topojson "^1.6.24"
+    underscore "^1.8.3"
 
 brace-expansion@^1.1.7:
   version "1.1.11"
@@ -2163,6 +2176,11 @@ core-js@^1.0.0:
   version "1.2.7"
   resolved "https://registry.yarnpkg.com/core-js/-/core-js-1.2.7.tgz#652294c14651db28fa93bd2d5ff2983a4f08c636"
   integrity sha1-ZSKUwUZR2yj6k70tX/KYOk8IxjY=
+
+core-js@^3.0.1:
+  version "3.1.3"
+  resolved "https://registry.yarnpkg.com/core-js/-/core-js-3.1.3.tgz#95700bca5f248f5f78c0ec63e784eca663ec4138"
+  integrity sha512-PWZ+ZfuaKf178BIAg+CRsljwjIMRV8MY00CbZczkR6Zk5LfkSkjGoaab3+bqRQWVITNZxQB7TFYz+CFcyuamvA==
 
 core-util-is@1.0.2, core-util-is@~1.0.0:
   version "1.0.2"
@@ -4699,10 +4717,6 @@ iota-array@^1.0.0:
   resolved "https://registry.yarnpkg.com/iota-array/-/iota-array-1.0.0.tgz#81ef57fe5d05814cd58c2483632a99c30a0e8087"
   integrity sha1-ge9X/l0FgUzVjCSDYyqZwwoOgIc=
 
-"ipyvuetify@https://github.com/mariobuikhuizen/ipyvuetify":
-  version "0.0.0"
-  resolved "https://github.com/mariobuikhuizen/ipyvuetify#d741dd89593374d2d97c7c91e58eae85d7047232"
-
 is-accessor-descriptor@^0.1.6:
   version "0.1.6"
   resolved "https://registry.yarnpkg.com/is-accessor-descriptor/-/is-accessor-descriptor-0.1.6.tgz#a9e12cb3ae8d876727eeef3843f8a0897b5c98d6"
@@ -5185,6 +5199,17 @@ jupyter-matplotlib@^0.3.0:
     jquery-ui "^1.12.1"
     lodash "^4.17.4"
 
+"jupyter-vuetify@file:../../ipyvuetify/js":
+  version "0.1.0"
+  dependencies:
+    "@jupyter-widgets/base" "^1.2.4"
+    "@mariobuikhuizen/vuetify" "1.5.12-alpha"
+    core-js "^3.0.1"
+    lodash "^4.17.11"
+    material-design-icons-iconfont "^5.0.1"
+    typeface-roboto "0.0.54"
+    vue "^2.6.10"
+
 kdbush@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/kdbush/-/kdbush-1.0.1.tgz#3cbd03e9dead9c0f6f66ccdb96450e5cecc640e0"
@@ -5357,7 +5382,7 @@ lodash.templatesettings@^4.0.0:
   dependencies:
     lodash._reinterpolate "~3.0.0"
 
-lodash@^4.17.4:
+lodash@^4.17.11, lodash@^4.17.4:
   version "4.17.11"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.11.tgz#b39ea6229ef607ecd89e2c8df12536891cac9b8d"
   integrity sha512-cQKh8igo5QUhZ7lg38DYWAxMvjSAKG0A8wGSVimP07SIUEK2UO+arSRKbRZWtelMtN5V0Hkwh5ryOto/SshYIg==
@@ -5521,6 +5546,11 @@ mat4-recompose@^1.0.3:
   integrity sha1-OVPCMP8kc9x3LuAUpSySXPgbDk0=
   dependencies:
     gl-mat4 "^1.0.1"
+
+material-design-icons-iconfont@^5.0.1:
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/material-design-icons-iconfont/-/material-design-icons-iconfont-5.0.1.tgz#371875ed7fe9c8c520bc7123c3231feeab731c31"
+  integrity sha512-Xg6rIdGrfySTqiTZ6d+nQbcFepS6R4uKbJP0oAqyeZXJY/bX6mZDnOmmUJusqLXfhIwirs0c++a6JpqVa8RFvA==
 
 math-log2@^1.0.1:
   version "1.0.1"
@@ -9271,6 +9301,11 @@ vt-pbf@^3.0.1:
     "@mapbox/point-geometry" "0.1.0"
     "@mapbox/vector-tile" "^1.3.1"
     pbf "^3.0.5"
+
+vue@^2.6.10:
+  version "2.6.10"
+  resolved "https://registry.yarnpkg.com/vue/-/vue-2.6.10.tgz#a72b1a42a4d82a721ea438d1b6bf55e66195c637"
+  integrity sha512-ImThpeNU9HbdZL3utgMCq0oiMzAkt1mcgy3/E6zWC/G6AaQoeuFdsl9nDhTDU3X1R6FK7nsIUuRACVcjI+A2GQ==
 
 warning@^3.0.0:
   version "3.0.0"
