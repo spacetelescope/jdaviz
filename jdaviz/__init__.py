@@ -27,3 +27,18 @@ if LooseVersion(sys.version) < LooseVersion(__minimum_python_version__):
 if not _ASTROPY_SETUP_:   # noqa
     # For egg_info test builds to pass, put package imports here.
     pass
+
+
+from .config import tools
+import ipyvuetify as v
+from traitlets import Unicode
+
+
+@tools('g-test-button')
+class TestButton(v.VuetifyTemplate):
+    template = Unicode("""
+    <v-btn>Button</v-btn>
+    """).tag(sync=True)
+
+    def __init__(self, *args, hub=None, **kwargs):
+        super().__init__(*args, **kwargs)
