@@ -1,0 +1,14 @@
+components:
+  menu_bar: true
+  toolbar: true
+  interact_drawer: true
+  content_area: true
+toolbar:
+  - g-open-session
+  - g-save-session
+  - g-import-data
+  - g-export-data
+  - g-active-subset
+  - g-selection-state
+menu_bar:
+  - g-test-action

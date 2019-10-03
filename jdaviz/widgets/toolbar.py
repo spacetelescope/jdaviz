@@ -17,7 +17,7 @@ class Toolbar(TemplateMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def append(self, name):
+    def add_tool(self, name):
         self.tool_names.append(name)
 
     def register_to_hub(self, hub):

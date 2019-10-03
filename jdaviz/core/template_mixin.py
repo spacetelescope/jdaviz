@@ -14,7 +14,7 @@ class TemplateMixin(v.VuetifyTemplate, HubListener):
         """
         Overload object creation so that we can inject a reference to the
         ``Hub`` class before components can be initialized. This makes it so
-        hub references on widgets can be passed along to components in the
+        hub references on plugins can be passed along to components in the
         call to the initialization method.
         """
         hub = kwargs.pop('hub', None)

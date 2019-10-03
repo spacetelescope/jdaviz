@@ -29,16 +29,4 @@ if not _ASTROPY_SETUP_:   # noqa
     pass
 
 
-from .config import tools
-import ipyvuetify as v
-from traitlets import Unicode
-
-
-@tools('g-test-button')
-class TestButton(v.VuetifyTemplate):
-    template = Unicode("""
-    <v-btn>Button</v-btn>
-    """).tag(sync=True)
-
-    def __init__(self, *args, hub=None, **kwargs):
-        super().__init__(*args, **kwargs)
+from jdaviz.configs.default import *
