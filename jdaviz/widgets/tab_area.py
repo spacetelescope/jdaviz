@@ -1,25 +1,20 @@
 import os
 
-from traitlets import Unicode
-from ipywidgets import IntSlider, VBox
+from traitlets import Unicode, Int
 
-from glue_jupyter.baldr.core.events import NewProfile1DMessage
-from glue_jupyter.baldr.core.template_mixin import TemplateMixin
+from ..core.template_mixin import TemplateMixin
 
 with open(os.path.join(os.path.dirname(__file__), "tab_area.vue")) as f:
         TEMPLATE = f.read()
 
 
 class TabArea(TemplateMixin):
+    tab = Int(0).tag(sync=True)
     template = Unicode(TEMPLATE).tag(sync=True)
+    text = Unicode("Lorem ipsum dolor sit amet, consectetur adipiscing elit, "
+                   "sed do eiusmod tempor incididunt ut labore et dolore magna "
+                   "aliqua. Ut enim ad minim veniam, quis nostrud exercitation "
+                   "ullamco laboris nisi ut aliquip ex ea commodo consequat.").tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        self.hub.subscribe(self, NewProfile1DMessage, handler=self.vue_add_child)
-
-    def vue_add_child(self, msg):
-
-        self._golden_layout.children = [
-            VBox([msg.figure.toolbar_selection_tools,
-                  msg.figure.figure_widget])]

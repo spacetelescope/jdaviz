@@ -1,7 +1,7 @@
 import ipyvuetify as v
-from traitlets import Unicode, Bool
+from traitlets import Unicode, Bool, Dict
 from .widgets.content_area import ContentArea
-from .widgets.navigation_drawer import NavigationDrawer
+from .widgets.interact_drawer import InteractDrawer
 from .widgets.toolbar import Toolbar
 from glue.core.application_base import Application
 import yaml
@@ -11,6 +11,8 @@ from jdaviz.core.registries import tools
 
 
 class IPyApplication(v.VuetifyTemplate, Application):
+    _metadata = Dict({'mount_id': 'content'}).tag(sync=True)
+    
     show_menu_bar = Bool(True).tag(sync=True)
     show_toolbar = Bool(True).tag(sync=True)
     show_interact_drawer = Bool(True).tag(sync=True)
@@ -18,6 +20,8 @@ class IPyApplication(v.VuetifyTemplate, Application):
     template = Unicode("""
     <v-app id='glupyter'>
         <g-toolbar v-if="show_menu_bar" />
+        <g-interact-drawer />
+        <g-content-area />
     </v-app>
     """).tag(sync=True)
 
@@ -29,7 +33,7 @@ class IPyApplication(v.VuetifyTemplate, Application):
         # Instantiate the default gui components
         self.components = {
             'g-toolbar': Toolbar(hub=self.hub),
-            'g-interact-drawer': NavigationDrawer(hub=self.hub),
+            'g-interact-drawer': InteractDrawer(hub=self.hub),
             'g-content-area': ContentArea(hub=self.hub)
         }
 

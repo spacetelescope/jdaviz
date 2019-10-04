@@ -62,8 +62,7 @@ class ActiveSubsetDropdown(TemplateMixin):
     subsets = List([]).tag(sync=True)
 
     template = Unicode("""
-    <template>
-        <div class="flex-grow-1"></div>
+    <span>
         <v-divider vertical></v-divider>
         <v-overflow-btn
             :items="subsets"
@@ -74,7 +73,7 @@ class ActiveSubsetDropdown(TemplateMixin):
             overflow
         ></v-overflow-btn>
         <v-divider vertical></v-divider>
-    </template>
+    </span>
     """).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
@@ -85,9 +84,7 @@ class ActiveSubsetDropdown(TemplateMixin):
 class SelectStateButtonGroup(TemplateMixin):
     toggle_one = Int(0).tag(sync=True)
     template = Unicode("""
-    <template>
-    <div class="flex-grow-1"></div>
-    <v-btn-toggle v-model="toggle_one" mandatory>
+    <v-btn-toggle light v-model="toggle_one" mandatory>
       <v-btn text>
         <v-icon>cloud_download</v-icon>
       </v-btn>
@@ -101,5 +98,4 @@ class SelectStateButtonGroup(TemplateMixin):
         <v-icon>cloud_download</v-icon>
       </v-btn>
     </v-btn-toggle>
-    </template>
     """).tag(sync=True)

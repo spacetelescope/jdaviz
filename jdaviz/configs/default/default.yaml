@@ -8,7 +8,9 @@ toolbar:
   - g-save-session
   - g-import-data
   - g-export-data
+  - spacer
   - g-active-subset
+  - spacer
   - g-selection-state
 menu_bar:
   - g-test-action

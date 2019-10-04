@@ -2,6 +2,7 @@
   <v-navigation-drawer
           v-model="drawer"
           app
+          clipped
   >
     <v-list dense>
       <v-list-item @click="">
