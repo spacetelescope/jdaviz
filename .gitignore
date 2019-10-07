@@ -11,6 +11,7 @@ __pycache__
 **/examples
 node_modules
 /.idea
+jdaviz/_version.py
 
 # Compiled files
 *.py[cod]

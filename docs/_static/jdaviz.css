@@ -1,0 +1,14 @@
+@import url("bootstrap-astropy.css");
+
+div.topbar a.brand {
+  background: transparent url("logo-32x32.png") no-repeat 8px 3px;
+  background-size: 32px 32px;
+}
+
+#logotext1 {
+  color: #707372;
+}
+
+#logotext2 {
+  color: #418fde;
+}
