@@ -1,6 +1,7 @@
+import logging
 import os
 
-from traitlets import Unicode, List, Int
+from traitlets import Unicode, List
 
 from ..core.template_mixin import TemplateMixin
 
@@ -18,6 +19,7 @@ class Toolbar(TemplateMixin):
         super().__init__(*args, **kwargs)
 
     def add_tool(self, name):
+        logging.info(f"Adding plugin {name} to tray bar.")
         self.tool_names.append(name)
 
     def register_to_hub(self, hub):

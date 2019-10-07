@@ -1,15 +1,25 @@
 <template>
   <v-content>
     <v-container
-            class="fill-height"
+            align-start
             fluid
+            class="fill-height"
     >
       <v-row
-              align="center"
-              justify="center"
+              align="start"
+              justify="start"
+              class="fill-height"
       >
-        <v-col class="text-center">
-          <g-tab-area></g-tab-area>
+        <v-col 
+                class="text-center fill-height"
+                cols="12"
+        >
+          <v-card
+                  class="mx-auto"
+                  height="100%"
+          >
+            <g-tab-area></g-tab-area>
+          </v-card>
         </v-col>
       </v-row>
     </v-container>

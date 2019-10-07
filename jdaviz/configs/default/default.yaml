@@ -1,7 +1,7 @@
 components:
   menu_bar: true
   toolbar: true
-  interact_drawer: true
+  tray_bar: true
   content_area: true
 toolbar:
   - g-open-session
@@ -9,8 +9,12 @@ toolbar:
   - g-import-data
   - g-export-data
   - spacer
+  - vertical-divider
   - g-active-subset
+  - vertical-divider
   - spacer
   - g-selection-state
 menu_bar:
   - g-test-action
+tray_bar:
+  - g-data-collection-list

@@ -1,6 +1,6 @@
 import os
 
-from traitlets import Unicode, Int
+from traitlets import Unicode, Any
 
 from ..core.template_mixin import TemplateMixin
 
@@ -9,7 +9,7 @@ with open(os.path.join(os.path.dirname(__file__), "tab_area.vue")) as f:
 
 
 class TabArea(TemplateMixin):
-    tab = Int(0).tag(sync=True)
+    tab = Any(None).tag(sync=True)
     template = Unicode(TEMPLATE).tag(sync=True)
     text = Unicode("Lorem ipsum dolor sit amet, consectetur adipiscing elit, "
                    "sed do eiusmod tempor incididunt ut labore et dolore magna "
