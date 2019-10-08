@@ -8,14 +8,14 @@ from jdaviz.core.template_mixin import TemplateMixin
 class DataCollectionListComponent(TemplateMixin):
     item = Int(1).tag(sync=True)
     items = List([
-        { 'text': 'Real-Time', 'icon': 'mdi-clock' },
-        { 'text': 'Audience', 'icon': 'mdi-account' },
-        { 'text': 'Conversions', 'icon': 'mdi-flag' },
+        { 'text': 'single_g235h-f170lp_x1d.fits', 'icon': 'mdi-clock' },
+        { 'text': 'single_g235h-f170lp_x1d.fits', 'icon': 'mdi-account' },
+        { 'text': 'single_g235h-f170lp_x1d.fits', 'icon': 'mdi-flag' },
     ]).tag(sync=True)
-    
+
     template = Unicode("""
     <v-list>
-      <v-subheader>REPORTS</v-subheader>
+      <v-subheader>Data</v-subheader>
       <v-list-item-group v-model="item" color="primary">
         <v-list-item
                 v-for="(item, i) in items"
@@ -31,4 +31,4 @@ class DataCollectionListComponent(TemplateMixin):
       </v-list-item-group>
     </v-list>
     """).tag(sync=True)
-    
+

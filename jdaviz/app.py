@@ -9,6 +9,7 @@ from jdaviz.core.registries import tools, trays
 from .widgets.content_area import ContentArea
 from .widgets.toolbar import Toolbar
 from .widgets.tray_bar import TrayBar
+from .core.events import NewViewerMessage, AddViewerMessage
 
 
 class IPyApplication(v.VuetifyTemplate, Application):
@@ -49,7 +50,11 @@ class IPyApplication(v.VuetifyTemplate, Application):
         tray_bar.components = {k: v(hub=self.hub)
                                for k, v in trays.members.items()}
 
+        # Load in default configuration file
         self.load_configuration()
+
+        # Setup hub event listeners
+        self.hub.subscribe(self, NewViewerMessage, handler=self._create_new_viewer)
 
     @property
     def hub(self):
@@ -81,3 +86,14 @@ class IPyApplication(v.VuetifyTemplate, Application):
         # Add the tray items filter to the interact drawer component
         for name in config.get('tray_bar', []):
             self.components['g-tray-bar'].add_tray(name)
+
+    def _create_new_viewer(self, msg):
+        view = self.new_data_viewer(msg.cls, data=msg.data)
+
+        if msg.x_attr is not None:
+            x = msg.data.id[msg.x_attr]
+            view.state.x_att = x
+            
+        self.hub.broadcast(AddViewerMessage(view))
+
+        return view

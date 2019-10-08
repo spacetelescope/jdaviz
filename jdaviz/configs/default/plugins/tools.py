@@ -80,7 +80,7 @@ class ActiveSubsetDropdown(TemplateMixin):
     template = Unicode("""
     <v-overflow-btn
         :items="subsets"
-        label="Overflow Btn"
+        label="Current subset"
         target="#dropdown-example"
         hide-details
         class="pa-0"

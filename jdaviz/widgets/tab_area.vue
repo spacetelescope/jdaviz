@@ -5,29 +5,21 @@
           dark
   >
     <v-tabs-slider></v-tabs-slider>
-
-      <v-tab href="#tab-1">
-        Recents
-      </v-tab>
-
-      <v-tab href="#tab-2">
-        Favorites
-      </v-tab>
-
-      <v-tab href="#tab-3">
-        Nearby
+      <v-tab v-for="viewer in viewers" href="#tab-1">
+        {{ viewer.name }}
       </v-tab>
   </v-tabs>
 
-  <v-tabs-items v-model="tab">
-    <v-tab-item
-            v-for="i in 3"
-            :key="i"
-            :value="'tab-' + i"
-    >
-      <v-card flat>
-        <v-card-text>{{ text }}</v-card-text>
-      </v-card>
-    </v-tab-item>
-  </v-tabs-items>
+  <g-tab-items></g-tab-items>
+  <v-tab-item
+          v-for="(viewer, i) in viewers"
+          :key="i"
+          :value="'tab-' + i"
+  >
+    <v-card flat>
+      <v-card-text>
+        <component v-bind:is="viewer.name"></component>
+      </v-card-text>
+    </v-card>
+  </v-tab-item>
 </template>
