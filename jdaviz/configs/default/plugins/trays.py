@@ -2,16 +2,13 @@ from traitlets import Unicode, List, Int
 
 from jdaviz.core.registries import trays
 from jdaviz.core.template_mixin import TemplateMixin
+from glue.core.message import DataCollectionAddMessage
 
 
 @trays("g-data-collection-list")
 class DataCollectionListComponent(TemplateMixin):
     item = Int(1).tag(sync=True)
-    items = List([
-        { 'text': 'single_g235h-f170lp_x1d.fits', 'icon': 'mdi-clock' },
-        { 'text': 'single_g235h-f170lp_x1d.fits', 'icon': 'mdi-account' },
-        { 'text': 'single_g235h-f170lp_x1d.fits', 'icon': 'mdi-flag' },
-    ]).tag(sync=True)
+    items = List([]).tag(sync=True)
 
     template = Unicode("""
     <v-list>
@@ -31,4 +28,12 @@ class DataCollectionListComponent(TemplateMixin):
       </v-list-item-group>
     </v-list>
     """).tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.hub.subscribe(self, DataCollectionAddMessage, handler=self._on_data_added)
+
+    def _on_data_added(self, msg):
+        self.items = self.items + [{'text': msg.data.label, 'icon': 'mdi-clock'}]
 
