@@ -14,8 +14,6 @@ class ContentArea(TemplateMixin):
     source = Unicode("https://google.com").tag(sync=True)
 
     def __init__(self, *args, **kwargs):
-        super().__init__(
-            *args,
-            components={
-                'g-tab-area': TabArea(hub=self.hub)},
-            **kwargs)
+        super().__init__(*args, **kwargs)
+
+        self.components={'g-tab-area': TabArea(session=self.session)}

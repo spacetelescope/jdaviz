@@ -15,7 +15,7 @@ class TrayBar(TemplateMixin):
     currently in the glue collection.
     """
     template = Unicode(TEMPLATE).tag(sync=True)
-    
+
     drawer = Bool(True).tag(sync=True)
     tab = Any(None).tag(sync=True)
     tray_names = List([]).tag(sync=True)

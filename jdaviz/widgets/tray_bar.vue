@@ -5,20 +5,20 @@
           clipped
           width="400px"
   >
-    <v-card 
+    <v-card
             dark
-            flat 
+            flat
             tile
             height="100%"
     >
-      <v-tabs 
-              vertical 
-              icons-and-text 
+      <v-tabs
+              vertical
+              icons-and-text
               background-color="indigo"
               class="fill-height"
               v-model="tab"
       >
-        <v-tab 
+        <v-tab
                 v-for="name in tray_names"
                 :key="name"
         >

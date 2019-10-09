@@ -1,25 +1,28 @@
 <template>
-  <v-tabs
-          v-model="tab"
-          background-color="indigo"
-          dark
+  <v-card
+          class="mx-auto"
+          height="100%"
   >
-    <v-tabs-slider></v-tabs-slider>
-      <v-tab v-for="viewer in viewers" href="#tab-1">
+    <v-tabs
+            v-model="tab"
+            background-color="indigo"
+            dark
+    >
+      <v-tabs-slider></v-tabs-slider>
+
+      <v-tab v-for="(viewer, i) in active_viewers" :href="'#tab-' + i">
         {{ viewer.name }}
       </v-tab>
-  </v-tabs>
+    </v-tabs>
 
-  <g-tab-items></g-tab-items>
-  <v-tab-item
-          v-for="(viewer, i) in viewers"
-          :key="i"
-          :value="'tab-' + i"
-  >
-    <v-card flat>
-      <v-card-text>
-        <component v-bind:is="viewer.name"></component>
-      </v-card-text>
-    </v-card>
-  </v-tab-item>
+    <v-tabs-items v-model="tab">
+      <v-tab-item
+              v-for="(viewer, i) in active_viewers"
+              :key="i"
+              :value="'tab-' + i"
+      >
+        <component v-bind:is="viewer.binding"></component>
+      </v-tab-item>
+    </v-tabs-items>
+  </v-card>
 </template>
