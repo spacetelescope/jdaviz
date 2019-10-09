@@ -1,10 +1,12 @@
-from glue_jupyter.bqplot import BqplotProfileView
+from glue_jupyter.bqplot.profile import BqplotProfileView
 from glue_jupyter.matplotlib.profile import ProfileJupyterViewer
 from glue_jupyter.utils import validate_data_argument
 
 from jdaviz.core.events import NewViewerMessage
+from jdaviz.core.registries import viewers
 
 
+@viewers("profile-1d")
 class Profile1DViewer:
     def __init__(self, *, hub=None, data=None, x_attr=None, widget='bqplot', show=True):
         """
@@ -34,15 +36,15 @@ class Profile1DViewer:
             raise ValueError("Widget type should be 'matplotlib'")
 
         data = validate_data_argument(self.data_collection, data)
-        
+
         new_viewer_message = NewViewerMessage(viewer_cls, data=data, x_attr=x_attr)
-        
+
         hub.broadcast(new_viewer_message)
 
         # view = self.new_data_viewer(viewer_cls, data=data, show=show)
-        # 
+        #
         # if x is not None:
         #     x = data.id[x]
         #     view.state.x_att = x
-        # 
+        #
         # return view
