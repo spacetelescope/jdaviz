@@ -17,12 +17,20 @@ class TemplateMixin(v.VuetifyTemplate, HubListener):
         hub references on plugins can be passed along to components in the
         call to the initialization method.
         """
-        hub = kwargs.pop('hub', None)
+        hub = kwargs.pop('session', None)
         obj = super().__new__(cls, *args, **kwargs)
-        setattr(obj, '_hub', hub)
+        setattr(obj, '_session', hub)
 
         return obj
 
     @property
     def hub(self):
-        return self._hub
+        return self.session.hub
+
+    @property
+    def session(self):
+        return self._session
+
+    @property
+    def data_collection(self):
+        return self.session.data_collection
