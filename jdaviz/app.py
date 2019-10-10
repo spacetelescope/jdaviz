@@ -103,7 +103,7 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
         for name in config.get('tray_bar', []):
             # Retrieve the meta information around the rendering of the tab
             #  button including the icon and label information.
-            item = trays.get(name)
+            item = trays.members.get(name)
 
             label = item.get('label')
             icon = item.get('icon')

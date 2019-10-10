@@ -18,3 +18,5 @@ menu_bar:
   - g-test-action
 tray_bar:
   - g-data-collection-list
+  - g-viewer-options
+  - g-layer-options
