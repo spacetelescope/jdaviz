@@ -1,10 +1,8 @@
-from jdaviz.core.registries import tools, trays, viewers
 import ipyvuetify as v
-from traitlets import Unicode
 from ipywidgets import Widget
-from glue_jupyter.bqplot.profile import BqplotProfileView
-from glue_jupyter.utils import validate_data_argument
-from glue_jupyter.matplotlib.profile import ProfileJupyterViewer
+from traitlets import Unicode
+
+from ..core.registries import tools, trays
 
 
 def test_toolbar_registry_template():
