@@ -65,7 +65,7 @@ class TrayRegistry(UniqueDictRegistry):
     Registry containing references to plugins that will be added to the sidebar
     tray tabs.
     """
-    def __call__(self, name=None):
+    def __call__(self, name=None, label=None, icon=None):
         def decorator(cls):
             # The class must inherit from `VuetifyTemplate` in order to be
             # ingestible by the component initialization.
@@ -75,8 +75,31 @@ class TrayRegistry(UniqueDictRegistry):
                     f"registered components must inherit from "
                     f"`ipyvuetify.VuetifyTemplate`.")
 
-            self.add(name, cls)
+            self.add(name, cls, label, icon)
         return decorator
+
+    def add(self, name, cls, label=None, icon=None):
+        """
+        Add an item to the registry.
+
+        Parameters
+        ----------
+        name : str
+            The key referencing the associated class in the registry
+            dictionary.
+        cls : type
+            The class definition (not instance) associated with the name given
+            in the first parameter.
+        label : str, optional
+            The label displayed in the tooltip when hovering over the tray tab.
+        icon : str, optional
+            The name of the icon to render in the tray tab.
+        """
+        if name in self.members:
+            raise ValueError(f"Viewer with the name {name} already exists, "
+                             f"please choose a different name.")
+        else:
+            self.members[name] = {'label': label, 'icon': icon, 'cls': cls}
 
 
 class ToolRegistry(UniqueDictRegistry):
