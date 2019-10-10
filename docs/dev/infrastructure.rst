@@ -66,6 +66,10 @@ The above layers are focused primaril on visualization.  All actual *operations*
 
 Note that those libraries themselve depend on the wider scientific Python ecosystem, so this is by no means a comprehensive list of the libraries jdaviz depends on.  But these are the primary "top-level" libraries, meaning it is these that most users are likely to focus on to parallel or extend their jdaviz workflows.
 
+Related Documents
+=================
+
+The above is a broad outline of the effort, particularly the specific role of `jdaviz` and how it related to `glue-jupyter`.  More specific documentation of data flow and how the code interacts at a more granular level can be found in the `glue` and `glue-jupyter` documentation.
 
 .. _ipywidgets: https://ipywidgets.readthedocs.io
 .. _ipyvuetify: https://github.com/mariobuikhuizen/ipyvuetify
