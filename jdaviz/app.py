@@ -49,12 +49,14 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
         # Dump all user-defined toolbar items as component references in the
         #  vuetify template instance.
         toolbar = self.components.get('g-toolbar')
+
         toolbar.components = {k: v(session=self.session)
                               for k, v in tools.members.items()}
 
         # Do the same thing for the sidebar components
         tray_bar = self.components.get('g-tray-bar')
-        tray_bar.components = {k: v(session=self.session)
+
+        tray_bar.components = {k: v.get('cls')(session=self.session)
                                for k, v in trays.members.items()}
 
         # Load in default configuration file
@@ -65,15 +67,6 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
                            handler=self._on_new_viewer)
         self.hub.subscribe(self, LoadDataMessage,
                            handler=self._on_load_data)
-
-        # -- Test
-
-        # data = self._application_handler.load_data("/Users/nearl/data/single_g235h-f170lp_x1d.fits")
-        # new_viewer_msg = NewViewerMessage(BqplotProfileView, data[0], sender=self)
-        # self.hub.broadcast(new_viewer_msg)
-        # self.hub.broadcast(new_viewer_msg)
-
-        # --
 
     @property
     def hub(self):
@@ -108,7 +101,14 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
 
         # Add the tray items filter to the interact drawer component
         for name in config.get('tray_bar', []):
-            self.components['g-tray-bar'].add_tray(name)
+            # Retrieve the meta information around the rendering of the tab
+            #  button including the icon and label information.
+            item = trays.get(name)
+
+            label = item.get('label')
+            icon = item.get('icon')
+
+            self.components['g-tray-bar'].add_tray(name, label, icon)
 
     def _on_load_data(self, msg):
         data = self._application_handler.load_data(msg.path)

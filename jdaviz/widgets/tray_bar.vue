@@ -19,20 +19,20 @@
               v-model="tab"
       >
         <v-tab
-                v-for="name in tray_names"
-                :key="name"
+                v-for="item in tray_items"
+                :key="item.name"
         >
-          <v-icon>save</v-icon>
+          <v-icon>{{ item.icon }}</v-icon>
         </v-tab>
 
         <v-tabs-items
                 v-model="tab">
           <v-tab-item
-                  v-for="name in tray_names"
-                  :key="name"
+                  v-for="item in tray_items"
+                  :key="item.name"
           >
             <v-card flat>
-              <component v-bind:is="name"></component>
+              <component v-bind:is="item.name"></component>
 <!--              <g-data-collection-list></g-data-collection-list>-->
 <!--              <g-test></g-test>-->
             </v-card>
