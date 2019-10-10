@@ -69,7 +69,7 @@ class TrayRegistry(UniqueDictRegistry):
         def decorator(cls):
             # The class must inherit from `VuetifyTemplate` in order to be
             # ingestible by the component initialization.
-            if not issubclass(cls, VuetifyTemplate):
+            if not issubclass(cls, (Widget, VuetifyTemplate)):
                 raise ValueError(
                     f"Unrecognized superclass for {cls.__name__}. All "
                     f"registered components must inherit from "
@@ -109,8 +109,8 @@ class ToolRegistry(UniqueDictRegistry):
     """
     def __call__(self, name=None):
         def decorator(cls):
-            # The class must inherit from `Widget` in order to be
-            # ingestible by the component initialization.
+            # The class must inherit from `VuetifyTemplate` or `Widget` in
+            # order to be ingestible by the component initialization.
             if not issubclass(cls, Widget):
                 raise ValueError(
                     f"Unrecognized superclass for `{cls.__name__}`. All "
@@ -128,9 +128,9 @@ class MenuRegistry(UniqueDictRegistry):
     """
     def __call__(self, name=None):
         def decorator(cls):
-            # The class must inherit from `VuetifyTemplate` in order to be
-            # ingestible by the component initialization.
-            if not issubclass(cls, Widget):
+            # The class must inherit from `VuetifyTemplate` or `Widget` in
+            # order to be ingestible by the component initialization.
+            if not issubclass(cls, (VuetifyTemplate, Widget)):
                 raise ValueError(
                     f"Unrecognized superclass for {cls.__name__}. All "
                     f"registered tools must inherit from "
