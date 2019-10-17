@@ -15,6 +15,16 @@ class Spacer(VuetifyTemplate):
             """).tag(sync=True)
 
 
+@tools('toolbar-items')
+class Spacer(VuetifyTemplate):
+    template = Unicode("""
+    <v-toolbar-items>
+        <component v-for="item in items" v-bind:is="item"></component>
+    </v-toolbar-items>
+    """).tag(sync=True)
+    items = List([]).tag(sync=True)
+
+
 @tools('vertical-divider')
 class VerticalDivider(VuetifyTemplate):
     template = Unicode("""
@@ -131,10 +141,15 @@ class ImportDataButton(TemplateMixin):
 @tools('g-export-data')
 class ExportDataButton(TemplateMixin):
     template = Unicode("""
-    <v-btn text class="mx-1">
-        <v-icon left>save_alt</v-icon>
-        Export Data
+    <v-btn text class="mx-1 px-0">
+        <v-icon>save_alt</v-icon>
     </v-btn>
+    """).tag(sync=True)
+
+    css = Unicode("""
+    .v-btn {
+      min-width: 0;
+    }
     """).tag(sync=True)
 
     def __init__(self, *args, **kwargs):

@@ -20,3 +20,8 @@ tray_bar:
   - g-data-collection-list
   - g-viewer-options
   - g-layer-options
+content_area:
+  - top_area:
+      - g-imshow
+  - bottom_area:
+      - g-profile-1d

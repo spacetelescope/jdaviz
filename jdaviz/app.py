@@ -10,6 +10,7 @@ from jdaviz.core.registries import tools, trays
 from .widgets.content_area import ContentArea
 from .widgets.toolbar import Toolbar
 from .widgets.tray_bar import TrayBar
+from .widgets.menu_bar import MenuBar
 from .core.events import NewViewerMessage, AddViewerMessage, LoadDataMessage
 
 from glue_jupyter.bqplot.profile import BqplotProfileView
@@ -24,9 +25,20 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
 
     template = Unicode("""
     <v-app id='glupyter'>
-        <g-toolbar v-if="show_toolbar" />
-        <g-tray-bar v-if="show_tray_bar" />
-        <g-content-area />
+        <v-content>
+            <v-container fluid class="pa-0 ma-0" style="height: 100%">
+                <!--<v-row no-gutters style="width: 100%">-->
+                <!--  <g-menu-bar />-->
+                <!--</v-row>-->
+                <v-row no-gutters>
+                    <g-toolbar v-if="show_toolbar" />
+                </v-row>
+                <v-row no-gutters class="fill-height">
+                    <g-tray-bar v-if="show_tray_bar" />
+                    <g-content-area />
+                </v-row>
+            </v-container>
+        <v-content>
     </v-app>
     """).tag(sync=True)
 
@@ -43,7 +55,8 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
         self.components = {
             'g-toolbar': Toolbar(session=self.session),
             'g-tray-bar': TrayBar(session=self.session),
-            'g-content-area': ContentArea(session=self.session)
+            'g-content-area': ContentArea(session=self.session),
+            'g-menu-bar': MenuBar(session=self.session)
         }
 
         # Dump all user-defined toolbar items as component references in the

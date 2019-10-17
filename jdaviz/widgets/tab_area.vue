@@ -15,11 +15,12 @@
       </v-tab>
     </v-tabs>
 
-    <v-tabs-items v-model="tab">
+    <v-tabs-items v-model="tab" class="fill-height">
       <v-tab-item
               v-for="(viewer, i) in active_viewers"
               :key="i"
               :value="'tab-' + i"
+              class="fill-height"
       >
         <component v-bind:is="viewer.binding"></component>
       </v-tab-item>
