@@ -42,3 +42,14 @@ class LoadDataMessage(Message):
     @property
     def path(self):
         return self._path
+
+
+class DataSelectedMessage(Message):
+    def __init__(self, index, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self._index = index
+
+    @property
+    def index(self):
+        return self._index

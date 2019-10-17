@@ -6,7 +6,7 @@ from jdaviz.core.events import NewViewerMessage
 from jdaviz.core.registries import viewers
 
 
-@viewers("profile-1d")
+@viewers("profile-1d", label="Profile 1D")
 class Profile1DViewer:
     def __init__(self, *, hub=None, data=None, x_attr=None, widget='bqplot', show=True):
         """
@@ -50,8 +50,8 @@ class Profile1DViewer:
         # return view
 
 
-@viewers("profile-1d")
-class Profile1DViewer:
+@viewers("imshow", label="Image 2D")
+class ImageViewer:
     def __init__(self, *, hub=None, data=None, x_attr=None, widget='bqplot', show=True):
         """
         Open an interactive 1d profile viewer.

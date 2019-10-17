@@ -3,7 +3,6 @@
           v-model="drawer"
           clipped
           width="400px"
-          expand-on-hover="true"
   >
     <v-card
             dark

@@ -106,7 +106,7 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
         # Toggle the rendering of the components in the gui
         self.show_menu_bar = comps.get('menu_bar', True)
         self.show_toolbar = comps.get('toolbar', True)
-        self.show_tray_bar = comps.get('iteract_drawer', True)
+        self.show_tray_bar = comps.get('tray_bar', True)
 
         # Add the toolbar item filter to the toolbar component
         for name in config.get('toolbar', []):
@@ -125,14 +125,10 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
 
     def _on_load_data(self, msg):
         data = self._application_handler.load_data(msg.path)
-        new_viewer_msg = NewViewerMessage(BqplotProfileView, data[0], sender=self)
-        self.hub.broadcast(new_viewer_msg)
 
     def _on_new_viewer(self, msg):
-        view = self._application_handler.new_data_viewer(msg.cls,
-                                                         data=msg.data,
-                                                         show=False
-                                                         )
+        view = self._application_handler.new_data_viewer(
+            msg.cls, data=msg.data, show=False)
 
         if msg.x_attr is not None:
             x = msg.data.id[msg.x_attr]

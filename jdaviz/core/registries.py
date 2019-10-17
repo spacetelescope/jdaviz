@@ -50,13 +50,31 @@ class ViewerRegistry(UniqueDictRegistry):
     """
     Registry containing references to custom viewers.
     """
-    def __call__(self, name=None):
-        def decorator(cls, key):
-            if key is None:
-                key = convert(cls.__name__)
-
-            self.add(key, cls)
+    def __call__(self, name=None, label=None):
+        def decorator(cls):
+            self.add(name, cls, label)
         return decorator
+
+    def add(self, name, cls, label=None):
+        """
+        Add an item to the registry.
+
+        Parameters
+        ----------
+        name : str
+            The key referencing the associated class in the registry
+            dictionary.
+        cls : type
+            The class definition (not instance) associated with the name given
+            in the first parameter.
+        label : str, optional
+            The label displayed in the tooltip when hovering over the tray tab.
+        """
+        if name in self.members:
+            raise ValueError(f"Viewer with the name {name} already exists, "
+                             f"please choose a different name.")
+        else:
+            self.members[name] = {'label': label, 'cls': cls}
 
 
 class TrayRegistry(UniqueDictRegistry):

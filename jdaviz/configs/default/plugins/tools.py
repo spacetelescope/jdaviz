@@ -3,7 +3,7 @@ from traitlets import Unicode, List, Int, Bool, Dict, Any
 
 from jdaviz.core.registries import tools
 from jdaviz.core.template_mixin import TemplateMixin
-from jdaviz.core.events import LoadDataMessage
+from jdaviz.core.events import LoadDataMessage, DataSelectedMessage
 
 __all__ = ['OpenSessionButton', 'SaveSessionButton', 'ImportDataButton', 'ExportDataButton']
 
@@ -37,7 +37,6 @@ class OpenSessionButton(TemplateMixin):
     template = Unicode("""
     <v-btn text class="mx-1">
         <v-icon left>folder</v-icon>
-        Open Session
     </v-btn>
     """).tag(sync=True)
 
@@ -50,7 +49,6 @@ class SaveSessionButton(TemplateMixin):
     template = Unicode("""
     <v-btn text class="mx-1">
         <v-icon left>save</v-icon>
-        Save Session
     </v-btn>
     """).tag(sync=True)
 
@@ -79,7 +77,6 @@ class ImportDataButton(TemplateMixin):
               class="mx-1"
             >
               <v-icon left>cloud_download</v-icon>
-              Import Data
             </v-btn>
           </template>
     
@@ -195,3 +192,20 @@ class SelectStateButtonGroup(TemplateMixin):
       </v-btn>
     </v-btn-toggle>
     """).tag(sync=True)
+
+
+@tools('g-index-indicator')
+class IndexIndicator(TemplateMixin):
+    template = Unicode("""
+    <span>{{ index }}</span>
+    """).tag(sync=True)
+    index = Int(-1).tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.hub.subscribe(self, DataSelectedMessage,
+                           handler=self._on_data_selected)
+
+    def _on_data_selected(self, msg):
+        self.index = msg.index
