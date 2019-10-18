@@ -107,12 +107,7 @@ release = package.__version__
 html_static_path = ['_static']
 html_style = 'jdaviz.css'
 
-
-html_theme_options = {
-    'logotext1': 'jda',  # white,  semi-bold
-    'logotext2': 'viz',  # orange, light
-    'logotext3': ':docs'   # white,  light
-    }
+html_theme = "sphinx_rtd_theme"
 
 
 # Custom sidebar templates, maps document names to template names.
@@ -160,10 +155,10 @@ man_pages = [('index', project.lower(), project + u' Documentation',
 if eval(setup_cfg.get('edit_on_github')):
     extensions += ['sphinx_astropy.ext.edit_on_github']
 
-    versionmod = __import__(setup_cfg['package_name'] + '.version')
+    versionmod = import_module(setup_cfg['name'] + '.version')
     edit_on_github_project = setup_cfg['github_project']
-    if versionmod.version.release:
-        edit_on_github_branch = "v" + versionmod.version.version
+    if versionmod.release:
+        edit_on_github_branch = "v" + versionmod.version
     else:
         edit_on_github_branch = "master"
 
