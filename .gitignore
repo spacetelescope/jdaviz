@@ -55,6 +55,9 @@ distribute-*.tar.gz
 .project
 .pydevproject
 .settings
+.idea
+.vscode
+.pytest_cache
 
 # Mac OSX
 .DS_Store
