@@ -1,6 +1,5 @@
-####################
-jdaviz Documentation
-####################
+JDAViz Documentation
+====================
 
 `jdaviz` is a package of astronomical data analysis visualization tools using
 the Jupyter platform.

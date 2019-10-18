@@ -1,4 +1,10 @@
-Copyright (c) 2019, JDADF Developers
+This project is based upon the Astropy package template
+(https://github.com/astropy/package-template/) which is licenced under the terms
+of the following licence.
+
+---
+
+Copyright (c) 2018, Astropy Developers
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
