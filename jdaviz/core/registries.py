@@ -1,9 +1,8 @@
-from glue.config import DictRegistry
 import re
-from functools import wraps
+
+from glue.config import DictRegistry
 from ipyvuetify import VuetifyTemplate
 from ipywidgets import Widget
-
 
 __all__ = ['viewers', 'trays', 'tools']
 
@@ -144,4 +143,3 @@ viewers = ViewerRegistry()
 trays = TrayRegistry()
 tools = ToolRegistry()
 menus = MenuRegistry()
-
