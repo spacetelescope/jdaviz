@@ -10,3 +10,9 @@ the Jupyter platform.
 
   notebook/index.rst
   dev/infrastructure.rst
+
+
+Reference/API
+=============
+
+.. automodapi:: jdaviz

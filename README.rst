@@ -1,5 +1,5 @@
-Astronomical data analysis development leveraging Jupyter platform
-------------------------------------------------------------------
+JWST Data Analysis Visualization Development
+--------------------------------------------
 
 .. image:: http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat
     :target: http://www.astropy.org
