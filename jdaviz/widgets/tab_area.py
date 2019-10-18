@@ -4,7 +4,7 @@ import ipyvuetify as v
 from traitlets import Unicode, Any, List
 from ipywidgets import VBox, Output
 
-from ..core.events import AddViewerMessage
+from ..core.events import AddViewerMessage, ViewerSelectedMessage
 from ..core.template_mixin import TemplateMixin
 
 with open(os.path.join(os.path.dirname(__file__), "tab_area.vue")) as f:
@@ -34,16 +34,45 @@ class TabArea(TemplateMixin):
     tab = Any(None).tag(sync=True)
     active_viewers = List([]).tag(sync=True)
 
+    css = Unicode("""
+    .tab-wrapper {
+      height:100%; /* Set to desired height of entire tabbed section, or use flex, or ... */
+      display:flex; 
+      flex-direction: column;
+    }
+    
+    .tab-wrapper .v-window{
+      flex: 1;
+    }
+    
+    .tab-wrapper .v-window__container,
+    .tab-wrapper .v-window-item  {
+      height: 100%;
+    }
+    
+    /* customise the dimensions of the card content here */
+    .tab-wrapper .v-card {
+      height: 100%;
+    }
+    """).tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Setup up "holders" due to the fact that ipyvuetify does not support
         # dynamically adding components after the application has been rendered
-        self.components = {'g-tab-{}'.format(i): v.Card()
+        self.components = {'g-tab-{}'.format(i): v.Card(class_="fill-height")
                            for i in range(10)}
 
         # Subscribed to the add viewer messages to trigger the creation of new
         # tabs in the tab area.
         self.hub.subscribe(self, AddViewerMessage, handler=self._add_viewer)
+
+        # When a new viewer tab is selected, fire an event
+        self.observe(self._on_active_viewer_changed, names='tab')
+
+        # Store the raw viewer object somewhere so we can still reference its
+        # layout pieces
+        self._viewers = {}
 
     def _add_viewer(self, msg):
         # Construct a reference to ipywidet parent stored in the components
@@ -59,8 +88,17 @@ class TabArea(TemplateMixin):
 
         # Add the figure widget (plot widget) as a child to the "holder"
         msg.viewer.figure_widget.layout.width = 'auto'
-        msg.viewer.figure_widget.layout.height = '100%'
+        msg.viewer.figure_widget.layout.height = 'auto'
         self.components.get(comp_ref).children = [msg.viewer.figure_widget]
+
+        # Store the raw viewer instance
+        self._viewers[comp_ref] = msg.viewer
+
+    def _on_active_viewer_changed(self, *args):
+        viewer = self._viewers.get("g-{}".format(self.tab))
+
+        viewer_selected_message = ViewerSelectedMessage(viewer, sender=self)
+        self.hub.broadcast(viewer_selected_message)
 
     def register_to_hub(self, hub):
         pass

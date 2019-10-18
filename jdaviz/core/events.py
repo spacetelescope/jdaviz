@@ -53,3 +53,14 @@ class DataSelectedMessage(Message):
     @property
     def index(self):
         return self._index
+
+
+class ViewerSelectedMessage(Message):
+    def __init__(self, viewer, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self._viewer = viewer
+
+    @property
+    def viewer(self):
+        return self._viewer
