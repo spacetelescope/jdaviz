@@ -8,7 +8,6 @@ the Jupyter platform.
 .. toctree::
   :maxdepth: 2
 
-  notebook/index.rst
   dev/infrastructure.rst
 
 

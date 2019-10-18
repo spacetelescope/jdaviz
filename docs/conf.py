@@ -107,13 +107,6 @@ release = package.__version__
 html_static_path = ['_static']
 html_style = 'jdaviz.css'
 
-
-html_theme_options = {
-    'logotext1': 'jda',  # white,  semi-bold
-    'logotext2': 'viz',  # orange, light
-    'logotext3': ':docs'   # white,  light
-    }
-
 html_theme = "sphinx_rtd_theme"
 
 
