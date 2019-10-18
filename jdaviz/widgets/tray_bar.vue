@@ -2,27 +2,33 @@
   <v-navigation-drawer
           v-model="drawer"
           clipped
-          width="400px"
+          width="360px"
+          app
   >
     <v-card
-            dark
             flat
             tile
             height="100%"
     >
       <v-tabs
               vertical
-              icons-and-text
-              background-color="indigo"
+              background-color="accent"
               class="fill-height"
               v-model="tab"
       >
-        <v-tab
-                v-for="item in tray_items"
-                :key="item.name"
-        >
-          <v-icon>{{ item.icon }}</v-icon>
-        </v-tab>
+        <template v-for="item in tray_items">
+          <v-tooltip right>
+            <template v-slot:activator="{ on }">
+              <v-tab :key="item.name"
+                     style="min-width: 50px"
+                     v-on="on"
+              >
+                <v-icon>{{ item.icon }}</v-icon>
+              </v-tab>
+            </template>
+            <span>{{ item.label }}</span>
+          </v-tooltip>
+        </template>
 
         <v-tabs-items
                 v-model="tab">
