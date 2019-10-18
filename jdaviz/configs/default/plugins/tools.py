@@ -5,6 +5,9 @@ from jdaviz.core.registries import tools
 from jdaviz.core.template_mixin import TemplateMixin
 from jdaviz.core.events import LoadDataMessage, DataSelectedMessage
 
+from glue.core.edit_subset_mode import OrMode, AndNotMode, AndMode, XorMode, ReplaceMode
+from glue.core.message import EditSubsetMessage
+
 __all__ = ['OpenSessionButton', 'SaveSessionButton', 'ImportDataButton', 'ExportDataButton']
 
 
@@ -153,19 +156,20 @@ class ExportDataButton(TemplateMixin):
         super().__init__(*args, **kwargs)
 
 
-@tools('g-active-subset')
-class ActiveSubsetDropdown(TemplateMixin):
-    subsets = List([]).tag(sync=True)
+@tools('g-subset-select')
+class SubsetSelectTool(TemplateMixin):
+    subsets = List(['one', 'two']).tag(sync=True)
 
     template = Unicode("""
     <v-overflow-btn
         :items="subsets"
-        label="Current subset"
+        label="Selected subsets"
         target="#dropdown-example"
         hide-details
         class="pa-0"
         overflow
-        width="500px"
+        min_width="500px"
+        multiple
     ></v-overflow-btn>
     """).tag(sync=True)
 
@@ -173,11 +177,20 @@ class ActiveSubsetDropdown(TemplateMixin):
         super().__init__(*args, **kwargs)
 
 
-@tools('g-selection-state')
-class SelectStateButtonGroup(TemplateMixin):
-    toggle_one = Int(0).tag(sync=True)
+SUBSET_MODES = {
+    'replace': ReplaceMode,
+    'add': OrMode,
+    'and': AndMode,
+    'xor': XorMode,
+    'remove': AndNotMode
+}
+
+
+@tools('g-subset-mode')
+class SubsetModeTool(TemplateMixin):
+    index = Int(0).tag(sync=True)
     template = Unicode("""
-    <v-btn-toggle light v-model="toggle_one" mandatory class="my-2">
+    <v-btn-toggle light v-model="index" mandatory class="my-2">
       <v-btn text>
         <v-icon>cloud_download</v-icon>
       </v-btn>
@@ -193,19 +206,19 @@ class SelectStateButtonGroup(TemplateMixin):
     </v-btn-toggle>
     """).tag(sync=True)
 
-
-@tools('g-index-indicator')
-class IndexIndicator(TemplateMixin):
-    template = Unicode("""
-    <span>{{ index }}</span>
-    """).tag(sync=True)
-    index = Int(-1).tag(sync=True)
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.hub.subscribe(self, DataSelectedMessage,
-                           handler=self._on_data_selected)
+        # Observe messages that change the subset mode state
+        self.session.hub.subscribe(
+            self, EditSubsetMessage, handler=self._on_subset_edited)
+        self.observe(self._subset_mode_selected, 'index')
 
-    def _on_data_selected(self, msg):
-        self.index = msg.index
+    def _subset_mode_selected(self, index):
+        self.session.edit_subset_mode.mode = list(SUBSET_MODES.values())[index]
+
+    def _on_subset_edited(self, msg):
+        if self.session.edit_subset_mode.mode != msg.mode:
+            self.session.edit_subset_mode.mode = msg.mode
+
+        self.index = list(SUBSET_MODES.values()).index(msg.mode)
