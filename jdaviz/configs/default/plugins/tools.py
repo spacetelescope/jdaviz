@@ -18,16 +18,6 @@ class Spacer(VuetifyTemplate):
             """).tag(sync=True)
 
 
-@tools('toolbar-items')
-class Spacer(VuetifyTemplate):
-    template = Unicode("""
-    <v-toolbar-items>
-        <component v-for="item in items" v-bind:is="item"></component>
-    </v-toolbar-items>
-    """).tag(sync=True)
-    items = List([]).tag(sync=True)
-
-
 @tools('vertical-divider')
 class VerticalDivider(VuetifyTemplate):
     template = Unicode("""
@@ -38,8 +28,8 @@ class VerticalDivider(VuetifyTemplate):
 @tools('g-open-session')
 class OpenSessionButton(TemplateMixin):
     template = Unicode("""
-    <v-btn text class="mx-1">
-        <v-icon left>folder</v-icon>
+    <v-btn icon class="mx-1">
+        <v-icon>folder</v-icon>
     </v-btn>
     """).tag(sync=True)
 
@@ -50,8 +40,8 @@ class OpenSessionButton(TemplateMixin):
 @tools('g-save-session')
 class SaveSessionButton(TemplateMixin):
     template = Unicode("""
-    <v-btn text class="mx-1">
-        <v-icon left>save</v-icon>
+    <v-btn icon class="mx-1">
+        <v-icon>save</v-icon>
     </v-btn>
     """).tag(sync=True)
 
@@ -76,10 +66,10 @@ class ImportDataButton(TemplateMixin):
             <v-btn
               dark
               v-on="on"
-              text
+              icon
               class="mx-1"
             >
-              <v-icon left>cloud_download</v-icon>
+              <v-icon>cloud_download</v-icon>
             </v-btn>
           </template>
     
@@ -141,7 +131,7 @@ class ImportDataButton(TemplateMixin):
 @tools('g-export-data')
 class ExportDataButton(TemplateMixin):
     template = Unicode("""
-    <v-btn text class="mx-1 px-0">
+    <v-btn icon class="mx-1 px-0">
         <v-icon>save_alt</v-icon>
     </v-btn>
     """).tag(sync=True)

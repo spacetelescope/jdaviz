@@ -4,7 +4,6 @@
           dark
           dense
           clipped-left
-          app
   >
     <!--        <v-toolbar-items >-->
     <template v-for="name in tool_names">

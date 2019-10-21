@@ -20,7 +20,7 @@ tray_bar:
   - g-data-collection-list
   - g-plot-options
 content_area:
-  - top_area:
-      - g-imshow
-  - bottom_area:
-      - g-profile-1d
+  top_area:
+    - imshow
+  bottom_area:
+    - profile-1d

@@ -3,7 +3,6 @@
           v-model="drawer"
           clipped
           width="360px"
-          app
   >
     <v-card
             flat

@@ -23,14 +23,19 @@ class NewViewerMessage(Message):
 
 
 class AddViewerMessage(Message):
-    def __init__(self, viewer, *args, **kwargs):
+    def __init__(self, viewer, area=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self._viewer = viewer
+        self._area = area
 
     @property
     def viewer(self):
         return self._viewer
+
+    @property
+    def area(self):
+        return self._area
 
 
 class LoadDataMessage(Message):

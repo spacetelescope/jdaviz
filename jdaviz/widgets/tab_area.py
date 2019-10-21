@@ -56,8 +56,11 @@ class TabArea(TemplateMixin):
     }
     """).tag(sync=True)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, area=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Store the area key for this tab area
+        self._area = area
+
         # Setup up "holders" due to the fact that ipyvuetify does not support
         # dynamically adding components after the application has been rendered
         self.components = {'g-tab-{}'.format(i): v.Card(class_="fill-height")
@@ -75,6 +78,9 @@ class TabArea(TemplateMixin):
         self._viewers = {}
 
     def _add_viewer(self, msg):
+        if not (msg.area is None or msg.area == self._area):
+            return
+
         # Construct a reference to ipywidet parent stored in the components
         comp_ref = 'g-tab-{}'.format(len(self.active_viewers))
 

@@ -6,7 +6,7 @@ from glue.core.application_base import Application, HubListener
 from glue_jupyter.app import JupyterApplication
 from traitlets import Unicode, Bool, Dict
 
-from jdaviz.core.registries import tools, trays
+from jdaviz.core.registries import tools, trays, viewers
 from .widgets.content_area import ContentArea
 from .widgets.toolbar import Toolbar
 from .widgets.tray_bar import TrayBar
@@ -25,10 +25,20 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
 
     template = Unicode("""
     <v-app id='glupyter'>
-        <g-menu-bar v-if="show_menu_bar" />
-        <g-toolbar v-if="show_toolbar" />
-        <g-tray-bar v-if="show_tray_bar" />
-        <g-content-area />
+        <v-content>
+            <v-container fluid class="pa-0 ma-0" style="height: 100%">
+                <!--<v-row no-gutters style="width: 100%">-->
+                <!--  <g-menu-bar />-->
+                <!--</v-row>-->
+                <v-row no-gutters>
+                    <g-toolbar v-if="show_toolbar" />
+                </v-row>
+                <v-row no-gutters class="fill-height">
+                    <g-tray-bar v-if="show_tray_bar" />
+                    <g-content-area />
+                </v-row>
+            </v-container>
+        <v-content>
     </v-app>
     """).tag(sync=True)
 
@@ -112,6 +122,27 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
             icon = item.get('icon')
 
             self.components['g-tray-bar'].add_tray(name, label, icon)
+
+        # Pre-load viewers into tab area
+        content_area = config.get('content_area')
+
+        # Toggle the visibility of the tab areas with the content area
+        if content_area is not None:
+            self.components['g-content-area'].top_area = 'top_area' in content_area
+            self.components['g-content-area'].bottom_area = 'bottom_area' in content_area
+
+        for area in content_area:
+            for viewer_label in content_area.get(area):
+                viewer = viewers.members.get(viewer_label)
+
+                if viewer is not None:
+                    viewer_cls = viewer.get('cls')
+
+                    view = self._application_handler.new_data_viewer(
+                        viewer_cls, data=None, show=False)
+
+                    self.hub.broadcast(
+                        AddViewerMessage(view, area=area, sender=self))
 
     def _on_load_data(self, msg):
         data = self._application_handler.load_data(msg.path)
