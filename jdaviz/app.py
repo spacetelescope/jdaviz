@@ -91,12 +91,12 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
 
     def load_configuration(self, path):
         # Parse the default configuration file
-        if path is None:
-            path = os.path.join(
-                os.path.dirname(__file__),
-                "configs",
-                "default",
-                "default.yaml")
+        default_path = os.path.join(os.path.dirname(__file__), "configs")
+
+        if path is None or path == 'default':
+            path = os.path.join(default_path, "default", "default.yaml")
+        elif path == 'cubeviz':
+            path = os.path.join(default_path, "cubeviz", "cubeviz.yaml")
         elif not os.path.isfile(path):
             raise ValueError("Configuration must be path to a .yaml file.")
 
