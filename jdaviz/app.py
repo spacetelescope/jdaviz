@@ -42,7 +42,7 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
     </v-app>
     """).tag(sync=True)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, configuration=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # TODO: we shouldn't need to keep an entire JupyterApplication
@@ -73,7 +73,7 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
                                for k, v in trays.members.items()}
 
         # Load in default configuration file
-        self.load_configuration()
+        self.load_configuration(configuration)
 
         # Setup hub event listeners
         self.hub.subscribe(self, NewViewerMessage,
@@ -89,13 +89,16 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
     def session(self):
         return self._application_handler.session
 
-    def load_configuration(self):
+    def load_configuration(self, path):
         # Parse the default configuration file
-        path = os.path.join(
-            os.path.dirname(__file__),
-            "configs",
-            "default",
-            "default.yaml")
+        if path is None:
+            path = os.path.join(
+                os.path.dirname(__file__),
+                "configs",
+                "default",
+                "default.yaml")
+        elif not os.path.isfile(path):
+            raise ValueError("Configuration must be path to a .yaml file.")
 
         with open(path, 'r') as f:
             config = yaml.safe_load(f)
