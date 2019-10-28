@@ -19,8 +19,3 @@ menu_bar:
 tray_bar:
   - g-data-collection-list
   - g-plot-options
-content_area:
-  top_area:
-    - imshow
-  bottom_area:
-    - profile-1d

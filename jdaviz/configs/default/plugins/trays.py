@@ -1,16 +1,17 @@
-from traitlets import Unicode, List, Int
-
-from jdaviz.core.registries import trays, viewers
-from jdaviz.core.template_mixin import TemplateMixin
 import ipyvuetify as v
 from glue.core.message import DataCollectionAddMessage
-
-from ipyvuetify import Card
-
-from jdaviz.core.events import AddViewerMessage, DataSelectedMessage, NewViewerMessage, ViewerSelectedMessage
 from glue_jupyter.utils import validate_data_argument
+from traitlets import Unicode, List, Int
+
+from jdaviz.core.events import DataSelectedMessage, NewViewerMessage, \
+    ViewerSelectedMessage
+from jdaviz.core.registries import trays, viewers
+from jdaviz.core.template_mixin import TemplateMixin
 
 
+# TODO: right now, the list items don't elide (the right button will get
+#  pushed out of the right side). There are solutions in vuetify for this
+#  but they need to be implemented.
 @trays("g-data-collection-list", label="Data Collection", icon='cloud_download')
 class DataCollectionListComponent(TemplateMixin):
     item = Int(1).tag(sync=True)

@@ -126,23 +126,24 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
         # Pre-load viewers into tab area
         content_area = config.get('content_area')
 
-        # Toggle the visibility of the tab areas with the content area
+        # Toggle the visibility of the tab areas with the content area.
+        # TODO: this will changed when ipygoldenlayout is properly
+        #   implemented.
         if content_area is not None:
-            self.components['g-content-area'].top_area = 'top_area' in content_area
             self.components['g-content-area'].bottom_area = 'bottom_area' in content_area
 
-        for area in content_area:
-            for viewer_label in content_area.get(area):
-                viewer = viewers.members.get(viewer_label)
+            for area in content_area:
+                for viewer_label in content_area.get(area):
+                    viewer = viewers.members.get(viewer_label)
 
-                if viewer is not None:
-                    viewer_cls = viewer.get('cls')
+                    if viewer is not None:
+                        viewer_cls = viewer.get('cls')
 
-                    view = self._application_handler.new_data_viewer(
-                        viewer_cls, data=None, show=False)
+                        view = self._application_handler.new_data_viewer(
+                            viewer_cls, data=None, show=False)
 
-                    self.hub.broadcast(
-                        AddViewerMessage(view, area=area, sender=self))
+                        self.hub.broadcast(
+                            AddViewerMessage(view, area=area, sender=self))
 
     def _on_load_data(self, msg):
         data = self._application_handler.load_data(msg.path)
