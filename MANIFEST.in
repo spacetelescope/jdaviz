@@ -5,7 +5,7 @@ include ah_bootstrap.py
 include setup.cfg
 include jdaviz/tests/coveragerc
 
-recursive-include jdaviz *.pyx *.c *.pxd
+recursive-include jdaviz *.pyx *.c *.pxd *.vue *.yaml
 recursive-include docs *
 recursive-include licenses *
 recursive-include cextern *

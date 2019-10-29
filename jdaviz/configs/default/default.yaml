@@ -1,0 +1,21 @@
+components:
+  menu_bar: false
+  toolbar: true
+  tray_bar: true
+  content_area: true
+toolbar:
+  - g-open-session
+  - g-save-session
+  - g-import-data
+  - g-export-data
+  - spacer
+  - vertical-divider
+  - g-subset-select
+  - vertical-divider
+  - spacer
+  - g-subset-mode
+menu_bar:
+  - g-test-action
+tray_bar:
+  - g-data-collection-list
+  - g-plot-options
