@@ -55,6 +55,8 @@ NOTEBOOK_TEMPLATE = r"""
 @click.option('--layout', default='default')
 def main(filename, layout):
 
+    filename = os.path.abspath(filename)
+
     start_dir = os.path.abspath('.')
 
     nbdir = tempfile.mkdtemp()
