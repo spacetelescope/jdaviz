@@ -29,10 +29,18 @@ running the cell, no icons or plugins load, save the notebook and refresh the pa
 Browser
 ^^^^^^^
 
-The browser version of the app can be accessed by running the provided notebook
-with `voila <https://github.com/voila-dashboards/voila/tree/master/voila>`_
-package. This will open and render the results of the cell in a new browser
-window::
+The easiest way to start up the browser version of the app is to do::
+
+    $ jdaviz filename.fits
+
+If you want to use a non-default layout, you can specify the layout name with::
+
+    $ jdaviz filename.fits --layout=cubeviz
+
+The browser version of the app can also be accessed by running the provided
+notebook with `voila
+<https://github.com/voila-dashboards/voila/tree/master/voila>`_ package. This
+will open and render the results of the cell in a new browser window::
 
     $ voila notebooks/Example.ipynb
 
