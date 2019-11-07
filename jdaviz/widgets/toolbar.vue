@@ -3,7 +3,9 @@
           color="primary"
           dark
           dense
+          flat
           clipped-left
+          :app="app"
   >
     <!--        <v-toolbar-items >-->
     <template v-for="name in tool_names">

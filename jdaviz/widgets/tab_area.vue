@@ -18,7 +18,7 @@
       </v-tab>
     </v-tabs>
 
-    <v-tabs-items v-model="tab" class="tab-wrapper">
+    <v-tabs-items v-model="tab" fill-height>
       <v-tab-item
               v-for="(viewer, i) in active_viewers"
               :key="i"

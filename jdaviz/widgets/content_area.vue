@@ -1,28 +1,26 @@
 <template>
   <v-content>
-    <v-container
-            fluid
+    <v-container fluid
+                 class="fill-height"
     >
-      <v-row style="height: 100%"
-             v-if="top_area"
+      <v-col cols="12">
+      <v-row v-if="top_area"
+             class="fill-height"
       >
-        <v-col
-                class="fill-height"
-                cols="12"
+        <v-col cols="12"
         >
           <g-tab-area-top></g-tab-area-top>
         </v-col>
       </v-row>
-      <v-row style="height: 100%"
-             v-if="bottom_area"
+      <v-row v-if="bottom_area"
+             class="fill-height"
       >
-        <v-col
-                class="fill-height"
-                cols="12"
+        <v-col cols="12"
         >
           <g-tab-area-bottom></g-tab-area-bottom>
         </v-col>
       </v-row>
+      </v-col>
     </v-container>
   </v-content>
 </template>
