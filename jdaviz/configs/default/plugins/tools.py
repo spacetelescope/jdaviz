@@ -14,21 +14,21 @@ __all__ = ['OpenSessionButton', 'SaveSessionButton', 'ImportDataButton', 'Export
 @tools('spacer')
 class Spacer(VuetifyTemplate):
     template = Unicode("""
-            <div class="flex-grow-1"></div>
-            """).tag(sync=True)
+        <div class="flex-grow-1"></div>
+        """).tag(sync=True)
 
 
 @tools('vertical-divider')
 class VerticalDivider(VuetifyTemplate):
     template = Unicode("""
-            <v-divider vertical></v-divider>
-            """).tag(sync=True)
+        <v-divider vertical></v-divider>
+        """).tag(sync=True)
 
 
 @tools('g-open-session')
 class OpenSessionButton(TemplateMixin):
     template = Unicode("""
-    <v-btn icon class="mx-1">
+    <v-btn min-width="0" dense tile text class="px-2 mx-1">
         <v-icon>folder</v-icon>
     </v-btn>
     """).tag(sync=True)
@@ -40,7 +40,7 @@ class OpenSessionButton(TemplateMixin):
 @tools('g-save-session')
 class SaveSessionButton(TemplateMixin):
     template = Unicode("""
-    <v-btn icon class="mx-1">
+    <v-btn min-width="0" dense tile text class="px-2 mx-1">
         <v-icon>save</v-icon>
     </v-btn>
     """).tag(sync=True)
@@ -66,8 +66,11 @@ class ImportDataButton(TemplateMixin):
             <v-btn
               dark
               v-on="on"
-              icon
-              class="mx-1"
+              min-width="0" 
+              dense 
+              tile 
+              text 
+              class="px-2 mx-1"
             >
               <v-icon>cloud_download</v-icon>
             </v-btn>
@@ -131,7 +134,7 @@ class ImportDataButton(TemplateMixin):
 @tools('g-export-data')
 class ExportDataButton(TemplateMixin):
     template = Unicode("""
-    <v-btn icon class="mx-1 px-0">
+    <v-btn min-width="0" dense tile text class="px-2 mx-1">
         <v-icon>save_alt</v-icon>
     </v-btn>
     """).tag(sync=True)
@@ -156,9 +159,8 @@ class SubsetSelectTool(TemplateMixin):
         label="Selected subsets"
         target="#dropdown-example"
         hide-details
-        class="pa-0"
         overflow
-        min_width="500px"
+        min_width="300px"
         multiple
     ></v-overflow-btn>
     """).tag(sync=True)
@@ -180,17 +182,17 @@ SUBSET_MODES = {
 class SubsetModeTool(TemplateMixin):
     index = Int(0).tag(sync=True)
     template = Unicode("""
-    <v-btn-toggle light v-model="index" mandatory class="my-2">
-      <v-btn text>
+    <v-btn-toggle v-model="index" mandatory group dense>
+      <v-btn>
         <v-icon>cloud_download</v-icon>
       </v-btn>
-      <v-btn text>
+      <v-btn>
         <v-icon>cloud_download</v-icon>
       </v-btn>
-      <v-btn text>
+      <v-btn>
         <v-icon>cloud_download</v-icon>
       </v-btn>
-      <v-btn text>
+      <v-btn>
         <v-icon>cloud_download</v-icon>
       </v-btn>
     </v-btn-toggle>

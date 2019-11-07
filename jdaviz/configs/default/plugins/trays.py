@@ -20,8 +20,6 @@ class DataCollectionListComponent(TemplateMixin):
 
     template = Unicode("""
     <v-list dense nav>
-      <v-subheader>Data</v-subheader>
-    
       <v-list-item-group v-model="item" color="primary">
         <v-list-item 
             v-for="(item, i) in items" 
@@ -97,23 +95,16 @@ class DataCollectionListComponent(TemplateMixin):
                                     'icon': 'mdi-clock'}]
 
 
-@trays('g-plot-options', label="Plot Options", icon='save')
-class PlotOptionsTray(TemplateMixin):
+@trays('g-viewer-options', label="Viewer Options", icon='save')
+class ViewerOptionsTray(TemplateMixin):
     template = Unicode("""
-    <v-card flat>
-        <v-subheader>Viewer Options</v-subheader>
-        <g-viewer-options-holder></g-viewer-options-holder>    
-        <v-divider class="mt-4"></v-divider>
-        <v-subheader>Layer Options</v-subheader>
-        <g-layer-options-holder></g-layer-options-holder>
-    <v-card>
+    <g-viewer-options-holder></g-viewer-options-holder>
     """).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.components = {
-            'g-layer-options-holder': v.Sheet(),
             'g-viewer-options-holder': v.Sheet()}
 
         self.hub.subscribe(self, ViewerSelectedMessage,
@@ -121,4 +112,22 @@ class PlotOptionsTray(TemplateMixin):
 
     def _on_viewer_selected(self, msg):
         self.components.get('g-viewer-options-holder').children = [msg.viewer.viewer_options]
+
+
+@trays('g-layer-options', label="Layer Options", icon='save')
+class LayerOptionsTray(TemplateMixin):
+    template = Unicode("""
+    <g-layer-options-holder></g-layer-options-holder>
+    """).tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.components = {
+            'g-layer-options-holder': v.Sheet()}
+
+        self.hub.subscribe(self, ViewerSelectedMessage,
+                           handler=self._on_viewer_selected)
+
+    def _on_viewer_selected(self, msg):
         self.components.get('g-layer-options-holder').children = [msg.viewer.layer_options]
