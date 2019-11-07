@@ -89,8 +89,7 @@ def user_dir():
 
 class DevelopCmd(develop):
     prefix_targets = [
-        ("voila/templates", 'vuetify-base'),
-        ("voila/templates", 'vuetify-default'),
+        ("voila/templates", 'jdaviz-default'),
         ("voila/templates", 'custom')
     ]
 

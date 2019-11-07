@@ -1,6 +1,6 @@
 {% raw -%}
-<div id="app" style="display: none">
-    <v-app>
+<div id="web-app" style="display: none">
+    <v-app >
         <v-slide-y-transition>
             <v-layout v-show="loading" align-center justify-center>
                 <v-card style="min-width: 600px">
@@ -17,11 +17,11 @@
             </v-layout>
         </v-slide-y-transition>
         <v-slide-y-transition>
-            <jupyter-widget-mount-point mount-id="content-main">
-                    <v-container>
-                            Placeholder for widget with mount id <i>content-main</i>.
-                    </v-container>
-            </jupyter-widget-mount-point>
+            <v-layout v-show="!loading">
+                    <jupyter-widget-mount-point mount-id="content">
+                        A widget with mount-id="content" should go here
+                    </jupyter-widget-mount-point>
+            </v-layout>
         </v-slide-y-transition>
     </v-app>
 </div>
@@ -34,17 +34,15 @@ var app = new Vue({
             iconfont: 'md',
         },
     }),
-    el: '#app',
+    el: '#web-app',
     mounted() {
-        document.querySelector('#app').removeAttribute("style");
+        document.querySelector('#web-app').removeAttribute("style");
     },
     data() {
         return {
             loading_text: "Loading page",
             loadingPercentage: -1,
-            loading: true,
-            right: null,
-            title: 'Voila vuetify',
+            loading: true
         }
     }
 });
