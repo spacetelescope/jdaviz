@@ -6,21 +6,26 @@ components:
 toolbar:
   - g-open-session
   - g-save-session
-  - g-import-data
+  - cv-import-data
   - g-export-data
+  - vertical-divider
   - spacer
   - vertical-divider
   - g-subset-select
   - vertical-divider
-  - spacer
   - g-subset-mode
+  - vertical-divider
+  - spacer
 menu_bar:
   - g-test-action
 tray_bar:
   - g-data-collection-list
-  - g-plot-options
+  - g-viewer-options
+  - g-layer-options
 content_area:
   top_area:
-    - imshow
+    - cv-data-imshow
+    - cv-error-imshow
+    - cv-dq-imshow
   bottom_area:
-    - profile-1d
+    - cv-profile-1d

@@ -30,3 +30,4 @@ if not _ASTROPY_SETUP_:   # noqa
 
 
 from jdaviz.configs.default import *
+from jdaviz.configs.cubeviz import *
