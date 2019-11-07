@@ -13,6 +13,9 @@ from .widgets.menu_bar import MenuBar
 from .widgets.toolbar import Toolbar
 from .widgets.tray_bar import TrayBar
 
+with open(os.path.join(os.path.dirname(__file__), "app.vue")) as f:
+    TEMPLATE = f.read()
+
 
 class IPyApplication(v.VuetifyTemplate, HubListener):
     _metadata = Dict({'mount_id': 'content'}).tag(sync=True)
@@ -21,25 +24,10 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
     show_toolbar = Bool(True).tag(sync=True)
     show_tray_bar = Bool(True).tag(sync=True)
     notebook_context = Bool(False).tag(sync=True)
+    drawer = Bool(False).tag(sync=True)
+    source = Unicode("").tag(sync=True)
 
-    template = Unicode("""
-    <v-app id='glupyter'>
-        <div v-if="checkNotebookContext()">
-            <v-card class="fill-height">
-                <g-toolbar v-if="show_toolbar" />
-                <v-row>
-                    <g-tray-bar v-if="show_tray_bar" />
-                    <g-content-area />
-                </v-row>
-            </v-card>
-        </div>
-        <div v-else>
-            <g-tray-bar v-if="show_tray_bar" />
-            <g-toolbar v-if="show_toolbar" />
-            <g-content-area />
-        </div>
-    </v-app>
-    """).tag(sync=True)
+    template = Unicode(TEMPLATE).tag(sync=True)
 
     methods = Unicode("""
     {
