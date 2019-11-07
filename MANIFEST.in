@@ -10,6 +10,7 @@ recursive-include docs *
 recursive-include licenses *
 recursive-include cextern *
 recursive-include scripts *
+recursive-include share *
 
 prune build
 prune docs/_build
