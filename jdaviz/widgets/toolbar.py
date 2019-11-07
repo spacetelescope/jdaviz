@@ -1,7 +1,7 @@
 import logging
 import os
 
-from traitlets import Unicode, List
+from traitlets import Unicode, List, Bool
 
 from ..core.template_mixin import TemplateMixin
 
@@ -33,6 +33,7 @@ class Toolbar(TemplateMixin):
     """
     template = Unicode(TEMPLATE).tag(sync=True)
     tool_names = List([]).tag(sync=True)
+    app = Bool(True).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

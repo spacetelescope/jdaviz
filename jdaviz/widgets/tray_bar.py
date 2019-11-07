@@ -14,12 +14,12 @@ class TrayBar(TemplateMixin):
     Application navigation drawer containing the lists of data and subsets
     currently in the glue collection.
     """
-
     template = Unicode(TEMPLATE).tag(sync=True)
 
     drawer = Bool(True).tag(sync=True)
     tab = Any(None).tag(sync=True)
     tray_items = List([]).tag(sync=True)
+    app = Bool(True).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

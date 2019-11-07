@@ -2,18 +2,16 @@ import os
 
 import ipyvuetify as v
 import yaml
-from glue.core.application_base import Application, HubListener
+from glue.core.application_base import HubListener
 from glue_jupyter.app import JupyterApplication
-from traitlets import Unicode, Bool, Dict
+from traitlets import Unicode, Bool, Dict, observe
 
 from jdaviz.core.registries import tools, trays, viewers
+from .core.events import NewViewerMessage, AddViewerMessage, LoadDataMessage
 from .widgets.content_area import ContentArea
+from .widgets.menu_bar import MenuBar
 from .widgets.toolbar import Toolbar
 from .widgets.tray_bar import TrayBar
-from .widgets.menu_bar import MenuBar
-from .core.events import NewViewerMessage, AddViewerMessage, LoadDataMessage
-
-from glue_jupyter.bqplot.profile import BqplotProfileView
 
 
 class IPyApplication(v.VuetifyTemplate, HubListener):
@@ -22,24 +20,34 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
     show_menu_bar = Bool(True).tag(sync=True)
     show_toolbar = Bool(True).tag(sync=True)
     show_tray_bar = Bool(True).tag(sync=True)
+    notebook_context = Bool(False).tag(sync=True)
 
     template = Unicode("""
     <v-app id='glupyter'>
-        <v-content>
-            <v-container fluid class="pa-0 ma-0" style="height: 100%">
-                <!--<v-row no-gutters style="width: 100%">-->
-                <!--  <g-menu-bar />-->
-                <!--</v-row>-->
-                <v-row no-gutters>
-                    <g-toolbar v-if="show_toolbar" />
-                </v-row>
-                <v-row no-gutters class="fill-height">
+        <div v-if="checkNotebookContext()">
+            <v-card class="fill-height">
+                <g-toolbar v-if="show_toolbar" />
+                <v-row>
                     <g-tray-bar v-if="show_tray_bar" />
                     <g-content-area />
                 </v-row>
-            </v-container>
-        <v-content>
+            </v-card>
+        </div>
+        <div v-else>
+            <g-tray-bar v-if="show_tray_bar" />
+            <g-toolbar v-if="show_toolbar" />
+            <g-content-area />
+        </div>
     </v-app>
+    """).tag(sync=True)
+
+    methods = Unicode("""
+    {
+        checkNotebookContext() {
+            this.notebook_context = !!!document.getElementById("web-app");
+            return this.notebook_context;
+        }
+    }
     """).tag(sync=True)
 
     def __init__(self, configuration=None, *args, **kwargs):
@@ -88,6 +96,21 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
     @property
     def session(self):
         return self._application_handler.session
+
+    @observe('notebook_context')
+    def _on_context_changed(self, event):
+        """
+        Observe changes in the rendered context of the application. If the
+        application is viewed inside a notebook, disable the app props on the
+        vuetify components.
+
+        Parameters
+        ----------
+        event : dict
+            Contains the trailet event properties.
+        """
+        self.components.get('g-toolbar').app = not event['new']
+        self.components.get('g-tray-bar').app = not event['new']
 
     def load_configuration(self, path):
         # Parse the default configuration file
@@ -144,6 +167,12 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
 
                         view = self._application_handler.new_data_viewer(
                             viewer_cls, data=None, show=False)
+
+                        # Give the viewers a reference to the hub.
+                        # TODO: this is a hack, do we really want to have
+                        #  viewers listening to events?
+                        if hasattr(view, 'setup_hub'):
+                            view.setup_hub(self.hub)
 
                         self.hub.broadcast(
                             AddViewerMessage(view, area=area, sender=self))
