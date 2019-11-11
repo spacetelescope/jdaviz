@@ -27,7 +27,24 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
     drawer = Bool(False).tag(sync=True)
     source = Unicode("").tag(sync=True)
 
-    template = Unicode(TEMPLATE).tag(sync=True)
+    template = Unicode("""
+    <v-app id='glupyter'>
+        <div v-if="checkNotebookContext()">
+            <v-card class="fill-height">
+                <g-toolbar v-if="show_toolbar" />
+                <v-row>
+                    <g-tray-bar v-if="show_tray_bar" />
+                    <g-content-area />
+                </v-row>
+            </v-card>
+        </div>
+        <div v-else>
+            <g-tray-bar v-if="show_tray_bar" />
+            <g-toolbar v-if="show_toolbar" />
+            <g-content-area />
+        </div>
+    </v-app>
+    """).tag(sync=True)
 
     methods = Unicode("""
     {

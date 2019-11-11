@@ -66,16 +66,16 @@ class ImportDataButton(TemplateMixin):
             <v-btn
               dark
               v-on="on"
-              min-width="0" 
-              dense 
-              tile 
-              text 
+              min-width="0"
+              dense
+              tile
+              text
               class="px-2 mx-1"
             >
               <v-icon>cloud_download</v-icon>
             </v-btn>
           </template>
-    
+
             <v-form v-model="valid">
               <v-card>
                 <v-card-title
@@ -84,17 +84,17 @@ class ImportDataButton(TemplateMixin):
                 >
                   Import Data
                 </v-card-title>
-                
+
                 <v-card-text>
-                    <v-file-input 
-                        show-size 
-                        counter 
-                        label="File input" 
+                    <v-file-input
+                        show-size
+                        counter
+                        label="File input"
                         v-model="file_paths"
                     ></v-file-input>
                 </v-card-text>
                 <v-divider></v-divider>
-        
+
                 <v-card-actions>
                   <div class="flex-grow-1"></div>
                   <v-btn
@@ -125,6 +125,7 @@ class ImportDataButton(TemplateMixin):
         # TODO: hack because of current incompatibility with ipywidget types
         #  and vuetify templates.
         for path in ["/Users/nearl/data/single_g235h-f170lp_x1d.fits"]:
+            print("HERE")
             load_data_message = LoadDataMessage(path, sender=self)
             self.hub.broadcast(load_data_message)
 
