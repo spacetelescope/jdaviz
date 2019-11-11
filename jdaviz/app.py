@@ -1,4 +1,5 @@
 import os
+import pkg_resources
 
 import ipyvuetify as v
 import yaml
@@ -72,6 +73,10 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
             'g-menu-bar': MenuBar(session=self.session)
         }
 
+        # Load in default configuration file. This must come before loading
+        #  in the components for the toolbar/tray_bar.
+        self.load_configuration(configuration)
+
         # Dump all user-defined toolbar items as component references in the
         #  vuetify template instance.
         toolbar = self.components.get('g-toolbar')
@@ -84,9 +89,6 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
 
         tray_bar.components = {k: v.get('cls')(session=self.session)
                                for k, v in trays.members.items()}
-
-        # Load in default configuration file
-        self.load_configuration(configuration)
 
         # Setup hub event listeners
         self.hub.subscribe(self, NewViewerMessage,
@@ -120,6 +122,11 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
     def load_configuration(self, path):
         # Parse the default configuration file
         default_path = os.path.join(os.path.dirname(__file__), "configs")
+
+        plugins = {
+            entry_point.name: entry_point.load()
+            for entry_point
+            in pkg_resources.iter_entry_points(group='plugins')}
 
         if path is None or path == 'default':
             path = os.path.join(default_path, "default", "default.yaml")
