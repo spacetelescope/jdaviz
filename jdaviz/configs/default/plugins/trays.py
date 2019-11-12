@@ -12,38 +12,40 @@ from jdaviz.core.template_mixin import TemplateMixin
 # TODO: right now, the list items don't elide (the right button will get
 #  pushed out of the right side). There are solutions in vuetify for this
 #  but they need to be implemented.
-@trays("g-data-collection-list", label="Data Collection", icon='cloud_download')
+@trays("g-data-collection-list", label="Data Collection", icon='mdi-database')
 class DataCollectionListComponent(TemplateMixin):
     item = Int(1).tag(sync=True)
     items = List([]).tag(sync=True)
     viewers = List([]).tag(sync=True)
 
     template = Unicode("""
-    <v-list dense nav>
+    <v-list dense nav max-width=250>
       <v-list-item-group v-model="item" color="primary">
-        <v-list-item 
-            v-for="(item, i) in items" 
-            :key="i" 
+        <v-subheader>Data</v-subheader>
+
+        <v-list-item
+            v-for="(item, i) in items"
+            :key="i"
             @click="data_selected(i)">
-    
+
           <v-list-item-content>
-            <v-list-item-title 
+            <v-list-item-title
                 v-text="item.text">
             </v-list-item-title>
           </v-list-item-content>
-          
+
           <v-list-item-action>
             <v-menu offset-y>
-              <template 
+              <template
                 v-slot:activator="{ on }">
                 <v-btn small icon v-on="on" @click.stop="">
                   <v-icon>menu</v-icon>
                 </v-btn>
               </template>
               <v-list>
-                <v-list-item 
-                    v-for="(viewer, index) in viewers" 
-                    :key="index" 
+                <v-list-item
+                    v-for="(viewer, index) in viewers"
+                    :key="index"
                     @click="create_viewer({name: viewer.name, index: i})">
                   <v-list-item-title>
                         {{ viewer.label }}
@@ -95,7 +97,7 @@ class DataCollectionListComponent(TemplateMixin):
                                     'icon': 'mdi-clock'}]
 
 
-@trays('g-viewer-options', label="Viewer Options", icon='save')
+@trays('g-viewer-options', label="Viewer Options", icon='mdi-view-dashboard')
 class ViewerOptionsTray(TemplateMixin):
     template = Unicode("""
     <g-viewer-options-holder></g-viewer-options-holder>
@@ -114,7 +116,7 @@ class ViewerOptionsTray(TemplateMixin):
         self.components.get('g-viewer-options-holder').children = [msg.viewer.viewer_options]
 
 
-@trays('g-layer-options', label="Layer Options", icon='save')
+@trays('g-layer-options', label="Layer Options", icon='mdi-chart-scatter-plot')
 class LayerOptionsTray(TemplateMixin):
     template = Unicode("""
     <g-layer-options-holder></g-layer-options-holder>

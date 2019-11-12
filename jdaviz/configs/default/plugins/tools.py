@@ -163,6 +163,10 @@ class SubsetSelectTool(TemplateMixin):
         overflow
         min_width="300px"
         multiple
+        height=46
+        dense
+        chips
+        deletable-chips
     ></v-overflow-btn>
     """).tag(sync=True)
 
@@ -185,16 +189,19 @@ class SubsetModeTool(TemplateMixin):
     template = Unicode("""
     <v-btn-toggle v-model="index" mandatory group dense>
       <v-btn>
-        <v-icon>cloud_download</v-icon>
+        <v-icon>mdi-checkbox-blank-circle</v-icon>
       </v-btn>
       <v-btn>
-        <v-icon>cloud_download</v-icon>
+        <v-icon>mdi-set-all</v-icon>
       </v-btn>
       <v-btn>
-        <v-icon>cloud_download</v-icon>
+        <v-icon>mdi-set-center</v-icon>
       </v-btn>
       <v-btn>
-        <v-icon>cloud_download</v-icon>
+        <v-icon>mdi-set-left-right</v-icon>
+      </v-btn>
+      <v-btn>
+        <v-icon>mdi-set-center-right</v-icon>
       </v-btn>
     </v-btn-toggle>
     """).tag(sync=True)
