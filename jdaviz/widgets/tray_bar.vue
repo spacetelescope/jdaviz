@@ -3,9 +3,37 @@
           v-model="drawer"
           clipped
           :app="app"
-          width="400px"
+          :mini-variant.sync="mini"
+          width=300
+          mini-variant-width=49
+          stateless
   >
-    <v-card flat class="pa-2">
+    <v-tabs @change="tab_changed" vertical optional>
+      <template v-for="item in tray_items">
+        <v-tooltip right :key="item.name">
+          <template v-slot:activator="{ on }">
+            <v-tab :key="item.name"
+                    style="width: 49px"
+                    v-on="on"
+            >
+              <v-icon>{{ item.icon }}</v-icon>
+            </v-tab>
+          </template>
+          <span>{{ item.label }}</span>
+        </v-tooltip>
+      </template>
+
+      <v-tab-item
+        v-for="item in tray_items"
+        :key="item.name">
+            <!-- <v-card flat> -->
+          <component v-bind:is="item.name"></component>
+<!--              <g-data-collection-list></g-data-collection-list>-->
+<!--              <g-test></g-test>-->
+            <!-- </v-card> -->
+      </v-tab-item>
+    </v-tabs>
+    <!-- <v-card flat class="pa-2">
     <v-expansion-panels multiple>
       <v-expansion-panel
               v-for="(item, index) in tray_items"
@@ -18,5 +46,5 @@
       </v-expansion-panel>
     </v-expansion-panels>
     </v-card>
-  </v-navigation-drawer>
+  </v-navigation-drawer> -->
 </template>

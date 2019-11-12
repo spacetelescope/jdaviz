@@ -35,9 +35,6 @@ class Toolbar(TemplateMixin):
     tool_names = List([]).tag(sync=True)
     app = Bool(True).tag(sync=True)
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
     def add_tool(self, name):
         """
         Adds a reference to the tool item from the registry that will be
@@ -49,10 +46,5 @@ class Toolbar(TemplateMixin):
             The name of the tool plugin.
         """
         logging.info(f"Adding plugin {name} to tray bar.")
+
         self.tool_names.append(name)
-
-    def register_to_hub(self, hub):
-        pass
-
-    def notify(self, message):
-        pass

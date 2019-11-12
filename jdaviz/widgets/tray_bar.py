@@ -1,7 +1,7 @@
 import logging
 import os
 
-from traitlets import Unicode, List, Bool, Any
+from traitlets import Unicode, List, Bool, Any, Float
 
 from ..core.template_mixin import TemplateMixin
 
@@ -15,21 +15,21 @@ class TrayBar(TemplateMixin):
     currently in the glue collection.
     """
     template = Unicode(TEMPLATE).tag(sync=True)
-
     drawer = Bool(True).tag(sync=True)
-    tab = Any(None).tag(sync=True)
     tray_items = List([]).tag(sync=True)
     app = Bool(True).tag(sync=True)
+    mini = Bool(False).tag(sync=True)
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    css = Unicode("""
+    .v-tabs--vertical > .v-tabs-bar .v-tab {
+        min-width: 49px;
+    }
+    """).tag(sync=True)
+
+    def vue_tab_changed(self, index):
+        self.mini = isinstance(index, dict)
 
     def add_tray(self, name, label=None, icon='save'):
         logging.info(f"Adding plugin {name} to tray bar.")
+
         self.tray_items.append({'name': name, 'label': label, 'icon': icon})
-
-    def register_to_hub(self, hub):
-        pass
-
-    def notify(self, message):
-        pass
