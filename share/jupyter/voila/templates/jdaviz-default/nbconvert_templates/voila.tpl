@@ -5,6 +5,7 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/vuetify/2.1.1/vuetify.min.js"></script>
         <link href="https://cdnjs.cloudflare.com/ajax/libs/vuetify/2.1.1/vuetify.min.css" rel="stylesheet">
         <link href='https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons' rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css" rel="stylesheet">
         <link href='{{resources.base_url}}voila/static/index.css' rel="stylesheet">
         <link href='{{resources.base_url}}voila/static/theme-light.css' rel="stylesheet">
         <script src="{{resources.base_url}}voila/static/require.min.js" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" crossorigin="anonymous"></script>

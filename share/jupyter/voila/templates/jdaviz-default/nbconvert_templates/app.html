@@ -17,11 +17,11 @@
             </v-layout>
         </v-slide-y-transition>
         <v-slide-y-transition>
-            <v-layout v-show="!loading">
+            <template v-show="!loading">
                     <jupyter-widget-mount-point mount-id="content">
                         A widget with mount-id="content" should go here
                     </jupyter-widget-mount-point>
-            </v-layout>
+            </template>
         </v-slide-y-transition>
     </v-app>
 </div>
