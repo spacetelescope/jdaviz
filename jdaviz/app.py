@@ -25,27 +25,10 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
     show_toolbar = Bool(True).tag(sync=True)
     show_tray_bar = Bool(True).tag(sync=True)
     notebook_context = Bool(False).tag(sync=True)
-    drawer = Bool(False).tag(sync=True)
+    drawer = Bool(True).tag(sync=True)
     source = Unicode("").tag(sync=True)
 
-    template = Unicode("""
-    <v-app id='glupyter'>
-        <div v-if="checkNotebookContext()">
-            <v-card class="fill-height">
-                <g-toolbar v-if="show_toolbar" />
-                <v-row>
-                    <g-tray-bar v-if="show_tray_bar" />
-                    <g-content-area />
-                </v-row>
-            </v-card>
-        </div>
-        <div v-else>
-            <g-tray-bar v-if="show_tray_bar" />
-            <g-toolbar v-if="show_toolbar" />
-            <g-content-area />
-        </div>
-    </v-app>
-    """).tag(sync=True)
+    template = Unicode(TEMPLATE).tag(sync=True)
 
     methods = Unicode("""
     {
@@ -118,6 +101,10 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
         """
         self.components.get('g-toolbar').app = not event['new']
         self.components.get('g-tray-bar').app = not event['new']
+
+    @observe('drawer')
+    def _on_drawer_state_changed(self, event):
+        self.components.get('g-tray-bar').drawer = event['new']
 
     def load_configuration(self, path):
         # Parse the default configuration file
