@@ -3,13 +3,6 @@ from glue.core import HubListener
 
 
 class TemplateMixin(v.VuetifyTemplate, HubListener):
-    _shared_state = {}
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.__dict__.update(self._shared_state)
-
     def __new__(cls, *args, **kwargs):
         """
         Overload object creation so that we can inject a reference to the
