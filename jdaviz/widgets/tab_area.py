@@ -6,6 +6,8 @@ from traitlets import Unicode, Any, List
 from ..core.events import AddViewerMessage, ViewerSelectedMessage
 from ..core.template_mixin import TemplateMixin
 
+from ipygoldenlayout import GoldenLayout
+
 with open(os.path.join(os.path.dirname(__file__), "tab_area.vue")) as f:
     TEMPLATE = f.read()
 
@@ -38,11 +40,13 @@ class TabArea(TemplateMixin):
         # Store the area key for this tab area
         self._area = area
 
+        self.components = {'g-goldenlayout': GoldenLayout()}
+
         # Setup up "holders" due to the fact that ipyvuetify does not support
         # dynamically adding components after the application has been rendered
-        self.components = {'g-tab-{}'.format(i): v.Card(flat=True,
-                                                        class_="fill-height")
-                           for i in range(10)}
+        # self.components = {'g-tab-{}'.format(i): v.Card(flat=True,
+        #                                                 class_="fill-height")
+        #                    for i in range(10)}
 
         # Subscribed to the add viewer messages to trigger the creation of new
         # tabs in the tab area.
