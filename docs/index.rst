@@ -9,6 +9,7 @@ the Jupyter platform.
   :maxdepth: 2
 
   dev/infrastructure.rst
+  dev/ui_description.rst
 
 
 Reference/API
