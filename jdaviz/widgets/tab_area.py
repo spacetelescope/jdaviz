@@ -72,7 +72,7 @@ class TabArea(TemplateMixin):
 
         # Add the figure widget (plot widget) as a child to the "holder"
         msg.viewer.figure_widget.layout.width = 'auto'
-        msg.viewer.figure_widget.layout.height = '350px'
+        msg.viewer.figure_widget.layout.height = 'calc(100vh - 110px)'
         self.components.get(comp_ref).children = [msg.viewer.figure_widget]
 
         # Store the raw viewer instance

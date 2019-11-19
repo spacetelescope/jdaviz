@@ -8,7 +8,7 @@
           mini-variant-width=49
           stateless
   >
-    <v-tabs @change="tab_changed" vertical optional>
+    <v-tabs v-model="tab" @change="tab_changed" vertical optional>
       <template v-for="item in tray_items">
         <v-tooltip right :key="item.name">
           <template v-slot:activator="{ on }">

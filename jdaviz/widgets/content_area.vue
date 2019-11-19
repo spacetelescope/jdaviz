@@ -8,7 +8,8 @@
         v-if="top_area"
         align="center"
         justify="center"
-        class="fill-height">
+        :class="{ 'fill-height': !bottom_area }"
+        :style="[ bottom_area ? { 'height': '50%' } : {} ]">
         <v-col
           class="center fill-height pa-0">
           <g-tab-area-top></g-tab-area-top>
@@ -18,7 +19,7 @@
         v-if="bottom_area"
         align="center"
         justify="center"
-        class="fill-height">
+        style="height: 50%;">
         <v-col
           class="center fill-height pa-0">
           <g-tab-area-bottom></g-tab-area-bottom>

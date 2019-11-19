@@ -214,7 +214,8 @@ class SubsetModeTool(TemplateMixin):
             self, EditSubsetMessage, handler=self._on_subset_edited)
         self.observe(self._subset_mode_selected, 'index')
 
-    def _subset_mode_selected(self, index):
+    def _subset_mode_selected(self, event):
+        index = event.get('new', 0)
         self.session.edit_subset_mode.mode = list(SUBSET_MODES.values())[index]
 
     def _on_subset_edited(self, msg):

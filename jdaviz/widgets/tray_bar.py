@@ -1,7 +1,7 @@
 import logging
 import os
 
-from traitlets import Unicode, List, Bool, Any, Float
+from traitlets import Unicode, List, Bool, Any, Float, Int
 
 from ..core.template_mixin import TemplateMixin
 
@@ -14,6 +14,7 @@ class TrayBar(TemplateMixin):
     Application navigation drawer containing the lists of data and subsets
     currently in the glue collection.
     """
+    tab = Any(0).tag(sync=True)
     template = Unicode(TEMPLATE).tag(sync=True)
     drawer = Bool(True).tag(sync=True)
     tray_items = List([]).tag(sync=True)
