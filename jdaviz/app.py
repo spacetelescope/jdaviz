@@ -14,6 +14,7 @@ from .widgets.menu_bar import MenuBar
 from .widgets.toolbar import Toolbar
 from .widgets.tray_bar import TrayBar
 
+
 with open(os.path.join(os.path.dirname(__file__), "app.vue")) as f:
     TEMPLATE = f.read()
 
@@ -29,12 +30,20 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
     source = Unicode("").tag(sync=True)
 
     template = Unicode(TEMPLATE).tag(sync=True)
-
     methods = Unicode("""
     {
         checkNotebookContext() {
             this.notebook_context = !!!document.getElementById("web-app");
             return this.notebook_context;
+        },
+        
+        loadRemoteCSS() {
+            var muiIconsSheet = document.createElement('link');
+            muiIconsSheet.type='text/css';
+            muiIconsSheet.rel='stylesheet';
+            muiIconsSheet.href='https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css';
+            document.getElementsByTagName('head')[0].appendChild(muiIconsSheet);
+            return true;
         }
     }
     """).tag(sync=True)
