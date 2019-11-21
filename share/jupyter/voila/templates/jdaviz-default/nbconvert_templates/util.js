@@ -36,8 +36,6 @@ Vue.component('jupyter-widget-mount-point', {
             }
             return this.elem;
         }
-        return createElement('div', this.$slots.default ||
-            [createElement('v-chip' ,`[${this.mountId}]`)]);
     }
 });
 

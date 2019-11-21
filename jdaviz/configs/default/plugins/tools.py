@@ -125,7 +125,6 @@ class ImportDataButton(TemplateMixin):
         # TODO: hack because of current incompatibility with ipywidget types
         #  and vuetify templates.
         for path in ["/Users/nearl/data/single_g235h-f170lp_x1d.fits"]:
-            print("HERE")
             load_data_message = LoadDataMessage(path, sender=self)
             self.hub.broadcast(load_data_message)
 
