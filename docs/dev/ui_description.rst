@@ -5,7 +5,7 @@ The glue-jupyter ("glupyter") package supports interacting with and
 visualizing data within the Jupyter environment using core elements from
 the Glue python package. It is distinct because unlike the more
 prominent Glue package, glupyter does not leverage Qt as the front-end
-gui library. Instead, glupyter maintains the separation between the data
+GUI library. Instead, glupyter maintains the separation between the data
 model (e.g. the core elements from Glue that are not dependent on the
 front-end library), and the view of the data (in this case, web-based
 tooling provided by Jupyter).
@@ -14,19 +14,18 @@ Glupyter implements a base ``JupyterApplication`` object through which
 users can manage their data, create viewers, and add links between data
 sets. The data management and linking are controlled separate from the
 viewers in that changes made directly to the data state propagate to the
-UI (i.e. the UI acts strictly as the view to the data state, not the
-controller of the data state). The viewers themselves are based on the
+UI -- that is, the UI does not contain any state, which allows the application to be easily controlled from code. The viewers themselves are based on the
 IPyWidget package which allows the creation of widgets that can be used
 and interacted with in python, but rendered in a javascript environment.
 
 There are two distinct use cases for the glupyter environment: first, as
 a means to procedurally interact with pieces of a user's workflow *in
 addition* to their work in e.g. a Jupyter Notebook; and second, to
-provide users a web-based gui to interact with and visualize their data
-while hiding the Jupyter context, e.g. a standalone web application.
-These two use cases describe a data-first and gui-first approach,
+provide users a web-based GUI to interact with and visualize their data
+while hiding the Python code, e.g. a standalone web application.
+These two use cases describe a data-first and GUI-first approach,
 respectively. This document will focus on detailing the design of the
-gui-first approach, depicted in the following diagram.
+GUI-first approach, depicted in the following diagram.
 
 .. note::
     The ``.xml`` file in the ``img`` directory can be used to edit the
@@ -40,17 +39,17 @@ General user interface design
 
 The general user interface is a parallel design to the Qt desktop
 interface. It is meant to be the standard scaffolding supporting the
-implementation of the individual viewers, data management functions, and
+display of the individual viewers, and implementation of data management functions and
 user plugins in much the same way that the Qt desktop version does.
 
 The implementation leverages three primary packages:
 
-1. ``glue-jupyter``: handles the data and state management, including
+1. `glue-jupyter <https://github.com/glue-viz/glue-jupyter>`_: handles the data and state management, including
    the plugin infrastructure that provides the registry of available
    viewers, analysis functions, etc.
-2. ``ipyvuetify``: provides the ui widgets for composing the web-based
+2. `ipyvuetify <https://github.com/mariobuikhuizen/ipyvuetify>`_: provides the UI widgets for composing the web-based
    front-end.
-3. ``ipygoldenlayout``: an additional widget that supports tabbing and
+3. `ipygoldenlayout <https://github.com/nmearl/ipygoldenlayout>`_: an additional widget that supports tabbing and
    docking the displayed viewers.
 
 Widget design
@@ -90,7 +89,7 @@ state and state changes on the custom widget, and the custom widget need
 not know or care about how that state is being represented (i.e. the
 only state is that of the custom widget).
 
-With this approach in hand, all widgets in the glupyter gui are composed
+With this approach in hand, all widgets in the glupyter GUI are composed
 of two files: the python file declaring the widget class (e.g.
 ``Toolbar``), and the ``.vue`` file containing the template describing
 how the widget is to be rendered using components from the Vuetify
@@ -219,5 +218,42 @@ each other is handled using the ``Hub`` class of the glue-core package
 paradigm wherein widgets subscribe to particular messages on the hub and
 are notified whenever those messages are published by any part of the
 UI. This system allows us to break hard dependencies between widgets in
-the UI the require passing references around and to develop widgets
+the UI that require passing references around and to develop widgets
 independently.
+
+The JDAViz package includes a base class that can be used for adding
+widgets that would need to communicate through global events. This is
+is the ``TemplateMixin`` class and allows passing Glue session objects
+to widgets upon their instantiation. The Glue session contains the ``Hub``
+object available to the application and it, along with other useful
+data objects, are easily accessible through the ``TemplateMixin``.
+
+Using the Glue event framework is covered in great detail in the
+`Glue documentation <http://docs.glueviz.org/en/stable/developer_guide/communication.html>`_.
+The code snippet gives an example of how an event listener may be
+implemented inside a widget::
+
+.. code:: python
+
+    from jdaviz.core.template_mixin import TemplateMixin
+    from glue.core.message import DataMessage
+
+    class TestWigdet(TemplateMixin):
+        text = Unicode("No messages...").tag(sync=True)
+        template = Unicode("""
+        <v-card>
+            <v-card-text>
+                <p>{{ text }}</p>
+            </v-card-text>
+        </v-card>
+        """).tag(sync=True)
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+
+            self.hub.subscribe(self, DataMessage,
+                               handler=self.on_data_message_received)
+
+        def on_data_message_received(self, message):
+            self.text = "Received data message!"
+
