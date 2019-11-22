@@ -106,18 +106,11 @@ window.init = async (voila) => {
         const originalLoader = widgetManager.loader;
         widgetManager.loader = (moduleName, moduleVersion) => {
             if (moduleName === 'jupyter-vuetify' || moduleName === 'jupyter-vue') {
-                const newModuleName = moduleName + '/nodeps';
-                const promise = originalLoader(newModuleName, moduleVersion);
-                if (moduleName === 'jupyter-vue') {
-                    promise.then(_ => requirejs.config({
-                        map: {
-                            '*': {
-                                [moduleName]: newModuleName
-                            }
-                        }
-                    }));
-                }
-                return promise;
+                requirejs.config({
+                    paths: {
+                        [moduleName]: [`${moduleName}/nodeps`, `https://unpkg.com/${moduleName}@${moduleVersion}/dist/nodeps`]
+                    }
+                });
             }
             return originalLoader(moduleName, moduleVersion);
         };
