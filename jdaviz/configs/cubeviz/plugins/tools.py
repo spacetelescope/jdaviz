@@ -3,9 +3,11 @@ from traitlets import Unicode, List, Int, Bool, Dict, Any
 
 from jdaviz.core.registries import tools
 from jdaviz.core.template_mixin import TemplateMixin
-from jdaviz.core.events import LoadDataMessage, DataSelectedMessage, AddViewerMessage
+from jdaviz.core.events import (LoadDataMessage, DataSelectedMessage,
+                                AddViewerMessage)
 
-from glue.core.edit_subset_mode import OrMode, AndNotMode, AndMode, XorMode, ReplaceMode
+from glue.core.edit_subset_mode import (OrMode, AndNotMode, AndMode, XorMode,
+                                        ReplaceMode)
 from glue.core.message import EditSubsetMessage
 
 
@@ -26,16 +28,16 @@ class CubevizImportDataButton(TemplateMixin):
             <v-btn
               dark
               v-on="on"
-              min-width="0" 
-              dense 
-              tile 
-              text 
+              min-width="0"
+              dense
+              tile
+              text
               class="px-2 mx-1"
             >
               <v-icon>cloud_download</v-icon>
             </v-btn>
           </template>
-    
+
             <v-form v-model="valid">
               <v-card>
                 <v-card-title
@@ -44,17 +46,17 @@ class CubevizImportDataButton(TemplateMixin):
                 >
                   Import Data
                 </v-card-title>
-                
+
                 <v-card-text>
-                    <v-file-input 
-                        show-size 
-                        counter 
-                        label="File input" 
+                    <v-file-input
+                        show-size
+                        counter
+                        label="File input"
                         v-model="file_paths"
                     ></v-file-input>
                 </v-card-text>
                 <v-divider></v-divider>
-        
+
                 <v-card-actions>
                   <div class="flex-grow-1"></div>
                   <v-btn

@@ -36,7 +36,7 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
             this.notebook_context = !!!document.getElementById("web-app");
             return this.notebook_context;
         },
-        
+
         loadRemoteCSS() {
             var muiIconsSheet = document.createElement('link');
             muiIconsSheet.type='text/css';

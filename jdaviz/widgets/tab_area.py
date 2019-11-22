@@ -103,5 +103,3 @@ class ViewerTab(v.Card):
         super().__init__(*args, flat=True, **kwargs)
 
         # self.components = {'viewer': figure}
-
-

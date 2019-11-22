@@ -18,7 +18,7 @@ class ContentArea(TemplateMixin):
     .container.fill-height {
         flex-wrap: wrap;
     }
-    
+
     .container.fill-height > .row {
         flex: 1 1 100%;
     }
