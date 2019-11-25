@@ -1,19 +1,22 @@
 import os
+import pkg_resources
 
 import ipyvuetify as v
 import yaml
-from glue.core.application_base import Application, HubListener
+from glue.core.application_base import HubListener
 from glue_jupyter.app import JupyterApplication
-from traitlets import Unicode, Bool, Dict
+from traitlets import Unicode, Bool, Dict, observe
 
 from jdaviz.core.registries import tools, trays, viewers
+from .core.events import NewViewerMessage, AddViewerMessage, LoadDataMessage
 from .widgets.content_area import ContentArea
+from .widgets.menu_bar import MenuBar
 from .widgets.toolbar import Toolbar
 from .widgets.tray_bar import TrayBar
-from .widgets.menu_bar import MenuBar
-from .core.events import NewViewerMessage, AddViewerMessage, LoadDataMessage
 
-from glue_jupyter.bqplot.profile import BqplotProfileView
+
+with open(os.path.join(os.path.dirname(__file__), "app.vue")) as f:
+    TEMPLATE = f.read()
 
 
 class IPyApplication(v.VuetifyTemplate, HubListener):
@@ -22,24 +25,27 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
     show_menu_bar = Bool(True).tag(sync=True)
     show_toolbar = Bool(True).tag(sync=True)
     show_tray_bar = Bool(True).tag(sync=True)
+    notebook_context = Bool(False).tag(sync=True)
+    drawer = Bool(True).tag(sync=True)
+    source = Unicode("").tag(sync=True)
 
-    template = Unicode("""
-    <v-app id='glupyter'>
-        <v-content>
-            <v-container fluid class="pa-0 ma-0" style="height: 100%">
-                <!--<v-row no-gutters style="width: 100%">-->
-                <!--  <g-menu-bar />-->
-                <!--</v-row>-->
-                <v-row no-gutters>
-                    <g-toolbar v-if="show_toolbar" />
-                </v-row>
-                <v-row no-gutters class="fill-height">
-                    <g-tray-bar v-if="show_tray_bar" />
-                    <g-content-area />
-                </v-row>
-            </v-container>
-        <v-content>
-    </v-app>
+    template = Unicode(TEMPLATE).tag(sync=True)
+    methods = Unicode("""
+    {
+        checkNotebookContext() {
+            this.notebook_context = !!!document.getElementById("web-app");
+            return this.notebook_context;
+        },
+
+        loadRemoteCSS() {
+            var muiIconsSheet = document.createElement('link');
+            muiIconsSheet.type='text/css';
+            muiIconsSheet.rel='stylesheet';
+            muiIconsSheet.href='https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css';
+            document.getElementsByTagName('head')[0].appendChild(muiIconsSheet);
+            return true;
+        }
+    }
     """).tag(sync=True)
 
     def __init__(self, configuration=None, *args, **kwargs):
@@ -59,6 +65,10 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
             'g-menu-bar': MenuBar(session=self.session)
         }
 
+        # Load in default configuration file. This must come before loading
+        #  in the components for the toolbar/tray_bar.
+        self.load_configuration(configuration)
+
         # Dump all user-defined toolbar items as component references in the
         #  vuetify template instance.
         toolbar = self.components.get('g-toolbar')
@@ -71,9 +81,6 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
 
         tray_bar.components = {k: v.get('cls')(session=self.session)
                                for k, v in trays.members.items()}
-
-        # Load in default configuration file
-        self.load_configuration(configuration)
 
         # Setup hub event listeners
         self.hub.subscribe(self, NewViewerMessage,
@@ -89,9 +96,33 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
     def session(self):
         return self._application_handler.session
 
+    @observe('notebook_context')
+    def _on_context_changed(self, event):
+        """
+        Observe changes in the rendered context of the application. If the
+        application is viewed inside a notebook, disable the app props on the
+        vuetify components.
+
+        Parameters
+        ----------
+        event : dict
+            Contains the trailet event properties.
+        """
+        self.components.get('g-toolbar').app = not event['new']
+        self.components.get('g-tray-bar').app = not event['new']
+
+    @observe('drawer')
+    def _on_drawer_state_changed(self, event):
+        self.components.get('g-tray-bar').drawer = event['new']
+
     def load_configuration(self, path):
         # Parse the default configuration file
         default_path = os.path.join(os.path.dirname(__file__), "configs")
+
+        plugins = {
+            entry_point.name: entry_point.load()
+            for entry_point
+            in pkg_resources.iter_entry_points(group='plugins')}
 
         if path is None or path == 'default':
             path = os.path.join(default_path, "default", "default.yaml")
@@ -144,6 +175,12 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
 
                         view = self._application_handler.new_data_viewer(
                             viewer_cls, data=None, show=False)
+
+                        # Give the viewers a reference to the hub.
+                        # TODO: this is a hack, do we really want to have
+                        #  viewers listening to events?
+                        if hasattr(view, 'setup_hub'):
+                            view.setup_hub(self.hub)
 
                         self.hub.broadcast(
                             AddViewerMessage(view, area=area, sender=self))

@@ -162,4 +162,3 @@ viewers = ViewerRegistry()
 trays = TrayRegistry()
 tools = ToolRegistry()
 menus = MenuRegistry()
-

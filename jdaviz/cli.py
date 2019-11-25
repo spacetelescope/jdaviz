@@ -6,6 +6,7 @@ import tempfile
 
 import click
 from voila.app import Voila
+from voila.configuration import VoilaConfiguration
 
 CONFIGS_DIR = os.path.join(os.path.dirname(__file__), 'configs')
 
@@ -29,6 +30,7 @@ def main(filename, layout):
     os.chdir(nbdir)
     try:
         Voila.notebook_path = 'notebook.ipynb'
+        VoilaConfiguration.template = 'jdaviz-default'
         sys.exit(Voila().launch_instance())
     finally:
         os.chdir(start_dir)

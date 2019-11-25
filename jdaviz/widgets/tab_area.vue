@@ -1,8 +1,5 @@
 <template>
-  <v-card
-          class="mx-auto"
-          height="100%"
-  >
+  <v-card flat tile class="fill-height" style="height: 100%">
     <v-tabs
             v-model="tab"
             background-color="secondary"
@@ -18,11 +15,13 @@
       </v-tab>
     </v-tabs>
 
-    <v-tabs-items v-model="tab" class="tab-wrapper">
+    <v-tabs-items v-model="tab">
       <v-tab-item
               v-for="(viewer, i) in active_viewers"
               :key="i"
               :value="'tab-' + i"
+              transition="false"
+              reverse-transition="false"
       >
         <component v-bind:is="viewer.binding"></component>
       </v-tab-item>

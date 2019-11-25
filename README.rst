@@ -49,7 +49,7 @@ It is recommended that users also install the `voila-vuetify
 the css spacing in the default nbconvert template utilized by voila. To use the
 template, include it in the start up command::
 
-    $ voila notebooks/Example.ipynb --template=vuetify-default
+    $ voila notebooks/Example.ipynb --template=jdaviz-default
 
 License
 -------

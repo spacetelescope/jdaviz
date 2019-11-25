@@ -1,7 +1,7 @@
 import logging
 import os
 
-from traitlets import Unicode, List
+from traitlets import Unicode, List, Bool
 
 from ..core.template_mixin import TemplateMixin
 
@@ -33,9 +33,7 @@ class Toolbar(TemplateMixin):
     """
     template = Unicode(TEMPLATE).tag(sync=True)
     tool_names = List([]).tag(sync=True)
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    app = Bool(True).tag(sync=True)
 
     def add_tool(self, name):
         """
@@ -48,10 +46,5 @@ class Toolbar(TemplateMixin):
             The name of the tool plugin.
         """
         logging.info(f"Adding plugin {name} to tray bar.")
+
         self.tool_names.append(name)
-
-    def register_to_hub(self, hub):
-        pass
-
-    def notify(self, message):
-        pass

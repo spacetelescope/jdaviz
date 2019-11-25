@@ -1,25 +1,27 @@
 <template>
   <v-content>
     <v-container
-            fluid
+      fluid
+      class="fill-height py-0"
     >
-      <v-row style="height: 100%"
-             v-if="top_area"
-      >
+      <v-row
+        v-if="top_area"
+        align="center"
+        justify="center"
+        :class="{ 'fill-height': !bottom_area }"
+        :style="[ bottom_area ? { 'height': '50%' } : {} ]">
         <v-col
-                class="fill-height"
-                cols="12"
-        >
+          class="center fill-height pa-0">
           <g-tab-area-top></g-tab-area-top>
         </v-col>
       </v-row>
-      <v-row style="height: 100%"
-             v-if="bottom_area"
-      >
+      <v-row
+        v-if="bottom_area"
+        align="center"
+        justify="center"
+        style="height: 50%;">
         <v-col
-                class="fill-height"
-                cols="12"
-        >
+          class="center fill-height pa-0">
           <g-tab-area-bottom></g-tab-area-bottom>
         </v-col>
       </v-row>

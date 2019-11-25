@@ -2,7 +2,6 @@ import os
 
 import ipyvuetify as v
 from traitlets import Unicode, Any, List
-from ipywidgets import VBox, Output
 
 from ..core.events import AddViewerMessage, ViewerSelectedMessage
 from ..core.template_mixin import TemplateMixin
@@ -34,28 +33,6 @@ class TabArea(TemplateMixin):
     tab = Any(None).tag(sync=True)
     active_viewers = List([]).tag(sync=True)
 
-    css = Unicode("""
-    .tab-wrapper {
-      height:100%; /* Set to desired height of entire tabbed section, or use flex, or ... */
-      display:flex; 
-      flex-direction: column;
-    }
-    
-    .tab-wrapper .v-window{
-      flex: 1;
-    }
-    
-    .tab-wrapper .v-window__container,
-    .tab-wrapper .v-window-item  {
-      height: 100%;
-    }
-    
-    /* customise the dimensions of the card content here */
-    .tab-wrapper .v-card {
-      height: 100%;
-    }
-    """).tag(sync=True)
-
     def __init__(self, area=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Store the area key for this tab area
@@ -63,7 +40,8 @@ class TabArea(TemplateMixin):
 
         # Setup up "holders" due to the fact that ipyvuetify does not support
         # dynamically adding components after the application has been rendered
-        self.components = {'g-tab-{}'.format(i): v.Card(class_="fill-height")
+        self.components = {'g-tab-{}'.format(i): v.Card(flat=True,
+                                                        class_="fill-height")
                            for i in range(10)}
 
         # Subscribed to the add viewer messages to trigger the creation of new
@@ -94,7 +72,7 @@ class TabArea(TemplateMixin):
 
         # Add the figure widget (plot widget) as a child to the "holder"
         msg.viewer.figure_widget.layout.width = 'auto'
-        msg.viewer.figure_widget.layout.height = 'auto'
+        msg.viewer.figure_widget.layout.height = 'calc(100vh - 110px)'
         self.components.get(comp_ref).children = [msg.viewer.figure_widget]
 
         # Store the raw viewer instance
@@ -125,5 +103,3 @@ class ViewerTab(v.Card):
         super().__init__(*args, flat=True, **kwargs)
 
         # self.components = {'viewer': figure}
-
-
