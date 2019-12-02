@@ -3,8 +3,8 @@ import os
 import ipyvuetify as v
 from traitlets import Unicode, Any, List
 
-from ..core.events import AddViewerMessage, ViewerSelectedMessage
-from ..core.template_mixin import TemplateMixin
+from jdaviz.core.events import AddViewerMessage, ViewerSelectedMessage
+from jdaviz.core.template_mixin import TemplateMixin
 
 from ipygoldenlayout import GoldenLayout
 

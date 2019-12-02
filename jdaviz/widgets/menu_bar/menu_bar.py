@@ -3,7 +3,7 @@ import os
 
 from traitlets import Unicode, List
 
-from ..core.template_mixin import TemplateMixin
+from jdaviz.core.template_mixin import TemplateMixin
 
 __all__ = ['MenuBar']
 

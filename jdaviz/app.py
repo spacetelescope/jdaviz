@@ -9,10 +9,10 @@ from traitlets import Unicode, Bool, Dict, observe
 
 from jdaviz.core.registries import tools, trays, viewers
 from .core.events import NewViewerMessage, AddViewerMessage, LoadDataMessage
-from .widgets.content_area import ContentArea
+from jdaviz.widgets.content_area.content_area import ContentArea
 from .widgets.menu_bar import MenuBar
-from .widgets.toolbar import Toolbar
-from .widgets.tray_bar import TrayBar
+from jdaviz.widgets.toolbar.toolbar import Toolbar
+from jdaviz.widgets.tray_bar.tray_bar import TrayBar
 
 
 with open(os.path.join(os.path.dirname(__file__), "app.vue")) as f:

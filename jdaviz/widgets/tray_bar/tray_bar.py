@@ -3,7 +3,7 @@ import os
 
 from traitlets import Unicode, List, Bool, Any, Float, Int
 
-from ..core.template_mixin import TemplateMixin
+from jdaviz.core.template_mixin import TemplateMixin
 
 with open(os.path.join(os.path.dirname(__file__), "tray_bar.vue")) as f:
     TEMPLATE = f.read()

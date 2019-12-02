@@ -2,8 +2,8 @@ import os
 
 from traitlets import Unicode, Bool
 
-from .tab_area import TabArea
-from ..core.template_mixin import TemplateMixin
+from jdaviz.widgets.tab_area import TabArea
+from jdaviz.core.template_mixin import TemplateMixin
 
 with open(os.path.join(os.path.dirname(__file__), "content_area.vue")) as f:
     TEMPLATE = f.read()
