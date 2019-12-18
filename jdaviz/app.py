@@ -164,26 +164,23 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
         # TODO: this will changed when ipygoldenlayout is properly
         #   implemented.
         if content_area is not None:
-            self.components['g-content-area'].bottom_area = 'bottom_area' in content_area
+            for viewer_label in content_area:
+                viewer = viewers.members.get(viewer_label)
 
-            for area in content_area:
-                for viewer_label in content_area.get(area):
-                    viewer = viewers.members.get(viewer_label)
+                if viewer is not None:
+                    viewer_cls = viewer.get('cls')
 
-                    if viewer is not None:
-                        viewer_cls = viewer.get('cls')
+                    view = self._application_handler.new_data_viewer(
+                        viewer_cls, data=None, show=False)
 
-                        view = self._application_handler.new_data_viewer(
-                            viewer_cls, data=None, show=False)
+                    # Give the viewers a reference to the hub.
+                    # TODO: this is a hack, do we really want to have
+                    #  viewers listening to events?
+                    if hasattr(view, 'setup_hub'):
+                        view.setup_hub(self.hub)
 
-                        # Give the viewers a reference to the hub.
-                        # TODO: this is a hack, do we really want to have
-                        #  viewers listening to events?
-                        if hasattr(view, 'setup_hub'):
-                            view.setup_hub(self.hub)
-
-                        self.hub.broadcast(
-                            AddViewerMessage(view, area=area, sender=self))
+                    self.hub.broadcast(
+                        AddViewerMessage(view, sender=self))
 
     def _on_load_data(self, msg):
         data = self._application_handler.load_data(msg.path)

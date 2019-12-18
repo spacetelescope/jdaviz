@@ -23,9 +23,7 @@ tray_bar:
   - g-viewer-options
   - g-layer-options
 content_area:
-  top_area:
-    - cv-data-imshow
-    - cv-error-imshow
-    - cv-dq-imshow
-  bottom_area:
-    - cv-profile-1d
+  - cv-data-imshow
+  - cv-error-imshow
+  - cv-dq-imshow
+  - cv-profile-1d

@@ -5,24 +5,23 @@
       class="fill-height py-0"
     >
       <v-row
-        v-if="top_area"
         align="center"
-        justify="center"
-        :class="{ 'fill-height': !bottom_area }"
-        :style="[ bottom_area ? { 'height': '50%' } : {} ]">
+        justify="center">
         <v-col
           class="center fill-height pa-0">
-          <g-tab-area-top></g-tab-area-top>
-        </v-col>
-      </v-row>
-      <v-row
-        v-if="bottom_area"
-        align="center"
-        justify="center"
-        style="height: 50%;">
-        <v-col
-          class="center fill-height pa-0">
-          <g-tab-area-bottom></g-tab-area-bottom>
+          <golden-layout style="height: 100vh">
+            <gl-row>
+              <gl-stack>
+                <gl-component
+                        title="component2"
+                        v-for="(viewer, i) in active_viewers"
+                        @resize="on_component_resized"
+                >
+                  <component v-bind:is="viewer.binding"></component>
+                </gl-component>
+              </gl-stack>
+            </gl-row>
+          </golden-layout>
         </v-col>
       </v-row>
     </v-container>

@@ -14,7 +14,7 @@ from jdaviz.core.template_mixin import TemplateMixin
 #  but they need to be implemented.
 @trays("g-data-collection-list", label="Data Collection", icon='mdi-database')
 class DataCollectionListComponent(TemplateMixin):
-    item = Int(1).tag(sync=True)
+    item = Int(1).tag(sync=True, allow_none=True)
     items = List([]).tag(sync=True)
     viewers = List([]).tag(sync=True)
 

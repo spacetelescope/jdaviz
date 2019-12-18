@@ -1,6 +1,6 @@
 <template>
   <v-card flat tile class="fill-height" style="height: 100%">
-    <golden-layout style="height: 200px">
+    <golden-layout style="height: 500px">
       <gl-row>
         <gl-component title="component1">
           <h1>Component 1</h1>
