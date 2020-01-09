@@ -25,7 +25,6 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
     show_menu_bar = Bool(True).tag(sync=True)
     show_toolbar = Bool(True).tag(sync=True)
     show_tray_bar = Bool(True).tag(sync=True)
-    notebook_context = Bool(False).tag(sync=True)
     drawer = Bool(True).tag(sync=True)
     source = Unicode("").tag(sync=True)
 
@@ -95,21 +94,6 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
     @property
     def session(self):
         return self._application_handler.session
-
-    @observe('notebook_context')
-    def _on_context_changed(self, event):
-        """
-        Observe changes in the rendered context of the application. If the
-        application is viewed inside a notebook, disable the app props on the
-        vuetify components.
-
-        Parameters
-        ----------
-        event : dict
-            Contains the trailet event properties.
-        """
-        self.components.get('g-toolbar').app = not event['new']
-        self.components.get('g-tray-bar').app = not event['new']
 
     @observe('drawer')
     def _on_drawer_state_changed(self, event):
