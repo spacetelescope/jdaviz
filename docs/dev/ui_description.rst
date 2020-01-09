@@ -3,10 +3,10 @@ Glupyter Framework Overview
 
 The glue-jupyter ("glupyter") package supports interacting with and
 visualizing data within the Jupyter environment using core elements from
-the Glue python package. It is distinct because unlike the more
-prominent Glue package, glupyter does not leverage Qt as the front-end
+the glue python package. It is distinct because unlike the more
+prominent glue package, glupyter does not leverage Qt as the front-end
 GUI library. Instead, glupyter maintains the separation between the data
-model (e.g. the core elements from Glue that are not dependent on the
+model (e.g. the core elements from glue that are not dependent on the
 front-end library), and the view of the data (in this case, web-based
 tooling provided by Jupyter).
 
@@ -16,14 +16,16 @@ sets. The data management and linking are controlled separate from the
 viewers in that changes made directly to the data state propagate to the
 UI -- that is, the UI does not contain any state, which allows the application to be easily controlled from code. The viewers themselves are based on the
 IPyWidget package which allows the creation of widgets that can be used
-and interacted with in python, but rendered in a javascript environment.
+and interacted with in python, but rendered in a browser environment.
 
-There are two distinct use cases for the glupyter environment: first, as
-a means to procedurally interact with pieces of a user's workflow *in
-addition* to their work in e.g. a Jupyter Notebook; and second, to
-provide users a web-based GUI to interact with and visualize their data
-while hiding the Python code, e.g. a standalone web application.
-These two use cases describe a data-first and GUI-first approach,
+There are two distinct use cases for the glupyter environment:
+
+    1. as a means to procedurally interact with pieces of a user's workflow
+    *in addition* to their work in e.g. a Jupyter Notebook;
+    2. to provide users a web-based GUI to interact with and visualize their
+    data while hiding the Python code, e.g. a standalone web application.
+
+These two use cases describe a Python-first and GUI-first approach,
 respectively. This document will focus on detailing the design of the
 GUI-first approach, depicted in the following diagram.
 
@@ -79,7 +81,7 @@ composes it. Put another way, there's no *central source of truth* for
 the state of the custom widget as each element may contain some kind of
 stateful information about itself.
 
-An alternative design is to have each widget implemented as a
+An alternative design, and the one used for the JDAViz tools, is to have each widget implemented as a
 ``VuetifyTemplate`` object. In this way, custom widgets are defined as
 ipywidget-like elements whose visual representation is described by a
 Vuetify template. The template composes the visual representation of the
@@ -157,9 +159,10 @@ built using ``ipyvuetify``, unified in the ``Application`` class.
 Widget communication
 --------------------
 
-There are two fundamental forms of communication between widgets:
-direction communication using the ``observer`` pattern, and global
-communication using the centralized event hub provided by Glue.
+There are three fundamental forms of communication between widgets:
+    1. direction communication using the ``observer`` pattern using `Traitlets <https://traitlets.readthedocs.io/en/stable/>`_,
+    2. global communication using the centralized event hub provided by glue,
+    3. and callback properties on glue objects.
 
 Direct messaging
 ~~~~~~~~~~~~~~~~
@@ -223,13 +226,13 @@ independently.
 
 The JDAViz package includes a base class that can be used for adding
 widgets that would need to communicate through global events. This is
-is the ``TemplateMixin`` class and allows passing Glue session objects
-to widgets upon their instantiation. The Glue session contains the ``Hub``
+is the ``TemplateMixin`` class and allows passing glue session objects
+to widgets upon their instantiation. The glue session contains the ``Hub``
 object available to the application and it, along with other useful
 data objects, are easily accessible through the ``TemplateMixin``.
 
-Using the Glue event framework is covered in great detail in the
-`Glue documentation <http://docs.glueviz.org/en/stable/developer_guide/communication.html>`_.
+Using the glue event framework is covered in great detail in the
+`glue documentation <http://docs.glueviz.org/en/stable/developer_guide/communication.html>`_.
 The code snippet gives an example of how an event listener may be
 implemented inside a widget::
 
@@ -257,3 +260,5 @@ implemented inside a widget::
         def on_data_message_received(self, message):
             self.text = "Received data message!"
 
+Glue callback properties
+~~~~~~~~~~~~~~~~~~~~~~~~
