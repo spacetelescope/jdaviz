@@ -27,6 +27,15 @@ class TrayBar(TemplateMixin):
     }
     """).tag(sync=True)
 
+    methods = Unicode("""
+    {
+        checkNotebookContext() {
+            this.notebook_context = !!!document.getElementById("web-app");
+            return this.notebook_context;
+        }
+    }
+    """).tag(sync=True)
+
     def vue_tab_changed(self, index):
         self.mini = isinstance(index, dict)
 

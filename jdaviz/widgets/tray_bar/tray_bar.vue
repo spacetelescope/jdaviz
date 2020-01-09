@@ -2,11 +2,13 @@
   <v-navigation-drawer
           v-model="drawer"
           clipped
-          :app="app"
+          app
           :mini-variant.sync="mini"
           width=300
           mini-variant-width=49
           stateless
+          class="fill-height"
+          :absolute="checkNotebookContext()"
   >
     <v-tabs v-model="tab" @change="tab_changed" vertical optional>
       <template v-for="item in tray_items">
@@ -24,8 +26,10 @@
       </template>
 
       <v-tab-item
-        v-for="item in tray_items"
-        :key="item.name">
+              style="overflow: auto"
+              v-for="item in tray_items"
+              :key="item.name"
+      >
             <!-- <v-card flat> -->
           <component v-bind:is="item.name"></component>
 <!--              <g-data-collection-list></g-data-collection-list>-->

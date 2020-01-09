@@ -5,13 +5,12 @@
           dense
           flat
           clipped-left
-          :app="app"
+          app
+          :absolute="checkNotebookContext()"
   >
     <slot></slot>
-    <!--        <v-toolbar-items >-->
     <template v-for="name in tool_names">
       <component v-bind:is="name"></component>
     </template>
-    <!--        </v-toolbar-items>-->
   </v-app-bar>
 </template>

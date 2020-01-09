@@ -35,6 +35,15 @@ class Toolbar(TemplateMixin):
     tool_names = List([]).tag(sync=True)
     app = Bool(True).tag(sync=True)
 
+    methods = Unicode("""
+    {
+        checkNotebookContext() {
+            this.notebook_context = !!!document.getElementById("web-app");
+            return this.notebook_context;
+        }
+    }
+    """).tag(sync=True)
+
     def add_tool(self, name):
         """
         Adds a reference to the tool item from the registry that will be
