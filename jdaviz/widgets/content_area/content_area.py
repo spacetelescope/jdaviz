@@ -15,13 +15,12 @@ class ContentArea(TemplateMixin):
     template = Unicode(TEMPLATE).tag(sync=True)
     active_viewers = List([]).tag(sync=True)
 
-    css = Unicode("""
-    .container.fill-height {
-        flex-wrap: wrap;
-    }
-
-    .container.fill-height > .row {
-        flex: 1 1 100%;
+    methods = Unicode("""
+    {
+        checkNotebookContext() {
+            this.notebook_context = !!!document.getElementById("web-app");
+            return this.notebook_context;
+        }
     }
     """).tag(sync=True)
 
@@ -69,14 +68,17 @@ class ContentArea(TemplateMixin):
     def _on_active_viewer_changed(self):
         pass
 
-    def vue_on_component_resized(self, event):
-        import random
+    def vue_on_tab_resized(self, event):
+        print("resized:", event)
 
         for comp_ref, viewer in self._viewers.items():
             comp = self.components.get(comp_ref)
             print(viewer.figure_widget.layout)
             viewer.figure_widget.layout.width = 'calc(100vh)' #''{}px'.format(random.randint(100, 500))
             viewer.figure_widget.layout.height = 'calc(100vh)' #'{}px'.format(random.randint(100, 500))
+
+    def vue_on_tab_destroyed(self, event):
+        print("destroyed", event)
 
 
 class TabbedViewer(TemplateMixin):

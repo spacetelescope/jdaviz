@@ -15,7 +15,8 @@
                 <gl-component
                         title="component2"
                         v-for="(viewer, i) in active_viewers"
-                        @resize="on_component_resized"
+                        @resize="on_tab_resized"
+                        @destroy="on_tab_destroyed"
                 >
                   <component v-bind:is="viewer.binding"></component>
                 </gl-component>
