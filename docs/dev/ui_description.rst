@@ -160,6 +160,7 @@ Widget communication
 --------------------
 
 There are three fundamental forms of communication between widgets:
+
     1. direction communication using the ``observer`` pattern using `Traitlets <https://traitlets.readthedocs.io/en/stable/>`_,
     2. global communication using the centralized event hub provided by glue,
     3. and callback properties on glue objects.
@@ -172,7 +173,10 @@ on defined widget classes (e.g. ``button_names`` on the ``Toolbar``
 widget in the example above) are implemented as traitlets, which can be
 observed for changes. In order to register callbacks in response to
 changes to attributes defined on widget classes, interested parties must
-have a direct reference to the widget instance.
+have a direct reference to the widget instance. Trailets are unique in that
+they can be referenced in the front-end Vue code, so chaning a trailet-defined
+attribute of a class will propagate that change to any front-end code that
+references the value.
 
 For example, if we consider that the ``Toolbar`` class above is
 implemented as part of a broader ``Application``, we can respond to
@@ -234,14 +238,14 @@ data objects, are easily accessible through the ``TemplateMixin``.
 Using the glue event framework is covered in great detail in the
 `glue documentation <http://docs.glueviz.org/en/stable/developer_guide/communication.html>`_.
 The code snippet gives an example of how an event listener may be
-implemented inside a widget::
+implemented inside a widget:
 
 .. code:: python
 
     from jdaviz.core.template_mixin import TemplateMixin
     from glue.core.message import DataMessage
 
-    class TestWigdet(TemplateMixin):
+    class TestWidget(TemplateMixin):
         text = Unicode("No messages...").tag(sync=True)
         template = Unicode("""
         <v-card>
@@ -262,3 +266,56 @@ implemented inside a widget::
 
 Glue callback properties
 ~~~~~~~~~~~~~~~~~~~~~~~~
+
+In cases where trailets are not apppropriate (e.g. where some python object is
+not a strict inherited class of ``HasTrailet``), glue's ``CallbackProperty`` s
+can be used in conjunction with a ``State`` class object. It should be noted,
+however, that glue callback properties do not interact with the front-end UI
+as in the case using trailets; that is, changing the value of a callback
+property will not automatically propagate that change to the front-end. More
+information on using glue callback properties can be be found in the
+`glue documentation <http://docs.glueviz.org/en/stable/customizing_guide/viewer.html#viewer-state>`_.
+
+
+Plugin design
+-------------
+
+As shown in the diagram above, JDAViz applications are ostensibly collections
+of widgets and viewers along with a configuration file that describes how the
+widgets and viewers ought to be rendered in the front-end. These widgets and
+viewers are defined as "Plugins", and everything in the front-end is an example
+of using plugins in conjunction with the configuration file.
+
+The UI supports four main areas currenty: the tool bar area, the menu bar area,
+the tray bar area, and the content area. Plugins can be associated with one
+of these areas. Plugins themselves **must** by IPyWidget subclasses, below
+is an example of a plugin that adds a single button to the tool bar area.
+
+.. code:: python
+
+    @tools('test-button')
+    class TestButton(TemplateMixin):
+        template = Unicode("""
+        <v-btn>Press me!</v-btn>
+        """).tag(sync=True)
+
+On loading the application, plugins are registered to the internal plugins
+registry. Based on the configuration declaration file, registry items will be
+referenced from these registries when rendering the front-end. An example of
+using the above test button plugin class might be
+
+.. code:: yaml
+
+    components:
+        menu_bar: false
+        toolbar: true
+        tray_bar: true
+        content_area: true
+    toolbar:
+        - test-button
+    menu_bar:
+    tray_bar:
+    content_area:
+
+Plugin classes should **not** make any direct reference to the application, and
+should communicate via events.
