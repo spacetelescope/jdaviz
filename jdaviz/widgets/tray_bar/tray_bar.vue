@@ -4,13 +4,26 @@
           clipped
           app
           :mini-variant.sync="mini"
-          width=300
+          width=320
           mini-variant-width=49
           stateless
           class="fill-height"
           :absolute="checkNotebookContext()"
   >
-    <v-tabs v-model="tab" @change="tab_changed" vertical optional>
+    <golden-layout style="height: 100%">
+      <gl-row>
+        <gl-stack>
+          <gl-component :key="item.name"
+                        v-for="item in tray_items"
+                        title="{{ item.label }}"
+          >
+            <component v-bind:is="viewer.name"></component>
+          </gl-component>
+        </gl-stack>
+      </gl-row>
+    </golden-layout>
+
+    <!-- <v-tabs v-model="tab" @change="tab_changed" vertical optional>
       <template v-for="item in tray_items">
         <v-tooltip right :key="item.name">
           <template v-slot:activator="{ on }">
@@ -31,12 +44,12 @@
               :key="item.name"
       >
             <!-- <v-card flat> -->
-          <component v-bind:is="item.name"></component>
+          <!-- <component v-bind:is="item.name"></component> -->
 <!--              <g-data-collection-list></g-data-collection-list>-->
 <!--              <g-test></g-test>-->
             <!-- </v-card> -->
-      </v-tab-item>
-    </v-tabs>
+      <!-- </v-tab-item>
+    </v-tabs> -->
     <!-- <v-card flat class="pa-2">
     <v-expansion-panels multiple>
       <v-expansion-panel
@@ -49,6 +62,6 @@
         </v-expansion-panel-content>
       </v-expansion-panel>
     </v-expansion-panels>
-    </v-card>
-  </v-navigation-drawer> -->
+    </v-card>  -->
+  </v-navigation-drawer>
 </template>
