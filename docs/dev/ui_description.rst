@@ -20,10 +20,10 @@ and interacted with in python, but rendered in a browser environment.
 
 There are two distinct use cases for the glupyter environment:
 
-    1. as a means to procedurally interact with pieces of a user's workflow
-    *in addition* to their work in e.g. a Jupyter Notebook;
-    2. to provide users a web-based GUI to interact with and visualize their
-    data while hiding the Python code, e.g. a standalone web application.
+1. As a means to procedurally interact with pieces of a user's workflow
+   *in addition* to their work in e.g. a Jupyter Notebook.
+2. To provide users a web-based GUI to interact with and visualize their
+   data while hiding the Python code, e.g. a standalone web application.
 
 These two use cases describe a Python-first and GUI-first approach,
 respectively. This document will focus on detailing the design of the
@@ -86,7 +86,7 @@ An alternative design, and the one used for the JDAViz tools, is to have each wi
 ipywidget-like elements whose visual representation is described by a
 Vuetify template. The template composes the visual representation of the
 custom widget using the Vue formalism, while the state is implemented as
-trailets on the custom widget class. The template reads and responds to
+`trailets <https://traitlets.readthedocs.io/en/stable/>`_ on the custom widget class. The template reads and responds to
 state and state changes on the custom widget, and the custom widget need
 not know or care about how that state is being represented (i.e. the
 only state is that of the custom widget).
@@ -161,9 +161,9 @@ Widget communication
 
 There are three fundamental forms of communication between widgets:
 
-    1. direction communication using the ``observer`` pattern using `Traitlets <https://traitlets.readthedocs.io/en/stable/>`_,
-    2. global communication using the centralized event hub provided by glue,
-    3. and callback properties on glue objects.
+1. direction communication using the ``observer`` pattern using `Traitlets <https://traitlets.readthedocs.io/en/stable/>`_,
+2. global communication using the centralized event hub provided by glue,
+3. and callback properties on glue objects.
 
 Direct messaging
 ~~~~~~~~~~~~~~~~
