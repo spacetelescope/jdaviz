@@ -9,14 +9,15 @@
         justify="center">
         <v-col
           class="center fill-height pa-0">
-          <golden-layout style="height: 100vh">
+          <golden-layout style="height: 100vh"
+          >
             <gl-row>
-              <gl-stack>
+              <gl-stack
+              >
                 <gl-component
                         title="component2"
                         v-for="(viewer, i) in active_viewers"
-                        @resize="on_tab_resized"
-                        @destroy="on_tab_destroyed"
+                        :key=i
                 >
                   <component v-bind:is="viewer.binding"></component>
                 </gl-component>

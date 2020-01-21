@@ -1,7 +1,7 @@
 import logging
 import os
 
-from traitlets import Unicode, List, Bool, Any, Float, Int
+from traitlets import Unicode, List, Bool, Any, Float, Int, observe
 
 from jdaviz.core.template_mixin import TemplateMixin
 
@@ -21,12 +21,6 @@ class TrayBar(TemplateMixin):
     app = Bool(True).tag(sync=True)
     mini = Bool(False).tag(sync=True)
 
-    css = Unicode("""
-    .v-tabs--vertical > .v-tabs-bar .v-tab {
-        min-width: 49px;
-    }
-    """).tag(sync=True)
-
     methods = Unicode("""
     {
         checkNotebookContext() {
@@ -39,7 +33,11 @@ class TrayBar(TemplateMixin):
     def vue_tab_changed(self, index):
         self.mini = isinstance(index, dict)
 
+    def vue_fixed_tray_items(self, *args, **kwargs):
+        return [x for x in self.tray_items if x.get('name') not in
+                ('g-data-collection-list', 'g-viewer-options', 'g-layer-options')]
+
     def add_tray(self, name, label=None, icon='save'):
-        logging.info(f"Adding plugin {name} to tray bar.")
+        print(f"Adding plugin {name} to tray bar.")
 
         self.tray_items.append({'name': name, 'label': label, 'icon': icon})

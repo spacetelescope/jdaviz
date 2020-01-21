@@ -10,16 +10,27 @@
           class="fill-height"
           :absolute="checkNotebookContext()"
   >
-    <golden-layout style="height: 100%">
+    <golden-layout style="height: 100%"
+    >
       <gl-row>
-        <gl-stack>
-          <gl-component :key="item.name"
-                        v-for="item in tray_items"
-                        title="{{ item.label }}"
-          >
-            <component v-bind:is="viewer.name"></component>
-          </gl-component>
-        </gl-stack>
+        <gl-col>
+          <gl-stack>
+            <gl-component v-for="item in tray_items"
+                          :key="item.name"
+                          :title="item.label"
+            >
+              <component v-bind:is="item.name"></component>
+            </gl-component>
+          </gl-stack>
+          <gl-stack>
+            <gl-component :key="item.name"
+                          v-for="item in tray_items"
+                          :title="item.label"
+            >
+              <component v-bind:is="item.name"></component>
+            </gl-component>
+          </gl-stack>
+        </gl-col>
       </gl-row>
     </golden-layout>
 
