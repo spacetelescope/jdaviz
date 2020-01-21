@@ -236,7 +236,7 @@ object available to the application and it, along with other useful
 data objects, are easily accessible through the ``TemplateMixin``.
 
 Using the glue event framework is covered in great detail in the
-`glue documentation <http://docs.glueviz.org/en/stable/developer_guide/communication.html>`_.
+`glue documentation <http://docs.glueviz.org/en/stable/developer_guide/communication.html>`__.
 The code snippet gives an example of how an event listener may be
 implemented inside a widget:
 
@@ -274,7 +274,7 @@ however, that glue callback properties do not interact with the front-end UI
 as in the case using trailets; that is, changing the value of a callback
 property will not automatically propagate that change to the front-end. More
 information on using glue callback properties can be be found in the
-`glue documentation <http://docs.glueviz.org/en/stable/customizing_guide/viewer.html#viewer-state>`_.
+`glue documentation <http://docs.glueviz.org/en/stable/customizing_guide/viewer.html#viewer-state>`__.
 
 
 Plugin design
