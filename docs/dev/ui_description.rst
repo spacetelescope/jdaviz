@@ -100,7 +100,7 @@ separation between the state of each widget (contained in the python
 file) and the view of that state (contained in the Vuetify file). Below
 is an example of what such a widget might looking like:
 
-.. code:: markup
+.. code::
 
     <template>
       <v-toolbar>
@@ -135,7 +135,7 @@ state of the ``Toolbar`` widget's ``button_names`` attribute, and the
 ``Toolbar`` class could know nothing about *how* that state is being
 represented.
 
-.. code:: markup
+.. code::
 
     <v-toolbar-items class="hidden-sm-and-down">
       <v-btn flat v-for="name in button_names">{{ name }}</v-btn>
