@@ -11,6 +11,7 @@
           :absolute="checkNotebookContext()"
   >
     <golden-layout style="height: 100%"
+      :showPopoutIcon="false"
     >
       <gl-row>
         <gl-col>
@@ -18,6 +19,7 @@
             <gl-component v-for="item in tray_items"
                           :key="item.name"
                           :title="item.label"
+                          :closable="false"
             >
               <component v-bind:is="item.name"></component>
             </gl-component>

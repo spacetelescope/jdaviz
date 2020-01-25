@@ -13,50 +13,46 @@ from jdaviz.core.template_mixin import TemplateMixin
 #  pushed out of the right side). There are solutions in vuetify for this
 #  but they need to be implemented.
 @trays("g-data-collection-list", label="Data Collection", icon='mdi-database')
-class DataCollectionListComponent(TemplateMixin):
+class DataCollectionTreeComponent(TemplateMixin):
     item = Int(1).tag(sync=True, allow_none=True)
     items = List([]).tag(sync=True)
     viewers = List([]).tag(sync=True)
 
     template = Unicode("""
-    <v-list dense nav max-width=250>
-      <v-list-item-group v-model="item" color="primary">
-        <v-subheader>Data</v-subheader>
+    <v-card
+      class="mx-auto"
+      outline
+      tile
+    >
+      <v-toolbar
+        dense
+        flat
+        fixed
+      >
+        <v-app-bar-nav-icon></v-app-bar-nav-icon>
 
-        <v-list-item
-            v-for="(item, i) in items"
-            :key="i"
-            @click="data_selected(i)">
+        <v-spacer></v-spacer>
 
-          <v-list-item-content>
-            <v-list-item-title
-                v-text="item.text">
-            </v-list-item-title>
-          </v-list-item-content>
-
-          <v-list-item-action>
-            <v-menu offset-y>
-              <template
-                v-slot:activator="{ on }">
-                <v-btn small icon v-on="on" @click.stop="">
-                  <v-icon>menu</v-icon>
-                </v-btn>
-              </template>
-              <v-list>
-                <v-list-item
-                    v-for="(viewer, index) in viewers"
-                    :key="index"
-                    @click="create_viewer({name: viewer.name, index: i})">
-                  <v-list-item-title>
-                        {{ viewer.label }}
-                  </v-list-item-title>
-                </v-list-item>
-              </v-list>
-            </v-menu>
-          </v-list-item-action>
-        </v-list-item>
-      </v-list-item-group>
-    </v-list>
+        <v-btn icon>
+          <v-icon>mdi-magnify</v-icon>
+        </v-btn>
+      </v-toolbar>
+      <v-divider
+      ></v-divider>
+      <v-container style="max-height: 100vh; overflow-y: auto" >
+        <v-row dense>
+          <v-col cols="12"
+          >
+            <v-treeview :items="items"
+                        hoverable
+                        activatable
+                        dense
+                        open-on-click
+            ></v-treeview>
+          </v-col>
+        </v-row>
+      </v-container>
+    </v-card>
     """).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
@@ -93,7 +89,7 @@ class DataCollectionListComponent(TemplateMixin):
         self.hub.broadcast(new_viewer_message)
 
     def _on_data_added(self, msg):
-        self.items = self.items + [{'text': msg.data.label,
+        self.items = self.items + [{'name': msg.data.label,
                                     'icon': 'mdi-clock'}]
 
 
