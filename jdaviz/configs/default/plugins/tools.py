@@ -8,7 +8,7 @@ from jdaviz.core.events import LoadDataMessage, DataSelectedMessage
 from glue.core.edit_subset_mode import OrMode, AndNotMode, AndMode, XorMode, ReplaceMode
 from glue.core.message import EditSubsetMessage
 
-__all__ = ['OpenSessionButton', 'SaveSessionButton', 'ImportDataButton', 'ExportDataButton']
+__all__ = ['GaussianSmoothingButton', 'OpenSessionButton', 'SaveSessionButton', 'ImportDataButton', 'ExportDataButton']
 
 
 @tools('spacer')
@@ -24,6 +24,16 @@ class VerticalDivider(VuetifyTemplate):
         <v-divider vertical></v-divider>
         """).tag(sync=True)
 
+@tools('g-gaussian-smoothing')
+class GaussianSmoothingButton(TemplateMixin):
+    template = Unicode("""
+    <v-btn min-width="0" dense tile text class="px-2 mx-1">
+        <v-icon>adjust</v-icon>
+    </v-btn>
+    """).tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
 @tools('g-open-session')
 class OpenSessionButton(TemplateMixin):
@@ -35,7 +45,6 @@ class OpenSessionButton(TemplateMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
 
 @tools('g-save-session')
 class SaveSessionButton(TemplateMixin):

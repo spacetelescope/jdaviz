@@ -4,6 +4,7 @@ components:
   tray_bar: true
   content_area: true
 toolbar:
+  - g-gaussian-smoothing
   - g-open-session
   - g-save-session
   - g-import-data
