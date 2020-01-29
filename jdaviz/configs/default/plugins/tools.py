@@ -26,14 +26,91 @@ class VerticalDivider(VuetifyTemplate):
 
 @tools('g-gaussian-smoothing')
 class GaussianSmoothingButton(TemplateMixin):
+    dialog = Bool(False).tag(sync=True)
+
     template = Unicode("""
-    <v-btn min-width="0" dense tile text class="px-2 mx-1">
-        <v-icon>adjust</v-icon>
-    </v-btn>
-    """).tag(sync=True)
+        <div class="text-center">
+            <v-dialog
+              v-model="dialog"
+              width="500"
+              persistent
+            >
+              <template v-slot:activator="{ on }">
+                <v-btn
+                  dark
+                  v-on="on"
+                  min-width="0"
+                  dense
+                  tile
+                  text
+                  class="px-2 mx-1"
+                >
+                  <v-icon>adjust</v-icon>
+                </v-btn>
+              </template>
+
+                <v-form>
+                  <v-card>
+                    <v-card-title
+                      class="headline grey lighten-2"
+                      primary-title
+                    >
+                      Gaussian Smoothing
+                    </v-card-title>
+
+                    <v-card-text>
+                    <v-text-field
+                        label="Amplitude"
+                        hint="1*u.Jy"
+                        persistent-hint
+                        outlined
+                        ></v-text-field>
+                    <v-text-field
+                        label="Mean"
+                        hint="5*u.GHz"
+                        persistent-hint
+                        outlined
+                        ></v-text-field>
+                    <v-text-field
+                        label="Standard Deviation"
+                        hint="0.8*u.GHz"
+                        persistent-hint
+                        outlined
+                        ></v-text-field>
+                    </v-card-text>
+                    <v-divider></v-divider>
+
+                    <v-card-actions>
+                      <div class="flex-grow-1"></div>
+                      <v-btn
+                        color="primary"
+                        text
+                        @click="dialog = false"
+                      >
+                        Cancel
+                      </v-btn>
+                      <v-btn
+                        color="primary"
+                        text
+                        @click="gaussian_smooth"
+                      >
+                        Apply
+                      </v-btn>
+                    </v-card-actions>
+                  </v-card>
+                </v-form>
+            </v-dialog>
+          </div>
+        """).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+    def vue_gaussian_smooth(self, *args, **kwargs):
+        # TODO: hack because of current incompatibility with ipywidget types
+        #  and vuetify templates.
+
+        self.dialog = False
 
 @tools('g-open-session')
 class OpenSessionButton(TemplateMixin):
