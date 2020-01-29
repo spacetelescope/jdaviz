@@ -55,9 +55,10 @@ distribute-*.tar.gz
 .project
 .pydevproject
 .settings
-.idea
+pip-wheel-metadata
 .vscode
 .pytest_cache
+.tmp
 
 # Mac OSX
 .DS_Store

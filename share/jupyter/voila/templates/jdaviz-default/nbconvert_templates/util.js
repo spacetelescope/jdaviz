@@ -105,6 +105,7 @@ window.init = async (voila) => {
     if (!window.enable_nbextensions) {
         const originalLoader = widgetManager.loader;
         widgetManager.loader = (moduleName, moduleVersion) => {
+            console.log(moduleName);
             if (moduleName === 'jupyter-vuetify' || moduleName === 'jupyter-vue') {
                 requirejs.config({
                     paths: {

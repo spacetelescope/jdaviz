@@ -1,55 +1,12 @@
-JWST Data Analysis Visualization Development
---------------------------------------------
+Astronomical data analysis development leveraging Jupyter platform
+------------------------------------------------------------------
 
 .. image:: http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat
     :target: http://www.astropy.org
     :alt: Powered by Astropy Badge
 
-Usage
------
 
-Clone the repository, move into the directory, and install the package using::
 
-    $ pip install .
-
-Developers can add the ``-e`` flag to install in editable mode.
-
-Alternatively, the package can be installed directly from the repository using::
-
-    $ pip install git+https://github.com/spacetelescope/jdaviz.git
-
-Notebook
-^^^^^^^^
-
-Open the provided Jupyter notebook and run the cell containing the code. *Note*
-there is currently an issue with the live rendering in the notebook. If, after
-running the cell, no icons or plugins load, save the notebook and refresh the page
-(there is no need to re-run the notebook).
-
-Browser
-^^^^^^^
-
-The easiest way to start up the browser version of the app is to do::
-
-    $ jdaviz filename.fits
-
-If you want to use a non-default layout, you can specify the layout name with::
-
-    $ jdaviz filename.fits --layout=cubeviz
-
-The browser version of the app can also be accessed by running the provided
-notebook with `voila
-<https://github.com/voila-dashboards/voila/tree/master/voila>`_ package. This
-will open and render the results of the cell in a new browser window::
-
-    $ voila notebooks/Example.ipynb
-
-It is recommended that users also install the `voila-vuetify
-<https://github.com/voila-dashboards/voila-vuetify>`_ nbconvert template to review
-the css spacing in the default nbconvert template utilized by voila. To use the
-template, include it in the start up command::
-
-    $ voila notebooks/Example.ipynb --template=jdaviz-default
 
 License
 -------

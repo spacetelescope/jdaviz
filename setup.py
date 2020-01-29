@@ -1,56 +1,58 @@
 #!/usr/bin/env python
 
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-
-import sys
 import os
-import builtins
+import sys
+from setuptools import setup
+from setuptools.command.develop import develop
 import contextlib
 
-# Ensure that astropy-helpers is available
-import ah_bootstrap  # noqa
+TEST_HELP = """
+Note: running tests is no longer done using 'python setup.py test'. Instead
+you will need to run:
 
-from setuptools import setup
-from setuptools.config import read_configuration
-from setuptools.command.develop import develop
+    tox -e test
 
-from astropy_helpers.setup_helpers import register_commands, get_package_info
-from astropy_helpers.version_helpers import generate_version_py
+If you don't already have tox installed, you can install it with:
 
-# Store the package name in a built-in variable so it's easy
-# to get from other parts of the setup infrastructure
-builtins._ASTROPY_PACKAGE_NAME_ = read_configuration('setup.cfg')[
-    'metadata']['name']
+    pip install tox
 
-# Create a dictionary with setup command overrides. Note that this gets
-# information about the package (name and version) from the setup.cfg file.
-cmdclass = register_commands()
+If you only want to run part of the test suite, you can also use pytest
+directly with::
 
-# Freeze build information in version.py. Note that this gets information
-# about the package (name and version) from the setup.cfg file.
-version = generate_version_py()
+    pip install -e .
+    pytest
 
-# Get configuration information from all of the various subpackages.
-# See the docstring for setup_helpers.update_package_files for more
-# details.
-package_info = get_package_info()
+For more information, see:
 
-# Include extra data files not picked up in the astropy helpers functions.
-# WARNING: all files generates during setup.py will not end up in the
-# source distribution
-data_files = []
+  http://docs.astropy.org/en/latest/development/testguide.html#running-tests
+"""
 
-for (dirpath, dirnames, filenames) in os.walk('share/jupyter/voila/templates/'):
-    if filenames:
-        data_files.append((dirpath, [os.path.join(dirpath, filename)
-                                     for filename in filenames]))
+if 'test' in sys.argv:
+    print(TEST_HELP)
+    sys.exit(1)
 
-# These are based on jupyter_core.paths
+DOCS_HELP = """
+Note: building the documentation is no longer done using
+'python setup.py build_docs'. Instead you will need to run:
 
+    tox -e build_docs
 
+If you don't already have tox installed, you can install it with:
+
+    pip install tox
+
+For more information, see:
+
+  http://docs.astropy.org/en/latest/install.html#builddocs
+"""
+
+if 'build_docs' in sys.argv or 'build_sphinx' in sys.argv:
+    print(DOCS_HELP)
+    sys.exit(1)
+
+# these are based on jupyter_core.paths
 def jupyter_config_dir():
     """Get the Jupyter config directory for this platform and user.
-
     Returns JUPYTER_CONFIG_DIR if defined, else ~/.jupyter
     """
 
@@ -89,10 +91,10 @@ def user_dir():
 
 class DevelopCmd(develop):
     prefix_targets = [
-        ("voila/templates", 'jdaviz-default'),
+        ("voila/templates", 'vuetify-base'),
+        ("voila/templates", 'vuetify-default'),
         ("voila/templates", 'custom')
     ]
-
     def run(self):
         target_dir = os.path.join(sys.prefix, 'share', 'jupyter')
         if '--user' in sys.prefix:  # TODO: is there a better way to find out?
@@ -105,19 +107,22 @@ class DevelopCmd(develop):
             target_subdir = os.path.dirname(target)
             if not os.path.exists(target_subdir):
                 os.makedirs(target_subdir)
-            rel_source = (os.path.relpath(os.path.abspath(source),
-                                          os.path.abspath(target_subdir)))
+            rel_source = os.path.relpath(os.path.abspath(source), os.path.abspath(target_subdir))
             try:
                 os.remove(target)
             except:
                 pass
-
+            print(rel_source, '->', target)
             os.symlink(rel_source, target)
 
         super(DevelopCmd, self).run()
 
 
-cmdclass.update({'develop': DevelopCmd})
+# WARNING: all files generates during setup.py will not end up in the source distribution
+data_files = []
+# Add all the templates
+for (dirpath, dirnames, filenames) in os.walk('share/jupyter/voila/templates/'):
+    if filenames:
+        data_files.append((dirpath, [os.path.join(dirpath, filename) for filename in filenames]))
 
-setup(version=version, cmdclass=cmdclass, include_package_data=True,
-      data_files=data_files, **package_info)
+setup(data_files=data_files, cmdclass={'develop': DevelopCmd}, use_scm_version={'write_to': os.path.join('jdaviz', 'version.py')})
