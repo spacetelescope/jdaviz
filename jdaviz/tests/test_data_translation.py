@@ -30,7 +30,7 @@ class Spectrum1DHandler:
 
 
 def test_translation():
-    input_flux   = Quantity(np.array([0.2, 0.3, 2.2, 0.3]), u.Jy)
+    input_flux = Quantity(np.array([0.2, 0.3, 2.2, 0.3]), u.Jy)
     input_spaxis = Quantity(np.array([1, 2, 3, 4]), u.micron)
     spec = Spectrum1D(input_flux, spectral_axis=input_spaxis)
 
