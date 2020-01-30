@@ -91,9 +91,7 @@ def user_dir():
 
 class DevelopCmd(develop):
     prefix_targets = [
-        ("voila/templates", 'vuetify-base'),
-        ("voila/templates", 'vuetify-default'),
-        ("voila/templates", 'custom')
+        ("voila/templates", 'jdaviz-default')
     ]
     def run(self):
         target_dir = os.path.join(sys.prefix, 'share', 'jupyter')
