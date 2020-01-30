@@ -1,6 +1,7 @@
 import numpy as np
 
 from astropy import units as u
+from astropy.io import fits
 from astropy.units import Quantity
 from astropy.units.quantity import allclose
 
@@ -21,7 +22,11 @@ class Spectrum1DHandler:
         return data
 
     def to_object(self, data):
-        return data.meta['s1d']
+        try:
+            result = data.meta['s1d']
+        except KeyError:
+            result = data.label
+        return result
 
 
 def test_translation():
@@ -52,3 +57,43 @@ def test_translation():
     # we could check more of the internals.
     allclose(spectrum.flux, input_flux, atol=1e-5*u.Jy)
     allclose(spectrum.spectral_axis, input_spaxis, atol=1e-5*u.micron)
+
+
+def test_translation_real_data():
+
+    # The description on issue JDAT-136 reads:
+    #
+    # "Doing the operation over a spectrum object that's been read
+    # into glue-jupyter by converting back into a spectrum, doing
+    # the specutils, and then putting it back into the data collection."
+    #
+    # Taking it literally, we should expect that something like this
+    # would be possible:
+    #
+    # >>> data = Data('https://dr14.sdss.org/optical/spectrum/view/...
+    # >>> spec = data.get_object(cls=Spectrum1D)
+    # >>> assert(isinstance(spec, Spectrum1D))
+    #
+    # That is not possible because the internal reader in Data doesn't
+    # have access to a data translator.
+    #
+    # Instead, we repeat here more or less the same test as above.
+
+    f = fits.open('https://dr14.sdss.org/optical/spectrum/view/data/format=fits/spec=lite?plateid=1323&mjd=52797&fiberid=12')
+    specdata = f[1].data
+    f.close()
+
+    flux_unit = u.Unit('erg cm-2 s-1 AA-1')
+    spaxis_unit = u.Unit('Angstrom')
+
+    lamb = 10 ** specdata['loglam'] * spaxis_unit
+    flux = specdata['flux'] * 10 ** -17 * flux_unit
+    spec = Spectrum1D(spectral_axis=lamb, flux=flux)
+
+    data = Data(spec)
+
+    spectrum = data.get_object(cls=Spectrum1D)
+    assert(isinstance(spectrum, Spectrum1D))
+
+    allclose(spectrum.flux, flux, atol=1e-5*flux_unit)
+    allclose(spectrum.spectral_axis, lamb, atol=1e-5*spaxis_unit)
