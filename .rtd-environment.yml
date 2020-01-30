@@ -1,0 +1,14 @@
+name: jdaviz
+
+channels:
+    - astropy
+
+dependencies:
+    - python>=3.7
+    - astropy
+    - Cython
+    - matplotlib
+    - numpy
+    - sphinx-astropy
+    - pip:
+        - sphinx-rtd-theme

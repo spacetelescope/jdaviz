@@ -1,0 +1,50 @@
+{% raw -%}
+<div id="web-app" style="display: none">
+    <v-app >
+        <v-slide-y-transition>
+            <v-layout v-show="loading" align-center justify-center>
+                <v-card style="min-width: 600px">
+                    <v-progress-linear
+                            :indeterminate="loadingPercentage < 0"
+                            v-model="loadingPercentage"
+                            height="15"
+                    ></v-progress-linear>
+
+                    <v-card-title primary-title class="py-8">
+                        <h1>{{ loading_text }}</h1>
+                    </v-card-title>
+                </v-card>
+            </v-layout>
+        </v-slide-y-transition>
+        <v-slide-y-transition>
+            <template v-show="!loading">
+                    <jupyter-widget-mount-point mount-id="content">
+                    </jupyter-widget-mount-point>
+            </template>
+        </v-slide-y-transition>
+    </v-app>
+</div>
+
+<script>
+
+var app = new Vue({
+    vuetify: new Vuetify({
+        icons: {
+            iconfont: 'md',
+        },
+    }),
+    el: '#web-app',
+    mounted() {
+        document.querySelector('#web-app').removeAttribute("style");
+    },
+    data() {
+        return {
+            loading_text: "Loading page",
+            loadingPercentage: -1,
+            loading: true
+        }
+    }
+});
+
+</script>
+{% endraw -%}

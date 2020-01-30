@@ -1,17 +1,3 @@
-__pycache__
-*pyc
-**/web/node_modules
-**/web/lib
-**/web/built
-**/web/dist
-/.pytest_cache
-/.eggs
-/*.egg-info
-**/examples/.ipynb_checkpoints
-**/examples
-node_modules
-/.idea
-
 # Compiled files
 *.py[cod]
 *.a
@@ -49,7 +35,6 @@ docs/_build
 
 # Packages/installer info
 *.egg
-*.eggs
 *.egg-info
 dist
 build
@@ -70,9 +55,9 @@ distribute-*.tar.gz
 .project
 .pydevproject
 .settings
-.pytest_cache
+.idea
 .vscode
+.pytest_cache
 
 # Mac OSX
 .DS_Store
-

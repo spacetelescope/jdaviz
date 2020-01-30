@@ -1,0 +1,31 @@
+components:
+  menu_bar: false
+  toolbar: true
+  tray_bar: true
+  content_area: true
+toolbar:
+  - g-open-session
+  - g-save-session
+  - cv-import-data
+  - g-export-data
+  - vertical-divider
+  - spacer
+  - vertical-divider
+  - g-subset-select
+  - vertical-divider
+  - g-subset-mode
+  - vertical-divider
+  - spacer
+menu_bar:
+  - g-test-action
+tray_bar:
+  - g-data-collection-list
+  - g-viewer-options
+  - g-layer-options
+content_area:
+  top_area:
+    - cv-data-imshow
+    - cv-error-imshow
+    - cv-dq-imshow
+  bottom_area:
+    - cv-profile-1d
