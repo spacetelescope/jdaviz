@@ -16,9 +16,6 @@ __all__ = ['TrayArea']
 with open(os.path.join(os.path.dirname(__file__), "tray_area.vue")) as f:
     TEMPLATE = f.read()
 
-test_widget_1 = w.IntSlider(description='Slider 1', value=20)
-test_widget_2 = w.IntSlider(description='Slider 2', value=20)
-
 
 class TrayArea(TemplateMixin):
     template = Unicode(TEMPLATE).tag(sync=True)
@@ -48,17 +45,17 @@ class TrayArea(TemplateMixin):
                     {
                         'id': 11,
                         'title': "Test Plugin",
-                        'widget': test_widget_1
+                        'widget': None
                     },
                     {
                         'id': 12,
                         'title': "Test Plugin",
-                        'widget': test_widget_1
+                        'widget': None
                     },
                     {
                         'id': 13,
                         'title': "Test Plugin",
-                        'widget': test_widget_1
+                        'widget': None
                     }
                 ]
             }

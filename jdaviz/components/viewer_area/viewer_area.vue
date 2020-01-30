@@ -6,13 +6,21 @@
           <v-tabs v-model="col.tab" height="36px" class="fill-height" background-color="blue lighten-5">
             <draggable v-model="col.items" :group="{name: 'viewers'}" class="d-flex flex-grow-1">
               <v-tab v-for="item in col.items" :key="item.id">
-                {{ item.title }}
+                {{ item.title }} {{ col.tab }} {{ item.id }}
                 <v-spacer></v-spacer>
                 <v-btn icon x-small @click.stop="close_tab(item.id)" style="margin-left: 10px">
                   <v-icon>mdi-close</v-icon>
                 </v-btn>
               </v-tab>
             </draggable>
+
+            <v-btn icon tile @click.stop="split_pane('horizontal', col.tab)">
+              <v-icon>mdi-view-split-horizontal</v-icon>
+            </v-btn>
+
+            <v-btn icon tile @click.stop="split_pane('vertical', col.tab)">
+              <v-icon>mdi-view-split-vertical</v-icon>
+            </v-btn>
 
             <v-tabs-items v-model="col.tab" class="fill-height">
               <v-tab-item

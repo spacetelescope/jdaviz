@@ -11,10 +11,6 @@ with open(os.path.join(os.path.dirname(__file__), "viewer_area.vue")) as f:
     TEMPLATE = f.read()
 
 
-test_widget_1 = w.IntSlider(description='Slider 1', value=20)
-test_widget_2 = w.IntSlider(description='Slider 2', value=20)
-
-
 class ViewerArea(TemplateMixin):
     template = Unicode(TEMPLATE).tag(sync=True)
     fab = Bool(False).tag(sync=True)
@@ -22,49 +18,49 @@ class ViewerArea(TemplateMixin):
     viewers = List([
         [
             {
-                'tab': '1',
+                'tab': 0,
                 'items': [
                     {
                         'id': '1',
                         'title': "Option",
-                        'widget': test_widget_1
+                        'widget': None
                     },
                     {
                         'id': '2',
                         'title': "Viewers",
-                        'widget': test_widget_1
+                        'widget': None
                     }
                 ]
             },
             {
-                'tab': '4',
+                'tab': 0,
                 'items': [
                     {
                         'id': '3',
                         'title': "Component",
-                        'widget': test_widget_1
+                        'widget': None
                     },
                     {
                         'id': '4',
                         'title': "Layout",
-                        'widget': test_widget_1
+                        'widget': None
                     }
                 ]
             }
         ],
         [
             {
-                'tab': '12',
+                'tab': 0,
                 'items': [
                     {
                         'id': '11',
                         'title': "Armature",
-                        'widget': test_widget_1
+                        'widget': None
                     },
                     {
                         'id': '12',
                         'title': "User",
-                        'widget': test_widget_1
+                        'widget': None
                     }
                 ]
             }
@@ -128,8 +124,9 @@ class ViewerArea(TemplateMixin):
             if len(row) == 0:
                 self.viewers.remove(row)
 
-        print(self.viewers)
-
         # TODO: Fix this hack to get traitlets to update
         self.viewers = self.viewers + [[]]
         self.viewers = self.viewers[:-1]
+
+    def vue_split_pane(self, *args):
+        print(args)
