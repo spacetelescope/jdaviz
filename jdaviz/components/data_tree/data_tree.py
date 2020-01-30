@@ -33,7 +33,7 @@ class DataTree(TemplateMixin):
     def _on_data_added(self, msg):
         self.items = self.items + [
             {
-                'id': len(self.items) + 1,
+                'id': len(self.items),
                 'name': msg.data.label,
                 'children': [
                     # {'id': 2, 'name': 'Calendar : app'},
