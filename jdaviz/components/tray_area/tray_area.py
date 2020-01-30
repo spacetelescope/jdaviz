@@ -38,16 +38,6 @@ class TrayArea(TemplateMixin):
                         'title': "Data",
                         'widget': "g-data-tree"
                     },
-                    {
-                        'id': 2,
-                        'title': "Layer",
-                        'widget': test_widget_1
-                    },
-                    {
-                        'id': 3,
-                        'title': "Options",
-                        'widget': test_widget_2
-                    }
                 ]
             }
         ],

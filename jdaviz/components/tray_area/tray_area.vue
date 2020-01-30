@@ -1,6 +1,6 @@
 <template>
-  <v-navigation-drawer v-model="drawer" app width="350px">
-    <v-toolbar tile dense color="blue lighten-5">
+  <v-navigation-drawer v-model="drawer" app width="350px" absolute>
+    <v-toolbar tile dense flat color="blue lighten-4">
       <v-toolbar-items>
         <v-dialog
                 v-model="dialog"
@@ -88,7 +88,7 @@
       <pane v-for="(row, i) in tray_items">
         <splitpanes>
           <pane v-for="(col, j) in row">
-            <v-tabs v-model="col.tab" grow height="36px">
+            <v-tabs v-model="col.tab" grow height="36px" background-color="blue lighten-5">
               <!-- <draggable v-model="col.items" :group="{name:'viewers'}" class="d-flex flex-grow-1"> -->
               <v-tab
                       v-for="item in col.items"

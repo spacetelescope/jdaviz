@@ -48,7 +48,7 @@ class Application(v.VuetifyTemplate, HubListener):
         padding-left: 0px;
         padding-right: 0px;
     }
-    
+
     .splitpanes__splitter {
         background-color: #ccc;
         position: relative;
@@ -63,29 +63,29 @@ class Application(v.VuetifyTemplate, HubListener):
         opacity: 0;
         z-index: 1;
     }
-    
+
     .splitpanes--vertical > .splitpanes__splitter:before {
         left: -10px;
         right: -10px;
         height: 100%;
     }
-    
+
     .splitpanes--horizontal > .splitpanes__splitter:before {
         top: -10px;
         bottom: -10px;
         width: 100%;
     }
-    
+
     .v-toolbar__content::before {
         border-bottom: 1px solid #ccc;
-        
+
     }
-    
+
     .v-treeview>.v-treeview-node--leaf {
         margin-left: 0px;
         padding-left: 0px;
     }
-    
+
     .v-treeview>.v-treeview-node--leaf>.v-treeview-node__root {
         padding-left: 16px;
     }
@@ -105,7 +105,7 @@ class Application(v.VuetifyTemplate, HubListener):
             for entry_point
             in pkg_resources.iter_entry_points(group='plugins')}
 
-        components = {'g-content-area': ViewerArea(session=self.session),
+        components = {'g-viewer-area': ViewerArea(session=self.session),
                       'g-default-toolbar': DefaultToolbar(session=self.session),
                       'g-tray-area': TrayArea(session=self.session)}
 

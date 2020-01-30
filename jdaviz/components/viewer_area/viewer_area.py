@@ -3,6 +3,7 @@ from jdaviz.core.template_mixin import TemplateMixin
 from traitlets import Unicode, List, Bool
 import ipywidgets as w
 from jdaviz.core.events import AddViewerMessage
+import uuid
 
 __all__ = ['ViewerArea']
 
@@ -21,30 +22,30 @@ class ViewerArea(TemplateMixin):
     viewers = List([
         [
             {
-                'tab': 0,
+                'tab': '1',
                 'items': [
                     {
-                        'id': 1,
+                        'id': '1',
                         'title': "Option",
                         'widget': test_widget_1
                     },
                     {
-                        'id': 2,
+                        'id': '2',
                         'title': "Viewers",
                         'widget': test_widget_1
                     }
                 ]
             },
             {
-                'tab': 0,
+                'tab': '4',
                 'items': [
                     {
-                        'id': 3,
+                        'id': '3',
                         'title': "Component",
                         'widget': test_widget_1
                     },
                     {
-                        'id': 4,
+                        'id': '4',
                         'title': "Layout",
                         'widget': test_widget_1
                     }
@@ -53,15 +54,15 @@ class ViewerArea(TemplateMixin):
         ],
         [
             {
-                'tab': 0,
+                'tab': '12',
                 'items': [
                     {
-                        'id': 11,
+                        'id': '11',
                         'title': "Armature",
                         'widget': test_widget_1
                     },
                     {
-                        'id': 12,
+                        'id': '12',
                         'title': "User",
                         'widget': test_widget_1
                     }
@@ -69,6 +70,13 @@ class ViewerArea(TemplateMixin):
             }
         ]
     ]).tag(sync=True, **w.widget_serialization)
+
+    items = List([
+          { 'title': 'Home', 'icon': 'dashboard' },
+          { 'title': 'About', 'icon': 'question_answer' }
+    ]).tag(sync=True)
+
+    drawer = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -92,10 +100,13 @@ class ViewerArea(TemplateMixin):
             self.viewers[0].append({'tab': 0, 'items': []})
 
         self.viewers[0][0]['items'].append({
-            'id': len(self.viewers[0][0]['items']) + 1,
+            'id': str(uuid.uuid4()),
             'title': "TEST",
             'widget': msg.viewer.figure_widget,
-            'tools': selection_tools
+            'tools': selection_tools,
+            'layer_options': msg.viewer.layer_options,
+            'viewer_options': msg.viewer.viewer_options,
+            'drawer': False
         })
 
         # TODO: fix this hack to get the traitlet to update
@@ -116,6 +127,8 @@ class ViewerArea(TemplateMixin):
 
             if len(row) == 0:
                 self.viewers.remove(row)
+
+        print(self.viewers)
 
         # TODO: Fix this hack to get traitlets to update
         self.viewers = self.viewers + [[]]
