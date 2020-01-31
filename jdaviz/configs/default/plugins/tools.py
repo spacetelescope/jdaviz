@@ -1,5 +1,5 @@
 from ipyvuetify import VuetifyTemplate
-from traitlets import Unicode, List, Int, Bool, Dict, Any
+from traitlets import Unicode, List, Int, Bool, Dict, Any, Float
 
 from jdaviz.core.registries import tools
 from jdaviz.core.template_mixin import TemplateMixin
@@ -7,6 +7,15 @@ from jdaviz.core.events import LoadDataMessage, DataSelectedMessage
 
 from glue.core.edit_subset_mode import OrMode, AndNotMode, AndMode, XorMode, ReplaceMode
 from glue.core.message import EditSubsetMessage
+from glue.core import DataCollection
+
+from specutils import Spectrum1D
+from specutils.manipulation import gaussian_smooth
+
+from astropy import units as u
+from astropy.units import Quantity
+
+import numpy as np
 
 __all__ = ['GaussianSmoothingButton', 'OpenSessionButton', 'SaveSessionButton', 'ImportDataButton', 'ExportDataButton']
 
@@ -60,20 +69,9 @@ class GaussianSmoothingButton(TemplateMixin):
 
                     <v-card-text>
                     <v-text-field
-                        label="Amplitude"
-                        hint="1*u.Jy"
-                        persistent-hint
-                        outlined
-                        ></v-text-field>
-                    <v-text-field
-                        label="Mean"
-                        hint="5*u.GHz"
-                        persistent-hint
-                        outlined
-                        ></v-text-field>
-                    <v-text-field
                         label="Standard Deviation"
-                        hint="0.8*u.GHz"
+                        @change="stddev = $event"
+                        hint="The stddev of the kernel, in pixels"
                         persistent-hint
                         outlined
                         ></v-text-field>
@@ -103,6 +101,8 @@ class GaussianSmoothingButton(TemplateMixin):
           </div>
         """).tag(sync=True)
 
+    stddev = Float(0).tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -111,6 +111,26 @@ class GaussianSmoothingButton(TemplateMixin):
         #  and vuetify templates.
 
         self.dialog = False
+
+        # Get currently activate data
+        # data = self.session.data_collection
+
+        # Testing inputs to make sure putting smoothed spectrum into
+        # datacollection works
+        input_flux = Quantity(np.array([0.2, 0.3, 2.2, 0.3]), u.Jy)
+        input_spaxis = Quantity(np.array([1, 2, 3, 4]), u.micron)
+        spec1 = Spectrum1D(input_flux, spectral_axis=input_spaxis)
+
+        # Takes the user input from the dialog (stddev) and uses it to
+        # define a standard deviation for gaussian smoothing
+        spec1_gsmooth = gaussian_smooth(spec1, stddev=self.stddev)
+
+        dc = DataCollection()
+
+        dc['spec1'] = spec1_gsmooth
+
+        self.data_collection.add(dc['spec1'])
+
 
 @tools('g-open-session')
 class OpenSessionButton(TemplateMixin):
