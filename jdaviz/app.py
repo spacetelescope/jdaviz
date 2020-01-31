@@ -114,6 +114,9 @@ class Application(v.VuetifyTemplate, HubListener):
 
         self.components = components
 
+        # Parse configuration
+        self.load_configuration('cubeviz')
+
         # Subscribe to viewer messages
         self.hub.subscribe(self, NewViewerMessage,
                            handler=self._on_new_viewer)
@@ -165,25 +168,31 @@ class Application(v.VuetifyTemplate, HubListener):
         with open(path, 'r') as f:
             config = yaml.safe_load(f)
 
+        from .core.registries import viewers
+        print(viewers.members.get('g-image-viewer'))
+
         # Get a reference to the component visibility states
-        comps = config.get('components', {})
+        # comps = config.get('components', {})
 
         # Toggle the rendering of the components in the gui
-        self.show_menu_bar = comps.get('menu_bar', True)
-        self.show_toolbar = comps.get('toolbar', True)
-        self.show_tray_bar = comps.get('tray_bar', True)
+        # self.show_menu_bar = comps.get('menu_bar', True)
+        # self.show_toolbar = comps.get('toolbar', True)
+        # self.show_tray_bar = comps.get('tray_bar', True)
+
+        viewer_area_layout = config.get('viewer_area')
+        self.components.get('g-viewer-area').parse_layout(viewer_area_layout)
 
         # Add the toolbar item filter to the toolbar component
         # for name in config.get('toolbar', []):
         #     self.components['g-toolbar'].add_tool(name)
 
         # Add the tray items filter to the interact drawer component
-        for name in config.get('tray_bar', []):
-            # Retrieve the meta information around the rendering of the tab
-            #  button including the icon and label information.
-            item = trays.members.get(name)
+        # for name in config.get('tray_bar', []):
+        #     # Retrieve the meta information around the rendering of the tab
+        #     #  button including the icon and label information.
+        #     item = trays.members.get(name)
 
-            label = item.get('label')
-            icon = item.get('icon')
+        #     label = item.get('label')
+        #     icon = item.get('icon')
 
-            self.components['g-tray-bar'].add_tray(name, label, icon)
+        #     self.components['g-tray-bar'].add_tray(name, label, icon)
