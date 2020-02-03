@@ -36,10 +36,6 @@ stages:
         coverage: codecov
         envs:
           # Test all supported python environments
-          - linux: py36-test
-          - macos: py36-test
-          - windows: py36-test
-
           - linux: py37-test
           - macos: py37-test
           - windows: py37-test
@@ -56,10 +52,6 @@ stages:
         coverage: codecov
         envs:
           # Test with dev environments
-          - linux: py37-test-dev
-          - macos: py37-test-dev
-          - windows: py37-test-dev
-
           - linux: py38-test-dev
           - macos: py38-test-dev
           - windows: py38-test-dev
@@ -72,9 +64,9 @@ stages:
         coverage: codecov
         envs:
           # Test lts environments
-          - linux: py36-test-lts
-          - macos: py36-test-lts
-          - windows: py36-test-lts
+          - linux: py37-test-lts
+          - macos: py37-test-lts
+          - windows: py37-test-lts
 
       # Try all numpy versions.
       # - linux: py36-test-numpy116
