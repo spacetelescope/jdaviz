@@ -1,8 +1,7 @@
 include README.rst
 include CHANGES.rst
-
 include setup.cfg
-include jdaviz/tests/coveragerc
+include LICENSE.rst
 include pyproject.toml
 
 recursive-include jdaviz *.pyx *.c *.pxd

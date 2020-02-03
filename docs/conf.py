@@ -150,16 +150,12 @@ man_pages = [('index', project.lower(), project + u' Documentation',
 
 # -- Options for the edit_on_github extension ---------------------------------
 
-# TODO: this is not supported in the new tox/azure template
-if eval(setup_cfg.get('edit_on_github')):
+if setup_cfg.get('edit_on_github').lower() == 'true':
+
     extensions += ['sphinx_astropy.ext.edit_on_github']
 
-    versionmod = import_module(setup_cfg['name'] + '.version')
     edit_on_github_project = setup_cfg['github_project']
-    if versionmod.release:
-        edit_on_github_branch = "v" + versionmod.version
-    else:
-        edit_on_github_branch = "master"
+    edit_on_github_branch = "master"
 
     edit_on_github_source_root = ""
     edit_on_github_doc_root = "docs"
@@ -169,8 +165,8 @@ github_issues_url = 'https://github.com/{0}/issues/'.format(setup_cfg['github_pr
 
 # -- Turn on nitpicky mode for sphinx (to warn about references not found) ----
 #
-nitpicky = True
-nitpick_ignore = []
+# nitpicky = True
+# nitpick_ignore = []
 #
 # Some warnings are impossible to suppress, and you can list specific references
 # that should be ignored in a nitpick-exceptions file which should be inside

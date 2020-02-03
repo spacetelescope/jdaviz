@@ -3,7 +3,6 @@ Documentation
 
 This is the documentation for jdaviz.
 
-
 .. toctree::
   :maxdepth: 2
 

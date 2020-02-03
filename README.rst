@@ -6,8 +6,6 @@ Astronomical data analysis development leveraging Jupyter platform
     :alt: Powered by Astropy Badge
 
 
-
-
 License
 -------
 
