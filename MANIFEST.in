@@ -4,7 +4,7 @@ include setup.cfg
 include LICENSE.rst
 include pyproject.toml
 
-recursive-include jdaviz *.pyx *.c *.pxd
+recursive-include jdaviz *.pyx *.c *.pxd *.vue
 recursive-include docs *
 recursive-include licenses *
 recursive-include cextern *
