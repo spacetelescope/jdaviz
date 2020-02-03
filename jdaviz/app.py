@@ -115,7 +115,7 @@ class Application(v.VuetifyTemplate, HubListener):
         self.components = components
 
         # Parse configuration
-        self.load_configuration('cubeviz')
+        self.load_configuration(configuration)
 
         # Subscribe to viewer messages
         self.hub.subscribe(self, NewViewerMessage,
@@ -141,8 +141,6 @@ class Application(v.VuetifyTemplate, HubListener):
             view.state.x_att = x
 
         self.hub.broadcast(AddViewerMessage(view, sender=self))
-
-        print("VIEWER CREATED")
 
         return view
 
@@ -179,8 +177,9 @@ class Application(v.VuetifyTemplate, HubListener):
         # self.show_toolbar = comps.get('toolbar', True)
         # self.show_tray_bar = comps.get('tray_bar', True)
 
-        viewer_area_layout = config.get('viewer_area')
-        self.components.get('g-viewer-area').parse_layout(viewer_area_layout)
+        if 'viewer_area' in config:
+            viewer_area_layout = config.get('viewer_area')
+            self.components.get('g-viewer-area').parse_layout(viewer_area_layout)
 
         # Add the toolbar item filter to the toolbar component
         # for name in config.get('toolbar', []):
