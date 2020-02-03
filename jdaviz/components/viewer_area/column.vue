@@ -36,7 +36,7 @@
                 flat
                 :items="dc_items"
                 @change="data_selected"
-                label="Standard"
+                label="Data"
                 ></v-select>
               <v-spacer></v-spacer>
               <v-divider vertical></v-divider>
