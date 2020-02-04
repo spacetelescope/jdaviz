@@ -105,7 +105,7 @@ release = package.__version__
 #html_theme = None
 
 
-html_theme = "sphinx-rtd-theme"
+html_theme = "sphinx_rtd_theme"
 
 
 # Custom sidebar templates, maps document names to template names.
