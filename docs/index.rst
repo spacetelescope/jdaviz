@@ -1,14 +1,18 @@
-Documentation
-=============
+JDAViz Documentation
+====================
 
-This is the documentation for jdaviz.
+`jdaviz` is a package of astronomical data analysis visualization tools using
+the Jupyter platform.
+
 
 .. toctree::
   :maxdepth: 2
 
-  jdaviz/index.rst
+  dev/infrastructure.rst
+  dev/ui_description.rst
 
-.. note:: The layout of this directory is simply a suggestion.  To follow
-          traditional practice, do *not* edit this page, but instead place
-          all documentation for the package inside ``jdaviz/``.
-          You can follow this practice or choose your own layout.
+
+Reference/API
+=============
+
+.. automodapi:: jdaviz

@@ -2,9 +2,9 @@
   <v-app id="web-app">
     <div v-if="loadRemoteCSS()"></div>
 
-    <template v-if="!checkNotebookContext()">
+    <!-- <template v-if="!checkNotebookContext()"> -->
       <g-tray-area></g-tray-area>
-    </template>
+    <!-- </template> -->
 
     <g-default-toolbar></g-default-toolbar>
 

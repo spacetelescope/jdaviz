@@ -20,7 +20,7 @@ class Column(TemplateMixin):
     """
     template = load_template("column.vue", __file__).tag(sync=True)
 
-    tab = Int(0).tag(sync=True)
+    tab = Any(0).tag(sync=True)
     items = List([]).tag(sync=True, **w.widget_serialization)
     queue = List([])
     dc_items = List([]).tag(sync=True)
@@ -62,8 +62,7 @@ class Column(TemplateMixin):
 
     def vue_split_pane(self, direction):
         self.queue = self.queue + [{'style': direction,
-                                    'content': self.items[self.tab]
-                                    }]
+                                    'content': self.items[self.tab]}]
 
 
 class Row(TemplateMixin):
@@ -73,8 +72,7 @@ class Row(TemplateMixin):
     """
     template = load_template("row.vue", __file__).tag(sync=True)
 
-    items = List([
-    ]).tag(sync=True, **w.widget_serialization)
+    items = List([]).tag(sync=True, **w.widget_serialization)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -82,6 +80,10 @@ class Row(TemplateMixin):
     def add_column(self, col):
         self.items = self.items + [col]
         col.observe(self._split_column, names='queue')
+
+        # Remove column instance if it contains now items
+        col.observe(lambda event: self.remove_column(col)
+                    if len(event['new']) == 0 else None, names='items')
 
     def remove_column(self, col):
         new_items = [x for x in self.items if x is not col]
