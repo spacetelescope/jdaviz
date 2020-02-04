@@ -8,15 +8,9 @@ from glue.core.message import DataCollectionAddMessage
 import uuid
 import ipyvuetify as v
 from ...core.registries import viewers
+from ...utils import load_template
 
 __all__ = ['ViewerArea']
-
-
-def load_template(file_name):
-    with open(os.path.join(os.path.dirname(__file__), file_name)) as f:
-        TEMPLATE = f.read()
-
-    return Unicode(TEMPLATE)
 
 
 class Column(TemplateMixin):
@@ -24,12 +18,13 @@ class Column(TemplateMixin):
     A column is a vertical area within a :class:~`Row` instance containg a
     stack of viewers with their associated toolbars and option panels.
     """
-    template = load_template("column.vue").tag(sync=True)
+    template = load_template("column.vue", __file__).tag(sync=True)
 
     tab = Int(0).tag(sync=True)
     items = List([]).tag(sync=True, **w.widget_serialization)
     queue = List([])
     dc_items = List([]).tag(sync=True)
+    drawer = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -39,26 +34,11 @@ class Column(TemplateMixin):
 
         self._base_viewers = {}
 
-        # self.items = self.items + [
-        #     {
-        #         'id': str(uuid.uuid4()),
-        #         'title': "Viewers",
-        #         'widget': None
-        #     },
-        #     {
-        #         'id': str(uuid.uuid4()),
-        #         'title': "Viewers",
-        #         'widget': None
-        #     }
-        # ]
-
     def _on_data_added(self, msg):
         self.dc_items = self.dc_items + [msg.data.label]
 
     def vue_data_selected(self, event):
-        print(event)
         data = [x for x in self.data_collection if x.label == event][0]
-        print(data)
         self._base_viewers.get(self.items[self.tab].get('id')).add_data(data)
 
     def add_item(self, item):
@@ -91,7 +71,7 @@ class Row(TemplateMixin):
     A row is a horizontal area within a :class:~`ViewerArea` instance
     containing a set of :class:~`Column` instances.
     """
-    template = load_template("row.vue").tag(sync=True)
+    template = load_template("row.vue", __file__).tag(sync=True)
 
     items = List([
     ]).tag(sync=True, **w.widget_serialization)
@@ -129,7 +109,7 @@ class ViewerArea(TemplateMixin):
     drawer : bool
         The state of the drawer (shown or not shown).
     """
-    template = load_template("viewer_area.vue").tag(sync=True)
+    template = load_template("viewer_area.vue", __file__).tag(sync=True)
     viewers = List([]).tag(sync=True, **w.widget_serialization)
     drawer = Bool(False).tag(sync=True)
 

@@ -14,6 +14,7 @@ from .components.toolbar import DefaultToolbar
 from .components.tray_area import TrayArea
 from .core.events import AddViewerMessage, NewViewerMessage
 from .core.registries import tools
+from .utils import load_template
 
 SplitPanes()
 Draggable()
@@ -29,9 +30,14 @@ class Application(v.VuetifyTemplate, HubListener):
     show_toolbar = Bool(True).tag(sync=True)
     show_tray_bar = Bool(True).tag(sync=True)
 
-    template = Unicode(TEMPLATE).tag(sync=True)
+    template = load_template("app.vue", __file__).tag(sync=True)
     methods = Unicode("""
     {
+        checkNotebookContext() {
+            this.notebook_context = document.getElementById("ipython-main-app");
+            return this.notebook_context;
+        },
+
         loadRemoteCSS() {
             var muiIconsSheet = document.createElement('link');
             muiIconsSheet.type='text/css';
@@ -43,53 +49,7 @@ class Application(v.VuetifyTemplate, HubListener):
     }
     """).tag(sync=True)
 
-    css = Unicode("""
-    .v-toolbar__content {
-        padding-left: 0px;
-        padding-right: 0px;
-    }
-
-    .splitpanes__splitter {
-        background-color: #ccc;
-        position: relative;
-    }
-    .splitpanes__splitter:before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 0;
-        transition: opacity 0.4s;
-        background-color: rgba(255, 0, 0, 0.3);
-        opacity: 0;
-        z-index: 1;
-    }
-
-    .splitpanes--vertical > .splitpanes__splitter:before {
-        left: -10px;
-        right: -10px;
-        height: 100%;
-    }
-
-    .splitpanes--horizontal > .splitpanes__splitter:before {
-        top: -10px;
-        bottom: -10px;
-        width: 100%;
-    }
-
-    .v-toolbar__content::before {
-        border-bottom: 1px solid #ccc;
-
-    }
-
-    .v-treeview>.v-treeview-node--leaf {
-        margin-left: 0px;
-        padding-left: 0px;
-    }
-
-    .v-treeview>.v-treeview-node--leaf>.v-treeview-node__root {
-        padding-left: 16px;
-    }
-    """).tag(sync=True)
+    css = load_template("app.css", __file__).tag(sync=True)
 
     def __init__(self, configuration=None, *args, **kwargs):
         super().__init__(*args, **kwargs)

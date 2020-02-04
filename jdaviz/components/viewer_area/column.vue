@@ -32,6 +32,7 @@
               <jupyter-widget :widget="item.tools" />
               <v-divider vertical></v-divider>
               <v-select
+                fill-width
                 solo
                 flat
                 :items="dc_items"
@@ -40,7 +41,7 @@
                 ></v-select>
               <v-spacer></v-spacer>
               <v-divider vertical></v-divider>
-              <v-btn icon @click.stop="item.drawer = !item.drawer">
+              <v-btn icon @click.stop="drawer = !drawer">
                 <v-icon>mdi-settings</v-icon>
               </v-btn>
             </v-toolbar-items>
@@ -48,7 +49,7 @@
 
           <v-divider></v-divider>
 
-          <v-navigation-drawer v-model="item.drawer" absolute temporary right overlay-opacity="0" width="325px">
+          <v-navigation-drawer v-model="drawer" absolute temporary right overlay-opacity="0" width="325px">
             <v-tabs grow height="36px">
               <v-tab>Layer</v-tab>
               <v-tab>Viewer</v-tab>
