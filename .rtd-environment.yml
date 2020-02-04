@@ -10,5 +10,5 @@ dependencies:
     - matplotlib
     - numpy
     - sphinx-astropy
-    - pip:
-        - sphinx-rtd-theme
+#   - pip:
+#       - dependency_from_pip

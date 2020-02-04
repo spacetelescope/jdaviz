@@ -1,35 +1,21 @@
 <template>
-  <v-app id="inspire">
+  <v-app id="web-app">
     <div v-if="loadRemoteCSS()"></div>
-    <div v-if="!checkNotebookContext()">
-      <g-tray-bar />
 
-      <g-toolbar>
-        <template v-if="show_tray_bar">
-          <v-app-bar-nav-icon @click.stop="drawer = !drawer" tile style="margin-left: -16px" />
-          <v-divider vertical></v-divider>
-        </template>
-      </g-toolbar>
+    <template v-if="!checkNotebookContext()">
+      <g-tray-area></g-tray-area>
+    </template>
 
-      <g-content-area />
-      <v-footer
-        app
-      >
-      </v-footer>
-    </div>
-    <div v-else>
-      <g-toolbar>
-        <template v-if="show_tray_bar">
-          <v-app-bar-nav-icon @click.stop="drawer = !drawer" tile style="margin-left: -16px" />
-          <v-divider vertical></v-divider>
-        </template>
-      </g-toolbar>
-      <v-container class="py-0">
-        <v-row>
-            <g-tray-bar />
-            <g-content-area />
+    <g-default-toolbar></g-default-toolbar>
+
+    <v-content style="min-height: 500px;">
+      <v-container class="fill-height" fluid style="padding: 0px; width:100%">
+        <v-row align="center" justify="center" class="fill-height" style="width: 100%">
+          <v-col class="fill-height" style="padding-top: 0px; padding-bottom: 0px">
+            <g-viewer-area></g-viewer-area>
+          </v-col>
         </v-row>
       </v-container>
-    </div>
+    </v-content>
   </v-app>
 </template>

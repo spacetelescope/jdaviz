@@ -1,0 +1,95 @@
+resources:
+  repositories:
+  - repository: OpenAstronomy
+    type: github
+    endpoint: nmearl
+    name: OpenAstronomy/azure-pipelines-templates
+    ref: master
+
+
+stages:
+
+  - stage: Documentation
+    dependsOn: []  # Have stage run concurrently with others
+    jobs:
+    - template: run-tox-env.yml@OpenAstronomy
+      parameters:
+        coverage: codecov
+        libraries:
+          apt:
+            - graphviz
+          brew:
+            - graphviz
+          choco:
+            - graphviz
+          yum:
+            - graphviz
+        envs:
+          # Build docs and check for warnings
+          - linux: build_docs
+
+  - stage: DefaultEnvironment
+    dependsOn: []  # Have stage run concurrently with others
+    jobs:
+    - template: run-tox-env.yml@OpenAstronomy
+      parameters:
+        coverage: codecov
+        envs:
+          # Test all supported python environments
+          - linux: py36-test-cov
+          - macos: py36-test
+          - windows: py36-test
+
+          - linux: py37-test-cov
+          - macos: py37-test
+          - windows: py37-test
+
+          - linux: py38-test-cov
+          - macos: py38-test
+          - windows: py38-test
+
+  - stage: DevelopmentEnvironment
+    dependsOn: []  # Have stage run concurrently with others
+    jobs:
+    - template: run-tox-env.yml@OpenAstronomy
+      parameters:
+        coverage: codecov
+        envs:
+          # Test with dev environments
+          - linux: py38-test-devdeps
+          - macos: py38-test-devdeps
+          - windows: py38-test-devdeps
+
+  - stage: LTSEnvironment
+    dependsOn: []  # Have stage run concurrently with others
+    jobs:
+    - template: run-tox-env.yml@OpenAstronomy
+      parameters:
+        coverage: codecov
+        envs:
+          # Test lts environments
+          - linux: py36-test-astropylts-numpy116
+          - macos: py36-test-astropylts-numpy116
+          - windows: py36-test-astropylts-numpy116
+
+      # Try all numpy versions.
+      # - linux: py36-test-numpy116
+      # - linux: py36-test-numpy117
+      # - linux: py36-test-numpy118
+
+      # - linux: py37-test-numpy116
+      # - linux: py37-test-numpy117
+      # - linux: py37-test-numpy118
+
+      # - linux: py38-test-numpy116
+      # - linux: py38-test-numpy117
+      # - linux: py38-test-numpy118
+  - stage: PEP8Compliance
+    dependsOn: []  # Have stage run concurrently with others
+    jobs:
+    - template: run-tox-env.yml@OpenAstronomy
+      parameters:
+        coverage: codecov
+        envs:
+          # Perform pip8 test with flake8
+          - linux: codestyle

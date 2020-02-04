@@ -6,7 +6,7 @@ components:
 toolbar:
   - g-open-session
   - g-save-session
-  - cv-import-data
+  - g-import-data
   - g-export-data
   - vertical-divider
   - spacer
@@ -22,10 +22,14 @@ tray_bar:
   - g-data-collection-list
   - g-viewer-options
   - g-layer-options
-content_area:
-  top_area:
-    - cv-data-imshow
-    - cv-error-imshow
-    - cv-dq-imshow
-  bottom_area:
-    - cv-profile-1d
+viewer_area:
+  - row:
+    - col:
+      - g-image-viewer
+    - col:
+      - g-image-viewer
+    - col:
+      - g-image-viewer
+  - row:
+    - col:
+      - g-profile-viewer

@@ -23,11 +23,10 @@ class NewViewerMessage(Message):
 
 
 class AddViewerMessage(Message):
-    def __init__(self, viewer, area=None, *args, **kwargs):
+    def __init__(self, viewer, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self._viewer = viewer
-        self._area = area
 
     @property
     def viewer(self):
@@ -50,14 +49,14 @@ class LoadDataMessage(Message):
 
 
 class DataSelectedMessage(Message):
-    def __init__(self, index, *args, **kwargs):
+    def __init__(self, indicies, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self._index = index
+        self._indicies = indicies
 
     @property
-    def index(self):
-        return self._index
+    def indicies(self):
+        return self._indicies
 
 
 class ViewerSelectedMessage(Message):

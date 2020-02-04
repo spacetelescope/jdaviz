@@ -1,39 +1,40 @@
 import os
-import pkg_resources
 
 import ipyvuetify as v
+import pkg_resources
 import yaml
 from glue.core.application_base import HubListener
 from glue_jupyter.app import JupyterApplication
-from traitlets import Unicode, Bool, Dict, observe
+from ipysplitpanes import SplitPanes
+from ipyvuedraggable import Draggable
+from traitlets import Unicode, Bool, Dict
 
-from jdaviz.core.registries import tools, trays, viewers
-from .core.events import NewViewerMessage, AddViewerMessage, LoadDataMessage
-from .widgets.content_area import ContentArea
-from .widgets.menu_bar import MenuBar
-from .widgets.toolbar import Toolbar
-from .widgets.tray_bar import TrayBar
+from .components.viewer_area import ViewerArea
+from .components.toolbar import DefaultToolbar
+from .components.tray_area import TrayArea
+from .core.events import AddViewerMessage, NewViewerMessage
+from .core.registries import tools
+from .utils import load_template
 
+SplitPanes()
+Draggable()
 
 with open(os.path.join(os.path.dirname(__file__), "app.vue")) as f:
     TEMPLATE = f.read()
 
 
-class IPyApplication(v.VuetifyTemplate, HubListener):
+class Application(v.VuetifyTemplate, HubListener):
     _metadata = Dict({'mount_id': 'content'}).tag(sync=True)
 
     show_menu_bar = Bool(True).tag(sync=True)
     show_toolbar = Bool(True).tag(sync=True)
     show_tray_bar = Bool(True).tag(sync=True)
-    notebook_context = Bool(False).tag(sync=True)
-    drawer = Bool(True).tag(sync=True)
-    source = Unicode("").tag(sync=True)
 
-    template = Unicode(TEMPLATE).tag(sync=True)
+    template = load_template("app.vue", __file__).tag(sync=True)
     methods = Unicode("""
     {
         checkNotebookContext() {
-            this.notebook_context = !!!document.getElementById("web-app");
+            this.notebook_context = document.getElementById("ipython-main-app");
             return this.notebook_context;
         },
 
@@ -48,45 +49,37 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
     }
     """).tag(sync=True)
 
+    css = load_template("app.css", __file__).tag(sync=True)
+
     def __init__(self, configuration=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # TODO: we shouldn't need to keep an entire JupyterApplication
-        #  instance, however, there are certain things on the glupyter viewers
-        #  that reference custom functionality in this class. Eventually, we
-        #  should parse those out so they aren't dependencies.
         self._application_handler = JupyterApplication()
-
-        # Instantiate the default gui components
-        self.components = {
-            'g-toolbar': Toolbar(session=self.session),
-            'g-tray-bar': TrayBar(session=self.session),
-            'g-content-area': ContentArea(session=self.session),
-            'g-menu-bar': MenuBar(session=self.session)
-        }
 
         # Load in default configuration file. This must come before loading
         #  in the components for the toolbar/tray_bar.
+        # self.load_configuration(configuration)
+
+        plugins = {
+            entry_point.name: entry_point.load()
+            for entry_point
+            in pkg_resources.iter_entry_points(group='plugins')}
+
+        components = {'g-viewer-area': ViewerArea(session=self.session),
+                      'g-default-toolbar': DefaultToolbar(session=self.session),
+                      'g-tray-area': TrayArea(session=self.session)}
+
+        components.update({k: v(session=self.session)
+                           for k, v in tools.members.items()})
+
+        self.components = components
+
+        # Parse configuration
         self.load_configuration(configuration)
 
-        # Dump all user-defined toolbar items as component references in the
-        #  vuetify template instance.
-        toolbar = self.components.get('g-toolbar')
-
-        toolbar.components = {k: v(session=self.session)
-                              for k, v in tools.members.items()}
-
-        # Do the same thing for the sidebar components
-        tray_bar = self.components.get('g-tray-bar')
-
-        tray_bar.components = {k: v.get('cls')(session=self.session)
-                               for k, v in trays.members.items()}
-
-        # Setup hub event listeners
+        # Subscribe to viewer messages
         self.hub.subscribe(self, NewViewerMessage,
                            handler=self._on_new_viewer)
-        self.hub.subscribe(self, LoadDataMessage,
-                           handler=self._on_load_data)
 
     @property
     def hub(self):
@@ -96,24 +89,23 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
     def session(self):
         return self._application_handler.session
 
-    @observe('notebook_context')
-    def _on_context_changed(self, event):
-        """
-        Observe changes in the rendered context of the application. If the
-        application is viewed inside a notebook, disable the app props on the
-        vuetify components.
+    def load_data(self, path):
+        self._application_handler.load_data(path)
 
-        Parameters
-        ----------
-        event : dict
-            Contains the trailet event properties.
-        """
-        self.components.get('g-toolbar').app = not event['new']
-        self.components.get('g-tray-bar').app = not event['new']
+    def _on_new_viewer(self, msg):
+        view = self._application_handler.new_data_viewer(
+            msg.cls, data=msg.data, show=False)
 
-    @observe('drawer')
-    def _on_drawer_state_changed(self, event):
-        self.components.get('g-tray-bar').drawer = event['new']
+        if msg.x_attr is not None:
+            x = msg.data.id[msg.x_attr]
+            view.state.x_att = x
+
+        self.hub.broadcast(AddViewerMessage(view, sender=self))
+
+        return view
+
+    def _registry_component(self):
+        pass
 
     def load_configuration(self, path):
         # Parse the default configuration file
@@ -134,68 +126,32 @@ class IPyApplication(v.VuetifyTemplate, HubListener):
         with open(path, 'r') as f:
             config = yaml.safe_load(f)
 
+        from .core.registries import viewers
+        print(viewers.members.get('g-image-viewer'))
+
         # Get a reference to the component visibility states
-        comps = config.get('components', {})
+        # comps = config.get('components', {})
 
         # Toggle the rendering of the components in the gui
-        self.show_menu_bar = comps.get('menu_bar', True)
-        self.show_toolbar = comps.get('toolbar', True)
-        self.show_tray_bar = comps.get('tray_bar', True)
+        # self.show_menu_bar = comps.get('menu_bar', True)
+        # self.show_toolbar = comps.get('toolbar', True)
+        # self.show_tray_bar = comps.get('tray_bar', True)
+
+        if 'viewer_area' in config:
+            viewer_area_layout = config.get('viewer_area')
+            self.components.get('g-viewer-area').parse_layout(viewer_area_layout)
 
         # Add the toolbar item filter to the toolbar component
-        for name in config.get('toolbar', []):
-            self.components['g-toolbar'].add_tool(name)
+        # for name in config.get('toolbar', []):
+        #     self.components['g-toolbar'].add_tool(name)
 
         # Add the tray items filter to the interact drawer component
-        for name in config.get('tray_bar', []):
-            # Retrieve the meta information around the rendering of the tab
-            #  button including the icon and label information.
-            item = trays.members.get(name)
+        # for name in config.get('tray_bar', []):
+        #     # Retrieve the meta information around the rendering of the tab
+        #     #  button including the icon and label information.
+        #     item = trays.members.get(name)
 
-            label = item.get('label')
-            icon = item.get('icon')
+        #     label = item.get('label')
+        #     icon = item.get('icon')
 
-            self.components['g-tray-bar'].add_tray(name, label, icon)
-
-        # Pre-load viewers into tab area
-        content_area = config.get('content_area')
-
-        # Toggle the visibility of the tab areas with the content area.
-        # TODO: this will changed when ipygoldenlayout is properly
-        #   implemented.
-        if content_area is not None:
-            self.components['g-content-area'].bottom_area = 'bottom_area' in content_area
-
-            for area in content_area:
-                for viewer_label in content_area.get(area):
-                    viewer = viewers.members.get(viewer_label)
-
-                    if viewer is not None:
-                        viewer_cls = viewer.get('cls')
-
-                        view = self._application_handler.new_data_viewer(
-                            viewer_cls, data=None, show=False)
-
-                        # Give the viewers a reference to the hub.
-                        # TODO: this is a hack, do we really want to have
-                        #  viewers listening to events?
-                        if hasattr(view, 'setup_hub'):
-                            view.setup_hub(self.hub)
-
-                        self.hub.broadcast(
-                            AddViewerMessage(view, area=area, sender=self))
-
-    def _on_load_data(self, msg):
-        data = self._application_handler.load_data(msg.path)
-
-    def _on_new_viewer(self, msg):
-        view = self._application_handler.new_data_viewer(
-            msg.cls, data=msg.data, show=False)
-
-        if msg.x_attr is not None:
-            x = msg.data.id[msg.x_attr]
-            view.state.x_att = x
-
-        self.hub.broadcast(AddViewerMessage(view, sender=self))
-
-        return view
+        #     self.components['g-tray-bar'].add_tray(name, label, icon)
