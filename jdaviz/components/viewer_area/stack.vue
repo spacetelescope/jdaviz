@@ -26,19 +26,12 @@
         reverse-transition="false"
         class="fill-height"
       >
-        <v-sheet class="fill-height" style="position: relative;">
+        <v-sheet class="fill-height" style="position: relative; height: calc(100% - 24px)">
           <v-toolbar dense flat>
             <v-toolbar-items>
               <jupyter-widget :widget="item.tools" />
               <v-divider vertical></v-divider>
-              <v-select
-                fill-width
-                solo
-                flat
-                :items="dc_items"
-                @change="data_selected"
-                label="Data"
-                ></v-select>
+              <v-select fill-width solo flat :items="dc_items" @change="data_selected" label="Data"></v-select>
               <v-spacer></v-spacer>
               <v-divider vertical></v-divider>
               <v-btn icon @click.stop="drawer = !drawer">
@@ -49,7 +42,14 @@
 
           <v-divider></v-divider>
 
-          <v-navigation-drawer v-model="drawer" absolute temporary right overlay-opacity="0" width="325px">
+          <v-navigation-drawer
+            v-model="drawer"
+            absolute
+            temporary
+            right
+            overlay-opacity="0"
+            width="325px"
+          >
             <v-tabs grow height="36px">
               <v-tab>Layer</v-tab>
               <v-tab>Viewer</v-tab>
@@ -67,11 +67,11 @@
             </v-tabs>
           </v-navigation-drawer>
 
-          <v-container class="fill-height">
+          <v-container class="fill-height" style="padding: 0px; margin: 0px">
             <v-row align="center" justify="center" class="fill-height">
-              <v-col class="fill-height">
-                <jupyter-widget :widget="item.widget" />
-              </v-col>
+              <!-- <v-col class="fill-height"> -->
+                <jupyter-widget :widget="item.widget" style="width: 100%" />
+              <!-- </v-col> -->
             </v-row>
           </v-container>
         </v-sheet>
