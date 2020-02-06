@@ -25,10 +25,8 @@
 
               <v-card-text>
                 <v-file-input
-                        show-size
-                        counter
+                        v-model="files"
                         label="File input"
-                        v-model="file_paths"
                 ></v-file-input>
               </v-card-text>
               <v-divider></v-divider>
@@ -45,7 +43,7 @@
                 <v-btn
                         color="primary"
                         text
-                        @click="load_data"
+                        @click="load_data(convertFile())"
                 >
                   Import
                 </v-btn>

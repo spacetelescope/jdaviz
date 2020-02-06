@@ -3,7 +3,7 @@ import os
 import ipywidgets as w
 import numpy as np
 from glue_jupyter.utils import validate_data_argument
-from traitlets import Unicode, List, Bool, Any
+from traitlets import Unicode, List, Bool, Any, Dict
 
 from ...core.events import (LoadDataMessage, DataSelectedMessage,
                             NewViewerMessage)
@@ -22,7 +22,19 @@ class TrayArea(TemplateMixin):
     drawer = Bool(True).tag(sync=True)
     valid = Bool(True).tag(sync=True)
     dialog = Bool(False).tag(sync=True)
-    file_paths = Any(None).tag(sync=True)
+    data = Unicode("""
+    {
+        files: undefined
+    }
+    """).tag(sync=True)
+    methods = Unicode("""
+    {
+        returnFiles() {
+            return this.files && this.files.name;
+        }
+    }
+    """).tag(sync=True)
+
     viewers = List([]).tag(sync=True)
 
     tray_items = List([
@@ -79,6 +91,8 @@ class TrayArea(TemplateMixin):
                         for k, v in viewers.members.items()]
 
     def vue_load_data(self, *args, **kwargs):
+        self.dialog = False
+        return
         # TODO: hack because of current incompatibility with ipywidget types
         #  and vuetify templates.
         for path in ["/Users/nearl/data/single_g235h-f170lp_x1d.fits"]:
@@ -86,6 +100,9 @@ class TrayArea(TemplateMixin):
             self.hub.broadcast(load_data_message)
 
         self.dialog = False
+
+    def vue_file_inputted(self, *args, **kwargs):
+        print(args, kwargs)
 
     def vue_create_viewer(self, name):
         viewer_cls = viewers.members[name]['cls']
