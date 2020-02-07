@@ -1,35 +1,17 @@
 import numpy as np
-
 from astropy import units as u
 from astropy.io import fits
 from astropy.units import Quantity
 from astropy.units.quantity import allclose
-
 from glue.config import data_translator
 from glue.core import Data, DataCollection
 
 from specutils import Spectrum1D
 
-
-@data_translator(Spectrum1D)
-class Spectrum1DHandler:
-    def to_data(self, obj):
-        data = Data()
-        data['spectral_axis'] = obj.spectral_axis
-        data['flux'] = obj.data
-        data.get_component('flux').units = str(obj.flux.unit)
-        data.meta['s1d'] = obj
-        return data
-
-    def to_object(self, data):
-        try:
-            result = data.meta['s1d']
-        except KeyError:
-            result = data.label
-        return result
+from ..core.translators import *
 
 
-def test_translation():
+def test_spectrum1d_translation():
     input_flux = Quantity(np.array([0.2, 0.3, 2.2, 0.3]), u.Jy)
     input_spaxis = Quantity(np.array([1, 2, 3, 4]), u.micron)
     spec = Spectrum1D(input_flux, spectral_axis=input_spaxis)
@@ -59,7 +41,8 @@ def test_translation():
     allclose(spectrum.spectral_axis, input_spaxis, atol=1e-5*u.micron)
 
 
-def test_translation_real_data():
+@pytest.mark.remote_data
+def test_translation_spectrum1d_real_data():
 
     # The description on issue JDAT-136 reads:
     #
