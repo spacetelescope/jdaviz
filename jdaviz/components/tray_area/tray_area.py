@@ -54,21 +54,6 @@ class TrayArea(TemplateMixin):
             {
                 'tab': 0,
                 'items': [
-                    {
-                        'id': 11,
-                        'title': "Test Plugin",
-                        'widget': None
-                    },
-                    {
-                        'id': 12,
-                        'title': "Test Plugin",
-                        'widget': None
-                    },
-                    {
-                        'id': 13,
-                        'title': "Test Plugin",
-                        'widget': None
-                    }
                 ]
             }
         ]
