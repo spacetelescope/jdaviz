@@ -3,20 +3,18 @@
     <v-toolbar-items>
 
       <v-btn-toggle borderless tile background-color="blue lighten-4">
-        <v-btn icon>
+        <v-btn icon disabled>
           <v-icon>mdi-hand-right</v-icon>
         </v-btn>
 
-        <v-btn>
+        <v-btn icon disabled>
           <v-icon>mdi-magnify-plus</v-icon>
         </v-btn>
 
-        <v-btn>
+        <v-btn icon disabled>
           <v-icon>mdi-magnify-minus</v-icon>
         </v-btn>
       </v-btn-toggle>
-
-      <v-divider vertical></v-divider>
 
       <!-- <v-combobox
               solo
@@ -72,21 +70,23 @@
       <g-subset-select></g-subset-select>
       <g-subset-mode></g-subset-mode>
 
-      <v-divider vertical></v-divider>
-
       <v-btn-toggle borderless tile background-color="blue lighten-4">
-        <v-btn icon>
+        <v-btn icon disabled>
           <v-icon>mdi-contrast-box</v-icon>
         </v-btn>
       </v-btn-toggle>
 
-      <v-divider vertical></v-divider>
-
       <v-btn-toggle borderless tile background-color="blue lighten-4">
-        <v-btn icon>
+        <v-btn icon disabled>
           <v-icon>mdi-cube-outline</v-icon>
         </v-btn>
       </v-btn-toggle>
+
+      <v-divider vertical></v-divider>
+
+      <template v-for="tool in tools">
+        <jupyter-widget :widget="tool" />
+      </template>
 
     </v-toolbar-items>
   </v-app-bar>

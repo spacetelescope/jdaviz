@@ -68,3 +68,41 @@ class ViewerSelectedMessage(Message):
     @property
     def viewer(self):
         return self._viewer
+
+
+class RemoveStackMessage(Message):
+    def __init__(self, stack, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self._stack = stack
+
+    @property
+    def stack(self):
+        return self._stack
+
+
+class SplitStackMessage(Message):
+    def __init__(self, item, horizontal, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self._item = item
+        self._horizontal = horizontal
+
+    @property
+    def item(self):
+        return self._item
+
+    @property
+    def horizontal(self):
+        return self._horizontal
+
+
+class RemoveItemMessage(Message):
+    def __init__(self, item, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self._item = item
+
+    @property
+    def item(self):
+        return self._item

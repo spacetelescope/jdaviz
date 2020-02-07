@@ -4,24 +4,7 @@ components:
   tray_bar: true
   content_area: true
 toolbar:
-  - g-open-session
-  - g-save-session
-  - g-import-data
-  - g-export-data
-  - vertical-divider
-  - spacer
-  - vertical-divider
-  - g-subset-select
-  - vertical-divider
-  - g-subset-mode
-  - vertical-divider
-  - spacer
-menu_bar:
-  - g-test-action
-tray_bar:
-  - g-data-collection-list
-  - g-viewer-options
-  - g-layer-options
+  - g-gaussian-smoothing
 viewer_area:
   - row:
     - col:

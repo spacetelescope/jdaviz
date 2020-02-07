@@ -3,7 +3,7 @@ import os
 import ipywidgets as w
 import numpy as np
 from glue_jupyter.utils import validate_data_argument
-from traitlets import Unicode, List, Bool, Any
+from traitlets import Unicode, List, Bool, Any, Dict, Int
 
 from ...core.events import (LoadDataMessage, DataSelectedMessage,
                             NewViewerMessage)
@@ -22,45 +22,32 @@ class TrayArea(TemplateMixin):
     drawer = Bool(True).tag(sync=True)
     valid = Bool(True).tag(sync=True)
     dialog = Bool(False).tag(sync=True)
-    file_paths = Any(None).tag(sync=True)
+    data = Unicode("""
+    {
+        files: undefined
+    }
+    """).tag(sync=True)
+    methods = Unicode("""
+    {
+        returnFiles() {
+            return this.files && this.files.name;
+        }
+    }
+    """).tag(sync=True)
+
     viewers = List([]).tag(sync=True)
 
-    tray_items = List([
-        [
+    base_items_tab = Int(0).tag(sync=True)
+    base_items = List([
             {
-                'tab': 0,
-                'items': [
-                    {
-                        'id': 1,
-                        'title': "Data",
-                        'widget': "g-data-tree"
-                    },
-                ]
+                'id': 1,
+                'title': "Data",
+                'widget': "g-data-tree"
             }
-        ],
-        [
-            {
-                'tab': 0,
-                'items': [
-                    {
-                        'id': 11,
-                        'title': "Test Plugin",
-                        'widget': None
-                    },
-                    {
-                        'id': 12,
-                        'title': "Test Plugin",
-                        'widget': None
-                    },
-                    {
-                        'id': 13,
-                        'title': "Test Plugin",
-                        'widget': None
-                    }
-                ]
-            }
-        ]
-    ]).tag(sync=True, **w.widget_serialization)
+        ]).tag(sync=True, **w.widget_serialization)
+
+    plugin_items_tab = Int(0).tag(sync=True)
+    plugin_items = List([]).tag(sync=True, **w.widget_serialization)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -79,6 +66,8 @@ class TrayArea(TemplateMixin):
                         for k, v in viewers.members.items()]
 
     def vue_load_data(self, *args, **kwargs):
+        self.dialog = False
+        return
         # TODO: hack because of current incompatibility with ipywidget types
         #  and vuetify templates.
         for path in ["/Users/nearl/data/single_g235h-f170lp_x1d.fits"]:
@@ -86,6 +75,9 @@ class TrayArea(TemplateMixin):
             self.hub.broadcast(load_data_message)
 
         self.dialog = False
+
+    def vue_file_inputted(self, *args, **kwargs):
+        print(args, kwargs)
 
     def vue_create_viewer(self, name):
         viewer_cls = viewers.members[name]['cls']

@@ -1,7 +1,7 @@
 <template>
-  <splitpanes class="fill-height" horizontal>
-    <pane v-for="row in viewers">
-        <jupyter-widget :widget="row" />
+  <splitpanes class="fill-height">
+    <pane v-for="item in items">
+        <jupyter-widget :widget="item" />
     </pane>
   </splitpanes>
 </template>

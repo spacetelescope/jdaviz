@@ -7,3 +7,7 @@ from ._astropy_init import *   # noqa
 # ----------------------------------------------------------------------------
 
 __all__ = []
+
+
+# Import glue translators
+from glue_astronomy.translators import *

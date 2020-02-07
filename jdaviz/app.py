@@ -126,9 +126,6 @@ class Application(v.VuetifyTemplate, HubListener):
         with open(path, 'r') as f:
             config = yaml.safe_load(f)
 
-        from .core.registries import viewers
-        print(viewers.members.get('g-image-viewer'))
-
         # Get a reference to the component visibility states
         # comps = config.get('components', {})
 
@@ -142,8 +139,9 @@ class Application(v.VuetifyTemplate, HubListener):
             self.components.get('g-viewer-area').parse_layout(viewer_area_layout)
 
         # Add the toolbar item filter to the toolbar component
-        # for name in config.get('toolbar', []):
-        #     self.components['g-toolbar'].add_tool(name)
+        for name in config.get('toolbar', []):
+            tool = tools.members.get(name)(session=self.session)
+            self.components['g-default-toolbar'].add_tool(tool)
 
         # Add the tray items filter to the interact drawer component
         # for name in config.get('tray_bar', []):
