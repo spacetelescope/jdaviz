@@ -126,9 +126,6 @@ class Application(v.VuetifyTemplate, HubListener):
         with open(path, 'r') as f:
             config = yaml.safe_load(f)
 
-        from .core.registries import viewers
-        print(viewers.members.get('g-image-viewer'))
-
         # Get a reference to the component visibility states
         # comps = config.get('components', {})
 

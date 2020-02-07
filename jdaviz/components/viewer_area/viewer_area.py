@@ -54,8 +54,6 @@ class Stack(TemplateMixin):
 
         self.items = self.items + [item]
 
-        print(len(self.items), self.items)
-
     @observe('items')
     def items_changed(self, event):
         if len(event['new']) == 0:
@@ -192,8 +190,15 @@ class ViewerArea(TemplateMixin):
                 if isinstance(item, Stack):
                     item.add_item(tab_item)
                     return True
+                elif isinstance(item, Item):
+                    if len(item.stacks) == 0:
+                        # If we got here, most likely there's an Item object
+                        #  with no Stack. Create one and add it.
+                        stack = Stack(session=self.session)
+                        items[0].add_stack(stack)
 
                 return find_stack(item.stacks)
+
 
         find_stack(self.items)
 
