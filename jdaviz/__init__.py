@@ -10,4 +10,4 @@ __all__ = []
 
 
 # Import glue translators
-from .core.translators import *
+from glue_astronomy.translators import *
