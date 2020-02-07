@@ -77,25 +77,37 @@
     </v-toolbar>
 
     <splitpanes horizontal style="height: calc(100% - 48px);">
-      <pane v-for="(row, i) in tray_items">
-        <splitpanes>
-          <pane v-for="(col, j) in row">
-            <v-tabs v-model="col.tab" grow height="36px" background-color="blue lighten-5">
-              <!-- <draggable v-model="col.items" :group="{name:'viewers'}" class="d-flex flex-grow-1"> -->
-              <v-tab v-for="item in col.items" :key="item.id" @click>{{ item.title }}</v-tab>
-              <!-- </draggable> -->
+      <pane>
+        <v-tabs v-model="base_items_tab" grow height="36px" background-color="blue lighten-5">
+          <!-- <draggable v-model="col.items" :group="{name:'viewers'}" class="d-flex flex-grow-1"> -->
+          <v-tab v-for="item in base_items" :key="item.id" @click>{{ item.title }}</v-tab>
+          <!-- </draggable> -->
 
-              <v-tabs-items v-model="col.tab">
-                <v-tab-item v-for="item in col.items" :key="item.id">
-                  <v-card flat class="scroll-y" height="100%">
-                    <!-- <jupyter-widget :widget="item.widget" /> -->
-                    <component v-bind:is="item.widget"></component>
-                  </v-card>
-                </v-tab-item>
-              </v-tabs-items>
-            </v-tabs>
-          </pane>
-        </splitpanes>
+          <v-tabs-items v-model="base_items_tab">
+            <v-tab-item v-for="item in base_items" :key="item.id">
+              <v-card flat class="scroll-y" height="100%">
+                <!-- <jupyter-widget :widget="item.widget" /> -->
+                <component v-bind:is="item.widget"></component>
+              </v-card>
+            </v-tab-item>
+          </v-tabs-items>
+        </v-tabs>
+      </pane>
+      <pane v-if="plugin_items.length > 0">
+        <v-tabs v-model="plugin_items_tab" grow height="36px" background-color="blue lighten-5">
+          <!-- <draggable v-model="col.items" :group="{name:'viewers'}" class="d-flex flex-grow-1"> -->
+          <v-tab v-for="item in plugin_items" :key="item.id" @click>{{ item.title }}</v-tab>
+          <!-- </draggable> -->
+
+          <v-tabs-items v-model="plugin_items_tab">
+            <v-tab-item v-for="item in plugin_items" :key="item.id">
+              <v-card flat class="scroll-y" height="100%">
+                <!-- <jupyter-widget :widget="item.widget" /> -->
+                <component v-bind:is="item.widget"></component>
+              </v-card>
+            </v-tab-item>
+          </v-tabs-items>
+        </v-tabs>
       </pane>
     </splitpanes>
   </v-navigation-drawer>

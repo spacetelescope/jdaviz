@@ -3,7 +3,7 @@ import os
 import ipywidgets as w
 import numpy as np
 from glue_jupyter.utils import validate_data_argument
-from traitlets import Unicode, List, Bool, Any, Dict
+from traitlets import Unicode, List, Bool, Any, Dict, Int
 
 from ...core.events import (LoadDataMessage, DataSelectedMessage,
                             NewViewerMessage)
@@ -37,27 +37,17 @@ class TrayArea(TemplateMixin):
 
     viewers = List([]).tag(sync=True)
 
-    tray_items = List([
-        [
+    base_items_tab = Int(0).tag(sync=True)
+    base_items = List([
             {
-                'tab': 0,
-                'items': [
-                    {
-                        'id': 1,
-                        'title': "Data",
-                        'widget': "g-data-tree"
-                    },
-                ]
+                'id': 1,
+                'title': "Data",
+                'widget': "g-data-tree"
             }
-        ],
-        [
-            {
-                'tab': 0,
-                'items': [
-                ]
-            }
-        ]
-    ]).tag(sync=True, **w.widget_serialization)
+        ]).tag(sync=True, **w.widget_serialization)
+
+    plugin_items_tab = Int(0).tag(sync=True)
+    plugin_items = List([]).tag(sync=True, **w.widget_serialization)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

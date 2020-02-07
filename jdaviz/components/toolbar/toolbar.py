@@ -1,14 +1,14 @@
 import os
-from traitlets import Unicode, List, Int, Bool, Dict, Any
 
-from jdaviz.core.registries import tools
-from jdaviz.core.template_mixin import TemplateMixin
-
-from glue_jupyter.widgets.subset_select_vuetify import SubsetSelect
-from glue_jupyter.widgets.subset_mode_vuetify import SelectionModeMenu
-from glue.core.edit_subset_mode import OrMode, AndNotMode, AndMode, XorMode, ReplaceMode
-from glue.core.message import EditSubsetMessage
 import ipywidgets as w
+from glue.core.edit_subset_mode import OrMode, AndNotMode, AndMode, XorMode, \
+    ReplaceMode
+from glue.core.message import EditSubsetMessage
+from glue_jupyter.widgets.subset_mode_vuetify import SelectionModeMenu
+from glue_jupyter.widgets.subset_select_vuetify import SubsetSelect
+from traitlets import Unicode, List, Int
+
+from jdaviz.core.template_mixin import TemplateMixin
 
 __all__ = ['DefaultToolbar']
 
