@@ -88,6 +88,12 @@
         </v-btn>
       </v-btn-toggle>
 
+      <v-divider vertical></v-divider>
+
+      <template v-for="tool in tools">
+        <jupyter-widget :widget="tool" />
+      </template>
+
     </v-toolbar-items>
   </v-app-bar>
 </template>

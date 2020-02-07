@@ -8,6 +8,7 @@ from glue_jupyter.widgets.subset_select_vuetify import SubsetSelect
 from glue_jupyter.widgets.subset_mode_vuetify import SelectionModeMenu
 from glue.core.edit_subset_mode import OrMode, AndNotMode, AndMode, XorMode, ReplaceMode
 from glue.core.message import EditSubsetMessage
+import ipywidgets as w
 
 __all__ = ['DefaultToolbar']
 
@@ -25,7 +26,7 @@ SUBSET_MODES = {
 
 class DefaultToolbar(TemplateMixin):
     template = Unicode(TEMPLATE).tag(sync=True)
-
+    tools = List([]).tag(sync=True, **w.widget_serialization)
     select = List([]).tag(sync=True)
     subset_mode = Int(0).tag(sync=True)
 
@@ -52,3 +53,6 @@ class DefaultToolbar(TemplateMixin):
 
         if self.session.edit_subset_mode.mode != mode:
             self.session.edit_subset_mode.mode = mode
+
+    def add_tool(self, tool):
+        self.tools = self.tools + [tool]
