@@ -7,7 +7,7 @@
             <v-icon>adjust</v-icon>
           </v-btn>
         </template>
-        <span>Tooltip</span>
+        <span>Gaussian Smooth</span>
       </v-tooltip>
     </template>
 
