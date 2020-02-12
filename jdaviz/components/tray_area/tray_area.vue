@@ -2,31 +2,7 @@
   <v-navigation-drawer v-model="drawer" app width="350px" absolute>
     <v-toolbar tile dense flat color="blue lighten-4">
       <v-toolbar-items>
-        <v-dialog v-model="dialog" width="500" persistent>
-          <template v-slot:activator="{ on }">
-            <v-btn tile depressed v-on="on" color="primary">
-              Import
-              <v-icon right>mdi-plus</v-icon>
-            </v-btn>
-          </template>
-
-          <v-form v-model="valid">
-            <v-card>
-              <v-card-title class="headline grey lighten-2" primary-title>Import Data</v-card-title>
-
-              <v-card-text>
-                <v-file-input v-model="files" label="File input"></v-file-input>
-              </v-card-text>
-              <v-divider></v-divider>
-
-              <v-card-actions>
-                <div class="flex-grow-1"></div>
-                <v-btn color="primary" text @click="dialog = false">Cancel</v-btn>
-                <v-btn color="primary" text @click="load_data(convertFile())">Import</v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-form>
-        </v-dialog>
+        <g-file-loader></g-file-loader>
 
         <v-menu offset-y>
           <template v-slot:activator="{ on: menu }">
