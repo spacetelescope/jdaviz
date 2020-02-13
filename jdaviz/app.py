@@ -12,7 +12,7 @@ from traitlets import Unicode, Bool, Dict
 from .components.viewer_area import ViewerArea
 from .components.toolbar import DefaultToolbar
 from .components.tray_area import TrayArea
-from .core.events import AddViewerMessage, NewViewerMessage
+from .core.events import AddViewerMessage, NewViewerMessage, LoadDataMessage
 from .core.registries import tools
 from .utils import load_template
 
@@ -80,6 +80,10 @@ class Application(v.VuetifyTemplate, HubListener):
         # Subscribe to viewer messages
         self.hub.subscribe(self, NewViewerMessage,
                            handler=self._on_new_viewer)
+
+        # Subscribe to load data messages
+        self.hub.subscribe(self, LoadDataMessage,
+                           handler=lambda msg: self.load_data(msg.path))
 
     @property
     def hub(self):

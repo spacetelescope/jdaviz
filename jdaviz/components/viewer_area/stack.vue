@@ -45,6 +45,7 @@
           <v-navigation-drawer
             v-model="drawer"
             absolute
+            disable-resize-watcher
             temporary
             right
             overlay-opacity="0"
