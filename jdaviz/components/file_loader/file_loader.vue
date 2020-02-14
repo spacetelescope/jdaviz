@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="dialog" width="500" persistent>
+  <v-dialog v-model="dialog" width="500" persistent @keydown.stop="">
     <template v-slot:activator="{ on }">
       <v-btn tile depressed v-on="on" color="primary">
         Import
