@@ -16,6 +16,8 @@ from .core.events import AddViewerMessage, NewViewerMessage, LoadDataMessage
 from .core.registries import tools
 from .utils import load_template
 
+__all__ = ['Application']
+
 SplitPanes()
 Draggable()
 

@@ -5,7 +5,8 @@ from ipyvuetify import VuetifyTemplate
 from ipywidgets import Widget
 
 
-__all__ = ['viewers', 'trays', 'tools']
+__all__ = ['viewers', 'trays', 'tools', 'ViewerRegistry', 'TrayRegistry',
+           'ToolRegistry', 'MenuRegistry']
 
 
 def convert(name):

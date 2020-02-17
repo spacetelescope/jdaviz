@@ -15,4 +15,7 @@ the Jupyter platform.
 Reference/API
 =============
 
-.. automodapi:: jdaviz
+.. toctree::
+   :maxdepth: 1
+
+   reference/api.rst

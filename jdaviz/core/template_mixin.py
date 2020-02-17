@@ -1,6 +1,8 @@
 import ipyvuetify as v
 from glue.core import HubListener
 
+__all__ = ['TemplateMixin']
+
 
 class TemplateMixin(v.VuetifyTemplate, HubListener):
     def __new__(cls, *args, **kwargs):

@@ -1,22 +1,16 @@
-import numpy as np
 from astropy import units as u
-from astropy.units import Quantity
-from glue.core import DataCollection
-from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
-                                        ReplaceMode, XorMode)
+from astropy import units as u
 from glue.core.message import (DataCollectionAddMessage,
-                               DataCollectionDeleteMessage, EditSubsetMessage)
-from ipyvuetify import VuetifyTemplate
+                               DataCollectionDeleteMessage)
 from specutils import Spectrum1D
 from specutils.manipulation import gaussian_smooth
-from traitlets import Any, Bool, Dict, Float, Int, List, Unicode
+from traitlets import Bool, List, Unicode
 
-from jdaviz.core.events import DataSelectedMessage, LoadDataMessage
 from jdaviz.core.registries import tools
 from jdaviz.core.template_mixin import TemplateMixin
 from jdaviz.utils import load_template
 
-__all__ = ['GaussianSmoothingButton']
+__all__ = ['GaussianSmoothing']
 
 
 spaxel = u.def_unit('spaxel', 1 * u.Unit(""))
@@ -24,7 +18,7 @@ u.add_enabled_units([spaxel])
 
 
 @tools('g-gaussian-smoothing')
-class GaussianSmoothingButton(TemplateMixin):
+class GaussianSmoothing(TemplateMixin):
     dialog = Bool(False).tag(sync=True)
     template = load_template("gaussian_smoothing.vue", __file__).tag(sync=True)
     stddev = Unicode().tag(sync=True)
