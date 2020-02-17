@@ -1,5 +1,9 @@
 from glue.core.message import Message
 
+__all__ = ['NewViewerMessage', 'AddViewerMessage', 'LoadDataMessage',
+           'DataSelectedMessage', 'ViewerSelectedMessage',
+           'RemoveStackMessage', 'SplitStackMessage', 'RemoveItemMessage']
+
 
 class NewViewerMessage(Message):
     def __init__(self, cls, data, x_attr=None, *args, **kwargs):
