@@ -1,5 +1,5 @@
 <template>
-  <v-app-bar app flat dense color="blue lighten-4" absolute>
+  <v-app-bar flat dense color="blue lighten-4">
     <v-toolbar-items>
 
       <v-btn-toggle borderless tile background-color="blue lighten-4">

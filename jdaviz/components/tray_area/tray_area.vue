@@ -1,5 +1,5 @@
 <template>
-  <v-navigation-drawer v-model="drawer" app width="350px" absolute>
+  <v-sheet style="height: 100%">
     <v-toolbar tile dense flat color="blue lighten-4">
       <v-toolbar-items>
         <g-file-loader></g-file-loader>
@@ -52,39 +52,48 @@
       </v-toolbar-items>
     </v-toolbar>
 
-    <splitpanes horizontal style="height: calc(100% - 48px);">
+    <splitpanes horizontal>
       <pane>
-        <v-tabs v-model="base_items_tab" grow height="36px" background-color="blue lighten-5">
-          <!-- <draggable v-model="col.items" :group="{name:'viewers'}" class="d-flex flex-grow-1"> -->
+        <v-tabs
+          v-model="base_items_tab"
+          height="36px"
+          background-color="blue lighten-5"
+          style="height: calc(100% - 36px - 48px)"
+        >
           <v-tab v-for="item in base_items" :key="item.id" @click>{{ item.title }}</v-tab>
-          <!-- </draggable> -->
-
-          <v-tabs-items v-model="base_items_tab">
-            <v-tab-item v-for="item in base_items" :key="item.id">
-              <v-card flat class="scroll-y" height="100%">
-                <!-- <jupyter-widget :widget="item.widget" /> -->
-                <component v-bind:is="item.widget"></component>
-              </v-card>
+          <v-tabs-items v-model="base_items_tab" style="height: 100%">
+            <v-tab-item
+              v-for="item in base_items"
+              :key="item.id"
+              style="height: 100%"
+              class="overflow-y-auto"
+            >
+              <component v-bind:is="item.widget"></component>
             </v-tab-item>
           </v-tabs-items>
         </v-tabs>
       </pane>
       <pane v-if="plugin_items.length > 0">
-        <v-tabs v-model="plugin_items_tab" grow height="36px" background-color="blue lighten-5">
-          <!-- <draggable v-model="col.items" :group="{name:'viewers'}" class="d-flex flex-grow-1"> -->
+        <v-tabs
+          v-model="plugin_items_tab"
+          height="36px"
+          background-color="blue lighten-5"
+          style="height: calc(100% - 36px - 48px)"
+        >
           <v-tab v-for="item in plugin_items" :key="item.id" @click>{{ item.title }}</v-tab>
-          <!-- </draggable> -->
 
-          <v-tabs-items v-model="plugin_items_tab">
-            <v-tab-item v-for="item in plugin_items" :key="item.id">
-              <v-card flat class="scroll-y" height="100%">
-                <!-- <jupyter-widget :widget="item.widget" /> -->
-                <component v-bind:is="item.widget"></component>
-              </v-card>
+          <v-tabs-items v-model="plugin_items_tab" style="height: 100%">
+            <v-tab-item
+              v-for="item in plugin_items"
+              :key="item.id"
+              style="height: 100%"
+              class="overflow-y-auto"
+            >
+              <component v-bind:is="item.widget"></component>
             </v-tab-item>
           </v-tabs-items>
         </v-tabs>
       </pane>
     </splitpanes>
-  </v-navigation-drawer>
+  </v-sheet>
 </template>
