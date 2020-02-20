@@ -1,5 +1,10 @@
 <template>
-  <v-tabs v-model="tab" height="36px" class="fill-height" background-color="blue lighten-5">
+  <v-tabs
+    v-model="tab"
+    height="36px"
+    background-color="blue lighten-5"
+    style="height: calc(100% - 36px)"
+  >
     <draggable v-model="items" :group="{name: 'viewers'}" class="d-flex flex-grow-1">
       <v-tab v-for="item in items" :key="item.id">
         {{ item.title }}
@@ -26,56 +31,54 @@
         reverse-transition="false"
         class="fill-height"
       >
-        <v-sheet class="fill-height" style="position: relative; height: calc(100% - 24px)">
-          <v-toolbar dense flat>
-            <v-toolbar-items>
-              <jupyter-widget :widget="item.tools" />
-              <v-divider vertical></v-divider>
-              <v-select fill-width solo flat :items="dc_items" @change="data_selected" label="Data"></v-select>
-              <v-spacer></v-spacer>
-              <v-divider vertical></v-divider>
-              <v-btn icon @click.stop="drawer = !drawer">
-                <v-icon>mdi-settings</v-icon>
-              </v-btn>
-            </v-toolbar-items>
-          </v-toolbar>
+        <v-toolbar dense flat>
+          <jupyter-widget :widget="item.tools" />
+          <v-divider vertical></v-divider>
+          <v-toolbar-items>
+            <v-select solo flat :items="dc_items" @change="data_selected" label="Data"></v-select>
+          </v-toolbar-items>
+          <v-spacer></v-spacer>
+          <v-divider vertical></v-divider>
+          <v-toolbar-items>
+            <v-menu offset-y :close-on-content-click="false" left>
+              <template v-slot:activator="{ on }">
+                <v-btn v-on="on" icon>
+                  <v-icon>mdi-settings</v-icon>
+                </v-btn>
+              </template>
+              <v-tabs grow height="36px" style="height: 100%">
+                <v-tab>Data</v-tab>
+                <v-tab>Layer</v-tab>
+                <v-tab>Viewer</v-tab>
 
-          <v-divider></v-divider>
+                <v-tab-item class="overflow-y-auto" style="height: 100%">
+                  <v-treeview
+                    dense
+                    selectable
+                    :items="data_items"
+                    v-model="selected_data_items"
+                    hoverable
+                    activatable
+                  ></v-treeview>
+                </v-tab-item>
+                <v-tab-item>
+                  <v-card flat class="overflow-y-auto" style="height: 100%">
+                    <jupyter-widget :widget="item.layer_options" />
+                  </v-card>
+                </v-tab-item>
+                <v-tab-item>
+                  <v-card flat class="overflow-y-auto" style="height: 100%">
+                    <jupyter-widget :widget="item.viewer_options" />
+                  </v-card>
+                </v-tab-item>
+              </v-tabs>
+            </v-menu>
+          </v-toolbar-items>
+        </v-toolbar>
 
-          <v-navigation-drawer
-            v-model="drawer"
-            absolute
-            disable-resize-watcher
-            temporary
-            right
-            overlay-opacity="0"
-            width="325px"
-          >
-            <v-tabs grow height="36px">
-              <v-tab>Layer</v-tab>
-              <v-tab>Viewer</v-tab>
+        <v-divider></v-divider>
 
-              <v-tab-item>
-                <v-card flat class="scroll-y" height="100%">
-                  <jupyter-widget :widget="item.layer_options" />
-                </v-card>
-              </v-tab-item>
-              <v-tab-item>
-                <v-card flat class="scroll-y" height="100%">
-                  <jupyter-widget :widget="item.viewer_options" />
-                </v-card>
-              </v-tab-item>
-            </v-tabs>
-          </v-navigation-drawer>
-
-          <v-container class="fill-height" style="padding: 0px; margin: 0px">
-            <v-row align="center" justify="center" class="fill-height">
-              <!-- <v-col class="fill-height"> -->
-                <jupyter-widget :widget="item.widget" style="width: 100%" />
-              <!-- </v-col> -->
-            </v-row>
-          </v-container>
-        </v-sheet>
+        <jupyter-widget :widget="item.widget" style="width: 100%; height: 100%" />
       </v-tab-item>
     </v-tabs-items>
   </v-tabs>

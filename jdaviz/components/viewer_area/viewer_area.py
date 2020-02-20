@@ -24,6 +24,9 @@ class Stack(TemplateMixin):
     tab = Any(0).tag(sync=True)
     dc_items = List([]).tag(sync=True)
     drawer = Bool(False).tag(sync=True)
+    overlay = Bool(False).tag(sync=True)
+    data_items = List([]).tag(sync=True)
+    selected_data_items = List([]).tag(sync=True)
 
     def __init__(self, item=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -31,7 +34,15 @@ class Stack(TemplateMixin):
         if item is not None:
             self.items = [item]
 
-        self._on_data_updated()
+        # Setup data items
+        self.data_items = [
+            {
+                'id': str(uuid.uuid4()),
+                'name': x.label,
+                'children': []
+            }
+            for x in self.data_collection
+        ]
 
         self.hub.subscribe(self, DataCollectionAddMessage,
                            handler=self._on_data_updated)
@@ -42,6 +53,25 @@ class Stack(TemplateMixin):
 
     def _on_data_updated(self, msg=None):
         self.dc_items = [x.label for x in self.data_collection]
+
+        self.data_items = self.data_items + [
+            {
+                'id': str(uuid.uuid4()),
+                'name': msg.data.label,
+                'children': [
+                    # {'id': 2, 'name': 'Calendar : app'},
+                    # {'id': 3, 'name': 'Chrome : app'},
+                    # {'id': 4, 'name': 'Webstorm : app'},
+                ],
+            }
+        ]
+
+    @observe("selected_data_items")
+    def _on_selected_data_items_changed(self, event):
+        for uid in event['new']:
+            [data_name] = [x['name'] for x in self.data_items if x['id'] == uid]
+            # data = [x for x in self.data_collection if x.label == event][0]
+            self._base_viewers.get(self.items[self.tab].get('id')).add_data(data_name)
 
     def add_item(self, item):
         # TODO: terrible hack to get around the fact that we can't store non-
@@ -198,7 +228,6 @@ class ViewerArea(TemplateMixin):
                         items[0].add_stack(stack)
 
                 return find_stack(item.stacks)
-
 
         find_stack(self.items)
 
