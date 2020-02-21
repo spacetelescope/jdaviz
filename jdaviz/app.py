@@ -5,52 +5,29 @@ import pkg_resources
 import yaml
 from glue.core.application_base import HubListener
 from glue_jupyter.app import JupyterApplication
-from ipysplitpanes import SplitPanes
-from ipyvuedraggable import Draggable
+from ipygoldenlayout import GoldenLayout
 from traitlets import Unicode, Bool, Dict
 
-from .components.viewer_area import ViewerArea
-from .components.toolbar import DefaultToolbar
-from .components.tray_area import TrayArea
 from .core.events import AddViewerMessage, NewViewerMessage, LoadDataMessage
 from .core.registries import tools
+from .core.template_mixin import TemplateMixin
 from .utils import load_template
 
 __all__ = ['Application']
 
-SplitPanes()
-Draggable()
+GoldenLayout()
 
-with open(os.path.join(os.path.dirname(__file__), "app.vue")) as f:
-    TEMPLATE = f.read()
-
-
-class Application(v.VuetifyTemplate, HubListener):
+class Application(TemplateMixin):
     _metadata = Dict({'mount_id': 'content'}).tag(sync=True)
+
+    drawer = Bool(True).tag(sync=True)
 
     show_menu_bar = Bool(True).tag(sync=True)
     show_toolbar = Bool(True).tag(sync=True)
     show_tray_bar = Bool(True).tag(sync=True)
 
     template = load_template("app.vue", __file__).tag(sync=True)
-    methods = Unicode("""
-    {
-        checkNotebookContext() {
-            this.notebook_context = document.getElementById("ipython-main-app");
-            return this.notebook_context;
-        },
-
-        loadRemoteCSS() {
-            var muiIconsSheet = document.createElement('link');
-            muiIconsSheet.type='text/css';
-            muiIconsSheet.rel='stylesheet';
-            muiIconsSheet.href='https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css';
-            document.getElementsByTagName('head')[0].appendChild(muiIconsSheet);
-            return true;
-        }
-    }
-    """).tag(sync=True)
-
+    methods = load_template("app.js", __file__).tag(sync=True)
     css = load_template("app.css", __file__).tag(sync=True)
 
     def __init__(self, configuration=None, *args, **kwargs):
@@ -67,9 +44,7 @@ class Application(v.VuetifyTemplate, HubListener):
             for entry_point
             in pkg_resources.iter_entry_points(group='plugins')}
 
-        components = {'g-viewer-area': ViewerArea(session=self.session),
-                      'g-default-toolbar': DefaultToolbar(session=self.session),
-                      'g-tray-area': TrayArea(session=self.session)}
+        components = {}
 
         components.update({k: v(session=self.session)
                            for k, v in tools.members.items()})
@@ -77,7 +52,7 @@ class Application(v.VuetifyTemplate, HubListener):
         self.components = components
 
         # Parse configuration
-        self.load_configuration(configuration)
+        # self.load_configuration(configuration)
 
         # Subscribe to viewer messages
         self.hub.subscribe(self, NewViewerMessage,

@@ -1,7 +1,7 @@
-.v-toolbar__content {
+/* .v-toolbar__content {
     padding-left: 0px;
     padding-right: 0px;
-}
+} */
 
 .splitpanes__splitter {
     background-color: #ccc;
@@ -42,4 +42,10 @@
 
 .v-treeview>.v-treeview-node--leaf>.v-treeview-node__root {
     padding-left: 16px;
+}
+
+.glComponent {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
 }
