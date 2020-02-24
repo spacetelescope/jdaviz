@@ -1,5 +1,5 @@
 ********************************
-jdaviz Design and Infrastructure
+JDAViz Design and Infrastructure
 ********************************
 
 This document outlines the top-level structure of jdaviz. At the highest level, jdaviz layers different, sometimes changing technologies in the Jupyter platform to do its visualization, and therefore provides a framework for these technologies to work together.  This document describes that framework, as well as the high-level sets of components needed for the jdaviz use cases at the time of this document's writing. Bear in mind, though, that the fast moving scientific and technical fields jdaviz is aimed at mean that some of the specific details in this document may change faster than the document can be kept up, so the high-level structure is the primary focus of this document, with the specific components best thought of as *examples* rather than a comprehensive list of all components implemented.  (For that, see the documentation itself).
