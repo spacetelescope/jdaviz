@@ -45,4 +45,3 @@ class DataTree(TemplateMixin):
 
     def vue_on_activated(self, event):
         print(event)
-
