@@ -5,6 +5,7 @@ components:
   content_area: true
 toolbar:
   - g-gaussian-smoothing
+  - g-line-flux
 viewer_area:
   - row:
     - col:

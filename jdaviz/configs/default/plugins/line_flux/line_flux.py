@@ -1,9 +1,7 @@
 from astropy import units as u
-from astropy import units as u
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
 from specutils import Spectrum1D
-from specutils.manipulation import gaussian_smooth
 from traitlets import Bool, List, Unicode
 
 from jdaviz.core.registries import tools
@@ -21,7 +19,7 @@ u.add_enabled_units([spaxel])
 class LineFlux(TemplateMixin):
     dialog = Bool(False).tag(sync=True)
     template = load_template("line_flux.vue", __file__).tag(sync=True)
-    stddev = Unicode().tag(sync=True)
+    wavelength = Unicode().tag(sync=True)
     dc_items = List([]).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
@@ -42,18 +40,11 @@ class LineFlux(TemplateMixin):
                                     if x.label == event))
 
     def vue_line_flux(self, *args, **kwargs):
-        # Testing inputs to make sure putting smoothed spectrum into
-        # datacollection works
-        # input_flux = Quantity(np.array([0.2, 0.3, 2.2, 0.3]), u.Jy)
-        # input_spaxis = Quantity(np.array([1, 2, 3, 4]), u.micron)
-        # spec1 = Spectrum1D(input_flux, spectral_axis=input_spaxis)
-        size = float(self.stddev)
+        input_wavelength = int(self.wavelength)
         spec = self._selected_data.get_object(cls=Spectrum1D)
 
-        # Takes the user input from the dialog (stddev) and uses it to
-        # define a standard deviation for gaussian smoothing
-        spec_smoothed = gaussian_smooth(spec, stddev=size)
+        # Takes the user input from the dialog (wavelength) and
+        # finds the flux at that input
 
-        self.data_collection[f"Smoothed {self._selected_data.label}"] = spec_smoothed
-
+        print(spec.flux[input_wavelength])
         self.dialog = False

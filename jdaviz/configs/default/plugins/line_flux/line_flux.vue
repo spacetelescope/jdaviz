@@ -29,10 +29,10 @@
           <v-row>
             <v-col>
               <v-text-field
-                ref="stddev"
-                label="Standard deviation"
-                v-model="stddev"
-                hint="The stddev of the kernel, in pixels."
+                ref="wavelength"
+                label="Line Flux at Wavelength"
+                v-model="wavelength"
+                hint="Line flux of the chosen wavelength."
                 persistent-hint
                 :rules="[() => !!stddev || 'This field is required']"
               ></v-text-field>
