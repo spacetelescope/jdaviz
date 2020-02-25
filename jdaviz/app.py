@@ -27,8 +27,6 @@ class Application(TemplateMixin):
     show_tray_bar = Bool(True).tag(sync=True)
 
     template = load_template("app.vue", __file__).tag(sync=True)
-    methods = load_template("app.js", __file__).tag(sync=True)
-    css = load_template("app.css", __file__).tag(sync=True)
 
     def __init__(self, configuration=None, *args, **kwargs):
         super().__init__(*args, **kwargs)

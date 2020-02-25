@@ -53,3 +53,78 @@
     </v-content>
   </v-app>
 </template>
+
+<script>
+export default {
+  methods: {
+    checkNotebookContext() {
+        this.notebook_context = document.getElementById("ipython-main-app");
+        return this.notebook_context;
+    },
+
+    loadRemoteCSS() {
+        window.addEventListener('resize', function () { console.log("RESIZING"); });
+        var muiIconsSheet = document.createElement('link');
+        muiIconsSheet.type = 'text/css';
+        muiIconsSheet.rel = 'stylesheet';
+        muiIconsSheet.href = 'https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css';
+        document.getElementsByTagName('head')[0].appendChild(muiIconsSheet);
+        return true;
+    }
+  }
+}
+</script>
+
+<style id="web-app">
+/* .v-toolbar__content {
+    padding-left: 0px;
+    padding-right: 0px;
+} */
+
+.splitpanes__splitter {
+    background-color: #ccc;
+    position: relative;
+}
+.splitpanes__splitter:before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    transition: opacity 0.4s;
+    background-color: rgba(255, 0, 0, 0.3);
+    opacity: 0;
+    z-index: 1;
+}
+
+.splitpanes--vertical > .splitpanes__splitter:before {
+    left: -10px;
+    right: -10px;
+    height: 100%;
+}
+
+.splitpanes--horizontal > .splitpanes__splitter:before {
+    top: -10px;
+    bottom: -10px;
+    width: 100%;
+}
+
+.v-toolbar__content::before {
+    border-bottom: 1px solid #ccc;
+
+}
+
+.v-treeview>.v-treeview-node--leaf {
+    margin-left: 0px;
+    padding-left: 0px;
+}
+
+.v-treeview>.v-treeview-node--leaf>.v-treeview-node__root {
+    padding-left: 16px;
+}
+
+.glComponent {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+}
+</style>
