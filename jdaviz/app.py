@@ -6,16 +6,21 @@ import yaml
 from glue.core.application_base import HubListener
 from glue_jupyter.app import JupyterApplication
 from ipygoldenlayout import GoldenLayout
-from traitlets import Unicode, Bool, Dict
+from ipysplitpanes import SplitPanes
+from traitlets import Unicode, Bool, Dict, List
+import ipywidgets as w
 
 from .core.events import AddViewerMessage, NewViewerMessage, LoadDataMessage
 from .core.registries import tools
 from .core.template_mixin import TemplateMixin
 from .utils import load_template
+from .components import ViewerArea, TrayArea
 
 __all__ = ['Application']
 
 GoldenLayout()
+SplitPanes()
+
 
 class Application(TemplateMixin):
     _metadata = Dict({'mount_id': 'content'}).tag(sync=True)
@@ -26,7 +31,35 @@ class Application(TemplateMixin):
     show_toolbar = Bool(True).tag(sync=True)
     show_tray_bar = Bool(True).tag(sync=True)
 
+    viewers = List([
+        {
+            'type': 'stack',
+            'children': []
+        }
+    ]).tag(sync=True, **w.widget_serialization)
+
     template = load_template("app.vue", __file__).tag(sync=True)
+    methods = Unicode("""
+    {
+        checkNotebookContext() {
+            this.notebook_context = document.getElementById("ipython-main-app");
+            return this.notebook_context;
+        },
+
+        loadRemoteCSS() {
+            window.addEventListener("resize", function() {
+                console.log("RESIZING");
+            });
+            var muiIconsSheet = document.createElement("link");
+            muiIconsSheet.type = "text/css";
+            muiIconsSheet.rel = "stylesheet";
+            muiIconsSheet.href =
+                "https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css";
+            document.getElementsByTagName("head")[0].appendChild(muiIconsSheet);
+            return true;
+        }
+    }
+    """).tag(sync=True)
 
     def __init__(self, configuration=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -42,7 +75,8 @@ class Application(TemplateMixin):
             for entry_point
             in pkg_resources.iter_entry_points(group='plugins')}
 
-        components = {}
+        components = {'g-viewer-area': ViewerArea(session=self.session),
+                      'g-tray-area': TrayArea(session=self.session)}
 
         components.update({k: v(session=self.session)
                            for k, v in tools.members.items()})
