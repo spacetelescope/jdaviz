@@ -1,25 +1,34 @@
 import os
 
 import ipyvuetify as v
+import ipywidgets as w
 import pkg_resources
 import yaml
-from glue.core.application_base import HubListener
 from glue_jupyter.app import JupyterApplication
 from ipygoldenlayout import GoldenLayout
-from ipysplitpanes import SplitPanes
-from traitlets import Unicode, Bool, Dict, List
-import ipywidgets as w
+from traitlets import Unicode, Bool, Dict, List, Int
 
+from .components import ViewerArea, TrayArea
 from .core.events import AddViewerMessage, NewViewerMessage, LoadDataMessage
-from .core.registries import tools
+from .core.registries import tool_registry
 from .core.template_mixin import TemplateMixin
 from .utils import load_template
-from .components import ViewerArea, TrayArea
 
 __all__ = ['Application']
 
 GoldenLayout()
-SplitPanes()
+
+
+class ViewCell(v.VuetifyTemplate):
+    template = Unicode("""
+    <component
+        v-bind:is="comp_name"
+        v-bind:key="index">
+    </component>
+    """).tag(sync=True)
+
+    comp_name = Unicode("").tag(sync=True)
+    index = Int(0).tag(sync=True)
 
 
 class Application(TemplateMixin):
@@ -29,13 +38,17 @@ class Application(TemplateMixin):
 
     show_menu_bar = Bool(True).tag(sync=True)
     show_toolbar = Bool(True).tag(sync=True)
-    show_tray_bar = Bool(True).tag(sync=True)
+    show_tray_bar = Bool(False).tag(sync=True)
 
-    viewers = List([
-        {
-            'type': 'stack',
-            'children': []
-        }
+    tools = List([]).tag(sync=True, **w.widget_serialization)
+    viewer_layout = List([
+        # {
+        #     'type': 'gl-stack',
+        #     'children': [],
+        #     'widget': w.IntSlider(value=10),
+        #     'name': "Slider Test",
+        #     'fab': False
+        # }
     ]).tag(sync=True, **w.widget_serialization)
 
     template = load_template("app.vue", __file__).tag(sync=True)
@@ -75,16 +88,17 @@ class Application(TemplateMixin):
             for entry_point
             in pkg_resources.iter_entry_points(group='plugins')}
 
-        components = {'g-viewer-area': ViewerArea(session=self.session),
-                      'g-tray-area': TrayArea(session=self.session)}
+        components = {
+            'g-viewer-area': ViewerArea(session=self.session),
+            'g-tray-area': TrayArea(session=self.session)}
 
         components.update({k: v(session=self.session)
-                           for k, v in tools.members.items()})
+                           for k, v in tool_registry.members.items()})
 
         self.components = components
 
         # Parse configuration
-        # self.load_configuration(configuration)
+        self.load_configuration(configuration)
 
         # Subscribe to viewer messages
         self.hub.subscribe(self, NewViewerMessage,
@@ -115,19 +129,20 @@ class Application(TemplateMixin):
 
         self.hub.broadcast(AddViewerMessage(view, sender=self))
 
-        return view
+        # Add viewer locally
+        self.viewer_layout = self.viewer_layout + [{
+            'type': 'gl-stack',
+            'children': [],
+            'widget': view.figure_widget,
+            'name': "Slider Test",
+            'fab': False
+        }]
 
-    def _registry_component(self):
-        pass
+        return view
 
     def load_configuration(self, path):
         # Parse the default configuration file
         default_path = os.path.join(os.path.dirname(__file__), "configs")
-
-        plugins = {
-            entry_point.name: entry_point.load()
-            for entry_point
-            in pkg_resources.iter_entry_points(group='plugins')}
 
         if path is None or path == 'default':
             path = os.path.join(default_path, "default", "default.yaml")
@@ -147,14 +162,17 @@ class Application(TemplateMixin):
         # self.show_toolbar = comps.get('toolbar', True)
         # self.show_tray_bar = comps.get('tray_bar', True)
 
-        if 'viewer_area' in config:
-            viewer_area_layout = config.get('viewer_area')
-            self.components.get('g-viewer-area').parse_layout(viewer_area_layout)
+        # if 'viewer_area' in config:
+        #     viewer_area_layout = config.get('viewer_area')
+        #     self.components.get('g-viewer-area').parse_layout(viewer_area_layout)
 
         # Add the toolbar item filter to the toolbar component
         for name in config.get('toolbar', []):
-            tool = tools.members.get(name)(session=self.session)
-            self.components['g-default-toolbar'].add_tool(tool)
+            tool = tool_registry.members.get(name)(session=self.session)
+            self.tools = self.tools + [{
+                'name': name,
+                'widget': tool
+            }]
 
         # Add the tray items filter to the interact drawer component
         # for name in config.get('tray_bar', []):

@@ -2,32 +2,79 @@
   <v-app id="web-app">
     <div v-if="loadRemoteCSS()"></div>
 
-    <v-navigation-drawer v-model="drawer" app absolute>
-      <g-tray-area></g-tray-area>
-    </v-navigation-drawer>
-
     <v-app-bar flat dense app color="indigo" dark>
-      <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
-      <v-toolbar-title>Application</v-toolbar-title>
+      <v-toolbar-items>
+        <jupyter-widget :widget="tool.widget" v-for="tool in tools" :key="tool.name"></jupyter-widget>
+      </v-toolbar-items>
     </v-app-bar>
 
     <v-content>
       <v-container class="fill-height pa-0" fluid>
-        <v-row align="center" justify="center" class="fill-height pa-0 ma-0">
-          <v-col cols="12" class="fill-height pa-0 ma-0">
+        <v-row align="center" justify="center" class="fill-height pa-0 ma-0" style="width: 100%">
+          <v-col cols="12" class="fill-height pa-0 ma-0" style="width: 100%">
             <golden-layout class="fill-height" style="width: 100%">
-              <gl-row width="80">
-                <gl-component title="component1">
-                  <h1>Component 1</h1>
-                </gl-component>
-                <gl-stack>
-                  <gl-component title="component2">
-                    <h1>Component 2</h1>
-                  </gl-component>
-                  <gl-component title="component3">
-                    <h1>Component 3</h1>
-                  </gl-component>
-                </gl-stack>
+              <gl-row>
+                <gl-col width="15" v-if="show_tray_bar">
+                  <gl-stack>
+                    <gl-component title="Data">
+
+                    </gl-component>
+                  </gl-stack>
+                </gl-col>
+                <gl-row width="80">
+                  <component
+                    v-for="(view, index) in viewer_layout"
+                    v-bind:is="view.type"
+                    v-bind:key="view.name"
+                  >
+                    <gl-component :title="view.name" class="pa-2">
+                      <v-speed-dial
+                              v-model="view.fab"
+                              fixed
+                              direction="right"
+                      >
+                        <template v-slot:activator>
+                          <v-btn
+                                  v-model="view.fab"
+                                  color="blue darken-2"
+                                  dark
+                                  small
+                                  fab
+                          >
+                            <v-icon v-if="view.fab">mdi-close</v-icon>
+                            <v-icon v-else>mdi-account-circle</v-icon>
+                          </v-btn>
+                        </template>
+                        <v-btn
+                                fab
+                                dark
+                                small
+                                color="green"
+                        >
+                          <v-icon>mdi-pencil</v-icon>
+                        </v-btn>
+                        <v-btn
+                                fab
+                                dark
+                                small
+                                color="indigo"
+                        >
+                          <v-icon>mdi-plus</v-icon>
+                        </v-btn>
+                        <v-btn
+                                fab
+                                dark
+                                small
+                                color="red"
+                        >
+                          <v-icon>mdi-delete</v-icon>
+                        </v-btn>
+                      </v-speed-dial>
+                      <jupyter-widget :widget="view.widget"></jupyter-widget>
+                    </gl-component>
+
+                  </component>
+                </gl-row>
               </gl-row>
             </golden-layout>
           </v-col>

@@ -5,7 +5,7 @@ from ipyvuetify import VuetifyTemplate
 from ipywidgets import Widget
 
 
-__all__ = ['viewers', 'trays', 'tools', 'ViewerRegistry', 'TrayRegistry',
+__all__ = ['viewer_registry', 'tray_registry', 'tool_registry', 'ViewerRegistry', 'TrayRegistry',
            'ToolRegistry', 'MenuRegistry']
 
 
@@ -159,7 +159,7 @@ class MenuRegistry(UniqueDictRegistry):
         return decorator
 
 
-viewers = ViewerRegistry()
-trays = TrayRegistry()
-tools = ToolRegistry()
-menus = MenuRegistry()
+viewer_registry = ViewerRegistry()
+tray_registry = TrayRegistry()
+tool_registry = ToolRegistry()
+menu_registry = MenuRegistry()
