@@ -5,8 +5,12 @@ import ipywidgets as w
 import pkg_resources
 import yaml
 from glue_jupyter.app import JupyterApplication
-from ipygoldenlayout import GoldenLayout
-from traitlets import Unicode, Bool, Dict, List, Int
+from glue.core.message import DataCollectionAddMessage
+from ipysplitpanes import SplitPanes
+from ipyvuedraggable import Draggable
+from traitlets import Unicode, Bool, Dict, List, Int, observe
+import uuid
+import numpy as np
 
 from .components import ViewerArea, TrayArea
 from .core.events import AddViewerMessage, NewViewerMessage, LoadDataMessage
@@ -16,7 +20,8 @@ from .utils import load_template
 
 __all__ = ['Application']
 
-GoldenLayout()
+SplitPanes()
+Draggable()
 
 
 class ViewCell(v.VuetifyTemplate):
@@ -36,18 +41,39 @@ class Application(TemplateMixin):
 
     drawer = Bool(True).tag(sync=True)
 
+    show_component = Dict({
+        'menu_bar': True,
+        'toolbar': True,
+        'tray_area': True
+    }).tag(sync=True)
+
     show_menu_bar = Bool(True).tag(sync=True)
     show_toolbar = Bool(True).tag(sync=True)
     show_tray_bar = Bool(False).tag(sync=True)
 
-    tools = List([]).tag(sync=True, **w.widget_serialization)
-    viewer_layout = List([
+    selected_viewer_item = Dict({}).tag(sync=True)
+    selected_stack_item_id = Unicode().tag(sync=True) #Dict({}).tag(sync=True)
+    data_items = List([]).tag(sync=True)
+    tool_items = List([]).tag(sync=True, **w.widget_serialization)
+    stack_items = List([
         # {
-        #     'type': 'gl-stack',
-        #     'children': [],
-        #     'widget': w.IntSlider(value=10),
-        #     'name': "Slider Test",
-        #     'fab': False
+        #     'id': str(uuid.uuid4()),
+        #     'tab': 0,
+        #     'viewers': [
+        #         {
+        #             'id': str(uuid.uuid4()),
+        #             'type': 'gl-stack',
+        #             'children': [],
+        #             'widget': w.IntSlider(value=10),
+        #             'name': "Slider Test",
+        #             'fab': False,
+        #             'tools': None,
+        #             'layer_options': None,
+        #             'viewer_options': None,
+        #             'drawer': False,
+        #             'selected_data_items': []
+        #         }
+        #     ]
         # }
     ]).tag(sync=True, **w.widget_serialization)
 
@@ -73,6 +99,7 @@ class Application(TemplateMixin):
         }
     }
     """).tag(sync=True)
+    css = load_template("app.css", __file__).tag(sync=True)
 
     def __init__(self, configuration=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -108,6 +135,11 @@ class Application(TemplateMixin):
         self.hub.subscribe(self, LoadDataMessage,
                            handler=lambda msg: self.load_data(msg.path))
 
+        # Subscribe to the event fired when data is added to the application-
+        # level data collection object
+        self.hub.subscribe(self, DataCollectionAddMessage,
+                           handler=self._on_data_added)
+
     @property
     def hub(self):
         return self._application_handler.data_collection.hub
@@ -119,6 +151,46 @@ class Application(TemplateMixin):
     def load_data(self, path):
         self._application_handler.load_data(path)
 
+    @observe('stack_items')
+    def vue_relayout(self, *args, **kwargs):
+        for stack in self.stack_items:
+            for viewer in stack.get('viewers'):
+                viewer.get('widget').layout.height = '99.9%'
+                viewer.get('widget').layout.height = '100%'
+
+    def _on_data_added(self, msg):
+        self.data_items = self.data_items + [
+            {
+                'id': str(uuid.uuid4()),
+                'name': msg.data.label,
+                'locked': True,#not bool(self.selected_viewer_item),
+                'children': [
+                    # {'id': 2, 'name': 'Calendar : app'},
+                    # {'id': 3, 'name': 'Chrome : app'},
+                    # {'id': 4, 'name': 'Webstorm : app'},
+                ],
+            }
+        ]
+
+    @observe('selected_viewer_item')
+    def _on_viewer_selected(self, event):
+        if event['old'].get('id') == event['new'].get('id'):
+            return
+
+        tmp_data_items = self.data_items
+        self.data_items = []
+
+        for item in tmp_data_items:
+            item['locked'] = not bool(self.selected_viewer_item)
+
+        self.data_items = tmp_data_items
+
+        # if True:
+        #     new_dict = {}
+        #     new_dict.update(self.data_items)
+
+        #     self.data_items = new_dict
+
     def _on_new_viewer(self, msg):
         view = self._application_handler.new_data_viewer(
             msg.cls, data=msg.data, show=False)
@@ -129,14 +201,34 @@ class Application(TemplateMixin):
 
         self.hub.broadcast(AddViewerMessage(view, sender=self))
 
+        selection_tools = view.toolbar_selection_tools
+        selection_tools.borderless = True
+        selection_tools.tile = True
+
         # Add viewer locally
-        self.viewer_layout = self.viewer_layout + [{
-            'type': 'gl-stack',
-            'children': [],
-            'widget': view.figure_widget,
-            'name': "Slider Test",
-            'fab': False
-        }]
+        self.stack_items = self.stack_items + [
+            {
+                'id': str(uuid.uuid4()),
+                'tab': 0,
+                'active': False,
+                'viewers':
+                [
+                    {
+                        'id': str(uuid.uuid4()),
+                        'type': 'gl-stack',
+                        'children': [],
+                        'widget': view.figure_widget,
+                        'name': "Slider Test",
+                        'fab': False,
+                        'tools': selection_tools,
+                        'layer_options': view.layer_options,
+                        'viewer_options': view.viewer_options,
+                        'drawer': False,
+                        'selected_data_items': []
+                    }
+                ]
+            }
+        ]
 
         return view
 
@@ -169,7 +261,7 @@ class Application(TemplateMixin):
         # Add the toolbar item filter to the toolbar component
         for name in config.get('toolbar', []):
             tool = tool_registry.members.get(name)(session=self.session)
-            self.tools = self.tools + [{
+            self.tool_items = self.tool_items + [{
                 'name': name,
                 'widget': tool
             }]
