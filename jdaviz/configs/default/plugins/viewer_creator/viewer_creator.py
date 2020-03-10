@@ -1,11 +1,12 @@
+import os
+
+from glue_jupyter.utils import validate_data_argument
+from traitlets import List, Unicode, observe
+
+from jdaviz.core.events import NewViewerMessage
+from jdaviz.core.registries import tool_registry, viewer_registry
 from jdaviz.core.template_mixin import TemplateMixin
 from jdaviz.utils import load_template
-from traitlets import Unicode, List, observe
-import os
-from jdaviz.core.registries import tool_registry, viewer_registry
-from glue_jupyter.utils import validate_data_argument
-from jdaviz.core.events import NewViewerMessage
-
 
 __all__ = ['ViewerCreator']
 

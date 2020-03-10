@@ -102,7 +102,7 @@
                             <v-btn
                               icon
                               x-small
-                              @click.stop="close_tab(viewer.id)"
+                              @click.stop="remove_viewer([viewer.id, stack.id])"
                               style="margin-left: 10px"
                             >
                               <v-icon>mdi-close</v-icon>
@@ -264,54 +264,43 @@ export default {
 </script>
 
 <style id="web-app">
-/* .v-toolbar__content {
+.v-toolbar__content {
     padding-left: 0px;
     padding-right: 0px;
-} */
+}
+
+.v-tabs-items {
+    height: 100%;
+}
 
 .splitpanes__splitter {
-  background-color: #ccc;
-  position: relative;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2), 0 2px 5px 0 rgba(0, 0, 0, 0.19);
+}
+
+/* .splitpanes__splitter {
+    background-color: #ccc;
+    position: relative;
 }
 .splitpanes__splitter:before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  transition: opacity 0.4s;
-  background-color: rgba(255, 0, 0, 0.3);
-  opacity: 0;
-  z-index: 1;
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    transition: opacity 0.4s;
+    background-color: rgba(255, 0, 0, 0.3);
+    opacity: 0;
+    z-index: 1;
 }
 
 .splitpanes--vertical > .splitpanes__splitter:before {
-  left: -10px;
-  right: -10px;
-  height: 100%;
+    left: -10px;
+    right: -10px;
+    height: 100%;
 }
 
 .splitpanes--horizontal > .splitpanes__splitter:before {
-  top: -10px;
-  bottom: -10px;
-  width: 100%;
-}
-
-.v-toolbar__content::before {
-  border-bottom: 1px solid #ccc;
-}
-
-.v-treeview > .v-treeview-node--leaf {
-  margin-left: 0px;
-  padding-left: 0px;
-}
-
-.v-treeview > .v-treeview-node--leaf > .v-treeview-node__root {
-  padding-left: 16px;
-}
-
-.glComponent {
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-}
+    top: -10px;
+    bottom: -10px;
+    width: 100%;
+} */
 </style>

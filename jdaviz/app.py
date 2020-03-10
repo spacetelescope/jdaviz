@@ -13,7 +13,6 @@ from traitlets import Unicode, Bool, Dict, List, Int, observe, ObjectName
 import uuid
 import numpy as np
 
-from .components import ViewerArea, TrayArea
 from .core.events import AddViewerMessage, NewViewerMessage, LoadDataMessage
 from .core.registries import tool_registry
 from .core.template_mixin import TemplateMixin
@@ -53,7 +52,6 @@ class Application(TemplateMixin):
     stack_items = List([]).tag(sync=True, **w.widget_serialization)
 
     template = load_template("app.vue", __file__).tag(sync=True)
-    css = load_template("app.css", __file__).tag(sync=True)
 
     def __init__(self, configuration=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -69,12 +67,8 @@ class Application(TemplateMixin):
             for entry_point
             in pkg_resources.iter_entry_points(group='plugins')}
 
-        components = {
-            'g-viewer-area': ViewerArea(session=self.session),
-            'g-tray-area': TrayArea(session=self.session)}
-
-        components.update({k: v(session=self.session)
-                           for k, v in tool_registry.members.items()})
+        components = {k: v(session=self.session)
+                      for k, v in tool_registry.members.items()}
 
         self.components = components
 
@@ -157,9 +151,19 @@ class Application(TemplateMixin):
             if data.label not in active_data_labels:
                 active_viewer.remove_data(data)
 
-    # @observe('selected_data_items')
-    # def _on_selected_data_items_changed(self, event):
-    #     self.selected_viewer_item['selected_data_items'] = event['new']
+    def vue_remove_viewer(self, *args):
+        viewer_id, stack_id = args[0]
+        viewer_item = self._viewer_by_id(viewer_id, stack_id)
+
+        temp_stack_items = self.stack_items
+
+        for stack in temp_stack_items:
+            if stack['id'] == stack_id:
+                stack['viewers'].remove(viewer_item)
+                break
+
+        self.stack_items = []
+        self.stack_items = temp_stack_items
 
     @observe('stack_items')
     def _on_stack_items_changed(self, event):
@@ -171,20 +175,16 @@ class Application(TemplateMixin):
 
         self.stack_items = new_stack_items
 
-    # @property
-    # def selected_stack_item(self):
-    #     return next((stack for stack in self.stack_items
-    #                  if stack['id'] == self.selected_stack_item_id), {})
+    def _stack_by_id(self, stack_id):
+        return next((stack for stack in self.stack_items
+                     if stack['id'] == stack_id), {})
 
-    # @property
-    # def selected_viewer_item(self):
-    #     return next((viewer for viewer in self.selected_stack_item.get('viewers', [])
-    #                  if viewer['id'] == self.selected_viewer_item_id), {})
+    def _viewer_by_id(self, viewer_id, stack_id=None):
+        if stack_id is None:
+            stack_id = self.selected_stack_item.get('id')
 
-    def _viewer_by_id(self, viewer_id):
-        selected_stack_id = self.selected_stack_item.get('id')
         [stack_item] = [x for x in self.stack_items
-                        if x['id'] == selected_stack_id]
+                        if x['id'] == stack_id]
 
         return next((viewer for viewer in stack_item.get('viewers', [])
                      if viewer['id'] == viewer_id), {})
@@ -202,22 +202,6 @@ class Application(TemplateMixin):
                 ],
             }
         ]
-
-    # @observe('selected_viewer_item_id')
-    def _on_viewer_selected(self, event):
-        if event['old'] == event['new']:
-            return
-
-        # Update selected data items
-        # self.selected_data_items[event['new']] = self.selected_viewer_item['selected_data_items']
-
-        tmp_data_items = self.data_items
-        self.data_items = []
-
-        for item in tmp_data_items:
-            item['locked'] = not bool(self.selected_viewer_item_id)
-
-        self.data_items = tmp_data_items
 
     def _on_new_viewer(self, msg):
         view = self._application_handler.new_data_viewer(

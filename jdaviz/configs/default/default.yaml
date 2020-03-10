@@ -6,3 +6,4 @@ components:
 toolbar:
   - g-data-import
   - g-viewer-creator
+  - g-subset-tools
