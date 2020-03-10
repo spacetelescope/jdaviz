@@ -6,9 +6,10 @@ import pkg_resources
 import yaml
 from glue_jupyter.app import JupyterApplication
 from glue.core.message import DataCollectionAddMessage
+from glue.core import BaseData
 from ipysplitpanes import SplitPanes
 from ipyvuedraggable import Draggable
-from traitlets import Unicode, Bool, Dict, List, Int, observe
+from traitlets import Unicode, Bool, Dict, List, Int, observe, ObjectName
 import uuid
 import numpy as np
 
@@ -24,81 +25,34 @@ SplitPanes()
 Draggable()
 
 
-class ViewCell(v.VuetifyTemplate):
-    template = Unicode("""
-    <component
-        v-bind:is="comp_name"
-        v-bind:key="index">
-    </component>
-    """).tag(sync=True)
-
-    comp_name = Unicode("").tag(sync=True)
-    index = Int(0).tag(sync=True)
-
-
 class Application(TemplateMixin):
     _metadata = Dict({'mount_id': 'content'}).tag(sync=True)
 
     drawer = Bool(True).tag(sync=True)
 
-    show_component = Dict({
-        'menu_bar': True,
-        'toolbar': True,
-        'tray_area': True
+    settings = Dict({
+        'show_component': {
+            'menu_bar': True,
+            'toolbar': True,
+            'tray_area': True
+        },
+        'show_tab_headers': True,
+        'context': {
+                'notebook': {
+                    'max-height': '500px'
+                }
+            }
     }).tag(sync=True)
 
-    show_menu_bar = Bool(True).tag(sync=True)
-    show_toolbar = Bool(True).tag(sync=True)
-    show_tray_bar = Bool(False).tag(sync=True)
+    selected_viewer_item = Dict({}).tag(sync=True, **w.widget_serialization)
+    selected_stack_item = Dict({}).tag(sync=True, **w.widget_serialization)
+    selected_data_items = List([]).tag(sync=True)
 
-    selected_viewer_item = Dict({}).tag(sync=True)
-    selected_stack_item_id = Unicode().tag(sync=True) #Dict({}).tag(sync=True)
     data_items = List([]).tag(sync=True)
     tool_items = List([]).tag(sync=True, **w.widget_serialization)
-    stack_items = List([
-        # {
-        #     'id': str(uuid.uuid4()),
-        #     'tab': 0,
-        #     'viewers': [
-        #         {
-        #             'id': str(uuid.uuid4()),
-        #             'type': 'gl-stack',
-        #             'children': [],
-        #             'widget': w.IntSlider(value=10),
-        #             'name': "Slider Test",
-        #             'fab': False,
-        #             'tools': None,
-        #             'layer_options': None,
-        #             'viewer_options': None,
-        #             'drawer': False,
-        #             'selected_data_items': []
-        #         }
-        #     ]
-        # }
-    ]).tag(sync=True, **w.widget_serialization)
+    stack_items = List([]).tag(sync=True, **w.widget_serialization)
 
     template = load_template("app.vue", __file__).tag(sync=True)
-    methods = Unicode("""
-    {
-        checkNotebookContext() {
-            this.notebook_context = document.getElementById("ipython-main-app");
-            return this.notebook_context;
-        },
-
-        loadRemoteCSS() {
-            window.addEventListener("resize", function() {
-                console.log("RESIZING");
-            });
-            var muiIconsSheet = document.createElement("link");
-            muiIconsSheet.type = "text/css";
-            muiIconsSheet.rel = "stylesheet";
-            muiIconsSheet.href =
-                "https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css";
-            document.getElementsByTagName("head")[0].appendChild(muiIconsSheet);
-            return true;
-        }
-    }
-    """).tag(sync=True)
     css = load_template("app.css", __file__).tag(sync=True)
 
     def __init__(self, configuration=None, *args, **kwargs):
@@ -140,6 +94,9 @@ class Application(TemplateMixin):
         self.hub.subscribe(self, DataCollectionAddMessage,
                            handler=self._on_data_added)
 
+        # Create a dictionary for holding non-ipywidget viewer objects
+        self._base_viewers = {}
+
     @property
     def hub(self):
         return self._application_handler.data_collection.hub
@@ -147,6 +104,10 @@ class Application(TemplateMixin):
     @property
     def session(self):
         return self._application_handler.session
+
+    @property
+    def data_collection(self):
+        return self._application_handler.data_collection
 
     def load_data(self, path):
         self._application_handler.load_data(path)
@@ -158,12 +119,82 @@ class Application(TemplateMixin):
                 viewer.get('widget').layout.height = '99.9%'
                 viewer.get('widget').layout.height = '100%'
 
+    @observe('selected_viewer_item')
+    def _on_viewer_item_selected(self, event):
+        selected_viewer_id = self.selected_viewer_item['id']
+        selected_viewer = self._viewer_by_id(selected_viewer_id)
+        self.selected_data_items = selected_viewer['selected_data_items']
+
+    @observe('selected_data_items')
+    def _on_data_item_selected(self, event):
+        selected_viewer_id = self.selected_viewer_item['id']
+        selected_viewer = self._viewer_by_id(selected_viewer_id)
+        selected_viewer['selected_data_items'] = event['new']
+
+    def vue_data_item_selected(self, data_ids, **kwargs):
+        # data_ids = event['new'].get(self.selected_viewer_item_id, [])
+
+        # Find the active viewer
+        active_viewer_id = self.selected_viewer_item['id']
+        active_viewer = self._base_viewers.get(active_viewer_id)
+
+        active_data_labels = []
+
+        # Include any selected data in the viewer
+        for data_id in data_ids:
+            [label] = [x['name'] for x in self.data_items if x['id'] == data_id]
+            active_data_labels.append(label)
+
+            [data] = [x for x in self.data_collection if x.label == label]
+
+            active_viewer.add_data(data)
+
+        # Remove any deselected data objects from viewer
+        viewer_data = [layer_state.layer for layer_state in active_viewer.state.layers
+                       if hasattr(layer_state, 'layer') and isinstance(layer_state.layer, BaseData)]
+
+        for data in viewer_data:
+            if data.label not in active_data_labels:
+                active_viewer.remove_data(data)
+
+    # @observe('selected_data_items')
+    # def _on_selected_data_items_changed(self, event):
+    #     self.selected_viewer_item['selected_data_items'] = event['new']
+
+    @observe('stack_items')
+    def _on_stack_items_changed(self, event):
+        new_stack_items = [x for x in self.stack_items]
+
+        for stack in self.stack_items:
+            if len(stack['viewers']) == 0:
+                new_stack_items.remove(stack)
+
+        self.stack_items = new_stack_items
+
+    # @property
+    # def selected_stack_item(self):
+    #     return next((stack for stack in self.stack_items
+    #                  if stack['id'] == self.selected_stack_item_id), {})
+
+    # @property
+    # def selected_viewer_item(self):
+    #     return next((viewer for viewer in self.selected_stack_item.get('viewers', [])
+    #                  if viewer['id'] == self.selected_viewer_item_id), {})
+
+    def _viewer_by_id(self, viewer_id):
+        selected_stack_id = self.selected_stack_item.get('id')
+        [stack_item] = [x for x in self.stack_items
+                        if x['id'] == selected_stack_id]
+
+        return next((viewer for viewer in stack_item.get('viewers', [])
+                     if viewer['id'] == viewer_id), {})
+
     def _on_data_added(self, msg):
         self.data_items = self.data_items + [
             {
                 'id': str(uuid.uuid4()),
                 'name': msg.data.label,
-                'locked': True,#not bool(self.selected_viewer_item),
+                'locked': False, # not bool(self.selected_viewer_item),
                 'children': [
                     # {'id': 2, 'name': 'Calendar : app'},
                     # {'id': 3, 'name': 'Chrome : app'},
@@ -172,24 +203,21 @@ class Application(TemplateMixin):
             }
         ]
 
-    @observe('selected_viewer_item')
+    # @observe('selected_viewer_item_id')
     def _on_viewer_selected(self, event):
-        if event['old'].get('id') == event['new'].get('id'):
+        if event['old'] == event['new']:
             return
+
+        # Update selected data items
+        # self.selected_data_items[event['new']] = self.selected_viewer_item['selected_data_items']
 
         tmp_data_items = self.data_items
         self.data_items = []
 
         for item in tmp_data_items:
-            item['locked'] = not bool(self.selected_viewer_item)
+            item['locked'] = not bool(self.selected_viewer_item_id)
 
         self.data_items = tmp_data_items
-
-        # if True:
-        #     new_dict = {}
-        #     new_dict.update(self.data_items)
-
-        #     self.data_items = new_dict
 
     def _on_new_viewer(self, msg):
         view = self._application_handler.new_data_viewer(
@@ -199,36 +227,58 @@ class Application(TemplateMixin):
             x = msg.data.id[msg.x_attr]
             view.state.x_att = x
 
-        self.hub.broadcast(AddViewerMessage(view, sender=self))
+        selection_tools = view.toolbar_selection_tools  #.children
 
-        selection_tools = view.toolbar_selection_tools
+        # for tool in selection_tools:
+        #     btn = tool.v_slots[0].get('children')
+        #     btn.color = 'blue darken-2'
+        #     btn.icon = False
+        #     btn.fab = True
+        #     btn.background_color = "white"
+        #     btn.dark = False
+        #     btn.outlined = True
+        #     btn.small = True
+        #     btn.class_ = "elevation-0"
+
         selection_tools.borderless = True
         selection_tools.tile = True
 
+        # Create the viewer item dictionary
+        new_viewer_item = {
+            'id': str(uuid.uuid4()),
+            'type': 'gl-row',
+            'children': [],
+            'widget': view.figure_widget,
+            'name': "Slider Test",
+            'fab': False,
+            'tools': selection_tools,
+            'layer_options': view.layer_options,
+            'viewer_options': view.viewer_options,
+            'selected': False,
+            'selected_data_items': []
+        }
+
+        new_stack_item = {
+            'id': str(uuid.uuid4()),
+            'tab': 0,
+            'active': False,
+            'viewers': [
+                new_viewer_item
+            ]
+        }
+
         # Add viewer locally
         self.stack_items = self.stack_items + [
-            {
-                'id': str(uuid.uuid4()),
-                'tab': 0,
-                'active': False,
-                'viewers':
-                [
-                    {
-                        'id': str(uuid.uuid4()),
-                        'type': 'gl-stack',
-                        'children': [],
-                        'widget': view.figure_widget,
-                        'name': "Slider Test",
-                        'fab': False,
-                        'tools': selection_tools,
-                        'layer_options': view.layer_options,
-                        'viewer_options': view.viewer_options,
-                        'drawer': False,
-                        'selected_data_items': []
-                    }
-                ]
-            }
+            new_stack_item
         ]
+
+        # Store the glupyter viewer object so we can access the add and remove
+        #  data methods in the future
+        self._base_viewers[new_viewer_item['id']] = view
+
+        # Make this view the active viewer
+        self.selected_stack_item = new_stack_item
+        self.selected_viewer_item = new_viewer_item
 
         return view
 
