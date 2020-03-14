@@ -9,6 +9,7 @@ from glue.core.message import DataCollectionAddMessage
 from glue.core import BaseData
 from ipysplitpanes import SplitPanes
 from ipyvuedraggable import Draggable
+from ipygoldenlayout import GoldenLayout
 from traitlets import Unicode, Bool, Dict, List, Int, observe, ObjectName
 import uuid
 import numpy as np
@@ -22,7 +23,7 @@ __all__ = ['Application']
 
 SplitPanes()
 Draggable()
-
+GoldenLayout()
 
 class Application(TemplateMixin):
     _metadata = Dict({'mount_id': 'content'}).tag(sync=True)
@@ -211,12 +212,12 @@ class Application(TemplateMixin):
             x = msg.data.id[msg.x_attr]
             view.state.x_att = x
 
-        selection_tools = view.toolbar_selection_tools  #.children
+        selection_tools = view.toolbar_selection_tools.children
 
-        # for tool in selection_tools:
-        #     btn = tool.v_slots[0].get('children')
+        for tool in selection_tools:
+            btn = tool.v_slots[0].get('children')
         #     btn.color = 'blue darken-2'
-        #     btn.icon = False
+            btn.icon = False
         #     btn.fab = True
         #     btn.background_color = "white"
         #     btn.dark = False
@@ -224,13 +225,13 @@ class Application(TemplateMixin):
         #     btn.small = True
         #     btn.class_ = "elevation-0"
 
-        selection_tools.borderless = True
-        selection_tools.tile = True
+        # selection_tools.borderless = True
+        # selection_tools.tile = True
 
         # Create the viewer item dictionary
         new_viewer_item = {
             'id': str(uuid.uuid4()),
-            'type': 'gl-row',
+            'component': 'gl-row',
             'children': [],
             'widget': view.figure_widget,
             'name': "Slider Test",

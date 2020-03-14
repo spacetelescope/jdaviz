@@ -72,76 +72,86 @@
           <v-col cols="12" class="fill-height pa-0 ma-0" style="width: 100%">
             <splitpanes class="default-theme" @resize="relayout">
               <pane size="80">
-                <splitpanes
+                <!-- <splitpanes
                   @resize="relayout"
                   @pane-add="relayout"
                   @pane-click="console.log('OMG IT WORKS')"
-                >
-                  <pane v-for="(stack, index) in stack_items" :key="index">
-                    <v-card class="ma-2" tile style="height: calc(100% - 16px)">
-                      <v-tabs
-                        v-model="stack.tab"
-                        :height="settings.show_tab_headers ? '36px' : '0px'"
-                        :background-color="selected_stack_item.id == stack.id ? 'accent' : 'secondary'"
-                        style="height: 100%"
+                >-->
+                <!-- <pane v-for="(stack, index) in stack_items" :key="index"> -->
+                <golden-layout style="height: 100%">
+                  <gl-row>
+                    <gl-stack v-for="(stack, index) in stack_items" :key="index" style="height: 100%">
+                      <gl-component
+                        v-for="(viewer, index) in stack.viewer"
+                        :key="index"
+                        title="Test"
                       >
-                        <!-- style="height: calc(100% - 36px)" -->
-                        <draggable
-                          v-model="stack.viewers"
-                          :group="{name: 'viewers'}"
-                          class="d-flex flex-grow-1"
-                        >
-                          <v-tab
-                            v-for="viewer in stack.viewers"
-                            :key="viewer.id"
-                            @click="selected_stack_item = stack; selected_viewer_item = viewer"
+                      <h1>TESTING</h1>
+                        <v-card class="ma-2" tile style="height: 100%">
+                          <v-toolbar
+                            dense
+                            floating
+                            absolute
+                            right
+                            class="mt-2 float-right"
+                            elevation="1"
                           >
-                            {{ viewer.title }}
-                            {{ selected_stack_item.id == stack.id }}
-                            <v-spacer></v-spacer>
-                            <v-btn
-                              icon
-                              x-small
-                              @click.stop="remove_viewer([viewer.id, stack.id])"
-                              style="margin-left: 10px"
-                            >
-                              <v-icon>mdi-close</v-icon>
-                            </v-btn>
-                          </v-tab>
-                        </draggable>
-
-                        <v-btn icon tile @click.stop="split_pane('horizontal')">
-                          <v-icon>mdi-view-split-horizontal</v-icon>
-                        </v-btn>
-
-                        <v-btn icon tile @click.stop="split_pane('vertical')">
-                          <v-icon>mdi-view-split-vertical</v-icon>
-                        </v-btn>
-
-                        <v-tabs-items v-model="stack.tab" style="height: calc(100% - 36px)">
-                          <v-tab-item
-                            v-for="viewer in stack.viewers"
-                            :key="viewer.id"
-                            transition="false"
-                            reverse-transition="false"
-                            class="fill-height pa-2"
-                            style="height: calc(100% + 36px)"
-                          >
-                            <v-toolbar
-                              dense
-                              floating
-                              absolute
-                              right
-                              class="mt-2 float-right"
-                              elevation="1"
-                            >
-                              <jupyter-widget
-                                :widget="viewer.tools"
+                            <v-toolbar-items>
+                              <!-- <jupyter-widget
+                                v-for="(tool, index) in viewer.tools"
+                                :widget="tool"
                                 :key="index"
                                 class="float-right"
-                              />
-                            </v-toolbar>
-                            <!-- <v-speed-dial v-model="viewer.fab" direction="left" right absolute>
+                              />-->
+                              <v-menu offset-y>
+                                <template v-slot:activator="{ on }">
+                                  <v-btn color="primary" dark v-on="on">
+                                    <v-icon>mdi-settings</v-icon>
+                                  </v-btn>
+                                </template>
+
+                                <v-tabs grow height="36px" style="height: 100%">
+                                  <v-tab>Data</v-tab>
+                                  <v-tab>Layer</v-tab>
+                                  <v-tab>Viewer</v-tab>
+
+                                  <v-tab-item
+                                    class="overflow-y-auto"
+                                    style="height: calc(100% - 36px)"
+                                  >
+                                    <v-treeview
+                                      dense
+                                      selectable
+                                      :items="data_items"
+                                      v-model="viewer.selected_data_items"
+                                      hoverable
+                                      activatable
+                                      item-disabled="locked"
+                                      @update:active="console.log($event)"
+                                      @input="data_item_selected"
+                                    ></v-treeview>
+                                    <!-- v-model="((stack_items.find(x => x.id == self.selected_stack_item_id) || { viewers: [] }).viewers.find(x => x.id == self.selected_viewer_item_id) || { selected_data_items: []}).selected_data_items" -->
+                                  </v-tab-item>
+
+                                  <v-tab-item eager class="overflow-y-auto" style="height: 100%">
+                                    <jupyter-widget
+                                      v-if="selected_viewer_item != undefined"
+                                      :widget="viewer.layer_options"
+                                    />
+                                  </v-tab-item>
+
+                                  <v-tab-item eager class="overflow-y-auto" style="height: 100%">
+                                    <jupyter-widget
+                                      v-if="selected_viewer_item != undefined"
+                                      :widget="viewer.viewer_options"
+                                    />
+                                  </v-tab-item>
+                                </v-tabs>
+                              </v-menu>
+                            </v-toolbar-items>
+                          </v-toolbar>
+
+                          <!-- <v-speed-dial v-model="viewer.fab" direction="left" right absolute>
                               <template v-slot:activator>
                                 <v-btn
                                   v-model="viewer.fab"
@@ -162,73 +172,22 @@
                                   :key="index"
                                 />
                               </v-btn-toggle>
-                            </v-speed-dial>-->
-                            <jupyter-widget
-                              :widget="viewer.widget"
-                              style="width: 100%; height: 100%"
-                            />
-                          </v-tab-item>
-                        </v-tabs-items>
-                      </v-tabs>
-                    </v-card>
-                  </pane>
-                </splitpanes>
+                          </v-speed-dial>-->
+                          <jupyter-widget
+                            :widget="viewer.widget"
+                            style="width: 100%; height: 100%"
+                          />
+                        </v-card>
+                      </gl-component>
+                    </gl-stack>
+                  </gl-row>
+                </golden-layout>
+                <!-- </pane>
+                </splitpanes>-->
               </pane>
               <pane size="20">
                 <splitpanes horizontal class="elevation-2">
-                  <pane>
-                    <v-tabs grow height="36px" style="height: 100%">
-                      <v-tab>Data</v-tab>
-
-                      <v-tab-item class="overflow-y-auto" style="height: calc(100% - 36px)">
-                          <v-treeview
-                            dense
-                            selectable
-                            :items="data_items"
-                            v-model="selected_data_items"
-                            hoverable
-                            activatable
-                            item-disabled="locked"
-                            @update:active="console.log($event)"
-                            @input="data_item_selected"
-                          ></v-treeview>
-                          <!-- v-model="((stack_items.find(x => x.id == self.selected_stack_item_id) || { viewers: [] }).viewers.find(x => x.id == self.selected_viewer_item_id) || { selected_data_items: []}).selected_data_items" -->
-                      </v-tab-item>
-                    </v-tabs>
-                  </pane>
-                  <pane>
-                    <v-tabs grow height="36px" style="height: 100%">
-                      <v-tab>Layer Options</v-tab>
-                      <v-tab>Viewer Options</v-tab>
-
-                      <v-tab-item eager class="overflow-y-auto" style="height: 100%">
-                        <!-- <v-card
-                          v-if="selected_viewer_item != undefined"
-                          flat
-                          class="overflow-y-auto"
-                          style="height: 100%"
-                        >-->
-                        <jupyter-widget
-                          v-if="selected_viewer_item != undefined"
-                          :widget="selected_viewer_item.layer_options"
-                        />
-                        <!-- </v-card> -->
-                      </v-tab-item>
-                      <v-tab-item eager class="overflow-y-auto" style="height: 100%">
-                        <!-- <v-card
-                          v-if="selected_viewer_item != undefined"
-                          flat
-                          class="overflow-y-auto"
-                          style="height: 100%"
-                        >-->
-                        <jupyter-widget
-                          v-if="selected_viewer_item != undefined"
-                          :widget="selected_viewer_item.viewer_options"
-                        />
-                        <!-- </v-card> -->
-                      </v-tab-item>
-                    </v-tabs>
-                  </pane>
+                  <pane></pane>
                 </splitpanes>
               </pane>
             </splitpanes>
@@ -265,16 +224,16 @@ export default {
 
 <style id="web-app">
 .v-toolbar__content {
-    padding-left: 0px;
-    padding-right: 0px;
+  padding-left: 0px;
+  padding-right: 0px;
 }
 
 .v-tabs-items {
-    height: 100%;
+  height: 100%;
 }
 
 .splitpanes__splitter {
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2), 0 2px 5px 0 rgba(0, 0, 0, 0.19);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2), 0 2px 5px 0 rgba(0, 0, 0, 0.19);
 }
 
 /* .splitpanes__splitter {
