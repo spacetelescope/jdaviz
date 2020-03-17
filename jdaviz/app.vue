@@ -78,10 +78,20 @@
                   @pane-click="console.log('OMG IT WORKS')"
                 >-->
                 <!-- <pane v-for="(stack, index) in stack_items" :key="index"> -->
-                <golden-layout style="height: 100%">
-                  <gl-row>
-                    <gl-stack v-for="(stack, index) in stack_items" :key="index" style="height: 100%">
-                      <gl-component
+                <v-card tile class="ma-2" style="height: calc(100% - 16px)">
+                  <golden-layout
+                    style="height: 100%"
+                    @selection-changed="consle.log($event)"
+                    :has-headers="settings.show_tab_headers"
+                  >
+                    <gl-row @selection-changed="consle.log($event)" :closable="false">
+                      <gl-stack
+                        v-for="(stack, index) in stack_items"
+                        :key="index"
+                        @selection-changed="consle.log($event)"
+                        :show-maximise-icon="false"
+                      >
+                        <gl-component
                         v-for="(viewer, index) in stack.viewer"
                         :key="index"
                         title="Test"
