@@ -41,7 +41,7 @@
       <v-divider vertical />
     </v-app-bar>
 
-    <v-content :style="checkNotebookContext() ? 'height: ' + settings.context.notebook.maxHeight : ''">
+    <v-content :style="checkNotebookContext() ? 'height: ' + settings.context.notebook.max_height : ''">
       <v-container class="fill-height pa-0" fluid>
         <v-row align="center" justify="center" class="fill-height pa-0 ma-0" style="width: 100%">
           <v-col cols="12" class="fill-height pa-0 ma-0" style="width: 100%">

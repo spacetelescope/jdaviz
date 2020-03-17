@@ -25,6 +25,8 @@ SplitPanes()
 Draggable()
 GoldenLayout()
 
+
+
 class Application(TemplateMixin):
     _metadata = Dict({'mount_id': 'content'}).tag(sync=True)
 
@@ -39,7 +41,7 @@ class Application(TemplateMixin):
         'show_tab_headers': True,
         'context': {
                 'notebook': {
-                    'max-height': '500px'
+                    'max_height': '500px'
                 }
             }
     }).tag(sync=True)
@@ -126,12 +128,14 @@ class Application(TemplateMixin):
         selected_viewer = self._viewer_by_id(selected_viewer_id)
         selected_viewer['selected_data_items'] = event['new']
 
-    def vue_data_item_selected(self, data_ids, **kwargs):
+    def vue_data_item_selected(self, viewer, **kwargs):
         # data_ids = event['new'].get(self.selected_viewer_item_id, [])
 
         # Find the active viewer
-        active_viewer_id = self.selected_viewer_item['id']
+        active_viewer_id = viewer.get('id')
         active_viewer = self._base_viewers.get(active_viewer_id)
+
+        data_ids = viewer.get('selected_data_items', [])
 
         active_data_labels = []
 
@@ -165,6 +169,9 @@ class Application(TemplateMixin):
 
         self.stack_items = []
         self.stack_items = temp_stack_items
+
+    def vue_on_selected_tab_changed(self, *args):
+        print(args)
 
     @observe('stack_items')
     def _on_stack_items_changed(self, event):
@@ -216,14 +223,13 @@ class Application(TemplateMixin):
 
         for tool in selection_tools:
             btn = tool.v_slots[0].get('children')
-        #     btn.color = 'blue darken-2'
+            btn.color = 'white'
             btn.icon = False
-        #     btn.fab = True
-        #     btn.background_color = "white"
-        #     btn.dark = False
-        #     btn.outlined = True
-        #     btn.small = True
-        #     btn.class_ = "elevation-0"
+            btn.fab = True
+            btn.dark = False
+            btn.small = True
+            btn.class_ = "elevation-1"
+            btn.on_event("click.stop", lambda: None)
 
         # selection_tools.borderless = True
         # selection_tools.tile = True
