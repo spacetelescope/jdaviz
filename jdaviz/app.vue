@@ -248,25 +248,26 @@ export default {
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2), 0 2px 5px 0 rgba(0, 0, 0, 0.19);
 }
 
-/* .splitpanes__splitter {
-    background-color: #ccc;
-    position: relative;
-}
-.splitpanes__splitter:before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    transition: opacity 0.4s;
-    background-color: rgba(255, 0, 0, 0.3);
-    opacity: 0;
-    z-index: 1;
+.lm_goldenlayout {
+  background: #ffffff;
 }
 
-.splitpanes--vertical > .splitpanes__splitter:before {
-    left: -10px;
-    right: -10px;
-    height: 100%;
+.lm_content {
+  background: #ffffff;
+  border: none;
+  border-top: 1px solid #cccccc;
+}
+
+.lm_splitter {
+  background: #999999;
+  opacity: 0.25;
+  z-index: 1;
+  transition: opacity 200ms ease;
+}
+
+.lm_header .lm_tab {
+  padding-top: 0px;
+  margin-top: 0px;
 }
 
 .splitpanes--horizontal > .splitpanes__splitter:before {
