@@ -92,21 +92,21 @@
                         :show-maximise-icon="false"
                       >
                         <gl-component
-                        v-for="(viewer, index) in stack.viewer"
-                        :key="index"
-                        title="Test"
-                      >
-                      <h1>TESTING</h1>
-                        <v-card class="ma-2" tile style="height: 100%">
-                          <v-toolbar
-                            dense
-                            floating
-                            absolute
-                            right
-                            class="mt-2 float-right"
-                            elevation="1"
-                          >
-                            <v-toolbar-items>
+                          v-for="(viewer, index) in stack.viewers"
+                          :key="index"
+                          title="Test"
+                          @resize="relayout"
+                        >
+                          <v-card tile flat style="height: calc(100% - 0px)">
+                            <!-- <v-toolbar
+                              dense
+                              floating
+                              absolute
+                              right
+                              class="mt-2 float-right"
+                              elevation="1"
+                            >
+                              <v-toolbar-items>
                               <!-- <jupyter-widget
                                 v-for="(tool, index) in viewer.tools"
                                 :widget="tool"
@@ -181,17 +181,19 @@
                                   :widget="viewer.tools"
                                   :key="index"
                                 />
-                              </v-btn-toggle>
-                          </v-speed-dial>-->
-                          <jupyter-widget
-                            :widget="viewer.widget"
-                            style="width: 100%; height: 100%"
-                          />
-                        </v-card>
-                      </gl-component>
-                    </gl-stack>
-                  </gl-row>
-                </golden-layout>
+                                  </v-tab-item>
+                                </v-tabs>
+                              </v-menu>
+                            </v-speed-dial>
+                            <jupyter-widget
+                              :widget="viewer.widget"
+                              style="width: 100%; height: 100%"
+                            />
+                          </v-card>
+                        </gl-component>
+                      </gl-stack>
+                    </gl-row>
+                  </golden-layout>
                 <!-- </pane>
                 </splitpanes>-->
               </pane>
