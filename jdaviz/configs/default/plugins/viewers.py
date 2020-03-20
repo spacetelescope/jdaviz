@@ -1,7 +1,7 @@
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from glue_jupyter.bqplot.image import BqplotImageView
 
-from jdaviz.core.registries import viewers
+from jdaviz.core.registries import viewer_registry
 
 
 # viewers.add("profile-1d", label="Profile 1D", cls=BqplotProfileView)

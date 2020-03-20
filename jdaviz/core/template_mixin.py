@@ -1,5 +1,6 @@
 import ipyvuetify as v
 from glue.core import HubListener
+from traitlets import List
 
 __all__ = ['TemplateMixin']
 

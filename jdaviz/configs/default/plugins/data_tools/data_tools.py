@@ -1,14 +1,16 @@
-from ...core.template_mixin import TemplateMixin
-from ...utils import load_template
+from jdaviz.core.template_mixin import TemplateMixin
+from jdaviz.utils import load_template
+from jdaviz.core.events import LoadDataMessage
 from traitlets import Unicode, Bool, observe
 import os
-from ...core.events import LoadDataMessage
+from jdaviz.core.registries import tool_registry
 
-__all__ = ['FileLoader']
+__all__ = ['DataTools']
 
 
-class FileLoader(TemplateMixin):
-    template = load_template("file_loader.vue", __file__).tag(sync=True)
+@tool_registry('g-data-tools')
+class DataTools(TemplateMixin):
+    template = load_template("data_tools.vue", __file__).tag(sync=True)
     file_path = Unicode("").tag(sync=True)
     dialog = Bool(False).tag(sync=True)
     valid_path = Bool(True).tag(sync=True)

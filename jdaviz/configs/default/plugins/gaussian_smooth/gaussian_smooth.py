@@ -6,21 +6,21 @@ from specutils import Spectrum1D
 from specutils.manipulation import gaussian_smooth
 from traitlets import Bool, List, Unicode
 
-from jdaviz.core.registries import tools
+from jdaviz.core.registries import tool_registry
 from jdaviz.core.template_mixin import TemplateMixin
 from jdaviz.utils import load_template
 
-__all__ = ['GaussianSmoothing']
+__all__ = ['GaussianSmooth']
 
 
 spaxel = u.def_unit('spaxel', 1 * u.Unit(""))
 u.add_enabled_units([spaxel])
 
 
-@tools('g-gaussian-smoothing')
-class GaussianSmoothing(TemplateMixin):
+@tool_registry('g-gaussian-smooth')
+class GaussianSmooth(TemplateMixin):
     dialog = Bool(False).tag(sync=True)
-    template = load_template("gaussian_smoothing.vue", __file__).tag(sync=True)
+    template = load_template("gaussian_smooth.vue", __file__).tag(sync=True)
     stddev = Unicode().tag(sync=True)
     dc_items = List([]).tag(sync=True)
 
