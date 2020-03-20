@@ -1,18 +1,12 @@
-components:
-  menu_bar: false
-  toolbar: true
-  tray_bar: true
-  content_area: true
+settings:
+  configuration: cubeviz
+  visible:
+    menu_bar: false
+    toolbar: true
+    tray: true
+    tab_headers: false
 toolbar:
-  - g-gaussian-smoothing
-viewer_area:
-  - row:
-    - col:
-      - g-image-viewer
-    - col:
-      - g-image-viewer
-    - col:
-      - g-image-viewer
-  - row:
-    - col:
-      - g-profile-viewer
+  - g-data-tools
+  - g-viewer-creator
+  - g-subset-tools
+  - g-gaussian-smooth

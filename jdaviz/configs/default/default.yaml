@@ -1,9 +1,13 @@
-components:
-  menu_bar: false
-  toolbar: true
-  tray_bar: true
-  content_area: true
+settings:
+  visible:
+    menu_bar: false
+    toolbar: true
+    tray: true
+    tab_headers: true
 toolbar:
-  - g-data-import
+  - g-data-tools
   - g-viewer-creator
   - g-subset-tools
+  - g-gaussian-smooth
+tray:
+  - g-model-fitting
