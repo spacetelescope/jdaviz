@@ -5,12 +5,12 @@ from traitlets import Unicode, Bool, observe
 import os
 from jdaviz.core.registries import tool_registry
 
-__all__ = ['DataImport']
+__all__ = ['DataTools']
 
 
-@tool_registry('g-data-import')
-class DataImport(TemplateMixin):
-    template = load_template("data_import.vue", __file__).tag(sync=True)
+@tool_registry('g-data-tools')
+class DataTools(TemplateMixin):
+    template = load_template("data_tools.vue", __file__).tag(sync=True)
     file_path = Unicode("").tag(sync=True)
     dialog = Bool(False).tag(sync=True)
     valid_path = Bool(True).tag(sync=True)
