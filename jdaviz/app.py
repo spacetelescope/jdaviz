@@ -284,9 +284,9 @@ class Application(TemplateMixin):
 
             return stack_items
 
-        stack_items = compose_viewer_area(config.get('viewer_area'))
-
-        self.stack_items = self.stack_items + stack_items
+        if config.get('viewer_area') is not None:
+            stack_items = compose_viewer_area(config.get('viewer_area'))
+            self.stack_items = self.stack_items + stack_items
 
         # Add the toolbar item filter to the toolbar component
         for name in config.get('toolbar', []):

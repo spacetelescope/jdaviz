@@ -10,3 +10,18 @@ toolbar:
   - g-viewer-creator
   - g-subset-tools
   - g-gaussian-smooth
+viewer_area:
+  - container: col
+    children:
+      - container: row
+        viewers:
+          - name: Flux
+            plot: g-image-viewer
+          - name: Uncertainty
+            plot: g-image-viewer
+          - name: Mask
+            plot: g-image-viewer
+      - container: row
+        viewers:
+          - name: Spectrum
+            plot: g-profile-viewer
