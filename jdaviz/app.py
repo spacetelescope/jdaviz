@@ -23,6 +23,8 @@ __all__ = ['Application']
 SplitPanes()
 GoldenLayout()
 
+CONTAINER_TYPES = dict(row='gl-row', col='gl-col', stack='gl-stack')
+
 
 class Application(TemplateMixin):
     _metadata = Dict({'mount_id': 'content'}).tag(sync=True)
@@ -52,6 +54,10 @@ class Application(TemplateMixin):
 
     template = load_template("app.vue", __file__).tag(sync=True)
 
+    components = Dict({'g-viewer-tab': load_template(
+        "container.vue", __file__, traitlet=False)}).tag(
+            sync=True, **w.widget_serialization)
+
     def __init__(self, configuration=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -61,11 +67,6 @@ class Application(TemplateMixin):
             entry_point.name: entry_point.load()
             for entry_point
             in pkg_resources.iter_entry_points(group='plugins')}
-
-        components = {k: v(session=self.session)
-                      for k, v in tool_registry.members.items()}
-
-        self.components = components
 
         # Parse configuration
         self.load_configuration(configuration)
@@ -134,7 +135,8 @@ class Application(TemplateMixin):
 
         # Include any selected data in the viewer
         for data_id in data_ids:
-            [label] = [x['name'] for x in self.data_items if x['id'] == data_id]
+            [label] = [x['name']
+                       for x in self.data_items if x['id'] == data_id]
             active_data_labels.append(label)
 
             [data] = [x for x in self.data_collection if x.label == label]
@@ -173,7 +175,7 @@ class Application(TemplateMixin):
             {
                 'id': str(uuid.uuid4()),
                 'name': msg.data.label,
-                'locked': False, # not bool(self.selected_viewer_item),
+                'locked': False,  # not bool(self.selected_viewer_item),
                 'children': [
                     # {'id': 2, 'name': 'Calendar : app'},
                     # {'id': 3, 'name': 'Chrome : app'},
@@ -181,6 +183,29 @@ class Application(TemplateMixin):
                 ],
             }
         ]
+
+    def _create_stack_item(self, container='gl-stack', children=None,
+                           viewers=None):
+        return {
+            'id': str(uuid.uuid4()),
+            'container': container,
+            'children': children if children is not None else [],
+            'viewers': viewers if viewers is not None else []}
+
+    def _create_viewer_item(self, name, widget, tools, layer_options,
+                            viewer_options):
+        tools.borderless = True
+        tools.tile = True
+
+        return {
+            'id': str(uuid.uuid4()),
+            'widget': widget,
+            'name': "Slider Test",
+            'tools': tools,
+            'layer_options': layer_options,
+            'viewer_options': viewer_options,
+            'selected_data_items': [],
+            'collapse': True}
 
     def _on_new_viewer(self, msg):
         view = self._application_handler.new_data_viewer(
@@ -190,35 +215,18 @@ class Application(TemplateMixin):
             x = msg.data.id[msg.x_attr]
             view.state.x_att = x
 
-        selection_tools = view.toolbar_selection_tools
-
-        selection_tools.borderless = True
-        selection_tools.tile = True
-
         # Create the viewer item dictionary
-        new_viewer_item = {
-            'id': str(uuid.uuid4()),
-            'component': 'gl-row',
-            'children': [],
-            'widget': view.figure_widget,
-            'name': "Slider Test",
-            'fab': False,
-            'tools': selection_tools,
-            'layer_options': view.layer_options,
-            'viewer_options': view.viewer_options,
-            'selected': False,
-            'selected_data_items': [],
-            'collapse': True,
-            'tab': 0
-        }
+        new_viewer_item = self._create_viewer_item(
+            name="Slider Test",
+            widget=view.figure_widget,
+            tools=view.toolbar_selection_tools,
+            layer_options=view.layer_options,
+            viewer_options=view.viewer_options)
 
-        new_stack_item = {
-            'id': str(uuid.uuid4()),
-            'container': 'gl-stack',
-            'viewers': [
-                new_viewer_item
-            ]
-        }
+        new_stack_item = self._create_stack_item(
+            container='gl-stack',
+            children=[],
+            viewers=[new_viewer_item])
 
         # Add viewer locally
         self.stack_items = self.stack_items + [
@@ -245,21 +253,40 @@ class Application(TemplateMixin):
         with open(path, 'r') as f:
             config = yaml.safe_load(f)
 
-        # Get a reference to the component visibility states
-        # comps = config.get('components', {})
-
-        # Toggle the rendering of the components in the gui
-        # self.show_menu_bar = comps.get('menu_bar', True)
-        # self.show_toolbar = comps.get('toolbar', True)
-        # self.show_tray_bar = comps.get('tray_bar', True)
-
-        # if 'viewer_area' in config:
-        #     viewer_area_layout = config.get('viewer_area')
-        #     self.components.get('g-viewer-area').parse_layout(viewer_area_layout)
-
         settings = self.settings
         settings.update(config.get('settings'))
         self.settings = settings
+
+        def compose_viewer_area(viewer_area_items):
+            stack_items = []
+
+            for item in viewer_area_items:
+                stack_item = self._create_stack_item(
+                    container=CONTAINER_TYPES[item.get('container')])
+
+                stack_items.append(stack_item)
+
+                for viewer in item.get('viewers', []):
+                    view = viewer_registry.members.get(viewer['plot'])['cls'](
+                        session=self.session)
+
+                    viewer_item = self._create_viewer_item(
+                        name=viewer.get('name'),
+                        widget=view.figure_widget,
+                        tools=view.toolbar_selection_tools,
+                        layer_options=view.layer_options,
+                        viewer_options=view.viewer_options)
+
+                    stack_item.get('viewers').append(viewer_item)
+
+                if 'children' in item:
+                    stack_items += compose_viewer_area(item.get('children'))
+
+            return stack_items
+
+        stack_items = compose_viewer_area(config.get('viewer_area'))
+
+        self.stack_items = self.stack_items + stack_items
 
         # Add the toolbar item filter to the toolbar component
         for name in config.get('toolbar', []):
@@ -271,7 +298,8 @@ class Application(TemplateMixin):
             }]
 
         for name in config.get('tray', []):
-            tray = tray_registry.members.get(name).get('cls')(session=self.session)
+            tray = tray_registry.members.get(
+                name).get('cls')(session=self.session)
 
             self.tray_items = self.tray_items + [{
                 'name': name,

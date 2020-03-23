@@ -29,108 +29,16 @@
                     @selection-changed="consle.log($event)"
                     :has-headers="settings.visible.tab_headers"
                   >
-                    <gl-row
-                      @stateChanged="consle.log($event)"
-                      @selection-changed="consle.log($event)"
-                      :closable="false"
-                    >
-                      <gl-stack
-                        v-for="(stack, index) in stack_items"
-                        :key="index"
-                        @selection-changed="consle.log($event)"
-                        :show-maximise-icon="false"
-                      >
-                        <gl-component
-                          v-for="(viewer, index) in stack.viewers"
+                    <gl-col :closable="false">
+                      <template v-for="(stack, index) in stack_items">
+                        <g-viewer-tab
+                          :stack="stack"
                           :key="index"
-                          title="Test"
+                          :data-items="data_items"
                           @resize="relayout"
-                        >
-                          <v-card tile flat style="height: calc(100% - 2px); margin-top: -2px;">
-                            <v-toolbar
-                              dense
-                              floating
-                              absolute
-                              right
-                              :collapse="viewer.collapse"
-                              elevation="1"
-                              :width="viewer.collapse ? '48px' : null"
-                            >
-                              <v-toolbar-items>
-                                <v-btn icon @click="viewer.collapse = !viewer.collapse">
-                                  <v-icon v-if="viewer.collapse">mdi-menu</v-icon>
-                                  <v-icon v-else>mdi-menu-open</v-icon>
-                                </v-btn>
-                                <v-divider vertical></v-divider>
-                                <jupyter-widget :widget="viewer.tools"></jupyter-widget>
-                                <v-menu
-                                  offset-y
-                                  :close-on-content-click="false"
-                                  style="z-index: 10"
-                                >
-                                  <template v-slot:activator="{ on }">
-                                    <v-btn icon color="primary" v-on="on">
-                                      <v-icon>mdi-settings</v-icon>
-                                    </v-btn>
-                                  </template>
-
-                                  <v-tabs v-model="viewer.tab" grow height="36px">
-                                    <v-tab key="0">Data</v-tab>
-                                    <v-tab key="1">Layer</v-tab>
-                                    <v-tab key="2">Viewer</v-tab>
-                                  </v-tabs>
-
-                                  <v-tabs-items
-                                    v-model="viewer.tab"
-                                    style="max-height: 500px; width: 350px;"
-                                  >
-                                    <v-tab-item
-                                      key="0"
-                                      class="overflow-y-auto"
-                                      style="height: 450px"
-                                    >
-                                      <v-treeview
-                                        dense
-                                        selectable
-                                        :items="data_items"
-                                        v-model="viewer.selected_data_items"
-                                        hoverable
-                                        activatable
-                                        item-disabled="locked"
-                                        @update:active="console.log($event)"
-                                        @input="data_item_selected(viewer)"
-                                      ></v-treeview>
-                                    </v-tab-item>
-
-                                    <v-tab-item
-                                      key="1"
-                                      eager
-                                      class="overflow-y-auto"
-                                      style="height: 100%"
-                                    >
-                                      <jupyter-widget :widget="viewer.layer_options" />
-                                    </v-tab-item>
-
-                                    <v-tab-item
-                                      key="2"
-                                      eager
-                                      class="overflow-y-auto"
-                                      style="height: 100%"
-                                    >
-                                      <jupyter-widget :widget="viewer.viewer_options" />
-                                    </v-tab-item>
-                                  </v-tabs-items>
-                                </v-menu>
-                              </v-toolbar-items>
-                            </v-toolbar>
-                            <jupyter-widget
-                              :widget="viewer.widget"
-                              style="width: 100%; height: 100%"
-                            />
-                          </v-card>
-                        </gl-component>
-                      </gl-stack>
-                    </gl-row>
+                        ></g-viewer-tab>
+                      </template>
+                    </gl-col>
                   </golden-layout>
                 </v-card>
                 <!-- </pane>
@@ -148,7 +56,11 @@
                           @selection-changed="consle.log($event)"
                           :closable="false"
                         >
-                          <gl-component v-for="(tray, index) in tray_items" :key="index" :title="tray.name">
+                          <gl-component
+                            v-for="(tray, index) in tray_items"
+                            :key="index"
+                            :title="tray.name"
+                          >
                             <jupyter-widget :widget="tray.widget"></jupyter-widget>
                           </gl-component>
                         </gl-stack>
