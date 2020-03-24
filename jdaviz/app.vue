@@ -36,6 +36,7 @@
                         :key="index"
                         :data-items="data_items"
                         @resize="relayout"
+                        @destroy="remove_component"
                       ></g-viewer-tab>
                     </gl-row>
                   </golden-layout>

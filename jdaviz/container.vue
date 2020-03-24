@@ -6,6 +6,7 @@
       :key="index"
       :data-items="dataItems"
       @resize="resize"
+      @destroy="destroy($event)"
     ></g-viewer-tab>
     <gl-component
       v-for="(viewer, index) in stack.viewers"
@@ -13,6 +14,7 @@
       title="Test"
       :tab-id="viewer.id"
       @resize="$emit('resize')"
+      @destroy="$emit('destroy', viewer.id)"
     >
       <v-card tile flat style="height: calc(100% - 2px); margin-top: -2px;">
         <v-toolbar
@@ -83,6 +85,10 @@ module.exports = {
   methods: {
     resize() {
       this.$emit("resize");
+    },
+    destroy(id) {
+      console.log("destroy " + id);
+      this.$emit("destroy", id);
     }
   },
   created() {

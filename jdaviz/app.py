@@ -118,15 +118,24 @@ class Application(TemplateMixin):
 
         resize(self.stack_items)
 
-    # @observe('stack_items')
-    # def _on_stack_items_changed(self, event):
-    #     new_stack_items = [x for x in self.stack_items]
+    def vue_remove_component(self, cid):
+        
+        def remove(stack_items):
+            for stack in stack_items:
+                if stack['id'] == cid:
+                    stack_items.remove(stack)
 
-    #     for stack in self.stack_items:
-    #         if len(stack['viewers']) == 0:
-    #             new_stack_items.remove(stack)
+                for viewer in stack['viewers']:
+                    if viewer['id'] == cid:
+                        stack['viewers'].remove(viewer)
 
-    #     self.stack_items = new_stack_items
+                if len(stack.get('children', [])) > 0:
+                    stack['children'] = remove(stack['children'])
+
+            return stack_items
+
+        new_stack_items = remove([x for x in self.stack_items])
+        self.stack_items = new_stack_items
 
     def vue_data_item_selected(self, viewer, **kwargs):
         # data_ids = event['new'].get(self.selected_viewer_item_id, [])
