@@ -29,20 +29,17 @@
                     @selection-changed="consle.log($event)"
                     :has-headers="settings.visible.tab_headers"
                   >
-                    <gl-col :closable="false">
-                      <template v-for="(stack, index) in stack_items">
-                        <g-viewer-tab
-                          :stack="stack"
-                          :key="index"
-                          :data-items="data_items"
-                          @resize="relayout"
-                        ></g-viewer-tab>
-                      </template>
-                    </gl-col>
+                    <gl-row :closable="false">
+                      <g-viewer-tab
+                        v-for="(stack, index) in stack_items"
+                        :stack="stack"
+                        :key="index"
+                        :data-items="data_items"
+                        @resize="relayout"
+                      ></g-viewer-tab>
+                    </gl-row>
                   </golden-layout>
                 </v-card>
-                <!-- </pane>
-                </splitpanes>-->
               </pane>
               <pane size="20" v-if="drawer">
                 <splitpanes horizontal class="elevation-2">

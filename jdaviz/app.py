@@ -107,20 +107,26 @@ class Application(TemplateMixin):
 
     @observe('stack_items')
     def vue_relayout(self, *args, **kwargs):
-        for stack in self.stack_items:
-            for viewer in stack.get('viewers'):
-                viewer.get('widget').layout.height = '99.9%'
-                viewer.get('widget').layout.height = '100%'
+        def resize(stack_items):
+            for stack in stack_items:
+                for viewer in stack.get('viewers'):
+                    viewer.get('widget').layout.height = '99.9%'
+                    viewer.get('widget').layout.height = '100%'
 
-    @observe('stack_items')
-    def _on_stack_items_changed(self, event):
-        new_stack_items = [x for x in self.stack_items]
+                if len(stack.get('children')) > 0:
+                    resize(stack.get('children'))
 
-        for stack in self.stack_items:
-            if len(stack['viewers']) == 0:
-                new_stack_items.remove(stack)
+        resize(self.stack_items)
 
-        self.stack_items = new_stack_items
+    # @observe('stack_items')
+    # def _on_stack_items_changed(self, event):
+    #     new_stack_items = [x for x in self.stack_items]
+
+    #     for stack in self.stack_items:
+    #         if len(stack['viewers']) == 0:
+    #             new_stack_items.remove(stack)
+
+    #     self.stack_items = new_stack_items
 
     def vue_data_item_selected(self, viewer, **kwargs):
         # data_ids = event['new'].get(self.selected_viewer_item_id, [])
@@ -279,8 +285,9 @@ class Application(TemplateMixin):
 
                     stack_item.get('viewers').append(viewer_item)
 
-                if 'children' in item:
-                    stack_items += compose_viewer_area(item.get('children'))
+                if len(item.get('children', [])) > 0:
+                    child_stack_items = compose_viewer_area(item.get('children'))
+                    stack_item['children'] = child_stack_items
 
             return stack_items
 
