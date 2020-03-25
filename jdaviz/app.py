@@ -68,6 +68,9 @@ class Application(TemplateMixin):
             for entry_point
             in pkg_resources.iter_entry_points(group='plugins')}
 
+        # Create a dictionary for holding non-ipywidget viewer objects
+        self._base_viewers = {}
+
         # Parse configuration
         self.load_configuration(configuration)
 
@@ -83,9 +86,6 @@ class Application(TemplateMixin):
         # level data collection object
         self.hub.subscribe(self, DataCollectionAddMessage,
                            handler=self._on_data_added)
-
-        # Create a dictionary for holding non-ipywidget viewer objects
-        self._base_viewers = {}
 
     @property
     def hub(self):
@@ -119,7 +119,7 @@ class Application(TemplateMixin):
         resize(self.stack_items)
 
     def vue_remove_component(self, cid):
-        
+
         def remove(stack_items):
             for stack in stack_items:
                 if stack['id'] == cid:
@@ -152,6 +152,7 @@ class Application(TemplateMixin):
         for data_id in data_ids:
             [label] = [x['name']
                        for x in self.data_items if x['id'] == data_id]
+
             active_data_labels.append(label)
 
             [data] = [x for x in self.data_collection if x.label == label]
@@ -282,8 +283,9 @@ class Application(TemplateMixin):
                 stack_items.append(stack_item)
 
                 for viewer in item.get('viewers', []):
-                    view = viewer_registry.members.get(viewer['plot'])['cls'](
-                        session=self.session)
+                    view = self._application_handler.new_data_viewer(
+                        viewer_registry.members.get(viewer['plot'])['cls'],
+                        data=None, show=False)
 
                     viewer_item = self._create_viewer_item(
                         name=viewer.get('name'),
@@ -291,6 +293,8 @@ class Application(TemplateMixin):
                         tools=view.toolbar_selection_tools,
                         layer_options=view.layer_options,
                         viewer_options=view.viewer_options)
+
+                    self._base_viewers[viewer_item['id']] = view
 
                     stack_item.get('viewers').append(viewer_item)
 

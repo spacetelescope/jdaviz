@@ -5,8 +5,9 @@
       :stack="child"
       :key="index"
       :data-items="dataItems"
-      @resize="resize"
-      @destroy="destroy($event)"
+      @resize="$emit('resize')"
+      @destroy="$emit('destroy', $event)"
+      @data-item-selected="$emit('data-item-selected', $event)"
     ></g-viewer-tab>
     <gl-component
       v-for="(viewer, index) in stack.viewers"
@@ -57,7 +58,7 @@
                     activatable
                     item-disabled="locked"
                     @update:active="console.log($event)"
-                    @input="data_item_selected(viewer)"
+                    @input="$emit('data-item-selected', viewer)"
                   ></v-treeview>
                 </v-tab-item>
 
@@ -82,15 +83,6 @@
 module.exports = {
   name: "g-viewer-tab",
   props: ["stack", "dataItems"],
-  methods: {
-    resize() {
-      this.$emit("resize");
-    },
-    destroy(id) {
-      console.log("destroy " + id);
-      this.$emit("destroy", id);
-    }
-  },
   created() {
     this.$parent.childMe = () => {
       return this.$children[0];

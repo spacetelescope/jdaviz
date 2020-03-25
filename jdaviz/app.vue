@@ -37,6 +37,7 @@
                         :data-items="data_items"
                         @resize="relayout"
                         @destroy="remove_component"
+                        @data-item-selected="data_item_selected($event)"
                       ></g-viewer-tab>
                     </gl-row>
                   </golden-layout>
