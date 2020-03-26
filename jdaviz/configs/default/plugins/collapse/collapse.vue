@@ -4,38 +4,44 @@
       <v-tooltip bottom>
         <template v-slot:activator="{ on: tooltip }">
           <v-btn v-on="{...tooltip, ...dialog}" icon>
-            <v-icon>mdi-chart-multiline</v-icon>
+            <v-icon>mdi-collapse-all</v-icon>
           </v-btn>
         </template>
-        <span>Gaussian Smooth</span>
+        <span>Collapse</span>
       </v-tooltip>
     </template>
 
     <v-card>
-      <v-card-title class="headline blue lighten-4" primary-title>Gaussian Smoothing</v-card-title>
+      <v-card-title class="headline blue lighten-4" primary-title>Cube Collapse</v-card-title>
 
       <v-card-text>
         <v-container>
           <v-row>
             <v-col>
               <v-select
-                :items="dc_items"
-                @change="data_selected"
+                :items="data_items"
+                v-model="selected_data_item"
                 label="Data"
-                hint="Select the data set to be smoothed."
+                hint="Select the data set to use in collapse."
               ></v-select>
             </v-col>
           </v-row>
           <v-row>
             <v-col>
-              <v-text-field
-                ref="stddev"
-                label="Standard deviation"
-                v-model="stddev"
-                hint="The stddev of the kernel, in pixels."
-                persistent-hint
-                :rules="[() => !!stddev || 'This field is required']"
-              ></v-text-field>
+                <v-select
+                :items="axes"
+                v-model="selected_axis"
+                label="Axis"
+                hint="Select the axis along with the data with be collapsed."
+              ></v-select>
+            </v-col>
+            <v-col>
+                <v-select
+                :items="funcs"
+                v-model="selected_func"
+                label="Method"
+                hint="Select the method to use in the collapse."
+              ></v-select>
             </v-col>
           </v-row>
         </v-container>
@@ -45,7 +51,7 @@
       <v-card-actions>
         <div class="flex-grow-1"></div>
         <v-btn color="primary" text @click="dialog = false">Cancel</v-btn>
-        <v-btn color="primary" text @click="gaussian_smooth">Apply</v-btn>
+        <v-btn color="primary" text @click="collapse">Apply</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
