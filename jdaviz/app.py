@@ -298,7 +298,7 @@ class Application(TemplateMixin):
         with open(path, 'r') as f:
             config = yaml.safe_load(f)
 
-        settings = self.settings
+        settings = {k: v for k, v in self.settings.items()}
         settings.update(config.get('settings'))
         self.settings = settings
 
