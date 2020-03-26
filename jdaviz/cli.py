@@ -31,6 +31,7 @@ def main(filename, layout):
     try:
         Voila.notebook_path = 'notebook.ipynb'
         VoilaConfiguration.template = 'jdaviz-default'
+        VoilaConfiguration.enable_nbextensions = True
         sys.exit(Voila().launch_instance())
     finally:
         os.chdir(start_dir)
