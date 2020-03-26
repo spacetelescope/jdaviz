@@ -18,8 +18,8 @@
       :style="checkNotebookContext() ? 'height: ' + settings.context.notebook.max_height : ''"
     >
       <v-container class="fill-height pa-0" fluid>
-        <v-row align="center" justify="center" class="fill-height pa-0 ma-0" style="width: 100%">
-          <v-col cols="12" class="fill-height pa-0 ma-0" style="width: 100%">
+        <!-- <v-row align="center" justify="center" class="fill-height pa-0 ma-0" style="width: 100%">
+          <v-col cols="12" class="fill-height pa-0 ma-0" style="width: 100%"> -->
             <splitpanes class="default-theme" @resize="relayout">
               <pane size="80">
                 <v-card tile class="ma-2" style="height: calc(100% - 16px)">
@@ -69,8 +69,8 @@
                 </splitpanes>
               </pane>
             </splitpanes>
-          </v-col>
-        </v-row>
+          <!-- </v-col>
+        </v-row> -->
       </v-container>
     </v-content>
   </v-app>

@@ -1,19 +1,21 @@
 import os
+import uuid
 
-import ipyvuetify as v
 import ipywidgets as w
+import numpy as np
 import pkg_resources
 import yaml
-from glue_jupyter.app import JupyterApplication
-from glue.core.message import DataCollectionAddMessage
 from glue.core import BaseData
-from ipysplitpanes import SplitPanes
+from glue.core.autolinking import find_possible_links
+from glue.core.message import DataCollectionAddMessage
+from glue_jupyter.app import JupyterApplication
 from ipygoldenlayout import GoldenLayout
-from traitlets import Unicode, Bool, Dict, List, Int, observe, ObjectName
-import uuid
-import numpy as np
+from ipysplitpanes import SplitPanes
+from traitlets import Bool, Dict, Int, List, ObjectName, Unicode, observe
 
-from .core.events import AddViewerMessage, NewViewerMessage, LoadDataMessage
+import ipyvuetify as v
+
+from .core.events import AddViewerMessage, LoadDataMessage, NewViewerMessage
 from .core.registries import tool_registry, tray_registry, viewer_registry
 from .core.template_mixin import TemplateMixin
 from .utils import load_template
@@ -70,6 +72,7 @@ class Application(TemplateMixin):
 
         # Create a dictionary for holding non-ipywidget viewer objects
         self._base_viewers = {}
+        self._viewer_references = {}
 
         # Parse configuration
         self.load_configuration(configuration)
@@ -104,6 +107,32 @@ class Application(TemplateMixin):
 
     def load_data(self, path):
         self._application_handler.load_data(path)
+
+        # Attempt to link the data
+        links = find_possible_links(self.data_collection)
+
+    def viewers(self, reference):
+        return self._viewer_references.get(reference)
+
+    def get_data(self, reference, cls=None):
+        viewer = self.viewers(reference)
+
+        data = [layer_state.layer
+                for layer_state in viewer.state.layers
+                if hasattr(layer_state, 'layer') and
+                isinstance(layer_state.layer, BaseData)]
+
+        if cls is not None:
+            data = [d.get_object(cls) for d in data]
+
+        return data
+
+    def add_data(self, reference, data, name=""):
+        name = name or "New Data"
+        self.data_collection[name or "New Data"] = data
+
+        viewer = self.viewers(reference)
+        viewer.add_data(name)
 
     @observe('stack_items')
     def vue_relayout(self, *args, **kwargs):
@@ -295,6 +324,9 @@ class Application(TemplateMixin):
                         viewer_options=view.viewer_options)
 
                     self._base_viewers[viewer_item['id']] = view
+
+                    if 'reference' in viewer:
+                        self._viewer_references[viewer['reference']] = view
 
                     stack_item.get('viewers').append(viewer_item)
 
