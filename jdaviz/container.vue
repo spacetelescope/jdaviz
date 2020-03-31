@@ -63,11 +63,15 @@
                 </v-tab-item>
 
                 <v-tab-item key="1" eager class="overflow-y-auto" style="height: 100%">
-                  <jupyter-widget :widget="viewer.layer_options" />
+                  <v-sheet class="px-4">
+                    <jupyter-widget :widget="viewer.layer_options" />
+                  </v-sheet>
                 </v-tab-item>
 
                 <v-tab-item key="2" eager class="overflow-y-auto" style="height: 100%">
-                  <jupyter-widget :widget="viewer.viewer_options" />
+                  <v-sheet class="px-4">
+                    <jupyter-widget :widget="viewer.viewer_options" />
+                  </v-sheet>
                 </v-tab-item>
               </v-tabs-items>
             </v-menu>
