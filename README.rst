@@ -5,8 +5,7 @@ Astronomical data analysis development leveraging Jupyter platform
     :target: http://www.astropy.org
     :alt: Powered by Astropy Badge
 
-About
------
+
 Jdaviz is a data analysis tool which can be used with Jupyter Notebooks
 and web applications.
 
