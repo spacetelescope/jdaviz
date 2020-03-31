@@ -42,7 +42,7 @@ class Application(TemplateMixin):
         },
         'context': {
             'notebook': {
-                'max_height': '500px'
+                'max_height': '600px'
             }
         },
         'layout': {
