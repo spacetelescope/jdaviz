@@ -4,7 +4,7 @@ from traitlets import Unicode
 __all__ = ['load_template']
 
 
-def load_template(file_name, path=None):
+def load_template(file_name, path=None, traitlet=True):
     """
     Load a vue template file and instantiate the appropriate traitlet object.
 
@@ -27,4 +27,7 @@ def load_template(file_name, path=None):
     with open(os.path.join(path, file_name)) as f:
         TEMPLATE = f.read()
 
-    return Unicode(TEMPLATE)
+    if traitlet:
+        return Unicode(TEMPLATE)
+
+    return TEMPLATE

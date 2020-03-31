@@ -7,6 +7,25 @@ settings:
     tab_headers: false
 toolbar:
   - g-data-tools
-  - g-viewer-creator
   - g-subset-tools
   - g-gaussian-smooth
+  - g-collapse
+viewer_area:
+  - container: col
+    children:
+      - container: row
+        viewers:
+          - name: Flux
+            plot: g-image-viewer
+            reference: flux-viewer
+          - name: Uncertainty
+            plot: g-image-viewer
+            reference: uncert-viewer
+          - name: Mask
+            plot: g-image-viewer
+            reference: mask-viewer
+      - container: row
+        viewers:
+          - name: Spectrum
+            plot: g-profile-viewer
+            reference: spectrum-viewer
