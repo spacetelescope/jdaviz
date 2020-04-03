@@ -122,4 +122,8 @@ export default {
   padding-top: 0px;
   margin-top: 0px;
 }
+
+.vuetify-styles .lm_header ul {
+  padding-left: 0;
+}
 </style>
