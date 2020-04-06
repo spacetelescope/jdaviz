@@ -88,7 +88,8 @@ export default {
 </script>
 
 <style id="web-app">
-.v-toolbar__content {
+.v-toolbar__content,
+.vuetify-styles .v-toolbar__content {
   padding-left: 0px;
   padding-right: 0px;
 }
