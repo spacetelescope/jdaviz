@@ -20,6 +20,10 @@ from .core.events import (AddDataMessage, AddViewerMessage, LoadDataMessage,
 from .core.registries import tool_registry, tray_registry, viewer_registry
 from .core.template_mixin import TemplateMixin
 from .utils import load_template
+from glue_jupyter.state_traitlets_helpers import GlueState
+from glue.core.state_objects import State
+from glue.external.echo import CallbackProperty
+
 
 __all__ = ['Application']
 
@@ -29,12 +33,11 @@ GoldenLayout()
 CONTAINER_TYPES = dict(row='gl-row', col='gl-col', stack='gl-stack')
 
 
-class Application(TemplateMixin):
-    _metadata = Dict({'mount_id': 'content'}).tag(sync=True)
+class ApplicationState(State):
+    drawer = CallbackProperty(
+        False, docstring="State of the plugins drawer.")
 
-    drawer = Bool(False).tag(sync=True)
-
-    settings = Dict({
+    settings = CallbackProperty({
         'visible': {
             'menu_bar': True,
             'toolbar': True,
@@ -48,12 +51,51 @@ class Application(TemplateMixin):
         },
         'layout': {
         }
-    }).tag(sync=True)
+    }, docstring="Top-level application settings.")
 
-    data_items = List([]).tag(sync=True)
-    tool_items = List([]).tag(sync=True, **w.widget_serialization)
-    tray_items = List([]).tag(sync=True, **w.widget_serialization)
-    stack_items = List([]).tag(sync=True, **w.widget_serialization)
+    data_items = CallbackProperty(
+        [], docstring="List of data items parsed from the Glue data "
+                      "collection.")
+
+    tool_items = CallbackProperty(
+        [], docstring="Collection of toolbar items displayed in the "
+                      "application.")
+
+    tray_items = CallbackProperty(
+        [], docstring="List of plugins displayed in the sidebar tray area.")
+
+    stack_items = CallbackProperty(
+        [], docstring="Nested collection of viewers constructed to support the"
+                      "Golden Layout viewer area.")
+
+
+class Application(TemplateMixin):
+    _metadata = Dict({'mount_id': 'content'}).tag(sync=True)
+
+    # drawer = Bool(False).tag(sync=True)
+
+    # settings = Dict({
+    #     'visible': {
+    #         'menu_bar': True,
+    #         'toolbar': True,
+    #         'tray': True,
+    #         'tab_headers': True,
+    #     },
+    #     'context': {
+    #         'notebook': {
+    #             'max_height': '600px'
+    #         }
+    #     },
+    #     'layout': {
+    #     }
+    # }).tag(sync=True)
+
+    # data_items = List([]).tag(sync=True)
+    # tool_items = List([]).tag(sync=True, **w.widget_serialization)
+    # tray_items = List([]).tag(sync=True, **w.widget_serialization)
+    # stack_items = List([]).tag(sync=True, **w.widget_serialization)
+
+    state = GlueState().tag(sync=True)  #, **w.widget_serialization)
 
     template = load_template("app.vue", __file__).tag(sync=True)
 
@@ -62,6 +104,8 @@ class Application(TemplateMixin):
             sync=True, **w.widget_serialization)
 
     def __init__(self, configuration=None, *args, **kwargs):
+        self.state = ApplicationState()
+
         super().__init__(*args, **kwargs)
 
         self._application_handler = JupyterApplication()
@@ -137,6 +181,41 @@ class Application(TemplateMixin):
         viewer = self.viewers(reference)
         viewer.add_data(name)
 
+        # Enable selection of data in viewer data list
+        selected_data_items = viewer_item.get('selected_data_items')
+        viewer_item['selected_data_items'] = selected_data_items + [name]
+
+    def _viewer_by_id(self, vid):
+        return self._base_viewers.get(vid)
+
+    def _viewer_item_by_id(self, vid):
+        def find_viewer_item(stack_items):
+            for stack_item in stack_items:
+                for viewer_item in stack_item.get('viewers'):
+                    if viewer_item['id'] == vid:
+                        return viewer_item
+
+                if len(stack_item.get('children')) > 0:
+                    return find_viewer_item(stack_item.get('children'))
+
+        viewer_item = find_viewer_item(self.state.stack_items)
+
+        return viewer_item
+
+    def _viewer_item_by_reference(self, ref):
+        def find_viewer_item(stack_items):
+            for stack_item in stack_items:
+                for viewer_item in stack_item.get('viewers'):
+                    if viewer_item['reference'] == ref:
+                        return viewer_item
+
+                if len(stack_item.get('children')) > 0:
+                    return find_viewer_item(stack_item.get('children'))
+
+        viewer_item = find_viewer_item(self.state.stack_items)
+
+        return viewer_item
+
     @observe('stack_items')
     def vue_relayout(self, *args, **kwargs):
         def resize(stack_items):
@@ -148,7 +227,7 @@ class Application(TemplateMixin):
                 if len(stack.get('children')) > 0:
                     resize(stack.get('children'))
 
-        resize(self.stack_items)
+        resize(self.state.stack_items)
 
     def vue_remove_component(self, cid):
 
@@ -166,8 +245,9 @@ class Application(TemplateMixin):
 
             return stack_items
 
-        new_stack_items = remove([x for x in self.stack_items])
-        self.stack_items = new_stack_items
+        # new_stack_items =
+        remove([x for x in self.state.stack_items])
+        # self.state.stack_items = new_stack_items
 
     def vue_data_item_selected(self, viewer, **kwargs):
         # data_ids = event['new'].get(self.selected_viewer_item_id, [])
@@ -183,7 +263,7 @@ class Application(TemplateMixin):
         # Include any selected data in the viewer
         for data_id in data_ids:
             [label] = [x['name']
-                       for x in self.data_items if x['id'] == data_id]
+                       for x in self.state.data_items if x['id'] == data_id]
 
             active_data_labels.append(label)
 
@@ -208,21 +288,21 @@ class Application(TemplateMixin):
         viewer_id, stack_id = args[0]
         viewer_item = self._viewer_by_id(viewer_id, stack_id)
 
-        temp_stack_items = self.stack_items
+        # temp_stack_items = self.state.stack_items
 
-        for stack in temp_stack_items:
+        for stack in self.state.stack_items:
             if stack['id'] == stack_id:
                 stack['viewers'].remove(viewer_item)
                 break
 
-        self.stack_items = []
-        self.stack_items = temp_stack_items
+        # self.state.stack_items = []
+        # self.state.stack_items = temp_stack_items
 
     def vue_on_selected_tab_changed(self, *args):
         print(args)
 
     def _on_data_added(self, msg):
-        self.data_items = self.data_items + [
+        self.state.data_items.append(
             {
                 'id': str(uuid.uuid4()),
                 'name': msg.data.label,
@@ -232,8 +312,7 @@ class Application(TemplateMixin):
                     # {'id': 3, 'name': 'Chrome : app'},
                     # {'id': 4, 'name': 'Webstorm : app'},
                 ],
-            }
-        ]
+            })
 
     def _create_stack_item(self, container='gl-stack', children=None,
                            viewers=None):
@@ -280,9 +359,7 @@ class Application(TemplateMixin):
             viewers=[new_viewer_item])
 
         # Add viewer locally
-        self.stack_items = self.stack_items + [
-            new_stack_item
-        ]
+        self.state.stack_items.append(new_stack_item)
 
         # Store the glupyter viewer object so we can access the add and remove
         #  data methods in the future
@@ -304,9 +381,9 @@ class Application(TemplateMixin):
         with open(path, 'r') as f:
             config = yaml.safe_load(f)
 
-        settings = {k: v for k, v in self.settings.items()}
+        settings = {k: v for k, v in self.state.settings.items()}
         settings.update(config.get('settings'))
-        self.settings = settings
+        self.state.settings = settings
 
         def compose_viewer_area(viewer_area_items):
             stack_items = []
@@ -344,22 +421,22 @@ class Application(TemplateMixin):
 
         if config.get('viewer_area') is not None:
             stack_items = compose_viewer_area(config.get('viewer_area'))
-            self.stack_items = self.stack_items + stack_items
+            self.state.stack_items.extend(stack_items)
 
         # Add the toolbar item filter to the toolbar component
         for name in config.get('toolbar', []):
             tool = tool_registry.members.get(name)(session=self.session)
 
-            self.tool_items = self.tool_items + [{
+            self.state.tool_items.append({
                 'name': name,
                 'widget': tool
-            }]
+            })
 
         for name in config.get('tray', []):
             tray = tray_registry.members.get(
                 name).get('cls')(session=self.session)
 
-            self.tray_items = self.tray_items + [{
+            self.state.tray_items.append({
                 'name': name,
                 'widget': tray
-            }]
+            })

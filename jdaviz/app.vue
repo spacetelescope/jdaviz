@@ -2,24 +2,24 @@
   <v-app id="web-app">
     <v-app-bar color="white" class="elevation-1" dense app absolute clipped-right>
       <!-- <v-toolbar-items> -->
-      <jupyter-widget :widget="item.widget" v-for="item in tool_items" :key="item.name"></jupyter-widget>
+      <jupyter-widget :widget="item.widget" v-for="item in state.tool_items" :key="item.name"></jupyter-widget>
       <!-- </v-toolbar-items> -->
       <v-spacer></v-spacer>
       <!-- <v-divider vertical></v-divider> -->
       <v-toolbar-items>
-        <v-btn icon @click="drawer = !drawer">
-          <v-icon v-if="drawer">mdi-toy-brick-remove</v-icon>
+        <v-btn icon @click="state.drawer = !state.drawer">
+          <v-icon v-if="state.drawer">mdi-toy-brick-remove</v-icon>
           <v-icon v-else>mdi-toy-brick-plus</v-icon>
         </v-btn>
       </v-toolbar-items>
     </v-app-bar>
 
     <v-content
-      :style="checkNotebookContext() ? 'height: ' + settings.context.notebook.max_height : ''"
+      :style="checkNotebookContext() ? 'height: ' + state.settings.context.notebook.max_height : ''"
     >
       <v-container class="fill-height pa-0" fluid>
         <!-- <v-row align="center" justify="center" class="fill-height pa-0 ma-0" style="width: 100%">
-        <v-col cols="12" class="fill-height pa-0 ma-0" style="width: 100%">-->
+        <v-col cols="12" class="fill-height pa-0 ma-0" style="width: 100%"> -->
         <splitpanes class="default-theme" @resize="relayout">
           <pane size="80">
             <v-card tile class="ma-2" style="height: calc(100% - 16px)">
@@ -27,14 +27,14 @@
                 @stateChanged="consle.log($event)"
                 :style="checkNotebookContext() ? 'height: 100%;' : 'height: calc(100vh - 64px)'"
                 @selection-changed="consle.log($event)"
-                :has-headers="settings.visible.tab_headers"
+                :has-headers="state.settings.visible.tab_headers"
               >
                 <gl-row :closable="false">
                   <g-viewer-tab
-                    v-for="(stack, index) in stack_items"
+                    v-for="(stack, index) in state.stack_items"
                     :stack="stack"
                     :key="index"
-                    :data-items="data_items"
+                    :data-items="state.data_items"
                     @resize="relayout"
                     @destroy="remove_component"
                     @data-item-selected="data_item_selected($event)"
@@ -43,7 +43,7 @@
               </golden-layout>
             </v-card>
           </pane>
-          <pane size="20" v-if="drawer">
+          <pane size="20" v-if="state.drawer">
             <splitpanes horizontal class="elevation-2">
               <pane>
                 <v-card tile class="ma-2" style="height: calc(100% - 16px)">
@@ -56,7 +56,7 @@
                       :closable="false"
                     >
                       <gl-component
-                        v-for="(tray, index) in tray_items"
+                        v-for="(tray, index) in state.tray_items"
                         :key="index"
                         :title="tray.name"
                       >
@@ -70,7 +70,7 @@
           </pane>
         </splitpanes>
         <!-- </v-col>
-        </v-row>-->
+        </v-row> -->
       </v-container>
     </v-content>
   </v-app>
