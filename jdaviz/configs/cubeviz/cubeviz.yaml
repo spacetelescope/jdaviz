@@ -10,19 +10,20 @@ toolbar:
   - g-subset-tools
   - g-gaussian-smooth
   - g-collapse
+  - g-unified-slider
 viewer_area:
   - container: col
     children:
       - container: row
         viewers:
           - name: Flux
-            plot: g-image-viewer
+            plot: g-cubeviz-image-viewer
             reference: flux-viewer
           - name: Uncertainty
-            plot: g-image-viewer
+            plot: g-cubeviz-image-viewer
             reference: uncert-viewer
           - name: Mask
-            plot: g-image-viewer
+            plot: g-cubeviz-image-viewer
             reference: mask-viewer
       - container: row
         viewers:
