@@ -22,7 +22,7 @@ from .core.template_mixin import TemplateMixin
 from .utils import load_template
 from glue_jupyter.state_traitlets_helpers import GlueState
 from glue.core.state_objects import State
-from glue.external.echo import CallbackProperty
+from glue.external.echo import CallbackProperty, ListCallbackProperty, DictCallbackProperty
 
 
 __all__ = ['Application']
@@ -37,7 +37,7 @@ class ApplicationState(State):
     drawer = CallbackProperty(
         False, docstring="State of the plugins drawer.")
 
-    settings = CallbackProperty({
+    settings = DictCallbackProperty({
         'visible': {
             'menu_bar': True,
             'toolbar': True,
@@ -53,18 +53,18 @@ class ApplicationState(State):
         }
     }, docstring="Top-level application settings.")
 
-    data_items = CallbackProperty(
+    data_items = ListCallbackProperty(
         [], docstring="List of data items parsed from the Glue data "
                       "collection.")
 
-    tool_items = CallbackProperty(
+    tool_items = ListCallbackProperty(
         [], docstring="Collection of toolbar items displayed in the "
                       "application.")
 
-    tray_items = CallbackProperty(
+    tray_items = ListCallbackProperty(
         [], docstring="List of plugins displayed in the sidebar tray area.")
 
-    stack_items = CallbackProperty(
+    stack_items = ListCallbackProperty(
         [], docstring="Nested collection of viewers constructed to support the"
                       "Golden Layout viewer area.")
 
@@ -303,39 +303,50 @@ class Application(TemplateMixin):
 
     def _on_data_added(self, msg):
         self.state.data_items.append(
+            DictCallbackProperty(
             {
                 'id': str(uuid.uuid4()),
                 'name': msg.data.label,
                 'locked': False,  # not bool(self.selected_viewer_item),
-                'children': [
+                'children': ListCallbackProperty([
                     # {'id': 2, 'name': 'Calendar : app'},
                     # {'id': 3, 'name': 'Chrome : app'},
                     # {'id': 4, 'name': 'Webstorm : app'},
-                ],
-            })
+                ]),
+            }))
 
     def _create_stack_item(self, container='gl-stack', children=None,
                            viewers=None):
-        return {
+        if children is not None and not isinstance(children, ListCallbackProperty):
+            children = ListCallbackProperty(children)
+        else:
+            children = ListCallbackProperty([])
+
+        if viewers is not None and not isinstance(viewers, ListCallbackProperty):
+            viewers = ListCallbackProperty(viewers)
+        else:
+            viewers = ListCallbackProperty([])
+
+        return DictCallbackProperty({
             'id': str(uuid.uuid4()),
             'container': container,
-            'children': children if children is not None else [],
-            'viewers': viewers if viewers is not None else []}
+            'children': children,
+            'viewers': viewers})
 
     def _create_viewer_item(self, name, widget, tools, layer_options,
                             viewer_options):
         tools.borderless = True
         tools.tile = True
 
-        return {
+        return DictCallbackProperty({
             'id': str(uuid.uuid4()),
             'widget': widget,
             'name': "Slider Test",
             'tools': tools,
             'layer_options': layer_options,
             'viewer_options': viewer_options,
-            'selected_data_items': [],
-            'collapse': True}
+            'selected_data_items': ListCallbackProperty([]),
+            'collapse': True})
 
     def _on_new_viewer(self, msg):
         view = self._application_handler.new_data_viewer(
