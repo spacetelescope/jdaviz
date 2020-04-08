@@ -110,3 +110,14 @@ class RemoveItemMessage(Message):
     @property
     def item(self):
         return self._item
+
+
+class AddDataMessage(Message):
+    def __init__(self, data, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self._data = data
+
+    @property
+    def data(self):
+        return self._data
