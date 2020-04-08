@@ -1,21 +1,22 @@
 import os
 import uuid
 
+import ipyvuetify as v
 import ipywidgets as w
 import numpy as np
 import pkg_resources
 import yaml
-from glue.core import BaseData
-from glue.core.autolinking import find_possible_links
-from glue.core.message import DataCollectionAddMessage
 from glue_jupyter.app import JupyterApplication
 from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
 from traitlets import Bool, Dict, Int, List, ObjectName, Unicode, observe
 
-import ipyvuetify as v
+from glue.core import BaseData
+from glue.core.autolinking import find_possible_links
+from glue.core.message import DataCollectionAddMessage
 
-from .core.events import AddViewerMessage, LoadDataMessage, NewViewerMessage
+from .core.events import (AddDataMessage, AddViewerMessage, LoadDataMessage,
+                          NewViewerMessage)
 from .core.registries import tool_registry, tray_registry, viewer_registry
 from .core.template_mixin import TemplateMixin
 from .utils import load_template
@@ -111,6 +112,8 @@ class Application(TemplateMixin):
         # Attempt to link the data
         links = find_possible_links(self.data_collection)
 
+        self.data_collection.add_link(links['Astronomy WCS'])
+
     def viewers(self, reference):
         return self._viewer_references.get(reference)
 
@@ -187,6 +190,9 @@ class Application(TemplateMixin):
             [data] = [x for x in self.data_collection if x.label == label]
 
             active_viewer.add_data(data)
+
+            add_data_message = AddDataMessage(data, sender=self)
+            self.hub.broadcast(add_data_message)
 
         # Remove any deselected data objects from viewer
         viewer_data = [layer_state.layer
