@@ -4,5 +4,5 @@ from glue_jupyter.bqplot.image import BqplotImageView
 from jdaviz.core.registries import viewer_registry
 
 
-# viewers.add("profile-1d", label="Profile 1D", cls=BqplotProfileView)
-# viewers.add("imshow", label="Image 2D", cls=BqplotImageView)
+viewer_registry.add("g-profile-viewer", label="Profile 1D", cls=BqplotProfileView)
+viewer_registry.add("g-image-viewer", label="Image 2D", cls=BqplotImageView)
