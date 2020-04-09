@@ -21,12 +21,6 @@ Application
 .. automodapi:: jdaviz.app
    :no-inheritance-diagram:
 
-Components
-==========
-
-.. automodapi:: jdaviz.components
-   :no-inheritance-diagram:
-
 Configurations
 ==============
 
