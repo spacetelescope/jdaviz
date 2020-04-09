@@ -2,7 +2,8 @@ from glue.core.message import Message
 
 __all__ = ['NewViewerMessage', 'AddViewerMessage', 'LoadDataMessage',
            'DataSelectedMessage', 'ViewerSelectedMessage',
-           'RemoveStackMessage', 'SplitStackMessage', 'RemoveItemMessage']
+           'RemoveStackMessage', 'SplitStackMessage', 'RemoveItemMessage',
+           'AddDataMessage']
 
 
 class NewViewerMessage(Message):
@@ -35,10 +36,6 @@ class AddViewerMessage(Message):
     @property
     def viewer(self):
         return self._viewer
-
-    @property
-    def area(self):
-        return self._area
 
 
 class LoadDataMessage(Message):
@@ -113,11 +110,16 @@ class RemoveItemMessage(Message):
 
 
 class AddDataMessage(Message):
-    def __init__(self, data, *args, **kwargs):
+    def __init__(self, data, viewer, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self._data = data
+        self._viewer = viewer
 
     @property
     def data(self):
         return self._data
+
+    @property
+    def viewer(self):
+        return self._viewer

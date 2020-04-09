@@ -191,7 +191,7 @@ class Application(TemplateMixin):
 
             active_viewer.add_data(data)
 
-            add_data_message = AddDataMessage(data, sender=self)
+            add_data_message = AddDataMessage(data, active_viewer, sender=self)
             self.hub.broadcast(add_data_message)
 
         # Remove any deselected data objects from viewer

@@ -2,12 +2,13 @@ import os
 
 from traitlets import Bool, Float, Unicode, observe
 
-from jdaviz.core.events import AddDataMessage
-from jdaviz.core.registries import tool_registry
+from jdaviz.core.events import AddDataMessage, AddViewerMessage
+from jdaviz.core.registries import tool_registry, viewer_registry
 from jdaviz.core.template_mixin import TemplateMixin
 from jdaviz.utils import load_template
 
-from ..events import ChangeSliderMessage
+from glue.external.echo import add_callback, remove_callback, delay_callback
+from glue_jupyter.bqplot.image import BqplotImageView
 
 __all__ = ['UnifiedSlider']
 
@@ -22,6 +23,8 @@ class UnifiedSlider(TemplateMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self._watched_viewers = []
+
         # Listen for add data events. **Note** this should only be used in
         #  cases where there is a specific type of data expected and arbitrary
         #  viewers are not expected to be created. That is, the expected data
@@ -30,10 +33,22 @@ class UnifiedSlider(TemplateMixin):
                                    handler=self._on_data_added)
 
     def _on_data_added(self, msg):
-        if len(msg.data.shape) == 3:
+        if len(msg.data.shape) == 3 and \
+                isinstance(msg.viewer, BqplotImageView):
             self.max_value = msg.data.shape[0]
 
-    def vue_on_slider_updated(self, value):
-        change_slider_message = ChangeSliderMessage(
-            value, sender=self)
-        self.hub.broadcast(change_slider_message)
+            self._watched_viewers.append(msg.viewer)
+
+            # remove_callback(self._watched_viewer.state, 'slices',
+            #                 self._slider_value_updated)
+
+            add_callback(msg.viewer.state, 'slices',
+                         self._slider_value_updated)
+
+    def _slider_value_updated(self, value):
+        self.slider = value[0]
+
+    @observe('slider')
+    def _on_slider_updated(self, event):
+        for viewer in self._watched_viewers:
+            viewer.state.slices = (event['new'], 0, 0)

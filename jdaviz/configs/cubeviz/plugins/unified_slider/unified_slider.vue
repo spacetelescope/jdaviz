@@ -7,7 +7,6 @@
       :max="max_value"
       :min="min_value"
       hide-details
-      @end="on_slider_updated"
       style="max-width: 33%; min-width: 300px"
       label="Slice"
     >
@@ -18,7 +17,6 @@
           hide-details
           single-line
           type="number"
-          @change="on_slider_updated"
           filled
           dense
         ></v-text-field>
@@ -26,3 +24,7 @@
     </v-slider>
   <!-- </v-toolbar-items> -->
 </template>
+
+<style lang="sass">
+  $slider-transition: none !important
+</style>

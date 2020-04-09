@@ -17,13 +17,13 @@ viewer_area:
       - container: row
         viewers:
           - name: Flux
-            plot: g-cubeviz-image-viewer
+            plot: g-image-viewer
             reference: flux-viewer
           - name: Uncertainty
-            plot: g-cubeviz-image-viewer
+            plot: g-image-viewer
             reference: uncert-viewer
           - name: Mask
-            plot: g-cubeviz-image-viewer
+            plot: g-image-viewer
             reference: mask-viewer
       - container: row
         viewers:
