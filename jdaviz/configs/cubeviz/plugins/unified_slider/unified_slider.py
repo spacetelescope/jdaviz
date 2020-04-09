@@ -30,7 +30,8 @@ class UnifiedSlider(TemplateMixin):
                                    handler=self._on_data_added)
 
     def _on_data_added(self, msg):
-        self.max_value = msg.data.shape[0]
+        if len(msg.data.shape) == 3:
+            self.max_value = msg.data.shape[0]
 
     def vue_on_slider_updated(self, value):
         change_slider_message = ChangeSliderMessage(

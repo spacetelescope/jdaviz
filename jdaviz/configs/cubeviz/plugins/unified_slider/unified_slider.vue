@@ -19,8 +19,7 @@
           single-line
           type="number"
           @change="on_slider_updated"
-          style="width: 60px"
-          outlined
+          filled
           dense
         ></v-text-field>
       </template>
