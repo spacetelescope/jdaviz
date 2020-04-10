@@ -72,30 +72,7 @@ class ApplicationState(State):
 class Application(TemplateMixin):
     _metadata = Dict({'mount_id': 'content'}).tag(sync=True)
 
-    # drawer = Bool(False).tag(sync=True)
-
-    # settings = Dict({
-    #     'visible': {
-    #         'menu_bar': True,
-    #         'toolbar': True,
-    #         'tray': True,
-    #         'tab_headers': True,
-    #     },
-    #     'context': {
-    #         'notebook': {
-    #             'max_height': '600px'
-    #         }
-    #     },
-    #     'layout': {
-    #     }
-    # }).tag(sync=True)
-
-    # data_items = List([]).tag(sync=True)
-    # tool_items = List([]).tag(sync=True, **w.widget_serialization)
-    # tray_items = List([]).tag(sync=True, **w.widget_serialization)
-    # stack_items = List([]).tag(sync=True, **w.widget_serialization)
-
-    state = GlueState().tag(sync=True)  #, **w.widget_serialization)
+    state = GlueState().tag(sync=True)
 
     template = load_template("app.vue", __file__).tag(sync=True)
 
