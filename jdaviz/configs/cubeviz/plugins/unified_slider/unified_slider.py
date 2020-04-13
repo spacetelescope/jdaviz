@@ -19,6 +19,7 @@ class UnifiedSlider(TemplateMixin):
     slider = Float().tag(sync=True)
     min_value = Float(0).tag(sync=True)
     max_value = Float(100).tag(sync=True)
+    linked = Bool(True).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -37,13 +38,11 @@ class UnifiedSlider(TemplateMixin):
                 isinstance(msg.viewer, BqplotImageView):
             self.max_value = msg.data.shape[0]
 
-            self._watched_viewers.append(msg.viewer)
+            if msg.viewer not in self._watched_viewers:
+                self._watched_viewers.append(msg.viewer)
 
-            # remove_callback(self._watched_viewer.state, 'slices',
-            #                 self._slider_value_updated)
-
-            add_callback(msg.viewer.state, 'slices',
-                         self._slider_value_updated)
+                add_callback(msg.viewer.state, 'slices',
+                             self._slider_value_updated)
 
     def _slider_value_updated(self, value):
         self.slider = value[0]

@@ -1,6 +1,7 @@
 <template>
   <!-- <v-toolbar-items> -->
-    <!-- <v-divider vertical></v-divider> -->
+  <!-- <v-divider vertical></v-divider> -->
+  <div>
     <v-slider
       v-model="slider"
       class="align-center"
@@ -22,6 +23,8 @@
         ></v-text-field>
       </template>
     </v-slider>
+    <v-checkbox v-model="linked" label="Linked"></v-checkbox>
+  </div>
   <!-- </v-toolbar-items> -->
 </template>
 
