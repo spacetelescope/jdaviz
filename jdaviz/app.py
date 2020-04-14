@@ -53,19 +53,15 @@ class ApplicationState(State):
         }
     }, docstring="Top-level application settings.")
 
-    data_items = ListCallbackProperty(
-        [], docstring="List of data items parsed from the Glue data "
+    data_items = ListCallbackProperty(docstring="List of data items parsed from the Glue data "
                       "collection.")
 
-    tool_items = ListCallbackProperty(
-        [], docstring="Collection of toolbar items displayed in the "
+    tool_items = ListCallbackProperty(docstring="Collection of toolbar items displayed in the "
                       "application.")
 
-    tray_items = ListCallbackProperty(
-        [], docstring="List of plugins displayed in the sidebar tray area.")
+    tray_items = ListCallbackProperty(docstring="List of plugins displayed in the sidebar tray area.")
 
-    stack_items = ListCallbackProperty(
-        [], docstring="Nested collection of viewers constructed to support the"
+    stack_items = ListCallbackProperty(docstring="Nested collection of viewers constructed to support the"
                       "Golden Layout viewer area.")
 
 
@@ -280,42 +276,41 @@ class Application(TemplateMixin):
 
     def _on_data_added(self, msg):
         self.state.data_items.append(
-            DictCallbackProperty(
             {
                 'id': str(uuid.uuid4()),
                 'name': msg.data.label,
                 'locked': False,  # not bool(self.selected_viewer_item),
-                'children': ListCallbackProperty([
+                'children': [
                     # {'id': 2, 'name': 'Calendar : app'},
                     # {'id': 3, 'name': 'Chrome : app'},
                     # {'id': 4, 'name': 'Webstorm : app'},
-                ]),
-            }))
+                ],
+            })
 
     def _create_stack_item(self, container='gl-stack', children=None,
                            viewers=None):
-        if children is not None and not isinstance(children, ListCallbackProperty):
-            children = ListCallbackProperty(children)
+        if children is not None:# and not isinstance(children, ListCallbackProperty):
+            children = children #ListCallbackProperty(children)
         else:
-            children = ListCallbackProperty([])
+            children = [] #ListCallbackProperty([])
 
-        if viewers is not None and not isinstance(viewers, ListCallbackProperty):
-            viewers = ListCallbackProperty(viewers)
+        if viewers is not None:# and not isinstance(viewers, ListCallbackProperty):
+            viewers = viewers #ListCallbackProperty(viewers)
         else:
-            viewers = ListCallbackProperty([])
+            viewers = [] #ListCallbackProperty([])
 
-        return DictCallbackProperty({
+        return {
             'id': str(uuid.uuid4()),
             'container': container,
             'children': children,
-            'viewers': viewers})
+            'viewers': viewers}
 
     def _create_viewer_item(self, name, widget, tools, layer_options,
                             viewer_options):
         tools.borderless = True
         tools.tile = True
 
-        return DictCallbackProperty({
+        return {
             'id': str(uuid.uuid4()),
             'widget': widget,
             'name': "Slider Test",
@@ -323,7 +318,7 @@ class Application(TemplateMixin):
             'layer_options': layer_options,
             'viewer_options': viewer_options,
             'selected_data_items': ListCallbackProperty([]),
-            'collapse': True})
+            'collapse': True}
 
     def _on_new_viewer(self, msg):
         view = self._application_handler.new_data_viewer(
@@ -409,7 +404,8 @@ class Application(TemplateMixin):
 
         if config.get('viewer_area') is not None:
             stack_items = compose_viewer_area(config.get('viewer_area'))
-            self.state.stack_items.extend(stack_items)
+            # print(stack_items)
+            self.state.stack_items.extend(['test'])
 
         # Add the toolbar item filter to the toolbar component
         for name in config.get('toolbar', []):
