@@ -33,6 +33,17 @@ class UnifiedSlider(TemplateMixin):
         self.session.hub.subscribe(self, AddDataMessage,
                                    handler=self._on_data_added)
 
+    @observe("linked")
+    def _on_linked_changed(self, event):
+        for viewer in self._watched_viewers:
+
+            if not event['new']:
+                remove_callback(viewer.state, 'slices',
+                                self._slider_value_updated)
+            else:
+                add_callback(viewer.state, 'slices',
+                             self._slider_value_updated)
+
     def _on_data_added(self, msg):
         if len(msg.data.shape) == 3 and \
                 isinstance(msg.viewer, BqplotImageView):
@@ -49,5 +60,6 @@ class UnifiedSlider(TemplateMixin):
 
     @observe('slider')
     def _on_slider_updated(self, event):
-        for viewer in self._watched_viewers:
-            viewer.state.slices = (event['new'], 0, 0)
+        if self.linked:
+            for viewer in self._watched_viewers:
+                viewer.state.slices = (event['new'], 0, 0)
