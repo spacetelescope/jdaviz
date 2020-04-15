@@ -31,8 +31,8 @@ def test_fitting_backend():
 
     parameters_expected = np.array([1.0104705, 4.58956282, 0.19590464, 2.39892026,
                                     5.49867754, 0.10834472, -1.66902953, 8.19714439,
-                                    0.09535613, 3.99125545])*u.Jy
+                                    0.09535613, 3.99125545])
 
-    assert np.allclose(fm.parameters, parameters_expected.value, atol=1e-5)
+    assert np.allclose(fm.parameters, parameters_expected, atol=1e-5)
 
 
