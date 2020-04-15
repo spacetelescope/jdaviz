@@ -28,7 +28,12 @@ def fit_model_to_spectrum(spectrum, component_list, expression):
     :class:`specutils.spectrum.Spectrum1D`
         The realization of the fitted model.
     """
-    # Initial guess for the fit
+    # Initial guess for the fit.
+    # The expression parser needs the subcomponents stored in a dict,
+    # with keys taken from their names. This mechanism can be augmented
+    # with status feedback to the UI (see specviz/specviz/plugins/model_editor/models.py
+    # around lines 200-230)
+
     model_dict = {}
     for component in component_list:
         model_dict[component.name] = component
