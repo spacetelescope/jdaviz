@@ -5,7 +5,7 @@ import astropy.modeling.models as models
 
 from specutils.spectra import Spectrum1D
 
-from jdaviz.configs.cubeviz.plugins import fitting_backend as fb
+from jdaviz.configs.default.plugins.model_fitting import fitting_backend as fb
 
 
 def test_fitting_backend():
