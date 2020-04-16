@@ -14,25 +14,27 @@ def fit_model_to_spectrum(spectrum, component_list, expression):
     ----------
     spectrum : :class:`specutils.spectrum.Spectrum1D`
         The spectrum to be fitted.
-    component_list : lit
+    component_list : list
         Spectral model subcomponents stored in a list.
         Their `name` attribute must be unique.
     expression : str
         The arithmetic expression that combines together
-        the model subcomponents.
+        the model subcomponents. The subcomponents are
+        refered via their 'name' attribute.
 
     Returns
     -------
     :class:`astropy.modeling.CompoundModel`
-        The realization of the fitted model.
+        The model resulting from the fit.
     :class:`specutils.spectrum.Spectrum1D`
-        The realization of the fitted model.
+        The realization of the fitted model as a spectrum.
     """
     # Initial guess for the fit.
     # The expression parser needs the subcomponents stored in a dict,
     # with keys taken from their names. This mechanism can be augmented
-    # with status feedback to the UI (see specviz/specviz/plugins/model_editor/models.py
-    # around lines 200-230)
+    # with status feedback to the UI. This requires the code in here to be
+    # refactored to provide the necessary hooks for the GUI (see
+    # specviz/specviz/plugins/model_editor/models.py around lines 200-230).
 
     model_dict = {}
     for component in component_list:
