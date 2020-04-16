@@ -68,9 +68,36 @@
         <v-expansion-panel
           v-for="(item, i) in component_models"
         >
-          <v-expansion-panel-header>{{ item.id }}</v-expansion-panel-header>
+          <v-expansion-panel-header>
+            <v-row n-gutters>
+              <v-col cols="4">{{ item.id }}</v-col>
+              <v-col cols="8" class="text--secondary">
+                <v-fade-transition leave-absolute>
+                  <span v-if="open">Enter values to initialize model fit</span>
+                  <v-row 
+                    v-else 
+                    no-gutters 
+                    style="width: 100%"
+                  >
+                    <v-col v-for="(param, i) in item.params">
+                      {{ param.name }} : {{ param.value || 'Not Set' }}
+                    </v-col>
+                  </v-row>
+                </v-fade-transition>
+              </v-col>
+            </v-row>
+          </v-expansion-panel-header>
           <v-expansion-panel-content>
-            TESTING
+            <v-row
+              justify="space-around"
+              no-gutters
+            >
+              <v-col
+                v-for="(param) in item.params"
+              >
+                {{ param.name }}
+              </v-col>
+            </v-row>
           </v-expansion-panel-content>
         </v-expansion-panel>
       </v-expansion-panels>
