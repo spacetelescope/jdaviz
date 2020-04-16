@@ -27,7 +27,11 @@ class ModelFitting(TemplateMixin):
     dialog = Bool(False).tag(sync=True)
     template = load_template("model_fitting.vue", __file__).tag(sync=True)
     dc_items = List([]).tag(sync=True)
+
     temp_name = Unicode().tag(sync=True)
+    temp_model = Unicode().tag(sync=True)
+    component_models = List([]).tag(sync=True)
+
     # Hard coding this for now, but will want to pull from a config file
     available_models = List(["Gaussian1D", "Const1D"]).tag(sync=True)
 
@@ -40,7 +44,7 @@ class ModelFitting(TemplateMixin):
                           handler=self._on_data_updated)
 
         self._selected_data = None
-        self._selected_models = Dict({}).tag(sync=True)
+        self.component_models = [{"id": "Example", "model_type": "Gaussian1D"}]
 
     def _on_data_updated(self, msg):
        self.dc_items = [x.label for x in self.data_collection]
@@ -51,12 +55,11 @@ class ModelFitting(TemplateMixin):
 
     def vue_model_selected(self, event):
         # Add the model selected to the list of models
-        #self._selected_models[event.name] = {"model_type" = event.model}
-        pass
+        self.temp_model = event
 
     def vue_add_model(self, event):
         # Add the selected model and input string ID to the list of models
-        pass
+        self.component_models.append({"id": self.temp_name, "model_type": self.temp_model})
 
     def vue_model_fitting(self, *args, **kwargs):
         # This will be where the model fitting code is run

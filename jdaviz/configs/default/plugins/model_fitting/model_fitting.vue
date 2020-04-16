@@ -64,6 +64,16 @@
       <v-divider></v-divider>
 
       <v-card-subtitle>Model Parameters<v-card-subtitle>
+      <v-expansion-panels>
+        <v-expansion-panel
+          v-for="(item, i) in component_models"
+        >
+          <v-expansion-panel-header>{{ item.id }}</v-expansion-panel-header>
+          <v-expansion-panel-content>
+            TESTING
+          </v-expansion-panel-content>
+        </v-expansion-panel>
+      </v-expansion-panels>
       <v-divider></v-divider>
 
       <v-card-actions>
