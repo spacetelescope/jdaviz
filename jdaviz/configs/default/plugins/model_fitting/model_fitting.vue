@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="dialog" persistent max-width="450" @keydown.stop="">
+  <v-dialog v-model="dialog" persistent max-width="500" @keydown.stop="">
     <template v-slot:activator="{ on: dialog }">
       <v-tooltip bottom>
         <template v-slot:activator="{ on: tooltip }">
@@ -23,6 +23,7 @@
                 @change="data_selected"
                 label="Data"
                 hint="Select the data set to be fitted."
+                persistent-hint
               ></v-select>
             </v-col>
         </v-container>
@@ -31,28 +32,38 @@
 
       <v-card-text>
         <v-container>
-          <v-row>
+          <v-row
+          align="start"
+          >
             <v-col>
               <v-select
                 :items="available_models"
                 @change="model_selected"
                 label="Model"
                 hint="Select a model to fit"
+                persistent-hint
               ></v-select>
             </v-col>
             <v-col>
-              <v-text-field
-                ref="model_name"
-                label="Name for model"
-                v-model="model_name"
-                hint="A unique name for this model, to use in model equation."
-                persistent-hint
-                :rules="[() => !!model_name || 'This field is required']"
-              ></v-text-field>
+            <v-text-field
+              label="Model ID"
+              v-model="temp_name"
+              hint="A unique ID for this component model"
+              persistent-hint
+              :rules="[() => !!temp_name || 'This field is required']"
+            >
+            </v-text-field>
             </v-col>
+          </v-row>
+          <v-row
+          justify="end">
+            <v-btn color="primary" text @click="add_model">Add Model</v-btn>
           </v-row>
         </v-container>
       </v-card-text>
+      <v-divider></v-divider>
+
+      <v-card-subtitle>Model Parameters<v-card-subtitle>
       <v-divider></v-divider>
 
       <v-card-actions>
