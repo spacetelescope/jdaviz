@@ -1,29 +1,25 @@
 import os
 import uuid
 
-import ipyvuetify as v
 import ipywidgets as w
-import numpy as np
 import pkg_resources
 import yaml
-from glue_jupyter.app import JupyterApplication
-from ipygoldenlayout import GoldenLayout
-from ipysplitpanes import SplitPanes
-from traitlets import Bool, Dict, Int, List, ObjectName, Unicode, observe
-
 from glue.core import BaseData
 from glue.core.autolinking import find_possible_links
 from glue.core.message import DataCollectionAddMessage
+from glue.core.state_objects import State
+from echo import (CallbackProperty, ListCallbackProperty,
+                  DictCallbackProperty)
+from glue_jupyter.app import JupyterApplication
+from glue_jupyter.state_traitlets_helpers import GlueState
+from ipygoldenlayout import GoldenLayout
+from ipysplitpanes import SplitPanes
+from traitlets import Dict, observe, List
 
-from .core.events import (AddDataMessage, AddViewerMessage, LoadDataMessage,
-                          NewViewerMessage)
+from .core.events import LoadDataMessage, NewViewerMessage
 from .core.registries import tool_registry, tray_registry, viewer_registry
 from .core.template_mixin import TemplateMixin
 from .utils import load_template
-from glue_jupyter.state_traitlets_helpers import GlueState
-from glue.core.state_objects import State
-from glue.external.echo import CallbackProperty, ListCallbackProperty, DictCallbackProperty
-
 
 __all__ = ['Application']
 
@@ -53,16 +49,18 @@ class ApplicationState(State):
         }
     }, docstring="Top-level application settings.")
 
-    data_items = ListCallbackProperty(docstring="List of data items parsed from the Glue data "
-                      "collection.")
+    data_items = ListCallbackProperty(
+        docstring="List of data items parsed from the Glue data collection.")
 
-    tool_items = ListCallbackProperty(docstring="Collection of toolbar items displayed in the "
-                      "application.")
+    tool_items = ListCallbackProperty(
+        docstring="Collection of toolbar items displayed in the application.")
 
-    tray_items = ListCallbackProperty(docstring="List of plugins displayed in the sidebar tray area.")
+    tray_items = ListCallbackProperty(
+        docstring="List of plugins displayed in the sidebar tray area.")
 
-    stack_items = ListCallbackProperty(docstring="Nested collection of viewers constructed to support the"
-                      "Golden Layout viewer area.")
+    stack_items = ListCallbackProperty(
+        docstring="Nested collection of viewers constructed to support the "
+                  "Golden Layout viewer area.")
 
 
 class Application(TemplateMixin):
@@ -89,8 +87,7 @@ class Application(TemplateMixin):
             in pkg_resources.iter_entry_points(group='plugins')}
 
         # Create a dictionary for holding non-ipywidget viewer objects
-        self._base_viewers = {}
-        self._viewer_references = {}
+        self._viewer_store = {}
 
         # Parse configuration
         self.load_configuration(configuration)
@@ -120,46 +117,39 @@ class Application(TemplateMixin):
     def data_collection(self):
         return self._application_handler.data_collection
 
-    def vue_on_state_changed(self, *args, **kwargs):
-        print(args, kwargs)
-
     def load_data(self, path):
         self._application_handler.load_data(path)
 
         # Attempt to link the data
         links = find_possible_links(self.data_collection)
 
-        self.data_collection.add_link(links['Astronomy WCS'])
+        # self.data_collection.add_link(links['Astronomy WCS'])
 
-    def viewers(self, reference):
-        return self._viewer_references.get(reference)
+    def get_viewer(self, reference):
+        return self._viewer_by_reference(reference)
 
     def get_data(self, reference, cls=None):
-        viewer = self.viewers(reference)
+        viewer = self.get_viewer(reference)
+        cls = cls or viewer.default_class
 
-        data = [layer_state.layer
+        data = [layer_state.layer.get_object(cls=cls)
                 for layer_state in viewer.state.layers
                 if hasattr(layer_state, 'layer') and
                 isinstance(layer_state.layer, BaseData)]
 
-        if cls is not None:
-            data = [d.get_object(cls) for d in data]
-
         return data
 
-    def add_data(self, reference, data, name=""):
+    def add_data(self, reference, data, name=None):
         name = name or "New Data"
-        self.data_collection[name or "New Data"] = data
+        self.data_collection[name] = data
 
-        viewer = self.viewers(reference)
-        viewer.add_data(name)
+        viewer_item = self._viewer_item_by_reference(reference)
 
         # Enable selection of data in viewer data list
-        selected_data_items = viewer_item.get('selected_data_items')
-        viewer_item['selected_data_items'] = selected_data_items + [name]
+        viewer_item['selected_data_items'].append(name)
 
     def _viewer_by_id(self, vid):
-        return self._base_viewers.get(vid)
+        return self._viewer_store.get(vid)
 
     def _viewer_item_by_id(self, vid):
         def find_viewer_item(stack_items):
@@ -175,6 +165,11 @@ class Application(TemplateMixin):
 
         return viewer_item
 
+    def _viewer_by_reference(self, ref):
+        viewer_item = self._viewer_item_by_reference(ref)
+
+        return self._viewer_store[viewer_item['id']]
+
     def _viewer_item_by_reference(self, ref):
         def find_viewer_item(stack_items):
             for stack_item in stack_items:
@@ -189,13 +184,16 @@ class Application(TemplateMixin):
 
         return viewer_item
 
-    @observe('stack_items')
+    @observe('state.stack_items')
     def vue_relayout(self, *args, **kwargs):
         def resize(stack_items):
             for stack in stack_items:
-                for viewer in stack.get('viewers'):
-                    viewer.get('widget').layout.height = '99.9%'
-                    viewer.get('widget').layout.height = '100%'
+                for viewer_item in stack.get('viewers'):
+                    viewer_id = viewer_item['id']
+                    viewer = self._viewer_store.get(viewer_id)
+
+                    viewer.layout.height = '99.9%'
+                    viewer.layout.height = '100%'
 
                 if len(stack.get('children')) > 0:
                     resize(stack.get('children'))
@@ -203,7 +201,6 @@ class Application(TemplateMixin):
         resize(self.state.stack_items)
 
     def vue_remove_component(self, cid):
-
         def remove(stack_items):
             for stack in stack_items:
                 if stack['id'] == cid:
@@ -222,40 +219,42 @@ class Application(TemplateMixin):
         remove([x for x in self.state.stack_items])
         # self.state.stack_items = new_stack_items
 
-    def vue_data_item_selected(self, viewer, **kwargs):
-        # data_ids = event['new'].get(self.selected_viewer_item_id, [])
+    def vue_data_item_selected(self, event):
+        viewer_id, selected_items = event['id'], event['selected_items']
 
         # Find the active viewer
-        active_viewer_id = viewer.get('id')
-        active_viewer = self._base_viewers.get(active_viewer_id)
+        viewer_item = self._viewer_item_by_id(viewer_id)
+        viewer = self._viewer_by_id(viewer_id)
 
-        data_ids = viewer.get('selected_data_items', [])
+        # Update the store selected data items
+        viewer_item['selected_data_items'] = selected_items
+        data_ids = viewer_item['selected_data_items']
 
         active_data_labels = []
 
         # Include any selected data in the viewer
         for data_id in data_ids:
-            [label] = [x['name']
-                       for x in self.state.data_items if x['id'] == data_id]
+            [label] = [x['name'] for x in self.state.data_items
+                       if x['id'] == data_id]
 
             active_data_labels.append(label)
 
             [data] = [x for x in self.data_collection if x.label == label]
 
-            active_viewer.add_data(data)
+            viewer.add_data(data)
 
             add_data_message = AddDataMessage(data, active_viewer, sender=self)
             self.hub.broadcast(add_data_message)
 
         # Remove any deselected data objects from viewer
         viewer_data = [layer_state.layer
-                       for layer_state in active_viewer.state.layers
+                       for layer_state in viewer.state.layers
                        if hasattr(layer_state, 'layer') and
                        isinstance(layer_state.layer, BaseData)]
 
         for data in viewer_data:
             if data.label not in active_data_labels:
-                active_viewer.remove_data(data)
+                viewer.remove_data(data)
 
     def vue_remove_viewer(self, *args):
         viewer_id, stack_id = args[0]
@@ -271,33 +270,17 @@ class Application(TemplateMixin):
         # self.state.stack_items = []
         # self.state.stack_items = temp_stack_items
 
-    def vue_on_selected_tab_changed(self, *args):
-        print(args)
-
     def _on_data_added(self, msg):
-        self.state.data_items.append(
-            {
-                'id': str(uuid.uuid4()),
-                'name': msg.data.label,
-                'locked': False,  # not bool(self.selected_viewer_item),
-                'children': [
-                    # {'id': 2, 'name': 'Calendar : app'},
-                    # {'id': 3, 'name': 'Chrome : app'},
-                    # {'id': 4, 'name': 'Webstorm : app'},
-                ],
-            })
+        self.state.data_items.append({
+            'id': str(uuid.uuid4()),
+            'name': msg.data.label,
+            'locked': False,
+            'children': []})
 
-    def _create_stack_item(self, container='gl-stack', children=None,
-                           viewers=None):
-        if children is not None:# and not isinstance(children, ListCallbackProperty):
-            children = children #ListCallbackProperty(children)
-        else:
-            children = [] #ListCallbackProperty([])
-
-        if viewers is not None:# and not isinstance(viewers, ListCallbackProperty):
-            viewers = viewers #ListCallbackProperty(viewers)
-        else:
-            viewers = [] #ListCallbackProperty([])
+    @staticmethod
+    def _create_stack_item(container='gl-stack', children=None, viewers=None):
+        children = [] if children is None else children
+        viewers = [] if viewers is None else viewers
 
         return {
             'id': str(uuid.uuid4()),
@@ -305,40 +288,37 @@ class Application(TemplateMixin):
             'children': children,
             'viewers': viewers}
 
-    def _create_viewer_item(self, name, widget, tools, layer_options,
-                            viewer_options):
+    @staticmethod
+    def _create_viewer_item(viewer, name=None, reference=None):
+        tools = viewer.toolbar_selection_tools
         tools.borderless = True
         tools.tile = True
 
         return {
             'id': str(uuid.uuid4()),
-            'widget': widget,
-            'name': "Slider Test",
-            'tools': tools,
-            'layer_options': layer_options,
-            'viewer_options': viewer_options,
-            'selected_data_items': ListCallbackProperty([]),
-            'collapse': True}
+            'name': name or "Unnamed Viewer",
+            'widget': "IPY_MODEL_" + viewer.figure_widget.model_id,
+            'tools': "IPY_MODEL_" + viewer.toolbar_selection_tools.model_id,
+            'layer_options': "IPY_MODEL_" + viewer.layer_options.model_id,
+            'viewer_options': "IPY_MODEL_" + viewer.viewer_options.model_id,
+            'selected_data_items': [],
+            'collapse': False,
+            'reference': reference}
 
     def _on_new_viewer(self, msg):
-        view = self._application_handler.new_data_viewer(
+        viewer = self._application_handler.new_data_viewer(
             msg.cls, data=msg.data, show=False)
 
         if msg.x_attr is not None:
             x = msg.data.id[msg.x_attr]
-            view.state.x_att = x
+            viewer.state.x_att = x
 
         # Create the viewer item dictionary
         new_viewer_item = self._create_viewer_item(
-            name="Slider Test",
-            widget=view.figure_widget,
-            tools=view.toolbar_selection_tools,
-            layer_options=view.layer_options,
-            viewer_options=view.viewer_options)
+            viewer=viewer)
 
         new_stack_item = self._create_stack_item(
             container='gl-stack',
-            children=[],
             viewers=[new_viewer_item])
 
         # Add viewer locally
@@ -346,9 +326,9 @@ class Application(TemplateMixin):
 
         # Store the glupyter viewer object so we can access the add and remove
         #  data methods in the future
-        self._base_viewers[new_viewer_item['id']] = view
+        self._viewer_store[new_viewer_item['id']] = viewer
 
-        return view
+        return viewer
 
     def load_configuration(self, path):
         # Parse the default configuration file
@@ -377,35 +357,30 @@ class Application(TemplateMixin):
 
                 stack_items.append(stack_item)
 
-                for viewer in item.get('viewers', []):
-                    view = self._application_handler.new_data_viewer(
-                        viewer_registry.members.get(viewer['plot'])['cls'],
+                for view in item.get('viewers', []):
+                    viewer = self._application_handler.new_data_viewer(
+                        viewer_registry.members.get(view['plot'])['cls'],
                         data=None, show=False)
 
                     viewer_item = self._create_viewer_item(
-                        name=viewer.get('name'),
-                        widget=view.figure_widget,
-                        tools=view.toolbar_selection_tools,
-                        layer_options=view.layer_options,
-                        viewer_options=view.viewer_options)
+                        name=view.get('name'),
+                        viewer=viewer,
+                        reference=view.get('reference'))
 
-                    self._base_viewers[viewer_item['id']] = view
-
-                    if 'reference' in viewer:
-                        self._viewer_references[viewer['reference']] = view
+                    self._viewer_store[viewer_item['id']] = viewer
 
                     stack_item.get('viewers').append(viewer_item)
 
                 if len(item.get('children', [])) > 0:
-                    child_stack_items = compose_viewer_area(item.get('children'))
+                    child_stack_items = compose_viewer_area(
+                        item.get('children'))
                     stack_item['children'] = child_stack_items
 
             return stack_items
 
         if config.get('viewer_area') is not None:
             stack_items = compose_viewer_area(config.get('viewer_area'))
-            # print(stack_items)
-            self.state.stack_items.extend(['test'])
+            self.state.stack_items.extend(stack_items)
 
         # Add the toolbar item filter to the toolbar component
         for name in config.get('toolbar', []):
@@ -413,7 +388,7 @@ class Application(TemplateMixin):
 
             self.state.tool_items.append({
                 'name': name,
-                'widget': tool
+                'widget': "IPY_MODEL_" + tool.model_id
             })
 
         for name in config.get('tray', []):
@@ -422,5 +397,5 @@ class Application(TemplateMixin):
 
             self.state.tray_items.append({
                 'name': name,
-                'widget': tray
+                'widget': "IPY_MODEL_" + tray.model_id
             })
