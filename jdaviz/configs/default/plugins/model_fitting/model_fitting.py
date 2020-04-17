@@ -19,8 +19,8 @@ def initialize_const1d():
 model_initializers = {"Gaussian1D": initialize_gaussian1d,
                       "Const1D": initialize_const1d}
 
-model_parameters = {"Gaussian1D": [],
-                    "Const1D": []}
+model_parameters = {"Gaussian1D": ["amplitude", "stddev", "mean"],
+                    "Const1D": ["amplitude"]}
 
 @tray_registry('g-model-fitting')
 class ModelFitting(TemplateMixin):
@@ -44,7 +44,8 @@ class ModelFitting(TemplateMixin):
                           handler=self._on_data_updated)
 
         self._selected_data = None
-        self.component_models = [{"id": "Example", "model_type": "Gaussian1D",
+        self.component_models = [{"id": "Example",
+                                  "model_type": "Gaussian1D",
                                   "parameters": [
                                                 {"name": "stddev", "value": 1},
                                                 {"name": "mean", "value": 5},
@@ -65,7 +66,12 @@ class ModelFitting(TemplateMixin):
 
     def vue_add_model(self, event):
         # Add the selected model and input string ID to the list of models
-        self.component_models.append({"id": self.temp_name, "model_type": self.temp_model})
+        new_model = {"id": self.temp_name, "model_type": self.temp_model,
+                     "parameters": []}
+        for param in model_parameters[new_model["model_type"]]:
+            new_model["parameters"][param] = None
+        self.component_models.append(new_model)
+
 
     def vue_model_fitting(self, *args, **kwargs):
         # This will be where the model fitting code is run
