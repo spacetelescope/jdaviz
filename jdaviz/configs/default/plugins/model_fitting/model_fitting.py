@@ -47,10 +47,13 @@ class ModelFitting(TemplateMixin):
         self.component_models = [{"id": "Ex1",
                                   "model_type": "Gaussian1D",
                                   "parameters": [
-                                                {"name": "stddev", "value": 1},
-                                                {"name": "mean", "value": 5},
-                                                {"name": "amp", "value": 10}
-                                                ]
+                                        {"name": "stddev", "value": 1,
+                                         "unit": "u.AA", "fixed": False},
+                                        {"name": "mean", "value": 5,
+                                         "unit": "u.AA", "fixed": False},
+                                        {"name": "amp", "value": 10,
+                                         "unit": "u.AA", "fixed": False}
+                                        ]
                                   }]
 
     def _on_data_updated(self, msg):
@@ -69,9 +72,12 @@ class ModelFitting(TemplateMixin):
         new_model = {"id": self.temp_name, "model_type": self.temp_model,
                      "parameters": []}
         for param in model_parameters[new_model["model_type"]]:
-            new_model["parameters"].append({"name": param, "value": None})
+            new_model["parameters"].append({"name": param, "value": None,
+                                            "unit": None, "fixed": False})
         self.component_models = self.component_models + [new_model]
 
+    def vue_remove_model(self, event):
+        self.component_models = [x for x in self.component_models if x["id"] != event]
 
     def vue_model_fitting(self, *args, **kwargs):
         # This will be where the model fitting code is run

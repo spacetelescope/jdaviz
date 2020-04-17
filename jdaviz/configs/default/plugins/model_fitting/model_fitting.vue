@@ -70,7 +70,12 @@
         >
           <v-expansion-panel-header v-slot="{ open }">
             <v-row n-gutters>
-              <v-col cols="4">{{ item.id }} ({{ item.model_type }})</v-col>
+              <v-col cols=1>
+                <v-btn @click.native.stop="remove_model" icon>
+                  <v-icon>mdi-close-circle</v-icon>
+                </v-btn>
+              </v-col>
+              <v-col cols="3">{{ item.id }} ({{ item.model_type }})</v-col>
               <v-col cols="8" class="text--secondary">
                 <v-fade-transition leave-absolute>
                   <span v-if="open">Enter parameters for model initialization</span>
@@ -89,18 +94,21 @@
           </v-expansion-panel-header>
           <v-expansion-panel-content>
             <v-row
-              justify="start"
+              justify="center"
               no-gutters
               v-for="param in item.parameters"
             >
-              <v-col>
+              <v-col cols = 3>
                 {{ param.name }}
               </v-col>
-              <v-col>
+              <v-col cols = 2>
                 <v-text-field 
                   v-model="param.value"
                 >
                 </v-text-field>
+              </v-col>
+              <v-col cols=2>
+                {{ param.unit }}
               </v-col>
             </v-row>
           </v-expansion-panel-content>
