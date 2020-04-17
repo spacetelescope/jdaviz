@@ -44,7 +44,7 @@ class ModelFitting(TemplateMixin):
                           handler=self._on_data_updated)
 
         self._selected_data = None
-        self.component_models = [{"id": "Example",
+        self.component_models = [{"id": "Ex1",
                                   "model_type": "Gaussian1D",
                                   "parameters": [
                                                 {"name": "stddev", "value": 1},
@@ -57,7 +57,7 @@ class ModelFitting(TemplateMixin):
        self.dc_items = [x.label for x in self.data_collection]
 
     def vue_data_selected(self, event):
-        self._selected_data = next((x for x in self.dc_items
+        self._selected_data = next((x for x in self.data_collection
                                     if x.label == event))
 
     def vue_model_selected(self, event):
@@ -70,7 +70,7 @@ class ModelFitting(TemplateMixin):
                      "parameters": []}
         for param in model_parameters[new_model["model_type"]]:
             new_model["parameters"].append({"name": param, "value": None})
-        self.component_models.append(new_model)
+        self.component_models = self.component_models + [new_model]
 
 
     def vue_model_fitting(self, *args, **kwargs):

@@ -68,20 +68,19 @@
         <v-expansion-panel
           v-for="item in component_models" :key="item.id"
         >
-          <v-expansion-panel-header v-slot="open">
+          <v-expansion-panel-header v-slot="{ open }">
             <v-row n-gutters>
-              <v-col cols="4">{{ item.id }}</v-col>
+              <v-col cols="4">{{ item.id }} ({{ item.model_type }})</v-col>
               <v-col cols="8" class="text--secondary">
                 <v-fade-transition leave-absolute>
-                  <span v-if="open">Enter parameters for model initialization<span>
+                  <span v-if="open">Enter parameters for model initialization</span>
                   <v-row 
                     v-else
                     no-gutters 
                     style="width: 100%"
-                    v-for="param in item.parameters"
                   >
-                    <v-col cols="4">
-                    {{param.name}}: {{param.value}}
+                    <v-col cols="4" v-for="param in item.parameters">
+                    {{ param.name }} : {{ param.value }}
                     </v-col>
                   </v-row>
                 </v-fade-transition>
@@ -90,12 +89,18 @@
           </v-expansion-panel-header>
           <v-expansion-panel-content>
             <v-row
-              justify="space-around"
+              justify="start"
               no-gutters
               v-for="param in item.parameters"
             >
               <v-col>
                 {{ param.name }}
+              </v-col>
+              <v-col>
+                <v-text-field 
+                  v-model="param.value"
+                >
+                </v-text-field>
               </v-col>
             </v-row>
           </v-expansion-panel-content>
