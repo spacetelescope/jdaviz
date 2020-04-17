@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="dialog" persistent max-width="500" @keydown.stop="">
+  <v-dialog v-model="dialog" persistent max-width="600" @keydown.stop="">
     <template v-slot:activator="{ on: dialog }">
       <v-tooltip bottom>
         <template v-slot:activator="{ on: tooltip }">
@@ -78,8 +78,9 @@
                     v-else 
                     no-gutters 
                     style="width: 100%"
+                    v-for="param in item.params"
                   >
-                    <v-col v-for="(param, i) in item.params">
+                    <v-col cols="3">
                       {{ param.name }} : {{ param.value || 'Not Set' }}
                     </v-col>
                   </v-row>

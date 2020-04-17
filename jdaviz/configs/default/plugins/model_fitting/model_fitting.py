@@ -44,7 +44,13 @@ class ModelFitting(TemplateMixin):
                           handler=self._on_data_updated)
 
         self._selected_data = None
-        self.component_models = [{"id": "Example", "model_type": "Gaussian1D"}]
+        self.component_models = [{"id": "Example", "model_type": "Gaussian1D",
+                                  "parameters": [
+                                                {"name": "stddev", "value": 1},
+                                                {"name": "mean", "value": 5},
+                                                {"name": "amp", "value": 10}
+                                                ]
+                                  }]
 
     def _on_data_updated(self, msg):
        self.dc_items = [x.label for x in self.data_collection]
