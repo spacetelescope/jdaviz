@@ -57,7 +57,7 @@ class ModelFitting(TemplateMixin):
        self.dc_items = [x.label for x in self.data_collection]
 
     def vue_data_selected(self, event):
-        self._selected_data = next((x for x in self.data_collection
+        self._selected_data = next((x for x in self.dc_items
                                     if x.label == event))
 
     def vue_model_selected(self, event):
@@ -69,7 +69,7 @@ class ModelFitting(TemplateMixin):
         new_model = {"id": self.temp_name, "model_type": self.temp_model,
                      "parameters": []}
         for param in model_parameters[new_model["model_type"]]:
-            new_model["parameters"][param] = None
+            new_model["parameters"].append({"name": param, "value": None})
         self.component_models.append(new_model)
 
 
