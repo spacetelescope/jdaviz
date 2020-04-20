@@ -1,6 +1,9 @@
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
 from traitlets import Bool, List, Dict, Unicode
+import astropy.units as u
+import astropy.modeling.models as models
+from specutils.spectra import Spectrum1D
 
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
@@ -10,11 +13,20 @@ from .fitting_backend import fit_model_to_spectrum
 
 __all__ = ['ModelFitting']
 
+def get_params(model_dict):
+    return {x.name: u.Quantity(x.value, x.unit) for x in model_dict.parameters}
+
 def initialize_gaussian1d(model_dict):
-    pass
+    params = get_params(model_dict)
+    return models.Gaussian1D(amplitude=params["amplitude"],
+                             mean=params["mean"],
+                             stddev=params["stddev"],
+                             name=model_dict["name"])
 
 def initialize_const1d(model_dict):
-    pass
+    params = get_params(model_dict)
+    return models.Const1D(amplitude=params["amplitude"],
+                          name=model_dict["name"])
 
 model_initializers = {"Gaussian1D": initialize_gaussian1d,
                       "Const1D": initialize_const1d}
@@ -51,11 +63,11 @@ class ModelFitting(TemplateMixin):
                                   "model_type": "Gaussian1D",
                                   "parameters": [
                                         {"name": "stddev", "value": 1,
-                                         "unit": "u.AA", "fixed": False},
+                                         "unit": "Angstrom", "fixed": False},
                                         {"name": "mean", "value": 5,
-                                         "unit": "u.AA", "fixed": False},
+                                         "unit": "Angstrom", "fixed": False},
                                         {"name": "amp", "value": 10,
-                                         "unit": "u.AA", "fixed": False}
+                                         "unit": "Jy", "fixed": False}
                                         ]
                                   }]
 
