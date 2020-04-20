@@ -110,6 +110,11 @@
               <v-col cols=2>
                 {{ param.unit }}
               </v-col>
+              <v-col cols=2>
+                <v-checkbox 
+                  label="Fixed">
+                </v-checkbox>
+              </v-col>
             </v-row>
           </v-expansion-panel-content>
         </v-expansion-panel>
