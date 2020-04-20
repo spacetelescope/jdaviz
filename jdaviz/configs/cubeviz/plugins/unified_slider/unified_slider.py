@@ -1,13 +1,10 @@
-import os
+from traitlets import Bool, Float, observe
 
-from traitlets import Bool, Float, Unicode, observe
-
-from jdaviz.core.events import AddDataMessage, AddViewerMessage
-from jdaviz.core.registries import tool_registry, viewer_registry
+from jdaviz.core.events import AddDataMessage
+from jdaviz.core.registries import tool_registry
 from jdaviz.core.template_mixin import TemplateMixin
 from jdaviz.utils import load_template
 
-from glue.external.echo import add_callback, remove_callback, delay_callback
 from glue_jupyter.bqplot.image import BqplotImageView
 
 __all__ = ['UnifiedSlider']
@@ -38,11 +35,11 @@ class UnifiedSlider(TemplateMixin):
         for viewer in self._watched_viewers:
 
             if not event['new']:
-                remove_callback(viewer.state, 'slices',
-                                self._slider_value_updated)
+                viewer.state.remove_callback('slices',
+                                             self._slider_value_updated)
             else:
-                add_callback(viewer.state, 'slices',
-                             self._slider_value_updated)
+                viewer.state.add_callback('slices',
+                                          self._slider_value_updated)
 
     def _on_data_added(self, msg):
         if len(msg.data.shape) == 3 and \
@@ -52,8 +49,8 @@ class UnifiedSlider(TemplateMixin):
             if msg.viewer not in self._watched_viewers:
                 self._watched_viewers.append(msg.viewer)
 
-                add_callback(msg.viewer.state, 'slices',
-                             self._slider_value_updated)
+                msg.viewer.state.add_callback('slices',
+                                              self._slider_value_updated)
 
     def _slider_value_updated(self, value):
         self.slider = value[0]
