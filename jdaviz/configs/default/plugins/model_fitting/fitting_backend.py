@@ -16,7 +16,8 @@ def fit_model_to_spectrum(spectrum, component_list, expression):
         The spectrum to be fitted.
     component_list : list
         Spectral model subcomponents stored in a list.
-        Their `name` attribute must be unique.
+        Their `name` attribute must be unique. Each subcomponent
+        should be an initialized object from `astropy.modeling.models'
     expression : str
         The arithmetic expression that combines together
         the model subcomponents. The subcomponents are
