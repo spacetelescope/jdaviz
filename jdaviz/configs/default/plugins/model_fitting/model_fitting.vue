@@ -63,63 +63,83 @@
       </v-card-text>
       <v-divider></v-divider>
 
-      <v-card-subtitle>Model Parameters<v-card-subtitle>
-      <v-expansion-panels>
-        <v-expansion-panel
-          v-for="item in component_models" :key="item.id"
-        >
-          <v-expansion-panel-header v-slot="{ open }">
-            <v-row n-gutters>
-              <v-col cols=1>
-                <v-btn @click.native.stop="remove_model" icon>
-                  <v-icon>mdi-close-circle</v-icon>
-                </v-btn>
-              </v-col>
-              <v-col cols="3">{{ item.id }} ({{ item.model_type }})</v-col>
-              <v-col cols="8" class="text--secondary">
-                <v-fade-transition leave-absolute>
-                  <span v-if="open">Enter parameters for model initialization</span>
-                  <v-row 
-                    v-else
-                    no-gutters 
-                    style="width: 100%"
+      <v-card-subtitle>Model Parameters</v-card-subtitle>
+      <v-card-text>
+        <v-container>
+        <v-expansion-panels>
+          <v-expansion-panel
+            v-for="item in component_models" :key="item.id"
+          >
+            <v-expansion-panel-header v-slot="{ open }">
+              <v-row n-gutters>
+                <v-col cols=1>
+                  <v-btn @click.native.stop="remove_model(item.id)" icon>
+                    <v-icon>mdi-close-circle</v-icon>
+                  </v-btn>
+                </v-col>
+                <v-col cols="3">{{ item.id }} ({{ item.model_type }})</v-col>
+                <v-col cols="8" class="text--secondary">
+                  <v-fade-transition leave-absolute>
+                    <span v-if="open">Enter parameters for model initialization</span>
+                    <v-row 
+                      v-else
+                      no-gutters 
+                      style="width: 100%"
+                    >
+                      <v-col cols="4" v-for="param in item.parameters">
+                      {{ param.name }} : {{ param.value }}
+                      </v-col>
+                    </v-row>
+                  </v-fade-transition>
+                </v-col>
+              </v-row>
+            </v-expansion-panel-header>
+            <v-expansion-panel-content>
+              <v-row
+                justify="center"
+                no-gutters
+                v-for="param in item.parameters"
+              >
+                <v-col cols = 3>
+                  {{ param.name }}
+                </v-col>
+                <v-col cols = 2>
+                  <v-text-field 
+                    v-model="param.value"
                   >
-                    <v-col cols="4" v-for="param in item.parameters">
-                    {{ param.name }} : {{ param.value }}
-                    </v-col>
-                  </v-row>
-                </v-fade-transition>
-              </v-col>
-            </v-row>
-          </v-expansion-panel-header>
-          <v-expansion-panel-content>
-            <v-row
-              justify="center"
-              no-gutters
-              v-for="param in item.parameters"
-            >
-              <v-col cols = 3>
-                {{ param.name }}
-              </v-col>
-              <v-col cols = 2>
-                <v-text-field 
-                  v-model="param.value"
-                >
-                </v-text-field>
-              </v-col>
-              <v-col cols=2>
-                {{ param.unit }}
-              </v-col>
-              <v-col cols=2>
-                <v-checkbox 
-                  label="Fixed">
-                </v-checkbox>
-              </v-col>
-            </v-row>
-          </v-expansion-panel-content>
-        </v-expansion-panel>
-      </v-expansion-panels>
+                  </v-text-field>
+                </v-col>
+                <v-col cols=2>
+                  {{ param.unit }}
+                </v-col>
+                <v-col cols=2>
+                  <v-checkbox 
+                    label="Fixed">
+                  </v-checkbox>
+                </v-col>
+              </v-row>
+            </v-expansion-panel-content>
+          </v-expansion-panel>
+        </v-expansion-panels>
+        </v-container>
+      </v-card-text>
       <v-divider></v-divider>
+
+      <v-card-subtitle>Model Equation Editor</v-card-subtitle>
+      <v-card-text>
+        <v-container>
+          <v-text-field
+            v-model="model_equation"
+            hint="Equation specifying how to combine the models"
+            persistent-hint
+            :rules="[() => !!model_equation || 'This field is required']"
+            @change="equation_changed"
+            :error="eq_error"
+          >
+          </v-text-field>
+        </v-container>
+      </v-card-text>
+      <v-divider inset="false"></v-divider>
 
       <v-card-actions>
         <div class="flex-grow-1"></div>

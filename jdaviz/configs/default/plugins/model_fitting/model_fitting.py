@@ -10,10 +10,10 @@ from .fitting_backend import fit_model_to_spectrum
 
 __all__ = ['ModelFitting']
 
-def initialize_gaussian1d():
+def initialize_gaussian1d(model_dict):
     pass
 
-def initialize_const1d():
+def initialize_const1d(model_dict):
     pass
 
 model_initializers = {"Gaussian1D": initialize_gaussian1d,
@@ -30,7 +30,10 @@ class ModelFitting(TemplateMixin):
 
     temp_name = Unicode().tag(sync=True)
     temp_model = Unicode().tag(sync=True)
+    model_equation = Unicode().tag(sync=True)
+    eq_error = Bool(False).tag(sync=True)
     component_models = List([]).tag(sync=True)
+
 
     # Hard coding this for now, but will want to pull from a config file
     available_models = List(["Gaussian1D", "Const1D"]).tag(sync=True)
@@ -79,6 +82,13 @@ class ModelFitting(TemplateMixin):
     def vue_remove_model(self, event):
         self.component_models = [x for x in self.component_models if x["id"] != event]
 
+    def vue_equation_changed(self, event):
+        # Length is a dummy check to test the infrastructure
+        if len(self.model_equation) > 6:
+            self.eq_error = True
+
     def vue_model_fitting(self, *args, **kwargs):
         # This will be where the model fitting code is run
+        self.component_models = [model_initializers[x.model_type](x) for x in self.compenent_models]
+        fit_model_to_spectrum(self._selected_data, self.component_models, self.model_equation
         self.dialog = False
