@@ -14,6 +14,7 @@
       :key="index"
       title="Test"
       :tab-id="viewer.id"
+      @item-created="console.log('TESTING')"
       @resize="$emit('resize')"
       @destroy="$emit('destroy', viewer.id)"
     >
@@ -57,9 +58,8 @@
                     v-model="viewer.selected_data_items"
                     activatable
                     item-disabled="locked"
+                    @input="$emit('data-item-selected', {'id': viewer.id, 'selected_items': $event})"
                   ></v-treeview>
-
-<!--                  @input="$emit('data-item-selected', {'id': viewer.id, 'selected_items': $event})"-->
 <!--                  :items="Object.keys(dataItems).map(key => dataItems[key])"-->
 <!--                  :value="Object.keys(viewer.selected_data_items).map(key => viewer.selected_data_items[key])"-->
                 </v-tab-item>
