@@ -6,7 +6,7 @@ from specutils.fitting import fit_lines
 __all__ = ['fit_model_to_spectrum']
 
 
-def fit_model_to_spectrum(spectrum, component_list, expression):
+def fit_model_to_spectrum(spectrum, component_list, expression, run_fitter=False):
     """
     Fits an astropy CompoundModel to an instance of Spectrum1D.
 
@@ -22,6 +22,9 @@ def fit_model_to_spectrum(spectrum, component_list, expression):
         The arithmetic expression that combines together
         the model subcomponents. The subcomponents are
         refered via their 'name' attribute.
+    run_fitter : bool
+        When False (the default), the function composes the compound
+        model and returns it without fitting.
 
     Returns
     -------
@@ -43,12 +46,16 @@ def fit_model_to_spectrum(spectrum, component_list, expression):
     aeval = Interpreter(usersyms=model_dict)
     compound_model_init = aeval(expression)
 
-    # Do the fit
-    fitted_model = fit_lines(spectrum, compound_model_init)
-    fitted_values = fitted_model(spectrum.spectral_axis)
+    if run_fitter:
+        output_model = fit_lines(spectrum, compound_model_init)
+        output_values = output_model(spectrum.spectral_axis)
+    else:
+        # Return without fitting.
+        output_model = compound_model_init
+        output_values = compound_model_init(spectrum.spectral_axis)
 
     # Build return spectrum
     funit = spectrum.flux.unit
-    fitted_spectrum = Spectrum1D(spectral_axis=spectrum.spectral_axis, flux=fitted_values * funit)
+    output_spectrum = Spectrum1D(spectral_axis=spectrum.spectral_axis, flux=output_values * funit)
 
-    return fitted_model, fitted_spectrum
+    return output_model, output_spectrum

@@ -27,12 +27,17 @@ def test_fitting_backend():
     model_list = [g1f, g2f, g3f, zero_level]
     expression = "g1 + g2 + g3 + const1d"
 
-    fm, fitted_spectrum = fb.fit_model_to_spectrum(spectrum, model_list, expression)
+    # Returns the intial model
+    fm, fitted_spectrum = fb.fit_model_to_spectrum(spectrum, model_list, expression, run_fitter=False)
+
+    parameters_expected = np.array([0.7,4.65,0.3,2.,5.55,0.3,-2.,8.15,0.2,1.])
+    assert np.allclose(fm.parameters, parameters_expected, atol=1e-5)
+
+    # Returns the fitted model
+    fm, fitted_spectrum = fb.fit_model_to_spectrum(spectrum, model_list, expression, run_fitter=True)
 
     parameters_expected = np.array([1.0104705, 4.58956282, 0.19590464, 2.39892026,
                                     5.49867754, 0.10834472, -1.66902953, 8.19714439,
                                     0.09535613, 3.99125545])
-
     assert np.allclose(fm.parameters, parameters_expected, atol=1e-5)
-
 
