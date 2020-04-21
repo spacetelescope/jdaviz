@@ -23,6 +23,7 @@
         ></v-text-field>
       </template>
     </v-slider>
+    <!-- the below is temporarily hidden because of spacing issues, which will be adjusted in a future PR that makes more substantial changes to the UI layout -->
     <v-checkbox v-show="false" v-model="linked" label="Linked"></v-checkbox>
   </div>
   <!-- </v-toolbar-items> -->
