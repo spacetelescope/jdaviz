@@ -1,0 +1,19 @@
+settings:
+  configuration: specviz
+  visible:
+    menu_bar: false
+    toolbar: true
+    tray: true
+    tab_headers: false
+toolbar:
+  - g-data-tools
+  - g-subset-tools
+  - g-gaussian-smooth
+viewer_area:
+  - container: col
+    children:
+      - container: row
+        viewers:
+          - name: Spectrum
+            plot: g-profile-viewer
+            reference: spectrum-viewer

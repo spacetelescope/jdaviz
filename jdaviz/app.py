@@ -292,6 +292,8 @@ class Application(TemplateMixin):
             path = os.path.join(default_path, "default", "default.yaml")
         elif path == 'cubeviz':
             path = os.path.join(default_path, "cubeviz", "cubeviz.yaml")
+        elif path == 'specviz':
+            path = os.path.join(default_path, "specviz", "specviz.yaml")
         elif not os.path.isfile(path):
             raise ValueError("Configuration must be path to a .yaml file.")
 
