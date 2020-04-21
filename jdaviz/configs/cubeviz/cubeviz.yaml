@@ -10,6 +10,7 @@ toolbar:
   - g-subset-tools
   - g-gaussian-smooth
   - g-collapse
+  - g-unified-slider
 viewer_area:
   - container: col
     children:

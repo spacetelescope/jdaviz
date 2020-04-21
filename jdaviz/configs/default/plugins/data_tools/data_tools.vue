@@ -26,7 +26,7 @@
             </v-row>
           </v-container>
         </v-card-text>
-        <v-divider></v-divider>
+        <!-- <v-divider></v-divider> -->
 
         <v-card-actions>
           <div class="flex-grow-1"></div>
@@ -59,6 +59,6 @@
       </template>
       <span>Delete Data</span>
     </v-tooltip>
-    <v-divider vertical></v-divider>
+    <!-- <v-divider vertical></v-divider> -->
   </v-toolbar-items>
 </template>

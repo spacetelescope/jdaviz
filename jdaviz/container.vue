@@ -32,7 +32,7 @@
               <v-icon v-if="viewer.collapse">mdi-menu</v-icon>
               <v-icon v-else>mdi-menu-open</v-icon>
             </v-btn>
-            <v-divider vertical></v-divider>
+            <!-- <v-divider vertical></v-divider> -->
             <jupyter-widget :widget="viewer.tools"></jupyter-widget>
             <v-menu offset-y :close-on-content-click="false" style="z-index: 10">
               <template v-slot:activator="{ on }">
