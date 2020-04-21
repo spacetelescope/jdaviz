@@ -23,7 +23,7 @@
         ></v-text-field>
       </template>
     </v-slider>
-    <v-checkbox v-model="linked" label="Linked"></v-checkbox>
+    <v-checkbox v-show="false" v-model="linked" label="Linked"></v-checkbox>
   </div>
   <!-- </v-toolbar-items> -->
 </template>
