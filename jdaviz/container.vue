@@ -14,7 +14,6 @@
       :key="index"
       title="Test"
       :tab-id="viewer.id"
-      @item-created="console.log('TESTING')"
       @resize="$emit('resize')"
       @destroy="$emit('destroy', viewer.id)"
     >
