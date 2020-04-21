@@ -24,19 +24,24 @@
           <pane size="80">
             <v-card tile class="ma-2" style="height: calc(100% - 16px)">
               <golden-layout
-                @stateChanged="consle.log($event)"
+                @stateChanged="console.log($event)"
                 :style="checkNotebookContext() ? 'height: 100%;' : 'height: calc(100vh - 64px)'"
-                @selection-changed="consle.log($event)"
+                @selection-changed="console.log($event)"
+                @itemCreated="console.log('TESTING')"
                 :has-headers="state.settings.visible.tab_headers"
               >
-                <gl-row :closable="false">
+                <gl-row
+                        :closable="false"
+                        @itemCreated="console.log('BLAH')"
+                        @componentCreated="console.log('TESTING')"
+                >
                   <g-viewer-tab
                     v-for="(stack, index) in state.stack_items"
                     :stack="stack"
                     :key="index"
                     :data-items="state.data_items"
                     @resize="relayout"
-                    @destroy="remove_component"
+                    @destroy="destroy_viewer_item($event)"
                     @data-item-selected="data_item_selected($event)"
                   ></g-viewer-tab>
                 </gl-row>
