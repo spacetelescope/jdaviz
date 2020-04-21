@@ -73,7 +73,7 @@ class ApplicationState(State):
                   "Golden Layout viewer area.")
 
 
-class Application(TemplateMixin, ABC):
+class Application(TemplateMixin):
     """
     The main application object containing implementing the ipyvue/vuetify
     template instructions for composing the interface.
