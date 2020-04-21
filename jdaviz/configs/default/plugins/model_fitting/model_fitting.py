@@ -14,19 +14,19 @@ from .fitting_backend import fit_model_to_spectrum
 __all__ = ['ModelFitting']
 
 def get_params(model_dict):
-    return {x.name: u.Quantity(x.value, x.unit) for x in model_dict.parameters}
+    return {x["name"]: u.Quantity(x["value"], x["unit"]) for x in model_dict["parameters"]}
 
 def initialize_gaussian1d(model_dict):
     params = get_params(model_dict)
     return models.Gaussian1D(amplitude=params["amplitude"],
                              mean=params["mean"],
                              stddev=params["stddev"],
-                             name=model_dict["name"])
+                             name=model_dict["id"])
 
 def initialize_const1d(model_dict):
     params = get_params(model_dict)
     return models.Const1D(amplitude=params["amplitude"],
-                          name=model_dict["name"])
+                          name=model_dict["id"])
 
 model_initializers = {"Gaussian1D": initialize_gaussian1d,
                       "Const1D": initialize_const1d}
@@ -101,6 +101,6 @@ class ModelFitting(TemplateMixin):
 
     def vue_model_fitting(self, *args, **kwargs):
         # This will be where the model fitting code is run
-        self.component_models = [model_initializers[x.model_type](x) for x in self.compenent_models]
-        fit_model_to_spectrum(self._selected_data, self.component_models, self.model_equation
+        self.component_models = [model_initializers[x["model_type"]](x) for x in self.component_models]
+        fit_model_to_spectrum(self._selected_data, self.component_models, self.model_equation)
         self.dialog = False
