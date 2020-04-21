@@ -544,7 +544,7 @@ class Application(TemplateMixin):
             'layer_options': "IPY_MODEL_" + viewer.layer_options.model_id,
             'viewer_options': "IPY_MODEL_" + viewer.viewer_options.model_id,
             'selected_data_items': [],
-            'collapse': False,
+            'collapse': True,
             'reference': reference}
 
     def _on_new_viewer(self, msg):
@@ -654,6 +654,7 @@ class Application(TemplateMixin):
         if config.get('viewer_area') is not None:
             stack_items = compose_viewer_area(config.get('viewer_area'))
             self.state.stack_items.extend(stack_items)
+            self.vue_relayout()
 
         # Add the toolbar item filter to the toolbar component
         for name in config.get('toolbar', []):
