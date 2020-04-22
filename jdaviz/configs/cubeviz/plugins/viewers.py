@@ -7,7 +7,7 @@ from jdaviz.core.registries import viewer_registry
 
 
 @viewer_registry("cubeviz-profile-viewer")
-class CubeVizProfileView(BqplotImageView):
+class CubeVizProfileView(BqplotProfileView):
     default_class = Spectrum1D
 
     def data(self, cls=None):
@@ -18,7 +18,9 @@ class CubeVizProfileView(BqplotImageView):
 
 
 @viewer_registry("cubeviz-image-viewer")
-class CubeVizImageView(BqplotProfileView):
+class CubeVizImageView(BqplotImageView):
+    default_class = None
+
     def data(self, cls=None):
         return [layer_state.layer
                 for layer_state in self.state.layers
