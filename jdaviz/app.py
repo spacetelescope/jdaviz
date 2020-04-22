@@ -213,7 +213,7 @@ class Application(TemplateMixin):
         """
         return self._viewer_by_reference(reference)
 
-    def get_data(self, reference, cls=None):
+    def get_viewer_data(self, reference, label=None, cls=None):
         """
         Returns each data component currently rendered within a viewer
         instance. Viewers themselves store a default data type to which the
@@ -231,6 +231,9 @@ class Application(TemplateMixin):
         reference : str
             The reference to the viewer defined with the ``reference`` key
             in the yaml configuration file.
+        label : str, optional
+            Optionally provide a label to retrieve a specific data set from the
+            viewer instance.
         cls : class
             The class definition the Glue data components get transformed to
             when retrieved. This requires that a working set of translation
@@ -246,22 +249,24 @@ class Application(TemplateMixin):
         cls = cls or viewer.default_class
 
         data = [layer_state.layer.get_object(cls=cls)
+                if cls is not None else layer_state.layer
                 for layer_state in viewer.state.layers
                 if hasattr(layer_state, 'layer') and
-                isinstance(layer_state.layer, BaseData)]
+                isinstance(layer_state.layer, BaseData)
+                and (label is None or layer_state.layer.label == label)]
+
+        if label is not None:
+            return next(iter(data), None)
 
         return data
 
-    def add_data(self, reference, data, name=None):
+    def add_data(self, data, name=None):
         """
         Retrieve the data from a viewer given a reference defined in the yaml
         configuration file.
 
         Parameters
         ----------
-        reference : str
-            The reference to the viewer defined with the ``reference`` key
-            in the yaml configuration file.
         data : any
             Data to be stored in the ``DataCollection``. This must either be
             a `~glue.core.data.Data` instance, or an arbitrary data instance
@@ -272,12 +277,63 @@ class Application(TemplateMixin):
             name is generated.
         """
         name = name or "New Data"
+
+        # Include the data in the data collection
         self.data_collection[name] = data
 
-        viewer_item = self._viewer_item_by_reference(reference)
+        # # Retrieve data item id
+        # data_id = self._data_id_from_label(name)
+        #
+        # viewer_item = self._viewer_item_by_reference(reference)
+        #
+        # # Enable selection of data in viewer data list
+        # viewer_item['selected_data_items'].append(data_id)
 
-        # Enable selection of data in viewer data list
-        viewer_item['selected_data_items'].append(name)
+    def set_viewer_data(self, reference, label):
+        """
+        Plots a data set from the data collection in the specific viewer.
+
+        Parameters
+        ----------
+        reference : str
+            The reference to the viewer defined with the ``reference`` key
+            in the yaml configuration file.
+        label : str
+            The Glue data label found in the ``DataCollection``.
+        """
+        viewer_item = self._viewer_item_by_reference(reference)
+        data_id = self._data_id_from_label(label)
+
+        self._update_selected_data_items(
+            viewer_item['id'], viewer_item['selected_data_items'] + [data_id])
+
+    def unset_viewer_data(self, reference, label):
+        """
+        Removes a data set from the specified viewer.
+
+        Parameters
+        ----------
+        reference : str
+            The reference to the viewer defined with the ``reference`` key
+            in the yaml configuration file.
+        label : str
+            The Glue data label found in the ``DataCollection``.
+        """
+        viewer_item = self._viewer_item_by_reference(reference)
+        data_id = self._data_id_from_label(label)
+
+        selected_items = viewer_item['selected_data_items']
+
+        if data_id in selected_items:
+            selected_items.remove(data_id)
+
+            self._update_selected_data_items(
+                viewer_item['id'], selected_items)
+
+    def _data_id_from_label(self, label):
+        for data_item in self.state.data_items:
+            if data_item['name'] == label:
+                return data_item['id']
 
     def _viewer_by_id(self, vid):
         """
@@ -430,6 +486,9 @@ class Application(TemplateMixin):
         """
         viewer_id, selected_items = event['id'], event['selected_items']
 
+        self._update_selected_data_items(viewer_id, selected_items)
+
+    def _update_selected_data_items(self, viewer_id, selected_items):
         # Find the active viewer
         viewer_item = self._viewer_item_by_id(viewer_id)
         viewer = self._viewer_by_id(viewer_id)
@@ -475,11 +534,16 @@ class Application(TemplateMixin):
             The Glue data collection add message containing information about
             the new data.
         """
-        self.state.data_items.append({
+        data_item = self._create_data_item(msg.data.label)
+        self.state.data_items.append(data_item)
+
+    @staticmethod
+    def _create_data_item(label):
+        return {
             'id': str(uuid.uuid4()),
-            'name': msg.data.label,
+            'name': label,
             'locked': False,
-            'children': []})
+            'children': []}
 
     @staticmethod
     def _create_stack_item(container='gl-stack', children=None, viewers=None):
