@@ -17,7 +17,7 @@ from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
 from traitlets import Dict, observe, List
 
-from .core.events import LoadDataMessage, NewViewerMessage
+from .core.events import LoadDataMessage, NewViewerMessage, AddDataMessage
 from .core.registries import tool_registry, tray_registry, viewer_registry
 from .core.template_mixin import TemplateMixin
 from .utils import load_template
@@ -451,7 +451,7 @@ class Application(TemplateMixin):
 
             viewer.add_data(data)
 
-            add_data_message = AddDataMessage(data, active_viewer, sender=self)
+            add_data_message = AddDataMessage(data, viewer, sender=self)
             self.hub.broadcast(add_data_message)
 
         # Remove any deselected data objects from viewer
