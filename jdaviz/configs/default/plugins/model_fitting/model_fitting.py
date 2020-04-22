@@ -101,6 +101,8 @@ class ModelFitting(TemplateMixin):
 
     def vue_model_fitting(self, *args, **kwargs):
         # This will be where the model fitting code is run
-        self.component_models = [model_initializers[x["model_type"]](x) for x in self.component_models]
-        fit_model_to_spectrum(self._selected_data, self.component_models, self.model_equation)
+        initialized_models = [model_initializers[x["model_type"]](x) for x in self.component_models]
+        spec = self._selected_data.get_object(cls=Spectrum1D)
+        print(spec)
+        fit_model_to_spectrum(spec, initialized_models, self.model_equation)
         self.dialog = False
