@@ -43,6 +43,7 @@ class ModelFitting(TemplateMixin):
     temp_name = Unicode().tag(sync=True)
     temp_model = Unicode().tag(sync=True)
     model_equation = Unicode().tag(sync=True)
+    param_units = Dict({}).tag(sync=True)
     eq_error = Bool(False).tag(sync=True)
     component_models = List([]).tag(sync=True)
 
@@ -59,6 +60,11 @@ class ModelFitting(TemplateMixin):
                           handler=self._on_data_updated)
 
         self._selected_data = None
+        # Hard coding this for initial testing, want to populate based on
+        # selected data
+        self._param_units = {"amplitude": "1E-17 erg/s/cm^2/Angstrom/spaxel",
+                             "stddev": "m",
+                             "mean": "m"}
         self.component_models = [{"id": "Ex1",
                                   "model_type": "Gaussian1D",
                                   "parameters": [
@@ -77,6 +83,7 @@ class ModelFitting(TemplateMixin):
     def vue_data_selected(self, event):
         self._selected_data = next((x for x in self.data_collection
                                     if x.label == event))
+        self.spectrum1d = self._selected_data.get_object(cls=Spectrum1D)
 
     def vue_model_selected(self, event):
         # Add the model selected to the list of models
@@ -88,7 +95,8 @@ class ModelFitting(TemplateMixin):
                      "parameters": []}
         for param in model_parameters[new_model["model_type"]]:
             new_model["parameters"].append({"name": param, "value": None,
-                                            "unit": None, "fixed": False})
+                                            "unit": self._param_units[param],
+                                            "fixed": False})
         self.component_models = self.component_models + [new_model]
 
     def vue_remove_model(self, event):
@@ -102,7 +110,5 @@ class ModelFitting(TemplateMixin):
     def vue_model_fitting(self, *args, **kwargs):
         # This will be where the model fitting code is run
         initialized_models = [model_initializers[x["model_type"]](x) for x in self.component_models]
-        spec = self._selected_data.get_object(cls=Spectrum1D)
-        print(spec)
-        fit_model_to_spectrum(spec, initialized_models, self.model_equation)
+        fit_model_to_spectrum(self.spectrum1d, initialized_models, self.model_equation)
         self.dialog = False
