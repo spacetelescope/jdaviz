@@ -96,25 +96,45 @@
             </v-expansion-panel-header>
             <v-expansion-panel-content>
               <v-row
-                justify="center"
+                justify="left"
+                align="center"
+                no-gutters
+              >
+                <v-col cols=2>
+                  <p class="font-weight-bold">Parameter</p>
+                </v-col>
+                <v-col cols=2>
+                  <p class="font-weight-bold">Value</p>
+                </v-col>
+                <v-col cols=4>
+                  <p class="font-weight-bold">Unit</p>
+                </v-col>
+                <v-col cols=2>
+                  <p class="font-weight-bold">Fixed?</p>
+                </v-col>
+              </v-row>
+              <v-row
+                justify="left"
+                align="center"
                 no-gutters
                 v-for="param in item.parameters"
               >
-                <v-col cols = 3>
+                <v-col cols = 2>
                   {{ param.name }}
                 </v-col>
-                <v-col cols = 2>
+                <v-col cols = 1>
                   <v-text-field 
                     v-model="param.value"
                   >
                   </v-text-field>
                 </v-col>
-                <v-col cols=2>
+                <v-col cols=1></v-col>
+                <v-col cols=3>
                   {{ param.unit }}
                 </v-col>
+                <v-col cols=1></v-col>
                 <v-col cols=2>
-                  <v-checkbox 
-                    label="Fixed">
+                  <v-checkbox>
                   </v-checkbox>
                 </v-col>
               </v-row>

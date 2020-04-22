@@ -60,6 +60,9 @@ class ModelFitting(TemplateMixin):
                           handler=self._on_data_updated)
 
         self._selected_data = None
+        self._spectrum1d = None
+        self._fitted_model = None
+        self._fitted_spectrum = None
         # Hard coding this for initial testing, want to populate based on
         # selected data
         self._param_units = {"amplitude": "1E-17 erg/s/cm^2/Angstrom/spaxel",
@@ -83,7 +86,7 @@ class ModelFitting(TemplateMixin):
     def vue_data_selected(self, event):
         self._selected_data = next((x for x in self.data_collection
                                     if x.label == event))
-        self.spectrum1d = self._selected_data.get_object(cls=Spectrum1D)
+        self._spectrum1d = self._selected_data.get_object(cls=Spectrum1D)
 
     def vue_model_selected(self, event):
         # Add the model selected to the list of models
@@ -110,5 +113,9 @@ class ModelFitting(TemplateMixin):
     def vue_model_fitting(self, *args, **kwargs):
         # This will be where the model fitting code is run
         initialized_models = [model_initializers[x["model_type"]](x) for x in self.component_models]
-        fit_model_to_spectrum(self.spectrum1d, initialized_models, self.model_equation)
+        fitted_model, fitted_spectrum = fit_model_to_spectrum(self._spectrum1d,
+                                                              initialized_models,
+                                                              self.model_equation)
+        self._fitted_model = fitted_model
+        self._fitted_spectrum = fitted_spectrum
         self.dialog = False
