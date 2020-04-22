@@ -1,11 +1,11 @@
 <template>
   <v-app id="web-app">
     <v-app-bar color="white" class="elevation-1" dense app absolute clipped-right>
-      <v-toolbar-items>
-        <jupyter-widget :widget="item.widget" v-for="item in tool_items" :key="item.name"></jupyter-widget>
-      </v-toolbar-items>
+      <!-- <v-toolbar-items> -->
+      <jupyter-widget :widget="item.widget" v-for="item in tool_items" :key="item.name"></jupyter-widget>
+      <!-- </v-toolbar-items> -->
       <v-spacer></v-spacer>
-      <v-divider vertical></v-divider>
+      <!-- <v-divider vertical></v-divider> -->
       <v-toolbar-items>
         <v-btn icon @click="drawer = !drawer">
           <v-icon v-if="drawer">mdi-toy-brick-remove</v-icon>
@@ -19,58 +19,58 @@
     >
       <v-container class="fill-height pa-0" fluid>
         <!-- <v-row align="center" justify="center" class="fill-height pa-0 ma-0" style="width: 100%">
-          <v-col cols="12" class="fill-height pa-0 ma-0" style="width: 100%"> -->
-            <splitpanes class="default-theme" @resize="relayout">
-              <pane size="80">
+        <v-col cols="12" class="fill-height pa-0 ma-0" style="width: 100%">-->
+        <splitpanes class="default-theme" @resize="relayout">
+          <pane size="80">
+            <v-card tile class="ma-2" style="height: calc(100% - 16px)">
+              <golden-layout
+                @stateChanged="consle.log($event)"
+                :style="checkNotebookContext() ? 'height: 100%;' : 'height: calc(100vh - 64px)'"
+                @selection-changed="consle.log($event)"
+                :has-headers="settings.visible.tab_headers"
+              >
+                <gl-row :closable="false">
+                  <g-viewer-tab
+                    v-for="(stack, index) in stack_items"
+                    :stack="stack"
+                    :key="index"
+                    :data-items="data_items"
+                    @resize="relayout"
+                    @destroy="remove_component"
+                    @data-item-selected="data_item_selected($event)"
+                  ></g-viewer-tab>
+                </gl-row>
+              </golden-layout>
+            </v-card>
+          </pane>
+          <pane size="20" v-if="drawer">
+            <splitpanes horizontal class="elevation-2">
+              <pane>
                 <v-card tile class="ma-2" style="height: calc(100% - 16px)">
                   <golden-layout
-                    @stateChanged="consle.log($event)"
                     :style="checkNotebookContext() ? 'height: 100%;' : 'height: calc(100vh - 64px)'"
-                    @selection-changed="consle.log($event)"
-                    :has-headers="settings.visible.tab_headers"
                   >
-                    <gl-row :closable="false">
-                      <g-viewer-tab
-                        v-for="(stack, index) in stack_items"
-                        :stack="stack"
+                    <gl-stack
+                      @stateChanged="consle.log($event)"
+                      @selection-changed="consle.log($event)"
+                      :closable="false"
+                    >
+                      <gl-component
+                        v-for="(tray, index) in tray_items"
                         :key="index"
-                        :data-items="data_items"
-                        @resize="relayout"
-                        @destroy="remove_component"
-                        @data-item-selected="data_item_selected($event)"
-                      ></g-viewer-tab>
-                    </gl-row>
+                        :title="tray.name"
+                      >
+                        <jupyter-widget :widget="tray.widget"></jupyter-widget>
+                      </gl-component>
+                    </gl-stack>
                   </golden-layout>
                 </v-card>
               </pane>
-              <pane size="20" v-if="drawer">
-                <splitpanes horizontal class="elevation-2">
-                  <pane>
-                    <v-card tile class="ma-2" style="height: calc(100% - 16px)">
-                      <golden-layout
-                        :style="checkNotebookContext() ? 'height: 100%;' : 'height: calc(100vh - 64px)'"
-                      >
-                        <gl-stack
-                          @stateChanged="consle.log($event)"
-                          @selection-changed="consle.log($event)"
-                          :closable="false"
-                        >
-                          <gl-component
-                            v-for="(tray, index) in tray_items"
-                            :key="index"
-                            :title="tray.name"
-                          >
-                            <jupyter-widget :widget="tray.widget"></jupyter-widget>
-                          </gl-component>
-                        </gl-stack>
-                      </golden-layout>
-                    </v-card>
-                  </pane>
-                </splitpanes>
-              </pane>
             </splitpanes>
-          <!-- </v-col>
-        </v-row> -->
+          </pane>
+        </splitpanes>
+        <!-- </v-col>
+        </v-row>-->
       </v-container>
     </v-content>
   </v-app>

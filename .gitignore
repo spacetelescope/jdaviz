@@ -59,6 +59,8 @@ pip-wheel-metadata
 .vscode
 .pytest_cache
 .tmp
+.eggs
+.python-version
 
 # Mac OSX
 .DS_Store

@@ -8,6 +8,7 @@ the Jupyter platform.
 .. toctree::
   :maxdepth: 2
 
+  installation.rst
   data_prep.rst
   dev/infrastructure.rst
   dev/ui_description.rst
