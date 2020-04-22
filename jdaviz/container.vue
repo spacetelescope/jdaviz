@@ -59,8 +59,6 @@
                     item-disabled="locked"
                     @input="$emit('data-item-selected', {'id': viewer.id, 'selected_items': $event})"
                   ></v-treeview>
-<!--                  :items="Object.keys(dataItems).map(key => dataItems[key])"-->
-<!--                  :value="Object.keys(viewer.selected_data_items).map(key => viewer.selected_data_items[key])"-->
                 </v-tab-item>
 
                 <v-tab-item key="1" eager class="overflow-y-auto" style="height: 100%">
