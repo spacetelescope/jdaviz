@@ -45,7 +45,6 @@ class Collapse(TemplateMixin):
 
     @observe('selected_data_item')
     def _on_data_item_selected(self, event):
-        print(event['new'])
         self._selected_data = next((x for x in self.data_collection
                                     if x.label == event['new']))
 

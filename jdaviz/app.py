@@ -93,6 +93,7 @@ class Application(TemplateMixin):
 
     def __init__(self, configuration=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         # Generate a state object for this application to maintain the state of
         #  the user interface.
         self.state = ApplicationState()
@@ -262,8 +263,7 @@ class Application(TemplateMixin):
 
     def add_data(self, data, name=None):
         """
-        Retrieve the data from a viewer given a reference defined in the yaml
-        configuration file.
+        Add data to the Glue ``DataCollection``.
 
         Parameters
         ----------
@@ -276,18 +276,8 @@ class Application(TemplateMixin):
             The name associated with this data. If none is given, a generic
             name is generated.
         """
-        name = name or "New Data"
-
         # Include the data in the data collection
-        self.data_collection[name] = data
-
-        # # Retrieve data item id
-        # data_id = self._data_id_from_label(name)
-        #
-        # viewer_item = self._viewer_item_by_reference(reference)
-        #
-        # # Enable selection of data in viewer data list
-        # viewer_item['selected_data_items'].append(data_id)
+        self.data_collection[name or "New Data"] = data
 
     def set_viewer_data(self, reference, label):
         """
@@ -331,6 +321,21 @@ class Application(TemplateMixin):
                 viewer_item['id'], selected_items)
 
     def _data_id_from_label(self, label):
+        """
+        Retrieve the data item given the Glue ``DataCollection`` data label.
+
+        Parameters
+        ----------
+        label : str
+            Label associated with the ``DataCollection`` item. This is also the
+            name shown in the data list.
+
+        Returns
+        -------
+        dict
+            The data item dictionary containing the id and name of the given
+            data set.
+        """
         for data_item in self.state.data_items:
             if data_item['name'] == label:
                 return data_item['id']
@@ -645,13 +650,13 @@ class Application(TemplateMixin):
         # Add viewer locally
         self.state.stack_items.append(new_stack_item)
 
-        # TODO: remove this once we can assign callbacks to nested
-        #  ``CallbackProperties``
-        self.vue_relayout()
-
         # Store the glupyter viewer object so we can access the add and remove
         #  data methods in the future
         self._viewer_store[new_viewer_item['id']] = viewer
+
+        # TODO: remove this once we can assign callbacks to nested
+        #  ``CallbackProperties``
+        self.vue_relayout()
 
         return viewer
 
@@ -681,9 +686,7 @@ class Application(TemplateMixin):
         with open(path, 'r') as f:
             config = yaml.safe_load(f)
 
-        settings = {k: v for k, v in self.state.settings.items()}
-        settings.update(config.get('settings'))
-        self.state.settings = settings
+        self.state.settings.update(config.get('settings'))
 
         def compose_viewer_area(viewer_area_items):
             stack_items = []

@@ -6,7 +6,7 @@ from specutils import Spectrum1D
 from jdaviz.core.registries import viewer_registry
 
 
-@viewer_registry("cubeviz-profile-viewer")
+@viewer_registry("cubeviz-profile-viewer", label="Profile 1D (CubeViz)")
 class CubeVizProfileView(BqplotProfileView):
     default_class = Spectrum1D
 
@@ -17,7 +17,7 @@ class CubeVizProfileView(BqplotProfileView):
                 isinstance(layer_state.layer, BaseData)]
 
 
-@viewer_registry("cubeviz-image-viewer")
+@viewer_registry("cubeviz-image-viewer", label="Image 2D (CubeViz)")
 class CubeVizImageView(BqplotImageView):
     default_class = None
 
