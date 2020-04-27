@@ -16,17 +16,24 @@ __all__ = ['ModelFitting']
 def get_params(model_dict):
     return {x["name"]: u.Quantity(x["value"], x["unit"]) for x in model_dict["parameters"]}
 
+def get_fixed(model_dict):
+    return {x["name"]: x["fixed"] for x in model_dict["parameters"]}
+
 def initialize_gaussian1d(model_dict):
     params = get_params(model_dict)
+    fixed = get_fixed(model_dict)
     return models.Gaussian1D(amplitude=params["amplitude"],
                              mean=params["mean"],
                              stddev=params["stddev"],
-                             name=model_dict["id"])
+                             name=model_dict["id"],
+                             fixed = fixed)
 
 def initialize_const1d(model_dict):
     params = get_params(model_dict)
+    fixed = get_fixed(model_dict)
     return models.Const1D(amplitude=params["amplitude"],
-                          name=model_dict["id"])
+                          name=model_dict["id"],
+                          fixed = fixed)
 
 model_initializers = {"Gaussian1D": initialize_gaussian1d,
                       "Const1D": initialize_const1d}
@@ -68,17 +75,7 @@ class ModelFitting(TemplateMixin):
         self._param_units = {"amplitude": "1E-17 erg/s/cm^2/Angstrom/spaxel",
                              "stddev": "m",
                              "mean": "m"}
-        self.component_models = [{"id": "Ex1",
-                                  "model_type": "Gaussian1D",
-                                  "parameters": [
-                                        {"name": "stddev", "value": 1,
-                                         "unit": "Angstrom", "fixed": False},
-                                        {"name": "mean", "value": 5,
-                                         "unit": "Angstrom", "fixed": False},
-                                        {"name": "amp", "value": 10,
-                                         "unit": "Jy", "fixed": False}
-                                        ]
-                                  }]
+        self.component_models = []
 
     def _on_data_updated(self, msg):
        self.dc_items = [x.label for x in self.data_collection]

@@ -103,7 +103,7 @@
                 <v-col cols=2>
                   <p class="font-weight-bold">Parameter</p>
                 </v-col>
-                <v-col cols=2>
+                <v-col cols=3>
                   <p class="font-weight-bold">Value</p>
                 </v-col>
                 <v-col cols=4>
@@ -122,7 +122,7 @@
                 <v-col cols = 2>
                   {{ param.name }}
                 </v-col>
-                <v-col cols = 1>
+                <v-col cols = 2>
                   <v-text-field 
                     v-model="param.value"
                   >
@@ -134,7 +134,7 @@
                 </v-col>
                 <v-col cols=1></v-col>
                 <v-col cols=2>
-                  <v-checkbox>
+                  <v-checkbox v-model="param.fixed">
                   </v-checkbox>
                 </v-col>
               </v-row>
