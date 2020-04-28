@@ -460,12 +460,15 @@ class Application(TemplateMixin):
         """
         def remove(stack_items):
             for stack in stack_items:
-                if stack['id'] == cid:
-                    stack_items.remove(stack)
-
                 for viewer in stack['viewers']:
                     if viewer['id'] == cid:
                         stack['viewers'].remove(viewer)
+
+                # If the stack is empty of viewers, also delete the stack
+                # if len(stack['viewers']) == 0 and \
+                #         len(stack['children']) == 0:
+                #     stack_items.remove(stack)
+                #     continue
 
                 if len(stack.get('children', [])) > 0:
                     stack['children'] = remove(stack['children'])
@@ -474,8 +477,12 @@ class Application(TemplateMixin):
 
         remove(self.state.stack_items)
 
+        self.vue_relayout()
+
         # Also remove the viewer from the stored viewer instance dictionary
-        del self._viewer_store[cid]
+        # FIXME: This is getting called twice for some reason
+        if cid in self._viewer_store:
+            del self._viewer_store[cid]
 
     def vue_data_item_selected(self, event):
         """
