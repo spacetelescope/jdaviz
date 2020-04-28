@@ -54,7 +54,6 @@ class ModelFitting(TemplateMixin):
     eq_error = Bool(False).tag(sync=True)
     component_models = List([]).tag(sync=True)
 
-
     # Hard coding this for now, but will want to pull from a config file
     available_models = List(["Gaussian1D", "Const1D"]).tag(sync=True)
 
@@ -115,4 +114,5 @@ class ModelFitting(TemplateMixin):
                                                               self.model_equation)
         self._fitted_model = fitted_model
         self._fitted_spectrum = fitted_spectrum
+        self.data_collection["Model fit"] = self._fitted_spectrum
         self.dialog = False
