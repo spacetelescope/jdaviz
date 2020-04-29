@@ -50,6 +50,8 @@ class ModelFitting(TemplateMixin):
     template = load_template("model_fitting.vue", __file__).tag(sync=True)
     dc_items = List([]).tag(sync=True)
 
+    save_enabled = Bool(False).tag(sync=True)
+    model_savename = Unicode("fitted_model.pkl").tag(sync=True)
     temp_name = Unicode().tag(sync=True)
     temp_model = Unicode().tag(sync=True)
     model_equation = Unicode().tag(sync=True)
@@ -105,7 +107,7 @@ class ModelFitting(TemplateMixin):
         self.component_models = [x for x in self.component_models if x["id"] != event]
 
     def vue_save_model(self, event):
-        with open('fitted_model.pkl', 'wb') as f:
+        with open(self.model_savename, 'wb') as f:
             pickle.dump(self._fitted_model, f)
 
     def vue_equation_changed(self, event):
@@ -122,4 +124,4 @@ class ModelFitting(TemplateMixin):
         self._fitted_model = fitted_model
         self._fitted_spectrum = fitted_spectrum
         self.data_collection["Model fit"] = self._fitted_spectrum
-        self.dialog = False
+        self.save_enabled = True

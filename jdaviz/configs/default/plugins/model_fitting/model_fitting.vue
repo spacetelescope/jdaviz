@@ -163,14 +163,21 @@
 
       <v-card-actions>
         <div class="flex-grow-1"></div>
-        <v-btn color="primary" text @click="dialog = false">Cancel</v-btn>
+        <v-text-field
+          v-if="save_enabled"
+          v-model="model_savename"
+          hint="Specify path and filename for output pickle file"
+         >
+         </v-text-field>
+         <v-btn 
+           v-if="save_enabled" 
+           color="primary" 
+           text 
+           @click="save_model">
+             Save Model
+          </v-btn>
+        <v-btn color="primary" text @click="dialog = false">Close</v-btn>
         <v-btn color="primary" text @click="model_fitting">Fit</v-btn>
-        <v-tooltip top>
-          <template v-slot:activator="{ on }">
-            <v-btn color="primary" text @click="save_model">Save</v-btn>
-          </template>
-          <span>Save the fitted model to fitted_model.pkl</span>
-        </v-tooltip>
       </v-card-actions>
     </v-card>
   </v-dialog>
