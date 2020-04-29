@@ -165,7 +165,7 @@
         <div class="flex-grow-1"></div>
         <v-btn color="primary" text @click="dialog = false">Cancel</v-btn>
         <v-btn color="primary" text @click="model_fitting">Fit</v-btn>
-        <v-tooltip bottom>
+        <v-tooltip top>
           <template v-slot:activator="{ on }">
             <v-btn color="primary" text @click="save_model">Save</v-btn>
           </template>

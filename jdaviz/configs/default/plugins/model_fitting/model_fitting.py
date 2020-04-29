@@ -104,8 +104,8 @@ class ModelFitting(TemplateMixin):
     def vue_remove_model(self, event):
         self.component_models = [x for x in self.component_models if x["id"] != event]
 
-    def vue_save_model(self):
-        with open('fitted_model.pkl', 'w') as f:
+    def vue_save_model(self, event):
+        with open('fitted_model.pkl', 'wb') as f:
             pickle.dump(self._fitted_model, f)
 
     def vue_equation_changed(self, event):
