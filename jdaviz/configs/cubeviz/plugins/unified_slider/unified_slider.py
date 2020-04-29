@@ -53,7 +53,8 @@ class UnifiedSlider(TemplateMixin):
                                               self._slider_value_updated)
 
     def _slider_value_updated(self, value):
-        self.slider = value[0]
+        if len(value) > 0:
+            self.slider = value[0]
 
     @observe('slider')
     def _on_slider_updated(self, event):
