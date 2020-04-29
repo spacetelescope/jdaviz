@@ -112,7 +112,7 @@ class Application(TemplateMixin):
         # Attempt to link the data
         links = find_possible_links(self.data_collection)
 
-        self.data_collection.add_link(links['Astronomy WCS'])
+        #self.data_collection.add_link(links['Astronomy WCS'])
 
     def viewers(self, reference):
         return self._viewer_references.get(reference)
