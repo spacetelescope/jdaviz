@@ -1,9 +1,12 @@
+import pickle
+
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
 from traitlets import Bool, List, Dict, Unicode
 import astropy.units as u
 import astropy.modeling.models as models
 from specutils.spectra import Spectrum1D
+
 
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
@@ -100,6 +103,10 @@ class ModelFitting(TemplateMixin):
 
     def vue_remove_model(self, event):
         self.component_models = [x for x in self.component_models if x["id"] != event]
+
+    def vue_save_model(self):
+        with open('fitted_model.pkl', 'w') as f:
+            pickle.dump(self._fitted_model, f)
 
     def vue_equation_changed(self, event):
         # Length is a dummy check to test the infrastructure
