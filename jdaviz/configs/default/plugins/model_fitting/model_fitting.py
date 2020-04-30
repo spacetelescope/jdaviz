@@ -84,6 +84,18 @@ class ModelFitting(TemplateMixin):
     def _on_data_updated(self, msg):
        self.dc_items = [x.label for x in self.data_collection]
 
+    def update_parameters_from_fit(self):
+        for m in self.component_models:
+            name = m["id"]
+            m_fit = self._fitted_model[name]
+            temp_params = []
+            for i in range(0, len(m_fit.parameters)):
+                temp_param = [x for x in m["parameters"] if x["name"] ==
+                              m_fit.param_names[i]]
+                temp_param[0]["value"] = m_fit.parameters[i]
+                temp_params += temp_param
+            m["parameters"] = temp_params
+
     def vue_data_selected(self, event):
         self._selected_data = next((x for x in self.data_collection
                                     if x.label == event))
@@ -124,4 +136,7 @@ class ModelFitting(TemplateMixin):
         self._fitted_model = fitted_model
         self._fitted_spectrum = fitted_spectrum
         self.data_collection["Model fit"] = self._fitted_spectrum
+        # Update component model parameters with fitted values
+        self.update_parameters_from_fit()
+
         self.save_enabled = True
