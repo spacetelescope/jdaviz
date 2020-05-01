@@ -12,37 +12,11 @@ from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
 from jdaviz.utils import load_template
 
+from .initializers import initialize_model, model_parameters
 from .fitting_backend import fit_model_to_spectrum
 
 __all__ = ['ModelFitting']
 
-def get_params(model_dict):
-    return {x["name"]: u.Quantity(x["value"], x["unit"]) for x in model_dict["parameters"]}
-
-def get_fixed(model_dict):
-    return {x["name"]: x["fixed"] for x in model_dict["parameters"]}
-
-def initialize_gaussian1d(model_dict):
-    params = get_params(model_dict)
-    fixed = get_fixed(model_dict)
-    return models.Gaussian1D(amplitude=params["amplitude"],
-                             mean=params["mean"],
-                             stddev=params["stddev"],
-                             name=model_dict["id"],
-                             fixed = fixed)
-
-def initialize_const1d(model_dict):
-    params = get_params(model_dict)
-    fixed = get_fixed(model_dict)
-    return models.Const1D(amplitude=params["amplitude"],
-                          name=model_dict["id"],
-                          fixed = fixed)
-
-model_initializers = {"Gaussian1D": initialize_gaussian1d,
-                      "Const1D": initialize_const1d}
-
-model_parameters = {"Gaussian1D": ["amplitude", "stddev", "mean"],
-                    "Const1D": ["amplitude"]}
 
 @tray_registry('g-model-fitting')
 class ModelFitting(TemplateMixin):
@@ -84,7 +58,7 @@ class ModelFitting(TemplateMixin):
     def _on_data_updated(self, msg):
        self.dc_items = [x.label for x in self.data_collection]
 
-    def update_parameters_from_fit(self):
+    def _update_parameters_from_fit(self):
         for m in self.component_models:
             name = m["id"]
             m_fit = self._fitted_model[name]
@@ -129,7 +103,7 @@ class ModelFitting(TemplateMixin):
 
     def vue_model_fitting(self, *args, **kwargs):
         # This will be where the model fitting code is run
-        initialized_models = [model_initializers[x["model_type"]](x) for x in self.component_models]
+        initialized_models = [initialize_model(x) for x in self.component_models]
         fitted_model, fitted_spectrum = fit_model_to_spectrum(self._spectrum1d,
                                                               initialized_models,
                                                               self.model_equation)
@@ -137,6 +111,6 @@ class ModelFitting(TemplateMixin):
         self._fitted_spectrum = fitted_spectrum
         self.data_collection["Model fit"] = self._fitted_spectrum
         # Update component model parameters with fitted values
-        self.update_parameters_from_fit()
+        self._update_parameters_from_fit()
 
         self.save_enabled = True
