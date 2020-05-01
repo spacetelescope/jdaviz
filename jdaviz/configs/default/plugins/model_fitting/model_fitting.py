@@ -49,8 +49,14 @@ class ModelFitting(TemplateMixin):
         # Hard coding this for initial testing, want to populate based on
         # selected data
         self._units = {"x": "m", "y": "1E-17 erg/s/cm^2/Angstrom/spaxel"}
-        self._y_params = ["amplitude", "amplitude_L", "intercept"]
         self.component_models = []
+
+    def _param_units(self, param):
+        '''Helper function to handle units that depend on x and y'''
+        y_params = ["amplitude", "amplitude_L", "intercept"]
+        if param == "slope":
+            return "{}/{}".format(self._units["y"], self._units["x"])
+        return self._units["y"] if param in y_params else self._units["x"]
 
     def _on_data_updated(self, msg):
        self.dc_items = [x.label for x in self.data_collection]
@@ -82,8 +88,7 @@ class ModelFitting(TemplateMixin):
                      "parameters": []}
         for param in model_parameters[new_model["model_type"]]:
             new_model["parameters"].append({"name": param, "value": None,
-                                            "unit": self._units["y"] if param in
-                                                    self._y_params else self._units["x"],
+                                            "unit": self._param_units(param),
                                             "fixed": False})
         self.component_models = self.component_models + [new_model]
 
