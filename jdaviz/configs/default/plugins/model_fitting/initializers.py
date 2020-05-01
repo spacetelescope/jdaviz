@@ -1,4 +1,5 @@
 from astropy.modeling import models, powerlaws
+import astropy.units as u
 
 def get_params(model_dict):
     return {x["name"]: u.Quantity(x["value"], x["unit"]) for x in model_dict["parameters"]}
