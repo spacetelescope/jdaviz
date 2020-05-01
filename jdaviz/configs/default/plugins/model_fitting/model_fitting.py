@@ -29,12 +29,10 @@ class ModelFitting(TemplateMixin):
     temp_name = Unicode().tag(sync=True)
     temp_model = Unicode().tag(sync=True)
     model_equation = Unicode().tag(sync=True)
-    param_units = Dict({}).tag(sync=True)
     eq_error = Bool(False).tag(sync=True)
     component_models = List([]).tag(sync=True)
 
-    # Hard coding this for now, but will want to pull from a config file
-    available_models = List(["Gaussian1D", "Const1D"]).tag(sync=True)
+    available_models = List(list(model_parameters.keys())).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -50,9 +48,8 @@ class ModelFitting(TemplateMixin):
         self._fitted_spectrum = None
         # Hard coding this for initial testing, want to populate based on
         # selected data
-        self._param_units = {"amplitude": "1E-17 erg/s/cm^2/Angstrom/spaxel",
-                             "stddev": "m",
-                             "mean": "m"}
+        self._units = {"x": "m", "y": "1E-17 erg/s/cm^2/Angstrom/spaxel"}
+        self._y_params = ["amplitude", "amplitude_L", "intercept"]
         self.component_models = []
 
     def _on_data_updated(self, msg):
@@ -85,7 +82,8 @@ class ModelFitting(TemplateMixin):
                      "parameters": []}
         for param in model_parameters[new_model["model_type"]]:
             new_model["parameters"].append({"name": param, "value": None,
-                                            "unit": self._param_units[param],
+                                            "unit": self._units["y"] if param in
+                                                    self._y_params else self._units["x"],
                                             "fixed": False})
         self.component_models = self.component_models + [new_model]
 
