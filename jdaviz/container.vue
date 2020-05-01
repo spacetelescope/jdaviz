@@ -1,5 +1,5 @@
 <template>
-  <component v-bind:is="stack.container">
+  <component :is="stack.container">
     <g-viewer-tab
       v-for="(child, index) in stack.children"
       :stack="child"
@@ -87,9 +87,15 @@ module.exports = {
   name: "g-viewer-tab",
   props: ["stack", "dataItems"],
   created() {
+      console.log("HERE" + this.$parent.computeChildrenPath);
     this.$parent.childMe = () => {
       return this.$children[0];
     };
+  },
+  methods: {
+    computeChildrenPath() {
+        return this.$parent.computeChildrenPath()
+    }
   },
   computed: {
     parentMe() {
