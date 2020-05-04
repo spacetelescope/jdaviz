@@ -44,7 +44,7 @@ class UnifiedSlider(TemplateMixin):
     def _on_data_added(self, msg):
         if len(msg.data.shape) == 3 and \
                 isinstance(msg.viewer, BqplotImageView):
-            self.max_value = msg.data.shape[0]
+            self.max_value = msg.data.shape[0] - 1
 
             if msg.viewer not in self._watched_viewers:
                 self._watched_viewers.append(msg.viewer)
@@ -54,7 +54,7 @@ class UnifiedSlider(TemplateMixin):
 
     def _slider_value_updated(self, value):
         if len(value) > 0:
-            self.slider = value[0]
+            self.slider = float(value[0])
 
     @observe('slider')
     def _on_slider_updated(self, event):
