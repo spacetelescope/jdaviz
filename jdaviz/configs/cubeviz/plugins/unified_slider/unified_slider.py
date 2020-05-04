@@ -60,4 +60,4 @@ class UnifiedSlider(TemplateMixin):
     def _on_slider_updated(self, event):
         if self.linked:
             for viewer in self._watched_viewers:
-                viewer.state.slices = (event['new'], 0, 0)
+                viewer.state.slices = (int(event['new']), 0, 0)
