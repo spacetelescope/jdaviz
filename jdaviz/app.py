@@ -132,6 +132,9 @@ class Application(TemplateMixin):
         self.hub.subscribe(self, DataCollectionAddMessage,
                            handler=self._on_data_added)
 
+        # Add callback that updates the layout when the data item array changes
+        self.state.add_callback('stack_items', self.vue_relayout)
+
     @property
     def hub(self):
         """
@@ -439,8 +442,9 @@ class Application(TemplateMixin):
                 for viewer_item in stack.get('viewers'):
                     viewer = self._viewer_by_id(viewer_item['id'])
 
-                    viewer.figure_widget.layout.height = '99.9%'
-                    viewer.figure_widget.layout.height = '100%'
+                    if viewer is not None:
+                        viewer.figure_widget.layout.height = '99.9%'
+                        viewer.figure_widget.layout.height = '100%'
 
                 if len(stack.get('children')) > 0:
                     resize(stack.get('children'))
@@ -465,10 +469,10 @@ class Application(TemplateMixin):
                         stack['viewers'].remove(viewer)
 
                 # If the stack is empty of viewers, also delete the stack
-                # if len(stack['viewers']) == 0 and \
-                #         len(stack['children']) == 0:
-                #     stack_items.remove(stack)
-                #     continue
+                if len(stack['viewers']) == 0 and \
+                        len(stack['children']) == 0:
+                    stack_items.remove(stack)
+                    continue
 
                 if len(stack.get('children', [])) > 0:
                     stack['children'] = remove(stack['children'])
@@ -477,7 +481,7 @@ class Application(TemplateMixin):
 
         remove(self.state.stack_items)
 
-        self.vue_relayout()
+        # self.vue_relayout()
 
         # Also remove the viewer from the stored viewer instance dictionary
         # FIXME: This is getting called twice for some reason
@@ -654,16 +658,12 @@ class Application(TemplateMixin):
             container='gl-stack',
             viewers=[new_viewer_item])
 
-        # Add viewer locally
-        self.state.stack_items.append(new_stack_item)
-
         # Store the glupyter viewer object so we can access the add and remove
         #  data methods in the future
         self._viewer_store[new_viewer_item['id']] = viewer
 
-        # TODO: remove this once we can assign callbacks to nested
-        #  ``CallbackProperties``
-        self.vue_relayout()
+        # Add viewer locally
+        self.state.stack_items.append(new_stack_item)
 
         return viewer
 
@@ -728,7 +728,7 @@ class Application(TemplateMixin):
         if config.get('viewer_area') is not None:
             stack_items = compose_viewer_area(config.get('viewer_area'))
             self.state.stack_items.extend(stack_items)
-            self.vue_relayout()
+            # self.vue_relayout()
 
         # Add the toolbar item filter to the toolbar component
         for name in config.get('toolbar', []):
