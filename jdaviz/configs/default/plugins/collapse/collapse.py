@@ -9,7 +9,7 @@ from specutils import Spectrum1D
 from spectral_cube import SpectralCube
 from traitlets import Bool, List, Unicode, Int, observe
 
-from jdaviz.core.registries import tool_registry
+from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
 from jdaviz.utils import load_template
 
@@ -24,7 +24,7 @@ u.add_enabled_units([spaxel])
 AXES_MAPPING = [((1, 2), (0, 1)), ((0, 2), (0, 1)), ((0, 1), (0, 1))]
 
 
-@tool_registry('g-collapse')
+@tray_registry('g-collapse', label="Collapse")
 class Collapse(TemplateMixin):
     template = load_template("collapse.vue", __file__).tag(sync=True)
     dialog = Bool(False).tag(sync=True)

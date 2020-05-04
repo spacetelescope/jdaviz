@@ -21,7 +21,7 @@
         <!-- <v-row align="center" justify="center" class="fill-height pa-0 ma-0" style="width: 100%">
         <v-col cols="12" class="fill-height pa-0 ma-0" style="width: 100%"> -->
         <splitpanes class="default-theme" @resize="relayout">
-          <pane size="80">
+          <pane size="70">
             <v-card tile class="ma-2" style="height: calc(100% - 16px)">
               <golden-layout
                 :style="checkNotebookContext() ? 'height: 100%;' : 'height: calc(100vh - 64px)'"
@@ -41,30 +41,20 @@
               </golden-layout>
             </v-card>
           </pane>
-          <pane size="20" v-if="state.drawer">
-            <splitpanes horizontal class="elevation-2">
-              <pane>
-                <v-card tile class="ma-2" style="height: calc(100% - 16px)">
-                  <golden-layout
-                    :style="checkNotebookContext() ? 'height: 100%;' : 'height: calc(100vh - 64px)'"
-                  >
-                    <gl-stack
-                      @stateChanged="consle.log($event)"
-                      @selection-changed="consle.log($event)"
-                      :closable="false"
-                    >
-                      <gl-component
+          <pane size="30" v-if="state.drawer">
+            <v-card class="fill-height" style="padding: 0px; margin: 0px">
+              <v-expansion-panels accordion multiple focusable>
+                <v-expansion-panel
                         v-for="(tray, index) in state.tray_items"
                         :key="index"
-                        :title="tray.name"
-                      >
-                        <jupyter-widget :widget="tray.widget"></jupyter-widget>
-                      </gl-component>
-                    </gl-stack>
-                  </golden-layout>
-                </v-card>
-              </pane>
-            </splitpanes>
+                >
+                  <v-expansion-panel-header>{{ tray.label }}</v-expansion-panel-header>
+                  <v-expansion-panel-content>
+                    <jupyter-widget :widget="tray.widget"></jupyter-widget>
+                  </v-expansion-panel-content>
+                </v-expansion-panel>
+              </v-expansion-panels>
+            </v-card>
           </pane>
         </splitpanes>
         <!-- </v-col>
@@ -124,5 +114,15 @@ export default {
 
 .vuetify-styles .lm_header ul {
   padding-left: 0;
+}
+
+.v-expansion-panel-content__wrap {
+  padding: 0px;
+  margin: 0px;
+}
+
+.v-expansion-panel__header {
+  padding: 0px;
+  margin: 0px
 }
 </style>

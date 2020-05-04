@@ -801,10 +801,12 @@ class Application(TemplateMixin):
             })
 
         for name in config.get('tray', []):
-            tray = tray_registry.members.get(
-                name).get('cls')(app=self)
+            tray = tray_registry.members.get(name)
+            tray_item_instance = tray.get('cls')(app=self)
+            tray_item_label = tray.get('label')
 
             self.state.tray_items.append({
                 'name': name,
-                'widget': "IPY_MODEL_" + tray.model_id
+                'label': tray_item_label,
+                'widget': "IPY_MODEL_" + tray_item_instance.model_id
             })
