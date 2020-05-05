@@ -1,6 +1,7 @@
 import os
 import uuid
 from abc import ABC
+import logging
 
 import ipywidgets as w
 import pkg_resources
@@ -297,8 +298,16 @@ class Application(TemplateMixin):
         viewer_item = self._viewer_item_by_reference(reference)
         data_id = self._data_id_from_label(label)
 
-        self._update_selected_data_items(
-            viewer_item['id'], viewer_item['selected_data_items'] + [data_id])
+        data_ids = viewer_item['selected_data_items']
+
+        if data_id is not None:
+            data_ids.append(data_id)
+            self._update_selected_data_items(viewer_item['id'], data_ids)
+        else:
+            logging.warning(
+                f"No data item found with label '{label}'. Label must be one "
+                f"of:\n\t" + f"\n\t".join([
+                    data_item['name'] for data_item in self.state.data_items]))
 
     def unset_viewer_data(self, reference, label):
         """
@@ -509,7 +518,7 @@ class Application(TemplateMixin):
         viewer_item = self._viewer_item_by_id(viewer_id)
         viewer = self._viewer_by_id(viewer_id)
 
-        # Update the store selected data items
+        # Update the stored selected data items
         viewer_item['selected_data_items'] = selected_items
         data_ids = viewer_item['selected_data_items']
 
@@ -517,8 +526,13 @@ class Application(TemplateMixin):
 
         # Include any selected data in the viewer
         for data_id in data_ids:
-            [label] = [x['name'] for x in self.state.data_items
-                       if x['id'] == data_id]
+            label = next((x['name'] for x in self.state.data_items
+                          if x['id'] == data_id), None)
+
+            if label is None:
+                logging.warning(f"No data item with id '{data_id}' found in "
+                                f"viewer '{viewer_id}'.")
+                continue
 
             active_data_labels.append(label)
 
