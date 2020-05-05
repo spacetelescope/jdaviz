@@ -20,7 +20,7 @@ from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
 from traitlets import Dict
 
-from .core.events import LoadDataMessage, NewViewerMessage, AddDataMessage
+from .core.events import LoadDataMessage, NewViewerMessage, AddDataMessage, SnackbarMessage
 from .core.registries import tool_registry, tray_registry, viewer_registry
 from .core.template_mixin import TemplateMixin
 from .utils import load_template
@@ -45,6 +45,15 @@ class ApplicationState(State):
     """
     drawer = CallbackProperty(
         False, docstring="State of the plugins drawer.")
+
+    snackbar = CallbackProperty(
+        False, docstring="State of the quick toast messages.")
+
+    snackbar_text = CallbackProperty(
+        "", docstring="Text to display in toast message.")
+
+    snackbar_timeout = CallbackProperty(
+        3000, docstring="Timeout for snackbar message.")
 
     settings = DictCallbackProperty({
         'visible': {
@@ -131,9 +140,14 @@ class Application(TemplateMixin):
                            handler=lambda msg: self.load_data(msg.path))
 
         # Subscribe to the event fired when data is added to the application-
-        # level data collection object
+        #  level data collection object
         self.hub.subscribe(self, DataCollectionAddMessage,
                            handler=self._on_data_added)
+
+        # Subscribe to snackbar messages and tie them to the display of the
+        #  message box
+        self.hub.subscribe(self, SnackbarMessage,
+                           handler=self._on_snackbar_message)
 
         # Add callback that updates the layout when the data item array changes
         self.state.add_callback('stack_items', self.vue_relayout)
@@ -175,6 +189,22 @@ class Application(TemplateMixin):
         """
         return self._application_handler.data_collection
 
+    def _on_snackbar_message(self, msg):
+        """
+        Displays a toast message with an editable message that be dismissed
+        manually or will dismiss automatically after a timeout.
+
+        Parameters
+        ----------
+        msg : `~glue.core.SnackbarMessage`
+            The Glue snackbar message containing information about displaying
+            the message box.
+        """
+        self.state.snackbar = False
+        self.state.snackbar_text = msg.text
+        self.state.snackbar_timeout = msg.timeout
+        self.state.snackbar = True
+
     def load_data(self, path):
         """
         Provided a path to a data file, open and parse the data into the
@@ -187,6 +217,11 @@ class Application(TemplateMixin):
             File path for the data file to be loaded.
         """
         self._application_handler.load_data(path)
+
+        # Send out a toast message
+        snackbar_message = SnackbarMessage("Data successfully loaded.",
+                                           sender=self)
+        self.hub.broadcast(snackbar_message)
 
         # Attempt to link the data
         links = find_possible_links(self.data_collection)
@@ -323,7 +358,13 @@ class Application(TemplateMixin):
             name is generated.
         """
         # Include the data in the data collection
-        self.data_collection[data_label or "New Data"] = data
+        data_label = data_label or "New Data"
+        self.data_collection[data_label] = data
+
+        # Send out a toast message
+        snackbar_message = SnackbarMessage(
+            f"Data '{data_label}' successfully added.", sender=self)
+        self.hub.broadcast(snackbar_message)
 
     def add_data_to_viewer(self, viewer_reference, data_label,
                            clear_other_data=False):
@@ -547,7 +588,7 @@ class Application(TemplateMixin):
     def vue_data_item_selected(self, event):
         """
         Callback for selection events in the front-end data list. Selections
-        mean that the checkbox associatd with the list item has been toggled.
+        mean that the checkbox associated with the list item has been toggled.
         When the checkbox is toggled off, remove the data from the viewer;
         when it is toggled on, add the data to the viewer.
 
@@ -725,6 +766,11 @@ class Application(TemplateMixin):
 
         # Add viewer locally
         self.state.stack_items.append(new_stack_item)
+
+        # Send out a toast message
+        snackbar_message = SnackbarMessage("New viewer successfully created.",
+                                           sender=self)
+        self.hub.broadcast(snackbar_message)
 
         return viewer
 

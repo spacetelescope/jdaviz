@@ -1,11 +1,8 @@
 <template>
   <v-app id="web-app">
-    <v-app-bar color="white" class="elevation-1" dense app absolute clipped-right>
-      <!-- <v-toolbar-items> -->
+    <v-app-bar dark dense flat app absolute clipped-right>
       <jupyter-widget :widget="item.widget" v-for="item in state.tool_items" :key="item.name"></jupyter-widget>
-      <!-- </v-toolbar-items> -->
       <v-spacer></v-spacer>
-      <!-- <v-divider vertical></v-divider> -->
       <v-toolbar-items>
         <v-btn icon @click="state.drawer = !state.drawer">
           <v-icon v-if="state.drawer">mdi-toy-brick-remove</v-icon>
@@ -18,13 +15,10 @@
       :style="checkNotebookContext() ? 'height: ' + state.settings.context.notebook.max_height : ''"
     >
       <v-container class="fill-height pa-0" fluid>
-        <!-- <v-row align="center" justify="center" class="fill-height pa-0 ma-0" style="width: 100%">
-        <v-col cols="12" class="fill-height pa-0 ma-0" style="width: 100%"> -->
-        <splitpanes class="default-theme" @resize="relayout">
+        <splitpanes @resize="relayout">
           <pane size="70">
-            <v-card tile class="ma-2" style="height: calc(100% - 16px)">
               <golden-layout
-                :style="checkNotebookContext() ? 'height: 100%;' : 'height: calc(100vh - 64px)'"
+                :style="checkNotebookContext() ? 'height: 100%;' : 'height: calc(100vh - 48px)'"
                 :has-headers="state.settings.visible.tab_headers"
               >
                 <gl-row :closable="false">
@@ -39,28 +33,24 @@
                   ></g-viewer-tab>
                 </gl-row>
               </golden-layout>
-            </v-card>
           </pane>
-          <pane size="30" v-if="state.drawer">
-            <v-card class="fill-height" style="padding: 0px; margin: 0px">
-              <v-expansion-panels accordion multiple focusable>
-                <v-expansion-panel
-                        v-for="(tray, index) in state.tray_items"
-                        :key="index"
-                >
-                  <v-expansion-panel-header>{{ tray.label }}</v-expansion-panel-header>
-                  <v-expansion-panel-content>
-                    <jupyter-widget :widget="tray.widget"></jupyter-widget>
-                  </v-expansion-panel-content>
-                </v-expansion-panel>
-              </v-expansion-panels>
-            </v-card>
+          <pane size="30" v-if="state.drawer" style="background-color: #fff;">
+            <v-expansion-panels accordion multiple focusable flat tile>
+              <v-expansion-panel v-for="(tray, index) in state.tray_items" :key="index">
+                <v-expansion-panel-header>{{ tray.label }}</v-expansion-panel-header>
+                <v-expansion-panel-content>
+                  <jupyter-widget :widget="tray.widget"></jupyter-widget>
+                </v-expansion-panel-content>
+              </v-expansion-panel>
+            </v-expansion-panels>
           </pane>
         </splitpanes>
-        <!-- </v-col>
-        </v-row> -->
       </v-container>
     </v-content>
+    <v-snackbar v-model="state.snackbar" :timeout="state.snackbar_timeout">
+      {{ state.snackbar_text }}
+      <v-btn color="blue" text @click="state.snackbar = false">Close</v-btn>
+    </v-snackbar>
   </v-app>
 </template>
 
@@ -86,8 +76,14 @@ export default {
   height: 100%;
 }
 
+.splitpanes {
+  background-color: #f8f8f8;
+}
+
 .splitpanes__splitter {
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2), 0 2px 5px 0 rgba(0, 0, 0, 0.19);
+  background-color: #e5e5e5;
+  position: relative;
+  width: 5px;
 }
 
 .lm_goldenlayout {
@@ -97,14 +93,21 @@ export default {
 .lm_content {
   background: #ffffff;
   border: none;
-  border-top: 1px solid #cccccc;
+  /*border-top: 1px solid #cccccc;*/
 }
 
 .lm_splitter {
-  background: #999999;
-  opacity: 0.25;
+  background: #e5e5e5;
+  opacity: 1;
   z-index: 1;
-  transition: opacity 200ms ease;
+}
+
+.lm_splitter .lm_vertical {
+  width: 1px
+}
+
+.lm_splitter .lm_horizontal {
+  height: 1px
 }
 
 .lm_header .lm_tab {
@@ -123,6 +126,6 @@ export default {
 
 .v-expansion-panel__header {
   padding: 0px;
-  margin: 0px
+  margin: 0px;
 }
 </style>
