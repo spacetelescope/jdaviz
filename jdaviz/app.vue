@@ -12,11 +12,11 @@
     </v-app-bar>
 
     <v-content
-      :style="checkNotebookContext() ? 'height: ' + state.settings.context.notebook.max_height : ''"
+      :style="checkNotebookContext() ? 'height: ' + state.settings.context.notebook.max_height + '; border: solid 1px #e5e5e5;' : ''"
     >
       <v-container class="fill-height pa-0" fluid>
         <splitpanes @resize="relayout">
-          <pane size="70">
+          <pane size="75">
               <golden-layout
                 :style="checkNotebookContext() ? 'height: 100%;' : 'height: calc(100vh - 48px)'"
                 :has-headers="state.settings.visible.tab_headers"
@@ -34,7 +34,7 @@
                 </gl-row>
               </golden-layout>
           </pane>
-          <pane size="30" v-if="state.drawer" style="background-color: #fff;">
+          <pane size="25" v-if="state.drawer" style="background-color: #fafbfc;">
             <v-expansion-panels accordion multiple focusable flat tile>
               <v-expansion-panel v-for="(tray, index) in state.tray_items" :key="index">
                 <v-expansion-panel-header>{{ tray.label }}</v-expansion-panel-header>
@@ -47,7 +47,7 @@
         </splitpanes>
       </v-container>
     </v-content>
-    <v-snackbar v-model="state.snackbar" :timeout="state.snackbar_timeout">
+    <v-snackbar v-model="state.snackbar" :timeout="state.snackbar_timeout" absolute>
       {{ state.snackbar_text }}
       <v-btn color="blue" text @click="state.snackbar = false">Close</v-btn>
     </v-snackbar>
@@ -66,66 +66,75 @@ export default {
 </script>
 
 <style id="web-app">
-.v-toolbar__content,
-.vuetify-styles .v-toolbar__content {
-  padding-left: 0px;
-  padding-right: 0px;
-}
+  .v-toolbar__content,
+  .vuetify-styles .v-toolbar__content {
+    padding-left: 0px;
+    padding-right: 0px;
+  }
 
-.v-tabs-items {
-  height: 100%;
-}
+  .v-tabs-items {
+    height: 100%;
+  }
 
-.splitpanes {
-  background-color: #f8f8f8;
-}
+  .splitpanes {
+    background-color: #f8f8f8;
+  }
 
-.splitpanes__splitter {
-  background-color: #e5e5e5;
-  position: relative;
-  width: 5px;
-}
+  .splitpanes__splitter {
+    background-color: #e2e4e8;
+    position: relative;
+    width: 1px;
+  }
 
-.lm_goldenlayout {
-  background: #fafafa;
-}
+  .lm_goldenlayout {
+    background: #ffffff;
+  }
 
-.lm_content {
-  background: #ffffff;
-  border: none;
-  /*border-top: 1px solid #cccccc;*/
-}
+  .lm_content {
+    background: #ffffff;
+    border: none;
+    /*border-top: 1px solid #cccccc;*/
+  }
 
-.lm_splitter {
-  background: #e5e5e5;
-  opacity: 1;
-  z-index: 1;
-}
+  .lm_splitter {
+    background: #e2e4e8;
+    opacity: 1;
+    z-index: 1;
+  }
 
-.lm_splitter .lm_vertical {
-  width: 1px
-}
+  .lm_splitter.lm_vertical {
+    height: 1px !important;
+    margin-top: 2px;
+    margin-bottom: 2px;
+  }
 
-.lm_splitter .lm_horizontal {
-  height: 1px
-}
+  .lm_splitter.lm_horizontal {
+    width: 1px !important;
+    margin-left: 2px;
+    margin-right: 2px;
+  }
 
-.lm_header .lm_tab {
-  padding-top: 0px;
-  margin-top: 0px;
-}
+  .lm_header .lm_tab {
+    padding-top: 0px;
+    margin-top: 0px;
+  }
 
-.vuetify-styles .lm_header ul {
-  padding-left: 0;
-}
+  .vuetify-styles .lm_header ul {
+    padding-left: 0;
+  }
 
-.v-expansion-panel-content__wrap {
-  padding: 0px;
-  margin: 0px;
-}
+  .v-expansion-panel-content__wrap {
+    padding: 0px;
+    margin: 0px;
+  }
 
-.v-expansion-panel__header {
-  padding: 0px;
-  margin: 0px;
-}
+  .v-expansion-panel__header {
+    padding: 0px;
+    margin: 0px;
+  }
+
+  .vuetify-styles .v-expansion-panel-content__wrap {
+    padding: 0px;
+    margin: 0px;
+  }
 </style>
