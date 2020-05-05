@@ -27,7 +27,6 @@ AXES_MAPPING = [((1, 2), (0, 1)), ((0, 2), (0, 1)), ((0, 1), (0, 1))]
 @tray_registry('g-collapse', label="Collapse")
 class Collapse(TemplateMixin):
     template = load_template("collapse.vue", __file__).tag(sync=True)
-    dialog = Bool(False).tag(sync=True)
     data_items = List([]).tag(sync=True)
     selected_data_item = Unicode().tag(sync=True)
     axes = List([]).tag(sync=True)
@@ -81,5 +80,3 @@ class Collapse(TemplateMixin):
                                                self.data_collection[label].pixel_component_ids[i1c]))
         self.data_collection.add_link(LinkSame(self._selected_data.pixel_component_ids[i2],
                                                self.data_collection[label].pixel_component_ids[i2c]))
-
-        self.dialog = False

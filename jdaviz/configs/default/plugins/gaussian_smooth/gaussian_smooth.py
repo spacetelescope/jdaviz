@@ -20,7 +20,6 @@ u.add_enabled_units([spaxel])
 
 @tray_registry('g-gaussian-smooth', label="Gaussian Smooth")
 class GaussianSmooth(TemplateMixin):
-    dialog = Bool(False).tag(sync=True)
     template = load_template("gaussian_smooth.vue", __file__).tag(sync=True)
     stddev = Unicode().tag(sync=True)
     dc_items = List([]).tag(sync=True)
@@ -67,5 +66,3 @@ class GaussianSmooth(TemplateMixin):
         # (whcih could in principle be a cube or a spectrum)
         self.data_collection.add_link(LinkSame(self._selected_data.pixel_component_ids[0],
                                                self.data_collection[label].pixel_component_ids[0]))
-
-        self.dialog = False
