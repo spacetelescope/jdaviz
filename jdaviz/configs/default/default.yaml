@@ -11,6 +11,5 @@ toolbar:
   - g-data-tools
   - g-viewer-creator
   - g-subset-tools
-  - g-gaussian-smooth
 tray:
-  - g-model-fitting
+  - g-gaussian-smooth

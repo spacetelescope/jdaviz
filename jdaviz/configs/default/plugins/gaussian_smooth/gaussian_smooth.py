@@ -5,8 +5,9 @@ from glue.core.message import (DataCollectionAddMessage,
 from glue.core.link_helpers import LinkSame
 from specutils import Spectrum1D
 from specutils.manipulation import gaussian_smooth
-from traitlets import Bool, List, Unicode
+from traitlets import List, Unicode
 
+from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
 from jdaviz.utils import load_template
@@ -66,3 +67,8 @@ class GaussianSmooth(TemplateMixin):
         # (whcih could in principle be a cube or a spectrum)
         self.data_collection.add_link(LinkSame(self._selected_data.pixel_component_ids[0],
                                                self.data_collection[label].pixel_component_ids[0]))
+
+        snackbar_message = SnackbarMessage(
+            f"Data set '{self._selected_data.label}' smoothed successfully.",
+            sender=self)
+        self.hub.broadcast(snackbar_message)
