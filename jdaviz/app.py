@@ -284,8 +284,8 @@ class Application(TemplateMixin):
         # Include the data in the data collection
         self.data_collection[data_label or "New Data"] = data
 
-    def add_viewer_data(self, viewer_reference, data_label,
-                        clear_other_data=False):
+    def add_data_to_viewer(self, viewer_reference, data_label,
+                           clear_other_data=False):
         """
         Plots a data set from the data collection in the specific viewer.
 
@@ -315,7 +315,7 @@ class Application(TemplateMixin):
                 f"of:\n\t" + f"\n\t".join([
                     data_item['name'] for data_item in self.state.data_items]))
 
-    def remove_viewer_data(self, viewer_reference, data_label):
+    def remove_data_from_viewer(self, viewer_reference, data_label):
         """
         Removes a data set from the specified viewer.
 
