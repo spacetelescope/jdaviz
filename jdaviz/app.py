@@ -8,6 +8,7 @@ import ipywidgets as w
 import pkg_resources
 import yaml
 from glue.core import BaseData
+from glue.core.subset import Subset
 from glue.core.autolinking import find_possible_links
 from glue.core.message import DataCollectionAddMessage
 from glue.core.state_objects import State
@@ -219,7 +220,8 @@ class Application(TemplateMixin):
         """
         return self._viewer_by_reference(viewer_reference)
 
-    def get_data_from_viewer(self, viewer_reference, data_label=None, cls=None):
+    def get_data_from_viewer(self, viewer_reference, data_label=None, cls=None,
+                             include_subsets=True):
         """
         Returns each data component currently rendered within a viewer
         instance. Viewers themselves store a default data type to which the
@@ -245,6 +247,9 @@ class Application(TemplateMixin):
             when retrieved. This requires that a working set of translation
             functions exist in the ``glue_astronomy`` package. See
             ``https://github.com/glue-viz/glue-astronomy`` for more info.
+        include_subsets : bool
+            Whether to include subset layer data that exists in the viewer but
+            has not been included in the core data collection object.
 
         Returns
         -------
@@ -254,12 +259,24 @@ class Application(TemplateMixin):
         viewer = self.get_viewer(viewer_reference)
         cls = cls or viewer.default_class
 
-        data = [layer_state.layer.get_object(cls=cls)
-                if cls is not None else layer_state.layer
-                for layer_state in viewer.state.layers
-                if hasattr(layer_state, 'layer') and
-                isinstance(layer_state.layer, BaseData)
-                and (data_label is None or layer_state.layer.label == data_label)]
+        data = []
+
+        for layer_state in viewer.state.layers:
+            if hasattr(layer_state, 'layer') and \
+                (data_label is None or
+                 layer_state.layer.label == data_label):
+
+                # For raw data, just include the data itself
+                if isinstance(layer_state.layer, BaseData):
+                    data.append(layer_state.layer.get_object(cls=cls))
+
+                # For subsets, make sure to apply the subset mask to the
+                #  layer data first
+                elif isinstance(layer_state.layer, Subset):
+                    subset = layer_state.layer
+                    mask = subset.to_mask()
+                    layer_data = subset.data[mask].get_object(cls=cls)
+                    data.append(layer_data)
 
         if data_label is not None:
             return next(iter(data), None)
