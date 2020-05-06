@@ -218,7 +218,7 @@ class Application(TemplateMixin):
         """
         return self._viewer_by_reference(reference)
 
-    def get_viewer_data(self, reference, label=None, cls=None):
+    def get_data_from_viewer(self, reference, label=None, cls=None):
         """
         Returns each data component currently rendered within a viewer
         instance. Viewers themselves store a default data type to which the
@@ -283,33 +283,38 @@ class Application(TemplateMixin):
         # Include the data in the data collection
         self.data_collection[name or "New Data"] = data
 
-    def set_viewer_data(self, reference, label):
+    def add_viewer_data(self, viewer_reference, data_label,
+                        clear_other_data=False):
         """
         Plots a data set from the data collection in the specific viewer.
 
         Parameters
         ----------
-        reference : str
+        viewer_reference : str
             The reference to the viewer defined with the ``reference`` key
             in the yaml configuration file.
-        label : str
+        data_label : str
             The Glue data label found in the ``DataCollection``.
+        clear_other_data : bool
+            Removes all other currently plotted data and only shows the newly
+            defined data set.
         """
-        viewer_item = self._viewer_item_by_reference(reference)
-        data_id = self._data_id_from_label(label)
+        viewer_item = self._viewer_item_by_reference(viewer_reference)
+        data_id = self._data_id_from_label(data_label)
 
-        data_ids = viewer_item['selected_data_items']
+        data_ids = viewer_item['selected_data_items'] \
+            if not clear_other_data else []
 
         if data_id is not None:
             data_ids.append(data_id)
             self._update_selected_data_items(viewer_item['id'], data_ids)
         else:
-            logging.warning(
-                f"No data item found with label '{label}'. Label must be one "
+            raise ValueError(
+                f"No data item found with label '{data_label}'. Label must be one "
                 f"of:\n\t" + f"\n\t".join([
                     data_item['name'] for data_item in self.state.data_items]))
 
-    def unset_viewer_data(self, reference, label):
+    def remove_viewer_data(self, reference, label):
         """
         Removes a data set from the specified viewer.
 
