@@ -2,6 +2,7 @@ import os
 import uuid
 from abc import ABC
 import logging
+import re
 
 import ipywidgets as w
 import pkg_resources
@@ -191,7 +192,7 @@ class Application(TemplateMixin):
 
         # self.data_collection.add_link(links['Astronomy WCS'])
 
-    def get_viewer(self, reference):
+    def get_viewer(self, viewer_reference):
         """
         Return a `~glue_jupyter.bqplot.common.BqplotBaseView` viewer instance.
         This is *not* an ``IPyWidget``. This is stored here because
@@ -207,7 +208,7 @@ class Application(TemplateMixin):
 
         Parameters
         ----------
-        reference : str
+        viewer_reference : str
             The reference to the viewer defined with the ``reference`` key
             in the yaml configuration file.
 
@@ -216,9 +217,9 @@ class Application(TemplateMixin):
         `~glue_jupyter.bqplot.common.BqplotBaseView`
             The viewer class instance.
         """
-        return self._viewer_by_reference(reference)
+        return self._viewer_by_reference(viewer_reference)
 
-    def get_data_from_viewer(self, reference, label=None, cls=None):
+    def get_data_from_viewer(self, viewer_reference, data_label=None, cls=None):
         """
         Returns each data component currently rendered within a viewer
         instance. Viewers themselves store a default data type to which the
@@ -233,10 +234,10 @@ class Application(TemplateMixin):
 
         Parameters
         ----------
-        reference : str
+        viewer_reference : str
             The reference to the viewer defined with the ``reference`` key
             in the yaml configuration file.
-        label : str, optional
+        data_label : str, optional
             Optionally provide a label to retrieve a specific data set from the
             viewer instance.
         cls : class
@@ -250,7 +251,7 @@ class Application(TemplateMixin):
         data : list
             A list of the transformed Glue data objects.
         """
-        viewer = self.get_viewer(reference)
+        viewer = self.get_viewer(viewer_reference)
         cls = cls or viewer.default_class
 
         data = [layer_state.layer.get_object(cls=cls)
@@ -258,14 +259,14 @@ class Application(TemplateMixin):
                 for layer_state in viewer.state.layers
                 if hasattr(layer_state, 'layer') and
                 isinstance(layer_state.layer, BaseData)
-                and (label is None or layer_state.layer.label == label)]
+                and (data_label is None or layer_state.layer.label == data_label)]
 
-        if label is not None:
+        if data_label is not None:
             return next(iter(data), None)
 
         return data
 
-    def add_data(self, data, name=None):
+    def add_data(self, data, data_label):
         """
         Add data to the Glue ``DataCollection``.
 
@@ -276,12 +277,12 @@ class Application(TemplateMixin):
             a `~glue.core.data.Data` instance, or an arbitrary data instance
             for which there exists data translation functions in the
             glue astronomy repository.
-        name : str, optional
+        data_label : str, optional
             The name associated with this data. If none is given, a generic
             name is generated.
         """
         # Include the data in the data collection
-        self.data_collection[name or "New Data"] = data
+        self.data_collection[data_label or "New Data"] = data
 
     def add_viewer_data(self, viewer_reference, data_label,
                         clear_other_data=False):
@@ -314,20 +315,20 @@ class Application(TemplateMixin):
                 f"of:\n\t" + f"\n\t".join([
                     data_item['name'] for data_item in self.state.data_items]))
 
-    def remove_viewer_data(self, reference, label):
+    def remove_viewer_data(self, viewer_reference, data_label):
         """
         Removes a data set from the specified viewer.
 
         Parameters
         ----------
-        reference : str
+        viewer_reference : str
             The reference to the viewer defined with the ``reference`` key
             in the yaml configuration file.
-        label : str
+        data_label : str
             The Glue data label found in the ``DataCollection``.
         """
-        viewer_item = self._viewer_item_by_reference(reference)
-        data_id = self._data_id_from_label(label)
+        viewer_item = self._viewer_item_by_reference(viewer_reference)
+        data_id = self._data_id_from_label(data_label)
 
         selected_items = viewer_item['selected_data_items']
 
