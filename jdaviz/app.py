@@ -752,7 +752,7 @@ class Application(TemplateMixin):
 
         # Add the toolbar item filter to the toolbar component
         for name in config.get('toolbar', []):
-            tool = tool_registry.members.get(name)(session=self.session)
+            tool = tool_registry.members.get(name)(app=self)
 
             self.state.tool_items.append({
                 'name': name,
@@ -761,7 +761,7 @@ class Application(TemplateMixin):
 
         for name in config.get('tray', []):
             tray = tray_registry.members.get(
-                name).get('cls')(session=self.session)
+                name).get('cls')(app=self)
 
             self.state.tray_items.append({
                 'name': name,
