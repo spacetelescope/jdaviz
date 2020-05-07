@@ -3,7 +3,10 @@
     <template v-slot:activator="{ on: dialog }">
       <v-tooltip bottom>
         <template v-slot:activator="{ on: tooltip }">
-          <v-btn v-on="{...dialog}">
+          <v-btn
+            @click="dialog_open"
+            v-on="{...dialog}"
+          >
             Model Fitting
           </v-btn>
         </template>

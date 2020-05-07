@@ -42,13 +42,10 @@ class ModelFitting(TemplateMixin):
         self.hub.subscribe(self, DataCollectionDeleteMessage,
                           handler=self._on_data_updated)
 
-        self._selected_data = None
+        self._viewer_spectra = None
         self._spectrum1d = None
         self._fitted_model = None
         self._fitted_spectrum = None
-        # Hard coding this for initial testing, want to populate based on
-        # selected data
-        self._units = {"x": "m", "y": "1E-17 erg/s/cm^2/Angstrom/spaxel"}
         self.component_models = []
 
     def _param_units(self, param):
@@ -73,10 +70,15 @@ class ModelFitting(TemplateMixin):
                 temp_params += temp_param
             m["parameters"] = temp_params
 
+    def vue_dialog_open(self, event):
+        """Populated the data list when the model fitting plugin is opened"""
+        self._viewer_data = self.app.get_data_from_viewer("spectrum-viewer")
+        self.dc_items = list(self._viewer_data.keys())
+        self.units["x"] =str(self.viewer_data[self.dc_items[0]].spectral_axis.unit)
+        self.units["y"] = str(self.viewer_data[self.dc_items[0]].flux.unit)
+
     def vue_data_selected(self, event):
-        self._selected_data = next((x for x in self.data_collection
-                                    if x.label == event))
-        self._spectrum1d = self._selected_data.get_object(cls=Spectrum1D)
+        self._spectrum1d = self._viewer_spectra[event]
 
     def vue_model_selected(self, event):
         # Add the model selected to the list of models
