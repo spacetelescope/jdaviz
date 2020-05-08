@@ -1,24 +1,24 @@
+import logging
 import os
 import uuid
-from abc import ABC
-import logging
-import re
 
 import ipywidgets as w
 import pkg_resources
 import yaml
+from astropy.nddata import CCDData
+from echo import (CallbackProperty, ListCallbackProperty,
+                  DictCallbackProperty)
+from glue.config import data_translator
 from glue.core import BaseData
-from glue.core.subset import Subset
 from glue.core.autolinking import find_possible_links
 from glue.core.message import DataCollectionAddMessage
 from glue.core.state_objects import State
-from echo import (CallbackProperty, ListCallbackProperty,
-                  DictCallbackProperty)
+from glue.core.subset import Subset
 from glue_jupyter.app import JupyterApplication
 from glue_jupyter.state_traitlets_helpers import GlueState
 from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
-from traitlets import Dict, observe, List
+from traitlets import Dict
 
 from .core.events import LoadDataMessage, NewViewerMessage, AddDataMessage
 from .core.registries import tool_registry, tray_registry, viewer_registry
@@ -268,14 +268,26 @@ class Application(TemplateMixin):
 
                 # For raw data, just include the data itself
                 if isinstance(layer_state.layer, BaseData):
-                    data.append(layer_state.layer.get_object(cls=cls))
+                    layer_data = layer_state.layer
+
+                    if cls is not None:
+                        layer_data = layer_data.get_object(cls=cls)
+                    # If the shape of the data is 2d, then use CCDData as the
+                    #  output data type
+                    elif len(layer_data.shape) == 2:
+                        layer_data = layer_data.get_object(cls=CCDData)
+
+                    data.append(layer_data)
 
                 # For subsets, make sure to apply the subset mask to the
                 #  layer data first
                 elif isinstance(layer_state.layer, Subset):
-                    subset = layer_state.layer
-                    mask = subset.to_mask()
-                    layer_data = subset.data[mask].get_object(cls=cls)
+                    layer_data = layer_state.layer
+
+                    if cls is not None:
+                        handler, _ = data_translator.get_handler_for(cls)
+                        layer_data = handler.to_object(layer_data)
+
                     data.append(layer_data)
 
         if data_label is not None:
