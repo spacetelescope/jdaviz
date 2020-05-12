@@ -1,5 +1,5 @@
 <template>
-  <component v-bind:is="stack.container">
+  <component :is="stack.container">
     <g-viewer-tab
       v-for="(child, index) in stack.children"
       :stack="child"
@@ -53,12 +53,11 @@
                     dense
                     selectable
                     :items="dataItems"
-                    v-model="viewer.selected_data_items"
                     hoverable
+                    v-model="viewer.selected_data_items"
                     activatable
                     item-disabled="locked"
-                    @update:active="console.log($event)"
-                    @input="$emit('data-item-selected', viewer)"
+                    @input="$emit('data-item-selected', {'id': viewer.id, 'selected_items': $event})"
                   ></v-treeview>
                 </v-tab-item>
 
@@ -91,6 +90,11 @@ module.exports = {
     this.$parent.childMe = () => {
       return this.$children[0];
     };
+  },
+  methods: {
+    computeChildrenPath() {
+        return this.$parent.computeChildrenPath()
+    }
   },
   computed: {
     parentMe() {

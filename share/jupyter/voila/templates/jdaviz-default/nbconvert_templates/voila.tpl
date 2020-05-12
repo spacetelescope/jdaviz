@@ -2,8 +2,8 @@
 <html>
     <head>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.10/vue.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/vuetify/2.1.1/vuetify.min.js"></script>
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/vuetify/2.1.1/vuetify.min.css" rel="stylesheet">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/vuetify/2.2.6/vuetify.min.js"></script>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/vuetify/2.2.6/vuetify.min.css" rel="stylesheet">
         <link href='https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons' rel="stylesheet">
         <link href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css" rel="stylesheet">
         <link href='{{resources.base_url}}voila/static/index.css' rel="stylesheet">
