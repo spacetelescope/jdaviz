@@ -253,31 +253,41 @@ class Application(TemplateMixin):
 
         Returns
         -------
-        data : list
-            A list of the transformed Glue data objects.
+        data : dict
+            A dict of the transformed Glue data objects, indexed to
+            corresponding viewer data labels.
         """
         viewer = self.get_viewer(viewer_reference)
         cls = cls or viewer.default_class
 
-        data = []
+        data = {}
+
+        # If the viewer also supports collapsing, then grab the user's chosen
+        #  statistic for collapsing data
+        if hasattr(viewer.state, 'function'):
+            statistic = viewer.state.function
+        else:
+            statistic = None
 
         for layer_state in viewer.state.layers:
+            label = layer_state.layer.label
+
             if hasattr(layer_state, 'layer') and \
-                (data_label is None or
-                 layer_state.layer.label == data_label):
+                    (data_label is None or label == data_label):
 
                 # For raw data, just include the data itself
                 if isinstance(layer_state.layer, BaseData):
                     layer_data = layer_state.layer
 
                     if cls is not None:
-                        layer_data = layer_data.get_object(cls=cls)
+                        layer_data = layer_data.get_object(cls=cls,
+                                                           statistic=statistic)
                     # If the shape of the data is 2d, then use CCDData as the
                     #  output data type
                     elif len(layer_data.shape) == 2:
                         layer_data = layer_data.get_object(cls=CCDData)
 
-                    data.append(layer_data)
+                    data[label] = layer_data
 
                 # For subsets, make sure to apply the subset mask to the
                 #  layer data first
@@ -286,12 +296,14 @@ class Application(TemplateMixin):
 
                     if cls is not None:
                         handler, _ = data_translator.get_handler_for(cls)
-                        layer_data = handler.to_object(layer_data)
+                        layer_data = handler.to_object(layer_data,
+                                                       statistic=statistic)
 
-                    data.append(layer_data)
+                    data[label] = layer_data
 
+        # If a data label was provided, return only the data requested
         if data_label is not None:
-            return next(iter(data), None)
+            return data.get(data_label)
 
         return data
 
