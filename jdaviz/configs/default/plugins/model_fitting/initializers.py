@@ -44,7 +44,7 @@ def initialize_voigt1d(params, fixed, name):
                           amplitude_L=params["amplitude_L"],
                           fwhm_L=params["fwhm_L"],
                           fwhm_G=params["fwhm_G"],
-                          name=name
+                          name=name,
                           fixed=fixed)
 
 model_initializers = {"Gaussian1D": initialize_gaussian1d,
