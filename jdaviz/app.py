@@ -1,23 +1,24 @@
+import logging
 import os
 import uuid
-from abc import ABC
-import logging
-import re
 
 import ipywidgets as w
 import pkg_resources
 import yaml
+from astropy.nddata import CCDData
+from echo import (CallbackProperty, ListCallbackProperty,
+                  DictCallbackProperty)
+from glue.config import data_translator
 from glue.core import BaseData
 from glue.core.autolinking import find_possible_links
 from glue.core.message import DataCollectionAddMessage
 from glue.core.state_objects import State
-from echo import (CallbackProperty, ListCallbackProperty,
-                  DictCallbackProperty)
+from glue.core.subset import Subset
 from glue_jupyter.app import JupyterApplication
 from glue_jupyter.state_traitlets_helpers import GlueState
 from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
-from traitlets import Dict, observe, List
+from traitlets import Dict
 
 from .core.events import LoadDataMessage, NewViewerMessage, AddDataMessage
 from .core.registries import tool_registry, tray_registry, viewer_registry
@@ -219,7 +220,8 @@ class Application(TemplateMixin):
         """
         return self._viewer_by_reference(viewer_reference)
 
-    def get_data_from_viewer(self, viewer_reference, data_label=None, cls=None):
+    def get_data_from_viewer(self, viewer_reference, data_label=None, cls=None,
+                             include_subsets=True):
         """
         Returns each data component currently rendered within a viewer
         instance. Viewers themselves store a default data type to which the
@@ -245,24 +247,63 @@ class Application(TemplateMixin):
             when retrieved. This requires that a working set of translation
             functions exist in the ``glue_astronomy`` package. See
             ``https://github.com/glue-viz/glue-astronomy`` for more info.
+        include_subsets : bool
+            Whether to include subset layer data that exists in the viewer but
+            has not been included in the core data collection object.
 
         Returns
         -------
-        data : list
-            A list of the transformed Glue data objects.
+        data : dict
+            A dict of the transformed Glue data objects, indexed to
+            corresponding viewer data labels.
         """
         viewer = self.get_viewer(viewer_reference)
         cls = cls or viewer.default_class
 
-        data = [layer_state.layer.get_object(cls=cls)
-                if cls is not None else layer_state.layer
-                for layer_state in viewer.state.layers
-                if hasattr(layer_state, 'layer') and
-                isinstance(layer_state.layer, BaseData)
-                and (data_label is None or layer_state.layer.label == data_label)]
+        data = {}
 
+        # If the viewer also supports collapsing, then grab the user's chosen
+        #  statistic for collapsing data
+        if hasattr(viewer.state, 'function'):
+            statistic = viewer.state.function
+        else:
+            statistic = None
+
+        for layer_state in viewer.state.layers:
+            label = layer_state.layer.label
+
+            if hasattr(layer_state, 'layer') and \
+                    (data_label is None or label == data_label):
+
+                # For raw data, just include the data itself
+                if isinstance(layer_state.layer, BaseData):
+                    layer_data = layer_state.layer
+
+                    if cls is not None:
+                        layer_data = layer_data.get_object(cls=cls,
+                                                           statistic=statistic)
+                    # If the shape of the data is 2d, then use CCDData as the
+                    #  output data type
+                    elif len(layer_data.shape) == 2:
+                        layer_data = layer_data.get_object(cls=CCDData)
+
+                    data[label] = layer_data
+
+                # For subsets, make sure to apply the subset mask to the
+                #  layer data first
+                elif isinstance(layer_state.layer, Subset):
+                    layer_data = layer_state.layer
+
+                    if cls is not None:
+                        handler, _ = data_translator.get_handler_for(cls)
+                        layer_data = handler.to_object(layer_data,
+                                                       statistic=statistic)
+
+                    data[label] = layer_data
+
+        # If a data label was provided, return only the data requested
         if data_label is not None:
-            return next(iter(data), None)
+            return data.get(data_label)
 
         return data
 
@@ -752,7 +793,7 @@ class Application(TemplateMixin):
 
         # Add the toolbar item filter to the toolbar component
         for name in config.get('toolbar', []):
-            tool = tool_registry.members.get(name)(session=self.session)
+            tool = tool_registry.members.get(name)(app=self)
 
             self.state.tool_items.append({
                 'name': name,
@@ -761,7 +802,7 @@ class Application(TemplateMixin):
 
         for name in config.get('tray', []):
             tray = tray_registry.members.get(
-                name).get('cls')(session=self.session)
+                name).get('cls')(app=self)
 
             self.state.tray_items.append({
                 'name': name,

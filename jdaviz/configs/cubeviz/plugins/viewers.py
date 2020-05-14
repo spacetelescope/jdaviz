@@ -20,10 +20,10 @@ class CubeVizProfileView(BqplotProfileView):
 
 @viewer_registry("cubeviz-image-viewer", label="Image 2D (CubeViz)")
 class CubeVizImageView(BqplotImageView):
-    default_class = CCDData
+    default_class = None
 
     def data(self, cls=None):
-        return [layer_state.layer.get_object(cls=cls or self.default_class)
+        return [layer_state.layer #.get_object(cls=cls or self.default_class)
                 for layer_state in self.state.layers
                 if hasattr(layer_state, 'layer') and
                 isinstance(layer_state.layer, BaseData)]
