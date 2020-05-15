@@ -42,7 +42,9 @@
                   <jupyter-widget :widget="tray.widget"></jupyter-widget>
                 </v-expansion-panel-content>
               </v-expansion-panel>
+
             </v-expansion-panels>
+            <v-divider></v-divider>
           </pane>
         </splitpanes>
       </v-container>
@@ -104,14 +106,10 @@ export default {
 
   .lm_splitter.lm_vertical {
     height: 1px !important;
-    margin-top: 2px;
-    margin-bottom: 2px;
   }
 
   .lm_splitter.lm_horizontal {
     width: 1px !important;
-    margin-left: 2px;
-    margin-right: 2px;
   }
 
   .lm_header .lm_tab {
