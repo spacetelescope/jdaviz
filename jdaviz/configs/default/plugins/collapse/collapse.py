@@ -20,6 +20,10 @@ spaxel = u.def_unit('spaxel', 1 * u.Unit(""))
 u.add_enabled_units([spaxel])
 
 
+# Mapping of pixel axes before and after collapse, as a function of selected axis
+AXES_MAPPING = [((1, 2), (0, 1)), ((0, 2), (0, 1)), ((0, 1), (0, 1))]
+
+
 @tool_registry('g-collapse')
 class Collapse(TemplateMixin):
     template = load_template("collapse.vue", __file__).tag(sync=True)
@@ -69,11 +73,13 @@ class Collapse(TemplateMixin):
         # Link the new dataset pixel-wise to the original dataset. In general
         # direct pixel to pixel links are the most efficient and should be
         # used in cases like this where we know there is a 1-to-1 mapping of
-        # pixel coordinates. Here the collapsing returns a 2-d dataset that is
-        # pixel aligned with the second and third dimensions of the cube
-        self.data_collection.add_link(LinkSame(self._selected_data.pixel_component_ids[1],
-                                               self.data_collection[label].pixel_component_ids[0]))
-        self.data_collection.add_link(LinkSame(self._selected_data.pixel_component_ids[2],
-                                               self.data_collection[label].pixel_component_ids[1]))
+        # pixel coordinates. Here which axes are linked to which depends on
+        # the selected axis.
+        (i1, i2), (i1c, i2c) = AXES_MAPPING[self.selected_axis]
+
+        self.data_collection.add_link(LinkSame(self._selected_data.pixel_component_ids[i1],
+                                               self.data_collection[label].pixel_component_ids[i1c]))
+        self.data_collection.add_link(LinkSame(self._selected_data.pixel_component_ids[i2],
+                                               self.data_collection[label].pixel_component_ids[i2c]))
 
         self.dialog = False

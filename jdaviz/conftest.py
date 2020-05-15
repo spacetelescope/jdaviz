@@ -4,8 +4,20 @@
 # packagename.test
 
 import os
+import pytest
 
 from astropy.version import version as astropy_version
+from astropy.wcs import WCS
+
+
+@pytest.fixture
+def spectral_cube_wcs(request):
+    # A simple spectral cube WCS used by some tests
+    wcs = WCS(naxis=3)
+    wcs.wcs.ctype = 'RA---TAN', 'DEC--TAN', 'FREQ'
+    wcs.wcs.set()
+    return wcs
+
 
 # For Astropy 3.0 and later, we can use the standalone pytest plugin
 if astropy_version < '3.0':
