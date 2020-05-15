@@ -2,9 +2,10 @@ from glue.core import BaseData
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from specutils import Spectrum1D
-from astropy.nddata import CCDData
 
 from jdaviz.core.registries import viewer_registry
+
+__all__ = ['CubeVizProfileView', 'CubeVizImageView']
 
 
 @viewer_registry("cubeviz-profile-viewer", label="Profile 1D (CubeViz)")
