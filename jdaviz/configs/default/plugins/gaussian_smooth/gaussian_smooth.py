@@ -2,6 +2,7 @@ from astropy import units as u
 from astropy import units as u
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
+from glue.core.link_helpers import LinkSame
 from specutils import Spectrum1D
 from specutils.manipulation import gaussian_smooth
 from traitlets import Bool, List, Unicode
@@ -54,6 +55,17 @@ class GaussianSmooth(TemplateMixin):
         # define a standard deviation for gaussian smoothing
         spec_smoothed = gaussian_smooth(spec, stddev=size)
 
-        self.data_collection[f"Smoothed {self._selected_data.label}"] = spec_smoothed
+        label = f"Smoothed {self._selected_data.label}"
+
+        self.data_collection[label] = spec_smoothed
+
+        # Link the new dataset pixel-wise to the original dataset. In general
+        # direct pixel to pixel links are the most efficient and should be
+        # used in cases like this where we know there is a 1-to-1 mapping of
+        # pixel coordinates. Here the smoothing returns a 1-d spectral object
+        # which we can link to the first dimension of the original dataset
+        # (whcih could in principle be a cube or a spectrum)
+        self.data_collection.add_link(LinkSame(self._selected_data.pixel_component_ids[0],
+                                               self.data_collection[label].pixel_component_ids[0]))
 
         self.dialog = False

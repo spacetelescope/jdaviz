@@ -4,6 +4,7 @@ from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
 from glue.core.coordinates import WCSCoordinates
 from glue.core import Data, Subset
+from glue.core.link_helpers import LinkSame
 from specutils import Spectrum1D
 from spectral_cube import SpectralCube
 from traitlets import Bool, List, Unicode, Int, observe
@@ -17,6 +18,10 @@ __all__ = ['Collapse']
 
 spaxel = u.def_unit('spaxel', 1 * u.Unit(""))
 u.add_enabled_units([spaxel])
+
+
+# Mapping of pixel axes before and after collapse, as a function of selected axis
+AXES_MAPPING = [((1, 2), (0, 1)), ((0, 2), (0, 1)), ((0, 1), (0, 1))]
 
 
 @tool_registry('g-collapse')
@@ -61,6 +66,20 @@ class Collapse(TemplateMixin):
         data.get_component('flux').units = str(collapsed_spec.unit)
         data.meta.update(collapsed_spec.meta)
 
-        self.data_collection[f"Collapsed {self._selected_data.label}"] = data
+        label = f"Collapsed {self._selected_data.label}"
+
+        self.data_collection[label] = data
+
+        # Link the new dataset pixel-wise to the original dataset. In general
+        # direct pixel to pixel links are the most efficient and should be
+        # used in cases like this where we know there is a 1-to-1 mapping of
+        # pixel coordinates. Here which axes are linked to which depends on
+        # the selected axis.
+        (i1, i2), (i1c, i2c) = AXES_MAPPING[self.selected_axis]
+
+        self.data_collection.add_link(LinkSame(self._selected_data.pixel_component_ids[i1],
+                                               self.data_collection[label].pixel_component_ids[i1c]))
+        self.data_collection.add_link(LinkSame(self._selected_data.pixel_component_ids[i2],
+                                               self.data_collection[label].pixel_component_ids[i2c]))
 
         self.dialog = False
