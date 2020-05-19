@@ -49,9 +49,13 @@
         </splitpanes>
       </v-container>
     </v-content>
-    <v-snackbar v-model="state.snackbar" :timeout="state.snackbar_timeout" absolute>
-      {{ state.snackbar_text }}
-      <v-btn color="blue" text @click="state.snackbar = false">Close</v-btn>
+    <v-snackbar
+            v-model="state.snackbar.show"
+            :timeout="state.snackbar.timeout"
+            :color="state.snackbar.color"
+            absolute>
+      {{ state.snackbar.text }}
+      <v-btn text @click="state.snackbar = false">Close</v-btn>
     </v-snackbar>
   </v-app>
 </template>

@@ -54,7 +54,16 @@ class Collapse(TemplateMixin):
         self.axes = list(range(len(self._selected_data.shape)))
 
     def vue_collapse(self, *args, **kwargs):
-        spec = self._selected_data.get_object(cls=SpectralCube)
+        try:
+            spec = self._selected_data.get_object(cls=SpectralCube)
+        except AttributeError:
+            snackbar_message = SnackbarMessage(
+                f"Unable to perform collapse over selected data.",
+                color="error",
+                sender=self)
+            self.hub.broadcast(snackbar_message)
+
+            return
 
         collapsed_spec = getattr(spec, self.selected_func.lower())(
             axis=self.selected_axis)

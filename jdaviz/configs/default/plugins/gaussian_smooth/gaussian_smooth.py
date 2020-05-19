@@ -1,11 +1,10 @@
 from astropy import units as u
-from astropy import units as u
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
 from glue.core.link_helpers import LinkSame
 from specutils import Spectrum1D
 from specutils.manipulation import gaussian_smooth
-from traitlets import List, Unicode
+from traitlets import List, Unicode, Int
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
@@ -22,7 +21,7 @@ u.add_enabled_units([spaxel])
 @tray_registry('g-gaussian-smooth', label="Gaussian Smooth")
 class GaussianSmooth(TemplateMixin):
     template = load_template("gaussian_smooth.vue", __file__).tag(sync=True)
-    stddev = Unicode().tag(sync=True)
+    stddev = Unicode("0").tag(sync=True)
     dc_items = List([]).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
@@ -49,7 +48,17 @@ class GaussianSmooth(TemplateMixin):
         # input_spaxis = Quantity(np.array([1, 2, 3, 4]), u.micron)
         # spec1 = Spectrum1D(input_flux, spectral_axis=input_spaxis)
         size = float(self.stddev)
-        spec = self._selected_data.get_object(cls=Spectrum1D)
+
+        try:
+            spec = self._selected_data.get_object(cls=Spectrum1D)
+        except TypeError:
+            snackbar_message = SnackbarMessage(
+                f"Unable to perform smoothing over selected data.",
+                color="error",
+                sender=self)
+            self.hub.broadcast(snackbar_message)
+
+            return
 
         # Takes the user input from the dialog (stddev) and uses it to
         # define a standard deviation for gaussian smoothing
@@ -70,5 +79,6 @@ class GaussianSmooth(TemplateMixin):
 
         snackbar_message = SnackbarMessage(
             f"Data set '{self._selected_data.label}' smoothed successfully.",
+            color="success",
             sender=self)
         self.hub.broadcast(snackbar_message)

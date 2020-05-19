@@ -46,14 +46,12 @@ class ApplicationState(State):
     drawer = CallbackProperty(
         False, docstring="State of the plugins drawer.")
 
-    snackbar = CallbackProperty(
-        False, docstring="State of the quick toast messages.")
-
-    snackbar_text = CallbackProperty(
-        "", docstring="Text to display in toast message.")
-
-    snackbar_timeout = CallbackProperty(
-        3000, docstring="Timeout for snackbar message.")
+    snackbar = DictCallbackProperty({
+        'show': False,
+        'test': "",
+        'color': None,
+        'timeout': 3000
+    }, docstring="State of the quick toast messages.")
 
     settings = DictCallbackProperty({
         'visible': {
@@ -200,10 +198,11 @@ class Application(TemplateMixin):
             The Glue snackbar message containing information about displaying
             the message box.
         """
-        self.state.snackbar = False
-        self.state.snackbar_text = msg.text
-        self.state.snackbar_timeout = msg.timeout
-        self.state.snackbar = True
+        self.state.snackbar['show'] = False
+        self.state.snackbar['text'] = msg.text
+        self.state.snackbar['color'] = msg.color
+        self.state.snackbar['timeout'] = msg.timeout
+        self.state.snackbar['show'] = True
 
     def load_data(self, path):
         """
