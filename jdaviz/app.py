@@ -641,7 +641,6 @@ class Application(TemplateMixin):
                 viewer.remove_data(data)
 
     def _on_data_added(self, msg):
-<<<<<<< HEAD
         """
         Callback for when data is added to the internal ``DataCollection``.
         Adds a new data item dictionary to the ``data_items`` state list.
@@ -687,31 +686,6 @@ class Application(TemplateMixin):
         """
         children = [] if children is None else children
         viewers = [] if viewers is None else viewers
-=======
-        self.state.data_items.append(
-            {
-                'id': str(uuid.uuid4()),
-                'name': msg.data.label,
-                'locked': False,  # not bool(self.selected_viewer_item),
-                'children': [
-                    # {'id': 2, 'name': 'Calendar : app'},
-                    # {'id': 3, 'name': 'Chrome : app'},
-                    # {'id': 4, 'name': 'Webstorm : app'},
-                ],
-            })
-
-    def _create_stack_item(self, container='gl-stack', children=None,
-                           viewers=None):
-        if children is not None:# and not isinstance(children, ListCallbackProperty):
-            children = children #ListCallbackProperty(children)
-        else:
-            children = [] #ListCallbackProperty([])
-
-        if viewers is not None:# and not isinstance(viewers, ListCallbackProperty):
-            viewers = viewers #ListCallbackProperty(viewers)
-        else:
-            viewers = [] #ListCallbackProperty([])
->>>>>>> Remove default property values
 
         return {
             'id': str(uuid.uuid4()),
@@ -719,7 +693,6 @@ class Application(TemplateMixin):
             'children': children,
             'viewers': viewers}
 
-<<<<<<< HEAD
     @staticmethod
     def _create_viewer_item(viewer, name=None, reference=None):
         """
@@ -741,16 +714,11 @@ class Application(TemplateMixin):
             Dictionary containing information for this viewer item.
         """
         tools = viewer.toolbar_selection_tools
-=======
-    def _create_viewer_item(self, name, widget, tools, layer_options,
-                            viewer_options):
->>>>>>> Remove default property values
         tools.borderless = True
         tools.tile = True
 
         return {
             'id': str(uuid.uuid4()),
-<<<<<<< HEAD
             'name': name or "Unnamed Viewer",
             'widget': "IPY_MODEL_" + viewer.figure_widget.model_id,
             'tools': "IPY_MODEL_" + viewer.toolbar_selection_tools.model_id,
@@ -759,15 +727,6 @@ class Application(TemplateMixin):
             'selected_data_items': [],
             'collapse': True,
             'reference': reference}
-=======
-            'widget': widget,
-            'name': "Slider Test",
-            'tools': tools,
-            'layer_options': layer_options,
-            'viewer_options': viewer_options,
-            'selected_data_items': ListCallbackProperty([]),
-            'collapse': True}
->>>>>>> Remove default property values
 
     def _on_new_viewer(self, msg):
         """
@@ -874,13 +833,8 @@ class Application(TemplateMixin):
 
         if config.get('viewer_area') is not None:
             stack_items = compose_viewer_area(config.get('viewer_area'))
-<<<<<<< HEAD
             self.state.stack_items.extend(stack_items)
             # self.vue_relayout()
-=======
-            # print(stack_items)
-            self.state.stack_items.extend(['test'])
->>>>>>> Remove default property values
 
         # Add the toolbar item filter to the toolbar component
         for name in config.get('toolbar', []):

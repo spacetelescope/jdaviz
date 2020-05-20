@@ -57,7 +57,10 @@ class ModelFitting(TemplateMixin):
     def _update_parameters_from_fit(self):
         for m in self.component_models:
             name = m["id"]
-            m_fit = self._fitted_model[name]
+            if len(self.component_models) > 1:
+                m_fit = self._fitted_model[name]
+            else:
+                m_fit = self._fitted_model
             temp_params = []
             for i in range(0, len(m_fit.parameters)):
                 temp_param = [x for x in m["parameters"] if x["name"] ==
