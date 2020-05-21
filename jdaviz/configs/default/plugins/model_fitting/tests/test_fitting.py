@@ -1,11 +1,9 @@
-import numpy as np
-
-import astropy.units as u
 import astropy.modeling.models as models
-
+import astropy.units as u
+import numpy as np
 from specutils.spectra import Spectrum1D
 
-from jdaviz.configs.default.plugins.model_fitting import fitting_backend as fb
+from .. import fitting_backend as fb
 
 
 def test_fitting_backend():
@@ -40,4 +38,3 @@ def test_fitting_backend():
                                     5.49867754, 0.10834472, -1.66902953, 8.19714439,
                                     0.09535613, 3.99125545])
     assert np.allclose(fm.parameters, parameters_expected, atol=1e-5)
-

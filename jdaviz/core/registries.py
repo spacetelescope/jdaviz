@@ -137,6 +137,7 @@ class ToolRegistry(UniqueDictRegistry):
                     f"`ipywidgets.Widget`.")
 
             self.add(name, cls)
+            return cls
         return decorator
 
 
@@ -156,6 +157,7 @@ class MenuRegistry(UniqueDictRegistry):
                     f"`ipywidgets.Widget`.")
 
             self.add(name, cls)
+            return cls
         return decorator
 
 

@@ -1,11 +1,8 @@
 <template>
   <v-app id="web-app">
-    <v-app-bar color="white" class="elevation-1" dense app absolute clipped-right>
-      <!-- <v-toolbar-items> -->
+    <v-app-bar dark dense flat app absolute clipped-right>
       <jupyter-widget :widget="item.widget" v-for="item in state.tool_items" :key="item.name"></jupyter-widget>
-      <!-- </v-toolbar-items> -->
       <v-spacer></v-spacer>
-      <!-- <v-divider vertical></v-divider> -->
       <v-toolbar-items>
         <v-btn icon @click="state.drawer = !state.drawer">
           <v-icon v-if="state.drawer">mdi-toy-brick-remove</v-icon>
@@ -15,62 +12,53 @@
     </v-app-bar>
 
     <v-content
-      :style="checkNotebookContext() ? 'height: ' + state.settings.context.notebook.max_height : ''"
+      :style="checkNotebookContext() ? 'height: ' + state.settings.context.notebook.max_height + '; border: solid 1px #e5e5e5;' : ''"
     >
       <v-container class="fill-height pa-0" fluid>
-        <!-- <v-row align="center" justify="center" class="fill-height pa-0 ma-0" style="width: 100%">
-        <v-col cols="12" class="fill-height pa-0 ma-0" style="width: 100%"> -->
-        <splitpanes class="default-theme" @resize="relayout">
-          <pane size="80">
-            <v-card tile class="ma-2" style="height: calc(100% - 16px)">
-              <golden-layout
-                :style="checkNotebookContext() ? 'height: 100%;' : 'height: calc(100vh - 64px)'"
-                :has-headers="state.settings.visible.tab_headers"
-              >
-                <gl-row :closable="false">
-                  <g-viewer-tab
-                    v-for="(stack, index) in state.stack_items"
-                    :stack="stack"
-                    :key="index"
-                    :data-items="state.data_items"
-                    @resize="relayout"
-                    @destroy="destroy_viewer_item($event)"
-                    @data-item-selected="data_item_selected($event)"
-                  ></g-viewer-tab>
-                </gl-row>
-              </golden-layout>
+        <splitpanes @resize="relayout">
+          <pane size="75">
+            <golden-layout
+              :style="checkNotebookContext() ? 'height: 100%;' : 'height: calc(100vh - 48px)'"
+              :has-headers="state.settings.visible.tab_headers"
+            >
+              <gl-row :closable="false">
+                <g-viewer-tab
+                  v-for="(stack, index) in state.stack_items"
+                  :stack="stack"
+                  :key="index"
+                  :data-items="state.data_items"
+                  @resize="relayout"
+                  @destroy="destroy_viewer_item($event)"
+                  @data-item-selected="data_item_selected($event)"
+                ></g-viewer-tab>
+              </gl-row>
+            </golden-layout>
+          </pane>
+          <pane size="25" v-if="state.drawer" style="background-color: #fafbfc;">
+            <v-card flat tile class="overflow-y-auto fill-height" color="#f8f8f8">
+              <v-expansion-panels accordion multiple focusable flat tile>
+                <v-expansion-panel v-for="(tray, index) in state.tray_items" :key="index">
+                  <v-expansion-panel-header>{{ tray.label }}</v-expansion-panel-header>
+                  <v-expansion-panel-content>
+                    <jupyter-widget :widget="tray.widget"></jupyter-widget>
+                  </v-expansion-panel-content>
+                </v-expansion-panel>
+              </v-expansion-panels>
+              <v-divider></v-divider>
             </v-card>
           </pane>
-          <pane size="20" v-if="state.drawer">
-            <splitpanes horizontal class="elevation-2">
-              <pane>
-                <v-card tile class="ma-2" style="height: calc(100% - 16px)">
-                  <golden-layout
-                    :style="checkNotebookContext() ? 'height: 100%;' : 'height: calc(100vh - 64px)'"
-                  >
-                    <gl-stack
-                      @stateChanged="consle.log($event)"
-                      @selection-changed="consle.log($event)"
-                      :closable="false"
-                    >
-                      <gl-component
-                        v-for="(tray, index) in state.tray_items"
-                        :key="index"
-                        :title="tray.name"
-                      >
-                        <jupyter-widget :widget="tray.widget"></jupyter-widget>
-                      </gl-component>
-                    </gl-stack>
-                  </golden-layout>
-                </v-card>
-              </pane>
-            </splitpanes>
-          </pane>
         </splitpanes>
-        <!-- </v-col>
-        </v-row> -->
       </v-container>
     </v-content>
+    <v-snackbar
+      v-model="state.snackbar.show"
+      :timeout="state.snackbar.timeout"
+      :color="state.snackbar.color"
+      absolute
+    >
+      {{ state.snackbar.text }}
+      <v-btn text @click="state.snackbar.show = false">Close</v-btn>
+    </v-snackbar>
   </v-app>
 </template>
 
@@ -96,26 +84,39 @@ export default {
   height: 100%;
 }
 
+.splitpanes {
+  background-color: #f8f8f8;
+}
+
 .splitpanes__splitter {
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2), 0 2px 5px 0 rgba(0, 0, 0, 0.19);
+  background-color: #e2e4e8;
+  position: relative;
+  width: 5px;
 }
 
 .lm_goldenlayout {
-  background: #fafafa;
+  background: #f8f8f8;
 }
 
 .lm_content {
   background: #ffffff;
   border: none;
-  border-top: 1px solid #cccccc;
+  /*border-top: 1px solid #cccccc;*/
 }
 
 .lm_splitter {
-  background: #999999;
-  opacity: 0.25;
+  background: #e2e4e8;
+  opacity: 1;
   z-index: 1;
-  transition: opacity 200ms ease;
 }
+
+/* .lm_splitter.lm_vertical {
+  height: 1px !important;
+}
+
+.lm_splitter.lm_horizontal {
+  width: 1px !important;
+} */
 
 .lm_header .lm_tab {
   padding-top: 0px;
@@ -124,5 +125,20 @@ export default {
 
 .vuetify-styles .lm_header ul {
   padding-left: 0;
+}
+
+.v-expansion-panel-content__wrap {
+  padding: 0px;
+  margin: 0px;
+}
+
+.v-expansion-panel__header {
+  padding: 0px;
+  margin: 0px;
+}
+
+.vuetify-styles .v-expansion-panel-content__wrap {
+  padding: 0px;
+  margin: 0px;
 }
 </style>

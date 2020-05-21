@@ -1,25 +1,26 @@
+import logging
 import os
 import uuid
-from abc import ABC
-import logging
-import re
 
 import ipywidgets as w
 import pkg_resources
 import yaml
+from astropy.nddata import CCDData
+from echo import (CallbackProperty, ListCallbackProperty,
+                  DictCallbackProperty)
+from glue.config import data_translator
 from glue.core import BaseData
 from glue.core.autolinking import find_possible_links
 from glue.core.message import DataCollectionAddMessage
 from glue.core.state_objects import State
-from echo import (CallbackProperty, ListCallbackProperty,
-                  DictCallbackProperty)
+from glue.core.subset import Subset
 from glue_jupyter.app import JupyterApplication
 from glue_jupyter.state_traitlets_helpers import GlueState
 from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
-from traitlets import Dict, observe, List
+from traitlets import Dict
 
-from .core.events import LoadDataMessage, NewViewerMessage, AddDataMessage
+from .core.events import LoadDataMessage, NewViewerMessage, AddDataMessage, SnackbarMessage
 from .core.registries import tool_registry, tray_registry, viewer_registry
 from .core.template_mixin import TemplateMixin
 from .utils import load_template
@@ -44,6 +45,13 @@ class ApplicationState(State):
     """
     drawer = CallbackProperty(
         False, docstring="State of the plugins drawer.")
+
+    snackbar = DictCallbackProperty({
+        'show': False,
+        'test': "",
+        'color': None,
+        'timeout': 3000
+    }, docstring="State of the quick toast messages.")
 
     settings = DictCallbackProperty({
         'visible': {
@@ -130,9 +138,14 @@ class Application(TemplateMixin):
                            handler=lambda msg: self.load_data(msg.path))
 
         # Subscribe to the event fired when data is added to the application-
-        # level data collection object
+        #  level data collection object
         self.hub.subscribe(self, DataCollectionAddMessage,
                            handler=self._on_data_added)
+
+        # Subscribe to snackbar messages and tie them to the display of the
+        #  message box
+        self.hub.subscribe(self, SnackbarMessage,
+                           handler=self._on_snackbar_message)
 
         # Add callback that updates the layout when the data item array changes
         self.state.add_callback('stack_items', self.vue_relayout)
@@ -174,6 +187,23 @@ class Application(TemplateMixin):
         """
         return self._application_handler.data_collection
 
+    def _on_snackbar_message(self, msg):
+        """
+        Displays a toast message with an editable message that be dismissed
+        manually or will dismiss automatically after a timeout.
+
+        Parameters
+        ----------
+        msg : `~glue.core.SnackbarMessage`
+            The Glue snackbar message containing information about displaying
+            the message box.
+        """
+        self.state.snackbar['show'] = False
+        self.state.snackbar['text'] = msg.text
+        self.state.snackbar['color'] = msg.color
+        self.state.snackbar['timeout'] = msg.timeout
+        self.state.snackbar['show'] = True
+
     def load_data(self, path):
         """
         Provided a path to a data file, open and parse the data into the
@@ -186,6 +216,11 @@ class Application(TemplateMixin):
             File path for the data file to be loaded.
         """
         self._application_handler.load_data(path)
+
+        # Send out a toast message
+        snackbar_message = SnackbarMessage("Data successfully loaded.",
+                                           sender=self)
+        self.hub.broadcast(snackbar_message)
 
         # Attempt to link the data
         links = find_possible_links(self.data_collection)
@@ -219,7 +254,8 @@ class Application(TemplateMixin):
         """
         return self._viewer_by_reference(viewer_reference)
 
-    def get_data_from_viewer(self, viewer_reference, data_label=None, cls=None):
+    def get_data_from_viewer(self, viewer_reference, data_label=None, cls=None,
+                             include_subsets=True):
         """
         Returns each data component currently rendered within a viewer
         instance. Viewers themselves store a default data type to which the
@@ -245,24 +281,63 @@ class Application(TemplateMixin):
             when retrieved. This requires that a working set of translation
             functions exist in the ``glue_astronomy`` package. See
             ``https://github.com/glue-viz/glue-astronomy`` for more info.
+        include_subsets : bool
+            Whether to include subset layer data that exists in the viewer but
+            has not been included in the core data collection object.
 
         Returns
         -------
-        data : list
-            A list of the transformed Glue data objects.
+        data : dict
+            A dict of the transformed Glue data objects, indexed to
+            corresponding viewer data labels.
         """
         viewer = self.get_viewer(viewer_reference)
         cls = cls or viewer.default_class
 
-        data = [layer_state.layer.get_object(cls=cls)
-                if cls is not None else layer_state.layer
-                for layer_state in viewer.state.layers
-                if hasattr(layer_state, 'layer') and
-                isinstance(layer_state.layer, BaseData)
-                and (data_label is None or layer_state.layer.label == data_label)]
+        data = {}
 
+        # If the viewer also supports collapsing, then grab the user's chosen
+        #  statistic for collapsing data
+        if hasattr(viewer.state, 'function'):
+            statistic = viewer.state.function
+        else:
+            statistic = None
+
+        for layer_state in viewer.state.layers:
+            label = layer_state.layer.label
+
+            if hasattr(layer_state, 'layer') and \
+                    (data_label is None or label == data_label):
+
+                # For raw data, just include the data itself
+                if isinstance(layer_state.layer, BaseData):
+                    layer_data = layer_state.layer
+
+                    if cls is not None:
+                        layer_data = layer_data.get_object(cls=cls,
+                                                           statistic=statistic)
+                    # If the shape of the data is 2d, then use CCDData as the
+                    #  output data type
+                    elif len(layer_data.shape) == 2:
+                        layer_data = layer_data.get_object(cls=CCDData)
+
+                    data[label] = layer_data
+
+                # For subsets, make sure to apply the subset mask to the
+                #  layer data first
+                elif isinstance(layer_state.layer, Subset):
+                    layer_data = layer_state.layer
+
+                    if cls is not None:
+                        handler, _ = data_translator.get_handler_for(cls)
+                        layer_data = handler.to_object(layer_data,
+                                                       statistic=statistic)
+
+                    data[label] = layer_data
+
+        # If a data label was provided, return only the data requested
         if data_label is not None:
-            return next(iter(data), None)
+            return data.get(data_label)
 
         return data
 
@@ -282,7 +357,13 @@ class Application(TemplateMixin):
             name is generated.
         """
         # Include the data in the data collection
-        self.data_collection[data_label or "New Data"] = data
+        data_label = data_label or "New Data"
+        self.data_collection[data_label] = data
+
+        # Send out a toast message
+        snackbar_message = SnackbarMessage(
+            f"Data '{data_label}' successfully added.", sender=self)
+        self.hub.broadcast(snackbar_message)
 
     def add_data_to_viewer(self, viewer_reference, data_label,
                            clear_other_data=False):
@@ -506,7 +587,7 @@ class Application(TemplateMixin):
     def vue_data_item_selected(self, event):
         """
         Callback for selection events in the front-end data list. Selections
-        mean that the checkbox associatd with the list item has been toggled.
+        mean that the checkbox associated with the list item has been toggled.
         When the checkbox is toggled off, remove the data from the viewer;
         when it is toggled on, add the data to the viewer.
 
@@ -685,6 +766,11 @@ class Application(TemplateMixin):
         # Add viewer locally
         self.state.stack_items.append(new_stack_item)
 
+        # Send out a toast message
+        snackbar_message = SnackbarMessage("New viewer successfully created.",
+                                           sender=self)
+        self.hub.broadcast(snackbar_message)
+
         return viewer
 
     def load_configuration(self, path=None):
@@ -754,7 +840,7 @@ class Application(TemplateMixin):
 
         # Add the toolbar item filter to the toolbar component
         for name in config.get('toolbar', []):
-            tool = tool_registry.members.get(name)(session=self.session)
+            tool = tool_registry.members.get(name)(app=self)
 
             self.state.tool_items.append({
                 'name': name,
@@ -762,10 +848,12 @@ class Application(TemplateMixin):
             })
 
         for name in config.get('tray', []):
-            tray = tray_registry.members.get(
-                name).get('cls')(session=self.session)
+            tray = tray_registry.members.get(name)
+            tray_item_instance = tray.get('cls')(app=self)
+            tray_item_label = tray.get('label')
 
             self.state.tray_items.append({
                 'name': name,
-                'widget': "IPY_MODEL_" + tray.model_id
+                'label': tray_item_label,
+                'widget': "IPY_MODEL_" + tray_item_instance.model_id
             })

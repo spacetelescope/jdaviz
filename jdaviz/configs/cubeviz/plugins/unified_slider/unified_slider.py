@@ -1,4 +1,4 @@
-from traitlets import Bool, Float, observe
+from traitlets import Bool, Float, observe, Any
 
 from jdaviz.core.events import AddDataMessage
 from jdaviz.core.registries import tool_registry
@@ -13,7 +13,7 @@ __all__ = ['UnifiedSlider']
 @tool_registry('g-unified-slider')
 class UnifiedSlider(TemplateMixin):
     template = load_template("unified_slider.vue", __file__).tag(sync=True)
-    slider = Float().tag(sync=True)
+    slider = Any(0).tag(sync=True)
     min_value = Float(0).tag(sync=True)
     max_value = Float(100).tag(sync=True)
     linked = Bool(True).tag(sync=True)
@@ -58,6 +58,11 @@ class UnifiedSlider(TemplateMixin):
 
     @observe('slider')
     def _on_slider_updated(self, event):
+        if not event['new']:
+            value = 0
+        else:
+            value = int(event['new'])
+
         if self.linked:
             for viewer in self._watched_viewers:
-                viewer.state.slices = (int(event['new']), 0, 0)
+                viewer.state.slices = (value, 0, 0)
