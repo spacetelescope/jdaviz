@@ -123,3 +123,24 @@ class AddDataMessage(Message):
     @property
     def viewer(self):
         return self._viewer
+
+
+class SnackbarMessage(Message):
+    def __init__(self, text, color=None, timeout=5000, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self._text = text
+        self._color = color
+        self._timeout = timeout
+
+    @property
+    def text(self):
+        return self._text
+
+    @property
+    def color(self):
+        return self._color
+
+    @property
+    def timeout(self):
+        return self._timeout

@@ -2,14 +2,13 @@ from astropy import units as u
 from astropy import units as u
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
-from glue.core.coordinates import WCSCoordinates
-from glue.core import Data, Subset
+from glue.core import Data
 from glue.core.link_helpers import LinkSame
-from specutils import Spectrum1D
 from spectral_cube import SpectralCube
-from traitlets import Bool, List, Unicode, Int, observe
+from traitlets import List, Unicode, Int, observe
 
-from jdaviz.core.registries import tool_registry
+from jdaviz.core.events import SnackbarMessage
+from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
 from jdaviz.utils import load_template
 
@@ -24,10 +23,9 @@ u.add_enabled_units([spaxel])
 AXES_MAPPING = [((1, 2), (0, 1)), ((0, 2), (0, 1)), ((0, 1), (0, 1))]
 
 
-@tool_registry('g-collapse')
+@tray_registry('g-collapse', label="Collapse")
 class Collapse(TemplateMixin):
     template = load_template("collapse.vue", __file__).tag(sync=True)
-    dialog = Bool(False).tag(sync=True)
     data_items = List([]).tag(sync=True)
     selected_data_item = Unicode().tag(sync=True)
     axes = List([]).tag(sync=True)
@@ -56,7 +54,16 @@ class Collapse(TemplateMixin):
         self.axes = list(range(len(self._selected_data.shape)))
 
     def vue_collapse(self, *args, **kwargs):
-        spec = self._selected_data.get_object(cls=SpectralCube)
+        try:
+            spec = self._selected_data.get_object(cls=SpectralCube)
+        except AttributeError:
+            snackbar_message = SnackbarMessage(
+                f"Unable to perform collapse over selected data.",
+                color="error",
+                sender=self)
+            self.hub.broadcast(snackbar_message)
+
+            return
 
         collapsed_spec = getattr(spec, self.selected_func.lower())(
             axis=self.selected_axis)
@@ -82,4 +89,8 @@ class Collapse(TemplateMixin):
         self.data_collection.add_link(LinkSame(self._selected_data.pixel_component_ids[i2],
                                                self.data_collection[label].pixel_component_ids[i2c]))
 
-        self.dialog = False
+        snackbar_message = SnackbarMessage(
+            f"Data set '{self._selected_data.label}' collapsed successfully.",
+            color="success",
+            sender=self)
+        self.hub.broadcast(snackbar_message)

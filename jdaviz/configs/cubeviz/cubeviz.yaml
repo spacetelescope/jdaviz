@@ -11,9 +11,10 @@ settings:
 toolbar:
   - g-data-tools
   - g-subset-tools
+  - g-unified-slider
+tray:
   - g-gaussian-smooth
   - g-collapse
-  - g-unified-slider
 viewer_area:
   - container: col
     children:

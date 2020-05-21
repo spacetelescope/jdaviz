@@ -93,7 +93,7 @@ module.exports = {
   },
   methods: {
     computeChildrenPath() {
-        return this.$parent.computeChildrenPath()
+      return this.$parent.computeChildrenPath();
     }
   },
   computed: {
