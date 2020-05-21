@@ -95,7 +95,7 @@ export default {
 }
 
 .lm_goldenlayout {
-  background: #ffffff;
+  background: #f8f8f8;
 }
 
 .lm_content {
