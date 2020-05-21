@@ -4,7 +4,7 @@ from glue.core.message import (DataCollectionAddMessage,
 from glue.core.link_helpers import LinkSame
 from specutils import Spectrum1D
 from specutils.manipulation import gaussian_smooth
-from traitlets import List, Unicode, Int
+from traitlets import List, Unicode, Int, Any, observe
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
@@ -21,8 +21,9 @@ u.add_enabled_units([spaxel])
 @tray_registry('g-gaussian-smooth', label="Gaussian Smooth")
 class GaussianSmooth(TemplateMixin):
     template = load_template("gaussian_smooth.vue", __file__).tag(sync=True)
-    stddev = Unicode("0").tag(sync=True)
+    stddev = Any().tag(sync=True)
     dc_items = List([]).tag(sync=True)
+    selected_data = Unicode().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -37,9 +38,10 @@ class GaussianSmooth(TemplateMixin):
     def _on_data_updated(self, msg):
         self.dc_items = [x.label for x in self.data_collection]
 
-    def vue_data_selected(self, event):
+    @observe("selected_data")
+    def _on_data_selected(self, event):
         self._selected_data = next((x for x in self.data_collection
-                                    if x.label == event))
+                                    if x.label == event['new']))
 
     def vue_gaussian_smooth(self, *args, **kwargs):
         # Testing inputs to make sure putting smoothed spectrum into

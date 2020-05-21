@@ -91,5 +91,6 @@ class Collapse(TemplateMixin):
 
         snackbar_message = SnackbarMessage(
             f"Data set '{self._selected_data.label}' collapsed successfully.",
+            color="success",
             sender=self)
         self.hub.broadcast(snackbar_message)

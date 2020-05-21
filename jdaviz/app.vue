@@ -57,7 +57,7 @@
       absolute
     >
       {{ state.snackbar.text }}
-      <v-btn text @click="state.snackbar = false">Close</v-btn>
+      <v-btn text @click="state.snackbar.show = false">Close</v-btn>
     </v-snackbar>
   </v-app>
 </template>
@@ -91,7 +91,7 @@ export default {
 .splitpanes__splitter {
   background-color: #e2e4e8;
   position: relative;
-  width: 1px;
+  width: 5px;
 }
 
 .lm_goldenlayout {
@@ -110,13 +110,13 @@ export default {
   z-index: 1;
 }
 
-.lm_splitter.lm_vertical {
+/* .lm_splitter.lm_vertical {
   height: 1px !important;
 }
 
 .lm_splitter.lm_horizontal {
   width: 1px !important;
-}
+} */
 
 .lm_header .lm_tab {
   padding-top: 0px;
