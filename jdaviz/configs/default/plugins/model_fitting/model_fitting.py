@@ -103,7 +103,7 @@ class ModelFitting(TemplateMixin):
 
     def vue_equation_changed(self, event):
         # Length is a dummy check to test the infrastructure
-        if len(self.model_equation) > 6:
+        if len(self.model_equation) > 20:
             self.eq_error = True
 
     def vue_model_fitting(self, *args, **kwargs):
@@ -111,7 +111,8 @@ class ModelFitting(TemplateMixin):
         initialized_models = [initialize_model(x) for x in self.component_models]
         fitted_model, fitted_spectrum = fit_model_to_spectrum(self._spectrum1d,
                                                               initialized_models,
-                                                              self.model_equation)
+                                                              self.model_equation,
+                                                              run_fitter=True)
         self._fitted_model = fitted_model
         self._fitted_spectrum = fitted_spectrum
         self.data_collection["Model fit"] = self._fitted_spectrum
