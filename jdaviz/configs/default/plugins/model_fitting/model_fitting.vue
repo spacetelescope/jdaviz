@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="dialog" persistent max-width="600" @keydown.stop="">
+  <v-card flat tile>
     <template v-slot:activator="{ on: dialog }">
       <v-tooltip bottom>
         <template v-slot:activator="{ on: tooltip }">
@@ -10,13 +10,10 @@
             Model Fitting
           </v-btn>
         </template>
-        <span>Model Fitting</span>
       </v-tooltip>
     </template>
 
     <v-card>
-      <v-card-title class="headline blue lighten-4" primary-title>Model Fitting</v-card-title>
-
       <v-card-text>
         <v-container>
           <v-row>
@@ -179,9 +176,8 @@
            @click="save_model">
              Save Model
           </v-btn>
-        <v-btn color="primary" text @click="dialog = false">Close</v-btn>
         <v-btn color="primary" text @click="model_fitting">Fit</v-btn>
       </v-card-actions>
     </v-card>
-  </v-dialog>
+  </v-card>
 </template>

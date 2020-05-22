@@ -18,7 +18,7 @@ from .fitting_backend import fit_model_to_spectrum
 __all__ = ['ModelFitting']
 
 
-@tray_registry('g-model-fitting')
+@tray_registry('g-model-fitting', label="Model Fitting")
 class ModelFitting(TemplateMixin):
     dialog = Bool(False).tag(sync=True)
     template = load_template("model_fitting.vue", __file__).tag(sync=True)
