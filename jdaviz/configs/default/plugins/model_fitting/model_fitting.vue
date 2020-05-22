@@ -1,18 +1,5 @@
 <template>
   <v-card flat tile>
-    <template v-slot:activator="{ on: dialog }">
-      <v-tooltip bottom>
-        <template v-slot:activator="{ on: tooltip }">
-          <v-btn
-            @click="dialog_open"
-            v-on="{...dialog}"
-          >
-            Model Fitting
-          </v-btn>
-        </template>
-      </v-tooltip>
-    </template>
-
     <v-card>
       <v-card-text>
         <v-container>
@@ -20,6 +7,7 @@
             <v-col>
               <v-select
                 :items="dc_items"
+                @click="dialog_open"
                 @change="data_selected"
                 label="Data"
                 hint="Select the data set to be fitted."

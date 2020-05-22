@@ -73,8 +73,9 @@ class ModelFitting(TemplateMixin):
         """Populated the data list when the model fitting plugin is opened"""
         self._viewer_spectra = self.app.get_data_from_viewer("spectrum-viewer")
         self.dc_items = list(self._viewer_spectra.keys())
-        self._units["x"] =str(self._viewer_spectra[self.dc_items[0]].spectral_axis.unit)
-        self._units["y"] = str(self._viewer_spectra[self.dc_items[0]].flux.unit)
+        if self._units == {}:
+            self._units["x"] =str(self._viewer_spectra[self.dc_items[0]].spectral_axis.unit)
+            self._units["y"] = str(self._viewer_spectra[self.dc_items[0]].flux.unit)
 
     def vue_data_selected(self, event):
         self._spectrum1d = self._viewer_spectra[event]
