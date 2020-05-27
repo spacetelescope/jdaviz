@@ -1,5 +1,6 @@
 import pickle
 
+from glue.core.link_helpers import LinkSame
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
 from traitlets import Bool, List, Dict, Unicode
@@ -68,6 +69,10 @@ class ModelFitting(TemplateMixin):
                 temp_param[0]["value"] = m_fit.parameters[i]
                 temp_params += temp_param
             m["parameters"] = temp_params
+        # Trick traitlets into updating the displayed values
+        component_models = self.component_models
+        self.component_models = []
+        self.component_models = component_models
 
     def vue_dialog_open(self, event):
         """Populated the data list when the model fitting plugin is opened"""
@@ -116,6 +121,7 @@ class ModelFitting(TemplateMixin):
         self._fitted_model = fitted_model
         self._fitted_spectrum = fitted_spectrum
         self.data_collection["Model fit"] = self._fitted_spectrum
+
         # Update component model parameters with fitted values
         self._update_parameters_from_fit()
 
