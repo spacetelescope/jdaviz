@@ -32,6 +32,9 @@ SplitPanes()
 GoldenLayout()
 
 CONTAINER_TYPES = dict(row='gl-row', col='gl-col', stack='gl-stack')
+EXT_TYPES = dict(flux=['flux', 'sci'],
+                 uncert=['ivar', 'err', 'var', 'uncert'],
+                 mask=['mask', 'dq'])
 
 
 class ApplicationState(State):
@@ -55,6 +58,9 @@ class ApplicationState(State):
     }, docstring="State of the quick toast messages.")
 
     settings = DictCallbackProperty({
+        'data': {
+            'auto_populate': False
+        },
         'visible': {
             'menu_bar': True,
             'toolbar': True,
@@ -217,6 +223,18 @@ class Application(TemplateMixin):
             File path for the data file to be loaded.
         """
         self._application_handler.load_data(path)
+
+        if self.state.settings['data']['auto_populate']:
+            for data in self.data_collection:
+                data_label = data.label.lower()
+
+                if any(x in data_label for x in EXT_TYPES['flux']):
+                    self.add_data_to_viewer('flux-viewer', data.label)
+                    self.add_data_to_viewer('spectrum-viewer', data.label)
+                elif any(x in data_label for x in EXT_TYPES['uncert']):
+                    self.add_data_to_viewer('uncert-viewer', data.label)
+                elif any(x in data_label for x in EXT_TYPES['mask']):
+                    self.add_data_to_viewer('mask-viewer', data.label)
 
         # Send out a toast message
         snackbar_message = SnackbarMessage("Data successfully loaded.",
