@@ -3,7 +3,7 @@ import pickle
 from glue.core.link_helpers import LinkSame
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
-from traitlets import Bool, List, Dict, Unicode
+from traitlets import Bool, Int, List, Dict, Unicode
 import astropy.units as u
 import astropy.modeling.models as models
 from specutils.spectra import Spectrum1D
@@ -40,6 +40,8 @@ class ModelFitting(TemplateMixin):
     model_equation = Unicode().tag(sync=True)
     eq_error = Bool(False).tag(sync=True)
     component_models = List([]).tag(sync=True)
+    display_order = Bool(False).tag(sync=True)
+    poly_order = Int(0).tag(sync=True)
 
     available_models = List(list(MODELS.keys())).tag(sync=True)
 
@@ -53,16 +55,21 @@ class ModelFitting(TemplateMixin):
         self._fitted_spectrum = None
         self.component_models = []
         self._initialized_models = {}
-
-    def _param_units(self, param):
-        '''Helper function to handle units that depend on x and y'''
-        y_params = ["amplitude", "amplitude_L", "intercept"]
-        if param == "slope":
-            return "{}/{}".format(self._units["y"], self._units["x"])
-        return self._units["y"] if param in y_params else self._units["x"]
+        self._display_order = False
 
     def _on_data_updated(self, msg):
-       self.dc_items = [x.label for x in self.data_collection]
+        self.dc_items
+
+    def _param_units(self, param, order = 0):
+        '''Helper function to handle units that depend on x and y'''
+        y_params = ["amplitude", "amplitude_L", "intercept"]
+
+        if param == "slope":
+            return str(u.Unit(self._units["y"]) / u.Unit(self._units["x"]))
+        elif param == "poly":
+            return str(u.Unit(self._units["y"]) / u.Unit(self._units["x"])**order)
+
+        return self._units["y"] if param in y_params else self._units["x"]
 
     def _update_parameters_from_fit(self):
         """Insert the results of the model fit into the component_models"""
@@ -89,7 +96,7 @@ class ModelFitting(TemplateMixin):
         self._viewer_spectra = self.app.get_data_from_viewer("spectrum-viewer")
         self.dc_items = list(self._viewer_spectra.keys())
         if self._units == {}:
-            self._units["x"] =str(self._viewer_spectra[self.dc_items[0]].spectral_axis.unit)
+            self._units["x"] = str(self._viewer_spectra[self.dc_items[0]].spectral_axis.unit)
             self._units["y"] = str(self._viewer_spectra[self.dc_items[0]].flux.unit)
 
     def vue_data_selected(self, event):
@@ -98,25 +105,50 @@ class ModelFitting(TemplateMixin):
     def vue_model_selected(self, event):
         # Add the model selected to the list of models
         self.temp_model = event
+        if event == "Polynomial1D":
+            self.display_order = True
+        else:
+            self.display_order = False
+
+    def _initialize_polynomial(self, new_model):
+        initialized_model = initialize(MODELS[self.temp_model](name=self.temp_name,
+                                                               degree = self.poly_order),
+                                       self._spectrum1d.spectral_axis,
+                                       self._spectrum1d.flux)
+        self._initialized_models[self.temp_name] = initialized_model
+        for i in range(self.poly_order + 1):
+            param = "c{}".format(i)
+            initial_val = getattr(initialized_model, param).value
+            new_model["parameters"].append({"name": param,
+                                            "value": initial_val,
+                                            "unit": self._param_units("poly", i),
+                                            "fixed": False})
+        return new_model
 
     def vue_add_model(self, event):
         """Add the selected model and input string ID to the list of models"""
         new_model = {"id": self.temp_name, "model_type": self.temp_model,
                      "parameters": []}
-        # Have a separate private dict with the initialized models, since they
-        # don't play well with JSON for widget interaction
-        initialized_model = initialize(MODELS[self.temp_model](name=self.temp_name),
-                                        self._spectrum1d.spectral_axis,
-                                        self._spectrum1d.flux)
 
-        self._initialized_models[self.temp_name] = initialized_model
+        # Need to do things differently for polynomials, since the order varies
+        if self.temp_model == "Polynomial1D":
+            new_model = self._initialize_polynomial(new_model)
+        else:
+            # Have a separate private dict with the initialized models, since they
+            # don't play well with JSON for widget interaction
+            initialized_model = initialize(MODELS[self.temp_model](name=self.temp_name),
+                                           self._spectrum1d.spectral_axis,
+                                           self._spectrum1d.flux)
 
-        for param in model_parameters[new_model["model_type"]]:
-            initial_val = getattr(initialized_model, param).value
-            new_model["parameters"].append({"name": param,
-                                            "value": initial_val,
-                                            "unit": self._param_units(param),
-                                            "fixed": False})
+            self._initialized_models[self.temp_name] = initialized_model
+
+            for param in model_parameters[new_model["model_type"]]:
+                initial_val = getattr(initialized_model, param).value
+                new_model["parameters"].append({"name": param,
+                                                "value": initial_val,
+                                                "unit": self._param_units(param),
+                                                "fixed": False})
+
         self.component_models = self.component_models + [new_model]
 
     def vue_remove_model(self, event):

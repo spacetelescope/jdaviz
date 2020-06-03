@@ -33,14 +33,24 @@
               ></v-select>
             </v-col>
             <v-col>
-            <v-text-field
-              label="Model ID"
-              v-model="temp_name"
-              hint="A unique ID for this component model"
-              persistent-hint
-              :rules="[() => !!temp_name || 'This field is required']"
-            >
-            </v-text-field>
+              <v-text-field
+                label="Model ID"
+                v-model="temp_name"
+                hint="A unique ID for this component model"
+                persistent-hint
+                :rules="[() => !!temp_name || 'This field is required']"
+              >
+              </v-text-field>
+            </v-col>
+            <v-col v-if="display_order">
+              <v-text-field
+                label="Order"
+                type="number"
+                v-model.number="poly_order"
+                hint="Order of polynomial to fit"
+                persistent-hint
+              >
+              </v-text-field>
             </v-col>
           </v-row>
           <v-row
