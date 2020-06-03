@@ -1,3 +1,4 @@
+import copy
 import logging
 import os
 import uuid
@@ -1094,6 +1095,9 @@ class Application(VuetifyTemplate, HubListener):
             else:
                 config = self._load_config_by_path(path=path)
 
+        # store the loaded config object
+        self._loaded_configuration = config
+
         self.state.settings.update(config.get('settings'))
 
         def compose_viewer_area(viewer_area_items):
@@ -1166,3 +1170,7 @@ class Application(VuetifyTemplate, HubListener):
         """ Resets the application state """
         self.state = ApplicationState()
         self.state.add_callback('stack_items', self.vue_relayout)
+
+    def get_configuration(self):
+        """ Returns a copy of the application configuration """
+        return copy.deepcopy(self._loaded_configuration)
