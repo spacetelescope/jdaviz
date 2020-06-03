@@ -1080,6 +1080,8 @@ class Application(VuetifyTemplate, HubListener):
             A dictionary of configuration settings to be loaded.  The dictionary
             contents should be the same as a YAML config file specification.
         """
+        # reset the application state
+        self._reset_state()
 
         # load the configuration from the yaml file or configuration object
         assert not (path and config), 'Cannot specify both a path and a config object!'
