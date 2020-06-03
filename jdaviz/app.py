@@ -59,7 +59,8 @@ class ApplicationState(State):
 
     settings = DictCallbackProperty({
         'data': {
-            'auto_populate': False
+            'auto_populate': False,
+            'parser': None
         },
         'visible': {
             'menu_bar': True,
@@ -222,19 +223,13 @@ class Application(TemplateMixin):
         path : str
             File path for the data file to be loaded.
         """
-        self._application_handler.load_data(path)
+        parser_ref = self.state.settings['data']['parser']
+        parser = data_parser_registry.members.get(parser_ref)
 
-        if self.state.settings['data']['auto_populate']:
-            for data in self.data_collection:
-                data_label = data.label.lower()
-
-                if any(x in data_label for x in EXT_TYPES['flux']):
-                    self.add_data_to_viewer('flux-viewer', data.label)
-                    self.add_data_to_viewer('spectrum-viewer', data.label)
-                elif any(x in data_label for x in EXT_TYPES['uncert']):
-                    self.add_data_to_viewer('uncert-viewer', data.label)
-                elif any(x in data_label for x in EXT_TYPES['mask']):
-                    self.add_data_to_viewer('mask-viewer', data.label)
+        if parser is not None:
+            parser(path, self)
+        else:
+            self._application_handler.load_data(path)
 
         # Send out a toast message
         snackbar_message = SnackbarMessage("Data successfully loaded.",

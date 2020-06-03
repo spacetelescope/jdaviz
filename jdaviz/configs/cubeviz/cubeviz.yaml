@@ -2,6 +2,7 @@ settings:
   configuration: cubeviz
   data:
     auto_populate: true
+    parser: cubeviz-data-parser
   visible:
     menu_bar: false
     toolbar: true
