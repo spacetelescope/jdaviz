@@ -13,11 +13,19 @@ from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
 from jdaviz.utils import load_template
 
-from .initializers import initialize_model, model_parameters
+from .initializers import initialize, model_parameters
 from .fitting_backend import fit_model_to_spectrum
 
 __all__ = ['ModelFitting']
 
+MODELS = {
+     'Const1D': models.Const1D,
+     'Linear1D': models.Linear1D,
+     'Polynomial1D': models.Polynomial1D,
+     'Gaussian1D': models.Gaussian1D,
+     'Voigt1D': models.Voigt1D,
+     'Lorentz1D': models.Lorentz1D
+     }
 
 @tray_registry('g-model-fitting', label="Model Fitting")
 class ModelFitting(TemplateMixin):
@@ -33,7 +41,7 @@ class ModelFitting(TemplateMixin):
     eq_error = Bool(False).tag(sync=True)
     component_models = List([]).tag(sync=True)
 
-    available_models = List(list(model_parameters.keys())).tag(sync=True)
+    available_models = List(list(MODELS.keys())).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -44,6 +52,7 @@ class ModelFitting(TemplateMixin):
         self._fitted_model = None
         self._fitted_spectrum = None
         self.component_models = []
+        self._initialized_models = {}
 
     def _param_units(self, param):
         '''Helper function to handle units that depend on x and y'''
@@ -56,6 +65,7 @@ class ModelFitting(TemplateMixin):
        self.dc_items = [x.label for x in self.data_collection]
 
     def _update_parameters_from_fit(self):
+        """Insert the results of the model fit into the component_models"""
         for m in self.component_models:
             name = m["id"]
             if len(self.component_models) > 1:
@@ -90,17 +100,28 @@ class ModelFitting(TemplateMixin):
         self.temp_model = event
 
     def vue_add_model(self, event):
-        # Add the selected model and input string ID to the list of models
+        """Add the selected model and input string ID to the list of models"""
         new_model = {"id": self.temp_name, "model_type": self.temp_model,
                      "parameters": []}
+        # Have a separate private dict with the initialized models, since they
+        # don't play well with JSON for widget interaction
+        initialized_model = initialize(MODELS[self.temp_model](name=self.temp_name),
+                                        self._spectrum1d.spectral_axis,
+                                        self._spectrum1d.flux)
+
+        self._initialized_models[self.temp_name] = initialized_model
+
         for param in model_parameters[new_model["model_type"]]:
-            new_model["parameters"].append({"name": param, "value": None,
+            initial_val = getattr(initialized_model, param).value
+            new_model["parameters"].append({"name": param,
+                                            "value": initial_val,
                                             "unit": self._param_units(param),
                                             "fixed": False})
         self.component_models = self.component_models + [new_model]
 
     def vue_remove_model(self, event):
         self.component_models = [x for x in self.component_models if x["id"] != event]
+        del(self._initialized_models[event])
 
     def vue_save_model(self, event):
         with open(self.model_savename, 'wb') as f:
@@ -112,10 +133,12 @@ class ModelFitting(TemplateMixin):
             self.eq_error = True
 
     def vue_model_fitting(self, *args, **kwargs):
-        # This will be where the model fitting code is run
-        initialized_models = [initialize_model(x) for x in self.component_models]
+        """
+        Run fitting on the initializes models, fixing any parameters marked
+        as such by the user
+        """
         fitted_model, fitted_spectrum = fit_model_to_spectrum(self._spectrum1d,
-                                                              initialized_models,
+                                                              self._initialized_models.values(),
                                                               self.model_equation,
                                                               run_fitter=True)
         self._fitted_model = fitted_model
