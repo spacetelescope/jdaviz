@@ -43,10 +43,24 @@ def load_template(file_name, path=None, traitlet=True):
 
 
 def parse_data(file_path, data_collection):
-    # There may be an issue with the wcs in which it exists only on the flux
-    # data. Luckily, Glue seems to deal with this well enough. We can leverage
-    # the translation machinery by loading first as a Glue object, translate to
-    # `SpectralCube` object, and then back again.
+    """
+    Attempts to parse a data file and auto-populate available viewers in
+    cubeviz.
+
+    Parameters
+    ----------
+    file_path : str
+        The path to a cube-like data file.
+    data_collection : `~glue.core.DataCollection`
+        The application-level data collection into which the parsed data will
+        be placed.
+
+    Returns
+    -------
+    ext_mapping : dict
+        A mapping of the three necessary components of the cubeviz viewers to
+        the data component labels in glue.
+    """
     ext_mapping = {'flux': None,
                    'uncert': None,
                    'mask': None}
@@ -58,10 +72,14 @@ def parse_data(file_path, data_collection):
             if hdu.data is None:
                 continue
 
+            # This will fail on attempting to load anything that
+            # isn't cube-shaped
             try:
                 sc = SpectralCube.read(hdu)
                 wcs = sc.wcs
             except ValueError:
+                # This will fail if the parsing of the wcs does not provide
+                # proper celestial axes
                 try:
                     hdu.header.update(wcs.to_header())
                     sc = SpectralCube.read(hdu)
@@ -83,8 +101,7 @@ def parse_data(file_path, data_collection):
                     any(x in hdu.name.lower() for x in EXT_TYPES['uncert']):
                 ext_mapping['uncert'] = hdu.name
 
-            if 'errtype' in [x.lower() for x in hdu.header.keys()] or \
-                    any(x in hdu.name.lower() for x in EXT_TYPES['flux']):
+            if any(x in hdu.name.lower() for x in EXT_TYPES['flux']):
                 ext_mapping['flux'] = hdu.name
 
     return ext_mapping

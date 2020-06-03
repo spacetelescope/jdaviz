@@ -24,7 +24,7 @@ from .core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
                           SnackbarMessage, RemoveDataMessage)
 from .core.registries import tool_registry, tray_registry, viewer_registry
 from .core.template_mixin import TemplateMixin
-from .utils import load_template, parse_data
+from .utils import load_template
 
 __all__ = ['Application']
 
@@ -32,6 +32,9 @@ SplitPanes()
 GoldenLayout()
 
 CONTAINER_TYPES = dict(row='gl-row', col='gl-col', stack='gl-stack')
+EXT_TYPES = dict(flux=['flux', 'sci'],
+                 uncert=['ivar', 'err', 'var', 'uncert'],
+                 mask=['mask', 'dq'])
 
 
 class ApplicationState(State):
@@ -219,13 +222,19 @@ class Application(TemplateMixin):
         path : str
             File path for the data file to be loaded.
         """
-        ext_mapping = parse_data(path, self.data_collection)
+        self._application_handler.load_data(path)
 
         if self.state.settings['data']['auto_populate']:
-            self.add_data_to_viewer('flux-viewer', ext_mapping['flux'])
-            self.add_data_to_viewer('spectrum-viewer', ext_mapping['flux'])
-            self.add_data_to_viewer('uncert-viewer', ext_mapping['uncert'])
-            self.add_data_to_viewer('mask-viewer', ext_mapping['mask'])
+            for data in self.data_collection:
+                data_label = data.label.lower()
+
+                if any(x in data_label for x in EXT_TYPES['flux']):
+                    self.add_data_to_viewer('flux-viewer', data.label)
+                    self.add_data_to_viewer('spectrum-viewer', data.label)
+                elif any(x in data_label for x in EXT_TYPES['uncert']):
+                    self.add_data_to_viewer('uncert-viewer', data.label)
+                elif any(x in data_label for x in EXT_TYPES['mask']):
+                    self.add_data_to_viewer('mask-viewer', data.label)
 
         # Send out a toast message
         snackbar_message = SnackbarMessage("Data successfully loaded.",
