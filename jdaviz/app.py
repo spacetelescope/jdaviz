@@ -1025,19 +1025,23 @@ class Application(VuetifyTemplate, HubListener):
 
         return viewer
 
-    def load_configuration(self, path=None):
-        """
-        Parses the provided configuration yaml file and populates the
-        appropriate state values with the results.
+    @staticmethod
+    def _load_config_by_path(path=None):
+        """ Loads a configuration from a YAML file
+
+        Loads application configuration settings from a YAML file
 
         Parameters
         ----------
         path : str, optional
-            Path to the configuration file to be loaded. In the case where this
-            is ``None``, it loads the default configuration. Optionally, this
-            can be provided as name reference. **NOTE** This optional way to
-            define the configuration will be removed in future versions.
+            Path to the configuration file to be loaded. If None, loads the
+            default configuration.
+
+        Returns:
+            A dictionary object
         """
+        assert isinstance(path, (str, type(None))), 'path must be a string'
+
         # Parse the default configuration file
         default_path = os.path.join(os.path.dirname(__file__), "configs")
 
@@ -1054,6 +1058,39 @@ class Application(VuetifyTemplate, HubListener):
 
         with open(path, 'r') as f:
             config = yaml.safe_load(f)
+
+        return config
+
+    def load_configuration(self, path=None, config=None):
+        """
+        Parses the provided input into a configuration
+        dictionary and populates the appropriate state values
+        with the results.  Provided input can either be a
+        configuration YAML file or a pre-made configuration
+        dictionary.
+
+        Parameters
+        ----------
+        path : str, optional
+            Path to the configuration file to be loaded. In the case where this
+            is ``None``, it loads the default configuration. Optionally, this
+            can be provided as name reference. **NOTE** This optional way to
+            define the configuration will be removed in future versions.
+        config : dict, optional
+            A dictionary of configuration settings to be loaded.  The dictionary
+            contents should be the same as a YAML config file specification.
+        """
+
+        # load the configuration from the yaml file or configuration object
+        assert not (path and config), 'Cannot specify both a path and a config object!'
+        if config:
+            assert isinstance(config, dict), 'configuration object must be a dictionary'
+        else:
+            # check if the input path is actually a dict object
+            if isinstance(path, dict):
+                config = path
+            else:
+                config = self._load_config_by_path(path=path)
 
         self.state.settings.update(config.get('settings'))
 
@@ -1111,6 +1148,19 @@ class Application(VuetifyTemplate, HubListener):
                 'widget': "IPY_MODEL_" + tray_item_instance.model_id
             })
 
-        config_loaded_message = ConfigurationLoadedMessage(
-            config['settings'].get('configuration', 'default'), sender=self)
-        self.hub.broadcast(config_loaded_message)
+    def reset_configuration(self, path='default'):
+        """ Resets the loaded user configuration
+
+        Parameters
+        ----------
+        path : str, optional
+            Path to the configuration file to be loaded. If None, loads the
+            default configuration.
+        """
+        self._reset_state()
+        self.load_configuration(path=path)
+
+    def _reset_state(self):
+        """ Resets the application state """
+        self.state = ApplicationState()
+        self.state.add_callback('stack_items', self.vue_relayout)
