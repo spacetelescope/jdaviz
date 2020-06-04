@@ -1,6 +1,8 @@
 import copy
 import logging
 import os
+import pathlib
+import re
 import uuid
 from inspect import isclass
 
@@ -556,8 +558,47 @@ class Application(VuetifyTemplate, HubListener):
             f"Data '{data_label}' successfully added.", sender=self)
         self.hub.broadcast(snackbar_message)
 
-    def add_data_to_viewer(self, viewer_reference, data_label,
-                           clear_other_data=False):
+    @staticmethod
+    def _build_data_label(path, ext=None):
+        """ Build a data label from a filename and data extension
+        
+        Builds a data_label out of a filename and data extension.
+        If the input string path already ends with a data
+        extension, the label is returned directly.  Otherwise a valid
+        extension must be specified to append to the file stem.
+
+        Parameters
+        ----------
+            path : str
+                The data filename to use as a
+            ext : str
+                The data extension to access from the file.
+        Returns
+        -------
+        A string data label used by Glue
+
+        Example
+        -------
+        >>> data = '/Users/Work/data/jw00626-o030_s00000_nirspec_f170lp-g235m_s2d.fits'
+        >>> _build_data_label(data, ext='SCI')
+        >>> 'jw00626-o030_s00000_nirspec_f170lp-g235m_s2d[SCI]'
+        >>> _build_data_label('jw00626-o030_s00000_nirspec_f170lp-g235m_s2d[SCI]')
+        >>> 'jw00626-o030_s00000_nirspec_f170lp-g235m_s2d[SCI]'
+
+        """
+
+        # check if path already ends in extension
+        if re.search(r'(.+)(\[(.*?)\])$', path):
+            return path
+        else:
+            assert ext, 'A data extension must be specified'
+            p = pathlib.Path(path)
+            stem = p.stem.split(os.extsep)[0]
+            label = f'{stem}[{ext}]'
+            return label
+        
+    def add_data_to_viewer(self, viewer_reference, data_path,
+                           clear_other_data=False, ext=None):
         """
         Plots a data set from the data collection in the specific viewer.
 
@@ -566,13 +607,17 @@ class Application(VuetifyTemplate, HubListener):
         viewer_reference : str
             The reference to the viewer defined with the ``reference`` key
             in the yaml configuration file.
-        data_label : str
-            The Glue data label found in the ``DataCollection``.
+        data_path : str
+            Either the data filename or the Glue data label found in the ``DataCollection``.
         clear_other_data : bool
             Removes all other currently plotted data and only shows the newly
             defined data set.
+        ext: str
+            The data extension to access from a file.  If data_path is a filename, ext
+            is required.
         """
         viewer_item = self._viewer_item_by_reference(viewer_reference)
+        data_label = self._build_data_label(data_path, ext=ext)
         data_id = self._data_id_from_label(data_label)
 
         data_ids = viewer_item['selected_data_items'] \
