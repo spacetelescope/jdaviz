@@ -1216,6 +1216,30 @@ class Application(VuetifyTemplate, HubListener):
         self.state = ApplicationState()
         self.state.add_callback('stack_items', self.vue_relayout)
 
-    def get_configuration(self):
-        """ Returns a copy of the application configuration """
-        return copy.deepcopy(self._loaded_configuration)
+    def get_configuration(self, path=None, section=None):
+        """ Returns a copy of the application configuration
+        
+        Returns a copy of the configuration specification.  If path
+        is not specified, returns the currently loaded configuration.
+
+        Parameters
+        ----------
+        path : str, optional
+            path to the configuration file to be retrieved.
+        section : str, optional
+            A section of the configuration to retrieve
+        Returns
+        -------
+        A configuration specification dictionary
+
+        """
+        if path:
+            config = self._load_config_by_path(path=path)
+        else:
+            config = self._loaded_configuration
+        cfg = copy.deepcopy(config)
+
+        # return only a section if requested
+        if section:
+            return cfg.get(section, None)
+        return cfg
