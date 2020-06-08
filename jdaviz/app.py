@@ -561,7 +561,7 @@ class Application(VuetifyTemplate, HubListener):
     @staticmethod
     def _build_data_label(path, ext=None):
         """ Build a data label from a filename and data extension
-        
+
         Builds a data_label out of a filename and data extension.
         If the input string path already ends with a data
         extension, the label is returned directly.  Otherwise a valid
@@ -596,7 +596,7 @@ class Application(VuetifyTemplate, HubListener):
             stem = p.stem.split(os.extsep)[0]
             label = f'{stem}[{ext}]'
             return label
-        
+
     def add_data_to_viewer(self, viewer_reference, data_path,
                            clear_other_data=False, ext=None):
         """
@@ -645,7 +645,7 @@ class Application(VuetifyTemplate, HubListener):
 
         viewer.set_plot_axes()
 
-    def remove_data_from_viewer(self, viewer_reference, data_label):
+    def remove_data_from_viewer(self, viewer_reference, data_path, ext=None):
         """
         Removes a data set from the specified viewer.
 
@@ -654,10 +654,14 @@ class Application(VuetifyTemplate, HubListener):
         viewer_reference : str
             The reference to the viewer defined with the ``reference`` key
             in the yaml configuration file.
-        data_label : str
-            The Glue data label found in the ``DataCollection``.
+        data_path : str
+            Either the data filename or the Glue data label found in the ``DataCollection``.
+        ext: str
+            The data extension to access from a file.  If data_path is a filename, ext
+            is required.
         """
         viewer_item = self._viewer_item_by_reference(viewer_reference)
+        data_label = self._build_data_label(data_path, ext=ext)
         data_id = self._data_id_from_label(data_label)
 
         selected_items = viewer_item['selected_data_items']
@@ -1218,7 +1222,7 @@ class Application(VuetifyTemplate, HubListener):
 
     def get_configuration(self, path=None, section=None):
         """ Returns a copy of the application configuration
-        
+
         Returns a copy of the configuration specification.  If path
         is not specified, returns the currently loaded configuration.
 
@@ -1228,6 +1232,7 @@ class Application(VuetifyTemplate, HubListener):
             path to the configuration file to be retrieved.
         section : str, optional
             A section of the configuration to retrieve
+
         Returns
         -------
         A configuration specification dictionary
