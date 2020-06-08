@@ -57,6 +57,7 @@ class ModelFitting(TemplateMixin):
         self.component_models = []
         self._initialized_models = {}
         self._display_order = False
+        self._label_to_link = ""
 
     def _on_data_updated(self, msg):
         self.dc_items
@@ -99,6 +100,10 @@ class ModelFitting(TemplateMixin):
         if self._units == {}:
             self._units["x"] = str(self._viewer_spectra[self.dc_items[0]].spectral_axis.unit)
             self._units["y"] = str(self._viewer_spectra[self.dc_items[0]].flux.unit)
+        for label in self.dc_items:
+            if label in self.data_collection:
+                self._label_to_link = label
+                break
 
     def vue_data_selected(self, event):
         self._spectrum1d = self._viewer_spectra[event]
@@ -177,7 +182,12 @@ class ModelFitting(TemplateMixin):
         self._fitted_model = fitted_model
         self._fitted_spectrum = fitted_spectrum
         self.n_models += 1
-        self.data_collection["Model fit {}".format(self.n_models)] = self._fitted_spectrum
+        label = "Model fit {}".format(self.n_models)
+        self.data_collection[label] = self._fitted_spectrum
+
+        # Link data to enable overplotting
+        self.data_collection.add_link(LinkSame(self.data_collection[self._label_to_link].pixel_component_ids[0],
+                                               self.data_collection[label].pixel_component_ids[0]))
 
         # Update component model parameters with fitted values
         self._update_parameters_from_fit()
