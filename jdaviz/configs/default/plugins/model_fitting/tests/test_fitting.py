@@ -6,14 +6,27 @@ from specutils.spectra import Spectrum1D
 from .. import fitting_backend as fb
 
 
-def test_fitting_backend():
-    np.random.seed(42)
+SPECTRUM_SIZE = 200 # length of spectrum
+IMAGE_SIZE    = 10 # size of cube (SC x SC spaxels)
 
+
+def build_spectrum(sigma=0.1):
     g1 = models.Gaussian1D(1, 4.6, 0.2)
     g2 = models.Gaussian1D(2.5, 5.5, 0.1)
     g3 = models.Gaussian1D(-1.7, 8.2, 0.1)
-    x = np.linspace(0, 10, 200)
-    y = g1(x) + g2(x) + g3(x) + np.random.normal(4., 0.1, x.shape)
+
+    x = np.linspace(0, 10, SPECTRUM_SIZE)
+    y = g1(x) + g2(x) + g3(x)
+
+    noise = np.random.normal(4., sigma, x.shape)
+
+    return x, y + noise
+
+
+def test_fitting_backend():
+    np.random.seed(42)
+
+    x, y = build_spectrum()
 
     spectrum = Spectrum1D(flux=y*u.Jy, spectral_axis=x*u.um)
 
@@ -38,3 +51,43 @@ def test_fitting_backend():
                                     5.49867754, 0.10834472, -1.66902953, 8.19714439,
                                     0.09535613, 3.99125545])
     assert np.allclose(fm.parameters, parameters_expected, atol=1e-5)
+
+
+
+def test_cube_fitting_backend():
+    np.random.seed(42)
+
+    flux_cube = np.zeros((SPECTRUM_SIZE, IMAGE_SIZE, IMAGE_SIZE))
+
+    # Generate list of all spaxels to be fitted
+    _spx = [[(x, y) for x in range(IMAGE_SIZE)] for y in range(IMAGE_SIZE)]
+    spaxels = [item for sublist in _spx for item in sublist]
+
+    # Fill cube with spectra that differ from each
+    # other only by the noise component.
+    x, _ = build_spectrum()
+    for spx in spaxels:
+        flux_cube[:,spx[0],spx[1]] = build_spectrum()[1]
+
+    flux_cube = flux_cube.transpose(1, 2, 0)
+
+    spectrum = Spectrum1D(flux=flux_cube*u.Jy, spectral_axis=x*u.um)
+
+    # Initial model for fit.
+    g1f = models.Gaussian1D(0.7*u.Jy, 4.65*u.um, 0.3*u.um, name='g1')
+    g2f = models.Gaussian1D(2.0*u.Jy, 5.55*u.um, 0.3*u.um, name='g2')
+    g3f = models.Gaussian1D(-2.*u.Jy, 8.15*u.um, 0.2*u.um, name='g3')
+    zero_level = models.Const1D(1.*u.Jy, name='const1d')
+
+    model_list = [g1f, g2f, g3f, zero_level]
+    expression = "g1 + g2 + g3 + const1d"
+
+    # Returns the fitted model
+    fitted_parameters = fb.fit_model_to_cube(spectrum, model_list, expression)
+
+    # parameters_expected = np.array([1.0104705, 4.58956282, 0.19590464, 2.39892026,
+    #                                 5.49867754, 0.10834472, -1.66902953, 8.19714439,
+    #                                 0.09535613, 3.99125545])
+    # assert np.allclose(fm.parameters, parameters_expected, atol=1e-5)
+
+
