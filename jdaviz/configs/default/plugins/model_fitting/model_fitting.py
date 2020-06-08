@@ -51,6 +51,7 @@ class ModelFitting(TemplateMixin):
         self._viewer_spectra = None
         self._spectrum1d = None
         self._units = {}
+        self.n_models = 0
         self._fitted_model = None
         self._fitted_spectrum = None
         self.component_models = []
@@ -175,7 +176,8 @@ class ModelFitting(TemplateMixin):
                                                               run_fitter=True)
         self._fitted_model = fitted_model
         self._fitted_spectrum = fitted_spectrum
-        self.data_collection["Model fit"] = self._fitted_spectrum
+        self.n_models += 1
+        self.data_collection["Model fit {}".format(self.n_models)] = self._fitted_spectrum
 
         # Update component model parameters with fitted values
         self._update_parameters_from_fit()
