@@ -53,7 +53,6 @@ def test_fitting_backend():
     assert np.allclose(fm.parameters, parameters_expected, atol=1e-5)
 
 
-
 def test_cube_fitting_backend():
     np.random.seed(42)
 
@@ -92,12 +91,16 @@ def test_cube_fitting_backend():
     assert len(fitted_parameters) == 10
 
     assert type(fitted_parameters[0]) == u.Quantity
+    assert fitted_parameters[0].unit == u.Jy
     assert fitted_parameters[0].shape == (IMAGE_SIZE, IMAGE_SIZE)
+
     assert type(fitted_parameters[1]) == u.Quantity
+    assert fitted_parameters[1].unit == u.um
     assert fitted_parameters[1].shape == (IMAGE_SIZE, IMAGE_SIZE)
 
     assert type(fitted_spectrum) == Spectrum1D
     assert len(fitted_spectrum.shape) == 3
+    assert fitted_spectrum.flux.unit == u.Jy
 
     # parameters_expected = np.array([1.0104705, 4.58956282, 0.19590464, 2.39892026,
     #                                 5.49867754, 0.10834472, -1.66902953, 8.19714439,
