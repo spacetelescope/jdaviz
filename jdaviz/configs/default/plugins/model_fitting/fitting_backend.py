@@ -316,5 +316,3 @@ def _generate_spaxel_list(spectrum):
     spaxels = [item for sublist in spx for item in sublist]
 
     return spaxels
-
-
