@@ -133,7 +133,7 @@ def _fit_3D(initial_model, spectrum):
                                       spectrum.flux.shape[0],
                                       spectrum.flux.shape[1]))
 
-    # Build cube with empty slabs, one per input spaxel. These
+    # Build cube with empty arrays, one per input spaxel. These
     # will store the flux values corresponding to the fitted
     # model realization over each spaxel.
     output_flux_cube = np.zeros(shape=spectrum.flux.shape)
@@ -206,6 +206,14 @@ class SpaxelWorker:
         x = parameters[0]
         y = parameters[1]
 
+        # Calling the Spectrum1D constructor for every spaxel
+        # turned out to be less expensive than expected. Experiments
+        # show that the cost amounts to a couple percent additional
+        # running time in comparison with a version that uses a 3D
+        # spectrum as input. Besides, letting an externally-created
+        # spectrum reference into the callable somehow prevents it
+        # to execute. This behavior was seen also with other functions
+        # passed to the callable.
         flux = self.cube[x, y, :] # transposed!
         sp = Spectrum1D(spectral_axis=self.wave, flux=flux)
 
