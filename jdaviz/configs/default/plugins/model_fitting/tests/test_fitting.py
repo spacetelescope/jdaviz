@@ -7,7 +7,7 @@ from .. import fitting_backend as fb
 
 
 SPECTRUM_SIZE = 200 # length of spectrum
-IMAGE_SIZE    = 10 # size of cube (SC x SC spaxels)
+IMAGE_SIZE    =  10 # size of slab (IMAGE_SIZE x IMAGE_SIZE spaxels)
 
 
 def build_spectrum(sigma=0.1):
@@ -63,12 +63,13 @@ def test_cube_fitting_backend():
     _spx = [[(x, y) for x in range(IMAGE_SIZE)] for y in range(IMAGE_SIZE)]
     spaxels = [item for sublist in _spx for item in sublist]
 
-    # Fill cube with spectra that differ from each
-    # other only by the noise component.
+    # Fill cube spaxels with spectra that differ from
+    # each other only by their noise component.
     x, _ = build_spectrum()
     for spx in spaxels:
         flux_cube[:,spx[0],spx[1]] = build_spectrum()[1]
 
+    # Transpose so it can be packed in a Spectrum1D instance.
     flux_cube = flux_cube.transpose(1, 2, 0)
 
     spectrum = Spectrum1D(flux=flux_cube*u.Jy, spectral_axis=x*u.um)
@@ -82,8 +83,18 @@ def test_cube_fitting_backend():
     model_list = [g1f, g2f, g3f, zero_level]
     expression = "g1 + g2 + g3 + const1d"
 
-    # Returns the fitted model
+    # Fit to all spaxels.
     fitted_parameters = fb.fit_model_to_cube(spectrum, model_list, expression)
+
+    # Check that results are formatted as expected.
+    assert type(fitted_parameters) == list
+    assert len(fitted_parameters) == 10
+
+    assert type(fitted_parameters[0]) == u.Quantity
+    assert fitted_parameters[0].shape == (IMAGE_SIZE, IMAGE_SIZE)
+    assert type(fitted_parameters[1]) == u.Quantity
+    assert fitted_parameters[1].shape == (IMAGE_SIZE, IMAGE_SIZE)
+
 
     # parameters_expected = np.array([1.0104705, 4.58956282, 0.19590464, 2.39892026,
     #                                 5.49867754, 0.10834472, -1.66902953, 8.19714439,
