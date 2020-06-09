@@ -194,7 +194,8 @@ class SpaxelWorker:
     model just fitted, over that same spaxel. We cannot do these
     two steps (fit and compute) separately, since we cannot
     modify parameter values in an already built CompoundModel
-    instance.
+    instance. We need to use the current model instance while
+    it still exists.
     '''
     def __init__(self, flux_cube, wave_array, initial_model):
         self.cube = flux_cube
