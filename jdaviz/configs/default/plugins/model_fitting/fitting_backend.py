@@ -251,9 +251,9 @@ def _build_model(component_list, expression):
         model_dict[component.name] = component
 
     aeval = Interpreter(usersyms=model_dict)
-    compound_model_init = aeval(expression)
+    model = aeval(expression)
 
-    return compound_model_init
+    return model
 
 
 def _handle_parameter_units(model, fitted_parameters_cube, param_units):
