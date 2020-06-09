@@ -58,9 +58,8 @@ def fit_model_to_spectrum(spectrum, component_list, expression, run_fitter=False
 
     if len(spectrum.shape) > 1:
         # 3D case
-        output_parameters = _fit_model_to_cube(spectrum, component_list, expression)
-
-        output_spectrum = _build_spectrum_cube(spectrum, initial_model, output_parameters)
+        output_parameters, output_spectrum = _fit_model_to_cube(
+            spectrum, component_list, expression)
 
         return output_parameters, output_spectrum
     else:
@@ -83,7 +82,8 @@ def fit_model_to_spectrum(spectrum, component_list, expression, run_fitter=False
 def _fit_model_to_cube(spectrum, component_list, expression):
     """
     Fits an astropy CompoundModel to every spaxel in a cube
-    using a multiprocessor pool running in parallel.
+    using a multiprocessor pool running in parallel. Computes
+    realizations of the models over each spaxel.
 
     Parameters
     ----------
@@ -103,6 +103,8 @@ def _fit_model_to_cube(spectrum, component_list, expression):
     :list: a list that stores 2D arrays. Each array contains one
         parameter from `astropy.modeling.CompoundModel` instances
         fitted to every spaxel in the input cube.
+    :class:`specutils.spectrum.Spectrum1D`
+        The spectrum that stores the fitted model values in its 'flux' attribute.
     """
     init_model = _build_model(component_list, expression)
 
@@ -120,17 +122,28 @@ def _fit_model_to_cube(spectrum, component_list, expression):
                                       spectrum.flux.shape[0],
                                       spectrum.flux.shape[1]))
 
-    # Callback to collect results from workers into the cube
+    # Build cube with empty slabs, one per input spaxel. These
+    # will store the flux values corresponding to the fitted
+    # model realization over each spaxel.
+    output_flux_cube = np.zeros(shape=spectrum.flux.shape)
+
+    # Callback to collect results from workers into the cubes
     def collect_result(result):
         x = result[0]
         y = result[1]
         model = result[2]
+        fitted_values = result[3]
 
+        # Store fitted model parameters
         for index, name in enumerate(model.param_names):
             param = getattr(model, name)
             parameters_cube[index, x, y] = param.value
 
-    # Run multiprocessor pool to fit each spaxel
+        # Store fitted values
+        output_flux_cube[x, y, :] = fitted_values
+
+    # Run multiprocessor pool to fit each spaxel and
+    # compute model values on that same spaxel.
     results = []
     pool = Pool(mp.cpu_count() - 1)
 
@@ -149,21 +162,26 @@ def _fit_model_to_cube(spectrum, component_list, expression):
     # Re-format parameters cube to a list of 2D Quantity arrays.
     fitted_parameters = _extract_model_parameters(init_model, parameters_cube, param_units)
 
-    return fitted_parameters
+    # Build output 3D spectrum
+    funit = spectrum.flux.unit
+    output_spectrum = Spectrum1D(spectral_axis=spectrum.spectral_axis,
+                                 flux=output_flux_cube * funit)
 
-
-def _build_spectrum_cube(spectrum, model, output_parameter):
-
-
-
-    return spectrum
+    return fitted_parameters, output_spectrum
 
 
 class SpaxelWorker:
     '''
-    A class with callable instances. It provides the callable for
-    the `Pool.apply_async` function, and also holds everything
-    necessary to perform the fit over one spaxel.
+    A class with callable instances that perform fitting over a
+    spaxel. It provides the callable for the `Pool.apply_async`
+    function, and also holds everything necessary to perform the
+    fit over one spaxel.
+
+    Additionally, the callable computes the realization of the
+    model just fitted, over that same spaxel. We cannot do these
+    two steps (fit and compute) separately, since t=we cannot
+    modify parameter values in an already built CompoundModel
+    instance.
     '''
     def __init__(self, flux_cube, wave_array, initial_model):
         self.cube = flux_cube
@@ -177,8 +195,9 @@ class SpaxelWorker:
         flux = self.cube[x, y, :] # transposed!
         sp = Spectrum1D(spectral_axis=self.wave, flux=flux)
         fitted_model = fit_lines(sp, self.model)
+        fitted_values = fitted_model(self.wave)
 
-        return (x, y, fitted_model)
+        return (x, y, fitted_model, fitted_values)
 
 
 def _build_model(component_list, expression):
