@@ -13,38 +13,6 @@ from specutils.fitting import fit_lines
 __all__ = ['fit_model_to_spectrum']
 
 
-def _build_initial_model(component_list, expression):
-    """
-    Builds an astropy CompoundModel from a list of components
-    and an expression that links them to each other.
-
-    Parameters
-    ----------
-    component_list : list
-        Spectral model subcomponents stored in a list.
-        Their `name` attribute must be unique. Each subcomponent
-        should be an initialized object from `astropy.modeling.models'
-    expression : str
-        The arithmetic expression that combines together
-        the model subcomponents. The subcomponents are
-        refered via their 'name' attribute.
-
-    Returns
-    -------
-    :class:`astropy.modeling.CompoundModel`
-        The model resulting from the fit.
-    """
-    model_dict = {}
-
-    for component in component_list:
-        model_dict[component.name] = component
-
-    aeval = Interpreter(usersyms=model_dict)
-    compound_model_init = aeval(expression)
-
-    return compound_model_init
-
-
 def fit_model_to_spectrum(spectrum, component_list, expression, run_fitter=False):
     """
     Fits an astropy CompoundModel to an instance of Spectrum1D.
@@ -86,24 +54,33 @@ def fit_model_to_spectrum(spectrum, component_list, expression, run_fitter=False
     # refactored to provide the necessary hooks for the GUI (see
     # specviz/specviz/plugins/model_editor/models.py around lines 200-230).
 
-    compound_model_init = _build_initial_model(component_list, expression)
+    initial_model = _build_model(component_list, expression)
 
-    if run_fitter:
-        output_model = fit_lines(spectrum, compound_model_init)
-        output_values = output_model(spectrum.spectral_axis)
+    if len(spectrum.shape) > 1:
+        # 3D case
+        output_parameters = _fit_model_to_cube(spectrum, component_list, expression)
+
+        output_spectrum = _build_spectrum_cube(spectrum, initial_model, output_parameters)
+
+        return output_parameters, output_spectrum
     else:
-        # Return without fitting.
-        output_model = compound_model_init
-        output_values = compound_model_init(spectrum.spectral_axis)
+        # 1D case
+        if run_fitter:
+            output_model = fit_lines(spectrum, initial_model)
+            output_values = output_model(spectrum.spectral_axis)
+        else:
+            # Return without fitting.
+            output_model = initial_model
+            output_values = initial_model(spectrum.spectral_axis)
 
-    # Build return spectrum
-    funit = spectrum.flux.unit
-    output_spectrum = Spectrum1D(spectral_axis=spectrum.spectral_axis, flux=output_values * funit)
+        # Build return spectrum
+        funit = spectrum.flux.unit
+        output_spectrum = Spectrum1D(spectral_axis=spectrum.spectral_axis, flux=output_values * funit)
 
-    return output_model, output_spectrum
+        return output_model, output_spectrum
 
 
-def fit_model_to_cube(spectrum, component_list, expression):
+def _fit_model_to_cube(spectrum, component_list, expression):
     """
     Fits an astropy CompoundModel to every spaxel in a cube
     using a multiprocessor pool running in parallel.
@@ -127,7 +104,7 @@ def fit_model_to_cube(spectrum, component_list, expression):
         parameter from `astropy.modeling.CompoundModel` instances
         fitted to every spaxel in the input cube.
     """
-    init_model = _build_initial_model(component_list, expression)
+    init_model = _build_model(component_list, expression)
 
     # Worker for the multiprocess pool.
     worker = SpaxelWorker(spectrum.flux,
@@ -135,15 +112,13 @@ def fit_model_to_cube(spectrum, component_list, expression):
                           init_model)
 
     # Generate list of all spaxels to be fitted
-    spx = [[(x, y) for x in range(spectrum.flux.shape[0])]
-           for y in range(spectrum.flux.shape[1])]
-    spaxels = [item for sublist in spx for item in sublist]
+    spaxels = _generate_spaxel_list(spectrum)
 
     # Build cube with empty slabs, one per model parameter. These
     # will store only parameter values for now, so a cube suffices.
-    result_cube = np.zeros(shape=(len(init_model.parameters),
-                                  spectrum.flux.shape[0],
-                                  spectrum.flux.shape[1]))
+    parameters_cube = np.zeros(shape=(len(init_model.parameters),
+                                      spectrum.flux.shape[0],
+                                      spectrum.flux.shape[1]))
 
     # Callback to collect results from workers into the cube
     def collect_result(result):
@@ -153,9 +128,9 @@ def fit_model_to_cube(spectrum, component_list, expression):
 
         for index, name in enumerate(model.param_names):
             param = getattr(model, name)
-            result_cube[index, x, y] = param.value
+            parameters_cube[index, x, y] = param.value
 
-    # Run multiprocessor pool
+    # Run multiprocessor pool to fit each spaxel
     results = []
     pool = Pool(mp.cpu_count() - 1)
 
@@ -171,30 +146,17 @@ def fit_model_to_cube(spectrum, component_list, expression):
         param = getattr(init_model, name)
         param_units.append(param.unit)
 
-    # Re-format result to a list of 2D Quantity arrays.
-    fitted_parameters = _extract_model_parameters(init_model, result_cube, param_units)
+    # Re-format parameters cube to a list of 2D Quantity arrays.
+    fitted_parameters = _extract_model_parameters(init_model, parameters_cube, param_units)
 
     return fitted_parameters
 
 
-def _extract_model_parameters(model, fitted_parameters_cube, param_units):
-    '''
-    Extracts parameter units from a CompoundModel and parameter values
-    from a list of 2D numpy arrays, and returns a list of 2D Quantity
-    arrays built the parameter values and units respectively.
+def _build_spectrum_cube(spectrum, model, output_parameter):
 
-    :param model:
-    :param fitted_parameters_cube:
-    :param param_units:
-    :return:
-    '''
-    fitted_parameters_list = []
 
-    for index in range(len(model.parameters)):
-        _ary = fitted_parameters_cube[index, :, :]
-        fitted_parameters_list.append(u.Quantity(_ary, param_units[index]))
 
-    return fitted_parameters_list
+    return spectrum
 
 
 class SpaxelWorker:
@@ -217,3 +179,79 @@ class SpaxelWorker:
         fitted_model = fit_lines(sp, self.model)
 
         return (x, y, fitted_model)
+
+
+def _build_model(component_list, expression):
+    """
+    Builds an astropy CompoundModel from a list of components
+    and an expression that links them to each other.
+
+    Parameters
+    ----------
+    component_list : list
+        Spectral model subcomponents stored in a list.
+        Their `name` attribute must be unique. Each subcomponent
+        should be an initialized object from `astropy.modeling.models'
+    expression : str
+        The arithmetic expression that combines together
+        the model subcomponents. The subcomponents are
+        refered via their 'name' attribute.
+
+    Returns
+    -------
+    :class:`astropy.modeling.CompoundModel`
+        The model resulting from the fit.
+    """
+    model_dict = {}
+
+    for component in component_list:
+        model_dict[component.name] = component
+
+    aeval = Interpreter(usersyms=model_dict)
+    compound_model_init = aeval(expression)
+
+    return compound_model_init
+
+
+def _extract_model_parameters(model, fitted_parameters_cube, param_units):
+    '''
+    Extracts parameter units from a CompoundModel and parameter values
+    from a list of 2D numpy arrays, and returns a list of 2D Quantity
+    arrays built the parameter values and units respectively.
+
+    :param model:
+    :param fitted_parameters_cube:
+    :param param_units:
+    :return:
+    '''
+    fitted_parameters_list = []
+
+    for index in range(len(model.parameters)):
+        _ary = fitted_parameters_cube[index, :, :]
+        fitted_parameters_list.append(u.Quantity(_ary, param_units[index]))
+
+    return fitted_parameters_list
+
+
+def _generate_spaxel_list(spectrum):
+    """
+    Generates a list wuth tuples, each one addressing the (x,y)
+    coordinates of a spaxel in a 3-D spectrum cube.
+
+    Parameters
+    ----------
+    spectrum : :class:`specutils.spectrum.Spectrum1D`
+        The spectrum that stores the cube in its 'flux' attribute.
+
+    Returns
+    -------
+    :list: list with spaxels
+    """
+    spx = [[(x, y) for x in range(spectrum.flux.shape[0])]
+           for y in range(spectrum.flux.shape[1])]
+
+    spaxels = [item for sublist in spx for item in sublist]
+
+    return spaxels
+
+
