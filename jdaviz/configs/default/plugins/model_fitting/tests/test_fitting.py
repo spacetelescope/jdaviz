@@ -56,9 +56,12 @@ def test_fitting_backend():
 def test_cube_fitting_backend():
     np.random.seed(42)
 
-    SIGMA = 1.E-4  # noise in data
-    TOL   = 1.E-3  # test tolerance
+    SIGMA = 0.1  # noise in data
+    TOL   = 0.4  # test tolerance
 
+    # Flux cube oriented as in JWST data. To build a Spectrum1D
+    # instance with this, one need to transpose it so the spectral
+    # axis direction corresponds to the last index.
     flux_cube = np.zeros((SPECTRUM_SIZE, IMAGE_SIZE, IMAGE_SIZE))
 
     # Generate list of all spaxels to be fitted
@@ -107,22 +110,21 @@ def test_cube_fitting_backend():
     assert fitted_spectrum.shape == (IMAGE_SIZE, IMAGE_SIZE, SPECTRUM_SIZE)
     assert fitted_spectrum.flux.unit == u.Jy
 
-    # Gaussian amplitudes are most affected by noise, so we use a
-    # looser tolerance for them. The important point here isn't to
-    # check the accuracy of the fit, which was already tested
-    # elsewhere. We are mostly interested here in checking the
-    # correctness of the data packaging into the output products.
+    # The important point here isn't to check the accuracy of the
+    # fit, which was already tested elsewhere. We are mostly
+    # interested here in checking the correctness of the data
+    # packaging into the output products.
 
     assert np.allclose(fitted_parameters[0].value,  1.,  atol=TOL)
     assert np.allclose(fitted_parameters[3].value,  2.5, atol=TOL)
     assert np.allclose(fitted_parameters[6].value, -1.7, atol=TOL)
 
-    assert np.allclose(fitted_parameters[1].value, 4.6, atol=SIGMA)
-    assert np.allclose(fitted_parameters[4].value, 5.5, atol=SIGMA)
-    assert np.allclose(fitted_parameters[7].value, 8.2, atol=SIGMA)
+    assert np.allclose(fitted_parameters[1].value, 4.6, atol=TOL)
+    assert np.allclose(fitted_parameters[4].value, 5.5, atol=TOL)
+    assert np.allclose(fitted_parameters[7].value, 8.2, atol=TOL)
 
-    assert np.allclose(fitted_parameters[2].value, 0.2, atol=SIGMA)
-    assert np.allclose(fitted_parameters[5].value, 0.1, atol=SIGMA)
-    assert np.allclose(fitted_parameters[8].value, 0.1, atol=SIGMA)
+    assert np.allclose(fitted_parameters[2].value, 0.2, atol=TOL)
+    assert np.allclose(fitted_parameters[5].value, 0.1, atol=TOL)
+    assert np.allclose(fitted_parameters[8].value, 0.1, atol=TOL)
 
-    assert np.allclose(fitted_parameters[9].value, 4.0, atol=SIGMA)
+    assert np.allclose(fitted_parameters[9].value, 4.0, atol=TOL)
