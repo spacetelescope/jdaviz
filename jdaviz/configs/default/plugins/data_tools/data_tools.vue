@@ -2,14 +2,14 @@
   <v-toolbar-items>
     <v-dialog v-model="dialog" width="500" persistent @keydown.stop>
       <template v-slot:activator="{ on }">
-        <v-btn tile depressed v-on="on" color="primary">
+        <v-btn tile depressed v-on="on" color="accent">
           Import
           <v-icon right>mdi-plus</v-icon>
         </v-btn>
       </template>
 
       <v-card>
-        <v-card-title class="headline blue lighten-4" primary-title>Import Data</v-card-title>
+        <v-card-title class="headline" color="primary" primary-title>Import Data</v-card-title>
 
         <v-card-text>
           <v-container>

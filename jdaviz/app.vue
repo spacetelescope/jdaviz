@@ -1,6 +1,6 @@
 <template>
   <v-app id="web-app">
-    <v-app-bar dark dense flat app absolute clipped-right>
+    <v-app-bar color="primary" dark dense flat app absolute clipped-right>
       <jupyter-widget :widget="item.widget" v-for="item in state.tool_items" :key="item.name"></jupyter-widget>
       <v-spacer></v-spacer>
       <v-toolbar-items>
@@ -69,6 +69,20 @@ export default {
       this.notebook_context = document.getElementById("ipython-main-app");
       return this.notebook_context;
     }
+  },
+  created() {
+    console.log("Created");
+    console.log(this.$vuetify.theme);
+    this.$vuetify.theme.themes.light = {
+      primary: "#00617E",
+      secondary: "#007DA4",
+      accent: "#C75109",
+    };
+    this.$vuetify.theme.themes.dark = {
+      primary: "#00617E",
+      secondary: "#007DA4",
+      accent: "#C75109"
+    };
   }
 };
 </script>
