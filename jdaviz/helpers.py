@@ -12,10 +12,18 @@ class ConfigHelper():
 
 
 class SpecViz(ConfigHelper):
+    """SpecViz Helper class"""
+
     def __init__(self):
+        """Instantiates base helper with specviz configuration"""
         super().__init__(configuration="specviz")
 
-    def load_data(self, data, data_label='specviz-data', format=None):
+        """Loads a data file or Spectrum1D object into SpecViz
+
+        :param data: Spectrum1D spectra, or path to compatible data file
+        :param data_label: Name/identifier of data
+        :param format: Spectrum1D data format to load
+        """
         try:
             if pathlib.Path(data).is_file():
                 data = Spectrum1D.read(data, format=format)
@@ -25,4 +33,5 @@ class SpecViz(ConfigHelper):
         self._app.add_data_to_viewer('spectrum-viewer', data_label)
 
     def get_spectra(self):
+        """Returns the current data loaded into the main viewer"""
         return self._app.get_data_from_viewer('spectrum-viewer')
