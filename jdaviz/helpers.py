@@ -15,7 +15,7 @@ class SpecViz(ConfigHelper):
     def __init__(self):
         super().__init__(configuration="specviz")
 
-    def load_data(self, data, data_label, format=None):
+    def load_data(self, data, data_label='specviz-data', format=None):
         try:
             if pathlib.Path(data).is_file():
                 data = Spectrum1D.read(data, format=format)
