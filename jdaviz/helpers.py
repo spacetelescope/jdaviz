@@ -1,5 +1,6 @@
 import pathlib
 import uuid
+from specutils import Spectrum1D, SpectrumCollection
 
 from .app import Application
 
@@ -28,12 +29,20 @@ class SpecViz(ConfigHelper):
         # If no data label is assigned, give it a unique identifier
         if not data_label:
             data_label = "specviz_data|" + uuid.uuid4().hex
+        # If data provided is a path, try opening into a Spectrum1D object
         try:
-            if pathlib.Path(data).is_file():
-                data = Spectrum1D.read(data, format=format)
-                self._app.add_data(data, data_label)
+            path = pathlib.Path(data)
+            if path.is_file():
+                data = Spectrum1D.read(path, format=format)
+            else:
+                raise FileNotFoundError("No such file: " + path)
+        # If not, it must be a Spectrum1D object. Otherwise, it's unsupported
         except TypeError:
-            self._app.add_data(data, data_label)
+            if type(data) is SpectrumCollection:
+                raise TypeError("SpectrumCollection detected. Please provide a Spectrum1D")
+            elif type(data) is not Spectrum1D:
+                raise TypeError("Data is not a Spectrum1D object or compatible file")
+        self._app.add_data(data, data_label)
         self._app.add_data_to_viewer('spectrum-viewer', data_label)
 
     def get_spectra(self):
