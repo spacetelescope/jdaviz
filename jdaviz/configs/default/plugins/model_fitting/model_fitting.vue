@@ -7,7 +7,7 @@
             <v-col>
               <v-select
                 :items="dc_items"
-                @click="dialog_open"
+                @click="populate_data"
                 @change="data_selected"
                 label="Data"
                 hint="Select the data set to be fitted."
@@ -122,7 +122,8 @@
                 </v-col>
                 <v-col cols = 2>
                   <v-text-field 
-                    v-model="param.value"
+                    v-model="param.value",
+                    @change="parameter_updated"
                   >
                   </v-text-field>
                 </v-col>
@@ -157,24 +158,42 @@
           </v-text-field>
         </v-container>
       </v-card-text>
-      <v-divider inset="false"></v-divider>
+      <v-divider></v-divider>
 
       <v-card-actions>
         <div class="flex-grow-1"></div>
         <v-text-field
-          v-if="save_enabled"
-          v-model="model_savename"
-          hint="Specify path and filename for output pickle file"
-         >
-         </v-text-field>
-         <v-btn 
-           v-if="save_enabled" 
-           color="primary" 
-           text 
-           @click="save_model">
-             Save Model
-          </v-btn>
+          v-model="model_label"
+          label="Model Label"
+          hint="Label for the modeled spectrum in the data dropdown menus"
+          persistent-hint
+        >
+        </v-text-field>
+        <c-col cols=1><v-col>
+        <v-text-field
+          v-model="model_save_path"
+          label="Filepath"
+          hint="Path to save output file [Model Label].pkl (defaults to notebook directory)"
+          persistent-hint
+        >
+        </v-text-field>
+      </v-card-actions>
+      <v-card-actions>
+        <div class="flex-grow-1"></div>
+        <v-row
+          justify="left"
+          align="center"
+          no-gutters
+        >
         <v-btn color="primary" text @click="model_fitting">Fit</v-btn>
+        <v-btn color="primary" text @click="register_spectrum"">Add to Viewer</v-btn>
+        <v-btn
+           color="primary"
+           text
+           @click="save_model">
+           Save to File
+         </v-btn>
+        </v-row>
       </v-card-actions>
     </v-card>
   </v-card>

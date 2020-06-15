@@ -1,4 +1,5 @@
 import pickle
+import os
 
 from glue.core.link_helpers import LinkSame
 from glue.core.message import (DataCollectionAddMessage,
@@ -34,7 +35,8 @@ class ModelFitting(TemplateMixin):
     dc_items = List([]).tag(sync=True)
 
     save_enabled = Bool(False).tag(sync=True)
-    model_savename = Unicode("fitted_model.pkl").tag(sync=True)
+    model_label = Unicode().tag(sync=True)
+    model_save_path = Unicode().tag(sync=True)
     temp_name = Unicode().tag(sync=True)
     temp_model = Unicode().tag(sync=True)
     model_equation = Unicode().tag(sync=True)
@@ -93,8 +95,13 @@ class ModelFitting(TemplateMixin):
         self.component_models = []
         self.component_models = component_models
 
-    def vue_dialog_open(self, event):
-        """Populated the data list when the model fitting plugin is opened"""
+    def vue_parameter_updated(self, event):
+        """If the user changes a parameter value, we need to change it in the
+        initialized model."""
+        pass
+
+    def vue_populate_data(self, event):
+        """Populated the data list when the model fitting data dropdown is clicked"""
         self._viewer_spectra = self.app.get_data_from_viewer("spectrum-viewer")
         self.dc_items = list(self._viewer_spectra.keys())
         if self._units == {}:
@@ -162,7 +169,12 @@ class ModelFitting(TemplateMixin):
         del(self._initialized_models[event])
 
     def vue_save_model(self, event):
-        with open(self.model_savename, 'wb') as f:
+        if self.model_save_path[-1] == "/":
+            connector = ""
+        else:
+            connector = "/"
+        full_path = self.model_save_path + connector + self.model_label + ".pkl"
+        with open(full_path, 'wb') as f:
             pickle.dump(self._fitted_model, f)
 
     def vue_equation_changed(self, event):
@@ -172,8 +184,9 @@ class ModelFitting(TemplateMixin):
 
     def vue_model_fitting(self, *args, **kwargs):
         """
-        Run fitting on the initializes models, fixing any parameters marked
-        as such by the user
+        Run fitting on the initialized models, fixing any parameters marked
+        as such by the user, then update the displauyed parameters with fit
+        values
         """
         fitted_model, fitted_spectrum = fit_model_to_spectrum(self._spectrum1d,
                                                               self._initialized_models.values(),
@@ -181,15 +194,27 @@ class ModelFitting(TemplateMixin):
                                                               run_fitter=True)
         self._fitted_model = fitted_model
         self._fitted_spectrum = fitted_spectrum
-        self.n_models += 1
-        label = "Model fit {}".format(self.n_models)
-        self.data_collection[label] = self._fitted_spectrum
-
-        # Link data to enable overplotting
-        self.data_collection.add_link(LinkSame(self.data_collection[self._label_to_link].pixel_component_ids[0],
-                                               self.data_collection[label].pixel_component_ids[0]))
 
         # Update component model parameters with fitted values
         self._update_parameters_from_fit()
 
         self.save_enabled = True
+
+    def vue_register_spectrum(self, event):
+        """
+        Add a spectrum to the data collection based on the currently displayed
+        parameters (these could be user input or fit values).
+        """
+        # Need to run the model fitter with run_fitter=False to get spectrum
+        model, spectrum = fit_model_to_spectrum(self._spectrum1d,
+                                                self._initialized_models.values(),
+                                                self.model_equation)
+
+        self.n_models += 1
+        label = self.model_label
+        if label in self.data_collection:
+            self.data_collection.remove(label)
+        self.data_collection[label] = spectrum
+        self.save_enabled = True
+        self.data_collection.add_link(LinkSame(self.data_collection[self._label_to_link].pixel_component_ids[0],
+                                               self.data_collection[label].pixel_component_ids[0]))
