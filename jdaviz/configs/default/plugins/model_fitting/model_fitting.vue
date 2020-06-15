@@ -122,8 +122,7 @@
                 </v-col>
                 <v-col cols = 2>
                   <v-text-field 
-                    v-model="param.value",
-                    @change="parameter_updated"
+                    v-model="param.value"
                   >
                   </v-text-field>
                 </v-col>

@@ -95,10 +95,14 @@ class ModelFitting(TemplateMixin):
         self.component_models = []
         self.component_models = component_models
 
-    def vue_parameter_updated(self, event):
+    def _update_initialized_parameters(self):
         """If the user changes a parameter value, we need to change it in the
         initialized model."""
-        pass
+        for m in self.component_models:
+            name = m["id"]
+            for param in m["parameters"]:
+                setattr(self._initialized_models[name], param["name"],
+                        param["value"])
 
     def vue_populate_data(self, event):
         """Populated the data list when the model fitting data dropdown is clicked"""
@@ -162,6 +166,7 @@ class ModelFitting(TemplateMixin):
                                                 "unit": self._param_units(param),
                                                 "fixed": False})
 
+        new_model["Initialized"] = True
         self.component_models = self.component_models + [new_model]
 
     def vue_remove_model(self, event):
@@ -205,6 +210,9 @@ class ModelFitting(TemplateMixin):
         Add a spectrum to the data collection based on the currently displayed
         parameters (these could be user input or fit values).
         """
+        # Make sure the initialized models are updated with any user-specified parameters
+        self._update_initialized_parameters()
+
         # Need to run the model fitter with run_fitter=False to get spectrum
         model, spectrum = fit_model_to_spectrum(self._spectrum1d,
                                                 self._initialized_models.values(),
