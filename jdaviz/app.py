@@ -212,7 +212,7 @@ class Application(TemplateMixin):
         self.state.snackbar['timeout'] = msg.timeout
         self.state.snackbar['show'] = True
 
-    def load_data(self, path):
+    def load_data(self, file_obj, data_type=None, data_label=None):
         """
         Provided a path to a data file, open and parse the data into the
         `~glue.core.DataCollection` for this session. This also attempts to
@@ -223,23 +223,25 @@ class Application(TemplateMixin):
         path : str
             File path for the data file to be loaded.
         """
-        parser_ref = self.state.settings['data']['parser']
-        parser = data_parser_registry.members.get(parser_ref)
+        if data_type is not None and data_type.lower() not in ['flux', 'mask', 'uncertainty']:
+            snackbar_message = SnackbarMessage(
+                "Data type must be one of 'flux', 'mask', or 'uncertainty'.",
+                sender=self)
+            self.hub.broadcast(snackbar_message)
+            return
+
+        parser = data_parser_registry.members.get(
+            self.state.settings['data']['parser'])
 
         if parser is not None:
-            parser(path, self)
+            parser(self, file_obj)
         else:
-            self._application_handler.load_data(path)
+            self._application_handler.load_data(file_obj)
 
         # Send out a toast message
         snackbar_message = SnackbarMessage("Data successfully loaded.",
                                            sender=self)
         self.hub.broadcast(snackbar_message)
-
-        # Attempt to link the data
-        links = find_possible_links(self.data_collection)
-
-        # self.data_collection.add_link(links['Astronomy WCS'])
 
     def get_viewer(self, viewer_reference):
         """
