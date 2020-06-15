@@ -12,11 +12,11 @@ def test_linking_after_gaussian_smooth(spectral_cube_wcs):
     dc = app.data_collection
     dc.append(Data(x=np.ones((3, 4, 5)), label='test', coords=spectral_cube_wcs))
 
-    coll = GaussianSmooth(app=app)
+    gs = GaussianSmooth(app=app)
 
-    coll.vue_data_selected('test')
-    coll.stddev = '3.2'
-    coll.vue_gaussian_smooth()
+    gs._on_data_selected({'new': 'test'})
+    gs.stddev = '3.2'
+    gs.vue_gaussian_smooth()
 
     assert len(dc) == 2
     assert dc[1].label == 'Smoothed test'

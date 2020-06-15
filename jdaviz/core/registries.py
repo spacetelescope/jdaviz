@@ -55,6 +55,7 @@ class ViewerRegistry(UniqueDictRegistry):
     def __call__(self, name=None, label=None):
         def decorator(cls):
             self.add(name, cls, label)
+            return cls
         return decorator
 
     def add(self, name, cls, label=None):
@@ -95,6 +96,7 @@ class TrayRegistry(UniqueDictRegistry):
                     f"`ipyvuetify.VuetifyTemplate`.")
 
             self.add(name, cls, label, icon)
+            return cls
         return decorator
 
     def add(self, name, cls, label=None, icon=None):

@@ -1,5 +1,4 @@
 from astropy import units as u
-from astropy import units as u
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
 from glue.core import Data
