@@ -24,12 +24,21 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
         The application-level object used to reference the viewers.
     file_path : str
         The path to a cube-like data file.
+    data_type : str, {'flux', 'mask', 'uncert'}
+        The data type used to explicitly differentiate parsed data.
+    data_label : str, optional
+        The label applicad to the glue data component.
     """
     if data_type is not None and data_type.lower() not in ['flux', 'mask', 'uncert']:
         msg = "Data type must be one of 'flux', 'mask', or 'uncertainty'."
         logging.error(msg)
         return msg
 
+    # If the file object is an hdulist or a string, use the generic parser for
+    #  fits files.
+    # TODO: this currently only supports fits files. We will want to make this
+    #  generic enough to work with other file types (e.g. ASDF). For now, this
+    #  supports MaNGA and JWST data.
     if isinstance(file_obj, fits.hdu.hdulist.HDUList):
         _parse_hdu(app, file_obj)
     elif isinstance(file_obj, str) and os.path.exists(file_obj):
@@ -38,6 +47,10 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
         with fits.open(file_obj) as hdulist:
             hdulist = fits.open(file_obj)
             _parse_hdu(app, hdulist, file_name)
+
+    # If the data types are custom data objects, use explicit parsers. Note
+    #  that this relies on the glue-astronomy machinery to turn the data object
+    #  into something glue can understand.
     elif isinstance(file_obj, SpectralCube):
         _parse_spectral_cube(app, file_obj, data_type or 'flux', data_label)
     elif isinstance(file_obj, Spectrum1D):
@@ -50,8 +63,23 @@ def _parse_hdu(app, hdulist, file_name=None):
 
     file_name = file_name or "Unknown HDU object"
 
+    # WCS may only exist in a single extension (in this case, just the flux
+    #  flux extention), so first find and store then wcs information.
     wcs = None
 
+    for hdu in hdulist:
+        if hdu.data is None:
+            continue
+
+        try:
+            sc = SpectralCube.read(hdu)
+            wcs = sc.wcs
+        except (ValueError, FITSReadError):
+            continue
+
+    # Now loop through and attempt to parse the fits extensions as spectral
+    #  cube object. If the wcs fails to parse in any case, use the wcs
+    #  information we scraped above.
     for hdu in hdulist:
         data_label = f"{file_name}[{hdu.name}]"
 
@@ -62,7 +90,6 @@ def _parse_hdu(app, hdulist, file_name=None):
         # isn't cube-shaped
         try:
             sc = SpectralCube.read(hdu)
-            wcs = sc.wcs
         except ValueError:
             # This will fail if the parsing of the wcs does not provide
             # proper celestial axes

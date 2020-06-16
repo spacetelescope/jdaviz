@@ -216,7 +216,8 @@ class Application(TemplateMixin):
         """
         Provided a path to a data file, open and parse the data into the
         `~glue.core.DataCollection` for this session. This also attempts to
-        find WCS links that exist between data components.
+        find WCS links that exist between data components. Extra key word
+        arguments are passed to the parsing functions.
 
         Parameters
         ----------
@@ -227,6 +228,8 @@ class Application(TemplateMixin):
             self.state.settings['data']['parser'])
 
         if parser is not None:
+            # If the parser returns something other than known, assume it's
+            #  a message we want to make the user aware of.
             msg = parser(self, file_obj, **kwargs)
 
             if msg is not None:
