@@ -81,7 +81,7 @@ class ModelFitting(TemplateMixin):
         for m in self.component_models:
             name = m["id"]
             if len(self.component_models) > 1:
-                m_fit = self._fitted_model[name]
+                m_fit = self._fitted_model.unitless_model[name]
             else:
                 m_fit = self._fitted_model
             temp_params = []
@@ -102,8 +102,9 @@ class ModelFitting(TemplateMixin):
         for m in self.component_models:
             name = m["id"]
             for param in m["parameters"]:
+                quant_param = u.Quantity(param["value"], param["unit"])
                 setattr(self._initialized_models[name], param["name"],
-                        param["value"])
+                        quant_param)
 
     def vue_populate_data(self, event):
         """Populated the data list when the model fitting data dropdown is clicked"""
