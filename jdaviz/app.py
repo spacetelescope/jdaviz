@@ -212,7 +212,7 @@ class Application(TemplateMixin):
         self.state.snackbar['timeout'] = msg.timeout
         self.state.snackbar['show'] = True
 
-    def load_data(self, file_obj, data_type=None, data_label=None):
+    def load_data(self, file_obj, **kwargs):
         """
         Provided a path to a data file, open and parse the data into the
         `~glue.core.DataCollection` for this session. This also attempts to
@@ -223,18 +223,17 @@ class Application(TemplateMixin):
         path : str
             File path for the data file to be loaded.
         """
-        if data_type is not None and data_type.lower() not in ['flux', 'mask', 'uncertainty']:
-            snackbar_message = SnackbarMessage(
-                "Data type must be one of 'flux', 'mask', or 'uncertainty'.",
-                sender=self)
-            self.hub.broadcast(snackbar_message)
-            return
-
         parser = data_parser_registry.members.get(
             self.state.settings['data']['parser'])
 
         if parser is not None:
-            parser(self, file_obj)
+            msg = parser(self, file_obj, **kwargs)
+
+            if msg is not None:
+                snackbar_message = SnackbarMessage(
+                    msg, color='error', sender=self)
+                self.hub.broadcast(snackbar_message)
+                return
         else:
             self._application_handler.load_data(file_obj)
 
