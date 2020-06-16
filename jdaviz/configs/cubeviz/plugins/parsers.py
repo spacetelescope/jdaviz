@@ -13,7 +13,7 @@ EXT_TYPES = dict(flux=['flux', 'sci'],
 
 
 @data_parser_registry("cubeviz-data-parser")
-def parse_data(app, file_obj, **kwargs):
+def parse_data(app, file_obj, data_type=None, data_label=None):
     """
     Attempts to parse a data file and auto-populate available viewers in
     cubeviz.
@@ -25,17 +25,23 @@ def parse_data(app, file_obj, **kwargs):
     file_path : str
         The path to a cube-like data file.
     """
+    if data_type is not None and data_type.lower() not in ['flux', 'mask', 'uncert']:
+        msg = "Data type must be one of 'flux', 'mask', or 'uncertainty'."
+        logging.error(msg)
+        return msg
+
     if isinstance(file_obj, fits.hdu.hdulist.HDUList):
         _parse_hdu(app, file_obj)
     elif isinstance(file_obj, str) and os.path.exists(file_obj):
         file_name = os.path.basename(file_obj)
+
         with fits.open(file_obj) as hdulist:
             hdulist = fits.open(file_obj)
-            _parse_hdu(app, hdulist, file_name, **kwargs)
+            _parse_hdu(app, hdulist, file_name)
     elif isinstance(file_obj, SpectralCube):
-        _parse_spectral_cube(app, file_obj, **kwargs)
+        _parse_spectral_cube(app, file_obj, data_type or 'flux', data_label)
     elif isinstance(file_obj, Spectrum1D):
-        _parse_spectrum1d(app, file_obj, **kwargs)
+        _parse_spectrum1d(app, file_obj)
 
 
 def _parse_hdu(app, hdulist, file_name=None):
@@ -89,14 +95,14 @@ def _parse_hdu(app, hdulist, file_name=None):
 def _parse_spectral_cube(app, file_obj, data_type='flux', data_label=None):
     data_label = data_label or f"Unknown spectral cube[{data_type.upper()}]"
 
-    app.data_collection[f"{data_label}"] = file_obj.unmasked_data[:, :, :]
+    app.data_collection[f"{data_label}"] = file_obj
 
     if data_type == 'flux':
         app.add_data_to_viewer('flux-viewer', f"{data_label}")
         app.add_data_to_viewer('spectrum-viewer', f"{data_label}")
     elif data_type == 'mask':
         app.add_data_to_viewer('mask-viewer', f"{data_label}")
-    elif data_type == 'uncertainty':
+    elif data_type == 'uncert':
         app.add_data_to_viewer('uncert-viewer', f"{data_label}")
 
     # TODO: SpectralCube does not store mask information
@@ -106,11 +112,8 @@ def _parse_spectral_cube(app, file_obj, data_type='flux', data_label=None):
 def _parse_spectrum1d(app, file_obj):
     data_label = "Unknown spectrum object"
 
-    app.data_collection[f"{data_label}[FLUX]"] = file_obj.flux
-    app.add_data_to_viewer('flux-viewer', f"{data_label}[FLUX]")
+    # TODO: glue-astronomy translators only look at the flux property of
+    #  specutils Spectrum1D objects. Fix to support uncertainties and masks.
+
+    app.data_collection[f"{data_label}[FLUX]"] = file_obj
     app.add_data_to_viewer('spectrum-viewer', f"{data_label}[FLUX]")
-
-    app.data_collection[f"{data_label}[MASK]"] = file_obj.mask
-    app.add_data_to_viewer('mask-viewer', f"{data_label}[MASK]")
-
-    # TODO: Spectrum1D does not currently store data quality information
