@@ -577,14 +577,6 @@ class Application(VuetifyTemplate, HubListener):
         -------
         A string data label used by Glue
 
-        Example
-        -------
-        >>> data = '/Users/Work/data/jw00626-o030_s00000_nirspec_f170lp-g235m_s2d.fits'
-        >>> _build_data_label(data, ext='SCI')
-        >>> 'jw00626-o030_s00000_nirspec_f170lp-g235m_s2d[SCI]'
-        >>> _build_data_label('jw00626-o030_s00000_nirspec_f170lp-g235m_s2d[SCI]')
-        >>> 'jw00626-o030_s00000_nirspec_f170lp-g235m_s2d[SCI]'
-
         """
 
         # check if path already ends in extension
