@@ -61,6 +61,8 @@ class ModelFitting(TemplateMixin):
         self._initialized_models = {}
         self._display_order = False
         self._label_to_link = ""
+        self.model_save_path = os.getcwd()
+        self.model_label = "Model"
 
     def _on_data_updated(self, msg):
         self.dc_items

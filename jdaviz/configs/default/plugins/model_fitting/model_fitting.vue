@@ -172,7 +172,7 @@
         <v-text-field
           v-model="model_save_path"
           label="Filepath"
-          hint="Path to save output file [Model Label].pkl (defaults to notebook directory)"
+          hint="Path to save output file [Model Label].pkl"
           persistent-hint
         >
         </v-text-field>
