@@ -32,5 +32,5 @@ viewer_area:
       - container: row
         viewers:
           - name: Spectrum
-            plot: cubeviz-profile-viewer
+            plot: specviz-profile-viewer
             reference: spectrum-viewer
