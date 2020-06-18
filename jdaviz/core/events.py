@@ -110,11 +110,12 @@ class RemoveItemMessage(Message):
 
 
 class AddDataMessage(Message):
-    def __init__(self, data, viewer, *args, **kwargs):
+    def __init__(self, data, viewer, viewer_id=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self._data = data
         self._viewer = viewer
+        self._viewer_id = viewer_id
 
     @property
     def data(self):
@@ -123,6 +124,31 @@ class AddDataMessage(Message):
     @property
     def viewer(self):
         return self._viewer
+
+    @property
+    def viewer_id(self):
+        return self._viewer_id
+
+
+class RemoveDataMessage(Message):
+    def __init__(self, data, viewer, viewer_id=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self._data = data
+        self._viewer = viewer
+        self._viewer_id = viewer_id
+
+    @property
+    def data(self):
+        return self._data
+
+    @property
+    def viewer(self):
+        return self._viewer
+
+    @property
+    def viewer_id(self):
+        return self._viewer_id
 
 
 class SnackbarMessage(Message):
