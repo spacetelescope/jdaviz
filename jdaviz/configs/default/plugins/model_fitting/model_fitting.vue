@@ -7,7 +7,6 @@
             <v-col>
               <v-select
                 :items="dc_items"
-                @click="populate_data"
                 @change="data_selected"
                 label="Data"
                 hint="Select the data set to be fitted."
@@ -79,9 +78,9 @@
                 <v-col cols="8" class="text--secondary">
                   <v-fade-transition leave-absolute>
                     <span v-if="open">Enter parameters for model initialization</span>
-                    <v-row 
+                    <v-row
                       v-else
-                      no-gutters 
+                      no-gutters
                       style="width: 100%"
                     >
                       <v-col cols="4" v-for="param in item.parameters">
@@ -121,7 +120,7 @@
                   {{ param.name }}
                 </v-col>
                 <v-col cols = 2>
-                  <v-text-field 
+                  <v-text-field
                     v-model="param.value"
                   >
                   </v-text-field>

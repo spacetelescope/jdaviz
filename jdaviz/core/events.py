@@ -3,7 +3,7 @@ from glue.core.message import Message
 __all__ = ['NewViewerMessage', 'AddViewerMessage', 'LoadDataMessage',
            'DataSelectedMessage', 'ViewerSelectedMessage',
            'RemoveStackMessage', 'SplitStackMessage', 'RemoveItemMessage',
-           'AddDataMessage']
+           'AddDataMessage', 'SnackbarMessage', 'RemoveDataMessage']
 
 
 class NewViewerMessage(Message):
