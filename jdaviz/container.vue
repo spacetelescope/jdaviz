@@ -87,6 +87,7 @@ module.exports = {
   name: "g-viewer-tab",
   props: ["stack", "dataItems"],
   created() {
+      console.log("HERE" + this.$parent.computeChildrenPath);
     this.$parent.childMe = () => {
       return this.$children[0];
     };

@@ -20,7 +20,8 @@ from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
 from traitlets import Dict
 
-from .core.events import LoadDataMessage, NewViewerMessage, AddDataMessage, SnackbarMessage
+from .core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
+                          SnackbarMessage, RemoveDataMessage)
 from .core.registries import tool_registry, tray_registry, viewer_registry
 from .core.template_mixin import TemplateMixin
 from .utils import load_template
@@ -627,7 +628,9 @@ class Application(TemplateMixin):
 
             viewer.add_data(data)
 
-            add_data_message = AddDataMessage(data, viewer, sender=self)
+            add_data_message = AddDataMessage(data, viewer,
+                                              viewer_id=viewer_id,
+                                              sender=self)
             self.hub.broadcast(add_data_message)
 
         # Remove any deselected data objects from viewer
@@ -639,6 +642,11 @@ class Application(TemplateMixin):
         for data in viewer_data:
             if data.label not in active_data_labels:
                 viewer.remove_data(data)
+
+                remove_data_message = RemoveDataMessage(data, viewer,
+                                                        viewer_id=viewer_id,
+                                                        sender=self)
+                self.hub.broadcast(remove_data_message)
 
     def _on_data_added(self, msg):
         """

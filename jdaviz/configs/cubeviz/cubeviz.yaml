@@ -15,6 +15,7 @@ toolbar:
 tray:
   - g-gaussian-smooth
   - g-collapse
+  - g-model-fitting
 viewer_area:
   - container: col
     children:
