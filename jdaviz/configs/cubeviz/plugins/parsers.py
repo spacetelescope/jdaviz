@@ -1,11 +1,15 @@
+import logging
+import os
+
+import numpy as np
 from astropy.io import fits
 from spectral_cube import SpectralCube
 from spectral_cube.io.fits import FITSReadError
-import logging
-import numpy as np
-import os
-from jdaviz.core.registries import data_parser_registry
 from specutils import Spectrum1D
+
+from jdaviz.core.registries import data_parser_registry
+
+__all__ = ['parse_data']
 
 EXT_TYPES = dict(flux=['flux', 'sci'],
                  uncert=['ivar', 'err', 'var', 'uncert'],
