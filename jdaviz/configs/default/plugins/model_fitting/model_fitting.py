@@ -1,22 +1,20 @@
-import pickle
 import os
-from time import sleep
+import pickle
 
-from glue.core.link_helpers import LinkSame
-from glue.core.message import (DataCollectionAddMessage,
-                               DataCollectionDeleteMessage)
-from traitlets import Bool, Int, List, Dict, Unicode
-import astropy.units as u
 import astropy.modeling.models as models
-from specutils.spectra import Spectrum1D
+import astropy.units as u
+from glue.core.link_helpers import LinkSame
+from glue.core.message import (SubsetCreateMessage,
+                               SubsetDeleteMessage,
+                               SubsetUpdateMessage)
+from traitlets import Bool, Int, List, Unicode
 
-
+from jdaviz.core.events import AddDataMessage, RemoveDataMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
 from jdaviz.utils import load_template
-
-from .initializers import initialize, model_parameters
 from .fitting_backend import fit_model_to_spectrum
+from .initializers import initialize, model_parameters
 
 __all__ = ['ModelFitting']
 
@@ -28,6 +26,7 @@ MODELS = {
      'Voigt1D': models.Voigt1D,
      'Lorentz1D': models.Lorentz1D
      }
+
 
 @tray_registry('g-model-fitting', label="Model Fitting")
 class ModelFitting(TemplateMixin):
@@ -64,11 +63,56 @@ class ModelFitting(TemplateMixin):
         self.model_save_path = os.getcwd()
         self.model_label = "Model"
 
-    def _on_data_updated(self, msg):
-        self.dc_items
+        self.hub.subscribe(self, AddDataMessage,
+                           handler=self._on_viewer_data_changed)
+
+        self.hub.subscribe(self, RemoveDataMessage,
+                           handler=self._on_viewer_data_changed)
+
+        self.hub.subscribe(self, SubsetCreateMessage,
+                           handler=lambda x: self._on_viewer_data_changed())
+
+        self.hub.subscribe(self, SubsetDeleteMessage,
+                           handler=lambda x: self._on_viewer_data_changed())
+
+        self.hub.subscribe(self, SubsetUpdateMessage,
+                           handler=lambda x: self._on_viewer_data_changed())
+
+    def _on_viewer_data_changed(self, msg=None):
+        """
+        Callback method for when data is added or removed from a viewer, or
+        when a subset is created, deleted, or updated. This method receieves
+        a glue message containing viewer information in the case of the former
+        set of events, and updates the available data list displayed to the
+        user.
+
+        Notes
+        -----
+        We do not attempt to parse any data at this point, at it can cause
+        visible lag in the application.
+
+        Parameters
+        ----------
+        msg : `glue.core.Message`
+            The glue message passed to this callback method.
+        """
+        self._viewer_id = self.app._viewer_item_by_reference(
+            'spectrum-viewer').get('id')
+
+        # Subsets are global and are not linked to specific viewer instances,
+        # so it's not required that we match any specific ids for that case.
+        # However, if the msg is not none, check to make sure that it's the
+        # viewer we care about.
+        if msg is not None and msg.viewer_id != self._viewer_id:
+            return
+
+        viewer = self.app.get_viewer('spectrum-viewer')
+
+        self.dc_items = [layer_state.layer.label
+                         for layer_state in viewer.state.layers]
 
     def _param_units(self, param, order = 0):
-        '''Helper function to handle units that depend on x and y'''
+        """Helper function to handle units that depend on x and y"""
         y_params = ["amplitude", "amplitude_L", "intercept"]
 
         if param == "slope":
@@ -99,8 +143,8 @@ class ModelFitting(TemplateMixin):
         self.component_models = component_models
 
     def _update_initialized_parameters(self):
-        """If the user changes a parameter value, we need to change it in the
-        initialized model."""
+        # If the user changes a parameter value, we need to change it in the
+        # initialized model
         for m in self.component_models:
             name = m["id"]
             for param in m["parameters"]:
@@ -108,20 +152,35 @@ class ModelFitting(TemplateMixin):
                 setattr(self._initialized_models[name], param["name"],
                         quant_param)
 
-    def vue_populate_data(self, event):
-        """Populated the data list when the model fitting data dropdown is clicked"""
-        self._viewer_spectra = self.app.get_data_from_viewer("spectrum-viewer")
-        self.dc_items = list(self._viewer_spectra.keys())
+    def vue_data_selected(self, event):
+        """
+        Callback method for when the user has selected data from the drop down
+        in the front-end. It is here that we actually parse and create a new
+        data object from the selected data. From this data object, unit
+        information is scraped, and the selected spectrum is stored for later
+        use in fitting.
+
+        Parameters
+        ----------
+        event : str
+            IPyWidget callback event object. In this case, represents the data
+            label of the data collection object selected by the user.
+        """
+        selected_spec = self.app.get_data_from_viewer("spectrum-viewer",
+                                                      data_label=event)
+
         if self._units == {}:
-            self._units["x"] = str(self._viewer_spectra[self.dc_items[0]].spectral_axis.unit)
-            self._units["y"] = str(self._viewer_spectra[self.dc_items[0]].flux.unit)
+            self._units["x"] = str(
+                selected_spec.spectral_axis.unit)
+            self._units["y"] = str(
+                selected_spec.flux.unit)
+
         for label in self.dc_items:
             if label in self.data_collection:
                 self._label_to_link = label
                 break
 
-    def vue_data_selected(self, event):
-        self._spectrum1d = self._viewer_spectra[event]
+        self._spectrum1d = selected_spec
 
     def vue_model_selected(self, event):
         # Add the model selected to the list of models
@@ -132,11 +191,13 @@ class ModelFitting(TemplateMixin):
             self.display_order = False
 
     def _initialize_polynomial(self, new_model):
-        initialized_model = initialize(MODELS[self.temp_model](name=self.temp_name,
-                                                               degree = self.poly_order),
-                                       self._spectrum1d.spectral_axis,
-                                       self._spectrum1d.flux)
+        initialized_model = initialize(
+            MODELS[self.temp_model](name=self.temp_name, degree=self.poly_order),
+            self._spectrum1d.spectral_axis,
+            self._spectrum1d.flux)
+
         self._initialized_models[self.temp_name] = initialized_model
+
         for i in range(self.poly_order + 1):
             param = "c{}".format(i)
             initial_val = getattr(initialized_model, param).value
@@ -155,11 +216,12 @@ class ModelFitting(TemplateMixin):
         if self.temp_model == "Polynomial1D":
             new_model = self._initialize_polynomial(new_model)
         else:
-            # Have a separate private dict with the initialized models, since they
-            # don't play well with JSON for widget interaction
-            initialized_model = initialize(MODELS[self.temp_model](name=self.temp_name),
-                                           self._spectrum1d.spectral_axis,
-                                           self._spectrum1d.flux)
+            # Have a separate private dict with the initialized models, since
+            # they don't play well with JSON for widget interaction
+            initialized_model = initialize(
+                MODELS[self.temp_model](name=self.temp_name),
+                self._spectrum1d.spectral_axis,
+                self._spectrum1d.flux)
 
             self._initialized_models[self.temp_name] = initialized_model
 
@@ -174,7 +236,8 @@ class ModelFitting(TemplateMixin):
         self.component_models = self.component_models + [new_model]
 
     def vue_remove_model(self, event):
-        self.component_models = [x for x in self.component_models if x["id"] != event]
+        self.component_models = [x for x in self.component_models
+                                 if x["id"] != event]
         del(self._initialized_models[event])
 
     def vue_save_model(self, event):
@@ -197,10 +260,11 @@ class ModelFitting(TemplateMixin):
         as such by the user, then update the displauyed parameters with fit
         values
         """
-        fitted_model, fitted_spectrum = fit_model_to_spectrum(self._spectrum1d,
-                                                              self._initialized_models.values(),
-                                                              self.model_equation,
-                                                              run_fitter=True)
+        fitted_model, fitted_spectrum = fit_model_to_spectrum(
+            self._spectrum1d,
+            self._initialized_models.values(),
+            self.model_equation,
+            run_fitter=True)
         self._fitted_model = fitted_model
         self._fitted_spectrum = fitted_spectrum
 
@@ -214,7 +278,8 @@ class ModelFitting(TemplateMixin):
         Add a spectrum to the data collection based on the currently displayed
         parameters (these could be user input or fit values).
         """
-        # Make sure the initialized models are updated with any user-specified parameters
+        # Make sure the initialized models are updated with any user-specified
+        # parameters
         self._update_initialized_parameters()
 
         # Need to run the model fitter with run_fitter=False to get spectrum
@@ -236,8 +301,9 @@ class ModelFitting(TemplateMixin):
             self.data_collection.remove(self.data_collection[label])
         self.data_collection[label] = spectrum
         self.save_enabled = True
-        self.data_collection.add_link(LinkSame(self.data_collection[self._label_to_link].pixel_component_ids[0],
-                                               self.data_collection[label].pixel_component_ids[0]))
+        self.data_collection.add_link(
+            LinkSame(self.data_collection[self._label_to_link].pixel_component_ids[0],
+                     self.data_collection[label].pixel_component_ids[0]))
 
         #sleep(1)
         #self.app.add_data_to_viewer('spectrum-viewer', label)
