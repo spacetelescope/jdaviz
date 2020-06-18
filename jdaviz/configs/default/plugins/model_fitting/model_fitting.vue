@@ -36,7 +36,7 @@
               <v-text-field
                 label="Model ID"
                 v-model="temp_name"
-                hint="A unique ID for this component model"
+                hint="A unique string label for this component model"
                 persistent-hint
                 :rules="[() => !!temp_name || 'This field is required']"
               >
@@ -148,7 +148,7 @@
         <v-container>
           <v-text-field
             v-model="model_equation"
-            hint="Equation specifying how to combine the models"
+            hint="Equation specifying how to combine the component models, using their model IDs and basic arithmetic operators"
             persistent-hint
             :rules="[() => !!model_equation || 'This field is required']"
             @change="equation_changed"
