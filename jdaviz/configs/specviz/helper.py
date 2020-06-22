@@ -3,7 +3,7 @@ import uuid
 
 from specutils import Spectrum1D, SpectrumCollection
 
-from jdaviz.core import ConfigHelper
+from jdaviz.core.helpers import ConfigHelper
 
 
 class SpecViz(ConfigHelper):
