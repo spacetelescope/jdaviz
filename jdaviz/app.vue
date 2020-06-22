@@ -77,11 +77,19 @@ export default {
       primary: "#00617E",
       secondary: "#007DA4",
       accent: "#C75109",
+      error: '#FF5252',
+      info: '#2196F3',
+      success: '#4CAF50',
+      warning: '#FFC107',
     };
     this.$vuetify.theme.themes.dark = {
       primary: "#00617E",
       secondary: "#007DA4",
-      accent: "#C75109"
+      accent: "#C75109",
+      error: '#FF5252',
+      info: '#2196F3',
+      success: '#4CAF50',
+      warning: '#FFC107',
     };
   }
 };
