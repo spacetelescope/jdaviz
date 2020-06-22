@@ -1,13 +1,12 @@
 from warnings import warn
 
-import ipyvuetify as v
+from ipyvuetify import VuetifyTemplate
 from glue.core import HubListener
-from traitlets import List
 
 __all__ = ['TemplateMixin']
 
 
-class TemplateMixin(v.VuetifyTemplate, HubListener):
+class TemplateMixin(VuetifyTemplate, HubListener):
     def __new__(cls, *args, **kwargs):
         """
         Overload object creation so that we can inject a reference to the
