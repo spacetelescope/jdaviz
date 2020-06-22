@@ -22,7 +22,8 @@ from traitlets import Dict
 
 from .core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
                           SnackbarMessage, RemoveDataMessage)
-from .core.registries import tool_registry, tray_registry, viewer_registry
+from .core.registries import (tool_registry, tray_registry, viewer_registry,
+                              data_parser_registry)
 from .core.template_mixin import TemplateMixin
 from .utils import load_template
 
