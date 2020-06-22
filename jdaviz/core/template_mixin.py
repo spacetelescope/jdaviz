@@ -1,3 +1,5 @@
+from warnings import warn
+
 import ipyvuetify as v
 from glue.core import HubListener
 from traitlets import List
@@ -20,6 +22,14 @@ class TemplateMixin(v.VuetifyTemplate, HubListener):
 
     @property
     def app(self):
+        warn(DeprecationWarning('The usage `.app` from a jdaviz application is'
+                                ' deprecated and should be replaced by '
+                                '`.glueapp` to prevent confusion with other '
+                                'meanings of "app"'))
+        return self._app
+
+    @property
+    def glueapp(self):
         return self._app
 
     @property
