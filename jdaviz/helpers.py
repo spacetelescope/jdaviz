@@ -9,7 +9,7 @@ class ConfigHelper():
     Provides shared abstracted helper methods to the user
     """
     def __init__(self, configuration=None):
-        self._app = Application(configuration=configuration)
+        self.app = Application(configuration=configuration)
 
 
 class SpecViz(ConfigHelper):
@@ -42,9 +42,9 @@ class SpecViz(ConfigHelper):
                 raise TypeError("SpectrumCollection detected. Please provide a Spectrum1D")
             elif type(data) is not Spectrum1D:
                 raise TypeError("Data is not a Spectrum1D object or compatible file")
-        self._app.add_data(data, data_label)
-        self._app.add_data_to_viewer('spectrum-viewer', data_label)
+        self.app.add_data(data, data_label)
+        self.app.add_data_to_viewer('spectrum-viewer', data_label)
 
     def get_spectra(self):
         """Returns the current data loaded into the main viewer"""
-        return self._app.get_data_from_viewer('spectrum-viewer')
+        return self.app.get_data_from_viewer('spectrum-viewer')
