@@ -22,7 +22,8 @@ from traitlets import Dict
 
 from .core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
                           SnackbarMessage, RemoveDataMessage)
-from .core.registries import tool_registry, tray_registry, viewer_registry
+from .core.registries import (tool_registry, tray_registry, viewer_registry,
+                              data_parser_registry)
 from .core.template_mixin import TemplateMixin
 from .utils import load_template
 
@@ -32,6 +33,9 @@ SplitPanes()
 GoldenLayout()
 
 CONTAINER_TYPES = dict(row='gl-row', col='gl-col', stack='gl-stack')
+EXT_TYPES = dict(flux=['flux', 'sci'],
+                 uncert=['ivar', 'err', 'var', 'uncert'],
+                 mask=['mask', 'dq'])
 
 
 class ApplicationState(State):
@@ -55,6 +59,10 @@ class ApplicationState(State):
     }, docstring="State of the quick toast messages.")
 
     settings = DictCallbackProperty({
+        'data': {
+            'auto_populate': False,
+            'parser': None
+        },
         'visible': {
             'menu_bar': True,
             'toolbar': True,
@@ -205,28 +213,38 @@ class Application(TemplateMixin):
         self.state.snackbar['timeout'] = msg.timeout
         self.state.snackbar['show'] = True
 
-    def load_data(self, path):
+    def load_data(self, file_obj, **kwargs):
         """
         Provided a path to a data file, open and parse the data into the
         `~glue.core.DataCollection` for this session. This also attempts to
-        find WCS links that exist between data components.
+        find WCS links that exist between data components. Extra key word
+        arguments are passed to the parsing functions.
 
         Parameters
         ----------
         path : str
             File path for the data file to be loaded.
         """
-        self._application_handler.load_data(path)
+        parser = data_parser_registry.members.get(
+            self.state.settings['data']['parser'])
+
+        if parser is not None:
+            # If the parser returns something other than known, assume it's
+            #  a message we want to make the user aware of.
+            msg = parser(self, file_obj, **kwargs)
+
+            if msg is not None:
+                snackbar_message = SnackbarMessage(
+                    msg, color='error', sender=self)
+                self.hub.broadcast(snackbar_message)
+                return
+        else:
+            self._application_handler.load_data(file_obj)
 
         # Send out a toast message
         snackbar_message = SnackbarMessage("Data successfully loaded.",
                                            sender=self)
         self.hub.broadcast(snackbar_message)
-
-        # Attempt to link the data
-        links = find_possible_links(self.data_collection)
-
-        # self.data_collection.add_link(links['Astronomy WCS'])
 
     def get_viewer(self, viewer_reference):
         """
