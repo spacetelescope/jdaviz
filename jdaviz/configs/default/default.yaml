@@ -8,6 +8,7 @@ settings:
     notebook:
       max_height: 600px
 toolbar:
+  - g-file-import
   - g-data-tools
   - g-viewer-creator
   - g-subset-tools
