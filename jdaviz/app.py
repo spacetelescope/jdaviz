@@ -1,4 +1,3 @@
-import copy
 import logging
 import os
 import pathlib
@@ -10,7 +9,6 @@ import ipywidgets as w
 import numpy as np
 from astropy import units as u
 import pkg_resources
-import yaml
 from astropy.nddata import CCDData
 from spectral_cube import SpectralCube
 from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
@@ -32,6 +30,7 @@ from glue_jupyter.app import JupyterApplication
 from glue_jupyter.state_traitlets_helpers import GlueState
 from ipyvuetify import VuetifyTemplate
 
+from .core.config import read_configuration, get_configuration
 from .core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
                           SnackbarMessage, RemoveDataMessage, ConfigurationLoadedMessage, AddDataToViewerMessage, RemoveDataFromViewerMessage)
 from .core.registries import (tool_registry, tray_registry, viewer_registry,
@@ -579,8 +578,8 @@ class Application(VuetifyTemplate, HubListener):
 
         """
 
-        # check if path already ends in extension
-        if re.search(r'(.+)(\[(.*?)\])$', path):
+        # if path is not a file or already ends in [ ] extension, assume it is a data-label
+        if not os.path.isfile(path) or re.search(r'(.+)(\[(.*?)\])$', path):
             return path
         else:
             assert ext, 'A data extension must be specified'
@@ -1067,42 +1066,6 @@ class Application(VuetifyTemplate, HubListener):
 
         return viewer
 
-    @staticmethod
-    def _load_config_by_path(path=None):
-        """ Loads a configuration from a YAML file
-
-        Loads application configuration settings from a YAML file
-
-        Parameters
-        ----------
-        path : str, optional
-            Path to the configuration file to be loaded. If None, loads the
-            default configuration.
-
-        Returns:
-            A dictionary object
-        """
-        assert isinstance(path, (str, type(None))), 'path must be a string'
-
-        # Parse the default configuration file
-        default_path = os.path.join(os.path.dirname(__file__), "configs")
-
-        if path is None or path == 'default':
-            path = os.path.join(default_path, "default", "default.yaml")
-        elif path == 'cubeviz':
-            path = os.path.join(default_path, "cubeviz", "cubeviz.yaml")
-        elif path == 'specviz':
-            path = os.path.join(default_path, "specviz", "specviz.yaml")
-        elif path == 'mosviz':
-            path = os.path.join(default_path, "mosviz", "mosviz.yaml")
-        elif not os.path.isfile(path):
-            raise ValueError("Configuration must be path to a .yaml file.")
-
-        with open(path, 'r') as f:
-            config = yaml.safe_load(f)
-
-        return config
-
     def load_configuration(self, path=None, config=None):
         """
         Parses the provided input into a configuration
@@ -1134,7 +1097,7 @@ class Application(VuetifyTemplate, HubListener):
             if isinstance(path, dict):
                 config = path
             else:
-                config = self._load_config_by_path(path=path)
+                config = read_configuration(path=path)
 
         # store the loaded config object
         self._loaded_configuration = config
@@ -1230,13 +1193,10 @@ class Application(VuetifyTemplate, HubListener):
         A configuration specification dictionary
 
         """
-        if path:
-            config = self._load_config_by_path(path=path)
-        else:
-            config = self._loaded_configuration
-        cfg = copy.deepcopy(config)
 
-        # return only a section if requested
-        if section:
-            return cfg.get(section, None)
+        config = None
+        if not path:
+            config = self._loaded_configuration
+
+        cfg = get_configuration(path=path, section=section, config=config)
         return cfg
