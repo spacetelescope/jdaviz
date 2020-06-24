@@ -268,9 +268,13 @@ class Application(VuetifyTemplate, HubListener):
         file_obj : str or file-like
             File object for the data to be loaded.
         """
-        old_data_len = len(self.data_collection)
-        parser = data_parser_registry.members.get(
-            self.state.settings['data'].get('parser') or parser_reference)
+        # attempt to get a data parser from the config settings
+        parser = None
+        data = self.state.settings.get('data', None)
+        if data and isinstance(data, dict):
+            data_parser = data.get('parser', None)
+            if data_parser:
+                parser = data_parser_registry.members.get(data_parser)
 
         if parser is not None:
             # If the parser returns something other than known, assume it's
