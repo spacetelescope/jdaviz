@@ -9,7 +9,7 @@ from astropy.nddata import CCDData
 from echo import (CallbackProperty, ListCallbackProperty,
                   DictCallbackProperty)
 from glue.config import data_translator
-from glue.core import BaseData
+from glue.core import BaseData, HubListener
 from glue.core.autolinking import find_possible_links
 from glue.core.message import DataCollectionAddMessage
 from glue.core.state_objects import State
@@ -17,6 +17,7 @@ from glue.core.subset import Subset
 from glue_jupyter.app import JupyterApplication
 from glue_jupyter.state_traitlets_helpers import GlueState
 from ipygoldenlayout import GoldenLayout
+from ipyvuetify import VuetifyTemplate
 from ipysplitpanes import SplitPanes
 from traitlets import Dict
 
@@ -24,7 +25,6 @@ from .core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
                           SnackbarMessage, RemoveDataMessage)
 from .core.registries import (tool_registry, tray_registry, viewer_registry,
                               data_parser_registry)
-from .core.template_mixin import TemplateMixin
 from .utils import load_template
 
 __all__ = ['Application']
@@ -92,7 +92,7 @@ class ApplicationState(State):
                   "Golden Layout viewer area.")
 
 
-class Application(TemplateMixin):
+class Application(VuetifyTemplate, HubListener):
     """
     The main application object containing implementing the ipyvue/vuetify
     template instructions for composing the interface.
