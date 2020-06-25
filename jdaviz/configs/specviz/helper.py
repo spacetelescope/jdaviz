@@ -1,23 +1,15 @@
 import pathlib
 import uuid
+
 from specutils import Spectrum1D, SpectrumCollection
 
-from .app import Application
-
-class ConfigHelper():
-    """The Base Helper Class
-    Provides shared abstracted helper methods to the user
-    """
-    def __init__(self, configuration=None):
-        self._app = Application(configuration=configuration)
+from jdaviz.core.helpers import ConfigHelper
 
 
 class SpecViz(ConfigHelper):
     """SpecViz Helper class"""
 
-    def __init__(self):
-        """Instantiates base helper with specviz configuration"""
-        super().__init__(configuration="specviz")
+    _default_configuration = 'specviz'
 
     def load_data(self, data, data_label='', format=None):
         """Loads a data file or Spectrum1D object into SpecViz
@@ -42,9 +34,9 @@ class SpecViz(ConfigHelper):
                 raise TypeError("SpectrumCollection detected. Please provide a Spectrum1D")
             elif type(data) is not Spectrum1D:
                 raise TypeError("Data is not a Spectrum1D object or compatible file")
-        self._app.add_data(data, data_label)
-        self._app.add_data_to_viewer('spectrum-viewer', data_label)
+        self.app.add_data(data, data_label)
+        self.app.add_data_to_viewer('spectrum-viewer', data_label)
 
     def get_spectra(self):
         """Returns the current data loaded into the main viewer"""
-        return self._app.get_data_from_viewer('spectrum-viewer')
+        return self.app.get_data_from_viewer('spectrum-viewer')
