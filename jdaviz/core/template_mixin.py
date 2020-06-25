@@ -21,14 +21,10 @@ class TemplateMixin(VuetifyTemplate, HubListener):
 
     @property
     def app(self):
-        warn(DeprecationWarning('The usage `.app` from a jdaviz application is'
-                                ' deprecated and should be replaced by '
-                                '`.glueapp` to prevent confusion with other '
-                                'meanings of "app"'))
-        return self._app
-
-    @property
-    def glueapp(self):
+        """
+        Allows access to the underlying jdaviz application instance. This is **not** access to the helper 
+        class, but instead the core application.
+        """
         return self._app
 
     @property
