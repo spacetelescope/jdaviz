@@ -11,6 +11,10 @@ settings:
 toolbar:
   - g-data-tools
   - g-subset-tools
+tray:
+   - g-gaussian-smooth
+   - g-collapse
+   - g-model-fitting
 viewer_area:
   - container: col
     children:
