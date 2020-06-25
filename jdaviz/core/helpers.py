@@ -6,6 +6,10 @@ application objects.
 See also https://github.com/spacetelescope/jdaviz/issues/104 for more details
 on the motivation behind this concept.
 """
+from ..app import Application  
+
+__all__ = ['ConfigHelper']
+
 
 class ConfigHelper():
     """The Base Helper Class
@@ -23,8 +27,6 @@ class ConfigHelper():
     _default_configuration = 'default'
 
     def __init__(self, app=None):
-        from ..app import Application  # inside to prevent possible circular imports
-
         if app is None:
             self.app = Application(configuration=self._default_configuration)
         else:
