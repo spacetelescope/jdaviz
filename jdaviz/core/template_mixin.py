@@ -14,8 +14,9 @@ class TemplateMixin(VuetifyTemplate, HubListener):
         hub references on plugins can be passed along to components in the
         call to the initialization method.
         """
+        app = kwargs.pop('app', None)
         obj = super().__new__(cls, *args, **kwargs)
-        obj._app = kwargs.pop('app', None)
+        obj._app = app
 
         return obj
 
