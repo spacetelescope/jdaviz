@@ -21,10 +21,7 @@ from glue.core.state_objects import State
 from glue.core.subset import Subset
 from glue_jupyter.app import JupyterApplication
 from glue_jupyter.state_traitlets_helpers import GlueState
-from ipygoldenlayout import GoldenLayout
 from ipyvuetify import VuetifyTemplate
-from ipysplitpanes import SplitPanes
-from traitlets import Dict
 
 from .core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
                           SnackbarMessage, RemoveDataMessage)
