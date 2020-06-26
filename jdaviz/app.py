@@ -390,7 +390,8 @@ class Application(VuetifyTemplate, HubListener):
         -------
         data : dict
             A dict of the transformed Glue subset objects, with keys
-            representing the subset name.
+            representing the subset name and values as astropy regions
+            objects.
         """
         viewer = self.get_viewer(viewer_reference)
         data = self.get_data_from_viewer(viewer_reference,
