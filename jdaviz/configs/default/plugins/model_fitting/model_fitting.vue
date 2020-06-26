@@ -68,7 +68,7 @@
             v-for="item in component_models" :key="item.id"
           >
             <v-expansion-panel-header v-slot="{ open }">
-              <v-row n-gutters>
+              <v-row no-gutters>
                 <v-col cols=1>
                   <v-btn @click.native.stop="remove_model(item.id)" icon>
                     <v-icon>mdi-close-circle</v-icon>

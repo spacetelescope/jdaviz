@@ -1,0 +1,54 @@
+Commentaries on Line Lists and SpecView Development
+
+A.P.Marston & I.Busko, 16 October 2017
+
+The following are some brief notes I took during our meeting.
+
+- DONE: Current markers – okay, but extend tooltips to provide all information on line.
+
+- Marker color there – should be default different for each group of lines selected (e.g. H2 or CO lines).
+  QUESTION: how to detect that a group was selected, in order to change the default at that time?
+
+- DONE: Groups of lines should not all be at the same height within the plot (e.g. 25% below the top).
+  Provide user with means to select line groups to be at different y positions within the plot – add as
+  option on view.
+
+- DONE: Allow line list groups to be viewed, also selected and edited to form new (smaller) line lists from
+  a subset of lines in a list.
+
+- DONE: Line list tables should be sortable as well as selectable by name as well as wavelength (or any column
+  of information available)
+
+- DONE: Redshift should be a user input (part of the plotting options) – it should be applied to the lines before
+  plotting the lines. Don’t shift the spectrum. Redshift tool is not a good idea.
+
+- DONE: We will need an optical line list that can be redshifted (down to near UV?). Action on me. Do you have
+  a possible list (used with HST?), Ivo?
+
+- A nice to have: Automatic title metadata at the top of the plot, e.g. observation/object name, RA, Dec,
+  instrument (grating/filter), length of exposure, exposure date/time.  OUT OF SCOPE: handled somewhere else
+  in the app.
+
+
+2nd round (Susan, Tony, Nick, Ivo, 1/30/2018)
+
+- DONE: Y axis locking when displaying line ID markers. MUCH HARDER TO DO THAN IT SEEMS AT FIRST.
+        Works for small number of markers. Needs speed up via buffering, perhaps threading as well.
+
+- DONE: Turn off automatic ingestion of line lists at app startup. Replace by guided approach by user, using a
+  drop-down or similar selector to allow user to pick out specific line lists from internal library or
+  external file. User will also select wavelength end points from pre-populated text fields. And select species
+  and intensities from appropriate GUI elements TBD.
+
+  NOTES: (1) automatic ingestion is still in place. Can be turned off entirely by commenting out one single line
+             of code. Or, we could have a more useful criterion, such as including only small lists to prevent
+             the beach ball from showing.
+         (2) Selecting species and intensities can be done with sort-select-create set sequence.
+
+- DONE: Add ability to write line lists. Reading is already specified by requirement above.
+
+- DONE: Use ECSV format throughout. Can read form ECSV files; internal lists still kept under yaml+ascii format.
+
+
+
+

@@ -16,6 +16,7 @@ tray:
   - g-collapse
   - g-model-fitting
   - g-unit-conversion
+  - g-line-list
 viewer_area:
   - container: col
     children:

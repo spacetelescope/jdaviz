@@ -1,0 +1,42 @@
+{
+  "Common Stellar": {
+    "units": "Angstrom",
+    "filename_base": "Common_stellar",
+    "Citations/Notes": " Common stellar lines.\n\n Copyrigtht (C) 1999-2004 by Christian Buil\n http://www.astrosurf.com/buil/us/spe2/hresol5.htm"
+  },
+  "SDSS": {
+    "units": "Angstrom",
+    "filename_base": "SDSS",
+    "Citations/Notes": " Table of Spectral Lines Used in SDSS\n\n http://classic.sdss.org/dr6/algorithms/linestable.html\n Vacuum wavelengths"
+  },
+  "CO": {
+    "units": "micron",
+    "filename_base": "CO",
+    "Citations/Notes": " CARBON MONOXIDE (12C16O) VIBRATION ROTATION BANDS\n Compilation CO band head, fundamental and overtone wavelengths for Gemini.\n T. Geballe http://www.gemini.edu/sciops/instruments/nir/wavecal/colines.dat"
+  },
+  "SDSS-IV": {
+    "units": "Angstrom",
+    "filename_base": "SDSS-IV",
+    "Citations/Notes": " Lines used by the SDSS-IV Science Archive Webapp (SAW).\n https://dr14.sdss.org/static/js/optical/markedLines.js\n\n See also the emlines.par file in the idlspec2d package.\n\n Wavelengths are in air for lambda > 2000 vacuum for lambda < 2000."
+  },
+  "Atomic/Ionic": {
+    "units": "micron",
+    "filename_base": "Atomic-Ionic",
+    "Citations/Notes": " JWST Line Lists: The lists and suggested means of implementing them in JWST data analysis software\n A.P.Marston, 30 March 2017\n https://stsci.slack.com/files/anmarston/F4UR94WUX/jwst_line_list.pdf"
+  },
+  "H2": {
+    "units": "micron",
+    "filename_base": "H2",
+    "Citations/Notes": " Gemini H2 lines\n Compilation of Important H2 Lines (for Gemini)\n T. Geballe, 1995. http://www.gemini.edu/sciops/instruments/nir/wavecal/h2lines.dat\n Based on energy levels calculated using Dabrowski & Herzberg, Can J Phys 62, 1639 (1984)\n and Einstein coefficients from Turner et al. ApJS, 35, 281 (1977)."
+  },
+  "Common Nebular": {
+    "units": "Angstrom",
+    "filename_base": "Common_nebular",
+    "Citations/Notes": " Common nebular lines.\n\n Copyright (C) 1999-2004 by Christian Buil\n http://www.astrosurf.com/buil/us/spe2/hresol5.htm"
+  },
+  "H-He": {
+    "units": "micron",
+    "filename_base": "H-He",
+    "Citations/Notes": " H lines\n to level 3 = Paschen; to level 4 = Brackett; to level 5 = Pfund; to level 6 = Humphreys\n\n References:\n 15 - Mohr P.J., Taylor B.N., Newell D.B., 2008, Rev. Mod. Phys. 80, 633 (section IV.A)\n 16 - Morton D.C., Wu Q., Drake G.W.F., 2006, Can. J. Phys. 84, 83"
+  }
+}
