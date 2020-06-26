@@ -47,14 +47,13 @@ class SpecViz(ConfigHelper):
                                 "provide a `Spectrum1D`.")
             elif type(data) is not Spectrum1D:
                 raise TypeError("Data is not a Spectrum1D object or compatible file")
-
-        self._app.add_data(data, data_label)
+        self.app.add_data(data, data_label)
         if show_in_viewer:
-            self._app.add_data_to_viewer('spectrum-viewer', data_label)
+            self.app.add_data_to_viewer('spectrum-viewer', data_label)
 
-    def get_spectra(self):
+    def get_spectra(self, data_label = None):
         """Returns the current data loaded into the main viewer"""
-        return self.app.get_data_from_viewer('spectrum-viewer')
+        return self.app.get_data_from_viewer('spectrum-viewer', data_label=data_label)
 
     def get_spectral_regions(self):
         """
@@ -80,7 +79,7 @@ class SpecViz(ConfigHelper):
 
         return spec_regs
     def x_limits(self, x_min = None, x_max = None):
-        scale = self._app.get_viewer('spectrum-viewer').scale_x
+        scale = self.app.get_viewer('spectrum-viewer').scale_x
         if not x_min and not x_max:
             return scale
         
@@ -88,26 +87,26 @@ class SpecViz(ConfigHelper):
             # If user's value has a unit, convert it to the current axis' units
             if isinstance(x_min, u.Quantity):
                 # Get the current axis' units
-                ref_index = self._app.get_viewer('spectrum-viewer').state.reference_data.label
-                ref_unit = self.get_spectra()[ref_index].spectral_axis.unit
+                ref_index = self.app.get_viewer('spectrum-viewer').state.reference_data.label
+                ref_unit = self.get_spectra(ref_index).spectral_axis.unit
                 # Convert user's value to axis' units
                 x_min = x_min.to(ref_unit).value
             # If auto, set to minimum wavelength value
             elif x_min == "auto":
-                ref_index = self._app.get_viewer('spectrum-viewer').state.reference_data.label
+                ref_index = self.app.get_viewer('spectrum-viewer').state.reference_data.label
                 x_min = min(self.get_spectra()[ref_index].spectral_axis).value
             scale.min = float(x_min)
         if x_max:
             # If user's value has a unit, convert it to the current axis' units
             if isinstance(x_max, u.Quantity):
                 # Get the current axis' units
-                ref_index = self._app.get_viewer('spectrum-viewer').state.reference_data.label
-                ref_unit = self.get_spectra()[ref_index].spectral_axis.unit
+                ref_index = self.app.get_viewer('spectrum-viewer').state.reference_data.label
+                ref_unit = self.get_spectra(ref_index).spectral_axis.unit
                 # Convert user's value to axis' units
                 x_max = x_max.to(ref_unit).value
             # If auto, set to maximum wavelength value
             elif x_max == "auto":
-                ref_index = self._app.get_viewer('spectrum-viewer').state.reference_data.label
+                ref_index = self.app.get_viewer('spectrum-viewer').state.reference_data.label
                 x_max = max(self.get_spectra()[ref_index].spectral_axis).value
 
             scale.max = float(x_max)
@@ -116,33 +115,33 @@ class SpecViz(ConfigHelper):
         self.x_limits('auto', 'auto')
 
     def y_limits(self, y_min = None, y_max = None):
-        scale = self._app.get_viewer('spectrum-viewer').scale_y
+        scale = self.app.get_viewer('spectrum-viewer').scale_y
         if not y_min and not y_max:
             return scale
         if y_min:
             # If user's value has a unit, convert it to the current axis' units
             if isinstance(y_min, u.Quantity):
                 # Get the current axis' units
-                ref_index = self._app.get_viewer('spectrum-viewer').state.reference_data.label
-                ref_unit = self.get_spectra()[ref_index].unit
+                ref_index = self.app.get_viewer('spectrum-viewer').state.reference_data.label
+                ref_unit = self.get_spectra(ref_index).unit
                 # Convert user's value to axis' units
                 y_min = y_min.to(ref_unit).value
             # If auto, set to minimum flux value
             elif y_min == "auto":
-                ref_index = self._app.get_viewer('spectrum-viewer').state.reference_data.label
+                ref_index = self.app.get_viewer('spectrum-viewer').state.reference_data.label
                 y_min = min(self.get_spectra()[ref_index].flux).value
             scale.min = float(y_min)
         if y_max:
             # If user's value has a unit, convert it to the current axis' units
             if isinstance(y_max, u.Quantity):
                 # Get the current axis' units
-                ref_index = self._app.get_viewer('spectrum-viewer').state.reference_data.label
-                ref_unit = self.get_spectra()[ref_index].unit
+                ref_index = self.app.get_viewer('spectrum-viewer').state.reference_data.label
+                ref_unit = self.get_spectra(ref_index).unit
                 # Convert user's value to axis' units
                 y_max = y_max.to(ref_unit).value
             # If auto, set to maximum flux value
             elif y_max == "auto":
-                ref_index = self._app.get_viewer('spectrum-viewer').state.reference_data.label
+                ref_index = self.app.get_viewer('spectrum-viewer').state.reference_data.label
                 y_max = max(self.get_spectra()[ref_index].flux).value
             scale.max = float(y_max)
 
