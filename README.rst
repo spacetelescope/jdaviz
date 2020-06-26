@@ -1,13 +1,26 @@
 Astronomical data analysis development leveraging Jupyter platform
 ------------------------------------------------------------------
 
-.. image:: http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat
-    :target: http://www.astropy.org
-    :alt: Powered by Astropy Badge
+.. image:: https://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat
+    :target: https://www.astropy.org
+    :alt: Powered by Astropy
 
+``jdaviz`` is a package of astronomical data analysis visualization
+tools based on the Jupyter platform.  These GUI-based tools link data
+visualization and interactive analysis.  They are designed to work
+within a Jupyter notebook cell, as a standalone desktop application,
+or as embedded windows within a website -- all with nearly-identical
+user interfaces.
 
-Jdaviz is a data analysis tool which can be used with Jupyter Notebook
-and as a web application.
+``jdaviz`` applications currently include tools for interactive
+visualization of spectroscopic data.  SpecViz is a tool for
+visualization and quick-look analysis of 1D astronomical spectra.
+MOSViz is a visualization tool for many astronomical spectra,
+typically the output of a multi-object spectrograph (e.g., JWST
+NIRSpec), and includes viewers for 1D and 2D spectra as well as
+contextual information like on-sky views of the spectrograph slit.
+CubeViz provides of view of spectroscopic data cubes (like those to be
+produced by JWST MIRI), along with 1D spectra extracted from the cube.
 
 
 Installing
