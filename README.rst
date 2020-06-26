@@ -10,7 +10,10 @@ tools based on the Jupyter platform.  These GUI-based tools link data
 visualization and interactive analysis.  They are designed to work
 within a Jupyter notebook cell, as a standalone desktop application,
 or as embedded windows within a website -- all with nearly-identical
-user interfaces.
+user interfaces. Note that ``jdaviz`` is under heavy development and should 
+not be considered stable or feature-complete. Users who encounter bugs in 
+the currently implemented features are encouraged to open an issues in this 
+repository.
 
 ``jdaviz`` applications currently include tools for interactive
 visualization of spectroscopic data.  SpecViz is a tool for
