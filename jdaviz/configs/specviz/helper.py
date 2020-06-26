@@ -53,6 +53,16 @@ class SpecViz(ConfigHelper):
         return self.app.get_data_from_viewer('spectrum-viewer')
 
     def get_spectral_regions(self):
+        """
+        Retrieves glue subset objects from the spectrum viewer and converts
+        them to `~specutils.SpectralRegion` objects.
+
+        Returns
+        -------
+        spec_regs : dict
+            Mapping from the names of the subsets to the subsets expressed
+            as `specutils.SpectralRegion` objects.
+        """
         regions = self.app.get_subsets_from_viewer('spectrum-viewer')
 
         spec_regs = {}
