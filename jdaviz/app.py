@@ -1,6 +1,7 @@
 import logging
 import os
 import uuid
+from inspect import isclass
 
 import ipywidgets as w
 import numpy as np
@@ -303,7 +304,9 @@ class Application(VuetifyTemplate, HubListener):
             The class definition the Glue data components get transformed to
             when retrieved. This requires that a working set of translation
             functions exist in the ``glue_astronomy`` package. See
-            ``https://github.com/glue-viz/glue-astronomy`` for more info.
+            https://github.com/glue-viz/glue-astronomy for more info.
+            If this is the special string ``'default'``,  the ``default_class``
+            attribute of the viewer referenced by ``viewer_reference`` is used.
         include_subsets : bool
             Whether to include subset layer data that exists in the viewer but
             has not been included in the core data collection object.
@@ -316,6 +319,9 @@ class Application(VuetifyTemplate, HubListener):
         """
         viewer = self.get_viewer(viewer_reference)
         cls = viewer.default_class if cls == 'default' else cls
+        if not isclass(cls):
+            raise TypeError('cls in get_data_from_viewer must be a class or '
+                            'the "default" string.')
 
         data = {}
 
