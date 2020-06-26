@@ -319,9 +319,11 @@ class Application(VuetifyTemplate, HubListener):
         """
         viewer = self.get_viewer(viewer_reference)
         cls = viewer.default_class if cls == 'default' else cls
-        if not isclass(cls):
-            raise TypeError('cls in get_data_from_viewer must be a class or '
-                            'the "default" string.')
+
+        if cls is not None and not isclass(cls):
+            raise TypeError(
+                "cls in get_data_from_viewer must be a class, None, or "
+                "the 'default' string.")
 
         data = {}
 
