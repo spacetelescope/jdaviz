@@ -6,7 +6,7 @@ application objects.
 See also https://github.com/spacetelescope/jdaviz/issues/104 for more details
 on the motivation behind this concept.
 """
-from ..app import Application  
+from ..app import Application
 
 __all__ = ['ConfigHelper']
 

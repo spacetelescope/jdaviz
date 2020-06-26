@@ -1,15 +1,20 @@
 import logging
 import os
 import uuid
+from inspect import isclass
 
 import ipywidgets as w
+import numpy as np
 import pkg_resources
 import yaml
 from astropy.nddata import CCDData
-from echo import (CallbackProperty, ListCallbackProperty,
-                  DictCallbackProperty)
+from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
+from ipygoldenlayout import GoldenLayout
+from ipysplitpanes import SplitPanes
+from traitlets import Dict
+
 from glue.config import data_translator
-from glue.core import BaseData, HubListener
+from glue.core import BaseData, HubListener, Data, DataCollection
 from glue.core.autolinking import find_possible_links
 from glue.core.message import DataCollectionAddMessage
 from glue.core.state_objects import State
@@ -273,8 +278,8 @@ class Application(VuetifyTemplate, HubListener):
         """
         return self._viewer_by_reference(viewer_reference)
 
-    def get_data_from_viewer(self, viewer_reference, data_label=None, cls=None,
-                             include_subsets=True):
+    def get_data_from_viewer(self, viewer_reference, data_label='None',
+                             cls='default', include_subsets=True):
         """
         Returns each data component currently rendered within a viewer
         instance. Viewers themselves store a default data type to which the
@@ -299,7 +304,9 @@ class Application(VuetifyTemplate, HubListener):
             The class definition the Glue data components get transformed to
             when retrieved. This requires that a working set of translation
             functions exist in the ``glue_astronomy`` package. See
-            ``https://github.com/glue-viz/glue-astronomy`` for more info.
+            https://github.com/glue-viz/glue-astronomy for more info.
+            If this is the special string ``'default'``,  the ``default_class``
+            attribute of the viewer referenced by ``viewer_reference`` is used.
         include_subsets : bool
             Whether to include subset layer data that exists in the viewer but
             has not been included in the core data collection object.
@@ -311,7 +318,10 @@ class Application(VuetifyTemplate, HubListener):
             corresponding viewer data labels.
         """
         viewer = self.get_viewer(viewer_reference)
-        cls = cls or viewer.default_class
+        cls = viewer.default_class if cls == 'default' else cls
+        if not isclass(cls):
+            raise TypeError('cls in get_data_from_viewer must be a class or '
+                            'the "default" string.')
 
         data = {}
 
@@ -359,6 +369,103 @@ class Application(VuetifyTemplate, HubListener):
             return data.get(data_label)
 
         return data
+
+    def get_subsets_from_viewer(self, viewer_reference, data_label=None):
+        """
+        Returns the subsets of a specified viewer converted to astropy regions
+        objects.
+
+        It should be noted that the subset translation machinery lives in the
+        glue-astronomy repository. Currently, the machinery only works on 2D
+        data for cases like range selection. For e.g. a profile viewer that is
+        ostensibly just a view into a 3D data set, it is necessary to first
+        reduce the dimensions of the data, then retrieve the subset information
+        as a regions object. This means that the returned y extents in the
+        region are not strictly representative of the subset range in y.
+
+        Parameters
+        ----------
+        viewer_reference : str
+            The reference to the viewer defined with the ``reference`` key
+            in the yaml configuration file.
+        data_label : str, optional
+            Optionally provide a label to retrieve a specific data set from the
+            viewer instance.
+
+        Returns
+        -------
+        data : dict
+            A dict of the transformed Glue subset objects, with keys
+            representing the subset name and values as astropy regions
+            objects.
+        """
+        viewer = self.get_viewer(viewer_reference)
+        data = self.get_data_from_viewer(viewer_reference,
+                                         data_label,
+                                         cls=None)
+        regions = {}
+
+        for key, value in data.items():
+            if isinstance(value, Subset):
+                # Range selection on a profile is currently not supported in
+                #  the glue translation machinery for astropy regions, so we
+                #  have to do it manually. Only data that is 2d is supported,
+                #  therefore, if the data is already 2d, simply use as is.
+                if value.data.ndim == 2:
+                    region = value.data.get_selection_definition(
+                        format='astropy-regions')
+                    regions[key] = region
+                    continue
+
+                # Get the pixel coordinate [z] of the 3D data, repreating the
+                #  wavelength axis. This doesn't seem strictly necessary as it
+                #  returns the same data if the pixel axis is [y] or [x]
+                xid = value.data.pixel_component_ids[0]
+
+                # Construct a new data object collapsing over one of the
+                #  spatial dimensions. This is necessary because the astropy
+                #  region translation machinery in glue-astronomy does not
+                #  support non-2D data, even for range objects.
+                stat_func = 'median'
+
+                if hasattr(viewer.state, 'function'):
+                    stat_func = viewer.state.function
+
+                # Compute reduced data based on the current viewer's statistic
+                #  function. This doesn't seem particuarly useful, but better
+                #  to be consistent.
+                reduced_data = Data(x=value.data.compute_statistic(
+                    stat_func, value.data.id[xid],
+                    subset_state=value.subset_state, axis=1))
+
+                # Instantiate a new data collection since we need to compose
+                #  the collapsed data with the current subset state. We use a
+                #  new data collection so as not to inference with the one used
+                #  by the application.
+                temp_data_collection = DataCollection()
+                temp_data_collection.append(reduced_data)
+
+                # Get the data id of the pixel axis that will be used in the
+                #  range composition. This is the wavelength axis for the new
+                #  2d data.
+                xid = reduced_data.pixel_component_ids[1]
+
+                # Create a new subset group to hold our current subset state
+                subset_group = temp_data_collection.new_subset_group(
+                    label=value.label, subset_state=value.subset_state)
+
+                # Set the subset state axis to the wavelength pixel coordinate
+                subset_group.subsets[0].subset_state.att = xid
+
+                # Use the associated collapsed subset data to get an astropy
+                #  regions object dependent on the extends of the subset.
+                # **Note** that the y values in this region object are not
+                #  useful, only the x values are.
+                region = subset_group.subsets[0].data.get_selection_definition(
+                    format='astropy-regions')
+                regions[key] = region
+
+        return regions
 
     def add_data(self, data, data_label):
         """
