@@ -12,6 +12,7 @@ from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
 from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
 from traitlets import Dict
+from regions import RectanglePixelRegion, PixCoord
 
 from glue.config import data_translator
 from glue.core import BaseData, HubListener, Data, DataCollection
@@ -404,7 +405,7 @@ class Application(VuetifyTemplate, HubListener):
         viewer = self.get_viewer(viewer_reference)
         data = self.get_data_from_viewer(viewer_reference,
                                          data_label,
-                                         cls='default')
+                                         cls=None)
         regions = {}
 
         for key, value in data.items():
@@ -418,8 +419,25 @@ class Application(VuetifyTemplate, HubListener):
                         format='astropy-regions')
                     regions[key] = region
                     continue
+                # There is a special case for 1d data (which is also not
+                #  supported currently). We now eschew the use of the
+                #  translation machinery entirely and construct the astropy
+                #  region ourselves.
+                elif value.data.ndim == 1:
+                    # Grab the data units from the glue-astronomy spectral axis
+                    # TODO: this needs to be much simpler; i.e. data units in
+                    #  the glue component objects
+                    unit = value.data.coords.spectral_axis.unit
+                    hi, lo = value.subset_state.hi, value.subset_state.lo
+                    xcen = 0.5 * (lo + hi)
+                    width = hi - lo
+                    region = RectanglePixelRegion(
+                        PixCoord(xcen, 0), width, 0,
+                        meta={'spectal_axis_unit': unit})
+                    regions[key] = region
+                    continue
 
-                # Get the pixel coordinate [z] of the 3D data, repreating the
+                # Get the pixel coordinate [z] of the 3D data, repeating the
                 #  wavelength axis. This doesn't seem strictly necessary as it
                 #  returns the same data if the pixel axis is [y] or [x]
                 xid = value.data.pixel_component_ids[0]
@@ -434,7 +452,7 @@ class Application(VuetifyTemplate, HubListener):
                     stat_func = viewer.state.function
 
                 # Compute reduced data based on the current viewer's statistic
-                #  function. This doesn't seem particuarly useful, but better
+                #  function. This doesn't seem particularly useful, but better
                 #  to be consistent.
                 reduced_data = Data(x=value.data.compute_statistic(
                     stat_func, value.data.id[xid],
