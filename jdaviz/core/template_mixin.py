@@ -23,7 +23,7 @@ class TemplateMixin(VuetifyTemplate, HubListener):
     @property
     def app(self):
         """
-        Allows access to the underlying jdaviz application instance. This is 
+        Allows access to the underlying jdaviz application instance. This is
         **not** access to the helper class, but instead the
         `jdaviz.Application` object.
         """
