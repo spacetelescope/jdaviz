@@ -52,14 +52,13 @@ class SpecViz(ConfigHelper):
         """Returns the current data loaded into the main viewer"""
         return self.app.get_data_from_viewer('spectrum-viewer')
 
-    def get_regions(self):
+    def get_spectral_regions(self):
         regions = self.app.get_subsets_from_viewer('spectrum-viewer')
 
         spec_regs = {}
 
         for name, reg in regions.items():
-            spec_reg = SpectralRegion((reg.center.x - reg.width * 0.5,
-                                       reg.center.x + reg.width * 0.5))
+            spec_reg = SpectralRegion.from_center(reg.center.x, reg.width)
 
             spec_regs[name] = spec_reg
 
