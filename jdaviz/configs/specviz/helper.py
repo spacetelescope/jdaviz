@@ -1,6 +1,7 @@
 import pathlib
 import uuid
 
+import astropy.units as u
 from specutils import Spectrum1D, SpectrumCollection, SpectralRegion
 
 from jdaviz.core.helpers import ConfigHelper
@@ -68,7 +69,9 @@ class SpecViz(ConfigHelper):
         spec_regs = {}
 
         for name, reg in regions.items():
-            spec_reg = SpectralRegion.from_center(reg.center.x, reg.width)
+            unit = reg.meta.get('spectral_axis_unit', u.Unit('Angstrom'))
+            spec_reg = SpectralRegion.from_center(reg.center.x * unit,
+                                                  reg.width * unit)
 
             spec_regs[name] = spec_reg
 
