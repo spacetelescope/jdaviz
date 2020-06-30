@@ -6,7 +6,7 @@ from ipywidgets import Widget
 
 __all__ = ['viewer_registry', 'tray_registry', 'tool_registry',
            'data_parser_registry', 'ViewerRegistry', 'TrayRegistry',
-           'ToolRegistry', 'MenuRegistry', 'DataParserRegistry']
+           'ToolRegistry', 'MenuRegistry', 'DataParserRegistry', 'ComponentRegistry']
 
 
 def convert(name):
@@ -175,8 +175,23 @@ class DataParserRegistry(UniqueDictRegistry):
         return decorator
 
 
+class ComponentRegistry(UniqueDictRegistry):
+    """
+    Registry containing parsing functions for attempting to auto-populate the
+    application-defined initial viewers.
+    """
+
+    def __call__(self, name=None):
+        def decorator(func):
+            self.add(name, func)
+            return func
+        return decorator
+
+
 viewer_registry = ViewerRegistry()
 tray_registry = TrayRegistry()
 tool_registry = ToolRegistry()
 menu_registry = MenuRegistry()
 data_parser_registry = DataParserRegistry()
+
+component_registry = ComponentRegistry()

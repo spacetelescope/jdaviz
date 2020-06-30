@@ -6,6 +6,7 @@ from specutils import SpectralRegion, Spectrum1D
 from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import RedshiftMessage
 from ..default.plugins.line_lists.line_list_mixin import LineListMixin
+from jdaviz.core.data_formats import prompt_data
 
 
 class SpecViz(ConfigHelper, LineListMixin):
@@ -24,6 +25,7 @@ class SpecViz(ConfigHelper, LineListMixin):
         self.app.hub.subscribe(self, RedshiftMessage,
                                handler=self._redshift_listener)
 
+    @prompt_data
     def load_spectrum(self, data, data_label=None, format=None, show_in_viewer=True):
         super().load_data(data,
                           'specviz-spectrum1d-parser',
