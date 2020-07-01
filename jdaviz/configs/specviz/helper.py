@@ -13,7 +13,7 @@ from jdaviz.core.helpers import ConfigHelper
 class SpecViz(ConfigHelper):
     """SpecViz Helper class"""
 
-    _default_configuration = 'specviz'
+    _default_configuration = "specviz"
 
     def load_data(self, data, data_label=None, format=None):
         """
@@ -31,7 +31,9 @@ class SpecViz(ConfigHelper):
         """
         # If no data label is assigned, give it a unique identifier
         if not data_label:
-            data_label = "specviz_data|" + str(base64.b85encode(uuid.uuid4().bytes), 'utf-8')
+            data_label = "specviz_data|" + str(
+                base64.b85encode(uuid.uuid4().bytes), "utf-8"
+            )
         # If data provided is a path, try opening into a Spectrum1D object
         try:
             path = pathlib.Path(data)
@@ -43,17 +45,18 @@ class SpecViz(ConfigHelper):
         # If not, it must be a Spectrum1D object. Otherwise, it's unsupported
         except TypeError:
             if type(data) is SpectrumCollection:
-                raise TypeError("`SpectrumCollection` detected. Please "
-                                "provide a `Spectrum1D`.")
+                raise TypeError(
+                    "SpectrumCollection detected. Please provide a Spectrum1D"
+                )
             elif type(data) is not Spectrum1D:
                 raise TypeError("Data is not a Spectrum1D object or compatible file")
         self.app.add_data(data, data_label)
         if show_in_viewer:
-            self.app.add_data_to_viewer('spectrum-viewer', data_label)
+            self.app.add_data_to_viewer("spectrum-viewer", data_label)
 
-    def get_spectra(self, data_label = None):
+    def get_spectra(self, data_label=None):
         """Returns the current data loaded into the main viewer"""
-        return self.app.get_data_from_viewer('spectrum-viewer', data_label=data_label)
+        return self.app.get_data_from_viewer("spectrum-viewer", data_label=data_label)
 
     def get_spectral_regions(self):
         """
@@ -78,39 +81,44 @@ class SpecViz(ConfigHelper):
             spec_regs[name] = spec_reg
 
         return spec_regs
-    def x_limits(self, x_min = None, x_max = None):
+
+    def x_limits(self, x_min=None, x_max=None):
         """Sets the limits of the x-axis
 
         :param x_min: The lower bound of the axis. Can also be a 
             Specutils SpectralRegion
         :param x_max: The upper bound of the axis
         """
-        scale = self.app.get_viewer('spectrum-viewer').scale_x
+        scale = self.app.get_viewer("spectrum-viewer").scale_x
         if not x_min and not x_max:
             return scale
         else:
             # Retrieve the spectral axis
-            ref_index = self.app.get_viewer('spectrum-viewer').state.reference_data.label
+            ref_index = self.app.get_viewer(
+                "spectrum-viewer"
+            ).state.reference_data.label
             spectral_axis = self.get_spectra(ref_index).spectral_axis
             self._set_scale(scale, spectral_axis, x_min, x_max)
 
-    def y_limits(self, y_min = None, y_max = None):
+    def y_limits(self, y_min=None, y_max=None):
         """Sets the limits of the y-axis
 
         :param y_min: The lower bound of the axis. Can also be a 
             Specutils SpectralRegion
         :param y_max: The upper bound of the axis
         """
-        scale = self.app.get_viewer('spectrum-viewer').scale_y
+        scale = self.app.get_viewer("spectrum-viewer").scale_y
         if not y_min and not y_max:
             return scale
         else:
             # Retrieve the flux axis
-            ref_index = self.app.get_viewer('spectrum-viewer').state.reference_data.label
+            ref_index = self.app.get_viewer(
+                "spectrum-viewer"
+            ).state.reference_data.label
             flux_axis = self.get_spectra(ref_index).flux
             self._set_scale(scale, flux_axis, y_min, y_max)
 
-    def _set_scale(self, scale, axis, min_val = None, max_val = None):
+    def _set_scale(self, scale, axis, min_val=None, max_val=None):
         """Internal helper method to set the bqplot scale
 
         :param scale: The Bqplot viewer scale
@@ -130,7 +138,7 @@ class SpecViz(ConfigHelper):
             # If auto, set to min_valimum wavelength value
             elif min_val == "auto":
                 min_val = min(axis).value
-            
+
             scale.min = float(min_val)
         if max_val:
             # If user's value has a unit, convert it to the current axis' units
@@ -140,26 +148,26 @@ class SpecViz(ConfigHelper):
             # If auto, set to max_valimum wavelength value
             elif max_val == "auto":
                 max_val = max(axis).value
-            
+
             scale.max = float(max_val)
 
     def autoscale_x(self):
         """Sets the x-axis limits to the min/max of the reference data"""
-        self.x_limits('auto', 'auto')
+        self.x_limits("auto", "auto")
 
     def autoscale_y(self):
         """Sets the y-axis limits to the min/max of the reference data"""
-        self.y_limits('auto', 'auto')
+        self.y_limits("auto", "auto")
 
     def flip_x(self):
         """Flips the current limits of the x-axis"""
-        scale = self.app.get_viewer('spectrum-viewer').scale_x
-        self.x_limits(x_min = scale.max, x_max = scale.min)
+        scale = self.app.get_viewer("spectrum-viewer").scale_x
+        self.x_limits(x_min=scale.max, x_max=scale.min)
 
     def flip_y(self):
         """Flips the current limits of the y-axis"""
-        scale = self.app.get_viewer('spectrum-viewer').scale_y
-        self.y_limits(y_min = scale.max, y_max = scale.min)
+        scale = self.app.get_viewer("spectrum-viewer").scale_y
+        self.y_limits(y_min=scale.max, y_max=scale.min)
 
     def show(self):
         self.app
