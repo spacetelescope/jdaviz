@@ -1,3 +1,4 @@
+import base64
 import pathlib
 import uuid
 from astropy import units as u
@@ -29,9 +30,8 @@ class SpecViz(ConfigHelper):
             `~specutils.Spectrum1D.read` io method.
         """
         # If no data label is assigned, give it a unique identifier
-        if data_label is None:
-            data_label = "specviz_data|" + uuid.uuid4().hex
-
+        if not data_label:
+            data_label = "specviz_data|" + str(base64.b85encode(uuid.uuid4().bytes), 'utf-8')
         # If data provided is a path, try opening into a Spectrum1D object
         try:
             path = pathlib.Path(data)
