@@ -114,6 +114,10 @@ class SpecViz(ConfigHelper):
     def autoscale_x(self):
         self.x_limits('auto', 'auto')
 
+    def flip_x(self):
+        scale = self.app.get_viewer('spectrum-viewer').scale_x
+        self.x_limits(x_min = scale.max, x_max = scale.min)
+
     def y_limits(self, y_min = None, y_max = None):
         scale = self.app.get_viewer('spectrum-viewer').scale_y
         if not y_min and not y_max:
@@ -147,6 +151,10 @@ class SpecViz(ConfigHelper):
 
     def autoscale_y(self):
         self.y_limits('auto', 'auto')
+
+    def flip_y(self):
+        scale = self.app.get_viewer('spectrum-viewer').scale_y
+        self.y_limits(y_min = scale.max, y_max = scale.min)
 
     def show(self):
         self.app
