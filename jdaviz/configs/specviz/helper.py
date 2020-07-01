@@ -79,6 +79,12 @@ class SpecViz(ConfigHelper):
 
         return spec_regs
     def x_limits(self, x_min = None, x_max = None):
+        """Sets the limits of the x-axis
+
+        :param x_min: The lower bound of the axis. Can also be a 
+            Specutils SpectralRegion
+        :param x_max: The upper bound of the axis
+        """
         scale = self.app.get_viewer('spectrum-viewer').scale_x
         if not x_min and not x_max:
             return scale
@@ -89,6 +95,12 @@ class SpecViz(ConfigHelper):
             self._set_scale(scale, spectral_axis, x_min, x_max)
 
     def y_limits(self, y_min = None, y_max = None):
+        """Sets the limits of the y-axis
+
+        :param y_min: The lower bound of the axis. Can also be a 
+            Specutils SpectralRegion
+        :param y_max: The upper bound of the axis
+        """
         scale = self.app.get_viewer('spectrum-viewer').scale_y
         if not y_min and not y_max:
             return scale
@@ -99,6 +111,14 @@ class SpecViz(ConfigHelper):
             self._set_scale(scale, flux_axis, y_min, y_max)
 
     def _set_scale(self, scale, axis, min_val = None, max_val = None):
+        """Internal helper method to set the bqplot scale
+
+        :param scale: The Bqplot viewer scale
+        :param axis: The Specutils data axis
+        :param min_val: The lower bound of the axis to set. Can also be a
+            Specutils SpectralRegion
+        :param max_val: The upper bound of the axis to set
+        """
         if min_val:
             # If SpectralRegion, set limits to region's lower and upper bounds
             if isinstance(min_val, SpectralRegion):
@@ -124,16 +144,20 @@ class SpecViz(ConfigHelper):
             scale.max = float(max_val)
 
     def autoscale_x(self):
+        """Sets the x-axis limits to the min/max of the reference data"""
         self.x_limits('auto', 'auto')
 
     def autoscale_y(self):
+        """Sets the y-axis limits to the min/max of the reference data"""
         self.y_limits('auto', 'auto')
 
     def flip_x(self):
+        """Flips the current limits of the x-axis"""
         scale = self.app.get_viewer('spectrum-viewer').scale_x
         self.x_limits(x_min = scale.max, x_max = scale.min)
 
     def flip_y(self):
+        """Flips the current limits of the y-axis"""
         scale = self.app.get_viewer('spectrum-viewer').scale_y
         self.y_limits(y_min = scale.max, y_max = scale.min)
 
