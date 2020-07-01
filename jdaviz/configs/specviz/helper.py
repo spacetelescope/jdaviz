@@ -2,7 +2,7 @@ import base64
 import pathlib
 import uuid
 from astropy import units as u
-from specutils import Spectrum1D, SpectrumCollection
+from specutils import Spectrum1D, SpectrumCollection, SpectralRegion
 
 import astropy.units as u
 from specutils import Spectrum1D, SpectrumCollection, SpectralRegion
@@ -84,8 +84,11 @@ class SpecViz(ConfigHelper):
             return scale
         
         if x_min:
+            # If SpectralRegion, set limits to region's lower and upper bounds
+            if isinstance(x_min, SpectralRegion):
+                return self.x_limits(x_min.lower, x_min.upper)
             # If user's value has a unit, convert it to the current axis' units
-            if isinstance(x_min, u.Quantity):
+            elif isinstance(x_min, u.Quantity):
                 # Get the current axis' units
                 ref_index = self.app.get_viewer('spectrum-viewer').state.reference_data.label
                 ref_unit = self.get_spectra(ref_index).spectral_axis.unit
@@ -123,6 +126,9 @@ class SpecViz(ConfigHelper):
         if not y_min and not y_max:
             return scale
         if y_min:
+            # If SpectralRegion, set limits to region's lower and upper bounds
+            if isinstance(y_min, SpectralRegion):
+                return self.y_limits(y_min.lower, y_min.upper)
             # If user's value has a unit, convert it to the current axis' units
             if isinstance(y_min, u.Quantity):
                 # Get the current axis' units
