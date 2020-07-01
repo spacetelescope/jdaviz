@@ -15,7 +15,7 @@ class SpecViz(ConfigHelper):
 
     _default_configuration = "specviz"
 
-    def load_data(self, data, data_label=None, format=None):
+    def load_data(self, data, data_label=None, format=None, show_in_viewer=True):
         """
         Loads a data file or `~specutils.Spectrum1D` object into SpecViz.
 
