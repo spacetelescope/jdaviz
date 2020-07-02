@@ -387,10 +387,7 @@ class Application(VuetifyTemplate, HubListener):
 
         # If a data label was provided, return only the data requested
         if data_label is not None:
-            if data_label in data:
-                data = {data_label: data.get(data_label)}
-            else:
-                data = {}
+            return data.get(data_label)
 
         return data
 
