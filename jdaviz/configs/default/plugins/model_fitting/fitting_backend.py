@@ -186,7 +186,7 @@ def _fit_3D(initial_model, spectrum):
 
 
 class SpaxelWorker:
-    '''
+    """
     A class with callable instances that perform fitting over a
     spaxel. It provides the callable for the `Pool.apply_async`
     function, and also holds everything necessary to perform the
@@ -198,7 +198,7 @@ class SpaxelWorker:
     modify parameter values in an already built CompoundModel
     instance. We need to use the current model instance while
     it still exists.
-    '''
+    """
     def __init__(self, flux_cube, wave_array, initial_model):
         self.cube = flux_cube
         self.wave = wave_array
@@ -223,7 +223,7 @@ class SpaxelWorker:
 
         fitted_values = fitted_model(self.wave)
 
-        return (x, y, fitted_model, fitted_values)
+        return x, y, fitted_model, fitted_values
 
 
 def _build_model(component_list, expression):
@@ -300,7 +300,7 @@ def _handle_parameter_units(model, fitted_parameters_cube, param_units):
 
 def _generate_spaxel_list(spectrum):
     """
-    Generates a list wuth tuples, each one addressing the (x,y)
+    Generates a list with tuples, each one addressing the (x,y)
     coordinates of a spaxel in a 3-D spectrum cube.
 
     Parameters
