@@ -3,12 +3,15 @@ import pickle
 
 import astropy.modeling.models as models
 import astropy.units as u
+import numpy as np
+from astropy.wcs import WCSSUB_SPECTRAL
 from glue.core.message import (SubsetCreateMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
+from specutils import Spectrum1D
 from traitlets import Bool, Int, List, Unicode
 
-from jdaviz.core.events import AddDataMessage, RemoveDataMessage
+from jdaviz.core.events import AddDataMessage, RemoveDataMessage, SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
 from jdaviz.utils import load_template
@@ -60,6 +63,7 @@ class ModelFitting(TemplateMixin):
         self._display_order = False
         self.model_save_path = os.getcwd()
         self.model_label = "Model"
+        self._selected_data_label = None
 
         self.hub.subscribe(self, AddDataMessage,
                            handler=self._on_viewer_data_changed)
@@ -79,7 +83,7 @@ class ModelFitting(TemplateMixin):
     def _on_viewer_data_changed(self, msg=None):
         """
         Callback method for when data is added or removed from a viewer, or
-        when a subset is created, deleted, or updated. This method receieves
+        when a subset is created, deleted, or updated. This method receives
         a glue message containing viewer information in the case of the former
         set of events, and updates the available data list displayed to the
         user.
@@ -165,7 +169,8 @@ class ModelFitting(TemplateMixin):
             label of the data collection object selected by the user.
         """
         selected_spec = self.app.get_data_from_viewer("spectrum-viewer",
-                                                      data_label=event)[event]
+                                                      data_label=event)
+        self._selected_data_label = event
 
         if self._units == {}:
             self._units["x"] = str(
@@ -250,7 +255,7 @@ class ModelFitting(TemplateMixin):
     def vue_model_fitting(self, *args, **kwargs):
         """
         Run fitting on the initialized models, fixing any parameters marked
-        as such by the user, then update the displauyed parameters with fit
+        as such by the user, then update the displayed parameters with fit
         values
         """
         fitted_model, fitted_spectrum = fit_model_to_spectrum(
@@ -265,6 +270,39 @@ class ModelFitting(TemplateMixin):
         self._update_parameters_from_fit()
 
         self.save_enabled = True
+
+    def vue_fit_model_to_cube(self, *args, **kwargs):
+        data = self.app.data_collection[self._selected_data_label]
+
+        # First, ensure that the selected data is cube-like. It is possible
+        # that the user has selected a pre-existing 1d data object.
+        if data.ndim != 3:
+            snackbar_message = SnackbarMessage(
+                f"Selected data {self._selected_data_label} is not cube-like.",
+                sender=self)
+            self.hub.broadcast(snackbar_message)
+            return
+
+        # Get the primary data component
+        attribute = data.main_components[0]
+        component = data.get_component(attribute)
+        temp_values = data.get_data(attribute)
+
+        # Transpose the axis order
+        values = np.moveaxis(temp_values, 0, -1) * u.Unit(component.units)
+
+        # We manually create a Spectrum1D object from the flux information
+        #  in the cube we select
+        wcs = data.coords.sub([WCSSUB_SPECTRAL])
+        spec = Spectrum1D(flux=values, wcs=wcs)
+
+        fitted_model, fitted_spectrum = fit_model_to_spectrum(
+            spec,
+            self._initialized_models.values(),
+            self.model_equation,
+            run_fitter=True)
+
+        self.app.data_collection["Fitted Model Cube"] = fitted_model
 
     def vue_register_spectrum(self, event):
         """
