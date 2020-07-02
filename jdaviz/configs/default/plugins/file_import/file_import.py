@@ -1,3 +1,7 @@
+import os
+import tempfile
+import uuid
+
 import ipywidgets as w
 from traitlets import Dict
 
@@ -16,26 +20,19 @@ class FileImport(TemplateMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self._file_upload = w.FileUpload()
+        self._file_upload = w.FileUpload(accept='*')
         self.components = {'g-file-import': self._file_upload}
 
         self._file_upload.observe(self.on_counter_changed, names=['_counter'])
 
     def on_counter_changed(self, event):
-        print("called")
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            file_name = str(uuid.uuid4())
+            file_path = os.path.join(tmp_dir, file_name)
 
-        for name, data in self._file_upload.value.items():
-            path = "/Users/nearl/Desktop/" + name
-            print(path)
-#             with open(path, 'w') as f:
-#                 f.write("Test")
+            with open(file_path, "wb") as tmp_file:
+                tmp_file.write(list(self._file_upload.value.values())[-1]['content'])
 
-#             img = w.Image(
-#                 value=data['content'],
-#                 format='png',
-#                 width=300,
-#                 height=400,
-#             )
-#             display(img)
+            self.app.load_data(file_path)\
 
 
