@@ -29,8 +29,8 @@
         >
           <v-toolbar-items>
             <v-btn icon @click="viewer.collapse = !viewer.collapse">
-              <v-icon v-if="viewer.collapse">mdi-menu</v-icon>
-              <v-icon v-else>mdi-menu-open</v-icon>
+              <v-icon v-if="viewer.collapse">mdi-hammer-screwdriver</v-icon>
+              <v-icon v-else>mdi-close</v-icon>
             </v-btn>
             <!-- <v-divider vertical></v-divider> -->
             <jupyter-widget :widget="viewer.tools"></jupyter-widget>
