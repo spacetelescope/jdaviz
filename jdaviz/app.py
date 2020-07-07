@@ -5,6 +5,7 @@ from inspect import isclass
 
 import ipywidgets as w
 import numpy as np
+from astropy import units as u
 import pkg_resources
 import yaml
 from astropy.nddata import CCDData
@@ -13,6 +14,7 @@ from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
 from traitlets import Dict
 from regions import RectanglePixelRegion, PixCoord
+from specutils import Spectrum1D
 
 from glue.config import data_translator
 from glue.core import BaseData, HubListener, Data, DataCollection
@@ -542,6 +544,38 @@ class Application(VuetifyTemplate, HubListener):
                 f"of:\n\t" + f"\n\t".join([
                     data_item['name'] for data_item in self.state.data_items]))
 
+    def _set_plot_axes_labels(self, data, viewer_id):
+        """
+        Sets the plot axes labels to be the units of the data to be loaded.
+
+        Parameters
+        ----------
+        data : `~Spectrum1D`
+            Data from ``DataCollection`` that will have its units as the plot
+            label axes.
+        viewer_id : str
+            The UUID associated with the desired viewer item.
+        """
+        viewer = self._viewer_by_id(viewer_id)
+
+        # Get the units of the data to be loaded.
+        spectral_axis_unit_type = data.spectral_axis.unit.physical_type.title()
+        flux_unit_type = data.flux.unit.physical_type.title()
+
+        if spectral_axis_unit_type.lower() == "length".lower():
+            spectral_axis_unit_type = "Wavelength"
+
+        if data.spectral_axis.unit.is_equivalent(u.m):
+            spectral_axis_unit_type = "Wavelength"
+        elif data.spectral_axis.unit.is_equivalent(u.pixel):
+            spectral_axis_unit_type = "pixel"
+
+        viewer.figure.axes[0].label = f"{spectral_axis_unit_type} [{data.spectral_axis.unit.to_string()}]"
+        viewer.figure.axes[1].label = f"{flux_unit_type} [{data.flux.unit.to_string()}]"
+
+        # Make it so y axis label is not covering tick numbers.
+        viewer.figure.axes[1].label_offset = "-50"
+
     def remove_data_from_viewer(self, viewer_reference, data_label):
         """
         Removes a data set from the specified viewer.
@@ -792,6 +826,15 @@ class Application(VuetifyTemplate, HubListener):
                                                         viewer_id=viewer_id,
                                                         sender=self)
                 self.hub.broadcast(remove_data_message)
+
+        # Sets the plot axes labels to be the units of the most recently
+        # active data.
+        if len(active_data_labels) > 0:
+            active_data = self.data_collection[active_data_labels[0]]
+            if hasattr(active_data, "_preferred_translation") \
+                    and active_data._preferred_translation is not None \
+                    and type(active_data.get_object()) is Spectrum1D:
+                self._set_plot_axes_labels(active_data.get_object(), viewer_id)
 
     def _on_data_added(self, msg):
         """
