@@ -11,7 +11,9 @@ from jdaviz.core.helpers import ConfigHelper
 
 
 class SpecViz(ConfigHelper):
-    """SpecViz Helper class"""
+    """SpecViz Helper class
+    
+    """
 
     _default_configuration = "specviz"
 
@@ -55,7 +57,9 @@ class SpecViz(ConfigHelper):
             self.app.add_data_to_viewer("spectrum-viewer", data_label)
 
     def get_spectra(self, data_label=None):
-        """Returns the current data loaded into the main viewer"""
+        """Returns the current data loaded into the main viewer
+        
+        """
         return self.app.get_data_from_viewer("spectrum-viewer", data_label=data_label)
 
     def get_spectral_regions(self):
@@ -84,9 +88,12 @@ class SpecViz(ConfigHelper):
     def x_limits(self, x_min=None, x_max=None):
         """Sets the limits of the x-axis
 
-        :param x_min: The lower bound of the axis. Can also be a
-            Specutils SpectralRegion
-        :param x_max: The upper bound of the axis
+        Parameters
+        ----------
+        x_min
+            The lower bound of the axis. Can also be a Specutils SpectralRegion
+        x_max
+            The upper bound of the axis
         """
         scale = self.app.get_viewer("spectrum-viewer").scale_x
         if x_min is None and x_max is None:
@@ -100,9 +107,12 @@ class SpecViz(ConfigHelper):
     def y_limits(self, y_min=None, y_max=None):
         """Sets the limits of the y-axis
 
-        :param y_min: The lower bound of the axis. Can also be a
-            Specutils SpectralRegion
-        :param y_max: The upper bound of the axis
+        Parameters
+        ----------
+        y_min
+            The lower bound of the axis. Can also be a Specutils SpectralRegion
+        y_max
+            The upper bound of the axis
         """
         scale = self.app.get_viewer("spectrum-viewer").scale_y
         if y_min is None and y_max is None:
@@ -115,12 +125,17 @@ class SpecViz(ConfigHelper):
 
     def _set_scale(self, scale, axis, min_val=None, max_val=None):
         """Internal helper method to set the bqplot scale
-
-        :param scale: The Bqplot viewer scale
-        :param axis: The Specutils data axis
-        :param min_val: The lower bound of the axis to set. Can also be a
-            Specutils SpectralRegion
-        :param max_val: The upper bound of the axis to set
+        
+        Parameters
+        ----------
+        scale
+            The Bqplot viewer scale
+        axis
+            The Specutils data axis
+        min_val
+            The lower bound of the axis to set. Can also be a Specutils SpectralRegion
+        max_val
+            The upper bound of the axis to set
         """
         if min_val is not None:
             # If SpectralRegion, set limits to region's lower and upper bounds
@@ -147,20 +162,28 @@ class SpecViz(ConfigHelper):
             scale.max = float(max_val)
 
     def autoscale_x(self):
-        """Sets the x-axis limits to the min/max of the reference data"""
+        """Sets the x-axis limits to the min/max of the reference data
+        
+        """
         self.x_limits("auto", "auto")
 
     def autoscale_y(self):
-        """Sets the y-axis limits to the min/max of the reference data"""
+        """Sets the y-axis limits to the min/max of the reference data
+        
+        """
         self.y_limits("auto", "auto")
 
     def flip_x(self):
-        """Flips the current limits of the x-axis"""
+        """Flips the current limits of the x-axis
+        
+        """
         scale = self.app.get_viewer("spectrum-viewer").scale_x
         self.x_limits(x_min=scale.max, x_max=scale.min)
 
     def flip_y(self):
-        """Flips the current limits of the y-axis"""
+        """Flips the current limits of the y-axis
+        
+        """
         scale = self.app.get_viewer("spectrum-viewer").scale_y
         self.y_limits(y_min=scale.max, y_max=scale.min)
 
