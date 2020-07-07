@@ -219,7 +219,7 @@ class Application(VuetifyTemplate, HubListener):
         self.state.snackbar['timeout'] = msg.timeout
         self.state.snackbar['show'] = True
 
-    def link_new_data(self, old_len):
+    def _link_new_data(self, old_len):
         """
         When additional data is loaded, check to see if the spectral axis of
         any components are compatible with already loaded data. If so, link
@@ -262,7 +262,7 @@ class Application(VuetifyTemplate, HubListener):
 
         # If there is already data loaded, link it to the new data
         if old_data_len > 0:
-            self.link_new_data(old_data_len)
+            self._link_new_data(old_data_len)
 
         # Send out a toast message
         snackbar_message = SnackbarMessage("Data successfully loaded.",
@@ -530,7 +530,7 @@ class Application(VuetifyTemplate, HubListener):
 
         # If there is already data loaded, link it to the new data
         if old_data_len > 0:
-            self.link_new_data(old_data_len)
+            self._link_new_data(old_data_len)
 
         # Send out a toast message
         snackbar_message = SnackbarMessage(
