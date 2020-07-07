@@ -89,7 +89,7 @@ class SpecViz(ConfigHelper):
         :param x_max: The upper bound of the axis
         """
         scale = self.app.get_viewer("spectrum-viewer").scale_x
-        if not x_min and not x_max:
+        if x_min is None and x_max is None:
             return scale
 
         # Retrieve the spectral axis
@@ -105,7 +105,7 @@ class SpecViz(ConfigHelper):
         :param y_max: The upper bound of the axis
         """
         scale = self.app.get_viewer("spectrum-viewer").scale_y
-        if not y_min and not y_max:
+        if y_min is None and y_max is None:
             return scale
 
         # Retrieve the flux axis
@@ -122,7 +122,7 @@ class SpecViz(ConfigHelper):
             Specutils SpectralRegion
         :param max_val: The upper bound of the axis to set
         """
-        if min_val:
+        if min_val is not None:
             # If SpectralRegion, set limits to region's lower and upper bounds
             if isinstance(min_val, SpectralRegion):
                 return self._set_scale(scale, axis, min_val.lower, min_val.upper)
@@ -135,7 +135,7 @@ class SpecViz(ConfigHelper):
                 min_val = min(axis).value
 
             scale.min = float(min_val)
-        if max_val:
+        if max_val is not None:
             # If user's value has a unit, convert it to the current axis' units
             if isinstance(max_val, u.Quantity):
                 # Convert user's value to axis' units
