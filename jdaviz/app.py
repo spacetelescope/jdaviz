@@ -19,6 +19,7 @@ from specutils import Spectrum1D
 from glue.config import data_translator
 from glue.core import BaseData, HubListener, Data, DataCollection
 from glue.core.autolinking import find_possible_links
+from glue.core.link_helpers import LinkSame
 from glue.core.message import DataCollectionAddMessage
 from glue.core.state_objects import State
 from glue.core.subset import Subset
@@ -218,6 +219,18 @@ class Application(VuetifyTemplate, HubListener):
         self.state.snackbar['timeout'] = msg.timeout
         self.state.snackbar['show'] = True
 
+    def link_new_data(self, old_len):
+        """
+        When additional data is loaded, check to see if the spectral axis of
+        any components are compatible with already loaded data. If so, link
+        them so that they can be displayed on the same profile1D plot.
+        """
+        new_len = len(self.data_collection)
+        for i in range(old_len, new_len):
+            for j in range(0, old_len):
+                self.data_collection.add_link(LinkSame(self.data_collection[i].pixel_component_ids[0],
+                    self.data_collection[j].pixel_component_ids[0]))
+
     def load_data(self, file_obj, **kwargs):
         """
         Provided a path to a data file, open and parse the data into the
@@ -230,6 +243,7 @@ class Application(VuetifyTemplate, HubListener):
         path : str
             File path for the data file to be loaded.
         """
+        old_data_len = len(self.data_collection)
         parser = data_parser_registry.members.get(
             self.state.settings['data']['parser'])
 
@@ -245,6 +259,10 @@ class Application(VuetifyTemplate, HubListener):
                 return
         else:
             self._application_handler.load_data(file_obj)
+
+        # If there is already data loaded, link it to the new data
+        if old_data_len > 0:
+            self.link_new_data(old_data_len)
 
         # Send out a toast message
         snackbar_message = SnackbarMessage("Data successfully loaded.",
@@ -504,9 +522,15 @@ class Application(VuetifyTemplate, HubListener):
             The name associated with this data. If none is given, a generic
             name is generated.
         """
+        old_data_len = len(self.data_collection)
+
         # Include the data in the data collection
         data_label = data_label or "New Data"
         self.data_collection[data_label] = data
+
+        # If there is already data loaded, link it to the new data
+        if old_data_len > 0:
+            self.link_new_data(old_data_len)
 
         # Send out a toast message
         snackbar_message = SnackbarMessage(
