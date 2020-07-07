@@ -91,13 +91,11 @@ class SpecViz(ConfigHelper):
         scale = self.app.get_viewer("spectrum-viewer").scale_x
         if not x_min and not x_max:
             return scale
-        else:
-            # Retrieve the spectral axis
-            ref_index = self.app.get_viewer(
-                "spectrum-viewer"
-            ).state.reference_data.label
-            spectral_axis = self.get_spectra(ref_index).get(ref_index).spectral_axis
-            self._set_scale(scale, spectral_axis, x_min, x_max)
+
+        # Retrieve the spectral axis
+        ref_index = self.app.get_viewer("spectrum-viewer").state.reference_data.label
+        spectral_axis = self.get_spectra(ref_index).get(ref_index).spectral_axis
+        self._set_scale(scale, spectral_axis, x_min, x_max)
 
     def y_limits(self, y_min=None, y_max=None):
         """Sets the limits of the y-axis
@@ -109,13 +107,11 @@ class SpecViz(ConfigHelper):
         scale = self.app.get_viewer("spectrum-viewer").scale_y
         if not y_min and not y_max:
             return scale
-        else:
-            # Retrieve the flux axis
-            ref_index = self.app.get_viewer(
-                "spectrum-viewer"
-            ).state.reference_data.label
-            flux_axis = self.get_spectra(ref_index).get(ref_index).flux
-            self._set_scale(scale, flux_axis, y_min, y_max)
+
+        # Retrieve the flux axis
+        ref_index = self.app.get_viewer("spectrum-viewer").state.reference_data.label
+        flux_axis = self.get_spectra(ref_index).get(ref_index).flux
+        self._set_scale(scale, flux_axis, y_min, y_max)
 
     def _set_scale(self, scale, axis, min_val=None, max_val=None):
         """Internal helper method to set the bqplot scale
