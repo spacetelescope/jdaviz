@@ -12,7 +12,7 @@ from jdaviz.core.helpers import ConfigHelper
 
 class SpecViz(ConfigHelper):
     """SpecViz Helper class
-    
+
     """
 
     _default_configuration = "specviz"
@@ -58,7 +58,7 @@ class SpecViz(ConfigHelper):
 
     def get_spectra(self, data_label=None):
         """Returns the current data loaded into the main viewer
-        
+
         """
         return self.app.get_data_from_viewer("spectrum-viewer", data_label=data_label)
 
@@ -125,7 +125,7 @@ class SpecViz(ConfigHelper):
 
     def _set_scale(self, scale, axis, min_val=None, max_val=None):
         """Internal helper method to set the bqplot scale
-        
+
         Parameters
         ----------
         scale
@@ -163,26 +163,26 @@ class SpecViz(ConfigHelper):
 
     def autoscale_x(self):
         """Sets the x-axis limits to the min/max of the reference data
-        
+
         """
         self.x_limits("auto", "auto")
 
     def autoscale_y(self):
         """Sets the y-axis limits to the min/max of the reference data
-        
+
         """
         self.y_limits("auto", "auto")
 
     def flip_x(self):
         """Flips the current limits of the x-axis
-        
+
         """
         scale = self.app.get_viewer("spectrum-viewer").scale_x
         self.x_limits(x_min=scale.max, x_max=scale.min)
 
     def flip_y(self):
         """Flips the current limits of the y-axis
-        
+
         """
         scale = self.app.get_viewer("spectrum-viewer").scale_y
         self.y_limits(y_min=scale.max, y_max=scale.min)
