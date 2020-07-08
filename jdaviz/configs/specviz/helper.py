@@ -52,6 +52,17 @@ class SpecViz(ConfigHelper):
                 )
             elif type(data) is not Spectrum1D:
                 raise TypeError("Data is not a Spectrum1D object or compatible file")
+
+        # Check to see if there's already data in the viewer and convert units
+        # if needed
+        current_spec = self.get_spectra()
+        if current_spec != {} and current_spec is not None:
+            spec_key = list(current_spec.keys())[0]
+            current_unit = current_spec[spec_key].spectral_axis.unit
+            if data.spectral_axis.unit != current_unit:
+                data = Spectrum1D(flux=data.flux,
+                                  spectral_axis=data.spectral_axis.to(current_unit))
+
         self.app.add_data(data, data_label)
         if show_in_viewer:
             self.app.add_data_to_viewer("spectrum-viewer", data_label)
