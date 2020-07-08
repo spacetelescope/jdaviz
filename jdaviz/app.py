@@ -228,8 +228,8 @@ class Application(VuetifyTemplate, HubListener):
         new_len = len(self.data_collection)
         for i in range(old_len, new_len):
             for j in range(0, old_len):
-                self.data_collection.add_link(LinkSame(self.data_collection[i].pixel_component_ids[0],
-                    self.data_collection[j].pixel_component_ids[0]))
+                self.data_collection.add_link(LinkSame(self.data_collection[i].world_component_ids[0],
+                    self.data_collection[j].world_component_ids[0]))
 
     def load_data(self, file_obj, **kwargs):
         """
