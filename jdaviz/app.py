@@ -219,17 +219,16 @@ class Application(VuetifyTemplate, HubListener):
         self.state.snackbar['timeout'] = msg.timeout
         self.state.snackbar['show'] = True
 
-    def _link_new_data(self, old_len):
+    def _link_new_data(self):
         """
         When additional data is loaded, check to see if the spectral axis of
         any components are compatible with already loaded data. If so, link
         them so that they can be displayed on the same profile1D plot.
         """
         new_len = len(self.data_collection)
-        for i in range(old_len, new_len):
-            for j in range(0, old_len):
+        for i in range(0, new_len-1):
                 self.data_collection.add_link(LinkSame(self.data_collection[i].world_component_ids[0],
-                    self.data_collection[j].world_component_ids[0]))
+                    self.data_collection[new_len-1].world_component_ids[0]))
 
     def load_data(self, file_obj, **kwargs):
         """
@@ -259,10 +258,6 @@ class Application(VuetifyTemplate, HubListener):
                 return
         else:
             self._application_handler.load_data(file_obj)
-
-        # If there is already data loaded, link it to the new data
-        if old_data_len > 0:
-            self._link_new_data(old_data_len)
 
         # Send out a toast message
         snackbar_message = SnackbarMessage("Data successfully loaded.",
@@ -527,10 +522,6 @@ class Application(VuetifyTemplate, HubListener):
         # Include the data in the data collection
         data_label = data_label or "New Data"
         self.data_collection[data_label] = data
-
-        # If there is already data loaded, link it to the new data
-        if old_data_len > 0:
-            self._link_new_data(old_data_len)
 
         # Send out a toast message
         snackbar_message = SnackbarMessage(
@@ -860,7 +851,8 @@ class Application(VuetifyTemplate, HubListener):
     def _on_data_added(self, msg):
         """
         Callback for when data is added to the internal ``DataCollection``.
-        Adds a new data item dictionary to the ``data_items`` state list.
+        Adds a new data item dictionary to the ``data_items`` state list and
+        links the new data to previous data, if possible.
 
         Parameters
         ----------
@@ -868,6 +860,7 @@ class Application(VuetifyTemplate, HubListener):
             The Glue data collection add message containing information about
             the new data.
         """
+        self._link_new_data()
         data_item = self._create_data_item(msg.data.label)
         self.state.data_items.append(data_item)
 
