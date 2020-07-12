@@ -1,10 +1,25 @@
 from jdaviz.core.helpers import ConfigHelper
 from specutils import Spectrum1D, SpectrumCollection
+from glue.core.data import Data
+from jdaviz.core.events import NewViewerMessage
+from jdaviz.core.registries import viewer_registry
 
 
 class MosViz(ConfigHelper):
     """MosViz Helper class"""
     _default_configuration = 'mosviz'
+
+    def _create_table(self, comp_data, label):
+        data = Data(label="MOS Table")
+        data.add_component(comp_data, label=label)
+        self.app.data_collection.append(data)
+
+        viewer_cls = viewer_registry.members["mosviz-table-viewer"]['cls']
+
+        new_viewer_message = NewViewerMessage(
+            viewer_cls, data=data, sender=self)
+
+        self.app.hub.broadcast(new_viewer_message)
 
     def load_1d_spectra(self, data_obj, data_labels=None):
         """
@@ -49,6 +64,24 @@ class MosViz(ConfigHelper):
             raise ValueError("Data object must be either `Spectrum1D` or "
                              f"`SpectrumCollection`, got {type(data_obj)}.")
 
+        # At this point, we want to add this component column to the mos table
+        #  viewer for display
+        if not hasattr(data_obj, '__len__'):
+            data_obj = [data_obj]
+
+        if len(data_labels) > 0:
+            if len(data_labels) < len(data_obj):
+                col_labels = [f"{data_labels[0]}_{i}" for i in range(len(data_obj))]
+            elif len(data_labels) == len(data_obj):
+                col_labels = data_labels
+        else:
+            col_labels = [f"new_spectrum1d_{i}" for i in range(len(data_obj))]
+
+        if 'MOS Table' in self.app.data_collection:
+            table_data = self.app.data_collection['MOS Table']
+            table_data.add_component(col_labels, 'Spectrum 1D')
+        else:
+            self._create_table(col_labels, 'Spectrum 1D')
 
     def load_2d_spectra(self, data_obj):
         pass
