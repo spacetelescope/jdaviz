@@ -2,6 +2,7 @@ from glue.core import BaseData
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from specutils import Spectrum1D
+from glue_jupyter.table import TableViewer
 
 from jdaviz.core.registries import viewer_registry
 
@@ -29,3 +30,12 @@ class MOSVizImageView(BqplotImageView):
                 for layer_state in self.state.layers
                 if hasattr(layer_state, 'layer') and
                 isinstance(layer_state.layer, BaseData)]
+
+
+DEFAULT_COLUMNS = ['ID', 'Image', '1D Spectrum', '2D Spectrum', 'RA', 'DEC']
+
+
+@viewer_registry("mosviz-table-viewer", label="Table (MOSViz)")
+class MOSVizTableViewer(TableViewer):
+    def __init__(self, session, *args, **kwargs):
+        super().__init__(session, *args, **kwargs)
