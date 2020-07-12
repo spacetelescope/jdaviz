@@ -33,10 +33,10 @@ viewer_area:
           - name: Spectrum
             plot: mosviz-profile-viewer
             reference: spectrum-viewer
-    - container: col
-      children:
-      - container: row
-        viewers:
-        - name: Image viewer
-          plot: mosviz-image-viewer
-          reference: mos-image-viewer
+#    - container: col
+#      children:
+#      - container: row
+#        viewers:
+#        - name: Image viewer
+#          plot: mosviz-table-viewer
+#          reference: table-viewer
