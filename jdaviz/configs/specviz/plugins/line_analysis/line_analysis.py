@@ -1,42 +1,37 @@
 import os
 import pickle
 
-import astropy.modeling.models as models
 import astropy.units as u
 from glue.core.link_helpers import LinkSame
 from glue.core.message import (SubsetCreateMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from traitlets import Bool, Int, List, Unicode
+from specutils import analysis
 
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
 from jdaviz.utils import load_template
-from .fitting_backend import fit_model_to_spectrum
-from .initializers import initialize, model_parameters
 
-__all__ = ['ModelFitting']
+__all__ = ['LineAnalysis']
 
-FUNCTIONS = {}
-
-MODELS = {
-     'Const1D': models.Const1D,
-     'Linear1D': models.Linear1D,
-     'Polynomial1D': models.Polynomial1D,
-     'Gaussian1D': models.Gaussian1D,
-     'Voigt1D': models.Voigt1D,
-     'Lorentz1D': models.Lorentz1D
-     }
+FUNCTIONS = {"Line Flux": analysis.line_flux,
+        "Equivalent Width": analysis.equivalent_width,
+        "Gaussian Signma Width": analysis.gaussian_sigma_width,
+        "Gaussian FWHM": analysis.gaussian_fwhm,
+        "Centroid": analysis.centroid}
 
 
 @tray_registry('specviz-line-analysis', label="Line Analysis")
-class ModelFitting(TemplateMixin):
+class LineAnalysis(TemplateMixin):
     dialog = Bool(False).tag(sync=True)
     template = load_template("line_analysis.vue", __file__).tag(sync=True)
     dc_items = List([]).tag(sync=True)
     temp_function = Unicode().tag(sync=True)
     available_functions = List(list(FUNCTIONS.keys())).tag(sync=True)
+    result_available = Bool(False).tag(sync=True)
+    result = Unicode().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -44,6 +39,7 @@ class ModelFitting(TemplateMixin):
         self._viewer_spectra = None
         self._spectrum1d = None
         self._units = {}
+        self.result_available = False
 
         self.hub.subscribe(self, AddDataMessage,
                            handler=self._on_viewer_data_changed)
@@ -108,7 +104,7 @@ class ModelFitting(TemplateMixin):
             label of the data collection object selected by the user.
         """
         selected_spec = self.app.get_data_from_viewer("spectrum-viewer",
-                                                      data_label=event)
+                                                      data_label=event)[event]
 
         if self._units == {}:
             self._units["x"] = str(
@@ -127,38 +123,13 @@ class ModelFitting(TemplateMixin):
         # Add the model selected to the list of models
         self.temp_function = event
 
-    def vue_add_model(self, event):
-        """Add the selected model and input string ID to the list of models"""
-        new_model = {"id": self.temp_name, "model_type": self.temp_model,
-                     "parameters": []}
-
-        # Need to do things differently for polynomials, since the order varies
-        if self.temp_model == "Polynomial1D":
-            new_model = self._initialize_polynomial(new_model)
-        else:
-            # Have a separate private dict with the initialized models, since
-            # they don't play well with JSON for widget interaction
-            initialized_model = initialize(
-                MODELS[self.temp_model](name=self.temp_name),
-                self._spectrum1d.spectral_axis,
-                self._spectrum1d.flux)
-
-            self._initialized_models[self.temp_name] = initialized_model
-
-            for param in model_parameters[new_model["model_type"]]:
-                initial_val = getattr(initialized_model, param).value
-                new_model["parameters"].append({"name": param,
-                                                "value": initial_val,
-                                                "unit": self._param_units(param),
-                                                "fixed": False})
-
-        new_model["Initialized"] = True
-        self.component_models = self.component_models + [new_model]
-
     def vue_run_function(self, *args, **kwargs):
         """
         Run fitting on the initialized models, fixing any parameters marked
         as such by the user, then update the displauyed parameters with fit
         values
         """
-        pass
+        temp_result = FUNCTIONS[self.temp_function](self._spectrum1d)
+        self.result = str(temp_result)
+        self.result_available = True
+        raise ValueError("{} {}".format(self.result_available, self.result))
