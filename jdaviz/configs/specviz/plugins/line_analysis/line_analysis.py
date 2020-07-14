@@ -1,13 +1,14 @@
 import os
 import pickle
 
+import numpy as np
 import astropy.units as u
 from glue.core.link_helpers import LinkSame
 from glue.core.message import (SubsetCreateMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from traitlets import Bool, Int, List, Unicode
-from specutils import analysis
+from specutils import analysis, SpectralRegion
 
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage
 from jdaviz.core.registries import tray_registry
@@ -129,7 +130,12 @@ class LineAnalysis(TemplateMixin):
         as such by the user, then update the displauyed parameters with fit
         values
         """
-        temp_result = FUNCTIONS[self.temp_function](self._spectrum1d)
+        if self.temp_function == "Centroid":
+            spec_region = self._spectrum1d.spectral_axis[np.where(self._spectrum1d.mask == False)]
+            spec_region = SpectralRegion(spec_region[0], spec_region[-1])
+            temp_result = FUNCTIONS[self.temp_function](self._spectrum1d, spec_region)
+        else:
+            temp_result = FUNCTIONS[self.temp_function](self._spectrum1d)
         self.result = str(temp_result)
         self.result_available = True
         raise ValueError("{} {}".format(self.result_available, self.result))
