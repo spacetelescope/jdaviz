@@ -80,6 +80,25 @@ class MosViz(ConfigHelper):
             mos_table = self.app.data_collection['MOS Table']
             mos_table.add_component(data_labels, "2D Spectra")
 
-    def load_images(self, data_obj):
-        pass
+    def load_images(self, data_obj, data_labels=None):
+        if data_labels is None or len(data_obj) != len(data_labels):
+            data_labels = [f"Image {i}" for i in range(len(data_obj))]
+
+        if hasattr(data_obj, '__len__'):
+            for i in range(len(data_obj)):
+                self.app.data_collection[data_labels[i]] = data_obj[i]
+
+        # Add data to the mos viz table object
+        if 'MOS Table' not in self.app.data_collection:
+            data = Data(label="MOS Table")
+            self.app.data_collection.append(data)
+
+            mos_table = self.app.data_collection['MOS Table']
+            mos_table.add_component(data_labels, "Images")
+
+            viewer = self.app.get_viewer("table-viewer")
+            viewer.add_data(data)
+        else:
+            mos_table = self.app.data_collection['MOS Table']
+            mos_table.add_component(data_labels, "Images")
 
