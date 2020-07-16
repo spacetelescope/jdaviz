@@ -4,7 +4,7 @@ settings:
     menu_bar: false
     toolbar: true
     tray: true
-    tab_headers: true
+    tab_headers: false
   context:
     notebook:
       max_height: 600px
@@ -16,27 +16,27 @@ tray:
   - g-gaussian-smooth
   - g-collapse
 viewer_area:
-  - container: stack
+  - container: col
     children:
-    - container: row
+    - container: col
       children:
       - container: row
-        viewers:
+        children:
+        - container: col
+          viewers:
           - name: Image viewer
             plot: mosviz-image-viewer
             reference: image-viewer
-      - container: col
+        - container: col
+          viewers:
+            - name: 2D Spectrum viewer
+              plot: mosviz-image-viewer
+              reference: spectrum-2d-viewer
+            - name: Spectrum
+              plot: mosviz-profile-viewer
+              reference: spectrum-viewer
+      - container: row
         viewers:
-          - name: 2D Spectrum viewer
-            plot: mosviz-image-viewer
-            reference: spectrum-2d-viewer
-          - name: Spectrum
-            plot: mosviz-profile-viewer
-            reference: spectrum-viewer
-#    - container: col
-#      children:
-#      - container: row
-#        viewers:
-#        - name: Image viewer
-#          plot: mosviz-table-viewer
-#          reference: table-viewer
+        - name: Table viewer
+          plot: mosviz-table-viewer
+          reference: table-viewer
