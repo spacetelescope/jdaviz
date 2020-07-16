@@ -29,7 +29,7 @@ from glue_jupyter.state_traitlets_helpers import GlueState
 from ipyvuetify import VuetifyTemplate
 
 from .core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
-                          SnackbarMessage, RemoveDataMessage)
+                          SnackbarMessage, RemoveDataMessage, ConfigurationLoadedMessage, AddDataToViewerMessage, RemoveDataFromViewerMessage)
 from .core.registries import (tool_registry, tray_registry, viewer_registry,
                               data_parser_registry)
 from .utils import load_template
@@ -163,6 +163,14 @@ class Application(VuetifyTemplate, HubListener):
         #  application-level data collection object
         self.hub.subscribe(self, DataCollectionDeleteMessage,
                            handler=self._on_data_deleted)
+
+        self.hub.subscribe(self, AddDataToViewerMessage,
+                           handler=lambda msg: self.add_data_to_viewer(
+                               msg.viewer_reference, msg.data_label))
+
+        self.hub.subscribe(self, RemoveDataFromViewerMessage,
+                           handler=lambda msg: self.remove_data_from_viewer(
+                               msg.viewer_reference, msg.data_label))
 
         # Subscribe to snackbar messages and tie them to the display of the
         #  message box
@@ -719,13 +727,18 @@ class Application(VuetifyTemplate, HubListener):
             attributes.
         """
         def find_viewer_item(stack_items):
+            out_viewer_item = None
+
             for stack_item in stack_items:
                 for viewer_item in stack_item.get('viewers'):
                     if viewer_item['reference'] == reference:
-                        return viewer_item
+                        out_viewer_item = viewer_item
+                        break
 
                 if len(stack_item.get('children')) > 0:
-                    return find_viewer_item(stack_item.get('children'))
+                    out_viewer_item = find_viewer_item(stack_item.get('children'))
+
+            return out_viewer_item
 
         viewer_item = find_viewer_item(self.state.stack_items)
 
@@ -1058,6 +1071,8 @@ class Application(VuetifyTemplate, HubListener):
                         viewer=viewer,
                         reference=view.get('reference'))
 
+                    print("REDNERING ", view.get('reference'))
+
                     self._viewer_store[viewer_item['id']] = viewer
 
                     stack_item.get('viewers').append(viewer_item)
@@ -1093,3 +1108,9 @@ class Application(VuetifyTemplate, HubListener):
                 'label': tray_item_label,
                 'widget': "IPY_MODEL_" + tray_item_instance.model_id
             })
+
+        config_loaded_message = ConfigurationLoadedMessage(
+            config['settings']['configuration'], sender=self)
+        self.hub.broadcast(config_loaded_message)
+
+        print("CONFIG LOADED")
