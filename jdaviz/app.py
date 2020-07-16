@@ -1071,8 +1071,6 @@ class Application(VuetifyTemplate, HubListener):
                         viewer=viewer,
                         reference=view.get('reference'))
 
-                    print("REDNERING ", view.get('reference'))
-
                     self._viewer_store[viewer_item['id']] = viewer
 
                     stack_item.get('viewers').append(viewer_item)
@@ -1087,7 +1085,6 @@ class Application(VuetifyTemplate, HubListener):
         if config.get('viewer_area') is not None:
             stack_items = compose_viewer_area(config.get('viewer_area'))
             self.state.stack_items.extend(stack_items)
-            # self.vue_relayout()
 
         # Add the toolbar item filter to the toolbar component
         for name in config.get('toolbar', []):
@@ -1112,5 +1109,3 @@ class Application(VuetifyTemplate, HubListener):
         config_loaded_message = ConfigurationLoadedMessage(
             config['settings']['configuration'], sender=self)
         self.hub.broadcast(config_loaded_message)
-
-        print("CONFIG LOADED")
