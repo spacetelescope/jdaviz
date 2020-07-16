@@ -19,7 +19,7 @@ __all__ = ['LineAnalysis']
 
 FUNCTIONS = {"Line Flux": analysis.line_flux,
         "Equivalent Width": analysis.equivalent_width,
-        "Gaussian Signma Width": analysis.gaussian_sigma_width,
+        "Gaussian Sigma Width": analysis.gaussian_sigma_width,
         "Gaussian FWHM": analysis.gaussian_fwhm,
         "Centroid": analysis.centroid}
 
@@ -138,4 +138,3 @@ class LineAnalysis(TemplateMixin):
             temp_result = FUNCTIONS[self.temp_function](self._spectrum1d)
         self.result = str(temp_result)
         self.result_available = True
-        raise ValueError("{} {}".format(self.result_available, self.result))
