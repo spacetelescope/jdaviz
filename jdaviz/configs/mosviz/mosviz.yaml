@@ -24,12 +24,12 @@ viewer_area:
         viewers:
           - name: Image viewer
             plot: mosviz-image-viewer
-            reference: mos-image-viewer
+            reference: image-viewer
       - container: col
         viewers:
           - name: 2D Spectrum viewer
             plot: mosviz-image-viewer
-            reference: mos-2d-spectrum-viewer
+            reference: spectrum-2d-viewer
           - name: Spectrum
             plot: mosviz-profile-viewer
             reference: spectrum-viewer
