@@ -562,9 +562,11 @@ class Application(VuetifyTemplate, HubListener):
         spectral_axis_unit_type = data.spectral_axis.unit.physical_type.title()
         flux_unit_type = data.flux.unit.physical_type.title()
 
-        if spectral_axis_unit_type.lower() == "length".lower():
+        from astropy import units as u
+        if data.spectral_axis.unit.is_equivalent(u.m):
             spectral_axis_unit_type = "Wavelength"
-
+        if data.spectral_axis.unit.is_equivalent(u.pixel):
+            spectral_axis_unit_type = "pixel"
         if data.spectral_axis.unit.is_equivalent(u.m):
             spectral_axis_unit_type = "Wavelength"
         elif data.spectral_axis.unit.is_equivalent(u.pixel):
