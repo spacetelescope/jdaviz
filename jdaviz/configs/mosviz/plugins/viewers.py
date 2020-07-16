@@ -103,6 +103,18 @@ class MOSVizTableViewer(TableViewer):
 
                 self._selected_data['spectrum-2d-viewer'] = selected_data
 
+            if component.label == 'Images':
+                if self._selected_data.get('image-viewer') != selected_data:
+                    remove_data_from_viewer_message = RemoveDataFromViewerMessage(
+                        'image-viewer', selected_data, sender=self)
+                    self.session.hub.broadcast(remove_data_from_viewer_message)
+
+                add_data_to_viewer_message = AddDataToViewerMessage(
+                    'image-viewer', selected_data, sender=self)
+                self.session.hub.broadcast(add_data_to_viewer_message)
+
+                self._selected_data['image-viewer'] = selected_data
+
 
 
 class TableState(State):
