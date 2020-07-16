@@ -15,6 +15,8 @@ from glue_jupyter.state_traitlets_helpers import GlueState
 from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
 import astropy.units as u
 import numpy as np
+from glue.core.data import Data
+from jdaviz.core.events import AddDataToViewerMessage, RemoveDataFromViewerMessage
 
 from jdaviz.core.registries import viewer_registry
 
@@ -51,6 +53,56 @@ DEFAULT_COLUMNS = ['ID', 'Image', '1D Spectrum', '2D Spectrum', 'RA', 'DEC']
 class MOSVizTableViewer(TableViewer):
     def __init__(self, session, *args, **kwargs):
         super().__init__(session, *args, **kwargs)
+
+        self.figure_widget.observe(self._on_row_selected, names=['checked'])
+
+        self._selected_data = {}
+
+    def _on_row_selected(self, event):
+        if len(event['new']) == 0:
+            if len(self._selected_data.keys()) > 0:
+
+                for viewer_reference, data_label in self._selected_data.items():
+                    print("REMOVING", viewer_reference, data_label)
+                    remove_data_from_viewer_message = RemoveDataFromViewerMessage(
+                        viewer_reference, data_label, sender=self)
+                    self.session.hub.broadcast(remove_data_from_viewer_message)
+
+            return
+
+        # Grab the index of the latest selected row
+        selected_index = event['new'][-1]
+        mos_data = self.session.data_collection['MOS Table']
+
+        for component in mos_data.components:
+            comp_data = mos_data.get_component(component).data
+            print(comp_data[selected_index])
+            selected_data = comp_data[selected_index]
+
+            if component.label == '1D Spectra':
+                if self._selected_data.get('spectrum-viewer') != selected_data:
+                    remove_data_from_viewer_message = RemoveDataFromViewerMessage(
+                        'spectrum-viewer', selected_data, sender=self)
+                    self.session.hub.broadcast(remove_data_from_viewer_message)
+
+                add_data_to_viewer_message = AddDataToViewerMessage(
+                    'spectrum-viewer', selected_data, sender=self)
+                self.session.hub.broadcast(add_data_to_viewer_message)
+
+                self._selected_data['spectrum-viewer'] = selected_data
+
+            if component.label == '2D Spectra':
+                if self._selected_data.get('spectrum-2d-viewer') != selected_data:
+                    remove_data_from_viewer_message = RemoveDataFromViewerMessage(
+                        'spectrum-2d-viewer', selected_data, sender=self)
+                    self.session.hub.broadcast(remove_data_from_viewer_message)
+
+                add_data_to_viewer_message = AddDataToViewerMessage(
+                    'spectrum-2d-viewer', selected_data, sender=self)
+                self.session.hub.broadcast(add_data_to_viewer_message)
+
+                self._selected_data['spectrum-2d-viewer'] = selected_data
+
 
 
 class TableState(State):
