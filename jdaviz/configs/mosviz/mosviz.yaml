@@ -11,7 +11,6 @@ settings:
 toolbar:
   - g-data-tools
   - g-subset-tools
-  - g-unified-slider
 tray:
   - g-gaussian-smooth
   - g-collapse
