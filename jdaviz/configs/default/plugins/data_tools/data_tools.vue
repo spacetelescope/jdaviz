@@ -1,6 +1,6 @@
 <template>
   <v-toolbar-items>
-    <v-dialog v-model="dialog" width="500" persistent @keydown.stop>
+    <v-dialog v-model="dialog" width="500" persistent>
       <template v-slot:activator="{ on }">
         <v-btn tile depressed v-on="on" color="accent">
           Import
