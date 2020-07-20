@@ -32,7 +32,7 @@ class LineAnalysis(TemplateMixin):
     temp_function = Unicode().tag(sync=True)
     available_functions = List(list(FUNCTIONS.keys())).tag(sync=True)
     result_available = Bool(False).tag(sync=True)
-    result = Unicode().tag(sync=True)
+    results = List().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -120,21 +120,26 @@ class LineAnalysis(TemplateMixin):
 
         self._spectrum1d = selected_spec
 
-    def vue_function_selected(self, event):
-        # Add the model selected to the list of models
-        self.temp_function = event
+        self._run_functions()
 
-    def vue_run_function(self, *args, **kwargs):
+    def _run_functions(self, *args, **kwargs):
         """
         Run fitting on the initialized models, fixing any parameters marked
         as such by the user, then update the displauyed parameters with fit
         values
         """
-        if self.temp_function == "Centroid":
-            spec_region = self._spectrum1d.spectral_axis[np.where(self._spectrum1d.mask == False)]
-            spec_region = SpectralRegion(spec_region[0], spec_region[-1])
-            temp_result = FUNCTIONS[self.temp_function](self._spectrum1d, spec_region)
-        else:
-            temp_result = FUNCTIONS[self.temp_function](self._spectrum1d)
-        self.result = str(temp_result)
-        self.result_available = True
+        temp_results = []
+        for function in FUNCTIONS:
+            # Centroid function requires a region argument, create one to pass
+            if function == "Centroid":
+                spec_region = self._spectrum1d.spectral_axis[np.where(self._spectrum1d.mask == False)]
+                spec_region = SpectralRegion(spec_region[0], spec_region[-1])
+                temp_result = FUNCTIONS[function](self._spectrum1d, spec_region)
+            else:
+                temp_result = FUNCTIONS[function](self._spectrum1d)
+
+            temp_results.append({'function': function, 'result': str(temp_result)})
+            self.result_available = True
+
+            self.results = []
+            self.results = temp_results

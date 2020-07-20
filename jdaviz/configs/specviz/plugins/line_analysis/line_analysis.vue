@@ -20,26 +20,16 @@
 
       <v-card-text>
         <v-container>
-          <v-row
-          align="start"
-          justify="center"
-          >
-            <v-col cols=8>
-              <v-select
-                :items="available_functions"
-                @change="function_selected"
-                label="Function"
-                hint="Select a function to apply"
-                persistent-hint
-              ></v-select>
-            </v-col>
-            <v-col cols = 2>
-              <v-btn color="primary" text @click="run_function">Run</v-btn>
-            </v-col>
+          <v-row>
+            <v-col cols=4>Function</v-col>
+            <v-col cols=8>Result</v-col>
           </v-row>
-          <v-row v-if="result_available">
-            <v-col cols=4>Result: </v-col>
-            <v-col cols=8>{{ result }}</v-col>
+          <v-row 
+            v-if="result_available"
+            v-for="item in results"
+            :key="item.function">
+            <v-col cols=4>{{  item.function  }} </v-col>
+            <v-col cols=8>{{ item.result }}</v-col>
           </v-row>
         </v-container>
       </v-card-text>
