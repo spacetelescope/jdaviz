@@ -21,15 +21,15 @@
       <v-card-text>
         <v-container>
           <v-row>
-            <v-col cols=4>Function</v-col>
-            <v-col cols=8>Result</v-col>
+            <v-col cols=6><U>Function</U></v-col>
+            <v-col cols=6><U>Result</U></v-col>
           </v-row>
           <v-row 
             v-if="result_available"
             v-for="item in results"
             :key="item.function">
-            <v-col cols=4>{{  item.function  }} </v-col>
-            <v-col cols=8>{{ item.result }}</v-col>
+            <v-col cols=6>{{  item.function  }} </v-col>
+            <v-col cols=6>{{ item.result }}</v-col>
           </v-row>
         </v-container>
       </v-card-text>
