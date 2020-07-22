@@ -27,7 +27,6 @@ from glue_jupyter.state_traitlets_helpers import GlueState
 from ipyvuetify import VuetifyTemplate
 
 from .core.config import read_configuration, get_configuration
-from .core.data_formats import prompt_data
 from .core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
                           SnackbarMessage, RemoveDataMessage,
                           AddDataToViewerMessage, RemoveDataFromViewerMessage, DataPromptMessage)
@@ -265,7 +264,6 @@ class Application(VuetifyTemplate, HubListener):
                 self.data_collection.add_link(LinkSame(wc_old[0], wc_new[0]))
                 break
 
-    @prompt_data
     def load_data(self, file_obj, parser_reference=None, **kwargs):
         """
         Provided a path to a data file, open and parse the data into the
