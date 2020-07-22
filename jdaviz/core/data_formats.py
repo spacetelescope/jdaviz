@@ -1,7 +1,20 @@
+# !/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# Filename: data_formats.py
+# Project: core
+# Author: Brian Cherinka
+# Created: Tuesday, 23rd June 2020 4:41:31 pm
+# License: BSD 3-clause "New" or "Revised" License
+# Copyright (c) 2020 Brian Cherinka
+# Last Modified: Tuesday, 23rd June 2020 4:41:32 pm
+# Modified By: Brian Cherinka
+
+
+from __future__ import print_function, division, absolute_import
 
 import os
 import pathlib
-from functools import wraps
 
 import astropy.io
 from specutils.io.registers import identify_spectrum_format
@@ -17,29 +30,32 @@ default_mapping = {'JWST x1d': 'specviz', 'JWST s2d': 'specviz2d',
                    'JWST s3d': 'cubeviz', 'MaNGA cube': 'cubeviz',
                    'MaNGA rss': 'imviz'}
 
-formats_table = astropy.io.registry.get_formats(data_class=Spectrum1D,
-                                                readwrite='Read')
+# create a default file format to configuration mapping
+default_mapping = {'JWST x1d': 'specviz', 'JWST s2d': 'imviz', 'JWST s3d': 'cubeviz',
+                   'MaNGA cube': 'cubeviz'}
+
+formats_table = astropy.io.registry.get_formats(data_class=Spectrum1D, readwrite='Read')
 
 file_to_config_mapping = {i: default_mapping.get(
     i, 'specviz') for i in formats_table['Format']}
 
 # default n-dimension to configuration mapping
-ndim_to_config_mapping = {1: 'specviz', 2: 'specviz2d', 3: 'cubeviz'}
+ndim_to_config_mapping = {1: 'specviz', 2: 'imviz', 3: 'cubeviz'}
 
 
 def guess_dimensionality(filename):
-    """ Guess the dimensionality of a file.
+    ''' Guess the dimensionality of a file
 
     Parameters
     ----------
-    filename : str or `pathlib.Path` or file-like object
+    filename : str
         The filename of the loaded data
 
     Returns
     -------
     ndim : int
         The number of dimensions of the data
-    """
+    '''
 
     # check for valid string input
     if not isinstance(filename, (str, pathlib.Path)) or not os.path.isfile(filename):
@@ -51,7 +67,7 @@ def guess_dimensionality(filename):
 
 
 def get_valid_format(filename):
-    """ Identify a best match jdaviz configuration from a filename
+    ''' Identify a best match jdaviz configuration from a filename
 
     Parameters
     ----------
@@ -64,7 +80,7 @@ def get_valid_format(filename):
             A valid file format
         config : str
             The recommended application configuration
-    """
+    '''
 
     valid_file_format = identify_spectrum_format(filename)
     ndim = guess_dimensionality(filename)
@@ -78,13 +94,13 @@ def get_valid_format(filename):
 
 
 def identify_data(filename, current=None):
-    """ Identify the data format and application configuration from a filename.
+    ''' Identify the data format and application configuration from a filename
 
     Parameters
     ----------
-    filename : str or `pathlib.Path` or file-like object
+    filename : str
         The filename of the loaded data
-    current : str or ``None``
+    current : str
         The currently loading application configuration, if any
 
     Returns
@@ -95,7 +111,7 @@ def identify_data(filename, current=None):
             The recommended application configuration
         status : str
             A status message
-    """
+    '''
 
     valid_format, config = get_valid_format(filename)
 
@@ -116,36 +132,29 @@ def identify_data(filename, current=None):
     return valid_format, config
 
 
-def prompt_data(func):
-    ''' Decorator to identity valid data format and prompt dialog '''
+def prompt_data(app, filename):
+    ''' Prompt for a data dialog modal
 
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        inst = args[0]
-        filename = args[1]
-        if isinstance(inst, jdaviz.core.helpers.ConfigHelper):
-            app = inst.app
-            current_config = inst._default_configuration
-        else:
-            app = inst
-            current_config = app.get_configuration().get(
-                'settings').get('configuration', 'default')
+    Given a JDAviz application instance and a data filename, checks
+    for a valid file format and recommended configuration and triggers
+    the data prompt dialog window with a message.
 
-        valid_format, config, status = identify_data(filename, current=current_config)
+    Parameters
+    ----------
+    app : application instance
+        The current jdaviz application
+    filename : str
+        The filename of the loaded data
 
-        if 'success' in status.lower():
-            return func(*args, **kwargs)
+    '''
+    # get the current configuration
+    current_config = app.get_configuration().get('settings').get('configuration', 'default')
 
-        msg = DataPromptMessage(status=status, data_format=valid_format, config=config,
-                                current=current_config, sender=app)
-        app.hub.broadcast(msg)
-        #loaded = app.state.data_prompt.get('load', None)
+    # get a valid file format, config, and status
+    valid_format, config, status = identify_data(filename, current=current_config)
 
-        return func(*args, **kwargs)
-        # if loaded:
-        #     return func(*args, **kwargs)
-        # else:
-        #     print('cannot show data. exiting')
-        #     #raise ValueError('cannot show data')
-        #     return None
+    # broadcast a message
+    msg = DataPromptMessage(status=status, data_format=valid_format, config=config,
+                            current=current_config, sender=app)
+    app.hub.broadcast(msg)
 
