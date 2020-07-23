@@ -26,18 +26,18 @@ def load_preset_linelist(name):
     fname = pkg_resources.resource_filename("jdaviz",
                                             "data/linelists/{}.csv".format(fname_base))
     units = metadata[name]["units"]
-    linename = []
-    rest = []
-    with open(fname) as f:
-        freader = csv.DictReader(f)
-        for row in freader:
-            linename.append(row["Line Name"])
-            rest.append(float(row["Rest Value"]))
-    rest = rest*u.Unit(units)
-
-    linetable = QTable()
-    linetable["linename"] = linename
-    linetable["rest"] = rest
-    linetable["listname"] = name
+    linetable = QTable.read(fname)
+    
+    # Add units
+    linetable['Rest Value'].unit = units
+    
+    # Add column with list name refernece
+    linetable['listname'] = name
+    
+    # Remove extraneous columns
+    linetable.remove_columns(('Error', 'Reference'))
+    
+    # Rename remaining columns
+    linetable.rename_columns(('Line Name', 'Rest Value'), ('linename', 'rest'))
 
     return linetable
