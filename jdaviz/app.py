@@ -852,7 +852,7 @@ class Application(VuetifyTemplate, HubListener):
         """
         Callback for when data is added to the internal ``DataCollection``.
         Adds a new data item dictionary to the ``data_items`` state list and
-        links the new data to previous data, if possible.
+        links the new data to any compatible previously loaded data.
 
         Parameters
         ----------
