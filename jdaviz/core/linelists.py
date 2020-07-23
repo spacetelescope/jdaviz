@@ -27,16 +27,13 @@ def load_preset_linelist(name):
                                             "data/linelists/{}.csv".format(fname_base))
     units = metadata[name]["units"]
     linetable = QTable.read(fname)
-    
+
     # Add units
     linetable['Rest Value'].unit = units
-    
+
     # Add column with list name refernece
     linetable['listname'] = name
-    
-    # Remove extraneous columns
-    linetable.remove_columns(('Error', 'Reference'))
-    
+
     # Rename remaining columns
     linetable.rename_columns(('Line Name', 'Rest Value'), ('linename', 'rest'))
 
