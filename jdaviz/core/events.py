@@ -3,8 +3,8 @@ from glue.core.message import Message
 __all__ = ['NewViewerMessage', 'AddViewerMessage', 'LoadDataMessage',
            'DataSelectedMessage', 'ViewerSelectedMessage',
            'RemoveStackMessage', 'SplitStackMessage', 'RemoveItemMessage',
-           'AddDataMessage', 'SnackbarMessage', 'RemoveDataMessage']
-
+           'AddDataMessage', 'SnackbarMessage', 'RemoveDataMessage',
+           'AddLineListMessage']
 
 class NewViewerMessage(Message):
     def __init__(self, cls, data, x_attr=None, *args, **kwargs):
@@ -170,3 +170,13 @@ class SnackbarMessage(Message):
     @property
     def timeout(self):
         return self._timeout
+
+class AddLineListMessage(Message):
+    def __init__(self, table, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self._table = table
+
+    @property
+    def table(self):
+        return self._table

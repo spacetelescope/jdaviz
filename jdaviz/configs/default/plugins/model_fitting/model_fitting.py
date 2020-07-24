@@ -167,7 +167,7 @@ class ModelFitting(TemplateMixin):
             label of the data collection object selected by the user.
         """
         selected_spec = self.app.get_data_from_viewer("spectrum-viewer",
-                                                      data_label=event)
+                                                      data_label=event)[event]
 
         if self._units == {}:
             self._units["x"] = str(

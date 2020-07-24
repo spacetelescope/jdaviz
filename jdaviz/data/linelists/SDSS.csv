@@ -1,0 +1,49 @@
+Line Name,Rest Value,Type,Weight-Galaxy,Weight-Quasar
+O VI,1033.82,Emission,0.,1.
+Lyα,1215.24,Emission,0.,9.
+N V,1240.81,Emission,0.,3.
+O I,1305.53,Emission,0.,0.
+C II,1335.31,Emission,0.,0.
+Si IV,1397.61,Emission,0.,0.
+Si IV + O I,1399.8,Emission,0.,1.
+C IV,1549.48,Emission,0.,8.
+He II,1640.4,Emission,0.,0.
+O III,1665.85,Emission,0.,0.
+Al III,1857.4,Emission,0.,0.
+C III,1908.73,Emission,0.,7.
+C II,2326.0,Emission,0.,0.
+Ne IV,2439.5,Emission,0.,0.
+Mg II,2799.11,Emission,1.,8.
+Ne V,3346.79,Emission,0.,0.
+Ne VI,3426.85,Emission,0.,0.
+O II,3727.09,Emission,5.,1.
+O II,3729.87,Emission,0.,0.
+He I,3889.0,Emission,0.,0.
+S II,4072.3,Emission,0.,0.
+Hδ,4102.89,Emission,0.,2.
+Hγ,4341.68,Emission,1.,3.
+O III,4364.43,Emission,0.,0.
+Hβ,4862.68,Emission,2.,4.
+O III,4932.60,Emission,0.,0.
+O III,4960.29,Emission,2.,2.
+O III,5008.24,Emission,3.,2.
+O I,6302.04,Emission,0.,0.
+O I,6365.53,Emission,0.,0.
+N I,6529.03,Emission,0.,0.
+N II,6549.86,Emission,3.,0.
+Hα,6564.61,Emission,8.,8.
+N II,6585.27,Emission,3.,0.
+S II,6718.29,Emission,3.,0.
+S II,6732.67,Emission,3.,0.
+K,3934.77,Absorptio,-1.,0.
+H,3969.58,Absorptio,-1.,0.
+G,4305.61,Absorptio,-1.,0.
+Mg,5176.7,Absorptio,-1.,0.
+Na,5895.6,Absorptio,-1.,0.
+CaII,8500.36,Absorptio,-1.,0.
+CaII,8544.44,Absorptio,-1.,0.
+CaII,8664.52,Absorptio,-1.,0.
+Sky,5578.5,Sky,0.,0.
+Sky,5894.6,Sky,0.,0.
+Sky,6301.7,Sky,0.,0.
+Sky,7246.0,Sky,0.,0.
