@@ -191,4 +191,3 @@ class SpecvizProfileView(BqplotProfileView):
 
     def available_linelists(self):
         return get_available_linelists()
-
