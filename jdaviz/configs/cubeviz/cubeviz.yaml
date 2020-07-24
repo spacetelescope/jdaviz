@@ -20,6 +20,7 @@ tray:
   - g-collapse
   - g-model-fitting
   - g-line-list
+  - g-contour-overlay
 viewer_area:
   - container: col
     children:
