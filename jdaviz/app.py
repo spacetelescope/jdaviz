@@ -558,7 +558,6 @@ class Application(VuetifyTemplate, HubListener):
 
         if data_id is not None:
             data_ids.append(data_id)
-            print("Updating selected data from adding")
             self._update_selected_data_items(viewer_item['id'], data_ids)
         else:
             raise ValueError(
@@ -615,7 +614,6 @@ class Application(VuetifyTemplate, HubListener):
         if data_id in selected_items:
             selected_items.remove(data_id)
 
-            print("Updating selected data from removal.")
             self._update_selected_data_items(
                 viewer_item['id'], selected_items)
 
@@ -841,12 +839,10 @@ class Application(VuetifyTemplate, HubListener):
         for data in viewer_data:
             if data.label not in active_data_labels:
                 viewer.remove_data(data)
-                print("Removing ", data.label)
                 remove_data_message = RemoveDataMessage(data, viewer,
                                                         viewer_id=viewer_id,
                                                         sender=self)
                 self.hub.broadcast(remove_data_message)
-        print("DONE")
 
         # Sets the plot axes labels to be the units of the most recently
         # active data.
