@@ -153,12 +153,7 @@ class UnitConversion(TemplateMixin):
             # a new version with the most recent conversion.
             if selected_data_label in self.data_collection:
                 self.app.remove_data_from_viewer('spectrum-viewer', selected_data_label)
-                # Some hacky code to remove the label from the data dropdown
-                temp_items = []
-                for data_item in self.app.state.data_items:
-                    if data_item['name'] != selected_data_label:
-                        temp_items.append(data_item)
-                self.app.state.data_items = temp_items
+
                 # Remove the actual Glue data object from the data_collection
                 self.data_collection.remove(self.data_collection[selected_data_label])
             self.data_collection[selected_data_label] = converted_spec
