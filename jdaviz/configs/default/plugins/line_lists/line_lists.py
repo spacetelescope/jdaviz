@@ -95,7 +95,13 @@ class LineListTool(TemplateMixin):
         if msg is not None and msg.viewer_id != self._viewer_id:
             return
 
-        self._viewer_spectrum = self.app.get_viewer('spectrum-viewer').data()[0]
+        viewer_data = self.app.get_viewer('spectrum-viewer').data()
+
+        # If no data is currently plotted, don't attempt to update
+        if len(viewer_data) == 0:
+            return
+
+        self._viewer_spectrum = viewer_data[0]
 
         self._units["x"] = str(self._viewer_spectrum.spectral_axis.unit)
         self._units["y"] = str(self._viewer_spectrum.flux.unit)
