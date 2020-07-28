@@ -1,7 +1,7 @@
 import numpy as np
 
 from glue.core import Data
-from glue.core.application_base import Application
+from jdaviz import Application
 
 from ..gaussian_smooth import GaussianSmooth
 
@@ -22,5 +22,5 @@ def test_linking_after_gaussian_smooth(spectral_cube_wcs):
     assert dc[1].label == 'Smoothed test'
     assert len(dc.external_links) == 1
 
-    assert dc.external_links[0].cids1[0] is dc[0].pixel_component_ids[0]
-    assert dc.external_links[0].cids2[0] is dc[1].pixel_component_ids[0]
+    assert dc.external_links[0].cids1[0] is dc[0].world_component_ids[0]
+    assert dc.external_links[0].cids2[0] is dc[1].world_component_ids[0]
