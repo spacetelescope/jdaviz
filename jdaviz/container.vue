@@ -8,6 +8,7 @@
       @resize="$emit('resize')"
       @destroy="$emit('destroy', $event)"
       @data-item-selected="$emit('data-item-selected', $event)"
+      @save-figure="$emit('save-figure', $event)"
     ></g-viewer-tab>
     <gl-component
       v-for="(viewer, index) in stack.viewers"
