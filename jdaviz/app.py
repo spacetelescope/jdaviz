@@ -158,7 +158,7 @@ class Application(VuetifyTemplate, HubListener):
         self.hub.subscribe(self, DataCollectionAddMessage,
                            handler=self._on_data_added)
 
-        # Subscribe to the event fired when data is delected from the 
+        # Subscribe to the event fired when data is deleted from the
         #  application-level data collection object
         self.hub.subscribe(self, DataCollectionDeleteMessage,
                            handler=self._on_data_deleted)
