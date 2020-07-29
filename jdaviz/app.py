@@ -266,7 +266,8 @@ class Application(VuetifyTemplate, HubListener):
         old_data_len = len(self.data_collection)
         parser = data_parser_registry.members.get(
             self.state.settings['data'].get('parser') or parser_reference)
-
+        print("Attemping to open ", parser_reference)
+        print(data_parser_registry.members)
         if parser is not None:
             # If the parser returns something other than known, assume it's
             #  a message we want to make the user aware of.
