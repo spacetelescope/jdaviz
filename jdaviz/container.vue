@@ -34,6 +34,21 @@
             </v-btn>
             <!-- <v-divider vertical></v-divider> -->
             <jupyter-widget :widget="viewer.tools"></jupyter-widget>
+            <v-menu offset-y :close-on-content-click="true" style="z-index: 10">
+             <template v-slot:activator="{ on }">
+              <v-btn icon color="primary" v-on="on">
+               <v-icon>mdi-content-save</v-icon>
+              </v-btn>
+             </v-template>
+             <v-list>
+              <v-list-item>
+               <v-btn color="primary">Save as PNG</v-btn>
+              </v-list-item>
+              <v-list-item>
+               <v-btn color="primary">Save as SVG</v-btn>
+              </v-list-item>
+             </v-list>
+            </v-menu>
             <v-menu offset-y :close-on-content-click="false" style="z-index: 10">
               <template v-slot:activator="{ on }">
                 <v-btn icon color="primary" v-on="on">
