@@ -19,6 +19,7 @@ from specutils import Spectrum1D
 from glue.config import data_translator
 from glue.core import BaseData, HubListener, Data, DataCollection
 from glue.core.autolinking import find_possible_links
+from glue.core.link_helpers import LinkSame
 from glue.core.message import DataCollectionAddMessage
 from glue.core.state_objects import State
 from glue.core.subset import Subset
@@ -218,6 +219,17 @@ class Application(VuetifyTemplate, HubListener):
         self.state.snackbar['timeout'] = msg.timeout
         self.state.snackbar['show'] = True
 
+    def _link_new_data(self):
+        """
+        When additional data is loaded, check to see if the spectral axis of
+        any components are compatible with already loaded data. If so, link
+        them so that they can be displayed on the same profile1D plot.
+        """
+        new_len = len(self.data_collection)
+        for i in range(0, new_len-1):
+                self.data_collection.add_link(LinkSame(self.data_collection[i].world_component_ids[0],
+                    self.data_collection[new_len-1].world_component_ids[0]))
+
     def load_data(self, file_obj, **kwargs):
         """
         Provided a path to a data file, open and parse the data into the
@@ -230,6 +242,7 @@ class Application(VuetifyTemplate, HubListener):
         path : str
             File path for the data file to be loaded.
         """
+        old_data_len = len(self.data_collection)
         parser = data_parser_registry.members.get(
             self.state.settings['data']['parser'])
 
@@ -504,6 +517,8 @@ class Application(VuetifyTemplate, HubListener):
             The name associated with this data. If none is given, a generic
             name is generated.
         """
+        old_data_len = len(self.data_collection)
+
         # Include the data in the data collection
         data_label = data_label or "New Data"
         self.data_collection[data_label] = data
@@ -836,7 +851,8 @@ class Application(VuetifyTemplate, HubListener):
     def _on_data_added(self, msg):
         """
         Callback for when data is added to the internal ``DataCollection``.
-        Adds a new data item dictionary to the ``data_items`` state list.
+        Adds a new data item dictionary to the ``data_items`` state list and
+        links the new data to any compatible previously loaded data.
 
         Parameters
         ----------
@@ -844,6 +860,7 @@ class Application(VuetifyTemplate, HubListener):
             The Glue data collection add message containing information about
             the new data.
         """
+        self._link_new_data()
         data_item = self._create_data_item(msg.data.label)
         self.state.data_items.append(data_item)
 

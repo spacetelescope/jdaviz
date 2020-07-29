@@ -3,7 +3,6 @@ import pickle
 
 import astropy.modeling.models as models
 import astropy.units as u
-from glue.core.link_helpers import LinkSame
 from glue.core.message import (SubsetCreateMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
@@ -59,7 +58,6 @@ class ModelFitting(TemplateMixin):
         self.component_models = []
         self._initialized_models = {}
         self._display_order = False
-        self._label_to_link = ""
         self.model_save_path = os.getcwd()
         self.model_label = "Model"
 
@@ -174,11 +172,6 @@ class ModelFitting(TemplateMixin):
                 selected_spec.spectral_axis.unit)
             self._units["y"] = str(
                 selected_spec.flux.unit)
-
-        for label in self.dc_items:
-            if label in self.data_collection:
-                self._label_to_link = label
-                break
 
         self._spectrum1d = selected_spec
 
@@ -301,9 +294,6 @@ class ModelFitting(TemplateMixin):
             self.data_collection.remove(self.data_collection[label])
         self.data_collection[label] = spectrum
         self.save_enabled = True
-        self.data_collection.add_link(
-            LinkSame(self.data_collection[self._label_to_link].pixel_component_ids[0],
-                     self.data_collection[label].pixel_component_ids[0]))
 
         #sleep(1)
         #self.app.add_data_to_viewer('spectrum-viewer', label)
