@@ -30,6 +30,7 @@
                   @resize="relayout"
                   @destroy="destroy_viewer_item($event)"
                   @data-item-selected="data_item_selected($event)"
+                  @save-figure="save_figure($event)"
                 ></g-viewer-tab>
               </gl-row>
             </golden-layout>

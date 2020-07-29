@@ -39,13 +39,23 @@
               <v-btn icon color="primary" v-on="on">
                <v-icon>mdi-content-save</v-icon>
               </v-btn>
-             </v-template>
+             </template>
              <v-list>
               <v-list-item>
-               <v-btn color="primary">Save as PNG</v-btn>
+               <v-btn 
+                color="primary" 
+                @click="$emit('save-figure', {'id': viewer.id, 'filetype': 'png'})"
+               >
+                Save as PNG
+               </v-btn>
               </v-list-item>
               <v-list-item>
-               <v-btn color="primary">Save as SVG</v-btn>
+               <v-btn 
+                color="primary" 
+                @click="$emit('save-figure', {'id': viewer.id, 'filetype': 'svg'})"
+               >
+                Save as SVG
+               </v-btn>
               </v-list-item>
              </v-list>
             </v-menu>
