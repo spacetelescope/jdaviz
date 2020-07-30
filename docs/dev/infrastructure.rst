@@ -57,7 +57,7 @@ Known component widgets for the target applications include:
 Libraries
 =========
 
-The above layers are focused primaril on visualization.  All actual *operations* and analysis tasks to be applied to visualized data sets are to be implemented in the various Python libraries aimed at these astronomical datasets. It is important to note that these libraries are *independent* efforts from jdaviz, and can therefore be used in whole, part, or not at all with the jdaviz tools. This allows a full range of workflows, while also maintaining transparency to scientific users exactly how an operation in the jdaviz tools actually works.  I.e., they can at any time simply use the library directly instead of accessing it through jdaviz.  Known libraries include:
+The above layers are focused primarily on visualization.  All actual *operations* and analysis tasks to be applied to visualized data sets are to be implemented in the various Python libraries aimed at these astronomical datasets. It is important to note that these libraries are *independent* efforts from jdaviz, and can therefore be used in whole, part, or not at all with the jdaviz tools. This allows a full range of workflows, while also maintaining transparency to scientific users exactly how an operation in the jdaviz tools actually works.  I.e., they can at any time simply use the library directly instead of accessing it through jdaviz.  Known libraries include:
 
 * astropy_
 * `specutils <https://specutils.readthedocs.io>`_
@@ -65,6 +65,17 @@ The above layers are focused primaril on visualization.  All actual *operations*
 * `photutils <https://photutils.readthedocs.io>`_
 
 Note that those libraries themselve depend on the wider scientific Python ecosystem, so this is by no means a comprehensive list of the libraries jdaviz depends on.  But these are the primary "top-level" libraries, meaning it is these that most users are likely to focus on to parallel or extend their jdaviz workflows.
+
+
+Selections
+==========
+
+This section explains the working theory behind the selection tool and was inspired by the the introduction of two methods to the SpecViz helper:
+`specviz.get_spectra()` and `specviz.get_spectral_regions()`
+
+Data loaded in are imported into jdaviz and immediately converted into a SpecUtils SpectralRegion. These are meant to be the spectral analog to the Astropy Region (for spatial WCS). These regions are returned by the `specviz.get_spectra()` method.
+
+The selection tool allows the user to specify a specific range on the graph. This is defined by the underlying Glue Library upon which jdaviz relies on as a "Glue Subset." Thus throughout this section, we will refer to these user defined ranges as "subsets." Effectively, the selection tool defines a mask that can be thought of as "definition" of which data is and is not included in the subset. Upon extraction via `specviz.get_spectral_regions()`, the method will return a new SpecUtils SpectralRegion object that applies that mask atop of the proper region (data) displayed, and realizes the subset the user defined in jdaviz. 
 
 Related Documents
 =================
