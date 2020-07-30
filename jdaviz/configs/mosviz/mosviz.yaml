@@ -29,7 +29,7 @@ viewer_area:
         - container: col
           viewers:
             - name: 2D Spectrum viewer
-              plot: mosviz-image-viewer
+              plot: mosviz-profile-2d-viewer
               reference: spectrum-2d-viewer
             - name: Spectrum
               plot: mosviz-profile-viewer
