@@ -11,7 +11,8 @@ from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import AddLineListMessage
 
 class SpecViz(ConfigHelper):
-    """SpecViz Helper class
+    """
+    SpecViz Helper class
 
     """
 
@@ -204,9 +205,9 @@ class SpecViz(ConfigHelper):
 
     def load_line_list(self, line_table, replace=False):
         """
-        Convenience function to get to the viewer function. Also broadcasts
-        a message so the line list plugin UI can display lines laoded via the
-        notebook.
+        Convenience function to get to the viewer function. Also
+        broadcasts a message so the line list plugin UI can display lines
+        loaded via the notebook.
         """
         lt = self.app.get_viewer('spectrum-viewer').load_line_list(line_table,
                                                                    replace=replace,
