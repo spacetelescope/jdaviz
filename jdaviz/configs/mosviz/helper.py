@@ -1,4 +1,6 @@
 from jdaviz.core.helpers import ConfigHelper
+from astropy.table import QTable
+import astropy.units as u
 
 
 class MosViz(ConfigHelper):
@@ -59,3 +61,39 @@ class MosViz(ConfigHelper):
         """
         self.app.load_data(data_obj, parser_reference="mosviz-image-parser",
                            data_labels=data_labels)
+
+    def add_column(self, data, column_name=None):
+        """
+        Add a new data column to the table.
+
+        Parameters
+        ----------
+        data : array-like
+            Array-like set of data values, e.g. redshifts, RA, DEC, etc.
+        column_name : str
+            Header string to be shown in the table.
+        """
+        table_data = self.app.data_collection['MOS Table']
+        table_data.add_component(data, column_name)
+
+    def to_table(self):
+        """
+        Creates an astropy `~astropy.table.QTable` object from the MOS table
+        viewer.
+
+        Returns
+        -------
+        `~astropy.table.QTable`
+            An astropy table constructed from the loaded mos data.
+        """
+        table_data = self.app.data_collection['MOS Table']
+
+        data_dict = {}
+
+        for cid in table_data.components:
+            comp = table_data.get_component(cid)
+            unit = u.Unit(comp.units)
+
+            data_dict[cid.label] = comp.data * unit
+
+        return QTable(data_dict)
