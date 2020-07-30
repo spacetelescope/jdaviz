@@ -54,7 +54,7 @@ class MOSVizTableViewer(TableViewer):
     def __init__(self, session, *args, **kwargs):
         super().__init__(session, *args, **kwargs)
 
-        self.figure_widget.observe(self._on_row_selected, names=['checked'])
+        self.figure_widget.observe(self._on_row_selected, names=['highlighted'])
 
         self._selected_data = {}
 
@@ -66,11 +66,8 @@ class MOSVizTableViewer(TableViewer):
                     viewer_reference, data_label, sender=self)
                 self.session.hub.broadcast(remove_data_from_viewer_message)
 
-        if len(event['new']) == 0:
-            return
-
         # Grab the index of the latest selected row
-        selected_index = event['new'][-1]
+        selected_index = event['new']
         mos_data = self.session.data_collection['MOS Table']
 
         for component in mos_data.components:
