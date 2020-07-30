@@ -27,6 +27,7 @@ produced by JWST MIRI), along with 1D spectra extracted from the cube.
   specviz/index.rst
   dev/infrastructure.rst
   dev/ui_description.rst
+  dev/release.rst
 
 
 Reference/API
