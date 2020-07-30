@@ -43,6 +43,7 @@ env:
         - TOXENV='test'
         - TOXARGS='-v'
         - TOXPOSARGS=''
+        - MPLBACKEND='Agg'
 
         # The following is needed to avoid issues if e.g. Matplotlib tries
         # to open a GUI window.
