@@ -43,7 +43,6 @@ env:
         - TOXENV='test'
         - TOXARGS='-v'
         - TOXPOSARGS=''
-        - MPLBACKEND='Agg'
 
         # The following is needed to avoid issues if e.g. Matplotlib tries
         # to open a GUI window.
@@ -71,7 +70,7 @@ matrix:
           python: 3.8
           name: Python 3.8 with required dependencies and measure coverage
           stage: Initial tests
-          env: TOXENV=py38-test-cov
+          env: TOXENV=py38-test
 
         # Check for sphinx doc build warnings
         - os: linux
