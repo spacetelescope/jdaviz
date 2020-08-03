@@ -12,7 +12,7 @@ def load_template(file_name, path=None, traitlet=True):
     ----------
     file_name : str
         The name of the template file.
-    root_path : str
+    path : str
         The path to where the template file is stored. If none is given,
         assumes the directory where the python file calling this function
         resides.

@@ -20,7 +20,8 @@ from glue.config import data_translator
 from glue.core import BaseData, HubListener, Data, DataCollection
 from glue.core.autolinking import find_possible_links
 from glue.core.link_helpers import LinkSame
-from glue.core.message import DataCollectionAddMessage
+from glue.core.message import (DataCollectionAddMessage,
+                               DataCollectionDeleteMessage)
 from glue.core.state_objects import State
 from glue.core.subset import Subset
 from glue_jupyter.app import JupyterApplication
@@ -156,6 +157,11 @@ class Application(VuetifyTemplate, HubListener):
         #  level data collection object
         self.hub.subscribe(self, DataCollectionAddMessage,
                            handler=self._on_data_added)
+
+        # Subscribe to the event fired when data is deleted from the
+        #  application-level data collection object
+        self.hub.subscribe(self, DataCollectionDeleteMessage,
+                           handler=self._on_data_deleted)
 
         # Subscribe to snackbar messages and tie them to the display of the
         #  message box
@@ -833,7 +839,6 @@ class Application(VuetifyTemplate, HubListener):
         for data in viewer_data:
             if data.label not in active_data_labels:
                 viewer.remove_data(data)
-
                 remove_data_message = RemoveDataMessage(data, viewer,
                                                         viewer_id=viewer_id,
                                                         sender=self)
@@ -863,6 +868,21 @@ class Application(VuetifyTemplate, HubListener):
         self._link_new_data()
         data_item = self._create_data_item(msg.data.label)
         self.state.data_items.append(data_item)
+
+    def _on_data_deleted(self, msg):
+        """
+        Callback for when data is removed from the internal ``DataCollection``.
+        Removes the data item dictionary in the ``data_items`` state list.
+
+        Parameters
+        ----------
+        msg : `~glue.core.DataCollectionAddMessage`
+            The Glue data collection add message containing information about
+            the new data.
+        """
+        for data_item in self.state.data_items:
+            if data_item['name'] == msg.data.label:
+                self.state.data_items.remove(data_item)
 
     @staticmethod
     def _create_data_item(label):
