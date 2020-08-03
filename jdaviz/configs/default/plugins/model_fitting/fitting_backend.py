@@ -164,6 +164,8 @@ def _fit_3D(initial_model, spectrum):
     for r in results:
         r.wait()
 
+    pool.close()
+
     # Collect units from all parameters
     param_units = []
     for name in initial_model.param_names:
