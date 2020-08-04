@@ -101,7 +101,7 @@ class ContourOverlay(TemplateMixin):
         # self.list_of_displays = [layer_state.layer.label
         #                  for layer_state in viewer.state.layers]
 
-        self.list_of_displays = [x.label for x in self.data_collection.data]
+        self.list_of_displays = [x.label for x in self.data_collection]
 
         # # self.list_of_displays = []
         # for viewer in self.list_of_viewers:
@@ -133,9 +133,7 @@ class ContourOverlay(TemplateMixin):
 
         #data = self.app.data_collection[self.figure_overlay_of.state.reference_data.label].get_object()
         data = self.app.data_collection[self.contour_display].get_object()
-        print(data)
         data_at_slice = data.unmasked_data[self.slice_index, :, :].value
-        print(data_at_slice)
 
         max_level = np.max(data_at_slice)
         if self.levels is None:
@@ -143,32 +141,20 @@ class ContourOverlay(TemplateMixin):
         else:
             contour_levels = [float(x) for x in self.levels.split(",")]
 
-        scale_x = LinearScale(min=0, max=1)
-        scale_y = LinearScale(min=0, max=1, orientation="vertical")
-        # scales = {'x': scale_x, 'y': scale_y}
-        # axis_x = Axis(scale=scale_x, label='x')
-        # axis_y = Axis(scale=scale_y, label='y', orientation='vertical')
-        scales_image = {'x': scale_x, 'y': scale_y,
-                        'image': ColorScale(min=np.min(data_at_slice).item(), max=np.max(data_at_slice).item())}
-
         scales = {'x': self.figure_overlay_on.figure.interaction.x_scale, 'y': self.figure_overlay_on.figure.interaction.y_scale}
 
-        # figure = Figure(scales=scales, axes=[axis_x, axis_y])
-        image = ImageGL(image=data_at_slice, scales=scales_image)
 
         contour_levels_str = ["{0:.4g}".format(level) for level in contour_levels]
         # contour_levels = [float(level) for level in contour_levels_str]
         self.levels = (",".join(contour_levels_str))
 
         color_list = ["red", "orange", "yellow", "green", "blue"]
-        print(data_at_slice.shape)
-        contour_list = []
-        # for contour_level in contour_levels:
+
         for index in range(0,len(contour_levels)):
             contours = skimage.measure.find_contours(data_at_slice, contour_levels[index])
-            contour_shape = [k / data_at_slice.shape for k in contours]
+            # contour_shape = [k / data_at_slice.shape for k in contours]
 
-            contour = Contour(contour_lines=[contour_shape], color=color_list[index%(len(color_list)-1)], level=float(contour_levels_str[index]), scales=scales_image, label_steps=200)
+            contour = Contour(contour_lines=[contours], color=color_list[index%(len(color_list)-1)], level=float(contour_levels_str[index]), scales=scales, label_steps=200)
 
             self.figure_overlay_on.figure.marks = self.figure_overlay_on.figure.marks + [contour]
         print(contour_levels)
