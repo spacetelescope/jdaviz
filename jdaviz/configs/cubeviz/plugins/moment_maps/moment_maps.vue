@@ -12,6 +12,17 @@
           ></v-select>
         </v-col>
       </v-row>
+        <v-col>
+          <v-text-field
+            ref="moment"
+            label="Moment"
+            v-model="moment"
+            type="number"
+            hint="The desired moment."
+            persistent-hint
+            :rules="[() => !!moment || 'This field is required', () => moment >= 0 || 'Moment must be zero or a positive integer']"
+          ></v-text-field>
+        </v-col>
       <v-row>
       </v-row>
     </v-container>

@@ -1,7 +1,7 @@
 from astropy import units as u
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
-from traitlets import List, Unicode, Int, Any, observe
+from traitlets import List, Unicode, Int, observe
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
@@ -18,7 +18,7 @@ u.add_enabled_units([spaxel])
 @tray_registry('cubeviz-moment-maps', label="Moment Maps")
 class GaussianSmooth(TemplateMixin):
     template = load_template("moment_maps.vue", __file__).tag(sync=True)
-    stddev = Any().tag(sync=True)
+    moment = Int().tag(sync=True)
     dc_items = List([]).tag(sync=True)
     selected_data = Unicode().tag(sync=True)
 
@@ -31,6 +31,7 @@ class GaussianSmooth(TemplateMixin):
                            handler=self._on_data_updated)
 
         self._selected_data = None
+        self.moment = 0
 
     def _on_data_updated(self, msg):
         self.dc_items = [x.label for x in self.data_collection]
