@@ -21,6 +21,7 @@ class GaussianSmooth(TemplateMixin):
     moment = Int().tag(sync=True)
     dc_items = List([]).tag(sync=True)
     selected_data = Unicode().tag(sync=True)
+    selected_spectral_subset = Unicode().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -32,6 +33,8 @@ class GaussianSmooth(TemplateMixin):
 
         self._selected_data = None
         self.moment = 0
+        self.spectral_min = None
+        self.spectral_max = None
 
     def _on_data_updated(self, msg):
         self.dc_items = [x.label for x in self.data_collection]
