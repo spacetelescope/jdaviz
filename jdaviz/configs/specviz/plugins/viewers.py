@@ -309,7 +309,7 @@ class SpecvizProfileView(BqplotProfileView):
 
             # For plotting markers only for the masked data
             # points, erase un-masked data from trace.
-            y = np.where(mask != 0, np.nan, y)
+            y = np.where(mask == 0, np.nan, y)
 
             # there is no 'X' marker option in bqplot
             self.mask_line_mark = Scatter(scales=self.scales,
