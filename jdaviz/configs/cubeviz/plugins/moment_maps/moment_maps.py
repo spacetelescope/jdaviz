@@ -49,7 +49,7 @@ class MomentMap(TemplateMixin):
         self.dc_items = [x.label for x in self.data_collection]
         # Default to selecting the first loaded data
         if self._selected_data is None:
-            self._selected_data = self.data_collection[0]
+            self.selected_data = self.dc_items[0]
             # Also set the spectral min and max to default to the full range
             cube = self._selected_data.get_object(cls=SpectralCube)
             self.spectral_min = cube.spectral_axis[0].value
@@ -61,11 +61,10 @@ class MomentMap(TemplateMixin):
         self._selected_data = next((x for x in self.data_collection
                                     if x.label == event['new']))
 
-    def vue_calculate_moment(self):
+    def vue_calculate_moment(self, event):
         # Retrieve the data cube and slice out desired region, if specified
         cube = self._selected_data.get_object(cls=SpectralCube)
-        spec_min = self.spectral_min or cube.spectral_axis[0]
-        spec_max = self.spectral_max or cube.spectral_axis[-1]
+        spec_min = self.spectral_min * u.Unit(self.spectral_unit)
+        spec_max = self.spectral_max * u.Unit(self.spectral_unit)
         slab = cube.spectral_slab(spec_min, spec_max)
         self.moment = slab.moment(self.n_moment)
-
