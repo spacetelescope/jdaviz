@@ -14,6 +14,17 @@
       </v-row>
       <v-row>
         <v-col>
+          <v-select
+            :items="spectral_subset_items"
+            v-model="selected_spectral_subset"
+            label="Spectral Region"
+            hint="Select a spectral region defined in the spectrum viewer."
+            persistent-hint
+          ></v-select>
+        </v-col>
+      </v-row>
+      <v-row>
+        <v-col>
           <v-text-field
             label="Lower spectral bound"
             type="number"
@@ -23,6 +34,11 @@
           >
           </v-text-field>
         </v-col>
+        <v-col cols = 2>
+          <span>{{ spectral_unit }}</span>
+        </v-col>
+      </v-row>
+      <v-row>
         <v-col>
           <v-text-field
             label="Upper spectral bound"
@@ -33,6 +49,9 @@
           >
           </v-text-field>
         </v-col>
+        <v-col cols = 2>
+          <span>{{ spectral_unit }}</span>
+        </v-col>
       </v-row>
     </v-container>
     <!-- <v-divider></v-divider> -->
@@ -42,7 +61,7 @@
         <v-text-field
           ref="n_moment"
           label="Moment"
-          v-model="n_moment"
+          v-model.number="n_moment"
           type="number"
           hint="The desired moment."
           persistent-hint

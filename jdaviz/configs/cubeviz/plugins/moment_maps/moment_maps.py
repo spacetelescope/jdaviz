@@ -21,11 +21,11 @@ class MomentMap(TemplateMixin):
     template = load_template("moment_maps.vue", __file__).tag(sync=True)
     n_moment = Int().tag(sync=True)
     dc_items = List([]).tag(sync=True)
-    subsets = List([]).tag(sync=True)
     selected_data = Unicode().tag(sync=True)
     spectral_min = Float().tag(sync=True)
     spectral_max = Float().tag(sync=True)
     spectral_unit = Unicode().tag(sync=True)
+    spectral_subset_items = List([]).tag(sync=True)
     selected_spectral_subset = Unicode().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
@@ -41,6 +41,7 @@ class MomentMap(TemplateMixin):
         self.moment = None
         self.spectral_min = 0.0
         self.spectral_max = 0.0
+        self.spectral_subsets = {}
 
     def _on_subsets_updated(self, msg):
         pass
@@ -55,6 +56,10 @@ class MomentMap(TemplateMixin):
             self.spectral_min = cube.spectral_axis[0].value
             self.spectral_max = cube.spectral_axis[-1].value
             self.spectral_unit = str(cube.spectral_axis.unit)
+
+        # Populate the spectral subset selection dropdown
+        self.spectral_subsets = self.app.get_subsets_from_viewer("spectrum-viewer")
+        self.spectral_subset_items = list(self.spectral_subsets.keys())
 
     @observe("selected_data")
     def _on_data_selected(self, event):
