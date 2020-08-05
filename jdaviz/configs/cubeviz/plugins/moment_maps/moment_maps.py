@@ -50,7 +50,7 @@ class GaussianSmooth(TemplateMixin):
         self._selected_data = next((x for x in self.data_collection
                                     if x.label == event['new']))
 
-    def vue_calculate_moments(self):
+    def vue_calculate_moment(self):
         # Retrieve the data cube and slice out desired region, if specified
         cube = self._selected_data.get_object(cls=SpectralCube)
         spec_min = self.spectral_min or cube.spectral_axis[0]
