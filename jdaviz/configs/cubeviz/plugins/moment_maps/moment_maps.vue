@@ -2,7 +2,7 @@
   <v-card flat tile>
     <v-container>
       <v-row>
-        <v-col class="py-0">
+        <v-col>
           <v-select
             :items="dc_items"
             v-model="selected_data"
@@ -12,17 +12,6 @@
           ></v-select>
         </v-col>
       </v-row>
-        <v-col>
-          <v-text-field
-            ref="n_moment"
-            label="Moment"
-            v-model="n_moment"
-            type="number"
-            hint="The desired moment."
-            persistent-hint
-            :rules="[() => !!n_moment || 'This field is required', () => n_moment >= 0 || 'Moment must be zero or a positive integer']"
-          ></v-text-field>
-        </v-col>
       <v-row>
         <v-col>
           <v-text-field
@@ -49,7 +38,20 @@
     <!-- <v-divider></v-divider> -->
 
     <v-card-actions>
-      <v-btn color="primary" text @click="calculate_moment">Calculate</v-btn>
+      <v-col>
+        <v-text-field
+          ref="n_moment"
+          label="Moment"
+          v-model="n_moment"
+          type="number"
+          hint="The desired moment."
+          persistent-hint
+          :rules="[() => !!n_moment || 'This field is required', () => n_moment >= 0 || 'Moment must be zero or a     positive integer']"
+        ></v-text-field>
+      </v-col>
+      <v-col>
+        <v-btn color="primary" text @click="calculate_moment">Calculate</v-btn>
+      </v-col>
     </v-card-actions>
   </v-card>
 </template>
