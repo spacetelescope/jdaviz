@@ -1,6 +1,7 @@
 from astropy import units as u
 from glue.core.message import (DataCollectionAddMessage,
-                               DataCollectionDeleteMessage)
+                               DataCollectionDeleteMessage,
+                               SubsetCreateMessage)
 from traitlets import List, Unicode, Int, Float, observe
 from spectral_cube import SpectralCube
 
@@ -35,16 +36,16 @@ class MomentMap(TemplateMixin):
                            handler=self._on_data_updated)
         self.hub.subscribe(self, DataCollectionDeleteMessage,
                            handler=self._on_data_updated)
-
+        #self.hub.subscribe(self, SubsetCreateMessage,
+        #                   handler=lambda x: self._on_subset_created())
         self._selected_data = None
         self.n_moment = 0
         self.moment = None
         self.spectral_min = 0.0
         self.spectral_max = 0.0
-        self.spectral_subsets = {}
-
-    def _on_subsets_updated(self, msg):
-        pass
+        self._spectral_subsets = {}
+        self._selected_spectral_subset = None
+        self.spectral_subset_items = []
 
     def _on_data_updated(self, msg):
         self.dc_items = [x.label for x in self.data_collection]
@@ -57,17 +58,22 @@ class MomentMap(TemplateMixin):
             self.spectral_max = cube.spectral_axis[-1].value
             self.spectral_unit = str(cube.spectral_axis.unit)
 
-        # Populate the spectral subset selection dropdown
-        self.spectral_subsets = self.app.get_subsets_from_viewer("spectrum-viewer")
-        self.spectral_subset_items = list(self.spectral_subsets.keys())
-
     @observe("selected_data")
     def _on_data_selected(self, event):
         self._selected_data = next((x for x in self.data_collection
                                     if x.label == event['new']))
 
+    @observe("selected_spectral_subset")
+    def _on_subset_selected(self, event):
+        self._selected_spectral_subset = self.selected_spectral_subset
+
+    def vue_list_subsets(self, event):
+         """Populate the spectral subset selection dropdown"""
+         self._spectral_subsets = self.app.get_subsets_from_viewer("spectrum-viewer")
+         self.spectral_subset_items = list(self._spectral_subsets.keys())
+
     def vue_calculate_moment(self, event):
-        # Retrieve the data cube and slice out desired region, if specified
+        """Retrieve the data cube and slice out desired region, if specified"""
         cube = self._selected_data.get_object(cls=SpectralCube)
         spec_min = self.spectral_min * u.Unit(self.spectral_unit)
         spec_max = self.spectral_max * u.Unit(self.spectral_unit)

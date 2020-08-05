@@ -20,6 +20,7 @@
             label="Spectral Region"
             hint="Optional: limit to a spectral region defined in the spectrum viewer."
             persistent-hint
+            @click="list_subsets"
           ></v-select>
         </v-col>
       </v-row>
