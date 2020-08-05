@@ -9,7 +9,7 @@ from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
 from jdaviz.utils import load_template
 
-__all__ = ['MomentMaps']
+__all__ = ['MomentMap']
 
 
 spaxel = u.def_unit('spaxel', 1 * u.Unit(""))
@@ -17,7 +17,7 @@ u.add_enabled_units([spaxel])
 
 
 @tray_registry('cubeviz-moment-maps', label="Moment Maps")
-class GaussianSmooth(TemplateMixin):
+class MomentMap(TemplateMixin):
     template = load_template("moment_maps.vue", __file__).tag(sync=True)
     n_moment = Int().tag(sync=True)
     dc_items = List([]).tag(sync=True)
