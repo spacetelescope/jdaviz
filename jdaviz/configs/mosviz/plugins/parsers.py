@@ -9,6 +9,7 @@ from astropy.io import fits
 import numpy as np
 import logging
 from astropy.wcs import WCS
+from pathlib import Path
 
 __all__ = ['mos_spec1d_parser', 'mos_spec2d_parser', 'mos_image_parser']
 
@@ -25,7 +26,7 @@ def _add_to_table(app, data, comp_label):
     data : array-list
         The set of data to added as a table (i.g. column) component.
     comp_label : str
-        The label used to desribe the data. Also used as the column header.
+        The label used to describe the data. Also used as the column header.
     """
     # Add data to the mos viz table object
     if 'MOS Table' not in app.data_collection:
@@ -40,6 +41,10 @@ def _add_to_table(app, data, comp_label):
     else:
         mos_table = app.data_collection['MOS Table']
         mos_table.add_component(data, comp_label)
+
+
+def _check_is_file(path):
+    return isinstance(path, str) and Path(path).is_file()
 
 
 @data_parser_registry("mosviz-spec1d-parser")
@@ -58,15 +63,20 @@ def mos_spec1d_parser(app, data_obj, data_labels=None):
         The label applied to the glue data component.
     """
     # If providing a file path, parse it using the specutils io tooling
-    if isinstance(data_obj, str):
+    if _check_is_file(data_obj):
         data_obj = [Spectrum1D.read(data_obj)]
 
     if isinstance(data_labels, str):
         data_labels = [data_labels]
 
-    # Coerce into list-like object
+    # Coerce into list-like object. This works because `Spectrum1D` objects
+    #  don't have a length dunder method.
     if not hasattr(data_obj, '__len__'):
         data_obj = [data_obj]
+    else:
+        data_obj = [Spectrum1D.read(x)
+                    if _check_is_file(x) else x
+                    for x in data_obj]
 
     if data_labels is None or len(data_obj) != len(data_labels):
         data_labels = [f"1D Spectrum {i}" for i in range(len(data_obj))]
@@ -102,8 +112,8 @@ def mos_spec2d_parser(app, data_obj, data_labels=None):
     #  a fits file.
     # TODO: this current does not handle the case where the file in the path is
     #  anything but a fits file whose wcs can be extracted.
-    if isinstance(data_obj, str):
-        with fits.open(data_obj) as hdulist:
+    def _parse_as_cube(path):
+        with fits.open(path) as hdulist:
             data = hdulist[1].data
 
             if hdulist[1].header['NAXIS'] == 2:
@@ -115,14 +125,18 @@ def mos_spec2d_parser(app, data_obj, data_labels=None):
             hdulist[1].header['CUNIT3'] = 'um'
             wcs = WCS(hdulist[1].header)
 
-        data_obj = [SpectralCube(new_data, wcs=wcs)]
+        return SpectralCube(new_data, wcs=wcs)
+
+    if _check_is_file(data_obj):
+        data_obj = [_parse_as_cube(data_obj)]
 
     # Coerce into list-like object
     if not isinstance(data_obj, (list, set)):
         data_obj = [data_obj]
-
-    if isinstance(data_labels, str):
-        data_labels = [data_labels]
+    else:
+        data_obj = [_parse_as_cube(x)
+                    if _check_is_file(x) else x
+                    for x in data_obj]
 
     if data_labels is None or len(data_obj) != len(data_labels):
         data_labels = [f"2D Spectrum {i}" for i in range(len(data_obj))]
@@ -151,21 +165,25 @@ def mos_image_parser(app, data_obj, data_labels=None):
     # Parse and load the 2d images. `CCData` objects require a unit be defined
     #  in the fits header, however, if none is provided, use a fallback and
     #  raise an error.
-    if isinstance(data_obj, str):
-        with fits.open(data_obj) as hdulist:
+    def _parse_as_image(path):
+        with fits.open(path) as hdulist:
             if 'BUNIT' not in hdulist[0].header:
                 logging.warning("No 'BUNIT' defined in the header, using 'Jy'.")
 
             unit = hdulist[0].header.get('BUNIT', 'Jy')
 
-        data_obj = CCDData.read(data_obj, unit=unit)
+        return CCDData.read(path, unit=unit)
+
+    if isinstance(data_obj, str):
+        data_obj = [_parse_as_image(data_obj)]
 
     # Coerce into list-like object
     if not hasattr(data_obj, '__len__'):
         data_obj = [data_obj]
-
-    if isinstance(data_labels, str):
-        data_labels = [data_labels]
+    else:
+        data_obj = [_parse_as_image(x)
+                    if _check_is_file(x) else x
+                    for x in data_obj]
 
     if data_labels is None or len(data_obj) != len(data_labels):
         data_labels = [f"Image {i}" for i in range(len(data_obj))]
