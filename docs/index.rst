@@ -24,6 +24,7 @@ produced by JWST MIRI), along with 1D spectra extracted from the cube.
 
   installation.rst
   data_prep.rst
+  specviz/index.rst
   dev/infrastructure.rst
   dev/ui_description.rst
 
