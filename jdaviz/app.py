@@ -477,7 +477,7 @@ class Application(VuetifyTemplate, HubListener):
                 #  to be consistent.
                 reduced_data = Data(x=value.data.compute_statistic(
                     stat_func, value.data.id[xid],
-                    subset_state=value.subset_state, axis=1))
+                    subset_state=value.subset_state.copy(), axis=1))
 
                 # Instantiate a new data collection since we need to compose
                 #  the collapsed data with the current subset state. We use a
@@ -493,7 +493,7 @@ class Application(VuetifyTemplate, HubListener):
 
                 # Create a new subset group to hold our current subset state
                 subset_group = temp_data_collection.new_subset_group(
-                    label=value.label, subset_state=value.subset_state)
+                    label=value.label, subset_state=value.subset_state.copy())
 
                 # Set the subset state axis to the wavelength pixel coordinate
                 subset_group.subsets[0].subset_state.att = xid
