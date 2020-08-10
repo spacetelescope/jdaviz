@@ -3,7 +3,7 @@ from astropy.nddata import CCDData
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage,
                                SubsetCreateMessage)
-from traitlets import List, Unicode, Int, Float, observe
+from traitlets import List, Unicode, Int, Float, Bool, observe
 from spectral_cube import SpectralCube
 from specutils import SpectralRegion
 from regions import RectanglePixelRegion
@@ -26,6 +26,10 @@ class MomentMap(TemplateMixin):
     n_moment = Int().tag(sync=True)
     dc_items = List([]).tag(sync=True)
     selected_data = Unicode().tag(sync=True)
+
+    filename = Unicode().tag(sync=True)
+
+    moment_available = Bool(False).tag(sync=True)
     spectral_min = Float().tag(sync=True)
     spectral_max = Float().tag(sync=True)
     spectral_unit = Unicode().tag(sync=True)
@@ -44,6 +48,7 @@ class MomentMap(TemplateMixin):
         self._selected_data = None
         self.n_moment = 0
         self.moment = None
+        self._filename = None
         self.spectral_min = 0.0
         self.spectral_max = 0.0
         self._spectral_subsets = {}
@@ -74,6 +79,9 @@ class MomentMap(TemplateMixin):
     def _on_subset_selected(self, event):
         self._selected_spectral_subset = self.selected_spectral_subset
 
+    @observe("filename")
+    def _on_filename_changed(self, event):
+        self._filename = self.filename
 
     def vue_list_subsets(self, event):
          """Populate the spectral subset selection dropdown"""
@@ -103,3 +111,7 @@ class MomentMap(TemplateMixin):
 
         label = "Moment {}: {}".format(self.n_moment, self._selected_data.label)
         self.data_collection[label] = moment_ccd
+        self.moment_available = True
+
+    def vue_save_as_fits(self, event):
+        self.moment.write(self._filename)

@@ -58,20 +58,35 @@
     <!-- <v-divider></v-divider> -->
 
     <v-card-actions>
-      <v-col>
-        <v-text-field
-          ref="n_moment"
-          label="Moment"
-          v-model.number="n_moment"
-          type="number"
-          hint="The desired moment."
-          persistent-hint
-          :rules="[() => !!n_moment || 'This field is required', () => n_moment >= 0 || 'Moment must be zero or a     positive integer']"
-        ></v-text-field>
-      </v-col>
-      <v-col>
-        <v-btn color="primary" text @click="calculate_moment">Calculate</v-btn>
-      </v-col>
+      <v-row>
+        <v-col>
+          <v-text-field
+            ref="n_moment"
+            label="Moment"
+            v-model.number="n_moment"
+            type="number"
+            hint="The desired moment."
+            persistent-hint
+            :rules="[() => !!n_moment || 'This field is required', () => n_moment >= 0 || 'Moment must be zero or a positive integer']"
+          ></v-text-field>
+        </v-col>
+        <v-col>
+          <v-btn color="primary" text @click="calculate_moment">Calculate</v-btn>
+        </v-col>
+    </v-card-actions>
+    <v-card-actions>
+      <v-row v-if="moment_available">
+        <v-col>
+          <v-text-field
+           v-model="filename"
+           label="Filename"
+           :rules="[() => !!filename || 'This field is required']">
+          </v-text-field>
+        </v-col>
+        <v-col>
+          <v-btn color="primary" text @click="save_as_fits">Save as FITS</v-btn>
+        </v-col>
+      </v-row>
     </v-card-actions>
   </v-card>
 </template>
