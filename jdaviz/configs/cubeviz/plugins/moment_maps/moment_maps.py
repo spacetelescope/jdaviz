@@ -4,6 +4,8 @@ from glue.core.message import (DataCollectionAddMessage,
                                SubsetCreateMessage)
 from traitlets import List, Unicode, Int, Float, observe
 from spectral_cube import SpectralCube
+from specutils import SpectralRegion
+from regions import RectanglePixelRegion
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
@@ -67,10 +69,19 @@ class MomentMap(TemplateMixin):
     def _on_subset_selected(self, event):
         self._selected_spectral_subset = self.selected_spectral_subset
 
+
     def vue_list_subsets(self, event):
          """Populate the spectral subset selection dropdown"""
-         self._spectral_subsets = self.app.get_subsets_from_viewer("spectrum-viewer")
-         self.spectral_subset_items = list(self._spectral_subsets.keys())
+         temp_subsets = self.app.get_subsets_from_viewer("spectrum-viewer")
+         temp_list = []
+         temp_dict = {}
+         # Attempt to filter out spatial subsets
+         for key, value in temp_subsets:
+             if type(value) == RectanglePixelRegion:
+                 temp_dict[key] = value
+                 temp_list.append(key)
+         self._spectral_subsets = temp_dict
+         self.spectral_subset_items = temp_list
 
     def vue_calculate_moment(self, event):
         """Retrieve the data cube and slice out desired region, if specified"""
