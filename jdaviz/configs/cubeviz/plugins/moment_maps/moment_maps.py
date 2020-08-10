@@ -39,7 +39,7 @@ class MomentMap(TemplateMixin):
         self.hub.subscribe(self, DataCollectionDeleteMessage,
                            handler=self._on_data_updated)
         #self.hub.subscribe(self, SubsetCreateMessage,
-        #                   handler=lambda x: self._on_subset_created())
+        #                   handler=self._on_subset_created)
         self._selected_data = None
         self.n_moment = 0
         self.moment = None
@@ -60,6 +60,10 @@ class MomentMap(TemplateMixin):
             self.spectral_max = cube.spectral_axis[-1].value
             self.spectral_unit = str(cube.spectral_axis.unit)
 
+    def _on_subset_created(self, msg):
+        """Currently unimplemented due to problems with the SubsetCreateMessafe"""
+        raise ValueError(msg)
+
     @observe("selected_data")
     def _on_data_selected(self, event):
         self._selected_data = next((x for x in self.data_collection
@@ -76,17 +80,20 @@ class MomentMap(TemplateMixin):
          temp_list = []
          temp_dict = {}
          # Attempt to filter out spatial subsets
-         for key, value in temp_subsets:
-             if type(value) == RectanglePixelRegion:
-                 temp_dict[key] = value
+         for key, region in temp_subsets.items():
+             if type(region) == RectanglePixelRegion:
+                 temp_dict[key] = region
                  temp_list.append(key)
          self._spectral_subsets = temp_dict
          self.spectral_subset_items = temp_list
 
     def vue_calculate_moment(self, event):
-        """Retrieve the data cube and slice out desired region, if specified"""
+        #Retrieve the data cube and slice out desired region, if specified
         cube = self._selected_data.get_object(cls=SpectralCube)
         spec_min = self.spectral_min * u.Unit(self.spectral_unit)
         spec_max = self.spectral_max * u.Unit(self.spectral_unit)
         slab = cube.spectral_slab(spec_min, spec_max)
+
+        # Calculate the moment and add it as a layer in the image viewers
         self.moment = slab.moment(self.n_moment)
+
