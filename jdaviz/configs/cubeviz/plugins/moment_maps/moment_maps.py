@@ -1,4 +1,5 @@
 from astropy import units as u
+from astropy.nddata import CCDData
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage,
                                SubsetCreateMessage)
@@ -94,6 +95,11 @@ class MomentMap(TemplateMixin):
         spec_max = self.spectral_max * u.Unit(self.spectral_unit)
         slab = cube.spectral_slab(spec_min, spec_max)
 
-        # Calculate the moment and add it as a layer in the image viewers
+        # Calculate the moment and convert to CCDData to add to the viewers
         self.moment = slab.moment(self.n_moment)
 
+        moment_ccd = CCDData(self.moment.array, wcs=self.moment.wcs,
+                             unit=self.moment.unit)
+
+        label = "Moment {}: {}".format(self.n_moment, self._selected_data.label)
+        self.data_collection[label] = moment_ccd
