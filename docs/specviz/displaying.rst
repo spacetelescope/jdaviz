@@ -29,7 +29,24 @@ Data can be selected and de-selected by clicking on the "hammer and screwdriver"
 Pan/Zoom
 ========
 
-Coming soon
+Included with the SpecViz tool are multiple manners to change your view/perspective on the data displayed, depending on your environment:
+
+Interactive Pan/Zoom (Desktop App interface)
+--------------------------------------------
+You can find the following Pan/Zoom tools available in the tool drawer of the viewer:
+
+2D Bidirectional Pan/Zoom
+^^^^^^^^^^^^^^^^^^^^^^^^^
+The 2D Pan/Zoom Icon allows you to zoom using the scroll wheel:
+
+.. image:: ../img/SpecViz_2D_Zoom.gif
+    :alt: Zooming in SpecViz with the Scroll Wheel
+
+
+
+
+API Pan/Zoom (Notebook interface)
+---------------------------------
 
 Defining Spectral Regions
 =========================
