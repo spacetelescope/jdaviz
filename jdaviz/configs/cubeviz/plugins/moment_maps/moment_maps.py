@@ -3,7 +3,7 @@ from astropy.nddata import CCDData
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage,
                                SubsetCreateMessage)
-from traitlets import List, Unicode, Int, Float, Bool, observe
+from traitlets import List, Unicode, Int, Any, Bool, observe
 from spectral_cube import SpectralCube
 from specutils import SpectralRegion
 from regions import RectanglePixelRegion
@@ -23,15 +23,15 @@ u.add_enabled_units([spaxel])
 @tray_registry('cubeviz-moment-maps', label="Moment Maps")
 class MomentMap(TemplateMixin):
     template = load_template("moment_maps.vue", __file__).tag(sync=True)
-    n_moment = Int().tag(sync=True)
+    n_moment = Any().tag(sync=True)
     dc_items = List([]).tag(sync=True)
     selected_data = Unicode().tag(sync=True)
 
     filename = Unicode().tag(sync=True)
 
     moment_available = Bool(False).tag(sync=True)
-    spectral_min = Float().tag(sync=True)
-    spectral_max = Float().tag(sync=True)
+    spectral_min = Any().tag(sync=True)
+    spectral_max = Any().tag(sync=True)
     spectral_unit = Unicode().tag(sync=True)
     spectral_subset_items = List([]).tag(sync=True)
     selected_subset = Unicode().tag(sync=True)
@@ -111,17 +111,23 @@ class MomentMap(TemplateMixin):
     def vue_calculate_moment(self, event):
         #Retrieve the data cube and slice out desired region, if specified
         cube = self._selected_data.get_object(cls=SpectralCube)
-        spec_min = self.spectral_min * u.Unit(self.spectral_unit)
-        spec_max = self.spectral_max * u.Unit(self.spectral_unit)
+        spec_min = float(self.spectral_min) * u.Unit(self.spectral_unit)
+        spec_max = float(self.spectral_max) * u.Unit(self.spectral_unit)
         slab = cube.spectral_slab(spec_min, spec_max)
 
         # Calculate the moment and convert to CCDData to add to the viewers
-        self.moment = slab.moment(self.n_moment)
+        try:
+            n_moment = int(self.n_moment)
+            if n_moment < 0:
+                raise ValueError("Moment must be a positive integer")
+        except:
+            raise ValueError("Moment must be a positive integer")
+        self.moment = slab.moment(n_moment)
 
         moment_ccd = CCDData(self.moment.array, wcs=self.moment.wcs,
                              unit=self.moment.unit)
 
-        label = "Moment {}: {}".format(self.n_moment, self._selected_data.label)
+        label = "Moment {}: {}".format(n_moment, self._selected_data.label)
         self.data_collection[label] = moment_ccd
         self.moment_available = True
 

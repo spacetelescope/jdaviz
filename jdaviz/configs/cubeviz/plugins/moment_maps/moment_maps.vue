@@ -28,8 +28,7 @@
         <v-col>
           <v-text-field
             label="Lower spectral bound"
-            type="number"
-            v-model.number="spectral_min"
+            v-model="spectral_min"
             hint="Lower bound of spectral region"
             persistent-hint
           >
@@ -43,8 +42,7 @@
         <v-col>
           <v-text-field
             label="Upper spectral bound"
-            type="number"
-            v-model.number="spectral_max"
+            v-model="spectral_max"
             hint="Lower bound of spectral region"
             persistent-hint
           >
@@ -63,11 +61,10 @@
           <v-text-field
             ref="n_moment"
             label="Moment"
-            v-model.number="n_moment"
-            type="number"
+            v-model="n_moment"
             hint="The desired moment."
             persistent-hint
-            :rules="[() => !!n_moment || 'This field is required', () => n_moment >= 0 || 'Moment must be zero or a positive integer']"
+            :rules="[() => !!n_moment || 'This field is required']"
           ></v-text-field>
         </v-col>
         <v-col>
