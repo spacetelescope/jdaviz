@@ -1,3 +1,6 @@
+import os
+import re
+
 from astropy import units as u
 from astropy.nddata import CCDData
 from glue.core.message import (DataCollectionAddMessage,
@@ -133,9 +136,20 @@ class MomentMap(TemplateMixin):
         self.data_collection[label] = moment_ccd
         self.moment_available = True
 
-        lines_loaded_message = SnackbarMessage("{} added to data collection".format(label),
+        msg = SnackbarMessage("{} added to data collection".format(label),
                                                sender=self, color="success")
-        self.hub.broadcast(lines_loaded_message)
+        self.hub.broadcast(msg)
 
     def vue_save_as_fits(self, event):
         self.moment.write(self._filename)
+        # Let the user know where we saved the file (don't need path if user
+        # specified a full filepath
+        if re.search("/", self._filename) is None:
+            wd = os.getcwd()
+            full_path = "{}/{}".format(wd, self._filename)
+        else:
+            full_path = self._filename
+        msg = SnackbarMessage("Moment map saved to {}".format(full_path),
+                                                sender=self, color="success")
+        self.hub.broadcast(msg)
+
