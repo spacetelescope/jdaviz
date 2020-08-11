@@ -9,7 +9,6 @@ import astropy.units as u
 
 from specutils.spectra import Spectrum1D
 from specutils.fitting import fit_lines
-from spectral_cube import SpectralCube
 
 __all__ = ['fit_model_to_spectrum']
 

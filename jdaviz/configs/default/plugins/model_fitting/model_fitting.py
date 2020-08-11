@@ -10,6 +10,7 @@ from glue.core.message import (SubsetCreateMessage,
                                SubsetUpdateMessage)
 from specutils import Spectrum1D
 from traitlets import Bool, Int, List, Unicode
+from glue.core.data import Data
 
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage, SnackbarMessage
 from jdaviz.core.registries import tray_registry
@@ -139,6 +140,7 @@ class ModelFitting(TemplateMixin):
                 temp_param[0]["value"] = m_fit.parameters[i]
                 temp_params += temp_param
             m["parameters"] = temp_params
+
         # Trick traitlets into updating the displayed values
         component_models = self.component_models
         self.component_models = []
@@ -203,6 +205,9 @@ class ModelFitting(TemplateMixin):
                                             "value": initial_val,
                                             "unit": self._param_units("poly", i),
                                             "fixed": False})
+
+        self._update_initialized_parameters()
+
         return new_model
 
     def vue_add_model(self, event):
@@ -232,6 +237,8 @@ class ModelFitting(TemplateMixin):
 
         new_model["Initialized"] = True
         self.component_models = self.component_models + [new_model]
+
+        self._update_initialized_parameters()
 
     def vue_remove_model(self, event):
         self.component_models = [x for x in self.component_models
@@ -302,7 +309,23 @@ class ModelFitting(TemplateMixin):
             self.model_equation,
             run_fitter=True)
 
-        self.app.data_collection["Fitted Model Cube"] = fitted_model
+        # Transpose the axis order back
+        values = np.moveaxis(fitted_spectrum.flux.value, -1, 0)
+
+        # Create new glue data object
+        output_cube = Data(label="Fitted Model Cube",
+                           coords=data.coords)
+        output_cube['flux'] = values
+        output_cube.get_component('flux').units = \
+            fitted_spectrum.flux.unit.to_string()
+
+        # Add to data collection
+        self.app.data_collection.append(output_cube)
+
+        snackbar_message = SnackbarMessage(
+            "Finished cube fitting",
+            color='success', loading=False, sender=self)
+        self.hub.broadcast(snackbar_message)
 
     def vue_register_spectrum(self, event):
         """
