@@ -9,6 +9,7 @@ import astropy.units as u
 
 from specutils.spectra import Spectrum1D
 from specutils.fitting import fit_lines
+from spectral_cube import SpectralCube
 
 __all__ = ['fit_model_to_spectrum']
 
@@ -119,11 +120,6 @@ def _fit_3D(initial_model, spectrum):
         attribute.
     """
 
-    # Worker for the multiprocess pool.
-    worker = SpaxelWorker(spectrum.flux,
-                          spectrum.spectral_axis,
-                          initial_model)
-
     # Generate list of all spaxels to be fitted
     spaxels = _generate_spaxel_list(spectrum)
 
@@ -139,19 +135,20 @@ def _fit_3D(initial_model, spectrum):
     output_flux_cube = np.zeros(shape=spectrum.flux.shape)
 
     # Callback to collect results from workers into the cubes
-    def collect_result(result):
-        x = result[0]
-        y = result[1]
-        model = result[2]
-        fitted_values = result[3]
+    def collect_result(results):
+        for i in range(len(results['x'])):
+            x = results['x'][i]
+            y = results['y'][i]
+            model = results['fitted_model'][i]
+            fitted_values = results['fitted_values'][i]
 
-        # Store fitted model parameters
-        for index, name in enumerate(model.param_names):
-            param = getattr(model, name)
-            parameters_cube[index, x, y] = param.value
+            # Store fitted model parameters
+            for index, name in enumerate(model.param_names):
+                param = getattr(model, name)
+                parameters_cube[index, x, y] = param.value
 
-        # Store fitted values
-        output_flux_cube[x, y, :] = fitted_values
+            # Store fitted values
+            output_flux_cube[x, y, :] = fitted_values
 
     # Run multiprocessor pool to fit each spaxel and
     # compute model values on that same spaxel.
