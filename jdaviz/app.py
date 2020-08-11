@@ -21,7 +21,7 @@ from glue.core import BaseData, HubListener, Data, DataCollection
 from glue.core.autolinking import find_possible_links
 from glue.core.link_helpers import LinkSame
 from glue.core.message import (DataCollectionAddMessage,
-                               DataCollectionDeleteMessage)
+                               DataCollectionDeleteMessage, SubsetCreateMessage)
 from glue.core.state_objects import State
 from glue.core.subset import Subset
 from glue_jupyter.app import JupyterApplication
@@ -62,7 +62,8 @@ class ApplicationState(State):
         'show': False,
         'test': "",
         'color': None,
-        'timeout': 3000
+        'timeout': 3000,
+        'loading': False
     }, docstring="State of the quick toast messages.")
 
     settings = DictCallbackProperty({
@@ -168,6 +169,8 @@ class Application(VuetifyTemplate, HubListener):
         self.hub.subscribe(self, SnackbarMessage,
                            handler=self._on_snackbar_message)
 
+        self.hub.subscribe(self, SubsetCreateMessage, handler=lambda x: print("HERE"))
+
         # Add callback that updates the layout when the data item array changes
         self.state.add_callback('stack_items', self.vue_relayout)
 
@@ -223,6 +226,7 @@ class Application(VuetifyTemplate, HubListener):
         self.state.snackbar['text'] = msg.text
         self.state.snackbar['color'] = msg.color
         self.state.snackbar['timeout'] = msg.timeout
+        self.state.snackbar['loading'] = msg.loading
         self.state.snackbar['show'] = True
 
     def _link_new_data(self):
