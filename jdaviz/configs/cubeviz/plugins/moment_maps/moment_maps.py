@@ -128,6 +128,8 @@ class MomentMap(TemplateMixin):
                              unit=self.moment.unit)
 
         label = "Moment {}: {}".format(n_moment, self._selected_data.label)
+        fname_label = self._selected_data.label.replace("[", "_").replace("]", "_")
+        self.filename = "moment{}_{}.fits".format(n_moment, fname_label)
         self.data_collection[label] = moment_ccd
         self.moment_available = True
 
