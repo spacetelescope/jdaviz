@@ -16,7 +16,7 @@
         <v-col>
           <v-select
             :items="spectral_subset_items"
-            v-model="selected_spectral_subset"
+            v-model="selected_subset"
             label="Spectral Region"
             hint="Optional: limit to a spectral region defined in the spectrum viewer."
             persistent-hint

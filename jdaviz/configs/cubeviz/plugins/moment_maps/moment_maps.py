@@ -34,7 +34,7 @@ class MomentMap(TemplateMixin):
     spectral_max = Float().tag(sync=True)
     spectral_unit = Unicode().tag(sync=True)
     spectral_subset_items = List([]).tag(sync=True)
-    selected_spectral_subset = Unicode().tag(sync=True)
+    selected_subset = Unicode().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -52,7 +52,7 @@ class MomentMap(TemplateMixin):
         self.spectral_min = 0.0
         self.spectral_max = 0.0
         self._spectral_subsets = {}
-        self._selected_spectral_subset = None
+        self._selected_subset = None
         self.spectral_subset_items = []
 
     def _on_data_updated(self, msg):
@@ -74,10 +74,22 @@ class MomentMap(TemplateMixin):
     def _on_data_selected(self, event):
         self._selected_data = next((x for x in self.data_collection
                                     if x.label == event['new']))
+        cube = self._selected_data.get_object(cls=SpectralCube)
+        # Update spectral bounds and unit if we've switched to another unit
+        if str(cube.spectral_axis.unit) != self.spectral_unit:
+            self.spectral_min = cube.spectral_axis[0].value
+            self.spectral_max = cube.spectral_axis[-1].value
+            self.spectral_unit = str(cube.spectral_axis.unit)
 
-    @observe("selected_spectral_subset")
+    @observe("selected_subset")
     def _on_subset_selected(self, event):
-        self._selected_spectral_subset = self.selected_spectral_subset
+        self._selected_subset = self.selected_subset
+        spec_sub = self._spectral_subsets[self._selected_subset]
+        unit = u.Unit(self.spectral_unit)
+        spec_reg = SpectralRegion.from_center(spec_sub.center.x * unit,
+                                              (spec_sub.width / 2) * unit)
+        self.spectral_min = spec_reg.lower.value
+        self.spectral_max = spec_reg.upper.value
 
     @observe("filename")
     def _on_filename_changed(self, event):
