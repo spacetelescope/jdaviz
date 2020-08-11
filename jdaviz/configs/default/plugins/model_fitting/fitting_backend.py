@@ -159,7 +159,7 @@ def _fit_3D(initial_model, spectrum):
     # sequentially). Instead, chunk the spaxel list based on the number of
     # available processors, and have each processor do the model fitting
     # on the entire subset of spaxel tuples, then return the set of results.
-    for spx in np.array_split(spaxels, 8):
+    for spx in np.array_split(spaxels, mp.cpu_count() - 1):
         # Worker for the multiprocess pool.
         worker = SpaxelWorker(spectrum.flux,
                               spectrum.spectral_axis,
