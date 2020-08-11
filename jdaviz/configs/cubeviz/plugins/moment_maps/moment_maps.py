@@ -87,7 +87,7 @@ class MomentMap(TemplateMixin):
         spec_sub = self._spectral_subsets[self._selected_subset]
         unit = u.Unit(self.spectral_unit)
         spec_reg = SpectralRegion.from_center(spec_sub.center.x * unit,
-                                              (spec_sub.width / 2) * unit)
+                                              spec_sub.width * unit)
         self.spectral_min = spec_reg.lower.value
         self.spectral_max = spec_reg.upper.value
 
