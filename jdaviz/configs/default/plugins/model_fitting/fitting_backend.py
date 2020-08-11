@@ -209,31 +209,40 @@ class SpaxelWorker:
     instance. We need to use the current model instance while
     it still exists.
     """
-    def __init__(self, flux_cube, wave_array, initial_model):
+    def __init__(self, flux_cube, wave_array, initial_model, param_set):
         self.cube = flux_cube
         self.wave = wave_array
         self.model = initial_model
+        self.param_set = param_set
 
-    def __call__(self, parameters):
-        x = parameters[0]
-        y = parameters[1]
+    def __call__(self):
+        results = {'x': [], 'y': [], 'fitted_model': [], 'fitted_values': []}
 
-        # Calling the Spectrum1D constructor for every spaxel
-        # turned out to be less expensive than expected. Experiments
-        # show that the cost amounts to a couple percent additional
-        # running time in comparison with a version that uses a 3D
-        # spectrum as input. Besides, letting an externally-created
-        # spectrum reference into the callable somehow prevents it
-        # to execute. This behavior was seen also with other functions
-        # passed to the callable.
-        flux = self.cube[x, y, :] # transposed!
-        sp = Spectrum1D(spectral_axis=self.wave, flux=flux)
+        for parameters in self.param_set:
+            x = parameters[0]
+            y = parameters[1]
 
-        fitted_model = fit_lines(sp, self.model)
+            # Calling the Spectrum1D constructor for every spaxel
+            # turned out to be less expensive than expected. Experiments
+            # show that the cost amounts to a couple percent additional
+            # running time in comparison with a version that uses a 3D
+            # spectrum as input. Besides, letting an externally-created
+            # spectrum reference into the callable somehow prevents it
+            # to execute. This behavior was seen also with other functions
+            # passed to the callable.
+            flux = self.cube[x, y, :] # transposed!
+            sp = Spectrum1D(spectral_axis=self.wave, flux=flux)
 
-        fitted_values = fitted_model(self.wave)
+            fitted_model = fit_lines(sp, self.model)
 
-        return x, y, fitted_model, fitted_values
+            fitted_values = fitted_model(self.wave)
+
+            results['x'].append(x)
+            results['y'].append(y)
+            results['fitted_model'].append(fitted_model)
+            results['fitted_values'].append(fitted_values)
+
+        return results
 
 
 def _build_model(component_list, expression):
