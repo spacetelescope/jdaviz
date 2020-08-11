@@ -158,8 +158,18 @@ def _fit_3D(initial_model, spectrum):
     results = []
     pool = Pool(mp.cpu_count() - 1)
 
-    for spx in spaxels:
-        r = pool.apply_async(worker, (spx,), callback=collect_result)
+    # The communicate overhead of spawning a process for each *individual*
+    # parameter set is prohibitively high (it's actually faster to run things
+    # sequentially). Instead, chunk the spaxel list based on the number of
+    # available processors, and have each processor do the model fitting
+    # on the entire subset of spaxel tuples, then return the set of results.
+    for spx in np.array_split(spaxels, 8):
+        # Worker for the multiprocess pool.
+        worker = SpaxelWorker(spectrum.flux,
+                              spectrum.spectral_axis,
+                              initial_model,
+                              param_set=spx)
+        r = pool.apply_async(worker, callback=collect_result)
         results.append(r)
     for r in results:
         r.wait()
