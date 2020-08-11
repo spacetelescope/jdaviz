@@ -1,5 +1,6 @@
 import os
 import pickle
+import re
 
 import astropy.modeling.models as models
 import astropy.units as u
@@ -320,8 +321,13 @@ class ModelFitting(TemplateMixin):
         # Transpose the axis order back
         values = np.moveaxis(fitted_spectrum.flux.value, -1, 0)
 
+        count = max(map(lambda s: int(next(iter(re.findall("\d$", s)), 0)),
+                        self.data_collection.labels)) + 1
+
+        label = f"{self.model_label} [Cube] {count}"
+
         # Create new glue data object
-        output_cube = Data(label="Fitted Model Cube",
+        output_cube = Data(label=label,
                            coords=data.coords)
         output_cube['flux'] = values
         output_cube.get_component('flux').units = \
