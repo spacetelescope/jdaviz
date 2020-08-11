@@ -285,7 +285,8 @@ class ModelFitting(TemplateMixin):
         # that the user has selected a pre-existing 1d data object.
         if data.ndim != 3:
             snackbar_message = SnackbarMessage(
-                f"Selected data {self._selected_data_label} is not cube-like.",
+                f"Selected data {self._selected_data_label} is not cube-like",
+                color='error',
                 sender=self)
             self.hub.broadcast(snackbar_message)
             return
@@ -302,6 +303,13 @@ class ModelFitting(TemplateMixin):
         #  in the cube we select
         wcs = data.coords.sub([WCSSUB_SPECTRAL])
         spec = Spectrum1D(flux=values, wcs=wcs)
+
+        # TODO: in vuetify >2.3, timeout should be set to -1 to keep open
+        #  indefinitely
+        snackbar_message = SnackbarMessage(
+            "Fitting model to cube...",
+            loading=True, timeout=0, sender=self)
+        self.hub.broadcast(snackbar_message)
 
         fitted_model, fitted_spectrum = fit_model_to_spectrum(
             spec,

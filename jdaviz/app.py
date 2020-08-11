@@ -21,7 +21,7 @@ from glue.core import BaseData, HubListener, Data, DataCollection
 from glue.core.autolinking import find_possible_links
 from glue.core.link_helpers import LinkSame
 from glue.core.message import (DataCollectionAddMessage,
-                               DataCollectionDeleteMessage, SubsetCreateMessage)
+                               DataCollectionDeleteMessage)
 from glue.core.state_objects import State
 from glue.core.subset import Subset
 from glue_jupyter.app import JupyterApplication
@@ -168,8 +168,6 @@ class Application(VuetifyTemplate, HubListener):
         #  message box
         self.hub.subscribe(self, SnackbarMessage,
                            handler=self._on_snackbar_message)
-
-        self.hub.subscribe(self, SubsetCreateMessage, handler=lambda x: print("HERE"))
 
         # Add callback that updates the layout when the data item array changes
         self.state.add_callback('stack_items', self.vue_relayout)
