@@ -26,6 +26,6 @@ Defining Spectral Regions
 More words...
 
 Display Settings
-=============
+================
 
 More words...

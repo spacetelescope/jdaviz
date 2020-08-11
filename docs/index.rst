@@ -1,6 +1,6 @@
-JDAViz Documentation
-====================
-
+.. image:: logos/jdaviz.svg
+   :width: 400
+   
 ``jdaviz`` is a package of astronomical data analysis visualization
 tools based on the Jupyter platform.  These GUI-based tools link data
 visualization and interactive analysis.  They are designed to work
@@ -25,6 +25,8 @@ produced by JWST MIRI), along with 1D spectra extracted from the cube.
   installation.rst
   data_prep.rst
   specviz/index.rst
+  cubeviz/index.rst
+  mosviz/index.rst
   dev/infrastructure.rst
   dev/ui_description.rst
 
