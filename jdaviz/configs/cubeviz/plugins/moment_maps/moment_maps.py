@@ -125,5 +125,9 @@ class MomentMap(TemplateMixin):
         self.data_collection[label] = moment_ccd
         self.moment_available = True
 
+        lines_loaded_message = SnackbarMessage("{} added to data collection".format(label),
+                                               sender=self, color="success")
+        self.hub.broadcast(lines_loaded_message)
+
     def vue_save_as_fits(self, event):
         self.moment.write(self._filename)
