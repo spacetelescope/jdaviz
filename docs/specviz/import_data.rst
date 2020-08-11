@@ -2,48 +2,57 @@
 Import Data
 ***********
 
+There are two primary ways in which a user can load their data into the Specviz application. It should be noted that currently, Specviz only supports data that can be parsed as :class:`~specutils.Spectrum1D` objects.
 
-A user can import :class:`~specutils.Spectrum1D` data in a number of ways.
+.. seealso::
 
-* A :class:`~specutils.Spectrum1D` object can be loaded using the Import Data button:
+    `Reading from a File <https://specutils.readthedocs.io/en/stable/spectrum1d.html#reading-from-a-file>`_
+        SpecUtils documentation on loading data as :class:`~specutils.Spectrum1D` objects.
+
+Importing data through the GUI
+------------------------------
+
+The first way that users can parse their data into the Specviz application is
+by using the "Import Data" button in the application's user interface.
 
 .. image:: img/specviz_viewer.png
 
-Click on the "Import Data" button.
+This process is fairly straightforward, users need only click on the "Import Data" button:
 
 .. image:: img/import_data_1.png
 
-Enter the path of file you would like to visualize.
+and enter the path of file that can be parsed as a :class:`~specutils.Spectrum1D` in the text field:
 
 .. image:: img/import_data_2.png
 
-After you click "Import", you will then need to go to the Data Selection drop down. First, click the "hammer and screwdriver" icon to open the tool menu. Then, click the "gear" icon.
+After having clicked "Import", the data file will be parsed and loaded into the application. A notification will appear to let users know if the data importing was successful. Afterward, the new data set can be found in the "Data" tab of each viewer's options menu.
+To access the data tab, click the "hammer and screwdriver" icon to open the tool menu of a viewer. Then, click the "gear" icon.
 
 .. image:: img/import_data_3.png
 
-Here, you can select the data you loaded to be visualized.
+Here, users can select the loaded data set to be visualized in the viewer.
 
 .. image:: img/data_selected_1.png
 
-* A :class:`~specutils.Spectrum1D` object can also be loaded using a notebook implementation::
+Importing data via the API
+--------------------------
+Alternatively, if users are working in a coding environment like a Jupyter notebook, they have access to the Specviz helper class's API. Using this API, users can load data into the application through code.
+Below is an example of importing the Specviz helper class, creating a :class:`~specutils.Spectrum1D` using randomly generated data, and loading that :class:`~specutils.Spectrum1D` object into the Specviz application::
 
     >>> from jdaviz.configs.specviz.helper import SpecViz
     >>> import numpy as np
     >>> import astropy.units as u
     >>> from specutils import Spectrum1D
-
     >>> flux = np.random.randn(200)*u.Jy
     >>> wavelength = np.arange(5100, 5300)*u.AA
     >>> spec1d = Spectrum1D(spectral_axis=wavelength, flux=flux)
     >>> specviz = SpecViz()
     >>> specviz.load_spectrum(spec1d)
 
+Similarly, users can create their :class:`~specutils.Spectrum1D` objects by providing file paths to the :func:`~specutils.Spectrum1D.read` method::
 
-* A :class:`~specutils.Spectrum1D` object can also be loaded using a url::
+    >>> from specutils import Spectrum1D
+    >>> #spec1d = Spectrum1D.read("/path/to/data/file")
 
-    >>> # spec_url = 'https://dr14.sdss.org/optical/spectrum/view/data/format=fits/spec=lite?plateid=1323&mjd=52797&fiberid=12'
-    >>> # specviz = SpecViz()
-    >>> # spec = specutils.Spectrum1D.read(spec_url)
-
-
-This example has the ``read`` attribute take in a url but it can also take in a file path as a parameter.
+For more information about using the SpecUtils package, please see the 
+`SpecUtils documentation <https://specutils.readthedocs.io>`_.
