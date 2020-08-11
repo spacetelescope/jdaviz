@@ -130,7 +130,7 @@ class ModelFitting(TemplateMixin):
         for m in self.component_models:
             name = m["id"]
             if len(self.component_models) > 1:
-                m_fit = self._fitted_model.unitless_model[name]
+                m_fit = self._fitted_model[name]
             else:
                 m_fit = self._fitted_model
             temp_params = []
