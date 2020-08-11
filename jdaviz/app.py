@@ -454,7 +454,7 @@ class Application(VuetifyTemplate, HubListener):
                     width = hi - lo
                     region = RectanglePixelRegion(
                         PixCoord(xcen, 0), width, 0,
-                        meta={'spectal_axis_unit': unit})
+                        meta={'spectral_axis_unit': unit})
                     regions[key] = region
                     continue
 

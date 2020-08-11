@@ -90,7 +90,8 @@ class SpecViz(ConfigHelper):
 
         for name, reg in regions.items():
             unit = reg.meta.get("spectral_axis_unit", u.Unit("Angstrom"))
-            spec_reg = SpectralRegion.from_center(reg.center.x * unit, reg.width * unit)
+            spec_reg = SpectralRegion.from_center(reg.center.x * unit,
+                                                  (reg.width / 2) * unit)
 
             spec_regs[name] = spec_reg
 
