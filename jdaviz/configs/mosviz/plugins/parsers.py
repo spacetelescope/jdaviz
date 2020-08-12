@@ -78,8 +78,10 @@ def mos_spec1d_parser(app, data_obj, data_labels=None):
                     if _check_is_file(x) else x
                     for x in data_obj]
 
-    if data_labels is None or len(data_obj) != len(data_labels):
+    if data_labels is None:
         data_labels = [f"1D Spectrum {i}" for i in range(len(data_obj))]
+    elif len(data_obj) != len(data_labels):
+        data_labels = [f"{data_labels[0]} {i}" for i in range(len(data_obj))]
 
     # Handle the case where the 1d spectrum is a collection of spectra
     for i in range(len(data_obj)):
@@ -130,6 +132,9 @@ def mos_spec2d_parser(app, data_obj, data_labels=None):
     if _check_is_file(data_obj):
         data_obj = [_parse_as_cube(data_obj)]
 
+    if isinstance(data_labels, str):
+        data_labels = [data_labels]
+
     # Coerce into list-like object
     if not isinstance(data_obj, (list, set)):
         data_obj = [data_obj]
@@ -138,8 +143,10 @@ def mos_spec2d_parser(app, data_obj, data_labels=None):
                     if _check_is_file(x) else x
                     for x in data_obj]
 
-    if data_labels is None or len(data_obj) != len(data_labels):
+    if data_labels is None:
         data_labels = [f"2D Spectrum {i}" for i in range(len(data_obj))]
+    elif len(data_obj) != len(data_labels):
+        data_labels = [f"{data_labels} {i}" for i in range(len(data_obj))]
 
     for i in range(len(data_obj)):
         app.data_collection[data_labels[i]] = data_obj[i]
@@ -185,8 +192,10 @@ def mos_image_parser(app, data_obj, data_labels=None):
                     if _check_is_file(x) else x
                     for x in data_obj]
 
-    if data_labels is None or len(data_obj) != len(data_labels):
+    if data_labels is None:
         data_labels = [f"Image {i}" for i in range(len(data_obj))]
+    elif len(data_obj) != len(data_labels):
+        data_labels = [f"{data_labels} {i}" for i in range(len(data_obj))]
 
     for i in range(len(data_obj)):
         app.data_collection[data_labels[i]] = data_obj[i]
