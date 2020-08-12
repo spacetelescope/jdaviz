@@ -6,7 +6,7 @@ from jdaviz.core.events import (AddDataToViewerMessage,
                                 RemoveDataFromViewerMessage)
 from jdaviz.core.registries import viewer_registry
 from specutils import Spectrum1D
-from astropy.nddata import CCDData
+from spectral_cube import SpectralCube
 
 __all__ = ['MOSVizProfileView', 'MOSVizImageView']
 
@@ -35,7 +35,9 @@ class MOSVizImageView(BqplotImageView):
 
 @viewer_registry("mosviz-profile-2d-viewer", label="Spectrum 2D (MOSViz)")
 class MOSVizProfile2DView(BqplotImageView):
-    default_class = CCDData
+    # Due to limitations in CCDData and 2D data that has spectral and spatial
+    #  axes, the default conversion class must handle cubes
+    default_class = SpectralCube
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
