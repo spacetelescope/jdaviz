@@ -103,7 +103,7 @@ def test_load_spectrum1d(mosviz_app, spectrum1d):
     assert mosviz_app.app.data_collection[0].label == label
 
     table = mosviz_app.app.get_viewer('table-viewer')
-    table.widget_table.vue_select({'row': 0, 'checked': True})
+    table.widget_table.vue_on_row_clicked(0)
 
     data = mosviz_app.app.get_data_from_viewer('spectrum-viewer')
 
@@ -122,7 +122,7 @@ def test_load_spectrum_collection(mosviz_app, spectrum_collection):
     assert mosviz_app.app.data_collection[0].label == labels[0]
 
     table = mosviz_app.app.get_viewer('table-viewer')
-    table.widget_table.vue_select({'row': 0, 'checked': True})
+    table.widget_table.vue_on_row_clicked(0)
 
     data = mosviz_app.app.get_data_from_viewer('spectrum-viewer')
 
@@ -140,7 +140,7 @@ def test_load_list_of_spectrum1d(mosviz_app, spectrum1d):
     assert mosviz_app.app.data_collection[0].label == labels[0]
 
     table = mosviz_app.app.get_viewer('table-viewer')
-    table.widget_table.vue_select({'row': 0, 'checked': True})
+    table.widget_table.vue_on_row_clicked(0)
 
     data = mosviz_app.app.get_data_from_viewer('spectrum-viewer')
 
@@ -156,7 +156,7 @@ def test_load_spectrum2d(mosviz_app, spectrum2d):
     assert mosviz_app.app.data_collection[0].label == label
 
     table = mosviz_app.app.get_viewer('table-viewer')
-    table.widget_table.vue_select({'row': 0, 'checked': True})
+    table.widget_table.vue_on_row_clicked(0)
 
     data = mosviz_app.app.get_data_from_viewer('spectrum-2d-viewer')
 
@@ -169,13 +169,13 @@ def test_load_image(mosviz_app, image):
     mosviz_app.load_images(image, data_labels=label)
 
     assert len(mosviz_app.app.data_collection) == 2
-    assert mosviz_app.app.data_collection[0].label == label
+    assert mosviz_app.app.data_collection[0].label == f"{label} 0"
 
     table = mosviz_app.app.get_viewer('table-viewer')
-    table.widget_table.vue_select({'row': 0, 'checked': True})
+    table.widget_table.vue_on_row_clicked(0)
 
     data = mosviz_app.app.get_data_from_viewer('image-viewer')
 
     # assert isinstance(list(data.values())[0], CCDData)
     assert list(data.values())[0].shape == (55, 55)
-    assert list(data.keys())[0] == label
+    assert list(data.keys())[0] == f"{label} 0"
