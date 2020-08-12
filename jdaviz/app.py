@@ -379,8 +379,13 @@ class Application(VuetifyTemplate, HubListener):
                     layer_data = layer_state.layer
 
                     if cls is not None:
-                        layer_data = layer_data.get_object(cls=cls,
-                                                           statistic=statistic)
+                        # If data is one-dimensional, assume that it can be
+                        #  collapsed via the defined statistic
+                        if len(layer_data.shape) == 1:
+                            layer_data = layer_data.get_object(cls=cls,
+                                                               statistic=statistic)
+                        else:
+                            layer_data = layer_data.get_object(cls=cls)
                     # If the shape of the data is 2d, then use CCDData as the
                     #  output data type
                     elif len(layer_data.shape) == 2:
