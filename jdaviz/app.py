@@ -887,7 +887,7 @@ class Application(VuetifyTemplate, HubListener):
             The Glue data collection add message containing information about
             the new data.
         """
-        # self._link_new_data()
+        self._link_new_data()
         data_item = self._create_data_item(msg.data.label)
         self.state.data_items.append(data_item)
 
@@ -1112,5 +1112,5 @@ class Application(VuetifyTemplate, HubListener):
             })
 
         config_loaded_message = ConfigurationLoadedMessage(
-            config['settings']['configuration'], sender=self)
+            config['settings'].get('configuration', 'default'), sender=self)
         self.hub.broadcast(config_loaded_message)
