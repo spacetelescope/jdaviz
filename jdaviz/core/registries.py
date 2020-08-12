@@ -5,8 +5,9 @@ from ipyvuetify import VuetifyTemplate
 from ipywidgets import Widget
 
 
-__all__ = ['viewer_registry', 'tray_registry', 'tool_registry', 'ViewerRegistry', 'TrayRegistry',
-           'ToolRegistry', 'MenuRegistry']
+__all__ = ['viewer_registry', 'tray_registry', 'tool_registry',
+           'data_parser_registry', 'ViewerRegistry', 'TrayRegistry',
+           'ToolRegistry', 'MenuRegistry', 'DataParserRegistry']
 
 
 def convert(name):
@@ -55,6 +56,7 @@ class ViewerRegistry(UniqueDictRegistry):
     def __call__(self, name=None, label=None):
         def decorator(cls):
             self.add(name, cls, label)
+            return cls
         return decorator
 
     def add(self, name, cls, label=None):
@@ -95,6 +97,7 @@ class TrayRegistry(UniqueDictRegistry):
                     f"`ipyvuetify.VuetifyTemplate`.")
 
             self.add(name, cls, label, icon)
+            return cls
         return decorator
 
     def add(self, name, cls, label=None, icon=None):
@@ -161,7 +164,20 @@ class MenuRegistry(UniqueDictRegistry):
         return decorator
 
 
+class DataParserRegistry(UniqueDictRegistry):
+    """
+    Registry containing parsing functions for attempting to auto-populate the
+    application-defined initial viewers.
+    """
+    def __call__(self, name=None):
+        def decorator(func):
+            self.add(name, func)
+            return func
+        return decorator
+
+
 viewer_registry = ViewerRegistry()
 tray_registry = TrayRegistry()
 tool_registry = ToolRegistry()
 menu_registry = MenuRegistry()
+data_parser_registry = DataParserRegistry()

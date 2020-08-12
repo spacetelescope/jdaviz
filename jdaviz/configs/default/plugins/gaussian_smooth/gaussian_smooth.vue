@@ -31,7 +31,7 @@
     <v-card-actions>
       <div class="flex-grow-1"></div>
       <v-btn :disabled="stddev <= 0 || selected_data == ''"
-      color="primary" text @click="gaussian_smooth">Apply</v-btn>
+      color="accent" text @click="gaussian_smooth">Apply</v-btn>
     </v-card-actions>
   </v-card>
 </template>

@@ -64,3 +64,6 @@ pip-wheel-metadata
 
 # Mac OSX
 .DS_Store
+
+# Environments
+/env*

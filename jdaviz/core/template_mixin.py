@@ -1,11 +1,12 @@
-import ipyvuetify as v
+from warnings import warn
+
+from ipyvuetify import VuetifyTemplate
 from glue.core import HubListener
-from traitlets import List
 
 __all__ = ['TemplateMixin']
 
 
-class TemplateMixin(v.VuetifyTemplate, HubListener):
+class TemplateMixin(VuetifyTemplate, HubListener):
     def __new__(cls, *args, **kwargs):
         """
         Overload object creation so that we can inject a reference to the
@@ -15,12 +16,17 @@ class TemplateMixin(v.VuetifyTemplate, HubListener):
         """
         app = kwargs.pop('app', None)
         obj = super().__new__(cls, *args, **kwargs)
-        setattr(obj, '_app', app)
+        obj._app = app
 
         return obj
 
     @property
     def app(self):
+        """
+        Allows access to the underlying jdaviz application instance. This is
+        **not** access to the helper class, but instead the
+        `jdaviz.Application` object.
+        """
         return self._app
 
     @property

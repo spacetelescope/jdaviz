@@ -6,8 +6,8 @@
 from ._astropy_init import *   # noqa
 # ----------------------------------------------------------------------------
 
-__all__ = []
-
-
-# Import glue translators
-from glue_astronomy.translators import *
+# top-level API as exposed to users
+from jdaviz.app import *
+from jdaviz.configs.specviz import SpecViz
+from jdaviz.configs.mosviz import MosViz
+from jdaviz.configs.cubeviz import CubeViz

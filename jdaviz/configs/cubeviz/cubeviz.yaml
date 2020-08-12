@@ -1,5 +1,8 @@
 settings:
   configuration: cubeviz
+  data:
+    auto_populate: true
+    parser: cubeviz-data-parser
   visible:
     menu_bar: false
     toolbar: true
@@ -15,6 +18,7 @@ toolbar:
 tray:
   - g-gaussian-smooth
   - g-collapse
+  - g-model-fitting
 viewer_area:
   - container: col
     children:
@@ -32,5 +36,5 @@ viewer_area:
       - container: row
         viewers:
           - name: Spectrum
-            plot: cubeviz-profile-viewer
+            plot: specviz-profile-viewer
             reference: spectrum-viewer

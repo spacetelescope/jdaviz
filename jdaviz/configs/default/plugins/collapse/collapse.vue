@@ -37,7 +37,7 @@
 
     <v-card-actions>
       <div class="flex-grow-1"></div>
-      <v-btn color="primary" text @click="collapse">Apply</v-btn>
+      <v-btn color="accent" text @click="collapse">Apply</v-btn>
     </v-card-actions>
   </v-card>
 </template>

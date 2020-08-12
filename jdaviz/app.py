@@ -1,28 +1,37 @@
 import logging
 import os
 import uuid
+from inspect import isclass
 
 import ipywidgets as w
+import numpy as np
+from astropy import units as u
 import pkg_resources
 import yaml
 from astropy.nddata import CCDData
-from echo import (CallbackProperty, ListCallbackProperty,
-                  DictCallbackProperty)
+from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
+from ipygoldenlayout import GoldenLayout
+from ipysplitpanes import SplitPanes
+from traitlets import Dict
+from regions import RectanglePixelRegion, PixCoord
+from specutils import Spectrum1D
+
 from glue.config import data_translator
-from glue.core import BaseData
+from glue.core import BaseData, HubListener, Data, DataCollection
 from glue.core.autolinking import find_possible_links
-from glue.core.message import DataCollectionAddMessage
+from glue.core.link_helpers import LinkSame
+from glue.core.message import (DataCollectionAddMessage,
+                               DataCollectionDeleteMessage)
 from glue.core.state_objects import State
 from glue.core.subset import Subset
 from glue_jupyter.app import JupyterApplication
 from glue_jupyter.state_traitlets_helpers import GlueState
-from ipygoldenlayout import GoldenLayout
-from ipysplitpanes import SplitPanes
-from traitlets import Dict
+from ipyvuetify import VuetifyTemplate
 
-from .core.events import LoadDataMessage, NewViewerMessage, AddDataMessage, SnackbarMessage
-from .core.registries import tool_registry, tray_registry, viewer_registry
-from .core.template_mixin import TemplateMixin
+from .core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
+                          SnackbarMessage, RemoveDataMessage)
+from .core.registries import (tool_registry, tray_registry, viewer_registry,
+                              data_parser_registry)
 from .utils import load_template
 
 __all__ = ['Application']
@@ -31,6 +40,9 @@ SplitPanes()
 GoldenLayout()
 
 CONTAINER_TYPES = dict(row='gl-row', col='gl-col', stack='gl-stack')
+EXT_TYPES = dict(flux=['flux', 'sci'],
+                 uncert=['ivar', 'err', 'var', 'uncert'],
+                 mask=['mask', 'dq'])
 
 
 class ApplicationState(State):
@@ -54,6 +66,10 @@ class ApplicationState(State):
     }, docstring="State of the quick toast messages.")
 
     settings = DictCallbackProperty({
+        'data': {
+            'auto_populate': False,
+            'parser': None
+        },
         'visible': {
             'menu_bar': True,
             'toolbar': True,
@@ -83,7 +99,7 @@ class ApplicationState(State):
                   "Golden Layout viewer area.")
 
 
-class Application(TemplateMixin):
+class Application(VuetifyTemplate, HubListener):
     """
     The main application object containing implementing the ipyvue/vuetify
     template instructions for composing the interface.
@@ -141,6 +157,11 @@ class Application(TemplateMixin):
         #  level data collection object
         self.hub.subscribe(self, DataCollectionAddMessage,
                            handler=self._on_data_added)
+
+        # Subscribe to the event fired when data is deleted from the
+        #  application-level data collection object
+        self.hub.subscribe(self, DataCollectionDeleteMessage,
+                           handler=self._on_data_deleted)
 
         # Subscribe to snackbar messages and tie them to the display of the
         #  message box
@@ -204,28 +225,50 @@ class Application(TemplateMixin):
         self.state.snackbar['timeout'] = msg.timeout
         self.state.snackbar['show'] = True
 
-    def load_data(self, path):
+    def _link_new_data(self):
+        """
+        When additional data is loaded, check to see if the spectral axis of
+        any components are compatible with already loaded data. If so, link
+        them so that they can be displayed on the same profile1D plot.
+        """
+        new_len = len(self.data_collection)
+        for i in range(0, new_len-1):
+                self.data_collection.add_link(LinkSame(self.data_collection[i].world_component_ids[0],
+                    self.data_collection[new_len-1].world_component_ids[0]))
+
+    def load_data(self, file_obj, **kwargs):
         """
         Provided a path to a data file, open and parse the data into the
         `~glue.core.DataCollection` for this session. This also attempts to
-        find WCS links that exist between data components.
+        find WCS links that exist between data components. Extra key word
+        arguments are passed to the parsing functions.
 
         Parameters
         ----------
         path : str
             File path for the data file to be loaded.
         """
-        self._application_handler.load_data(path)
+        old_data_len = len(self.data_collection)
+        parser = data_parser_registry.members.get(
+            self.state.settings['data']['parser'])
+
+        if parser is not None:
+            # If the parser returns something other than known, assume it's
+            #  a message we want to make the user aware of.
+            msg = parser(self, file_obj, **kwargs)
+
+            if msg is not None:
+                snackbar_message = SnackbarMessage(
+                    msg, color='error', sender=self)
+                self.hub.broadcast(snackbar_message)
+                return
+        else:
+            self._application_handler.load_data(file_obj)
 
         # Send out a toast message
         snackbar_message = SnackbarMessage("Data successfully loaded.",
                                            sender=self)
         self.hub.broadcast(snackbar_message)
-
-        # Attempt to link the data
-        links = find_possible_links(self.data_collection)
-
-        # self.data_collection.add_link(links['Astronomy WCS'])
 
     def get_viewer(self, viewer_reference):
         """
@@ -254,8 +297,8 @@ class Application(TemplateMixin):
         """
         return self._viewer_by_reference(viewer_reference)
 
-    def get_data_from_viewer(self, viewer_reference, data_label=None, cls=None,
-                             include_subsets=True):
+    def get_data_from_viewer(self, viewer_reference, data_label=None,
+                             cls='default', include_subsets=True):
         """
         Returns each data component currently rendered within a viewer
         instance. Viewers themselves store a default data type to which the
@@ -280,7 +323,9 @@ class Application(TemplateMixin):
             The class definition the Glue data components get transformed to
             when retrieved. This requires that a working set of translation
             functions exist in the ``glue_astronomy`` package. See
-            ``https://github.com/glue-viz/glue-astronomy`` for more info.
+            https://github.com/glue-viz/glue-astronomy for more info.
+            If this is the special string ``'default'``,  the ``default_class``
+            attribute of the viewer referenced by ``viewer_reference`` is used.
         include_subsets : bool
             Whether to include subset layer data that exists in the viewer but
             has not been included in the core data collection object.
@@ -292,7 +337,12 @@ class Application(TemplateMixin):
             corresponding viewer data labels.
         """
         viewer = self.get_viewer(viewer_reference)
-        cls = cls or viewer.default_class
+        cls = viewer.default_class if cls == 'default' else cls
+
+        if cls is not None and not isclass(cls):
+            raise TypeError(
+                "cls in get_data_from_viewer must be a class, None, or "
+                "the 'default' string.")
 
         data = {}
 
@@ -337,9 +387,126 @@ class Application(TemplateMixin):
 
         # If a data label was provided, return only the data requested
         if data_label is not None:
-            return data.get(data_label)
+            if data_label in data:
+                data = {data_label: data.get(data_label)}
+            else:
+                data = {}
 
         return data
+
+    def get_subsets_from_viewer(self, viewer_reference, data_label=None):
+        """
+        Returns the subsets of a specified viewer converted to astropy regions
+        objects.
+
+        It should be noted that the subset translation machinery lives in the
+        glue-astronomy repository. Currently, the machinery only works on 2D
+        data for cases like range selection. For e.g. a profile viewer that is
+        ostensibly just a view into a 3D data set, it is necessary to first
+        reduce the dimensions of the data, then retrieve the subset information
+        as a regions object. This means that the returned y extents in the
+        region are not strictly representative of the subset range in y.
+
+        Parameters
+        ----------
+        viewer_reference : str
+            The reference to the viewer defined with the ``reference`` key
+            in the yaml configuration file.
+        data_label : str, optional
+            Optionally provide a label to retrieve a specific data set from the
+            viewer instance.
+
+        Returns
+        -------
+        data : dict
+            A dict of the transformed Glue subset objects, with keys
+            representing the subset name and values as astropy regions
+            objects.
+        """
+        viewer = self.get_viewer(viewer_reference)
+        data = self.get_data_from_viewer(viewer_reference,
+                                         data_label,
+                                         cls=None)
+        regions = {}
+
+        for key, value in data.items():
+            if isinstance(value, Subset):
+                # Range selection on a profile is currently not supported in
+                #  the glue translation machinery for astropy regions, so we
+                #  have to do it manually. Only data that is 2d is supported,
+                #  therefore, if the data is already 2d, simply use as is.
+                if value.data.ndim == 2:
+                    region = value.data.get_selection_definition(
+                        format='astropy-regions')
+                    regions[key] = region
+                    continue
+                # There is a special case for 1d data (which is also not
+                #  supported currently). We now eschew the use of the
+                #  translation machinery entirely and construct the astropy
+                #  region ourselves.
+                elif value.data.ndim == 1:
+                    # Grab the data units from the glue-astronomy spectral axis
+                    # TODO: this needs to be much simpler; i.e. data units in
+                    #  the glue component objects
+                    unit = value.data.coords.spectral_axis.unit
+                    hi, lo = value.subset_state.hi, value.subset_state.lo
+                    xcen = 0.5 * (lo + hi)
+                    width = hi - lo
+                    region = RectanglePixelRegion(
+                        PixCoord(xcen, 0), width, 0,
+                        meta={'spectral_axis_unit': unit})
+                    regions[key] = region
+                    continue
+
+                # Get the pixel coordinate [z] of the 3D data, repeating the
+                #  wavelength axis. This doesn't seem strictly necessary as it
+                #  returns the same data if the pixel axis is [y] or [x]
+                xid = value.data.pixel_component_ids[0]
+
+                # Construct a new data object collapsing over one of the
+                #  spatial dimensions. This is necessary because the astropy
+                #  region translation machinery in glue-astronomy does not
+                #  support non-2D data, even for range objects.
+                stat_func = 'median'
+
+                if hasattr(viewer.state, 'function'):
+                    stat_func = viewer.state.function
+
+                # Compute reduced data based on the current viewer's statistic
+                #  function. This doesn't seem particularly useful, but better
+                #  to be consistent.
+                reduced_data = Data(x=value.data.compute_statistic(
+                    stat_func, value.data.id[xid],
+                    subset_state=value.subset_state.copy(), axis=1))
+
+                # Instantiate a new data collection since we need to compose
+                #  the collapsed data with the current subset state. We use a
+                #  new data collection so as not to inference with the one used
+                #  by the application.
+                temp_data_collection = DataCollection()
+                temp_data_collection.append(reduced_data)
+
+                # Get the data id of the pixel axis that will be used in the
+                #  range composition. This is the wavelength axis for the new
+                #  2d data.
+                xid = reduced_data.pixel_component_ids[1]
+
+                # Create a new subset group to hold our current subset state
+                subset_group = temp_data_collection.new_subset_group(
+                    label=value.label, subset_state=value.subset_state.copy())
+
+                # Set the subset state axis to the wavelength pixel coordinate
+                subset_group.subsets[0].subset_state.att = xid
+
+                # Use the associated collapsed subset data to get an astropy
+                #  regions object dependent on the extends of the subset.
+                # **Note** that the y values in this region object are not
+                #  useful, only the x values are.
+                region = subset_group.subsets[0].data.get_selection_definition(
+                    format='astropy-regions')
+                regions[key] = region
+
+        return regions
 
     def add_data(self, data, data_label):
         """
@@ -356,6 +523,8 @@ class Application(TemplateMixin):
             The name associated with this data. If none is given, a generic
             name is generated.
         """
+        old_data_len = len(self.data_collection)
+
         # Include the data in the data collection
         data_label = data_label or "New Data"
         self.data_collection[data_label] = data
@@ -395,6 +564,35 @@ class Application(TemplateMixin):
                 f"No data item found with label '{data_label}'. Label must be one "
                 f"of:\n\t" + f"\n\t".join([
                     data_item['name'] for data_item in self.state.data_items]))
+
+    def _set_plot_axes_labels(self, data, viewer_id):
+        """
+        Sets the plot axes labels to be the units of the data to be loaded.
+
+        Parameters
+        ----------
+        data : `~Spectrum1D`
+            Data from ``DataCollection`` that will have its units as the plot
+            label axes.
+        viewer_id : str
+            The UUID associated with the desired viewer item.
+        """
+        viewer = self._viewer_by_id(viewer_id)
+
+        # Get the units of the data to be loaded.
+        spectral_axis_unit_type = data.spectral_axis.unit.physical_type.title()
+        flux_unit_type = data.flux.unit.physical_type.title()
+
+        if data.spectral_axis.unit.is_equivalent(u.m):
+            spectral_axis_unit_type = "Wavelength"
+        elif data.spectral_axis.unit.is_equivalent(u.pixel):
+            spectral_axis_unit_type = "pixel"
+
+        viewer.figure.axes[0].label = f"{spectral_axis_unit_type} [{data.spectral_axis.unit.to_string()}]"
+        viewer.figure.axes[1].label = f"{flux_unit_type} [{data.flux.unit.to_string()}]"
+
+        # Make it so y axis label is not covering tick numbers.
+        viewer.figure.axes[1].label_offset = "-50"
 
     def remove_data_from_viewer(self, viewer_reference, data_label):
         """
@@ -627,7 +825,9 @@ class Application(TemplateMixin):
 
             viewer.add_data(data)
 
-            add_data_message = AddDataMessage(data, viewer, sender=self)
+            add_data_message = AddDataMessage(data, viewer,
+                                              viewer_id=viewer_id,
+                                              sender=self)
             self.hub.broadcast(add_data_message)
 
         # Remove any deselected data objects from viewer
@@ -639,11 +839,25 @@ class Application(TemplateMixin):
         for data in viewer_data:
             if data.label not in active_data_labels:
                 viewer.remove_data(data)
+                remove_data_message = RemoveDataMessage(data, viewer,
+                                                        viewer_id=viewer_id,
+                                                        sender=self)
+                self.hub.broadcast(remove_data_message)
+
+        # Sets the plot axes labels to be the units of the most recently
+        # active data.
+        if len(active_data_labels) > 0:
+            active_data = self.data_collection[active_data_labels[0]]
+            if hasattr(active_data, "_preferred_translation") \
+                    and active_data._preferred_translation is not None \
+                    and type(active_data.get_object()) is Spectrum1D:
+                self._set_plot_axes_labels(active_data.get_object(), viewer_id)
 
     def _on_data_added(self, msg):
         """
         Callback for when data is added to the internal ``DataCollection``.
-        Adds a new data item dictionary to the ``data_items`` state list.
+        Adds a new data item dictionary to the ``data_items`` state list and
+        links the new data to any compatible previously loaded data.
 
         Parameters
         ----------
@@ -651,8 +865,24 @@ class Application(TemplateMixin):
             The Glue data collection add message containing information about
             the new data.
         """
+        self._link_new_data()
         data_item = self._create_data_item(msg.data.label)
         self.state.data_items.append(data_item)
+
+    def _on_data_deleted(self, msg):
+        """
+        Callback for when data is removed from the internal ``DataCollection``.
+        Removes the data item dictionary in the ``data_items`` state list.
+
+        Parameters
+        ----------
+        msg : `~glue.core.DataCollectionAddMessage`
+            The Glue data collection add message containing information about
+            the new data.
+        """
+        for data_item in self.state.data_items:
+            if data_item['name'] == msg.data.label:
+                self.state.data_items.remove(data_item)
 
     @staticmethod
     def _create_data_item(label):
@@ -793,6 +1023,10 @@ class Application(TemplateMixin):
             path = os.path.join(default_path, "default", "default.yaml")
         elif path == 'cubeviz':
             path = os.path.join(default_path, "cubeviz", "cubeviz.yaml")
+        elif path == 'specviz':
+            path = os.path.join(default_path, "specviz", "specviz.yaml")
+        elif path == 'mosviz':
+            path = os.path.join(default_path, "mosviz", "mosviz.yaml")
         elif not os.path.isfile(path):
             raise ValueError("Configuration must be path to a .yaml file.")
 

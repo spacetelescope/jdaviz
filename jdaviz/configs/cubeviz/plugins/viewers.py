@@ -5,19 +5,7 @@ from specutils import Spectrum1D
 
 from jdaviz.core.registries import viewer_registry
 
-__all__ = ['CubeVizProfileView', 'CubeVizImageView']
-
-
-@viewer_registry("cubeviz-profile-viewer", label="Profile 1D (CubeViz)")
-class CubeVizProfileView(BqplotProfileView):
-    default_class = Spectrum1D
-
-    def data(self, cls=None):
-        return [layer_state.layer.get_object(cls=cls or self.default_class)
-                for layer_state in self.state.layers
-                if hasattr(layer_state, 'layer') and
-                isinstance(layer_state.layer, BaseData)]
-
+__all__ = ['CubeVizImageView']
 
 @viewer_registry("cubeviz-image-viewer", label="Image 2D (CubeViz)")
 class CubeVizImageView(BqplotImageView):

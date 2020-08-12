@@ -1,0 +1,44 @@
+Line Name,Rest Value,Type
+Ly-α,1215.67,Emission
+N V 1240,1240.81,Emission
+C IV 1549,1549.48,Emission
+He II 1640,1640.42,Emission
+C III] 1908,1908.734,Emission
+Mg II 2799,2799.49,Emission
+[O II] 3725,3726.032,Emission
+[O II] 3727,3728.815,Emission
+[Ne III] 3868,3868.76,Emission
+Hζ,3889.049,Emission
+[Ne III] 3970,3970.00,Emission
+Hδ,4101.734,Emission
+Hγ,4340.464,Emission
+[O III] 4363,4363.209,Emission
+He II 4685,4685.68,Emission
+Hβ,4861.325,Emission
+[O III] 4959,4958.911,Emission
+[O III] 5007,5006.843,Emission
+He II 5411,5411.52,Emission
+[O I] 5577,5577.339,Emission
+[N II] 5755,5754.59,Emission
+He I 5876,5875.68,Emission
+[O I] 6300,6300.304,Emission
+[S III] 6312,6312.06,Emission
+[O I] 6363,6363.776,Emission
+[N II] 6548,6548.05,Emission
+Hα,6562.801,Emission
+[N II] 6583,6583.45,Emission
+[S II] 6716,6716.44,Emission
+[S II] 6730,6730.82,Emission
+[Ar III] 7135,7135.790,Emission
+Hζ,3889.049,Absorption
+K (Ca II 3933),3933.7,Absorption
+H (Ca II 3968),3968.5,Absorption
+Hε,3970.072,Absorption
+Hδ,4101.734,Absorption
+G (Ca I 4307),4307.74,Absorption
+Hγ,4340.464,Absorption
+Hβ,4861.325,Absorption
+Mg I 5175,5175.0,Absorption
+D2 (Na I 5889),5889.95,Absorption
+D1 (Na I 5895),5895.92,Absorption
+Hα,6562.801,Absorption
