@@ -26,7 +26,7 @@ viewer. Then, click the "region" icon to set the cursor dragging function in "sp
 
 Now, you can move the mouse to one of the end points (in wavelength) of the region you want to select, and drag
 it to the other end point. The selected region background will display in light gray color, and the spectral trace
-in dark red.
+in color, coded to subset number.
 
 You also see in the top tool bar that the region was added to the data hold, and is named "Subset 1".
 
