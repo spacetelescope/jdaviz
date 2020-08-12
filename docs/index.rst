@@ -1,3 +1,7 @@
+######
+Jdaviz
+######
+
 .. image:: logos/jdaviz.svg
    :width: 400
    
@@ -18,6 +22,8 @@ contextual information like on-sky views of the spectrograph slit.
 CubeViz provides of view of spectroscopic data cubes (like those to be
 produced by JWST MIRI), along with 1D spectra extracted from the cube.
 
+Using Jdaviz
+============
 
 .. toctree::
   :maxdepth: 2
@@ -27,14 +33,12 @@ produced by JWST MIRI), along with 1D spectra extracted from the cube.
   specviz/index.rst
   cubeviz/index.rst
   mosviz/index.rst
-  dev/infrastructure.rst
-  dev/ui_description.rst
-
 
 Reference/API
 =============
 
 .. toctree::
-   :maxdepth: 1
-
+   :maxdepth: 2
+    
+   dev/index.rst
    reference/api.rst
