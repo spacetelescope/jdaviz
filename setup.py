@@ -8,7 +8,6 @@ import os
 import sys
 
 from setuptools import setup
-from setuptools.config import read_configuration
 from setuptools.command.develop import develop
 
 
@@ -76,9 +75,8 @@ except Exception:
     version = '{version}'
 """.lstrip()
 
-# these are based on jupyter_core.paths
 
-
+# These are based on jupyter_core.paths
 def jupyter_config_dir():
     """Get the Jupyter config directory for this platform and user.
     Returns JUPYTER_CONFIG_DIR if defined, else ~/.jupyter
@@ -146,13 +144,15 @@ class DevelopCmd(develop):
         super(DevelopCmd, self).run()
 
 
-# WARNING: all files generates during setup.py will not end up in the source distribution
+# WARNING: all files generated during setup.py will not end up in the source
+# distribution
 data_files = []
 # Add all the templates
 for (dirpath, dirnames, filenames) in os.walk('share/jupyter/voila/templates/'):
     if filenames:
-        data_files.append(
-            (dirpath, [os.path.join(dirpath, filename) for filename in filenames]))
+        data_files.append((dirpath, [os.path.join(dirpath, filename)
+                                     for filename in filenames]))
+
 
 setup(data_files=data_files, cmdclass={'develop': DevelopCmd},
       use_scm_version={'write_to': os.path.join('jdaviz', 'version.py'),
