@@ -152,12 +152,14 @@ class RemoveDataMessage(Message):
 
 
 class SnackbarMessage(Message):
-    def __init__(self, text, color=None, timeout=5000, *args, **kwargs):
+    def __init__(self, text, color=None, timeout=5000, loading=False,
+                 *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self._text = text
         self._color = color
         self._timeout = timeout
+        self._loading = loading
 
     @property
     def text(self):
@@ -170,6 +172,11 @@ class SnackbarMessage(Message):
     @property
     def timeout(self):
         return self._timeout
+
+    @property
+    def loading(self):
+        return self._loading
+
 
 class AddLineListMessage(Message):
     def __init__(self, table, *args, **kwargs):

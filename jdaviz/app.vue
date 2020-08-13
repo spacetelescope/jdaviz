@@ -57,7 +57,20 @@
       absolute
     >
       {{ state.snackbar.text }}
-      <v-btn text @click="state.snackbar.show = false">Close</v-btn>
+
+      <v-progress-circular
+              v-if="state.snackbar.loading"
+              indeterminate
+      ></v-progress-circular>
+
+      <v-btn
+              v-if="!state.snackbar.loading"
+              text
+              @click="state.snackbar.show = false"
+      >
+        Close
+      </v-btn>
+
     </v-snackbar>
   </v-app>
 </template>
@@ -71,8 +84,6 @@ export default {
     }
   },
   created() {
-    console.log("Created");
-    console.log(this.$vuetify.theme);
     this.$vuetify.theme.themes.light = {
       primary: "#00617E",
       secondary: "#007DA4",
