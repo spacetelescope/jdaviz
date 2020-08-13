@@ -52,4 +52,26 @@ In a notebook cell, you can access the regions using the `get_spectral_regions()
 Plot Settings
 =============
 
-More words...
+To access plot settings for a particular viewer (including the spectrum viewer), click the "hammer and screwdriver" icon, followed by the "gear" icon, followed by the "Layer" tab.
+
+.. image:: img/specviz_plot_settings.png
+
+Layer
+-----
+
+The top section of the "Layer" tab contains options to change the color of the spectrum (click the "square" icon to see a color change menu), change visibility of the spectrum ("eye" icon), and a drop-down box to select which layer will have its' settings changed.
+
+Line Width
+----------
+
+Pixel width of the spectra. Larger values correspond to thicker lines on the plot.
+
+Vmin and Vmax
+-------------
+
+Minimum and maximum values of the y axis.
+
+Percentile
+----------
+
+Include data within this percentile in the viewer.
