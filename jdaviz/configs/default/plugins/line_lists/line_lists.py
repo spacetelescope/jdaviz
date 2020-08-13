@@ -97,7 +97,7 @@ class LineListTool(TemplateMixin):
 
         try:
             viewer_data = self.app.get_viewer('spectrum-viewer').data()
-        except:
+        except TypeError:
             warn_message = SnackbarMessage("Line list plugin could not retrieve data from viewer",
                                             sender=self, color="error")
             self.hub.broadcast(warn_message)
