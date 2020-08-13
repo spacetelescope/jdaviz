@@ -12,8 +12,7 @@ There are two primary ways in which a user can load their data into the Specviz 
 Importing data through the GUI
 ------------------------------
 
-The first way that users can parse their data into the Specviz application is
-by using the "Import Data" button in the application's user interface.
+The first way that users can load their data into the Specviz application is by using the "Import Data" button in the application's user interface.
 
 .. image:: img/specviz_viewer.png
 
@@ -25,7 +24,7 @@ and enter the path of file that can be parsed as a :class:`~specutils.Spectrum1D
 
 .. image:: img/import_data_2.png
 
-After having clicked "Import", the data file will be parsed and loaded into the application. A notification will appear to let users know if the data importing was successful. Afterward, the new data set can be found in the "Data" tab of each viewer's options menu.
+After clicking "Import", the data file will be parsed and loaded into the application. A notification will appear to let users know if the data import was successful. Afterward, the new data set can be found in the "Data" tab of each viewer's options menu.
 To access the data tab, click the "hammer and screwdriver" icon to open the tool menu of a viewer. Then, click the "gear" icon.
 
 .. image:: img/import_data_3.png
@@ -36,7 +35,7 @@ Here, users can select the loaded data set to be visualized in the viewer.
 
 Importing data via the API
 --------------------------
-Alternatively, if users are working in a coding environment like a Jupyter notebook, they have access to the Specviz helper class's API. Using this API, users can load data into the application through code.
+Alternatively, if users are working in a coding environment like a Jupyter notebook, they have access to the Specviz helper class API. Using this API, users can load data into the application through code.
 Below is an example of importing the Specviz helper class, creating a :class:`~specutils.Spectrum1D` using randomly generated data, and loading that :class:`~specutils.Spectrum1D` object into the Specviz application::
 
     >>> from jdaviz.configs.specviz.helper import SpecViz
