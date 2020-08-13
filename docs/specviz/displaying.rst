@@ -59,12 +59,12 @@ To access plot settings for a particular viewer (including the spectrum viewer),
 Layer
 -----
 
-The top section of the "Layer" tab contains options to change the color of the spectrum (click the "square" icon to see a color change menu), change visibility of the spectrum ("eye" icon), and a drop-down box to select which layer will have its' settings changed.
+The top section of the "Layer" tab contains options to change the color of the spectrum (click the "square" icon to see a color change menu), change visibility of the spectrum ("eye" icon), and a drop-down box to select which layer will have its settings changed.
 
 Line Width
 ----------
 
-Pixel width of the spectra. Larger values correspond to thicker lines on the plot.
+Width of the spectrum in pixels. Larger values correspond to thicker lines on the plot.
 
 Vmin and Vmax
 -------------
@@ -74,4 +74,4 @@ Minimum and maximum values of the y axis.
 Percentile
 ----------
 
-Include data within this percentile in the viewer.
+Sets the bounds of the plot (Vmin and Vmax) such that the selected percentage of the data is shown in the viewer. Editing either bound manually changes the "Percentile" selection to "Custom."
