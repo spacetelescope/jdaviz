@@ -95,7 +95,13 @@ class LineListTool(TemplateMixin):
         if msg is not None and msg.viewer_id != self._viewer_id:
             return
 
-        viewer_data = self.app.get_viewer('spectrum-viewer').data()
+        try:
+            viewer_data = self.app.get_viewer('spectrum-viewer').data()
+        except TypeError:
+            warn_message = SnackbarMessage("Line list plugin could not retrieve data from viewer",
+                                            sender=self, color="error")
+            self.hub.broadcast(warn_message)
+            return
 
         # If no data is currently plotted, don't attempt to update
         if len(viewer_data) == 0:
