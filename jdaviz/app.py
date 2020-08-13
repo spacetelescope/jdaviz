@@ -234,8 +234,13 @@ class Application(VuetifyTemplate, HubListener):
         them so that they can be displayed on the same profile1D plot.
         """
         new_len = len(self.data_collection)
+        # Can't link if there's no world_component_ids
+        if self.data_collection[new_len-1].world_component_ids == []:
+            return
         for i in range(0, new_len-1):
-                self.data_collection.add_link(LinkSame(self.data_collection[i].world_component_ids[0],
+            if self.data_collection[i].world_component_ids == []:
+                continue
+            self.data_collection.add_link(LinkSame(self.data_collection[i].world_component_ids[0],
                     self.data_collection[new_len-1].world_component_ids[0]))
 
     def load_data(self, file_obj, **kwargs):
