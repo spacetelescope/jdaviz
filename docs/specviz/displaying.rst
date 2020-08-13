@@ -37,16 +37,71 @@ You can find the following Pan/Zoom tools available in the tool drawer of the vi
 
 2D Bidirectional Pan/Zoom
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-The 2D Pan/Zoom Icon allows you to zoom using the scroll wheel:
+The 2D Pan/Zoom Icon allows you to zoom using the scroll wheel. The window will zoom into the area around your cursor:
 
 .. image:: ../img/SpecViz_2D_Zoom.gif
     :alt: Zooming in SpecViz with the Scroll Wheel
 
+To pan, simply click and drag the window
 
+Horizontal/Vertical Zoom
+^^^^^^^^^^^^^^^^^^^^^^^^
+The Horizontal and Vertical Zoom tools allow you to zoom along each axis, while locking the other. Zoom by scrolling
+
+.. note::
+    A gif here showing how these tools manipulate the view, similar to above may be useful here
 
 
 API Pan/Zoom (Notebook interface)
 ---------------------------------
+The SpecViz helper contains a set of convinence methods to programmatically define the view of the spectrum viewer.
+
+For information about the SpecViz, and other, helpers, and how to instantiate one, please see `helpers <https://readthedocs.org/404>`_
+
+.. warning::
+    The helper page has not yet been written/defined. Until that documentation is written, you may instantiate a SpecViz Helper via:
+    ::
+
+        from jdaviz import SpecViz
+        
+        # Instantiate an instance of SpecViz
+        specviz = SpecViz()
+        # Display SpecViz
+        specviz.app
+
+Limit methods
+^^^^^^^^^^^^^
+You can use the methods x_limits() and y_limits() to modify the field of view of SpecViz. You can provide it a scalar (which assumes the units of the loaded spectra), an Astropy Quantity, or 'auto' to automatically scale
+::
+
+    specviz.x_limits()
+    specviz.x_limits(650*u.nm,750*u.nm)
+    specviz.y_limits('auto', 110.0)
+
+Additionally, you can provide the limit methods with a `specutils SpectralRegion <https://specutils.readthedocs.io/en/stable/spectral_regions.html>_`. SpecViz shall set the bounds the upper and lower bounds of the SpectralRegion
+::
+
+    from astropy import units as u
+    from specutils.spectral import SpectralRegion
+
+    bounds = SpectralRegion(0.45*u.nm, 0.6*u.nm)
+    specviz.x_limits(bounds)
+
+Autoscale methods
+^^^^^^^^^^^^^^^^^
+You can also quickly return to the default zoom using autoscale_x() and autoscale_y()
+::
+
+    specviz.autoscale_x()
+    specviz.autoscale_y()
+
+Axis Orientation methods
+^^^^^^^^^^^^^^^^^^^^^^^^
+To quickly flip an axis to change to and from ascending/descending, use flip_x() and flip_y()
+::
+
+    specviz.flip_x()
+    specviz.flip_y()
 
 Defining Spectral Regions
 =========================
