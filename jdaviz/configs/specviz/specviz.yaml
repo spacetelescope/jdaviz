@@ -16,7 +16,6 @@ toolbar:
 tray:
   - g-gaussian-smooth
   - g-model-fitting
-  - specviz-line-analysis
   - g-unit-conversion
   - g-line-list
   - specviz-line-analysis
