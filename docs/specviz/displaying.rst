@@ -52,14 +52,14 @@ In a notebook cell, you can access the regions using the `get_spectral_regions()
 Plot Settings
 =============
 
-To access plot settings for a particular viewer (including the spectrum viewer), click the "hammer and screwdriver" icon, followed by the "gear" icon, followed by the "Layer" tab.
+To access plot settings for a particular viewer (including the spectrum viewer), click the :guilabel:`hammer and screwdriver` icon, followed by the :guilabel:`gear` icon, followed by the  :guilabel:`Layer` tab.
 
 .. image:: img/specviz_plot_settings.png
 
 Layer
 -----
 
-The top section of the "Layer" tab contains options to change the color of the spectrum (click the "square" icon to see a color change menu), change visibility of the spectrum ("eye" icon), and a drop-down box to select which layer will have its settings changed.
+The top section of the :guilabel:`Layer` tab contains options to change the color of the spectrum (click the :guilabel:`square` icon to see a color change menu), change visibility of the spectrum (:guilabel:`eye` icon), and a drop-down box to select which layer will have its settings changed.
 
 Line Width
 ----------
