@@ -14,14 +14,12 @@ toolbar:
   - g-data-tools
   - g-subset-tools
 tray:
-<<<<<<< HEAD
   - g-gaussian-smooth
   - g-model-fitting
   - specviz-line-analysis
   - g-unit-conversion
   - g-line-list
   - specviz-line-analysis
->>>>>>> Add line analysis plugin to specviz config
 viewer_area:
   - container: col
     children:
