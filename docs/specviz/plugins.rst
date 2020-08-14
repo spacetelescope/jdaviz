@@ -111,7 +111,7 @@ line.
 The emission line is selected via the :guilabel:`region` tool in
 the spectrum viewer to select a spectral subset.
 
-The statistics returned include the line centroid, width, peak flux,
+The statistics returned include the line centroid, gaussian sigma width, gaussian FWHM,
 total flux, and equivalent width.
 
 Currently, it is assumed that the continuum has already been
