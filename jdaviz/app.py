@@ -62,7 +62,8 @@ class ApplicationState(State):
         'show': False,
         'test': "",
         'color': None,
-        'timeout': 3000
+        'timeout': 3000,
+        'loading': False
     }, docstring="State of the quick toast messages.")
 
     settings = DictCallbackProperty({
@@ -223,6 +224,7 @@ class Application(VuetifyTemplate, HubListener):
         self.state.snackbar['text'] = msg.text
         self.state.snackbar['color'] = msg.color
         self.state.snackbar['timeout'] = msg.timeout
+        self.state.snackbar['loading'] = msg.loading
         self.state.snackbar['show'] = True
 
     def _link_new_data(self):
@@ -232,8 +234,13 @@ class Application(VuetifyTemplate, HubListener):
         them so that they can be displayed on the same profile1D plot.
         """
         new_len = len(self.data_collection)
+        # Can't link if there's no world_component_ids
+        if self.data_collection[new_len-1].world_component_ids == []:
+            return
         for i in range(0, new_len-1):
-                self.data_collection.add_link(LinkSame(self.data_collection[i].world_component_ids[0],
+            if self.data_collection[i].world_component_ids == []:
+                continue
+            self.data_collection.add_link(LinkSame(self.data_collection[i].world_component_ids[0],
                     self.data_collection[new_len-1].world_component_ids[0]))
 
     def load_data(self, file_obj, **kwargs):
@@ -387,10 +394,7 @@ class Application(VuetifyTemplate, HubListener):
 
         # If a data label was provided, return only the data requested
         if data_label is not None:
-            if data_label in data:
-                data = {data_label: data.get(data_label)}
-            else:
-                data = {}
+            return data.get(data_label)
 
         return data
 
