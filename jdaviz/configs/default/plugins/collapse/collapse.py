@@ -52,14 +52,19 @@ class Collapse(TemplateMixin):
 
     def _on_data_updated(self, msg):
         self.data_items = [x.label for x in self.data_collection]
-        # Default to selecting the first loaded data
+        # Default to selecting the first loaded cube
         if self._selected_data is None:
-            self.selected_data_item = self.data_items[0]
-            # Also set the spectral min and max to default to the full range
-            cube = self._selected_data.get_object(cls=SpectralCube)
-            self.spectral_min = cube.spectral_axis[0].value
-            self.spectral_max = cube.spectral_axis[-1].value
-            self.spectral_unit = str(cube.spectral_axis.unit)
+            for i in range(len(self.dc_items)):
+                try:
+                    self.selected_data_item = self.data_items[0]
+                    # Also set the spectral min and max to default to the
+                    # full range
+                    cube = self._selected_data.get_object(cls=SpectralCube)
+                    self.spectral_min = cube.spectral_axis[0].value
+                    self.spectral_max = cube.spectral_axis[-1].value
+                    self.spectral_unit = str(cube.spectral_axis.unit)
+                except (ValueError, TypeError):
+                    continue
 
     @observe('selected_data_item')
     def _on_data_item_selected(self, event):
@@ -85,17 +90,17 @@ class Collapse(TemplateMixin):
             self.spectral_max = spec_reg.upper.value
 
     def vue_list_subsets(self, event):
-         """Populate the spectral subset selection dropdown"""
-         temp_subsets = self.app.get_subsets_from_viewer("spectrum-viewer")
-         temp_list = ["None"]
-         temp_dict = {}
-         # Attempt to filter out spatial subsets
-         for key, region in temp_subsets.items():
-             if type(region) == RectanglePixelRegion:
-                 temp_dict[key] = region
-                 temp_list.append(key)
-         self._spectral_subsets = temp_dict
-         self.spectral_subset_items = temp_list
+        """Populate the spectral subset selection dropdown"""
+        temp_subsets = self.app.get_subsets_from_viewer("spectrum-viewer")
+        temp_list = ["None"]
+        temp_dict = {}
+        # Attempt to filter out spatial subsets
+        for key, region in temp_subsets.items():
+            if type(region) == RectanglePixelRegion:
+                temp_dict[key] = region
+                temp_list.append(key)
+        self._spectral_subsets = temp_dict
+        self.spectral_subset_items = temp_list
 
     def vue_collapse(self, *args, **kwargs):
         try:
