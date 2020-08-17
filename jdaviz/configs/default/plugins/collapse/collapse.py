@@ -57,12 +57,6 @@ class Collapse(TemplateMixin):
             for i in range(len(self.data_items)):
                 try:
                     self.selected_data_item = self.data_items[i]
-                    # Also set the spectral min and max to default to the
-                    # full range
-                    cube = self._selected_data.get_object(cls=SpectralCube)
-                    self.spectral_min = cube.spectral_axis[0].value
-                    self.spectral_max = cube.spectral_axis[-1].value
-                    self.spectral_unit = str(cube.spectral_axis.unit)
                 except (ValueError, TypeError):
                     continue
 
@@ -70,6 +64,12 @@ class Collapse(TemplateMixin):
     def _on_data_item_selected(self, event):
         self._selected_data = next((x for x in self.data_collection
                                     if x.label == event['new']))
+
+        # Also set the spectral min and max to default to the full range
+        cube = self._selected_data.get_object(cls=SpectralCube)
+        self.spectral_min = cube.spectral_axis[0].value
+        self.spectral_max = cube.spectral_axis[-1].value
+        self.spectral_unit = str(cube.spectral_axis.unit)
 
         self.axes = list(range(len(self._selected_data.shape)))
 
