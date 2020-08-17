@@ -11,23 +11,31 @@ settings:
 toolbar:
   - g-data-tools
   - g-subset-tools
-  - g-unified-slider
 tray:
   - g-gaussian-smooth
   - g-collapse
 viewer_area:
   - container: col
     children:
+    - container: col
+      children:
       - container: row
-        viewers:
+        children:
+        - container: col
+          viewers:
           - name: Image viewer
             plot: mosviz-image-viewer
-            reference: mos-image-viewer
-          - name: 2D Spectrum viewer
-            plot: mosviz-image-viewer
-            reference: mos-2d-spectrum-viewer
+            reference: image-viewer
+        - container: col
+          viewers:
+            - name: 2D Spectrum viewer
+              plot: mosviz-profile-2d-viewer
+              reference: spectrum-2d-viewer
+            - name: Spectrum
+              plot: mosviz-profile-viewer
+              reference: spectrum-viewer
       - container: row
         viewers:
-          - name: Spectrum
-            plot: mosviz-profile-viewer
-            reference: spectrum-viewer
+        - name: Table viewer
+          plot: mosviz-table-viewer
+          reference: table-viewer
