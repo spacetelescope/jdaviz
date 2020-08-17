@@ -133,7 +133,7 @@ class MomentMap(TemplateMixin):
             n_moment = int(self.n_moment)
             if n_moment < 0:
                 raise ValueError("Moment must be a positive integer")
-        except:
+        except ValueError:
             raise ValueError("Moment must be a positive integer")
         self.moment = slab.moment(n_moment)
 
@@ -147,7 +147,7 @@ class MomentMap(TemplateMixin):
         self.moment_available = True
 
         msg = SnackbarMessage("{} added to data collection".format(label),
-                                               sender=self, color="success")
+                              sender=self, color="success")
         self.hub.broadcast(msg)
 
     def vue_save_as_fits(self, event):
@@ -160,6 +160,5 @@ class MomentMap(TemplateMixin):
         else:
             full_path = self._filename
         msg = SnackbarMessage("Moment map saved to {}".format(full_path),
-                                                sender=self, color="success")
+                              sender=self, color="success")
         self.hub.broadcast(msg)
-
