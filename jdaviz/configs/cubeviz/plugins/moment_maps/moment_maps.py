@@ -109,17 +109,17 @@ class MomentMap(TemplateMixin):
         self._filename = self.filename
 
     def vue_list_subsets(self, event):
-         """Populate the spectral subset selection dropdown"""
-         temp_subsets = self.app.get_subsets_from_viewer("spectrum-viewer")
-         temp_list = ["None"]
-         temp_dict = {}
-         # Attempt to filter out spatial subsets
-         for key, region in temp_subsets.items():
-             if type(region) == RectanglePixelRegion:
-                 temp_dict[key] = region
-                 temp_list.append(key)
-         self._spectral_subsets = temp_dict
-         self.spectral_subset_items = temp_list
+        """Populate the spectral subset selection dropdown"""
+        temp_subsets = self.app.get_subsets_from_viewer("spectrum-viewer")
+        temp_list = ["None"]
+        temp_dict = {}
+        # Attempt to filter out spatial subsets
+        for key, region in temp_subsets.items():
+            if type(region) == RectanglePixelRegion:
+                temp_dict[key] = region
+                temp_list.append(key)
+        self._spectral_subsets = temp_dict
+        self.spectral_subset_items = temp_list
 
     def vue_calculate_moment(self, event):
         #Retrieve the data cube and slice out desired region, if specified
