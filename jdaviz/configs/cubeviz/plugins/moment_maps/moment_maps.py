@@ -58,14 +58,20 @@ class MomentMap(TemplateMixin):
 
     def _on_data_updated(self, msg):
         self.dc_items = [x.label for x in self.data_collection]
-        # Default to selecting the first loaded data
+        # Default to selecting the first loaded cube
         if self._selected_data is None:
-            self.selected_data = self.dc_items[0]
-            # Also set the spectral min and max to default to the full range
-            cube = self._selected_data.get_object(cls=SpectralCube)
-            self.spectral_min = cube.spectral_axis[0].value
-            self.spectral_max = cube.spectral_axis[-1].value
-            self.spectral_unit = str(cube.spectral_axis.unit)
+            for i in range(len(self.dc_items)):
+                # Also set the spectral min and max to default to the full range
+                try:
+                    self.selected_data = self.dc_items[i]
+                    cube = self._selected_data.get_object(cls=SpectralCube)
+                    self.spectral_min = cube.spectral_axis[0].value
+                    self.spectral_max = cube.spectral_axis[-1].value
+                    self.spectral_unit = str(cube.spectral_axis.unit)
+                    break
+                # Skip data that can't be returned as a SpectralCube
+                except ValueError:
+                    continue
 
     def _on_subset_created(self, msg):
         """Currently unimplemented due to problems with the SubsetCreateMessafe"""
