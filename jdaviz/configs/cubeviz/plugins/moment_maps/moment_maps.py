@@ -70,7 +70,7 @@ class MomentMap(TemplateMixin):
                     self.spectral_unit = str(cube.spectral_axis.unit)
                     break
                 # Skip data that can't be returned as a SpectralCube
-                except ValueError:
+                except (ValueError, TypeError):
                     continue
 
     def _on_subset_created(self, msg):
