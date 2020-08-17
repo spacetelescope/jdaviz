@@ -54,9 +54,9 @@ class Collapse(TemplateMixin):
         self.data_items = [x.label for x in self.data_collection]
         # Default to selecting the first loaded cube
         if self._selected_data is None:
-            for i in range(len(self.dc_items)):
+            for i in range(len(self.data_items)):
                 try:
-                    self.selected_data_item = self.data_items[0]
+                    self.selected_data_item = self.data_items[i]
                     # Also set the spectral min and max to default to the
                     # full range
                     cube = self._selected_data.get_object(cls=SpectralCube)
