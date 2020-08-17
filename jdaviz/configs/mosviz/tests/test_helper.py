@@ -51,9 +51,22 @@ MJDREFF =                  0.0 / [d] MJD of fiducial time, fractional part
 RADESYS = 'ICRS'               / Equatorial coordinate system
 SPECSYS = 'BARYCENT'           / Reference frame of spectral coordinates
 """
-    wcs = WCS(header)
-    data = np.random.sample((15, 1, 1174))
+    new_hdr = {}
 
+    for line in header.split('\n'):
+        try:
+            key, value = line.split('=')
+            key = key.strip()
+            value, _ = value.split('/')
+            value = value.strip()
+            value = value.strip("'")
+        except ValueError:
+            continue
+
+        new_hdr[key] = value
+
+    wcs = WCS(new_hdr)
+    data = np.random.sample((15, 1, 1174))
     spectral_cube = SpectralCube(data, wcs=wcs)
 
     return spectral_cube
@@ -87,9 +100,22 @@ MJDREFI =                  0.0 / [d] MJD of fiducial time, integer part
 MJDREFF =                  0.0 / [d] MJD of fiducial time, fractional part
 RADESYS = 'ICRS'               / Equatorial coordinate system
 """
-    data = np.random.sample((55, 55))
-    wcs = WCS(header)
+    new_hdr = {}
 
+    for line in header.split('\n'):
+        try:
+            key, value = line.split('=')
+            key = key.strip()
+            value, _ = value.split('/')
+            value = value.strip()
+            value = value.strip("'")
+        except ValueError:
+            continue
+
+        new_hdr[key] = value
+
+    wcs = WCS(new_hdr)
+    data = np.random.sample((55, 55))
     ccd_data = CCDData(data, wcs=wcs, unit='Jy')
 
     return ccd_data
