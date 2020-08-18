@@ -6,7 +6,7 @@
 Cubeviz
 #######
 
-Cubeviz is a visualization and analysis toolbox for data cubes from integral field units (IFUs). It is built as part of the `Glue visualiztion <https://glueviz.org>`_ tool. CubeViz is designed to work with data cubes from the NIRSpec and MIRI instruments on JWST, and will work with IFU data cubes. It uses the `specutils <https://specutils.readthedocs.io/en/latest/>`_ package from `Astropy <https://www.astropy.org>`_ .
+Cubeviz is a visualization and analysis toolbox for data cubes from integral field units (IFUs). It is built as part of the `Glue visualiztion <https://glueviz.org>`_ tool. Cubeviz is designed to work with data cubes from the NIRSpec and MIRI instruments on JWST, and will work with IFU data cubes. It uses the `specutils <https://specutils.readthedocs.io/en/latest/>`_ package from `Astropy <https://www.astropy.org>`_ .
 
 The core functionality of Cubeviz currently includes the ability to:
 
