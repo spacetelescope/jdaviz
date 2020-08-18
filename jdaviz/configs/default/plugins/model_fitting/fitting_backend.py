@@ -119,11 +119,6 @@ def _fit_3D(initial_model, spectrum):
         attribute.
     """
 
-    # Worker for the multiprocess pool.
-    worker = SpaxelWorker(spectrum.flux,
-                          spectrum.spectral_axis,
-                          initial_model)
-
     # Generate list of all spaxels to be fitted
     spaxels = _generate_spaxel_list(spectrum)
 
@@ -139,27 +134,38 @@ def _fit_3D(initial_model, spectrum):
     output_flux_cube = np.zeros(shape=spectrum.flux.shape)
 
     # Callback to collect results from workers into the cubes
-    def collect_result(result):
-        x = result[0]
-        y = result[1]
-        model = result[2]
-        fitted_values = result[3]
+    def collect_result(results):
+        for i in range(len(results['x'])):
+            x = results['x'][i]
+            y = results['y'][i]
+            model = results['fitted_model'][i]
+            fitted_values = results['fitted_values'][i]
 
-        # Store fitted model parameters
-        for index, name in enumerate(model.param_names):
-            param = getattr(model, name)
-            parameters_cube[index, x, y] = param.value
+            # Store fitted model parameters
+            for index, name in enumerate(model.param_names):
+                param = getattr(model, name)
+                parameters_cube[index, x, y] = param.value
 
-        # Store fitted values
-        output_flux_cube[x, y, :] = fitted_values
+            # Store fitted values
+            output_flux_cube[x, y, :] = fitted_values
 
     # Run multiprocessor pool to fit each spaxel and
     # compute model values on that same spaxel.
     results = []
     pool = Pool(mp.cpu_count() - 1)
 
-    for spx in spaxels:
-        r = pool.apply_async(worker, (spx,), callback=collect_result)
+    # The communicate overhead of spawning a process for each *individual*
+    # parameter set is prohibitively high (it's actually faster to run things
+    # sequentially). Instead, chunk the spaxel list based on the number of
+    # available processors, and have each processor do the model fitting
+    # on the entire subset of spaxel tuples, then return the set of results.
+    for spx in np.array_split(spaxels, mp.cpu_count() - 1):
+        # Worker for the multiprocess pool.
+        worker = SpaxelWorker(spectrum.flux,
+                              spectrum.spectral_axis,
+                              initial_model,
+                              param_set=spx)
+        r = pool.apply_async(worker, callback=collect_result)
         results.append(r)
     for r in results:
         r.wait()
@@ -186,7 +192,7 @@ def _fit_3D(initial_model, spectrum):
 
 
 class SpaxelWorker:
-    '''
+    """
     A class with callable instances that perform fitting over a
     spaxel. It provides the callable for the `Pool.apply_async`
     function, and also holds everything necessary to perform the
@@ -198,32 +204,41 @@ class SpaxelWorker:
     modify parameter values in an already built CompoundModel
     instance. We need to use the current model instance while
     it still exists.
-    '''
-    def __init__(self, flux_cube, wave_array, initial_model):
+    """
+    def __init__(self, flux_cube, wave_array, initial_model, param_set):
         self.cube = flux_cube
         self.wave = wave_array
         self.model = initial_model
+        self.param_set = param_set
 
-    def __call__(self, parameters):
-        x = parameters[0]
-        y = parameters[1]
+    def __call__(self):
+        results = {'x': [], 'y': [], 'fitted_model': [], 'fitted_values': []}
 
-        # Calling the Spectrum1D constructor for every spaxel
-        # turned out to be less expensive than expected. Experiments
-        # show that the cost amounts to a couple percent additional
-        # running time in comparison with a version that uses a 3D
-        # spectrum as input. Besides, letting an externally-created
-        # spectrum reference into the callable somehow prevents it
-        # to execute. This behavior was seen also with other functions
-        # passed to the callable.
-        flux = self.cube[x, y, :] # transposed!
-        sp = Spectrum1D(spectral_axis=self.wave, flux=flux)
+        for parameters in self.param_set:
+            x = parameters[0]
+            y = parameters[1]
 
-        fitted_model = fit_lines(sp, self.model)
+            # Calling the Spectrum1D constructor for every spaxel
+            # turned out to be less expensive than expected. Experiments
+            # show that the cost amounts to a couple percent additional
+            # running time in comparison with a version that uses a 3D
+            # spectrum as input. Besides, letting an externally-created
+            # spectrum reference into the callable somehow prevents it
+            # to execute. This behavior was seen also with other functions
+            # passed to the callable.
+            flux = self.cube[x, y, :] # transposed!
+            sp = Spectrum1D(spectral_axis=self.wave, flux=flux)
 
-        fitted_values = fitted_model(self.wave)
+            fitted_model = fit_lines(sp, self.model)
 
-        return (x, y, fitted_model, fitted_values)
+            fitted_values = fitted_model(self.wave)
+
+            results['x'].append(x)
+            results['y'].append(y)
+            results['fitted_model'].append(fitted_model)
+            results['fitted_values'].append(fitted_values)
+
+        return results
 
 
 def _build_model(component_list, expression):
@@ -300,7 +315,7 @@ def _handle_parameter_units(model, fitted_parameters_cube, param_units):
 
 def _generate_spaxel_list(spectrum):
     """
-    Generates a list wuth tuples, each one addressing the (x,y)
+    Generates a list with tuples, each one addressing the (x,y)
     coordinates of a spaxel in a 3-D spectrum cube.
 
     Parameters

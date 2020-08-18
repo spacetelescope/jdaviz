@@ -29,7 +29,7 @@ from glue_jupyter.state_traitlets_helpers import GlueState
 from ipyvuetify import VuetifyTemplate
 
 from .core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
-                          SnackbarMessage, RemoveDataMessage)
+                          SnackbarMessage, RemoveDataMessage, ConfigurationLoadedMessage, AddDataToViewerMessage, RemoveDataFromViewerMessage)
 from .core.registries import (tool_registry, tray_registry, viewer_registry,
                               data_parser_registry)
 from .utils import load_template
@@ -62,7 +62,8 @@ class ApplicationState(State):
         'show': False,
         'test': "",
         'color': None,
-        'timeout': 3000
+        'timeout': 3000,
+        'loading': False
     }, docstring="State of the quick toast messages.")
 
     settings = DictCallbackProperty({
@@ -163,6 +164,14 @@ class Application(VuetifyTemplate, HubListener):
         self.hub.subscribe(self, DataCollectionDeleteMessage,
                            handler=self._on_data_deleted)
 
+        self.hub.subscribe(self, AddDataToViewerMessage,
+                           handler=lambda msg: self.add_data_to_viewer(
+                               msg.viewer_reference, msg.data_label))
+
+        self.hub.subscribe(self, RemoveDataFromViewerMessage,
+                           handler=lambda msg: self.remove_data_from_viewer(
+                               msg.viewer_reference, msg.data_label))
+
         # Subscribe to snackbar messages and tie them to the display of the
         #  message box
         self.hub.subscribe(self, SnackbarMessage,
@@ -223,6 +232,7 @@ class Application(VuetifyTemplate, HubListener):
         self.state.snackbar['text'] = msg.text
         self.state.snackbar['color'] = msg.color
         self.state.snackbar['timeout'] = msg.timeout
+        self.state.snackbar['loading'] = msg.loading
         self.state.snackbar['show'] = True
 
     def _link_new_data(self):
@@ -232,11 +242,16 @@ class Application(VuetifyTemplate, HubListener):
         them so that they can be displayed on the same profile1D plot.
         """
         new_len = len(self.data_collection)
+        # Can't link if there's no world_component_ids
+        if self.data_collection[new_len-1].world_component_ids == []:
+            return
         for i in range(0, new_len-1):
-                self.data_collection.add_link(LinkSame(self.data_collection[i].world_component_ids[0],
+            if self.data_collection[i].world_component_ids == []:
+                continue
+            self.data_collection.add_link(LinkSame(self.data_collection[i].world_component_ids[0],
                     self.data_collection[new_len-1].world_component_ids[0]))
 
-    def load_data(self, file_obj, **kwargs):
+    def load_data(self, file_obj, parser_reference=None, **kwargs):
         """
         Provided a path to a data file, open and parse the data into the
         `~glue.core.DataCollection` for this session. This also attempts to
@@ -245,12 +260,12 @@ class Application(VuetifyTemplate, HubListener):
 
         Parameters
         ----------
-        path : str
-            File path for the data file to be loaded.
+        file_obj : str or file-like
+            File object for the data to be loaded.
         """
         old_data_len = len(self.data_collection)
         parser = data_parser_registry.members.get(
-            self.state.settings['data']['parser'])
+            self.state.settings['data'].get('parser') or parser_reference)
 
         if parser is not None:
             # If the parser returns something other than known, assume it's
@@ -364,8 +379,13 @@ class Application(VuetifyTemplate, HubListener):
                     layer_data = layer_state.layer
 
                     if cls is not None:
-                        layer_data = layer_data.get_object(cls=cls,
-                                                           statistic=statistic)
+                        # If data is one-dimensional, assume that it can be
+                        #  collapsed via the defined statistic
+                        if len(layer_data.shape) == 1:
+                            layer_data = layer_data.get_object(cls=cls,
+                                                               statistic=statistic)
+                        else:
+                            layer_data = layer_data.get_object(cls=cls)
                     # If the shape of the data is 2d, then use CCDData as the
                     #  output data type
                     elif len(layer_data.shape) == 2:
@@ -387,10 +407,7 @@ class Application(VuetifyTemplate, HubListener):
 
         # If a data label was provided, return only the data requested
         if data_label is not None:
-            if data_label in data:
-                data = {data_label: data.get(data_label)}
-            else:
-                data = {}
+            return data.get(data_label)
 
         return data
 
@@ -715,13 +732,18 @@ class Application(VuetifyTemplate, HubListener):
             attributes.
         """
         def find_viewer_item(stack_items):
+            out_viewer_item = None
+
             for stack_item in stack_items:
                 for viewer_item in stack_item.get('viewers'):
                     if viewer_item['reference'] == reference:
-                        return viewer_item
+                        out_viewer_item = viewer_item
+                        break
 
                 if len(stack_item.get('children')) > 0:
-                    return find_viewer_item(stack_item.get('children'))
+                    out_viewer_item = find_viewer_item(stack_item.get('children'))
+
+            return out_viewer_item
 
         viewer_item = find_viewer_item(self.state.stack_items)
 
@@ -1068,7 +1090,6 @@ class Application(VuetifyTemplate, HubListener):
         if config.get('viewer_area') is not None:
             stack_items = compose_viewer_area(config.get('viewer_area'))
             self.state.stack_items.extend(stack_items)
-            # self.vue_relayout()
 
         # Add the toolbar item filter to the toolbar component
         for name in config.get('toolbar', []):
@@ -1089,3 +1110,7 @@ class Application(VuetifyTemplate, HubListener):
                 'label': tray_item_label,
                 'widget': "IPY_MODEL_" + tray_item_instance.model_id
             })
+
+        config_loaded_message = ConfigurationLoadedMessage(
+            config['settings'].get('configuration', 'default'), sender=self)
+        self.hub.broadcast(config_loaded_message)
