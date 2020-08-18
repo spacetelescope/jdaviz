@@ -38,7 +38,6 @@ Future functionality will include the ability to:
 
 * save and restore a session,
 
-* create kinematic maps (rotation velocity and velocity dispersion),
 
 * create RGB images from regions collapsed in wavelength space (i.e., linemaps),
 
