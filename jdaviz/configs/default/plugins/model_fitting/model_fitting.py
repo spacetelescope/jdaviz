@@ -382,16 +382,9 @@ class ModelFitting(TemplateMixin):
         label = self.model_label
         if label in self.data_collection:
             self.app.remove_data_from_viewer('spectrum-viewer', label)
-            # Some hacky code to remove the label from the data dropdown
-            temp_items = []
-            for data_item in self.app.state.data_items:
-                if data_item['name'] != label:
-                    temp_items.append(data_item)
-            self.app.state.data_items = temp_items
             # Remove the actual Glue data object from the data_collection
             self.data_collection.remove(self.data_collection[label])
         self.data_collection[label] = spectrum
         self.save_enabled = True
 
-        #sleep(1)
         #self.app.add_data_to_viewer('spectrum-viewer', label)
