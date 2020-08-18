@@ -211,6 +211,25 @@ class ModelFitting(TemplateMixin):
 
         return new_model
 
+    def _reinitialize_with_fixed(self):
+        """
+        Reinitialize all component models with current values and the
+        specified parameters fixed (can't easily update fixed dictionary in
+        an existing model)
+        """
+        temp_models = []
+        for m in self.component_models:
+            fixed = {}
+            for p in m["parameters"]:
+                fixed[p["name"]] = p["fixed"]
+            # Have to initialize with fixed dictionary
+            temp_model = MODELS[m["model_type"]](name=m["id"], fixed=fixed)
+            # Now we can set the parameter values
+            for p in m["parameters"]:
+                setattr(temp_model, p["name"], p["value"])
+            temp_models.append(temp_model)
+        return temp_models
+
     def vue_add_model(self, event):
         """Add the selected model and input string ID to the list of models"""
         new_model = {"id": self.temp_name, "model_type": self.temp_model,
@@ -266,9 +285,10 @@ class ModelFitting(TemplateMixin):
         as such by the user, then update the displayed parameters with fit
         values
         """
+        models_to_fit = self._reinitialize_with_fixed()
         fitted_model, fitted_spectrum = fit_model_to_spectrum(
             self._spectrum1d,
-            self._initialized_models.values(),
+            models_to_fit,
             self.model_equation,
             run_fitter=True)
         self._fitted_model = fitted_model
@@ -312,9 +332,12 @@ class ModelFitting(TemplateMixin):
             loading=True, timeout=0, sender=self)
         self.hub.broadcast(snackbar_message)
 
+        # Retrieve copy of the models with proper "fixed" dictionaries
+        models_to_fit = self._reinitialize_with_fixed()
+
         fitted_model, fitted_spectrum = fit_model_to_spectrum(
             spec,
-            self._initialized_models.values(),
+            models_to_fit,
             self.model_equation,
             run_fitter=True)
 
