@@ -24,7 +24,7 @@ The core functionality of Cubeviz currently includes the ability to:
 
 * fit spectral lines,
 
-* create moment maps,
+* create moment maps, including line flux and kinematic maps (rotation velocity and velocity dispersion)
 
 * overlay spectral line lists,
 
