@@ -3,7 +3,7 @@
    :width: 400
 
 #######
-SpecViz
+Specviz
 #######
 
 SpecViz is a tool for visualization and quick-look analysis of 1D astronomical spectra. It is written in the Python programming language, and therefore can be run anywhere Python is supported (see Installation). SpecViz is built on top of the `specutils <https://specutils.readthedocs.io/en/latest/>`_ package from `Astropy <https://www.astropy.org>`_ , providing a visual, interactive interface to the analysis capabilities in that library.

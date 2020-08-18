@@ -3,12 +3,12 @@
    :width: 400
 
 #######
-CubeViz
+Cubeviz
 #######
 
-CubeViz is an visualization and analysis toolbox for data cubes from integral field units (IFUs). It is built as part of the glue visualiztion tool. CubeViz is designed to work with data cubes from the NIRSpec and MIRI instruments on JWST, and will work with data cubes from any IFU. It uses the `specutils <https://specutils.readthedocs.io/en/latest/>`_ package from `Astropy <https://www.astropy.org>`_ .
+Cubeviz is a visualization and analysis toolbox for data cubes from integral field units (IFUs). It is built as part of the `Glue visualiztion <https://glueviz.org>`_ tool. CubeViz is designed to work with data cubes from the NIRSpec and MIRI instruments on JWST, and will work with IFU data cubes. It uses the `specutils <https://specutils.readthedocs.io/en/latest/>`_ package from `Astropy <https://www.astropy.org>`_ .
 
-The core functionality of CubeViz currently includes the ability to:
+The core functionality of Cubeviz currently includes the ability to:
 
 * view the wavelength slices (RA, DEC) in a data cube,
 
@@ -16,7 +16,7 @@ The core functionality of CubeViz currently includes the ability to:
 
 * view spectra from selected spatial (RA, DEC) regions,
 
-* smooth cubes spactially (RA, DEC) and spectrally (wavelength), and
+* smooth cubes spatially (RA, DEC) and spectrally (wavelength), and
 
 * create and display contour maps.
 
@@ -26,19 +26,11 @@ The core functionality of CubeViz currently includes the ability to:
 
 * create moment maps,
 
-* perform continuum subtraction,
-
-* cube arithmetic,
-
 * overlay spectral line lists,
 
 * save edited cubes,
 
 * save figures,
-
-* mock slit observations,
-
-* accurate spectro-photometry,
 
 * fit models to every spaxel
 
@@ -58,7 +50,7 @@ Future functionality will include the ability to:
 
 * bin data into constant signal-to-noise regions
 
-**Using CubeViz**
+**Using Cubeviz**
 
 .. toctree::
   :maxdepth: 2
