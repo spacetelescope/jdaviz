@@ -28,7 +28,6 @@ def _add_to_table(app, data, comp_label):
     comp_label : str
         The label used to describe the data. Also used as the column header.
     """
-    print("Adding " + str(data) + " with label " + str(comp_label))
     # Add data to the mos viz table object
     if "MOS Table" not in app.data_collection:
         table_data = Data(label="MOS Table")
