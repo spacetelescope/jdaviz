@@ -3,7 +3,7 @@ from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
 from specutils import Spectrum1D
 from specutils.manipulation import gaussian_smooth
-from traitlets import List, Unicode, Int, Any, observe
+from traitlets import List, Unicode, Int, Any, Bool, observe
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
@@ -23,6 +23,9 @@ class GaussianSmooth(TemplateMixin):
     stddev = Any().tag(sync=True)
     dc_items = List([]).tag(sync=True)
     selected_data = Unicode().tag(sync=True)
+    show_modes = Bool(False).tag(sync=True)
+    smooth_modes = List(["Spectral", "Spatial"]).tag(sync=True)
+    selected_mode = Unicode("Spectral").tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -33,6 +36,9 @@ class GaussianSmooth(TemplateMixin):
                            handler=self._on_data_updated)
 
         self._selected_data = None
+        self._config = self.app.state.settings.get("configuration")
+        if self._config == "cubeviz":
+            self.show_modes = True
 
     def _on_data_updated(self, msg):
         self.dc_items = [x.label for x in self.data_collection]
@@ -42,7 +48,7 @@ class GaussianSmooth(TemplateMixin):
         self._selected_data = next((x for x in self.data_collection
                                     if x.label == event['new']))
 
-    def vue_gaussian_smooth(self, *args, **kwargs):
+    def vue_spectral_smooth(self, *args, **kwargs):
         # Testing inputs to make sure putting smoothed spectrum into
         # datacollection works
         # input_flux = Quantity(np.array([0.2, 0.3, 2.2, 0.3]), u.Jy)
@@ -72,5 +78,12 @@ class GaussianSmooth(TemplateMixin):
         snackbar_message = SnackbarMessage(
             f"Data set '{self._selected_data.label}' smoothed successfully.",
             color="success",
+            sender=self)
+        self.hub.broadcast(snackbar_message)
+
+    def vue_spatial_convolution(self, *args):
+        snackbar_message = SnackbarMessage(
+            f"Spatial smoothing not yet enabled",
+            color="warning",
             sender=self)
         self.hub.broadcast(snackbar_message)
