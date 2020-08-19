@@ -1,5 +1,6 @@
+#################
 Installing JDAViz
-=================
+#################
 
 Installing can be done using pip::
 
