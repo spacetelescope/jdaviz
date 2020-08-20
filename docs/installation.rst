@@ -29,10 +29,10 @@ Running Jdaviz
 
 Once installed, ``jdaviz`` can be run either as a standalone web application or in a Jupyter notebook.
 
-As a Desktop Application
+As a Web Application
 ------------------------
 
-``jdaviz`` provides a command-line tool to start the desktop application.  To see the syntax and usage,
+``jdaviz`` provides a command-line tool to start the web application. To see the syntax and usage,
 from a terminal, type::
 
     jdaviz --help
