@@ -8,14 +8,16 @@ populate automatically when the first dataset is loaded. By default, cubeviz
 attempts to parse and display the flux in the top left viewer, the uncertainty
 in the top middle viewer, and the mask into the top right viewer. The spectrum
 viewer is populated by default by collapsing the spatial axes using the `max`
-function. If any viewer fails to populate automatically, or if displaying 
-different data is desired, the user can select different data as described 
-in the next section. Different statistics for collapsing the spectrum displayed 
-in the spectrum viewer can be chosen as described in 
+function. 
+
+If any viewer fails to populate automatically, or if displaying 
+different data is desired, the user can manually select data for each viewer
+as described in the next section. Different statistics for collapsing the 
+spectrum displayed in the spectrum viewer can be chosen as described in 
 :ref:`Display Settings<display-settings>`. Note that any spatial subsets will 
 also be collapsed into a spectrum using the same statistic and displayed in 
-the spectrum viewer along with the spectrum resulting from collapsing the entire
-spatial slices.
+the spectrum viewer along with the spectrum resulting from collapsing all the
+data in each spectral slice.
 
 
 Selecting Data Set
