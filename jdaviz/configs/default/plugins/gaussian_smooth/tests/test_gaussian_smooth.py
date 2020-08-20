@@ -6,7 +6,7 @@ from jdaviz import Application
 from ..gaussian_smooth import GaussianSmooth
 
 
-def test_linking_after_gaussian_smooth(spectral_cube_wcs):
+def test_linking_after_spectral_smooth(spectral_cube_wcs):
 
     app = Application()
     dc = app.data_collection
@@ -16,7 +16,7 @@ def test_linking_after_gaussian_smooth(spectral_cube_wcs):
 
     gs._on_data_selected({'new': 'test'})
     gs.stddev = '3.2'
-    gs.vue_gaussian_smooth()
+    gs.vue_spectral_smooth()
 
     assert len(dc) == 2
     assert dc[1].label == 'Smoothed test'
