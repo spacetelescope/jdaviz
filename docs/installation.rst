@@ -27,7 +27,7 @@ To install ``jdaviz`` for development, or from source::
 Running Jdaviz
 ==============
 
-Once installed, ``jdaviz`` can be run either as a desktop application or in a Jupyter notebook.
+Once installed, ``jdaviz`` can be run either as a standalone web application or in a Jupyter notebook.
 
 As a Desktop Application
 ------------------------
