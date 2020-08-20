@@ -26,7 +26,7 @@ class MosViz(ConfigHelper):
             A list of spectra as translatable container objects (e.g.
             ``Spectrum1D``) that can be read by glue-jupyter. Alternatively,
             can be a string file path.
-        
+
         twodspectra: list or str
             A list of spectra as translatable container objects (e.g.
             ``Spectrum1D``) that can be read by glue-jupyter. Alternatively,
