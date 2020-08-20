@@ -92,7 +92,7 @@ class GaussianSmooth(TemplateMixin):
         """
 
         size = float(self.stddev)
-        cube = self._selected_data.get_object()
+        cube = self._selected_data.get_object(cls=SpectralCube)
         # Extend the 2D kernel to have a length 1 spectral dimension, so that
         # we can do "3d" convolution to the whole cube
         kernel = np.expand_dims(Gaussian2DKernel(size), 0)
