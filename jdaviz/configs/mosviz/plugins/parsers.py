@@ -191,14 +191,36 @@ def mos_image_parser(app, data_obj, data_labels=None):
     elif len(data_obj) != len(data_labels):
         data_labels = [f"{data_labels} {i}" for i in range(len(data_obj))]
 
+    for i in range(len(data_obj)):
+        app.data_collection[data_labels[i]] = data_obj[i]
+
+    _add_to_table(app, data_labels, "Images")
+
+
+@data_parser_registry("mosviz-metadata-parser")
+def mos_meta_parser(app, data_obj):
+    """
+    Attempts to parse MOS FITS header metadata.
+
+    Parameters
+    ----------
+    app : `~jdaviz.app.Application`
+        The application-level object used to reference the viewers.
+    data_obj : str or list or image-like
+        File path, list, or image-like object to be read as a new row in
+        the mosviz table.
+    """
+
+    # Coerce into list-like object
+    if not hasattr(data_obj, "__len__"):
+        data_obj = [data_obj]
+    else:
+        data_obj = [fits.open(x)[0] if _check_is_file(x) else x for x in data_obj]
+
     ra = [x.header.get("OBJ_RA", float("nan")) for x in data_obj]
     dec = [x.header.get("OBJ_DEC", float("nan")) for x in data_obj]
     names = [x.header.get("OBJECT", "Unspecified Target") for x in data_obj]
 
-    for i in range(len(data_obj)):
-        app.data_collection[data_labels[i]] = data_obj[i]
-
     _add_to_table(app, names, "Source Names")
     _add_to_table(app, ra, "Right Ascension")
     _add_to_table(app, dec, "Declination")
-    _add_to_table(app, data_labels, "Images")

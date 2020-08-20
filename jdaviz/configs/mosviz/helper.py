@@ -53,9 +53,22 @@ class MosViz(ConfigHelper):
             for each item in ``data_obj`` if  ``data_obj`` is a list.
         """
 
+        self.load_metadata(images)
         self.load_images(images, images_label)
         self.load_2d_spectra(twodspectra, twodspectra_label)
         self.load_1d_spectra(onedspectra, onedspectra_label)
+
+    def load_metadata(self, data_obj):
+        """
+        Load and parse a set of FITS objects to extract any relevant metadata.
+
+        Parameters
+        ----------
+        data_obj : list or str
+            A list of FITS objects with parseable headers. Alternatively,
+            can be a string file path.
+        """
+        self.app.load_data(data_obj, parser_reference="mosviz-metadata-parser")
 
     def load_1d_spectra(self, data_obj, data_labels=None):
         """
