@@ -1,4 +1,5 @@
 import os
+import pathlib
 import re
 
 from astropy import units as u
@@ -155,10 +156,10 @@ class MomentMap(TemplateMixin):
         # Let the user know where we saved the file (don't need path if user
         # specified a full filepath
         if re.search("/", self._filename) is None:
-            wd = os.getcwd()
-            full_path = "{}/{}".format(wd, self._filename)
+            wd = pathlib.Path.cwd()
+            full_path = wd / pathlib.Path(self._filename)
         else:
             full_path = self._filename
-        msg = SnackbarMessage("Moment map saved to {}".format(full_path),
+        msg = SnackbarMessage("Moment map saved to {}".format(str(full_path)),
                               sender=self, color="success")
         self.hub.broadcast(msg)
