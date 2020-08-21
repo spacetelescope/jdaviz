@@ -96,9 +96,8 @@ class MosViz(ConfigHelper):
             ``data_obj``. Can be a list of strings representing data labels
             for each item in ``data_obj`` if  ``data_obj`` is a list.
         """
-        self.app.load_data(
-            data_obj, parser_reference="mosviz-spec2d-parser", data_labels=data_labels
-        )
+        self.app.load_data(data_obj, parser_reference="mosviz-spec2d-parser",
+                           data_labels=data_labels)
 
     def load_images(self, data_obj, data_labels=None):
         """
