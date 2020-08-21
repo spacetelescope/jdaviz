@@ -142,7 +142,7 @@ class MosViz(ConfigHelper):
         `~astropy.table.QTable`
             An astropy table constructed from the loaded mos data.
         """
-        table_data = self.app.data_collection["MOS Table"]
+        table_data = self.app.data_collection['MOS Table']
 
         data_dict = {}
 
