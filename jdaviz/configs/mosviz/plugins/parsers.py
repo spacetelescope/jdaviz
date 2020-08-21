@@ -198,7 +198,7 @@ def mos_image_parser(app, data_obj, data_labels=None):
     for i in range(len(data_obj)):
         app.data_collection[data_labels[i]] = data_obj[i]
 
-    _add_to_table(app, data_labels, "Images")
+    _add_to_table(app, data_labels, 'Images')
 
 
 @data_parser_registry("mosviz-metadata-parser")
