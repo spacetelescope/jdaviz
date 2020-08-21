@@ -11,7 +11,7 @@ import logging
 from astropy.wcs import WCS
 from pathlib import Path
 
-__all__ = ["mos_spec1d_parser", "mos_spec2d_parser", "mos_image_parser"]
+__all__ = ['mos_spec1d_parser', 'mos_spec2d_parser', 'mos_image_parser']
 
 
 def _add_to_table(app, data, comp_label):
