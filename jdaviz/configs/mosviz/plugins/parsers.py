@@ -137,7 +137,9 @@ def mos_spec2d_parser(app, data_obj, data_labels=None):
     if not isinstance(data_obj, (list, set)):
         data_obj = [data_obj]
     else:
-        data_obj = [_parse_as_cube(x) if _check_is_file(x) else x for x in data_obj]
+        data_obj = [_parse_as_cube(x)
+                    if _check_is_file(x) else x
+                    for x in data_obj]
 
     if data_labels is None:
         data_labels = [f"2D Spectrum {i}" for i in range(len(data_obj))]
