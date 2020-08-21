@@ -227,7 +227,7 @@ def mos_meta_parser(app, data_obj):
     dec = [x.header.get("OBJ_DEC", float("nan")) for x in data_obj]
     names = [x.header.get("OBJECT", "Unspecified Target") for x in data_obj]
 
-[x.close() for x in data_obj]
+    [x.close() for x in data_obj]
 
     _add_to_table(app, names, "Source Names")
     _add_to_table(app, ra, "Right Ascension")
