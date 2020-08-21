@@ -129,7 +129,7 @@ class MosViz(ConfigHelper):
         column_name : str
             Header string to be shown in the table.
         """
-        table_data = self.app.data_collection["MOS Table"]
+        table_data = self.app.data_collection['MOS Table']
         table_data.add_component(data, column_name)
 
     def to_table(self):
