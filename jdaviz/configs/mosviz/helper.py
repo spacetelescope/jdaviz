@@ -8,15 +8,8 @@ class MosViz(ConfigHelper):
 
     _default_configuration = "mosviz"
 
-    def load_data(
-        self,
-        onedspectra,
-        twodspectra,
-        images,
-        onedspectra_label=None,
-        twodspectra_label=None,
-        images_label=None,
-    ):
+    def load_data(self, onedspectra, twodspectra, images, onedspectra_label=None, 
+                  twodspectra_label=None, images_label=None):
         """
         Load and parse a set of MOS spectra and images
 
