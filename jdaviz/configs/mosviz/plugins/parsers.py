@@ -175,7 +175,8 @@ def mos_image_parser(app, data_obj, data_labels=None):
     def _parse_as_image(path):
         with fits.open(path) as hdulist:
             if "BUNIT" not in hdulist[0].header:
-                logging.warning("No 'BUNIT' defined in the header, using 'Jy'.")
+                logging.warning(
+                    "No 'BUNIT' defined in the header, using 'Jy'.")
 
             unit = hdulist[0].header.get("BUNIT", "Jy")
 
@@ -212,20 +213,20 @@ def mos_meta_parser(app, data_obj):
     ----------
     app : `~jdaviz.app.Application`
         The application-level object used to reference the viewers.
-    data_obj : str or list or image-like
-        File path, list, or image-like object to be read as a new row in
-        the mosviz table.
+    data_obj : str or list or HDUList
+        File path, list, or an HDUList to extract metadata from.
     """
 
     # Coerce into list-like object
     if not hasattr(data_obj, "__len__"):
         data_obj = [data_obj]
     else:
-        data_obj = [fits.open(x)[0] if _check_is_file(x) else x for x in data_obj]
+        data_obj = [fits.open(x) if _check_is_file(x)
+                    else x for x in data_obj]
 
-    ra = [x.header.get("OBJ_RA", float("nan")) for x in data_obj]
-    dec = [x.header.get("OBJ_DEC", float("nan")) for x in data_obj]
-    names = [x.header.get("OBJECT", "Unspecified Target") for x in data_obj]
+    ra = [x[0].header.get("OBJ_RA", float("nan")) for x in data_obj]
+    dec = [x[0].header.get("OBJ_DEC", float("nan")) for x in data_obj]
+    names = [x[0].header.get("OBJECT", "Unspecified Target") for x in data_obj]
 
     [x.close() for x in data_obj]
 
