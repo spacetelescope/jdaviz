@@ -117,17 +117,20 @@ def mos_spec2d_parser(app, data_obj, data_labels=None):
     def _parse_as_cube(path):
         with fits.open(path) as hdulist:
             data = hdulist[1].data
-
-            if hdulist[1].header['NAXIS'] == 2:
+            header = hdulist[1].header
+            if header['NAXIS'] == 2:
                 new_data = np.expand_dims(data, axis=1)
-                hdulist[1].header['NAXIS'] = 3
+                header['NAXIS'] = 3
 
-            hdulist[1].header['NAXIS3'] = 1
-            hdulist[1].header['BUNIT'] = 'dN/s'
-            hdulist[1].header['CUNIT3'] = 'um'
-            wcs = WCS(hdulist[1].header)
+            header['NAXIS3'] = 1
+            header['BUNIT'] = 'dN/s'
+            header['CUNIT3'] = 'um'
+            wcs = WCS(header)
 
-        return SpectralCube(new_data, wcs=wcs)
+            meta = {'S_REGION': header['S_REGION']}
+
+
+            return SpectralCube(new_data, wcs=wcs, meta=meta)
 
     if _check_is_file(data_obj):
         data_obj = [_parse_as_cube(data_obj)]
@@ -179,7 +182,18 @@ def mos_image_parser(app, data_obj, data_labels=None):
 
             unit = hdulist[0].header.get('BUNIT', 'Jy')
 
-        return CCDData.read(path, unit=unit)
+            header = hdulist[0].header.copy()
+            meta = {}
+            for x in header.keys():
+                meta[x] = header[x]
+
+            print("Header keys of file: {}".format(path))
+            for key in meta.keys():
+                print("\t\'{}\': {},".format(key, meta[key]))
+
+            wcs = WCS(header)
+
+        return CCDData.read(path, unit=unit, wcs=wcs, meta=meta)
 
     if isinstance(data_obj, str):
         data_obj = [_parse_as_image(data_obj)]
