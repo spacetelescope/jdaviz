@@ -198,6 +198,7 @@ class ModelFitting(TemplateMixin):
             self._spectrum1d.flux)
 
         self._initialized_models[self.temp_name] = initialized_model
+        new_model["order"] = self.poly_order
 
         for i in range(self.poly_order + 1):
             param = "c{}".format(i)
@@ -223,7 +224,12 @@ class ModelFitting(TemplateMixin):
             for p in m["parameters"]:
                 fixed[p["name"]] = p["fixed"]
             # Have to initialize with fixed dictionary
-            temp_model = MODELS[m["model_type"]](name=m["id"], fixed=fixed)
+            if m["model_type"] == "Polynomial1D":
+                temp_model = MODELS[m["model_type"]](name=m["id"],
+                                                     degree=m["order"],
+                                                     fixed=fixed)
+            else:
+                temp_model = MODELS[m["model_type"]](name=m["id"], fixed=fixed)
             # Now we can set the parameter values
             for p in m["parameters"]:
                 setattr(temp_model, p["name"], p["value"])
