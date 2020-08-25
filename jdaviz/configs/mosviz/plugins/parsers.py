@@ -1,14 +1,14 @@
 import csv
 import logging
 import numpy as np
-from pathlib import path
+from pathlib import Path
 
 from glue.core.data import Data
 from astropy.nddata import CCDData
 from astropy.wcs import WCS
 from astropy.io import fits
 from spectral_cube import SpectralCube
-from specutils import Spectrum1D
+from specutils import Spectrum1D, SpectrumList
 
 
 from jdaviz.core.registries import data_parser_registry
@@ -87,6 +87,8 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
     - *_WFSSR_*_x1d.fits : 1D spectra in first orientatiom
     - *_WFSSC_*_x1d.fits : 1D spectra in second orientatiom
 
+    The spectra from the "C" files (horizontal orientation) are showed
+    in the viewers by default.
     """
     p = pathlib.Path(data_dir)
     source_cat = list(p.glob("*{}*_direct_*_cat.ecsv".format(obs_label)))
@@ -119,9 +121,23 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
 
     # Parse 2D spectra
 
-    # Parse 1D spectra
-
-    pass
+    # Parse 1D spectra using SpectumList reader
+    spec1d_C = {}
+    spec2d_R = {}
+    for f in ["1D Spectra (orientation 1)", "1D Spectra (orientation 1)"]:
+        spec_labels = []
+        for fname in file_lists[f]:
+            specs = SpectrumList.read(file_lists[f])
+            # Orientation denoted by "C" or "R"
+            orientation = fname.split("_")[2][-1]
+            for spec in specs:
+                label = "Source {} spec1d {}".format(spec.meta["SOURCEID"],
+                                              orientation)
+                spec_labels.append(label)
+                app.data_collection[label] = spec
+        # We default to show the "C" spectra, show those in the table for now
+        if orientation == "C":
+            _add_to_table(app, spec_labels, "1D Spectra")
 
 @data_parser_registry("mosviz-spec1d-parser")
 def mos_spec1d_parser(app, data_obj, data_labels=None):
