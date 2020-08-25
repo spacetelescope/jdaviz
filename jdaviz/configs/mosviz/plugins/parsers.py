@@ -61,6 +61,9 @@ def _warn_if_not_found(app, file_lists):
             not_found.append(key)
         else:
             found.append(key)
+
+    if len(found) == 0:
+        raise ValueError("No valid NIRISS files found in specified directory")
     if len(not_found) > 0:
         warn_msg = "Some files not found: {}".format(", ".join(not_found))
         warn_msg = SnackbarMessage(warn_msg, color="warning", sender=app)
@@ -96,6 +99,8 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
     in the viewers by default.
     """
     p = Path(data_dir)
+    if not p.is_dir():
+        raise ValueError("{} is not a valid directory path".format(data_dir))
     source_cat = list(p.glob("{}*_direct_*_cat.ecsv".format(obs_label)))
     direct_image = list(p.glob("{}*_direct_*_cal.fits".format(obs_label)))
     spec2d_r = list(p.glob("{}*_WFSSR_*_cal.fits".format(obs_label)))
@@ -112,17 +117,23 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                   "1D Spectra R": spec1d_r
                  }
 
+    # Convert from pathlib Paths back to strings
+    for key in file_lists:
+        file_lists[key] = [str(x) for x in file_lists[key]]
+
     found_files = _warn_if_not_found(app, file_lists)
 
     # Read in direct image (NIRISS only has one image containing all sources)
-    im_split = direct_image[0].split("_")
-    image_label = "Image {} {}".format(im_split[0], im_split[1])
-    image_data = CCDData.read(direct_image[0])
-    app.data_collection[image_label] = image_data
+    for image_file in file_lists["Direct Image"]:
+        im_split = image_file.split("_")
+        image_label = "Image {} {}".format(im_split[0], im_split[1])
+        image_data = CCDData.read(direct_image[0])
+        app.data_collection[image_label] = image_data
 
     # Parse relevant information from source catalog
     cat_fields = ["id", "sky_centroid.ra", "sky_centroid.dec"]
-    parsed_cat_fields = _fields_from_ecsv(source_cat, cat_fields, delimiter=" ")
+    cat_file = file_lists["Source Catalog"][0]
+    parsed_cat_fields = _fields_from_ecsv(cat_file, cat_fields, delimiter=" ")
 
     # Parse 2D spectra
 
@@ -132,7 +143,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
     for f in ["1D Spectra C", "1D Spectra R"]:
         spec_labels = []
         for fname in file_lists[f]:
-            specs = SpectrumList.read(file_lists[f])
+            specs = SpectrumList.read(fname, format="JWST x1d")
             # Orientation denoted by "C" or "R"
             orientation = fname.split("_")[2][-1]
             for spec in specs:
