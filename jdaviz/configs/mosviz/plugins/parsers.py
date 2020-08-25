@@ -54,14 +54,19 @@ def _warn_if_not_found(app, file_lists):
     Take a list of labels and associated file lists and send a snackbar
     message if the length of any list is 0.
     """
+    found = []
     not_found = []
     for key in file_lists:
-        if len(file_lists[key] == 0):
+        if len(file_lists[key]) == 0:
             not_found.append(key)
+        else:
+            found.append(key)
     if len(not_found) > 0:
         warn_msg = "Some files not found: {}".format(", ".join(not_found))
         warn_msg = SnackbarMessage(warn_msg, color="warning", sender=app)
-        app.hub.broadcast(snackbar_message)
+        app.hub.broadcast(warn_msg)
+
+    return found
 
 def _fields_from_ecsv(fname, fields, delimiter=","):
     parsed_fields = []
@@ -90,24 +95,24 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
     The spectra from the "C" files (horizontal orientation) are showed
     in the viewers by default.
     """
-    p = pathlib.Path(data_dir)
-    source_cat = list(p.glob("*{}*_direct_*_cat.ecsv".format(obs_label)))
-    direct_image = list(p.glob("*{}*_direct_*_cal.fits".format(obs_label)))
-    spec2d_1 = list(p.glob("*{}*_WFSSR_*_cal.fits".format(obs_label)))
-    spec2d_2 = list(p.glob("*{}*_WFSSC_*_cal.fits".format(obs_label)))
-    spec1d_1 = list(p.glob("*{}*_WFSSR_*_x1d.fits".format(obs_label)))
-    spec1d_2 = list(p.glob("*{}*_WFSSC_*_x1d.fits".format(obs_label)))
+    p = Path(data_dir)
+    source_cat = list(p.glob("{}*_direct_*_cat.ecsv".format(obs_label)))
+    direct_image = list(p.glob("{}*_direct_*_cal.fits".format(obs_label)))
+    spec2d_r = list(p.glob("{}*_WFSSR_*_cal.fits".format(obs_label)))
+    spec2d_c = list(p.glob("{}*_WFSSC_*_cal.fits".format(obs_label)))
+    spec1d_r = list(p.glob("{}*_WFSSR_*_x1d.fits".format(obs_label)))
+    spec1d_c = list(p.glob("{}*_WFSSC_*_x1d.fits".format(obs_label)))
 
     file_lists = {
                   "Source Catalog": source_cat,
                   "Direct Image": direct_image,
-                  "2D Spectra (orientation 1)": spec2d_1,
-                  "2D Spectra (orientation 2)": spec2d_2,
-                  "1D Spectra (orientation 1)": spec1d_1,
-                  "1D Spectra (orientation 1)": spec1d_2
+                  "2D Spectra C": spec2d_c,
+                  "2D Spectra R": spec2d_r,
+                  "1D Spectra C": spec1d_c,
+                  "1D Spectra R": spec1d_r
                  }
 
-    _warn_if_not_found(app, file_lists)
+    found_files = _warn_if_not_found(app, file_lists)
 
     # Read in direct image (NIRISS only has one image containing all sources)
     im_split = direct_image[0].split("_")
@@ -124,7 +129,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
     # Parse 1D spectra using SpectumList reader
     spec1d_C = {}
     spec2d_R = {}
-    for f in ["1D Spectra (orientation 1)", "1D Spectra (orientation 1)"]:
+    for f in ["1D Spectra C", "1D Spectra R"]:
         spec_labels = []
         for fname in file_lists[f]:
             specs = SpectrumList.read(file_lists[f])
