@@ -1,3 +1,4 @@
+import csv
 import logging
 import numpy as np
 from pathlib import path
@@ -62,6 +63,18 @@ def _warn_if_not_found(app, file_lists):
         warn_msg = SnackbarMessage(warn_msg, color="warning", sender=app)
         app.hub.broadcast(snackbar_message)
 
+def _fields_from_ecsv(fname, fields, delimiter=","):
+    parsed_fields = []
+    with open(fname, "r") as f:
+        reader = csv.DictReader(filter(lambda row: row[0]!="#", f),
+                                delimiter=delimiter)
+        for row in reader:
+            temp_list = []
+            for field in fields:
+                temp_list.append(row[field])
+            parsed_fields.append(temp_list)
+    return parsed_fields
+
 @data_parser_registry("mosviz-niriss-parser")
 def mos_niriss_parser(app, data_dir, obs_label=""):
     """
@@ -93,6 +106,20 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                  }
 
     _warn_if_not_found(app, file_lists)
+
+    # Read in direct image (NIRISS only has one image containing all sources)
+    im_split = direct_image[0].split("_")
+    image_label = "Image {} {}".format(im_split[0], im_split[1])
+    image_data = CCDData.read(direct_image[0])
+    app.data_collection[image_label] = image_data
+
+    # Parse relevant information from source catalog
+    cat_fields = ["id", "sky_centroid.ra", "sky_centroid.dec"]
+    parsed_cat_fields = _fields_from_ecsv(source_cat, cat_fields, delimiter=" ")
+
+    # Parse 2D spectra
+
+    # Parse 1D spectra
 
     pass
 
