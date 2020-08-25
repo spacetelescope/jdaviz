@@ -153,3 +153,8 @@ class MosViz(ConfigHelper):
             data_dict[cid.label] = comp.data * unit
 
         return QTable(data_dict)
+
+    def load_niriss_data(self, data_dir):
+        """
+        """
+        self.app.load_data(data_dir, parser_reference="mosviz-niriss-parser")

@@ -47,6 +47,21 @@ def _check_is_file(path):
     return isinstance(path, str) and Path(path).is_file()
 
 
+@data_parser_registry("mosviz-niriss-parser")
+def mos_niriss_parser(app, data_dir, base_label=None):
+    """
+    Attempts to parse all data for a NIRISS dataset in the specified
+    directory, which should include:
+    - *_direct_*_cal.fits : Direct 2D image
+    - *_direct_*_cat.ecsv : Source catalog
+    - *_WFSSR_*_cal.fits : 2D spectra in first orientation
+    - *_WFSSC_*_cal.fits : 2D spectra in second orientation
+    - *_WFSSR_*_x1d.fits : 1D spectra in first orientatiom
+    - *_WFSSC_*_x1d.fits : 1D spectra in second orientatiom
+
+    """
+    pass
+
 @data_parser_registry("mosviz-spec1d-parser")
 def mos_spec1d_parser(app, data_obj, data_labels=None):
     """
