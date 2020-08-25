@@ -40,7 +40,7 @@ from a terminal, type::
 The general syntax to start the application is to provide a local filename path and an application configuration
 to load, i.e.::
 
-    jdaviz /path/to/data/file --layout=[configuration]
+    jdaviz /path/to/data/file --layout=<configuration>
 
 For example, to load a SDSS MaNGA IFU data cube into ``CubeViz``, you would run the following from a terminal::
 
