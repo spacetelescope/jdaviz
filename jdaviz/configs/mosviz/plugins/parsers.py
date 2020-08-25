@@ -1,22 +1,24 @@
+import logging
+import numpy as np
+from pathlib import path
+
 from glue.core.data import Data
+from astropy.nddata import CCDData
+from astropy.wcs import WCS
+from astropy.io import fits
+from spectral_cube import SpectralCube
+from specutils import Spectrum1D
+
 
 from jdaviz.core.registries import data_parser_registry
-
-from spectral_cube import SpectralCube
-from astropy.nddata import CCDData
-from specutils import Spectrum1D
-from astropy.io import fits
-import numpy as np
-import logging
-from astropy.wcs import WCS
-from pathlib import Path
+from jdaviz.core.events import SnackbarMessage
 
 __all__ = ['mos_spec1d_parser', 'mos_spec2d_parser', 'mos_image_parser']
 
 
 def _add_to_table(app, data, comp_label):
     """
-    Creates a mos table instance in the application data collection is none
+    Creates a mos table instance in the application data collection if none
     currently exists.
 
     Parameters
@@ -46,9 +48,22 @@ def _add_to_table(app, data, comp_label):
 def _check_is_file(path):
     return isinstance(path, str) and Path(path).is_file()
 
+def _warn_if_not_found(app, file_lists):
+    """
+    Take a list of labels and associated file lists and send a snackbar
+    message if the length of any list is 0.
+    """
+    not_found = []
+    for key in file_lists:
+        if len(file_lists[key] == 0):
+            not_found.append(key)
+    if len(not_found) > 0:
+        warn_msg = "Some files not found: {}".format(", ".join(not_found))
+        warn_msg = SnackbarMessage(warn_msg, color="warning", sender=app)
+        app.hub.broadcast(snackbar_message)
 
 @data_parser_registry("mosviz-niriss-parser")
-def mos_niriss_parser(app, data_dir, base_label=None):
+def mos_niriss_parser(app, data_dir, obs_label=""):
     """
     Attempts to parse all data for a NIRISS dataset in the specified
     directory, which should include:
@@ -60,6 +75,25 @@ def mos_niriss_parser(app, data_dir, base_label=None):
     - *_WFSSC_*_x1d.fits : 1D spectra in second orientatiom
 
     """
+    p = pathlib.Path(data_dir)
+    source_cat = list(p.glob("*{}*_direct_*_cat.ecsv".format(obs_label)))
+    direct_image = list(p.glob("*{}*_direct_*_cal.fits".format(obs_label)))
+    spec2d_1 = list(p.glob("*{}*_WFSSR_*_cal.fits".format(obs_label)))
+    spec2d_2 = list(p.glob("*{}*_WFSSC_*_cal.fits".format(obs_label)))
+    spec1d_1 = list(p.glob("*{}*_WFSSR_*_x1d.fits".format(obs_label)))
+    spec1d_2 = list(p.glob("*{}*_WFSSC_*_x1d.fits".format(obs_label)))
+
+    file_lists = {
+                  "Source Catalog": source_cat,
+                  "Direct Image": direct_image,
+                  "2D Spectra (orientation 1)": spec2d_1,
+                  "2D Spectra (orientation 2)": spec2d_2,
+                  "1D Spectra (orientation 1)": spec1d_1,
+                  "1D Spectra (orientation 1)": spec1d_2
+                 }
+
+    _warn_if_not_found(app, file_lists)
+
     pass
 
 @data_parser_registry("mosviz-spec1d-parser")

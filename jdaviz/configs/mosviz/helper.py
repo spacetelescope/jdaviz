@@ -154,7 +154,8 @@ class MosViz(ConfigHelper):
 
         return QTable(data_dict)
 
-    def load_niriss_data(self, data_dir):
+    def load_niriss_data(self, data_dir, obs_label=""):
         """
         """
-        self.app.load_data(data_dir, parser_reference="mosviz-niriss-parser")
+        self.app.load_data(data_dir, parser_reference="mosviz-niriss-parser",
+                           obs_label=obs_label)
