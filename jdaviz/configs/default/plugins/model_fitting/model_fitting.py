@@ -157,6 +157,18 @@ class ModelFitting(TemplateMixin):
                 setattr(self._initialized_models[name], param["name"],
                         quant_param)
 
+    def _warn_if_no_equation(self):
+        if self.model_equation == "" or self.model_equation is None:
+            example = "+".join([m["id"] for m in self.component_models])
+            snackbar_message = SnackbarMessage(
+                f"Error: a model equation must be defined, e.g. {example}",
+                color='error',
+                sender=self)
+            self.hub.broadcast(snackbar_message)
+            return True
+        else:
+            return False
+
     def vue_data_selected(self, event):
         """
         Callback method for when the user has selected data from the drop down
@@ -291,7 +303,10 @@ class ModelFitting(TemplateMixin):
         as such by the user, then update the displayed parameters with fit
         values
         """
+        if self._warn_if_no_equation():
+            return
         models_to_fit = self._reinitialize_with_fixed()
+
         fitted_model, fitted_spectrum = fit_model_to_spectrum(
             self._spectrum1d,
             models_to_fit,
@@ -306,6 +321,9 @@ class ModelFitting(TemplateMixin):
         self.save_enabled = True
 
     def vue_fit_model_to_cube(self, *args, **kwargs):
+
+        if self._warn_if_no_equation():
+            return
         data = self.app.data_collection[self._selected_data_label]
 
         # First, ensure that the selected data is cube-like. It is possible
@@ -375,6 +393,8 @@ class ModelFitting(TemplateMixin):
         Add a spectrum to the data collection based on the currently displayed
         parameters (these could be user input or fit values).
         """
+        if self._warn_if_no_equation():
+            return
         # Make sure the initialized models are updated with any user-specified
         # parameters
         self._update_initialized_parameters()
