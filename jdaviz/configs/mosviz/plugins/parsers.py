@@ -123,17 +123,31 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
 
     found_files = _warn_if_not_found(app, file_lists)
 
-    # Read in direct image (NIRISS only has one image containing all sources)
-    for image_file in file_lists["Direct Image"]:
-        im_split = image_file.split("_")
-        image_label = "Image {} {}".format(im_split[0], im_split[1])
-        image_data = CCDData.read(direct_image[0])
-        app.data_collection[image_label] = image_data
-
     # Parse relevant information from source catalog
     cat_fields = ["id", "sky_centroid.ra", "sky_centroid.dec"]
     cat_file = file_lists["Source Catalog"][0]
     parsed_cat_fields = _fields_from_ecsv(cat_file, cat_fields, delimiter=" ")
+    # Need to change to column lists rather than row lists
+    source_ids = []
+    ras = []
+    decs = []
+    for row in parsed_cat_fields:
+        source_ids.append(row[0])
+        ras.append(row[1])
+        decs.append(row[2])
+    _add_to_table(app, source_ids, "Source ID")
+    _add_to_table(app, ras, "RA")
+    _add_to_table(app, decs, "Dec")
+
+    # Read in direct image (NIRISS only has one image containing all sources)
+    for image_file in file_lists["Direct Image"]:
+        im_split = image_file.split("/")[-1].split("_")
+        image_label = "Image {} {}".format(im_split[0], im_split[1])
+        image_data = CCDData.read(direct_image[0])
+        app.data_collection[image_label] = image_data
+        # Only one image, duplicate for table
+        image_list = [image_label]*len(source_ids)
+        _add_to_table(app, image_list, "Images")
 
     # Parse 2D spectra
 
