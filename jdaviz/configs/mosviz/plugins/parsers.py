@@ -143,7 +143,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
     for f in ["1D Spectra C", "1D Spectra R"]:
         spec_labels = []
         for fname in file_lists[f]:
-            specs = SpectrumList.read(fname, format="JWST x1d")
+            specs = SpectrumList.read(fname)
             # Orientation denoted by "C" or "R"
             orientation = fname.split("_")[2][-1]
             for spec in specs:
