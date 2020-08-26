@@ -8,7 +8,7 @@ Specviz is developed to fully support analyzing spectra within your existing `Ju
     # Import specviz
     from jdaviz import specviz
     # Instantiate an instance of Specviz
-    specviz = Specviz()
+    specviz = SpecViz()
     # Display Specviz
     specviz.app
 
