@@ -2,6 +2,7 @@
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
 from jdaviz.utils import load_template
+from jdaviz.core.events import SnackbarMessage
 
 import numpy as np
 from regions import RectangleSkyRegion, RectanglePixelRegion
@@ -18,8 +19,8 @@ class SlitOverlay(TemplateMixin):
     template = load_template("slit_overlay.vue", __file__).tag(sync=True)
 
 
-    def jwst_header_to_skyregion(self, s_region):
-        #s_region = header['S_REGION']
+    def jwst_header_to_skyregion(self, header):
+        s_region = header['S_REGION']
         footprint = s_region.split("POLYGON ICRS")[1].split()
         ra = np.array(footprint[::2], dtype=np.float)
         dec = np.array(footprint[1::2], dtype=np.float)
@@ -56,18 +57,14 @@ class SlitOverlay(TemplateMixin):
         spec2d_data = self.app.get_viewer("spectrum-2d-viewer").data()
 
         if 'S_REGION' in spec2d_data[0].meta:
-            print("######## Creating slit ##########")
-            s_region = spec2d_data[0].meta['S_REGION']
-            sky_region = self.jwst_header_to_skyregion(s_region)
+            header = spec2d_data[0].meta
+            sky_region = self.jwst_header_to_skyregion(header)
 
-            print(sky_region)
 
             # Use wcs of image viewer to scale slit dimensions correctly
             wcs_image = WCS(image_data[0].meta)
-
             pixel_region = sky_region.to_pixel(wcs_image)
 
-            print(pixel_region)
 
             # Create polygon region from the pixel region and set vertices
             pix_rec = pixel_region.to_polygon()
@@ -77,7 +74,6 @@ class SlitOverlay(TemplateMixin):
 
             fig_image = self.app.get_viewer("image-viewer").figure
 
-
             # Create LinearScale that is the same size as the image viewer
             scales = {'x': fig_image.interaction.x_scale, 'y': fig_image.interaction.y_scale}
 
@@ -85,15 +81,22 @@ class SlitOverlay(TemplateMixin):
             patch2 = bqplot.Lines(x=x_coords, y=y_coords, scales=scales, fill='none', colors=["red"], stroke_width=2,
                                   close_path=True)
 
-            print(x_coords, y_coords, scales)
-
             # Visualize slit on the figure
             fig_image.marks = fig_image.marks + [patch2]
 
-            # print(fig_image.marks)
+            snackbar_message = SnackbarMessage(
+                "Slit successfully added to image viewer",
+                color="success",
+                sender=self)
+
 
         else:
-            print("didnt work, sorry\nHeader info: {}".format(spec2d_data[0].meta))
+            snackbar_message = SnackbarMessage(
+                "\'S_REGION\' not found in Spectrum 2D meta attribute",
+                color="error",
+                sender=self)
+
+        self.hub.broadcast(snackbar_message)
 
     def vue_slit_overlay_remove(self, *args, **kwargs):
         image_figure = self.app.get_viewer("image-viewer").figure
