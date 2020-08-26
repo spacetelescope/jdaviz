@@ -63,35 +63,7 @@ class SlitOverlay(TemplateMixin):
             print(sky_region)
 
             # Use wcs of image viewer to scale slit dimensions correctly
-            test_meta = {
-                'SIMPLE': True,
-                'BITPIX': -64,
-                'NAXIS': 2,
-                'NAXIS1': 55,
-                'NAXIS2': 55,
-                'EXTEND': True,
-                'WCSAXES': 2,
-                'CRPIX1': 937.0,
-                'CRPIX2': 696.0,
-                'CDELT1': -1.5182221158397e-05,
-                'CDELT2': 1.5182221158397e-05,
-                'CUNIT1': "deg",
-                'CUNIT2': "deg",
-                'CTYPE1': "RA---TAN",
-                'CTYPE2': "DEC--TAN",
-                'CRVAL1': 5.0155198140981,
-                'CRVAL2': 5.002450989248,
-                'LONPOLE': 180.0,
-                'LATPOLE': 5.002450989248,
-                'DATEREF': 1858 - 11 - 17,
-                'MJDREFI': 0.0,
-                'MJDREFF': 0.0,
-                'RADESYS': "ICRS",
-                'OBJ_RA': 5.029374606669549,
-                'OBJ_DEC': 4.9923114303282
-            }
-            wcs_image = WCS(test_meta)
-            #wcs_image = WCS(image_data[0].meta)
+            wcs_image = WCS(image_data[0].meta)
 
             pixel_region = sky_region.to_pixel(wcs_image)
 

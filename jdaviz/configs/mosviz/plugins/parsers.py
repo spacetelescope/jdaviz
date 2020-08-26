@@ -130,7 +130,7 @@ def mos_spec2d_parser(app, data_obj, data_labels=None):
             meta = {'S_REGION': header['S_REGION']}
 
 
-            return SpectralCube(new_data, wcs=wcs, meta=meta)
+        return SpectralCube(new_data, wcs=wcs, meta=meta)
 
     if _check_is_file(data_obj):
         data_obj = [_parse_as_cube(data_obj)]
@@ -187,13 +187,12 @@ def mos_image_parser(app, data_obj, data_labels=None):
             for x in header.keys():
                 meta[x] = header[x]
 
-            print("Header keys of file: {}".format(path))
-            for key in meta.keys():
-                print("\t\'{}\': {},".format(key, meta[key]))
-
             wcs = WCS(header)
 
-        return CCDData.read(path, unit=unit, wcs=wcs, meta=meta)
+            image_ccd = CCDData.read(path, unit=unit, wcs=wcs)
+            image_ccd.meta = meta
+
+        return image_ccd
 
     if isinstance(data_obj, str):
         data_obj = [_parse_as_image(data_obj)]
