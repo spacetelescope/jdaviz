@@ -150,10 +150,27 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
         _add_to_table(app, image_list, "Images")
 
     # Parse 2D spectra
+    for f in ["2D Spectra C", "2D Spectra R"]:
+        spec_labels = []
+        for fname in file_lists[f]:
+            orientation = fname.split("_")[2][-1]
+            sci_hdus = []
+            temp = fits.open(fname)
+            for i in range(len(temp)):
+                if "EXTNAME" in temp[i].header:
+                    if temp[i].header["EXTNAME"] == "SCI":
+                        sci_hdus.append(i)
+            # Now get a CCDData object for each SCI HDU
+            for i in sci_hdus:
+                spec2d = CCDData.read(fname, hdu=i)
+                label = "Source {} spec2d {}".format(spec2d.meta["SOURCEID"],
+                                               orientation)
+                spec_labels.append(label)
+                app.data_collection[label] = spec2d
+            if orientation == "C":
+                _add_to_table(app, spec_labels, "2D Spectra")
 
     # Parse 1D spectra using SpectumList reader
-    spec1d_C = {}
-    spec2d_R = {}
     for f in ["1D Spectra C", "1D Spectra R"]:
         spec_labels = []
         for fname in file_lists[f]:
@@ -165,9 +182,9 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                                               orientation)
                 spec_labels.append(label)
                 app.data_collection[label] = spec
-        # We default to show the "C" spectra, show those in the table for now
-        if orientation == "C":
-            _add_to_table(app, spec_labels, "1D Spectra")
+            # We default to show the "C" spectra, show those in the table for now
+            if orientation == "C":
+                _add_to_table(app, spec_labels, "1D Spectra")
 
 @data_parser_registry("mosviz-spec1d-parser")
 def mos_spec1d_parser(app, data_obj, data_labels=None):
