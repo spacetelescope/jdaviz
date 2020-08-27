@@ -10,8 +10,6 @@ from astropy.coordinates import Angle, SkyCoord
 from astropy import units as u
 from astropy.wcs import WCS
 
-from spectral_cube import SpectralCube
-
 import bqplot
 
 @tray_registry('g-slit-overlay', label="Slit Overlay")
@@ -88,7 +86,6 @@ class SlitOverlay(TemplateMixin):
                 "Slit successfully added to image viewer",
                 color="success",
                 sender=self)
-
 
         else:
             snackbar_message = SnackbarMessage(
