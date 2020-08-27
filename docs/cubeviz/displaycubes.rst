@@ -8,7 +8,15 @@ populate automatically when the first dataset is loaded. By default, cubeviz
 attempts to parse and display the flux in the top left viewer, the uncertainty
 in the top middle viewer, and the mask into the top right viewer. The spectrum
 viewer is populated by default by collapsing the spatial axes using the `max`
-function. 
+function. The indicators that the load machinery looks for in each HDU to 
+populate the viewers are below (note that in all cases, header values are
+converted to lower case):
+
+    - Flux viewer: `hdu.name` is in the set `['flux', 'sci']`
+    - Uncertainty viewer: `hdu.header.keys()` includes "errtype" or `hdu.name` 
+      is in the set `['ivar', 'err', 'var', 'uncert']`
+    - Mask viewer: `hdu.data.dtype` is `np.int`, `np.uint` or `np.uint32`, or
+      `hdu.name` is in the set `['mask', 'dq']`
 
 If any viewer fails to populate automatically, or if displaying 
 different data is desired, the user can manually select data for each viewer
