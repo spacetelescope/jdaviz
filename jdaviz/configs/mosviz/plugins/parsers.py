@@ -83,108 +83,6 @@ def _fields_from_ecsv(fname, fields, delimiter=","):
             parsed_fields.append(temp_list)
     return parsed_fields
 
-@data_parser_registry("mosviz-niriss-parser")
-def mos_niriss_parser(app, data_dir, obs_label=""):
-    """
-    Attempts to parse all data for a NIRISS dataset in the specified
-    directory, which should include:
-    - *_direct_*_cal.fits : Direct 2D image
-    - *_direct_*_cat.ecsv : Source catalog
-    - *_WFSSR_*_cal.fits : 2D spectra in first orientation
-    - *_WFSSC_*_cal.fits : 2D spectra in second orientation
-    - *_WFSSR_*_x1d.fits : 1D spectra in first orientatiom
-    - *_WFSSC_*_x1d.fits : 1D spectra in second orientatiom
-
-    The spectra from the "C" files (horizontal orientation) are showed
-    in the viewers by default.
-    """
-    p = Path(data_dir)
-    if not p.is_dir():
-        raise ValueError("{} is not a valid directory path".format(data_dir))
-    source_cat = list(p.glob("{}*_direct_*_cat.ecsv".format(obs_label)))
-    direct_image = list(p.glob("{}*_direct_*_cal.fits".format(obs_label)))
-    spec2d_r = list(p.glob("{}*_WFSSR_*_cal.fits".format(obs_label)))
-    spec2d_c = list(p.glob("{}*_WFSSC_*_cal.fits".format(obs_label)))
-    spec1d_r = list(p.glob("{}*_WFSSR_*_x1d.fits".format(obs_label)))
-    spec1d_c = list(p.glob("{}*_WFSSC_*_x1d.fits".format(obs_label)))
-
-    file_lists = {
-                  "Source Catalog": source_cat,
-                  "Direct Image": direct_image,
-                  "2D Spectra C": spec2d_c,
-                  "2D Spectra R": spec2d_r,
-                  "1D Spectra C": spec1d_c,
-                  "1D Spectra R": spec1d_r
-                 }
-
-    # Convert from pathlib Paths back to strings
-    for key in file_lists:
-        file_lists[key] = [str(x) for x in file_lists[key]]
-
-    found_files = _warn_if_not_found(app, file_lists)
-
-    # Parse relevant information from source catalog
-    cat_fields = ["id", "sky_centroid.ra", "sky_centroid.dec"]
-    cat_file = file_lists["Source Catalog"][0]
-    parsed_cat_fields = _fields_from_ecsv(cat_file, cat_fields, delimiter=" ")
-    # Need to change to column lists rather than row lists
-    source_ids = []
-    ras = []
-    decs = []
-    for row in parsed_cat_fields:
-        source_ids.append(row[0])
-        ras.append(row[1])
-        decs.append(row[2])
-    _add_to_table(app, source_ids, "Source ID")
-    _add_to_table(app, ras, "RA")
-    _add_to_table(app, decs, "Dec")
-
-    # Read in direct image (NIRISS only has one image containing all sources)
-    for image_file in file_lists["Direct Image"]:
-        im_split = image_file.split("/")[-1].split("_")
-        image_label = "Image {} {}".format(im_split[0], im_split[1])
-        image_data = CCDData.read(direct_image[0])
-        app.data_collection[image_label] = image_data
-        # Only one image, duplicate for table
-        image_list = [image_label]*len(source_ids)
-        _add_to_table(app, image_list, "Images")
-
-    # Parse 2D spectra
-    for f in ["2D Spectra C", "2D Spectra R"]:
-        spec_labels = []
-        for fname in file_lists[f]:
-            orientation = fname.split("_")[2][-1]
-            sci_hdus = []
-            temp = fits.open(fname)
-            for i in range(len(temp)):
-                if "EXTNAME" in temp[i].header:
-                    if temp[i].header["EXTNAME"] == "SCI":
-                        sci_hdus.append(i)
-            # Now get a CCDData object for each SCI HDU
-            for i in sci_hdus:
-                spec2d = CCDData.read(fname, hdu=i)
-                label = "Source {} spec2d {}".format(spec2d.meta["SOURCEID"],
-                                               orientation)
-                spec_labels.append(label)
-                app.data_collection[label] = spec2d
-            if orientation == "C":
-                _add_to_table(app, spec_labels, "2D Spectra")
-
-    # Parse 1D spectra using SpectumList reader
-    for f in ["1D Spectra C", "1D Spectra R"]:
-        spec_labels = []
-        for fname in file_lists[f]:
-            specs = SpectrumList.read(fname)
-            # Orientation denoted by "C" or "R"
-            orientation = fname.split("_")[2][-1]
-            for spec in specs:
-                label = "Source {} spec1d {}".format(spec.meta["SOURCEID"],
-                                              orientation)
-                spec_labels.append(label)
-                app.data_collection[label] = spec
-            # We default to show the "C" spectra, show those in the table for now
-            if orientation == "C":
-                _add_to_table(app, spec_labels, "1D Spectra")
 
 @data_parser_registry("mosviz-spec1d-parser")
 def mos_spec1d_parser(app, data_obj, data_labels=None):
@@ -371,3 +269,107 @@ def mos_meta_parser(app, data_obj):
     _add_to_table(app, names, "Source Names")
     _add_to_table(app, ra, "Right Ascension")
     _add_to_table(app, dec, "Declination")
+
+
+@data_parser_registry("mosviz-niriss-parser")
+def mos_niriss_parser(app, data_dir, obs_label=""):
+    """
+    Attempts to parse all data for a NIRISS dataset in the specified
+    directory, which should include:
+    - *_direct_*_cal.fits : Direct 2D image
+    - *_direct_*_cat.ecsv : Source catalog
+    - *_WFSSR_*_cal.fits : 2D spectra in first orientation
+    - *_WFSSC_*_cal.fits : 2D spectra in second orientation
+    - *_WFSSR_*_x1d.fits : 1D spectra in first orientatiom
+    - *_WFSSC_*_x1d.fits : 1D spectra in second orientatiom
+
+    The spectra from the "C" files (horizontal orientation) are showed
+    in the viewers by default.
+    """
+    p = Path(data_dir)
+    if not p.is_dir():
+        raise ValueError("{} is not a valid directory path".format(data_dir))
+    source_cat = list(p.glob("{}*_direct_*_cat.ecsv".format(obs_label)))
+    direct_image = list(p.glob("{}*_direct_*_cal.fits".format(obs_label)))
+    spec2d_r = list(p.glob("{}*_WFSSR_*_cal.fits".format(obs_label)))
+    spec2d_c = list(p.glob("{}*_WFSSC_*_cal.fits".format(obs_label)))
+    spec1d_r = list(p.glob("{}*_WFSSR_*_x1d.fits".format(obs_label)))
+    spec1d_c = list(p.glob("{}*_WFSSC_*_x1d.fits".format(obs_label)))
+
+    file_lists = {
+                  "Source Catalog": source_cat,
+                  "Direct Image": direct_image,
+                  "2D Spectra C": spec2d_c,
+                  "2D Spectra R": spec2d_r,
+                  "1D Spectra C": spec1d_c,
+                  "1D Spectra R": spec1d_r
+                 }
+
+    # Convert from pathlib Paths back to strings
+    for key in file_lists:
+        file_lists[key] = [str(x) for x in file_lists[key]]
+
+    found_files = _warn_if_not_found(app, file_lists)
+
+    # Parse relevant information from source catalog
+    cat_fields = ["id", "sky_centroid.ra", "sky_centroid.dec"]
+    cat_file = file_lists["Source Catalog"][0]
+    parsed_cat_fields = _fields_from_ecsv(cat_file, cat_fields, delimiter=" ")
+    # Need to change to column lists rather than row lists
+    source_ids = []
+    ras = []
+    decs = []
+    for row in parsed_cat_fields:
+        source_ids.append(row[0])
+        ras.append(row[1])
+        decs.append(row[2])
+    _add_to_table(app, source_ids, "Source ID")
+    _add_to_table(app, ras, "RA")
+    _add_to_table(app, decs, "Dec")
+
+    # Read in direct image (NIRISS only has one image containing all sources)
+    for image_file in file_lists["Direct Image"]:
+        im_split = image_file.split("/")[-1].split("_")
+        image_label = "Image {} {}".format(im_split[0], im_split[1])
+        image_data = CCDData.read(direct_image[0])
+        app.data_collection[image_label] = image_data
+        # Only one image, duplicate for table
+        image_list = [image_label]*len(source_ids)
+        _add_to_table(app, image_list, "Images")
+
+    # Parse 2D spectra
+    for f in ["2D Spectra C", "2D Spectra R"]:
+        spec_labels = []
+        for fname in file_lists[f]:
+            orientation = fname.split("_")[2][-1]
+            sci_hdus = []
+            temp = fits.open(fname)
+            for i in range(len(temp)):
+                if "EXTNAME" in temp[i].header:
+                    if temp[i].header["EXTNAME"] == "SCI":
+                        sci_hdus.append(i)
+            # Now get a CCDData object for each SCI HDU
+            for i in sci_hdus:
+                spec2d = CCDData.read(fname, hdu=i)
+                label = "Source {} spec2d {}".format(spec2d.meta["SOURCEID"],
+                                               orientation)
+                spec_labels.append(label)
+                app.data_collection[label] = spec2d
+            if orientation == "C":
+                _add_to_table(app, spec_labels, "2D Spectra")
+
+    # Parse 1D spectra using SpectumList reader
+    for f in ["1D Spectra C", "1D Spectra R"]:
+        spec_labels = []
+        for fname in file_lists[f]:
+            specs = SpectrumList.read(fname)
+            # Orientation denoted by "C" or "R"
+            orientation = fname.split("_")[2][-1]
+            for spec in specs:
+                label = "Source {} spec1d {}".format(spec.meta["SOURCEID"],
+                                              orientation)
+                spec_labels.append(label)
+                app.data_collection[label] = spec
+            # We default to show the "C" spectra, show those in the table for now
+            if orientation == "C":
+                _add_to_table(app, spec_labels, "1D Spectra")
