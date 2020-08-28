@@ -123,8 +123,8 @@ def mos_spec2d_parser(app, data_obj, data_labels=None):
                 hdulist[1].header['NAXIS'] = 3
 
             hdulist[1].header['NAXIS3'] = 1
-            hdulist[1].header['BUNIT'] = "dN/s"
-            hdulist[1].header['CUNIT3'] = "um"
+            hdulist[1].header['BUNIT'] = 'dN/s'
+            hdulist[1].header['CUNIT3'] = 'um'
             wcs = WCS(hdulist[1].header)
 
         return SpectralCube(new_data, wcs=wcs)
