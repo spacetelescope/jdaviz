@@ -1,9 +1,3 @@
-import base64
-import pathlib
-import uuid
-from astropy import units as u
-from specutils import Spectrum1D, SpectrumCollection, SpectralRegion
-
 import astropy.units as u
 from specutils import Spectrum1D, SpectrumCollection, SpectralRegion
 
@@ -19,54 +13,11 @@ class SpecViz(ConfigHelper, LineListMixin):
     _default_configuration = "specviz"
 
     def load_spectrum(self, data, data_label=None, format=None, show_in_viewer=True):
-        """
-        Loads a data file or `~specutils.Spectrum1D` object into SpecViz.
-
-        Parameters
-        ----------
-        data : str or `~specutils.Spectrum1D`
-            Spectrum1D spectra, or path to compatible data file.
-        data_label : str
-            The Glue data label found in the ``DataCollection``.
-        format : str
-            Loader format specification used to indicate data format in
-            `~specutils.Spectrum1D.read` io method.
-        """
-        # If no data label is assigned, give it a unique identifier
-        if not data_label:
-            data_label = "specviz_data|" + str(
-                base64.b85encode(uuid.uuid4().bytes), "utf-8"
-            )
-        # If data provided is a path, try opening into a Spectrum1D object
-        try:
-            path = pathlib.Path(data)
-
-            if path.is_file():
-                data = Spectrum1D.read(path, format=format)
-            else:
-                raise FileNotFoundError("No such file: " + path)
-        # If not, it must be a Spectrum1D object. Otherwise, it's unsupported
-        except TypeError:
-            if type(data) is SpectrumCollection:
-                raise TypeError(
-                    "SpectrumCollection detected. Please provide a Spectrum1D"
-                )
-            elif type(data) is not Spectrum1D:
-                raise TypeError("Data is not a Spectrum1D object or compatible file")
-
-        # Check to see if there's already data in the viewer and convert units
-        # if needed
-        current_spec = self.get_spectra()
-        if current_spec != {} and current_spec is not None:
-            spec_key = list(current_spec.keys())[0]
-            current_unit = current_spec[spec_key].spectral_axis.unit
-            if data.spectral_axis.unit != current_unit:
-                data = Spectrum1D(flux=data.flux,
-                                  spectral_axis=data.spectral_axis.to(current_unit))
-
-        self.app.add_data(data, data_label)
-        if show_in_viewer:
-            self.app.add_data_to_viewer("spectrum-viewer", data_label)
+        super().load_data(data,
+                          'specviz-spectrum1d-parser',
+                          data_label=data_label,
+                          format=format,
+                          show_in_viewer=show_in_viewer)
 
     def get_spectra(self, data_label=None):
         """Returns the current data loaded into the main viewer

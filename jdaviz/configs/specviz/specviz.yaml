@@ -1,5 +1,7 @@
 settings:
   configuration: specviz
+  data:
+    parser: specviz-spectrum1d-parser
   visible:
     menu_bar: false
     toolbar: true
