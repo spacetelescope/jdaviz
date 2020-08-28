@@ -1,4 +1,5 @@
 from astropy import units as u
+from astropy.nddata import VarianceUncertainty, StdDevUncertainty, InverseVariance, UnknownUncertainty
 import numpy as np
 import datetime
 import time
@@ -140,8 +141,18 @@ class UnitConversion(TemplateMixin):
                 self.hub.broadcast(snackbar_message)
 
                 return
+
+        # Uncertainty converted to new flux units
+        temp_uncertainty = self.spectrum.uncertainty.quantity.to(u.Unit(set_flux_unit.unit),
+                                                      equivalencies=u.spectral_density(set_spectral_axis_unit))
+
         # Create new spectrum with new units.
-        converted_spec = self.spectrum._copy(flux=set_flux_unit, spectral_axis=set_spectral_axis_unit, unit=set_flux_unit.unit, uncertainty=self.spectrum.uncertainty)
+        converted_spec = self.spectrum._copy(flux=set_flux_unit,
+                                             spectral_axis=set_spectral_axis_unit,
+                                             unit=set_flux_unit.unit,
+                                             uncertainty=self.return_uncertainty_type(self.spectrum.uncertainty.uncertainty_type,
+                                                                                      temp_uncertainty.value)
+                                             )
 
         # Finds the '_units_copy_' spectrum and does unit conversions in that copy.
         if "_units_copy_" in self.selected_data:
@@ -277,3 +288,28 @@ class UnitConversion(TemplateMixin):
                         hasattr(u.Unit(unit), "long_names") and len(u.Unit(unit).long_names) > 0)
             else u.Unit(unit).to_string()
             for unit in unit_list]
+
+    def return_uncertainty_type(self, uncertainty_type, value):
+        """
+        Return correct uncertainty type based on uncertainty_type of original spectrum.
+
+        Parameters
+        ----------
+        uncertainty_type : str
+            String that represents a spectrum's uncertainty type.
+        value : list
+            List of floats representing the original spectrum's uncertainty without units.
+
+        Returns
+        -------
+        Uncertainty : VarianceUncertainty, StdDevUncertainty, InverseVariance or UnknownUncertainty
+            Uncertainty type of original spectrum with the newly converted values for uncertainty.
+        """
+        if uncertainty_type == "std":
+            return StdDevUncertainty(value)
+        elif uncertainty_type == "var":
+            return VarianceUncertainty(value)
+        elif uncertainty_type == "ivar":
+            return InverseVariance(value)
+        else:
+            return UnknownUncertainty(value)
