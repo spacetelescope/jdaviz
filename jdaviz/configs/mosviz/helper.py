@@ -22,7 +22,7 @@ class MosViz(ConfigHelper):
             ``data_obj``. Can be a list of strings representing data labels
             for each item in ``data_obj`` if  ``data_obj`` is a list.
         """
-        self.app.load_data(data_obj, parser_reference="mosviz-spec1d-parser",
+        super().load_data(data_obj, parser_reference="mosviz-spec1d-parser",
                            data_labels=data_labels)
 
     def load_2d_spectra(self, data_obj, data_labels=None):
@@ -40,7 +40,7 @@ class MosViz(ConfigHelper):
             ``data_obj``. Can be a list of strings representing data labels
             for each item in ``data_obj`` if  ``data_obj`` is a list.
         """
-        self.app.load_data(data_obj, parser_reference="mosviz-spec2d-parser",
+        super().load_data(data_obj, parser_reference="mosviz-spec2d-parser",
                            data_labels=data_labels)
 
     def load_images(self, data_obj, data_labels=None):
@@ -59,7 +59,7 @@ class MosViz(ConfigHelper):
             ``data_obj``. Can be a list of strings representing data labels
             for each item in ``data_obj`` if  ``data_obj`` is a list.
         """
-        self.app.load_data(data_obj, parser_reference="mosviz-image-parser",
+        super().load_data(data_obj, parser_reference="mosviz-image-parser",
                            data_labels=data_labels)
 
     def add_column(self, data, column_name=None):
