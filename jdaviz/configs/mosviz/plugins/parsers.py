@@ -324,8 +324,8 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
         ras.append(row[1])
         decs.append(row[2])
     _add_to_table(app, source_ids, "Source ID")
-    _add_to_table(app, ras, "RA")
-    _add_to_table(app, decs, "Dec")
+    _add_to_table(app, ras, "Right Ascension")
+    _add_to_table(app, decs, "Declination")
 
     # Read in direct image (NIRISS only has one image containing all sources)
     for image_file in file_lists["Direct Image"]:
