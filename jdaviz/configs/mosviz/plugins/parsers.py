@@ -183,9 +183,7 @@ def mos_image_parser(app, data_obj, data_labels=None):
             unit = hdulist[0].header.get('BUNIT', 'Jy')
 
             header = hdulist[0].header.copy()
-            meta = {}
-            for x in header.keys():
-                meta[x] = header[x]
+            meta = dict(header)
 
             wcs = WCS(header)
 
