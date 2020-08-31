@@ -357,7 +357,9 @@ class ModelFitting(TemplateMixin):
         self.hub.broadcast(snackbar_message)
 
         # Retrieve copy of the models with proper "fixed" dictionaries
-        models_to_fit = self._reinitialize_with_fixed()
+        # TODO: figure out why this was causing the parallel fitting to fail
+        #models_to_fit = self._reinitialize_with_fixed()
+        models_to_fit = self._initialized_models.values()
 
         fitted_model, fitted_spectrum = fit_model_to_spectrum(
             spec,
