@@ -8,7 +8,7 @@ from specutils import Spectrum1D, SpectrumCollection
 __all__ = ["specviz_spectrum1d_parser"]
 
 @data_parser_registry("specviz-spectrum1d-parser")
-def specviz_spectrum1d_parser(app, data, data_label=None, format = None, show_in_viewer=True):
+def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_viewer=True):
     """
     Loads a data file or `~specutils.Spectrum1D` object into SpecViz.
 
