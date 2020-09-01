@@ -820,6 +820,18 @@ class Application(VuetifyTemplate, HubListener):
 
         self._update_selected_data_items(viewer_id, selected_items)
 
+    def vue_save_figure(self, event):
+        """
+        Callback for save figure events in the front end viewer toolbars. Uses
+        the bqplot.Figure save methods.
+        """
+        viewer_id, filetype = event['id'], event['filetype']
+        viewer = self._viewer_store[viewer_id]
+        if filetype == "png":
+            viewer.figure.save_png()
+        elif filetype == "svg":
+            viewer.figure.save_svg()
+
     def _update_selected_data_items(self, viewer_id, selected_items):
         # Find the active viewer
         viewer_item = self._viewer_item_by_id(viewer_id)
