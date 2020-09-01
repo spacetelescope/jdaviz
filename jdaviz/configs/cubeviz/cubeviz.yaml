@@ -19,6 +19,8 @@ tray:
   - g-gaussian-smooth
   - g-collapse
   - g-model-fitting
+  - g-line-list
+  - cubeviz-moment-maps
 viewer_area:
   - container: col
     children:

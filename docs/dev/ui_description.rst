@@ -1,5 +1,6 @@
+***************************
 Glupyter Framework Overview
-===========================
+***************************
 
 The glue-jupyter ("glupyter") package supports interacting with and
 visualizing data within the Jupyter environment using core elements from

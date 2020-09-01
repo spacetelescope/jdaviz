@@ -11,7 +11,7 @@ from ..app import Application
 __all__ = ['ConfigHelper']
 
 
-class ConfigHelper():
+class ConfigHelper:
     """The Base Helper Class
     Provides shared abstracted helper methods to the user.
 

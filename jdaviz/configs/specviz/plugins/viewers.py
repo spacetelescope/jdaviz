@@ -44,6 +44,8 @@ class SpecvizProfileView(BqplotProfileView):
 
         # If there is already a loaded table, convert units to match. This
         # attempts to do some sane rounding after the unit conversion.
+        # TODO: Fix this so that things don't get rounded to 0 in some cases
+        """
         if self.spectral_lines is not None:
             sig_figs = []
             for row in line_table:
@@ -54,6 +56,7 @@ class SpecvizProfileView(BqplotProfileView):
             for row in line_table:
                 row["rest"] = row["rest"].round(row["sig_figs"])
             del line_table["sig_figs"]
+        """
 
         # Combine name and rest value for indexing
         if "name_rest" not in line_table.colnames:
