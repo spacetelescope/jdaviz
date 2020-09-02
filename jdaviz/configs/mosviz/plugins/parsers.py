@@ -30,7 +30,7 @@ def _add_to_table(app, data, comp_label):
     """
     # Add data to the mos viz table object
     if 'MOS Table' not in app.data_collection:
-        table_data = Data(label="MOS Table")
+        table_data = Data(label='MOS Table')
         app.data_collection.append(table_data)
 
         mos_table = app.data_collection['MOS Table']
@@ -201,3 +201,34 @@ def mos_image_parser(app, data_obj, data_labels=None):
         app.data_collection[data_labels[i]] = data_obj[i]
 
     _add_to_table(app, data_labels, 'Images')
+
+
+@data_parser_registry("mosviz-metadata-parser")
+def mos_meta_parser(app, data_obj):
+    """
+    Attempts to parse MOS FITS header metadata.
+
+    Parameters
+    ----------
+    app : `~jdaviz.app.Application`
+        The application-level object used to reference the viewers.
+    data_obj : str or list or HDUList
+        File path, list, or an HDUList to extract metadata from.
+    """
+
+    # Coerce into list-like object
+    if not hasattr(data_obj, '__len__'):
+        data_obj = [data_obj]
+    else:
+        data_obj = [fits.open(x) if _check_is_file(x)
+                    else x for x in data_obj]
+
+    ra = [x[0].header.get("OBJ_RA", float("nan")) for x in data_obj]
+    dec = [x[0].header.get("OBJ_DEC", float("nan")) for x in data_obj]
+    names = [x[0].header.get("OBJECT", "Unspecified Target") for x in data_obj]
+
+    [x.close() for x in data_obj]
+
+    _add_to_table(app, names, "Source Names")
+    _add_to_table(app, ra, "Right Ascension")
+    _add_to_table(app, dec, "Declination")
