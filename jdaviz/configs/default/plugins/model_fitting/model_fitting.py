@@ -318,6 +318,10 @@ class ModelFitting(TemplateMixin):
             self.model_equation,
             run_fitter=True)
 
+        # Save fitted 3D model in a way that the cubeviz
+        # helper can access it.
+        self.app._fitted_3d_model = fitted_model
+
         # Transpose the axis order back
         values = np.moveaxis(fitted_spectrum.flux.value, -1, 0)
 
