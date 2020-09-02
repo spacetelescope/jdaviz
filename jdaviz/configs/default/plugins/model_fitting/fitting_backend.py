@@ -178,7 +178,7 @@ def _fit_3D(initial_model, spectrum):
         param = getattr(initial_model, name)
         param_units.append(param.unit)
 
-    # Re-format parameters cube to a list of 2D Quantity arrays.
+    # Re-format parameters cube to a dict of 2D Quantity arrays.
     fitted_parameters = _handle_parameter_units(initial_model,
                                                 parameters_cube,
                                                 param_units)
@@ -284,8 +284,8 @@ def _build_model(component_list, expression):
 def _handle_parameter_units(model, fitted_parameters_cube, param_units):
     """
     Extracts parameter units from a CompoundModel and parameter values
-    from a list of 2D numpy arrays, and returns a list of 2D Quantity
-    arrays built the parameter values and units respectively.
+    from a list of 2D numpy arrays, and returns a dict of 2D Quantity
+    arrays. The dict values are keyed by the parameter names.
 
     Parameters
     ----------
@@ -301,16 +301,17 @@ def _handle_parameter_units(model, fitted_parameters_cube, param_units):
 
     Returns
     -------
-    :list: list with 2D Quantity arrays
+    :dict: 2D Quantity arrays keyed by parameter name
     """
 
-    fitted_parameters_list = []
+    fitted_parameters_dict = {}
 
     for index in range(len(model.parameters)):
+        key = model.param_names[index]
         _ary = fitted_parameters_cube[index, :, :]
-        fitted_parameters_list.append(u.Quantity(_ary, param_units[index]))
+        fitted_parameters_dict[key] = u.Quantity(_ary, param_units[index])
 
-    return fitted_parameters_list
+    return fitted_parameters_dict
 
 
 def _generate_spaxel_list(spectrum):
