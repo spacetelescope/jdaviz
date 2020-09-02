@@ -16,6 +16,9 @@ class MosViz(ConfigHelper):
         spec1d = self.app.get_viewer("spectrum-viewer")
         spec1d.scales['x'].observe(self._update_spec2d_x_axis)
 
+        spec2d = self.app.get_viewer("spectrum-2d-viewer")
+        spec2d.scales['x'].observe(self._update_spec1d_x_axis)
+
     def _update_spec2d_x_axis(self, change):
         # This assumes the two spectrum viewers have the same x-axis shape and
         # wavelength solution, which should always hold
@@ -34,6 +37,25 @@ class MosViz(ConfigHelper):
             print(idx, old_idx)
             if idx != old_idx:
                 setattr(scales['x'], name, idx)
+
+    def _update_spec1d_x_axis(self, change):
+        # This assumes the two spectrum viewers have the same x-axis shape and
+        # wavelength solution, which should always hold
+        if change['old'] is None:
+            pass
+        else:
+            name = change['name']
+            if name not in ['min', 'max']:
+                return
+            new_idx = int(np.around(change['new']))
+            spec1d = self.app.get_viewer('table-viewer')._selected_data["spectrum-viewer"]
+            world = self.app.data_collection[spec1d]["World 0"]
+            val = world[new_idx]
+            scales = self.app.get_viewer('spectrum-viewer').scales
+            old_val = getattr(scales['x'], name)
+            print(val, old_val)
+            if val != old_val:
+                setattr(scales['x'], name, val)
 
     def load_data(self, spectra_1d, spectra_2d, images, spectra_1d_label=None,
                   spectra_2d_label=None, images_label=None):
