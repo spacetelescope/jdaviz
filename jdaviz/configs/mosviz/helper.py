@@ -34,7 +34,6 @@ class MosViz(ConfigHelper):
             idx = float((np.abs(world - new_val)).argmin())
             scales = self.app.get_viewer('spectrum-2d-viewer').scales
             old_idx = getattr(scales['x'], name)
-            print(idx, old_idx)
             if idx != old_idx:
                 setattr(scales['x'], name, idx)
 
@@ -53,7 +52,6 @@ class MosViz(ConfigHelper):
             val = world[new_idx]
             scales = self.app.get_viewer('spectrum-viewer').scales
             old_val = getattr(scales['x'], name)
-            print(val, old_val)
             if val != old_val:
                 setattr(scales['x'], name, val)
 
