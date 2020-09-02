@@ -1,3 +1,5 @@
+import numpy as np
+
 from jdaviz.core.helpers import ConfigHelper
 from astropy.table import QTable
 import astropy.units as u
@@ -7,6 +9,31 @@ class MosViz(ConfigHelper):
     """MosViz Helper class"""
 
     _default_configuration = "mosviz"
+
+    def __init__(self):
+        super().__init__()
+
+        spec1d = self.app.get_viewer("spectrum-viewer")
+        spec1d.scales['x'].observe(self._update_spec2d_x_axis)
+
+    def _update_spec2d_x_axis(self, change):
+        # This assumes the two spectrum viewers have the same x-axis shape and
+        # wavelength solution, which should always hold
+        if change['old'] is None:
+            pass
+        else:
+            name = change['name']
+            if name not in ['min', 'max']:
+                return
+            new_val = change['new']
+            spec1d = self.app.get_viewer('table-viewer')._selected_data["spectrum-viewer"]
+            world = self.app.data_collection[spec1d]["World 0"]
+            idx = float((np.abs(world - new_val)).argmin())
+            scales = self.app.get_viewer('spectrum-2d-viewer').scales
+            old_idx = getattr(scales['x'], name)
+            print(idx, old_idx)
+            if idx != old_idx:
+                setattr(scales['x'], name, idx)
 
     def load_data(self, spectra_1d, spectra_2d, images, spectra_1d_label=None,
                   spectra_2d_label=None, images_label=None):
