@@ -906,12 +906,8 @@ class Application(VuetifyTemplate, HubListener):
             print("In set axes labels")
             active_data = self.data_collection[active_data_labels[0]]
             if hasattr(active_data, "_preferred_translation") \
-                    and active_data._preferred_translation is not None \
-                    and type(active_data.get_object()) is Spectrum1D:
+                    and active_data._preferred_translation is not None:
                 print("running set plot axes labels")
-                self._set_plot_axes_labels(active_data.get_object(), viewer_id)
-            else:
-                #print(f"{active_data}: {type(active_data)}: {active_data.get_object().spectral_axis}")
                 self._set_plot_axes_labels(active_data.get_object(), viewer_id)
 
     def _on_data_added(self, msg):
