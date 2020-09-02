@@ -31,3 +31,6 @@ class ConfigHelper:
             self.app = Application(configuration=self._default_configuration)
         else:
             self.app = app
+
+    def load_data(self, data, parser_reference=None, **kwargs):
+        self.app.load_data(data, parser_reference=parser_reference, **kwargs)
