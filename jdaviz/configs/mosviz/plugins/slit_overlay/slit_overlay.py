@@ -77,7 +77,7 @@ class SlitOverlay(TemplateMixin):
         spec2d_data = self.app.get_viewer("spectrum-2d-viewer").data()
 
         # 'S_REGION' contains slit information
-        if 'S_REGION' in spec2d_data[0].meta:
+        if len(spec2d_data) > 0 and 'S_REGION' in spec2d_data[0].meta:
             header = spec2d_data[0].meta
             sky_region = self.jwst_header_to_skyregion(header)
 
