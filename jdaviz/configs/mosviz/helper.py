@@ -19,6 +19,17 @@ class MosViz(ConfigHelper):
         spec2d = self.app.get_viewer("spectrum-2d-viewer")
         spec2d.scales['x'].observe(self._update_spec1d_x_axis)
 
+    def _extend_world(self, spec1d, ext):
+        # Extend 1D spectrum world axis to enable panning (within reason) past
+        # the bounds of data
+        world = self.app.data_collection[spec1d]["World 0"].copy()
+        dw = world[1]-world[0]
+        prepend = np.linspace(world[0]-dw*ext, world[0]-dw, ext)
+        dw = world[-1]-world[-2]
+        append = np.linspace(world[-1]+dw, world[-1]+dw*ext, ext)
+        world = np.hstack((prepend, world, append))
+        return world
+
     def _update_spec2d_x_axis(self, change):
         # This assumes the two spectrum viewers have the same x-axis shape and
         # wavelength solution, which should always hold
@@ -30,8 +41,10 @@ class MosViz(ConfigHelper):
                 return
             new_val = change['new']
             spec1d = self.app.get_viewer('table-viewer')._selected_data["spectrum-viewer"]
-            world = self.app.data_collection[spec1d]["World 0"]
-            idx = float((np.abs(world - new_val)).argmin())
+            extend_by = int(self.app.data_collection[spec1d]["World 0"].shape[0] / 2)
+            world = self._extend_world(spec1d, extend_by)
+
+            idx = float((np.abs(world - new_val)).argmin()) - extend_by
             scales = self.app.get_viewer('spectrum-2d-viewer').scales
             old_idx = getattr(scales['x'], name)
             if idx != old_idx:
@@ -48,8 +61,10 @@ class MosViz(ConfigHelper):
                 return
             new_idx = int(np.around(change['new']))
             spec1d = self.app.get_viewer('table-viewer')._selected_data["spectrum-viewer"]
-            world = self.app.data_collection[spec1d]["World 0"]
-            val = world[new_idx]
+            extend_by = int(self.app.data_collection[spec1d]["World 0"].shape[0] / 2)
+            world = self._extend_world(spec1d, extend_by)
+
+            val = world[new_idx+extend_by]
             scales = self.app.get_viewer('spectrum-viewer').scales
             old_val = getattr(scales['x'], name)
             if val != old_val:
