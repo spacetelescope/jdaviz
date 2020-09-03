@@ -14,6 +14,8 @@ from astropy.wcs import WCS
 
 import bqplot
 
+__all__ = ['SlitOverlay']
+
 @tray_registry('g-slit-overlay', label="Slit Overlay")
 class SlitOverlay(TemplateMixin):
     template = load_template("slit_overlay.vue", __file__).tag(sync=True)

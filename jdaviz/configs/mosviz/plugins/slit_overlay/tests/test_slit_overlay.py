@@ -7,7 +7,6 @@ from regions import RectangleSkyRegion
 from astropy.coordinates import Angle, SkyCoord
 from astropy import units as u
 
-
 from ..slit_overlay import SlitOverlay
 
 header = {'S_REGION': 'POLYGON ICRS  5.029236065 4.992154276 5.029513148 4.992154276 5.029513148 4.992468585 5.029236065 4.992468585'}
