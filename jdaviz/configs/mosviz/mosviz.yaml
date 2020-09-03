@@ -14,6 +14,7 @@ toolbar:
 tray:
   - g-gaussian-smooth
   - g-collapse
+  - g-slit-overlay
 viewer_area:
   - container: col
     children:
