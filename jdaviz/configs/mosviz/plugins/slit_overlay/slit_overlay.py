@@ -1,11 +1,13 @@
-
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
 from jdaviz.utils import load_template
 from jdaviz.core.events import SnackbarMessage
 
+from traitlets import Bool
+from bqplot.interacts import PanZoom
+
 import numpy as np
-from regions import RectangleSkyRegion, RectanglePixelRegion
+from regions import RectangleSkyRegion
 from astropy.coordinates import Angle, SkyCoord
 from astropy import units as u
 from astropy.wcs import WCS
@@ -15,7 +17,13 @@ import bqplot
 @tray_registry('g-slit-overlay', label="Slit Overlay")
 class SlitOverlay(TemplateMixin):
     template = load_template("slit_overlay.vue", __file__).tag(sync=True)
+    visible = Bool(True).tag(sync=True)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        table = self.app.get_viewer("table-viewer")
+        table.figure_widget.observe(self.place_slit_overlay, names=['highlighted'])
 
     def jwst_header_to_skyregion(self, header):
         s_region = header['S_REGION']
@@ -44,20 +52,34 @@ class SlitOverlay(TemplateMixin):
         skyregion = RectangleSkyRegion(center=skycoord, width=width, height=length)
         return skyregion
 
+    def vue_change_visible(self, *args, **kwargs):
+        if self.visible:
+            self.place_slit_overlay()
+        else:
+            self.remove_slit_overlay()
 
-    def vue_slit_overlay(self, *args, **kwargs):
+    def place_slit_overlay(self, *args, **kwargs):
         """
         Find slit information in 2D Spectrum metadata, find the correct
         wcs information from the image metadata, then plot the slit over the
         image viewer using both.
         """
+        if not self.visible:
+            return
+
+        snackbar_message = None
+
+        # Clear existing slits on the image viewer
+        self.remove_slit_overlay()
+
+        # Get data from relevant viewers
         image_data = self.app.get_viewer("image-viewer").data()
         spec2d_data = self.app.get_viewer("spectrum-2d-viewer").data()
 
+        # 'S_REGION' contains slit information
         if 'S_REGION' in spec2d_data[0].meta:
             header = spec2d_data[0].meta
             sky_region = self.jwst_header_to_skyregion(header)
-
 
             # Use wcs of image viewer to scale slit dimensions correctly
             wcs_image = WCS(image_data[0].meta)
@@ -72,20 +94,24 @@ class SlitOverlay(TemplateMixin):
 
             fig_image = self.app.get_viewer("image-viewer").figure
 
-            # Create LinearScale that is the same size as the image viewer
-            scales = {'x': fig_image.interaction.x_scale, 'y': fig_image.interaction.y_scale}
+            # If PanZoom is selected during row switch, error occurs
+            if type(fig_image.interaction) is not PanZoom:
 
-            # Create slit
-            patch2 = bqplot.Lines(x=x_coords, y=y_coords, scales=scales, fill='none', colors=["red"], stroke_width=2,
-                                  close_path=True)
+                # Create LinearScale that is the same size as the image viewer
+                scales = {'x': fig_image.interaction.x_scale, 'y': fig_image.interaction.y_scale}
 
-            # Visualize slit on the figure
-            fig_image.marks = fig_image.marks + [patch2]
+                # Create slit
+                patch2 = bqplot.Lines(x=x_coords, y=y_coords, scales=scales, fill='none', colors=["red"], stroke_width=2,
+                                      close_path=True)
 
-            snackbar_message = SnackbarMessage(
-                "Slit successfully added to image viewer",
-                color="success",
-                sender=self)
+                # Visualize slit on the figure
+                fig_image.marks = fig_image.marks + [patch2]
+
+            else:
+                snackbar_message = SnackbarMessage(
+                    "Please de-select PanZoom in the toolbar and re-select row to plot slit",
+                    color="error",
+                    sender=self)
 
         else:
             snackbar_message = SnackbarMessage(
@@ -93,8 +119,9 @@ class SlitOverlay(TemplateMixin):
                 color="error",
                 sender=self)
 
-        self.hub.broadcast(snackbar_message)
+        if snackbar_message:
+            self.hub.broadcast(snackbar_message)
 
-    def vue_slit_overlay_remove(self, *args, **kwargs):
+    def remove_slit_overlay(self):
         image_figure = self.app.get_viewer("image-viewer").figure
         image_figure.marks = [image_figure.marks[0]]
