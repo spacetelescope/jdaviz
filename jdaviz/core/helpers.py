@@ -11,7 +11,7 @@ from ..app import Application
 __all__ = ['ConfigHelper']
 
 
-class ConfigHelper():
+class ConfigHelper:
     """The Base Helper Class
     Provides shared abstracted helper methods to the user.
 
@@ -31,3 +31,6 @@ class ConfigHelper():
             self.app = Application(configuration=self._default_configuration)
         else:
             self.app = app
+
+    def load_data(self, data, parser_reference=None, **kwargs):
+        self.app.load_data(data, parser_reference=parser_reference, **kwargs)

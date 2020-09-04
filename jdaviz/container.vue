@@ -8,6 +8,7 @@
       @resize="$emit('resize')"
       @destroy="$emit('destroy', $event)"
       @data-item-selected="$emit('data-item-selected', $event)"
+      @save-figure="$emit('save-figure', $event)"
     ></g-viewer-tab>
     <gl-component
       v-for="(viewer, index) in stack.viewers"
@@ -34,6 +35,31 @@
             </v-btn>
             <!-- <v-divider vertical></v-divider> -->
             <jupyter-widget :widget="viewer.tools"></jupyter-widget>
+            <v-menu offset-y :close-on-content-click="true" style="z-index: 10">
+             <template v-slot:activator="{ on }">
+              <v-btn icon color="primary" v-on="on">
+               <v-icon>mdi-content-save</v-icon>
+              </v-btn>
+             </template>
+             <v-list>
+              <v-list-item>
+               <v-btn 
+                color="primary" 
+                @click="$emit('save-figure', {'id': viewer.id, 'filetype': 'png'})"
+               >
+                Save as PNG
+               </v-btn>
+              </v-list-item>
+              <v-list-item>
+               <v-btn 
+                color="primary" 
+                @click="$emit('save-figure', {'id': viewer.id, 'filetype': 'svg'})"
+               >
+                Save as SVG
+               </v-btn>
+              </v-list-item>
+             </v-list>
+            </v-menu>
             <v-menu offset-y :close-on-content-click="false" style="z-index: 10">
               <template v-slot:activator="{ on }">
                 <v-btn icon color="primary" v-on="on">

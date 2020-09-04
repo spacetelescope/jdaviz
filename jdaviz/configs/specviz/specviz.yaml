@@ -1,5 +1,7 @@
 settings:
   configuration: specviz
+  data:
+    parser: specviz-spectrum1d-parser
   visible:
     menu_bar: false
     toolbar: true
@@ -13,7 +15,6 @@ toolbar:
   - g-subset-tools
 tray:
   - g-gaussian-smooth
-  - g-collapse
   - g-model-fitting
   - g-unit-conversion
   - g-line-list

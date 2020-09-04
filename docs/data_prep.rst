@@ -1,6 +1,6 @@
-****************
+################
 Collapsing Cubes
-****************
+################
 
 Currently, the ``specutils`` library does not support loading three dimensional
 spectral cubes and manipulating their non-spectral axes, so parsing a spectral

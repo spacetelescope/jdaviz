@@ -12,6 +12,17 @@
           ></v-select>
         </v-col>
       </v-row>
+      <v-row v-if="show_modes">
+        <v-col>
+          <v-select
+            :items="smooth_modes"
+            v-model="selected_mode"
+            label="Smoothing Type"
+            hint="Smooth data spectrally or spatially"
+            persistent-hint
+          ></v-select>
+        </v-col>
+      </v-row>
       <v-row>
         <v-col>
           <v-text-field
@@ -30,8 +41,16 @@
 
     <v-card-actions>
       <div class="flex-grow-1"></div>
-      <v-btn :disabled="stddev <= 0 || selected_data == ''"
-      color="accent" text @click="gaussian_smooth">Apply</v-btn>
+      <v-btn v-if="selected_mode=='Spectral'"
+        :disabled="stddev <= 0 || selected_data == ''"
+        color="accent" text 
+        @click="spectral_smooth"
+      >Apply</v-btn>
+      <v-btn v-else
+        :disabled="stddev <= 0 || selected_data == ''"
+        color="accent" text
+        @click="spatial_convolution"
+      >Apply</v-btn>
     </v-card-actions>
   </v-card>
 </template>
