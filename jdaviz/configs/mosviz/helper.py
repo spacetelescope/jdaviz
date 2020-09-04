@@ -41,7 +41,7 @@ class MosViz(ConfigHelper):
                 return
             new_val = change['new']
             spec1d = self.app.get_viewer('table-viewer')._selected_data["spectrum-viewer"]
-            extend_by = int(self.app.data_collection[spec1d]["World 0"].shape[0] / 2)
+            extend_by = int(self.app.data_collection[spec1d]["World 0"].shape[0])
             world = self._extend_world(spec1d, extend_by)
 
             idx = float((np.abs(world - new_val)).argmin()) - extend_by
@@ -61,7 +61,7 @@ class MosViz(ConfigHelper):
                 return
             new_idx = int(np.around(change['new']))
             spec1d = self.app.get_viewer('table-viewer')._selected_data["spectrum-viewer"]
-            extend_by = int(self.app.data_collection[spec1d]["World 0"].shape[0] / 2)
+            extend_by = int(self.app.data_collection[spec1d]["World 0"].shape[0])
             world = self._extend_world(spec1d, extend_by)
 
             val = world[new_idx+extend_by]

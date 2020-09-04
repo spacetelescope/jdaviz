@@ -40,6 +40,8 @@ class MOSVizProfile2DView(BqplotImageView):
     #  axes, the default conversion class must handle cubes
     default_class = SpectralCube
 
+    tools = ['bqplot:panzoom_x']
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Setup viewer option defaults
