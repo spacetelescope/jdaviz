@@ -31,7 +31,7 @@ class Collapse(TemplateMixin):
     selected_data_item = Unicode().tag(sync=True)
     axes = List([]).tag(sync=True)
     selected_axis = Int(0).tag(sync=True)
-    funcs = List(['Mean', 'Median', 'Min', 'Max']).tag(sync=True)
+    funcs = List(['Mean', 'Median', 'Min', 'Max', 'Sum']).tag(sync=True)
     selected_func = Unicode('Mean').tag(sync=True)
 
     spectral_min = Any().tag(sync=True)
