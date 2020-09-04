@@ -307,11 +307,17 @@ class ModelFitting(TemplateMixin):
             return
         models_to_fit = self._reinitialize_with_fixed()
 
-        fitted_model, fitted_spectrum = fit_model_to_spectrum(
-            self._spectrum1d,
-            models_to_fit,
-            self.model_equation,
-            run_fitter=True)
+        try:
+            fitted_model, fitted_spectrum = fit_model_to_spectrum(
+                self._spectrum1d,
+                models_to_fit,
+                self.model_equation,
+                run_fitter=True)
+        except AttributeError:
+            msg = SnackbarMessage("Unable to fit: model equation may be invalid",
+                                  color="error", sender=self)
+            self.hub.broadcast(msg)
+            return
         self._fitted_model = fitted_model
         self._fitted_spectrum = fitted_spectrum
 
