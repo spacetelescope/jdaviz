@@ -1,4 +1,4 @@
-from traitlets import Bool, Float, observe, Any
+from traitlets import Bool, Float, observe, Any, Int
 
 from jdaviz.core.events import AddDataMessage
 from jdaviz.core.registries import tool_registry
@@ -17,6 +17,7 @@ class UnifiedSlider(TemplateMixin):
     min_value = Float(0).tag(sync=True)
     max_value = Float(100).tag(sync=True)
     linked = Bool(True).tag(sync=True)
+    wait = Int(300).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
