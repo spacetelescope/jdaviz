@@ -1,6 +1,7 @@
 import numpy as np
 
 from jdaviz.core.helpers import ConfigHelper
+from jdaviz.core.events import SnackbarMessage
 from astropy.table import QTable
 import astropy.units as u
 
@@ -44,6 +45,14 @@ class MosViz(ConfigHelper):
             extend_by = int(self.app.data_collection[spec1d]["World 0"].shape[0])
             world = self._extend_world(spec1d, extend_by)
 
+            # Warn the user if they've panned far enough away from the data
+            # that the viewers will desync
+            if new_val > world[-1] or new_val < world[0]:
+                msg = "Warning: panning too far away from the data may desync\
+                      the 1D and 2D spectrum viewers"
+                msg = SnackbarMessage(msg, color='warning', sender=self)
+                self.app.hub.broadcast(msg)
+
             idx = float((np.abs(world - new_val)).argmin()) - extend_by
             scales = self.app.get_viewer('spectrum-2d-viewer').scales
             old_idx = getattr(scales['x'], name)
@@ -64,9 +73,19 @@ class MosViz(ConfigHelper):
             extend_by = int(self.app.data_collection[spec1d]["World 0"].shape[0])
             world = self._extend_world(spec1d, extend_by)
 
-            val = world[new_idx+extend_by]
             scales = self.app.get_viewer('spectrum-viewer').scales
             old_val = getattr(scales['x'], name)
+
+            # Warn the user if they've panned far enough away from the data
+            # that the viewers will desync
+            try:
+                val = world[new_idx+extend_by]
+            except:
+                val=old_val
+                msg = "Warning: panning too far away from the data may desync \
+                       the 1D and 2D spectrum viewers"
+                msg = SnackbarMessage(msg, color='warning', sender=self)
+                self.app.hub.broadcast(msg)
             if val != old_val:
                 setattr(scales['x'], name, val)
 
