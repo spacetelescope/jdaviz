@@ -80,7 +80,7 @@ class MosViz(ConfigHelper):
             # that the viewers will desync
             try:
                 val = world[new_idx+extend_by]
-            except:
+            except IndexError:
                 val=old_val
                 msg = "Warning: panning too far away from the data may desync \
                        the 1D and 2D spectrum viewers"
