@@ -19,6 +19,7 @@ tray:
   - g-gaussian-smooth
   - g-collapse
   - g-model-fitting
+  - g-unit-conversion
   - g-line-list
   - cubeviz-moment-maps
 viewer_area:
