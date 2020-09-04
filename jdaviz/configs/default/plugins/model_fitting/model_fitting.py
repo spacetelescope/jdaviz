@@ -157,6 +157,18 @@ class ModelFitting(TemplateMixin):
                 setattr(self._initialized_models[name], param["name"],
                         quant_param)
 
+    def _warn_if_no_equation(self):
+        if self.model_equation == "" or self.model_equation is None:
+            example = "+".join([m["id"] for m in self.component_models])
+            snackbar_message = SnackbarMessage(
+                f"Error: a model equation must be defined, e.g. {example}",
+                color='error',
+                sender=self)
+            self.hub.broadcast(snackbar_message)
+            return True
+        else:
+            return False
+
     def vue_data_selected(self, event):
         """
         Callback method for when the user has selected data from the drop down
@@ -198,6 +210,7 @@ class ModelFitting(TemplateMixin):
             self._spectrum1d.flux)
 
         self._initialized_models[self.temp_name] = initialized_model
+        new_model["order"] = self.poly_order
 
         for i in range(self.poly_order + 1):
             param = "c{}".format(i)
@@ -210,6 +223,30 @@ class ModelFitting(TemplateMixin):
         self._update_initialized_parameters()
 
         return new_model
+
+    def _reinitialize_with_fixed(self):
+        """
+        Reinitialize all component models with current values and the
+        specified parameters fixed (can't easily update fixed dictionary in
+        an existing model)
+        """
+        temp_models = []
+        for m in self.component_models:
+            fixed = {}
+            for p in m["parameters"]:
+                fixed[p["name"]] = p["fixed"]
+            # Have to initialize with fixed dictionary
+            if m["model_type"] == "Polynomial1D":
+                temp_model = MODELS[m["model_type"]](name=m["id"],
+                                                     degree=m["order"],
+                                                     fixed=fixed)
+            else:
+                temp_model = MODELS[m["model_type"]](name=m["id"], fixed=fixed)
+            # Now we can set the parameter values
+            for p in m["parameters"]:
+                setattr(temp_model, p["name"], p["value"])
+            temp_models.append(temp_model)
+        return temp_models
 
     def vue_add_model(self, event):
         """Add the selected model and input string ID to the list of models"""
@@ -266,11 +303,21 @@ class ModelFitting(TemplateMixin):
         as such by the user, then update the displayed parameters with fit
         values
         """
-        fitted_model, fitted_spectrum = fit_model_to_spectrum(
-            self._spectrum1d,
-            self._initialized_models.values(),
-            self.model_equation,
-            run_fitter=True)
+        if self._warn_if_no_equation():
+            return
+        models_to_fit = self._reinitialize_with_fixed()
+
+        try:
+            fitted_model, fitted_spectrum = fit_model_to_spectrum(
+                self._spectrum1d,
+                models_to_fit,
+                self.model_equation,
+                run_fitter=True)
+        except AttributeError:
+            msg = SnackbarMessage("Unable to fit: model equation may be invalid",
+                                  color="error", sender=self)
+            self.hub.broadcast(msg)
+            return
         self._fitted_model = fitted_model
         self._fitted_spectrum = fitted_spectrum
 
@@ -280,6 +327,9 @@ class ModelFitting(TemplateMixin):
         self.save_enabled = True
 
     def vue_fit_model_to_cube(self, *args, **kwargs):
+
+        if self._warn_if_no_equation():
+            return
         data = self.app.data_collection[self._selected_data_label]
 
         # First, ensure that the selected data is cube-like. It is possible
@@ -312,9 +362,14 @@ class ModelFitting(TemplateMixin):
             loading=True, timeout=0, sender=self)
         self.hub.broadcast(snackbar_message)
 
+        # Retrieve copy of the models with proper "fixed" dictionaries
+        # TODO: figure out why this was causing the parallel fitting to fail
+        #models_to_fit = self._reinitialize_with_fixed()
+        models_to_fit = self._initialized_models.values()
+
         fitted_model, fitted_spectrum = fit_model_to_spectrum(
             spec,
-            self._initialized_models.values(),
+            models_to_fit,
             self.model_equation,
             run_fitter=True)
 
@@ -346,6 +401,8 @@ class ModelFitting(TemplateMixin):
         Add a spectrum to the data collection based on the currently displayed
         parameters (these could be user input or fit values).
         """
+        if self._warn_if_no_equation():
+            return
         # Make sure the initialized models are updated with any user-specified
         # parameters
         self._update_initialized_parameters()
@@ -359,16 +416,9 @@ class ModelFitting(TemplateMixin):
         label = self.model_label
         if label in self.data_collection:
             self.app.remove_data_from_viewer('spectrum-viewer', label)
-            # Some hacky code to remove the label from the data dropdown
-            temp_items = []
-            for data_item in self.app.state.data_items:
-                if data_item['name'] != label:
-                    temp_items.append(data_item)
-            self.app.state.data_items = temp_items
             # Remove the actual Glue data object from the data_collection
             self.data_collection.remove(self.data_collection[label])
         self.data_collection[label] = spectrum
         self.save_enabled = True
 
-        #sleep(1)
         #self.app.add_data_to_viewer('spectrum-viewer', label)
