@@ -40,6 +40,8 @@ class MOSVizProfile2DView(BqplotImageView):
     #  axes, the default conversion class must handle cubes
     default_class = SpectralCube
 
+    tools = ['bqplot:panzoom_x']
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Setup viewer option defaults
@@ -70,12 +72,6 @@ class MOSVizTableViewer(TableViewer):
         self._selected_data = {}
 
     def _on_row_selected(self, event):
-        # If no data is selected, ensure that all selected data is removed
-        if len(self._selected_data.keys()) > 0:
-            for viewer_reference, data_label in self._selected_data.items():
-                remove_data_from_viewer_message = RemoveDataFromViewerMessage(
-                    viewer_reference, data_label, sender=self)
-                self.session.hub.broadcast(remove_data_from_viewer_message)
 
         # Grab the index of the latest selected row
         selected_index = event['new']
@@ -86,37 +82,40 @@ class MOSVizTableViewer(TableViewer):
             selected_data = comp_data[selected_index]
 
             if component.label == '1D Spectra':
-                if self._selected_data.get('spectrum-viewer') != selected_data:
+                prev_data = self._selected_data.get('spectrum-viewer')
+                if prev_data != selected_data:
                     remove_data_from_viewer_message = RemoveDataFromViewerMessage(
-                        'spectrum-viewer', selected_data, sender=self)
+                        'spectrum-viewer', prev_data, sender=self)
                     self.session.hub.broadcast(remove_data_from_viewer_message)
 
-                add_data_to_viewer_message = AddDataToViewerMessage(
-                    'spectrum-viewer', selected_data, sender=self)
-                self.session.hub.broadcast(add_data_to_viewer_message)
+                    add_data_to_viewer_message = AddDataToViewerMessage(
+                        'spectrum-viewer', selected_data, sender=self)
+                    self.session.hub.broadcast(add_data_to_viewer_message)
 
-                self._selected_data['spectrum-viewer'] = selected_data
+                    self._selected_data['spectrum-viewer'] = selected_data
 
             if component.label == '2D Spectra':
-                if self._selected_data.get('spectrum-2d-viewer') != selected_data:
+                prev_data = self._selected_data.get('spectrum-2d-viewer')
+                if prev_data != selected_data:
                     remove_data_from_viewer_message = RemoveDataFromViewerMessage(
-                        'spectrum-2d-viewer', selected_data, sender=self)
+                        'spectrum-2d-viewer', prev_data, sender=self)
                     self.session.hub.broadcast(remove_data_from_viewer_message)
 
-                add_data_to_viewer_message = AddDataToViewerMessage(
-                    'spectrum-2d-viewer', selected_data, sender=self)
-                self.session.hub.broadcast(add_data_to_viewer_message)
+                    add_data_to_viewer_message = AddDataToViewerMessage(
+                        'spectrum-2d-viewer', selected_data, sender=self)
+                    self.session.hub.broadcast(add_data_to_viewer_message)
 
-                self._selected_data['spectrum-2d-viewer'] = selected_data
+                    self._selected_data['spectrum-2d-viewer'] = selected_data
 
             if component.label == 'Images':
-                if self._selected_data.get('image-viewer') != selected_data:
+                prev_data = self._selected_data.get('image-viewer')
+                if prev_data != selected_data:
                     remove_data_from_viewer_message = RemoveDataFromViewerMessage(
-                        'image-viewer', selected_data, sender=self)
+                        'image-viewer', prev_data, sender=self)
                     self.session.hub.broadcast(remove_data_from_viewer_message)
 
-                add_data_to_viewer_message = AddDataToViewerMessage(
-                    'image-viewer', selected_data, sender=self)
-                self.session.hub.broadcast(add_data_to_viewer_message)
+                    add_data_to_viewer_message = AddDataToViewerMessage(
+                        'image-viewer', selected_data, sender=self)
+                    self.session.hub.broadcast(add_data_to_viewer_message)
 
-                self._selected_data['image-viewer'] = selected_data
+                    self._selected_data['image-viewer'] = selected_data

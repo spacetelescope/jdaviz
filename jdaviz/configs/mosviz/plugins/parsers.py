@@ -30,7 +30,7 @@ def _add_to_table(app, data, comp_label):
     """
     # Add data to the mos viz table object
     if 'MOS Table' not in app.data_collection:
-        table_data = Data(label="MOS Table")
+        table_data = Data(label='MOS Table')
         app.data_collection.append(table_data)
 
         mos_table = app.data_collection['MOS Table']
@@ -117,17 +117,20 @@ def mos_spec2d_parser(app, data_obj, data_labels=None):
     def _parse_as_cube(path):
         with fits.open(path) as hdulist:
             data = hdulist[1].data
-
-            if hdulist[1].header['NAXIS'] == 2:
+            header = hdulist[1].header
+            if header['NAXIS'] == 2:
                 new_data = np.expand_dims(data, axis=1)
-                hdulist[1].header['NAXIS'] = 3
+                header['NAXIS'] = 3
 
-            hdulist[1].header['NAXIS3'] = 1
-            hdulist[1].header['BUNIT'] = 'dN/s'
-            hdulist[1].header['CUNIT3'] = 'um'
-            wcs = WCS(hdulist[1].header)
+            header['NAXIS3'] = 1
+            header['BUNIT'] = 'dN/s'
+            header['CUNIT3'] = 'um'
+            wcs = WCS(header)
 
-        return SpectralCube(new_data, wcs=wcs)
+            meta = {'S_REGION': header['S_REGION']}
+
+
+        return SpectralCube(new_data, wcs=wcs, meta=meta)
 
     if _check_is_file(data_obj):
         data_obj = [_parse_as_cube(data_obj)]
@@ -179,7 +182,15 @@ def mos_image_parser(app, data_obj, data_labels=None):
 
             unit = hdulist[0].header.get('BUNIT', 'Jy')
 
-        return CCDData.read(path, unit=unit)
+            header = hdulist[0].header.copy()
+            meta = dict(header)
+
+            wcs = WCS(header)
+
+            image_ccd = CCDData.read(path, unit=unit, wcs=wcs)
+            image_ccd.meta = meta
+
+        return image_ccd
 
     if isinstance(data_obj, str):
         data_obj = [_parse_as_image(data_obj)]
@@ -201,3 +212,34 @@ def mos_image_parser(app, data_obj, data_labels=None):
         app.data_collection[data_labels[i]] = data_obj[i]
 
     _add_to_table(app, data_labels, 'Images')
+
+
+@data_parser_registry("mosviz-metadata-parser")
+def mos_meta_parser(app, data_obj):
+    """
+    Attempts to parse MOS FITS header metadata.
+
+    Parameters
+    ----------
+    app : `~jdaviz.app.Application`
+        The application-level object used to reference the viewers.
+    data_obj : str or list or HDUList
+        File path, list, or an HDUList to extract metadata from.
+    """
+
+    # Coerce into list-like object
+    if not hasattr(data_obj, '__len__'):
+        data_obj = [data_obj]
+    else:
+        data_obj = [fits.open(x) if _check_is_file(x)
+                    else x for x in data_obj]
+
+    ra = [x[0].header.get("OBJ_RA", float("nan")) for x in data_obj]
+    dec = [x[0].header.get("OBJ_DEC", float("nan")) for x in data_obj]
+    names = [x[0].header.get("OBJECT", "Unspecified Target") for x in data_obj]
+
+    [x.close() for x in data_obj]
+
+    _add_to_table(app, names, "Source Names")
+    _add_to_table(app, ra, "Right Ascension")
+    _add_to_table(app, dec, "Declination")

@@ -66,7 +66,7 @@ SPECSYS = 'BARYCENT'           / Reference frame of spectral coordinates
         new_hdr[key] = value
 
     wcs = WCS(new_hdr)
-    data = np.random.sample((15, 1, 1174))
+    data = np.random.sample((15, 1, 1024))
     spectral_cube = SpectralCube(data, wcs=wcs)
 
     return spectral_cube
@@ -186,7 +186,7 @@ def test_load_spectrum2d(mosviz_app, spectrum2d):
 
     data = mosviz_app.app.get_data_from_viewer('spectrum-2d-viewer')
 
-    assert list(data.values())[0].shape == (15, 1, 1174)
+    assert list(data.values())[0].shape == (15, 1, 1024)
     assert list(data.keys())[0] == label
 
 
@@ -205,3 +205,22 @@ def test_load_image(mosviz_app, image):
     # assert isinstance(list(data.values())[0], CCDData)
     assert list(data.values())[0].shape == (55, 55)
     assert list(data.keys())[0] == f"{label} 0"
+
+def test_viewer_axis_link(mosviz_app, spectrum1d, spectrum2d):
+    label1d = "Test 1D Spectrum"
+    mosviz_app.load_1d_spectra(spectrum1d, data_labels=label1d)
+
+    label2d = "Test 2D Spectrum"
+    mosviz_app.load_2d_spectra(spectrum2d, data_labels=label2d)
+
+    table = mosviz_app.app.get_viewer('table-viewer')
+    table.widget_table.vue_on_row_clicked(0)
+
+    scale_2d = mosviz_app.app.get_viewer('spectrum-2d-viewer').scales['x']
+    scale_1d = mosviz_app.app.get_viewer('spectrum-viewer').scales['x']
+
+    scale_2d.min = 200.0
+    assert scale_1d.min == spectrum1d.spectral_axis.value[200]
+
+    scale_1d.max = 7564
+    assert scale_2d.max == 800.0

@@ -3,7 +3,8 @@
   <!-- <v-divider vertical></v-divider> -->
   <div>
     <v-slider
-      v-model="slider"
+      :value="slider"
+      @input="throttledSetValue"
       class="align-center"
       :max="max_value"
       :min="min_value"
@@ -28,6 +29,16 @@
   </div>
   <!-- </v-toolbar-items> -->
 </template>
+
+<script>
+  module.exports = {
+    created() {
+      this.throttledSetValue = _.throttle(
+        (v) => { this.slider = v; },
+        this.wait);
+    },
+  }
+</script>
 
 <style lang="sass">
   $slider-transition: none !important
