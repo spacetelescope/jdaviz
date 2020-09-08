@@ -598,9 +598,11 @@ class Application(VuetifyTemplate, HubListener):
         viewer = self._viewer_by_id(viewer_id)
 
         if type(data) is Spectrum1D:
-            # Get the units of the data to be loaded.
+            # Set axes labels for the spectrum viewer
+
             spectral_axis_unit_type = data.spectral_axis.unit.physical_type.title()
-            flux_unit_type = data.flux.unit.physical_type.title()
+            # flux_unit_type = data.flux.unit.physical_type.title()
+            flux_unit_type = "Flux density"
 
             if data.spectral_axis.unit.is_equivalent(u.m):
                 spectral_axis_unit_type = "Wavelength"
@@ -611,24 +613,22 @@ class Application(VuetifyTemplate, HubListener):
             viewer.figure.axes[1].label = f"{flux_unit_type} [{data.flux.unit.to_string()}]"
 
         elif type(data) is SpectralCube:
-            # Get the units of the data to be loaded.
-            spectral_axis_unit_type = data.spectral_axis.unit.physical_type.title()
-            flux_unit_type = data.unit.physical_type.title()
+            # Set axes labels for the spectrum 2d viewer
 
-            if data.spectral_axis.unit.is_equivalent(u.m):
-                spectral_axis_unit_type = "Wavelength"
-            elif data.spectral_axis.unit.is_equivalent(u.pixel):
-                spectral_axis_unit_type = "pixel"
+            viewer.figure.axes[0].visible = False
 
-            viewer.figure.axes[0].label = f"{spectral_axis_unit_type} [{data.spectral_axis.unit.to_string()}]"
-            viewer.figure.axes[1].label = f"{flux_unit_type} [{data.unit.to_string()}]"
+            viewer.figure.axes[1].label = "y: pixels"
+            viewer.figure.axes[1].tick_format = None
+            viewer.figure.axes[1].label_location = 'start'
 
         elif type(data) is CCDData:
-            # Get the units of the data to be loaded.
-            flux_unit_type = data.unit.physical_type.title()
+            # Set axes labels for the image viewer
 
-            viewer.figure.axes[0].label = f""
-            viewer.figure.axes[1].label = f"{flux_unit_type} [{data.unit.to_string()}]"
+            viewer.figure.axes[1].tick_format = None
+            viewer.figure.axes[0].tick_format = None
+
+            viewer.figure.axes[1].label = "y: pixels"
+            viewer.figure.axes[0].label = "x: pixels"
 
         # Make it so y axis label is not covering tick numbers.
         viewer.figure.axes[1].label_offset = "-50"
@@ -903,11 +903,9 @@ class Application(VuetifyTemplate, HubListener):
         # Sets the plot axes labels to be the units of the most recently
         # active data.
         if len(active_data_labels) > 0:
-            print("In set axes labels")
             active_data = self.data_collection[active_data_labels[0]]
             if hasattr(active_data, "_preferred_translation") \
                     and active_data._preferred_translation is not None:
-                print("running set plot axes labels")
                 self._set_plot_axes_labels(active_data.get_object(), viewer_id)
 
     def _on_data_added(self, msg):
