@@ -35,6 +35,8 @@ from .core.registries import (tool_registry, tray_registry, viewer_registry,
                               data_parser_registry)
 from .utils import load_template
 
+#from .configs.mosviz.plugins.viewers import MOSVizProfile2DView
+
 __all__ = ['Application']
 
 SplitPanes()
@@ -583,55 +585,18 @@ class Application(VuetifyTemplate, HubListener):
                 f"of:\n\t" + f"\n\t".join([
                     data_item['name'] for data_item in self.state.data_items]))
 
-    def _set_plot_axes_labels(self, data, viewer_id):
+    def _set_plot_axes_labels(self,viewer_id):
         """
         Sets the plot axes labels to be the units of the data to be loaded.
 
         Parameters
         ----------
-        data : `~Spectrum1D`
-            Data from ``DataCollection`` that will have its units as the plot
-            label axes.
         viewer_id : str
             The UUID associated with the desired viewer item.
         """
         viewer = self._viewer_by_id(viewer_id)
 
-        if type(data) is Spectrum1D:
-            # Set axes labels for the spectrum viewer
-
-            spectral_axis_unit_type = data.spectral_axis.unit.physical_type.title()
-            # flux_unit_type = data.flux.unit.physical_type.title()
-            flux_unit_type = "Flux density"
-
-            if data.spectral_axis.unit.is_equivalent(u.m):
-                spectral_axis_unit_type = "Wavelength"
-            elif data.spectral_axis.unit.is_equivalent(u.pixel):
-                spectral_axis_unit_type = "pixel"
-
-            viewer.figure.axes[0].label = f"{spectral_axis_unit_type} [{data.spectral_axis.unit.to_string()}]"
-            viewer.figure.axes[1].label = f"{flux_unit_type} [{data.flux.unit.to_string()}]"
-
-        elif type(data) is SpectralCube:
-            # Set axes labels for the spectrum 2d viewer
-
-            viewer.figure.axes[0].visible = False
-
-            viewer.figure.axes[1].label = "y: pixels"
-            viewer.figure.axes[1].tick_format = None
-            viewer.figure.axes[1].label_location = 'start'
-
-        elif type(data) is CCDData:
-            # Set axes labels for the image viewer
-
-            viewer.figure.axes[1].tick_format = None
-            viewer.figure.axes[0].tick_format = None
-
-            viewer.figure.axes[1].label = "y: pixels"
-            viewer.figure.axes[0].label = "x: pixels"
-
-        # Make it so y axis label is not covering tick numbers.
-        viewer.figure.axes[1].label_offset = "-50"
+        viewer.set_plot_axes()
 
     def remove_data_from_viewer(self, viewer_reference, data_label):
         """
@@ -906,7 +871,8 @@ class Application(VuetifyTemplate, HubListener):
             active_data = self.data_collection[active_data_labels[0]]
             if hasattr(active_data, "_preferred_translation") \
                     and active_data._preferred_translation is not None:
-                self._set_plot_axes_labels(active_data.get_object(), viewer_id)
+                pass
+                self._set_plot_axes_labels(viewer_id)
 
     def _on_data_added(self, msg):
         """

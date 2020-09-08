@@ -8,6 +8,8 @@ from jdaviz.core.registries import viewer_registry
 from specutils import Spectrum1D
 from spectral_cube import SpectralCube
 from echo import delay_callback
+from astropy import units as u
+
 
 __all__ = ['MOSVizProfileView', 'MOSVizImageView']
 
@@ -22,6 +24,25 @@ class MOSVizProfileView(BqplotProfileView):
                 if hasattr(layer_state, 'layer') and
                 isinstance(layer_state.layer, BaseData)]
 
+    def set_plot_axes(self):
+        data = self.data()[0]
+        # Set axes labels for the spectrum viewer
+
+        spectral_axis_unit_type = data.spectral_axis.unit.physical_type.title()
+        # flux_unit_type = data.flux.unit.physical_type.title()
+        flux_unit_type = "Flux density"
+
+        if data.spectral_axis.unit.is_equivalent(u.m):
+            spectral_axis_unit_type = "Wavelength"
+        elif data.spectral_axis.unit.is_equivalent(u.pixel):
+            spectral_axis_unit_type = "pixel"
+
+        self.figure.axes[0].label = f"{spectral_axis_unit_type} [{data.spectral_axis.unit.to_string()}]"
+        self.figure.axes[1].label = f"{flux_unit_type} [{data.flux.unit.to_string()}]"
+
+        # Make it so y axis label is not covering tick numbers.
+        self.figure.axes[1].label_offset = "-50"
+
 
 @viewer_registry("mosviz-image-viewer", label="Image 2D (MOSViz)")
 class MOSVizImageView(BqplotImageView):
@@ -32,6 +53,16 @@ class MOSVizImageView(BqplotImageView):
                 for layer_state in self.state.layers
                 if hasattr(layer_state, 'layer') and
                 isinstance(layer_state.layer, BaseData)]
+
+    def set_plot_axes(self):
+        self.figure.axes[1].tick_format = None
+        self.figure.axes[0].tick_format = None
+
+        self.figure.axes[1].label = "y: pixels"
+        self.figure.axes[0].label = "x: pixels"
+
+        # Make it so y axis label is not covering tick numbers.
+        self.figure.axes[1].label_offset = "-50"
 
 
 @viewer_registry("mosviz-profile-2d-viewer", label="Spectrum 2D (MOSViz)")
@@ -60,6 +91,16 @@ class MOSVizProfile2DView(BqplotImageView):
                 if 'Wave' in data.components:
                     self.state.x_att_world = data.id['Right Ascension']
                     self.state.y_att_world = data.id['Wave']
+
+    def set_plot_axes(self):
+        self.figure.axes[0].visible = False
+
+        self.figure.axes[1].label = "y: pixels"
+        self.figure.axes[1].tick_format = None
+        self.figure.axes[1].label_location = "start"
+
+        # Make it so y axis label is not covering tick numbers.
+        self.figure.axes[1].label_offset = "-50"
 
 
 @viewer_registry("mosviz-table-viewer", label="Table (MOSViz)")
@@ -119,3 +160,6 @@ class MOSVizTableViewer(TableViewer):
                     self.session.hub.broadcast(add_data_to_viewer_message)
 
                     self._selected_data['image-viewer'] = selected_data
+
+    def set_plot_axes(self, *args, **kwargs):
+        return

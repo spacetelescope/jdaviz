@@ -7,6 +7,8 @@ from glue_jupyter.bqplot.profile import BqplotProfileView
 from astropy import table
 from specutils import Spectrum1D
 from matplotlib.colors import cnames
+from astropy import units as u
+
 
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.spectral_line import SpectralLine
@@ -367,3 +369,24 @@ class SpecvizProfileView(BqplotProfileView):
 
             # We added an extra trace. Get pointer to it.
             self.error_trace_pointer = len(self.figure.marks) - 1
+
+    def set_plot_axes(self):
+        # Get data to be used for axes labels
+        data = self.data()[0]
+
+        # Set axes labels for the spectrum viewer
+
+        spectral_axis_unit_type = data.spectral_axis.unit.physical_type.title()
+        # flux_unit_type = data.flux.unit.physical_type.title()
+        flux_unit_type = "Flux density"
+
+        if data.spectral_axis.unit.is_equivalent(u.m):
+            spectral_axis_unit_type = "Wavelength"
+        elif data.spectral_axis.unit.is_equivalent(u.pixel):
+            spectral_axis_unit_type = "pixel"
+
+        self.figure.axes[0].label = f"{spectral_axis_unit_type} [{data.spectral_axis.unit.to_string()}]"
+        self.figure.axes[1].label = f"{flux_unit_type} [{data.flux.unit.to_string()}]"
+
+        # Make it so y axis label is not covering tick numbers.
+        self.figure.axes[1].label_offset = "-50"
