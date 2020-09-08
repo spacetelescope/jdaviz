@@ -21,6 +21,7 @@ tray:
   - g-model-fitting
   - g-unit-conversion
   - g-line-list
+  - specviz-line-analysis
   - cubeviz-moment-maps
 viewer_area:
   - container: col
