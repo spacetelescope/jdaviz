@@ -49,6 +49,7 @@ class Collapse(TemplateMixin):
                            handler=self._on_data_updated)
 
         self._selected_data = None
+        self._label_counter = 0
 
     def _on_data_updated(self, msg):
         self.data_items = [x.label for x in self.data_collection]
@@ -129,7 +130,8 @@ class Collapse(TemplateMixin):
         data.get_component('flux').units = str(collapsed_spec.unit)
         data.meta.update(collapsed_spec.meta)
 
-        label = f"Collapsed {self._selected_data.label}"
+        self._label_counter += 1
+        label = f"Collapsed {self._label_counter} {self._selected_data.label}"
 
         self.data_collection[label] = data
 
