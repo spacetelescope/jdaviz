@@ -229,6 +229,10 @@ class ModelFitting(TemplateMixin):
         """
         selected_spec = self.app.get_data_from_viewer("spectrum-viewer",
                                                       data_label=event)
+        # Replace NaNs from collapsed SpectralCube in Cubeviz
+        # (won't affect calculations because these locations are masked)
+        selected_spec.flux[np.isnan(selected_spec.flux)] = 0.0
+
         self._selected_data_label = event
 
         if self._units == {}:
