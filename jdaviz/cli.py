@@ -53,3 +53,11 @@ def main(filename, layout='default'):
         sys.exit(Voila().launch_instance(argv=[]))
     finally:
         os.chdir(start_dir)
+
+if __name__ == '__main__':
+    import sys
+
+    if sys.platform == 'win32':
+        import asyncio
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    main()
