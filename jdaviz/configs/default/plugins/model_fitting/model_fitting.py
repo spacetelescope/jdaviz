@@ -242,7 +242,6 @@ class ModelFitting(TemplateMixin):
                 selected_spec.flux.unit)
 
         self._spectrum1d = selected_spec
-        print(np.nanmax(self._spectrum1d.flux))
 
     def vue_model_selected(self, event):
         # Add the model selected to the list of models
@@ -371,7 +370,9 @@ class ModelFitting(TemplateMixin):
         self._fitted_spectrum = fitted_spectrum
 
         self.vue_register_spectrum({"spectrum": fitted_spectrum})
-        self.app.fitted_model = fitted_model
+        if not hasattr(self.app, "_fitted_1d_models"):
+            self.app._fitted_1d_models = {}
+        self.app._fitted_1d_models[self.model_label] = fitted_model
 
         # Update component model parameters with fitted values
         if type(self._fitted_model) == QuantityModel:
