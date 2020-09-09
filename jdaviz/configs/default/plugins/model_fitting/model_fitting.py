@@ -10,6 +10,7 @@ from glue.core.message import (SubsetCreateMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from specutils import Spectrum1D
+from specutils.utils import QuantityModel
 from traitlets import Bool, Int, List, Unicode
 from glue.core.data import Data
 
@@ -139,6 +140,32 @@ class ModelFitting(TemplateMixin):
                 temp_param = [x for x in m["parameters"] if x["name"] ==
                               m_fit.param_names[i]]
                 temp_param[0]["value"] = m_fit.parameters[i]
+                temp_params += temp_param
+            m["parameters"] = temp_params
+
+        # Trick traitlets into updating the displayed values
+        component_models = self.component_models
+        self.component_models = []
+        self.component_models = component_models
+
+    def _update_parameters_from_QM(self):
+        """
+        Parse out result parameters from a QuantityModel, which isn't
+        subscriptable with model name
+        """
+        submodel_names = self._fitted_model.submodel_names
+        fit_params = self._fitted_model.parameters
+        param_names = self._fitted_model.param_names
+        for i in range(len(submodel_names)):
+            name = submodel_names[i]
+            m = [x for x in self.component_models if x["id"] == name][0]
+            temp_params = []
+            idxs = [j for j in range(len(param_names)) if
+                    int(param_names[j][-1]) == i]
+            for idx in idxs:
+                temp_param = [x for x in m["parameters"] if x["name"] ==
+                              param_names[idx].split("_")[0]]
+                temp_param[0]["value"] = fit_params[idx]
                 temp_params += temp_param
             m["parameters"] = temp_params
 
@@ -321,8 +348,14 @@ class ModelFitting(TemplateMixin):
         self._fitted_model = fitted_model
         self._fitted_spectrum = fitted_spectrum
 
+        self.vue_register_spectrum({"spectrum": fitted_spectrum})
+        self.app.fitted_model = fitted_model
+
         # Update component model parameters with fitted values
-        self._update_parameters_from_fit()
+        if type(self._fitted_model) == QuantityModel:
+            self._update_parameters_from_QM()
+        else:
+            self._update_parameters_from_fit()
 
         self.save_enabled = True
 
@@ -412,7 +445,10 @@ class ModelFitting(TemplateMixin):
         self._update_initialized_parameters()
 
         # Need to run the model fitter with run_fitter=False to get spectrum
-        model, spectrum = fit_model_to_spectrum(self._spectrum1d,
+        if "spectrum" in event:
+            spectrum = event["spectrum"]
+        else:
+            model, spectrum = fit_model_to_spectrum(self._spectrum1d,
                                                 self._initialized_models.values(),
                                                 self.model_equation)
 
