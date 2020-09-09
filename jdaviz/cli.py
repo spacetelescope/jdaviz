@@ -1,5 +1,6 @@
 # Command-line interface for jdaviz
 
+import pathlib
 import os
 import sys
 import tempfile
@@ -31,7 +32,7 @@ def main(filename, layout='default'):
     layout : str, optional
         Optional specification for which configuration to use on startup.
     """
-    filename = os.path.abspath(filename)
+    filepath = pathlib.Path(filename).absolute()
 
     with open(os.path.join(CONFIGS_DIR, layout, layout + '.ipynb')) as f:
         notebook_template = f.read()
@@ -42,7 +43,7 @@ def main(filename, layout='default'):
 
     with open(os.path.join(nbdir, 'notebook.ipynb'), 'w') as nbf:
         nbf.write(notebook_template.replace('CONFIG_NAME', layout).replace(
-            'DATA_FILENAME', filename).strip())
+            'DATA_FILENAME', str(filepath).encode('unicode_escape').decode()).strip())
 
     os.chdir(nbdir)
 
