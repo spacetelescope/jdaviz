@@ -385,7 +385,8 @@ class Application(VuetifyTemplate, HubListener):
                             layer_data = layer_data.get_object(cls=cls,
                                                                statistic=statistic)
                         else:
-                            layer_data = layer_data.get_object(cls=cls)
+                            layer_data = layer_data.get_object(cls=cls,
+                                                               statistic=statistic)
                     # If the shape of the data is 2d, then use CCDData as the
                     #  output data type
                     elif len(layer_data.shape) == 2:
