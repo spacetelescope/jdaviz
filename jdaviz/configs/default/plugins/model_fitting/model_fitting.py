@@ -154,18 +154,34 @@ class ModelFitting(TemplateMixin):
         Parse out result parameters from a QuantityModel, which isn't
         subscriptable with model name
         """
-        submodel_names = self._fitted_model.submodel_names
+        if hasattr(self._fitted_model, "submodel_names"):
+            submodel_names = self._fitted_model.submodel_names
+            submodels = True
+        else:
+            submodel_names = [self._fitted_model.name]
+            submodels = False
         fit_params = self._fitted_model.parameters
         param_names = self._fitted_model.param_names
+
         for i in range(len(submodel_names)):
             name = submodel_names[i]
             m = [x for x in self.component_models if x["id"] == name][0]
             temp_params = []
-            idxs = [j for j in range(len(param_names)) if
-                    int(param_names[j][-1]) == i]
+            if submodels:
+                idxs = [j for j in range(len(param_names)) if
+                        int(param_names[j][-1]) == i]
+            else:
+                idxs = [j for j in range(len(param_names))]
+            # This is complicated by needing to handle parameter names that
+            # have underscores in them, since QuantityModel adds an underscore
+            # and integer to indicate to which model a parameter belongs
             for idx in idxs:
-                temp_param = [x for x in m["parameters"] if x["name"] ==
-                              param_names[idx].split("_")[0]]
+                if submodels:
+                    temp_param = [x for x in m["parameters"] if x["name"] ==
+                                  "_".join(param_names[idx].split("_")[0:-1])]
+                else:
+                    temp_param = [x for x in m["parameters"] if x["name"] ==
+                                  param_names[idx]]
                 temp_param[0]["value"] = fit_params[idx]
                 temp_params += temp_param
             m["parameters"] = temp_params
