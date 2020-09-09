@@ -1,6 +1,7 @@
 import os
 import pickle
 import re
+import numpy as np
 
 import astropy.modeling.models as models
 import astropy.units as u
@@ -221,6 +222,7 @@ class ModelFitting(TemplateMixin):
                 selected_spec.flux.unit)
 
         self._spectrum1d = selected_spec
+        print(np.nanmax(self._spectrum1d.flux))
 
     def vue_model_selected(self, event):
         # Add the model selected to the list of models
