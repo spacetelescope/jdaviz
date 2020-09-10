@@ -71,7 +71,7 @@ For information about the Specviz, and other, helpers, and how to instantiate on
 
 Limit methods
 ^^^^^^^^^^^^^
-You can use the methods x_limits() and y_limits() to modify the field of view of SpecViz. You can provide it a scalar (which assumes the units of the loaded spectra), an Astropy Quantity, or 'auto' to automatically scale
+You can use the methods x_limits() and y_limits() to modify the field of view of Specviz. You can provide it a scalar (which assumes the units of the loaded spectra), an Astropy Quantity, or 'auto' to automatically scale
 ::
 
     specviz.x_limits()
