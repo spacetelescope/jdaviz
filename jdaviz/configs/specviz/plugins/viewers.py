@@ -235,7 +235,7 @@ class SpecvizProfileView(BqplotProfileView):
         if hasattr(self, 'error_line_mark') and self.error_line_mark is not None:
             marks.remove(self.error_line_mark)
             self.error_line_mark = None
-            self.uncert_trace_pointer = None
+            self.error_trace_pointer = None
 
     def add_data(self, data, color=None, alpha=None, **layer_state):
         """
@@ -259,7 +259,7 @@ class SpecvizProfileView(BqplotProfileView):
         # trace representing the spectrum itself.
         result = super().add_data(data, color, alpha, **layer_state)
 
-        self._data = data
+        #self._temp_data = data
 
         # Index of spectrum trace plotted by the super class. It is
         # for now, always the last in the array of marks. This will
@@ -268,7 +268,7 @@ class SpecvizProfileView(BqplotProfileView):
         # eventual upgrade.
         self.data_trace_pointer = len(self.figure.marks) - 1
 
-        self.uncert_trace_pointer = None
+        self.error_trace_pointer = None
         self.mask_trace_pointer = None
 
         # Color and opacity are taken from the already plotted trace,
@@ -292,7 +292,7 @@ class SpecvizProfileView(BqplotProfileView):
 
     def _plot_mask(self):
 
-        _data = self._data
+        _data = self._data[0]
         _data_trace = self.data_trace_pointer
 
         if 'mask' in _data.components and self.display_mask:
@@ -332,11 +332,11 @@ class SpecvizProfileView(BqplotProfileView):
 
     def _plot_uncertainties(self):
 
-        _data = self._data
+        _data = self._data[0]
         _data_trace = self.data_trace_pointer
 
         if 'uncertainty' in _data.components and self.display_uncertainties:
-            error = _data['uncertainty'].data
+            error = np.array(_data['uncertainty'].data)
 
             # If uncertainties were already plotted, remove them.
             if hasattr(self,'error_trace_pointer') and \
@@ -368,4 +368,4 @@ class SpecvizProfileView(BqplotProfileView):
             self.figure.marks = list(self.figure.marks) + [self.error_line_mark]
 
             # We added an extra trace. Get pointer to it.
-            self.uncert_trace_pointer = len(self.figure.marks) - 1
+            self.error_trace_pointer = len(self.figure.marks) - 1
