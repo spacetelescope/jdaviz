@@ -17,10 +17,29 @@ class SpecvizProfileView(BqplotProfileView):
     spectral_lines = None
 
     def data(self, cls=None):
-        return [layer_state.layer.get_object(cls=cls or self.default_class)
-                for layer_state in self.state.layers
-                if hasattr(layer_state, 'layer') and
-                isinstance(layer_state.layer, BaseData)]
+        # Grab the user's chosen statistic for collapsing data
+        if hasattr(self.state, 'function'):
+            statistic = self.state.function
+        else:
+            statistic = None
+
+        result = []
+        for layer_state in self.state.layers:
+            if hasattr(layer_state, 'layer') and isinstance(layer_state.layer, BaseData):
+                _class = cls or self.default_class
+
+                if _class is not None:
+                    # If spectrum, collapse via the defined statistic
+                    if _class == Spectrum1D:
+                        layer_data = layer_state.layer.get_object(cls=_class,
+                                                                  statistic=statistic)
+                    else:
+                        layer_data = layer_state.layer.get_object(cls=_class)
+
+                    result.append(layer_data)
+
+        return result
+
 
     def load_line_list(self, line_table, replace=False, return_table=False):
         if type(line_table) == str:

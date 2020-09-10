@@ -104,7 +104,7 @@ class LineListTool(TemplateMixin):
             return
 
         # If no data is currently plotted, don't attempt to update
-        if len(viewer_data) == 0:
+        if viewer_data is None or len(viewer_data) == 0:
             return
 
         self._viewer_spectrum = viewer_data[0]
