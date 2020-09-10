@@ -11,6 +11,16 @@ __all__ = ['CubeVizImageView']
 class CubeVizImageView(BqplotImageView):
     default_class = None
 
+    def set_plot_axes(self):
+        self.figure.axes[1].tick_format = None
+        self.figure.axes[0].tick_format = None
+
+        self.figure.axes[1].label = "y: pixels"
+        self.figure.axes[0].label = "x: pixels"
+
+        # Make it so y axis label is not covering tick numbers.
+        self.figure.axes[1].label_offset = "-50"
+
     def data(self, cls=None):
         return [layer_state.layer #.get_object(cls=cls or self.default_class)
                 for layer_state in self.state.layers
