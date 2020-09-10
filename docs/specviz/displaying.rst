@@ -78,7 +78,7 @@ You can use the methods x_limits() and y_limits() to modify the field of view of
     specviz.x_limits(650*u.nm,750*u.nm)
     specviz.y_limits('auto', 110.0)
 
-Additionally, you can provide the limit methods with a `specutils SpectralRegion <https://specutils.readthedocs.io/en/stable/spectral_regions.html>_`. SpecViz shall set the bounds the upper and lower bounds of the SpectralRegion
+Additionally, you can provide the limit methods with a `specutils SpectralRegion <https://specutils.readthedocs.io/en/stable/spectral_regions.html>_`. Specviz shall set the bounds the upper and lower bounds of the SpectralRegion
 ::
 
     from astropy import units as u
