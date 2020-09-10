@@ -1,6 +1,7 @@
 import os
 import pickle
 import re
+import numpy as np
 
 import astropy.modeling.models as models
 import astropy.units as u
@@ -10,6 +11,7 @@ from glue.core.message import (SubsetCreateMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from specutils import Spectrum1D
+from specutils.utils import QuantityModel
 from traitlets import Bool, Int, List, Unicode
 from glue.core.data import Data
 
@@ -147,6 +149,48 @@ class ModelFitting(TemplateMixin):
         self.component_models = []
         self.component_models = component_models
 
+    def _update_parameters_from_QM(self):
+        """
+        Parse out result parameters from a QuantityModel, which isn't
+        subscriptable with model name
+        """
+        if hasattr(self._fitted_model, "submodel_names"):
+            submodel_names = self._fitted_model.submodel_names
+            submodels = True
+        else:
+            submodel_names = [self._fitted_model.name]
+            submodels = False
+        fit_params = self._fitted_model.parameters
+        param_names = self._fitted_model.param_names
+
+        for i in range(len(submodel_names)):
+            name = submodel_names[i]
+            m = [x for x in self.component_models if x["id"] == name][0]
+            temp_params = []
+            if submodels:
+                idxs = [j for j in range(len(param_names)) if
+                        int(param_names[j][-1]) == i]
+            else:
+                idxs = [j for j in range(len(param_names))]
+            # This is complicated by needing to handle parameter names that
+            # have underscores in them, since QuantityModel adds an underscore
+            # and integer to indicate to which model a parameter belongs
+            for idx in idxs:
+                if submodels:
+                    temp_param = [x for x in m["parameters"] if x["name"] ==
+                                  "_".join(param_names[idx].split("_")[0:-1])]
+                else:
+                    temp_param = [x for x in m["parameters"] if x["name"] ==
+                                  param_names[idx]]
+                temp_param[0]["value"] = fit_params[idx]
+                temp_params += temp_param
+            m["parameters"] = temp_params
+
+        # Trick traitlets into updating the displayed values
+        component_models = self.component_models
+        self.component_models = []
+        self.component_models = component_models
+
     def _update_initialized_parameters(self):
         # If the user changes a parameter value, we need to change it in the
         # initialized model
@@ -185,6 +229,10 @@ class ModelFitting(TemplateMixin):
         """
         selected_spec = self.app.get_data_from_viewer("spectrum-viewer",
                                                       data_label=event)
+        # Replace NaNs from collapsed SpectralCube in Cubeviz
+        # (won't affect calculations because these locations are masked)
+        selected_spec.flux[np.isnan(selected_spec.flux)] = 0.0
+
         self._selected_data_label = event
 
         if self._units == {}:
@@ -321,8 +369,16 @@ class ModelFitting(TemplateMixin):
         self._fitted_model = fitted_model
         self._fitted_spectrum = fitted_spectrum
 
+        self.vue_register_spectrum({"spectrum": fitted_spectrum})
+        if not hasattr(self.app, "_fitted_1d_models"):
+            self.app._fitted_1d_models = {}
+        self.app._fitted_1d_models[self.model_label] = fitted_model
+
         # Update component model parameters with fitted values
-        self._update_parameters_from_fit()
+        if type(self._fitted_model) == QuantityModel:
+            self._update_parameters_from_QM()
+        else:
+            self._update_parameters_from_fit()
 
         self.save_enabled = True
 
@@ -412,7 +468,10 @@ class ModelFitting(TemplateMixin):
         self._update_initialized_parameters()
 
         # Need to run the model fitter with run_fitter=False to get spectrum
-        model, spectrum = fit_model_to_spectrum(self._spectrum1d,
+        if "spectrum" in event:
+            spectrum = event["spectrum"]
+        else:
+            model, spectrum = fit_model_to_spectrum(self._spectrum1d,
                                                 self._initialized_models.values(),
                                                 self.model_equation)
 
