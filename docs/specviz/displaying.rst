@@ -59,7 +59,7 @@ The Specviz helper contains a set of convinence methods to programmatically defi
 For information about the Specviz, and other, helpers, and how to instantiate one, please see `helpers <https://readthedocs.org/404>`_
 
 .. warning::
-    The helper page has not yet been written/defined. Until that documentation is written, you may instantiate a SpecViz Helper via:
+    The helper page has not yet been written/defined. Until that documentation is written, you may instantiate a Specviz Helper via:
     ::
 
         from jdaviz import SpecViz
