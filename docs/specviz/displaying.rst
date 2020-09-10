@@ -29,7 +29,7 @@ Data can be selected and de-selected by clicking on the "hammer and screwdriver"
 Pan/Zoom
 ========
 
-Included with the SpecViz tool are multiple manners to change your view/perspective on the data displayed, depending on your environment:
+Included with the Specviz tool are multiple manners to change your view/perspective on the data displayed, depending on your environment:
 
 Interactive Pan/Zoom (Desktop App interface)
 --------------------------------------------
