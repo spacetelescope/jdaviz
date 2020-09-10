@@ -259,8 +259,6 @@ class SpecvizProfileView(BqplotProfileView):
         # trace representing the spectrum itself.
         result = super().add_data(data, color, alpha, **layer_state)
 
-        #self._temp_data = data
-
         # Index of spectrum trace plotted by the super class. It is
         # for now, always the last in the array of marks. This will
         # have to be reworked once multiple spectra can be over-plotted.
