@@ -66,8 +66,8 @@ def test_region_from_subset_3d(jdaviz_app):
     assert_allclose(reg.height, 3.5)
 
 
-def test_region_from_subset_profile(jdaviz_app):
-    data = Data(flux=np.ones((256, 128, 128)), label='Test 1D Flux')
+def test_region_from_subset_profile(jdaviz_app, spectral_cube_wcs):
+    data = Data(flux=np.ones((256, 128, 128)), label='Test 1D Flux', coords=spectral_cube_wcs)
     jdaviz_app.data_collection.append(data)
 
     subset_state = RoiSubsetState(data.pixel_component_ids[1],
