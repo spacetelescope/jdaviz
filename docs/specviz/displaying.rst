@@ -56,7 +56,7 @@ API Pan/Zoom (Notebook interface)
 ---------------------------------
 The Specviz helper contains a set of convinence methods to programmatically define the view of the spectrum viewer.
 
-For information about the SpecViz, and other, helpers, and how to instantiate one, please see `helpers <https://readthedocs.org/404>`_
+For information about the Specviz, and other, helpers, and how to instantiate one, please see `helpers <https://readthedocs.org/404>`_
 
 .. warning::
     The helper page has not yet been written/defined. Until that documentation is written, you may instantiate a SpecViz Helper via:
