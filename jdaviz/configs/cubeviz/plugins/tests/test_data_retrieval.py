@@ -14,8 +14,8 @@ URL = 'https://stsci.box.com/shared/static/28a88k1qfipo4yxc4p4d40v4axtlal8y.fits
 
       - app.get_viewer('spectrum-viewer').data()
       - app.get_data_from_viewer("spectrum-viewer")
-      
-    return the same spectrum values.
+
+      return the same spectrum values.
 """
 
 
