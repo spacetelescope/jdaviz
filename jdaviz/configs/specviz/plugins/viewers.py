@@ -1,5 +1,8 @@
 from glue.core import BaseData
+from glue.core.subset import Subset
+from glue.config import data_translator
 from glue_jupyter.bqplot.profile import BqplotProfileView
+
 from astropy import table
 from specutils import Spectrum1D
 from matplotlib.colors import cnames
@@ -23,22 +26,37 @@ class SpecvizProfileView(BqplotProfileView):
         else:
             statistic = None
 
-        result = []
+        data = []
+
         for layer_state in self.state.layers:
-            if hasattr(layer_state, 'layer') and isinstance(layer_state.layer, BaseData):
-                _class = cls or self.default_class
+            if hasattr(layer_state, 'layer'):
 
-                if _class is not None:
-                    # If spectrum, collapse via the defined statistic
-                    if _class == Spectrum1D:
-                        layer_data = layer_state.layer.get_object(cls=_class,
-                                                                  statistic=statistic)
-                    else:
-                        layer_data = layer_state.layer.get_object(cls=_class)
+                # For raw data, just include the data itself
+                if isinstance(layer_state.layer, BaseData):
+                    _class = cls or self.default_class
 
-                    result.append(layer_data)
+                    if _class is not None:
+                        # If spectrum, collapse via the defined statistic
+                        if _class == Spectrum1D:
+                            layer_data = layer_state.layer.get_object(cls=_class,
+                                                                      statistic=statistic)
+                        else:
+                            layer_data = layer_state.layer.get_object(cls=_class)
 
-        return result
+                        data.append(layer_data)
+
+                # For subsets, make sure to apply the subset mask to the
+                #  layer data first
+                elif isinstance(layer_state.layer, Subset):
+                    layer_data = layer_state.layer
+
+                    if _class is not None:
+                        handler, _ = data_translator.get_handler_for(_class)
+                        layer_data = handler.to_object(layer_data,
+                                                       statistic=statistic)
+                    data.append(layer_data)
+
+        return data
 
 
     def load_line_list(self, line_table, replace=False, return_table=False):
