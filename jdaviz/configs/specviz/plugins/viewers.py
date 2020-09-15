@@ -3,7 +3,10 @@ import numpy as np
 from bqplot.marks import Lines, Scatter
 
 from glue.core import BaseData
+from glue.core.subset import Subset
+from glue.config import data_translator
 from glue_jupyter.bqplot.profile import BqplotProfileView
+
 from astropy import table
 from specutils import Spectrum1D
 from matplotlib.colors import cnames
@@ -29,10 +32,44 @@ class SpecvizProfileView(BqplotProfileView):
         self.display_mask = False
 
     def data(self, cls=None):
-        return [layer_state.layer.get_object(cls=cls or self.default_class)
-                for layer_state in self.state.layers
-                if hasattr(layer_state, 'layer') and
-                isinstance(layer_state.layer, BaseData)]
+        # Grab the user's chosen statistic for collapsing data
+        if hasattr(self.state, 'function'):
+            statistic = self.state.function
+        else:
+            statistic = None
+
+        data = []
+
+        for layer_state in self.state.layers:
+            if hasattr(layer_state, 'layer'):
+
+                # For raw data, just include the data itself
+                if isinstance(layer_state.layer, BaseData):
+                    _class = cls or self.default_class
+
+                    if _class is not None:
+                        # If spectrum, collapse via the defined statistic
+                        if _class == Spectrum1D:
+                            layer_data = layer_state.layer.get_object(cls=_class,
+                                                                      statistic=statistic)
+                        else:
+                            layer_data = layer_state.layer.get_object(cls=_class)
+
+                        data.append(layer_data)
+
+                # For subsets, make sure to apply the subset mask to the
+                #  layer data first
+                elif isinstance(layer_state.layer, Subset):
+                    layer_data = layer_state.layer
+
+                    if _class is not None:
+                        handler, _ = data_translator.get_handler_for(_class)
+                        layer_data = handler.to_object(layer_data,
+                                                       statistic=statistic)
+                    data.append(layer_data)
+
+        return data
+
 
     def load_line_list(self, line_table, replace=False, return_table=False):
         if type(line_table) == str:

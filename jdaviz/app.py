@@ -399,14 +399,15 @@ class Application(VuetifyTemplate, HubListener):
                 # For subsets, make sure to apply the subset mask to the
                 #  layer data first
                 elif isinstance(layer_state.layer, Subset):
-                    layer_data = layer_state.layer
+                    if include_subsets:
+                        layer_data = layer_state.layer
 
-                    if cls is not None:
-                        handler, _ = data_translator.get_handler_for(cls)
-                        layer_data = handler.to_object(layer_data,
-                                                       statistic=statistic)
+                        if cls is not None:
+                            handler, _ = data_translator.get_handler_for(cls)
+                            layer_data = handler.to_object(layer_data,
+                                                           statistic=statistic)
 
-                    data[label] = layer_data
+                        data[label] = layer_data
 
         # If a data label was provided, return only the data requested
         if data_label is not None:
