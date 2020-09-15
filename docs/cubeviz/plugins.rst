@@ -64,25 +64,25 @@ also saved to a dataset with the label specified in the :guilabel:`Model Label` 
         Specviz documentation on fitting spectral models.
 
 Contours
-===============
+========
 
 :guilabel:`Contours` can be accessed in the :guilabel:`Layer` tab in the viewer settings window.
 To activate :guilabel:`Contours`, click on the :guilabel:`Eye with a cross` icon and choose either the :guilabel:`Linear` icon for auto-contours or the :guilabel:`Custom` icon to set your own levels.
 
-.. image:: ../img/contour_location.png
+.. image:: img/contour_location.png
 
-.. image:: ../img/contours_activated.png
+.. image:: img/contours_activated.png
 
 The :guilabel:`Contours` of a 2D image can also be plotted over an image viewer.
 A user can create a 2D image using a plugin like :ref:`Collapse <collapse>` and then add it to an image viewer as a 2nd layer.
 
-.. image:: ../img/data_tab_with_2_data.png
+.. image:: img/data_tab_with_2_data.png
 
 To visualize the contours of this 2D image over the image viewer, first go to the :guilabel:`Layer` tab, select the 2nd layer (which should be the 2D image), and then set its :guilabel:`Contour` to be on and its :guilabel:`Bitmap` to be off.
 
-.. image:: ../img/layer_tab_with_2_layers.png
+.. image:: img/layer_tab_with_2_layers.png
 
-.. image:: ../img/second_layer_with_contours.png
+.. image:: img/second_layer_with_contours.png
 
 
 Unit Conversion
