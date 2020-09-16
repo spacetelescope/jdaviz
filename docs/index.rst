@@ -4,7 +4,7 @@ Jdaviz
 
 .. image:: logos/jdaviz.svg
    :width: 400
-
+   
 ``Jdaviz`` is a package of astronomical data analysis visualization
 tools based on the Jupyter platform.  These GUI-based tools link data
 visualization and interactive analysis.  They are designed to work
@@ -29,7 +29,6 @@ Using Jdaviz
   :maxdepth: 2
 
   installation.rst
-  quickstart.rst
   data_prep.rst
   specviz/index.rst
   cubeviz/index.rst
@@ -40,6 +39,14 @@ Reference/API
 
 .. toctree::
    :maxdepth: 2
-
+    
    dev/index.rst
    reference/api.rst
+
+Additional documentation
+========================
+
+.. toctree::
+   :maxdepth: 2
+
+   known_bugs.rst
