@@ -2,6 +2,8 @@
 .. image:: ../logos/specviz.svg
    :width: 400
 
+.. _specviz:
+
 #######
 Specviz
 #######

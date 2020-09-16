@@ -2,6 +2,8 @@
 .. image:: ../logos/cubeviz.svg
    :width: 400
 
+.. _cubeviz:
+
 #######
 Cubeviz
 #######
