@@ -42,3 +42,11 @@ Reference/API
     
    dev/index.rst
    reference/api.rst
+
+Additional documentation
+========================
+
+.. toctree::
+   :maxdepth: 2
+
+   known_bugs.rst
