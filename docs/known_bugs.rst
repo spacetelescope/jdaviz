@@ -58,4 +58,4 @@ Cubeviz cube viewer contrast changes when collapsing jupyter scroll window
 In order to see the full Cubeviz app in a Jupyter notebook, one can click on
 the side of the cell output to collapse or expand the scrollable window. This
 has the unintended consequence of changing the contrast of the image displayed
-in the Cubeviz cube viewer:
+in the Cubeviz cube viewer.
