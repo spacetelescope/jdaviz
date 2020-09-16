@@ -37,6 +37,14 @@ the region bounds are correct. However, applying Collapse again, it errors out a
 the image viewer that contained the intial collapse goes blank.
 
 
+Flashing display when data is added or removed too quickly
+----------------------------------------------------------
+
+If data addition/removal is done too quickly, the front-end can get "desynced" from
+the kernel. The stopgap solution for this is to just restart the kernel or restart
+jupyter notebook entirely if the bug persists.
+
+
 Cubeviz cube viewer colormap printed out
 ----------------------------------------
 
