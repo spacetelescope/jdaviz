@@ -25,7 +25,7 @@ Ghost subsets and models in spectrum viewer
 
 Mysterious extra subsets and models appear in the Specviz spectrum viewer
 after fitting a model. Pan/zoom and resize were also used, but it is unclear
-if they play a role or not in this bug:
+if they play a role or not in this bug.
 
 
 Cubeviz Collapse and Moment Maps: Spectral bounds do not match Region selection
@@ -59,4 +59,3 @@ In order to see the full Cubeviz app in a Jupyter notebook, one can click on
 the side of the cell output to collapse or expand the scrollable window. This
 has the unintended consequence of changing the contrast of the image displayed
 in the Cubeviz cube viewer:
-
