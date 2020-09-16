@@ -29,6 +29,7 @@ Using Jdaviz
   :maxdepth: 2
 
   installation.rst
+  quickstart.rst
   data_prep.rst
   specviz/index.rst
   cubeviz/index.rst
