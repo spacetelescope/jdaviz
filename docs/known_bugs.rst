@@ -67,3 +67,11 @@ Gaussian smooth crashes after selecting smoothed data in spectrum viewer
 Attempting to apply the Gaussian Smooth functionality on a spectrum that is
 itself the result of a previous application of Gaussian Smooth, results in
 an error dump.
+
+
+Reporting a bug
+---------------
+
+You can report a bug in the Jdaviz GitHub issues:
+
+https://github.com/spacetelescope/jdaviz/issues/new
