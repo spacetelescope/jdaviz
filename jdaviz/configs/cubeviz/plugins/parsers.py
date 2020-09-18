@@ -76,7 +76,7 @@ def _parse_hdu(app, hdulist, file_name=None):
             continue
 
         try:
-            sc = SpectralCube.read(hdu)
+            sc = SpectralCube.read(hdulist, format='fits')
             wcs = sc.wcs
         except (ValueError, FITSReadError):
             continue
@@ -93,7 +93,7 @@ def _parse_hdu(app, hdulist, file_name=None):
         # This will fail on attempting to load anything that
         # isn't cube-shaped
         try:
-            sc = SpectralCube.read(hdu)
+            sc = SpectralCube.read(hdu, format='fits')
         except ValueError:
             # This will fail if the parsing of the wcs does not provide
             # proper celestial axes
