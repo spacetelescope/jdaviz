@@ -1,7 +1,13 @@
-0.2 (unreleased)
+1.0.1 (2020-09-18)
 ----------------
 
-- No changes yet
+- Fix issue from release.
+
+
+1.0 (2020-09-18)
+----------------
+
+- Official release.
 
 
 0.1 (2020-08-26)
