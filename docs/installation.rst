@@ -9,11 +9,11 @@ The following details how to install the ``jdaviz`` Python package.
 Quick Installation
 ------------------
 
-Installing can be done using pip::
+Installing the released version can be done using pip::
 
-    pip install --upgrade jdaviz
+    pip install jdaviz
 
-or via Github::
+or  if you want the latest in-development version, you can install via Github::
 
    pip install git+https://github.com/spacetelescope/jdaviz --upgrade
 
