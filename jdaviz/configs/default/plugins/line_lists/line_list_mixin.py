@@ -14,8 +14,12 @@ class LineListMixin:
         loaded via the notebook.
         """
         lt = self.app.get_viewer('spectrum-viewer').load_line_list(line_table,
-                                                                   replace=replace,
-                                                                   return_table=True)
+                                                              replace=replace,
+                                                              return_table=True)
+        # Preset lists were returning None table despite loading correctly
+        if lt is None:
+            lt = self.spectral_lines.loc["listname", line_table]
+
         add_line_list_message = AddLineListMessage(table=lt, sender=self)
         self.app.hub.broadcast(add_line_list_message)
 
