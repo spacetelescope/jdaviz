@@ -148,8 +148,17 @@ class UnitConversion(TemplateMixin):
         if self.spectrum.uncertainty is not None:
             unit_exp = unit_exponents.get(self.spectrum.uncertainty.__class__, 1)
 
-            temp_uncertainty = self.spectrum.uncertainty.quantity.to(u.Unit(set_flux_unit.unit)**unit_exp,
+            try:
+                temp_uncertainty = self.spectrum.uncertainty.quantity.to(u.Unit(set_flux_unit.unit)**unit_exp,
                                     equivalencies=u.spectral_density(set_spectral_axis_unit))
+            # Catch and handle error trying to convert variance uncertainties
+            # between frequency and wavelength space.
+            # TODO: get rid of this when astropy handles it
+            except u.UnitConversionError:
+                temp_uncertainty = self.spectrum.uncertainty.quantity**(1/unit_exp)
+                temp_uncertainty = temp_uncertainty.to(u.Unit(set_flux_unit.unit),
+                                    equivalencies=u.spectral_density(set_spectral_axis_unit))
+                temp_uncertainty **= unit_exp
             temp_uncertainty = self.spectrum.uncertainty.__class__(temp_uncertainty.value)
         else:
             temp_uncertainty = None
