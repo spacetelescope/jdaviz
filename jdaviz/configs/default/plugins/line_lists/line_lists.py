@@ -124,8 +124,10 @@ class LineListTool(TemplateMixin):
         msg : `glue.core.Message`
             The glue message passed to this callback method. Includes the line data added in msg.table.
         """
-        list_contents = self.list_contents
-        loaded_lists = self.loaded_lists
+        #list_contents = self.list_contents
+        #loaded_lists = self.loaded_lists
+        loaded_lists = ["Custom"]
+        list_contents = {"Custom": {"lines": [], "color": "#FF0000FF"}}
         for row in msg.table:
             if row["listname"] not in loaded_lists:
                 loaded_lists.append(row["listname"])
