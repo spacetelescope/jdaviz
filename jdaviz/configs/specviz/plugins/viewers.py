@@ -142,6 +142,7 @@ class SpecvizProfileView(BqplotProfileView):
         # It seems that we need to recreate this index after v-stacking.
         self.spectral_lines.add_index("name_rest")
         self.spectral_lines.add_index("linename")
+        self.spectral_lines.add_index("listname")
 
         if return_table:
             return line_table
