@@ -15,6 +15,8 @@ from jdaviz.utils import load_template
 
 __all__ = ['UnitConversion']
 
+unit_exponents = {InverseVariance: -2,
+                  VarianceUncertainty: 2}
 
 @tray_registry('g-unit-conversion', label="Unit Conversion")
 class UnitConversion(TemplateMixin):
@@ -144,7 +146,9 @@ class UnitConversion(TemplateMixin):
 
         # Uncertainty converted to new flux units
         if self.spectrum.uncertainty is not None:
-            temp_uncertainty = self.spectrum.uncertainty.quantity.to(u.Unit(set_flux_unit.unit),
+            unit_exp = unit_exponents.get(self.spectrum.uncertainty.__class__, 1)
+
+            temp_uncertainty = self.spectrum.uncertainty.quantity.to(u.Unit(set_flux_unit.unit)**unit_exp,
                                     equivalencies=u.spectral_density(set_spectral_axis_unit))
             temp_uncertainty = self.spectrum.uncertainty.__class__(temp_uncertainty.value)
         else:
@@ -180,8 +184,7 @@ class UnitConversion(TemplateMixin):
 
             # Replace old spectrum with new one with updated units.
             self.app.add_data(converted_spec, label)
-            self.app.add_data_to_viewer("spectrum-viewer", label)
-            self.app.remove_data_from_viewer("spectrum-viewer", self.selected_data)
+            self.app.add_data_to_viewer("spectrum-viewer", label, clear_other_data=True)
 
         # Reset UI labels.
         self.new_flux_unit = ""
