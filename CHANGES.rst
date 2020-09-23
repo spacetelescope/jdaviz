@@ -1,4 +1,4 @@
-1.1 (unreleased)
+1.1.0 (unreleased)
 ----------------
 
 - No changes yet.
