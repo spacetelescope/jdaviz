@@ -1,24 +1,29 @@
-#################
-Installing JDAViz
-#################
 
-Installing can be done using pip::
+.. _install:
+
+Installation
+============
+
+The following details how to install the ``jdaviz`` Python package.
+
+Quick Installation
+------------------
+
+Installing the released version can be done using pip::
+
+    pip install jdaviz
+
+or  if you want the latest in-development version, you can install via Github::
 
    pip install git+https://github.com/spacetelescope/jdaviz --upgrade
 
-Or from source::
+Developer Installation
+----------------------
+
+To install ``jdaviz`` for development, or from source::
 
    git clone https://github.com/spacetelescope/jdaviz.git
    cd jdaviz
    pip install -e .
 
-Once installed, to start the browser app version, run the following in your terminal::
-
-    jdaviz /path/to/data/file --layout=cubeviz
-
-For the notebook version, start the jupyter kernel with the path to the Example.ipynb notebook::
-
-    jupyter notebook /path/to/jdaviz/notebooks/Example.ipynb
-
-Note that to load data in the notebook version, uncomment the cell in the notebook and
-provide the path to your data.
+See :ref:`quickstart` to learn how to run ``jdaviz``.

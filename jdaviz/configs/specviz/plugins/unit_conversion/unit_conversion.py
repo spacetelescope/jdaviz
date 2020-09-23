@@ -1,4 +1,5 @@
 from astropy import units as u
+from astropy.nddata import VarianceUncertainty, StdDevUncertainty, InverseVariance, UnknownUncertainty
 import numpy as np
 import datetime
 import time
@@ -140,8 +141,21 @@ class UnitConversion(TemplateMixin):
                 self.hub.broadcast(snackbar_message)
 
                 return
+
+        # Uncertainty converted to new flux units
+        if self.spectrum.uncertainty is not None:
+            temp_uncertainty = self.spectrum.uncertainty.quantity.to(u.Unit(set_flux_unit.unit),
+                                    equivalencies=u.spectral_density(set_spectral_axis_unit))
+            temp_uncertainty = self.spectrum.uncertainty.__class__(temp_uncertainty.value)
+        else:
+            temp_uncertainty = None
+
         # Create new spectrum with new units.
-        converted_spec = self.spectrum._copy(flux=set_flux_unit, spectral_axis=set_spectral_axis_unit, unit=set_flux_unit.unit)
+        converted_spec = self.spectrum._copy(flux=set_flux_unit,
+                                             spectral_axis=set_spectral_axis_unit,
+                                             unit=set_flux_unit.unit,
+                                             uncertainty=temp_uncertainty
+                                             )
 
         # Finds the '_units_copy_' spectrum and does unit conversions in that copy.
         if "_units_copy_" in self.selected_data:

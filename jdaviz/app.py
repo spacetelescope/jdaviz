@@ -9,6 +9,7 @@ from astropy import units as u
 import pkg_resources
 import yaml
 from astropy.nddata import CCDData
+from spectral_cube import SpectralCube
 from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
 from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
@@ -33,6 +34,8 @@ from .core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
 from .core.registries import (tool_registry, tray_registry, viewer_registry,
                               data_parser_registry)
 from .utils import load_template
+
+#from .configs.mosviz.plugins.viewers import MOSVizProfile2DView
 
 __all__ = ['Application']
 
@@ -381,7 +384,7 @@ class Application(VuetifyTemplate, HubListener):
                     if cls is not None:
                         # If data is one-dimensional, assume that it can be
                         #  collapsed via the defined statistic
-                        if len(layer_data.shape) == 1:
+                        if cls == Spectrum1D:
                             layer_data = layer_data.get_object(cls=cls,
                                                                statistic=statistic)
                         else:
@@ -396,14 +399,15 @@ class Application(VuetifyTemplate, HubListener):
                 # For subsets, make sure to apply the subset mask to the
                 #  layer data first
                 elif isinstance(layer_state.layer, Subset):
-                    layer_data = layer_state.layer
+                    if include_subsets:
+                        layer_data = layer_state.layer
 
-                    if cls is not None:
-                        handler, _ = data_translator.get_handler_for(cls)
-                        layer_data = handler.to_object(layer_data,
-                                                       statistic=statistic)
+                        if cls is not None:
+                            handler, _ = data_translator.get_handler_for(cls)
+                            layer_data = handler.to_object(layer_data,
+                                                           statistic=statistic)
 
-                    data[label] = layer_data
+                        data[label] = layer_data
 
         # If a data label was provided, return only the data requested
         if data_label is not None:
@@ -582,34 +586,18 @@ class Application(VuetifyTemplate, HubListener):
                 f"of:\n\t" + f"\n\t".join([
                     data_item['name'] for data_item in self.state.data_items]))
 
-    def _set_plot_axes_labels(self, data, viewer_id):
+    def _set_plot_axes_labels(self,viewer_id):
         """
         Sets the plot axes labels to be the units of the data to be loaded.
 
         Parameters
         ----------
-        data : `~Spectrum1D`
-            Data from ``DataCollection`` that will have its units as the plot
-            label axes.
         viewer_id : str
             The UUID associated with the desired viewer item.
         """
         viewer = self._viewer_by_id(viewer_id)
 
-        # Get the units of the data to be loaded.
-        spectral_axis_unit_type = data.spectral_axis.unit.physical_type.title()
-        flux_unit_type = data.flux.unit.physical_type.title()
-
-        if data.spectral_axis.unit.is_equivalent(u.m):
-            spectral_axis_unit_type = "Wavelength"
-        elif data.spectral_axis.unit.is_equivalent(u.pixel):
-            spectral_axis_unit_type = "pixel"
-
-        viewer.figure.axes[0].label = f"{spectral_axis_unit_type} [{data.spectral_axis.unit.to_string()}]"
-        viewer.figure.axes[1].label = f"{flux_unit_type} [{data.flux.unit.to_string()}]"
-
-        # Make it so y axis label is not covering tick numbers.
-        viewer.figure.axes[1].label_offset = "-50"
+        viewer.set_plot_axes()
 
     def remove_data_from_viewer(self, viewer_reference, data_label):
         """
@@ -820,6 +808,18 @@ class Application(VuetifyTemplate, HubListener):
 
         self._update_selected_data_items(viewer_id, selected_items)
 
+    def vue_save_figure(self, event):
+        """
+        Callback for save figure events in the front end viewer toolbars. Uses
+        the bqplot.Figure save methods.
+        """
+        viewer_id, filetype = event['id'], event['filetype']
+        viewer = self._viewer_store[viewer_id]
+        if filetype == "png":
+            viewer.figure.save_png()
+        elif filetype == "svg":
+            viewer.figure.save_svg()
+
     def _update_selected_data_items(self, viewer_id, selected_items):
         # Find the active viewer
         viewer_item = self._viewer_item_by_id(viewer_id)
@@ -871,9 +871,9 @@ class Application(VuetifyTemplate, HubListener):
         if len(active_data_labels) > 0:
             active_data = self.data_collection[active_data_labels[0]]
             if hasattr(active_data, "_preferred_translation") \
-                    and active_data._preferred_translation is not None \
-                    and type(active_data.get_object()) is Spectrum1D:
-                self._set_plot_axes_labels(active_data.get_object(), viewer_id)
+                    and active_data._preferred_translation is not None:
+                pass
+                self._set_plot_axes_labels(viewer_id)
 
     def _on_data_added(self, msg):
         """
