@@ -5,6 +5,11 @@ Jdaviz
 .. image:: logos/jdaviz.svg
    :width: 400
    
+.. note::
+
+   ``Jdaviz`` is one tool that is part of STScI's larger `Data Analysis Tools Ecosystem <https://specutils.readthedocs.io>`_.
+
+
 ``Jdaviz`` is a package of astronomical data analysis visualization
 tools based on the Jupyter platform.  These GUI-based tools link data
 visualization and interactive analysis.  They are designed to work
@@ -29,7 +34,6 @@ Using Jdaviz
   :maxdepth: 2
 
   installation.rst
-  data_prep.rst
   specviz/index.rst
   cubeviz/index.rst
   mosviz/index.rst
