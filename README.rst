@@ -16,6 +16,10 @@ JDAViz
     :target: https://www.astropy.org
     :alt: Powered by Astropy
 
+.. note::
+
+   ``Jdaviz`` is one tool that is part of STScI's larger `Data Analysis Tools Ecosystem <https://specutils.readthedocs.io>`_.
+
 
 ``jdaviz`` is a package of astronomical data analysis visualization
 tools based on the Jupyter platform.  These GUI-based tools link data
