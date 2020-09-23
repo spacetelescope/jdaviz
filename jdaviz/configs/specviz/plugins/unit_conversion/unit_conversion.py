@@ -15,7 +15,8 @@ from jdaviz.utils import load_template
 
 __all__ = ['UnitConversion']
 
-unit_exponents = {InverseVariance: -2,
+unit_exponents = {StdDevUncertainty: 1,
+                  InverseVariance: -2,
                   VarianceUncertainty: 2}
 
 @tray_registry('g-unit-conversion', label="Unit Conversion")
@@ -146,20 +147,32 @@ class UnitConversion(TemplateMixin):
 
         # Uncertainty converted to new flux units
         if self.spectrum.uncertainty is not None:
-            unit_exp = unit_exponents.get(self.spectrum.uncertainty.__class__, 1)
-
-            try:
-                temp_uncertainty = self.spectrum.uncertainty.quantity.to(u.Unit(set_flux_unit.unit)**unit_exp,
+            unit_exp = unit_exponents.get(self.spectrum.uncertainty.__class__)
+            # If uncertainty type not in our lookup, drop the uncertainty
+            if unit_exp is None:
+                msg = SnackbarMessage(
+                    "Warning: Unrecognized uncertainty type, setting to None in converted data",
+                    color="warning",
+                    sender=self)
+                self.hub.broadcast(msg)
+                temp_uncertainty = None
+            else:
+                try:
+                    # Catch and handle error trying to convert variance uncertainties
+                    # between frequency and wavelength space.
+                    # TODO: simplify this when astropy handles it
+                    temp_uncertainty = self.spectrum.uncertainty.quantity**(1/unit_exp)
+                    temp_uncertainty = temp_uncertainty.to(u.Unit(set_flux_unit.unit),
                                     equivalencies=u.spectral_density(set_spectral_axis_unit))
-            # Catch and handle error trying to convert variance uncertainties
-            # between frequency and wavelength space.
-            # TODO: get rid of this when astropy handles it
-            except u.UnitConversionError:
-                temp_uncertainty = self.spectrum.uncertainty.quantity**(1/unit_exp)
-                temp_uncertainty = temp_uncertainty.to(u.Unit(set_flux_unit.unit),
-                                    equivalencies=u.spectral_density(set_spectral_axis_unit))
-                temp_uncertainty **= unit_exp
-            temp_uncertainty = self.spectrum.uncertainty.__class__(temp_uncertainty.value)
+                    temp_uncertainty **= unit_exp
+                    temp_uncertainty = self.spectrum.uncertainty.__class__(temp_uncertainty.value)
+                except u.UnitConversionError:
+                    msg = SnackbarMessage(
+                        "Warning: Could not convert uncertainty, setting to None in converted data",
+                        color="warning",
+                        sender=self)
+                    self.hub.broadcast(msg)
+                    temp_uncertainty = None
         else:
             temp_uncertainty = None
 
