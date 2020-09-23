@@ -151,7 +151,7 @@ class UnitConversion(TemplateMixin):
             # If uncertainty type not in our lookup, drop the uncertainty
             if unit_exp is None:
                 msg = SnackbarMessage(
-                    "Warning: Unrecognized uncertainty type, setting to None in converted data",
+                    "Warning: Unrecognized uncertainty type, cannot guarantee conversion so dropping uncertainty in resulting data",
                     color="warning",
                     sender=self)
                 self.hub.broadcast(msg)
