@@ -7,7 +7,7 @@ Jdaviz
    
 .. note::
 
-   ``Jdaviz`` is one tool that is part of STScI's larger `Data Analysis Tools Ecosystem <https://specutils.readthedocs.io>`_.
+   ``Jdaviz`` is one tool that is part of STScI's larger `Data Analysis Tools Ecosystem <https://jwst-docs.stsci.edu/jwst-post-pipeline-data-analysis>`_.
 
 
 ``Jdaviz`` is a package of astronomical data analysis visualization
