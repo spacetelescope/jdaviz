@@ -1,5 +1,5 @@
-Known bugs
-==========
+Known Issues
+============
 
 On some platforms, install fails due to `vispy`
 -----------------------------------------------
@@ -7,13 +7,13 @@ On some platforms, install fails due to `vispy`
 The latest version of `vispy` at the time of this release fails to build for
 some combinations of platform/OS and Python versions.  While a new `vispy`
 release should address this, in the meantime the workaround is to install
-from the development version of vispy like this:
-```
-% conda create -n jdaviz python=3.8
-% conda activate jdaviz
-% pip install git+https://github.com/vispy/vispy.git
-% pip install jdaviz --no-cache-dir
-```
+from the development version of vispy like this::
+
+  % conda create -n jdaviz python=3.8
+  % conda activate jdaviz
+  % pip install git+https://github.com/vispy/vispy.git
+  % pip install jdaviz --no-cache-dir
+
 See `Issue #305 <https://github.com/spacetelescope/jdaviz/issues/305>`_ for
 updates on this topic.
 
