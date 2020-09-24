@@ -32,6 +32,11 @@ def main(filename, layout='default'):
     layout : str, optional
         Optional specification for which configuration to use on startup.
     """
+    # Tornado Webserver py3.8 compatibility hotfix for windows
+    if sys.platform == 'win32':
+        import asyncio
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
     filepath = pathlib.Path(filename).absolute()
 
     with open(os.path.join(CONFIGS_DIR, layout, layout + '.ipynb')) as f:
@@ -55,9 +60,4 @@ def main(filename, layout='default'):
         os.chdir(start_dir)
 
 if __name__ == '__main__':
-    import sys
-
-    if sys.platform == 'win32':
-        import asyncio
-        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     main()
