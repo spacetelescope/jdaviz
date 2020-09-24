@@ -35,7 +35,8 @@ def read_configuration(path=None):
     Returns:
         A dictionary object
     """
-    assert isinstance(path, (str, type(None))), 'path must be a string'
+    if not isinstance(path, (str, type(None))):
+        raise ValueError('path must be a string')
 
     # Parse the default configuration file
     default_path = pathlib.Path(__file__).resolve().parent.parent / "configs"
@@ -81,7 +82,8 @@ def get_configuration(path=None, section=None, config=None):
     if path:
         config = read_configuration(path=path)
     else:
-        assert config is not None, 'A pre-existing config must be specified'
+        if config is None:
+            raise ValueError('Either a path or a pre-existing config must be specified')
 
     cfg = copy.deepcopy(config)
 
