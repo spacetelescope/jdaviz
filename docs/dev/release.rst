@@ -6,8 +6,13 @@ This document outlines the steps for releasing a versioned JDAViz package to
 PyPI. Currently, these do not cover submitting package updates to the
 ``astroconda`` channel.
 
-This process currently requires high-level access to the JDAViz repository,
-as it relies on the ability to commit to master directly.
+This process currently requires admin-level access to the JDAViz repository,
+as it relies on the ability to commit to master directly. To do this, it is
+recommended that you create a ``temp`` directory in a different directory where
+you do your development. Inside this ``temp`` directory, ``git clone`` the ``jdaviz``
+repository. This will ensure that you do not have incorrect ``git remote`` commands
+and that you can follow the steps below exactly, without interfering with your
+development directory.
 
 .. note::
     These instructions are adapted from the Astropy package template releasing

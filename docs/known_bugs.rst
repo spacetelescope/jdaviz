@@ -1,6 +1,21 @@
-Known bugs
-==========
+Known Issues
+============
 
+On some platforms, install fails due to `vispy`
+-----------------------------------------------
+
+The 0.6.4 version of `vispy` fails to build for some combinations of
+platform/OS and Python versions.  `vispy` 0.6.5 has resolved this, but a
+workaround if you have an older version of vispy is to ensure you have a
+compatible version:
+
+  % conda create -n jdaviz python=3.8
+  % conda activate jdaviz
+  % pip install vispy>=0.6.5
+  % pip install jdaviz --no-cache-dir
+
+See `Issue #305 <https://github.com/spacetelescope/jdaviz/issues/305>`_ for
+updates on this topic.
 
 Collapse Plugin spectral bounds don't match selected region
 -----------------------------------------------------------
