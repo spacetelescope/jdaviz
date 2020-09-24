@@ -268,6 +268,15 @@ class Application(VuetifyTemplate, HubListener):
         file_obj : str or file-like
             File object for the data to be loaded.
         """
+        try:
+            # Properly form path and check if a valid file
+            file_obj = str(pathlib.Path(file_obj))
+            if not file_obj.exists():
+                raise FileNotFoundError("Could not locate file: " + file_obj)
+        except TypeError:
+            # If it's not a str/path type, it might be a class 
+            pass
+
         # attempt to get a data parser from the config settings
         parser = None
         data = self.state.settings.get('data', None)
