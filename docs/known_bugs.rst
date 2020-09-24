@@ -4,7 +4,7 @@ Known Issues
 On some platforms, install fails due to `vispy`
 -----------------------------------------------
 
-The 0.6.4 version of `vispy` at fails to build for some combinations of
+The 0.6.4 version of `vispy` fails to build for some combinations of
 platform/OS and Python versions.  `vispy` 0.6.5 has resolved this, but a
 workaround if you have an older version of vispy is to ensure you have a
 compatible version:
