@@ -1,0 +1,32 @@
+{%- extends 'nbconvert/templates/jdaviz-default/index.html.j2' -%}
+{% block notebook_execute %}
+
+{%- set kernel_id = kernel_start(nb) -%}
+    <script id="jupyter-config-data" type="application/json">
+        {
+            "baseUrl": "{{resources.base_url}}",
+            "kernelId": "{{kernel_id}}"
+        }
+    </script>
+{% endblock notebook_execute %}
+
+{% block cell_generator %}
+    <script>
+        app.title = "{{nb_title}}"
+
+        var voila_process = function(cell_index, cell_count) {
+            const loading_text = `Executing cell ${cell_index} of ${cell_count}`
+            console.log(loading_text)
+            app.loading_text = loading_text
+            app.loadingPercentage = cell_index / cell_count * 100
+        }
+        var voila_heartbeat = function() {
+            console.log('Ok, voila is still executing...')
+        }
+    </script>
+    {% for cell in cell_generator(nb, kernel_id) %}
+        <script>
+            voila_process({{ loop.index }}, {{ cell_count }});
+        </script>
+    {% endfor %}
+{% endblock cell_generator %}
