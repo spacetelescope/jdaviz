@@ -270,7 +270,7 @@ class Application(VuetifyTemplate, HubListener):
         """
         try:
             # Properly form path and check if a valid file
-            file_obj = str(pathlib.Path(file_obj))
+            file_obj = pathlib.Path(file_obj)
             if not file_obj.exists():
                 raise FileNotFoundError("Could not locate file: " + file_obj)
         except TypeError:
@@ -298,7 +298,7 @@ class Application(VuetifyTemplate, HubListener):
                 self.hub.broadcast(snackbar_message)
                 return
         else:
-            self._application_handler.load_data(file_obj)
+            self._application_handler.load_data(str(file_obj))
 
         # Send out a toast message
         snackbar_message = SnackbarMessage("Data successfully loaded.",
