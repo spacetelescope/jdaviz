@@ -18,8 +18,11 @@ JDAViz
 
 .. note::
 
-   ``Jdaviz`` is one tool that is part of STScI's larger `Data Analysis Tools Ecosystem <https://specutils.readthedocs.io>`_.
+   ``Jdaviz`` is one tool that is part of STScI's larger `Data Analysis Tools Ecosystem <https://jwst-docs.stsci.edu/jwst-post-pipeline-data-analysis>`_.
 
+.. note::
+
+   ``Jdaviz`` has complete `documentation <https://jdaviz.readthedocs.io/en/latest/>`_.
 
 ``jdaviz`` is a package of astronomical data analysis visualization
 tools based on the Jupyter platform.  These GUI-based tools link data
