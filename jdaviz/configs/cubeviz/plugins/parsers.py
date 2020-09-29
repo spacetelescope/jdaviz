@@ -62,7 +62,7 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
 
 
 def _parse_hdu(app, hdulist, file_name=None):
-    if filename is None:
+    if file_name is None:
         if hasattr(hdulist, 'file_name'):
             file_name = hdulist.file_name
 
