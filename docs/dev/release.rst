@@ -30,14 +30,14 @@ development directory.
    make sure that you don't need to keep any of these files).
 
 #. Generate the source distribution tar file by first making sure the
-   `pep517 <https://pypi.org/project/pep517/>`_ package is installed and
+   `build <https://pypi.org/project/build/>`_ package is installed and
    up-to-date::
 
-        pip install pep517 --upgrade
+        pip install build --upgrade
 
    then creating the source distribution with::
 
-        python -m pep517.build --source .
+        python -m build --sdist .
 
    Make sure that generated file is good to go by going inside ``dist``,
    expanding the tar file, going inside the expanded directory, and
