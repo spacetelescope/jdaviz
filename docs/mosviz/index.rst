@@ -2,6 +2,8 @@
 .. image:: ../logos/mosviz.svg
    :width: 400
 
+.. _mosviz:
+
 ######
 Mosviz
 ######

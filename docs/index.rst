@@ -29,6 +29,7 @@ Using Jdaviz
   :maxdepth: 2
 
   installation.rst
+  quickstart.rst
   data_prep.rst
   specviz/index.rst
   cubeviz/index.rst
@@ -42,3 +43,11 @@ Reference/API
     
    dev/index.rst
    reference/api.rst
+
+Additional documentation
+========================
+
+.. toctree::
+   :maxdepth: 1
+
+   known_bugs.rst

@@ -96,24 +96,19 @@ class SlitOverlay(TemplateMixin):
 
             fig_image = self.app.get_viewer("image-viewer").figure
 
-            # If PanZoom is selected during row switch, error occurs
-            if type(fig_image.interaction) is not PanZoom:
+            if self.app.get_viewer("image-viewer").toolbar.active_tool is not None:
+                self.app.get_viewer("image-viewer").toolbar.active_tool = None
 
-                # Create LinearScale that is the same size as the image viewer
-                scales = {'x': fig_image.interaction.x_scale, 'y': fig_image.interaction.y_scale}
+            # Create LinearScale that is the same size as the image viewer
+            scales = {'x': fig_image.interaction.x_scale, 'y': fig_image.interaction.y_scale}
 
-                # Create slit
-                patch2 = bqplot.Lines(x=x_coords, y=y_coords, scales=scales, fill='none', colors=["red"], stroke_width=2,
-                                      close_path=True)
+            # Create slit
+            patch2 = bqplot.Lines(x=x_coords, y=y_coords, scales=scales, fill='none', colors=["red"], stroke_width=2,
+                                  close_path=True)
 
-                # Visualize slit on the figure
-                fig_image.marks = fig_image.marks + [patch2]
+            # Visualize slit on the figure
+            fig_image.marks = fig_image.marks + [patch2]
 
-            else:
-                snackbar_message = SnackbarMessage(
-                    "Please de-select PanZoom in the toolbar and re-select row to plot slit",
-                    color="error",
-                    sender=self)
 
         else:
             snackbar_message = SnackbarMessage(

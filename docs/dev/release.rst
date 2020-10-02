@@ -6,8 +6,13 @@ This document outlines the steps for releasing a versioned JDAViz package to
 PyPI. Currently, these do not cover submitting package updates to the
 ``astroconda`` channel.
 
-This process currently requires high-level access to the JDAViz repository,
-as it relies on the ability to commit to master directly.
+This process currently requires admin-level access to the JDAViz repository,
+as it relies on the ability to commit to master directly. To do this, it is
+recommended that you create a ``temp`` directory in a different directory where
+you do your development. Inside this ``temp`` directory, ``git clone`` the ``jdaviz``
+repository. This will ensure that you do not have incorrect ``git remote`` commands
+and that you can follow the steps below exactly, without interfering with your
+development directory.
 
 .. note::
     These instructions are adapted from the Astropy package template releasing
@@ -25,14 +30,14 @@ as it relies on the ability to commit to master directly.
    make sure that you don't need to keep any of these files).
 
 #. Generate the source distribution tar file by first making sure the
-   `pep517 <https://pypi.org/project/pep517/>`_ package is installed and
+   `build <https://pypi.org/project/build/>`_ package is installed and
    up-to-date::
 
-        pip install pep517 --upgrade
+        pip install build --upgrade
 
    then creating the source distribution with::
 
-        python -m pep517.build --source .
+        python -m build --sdist .
 
    Make sure that generated file is good to go by going inside ``dist``,
    expanding the tar file, going inside the expanded directory, and

@@ -44,13 +44,13 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
     #  generic enough to work with other file types (e.g. ASDF). For now, this
     #  supports MaNGA and JWST data.
     if isinstance(file_obj, fits.hdu.hdulist.HDUList):
-        _parse_hdu(app, file_obj)
+        _parse_hdu(app, file_obj, file_name=data_label)
     elif isinstance(file_obj, str) and os.path.exists(file_obj):
         file_name = os.path.basename(file_obj)
 
         with fits.open(file_obj) as hdulist:
             hdulist = fits.open(file_obj)
-            _parse_hdu(app, hdulist, file_name)
+            _parse_hdu(app, hdulist, file_name=data_label or file_name)
 
     # If the data types are custom data objects, use explicit parsers. Note
     #  that this relies on the glue-astronomy machinery to turn the data object
@@ -62,8 +62,9 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
 
 
 def _parse_hdu(app, hdulist, file_name=None):
-    if hasattr(hdulist, 'file_name'):
-        file_name = hdulist.file_name
+    if file_name is None:
+        if hasattr(hdulist, 'file_name'):
+            file_name = hdulist.file_name
 
     file_name = file_name or "Unknown HDU object"
 
@@ -76,7 +77,7 @@ def _parse_hdu(app, hdulist, file_name=None):
             continue
 
         try:
-            sc = SpectralCube.read(hdu)
+            sc = SpectralCube.read(hdulist, format='fits')
             wcs = sc.wcs
         except (ValueError, FITSReadError):
             continue
@@ -90,21 +91,21 @@ def _parse_hdu(app, hdulist, file_name=None):
         if hdu.data is None:
             continue
 
-        # This will fail on attempting to load anything that
-        # isn't cube-shaped
+        # This is supposed to fail on attempting to load anything that
+        # isn't cube-shaped. But it's not terribly reliable
         try:
-            sc = SpectralCube.read(hdu)
-        except ValueError:
+            sc = SpectralCube.read(hdu, format='fits')
+        except (ValueError, OSError):
             # This will fail if the parsing of the wcs does not provide
             # proper celestial axes
             try:
                 hdu.header.update(wcs.to_header())
                 sc = SpectralCube.read(hdu)
-            except ValueError as e:
-                logging.error(e)
+            except (ValueError, AttributeError) as e:
+                logging.warn(e)
                 continue
         except FITSReadError as e:
-            logging.error(e)
+            logging.warn(e)
             continue
 
         app.data_collection[data_label] = sc

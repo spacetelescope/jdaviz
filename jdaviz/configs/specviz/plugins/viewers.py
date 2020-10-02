@@ -1,8 +1,17 @@
+import numpy as np
+
+from bqplot.marks import Lines, Scatter
+
 from glue.core import BaseData
+from glue.core.subset import Subset
+from glue.config import data_translator
 from glue_jupyter.bqplot.profile import BqplotProfileView
+
 from astropy import table
 from specutils import Spectrum1D
 from matplotlib.colors import cnames
+from astropy import units as u
+
 
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.spectral_line import SpectralLine
@@ -16,16 +25,56 @@ class SpecvizProfileView(BqplotProfileView):
     default_class = Spectrum1D
     spectral_lines = None
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.display_uncertainties = False
+        self.display_mask = False
+
     def data(self, cls=None):
-        return [layer_state.layer.get_object(cls=cls or self.default_class)
-                for layer_state in self.state.layers
-                if hasattr(layer_state, 'layer') and
-                isinstance(layer_state.layer, BaseData)]
+        # Grab the user's chosen statistic for collapsing data
+        if hasattr(self.state, 'function'):
+            statistic = self.state.function
+        else:
+            statistic = None
+
+        data = []
+
+        for layer_state in self.state.layers:
+            if hasattr(layer_state, 'layer'):
+
+                # For raw data, just include the data itself
+                if isinstance(layer_state.layer, BaseData):
+                    _class = cls or self.default_class
+
+                    if _class is not None:
+                        # If spectrum, collapse via the defined statistic
+                        if _class == Spectrum1D:
+                            layer_data = layer_state.layer.get_object(cls=_class,
+                                                                      statistic=statistic)
+                        else:
+                            layer_data = layer_state.layer.get_object(cls=_class)
+
+                        data.append(layer_data)
+
+                # For subsets, make sure to apply the subset mask to the
+                #  layer data first
+                elif isinstance(layer_state.layer, Subset):
+                    layer_data = layer_state.layer
+
+                    if _class is not None:
+                        handler, _ = data_translator.get_handler_for(_class)
+                        layer_data = handler.to_object(layer_data,
+                                                       statistic=statistic)
+                    data.append(layer_data)
+
+        return data
+
 
     def load_line_list(self, line_table, replace=False, return_table=False):
         if type(line_table) == str:
             self.load_line_list(load_preset_linelist(line_table),
-                                replace=replace, raise_event=raise_event)
+                                replace=replace, return_table=return_table)
             return
         elif type(line_table) != table.QTable:
             raise TypeError("Line list must be an astropy QTable with\
@@ -93,6 +142,7 @@ class SpecvizProfileView(BqplotProfileView):
         # It seems that we need to recreate this index after v-stacking.
         self.spectral_lines.add_index("name_rest")
         self.spectral_lines.add_index("linename")
+        self.spectral_lines.add_index("listname")
 
         if return_table:
             return line_table
@@ -194,3 +244,187 @@ class SpecvizProfileView(BqplotProfileView):
 
     def available_linelists(self):
         return get_available_linelists()
+
+    def show_uncertainties(self):
+        self.display_uncertainties = True
+        self._plot_uncertainties()
+
+    def show_mask(self):
+        self.display_mask = True
+        self._plot_mask()
+
+    def clean(self):
+        self.display_uncertainties = False
+        self.display_mask = False
+
+        marks = self.figure.marks[:]
+
+        # Remove extra traces, in case they exist.
+        self._clean_error(marks)
+        self._clean_mask(marks)
+
+        self.figure.marks = marks
+
+    def _clean_mask(self, marks):
+        if hasattr(self, 'mask_line_mark') and self.mask_line_mark is not None:
+            marks.remove(self.mask_line_mark)
+            self.mask_line_mark = None
+            self.mask_trace_pointer = None
+
+    def _clean_error(self, marks):
+        if hasattr(self, 'error_line_mark') and self.error_line_mark is not None:
+            marks.remove(self.error_line_mark)
+            self.error_line_mark = None
+            self.error_trace_pointer = None
+
+    def add_data(self, data, color=None, alpha=None, **layer_state):
+        """
+        Overrides the base class to add markers for plotting
+        uncertainties and data quality flags.
+
+        Parameters
+        ----------
+        spectrum : :class:`glue.core.Data`
+            Data object with the spectrum.
+        color: color specification
+            Color value for plotting
+        alpha: float
+            Alpha value for plotting
+
+        Returns
+        -------
+        :bool: True if success, False otherwise.
+        """
+        # The base class handles the plotting of the main
+        # trace representing the spectrum itself.
+        result = super().add_data(data, color, alpha, **layer_state)
+
+        # Index of spectrum trace plotted by the super class. It is
+        # for now, always the last in the array of marks. This will
+        # have to be reworked once multiple spectra can be over-plotted.
+        # The uncert and mask trace pointers are meant to facilitate this
+        # eventual upgrade.
+        self.data_trace_pointer = len(self.figure.marks) - 1
+
+        self.error_trace_pointer = None
+        self.mask_trace_pointer = None
+
+        # Color and opacity are taken from the already plotted trace,
+        # in case they are not set explicitly by the caller.
+        self._color = self.figure.marks[self.data_trace_pointer].colors[0]
+        if color:
+            self._color = color
+
+        self._alpha = self.figure.marks[self.data_trace_pointer].opacities[0]
+        if alpha:
+            self._alpha = alpha
+
+        # An opacity defined specifically for the shaded areas.
+        self._alpha_shade = self._alpha / 3
+
+        self._plot_uncertainties()
+
+        self._plot_mask()
+
+        return result
+
+    def _plot_mask(self):
+
+        _data = self._data[0]
+        _data_trace = self.data_trace_pointer
+
+        if 'mask' in _data.components and self.display_mask:
+
+            # If a mask was already plotted, remove it.
+            if hasattr(self,'mask_trace_pointer') and \
+                    self.mask_trace_pointer is not None:
+                marks = self.figure.marks[:]
+                self._clean_mask(marks)
+                self.figure.marks = marks
+
+            mask = _data['mask'].data
+
+            # get trace with spectrum.
+            x = self.figure.marks[_data_trace].x
+            y = self.figure.marks[_data_trace].y
+
+            # For plotting markers only for the masked data
+            # points, erase un-masked data from trace.
+            y = np.where(np.asarray(mask) == 0, np.nan, y)
+
+            # there is no 'X' marker option in bqplot
+            self.mask_line_mark = Scatter(scales=self.scales,
+                                marker='cross',
+                                x=x,
+                                y=y,
+                                stroke_width=0.5,
+                                # colors=['red'],
+                                colors=[self._color],
+                                default_size=25,
+                                default_opacities=[self._alpha],
+                                )
+            self.figure.marks = list(self.figure.marks) + [self.mask_line_mark]
+
+            # We added an extra trace. Get pointer to it.
+            self.mask_trace_pointer = len(self.figure.marks) - 1
+
+    def _plot_uncertainties(self):
+
+        _data = self._data[0]
+        _data_trace = self.data_trace_pointer
+
+        if 'uncertainty' in _data.components and self.display_uncertainties:
+            error = np.array(_data['uncertainty'].data)
+
+            # If uncertainties were already plotted, remove them.
+            if hasattr(self,'error_trace_pointer') and \
+                    self.error_trace_pointer is not None:
+                marks = self.figure.marks[:]
+                self._clean_error(marks)
+                self.figure.marks = marks
+
+            # The shaded band around the spectrum trace is bounded by
+            # two lines, above and below the spectrum trace itself.
+            x = np.array([np.ndarray.tolist(self.figure.marks[_data_trace].x),
+                          np.ndarray.tolist(self.figure.marks[_data_trace].x)])
+            y = np.array([np.ndarray.tolist(self.figure.marks[_data_trace].y - error),
+                          np.ndarray.tolist(self.figure.marks[_data_trace].y + error)])
+
+            # A Lines bqplot instance with two lines and shaded area
+            # in between.
+            self.error_line_mark = Lines(scales=self.scales,
+                              x=[x],
+                              y=[y],
+                              stroke_width=1,
+                              colors=[self._color, self._color],
+                              fill_colors=[self._color, self._color],
+                              opacities=[0.0, 0.0],
+                              fill_opacities=[self._alpha_shade, self._alpha_shade],
+                              fill='between',
+                              close_path=False
+                              )
+            self.figure.marks = list(self.figure.marks) + [self.error_line_mark]
+
+            # We added an extra trace. Get pointer to it.
+            self.error_trace_pointer = len(self.figure.marks) - 1
+
+    def set_plot_axes(self):
+        # Get data to be used for axes labels
+        data = self.data()[0]
+
+        # Set axes labels for the spectrum viewer
+
+        spectral_axis_unit_type = data.spectral_axis.unit.physical_type.title()
+        # flux_unit_type = data.flux.unit.physical_type.title()
+        flux_unit_type = "Flux density"
+
+        if data.spectral_axis.unit.is_equivalent(u.m):
+            spectral_axis_unit_type = "Wavelength"
+        elif data.spectral_axis.unit.is_equivalent(u.pixel):
+            spectral_axis_unit_type = "pixel"
+
+        self.figure.axes[0].label = f"{spectral_axis_unit_type} [{data.spectral_axis.unit.to_string()}]"
+        self.figure.axes[1].label = f"{flux_unit_type} [{data.flux.unit.to_string()}]"
+
+        # Make it so y axis label is not covering tick numbers.
+        self.figure.axes[1].label_offset = "-50"
