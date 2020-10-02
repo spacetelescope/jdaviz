@@ -273,6 +273,9 @@ class Application(VuetifyTemplate, HubListener):
             file_obj = pathlib.Path(file_obj)
             if not file_obj.exists():
                 raise FileNotFoundError("Could not locate file: " + file_obj)
+            else:
+                # Convert path to properly formatted string (Parsers do not accept path objs)
+                file_obj = str(file_obj)
         except TypeError:
             # If it's not a str/path type, it might be a class 
             pass
@@ -298,7 +301,7 @@ class Application(VuetifyTemplate, HubListener):
                 self.hub.broadcast(snackbar_message)
                 return
         else:
-            self._application_handler.load_data(str(file_obj))
+            self._application_handler.load_data(file_obj)
 
         # Send out a toast message
         snackbar_message = SnackbarMessage("Data successfully loaded.",
