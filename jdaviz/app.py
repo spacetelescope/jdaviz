@@ -277,7 +277,8 @@ class Application(VuetifyTemplate, HubListener):
                 # Convert path to properly formatted string (Parsers do not accept path objs)
                 file_obj = str(file_obj)
         except TypeError:
-            # If it's not a str/path type, it might be a class 
+            # If it's not a str/path type, it might be a compatible class.
+            # Pass to parsers to see if they can accept it
             pass
 
         # attempt to get a data parser from the config settings
