@@ -15,7 +15,10 @@ JDAViz
 .. image:: https://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat
     :target: https://www.astropy.org
     :alt: Powered by Astropy
+    
 
+.. image:: https://github.com/ibusko/jdaviz/blob/add-logo-to-github/docs/logos/jdaviz_1.svg
+ 
 
 ``jdaviz`` is a package of astronomical data analysis visualization
 tools based on the Jupyter platform.  These GUI-based tools link data
