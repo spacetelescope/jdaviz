@@ -17,7 +17,7 @@ JDAViz
     :alt: Powered by Astropy
     
 
-.. image:: https://github.com/ibusko/jdaviz/blob/add-logo-to-github/docs/logos/jdaviz_1.svg
+.. image:: docs/logos/jdaviz_1.svg
  
 
 ``jdaviz`` is a package of astronomical data analysis visualization
