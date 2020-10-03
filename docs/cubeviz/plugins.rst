@@ -71,19 +71,20 @@ Contours
 ========
 .. image:: img/contours_activated.png
 
-:guilabel:`Contours` can be created in the :guilabel:`Layer` tab in the viewer settings window.
-To activate :guilabel:`Contours`, click on the :guilabel:`Eye with a cross` icon and choose either
-the :guilabel:`Linear` icon for auto-contours or the
-:guilabel:`Custom` icon to set your own levels.
+Contours of an image can be generated and overplotted on that image.  Go
+to the :guilabel:`Layer` tab in the image viewer settings window. To activate :guilabel:`Contours`,
+click on the :guilabel:`Eye with a cross` icon and choose either the :guilabel:`Linear` icon
+for auto-contours or the :guilabel:`Custom` icon to set your own levels. The specified levels
+will appear as labeled, color-coded contours in the image viewer, on top of the image.
 
-
-The :guilabel:`Contours` of a 2D image can also be plotted over an image viewer.
-A user can create a 2D image using a plugin like :ref:`Collapse <collapse>` and then add it
-to an image viewer as a 2nd layer. To visualize the contours of this 2D image over the image viewer,
-first go to the :guilabel:`Layer` tab, select the 2nd layer (which should be the 2D image), and
-then set its :guilabel:`Contour` to be on and its :guilabel:`Bitmap` to be off. The contours of
-the 2D image from the collapsed cube appear superimposed on the leftmost cube viewer in the second
-figure below.
+The :guilabel:`Contours` of a second image can also be plotted over a first image or cube. Add
+the second image as data in the data drop-down tab, and select both images. To visualize the contours
+of the second image, go to the :guilabel:`Layer` tab, select the layer to be contour-mapped, and
+set its :guilabel:`Contour` to be on and its :guilabel:`Bitmap` to be off. The contours of
+the second image will appear superimposed on the first image. In the second figure below, we
+show the contours of an image generated using the Collapse plugin plotted over leftmost cube
+viewer.  If you overplot them on a cube, the contours will remain unchanged as you scrub through
+the cube.
 
 .. image:: img/data_tab_with_2_data.png
 .. image:: img/second_layer_with_contours.png
