@@ -27,6 +27,8 @@ Plugins:Gaussian Smoothing.
 Collapse
 ===============
 
+.. image:: ../img/collapse_plugin.png
+
 The Collapse plugin collapses a spectral cube along
 any one axis (x, y , or wavelength) to create a 2D image.
 For spatial axes, the full extent of the selected dimension
@@ -42,9 +44,11 @@ for collapse (Mean, Median, Min, Max, or Sum) in the
 :guilabel:`Method` pulldown. To collapse a limited spectral subregion,
 you can either create and select a
 :guilabel:`Region` in the spectrum viewer, or enter the lower and
-upper spectral bounds manually. When you :guilabel:`Apply` the
+upper spectral bounds manually. When you :guilabel:`APPLY` the
 Collapse, a 2D image is created. You can load this into any image
-viewer pane to inspect the result.
+viewer pane to inspect the result.  For example, the Collapse Sum
+over an emission line is shown in the middle image viewer of
+the above figure.
 
 .. _model-fitting:
 
@@ -65,23 +69,24 @@ also saved to a dataset with the label specified in the :guilabel:`Model Label` 
 
 Contours
 ========
-
-:guilabel:`Contours` can be accessed in the :guilabel:`Layer` tab in the viewer settings window.
-To activate :guilabel:`Contours`, click on the :guilabel:`Eye with a cross` icon and choose either the :guilabel:`Linear` icon for auto-contours or the :guilabel:`Custom` icon to set your own levels.
-
-.. image:: img/contour_location.png
-
 .. image:: img/contours_activated.png
 
-The :guilabel:`Contours` of a 2D image can also be plotted over an image viewer.
-A user can create a 2D image using a plugin like :ref:`Collapse <collapse>` and then add it to an image viewer as a 2nd layer.
+Contours of an image can be generated and overplotted on that image.  Go
+to the :guilabel:`Layer` tab in the image viewer settings window. To activate :guilabel:`Contours`,
+click on the :guilabel:`Eye with a cross` icon and choose either the :guilabel:`Linear` icon
+for auto-contours or the :guilabel:`Custom` icon to set your own levels. The specified levels
+will appear as labeled, color-coded contours in the image viewer, on top of the image.
+
+The :guilabel:`Contours` of a second image can also be plotted over a first image or cube. Add
+the second image as data in the data drop-down tab, and select both images. To visualize the contours
+of the second image, go to the :guilabel:`Layer` tab, select the layer to be contour-mapped, and
+set its :guilabel:`Contour` to be on and its :guilabel:`Bitmap` to be off. The contours of
+the second image will appear superimposed on the first image. In the second figure below, we
+show the contours of an image generated using the Collapse plugin plotted over leftmost cube
+viewer.  If you overplot them on a cube, the contours will remain unchanged as you scrub through
+the cube.
 
 .. image:: img/data_tab_with_2_data.png
-
-To visualize the contours of this 2D image over the image viewer, first go to the :guilabel:`Layer` tab, select the 2nd layer (which should be the 2D image), and then set its :guilabel:`Contour` to be on and its :guilabel:`Bitmap` to be off.
-
-.. image:: img/layer_tab_with_2_layers.png
-
 .. image:: img/second_layer_with_contours.png
 
 
@@ -117,18 +122,19 @@ Line Analysis
 Moment Maps
 =============
 
+.. image:: ../img/moment1_map.png
+
 The Moment Maps plugin can be used to create a 2D image from
 a data cube. Mathematically, a moment is an integral
 of a 1D curve multiplied by the abscissa to some power. The plugin
 integrates the flux density along the spectral axis to compute
-a moment map. The spectral axis is first shifted so that the
-center of the spectral region is at zero. The order of the moment
-map (0, 1, 2, ...) indicates the power-law index to which the
-spectral axis is raised.  A 'moment 0' map gives the integrated
-line flux over the spectral region. Similarly, 'moment 1'
+a moment map. The order of the moment map (0, 1, 2, ...) indicates
+the power-law index to which the spectral axis is raised.  A 'moment 0' map
+gives the integrated flux over a spectral region. Similarly, 'moment 1'
 is the flux-weighted centroid (e.g. line center) and a 'moment 2'
 is the dispersion (e.g. wavelength or velocity dispersion)
-along the spectral axis.  Moments 3 and 4 are less commonly utilized, but correspond to the skewness and
+along the spectral axis.  Moments 3 and 4 are less commonly utilized,
+but correspond to the skewness and
 kurtosis of a spectral feature.
 
 To make a moment map, first go to the Moment Maps plugin and
@@ -137,12 +143,25 @@ To specify the spectral feature of interest, you can either create
 and select a :guilabel:`Region` in the spectrum viewer, or enter
 the lower and upper spectral bounds manually in the plugin.
 Next, enter the :guilabel:`Moment` index to specifiy the order
-of the moment map.   When you press :guilabel:`Calculate`, a 2D moment
+of the moment map.   When you press :guilabel:`CALCULATE`, a 2D moment
 map is created. You can load this into any image
-viewer pane to inspect the result.
+viewer pane to inspect the result. You can also save the result to
+a FITS format file by pressing :guilabel:`SAVE AS FITS`
+
+For example, the middle image viewer in figure above shows the Moment 1 map
+for a continuum-subtracted cube.  Note that the cube should first be
+continuum-subtracted in order to create continuum-free moment maps of an
+emission line. Moment maps of continuum emission can also be created, but
+moments other than moment 0 may not be physically meaningful.  Also note
+that the units in the moment 1 and moment 2 maps reflect the units of the spectral
+axis (Angstroms in this case). The units of the input cube should first be
+converted to velocity units before running the plugin if those units are
+desired for the output moment maps.
 
 Line or Continuum Maps
 ===================================
+
+.. image:: ../img/moment0_line_map.png
 
 There are at least three ways to make a line map using
 one of three Cubeviz plugins: :ref:`Collapse <collapse>`,
@@ -157,12 +176,12 @@ To make a line or continuum map using the Collapse plugin, first
 import a data cube into Cubeviz.  Next, go to the
 Collapse plugin and select the input data using the
 :guilabel:`Data` pulldown. Then set the :guilabel:`Axis` to the
-wavelength axis (e.g. 0 for JWST data) and the method to 'Mean'.
-Next either create and select a :guilabel:`Region` in the spectrum
-viewer, or enter the lower and upper spectral bounds manually.
-When you :guilabel:`Apply` the Collapse, a 2D image of the spectral
-region is created. You can load this line map in any image viewer
-pane to inspect the result.
+wavelength axis (e.g. 0 for JWST data) and the method to 'Sum'
+(or any other desired method). Next either create and select a
+:guilabel:`Region` in the spectrum viewer, or enter the lower and upper
+spectral bounds manually. When you :guilabel:`Apply` the Collapse, a 2D image
+of the spectral region is created. You can load this line map in any image
+viewer pane to inspect the result.
 
 A line map can also be created using the Moment Maps Plugin using a
 similar workflow. Select the (continuum-subtracted) dataset in the
@@ -171,7 +190,8 @@ subset in the Spectral Region pulldown or enter the lower and upper
 spectral bounds. Enter '0' for :guilabel:`Moment` and press
 :guilabel:`Calculate` to create the moment 0 map. The resultant 2D
 image is the flux integral of the cube over the selected spectral
-region, and may be displayed in any image viewer.
+region, and may be displayed in any image viewer, as shown in the
+middle image viewer in the figure above.
 
 The third method to create a map is via the Model Fitting plugin.
 First create and fit a model (e.g. a Gaussian plus continuum model)
