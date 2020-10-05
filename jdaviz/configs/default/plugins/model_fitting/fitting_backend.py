@@ -91,9 +91,8 @@ def _fit_1D(initial_model, spectrum, run_fitter):
         output_values = initial_model(spectrum.spectral_axis)
 
     # Build return spectrum
-    funit = spectrum.flux.unit
     output_spectrum = Spectrum1D(spectral_axis=spectrum.spectral_axis,
-                                 flux=output_values * funit)
+                                 flux=output_values)
 
     return output_model, output_spectrum
 
