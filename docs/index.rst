@@ -5,6 +5,11 @@ Jdaviz
 .. image:: logos/jdaviz.svg
    :width: 400
    
+.. note::
+
+   ``Jdaviz`` is one tool that is part of STScI's larger `Data Analysis Tools Ecosystem <https://jwst-docs.stsci.edu/jwst-post-pipeline-data-analysis>`_.
+
+
 ``Jdaviz`` is a package of astronomical data analysis visualization
 tools based on the Jupyter platform.  These GUI-based tools link data
 visualization and interactive analysis.  They are designed to work
