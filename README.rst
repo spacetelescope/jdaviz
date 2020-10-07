@@ -1,6 +1,4 @@
-======
-JDAViz
-======
+.. image:: docs/logos/jdaviz_1.svg
 
 .. image:: https://travis-ci.com/spacetelescope/jdaviz.svg?branch=master
     :target: https://travis-ci.com/spacetelescope/jdaviz
