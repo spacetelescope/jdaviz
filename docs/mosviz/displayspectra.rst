@@ -1,6 +1,6 @@
-***********
-Import Data
-***********
+***************
+Display Spectra
+***************
 
 Words go here
 
