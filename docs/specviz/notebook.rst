@@ -9,7 +9,7 @@ Specviz is developed to fully support analyzing spectra within your existing `Ju
     >>> # Instantiate an instance of Specviz
     >>> specviz = SpecViz()
     >>> # Display Specviz
-    >>> specviz.app
+    >>> specviz.app   #doctest: +SKIP
 
 To extract the data currently loaded into the viewer:
 ::
