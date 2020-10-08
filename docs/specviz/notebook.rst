@@ -16,4 +16,4 @@ To extract the data currently loaded into the viewer:
 
     specviz.app.get_data_from_viewer('spectrum-viewer')
 
-To learn how to add data and use Specviz, including the corresponding API calls, please see our other Specviz Documentation
+To learn how to add data and use Specviz, including the corresponding API calls, please see our other Specviz Documentation.
