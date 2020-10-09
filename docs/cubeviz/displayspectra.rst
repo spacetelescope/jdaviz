@@ -2,20 +2,20 @@
 Displaying Spectra
 ******************
 
-Words go here
+Coming soon
 
 
 Pan/Zoom
 ========
 
-More words...
+Coming soon
 
 Defining Spectral Regions
 =========================
 
-More words...
+Coming soon
 
 Plot Settings
 =============
 
-More words...
+Coming soon
