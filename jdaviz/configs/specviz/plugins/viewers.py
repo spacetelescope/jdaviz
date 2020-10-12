@@ -191,7 +191,11 @@ class SpecvizProfileView(BqplotProfileView):
 
     def plot_spectral_line(self, line, scales=None, plot_units=None, **kwargs):
         if type(line) == str:
-            line = self.spectral_lines.loc[line]
+            # Try the full index first (for backend calls), otherwise name only
+            try:
+                line = self.spectral_lines.loc[line]
+            except KeyError:
+                line = self.spectral_lines.loc["linename", line]
         if plot_units is None:
             plot_units = self.data()[0].spectral_axis.unit
         if scales is None:
