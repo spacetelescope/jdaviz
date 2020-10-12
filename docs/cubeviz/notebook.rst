@@ -1,5 +1,5 @@
 ***********************************
-Using Cubeviz in a Jupyter Notebook 
+Using Cubeviz in a Jupyter Notebook
 ***********************************
 
-Words go here
+Coming soon
