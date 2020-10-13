@@ -271,7 +271,9 @@ class Application(VuetifyTemplate, HubListener):
         # attempt to get a data parser from the config settings
         parser = None
         data = self.state.settings.get('data', None)
-        if data and isinstance(data, dict):
+        if parser_reference:
+            parser = data_parser_registry.members.get(parser_reference)
+        elif data and isinstance(data, dict):
             data_parser = data.get('parser', None)
             if data_parser:
                 parser = data_parser_registry.members.get(data_parser)

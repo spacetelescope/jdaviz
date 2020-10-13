@@ -125,9 +125,10 @@ class MOSVizTableViewer(TableViewer):
             if component.label == '1D Spectra':
                 prev_data = self._selected_data.get('spectrum-viewer')
                 if prev_data != selected_data:
-                    remove_data_from_viewer_message = RemoveDataFromViewerMessage(
-                        'spectrum-viewer', prev_data, sender=self)
-                    self.session.hub.broadcast(remove_data_from_viewer_message)
+                    if prev_data:
+                        remove_data_from_viewer_message = RemoveDataFromViewerMessage(
+                            'spectrum-viewer', prev_data, sender=self)
+                        self.session.hub.broadcast(remove_data_from_viewer_message)
 
                     add_data_to_viewer_message = AddDataToViewerMessage(
                         'spectrum-viewer', selected_data, sender=self)
@@ -138,9 +139,10 @@ class MOSVizTableViewer(TableViewer):
             if component.label == '2D Spectra':
                 prev_data = self._selected_data.get('spectrum-2d-viewer')
                 if prev_data != selected_data:
-                    remove_data_from_viewer_message = RemoveDataFromViewerMessage(
-                        'spectrum-2d-viewer', prev_data, sender=self)
-                    self.session.hub.broadcast(remove_data_from_viewer_message)
+                    if prev_data:
+                        remove_data_from_viewer_message = RemoveDataFromViewerMessage(
+                            'spectrum-2d-viewer', prev_data, sender=self)
+                        self.session.hub.broadcast(remove_data_from_viewer_message)
 
                     add_data_to_viewer_message = AddDataToViewerMessage(
                         'spectrum-2d-viewer', selected_data, sender=self)
@@ -151,9 +153,10 @@ class MOSVizTableViewer(TableViewer):
             if component.label == 'Images':
                 prev_data = self._selected_data.get('image-viewer')
                 if prev_data != selected_data:
-                    remove_data_from_viewer_message = RemoveDataFromViewerMessage(
-                        'image-viewer', prev_data, sender=self)
-                    self.session.hub.broadcast(remove_data_from_viewer_message)
+                    if prev_data:
+                        remove_data_from_viewer_message = RemoveDataFromViewerMessage(
+                            'image-viewer', prev_data, sender=self)
+                        self.session.hub.broadcast(remove_data_from_viewer_message)
 
                     add_data_to_viewer_message = AddDataToViewerMessage(
                         'image-viewer', selected_data, sender=self)
