@@ -31,27 +31,31 @@ data in each spectral slice.
 Selecting Data Set
 ==================
 
-More words...
+Coming soon
 
 Changing Wavelength Slice
 =========================
 
+Coming soon
+
 Defining and Selecting Region Subsets
 =====================================
+
+Coming soon
 
 Pan/Zoom
 ========
 
-More words...
+Coming soon
 
 Defining Spectral Regions
 =========================
 
-More words...
+Coming soon
 
 .. _display-settings:
 
 Display Settings
 ================
 
-More words...
+Coming soon

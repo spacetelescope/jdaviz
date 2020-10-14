@@ -1,6 +1,4 @@
-======
-JDAViz
-======
+.. image:: docs/logos/jdaviz_1.svg
 
 .. image:: https://travis-ci.com/spacetelescope/jdaviz.svg?branch=master
     :target: https://travis-ci.com/spacetelescope/jdaviz
@@ -16,32 +14,30 @@ JDAViz
     :target: https://www.astropy.org
     :alt: Powered by Astropy
 
-
-``jdaviz`` is a package of astronomical data analysis visualization
-tools based on the Jupyter platform.  These GUI-based tools link data
+``jdaviz`` is a package of astronomical data analysis visualization tools based on the Jupyter platform. It is one tool that is a part of STScI's larger `Data Analysis Tools Ecosystem <https://jwst-docs.stsci.edu/jwst-post-pipeline-data-analysis>`_. These GUI-based tools link data
 visualization and interactive analysis.  They are designed to work
 within a Jupyter notebook cell, as a standalone desktop application,
 or as embedded windows within a website -- all with nearly-identical
-user interfaces. Note that ``jdaviz`` is under heavy development and should 
-not be considered stable or feature-complete. Users who encounter bugs in 
-the currently implemented features are encouraged to open an issues in this 
+user interfaces. ``jdaviz`` is under active development, and users who 
+encounter bugs in existing features are encouraged to open issues in this 
 repository.
 
-``jdaviz`` applications currently include tools for interactive
-visualization of spectroscopic data.  SpecViz is a tool for
-visualization and quick-look analysis of 1D astronomical spectra.
-MOSViz is a visualization tool for many astronomical spectra,
+``jdaviz`` provides data viewers and analysis plugins that can be flexibly 
+combined as desired to create interactive applications that fit your workflow. 
+Three named preset configurations for common use cases are provided. **Specviz** 
+is a tool for visualization and quick-look analysis of 1D astronomical spectra.
+**MOSviz** is a visualization tool for many astronomical spectra,
 typically the output of a multi-object spectrograph (e.g., JWST
 NIRSpec), and includes viewers for 1D and 2D spectra as well as
 contextual information like on-sky views of the spectrograph slit.
-CubeViz provides of view of spectroscopic data cubes (like those to be
+**Cubeviz** provides of view of spectroscopic data cubes (like those to be
 produced by JWST MIRI), along with 1D spectra extracted from the cube.
 
 
 Installing
 ----------
 For details on installing and using JDAViz, see the
-`JDAViz documentation <https://jdaviz.readthedocs.io/en/latest/>`_.
+`Jdaviz documentation <https://jdaviz.readthedocs.io/en/latest/>`_.
 
 
 

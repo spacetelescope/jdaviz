@@ -29,7 +29,7 @@ Data can be selected and de-selected by clicking on the "hammer and screwdriver"
 Pan/Zoom
 ========
 
-More words...
+Coming soon
 
 Defining Spectral Regions
 =========================
