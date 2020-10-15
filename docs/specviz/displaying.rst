@@ -62,46 +62,35 @@ For information about the Specviz, and other, helpers, and how to instantiate on
     The helper page has not yet been written/defined. Until that documentation is written, you may instantiate a Specviz Helper via:
     ::
 
-        from jdaviz import SpecViz
-        
-        # Instantiate an instance of SpecViz
-        specviz = SpecViz()
-        # Display SpecViz
-        specviz.app
+>>> from jdaviz import SpecViz
+>>> # Instantiate an instance of SpecViz
+>>> SpecViz = SpecViz()
+>>> # Display SpecViz
+>>> SpecViz.app
 
 Limit methods
 ^^^^^^^^^^^^^
 You can use the methods x_limits() and y_limits() to modify the field of view of Specviz. You can provide it a scalar (which assumes the units of the loaded spectra), an Astropy Quantity, or 'auto' to automatically scale
 ::
 
-    specviz.x_limits()
-    specviz.x_limits(650*u.nm,750*u.nm)
-    specviz.y_limits('auto', 110.0)
+>>> SpecViz.x_limits()
+>>> SpecViz.x_limits(650*u.nm,750*u.nm)
+>>> SpecViz.y_limits('auto', 110.0)
 
-Additionally, you can provide the limit methods with a `specutils SpectralRegion <https://specutils.readthedocs.io/en/stable/spectral_regions.html>_`. Specviz shall set the bounds the upper and lower bounds of the SpectralRegion
-::
+Additionally, you can provide the limit methods with a `~specutils.SpectralRegion`. Specviz shall set the bounds the upper and lower bounds of the SpectralRegion
 
-    from astropy import units as u
-    from specutils.spectral import SpectralRegion
-
-    bounds = SpectralRegion(0.45*u.nm, 0.6*u.nm)
-    specviz.x_limits(bounds)
+>>> from astropy import units as u
+>>> from specutils.spectral import SpectralRegion
+>>> bounds = SpectralRegion(0.45*u.nm, 0.6*u.nm)
+>>> SpecViz.x_limits(bounds)
 
 Autoscale methods
 ^^^^^^^^^^^^^^^^^
-You can also quickly return to the default zoom using autoscale_x() and autoscale_y()
-::
-
-    specviz.autoscale_x()
-    specviz.autoscale_y()
+You can also quickly return to the default zoom using :py:func:`SpecViz.autoscale_x()` and :py:func:`SpecViz.autoscale_y()`
 
 Axis Orientation methods
 ^^^^^^^^^^^^^^^^^^^^^^^^
-To quickly flip an axis to change to and from ascending/descending, use flip_x() and flip_y()
-::
-
-    specviz.flip_x()
-    specviz.flip_y()
+To quickly flip an axis to change to and from ascending/descending, use :py:func:`SpecViz.flip_x()` and :py:func:`SpecViz.flip_y()`
 
 Defining Spectral Regions
 =========================
