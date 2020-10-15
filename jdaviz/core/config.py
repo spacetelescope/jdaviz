@@ -59,10 +59,11 @@ def read_configuration(path=None):
 
 
 def get_configuration(path=None, section=None, config=None):
-    """ Returns a copy of the application configuration
+    """ Retrieve a copy of a specified configuration
 
-    Returns a copy of the configuration specification.  If path
-    is not specified, returns the currently loaded configuration.
+    Returns a copy of a configuration specification.  If ``path``
+    is not specified, then returns a copy of the current application
+    configuration if ``config`` is specified.
 
     Parameters
     ----------

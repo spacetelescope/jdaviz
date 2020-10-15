@@ -1164,18 +1164,6 @@ class Application(VuetifyTemplate, HubListener):
                 'widget': "IPY_MODEL_" + tray_item_instance.model_id
             })
 
-    def reset_configuration(self, path='default'):
-        """ Resets the loaded user configuration
-
-        Parameters
-        ----------
-        path : str, optional
-            Path to the configuration file to be loaded. If None, loads the
-            default configuration.
-        """
-        self._reset_state()
-        self.load_configuration(path=path)
-
     def _reset_state(self):
         """ Resets the application state """
         self.state = ApplicationState()
