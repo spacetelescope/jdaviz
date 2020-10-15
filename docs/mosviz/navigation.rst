@@ -2,7 +2,17 @@
 Navigating the UI
 *****************
 
-Overview here...
+The Mosviz User Interface contains an image viewer in the top left section and
+a 2D spectrum viewer over a specviz viewer in the top right section. The bottom
+section houses the :ref:`table viewer<table-viewer>`.
+The image viewer contains all of the same functionality as an image viewer
+in Cubeviz, with the addition that there is a :ref:`slit overlay<slit-overlay>` that uses data from a
+spectrum 2d file that is linked to the image file to determine where to plot the slit.
+The 2D spectrum viewer and the specviz viewer have their x axes’ locked, meaning that
+when you Pan/Zoom in one viewer, the exact same action happens in the other.
+
+
+.. _table-viewer:
 
 Using the Table Viewer
 ======================
@@ -15,8 +25,11 @@ with the selector at the bottom right of the table viewer. To the right of the
 rows-per-page selector are left and right arrows that are used to move between
 pages of the table, if there is more data than fits on a single page. 
 
-Using the Slit Viewer
-=====================
+
+.. _slit-overlay:
+
+Using the Slit Overlay
+======================
 
 Currently, the option to overlay slit geometry is enabled by default if the 
 required information is present. The option to toggle whether slits are displayed
