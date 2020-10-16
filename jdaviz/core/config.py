@@ -1,20 +1,8 @@
-# !/usr/bin/env python
-# -*- coding: utf-8 -*-
-#
-# Filename: config.py
-# Project: core
-# Author: Brian Cherinka
-# Created: Tuesday, 23rd June 2020 1:22:32 pm
-# License: BSD 3-clause "New" or "Revised" License
-# Copyright (c) 2020 Brian Cherinka
-# Last Modified: Tuesday, 23rd June 2020 1:22:32 pm
-# Modified By: Brian Cherinka
 
 #
 #  This file contains helper function related to configuration handling
 #
 
-from __future__ import print_function, division, absolute_import
 import copy
 import os
 import pathlib
@@ -95,7 +83,7 @@ def get_configuration(path=None, section=None, config=None):
 
 
 def list_configurations():
-    ''' Get a list of pre-built configurations '''
+    """Get a list of pre-built configurations."""
 
     path = pathlib.Path(__file__).resolve().parent.parent / "configs"
     return [i.stem for i in path.rglob('*.yaml')]
