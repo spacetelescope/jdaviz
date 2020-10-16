@@ -8,8 +8,10 @@ section houses the :ref:`table viewer<table-viewer>`.
 The image viewer contains all of the same functionality as an image viewer
 in Cubeviz, with the addition that there is a :ref:`slit overlay<slit-overlay>` that uses data from a
 spectrum 2d file that is linked to the image file to determine where to plot the slit.
-The 2D spectrum viewer and the specviz viewer have their x axes’ locked, meaning that
-when you Pan/Zoom in one viewer, the exact same action happens in the other.
+The 2D spectrum viewer and the 1D spectrum viewer have their x axes locked to one another,
+meaning that when you pan or zoom the x axis in one viewer, the same action happens in the other.
+
+.. image:: img/mosviz_ui.png
 
 
 .. _table-viewer:
