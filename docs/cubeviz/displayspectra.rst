@@ -11,5 +11,5 @@ below.
 
 .. seealso::
 
-    `Gaussian Smooth <https://jdaviz.readthedocs.io/en/latest/specviz/displaying.html`_
+    `Displaying Spectra (Specviz) <https://jdaviz.readthedocs.io/en/latest/specviz/displaying.html>`_
         Specviz documentation on gaussian smoothing of 1D spectra.
