@@ -63,16 +63,16 @@ Limit methods
 You can use the methods :py:func:`SpecViz.x_limits()` and :py:func:`SpecViz.y_limits()` to modify the field of view of Specviz. You can provide a scalar (which assumes the units of the loaded spectra), an Astropy Quantity, or 'auto' to automatically scale
 ::
 
->>> SpecViz.x_limits()
->>> SpecViz.x_limits(650*u.nm,750*u.nm)
->>> SpecViz.y_limits('auto', 110.0)
+>>> SpecViz.x_limits() #doctest: +SKIP
+>>> SpecViz.x_limits(650*u.nm,750*u.nm) #doctest: +SKIP
+>>> SpecViz.y_limits('auto', 110.0) #doctest: +SKIP
 
 Additionally, you can provide the limit methods with a `~specutils.SpectralRegion`. Specviz shall set the bounds the upper and lower bounds of the SpectralRegion
 
 >>> from astropy import units as u
->>> from specutils.spectral import SpectralRegion
+>>> from specutils import SpectralRegion
 >>> bounds = SpectralRegion(0.45*u.nm, 0.6*u.nm)
->>> SpecViz.x_limits(bounds)
+>>> SpecViz.x_limits(bounds) #doctest: +SKIP
 
 Autoscale methods
 ^^^^^^^^^^^^^^^^^
