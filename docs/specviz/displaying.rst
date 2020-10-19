@@ -29,7 +29,7 @@ Data can be selected and de-selected by clicking on the "hammer and screwdriver"
 Pan/Zoom
 ========
 
-Included with the Specviz tool are multiple manners to change your view/perspective on the data displayed, depending on your environment:
+There are several ways to pan or zoom in on spectral features of interest.
 
 Interactive Pan/Zoom (Desktop App interface)
 --------------------------------------------
