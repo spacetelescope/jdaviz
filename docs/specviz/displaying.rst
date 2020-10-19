@@ -48,19 +48,9 @@ Horizontal/Vertical Zoom
 ^^^^^^^^^^^^^^^^^^^^^^^^
 The :guilabel:`Horizontal` and :guilabel:`Vertical` Zoom tools allow you to zoom along each axis, while locking the other.  You can also zoom by scrolling.
 
-.. note::
-    A gif here showing how these tools manipulate the view, similar to above may be useful here
-
-
 API Pan/Zoom (Notebook interface)
 ---------------------------------
-The Specviz helper contains a set of convenience methods to programmatically define the view of the spectrum viewer.
-
-For information about the Specviz, and other, helpers, and how to instantiate one, please see `helpers <https://readthedocs.org/404>`_
-
-.. warning::
-    The helper page has not yet been written/defined. Until that documentation is written, you may instantiate a Specviz Helper via:
-    ::
+The Specviz helper contains a set of convenience methods to programmatically define the view of the spectrum viewer. You may instantiate a Specviz Helper via:
 
 >>> from jdaviz import SpecViz
 >>> # Instantiate an instance of SpecViz
@@ -70,7 +60,7 @@ For information about the Specviz, and other, helpers, and how to instantiate on
 
 Limit methods
 ^^^^^^^^^^^^^
-You can use the methods :py:func:`SpecViz.x_limits()` and :py:func:`SpecViz.y_limits()` to modify the field of view of Specviz. You can provide it a scalar (which assumes the units of the loaded spectra), an Astropy Quantity, or 'auto' to automatically scale
+You can use the methods :py:func:`SpecViz.x_limits()` and :py:func:`SpecViz.y_limits()` to modify the field of view of Specviz. You can provide a scalar (which assumes the units of the loaded spectra), an Astropy Quantity, or 'auto' to automatically scale
 ::
 
 >>> SpecViz.x_limits()
