@@ -42,7 +42,7 @@ The 2D Pan/Zoom Icon allows you to zoom using the scroll wheel. The window will 
 .. image:: ../img/SpecViz_2D_Zoom.gif
     :alt: Zooming in Specviz with the Scroll Wheel
 
-To pan, simply click and drag the window
+To pan, simply click and drag the window.
 
 Horizontal/Vertical Zoom
 ^^^^^^^^^^^^^^^^^^^^^^^^
