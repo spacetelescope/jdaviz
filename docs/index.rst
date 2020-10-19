@@ -4,7 +4,7 @@ Jdaviz
 
 .. image:: logos/jdaviz.svg
    :width: 400
-   
+
 .. note::
 
    ``Jdaviz`` is one tool that is part of STScI's larger `Data Analysis Tools Ecosystem <https://jwst-docs.stsci.edu/jwst-post-pipeline-data-analysis>`_.
@@ -35,7 +35,6 @@ Using Jdaviz
 
   installation.rst
   quickstart.rst
-  data_prep.rst
   specviz/index.rst
   cubeviz/index.rst
   mosviz/index.rst
@@ -45,7 +44,7 @@ Reference/API
 
 .. toctree::
    :maxdepth: 2
-    
+
    dev/index.rst
    reference/api.rst
 
