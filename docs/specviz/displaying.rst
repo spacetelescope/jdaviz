@@ -37,7 +37,7 @@ You can find the following Pan/Zoom tools available in the tool drawer of the vi
 
 2D Bidirectional Pan/Zoom
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-The 2D Pan/Zoom Icon allows you to zoom using the scroll wheel. The window will zoom into the area around your cursor:
+The :guilabel: `2D Pan/Zoom` icon allows you to zoom using the scroll wheel. The window will zoom into the area around your cursor:
 
 .. image:: ../img/SpecViz_2D_Zoom.gif
     :alt: Zooming in Specviz with the Scroll Wheel
