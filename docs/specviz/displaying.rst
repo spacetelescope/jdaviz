@@ -46,7 +46,7 @@ To pan, simply click and drag the window.
 
 Horizontal/Vertical Zoom
 ^^^^^^^^^^^^^^^^^^^^^^^^
-The Horizontal and Vertical Zoom tools allow you to zoom along each axis, while locking the other. Zoom by scrolling
+The :guilabel:`Horizontal` and :guilabel:`Vertical` Zoom tools allow you to zoom along each axis, while locking the other.  You can also zoom by scrolling.
 
 .. note::
     A gif here showing how these tools manipulate the view, similar to above may be useful here
