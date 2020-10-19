@@ -12,4 +12,4 @@ below.
 .. seealso::
 
     `Displaying Spectra (Specviz) <https://jdaviz.readthedocs.io/en/latest/specviz/displaying.html>`_
-        Specviz documentation on gaussian smoothing of 1D spectra.
+        Documentation on displaying spectra in a 1D spectrum viewer.
