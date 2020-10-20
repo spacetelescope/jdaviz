@@ -31,6 +31,8 @@ Pan/Zoom
 
 Coming soon
 
+.. _spectral-regions
+
 Defining Spectral Regions
 =========================
 
