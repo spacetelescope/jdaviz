@@ -7,7 +7,7 @@ Coming soon
 Pan/Zoom
 ========
 
-Coming soon
+For an overview on general pan/zoom mechanics, please see :ref:`pan-zoom`
 
 Defining Spectral Regions
 =========================
