@@ -36,7 +36,13 @@ Coming soon
 Changing Wavelength Slice
 =========================
 
-Coming soon
+To change the wavelength slice, click and drag the :guilabel:`slider` at the top of the Cubeviz UI
+to the left or right in order to get a lower or higher slice number, respectively. Another option is to
+click the :guilabel:`circle` that controls the location on the :guilabel:`slider` and use the
+:guilabel:`left` or :guilabel:`right` arrow keys on your keyboard to find a slice number with more precision.
+A third option is to type a slice number into the :guilabel:`text box` to the right of the :guilabel:`slider`
+and press :guilabel:`enter` on your keyboard. A fourth option is to use the :guilabel:`up/down arrows` inside
+the :guilabel:`text box` to raise/lower the slice number.
 
 Defining and Selecting Region Subsets
 =====================================
