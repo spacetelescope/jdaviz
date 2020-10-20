@@ -1,10 +1,9 @@
-***************
-Display Spectra
-***************
+******************
+Displaying Spectra
+******************
 
-Spectra loaded by the user will be automatically displayed in the viewers, with 2d spectra
-going in the 2d spectrum viewer (top right section) and 1d spectra going in the 1d spectrum viewer
-(top right section, below the 2d spectrum viewer).
+The spectra linked to the source selected in the table viewer will be automatically displayed in the viewers,
+with 2d spectra populating the top right viewer, and 1d spectra populating the viewer 2nd from top on the right.
 
 .. seealso::
 
@@ -28,12 +27,12 @@ Plot settings for the 1d spectrum viewer can be found in the Specviz section.
 
 .. seealso::
 
-    `Display Spectra <https://jdaviz.readthedocs.io/en/latest/specviz/displaying.html#plot-settings>`_
+    `Plot Settings <https://jdaviz.readthedocs.io/en/latest/specviz/displaying.html#plot-settings>`_
         Specviz documentation on plot settings for a 1d spectrum viewer.
 
-Plot settings for the 2d spectrum viewer can be found in the Cubeviz section.
+Display settings for the 2d spectrum viewer can be found in the Cubeviz section.
 
 .. seealso::
 
     `Display Settings <https://jdaviz.readthedocs.io/en/latest/cubeviz/displaycubes.html#display-settings>`_
-        Cubeviz documentation on plot settings for an image viewer (2d spectrum viewer in this case).
+        Cubeviz documentation on display settings for an image viewer (2d spectrum viewer in this case).
