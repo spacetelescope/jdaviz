@@ -1,3 +1,5 @@
+.. _cubeviz-display-cubes:
+
 ****************
 Displaying Cubes
 ****************
@@ -27,11 +29,18 @@ also be collapsed into a spectrum using the same statistic and displayed in
 the spectrum viewer along with the spectrum resulting from collapsing all the
 data in each spectral slice.
 
+.. _cubeviz-selecting-data:
 
 Selecting Data Set
 ==================
 
-Coming soon
+The data to be displayed in each viewer can be selected and de-selected by 
+clicking on the :guilabel:`hammer and screwdriver` icon at the top left of each viewer. 
+Then, click the :guilabel:`gear` icon to access the :guilabel:`Data` tab. Here, 
+you can click the checkbox next to each listed dataset to make that dataset 
+visible (checked) or invisible (unchecked).
+
+ .. image:: img/data_tab_with_2_data.png
 
 Changing Wavelength Slice
 =========================
