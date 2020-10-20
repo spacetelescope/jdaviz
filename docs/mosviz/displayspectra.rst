@@ -12,7 +12,7 @@ For an overview on general pan/zoom mechanics, please see :ref:`pan-zoom`
 Defining Spectral Regions
 =========================
 
-Coming soon
+For an overview on spectral regions, please see :ref:`spectral-regions`
 
 Plot Settings
 =============
