@@ -1,5 +1,7 @@
 import logging
 import os
+import pathlib
+import re
 import uuid
 from inspect import isclass
 
@@ -7,7 +9,6 @@ import ipywidgets as w
 import numpy as np
 from astropy import units as u
 import pkg_resources
-import yaml
 from astropy.nddata import CCDData
 from spectral_cube import SpectralCube
 from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
@@ -29,6 +30,7 @@ from glue_jupyter.app import JupyterApplication
 from glue_jupyter.state_traitlets_helpers import GlueState
 from ipyvuetify import VuetifyTemplate
 
+from .core.config import read_configuration, get_configuration
 from .core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
                           SnackbarMessage, RemoveDataMessage, ConfigurationLoadedMessage, AddDataToViewerMessage, RemoveDataFromViewerMessage)
 from .core.registries import (tool_registry, tray_registry, viewer_registry,
@@ -266,9 +268,15 @@ class Application(VuetifyTemplate, HubListener):
         file_obj : str or file-like
             File object for the data to be loaded.
         """
-        old_data_len = len(self.data_collection)
-        parser = data_parser_registry.members.get(
-            self.state.settings['data'].get('parser') or parser_reference)
+        # attempt to get a data parser from the config settings
+        parser = None
+        data = self.state.settings.get('data', None)
+        if parser_reference:
+            parser = data_parser_registry.members.get(parser_reference)
+        elif data and isinstance(data, dict):
+            data_parser = data.get('parser', None)
+            if data_parser:
+                parser = data_parser_registry.members.get(data_parser)
 
         if parser is not None:
             # If the parser returns something other than known, assume it's
@@ -555,8 +563,39 @@ class Application(VuetifyTemplate, HubListener):
             f"Data '{data_label}' successfully added.", sender=self)
         self.hub.broadcast(snackbar_message)
 
-    def add_data_to_viewer(self, viewer_reference, data_label,
-                           clear_other_data=False):
+    @staticmethod
+    def _build_data_label(path, ext=None):
+        """ Build a data label from a filename and data extension
+
+        Builds a data_label out of a filename and data extension.
+        If the input string path already ends with a data
+        extension, the label is returned directly.  Otherwise a valid
+        extension must be specified to append to the file stem.
+
+        Parameters
+        ----------
+            path : str
+                The data filename to use as a
+            ext : str
+                The data extension to access from the file.
+        Returns
+        -------
+        A string data label used by Glue
+
+        """
+
+        # if path is not a file or already ends in [ ] extension, assume it is a data-label
+        if not os.path.isfile(path) or re.search(r'(.+)(\[(.*?)\])$', path):
+            return path
+        else:
+            assert ext, 'A data extension must be specified'
+            p = pathlib.Path(path)
+            stem = p.stem.split(os.extsep)[0]
+            label = f'{stem}[{ext}]'
+            return label
+
+    def add_data_to_viewer(self, viewer_reference, data_path,
+                           clear_other_data=False, ext=None):
         """
         Plots a data set from the data collection in the specific viewer.
 
@@ -565,13 +604,17 @@ class Application(VuetifyTemplate, HubListener):
         viewer_reference : str
             The reference to the viewer defined with the ``reference`` key
             in the yaml configuration file.
-        data_label : str
-            The Glue data label found in the ``DataCollection``.
+        data_path : str
+            Either the data filename or the Glue data label found in the ``DataCollection``.
         clear_other_data : bool
             Removes all other currently plotted data and only shows the newly
             defined data set.
+        ext: str
+            The data extension to access from a file.  If data_path is a filename, ext
+            is required.
         """
         viewer_item = self._viewer_item_by_reference(viewer_reference)
+        data_label = self._build_data_label(data_path, ext=ext)
         data_id = self._data_id_from_label(data_label)
 
         data_ids = viewer_item['selected_data_items'] \
@@ -599,7 +642,7 @@ class Application(VuetifyTemplate, HubListener):
 
         viewer.set_plot_axes()
 
-    def remove_data_from_viewer(self, viewer_reference, data_label):
+    def remove_data_from_viewer(self, viewer_reference, data_path, ext=None):
         """
         Removes a data set from the specified viewer.
 
@@ -608,10 +651,14 @@ class Application(VuetifyTemplate, HubListener):
         viewer_reference : str
             The reference to the viewer defined with the ``reference`` key
             in the yaml configuration file.
-        data_label : str
-            The Glue data label found in the ``DataCollection``.
+        data_path : str
+            Either the data filename or the Glue data label found in the ``DataCollection``.
+        ext: str
+            The data extension to access from a file.  If data_path is a filename, ext
+            is required.
         """
         viewer_item = self._viewer_item_by_reference(viewer_reference)
+        data_label = self._build_data_label(data_path, ext=ext)
         data_id = self._data_id_from_label(data_label)
 
         selected_items = viewer_item['selected_data_items']
@@ -1025,10 +1072,13 @@ class Application(VuetifyTemplate, HubListener):
 
         return viewer
 
-    def load_configuration(self, path=None):
+    def load_configuration(self, path=None, config=None):
         """
-        Parses the provided configuration yaml file and populates the
-        appropriate state values with the results.
+        Parses the provided input into a configuration
+        dictionary and populates the appropriate state values
+        with the results.  Provided input can either be a
+        configuration YAML file or a pre-made configuration
+        dictionary.
 
         Parameters
         ----------
@@ -1037,23 +1087,26 @@ class Application(VuetifyTemplate, HubListener):
             is ``None``, it loads the default configuration. Optionally, this
             can be provided as name reference. **NOTE** This optional way to
             define the configuration will be removed in future versions.
+        config : dict, optional
+            A dictionary of configuration settings to be loaded.  The dictionary
+            contents should be the same as a YAML config file specification.
         """
-        # Parse the default configuration file
-        default_path = os.path.join(os.path.dirname(__file__), "configs")
+        # reset the application state
+        self._reset_state()
 
-        if path is None or path == 'default':
-            path = os.path.join(default_path, "default", "default.yaml")
-        elif path == 'cubeviz':
-            path = os.path.join(default_path, "cubeviz", "cubeviz.yaml")
-        elif path == 'specviz':
-            path = os.path.join(default_path, "specviz", "specviz.yaml")
-        elif path == 'mosviz':
-            path = os.path.join(default_path, "mosviz", "mosviz.yaml")
-        elif not os.path.isfile(path):
-            raise ValueError("Configuration must be path to a .yaml file.")
+        # load the configuration from the yaml file or configuration object
+        assert not (path and config), 'Cannot specify both a path and a config object!'
+        if config:
+            assert isinstance(config, dict), 'configuration object must be a dictionary'
+        else:
+            # check if the input path is actually a dict object
+            if isinstance(path, dict):
+                config = path
+            else:
+                config = read_configuration(path=path)
 
-        with open(path, 'r') as f:
-            config = yaml.safe_load(f)
+        # store the loaded config object
+        self._loaded_configuration = config
 
         self.state.settings.update(config.get('settings'))
 
@@ -1111,6 +1164,33 @@ class Application(VuetifyTemplate, HubListener):
                 'widget': "IPY_MODEL_" + tray_item_instance.model_id
             })
 
-        config_loaded_message = ConfigurationLoadedMessage(
-            config['settings'].get('configuration', 'default'), sender=self)
-        self.hub.broadcast(config_loaded_message)
+    def _reset_state(self):
+        """ Resets the application state """
+        self.state = ApplicationState()
+        self.state.add_callback('stack_items', self.vue_relayout)
+
+    def get_configuration(self, path=None, section=None):
+        """ Returns a copy of the application configuration
+
+        Returns a copy of the configuration specification.  If path
+        is not specified, returns the currently loaded configuration.
+
+        Parameters
+        ----------
+        path : str, optional
+            path to the configuration file to be retrieved.
+        section : str, optional
+            A section of the configuration to retrieve
+
+        Returns
+        -------
+        A configuration specification dictionary
+
+        """
+
+        config = None
+        if not path:
+            config = self._loaded_configuration
+
+        cfg = get_configuration(path=path, section=section, config=config)
+        return cfg
