@@ -42,7 +42,7 @@ click the :guilabel:`circle` that controls the location on the :guilabel:`slider
 :guilabel:`left` or :guilabel:`right` arrow keys on your keyboard to find a slice number with more precision.
 A third option is to type a slice number into the :guilabel:`text box` to the right of the :guilabel:`slider`
 and press :guilabel:`enter` on your keyboard. A fourth option is to use the :guilabel:`up/down arrows` inside
-the :guilabel:`text box` to raise or lower the slice number, respectively.
+the :guilabel:`text box` to raise/lower the slice number.
 
 Defining and Selecting Region Subsets
 =====================================
