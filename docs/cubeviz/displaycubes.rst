@@ -45,7 +45,7 @@ visible (checked) or invisible (unchecked).
 Changing Wavelength Slice
 =========================
 
-To change the wavelength slice, click and drag the :guilabel:`slider` at the top of the Cubeviz UI
+To change the wavelength slice, click and drag the :guilabel:`slider` at the top of the Cubeviz User Interface (UI)
 to the left or right in order to get a lower or higher slice number, respectively. Another option is to
 click the :guilabel:`circle` that controls the location on the :guilabel:`slider` and use the
 :guilabel:`left` or :guilabel:`right` arrow keys on your keyboard to find a slice number with more precision.
@@ -53,10 +53,37 @@ A third option is to type a slice number into the :guilabel:`text box` to the ri
 and press :guilabel:`enter` on your keyboard. A fourth option is to use the :guilabel:`up/down arrows` inside
 the :guilabel:`text box` to raise/lower the slice number.
 
-Defining and Selecting Region Subsets
-=====================================
+Defining Spatial Regions
+========================
 
-Coming soon
+Regions can be created by first clicking the :guilabel:`hammer and screwdriver` icon and
+selecting either the :guilabel:`rectangular region of interest` icon or the
+:guilabel:`circular region of interest` icon, then clicking and dragging (using the mouse) until the
+desired region is covered by a colored shape, after which you release the mouse button.
+Once you have completed the action of clicking and dragging, there is an opportunity to reposition
+the region of interest by clicking on it and moving the region to a different location in the image viewer.
+If you are satisfied with the positioning of your region of interest, simply click another part of the
+viewer to lock it in place. Once a region is selected, the cube will be collapsed in wavelength space over the region,
+and the resulting spectrum will be displayed in the 1d spectrum viewer at the bottom of the UI.
+
+.. image:: img/subset_creation.png
+
+There are other options available for region of interest. At the top of the User Interface,
+there is a section that says either "+ No selection (create new)" or "Subset n" where n is an integer
+that tells you which Subset is currently selected. To the right of this area, are red circles that allow
+you to change the method of region selection. The options are `replace`, `add`, `and`, `xor`, and `remove`.
+You can use these options to further adjust the region of interest and adapt it to your use case.
+
+.. seealso::
+
+    `Defining subsets using Glue <http://docs.glueviz.org/en/stable/getting_started/#defining-subsets>`_
+        Glueviz documentation on defining and refining subsets. Slightly different UI but same approach.
+
+There are options available in the :guilabel:`Layer` tab to make subsets visible or invisible,
+to change their color, and to change their opacity.
+
+.. image:: img/subset_layer_tab.png
+
 
 Pan/Zoom
 ========
