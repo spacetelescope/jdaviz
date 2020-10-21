@@ -72,6 +72,11 @@ There are other options available for region of interest. At the top of the User
 there is a section that says either "+ No selection (create new)" or "Subset n" where n is an integer
 that tells you which Subset is currently selected. To the right of this area, are red circles that allow
 you to change the method of region selection. The options are `replace`, `add`, `and`, `xor`, and `remove`.
+`replace` will remove the previously created selection and place the newly created subset.
+`add` allows you to create another subset that extends the existing subset.
+`and` only leaves behind the overlapping region between the existing subset and any additional subsets.
+`xor` only leaves behind the non-overlapping region between the existing subset and any additional subsets.
+`remove` will de-select any parts of the existing subset that overlaps with any additional subsets.
 You can use these options to further adjust the region of interest and adapt it to your use case.
 
 .. seealso::
