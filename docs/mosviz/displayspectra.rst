@@ -7,7 +7,7 @@ Coming soon
 Pan/Zoom
 ========
 
-For an overview on general pan/zoom mechanics, please see :ref:`pan-zoom`
+For an overview on general pan/zoom functionality, please see :ref:`pan-zoom`
 
 Synchronous Spectral Pan/Zoom
 -----------------------------
