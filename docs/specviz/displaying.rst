@@ -82,6 +82,8 @@ Axis Orientation methods
 ^^^^^^^^^^^^^^^^^^^^^^^^
 To quickly flip an axis to change to and from ascending/descending, use :py:func:`SpecViz.flip_x()` and :py:func:`SpecViz.flip_y()`
 
+.. _spectral-regions:
+
 Defining Spectral Regions
 =========================
 
