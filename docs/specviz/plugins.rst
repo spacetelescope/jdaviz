@@ -110,12 +110,6 @@ Similarly, all of the line lists may be shown or hidden via
 :guilabel:`Plot All` and :guilabel:`Erase All`, located at the
 bottom of the plugin.
 
-If the included line lists are not sufficient for your needs, it is also
-possible to add your own line lists programatically with the Notebook
-interface::
-
-    stuff
-
 
 Line Analysis
 =============
