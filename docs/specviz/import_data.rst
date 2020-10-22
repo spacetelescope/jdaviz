@@ -35,8 +35,10 @@ Here, users can select the loaded data set to be visualized in the viewer.
 
 .. image:: img/data_selected_1.png
 
-Importing data via the API
---------------------------
+.. _api-import:
+
+Loading data via the API
+------------------------
 Alternatively, if users are working in a coding environment like a Jupyter notebook, they have access to the :class:`~jdaviz.configs.specviz.helper.Specviz` helper class API. Using this API, users can load data into the application through code.
 Below is an example of importing the :class:`~jdaviz.configs.specviz.helper.Specviz` helper class, creating a :class:`~specutils.Spectrum1D` object from a data file via the :func:`~specutils.Spectrum1D.read` method::
 
