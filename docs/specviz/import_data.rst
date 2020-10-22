@@ -7,7 +7,7 @@ By design, Specviz only supports data that can be parsed as :class:`~specutils.S
 .. seealso::
 
     `Reading from a File <https://specutils.readthedocs.io/en/stable/spectrum1d.html#reading-from-a-file>`_
-        SpecUtils documentation on loading data as :class:`~specutils.Spectrum1D` objects.
+        Specutils documentation on loading data as :class:`~specutils.Spectrum1D` objects.
 
 There are two primary ways in which a user can load their data into the Specviz application: through the UI, or via the Python API (for most user cases this means inside a notebook).  These are separately detailed below.
 
@@ -57,5 +57,5 @@ Similarly, users can create their :class:`~specutils.Spectrum1D` objects by prov
     >>> specviz = SpecViz() #doctest: +SKIP
     >>> specviz.load_spectrum(spec1d)
 
-For more information about using the SpecUtils package, please see the
-`SpecUtils documentation <https://specutils.readthedocs.io>`_.
+For more information about using the Specutils package, please see the
+`Specutils documentation <https://specutils.readthedocs.io>`_.
