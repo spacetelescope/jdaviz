@@ -51,7 +51,8 @@ Future functionality will include the ability to:
 
 * bin data into constant signal-to-noise regions
 
-**Using Cubeviz**
+Using Cubeviz
+-------------
 
 .. toctree::
   :maxdepth: 2

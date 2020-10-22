@@ -22,7 +22,8 @@ Specviz will soon include the ability to:
 
 * And more…
 
-**Using Specviz**
+Using Specviz
+-------------
 
 .. toctree::
   :maxdepth: 2
