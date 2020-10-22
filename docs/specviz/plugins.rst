@@ -2,6 +2,14 @@
 Data Analysis Plugins
 *********************
 
+To enable quick analysis of astronomical spectra, Specviz ships with a number of
+plugins that let you do various standard spectral analysis tasks.  Note that
+these plugins all depend on `specutils` to do the actual analysis work - when
+doing these operations in the Notebook you are often better off using
+the `specutils` or `astropy` APIs directly instead of using the plugins. But
+for quick-look or interaction heavy workflows, the plugins provide a UI-based
+alternative.
+
 Data analysis plugins are found in the plugin tray, accessed via the
 :guilabel:`plugin` icon in the upper right corner of the Specviz application window.
 Each plugin may be used to perform data analysis tasks on
@@ -102,21 +110,29 @@ Similarly, all of the line lists may be shown or hidden via
 :guilabel:`Plot All` and :guilabel:`Erase All`, located at the
 bottom of the plugin.
 
+If the included line lists are not sufficient for your needs, it is also
+possible to add your own line lists programatically with the Notebook
+interface::
+
+    stuff
+
 
 Line Analysis
 =============
 
-The Line Analysis plugin returns statistics for a single emission
-line.
-The emission line is selected via the :guilabel:`region` tool in
-the spectrum viewer to select a spectral subset.
+The Line Analysis plugin returns statistics for a single spectral line.
+The line is selected via the :guilabel:`region` tool in
+the spectrum viewer to select a spectral subset. Note that you can have
+multiple subsets in Specviz, but the plugin will only show statistics for the
+selected subset.
 
 The statistics returned include the line centroid, gaussian sigma width, gaussian FWHM,
 total flux, and equivalent width.
 
-Currently, it is assumed that the continuum has already been
-normalized to unity.
-The line statistics may be incorrect for a spectrum with a non-unity
-continuum.
-Future versions will include a method to specify and normalize
-the continuum.
+No continuum operations are performed as part of this plugin.  This means that
+the statistics may or may not be correct depending on how you have prepared
+your spectrum - most statistics assume a continuum-subtracted spectrum, aside
+from equivalent width which assumes continuum-normalized. If your continuum is
+not in this form initially, you may wish to either use the `specutils` API in
+the Notebook Interface to perform continuum subtraction/normalization, or
+make use of the model fitting plugin to do the appropriate corrections.
