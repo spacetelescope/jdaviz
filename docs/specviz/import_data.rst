@@ -38,7 +38,14 @@ Here, users can select the loaded data set to be visualized in the viewer.
 Importing data via the API
 --------------------------
 Alternatively, if users are working in a coding environment like a Jupyter notebook, they have access to the Specviz helper class API. Using this API, users can load data into the application through code.
-Below is an example of importing the Specviz helper class, creating a :class:`~specutils.Spectrum1D` using randomly generated data, and loading that :class:`~specutils.Spectrum1D` object into the Specviz application::
+Below is an example of importing the Specviz helper class, creating a :class:`~specutils.Spectrum1D` object from a data file via the :func:`~specutils.Spectrum1D.read` method::
+
+    >>> from specutils import Spectrum1D
+    >>> spec1d = Spectrum1D.read("/path/to/data/file") #doctest: +SKIP
+    >>> specviz = SpecViz() #doctest: +SKIP
+    >>> specviz.load_spectrum(spec1d)
+
+This method works well for data files that `specutils` understands.  However, if you are using your own data file or in-memory data, you can instead create a :class:`~specutils.Spectrum1D` object directly. In this example that is done using randomly generated data, and then that :class:`~specutils.Spectrum1D` object is loaded into the Specviz application::
 
     >>> from jdaviz.configs.specviz.helper import SpecViz
     >>> import numpy as np
@@ -48,13 +55,6 @@ Below is an example of importing the Specviz helper class, creating a :class:`~s
     >>> wavelength = np.arange(5100, 5300)*u.AA
     >>> spec1d = Spectrum1D(spectral_axis=wavelength, flux=flux)
     >>> specviz = SpecViz()
-    >>> specviz.load_spectrum(spec1d)
-
-Similarly, users can create their :class:`~specutils.Spectrum1D` objects by providing file paths to the :func:`~specutils.Spectrum1D.read` method::
-
-    >>> from specutils import Spectrum1D
-    >>> spec1d = Spectrum1D.read("/path/to/data/file") #doctest: +SKIP
-    >>> specviz = SpecViz() #doctest: +SKIP
     >>> specviz.load_spectrum(spec1d)
 
 For more information about using the Specutils package, please see the
