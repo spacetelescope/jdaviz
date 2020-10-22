@@ -1,13 +1,15 @@
-***********
-Import Data
-***********
+*************************
+Loading Data into Specviz
+*************************
 
-There are two primary ways in which a user can load their data into the Specviz application. It should be noted that currently, Specviz only supports data that can be parsed as :class:`~specutils.Spectrum1D` objects.
+By design, Specviz only supports data that can be parsed as :class:`~specutils.Spectrum1D` objects, as that allows the Python-level interface and parsing tools to be defined in `specutils` instead of being duplicated in `jdaviz`.  :class:`~specutils.Spectrum1D` objects are very flexible in their capabilities, however, and hence should address most astronomical spectrum use cases.
 
 .. seealso::
 
     `Reading from a File <https://specutils.readthedocs.io/en/stable/spectrum1d.html#reading-from-a-file>`_
         SpecUtils documentation on loading data as :class:`~specutils.Spectrum1D` objects.
+
+There are two primary ways in which a user can load their data into the Specviz application: through the UI, or via the Python API (for most user cases this means inside a notebook).  These are separately detailed below.
 
 Importing data through the GUI
 ------------------------------
@@ -53,5 +55,5 @@ Similarly, users can create their :class:`~specutils.Spectrum1D` objects by prov
     >>> from specutils import Spectrum1D
     >>> #spec1d = Spectrum1D.read("/path/to/data/file")
 
-For more information about using the SpecUtils package, please see the 
+For more information about using the SpecUtils package, please see the
 `SpecUtils documentation <https://specutils.readthedocs.io>`_.
