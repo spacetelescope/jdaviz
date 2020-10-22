@@ -53,7 +53,9 @@ Below is an example of importing the Specviz helper class, creating a :class:`~s
 Similarly, users can create their :class:`~specutils.Spectrum1D` objects by providing file paths to the :func:`~specutils.Spectrum1D.read` method::
 
     >>> from specutils import Spectrum1D
-    >>> #spec1d = Spectrum1D.read("/path/to/data/file")
+    >>> spec1d = Spectrum1D.read("/path/to/data/file") #doctest: +SKIP
+    >>> specviz = SpecViz() #doctest: +SKIP
+    >>> specviz.load_spectrum(spec1d)
 
 For more information about using the SpecUtils package, please see the
 `SpecUtils documentation <https://specutils.readthedocs.io>`_.
