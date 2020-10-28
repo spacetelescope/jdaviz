@@ -113,4 +113,3 @@ def identify_data(filename, current=None):
         status = 'Success: Valid Format'
 
     return valid_format, config, status
-
