@@ -11,7 +11,8 @@ from jdaviz.core.config import list_configurations
 
 # create a default file format to configuration mapping
 default_mapping = {'JWST x1d': 'specviz', 'JWST s2d': 'imviz',
-                   'JWST s3d': 'cubeviz', 'MaNGA cube': 'cubeviz'}
+                   'JWST s3d': 'cubeviz', 'MaNGA cube': 'cubeviz',
+                   'MaNGA rss': 'imviz'}
 
 formats_table = astropy.io.registry.get_formats(data_class=Spectrum1D,
                                                 readwrite='Read')
