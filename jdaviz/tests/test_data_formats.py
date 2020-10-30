@@ -125,4 +125,3 @@ def test_identify_current_mismatch(create_fake_fits):
     valid_format, config, status = identify_data(filename, current='specviz')
     assert (valid_format, config) == ("MaNGA cube", 'cubeviz')
     assert 'Error: Mismatch between input file format and loaded configuration.' in status
-
