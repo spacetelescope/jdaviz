@@ -28,5 +28,25 @@
         <script>
             voila_process({{ loop.index }}, {{ cell_count }});
         </script>
+
+        {% if cell.cell_type == 'code' %}
+            {% for output in cell.outputs %}
+                {% if output.output_type == 'error' %}
+                    <script>
+                        if (!window['voilaDebugMessages']) {
+                            window.voilaDebugMessages = [];
+                        }
+                        window.voilaDebugMessages.push({
+                            cell: {{ cell.execution_count }},
+                            traceback: [
+                                {% for line in output.traceback  %}
+                                    `{{ line | ansi2html }}`,
+                                {% endfor %}
+                            ]
+                        })
+                    </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
     {% endfor %}
 {% endblock cell_generator %}
