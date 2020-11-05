@@ -45,7 +45,7 @@ Below is an example of importing the :class:`~jdaviz.configs.specviz.helper.Spec
     >>> from specutils import Spectrum1D
     >>> spec1d = Spectrum1D.read("/path/to/data/file") #doctest: +SKIP
     >>> specviz = SpecViz() #doctest: +SKIP
-    >>> specviz.load_spectrum(spec1d)
+    >>> specviz.load_spectrum(spec1d)  #doctest: +SKIP
 
 This method works well for data files that `specutils` understands.  However, if you are using your own data file or in-memory data, you can instead create a :class:`~specutils.Spectrum1D` object directly. In this example that is done using randomly generated data, and then that :class:`~specutils.Spectrum1D` object is loaded into the Specviz application::
 
