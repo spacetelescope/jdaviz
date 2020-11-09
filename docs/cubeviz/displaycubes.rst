@@ -98,11 +98,23 @@ Coming soon
 Defining Spectral Regions
 =========================
 
-Coming soon
+Spectral regions can be defined in the spectrum viewer in the same way they
+are defined in Specviz.
+
+.. seealso::
+
+    `Defining Spectral Regions (Specviz) <https://jdaviz.readthedocs.io/en/latest/specviz/displaying.html#spectral-regions>`_
+        Documentation on defining spectral regions in a 1D spectrum viewer.
 
 .. _display-settings:
 
 Display Settings
 ================
 
-Coming soon
+The display settings for the spectrum viewer are the same as the display
+settings available in Specviz.
+
+.. seealso::
+
+    :ref:`specviz-plot-setting`
+        Documentation on defining spectral regions in a 1D spectrum viewer.
