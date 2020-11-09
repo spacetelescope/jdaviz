@@ -93,7 +93,8 @@ to change their color, and to change their opacity.
 Pan/Zoom
 ========
 
-Coming soon
+Panning and zooming in any viewer works the same as described in the
+section on :ref:`Panning and Zooming in Specviz <pan-zoom>`.
 
 Defining Spectral Regions
 =========================
@@ -111,10 +112,4 @@ are defined in Specviz.
 Display Settings
 ================
 
-The display settings for the spectrum viewer are the same as the display
-settings available in Specviz.
-
-.. seealso::
-
-    :ref:`specviz-plot-setting`
-        Documentation on defining spectral regions in a 1D spectrum viewer.
+Coming soon
