@@ -89,16 +89,25 @@ to change their color, and to change their opacity.
 
 .. image:: img/subset_layer_tab.png
 
+Defining Spectral Regions
+=========================
+
+Spectral regions can be defined in the spectrum viewer in the same way they
+are defined in Specviz.
+
+.. seealso::
+
+    `Defining Spectral Regions (Specviz) <https://jdaviz.readthedocs.io/en/latest/specviz/displaying.html#spectral-regions>`_
+        Documentation on defining spectral regions in a 1D spectrum viewer.
 
 Pan/Zoom
 ========
 
-Coming soon
-
-Defining Spectral Regions
-=========================
-
-Coming soon
+Panning and zooming in the Cubeviz viewers works the same as described in the
+section on :ref:`Panning and Zooming in Specviz <pan-zoom>`, with the exception
+that image viewers have only the bidirectional Pan/Zoom tool enabled. The 
+1D spectrum viewer allows panning and zooming along a single axis as in 
+Specviz.
 
 .. _display-settings:
 
