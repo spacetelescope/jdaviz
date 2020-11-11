@@ -10,6 +10,13 @@
             disabled="True"
             persistent-hint
           ></v-text-field>
+          <v-select
+                :items="dc_items"
+                @change="data_selected"
+                label="Data"
+                hint="Select the data set to be fitted."
+                persistent-hint
+           ></v-select>
         </v-col>
       </v-row>
       <v-row>

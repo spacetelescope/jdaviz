@@ -3,6 +3,7 @@ from astropy.nddata import VarianceUncertainty, StdDevUncertainty, InverseVarian
 import numpy as np
 import datetime
 import time
+from regions import RectanglePixelRegion
 
 from specutils import Spectrum1D
 from traitlets import List, Unicode, Any
@@ -13,6 +14,7 @@ from jdaviz.core.template_mixin import TemplateMixin
 from jdaviz.utils import load_template
 
 
+
 __all__ = ['UnitConversion']
 
 unit_exponents = {StdDevUncertainty: 1,
@@ -21,13 +23,17 @@ unit_exponents = {StdDevUncertainty: 1,
 
 @tray_registry('g-unit-conversion', label="Unit Conversion")
 class UnitConversion(TemplateMixin):
+
     template = load_template("unit_conversion.vue", __file__).tag(sync=True)
+
     dc_items = List([]).tag(sync=True)
     selected_data = Unicode().tag(sync=True)
+
     current_flux_unit = Unicode().tag(sync=True)
     current_spectral_axis_unit = Unicode().tag(sync=True)
     new_flux_unit = Any().tag(sync=True)
     new_spectral_axis_unit = Any().tag(sync=True)
+
     spectral_axis_unit_equivalencies = List([]).tag(sync=True)
     flux_unit_equivalencies = List([]).tag(sync=True)
 
@@ -73,12 +79,23 @@ class UnitConversion(TemplateMixin):
         if msg is not None and msg.viewer_id != self._viewer_id:
             return
 
+        print(self.app.data_collection)
+
         viewer = self.app.get_viewer('spectrum-viewer')
 
-        self._viewer_data = self.app.get_data_from_viewer('spectrum-viewer')
+        # self._viewer_data = self.app.get_data_from_viewer('spectrum-viewer')
 
-        self.dc_items = [layer_state.layer.label
-                         for layer_state in viewer.state.layers]
+        self.dc_items = [data.label
+                         for data in self.app.data_collection
+                         if data is not None]
+
+        print(self.dc_items)
+
+        # self.update_ui()
+
+    def vue_data_selected(self, event):
+        self.spectrum = self.app.data_collection[event].get_object(cls=Spectrum1D)
+        self.selected_data = event
 
         self.update_ui()
 
@@ -92,9 +109,20 @@ class UnitConversion(TemplateMixin):
             self.current_spectral_axis_unit = ""
             return
 
-        self.selected_data = self.app.get_viewer("spectrum-viewer").state.reference_data.label
+        """Populate the spectral subset selection dropdown"""
+        temp_subsets = self.app.get_subsets_from_viewer("spectrum-viewer")
+        temp_list = ["None"]
+        temp_dict = {}
+        # Attempt to filter out spatial subsets
+        for key, region in temp_subsets.items():
+            if type(region) == RectanglePixelRegion:
+                temp_dict[key] = region
+                temp_list.append(key)
+        print(f"temp dict: {temp_dict} temp_list: {temp_list}")
 
-        self.spectrum = self._viewer_data[self.selected_data]
+        # self.selected_data = self.app.get_viewer("spectrum-viewer").state.reference_data.label
+
+        # self.spectrum = self._viewer_data[self.selected_data]
 
         # Set UI label to show current flux and spectral axis units.
         self.current_flux_unit = self.spectrum.flux.unit.to_string()
@@ -112,13 +140,166 @@ class UnitConversion(TemplateMixin):
 
         set_spectral_axis_unit = self.spectrum.spectral_axis
         set_flux_unit = self.spectrum.flux
+        #
+        # # Try to set new units if set and are valid.
+        # if self.new_spectral_axis_unit is not None \
+        #         and self.new_spectral_axis_unit != "" \
+        #         and self.new_spectral_axis_unit != self.current_spectral_axis_unit:
+        #     try:
+        #         set_spectral_axis_unit = self.spectrum.spectral_axis.to(u.Unit(self.new_spectral_axis_unit))
+        #     except ValueError:
+        #         snackbar_message = SnackbarMessage(
+        #             f"Unable to convert spectral axis units for selected data. Try different units.",
+        #             color="error",
+        #             sender=self)
+        #         self.hub.broadcast(snackbar_message)
+        #
+        #         return
+        #
+        # # Try to set new units if set and are valid.
+        # if self.new_flux_unit is not None \
+        #         and self.new_flux_unit != "" \
+        #         and self.new_flux_unit != self.current_flux_unit:
+        #     try:
+        #
+        #         set_flux_unit = self.spectrum.flux.to(u.Unit(self.new_flux_unit),
+        #                                               equivalencies=u.spectral_density(set_spectral_axis_unit))
+        #     except ValueError:
+        #         snackbar_message = SnackbarMessage(
+        #             f"Unable to convert flux units for selected data. Try different units.",
+        #             color="error",
+        #             sender=self)
+        #         self.hub.broadcast(snackbar_message)
+        #
+        #         return
+        #
+        # # Uncertainty converted to new flux units
+        # if self.spectrum.uncertainty is not None:
+        #     unit_exp = unit_exponents.get(self.spectrum.uncertainty.__class__)
+        #     # If uncertainty type not in our lookup, drop the uncertainty
+        #     if unit_exp is None:
+        #         msg = SnackbarMessage(
+        #             "Warning: Unrecognized uncertainty type, cannot guarantee conversion so dropping uncertainty in resulting data",
+        #             color="warning",
+        #             sender=self)
+        #         self.hub.broadcast(msg)
+        #         temp_uncertainty = None
+        #     else:
+        #         try:
+        #             # Catch and handle error trying to convert variance uncertainties
+        #             # between frequency and wavelength space.
+        #             # TODO: simplify this when astropy handles it
+        #             temp_uncertainty = self.spectrum.uncertainty.quantity**(1/unit_exp)
+        #             temp_uncertainty = temp_uncertainty.to(u.Unit(set_flux_unit.unit),
+        #                             equivalencies=u.spectral_density(set_spectral_axis_unit))
+        #             temp_uncertainty **= unit_exp
+        #             temp_uncertainty = self.spectrum.uncertainty.__class__(temp_uncertainty.value)
+        #         except u.UnitConversionError:
+        #             msg = SnackbarMessage(
+        #                 "Warning: Could not convert uncertainty, setting to None in converted data",
+        #                 color="warning",
+        #                 sender=self)
+        #             self.hub.broadcast(msg)
+        #             temp_uncertainty = None
+        # else:
+        #     temp_uncertainty = None
+        #
+        # # Create new spectrum with new units.
+        # converted_spec = self.spectrum._copy(flux=set_flux_unit,
+        #                                      spectral_axis=set_spectral_axis_unit,
+        #                                      unit=set_flux_unit.unit,
+        #                                      uncertainty=temp_uncertainty
+        #                                      )
+        converted_spec = self.process_unit_conversion(self.spectrum, self.new_flux_unit, self.new_spectral_axis_unit)
+
+        label = f"_units_copy_Flux:{set_flux_unit.unit}_SpectralAxis:{set_spectral_axis_unit.unit}"
+        new_label = ""
+
+        # Finds the '_units_copy_' spectrum and does unit conversions in that copy.
+        if "_units_copy_" in self.selected_data:
+
+
+
+            selected_data_label = self.selected_data
+            selected_data_label_split = selected_data_label.split("_units_copy_")
+            # label = selected_data_label_split[0] + "_units_copy_" + datetime.datetime.now().isoformat()
+            new_label = selected_data_label_split[0] + label
+
+            if new_label in self.data_collection:
+                # self.app.add_data_to_viewer("spectrum-viewer", new_label, clear_other_data=True)
+                print("Units converted already exists")
+            else:
+                # self.data_collection[new_label] = converted_spec
+                self.app.add_data(converted_spec, new_label)
+
+                # TODO: Fix bug that sends AddDataMessage into a loop
+                # self.app.add_data_to_viewer("spectrum-viewer", new_label, clear_other_data=True)
+
+            # # Removes the old version of the unit conversion copy and creates
+            # # a new version with the most recent conversion.
+            # if selected_data_label in self.data_collection:
+            #     self.app.remove_data_from_viewer('spectrum-viewer', selected_data_label)
+            #
+            #     # Remove the actual Glue data object from the data_collection
+            #     self.data_collection.remove(self.data_collection[selected_data_label])
+            # self.data_collection[selected_data_label] = converted_spec
+            #
+            # #TODO: Fix bug that sends AddDataMessage into a loop
+            # self.app.add_data_to_viewer("spectrum-viewer", selected_data_label, clear_other_data=True)
+
+        else:
+            # label = self.selected_data + "_units_copy_" + datetime.datetime.now().isoformat()
+            new_label = self.selected_data + label
+
+            # Replace old spectrum with new one with updated units.
+            self.app.add_data(converted_spec, new_label)
+            # self.app.add_data_to_viewer("spectrum-viewer", new_label, clear_other_data=True)
+
+        self.spectrum = converted_spec
+        self.selected_data = new_label
+
+        # Reset UI labels.
+        self.update_ui()
+        # self.new_flux_unit = ""
+        # self.new_spectral_axis_unit = ""
+
+        snackbar_message = SnackbarMessage(
+            f"Data set '{label}' units converted successfully.",
+            color="success",
+            sender=self)
+        self.hub.broadcast(snackbar_message)
+
+    def process_unit_conversion(self, spectrum, new_flux=None, new_spectral_axis=None):
+        """
+
+        Parameters
+        ----------
+        spectrum : `Spectrum1D`
+            The spectrum that will have its units converted.
+        new_flux : ``
+            The flux of spectrum will be converted to these units if they are provided.
+        new_spectral_axis : ``
+            The spectral_axis of spectrum will be converted to these units if they are provided.
+        new_uncertainty : ``
+            The uncertainty of spectrum will be converted to these units if they are provided.
+
+        Returns
+        -------
+        converted_spectrum : `Spectrum1D`
+            A new spectrum with converted units.
+        """
+        set_spectral_axis_unit = spectrum.spectral_axis
+        set_flux_unit = spectrum.flux
+
+        current_flux_unit = spectrum.flux.unit.to_string()
+        current_spectral_axis_unit = spectrum.spectral_axis.unit.to_string()
 
         # Try to set new units if set and are valid.
-        if self.new_spectral_axis_unit is not None \
-                and self.new_spectral_axis_unit != "" \
-                and self.new_spectral_axis_unit != self.current_spectral_axis_unit:
+        if new_spectral_axis is not None \
+                and new_spectral_axis != "" \
+                and new_spectral_axis != current_spectral_axis_unit:
             try:
-                set_spectral_axis_unit = self.spectrum.spectral_axis.to(u.Unit(self.new_spectral_axis_unit))
+                set_spectral_axis_unit = spectrum.spectral_axis.to(u.Unit(new_spectral_axis))
             except ValueError:
                 snackbar_message = SnackbarMessage(
                     f"Unable to convert spectral axis units for selected data. Try different units.",
@@ -129,12 +310,12 @@ class UnitConversion(TemplateMixin):
                 return
 
         # Try to set new units if set and are valid.
-        if self.new_flux_unit is not None \
-                and self.new_flux_unit != "" \
-                and self.new_flux_unit != self.current_flux_unit:
+        if new_flux is not None \
+                and new_flux != "" \
+                and new_flux != current_flux_unit:
             try:
 
-                set_flux_unit = self.spectrum.flux.to(u.Unit(self.new_flux_unit),
+                set_flux_unit = spectrum.flux.to(u.Unit(new_flux),
                                                       equivalencies=u.spectral_density(set_spectral_axis_unit))
             except ValueError:
                 snackbar_message = SnackbarMessage(
@@ -146,8 +327,8 @@ class UnitConversion(TemplateMixin):
                 return
 
         # Uncertainty converted to new flux units
-        if self.spectrum.uncertainty is not None:
-            unit_exp = unit_exponents.get(self.spectrum.uncertainty.__class__)
+        if spectrum.uncertainty is not None:
+            unit_exp = unit_exponents.get(spectrum.uncertainty.__class__)
             # If uncertainty type not in our lookup, drop the uncertainty
             if unit_exp is None:
                 msg = SnackbarMessage(
@@ -161,11 +342,11 @@ class UnitConversion(TemplateMixin):
                     # Catch and handle error trying to convert variance uncertainties
                     # between frequency and wavelength space.
                     # TODO: simplify this when astropy handles it
-                    temp_uncertainty = self.spectrum.uncertainty.quantity**(1/unit_exp)
+                    temp_uncertainty = spectrum.uncertainty.quantity**(1/unit_exp)
                     temp_uncertainty = temp_uncertainty.to(u.Unit(set_flux_unit.unit),
                                     equivalencies=u.spectral_density(set_spectral_axis_unit))
                     temp_uncertainty **= unit_exp
-                    temp_uncertainty = self.spectrum.uncertainty.__class__(temp_uncertainty.value)
+                    temp_uncertainty = spectrum.uncertainty.__class__(temp_uncertainty.value)
                 except u.UnitConversionError:
                     msg = SnackbarMessage(
                         "Warning: Could not convert uncertainty, setting to None in converted data",
@@ -177,46 +358,12 @@ class UnitConversion(TemplateMixin):
             temp_uncertainty = None
 
         # Create new spectrum with new units.
-        converted_spec = self.spectrum._copy(flux=set_flux_unit,
+        converted_spectrum = spectrum._copy(flux=set_flux_unit,
                                              spectral_axis=set_spectral_axis_unit,
                                              unit=set_flux_unit.unit,
                                              uncertainty=temp_uncertainty
                                              )
-
-        # Finds the '_units_copy_' spectrum and does unit conversions in that copy.
-        if "_units_copy_" in self.selected_data:
-            selected_data_label = self.selected_data
-            selected_data_label_split = selected_data_label.split("_units_copy_")
-            label = selected_data_label_split[0] + "_units_copy_" + datetime.datetime.now().isoformat()
-
-            # Removes the old version of the unit conversion copy and creates
-            # a new version with the most recent conversion.
-            if selected_data_label in self.data_collection:
-                self.app.remove_data_from_viewer('spectrum-viewer', selected_data_label)
-
-                # Remove the actual Glue data object from the data_collection
-                self.data_collection.remove(self.data_collection[selected_data_label])
-            self.data_collection[selected_data_label] = converted_spec
-
-            #TODO: Fix bug that sends AddDataMessage into a loop
-            self.app.add_data_to_viewer("spectrum-viewer", selected_data_label)
-
-        else:
-            label = self.selected_data + "_units_copy_" + datetime.datetime.now().isoformat()
-
-            # Replace old spectrum with new one with updated units.
-            self.app.add_data(converted_spec, label)
-            self.app.add_data_to_viewer("spectrum-viewer", label, clear_other_data=True)
-
-        # Reset UI labels.
-        self.new_flux_unit = ""
-        self.new_spectral_axis_unit = ""
-
-        snackbar_message = SnackbarMessage(
-            f"Data set '{label}' units converted successfully.",
-            color="success",
-            sender=self)
-        self.hub.broadcast(snackbar_message)
+        return converted_spectrum
 
     def create_spectral_equivalencies_list(self):
         """
