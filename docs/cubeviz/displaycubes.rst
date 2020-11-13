@@ -114,4 +114,72 @@ Specviz.
 Display Settings
 ================
 
-Coming soon
+To access all of the different display settings for an image viewer, click
+the :guilabel:`hammer and screwdriver` and go to the :guilabel:`Layer` tab.
+
+.. image:: img/display_settings.png
+
+Layer
+-----
+
+This option allows you to change which layer you are changing the settings for.
+
+Attribute
+---------
+
+This shows which extension of the data is being displayed in the current viewer.
+
+Contour
+-------
+
+This option selects whether to show or hide contours.
+
+Bitmap
+------
+
+This option selects whether to show or hide the bitmap (image) in the viewer.
+
+Opacity
+^^^^^^^
+
+Change the translucence of the image.
+
+Contrast
+^^^^^^^^
+
+Change the luminance of the color in the image.
+
+Bias
+^^^^
+
+Change the signal to noise ratio in the image.
+
+Stretch
+^^^^^^^
+
+Change the algorithm for how the data is visualized.
+
+Percentile
+^^^^^^^^^^
+
+Change the percentage of data that is included in the visualization.
+
+Min
+"""
+
+If the percentile is "custom", then the minimum value for data to be visualized can be set.
+
+Max
+"""
+
+If the percentile is "custom", then the maximum value for data to be visualized can be set.
+
+Colormap
+^^^^^^^^
+
+The spectrum of colors used to visualize data can be changed using this drop down.
+
+.. seealso::
+
+    `Plot Settings (Specviz) <https://jdaviz.readthedocs.io/en/latest/specviz/displaying.html#plot-settings>`_
+        Plot settings for the spectrum 1D viewer.
