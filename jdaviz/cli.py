@@ -47,7 +47,7 @@ def main(filename, layout='default'):
     nbdir = tempfile.mkdtemp()
 
     with open(os.path.join(nbdir, 'notebook.ipynb'), 'w') as nbf:
-        nbf.write(notebook_template.replace('DATA_FILENAME', str(filepath).encode('unicode_escape').decode()).strip())
+        nbf.write(notebook_template.replace('DATA_FILENAME', str(filepath).replace('\\', '/')).strip())
 
     os.chdir(nbdir)
 
