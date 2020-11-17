@@ -35,6 +35,8 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+<!--
     <v-tooltip bottom>
       <template v-slot:activator="{ on }">
         <v-btn disabled v-on="on" icon tile>
@@ -59,6 +61,8 @@
       </template>
       <span>Delete Data</span>
     </v-tooltip>
+-->
+
     <!-- <v-divider vertical></v-divider> -->
   </v-toolbar-items>
 </template>
