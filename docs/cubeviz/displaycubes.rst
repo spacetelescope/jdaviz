@@ -152,12 +152,20 @@ Change the luminance of the color in the image.
 Bias
 ^^^^
 
-Change the signal to noise ratio in the image.
+Set a constant to subtract from every point in the data array before
+applying the conversion between data value and displayed pixel saturation.
+For example, with a data min=2 and max=10, any points in the array with value 2 or
+less would be displayed as black in the viewer and any points 10 or higher
+as white (with gray in between, assuming a gray scale colormap).
+The :guilabel:`bias` slider center position is 0 bias, such that you can apply negative
+bias values by sliding it left.
 
 Stretch
 ^^^^^^^
 
-Change the algorithm for how the data is visualized.
+Change the equation that is used to convert data values between
+:guilabel:`min` and :guilabel:`max` to the 0 to 1 scale of pixel saturation on the displayed
+image.
 
 Percentile
 ^^^^^^^^^^
