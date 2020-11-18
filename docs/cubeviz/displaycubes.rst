@@ -116,6 +116,8 @@ Display Settings
 
 To access all of the different display settings for an image viewer, click
 the :guilabel:`hammer and screwdriver` and go to the :guilabel:`Layer` tab.
+Changing the display settings DOES NOT change the underlying data, only the
+visualization of that data.
 
 .. image:: img/display_settings.png
 
@@ -170,17 +172,19 @@ image.
 Percentile
 ^^^^^^^^^^
 
-Change the percentage of data that is included in the visualization.
+Can be used to set the :guilabel:`min` and :guilabel:`max` values based on percentiles of the data.
 
 Min
 """
 
-If the percentile is "custom", then the minimum value for data to be visualized can be set.
+If the percentile is "custom", then the data value corresponding to the
+minimum of the colormap scale (e.g. black in grayscale) can be set.
 
 Max
 """
 
-If the percentile is "custom", then the maximum value for data to be visualized can be set.
+If the percentile is "custom", then the data value corresponding to the
+maximum of the colormap scale (e.g. white in grayscale) can be set.
 
 Colormap
 ^^^^^^^^
