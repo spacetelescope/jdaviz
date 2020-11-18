@@ -167,8 +167,19 @@ class UnitConversion(TemplateMixin):
         else:
             new_label = self.selected_data + label
 
-            # Replace old spectrum with new one with updated units.
-            self.app.add_data(converted_spec, new_label)
+            if new_label in self.data_collection:
+                # Spectrum with these converted units already exists.
+                msg = SnackbarMessage(
+                    "Spectrum with these units already exists, please check the data drop down.",
+                    color="warning",
+                    sender=self)
+                self.hub.broadcast(msg)
+
+                return
+            else:
+
+                # Replace old spectrum with new one with updated units.
+                self.app.add_data(converted_spec, new_label)
 
         snackbar_message = SnackbarMessage(
             f"Data set '{label}' units converted successfully.",
