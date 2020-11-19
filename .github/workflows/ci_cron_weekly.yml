@@ -1,0 +1,35 @@
+# GitHub Actions workflow that runs on a cron schedule.
+
+name: Cron Scheduled CI Tests
+
+on:
+  # DEBUG/testing
+  push:
+    branches:
+    - main  # GitHub now defaults to 'main' as the name of the primary branch. Change this as needed.
+  #  tags: # run CI if specific tags are pushed
+  pull_request:
+  #END DEBUG
+  schedule:
+    # run at 9am UTC on Mondays
+    - cron: '0 9 * * 1'
+
+jobs:
+  # The linkcheck job tests that the links in the docs point to real places
+  # The if statement is to prevent cron from running on forks.
+  linkcheck:
+    runs-on: ubuntu-latest
+    if: github.repository == 'spacetelescope/jdaviz'
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python to build docs with sphinx
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - name: Install base dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install tox
+    - name: Check links in docs using tox
+      run: |
+        tox -e linkcheck
