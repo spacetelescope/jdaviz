@@ -15,7 +15,7 @@ jobs:
   ci_tests:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.allow_failure}}
+    continue-on-error: ${{ matrix.allow_failure }}
     strategy:
       matrix:
         include:
