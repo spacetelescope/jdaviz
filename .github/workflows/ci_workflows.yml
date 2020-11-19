@@ -35,7 +35,7 @@ jobs:
             os: ubuntu-latest
             python: 3.x
             toxenv: securityaudit
-            allow_failure: true
+            allow_failure: false
 
           - name: Python 3.8 with coverage checking
             os: ubuntu-latest
