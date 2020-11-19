@@ -35,9 +35,9 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
         path = pathlib.Path(data)
 
         if path.is_file():
-            data = Spectrum1D.read(path, format=format)
+            data = Spectrum1D.read(str(path), format=format)
         else:
-            raise FileNotFoundError("No such file: " + path)
+            raise FileNotFoundError("No such file: " + str(path))
     # If not, it must be a Spectrum1D object. Otherwise, it's unsupported
     except TypeError:
         if type(data) is SpectrumCollection:
