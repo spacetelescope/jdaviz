@@ -3,13 +3,6 @@
 name: Cron Scheduled CI Tests
 
 on:
-  # DEBUG/testing
-  push:
-    branches:
-    - main  # GitHub now defaults to 'main' as the name of the primary branch. Change this as needed.
-  #  tags: # run CI if specific tags are pushed
-  pull_request:
-  #END DEBUG
   schedule:
     # run at 9am UTC on Mondays
     - cron: '0 9 * * 1'
