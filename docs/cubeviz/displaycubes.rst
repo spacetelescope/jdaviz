@@ -114,4 +114,81 @@ Specviz.
 Display Settings
 ================
 
-Coming soon
+To access all of the different display settings for an image viewer, click
+the :guilabel:`hammer and screwdriver` and go to the :guilabel:`Layer` tab.
+Changing the display settings DOES NOT change the underlying data, only the
+visualization of that data.
+
+.. image:: img/display_settings.png
+
+Layer
+-----
+
+This option allows you to change which layer you are changing the settings for.
+
+Attribute
+---------
+
+This shows which extension of the data is being displayed in the current viewer.
+
+Contour
+-------
+
+This option selects whether to show or hide contours.
+
+Bitmap
+------
+
+This option selects whether to show or hide the bitmap (image) in the viewer.
+
+Opacity
+^^^^^^^
+
+Change the translucence of the image.
+
+Contrast
+^^^^^^^^
+
+Change the luminance of the color in the image.
+
+Bias
+^^^^
+
+Set a constant to subtract from every point in the data array before
+applying the conversion between data value and displayed pixel saturation.
+The :guilabel:`bias` slider center position is 0 bias, such that a user can apply negative
+bias values by sliding it left.
+
+Stretch
+^^^^^^^
+
+Change the equation that is used to convert data values between
+:guilabel:`min` and :guilabel:`max` to the 0 to 1 scale of pixel saturation on the displayed
+image.
+
+Percentile
+^^^^^^^^^^
+
+Can be used to set the :guilabel:`min` and :guilabel:`max` values based on percentiles of the data.
+
+Min
+"""
+
+If the percentile is "custom", then the data value corresponding to the
+minimum of the colormap scale (e.g. black in grayscale) can be set.
+
+Max
+"""
+
+If the percentile is "custom", then the data value corresponding to the
+maximum of the colormap scale (e.g. white in grayscale) can be set.
+
+Colormap
+^^^^^^^^
+
+The spectrum of colors used to visualize data can be changed using this drop down.
+
+.. seealso::
+
+    `Plot Settings (Specviz) <https://jdaviz.readthedocs.io/en/latest/specviz/displaying.html#plot-settings>`_
+        Plot settings for the spectrum 1D viewer.

@@ -117,6 +117,7 @@ def user_dir():
 
 class DevelopCmd(develop):
     prefix_targets = [
+        ("nbconvert/templates", 'jdaviz-default'),
         ("voila/templates", 'jdaviz-default')
     ]
 
@@ -148,7 +149,7 @@ class DevelopCmd(develop):
 # distribution
 data_files = []
 # Add all the templates
-for (dirpath, dirnames, filenames) in os.walk('share/jupyter/voila/templates/'):
+for (dirpath, dirnames, filenames) in os.walk('share/jupyter/'):
     if filenames:
         data_files.append((dirpath, [os.path.join(dirpath, filename)
                                      for filename in filenames]))
