@@ -23,37 +23,37 @@ jobs:
             os: ubuntu-latest
             python: 3.x
             toxenv: codestyle
-            allow_failure: [false]
+            allow_failure: false
 
           - name: PEP 517
             os: ubuntu-latest
             python: 3.x
             toxenv: pep517
-            allow_failure: [true]
+            allow_failure: true
 
           - name: Python 3.8 with coverage checking
             os: ubuntu-latest
             python: 3.8
             toxenv: py38-test-cov
-            allow_failure: [false]
+            allow_failure: false
 
           - name: OS X - Python 3.8
             os: macos-latest
             python: 3.8
             toxenv: py38-test
-            allow_failure: [false]
+            allow_failure: false
 
           - name: Windows - Python 3.8
             os: windows-latest
             python: 3.8
             toxenv: py38-test
-            allow_failure: [false]
+            allow_failure: false
 
           - name: Documentation build
             os: ubuntu-latest
             python: 3.8
             toxenv: build_docs
-            allow_failure: [false]
+            allow_failure: false
 
     env:
       SETUP_XVFB: True
