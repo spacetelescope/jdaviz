@@ -55,9 +55,6 @@ jobs:
             toxenv: build_docs
             allow_failure: false
 
-    env:
-      SETUP_XVFB: True
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v2

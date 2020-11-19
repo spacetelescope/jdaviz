@@ -48,9 +48,6 @@ jobs:
             python: 3.6
             toxenv: py36-test-astropylts-numpy116
 
-    env:
-      SETUP_XVFB: True
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
