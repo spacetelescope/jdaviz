@@ -58,6 +58,9 @@ jobs:
             python: 3.9
             toxenv: py39-test-devdeps
 
+    env:
+      SETUP_XVFB: True
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
