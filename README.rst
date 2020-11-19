@@ -1,7 +1,8 @@
 .. image:: docs/logos/jdaviz_1.svg
 
-.. image:: https://travis-ci.com/spacetelescope/jdaviz.svg?branch=master
-    :target: https://travis-ci.com/spacetelescope/jdaviz
+.. image:: https://github.com/spacetelescope/jdaviz/workflows/CI/badge.svg
+    :target: https://github.com/spacetelescope/jdaviz/actions
+    :alt: GitHub Actions CI Status
 
 .. image:: https://codecov.io/gh/spacetelescope/jdaviz/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/spacetelescope/jdaviz
@@ -18,13 +19,13 @@
 visualization and interactive analysis.  They are designed to work
 within a Jupyter notebook cell, as a standalone desktop application,
 or as embedded windows within a website -- all with nearly-identical
-user interfaces. ``jdaviz`` is under active development, and users who 
-encounter bugs in existing features are encouraged to open issues in this 
+user interfaces. ``jdaviz`` is under active development, and users who
+encounter bugs in existing features are encouraged to open issues in this
 repository.
 
-``jdaviz`` provides data viewers and analysis plugins that can be flexibly 
-combined as desired to create interactive applications that fit your workflow. 
-Three named preset configurations for common use cases are provided. **Specviz** 
+``jdaviz`` provides data viewers and analysis plugins that can be flexibly
+combined as desired to create interactive applications that fit your workflow.
+Three named preset configurations for common use cases are provided. **Specviz**
 is a tool for visualization and quick-look analysis of 1D astronomical spectra.
 **MOSviz** is a visualization tool for many astronomical spectra,
 typically the output of a multi-object spectrograph (e.g., JWST
