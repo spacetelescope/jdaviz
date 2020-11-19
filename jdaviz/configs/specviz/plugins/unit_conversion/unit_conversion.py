@@ -151,10 +151,23 @@ class UnitConversion(TemplateMixin):
 
             new_label = selected_data_label_split[0] + label
 
+            original_flux = self.data_collection[selected_data_label_split[0]].get_object().flux.unit
+            original_spectral_axis = self.data_collection[selected_data_label_split[0]].get_object().spectral_axis.unit
+
             if new_label in self.data_collection:
                 # Spectrum with these converted units already exists.
                 msg = SnackbarMessage(
                     "Spectrum with these units already exists, please check the data drop down.",
+                    color="warning",
+                    sender=self)
+                self.hub.broadcast(msg)
+
+                return
+            elif converted_spec.flux.unit == original_flux and \
+                converted_spec.spectral_axis.unit == original_spectral_axis:
+                # Check if converted units already exist in the original spectrum.
+                msg = SnackbarMessage(
+                    "These are the units of the original spectrum, please use the that spectrum instead.",
                     color="warning",
                     sender=self)
                 self.hub.broadcast(msg)
