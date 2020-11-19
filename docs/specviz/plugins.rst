@@ -74,9 +74,10 @@ Select the flux density unit in the :guilabel:`New Flux Unit` pulldown
 (e.g. Jansky, W/(Hz/m2), ph/(Angstrom cm2 s)).
 
 The :guilabel:`Apply` button will convert the flux density and/or
-spectral axis units and create a new Spectrum1D object that can
-be selected in the spectrum viewer Data tab. The name of the new Spectrum1D
-object is "_units_copy_" plus the flux and spectral units of the spectrum.
+spectral axis units and create a new Spectrum1D object that
+is automatically switched to in the spectrum viewer.
+The name of the new Spectrum1D object is "_units_copy_" plus
+the flux and spectral units of the spectrum.
 
 Line Lists
 ==========
