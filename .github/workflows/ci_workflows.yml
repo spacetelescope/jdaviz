@@ -28,15 +28,10 @@ jobs:
             python: 3.x
             toxenv: pep517
 
-          - name: Python 3.7 with oldest supported dependencies
+          - name: Python 3.8 with coverage checking
             os: ubuntu-latest
-            python: 3.7
-            toxenv: py37-test-oldestdeps
-
-          - name: Python 3.9 with coverage checking
-            os: ubuntu-latest
-            python: 3.9
-            toxenv: py39-test-cov
+            python: 3.8
+            toxenv: py38-test-cov
 
           - name: OS X - Python 3.8
             os: macos-latest
@@ -47,6 +42,16 @@ jobs:
             os: windows-latest
             python: 3.8
             toxenv: py38-test
+
+          - name: Documentation build
+            os: ubuntu-latest
+            python: 3.8
+            toxenv: build_docs
+
+          - name: Python 3.9 with latest dev versions of key dependencies
+            os: ubuntu-latest
+            python: 3.9
+            toxenv: py39-test-devdeps
 
           - name: Python 3.9 with latest dev versions of key dependencies
             os: ubuntu-latest
