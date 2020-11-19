@@ -1,5 +1,6 @@
 # Command-line interface for jdaviz
 
+import pathlib
 import os
 import sys
 import tempfile
@@ -31,7 +32,12 @@ def main(filename, layout='default'):
     layout : str, optional
         Optional specification for which configuration to use on startup.
     """
-    filename = os.path.abspath(filename)
+    # Tornado Webserver py3.8 compatibility hotfix for windows
+    if sys.platform == 'win32':
+        import asyncio
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+    filepath = pathlib.Path(filename).absolute()
 
     with open(os.path.join(CONFIGS_DIR, layout, layout + '.ipynb')) as f:
         notebook_template = f.read()
@@ -41,8 +47,7 @@ def main(filename, layout='default'):
     nbdir = tempfile.mkdtemp()
 
     with open(os.path.join(nbdir, 'notebook.ipynb'), 'w') as nbf:
-        nbf.write(notebook_template.replace('CONFIG_NAME', layout).replace(
-            'DATA_FILENAME', filename).strip())
+        nbf.write(notebook_template.replace('DATA_FILENAME', str(filepath).replace('\\', '/')).strip())
 
     os.chdir(nbdir)
 
@@ -53,3 +58,6 @@ def main(filename, layout='default'):
         sys.exit(Voila().launch_instance(argv=[]))
     finally:
         os.chdir(start_dir)
+
+if __name__ == '__main__':
+    main()
