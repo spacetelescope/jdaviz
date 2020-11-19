@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    branches:
+    - master
+  #  tags: # run CI if specific tags are pushed
+  pull_request:
+  #  branches: # only build on PRs against 'main' if you need to further limit when CI is run.
+  #  - main
+
+jobs:
+  # Github Actions supports ubuntu, windows, and macos virtual environments:
+  # https://help.github.com/en/actions/reference/virtual-environments-for-github-hosted-runners
+  ci_tests:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - name: Code style checks
+            os: ubuntu-latest
+            python: 3.x
+            toxenv: codestyle
+
+          - name: PEP 517
+            os: ubuntu-latest
+            python: 3.x
+            toxenv: pep517
+
+          - name: Security audit
+            os: ubuntu-latest
+            python: 3.x
+            toxenv: securityaudit
+
+          - name: Python 3.7 with oldest supported dependencies
+            os: ubuntu-latest
+            python: 3.7
+            toxenv: py37-test-oldestdeps
+
+          - name: Python 3.9 with coverage checking
+            os: ubuntu-latest
+            python: 3.9
+            toxenv: py39-test-cov
+
+          - name: OS X - Python 3.8
+            os: macos-latest
+            python: 3.8
+            toxenv: py38-test
+
+          - name: Windows - Python 3.8
+            os: windows-latest
+            python: 3.8
+            toxenv: py38-test
+
+          - name: Python 3.9 with latest dev versions of key dependencies
+            os: ubuntu-latest
+            python: 3.9
+            toxenv: py39-test-devdeps
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Set up python ${{ matrix.python }} on ${{ matrix.os }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python }}
+    - name: Install base dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install tox codecov
+    - name: Test with tox
+      run: |
+        tox -e ${{ matrix.toxenv }}
+    # Activate your repo on codecov.io first.
+    - name: Upload coverage to codecov
+      if: "contains(matrix.toxenv, '-cov')"
+      uses: codecov/codecov-action@v1
+      with:
+        file: ./coverage.xml
