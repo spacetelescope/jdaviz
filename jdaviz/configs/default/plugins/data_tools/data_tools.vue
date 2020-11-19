@@ -32,8 +32,16 @@
           <v-btn color="primary" text @click="load_data" :disabled="!valid_path">Import</v-btn>
         </v-card-actions>
       </v-card>
-
     </v-dialog>
+
+    <v-tooltip bottom>
+      <template v-slot:activator="{ on }">
+        <v-btn disabled v-on="on" icon tile>
+          <v-icon>mdi-format-blank</v-icon>
+        </v-btn>
+      </template>
+      <span>Spacer</span>
+    </v-tooltip>
     <!-- <v-divider vertical></v-divider> -->
   </v-toolbar-items>
 </template>
