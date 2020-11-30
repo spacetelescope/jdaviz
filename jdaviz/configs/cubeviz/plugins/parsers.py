@@ -73,14 +73,15 @@ def _parse_hdu(app, hdulist, file_name=None):
     wcs = None
 
     for hdu in hdulist:
-        if hdu.data is None:
+        if hdu.data is None or not hdu.is_image:
             continue
 
         try:
-            sc = SpectralCube.read(hdulist, format='fits')
-            wcs = sc.wcs
+            sc = SpectralCube.read(hdu, format='fits')
         except (ValueError, FITSReadError):
             continue
+        else:
+            wcs = sc.wcs
 
     # Now loop through and attempt to parse the fits extensions as spectral
     #  cube object. If the wcs fails to parse in any case, use the wcs
@@ -88,7 +89,7 @@ def _parse_hdu(app, hdulist, file_name=None):
     for hdu in hdulist:
         data_label = f"{file_name}[{hdu.name}]"
 
-        if hdu.data is None:
+        if hdu.data is None or not hdu.is_image:
             continue
 
         # This is supposed to fail on attempting to load anything that
