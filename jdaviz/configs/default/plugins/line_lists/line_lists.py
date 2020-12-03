@@ -1,5 +1,4 @@
 import os
-import pickle
 
 import bqplot
 from bqplot.marks import Lines
