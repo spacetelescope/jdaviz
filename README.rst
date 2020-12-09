@@ -31,7 +31,7 @@ is a tool for visualization and quick-look analysis of 1D astronomical spectra.
 typically the output of a multi-object spectrograph (e.g., JWST
 NIRSpec), and includes viewers for 1D and 2D spectra as well as
 contextual information like on-sky views of the spectrograph slit.
-**Cubeviz** provides of view of spectroscopic data cubes (like those to be
+**Cubeviz** provides a view of spectroscopic data cubes (like those to be
 produced by JWST MIRI), along with 1D spectra extracted from the cube.
 
 
