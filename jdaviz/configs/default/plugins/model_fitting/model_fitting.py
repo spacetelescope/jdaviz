@@ -1,5 +1,6 @@
 import os
-import pickle
+# pickle is in principle a security risk, but we use it just for dumping of a known class here
+import pickle  # nosec
 import re
 import numpy as np
 

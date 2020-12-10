@@ -55,6 +55,7 @@
       v-model="state.snackbar.show"
       :timeout="state.snackbar.timeout"
       :color="state.snackbar.color"
+      :top=true
       absolute
     >
       {{ state.snackbar.text }}
