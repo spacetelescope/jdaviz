@@ -9,6 +9,7 @@ from astropy.io import fits
 import numpy as np
 import logging
 from astropy.wcs import WCS
+from asdf.fits_embed import AsdfInFits
 from pathlib import Path
 
 __all__ = ['mos_spec1d_parser', 'mos_spec2d_parser', 'mos_image_parser']
@@ -125,9 +126,63 @@ def mos_spec2d_parser(app, data_obj, data_labels=None):
             header['NAXIS3'] = 1
             header['BUNIT'] = 'dN/s'
             header['CUNIT3'] = 'um'
+            header['CTYPE3'] = 'WAVE'
+
+            fa = AsdfInFits.open(path)
+            gwcs = fa.tree['meta']['wcs']
+
+            header['CTYPE1'] = 'RA---TAN'
+            header['CTYPE2'] = 'DEC--TAN'
+            header['CUNIT1'] = 'deg'
+            header['CUNIT2'] = 'deg'
+
+            # print("@@@@  parsers.py-139: ", str(gwcs.forward_transform))
+
+            header['CRVAL1'] = gwcs.forward_transform.lon_4.value
+            header['CRVAL2'] = gwcs.forward_transform.lat_4.value
+            header['CRPIX1'] = gwcs.forward_transform.intercept_1.value
+            header['CRPIX2'] = gwcs.forward_transform.intercept_2.value
+            header['CDELT1'] = gwcs.forward_transform.slope_1.value
+            header['CDELT2'] = gwcs.forward_transform.slope_2.value
+            header['PC1_1'] = -1.
+            header['PC1_2'] = 0.
+            header['PC2_1'] = 0.
+            header['PC2_2'] = 1.
+            header['PC3_1'] = 1.
+            header['PC3_2'] = 0.
+
             wcs = WCS(header)
 
             meta = {'S_REGION': header['S_REGION']}
+
+        print("@@@@  parsers.py-135: ", header)
+
+        print("@@@@  parsers.py-137: ", wcs)
+
+
+# """
+#  RIGHT WCS SHOULD LOOK LIKE THIS:
+# @@@@  parsers.py-134:  WCS Keywords
+#
+# Number of WCS axes: 3
+# CTYPE : 'RA---TAN'  'DEC--TAN'  'WAVE'
+# CRVAL : 5.0  5.0  0.0
+# CRPIX : 1024.5  1024.5  0.0
+# PC1_1 PC1_2 PC1_3  : -1.0  0.0  0.0
+# PC2_1 PC2_2 PC2_3  : 0.0  1.0  0.0
+# PC3_1 PC3_2 PC3_3  : 1.0  0.0  1.0
+# CDELT : 2.86854111111111e-05  2.92567277777777e-05  1e-06
+# NAXIS : 1351  15  1
+# @@@@  cube_utils.py-153:
+# [
+# {'coordinate_type': 'celestial',
+# 'scale': 'non-linear celestial', 'group': 0, 'number': 0},
+# {'coordinate_type': 'celestial', 'scale': 'non-linear celestial',
+# 'group': 0, 'number': 1},
+# {'coordinate_type': 'spectral', 'scale': 'linear', 'group': 0, 'number': 0}
+# ]
+#
+# """
 
 
         return SpectralCube(new_data, wcs=wcs, meta=meta)
