@@ -132,6 +132,9 @@ def mos_spec2d_parser(app, data_obj, data_labels=None):
             # the pipeline) has to be put back so spectral_cube won't
             # crash. We cook up a simple linear wcs with the only intention
             # of making the code run beyond the spectral_cube processing.
+            # There is no guarantee that this will result in the correct
+            # axis label values being displayed.
+            #
             # This is a stopgap solution that will be replaced when specutils
             # absorbs the functionality provided by spectral_cube.
 
@@ -142,8 +145,6 @@ def mos_spec2d_parser(app, data_obj, data_labels=None):
             header['CTYPE2'] = 'DEC--TAN'
             header['CUNIT1'] = 'deg'
             header['CUNIT2'] = 'deg'
-
-            # print("@@@@  parsers.py-139: ", str(gwcs.forward_transform))
 
             header['CRVAL1'] = gwcs.forward_transform.lon_4.value
             header['CRVAL2'] = gwcs.forward_transform.lat_4.value
@@ -161,36 +162,6 @@ def mos_spec2d_parser(app, data_obj, data_labels=None):
             wcs = WCS(header)
 
             meta = {'S_REGION': header['S_REGION']}
-
-        print("@@@@  parsers.py-135: ", header)
-
-        print("@@@@  parsers.py-137: ", wcs)
-
-
-# """
-#  RIGHT WCS SHOULD LOOK LIKE THIS:
-# @@@@  parsers.py-134:  WCS Keywords
-#
-# Number of WCS axes: 3
-# CTYPE : 'RA---TAN'  'DEC--TAN'  'WAVE'
-# CRVAL : 5.0  5.0  0.0
-# CRPIX : 1024.5  1024.5  0.0
-# PC1_1 PC1_2 PC1_3  : -1.0  0.0  0.0
-# PC2_1 PC2_2 PC2_3  : 0.0  1.0  0.0
-# PC3_1 PC3_2 PC3_3  : 1.0  0.0  1.0
-# CDELT : 2.86854111111111e-05  2.92567277777777e-05  1e-06
-# NAXIS : 1351  15  1
-# @@@@  cube_utils.py-153:
-# [
-# {'coordinate_type': 'celestial',
-# 'scale': 'non-linear celestial', 'group': 0, 'number': 0},
-# {'coordinate_type': 'celestial', 'scale': 'non-linear celestial',
-# 'group': 0, 'number': 1},
-# {'coordinate_type': 'spectral', 'scale': 'linear', 'group': 0, 'number': 0}
-# ]
-#
-# """
-
 
         return SpectralCube(new_data, wcs=wcs, meta=meta)
 
