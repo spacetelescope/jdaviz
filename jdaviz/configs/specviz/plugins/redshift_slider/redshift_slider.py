@@ -1,4 +1,5 @@
 from traitlets import Bool, Float, observe, Any, Int
+import astropy.units as u
 
 from jdaviz.core.events import AddDataMessage
 from jdaviz.core.registries import tool_registry
@@ -29,6 +30,16 @@ class RedshiftSlider(TemplateMixin):
         #self.session.hub.subscribe(self, AddDataMessage,
         #                           handler=self._on_data_added)
 
+    def _propagate_redshift(self):
+        """
+        When the redshift is changed with the slider, send the new value to
+        the line list and spectrum viewer data.
+        """
+        line_list = self.app.get_viewer('spectrum-viewer').spectral_lines
+        line_list["redshift"]= u.Quantity(self.slider)
+        # Replot with the new redshift
+        line_list = self.app.get_viewer('spectrum-viewer').plot_spectral_lines()
+
     def _slider_value_updated(self, value):
         if len(value) > 0:
             self.slider = float(value[0])
@@ -39,3 +50,4 @@ class RedshiftSlider(TemplateMixin):
             value = 0
         else:
             value = event['new']
+        self._propagate_redshift()
