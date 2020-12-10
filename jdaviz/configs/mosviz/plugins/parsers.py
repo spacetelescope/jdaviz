@@ -128,6 +128,13 @@ def mos_spec2d_parser(app, data_obj, data_labels=None):
             header['CUNIT3'] = 'um'
             header['CTYPE3'] = 'WAVE'
 
+            # Information not present in the SCI header (was removed by
+            # the pipeline) has to be put back so spectral_cube won't
+            # crash. We cook up a simple linear wcs with the only intention
+            # of making the code run beyond the spectral_cube processing.
+            # This is a stopgap solution that will be replaced when specutils
+            # absorbs the functionality provided by spectral_cube.
+
             fa = AsdfInFits.open(path)
             gwcs = fa.tree['meta']['wcs']
 
