@@ -11,6 +11,7 @@
       hide-details
       style="max-width: 33%; min-width: 300px"
       label="Redshift"
+      :step="slider_step"
     >
       <template v-slot:append>
         <v-text-field
@@ -21,6 +22,7 @@
           type="number"
           filled
           dense
+          :step="slider_step"
         ></v-text-field>
       </template>
     </v-slider>

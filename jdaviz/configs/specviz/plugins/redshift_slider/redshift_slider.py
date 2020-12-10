@@ -14,8 +14,9 @@ __all__ = ['RedshiftSlider']
 class RedshiftSlider(TemplateMixin):
     template = load_template("redshift_slider.vue", __file__).tag(sync=True)
     slider = Any(0).tag(sync=True)
-    min_value = Float(-10).tag(sync=True)
-    max_value = Float(10).tag(sync=True)
+    min_value = Float(-1).tag(sync=True)
+    max_value = Float(1).tag(sync=True)
+    slider_step = Float(0.01).tag(sync=True)
     linked = Bool(True).tag(sync=True)
     wait = Int(100).tag(sync=True)
 
@@ -24,23 +25,9 @@ class RedshiftSlider(TemplateMixin):
 
         self._watched_viewers = []
 
-        # Listen for add data events. **Note** this should only be used in
-        #  cases where there is a specific type of data expected and arbitrary
-        #  viewers are not expected to be created. That is, the expected data
-        #  in _all_ viewers should be uniform.
-        self.session.hub.subscribe(self, AddDataMessage,
-                                   handler=self._on_data_added)
-
-    def _on_data_added(self, msg):
-        if len(msg.data.shape) == 3 and \
-                isinstance(msg.viewer, BqplotImageView):
-            self.max_value = msg.data.shape[0] - 1
-
-            if msg.viewer not in self._watched_viewers:
-                self._watched_viewers.append(msg.viewer)
-
-                msg.viewer.state.add_callback('slices',
-                                              self._slider_value_updated)
+        # Probably don't need a new data watcher here
+        #self.session.hub.subscribe(self, AddDataMessage,
+        #                           handler=self._on_data_added)
 
     def _slider_value_updated(self, value):
         if len(value) > 0:

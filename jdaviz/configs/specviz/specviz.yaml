@@ -13,6 +13,7 @@ settings:
 toolbar:
   - g-data-tools
   - g-subset-tools
+  - g-redshift-slider
 tray:
   - g-gaussian-smooth
   - g-model-fitting
