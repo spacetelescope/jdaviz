@@ -2,6 +2,13 @@
   <!-- <v-toolbar-items> -->
   <!-- <v-divider vertical></v-divider> -->
   <div>
+    <v-row>
+      <v-select 
+        :items="['Redshift', 'RV (km/s)']"
+        v-model="slider_type">
+      </v-select>
+    </v-row>
+    <v-row>
     <v-slider
       :value="slider"
       @input="throttledSetValue"
@@ -26,6 +33,7 @@
         ></v-text-field>
       </template>
     </v-slider>
+    </v-row>
   </div>
   <!-- </v-toolbar-items> -->
 </template>

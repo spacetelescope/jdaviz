@@ -6,7 +6,7 @@ from jdaviz.core.registries import tool_registry
 from jdaviz.core.template_mixin import TemplateMixin
 from jdaviz.utils import load_template
 
-from glue_jupyter.bqplot.image import BqplotImageView
+from glue_jupyter.bqplot.profile import BqplotProfileView
 
 __all__ = ['RedshiftSlider']
 
@@ -15,6 +15,7 @@ __all__ = ['RedshiftSlider']
 class RedshiftSlider(TemplateMixin):
     template = load_template("redshift_slider.vue", __file__).tag(sync=True)
     slider = Any(0).tag(sync=True)
+    slider_type = Any("Redshift").tag(sync=True)
     min_value = Float(-1).tag(sync=True)
     max_value = Float(1).tag(sync=True)
     slider_step = Float(0.01).tag(sync=True)
@@ -26,9 +27,12 @@ class RedshiftSlider(TemplateMixin):
 
         self._watched_viewers = []
 
-        # Probably don't need a new data watcher here
-        #self.session.hub.subscribe(self, AddDataMessage,
-        #                           handler=self._on_data_added)
+        # Watch for new data to grab its redshift if it has one
+        self.session.hub.subscribe(self, AddDataMessage,
+                                   handler=self._on_data_added)
+    def _on_data_added(self, msg):
+        if isinstance(msg.viewer, BqplotProfileView):
+            print(msg)
 
     def _propagate_redshift(self):
         """
