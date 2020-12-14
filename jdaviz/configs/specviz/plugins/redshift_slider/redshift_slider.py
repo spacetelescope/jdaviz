@@ -1,5 +1,7 @@
 from traitlets import Bool, Float, observe, Any, Int
 import astropy.units as u
+from specutils import SpectralAxis
+from glue_astronomy.spectral_coordinates import SpectralCoordinates
 
 from jdaviz.core.events import AddDataMessage
 from jdaviz.core.registries import tool_registry
@@ -32,7 +34,9 @@ class RedshiftSlider(TemplateMixin):
                                    handler=self._on_data_added)
     def _on_data_added(self, msg):
         if isinstance(msg.viewer, BqplotProfileView):
-            print(msg)
+            print(msg.data.get_object())
+            label = msg.data.label
+            temp_data = msg.viewer_id
 
     def _propagate_redshift(self):
         """
@@ -40,9 +44,19 @@ class RedshiftSlider(TemplateMixin):
         the line list and spectrum viewer data.
         """
         line_list = self.app.get_viewer('spectrum-viewer').spectral_lines
-        line_list["redshift"]= u.Quantity(self.slider)
-        # Replot with the new redshift
-        line_list = self.app.get_viewer('spectrum-viewer').plot_spectral_lines()
+        if line_list is not None:
+            line_list["redshift"]= u.Quantity(self.slider)
+            # Replot with the new redshift
+            line_list = self.app.get_viewer('spectrum-viewer').plot_spectral_lines()
+
+        for data_item in self.app.data_collection:
+            if type(data_item.coords.spectral_axis) == SpectralAxis:
+                new_axis = SpectralAxis(data_item.coords.spectral_axis,
+                                                 redshift = self.slider)
+                data_item.coords = SpectralCoordinates(new_axis)
+            #if "redshift" in data_item.meta:
+            #    data_item.meta["redshift"] = self.slider
+
 
     def _slider_value_updated(self, value):
         if len(value) > 0:
