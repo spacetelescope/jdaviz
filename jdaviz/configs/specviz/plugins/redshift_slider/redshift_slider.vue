@@ -13,7 +13,9 @@
       :step="slider_step"
     >
     <template v-slot:prepend>
+      <v-divider vertical></v-divider>
       <v-select
+        class="pl-md-4"
         :items="['Redshift', 'RV (km/s)']"
         v-model="slider_type"
         dense>
