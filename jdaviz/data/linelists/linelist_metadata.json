@@ -48,5 +48,10 @@
     "units": "micron",
     "filename_base": "H-He",
     "Citations/Notes": " H lines\n to level 3 = Paschen; to level 4 = Brackett; to level 5 = Pfund; to level 6 = Humphreys\n\n References:\n 15 - Mohr P.J., Taylor B.N., Newell D.B., 2008, Rev. Mod. Phys. 80, 633 (section IV.A)\n 16 - Morton D.C., Wu Q., Drake G.W.F., 2006, Can. J. Phys. 84, 83"
+  },
+  "Unidentified-ISO": {
+    "units": "micron",
+    "filename_base": "Unidentified-ISO",
+    "Citations/Notes": "https://old.ipac.caltech.edu/iso//lws/unidentified.html"
   }
 }
