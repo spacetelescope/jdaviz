@@ -34,6 +34,11 @@
     "filename_base": "H2",
     "Citations/Notes": " Gemini H2 lines\n Compilation of Important H2 Lines (for Gemini)\n T. Geballe, 1995. http://www.gemini.edu/sciops/instruments/nir/wavecal/h2lines.dat\n Based on energy levels calculated using Dabrowski & Herzberg, Can J Phys 62, 1639 (1984)\n and Einstein coefficients from Turner et al. ApJS, 35, 281 (1977)."
   },
+  "H2-ISO": {
+    "units": "micron",
+    "filename_base": "H2-ISO",
+    "Citations/Notes": " J.H.Black, E.F.vanDishoeck, ApJ 322: 412-449, 1988. https://old.ipac.caltech.edu/iso//lws/HII.html"
+  },
   "Common Nebular": {
     "units": "Angstrom",
     "filename_base": "Common_nebular",
