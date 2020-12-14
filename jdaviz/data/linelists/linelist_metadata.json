@@ -19,6 +19,11 @@
     "filename_base": "SDSS-IV",
     "Citations/Notes": " Lines used by the SDSS-IV Science Archive Webapp (SAW).\n https://dr14.sdss.org/static/js/optical/markedLines.js\n\n See also the emlines.par file in the idlspec2d package.\n\n Wavelengths are in air for lambda > 2000 vacuum for lambda < 2000."
   },
+  "Atomic-ISO": {
+    "units": "micron",
+    "filename_base": "Atomic-ISO",
+    "Citations/Notes": " D.Lutz, S.Colgan, M.Haas, 1998\n https://old.ipac.caltech.edu/iso//lws/atomic.html"
+  },
   "Atomic/Ionic": {
     "units": "micron",
     "filename_base": "Atomic-Ionic",
