@@ -94,15 +94,20 @@ class RedshiftSlider(TemplateMixin):
         When the redshift is changed with the slider, send the new value to
         the line list and spectrum viewer data.
         """
+        if self.slider_type == "Redshift":
+            z = u.Quantity(self.slider)
+        else:
+            z = self._velocity_to_redshift(u.Quantity(self.slider, "km/s"))
+
         line_list = self.app.get_viewer('spectrum-viewer').spectral_lines
         if line_list is not None:
-            if self.slider_type == "Redshift":
-                line_list["redshift"] = u.Quantity(self.slider)
-            else:
-                z = self._velocity_to_redshift(u.Quantity(self.slider, "km/s"))
-                line_list["redshift"] = z
+            line_list["redshift"] = z
             # Replot with the new redshift
             line_list = self.app.get_viewer('spectrum-viewer').plot_spectral_lines()
+
+        # Send the redshift back to the Specviz helper
+        msg = RedshiftMessage("redshift", z.value, sender=self)
+        self.app.hub.broadcast(msg)
 
         '''
         for data_item in self.app.data_collection:

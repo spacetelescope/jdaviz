@@ -12,6 +12,14 @@ class SpecViz(ConfigHelper, LineListMixin):
     """
 
     _default_configuration = "specviz"
+    _redshift = 0
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Listen for new redshifts from the redshift slider
+        self.app.hub.subscribe(self, RedshiftMessage,
+                                       handler=self._redshift_listener)
 
     def load_spectrum(self, data, data_label=None, format=None, show_in_viewer=True):
         super().load_data(data,
@@ -24,7 +32,10 @@ class SpecViz(ConfigHelper, LineListMixin):
         """Returns the current data loaded into the main viewer
 
         """
-        return self.app.get_data_from_viewer("spectrum-viewer", data_label=data_label)
+        spectra = self.app.get_data_from_viewer("spectrum-viewer", data_label=data_label)
+        for key in spectra.keys():
+            spectra[key].redshift = self._redshift
+        return spectra
 
     def get_spectral_regions(self):
         """
@@ -275,8 +286,13 @@ class SpecViz(ConfigHelper, LineListMixin):
         Apply a redshift to any loaded spectral lines and data. Also updates
         the value shown in the slider.
         '''
+        self._redshift = new_redshift
         msg = RedshiftMessage("redshift", new_redshift, sender=self)
         self.app.hub.broadcast(msg)
+
+    def _redshift_listener(self, msg):
+        if msg.param == "redshift":
+            self._redshift = msg.value
 
     def show(self):
         self.app
