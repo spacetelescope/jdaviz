@@ -44,7 +44,6 @@ class RedshiftSlider(TemplateMixin):
 
     def _on_data_added(self, msg):
         if isinstance(msg.viewer, BqplotProfileView):
-            print(msg.data.get_object())
             label = msg.data.label
             temp_data = self.app.get_data_from_viewer("spectrum-viewer")[label]
             if self.slider_type == "Redshift":
@@ -63,6 +62,9 @@ class RedshiftSlider(TemplateMixin):
         Handle incoming redshift messages from the app hub. Generally these
         will be created by Specviz helper methods.
         '''
+        if msg.sender == self:
+            return
+
         param = msg.param
         val = float(msg.value)
 

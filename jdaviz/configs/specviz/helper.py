@@ -286,11 +286,11 @@ class SpecViz(ConfigHelper, LineListMixin):
         Apply a redshift to any loaded spectral lines and data. Also updates
         the value shown in the slider.
         '''
-        self._redshift = new_redshift
         msg = RedshiftMessage("redshift", new_redshift, sender=self)
         self.app.hub.broadcast(msg)
 
     def _redshift_listener(self, msg):
+        '''Save new redshifts (including from the helper itself)'''
         if msg.param == "redshift":
             self._redshift = msg.value
 
