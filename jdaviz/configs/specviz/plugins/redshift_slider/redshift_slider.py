@@ -101,7 +101,6 @@ class RedshiftSlider(TemplateMixin):
             else:
                 z = self._velocity_to_redshift(u.Quantity(self.slider, "km/s"))
                 line_list["redshift"] = z
-                print(z)
             # Replot with the new redshift
             line_list = self.app.get_viewer('spectrum-viewer').plot_spectral_lines()
 
@@ -137,7 +136,7 @@ class RedshiftSlider(TemplateMixin):
 
     def _update_bounds_redshift(self, new_val):
         '''Set reasonable slider parameters based on manually set redshift'''
-        if new_val > 0 and new_val - 0.5 < 0:
+        if new_val >= 0 and new_val - 0.5 < 0:
             new_min = 0
         else:
             new_min = new_val - 0.5
@@ -166,22 +165,34 @@ class RedshiftSlider(TemplateMixin):
 
         self.slider_step = step
 
+    '''
+    # Note: these are artifacts of an attempt to accept values outside the
+    # range of the slider in the text field and automatically update the slider
+    # range in that case. Turns out to be very difficult to get the slider,
+    # text field, and spin buttons all to interact properly.
+
     def vue_textbox_change(self, event):
         val = float(event)
-        if self.slider_type == "Redshift":
-            self._update_bounds_redshift(val)
-        else:
-            self._update_bounds_rv(val)
+        if val > self.max_value or val < self.min_value:
+            self._update_bounds[self.slider_type](val)
         self.slider = val
-        print(self.slider)
+        print(val)
+
+    @observe('slider_textbox')
+    def _on_textbox_change(self, event):
+        print("I saw that: {}".format(event))
+        self.slider = float(event["new"])
+    '''
 
     @observe('slider')
     def _on_slider_updated(self, event):
         if not event['new']:
             value = 0
         else:
-            value = event['new']
-        self.slider_textbox = value
+            value = float(event['new'])
+        if value > self.max_value or value < self.min_value:
+            self._update_bounds[self.slider_type](value)
+            self.slider = value
         self._propagate_redshift()
 
     @observe('slider_type')

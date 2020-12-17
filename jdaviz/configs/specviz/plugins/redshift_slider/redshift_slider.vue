@@ -23,7 +23,7 @@
     </template>
     <template v-slot:append>
         <v-text-field
-          v-model="slider_textbox"
+          v-model="slider"
           class="mt-0 pt-0"
           hide-details
           single-line
@@ -31,7 +31,6 @@
           filled
           dense
           :step="slider_step"
-          @change="textbox_change"
       ></v-text-field>
     </template>
     </v-slider>
