@@ -230,3 +230,18 @@ class AddLineListMessage(Message):
     @property
     def table(self):
         return self._table
+
+class RedshiftMessage(Message):
+    '''Messages related to Specviz redshift slider'''
+    def __init__(self, param, value, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._param = param
+        self._value = value
+
+    @property
+    def param(self):
+        return self._param
+
+    @property
+    def value(self):
+        return self._value

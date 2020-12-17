@@ -2,6 +2,7 @@ import astropy.units as u
 from specutils import Spectrum1D, SpectrumCollection, SpectralRegion
 
 from jdaviz.core.helpers import ConfigHelper
+from jdaviz.core.events import RedshiftMessage
 from ..default.plugins.line_lists.line_list_mixin import LineListMixin
 
 class SpecViz(ConfigHelper, LineListMixin):
@@ -255,6 +256,27 @@ class SpecViz(ConfigHelper, LineListMixin):
         """
         scale = self.app.get_viewer("spectrum-viewer").scale_y
         self.y_limits(y_min=scale.max, y_max=scale.min)
+
+    def set_redshift_slider_bounds(self, lower = None, upper = None):
+        '''
+        Set the upper, lower, or both bounds of the redshift slider. Note
+        that this does not do any sanity checks on the numbers provided based
+        on whether the slider is set to Redshift or Radial Velocity.
+        '''
+        if lower is not None:
+            msg = RedshiftMessage("slider_min", lower, sender=self)
+            self.app.hub.broadcast(msg)
+        if upper is not None:
+            msg = RedshiftMessage("slider_max", upper, sender=self)
+            self.app.hub.broadcast(msg)
+
+    def set_redshift(self, new_redshift):
+        '''
+        Apply a redshift to any loaded spectral lines and data. Also updates
+        the value shown in the slider.
+        '''
+        msg = RedshiftMessage("redshift", new_redshift, sender=self)
+        self.app.hub.broadcast(msg)
 
     def show(self):
         self.app

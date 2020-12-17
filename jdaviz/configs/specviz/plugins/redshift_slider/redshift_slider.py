@@ -5,7 +5,7 @@ from specutils import SpectralAxis
 from glue_astronomy.spectral_coordinates import SpectralCoordinates
 import numpy as np
 
-from jdaviz.core.events import AddDataMessage
+from jdaviz.core.events import AddDataMessage, RedshiftMessage
 from jdaviz.core.registries import tool_registry
 from jdaviz.core.template_mixin import TemplateMixin
 from jdaviz.utils import load_template
@@ -35,6 +35,13 @@ class RedshiftSlider(TemplateMixin):
         # Watch for new data to grab its redshift if it has one
         self.session.hub.subscribe(self, AddDataMessage,
                                    handler=self._on_data_added)
+        # Watch for messages from Specviz helper redshift functions
+        self.session.hub.subscribe(self, RedshiftMessage,
+                                   handler=self._parse_redshift_msg)
+
+        self._update_bounds = {"Redshift": self._update_bounds_redshift,
+                               "RV (km/s)": self._update_bounds_rv}
+
     def _on_data_added(self, msg):
         if isinstance(msg.viewer, BqplotProfileView):
             print(msg.data.get_object())
@@ -50,6 +57,23 @@ class RedshiftSlider(TemplateMixin):
                 if new_rv < self.min_value or new_rv > self.max_value:
                     self._update_bounds_rv(new_rv)
                 self.slider = new_rv
+
+    def _parse_redshift_msg(self, msg):
+        '''
+        Handle incoming redshift messages from the app hub. Generally these
+        will be created by Specviz helper methods.
+        '''
+        param = msg.param
+        val = float(msg.value)
+
+        if param == "slider_min":
+            self.min_value = val
+        elif param == "slider_max":
+            self.max_value = val
+        elif param == "redshift":
+            if val > self.max_value or val < self.min_value:
+                self._update_bounds[self.slider_type](val)
+            self.slider = val
 
     def _velocity_to_redshift(self, velocity):
         """
@@ -136,7 +160,7 @@ class RedshiftSlider(TemplateMixin):
         else:
             new_min = new_val - (new_val / 100.0)
             new_max = new_val + (new_val / 100.0)
-            step = new_cal / 10000.0
+            step = new_val / 10000.0
 
         self._set_bounds_orderly(new_min, new_max, new_val)
 
