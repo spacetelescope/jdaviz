@@ -22,6 +22,37 @@
                     </jupyter-widget-mount-point>
             </template>
         </v-slide-y-transition>
+        <v-menu v-if="debug && voilaDebugMessages && voilaDebugMessages.length" offset-y top :close-on-content-click="false">
+            <template v-slot:activator="{ on }">
+                <v-btn text v-on="on" style="position: fixed; bottom: 8px; right: 8px">
+                    <span style="color: red">{{ voilaDebugMessages.length }}</span>
+                    <v-icon right large color="red">mdi-bug-outline</v-icon>
+                </v-btn>
+            </template>
+            <v-sheet class="pa-2" style="overflow: auto; max-height: 80vh">
+                <div style="display: flex" v-for="message in voilaDebugMessages" :key="message.cell" class="pa-2">
+                    <div style="width: 50px">[{{ message.cell }}]</div>
+                    <div v-if="message.traceback" class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr">
+                        <pre v-html="message.traceback.join('\n')" class="pa-2"></pre>
+                    </div>
+                    <pre v-else
+                    ><span :style="message.name === 'stderr' ? 'background-color: var(--jp-rendermime-error-background)' : ''"
+                           class="pa-2"
+                    >{{ message.text }}</span>
+                    </pre>
+                </div>
+                <div class="d-flex justify-end">
+                    <v-tooltip top>
+                        <template v-slot:activator="{ on, attrs }">
+                            <v-btn icon v-bind="attrs" v-on="on"  @click="voilaDebugMessages = []">
+                                <v-icon>mdi-trash-can-outline</v-icon>
+                            </v-btn>
+                        </template>
+                        <span>Clear messages</span>
+                    </v-tooltip>
+                </div>
+            </v-sheet>
+        </v-menu>
     </v-app>
 </div>
 
@@ -41,7 +72,9 @@ var app = new Vue({
         return {
             loading_text: "Loading page",
             loadingPercentage: -1,
-            loading: true
+            loading: true,
+            debug: false,
+            voilaDebugMessages: [],
         }
     }
 });
