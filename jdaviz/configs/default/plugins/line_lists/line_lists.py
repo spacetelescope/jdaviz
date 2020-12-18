@@ -13,7 +13,8 @@ from traitlets import Bool, Int, List, Unicode, Dict, Float
 from jdaviz.core.events import (AddDataMessage,
                                 RemoveDataMessage,
                                 AddLineListMessage,
-                                SnackbarMessage)
+                                SnackbarMessage,
+                                RedshiftMessage)
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
 from jdaviz.core.linelists import load_preset_linelist
@@ -48,6 +49,7 @@ class LineListTool(TemplateMixin):
         self.line_mark_dict = {}
         self._units = {}
         self._bounds = {}
+        self._global_redshift = 0
 
         self.hub.subscribe(self, AddDataMessage,
                            handler=self._on_viewer_data_changed)
@@ -66,6 +68,8 @@ class LineListTool(TemplateMixin):
 
         self.hub.subscribe(self, AddLineListMessage,
                            handler=self._list_from_notebook)
+        self.hub.subscribe(self, RedshiftMessage,
+                           handler=self._update_global_redshift)
 
     def _on_viewer_data_changed(self, msg=None):
         """
@@ -114,6 +118,11 @@ class LineListTool(TemplateMixin):
         self._bounds["min"] = self._viewer_spectrum.spectral_axis[0]
         self._bounds["max"] = self._viewer_spectrum.spectral_axis[-1]
 
+    def _update_global_redshift(self, msg):
+        '''Handle updates to the Specviz redshift slider, to apply to lines'''
+        if msg.param == "redshift":
+            self._global_redshift = msg.value
+
     def _list_from_notebook(self, msg):
         """
         Callback method for when a spectral line list is added to the specviz instance from the notebook.
@@ -137,7 +146,9 @@ class LineListTool(TemplateMixin):
                          "unit": str(row["rest"].unit),
                          "colors": row["colors"] if "colors" in row else "#FF0000FF",
                          "show": True,
-                         "name_rest": row["name_rest"]}
+                         "name_rest": row["name_rest"],
+                         "redshift": row["redshift"] if "redshift" in row else
+                                     self._global_redshift}
             list_contents[row["listname"]]["lines"].append(temp_dict)
 
         self.loaded_lists = []
@@ -196,7 +207,8 @@ class LineListTool(TemplateMixin):
                          "unit": str(row["rest"].unit),
                          "colors": row["colors"],
                          "show": True,
-                         "name_rest": str(row["name_rest"])}
+                         "name_rest": str(row["name_rest"]),
+                         "redshift": self._global_redshift}
             #for field in extra_fields:
             #    temp_dict[field] = row[field]
             line_list_dict["lines"].append(temp_dict)
@@ -226,7 +238,8 @@ class LineListTool(TemplateMixin):
                      "rest": float(self.custom_rest),
                      "unit": self.custom_unit,
                      "colors": list_contents["Custom"]["color"],
-                     "show": True
+                     "show": True,
+                     "redshift": self._global_redshift
                 }
 
         # Add to viewer astropy table
@@ -234,6 +247,7 @@ class LineListTool(TemplateMixin):
         temp_table["linename"] = [temp_dict["linename"]]
         temp_table["rest"] = [temp_dict["rest"]*u.Unit(temp_dict["unit"])]
         temp_table["colors"] = [temp_dict["colors"]]
+        temp_table["redshift"] = [temp_dict["redshift"]]
         temp_table = self._viewer.load_line_list(temp_table, return_table=True)
 
         # Add line to Custom lines in local list

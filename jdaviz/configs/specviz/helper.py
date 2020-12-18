@@ -268,7 +268,7 @@ class SpecViz(ConfigHelper, LineListMixin):
         scale = self.app.get_viewer("spectrum-viewer").scale_y
         self.y_limits(y_min=scale.max, y_max=scale.min)
 
-    def set_redshift_slider_bounds(self, lower = None, upper = None):
+    def set_redshift_slider_bounds(self, lower = None, upper = None, step = None):
         '''
         Set the upper, lower, or both bounds of the redshift slider. Note
         that this does not do any sanity checks on the numbers provided based
@@ -279,6 +279,9 @@ class SpecViz(ConfigHelper, LineListMixin):
             self.app.hub.broadcast(msg)
         if upper is not None:
             msg = RedshiftMessage("slider_max", upper, sender=self)
+            self.app.hub.broadcast(msg)
+        if step is not None:
+            msg = RedshiftMessage("slider_step", step, sender=self)
             self.app.hub.broadcast(msg)
 
     def set_redshift(self, new_redshift):
