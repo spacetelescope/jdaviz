@@ -23,14 +23,12 @@
     </template>
     <template v-slot:append>
         <v-text-field
-          v-model="slider"
+          v-model="slider_textbox"
           class="mt-0 pt-0"
           hide-details
           single-line
-          type="number"
           filled
           dense
-          :step="slider_step"
       ></v-text-field>
     </template>
     </v-slider>
