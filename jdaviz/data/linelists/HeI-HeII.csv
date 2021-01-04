@@ -1,0 +1,93 @@
+Line Name, 	transition,  Rest Value
+HeI, 	7F-3D 3Fo-3D,      	1.0031
+HeI,  7F-3D 1Fo-1D,      	1.0034
+HeII, 14-6, 	             1.0049
+HeII, 5-4,	               1.0133
+HeI, 	6D-3P 3dD-3Po,     	1.0314
+HeII, 13-6, 	             1.0422
+HeI, 	6S-3P 3S-3Po, 	     1.0668
+HeI, 	2P-2S 3Po-3S GU=3, 	1.0832
+HeI, 	2P-2S 3Po-3P GU=1, 	1.0832
+HeI, 	2P-2S 3Po-3S GU=5, 	1.0833
+HeI, 	2P-2S 3Po-3S GU=9, 	1.0833
+HeI, 	6P-3D 1Po-1d,      	1.0905
+HeI, 	6F-3D 3Fo-3D, 	     1.0916
+HeI, 	6F-3D 1Fo-1D, 	     1.0920
+HeII, 12-6, 	             1.0938
+HeI, 	6P-3D 3Po-3D, 	     1.0997
+HeI, 	5P-3S 1Po-1S,      	1.1016
+HeI, 	6D-3P 1D-1Po,      	1.1048
+HeII, 7LIMIT, 	           1.1164
+HeI, 	6S-3P 1S-1Po,	      1.1229
+HeII, 7-5,	               1.1628
+HeII, 11-6,	              1.1677
+HeI, 	5D-3P 3D-3Po,	      1.1972
+HeII, 21-7,	              1.2256
+HeII, 22-7,	              1.2418
+HeI, 	4P-3S 3Po-3S,	      1.2531
+HeII, 20-7,	              1.2719
+HeI, 	5P-3D 1Po-1D,	      1.2759
+HeI, 	5F-3D 3Fo-3D,	      1.2789
+HeII, 10-6,	              1.2817
+HeI, 	5S-3P 3S-3Po,	      1.2850
+HeII, 19-7,	              1.2914
+HeI, 	5D-3P 1D-1Po,	      1.2971
+HeI, 	5F-3D 1Fo-1D,      	1.2976
+HeI, 	5P-3D 3Po-3D,	      1.2988
+HeII, 18-7,	              1.3150
+HeI, 	5S-3P 1S-1Po,	      1.3415
+HeII, 17-7,	              1.3442
+HeII, 15-7,	              1.4273
+HeII, 8LIMIT,            	1.4578
+HeII, 9-6,	               1.4765
+HeII, 14-7,              	1.4882
+HeI, 	4P-3S 1Po-1S,	      1.5088
+HeII, 13-7,	              1.5719
+HeII, 25-8,	              1.6241
+HeII, 24-8,	              1.6400
+HeII, 23-8,	              1.6584
+HeII, 22-8,              	1.6799
+HeII, 12-7,	              1.6926
+HeI, 	4D-3P 3D-3Po,	      1.7007
+HeII, 21-8,	              1.7053
+HeII, 20-8,	              1.7355
+HeII, 19-8,	              1.7717
+HeII, 18-8,	              1.8167
+HeII, 9LIMIT,	            1.8450
+HeI, 	4P-3D 1Po-1D,	      1.8561
+HeII, 6-5,	               1.8639
+HeI, 	4F-3D 3Fo-3D,	      1.8691
+HeI, 	4F-3D 1Fo-1d,	      1.8702
+HeII, 17-8,	              1.8725
+HeII, 8-6,               	1.8753
+HeII, 11-7,	              1.8770
+HeI, 	8S-4P 3S-3Po,	      1.9068
+HeI, 	4D-3P 1D-1Po,	      1.9094
+HeI, 	4P-3D 3Po-3D,	      1.9548
+HeII, 15-8,              	2.0379
+HeI, 	6P-4S 3Po-3S,	      2.0430
+HeI, 	2P-2S 1Po-1S,	      2.0587
+HeI, 	4S-3P 3S-3Po,	      2.1126
+HeI, 	3pP-4sS,           	2.1132
+HeI, 	4S-3P 1S-1Po,	      2.1138
+HeII, 25-9,	              2.1195
+HeII, 24-9,              	2.1469
+HeI, 	7S-4P 3S-3Po,	      2.1500
+HeI, 	7F-4D 3Fo-3D,	      2.1614
+HeI, 	4dD-7fF,	           2.1617
+HeI, 	7F-4D 1Fo-1D,	      2.1623
+HeII, 14-8,              	2.1653
+HeI, 	4-7,               	2.166
+HeII, 23-9,	              2.1786
+HeI, 	7D-4P 1D-1Po,      	2.1847
+HeII, 10-7,              	2.1891
+HeII, 22-9,	              2.2155
+HeI, 	7S-4P 1S-1Po	       2.2290
+HeII, 21-9,              	2.2601
+HeII, 10LIMIT,           	2.2778
+HeI, 	6P-4S 1Po-1S,	      2.3069
+HeII, 20-9,              	2.314
+HeII, 13-8,	              2.348
+HeII, 19-9,	              2.3788
+HeII, 18-9,	              2.4606
+HeI, 	6D-4P 3D-3Po,	      2.4734

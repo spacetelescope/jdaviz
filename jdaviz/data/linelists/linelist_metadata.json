@@ -4,39 +4,74 @@
     "filename_base": "Common_stellar",
     "Citations/Notes": " Common stellar lines.\n\n Copyrigtht (C) 1999-2004 by Christian Buil\n http://www.astrosurf.com/buil/us/spe2/hresol5.htm"
   },
-  "SDSS": {
+  "Common Nebular": {
     "units": "Angstrom",
-    "filename_base": "SDSS",
-    "Citations/Notes": " Table of Spectral Lines Used in SDSS\n\n http://classic.sdss.org/dr6/algorithms/linestable.html\n Vacuum wavelengths"
-  },
-  "CO": {
-    "units": "micron",
-    "filename_base": "CO",
-    "Citations/Notes": " CARBON MONOXIDE (12C16O) VIBRATION ROTATION BANDS\n Compilation CO band head, fundamental and overtone wavelengths for Gemini.\n T. Geballe http://www.gemini.edu/sciops/instruments/nir/wavecal/colines.dat"
-  },
-  "SDSS-IV": {
-    "units": "Angstrom",
-    "filename_base": "SDSS-IV",
-    "Citations/Notes": " Lines used by the SDSS-IV Science Archive Webapp (SAW).\n https://dr14.sdss.org/static/js/optical/markedLines.js\n\n See also the emlines.par file in the idlspec2d package.\n\n Wavelengths are in air for lambda > 2000 vacuum for lambda < 2000."
+    "filename_base": "Common_nebular",
+    "Citations/Notes": " Common nebular lines.\n\n Copyright (C) 1999-2004 by Christian Buil\n http://www.astrosurf.com/buil/us/spe2/hresol5.htm"
   },
   "Atomic/Ionic": {
     "units": "micron",
     "filename_base": "Atomic-Ionic",
     "Citations/Notes": " JWST Line Lists: The lists and suggested means of implementing them in JWST data analysis software\n A.P.Marston, 30 March 2017\n https://stsci.slack.com/files/anmarston/F4UR94WUX/jwst_line_list.pdf"
   },
-  "H2": {
+  "Atomic-ISO": {
     "units": "micron",
-    "filename_base": "H2",
-    "Citations/Notes": " Gemini H2 lines\n Compilation of Important H2 Lines (for Gemini)\n T. Geballe, 1995. http://www.gemini.edu/sciops/instruments/nir/wavecal/h2lines.dat\n Based on energy levels calculated using Dabrowski & Herzberg, Can J Phys 62, 1639 (1984)\n and Einstein coefficients from Turner et al. ApJS, 35, 281 (1977)."
+    "filename_base": "Atomic-ISO",
+    "Citations/Notes": " D.Lutz, S.Colgan, M.Haas, 1998\n https://old.ipac.caltech.edu/iso//lws/atomic.html"
   },
-  "Common Nebular": {
+  "SDSS": {
     "units": "Angstrom",
-    "filename_base": "Common_nebular",
-    "Citations/Notes": " Common nebular lines.\n\n Copyright (C) 1999-2004 by Christian Buil\n http://www.astrosurf.com/buil/us/spe2/hresol5.htm"
+    "filename_base": "SDSS",
+    "Citations/Notes": " Table of Spectral Lines Used in SDSS\n\n http://classic.sdss.org/dr6/algorithms/linestable.html\n Vacuum wavelengths"
+  },
+  "SDSS-IV": {
+    "units": "Angstrom",
+    "filename_base": "SDSS-IV",
+    "Citations/Notes": " Lines used by the SDSS-IV Science Archive Webapp (SAW).\n https://dr14.sdss.org/static/js/optical/markedLines.js\n\n See also the emlines.par file in the idlspec2d package.\n\n Wavelengths are in air for lambda > 2000 vacuum for lambda < 2000."
+  },
+  "H-Paschen-Brackett": {
+    "units": "micron",
+    "filename_base": "H-Paschen-Brackett",
+    "Citations/Notes": " https://www.stsci.edu/itt/review/ihb_cy16/NICMOS/Appendix_B6.html"
   },
   "H-He": {
     "units": "micron",
     "filename_base": "H-He",
     "Citations/Notes": " H lines\n to level 3 = Paschen; to level 4 = Brackett; to level 5 = Pfund; to level 6 = Humphreys\n\n References:\n 15 - Mohr P.J., Taylor B.N., Newell D.B., 2008, Rev. Mod. Phys. 80, 633 (section IV.A)\n 16 - Morton D.C., Wu Q., Drake G.W.F., 2006, Can. J. Phys. 84, 83"
+  },
+  "HeI-HeII": {
+    "units": "micron",
+    "filename_base": "HeI-HeII",
+    "Citations/Notes": " https://www.stsci.edu/itt/review/ihb_cy16/NICMOS/Appendix_B6.html"
+  },
+  "H2": {
+    "units": "micron",
+    "filename_base": "H2",
+    "Citations/Notes": " Gemini H2 lines\n Compilation of Important H2 Lines (for Gemini)\n T. Geballe, 1995. http://www.gemini.edu/sciops/instruments/nir/wavecal/h2lines.dat\n Based on energy levels calculated using Dabrowski & Herzberg, Can J Phys 62, 1639 (1984)\n and Einstein coefficients from Turner et al. ApJS, 35, 281 (1977)."
+  },
+  "H2-alt": {
+    "units": "micron",
+    "filename_base": "H2-alt",
+    "Citations/Notes": " https://www.stsci.edu/itt/review/ihb_cy16/NICMOS/Appendix_B6.html"
+  },
+  "H2-ISO": {
+    "units": "micron",
+    "filename_base": "H2-ISO",
+    "Citations/Notes": " J.H.Black, E.F.vanDishoeck, ApJ 322: 412-449, 1988. https://old.ipac.caltech.edu/iso//lws/HII.html"
+  },
+  "CO": {
+    "units": "micron",
+    "filename_base": "CO",
+    "Citations/Notes": " CARBON MONOXIDE (12C16O) VIBRATION ROTATION BANDS\n Compilation CO band head, fundamental and overtone wavelengths for Gemini.\n T. Geballe http://www.gemini.edu/sciops/instruments/nir/wavecal/colines.dat"
+  },
+  "CO-band-heads": {
+    "units": "micron",
+    "filename_base": "CO-band-heads",
+    "Citations/Notes": " https://www.stsci.edu/itt/review/ihb_cy16/NICMOS/Appendix_B6.html"
+  },
+  "PAH": {
+    "units": "micron",
+    "filename_base": "PAH",
+    "Citations/Notes": " PAH features (Galaxies)\n\"ISO-SWS spectra of galaxies: Continuum and features\"\nSturm, E. et al. 2000, A&A, 358, 481\nTable 2  (features at  < 4 microns from ISO)\nand\n\"The Mid-Infrared Spectrum of Star-Forming Galaxies:\nGlobal Properties of Polycyclic Aromatic Hydrocarbon Emission\"\nSmith, J. D. T. et al. 2007, ApJ, 656, 770\nTable 3 (features at > 5 microns from Spitzer"
   }
 }
