@@ -1,3 +1,5 @@
+import logging
+
 import astropy.units as u
 from specutils import Spectrum1D, SpectrumCollection, SpectralRegion
 
@@ -28,13 +30,21 @@ class SpecViz(ConfigHelper, LineListMixin):
                           format=format,
                           show_in_viewer=show_in_viewer)
 
-    def get_spectra(self, data_label=None):
+    def get_spectra(self, data_label=None, apply_slider_redshift="Warn"):
         """Returns the current data loaded into the main viewer
 
         """
         spectra = self.app.get_data_from_viewer("spectrum-viewer", data_label=data_label)
-        for key in spectra.keys():
-            spectra[key].redshift = self._redshift
+        if not apply_slider_redshift:
+            return spectra
+        else:
+            for key in spectra.keys():
+                spectra[key].redshift = self._redshift
+            if apply_slider_redshift == "Warn":
+                logging.warning("Warning: Applying the value from the redshift "
+                        "slider to the output spectra. To avoid seeing this "
+                        "warning, explicitly set the apply_slider_redshift "
+                        "argument to True or False.")
         return spectra
 
     def get_spectral_regions(self):
