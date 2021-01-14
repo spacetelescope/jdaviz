@@ -108,7 +108,8 @@ def test_list_configurations():
 @pytest.mark.parametrize('name, expconf, expstat',
                          [('MaNGA cube', 'cubeviz', 'Success: Valid Format'),
                           ('MaNGA rss', 'imviz', 'Error: Config imviz not a valid configuration.'),
-                          ('generic 1d', 'specviz', 'Error: Cannot determine format of the file to load.')])
+                          ('generic 1d', 'specviz', 'Error: Cannot determine format of '
+                                                    'the file to load.')])
 def test_identify_data(create_fake_fits, name, expconf, expstat):
     """ test correct status messages are returned with identify_data """
     filename = create_fake_fits(name)
@@ -124,12 +125,4 @@ def test_identify_current_mismatch(create_fake_fits):
     filename = create_fake_fits('MaNGA cube')
     valid_format, config, status = identify_data(filename, current='specviz')
     assert (valid_format, config) == ("MaNGA cube", 'cubeviz')
-<<<<<<< HEAD
     assert 'Error: Mismatch between input file format and loaded configuration.' in status
-<<<<<<< HEAD
-=======
-
->>>>>>> a8d5fb8... adding tests for checking data_formats
-=======
-    assert 'Error: Mismatch between input file format and loaded configuration.' in status
->>>>>>> d78ff12... fixing linting issue
