@@ -1,3 +1,5 @@
+import astropy.units as u
+
 from jdaviz.core.events import AddLineListMessage
 
 __all__ = ['LineListMixin']
@@ -13,6 +15,11 @@ class LineListMixin:
         broadcasts a message so the line list plugin UI can display lines
         loaded via the notebook.
         """
+
+        # If the helper class has a global redshift (as in Specviz), use it
+        if hasattr(self, "_redshift") and "redshift" not in line_table.colnames:
+            line_table["redshift"] = u.Quantity(self._redshift)
+
         lt = self.app.get_viewer('spectrum-viewer').load_line_list(line_table,
                                                               replace=replace,
                                                               return_table=True)

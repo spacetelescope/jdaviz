@@ -24,4 +24,5 @@ Using Specviz
   import_data
   displaying
   plugins
+  redshift
   notebook

@@ -79,6 +79,8 @@ is automatically switched to in the spectrum viewer.
 The name of the new Spectrum1D object is "_units_copy_" plus
 the flux and spectral units of the spectrum.
 
+.. _line-lists:
+
 Line Lists
 ==========
 

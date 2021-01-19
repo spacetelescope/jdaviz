@@ -1,7 +1,10 @@
+import logging
+
 import astropy.units as u
 from specutils import Spectrum1D, SpectrumCollection, SpectralRegion
 
 from jdaviz.core.helpers import ConfigHelper
+from jdaviz.core.events import RedshiftMessage
 from ..default.plugins.line_lists.line_list_mixin import LineListMixin
 
 class SpecViz(ConfigHelper, LineListMixin):
@@ -11,6 +14,14 @@ class SpecViz(ConfigHelper, LineListMixin):
     """
 
     _default_configuration = "specviz"
+    _redshift = 0
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Listen for new redshifts from the redshift slider
+        self.app.hub.subscribe(self, RedshiftMessage,
+                                       handler=self._redshift_listener)
 
     def load_spectrum(self, data, data_label=None, format=None, show_in_viewer=True):
         super().load_data(data,
@@ -19,11 +30,22 @@ class SpecViz(ConfigHelper, LineListMixin):
                           format=format,
                           show_in_viewer=show_in_viewer)
 
-    def get_spectra(self, data_label=None):
+    def get_spectra(self, data_label=None, apply_slider_redshift="Warn"):
         """Returns the current data loaded into the main viewer
 
         """
-        return self.app.get_data_from_viewer("spectrum-viewer", data_label=data_label)
+        spectra = self.app.get_data_from_viewer("spectrum-viewer", data_label=data_label)
+        if not apply_slider_redshift:
+            return spectra
+        else:
+            for key in spectra.keys():
+                spectra[key].redshift = self._redshift
+            if apply_slider_redshift == "Warn":
+                logging.warning("Warning: Applying the value from the redshift "
+                        "slider to the output spectra. To avoid seeing this "
+                        "warning, explicitly set the apply_slider_redshift "
+                        "argument to True or False.")
+        return spectra
 
     def get_spectral_regions(self):
         """
@@ -255,6 +277,35 @@ class SpecViz(ConfigHelper, LineListMixin):
         """
         scale = self.app.get_viewer("spectrum-viewer").scale_y
         self.y_limits(y_min=scale.max, y_max=scale.min)
+
+    def set_redshift_slider_bounds(self, lower = None, upper = None, step = None):
+        '''
+        Set the upper, lower, or both bounds of the redshift slider. Note
+        that this does not do any sanity checks on the numbers provided based
+        on whether the slider is set to Redshift or Radial Velocity.
+        '''
+        if lower is not None:
+            msg = RedshiftMessage("slider_min", lower, sender=self)
+            self.app.hub.broadcast(msg)
+        if upper is not None:
+            msg = RedshiftMessage("slider_max", upper, sender=self)
+            self.app.hub.broadcast(msg)
+        if step is not None:
+            msg = RedshiftMessage("slider_step", step, sender=self)
+            self.app.hub.broadcast(msg)
+
+    def set_redshift(self, new_redshift):
+        '''
+        Apply a redshift to any loaded spectral lines and data. Also updates
+        the value shown in the slider.
+        '''
+        msg = RedshiftMessage("redshift", new_redshift, sender=self)
+        self.app.hub.broadcast(msg)
+
+    def _redshift_listener(self, msg):
+        '''Save new redshifts (including from the helper itself)'''
+        if msg.param == "redshift":
+            self._redshift = msg.value
 
     def show(self):
         self.app

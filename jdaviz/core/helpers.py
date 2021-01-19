@@ -7,11 +7,12 @@ See also https://github.com/spacetelescope/jdaviz/issues/104 for more details
 on the motivation behind this concept.
 """
 from ..app import Application
+from glue.core import HubListener
 
 __all__ = ['ConfigHelper']
 
 
-class ConfigHelper:
+class ConfigHelper(HubListener):
     """The Base Helper Class
     Provides shared abstracted helper methods to the user.
 

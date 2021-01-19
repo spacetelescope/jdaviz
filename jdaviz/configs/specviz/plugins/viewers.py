@@ -87,6 +87,9 @@ class SpecvizProfileView(BqplotProfileView):
         # Use the redshift of the displayed spectrum if no redshifts are specified
         if "redshift" not in line_table.colnames:
             line_table["redshift"] = self.data()[0].spectral_axis.redshift
+        # Make sure the redshift column is a quantity
+        line_table["redshift"] = u.Quantity(line_table["redshift"])
+
 
         # Set all of the lines to be shown on the plot by default on load
         line_table["show"] = True
