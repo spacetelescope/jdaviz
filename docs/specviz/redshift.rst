@@ -2,6 +2,12 @@
 Setting Redshift/RV
 *******************
 
+.. warning::
+    Using the redshift slider with many active spectral lines can be slow, as
+    every line gets replotted at each slider position. We recommended using 
+    the slider with no more than around a dozen lines plotted. You can deselect
+    lines using e.g. the "Hide All" button in the line lists UI.
+
 In the Specviz configuration, the toolbar includes a slider that can be used
 to set an app-level redshift or radial velocity. The user can toggle between
 the two modes by clicking the dropdown menu to the left of the slider bar.
@@ -28,5 +34,6 @@ From the notebook
 
 The upper and lower bounds of the slider, as well as the resolution of a single
 step in the slider, can be set from a notebook cell using the 
-`set_redshift_slider_bounds` method. The redshift on the slider can be set from 
-the notebook using the `set_redshift` method.
+`set_redshift_slider_bounds` method by specifying the `upper`, `lower` and 
+`step` keywords. The redshift on the slider can be set from the notebook using 
+the `set_redshift` method.
