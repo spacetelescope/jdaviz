@@ -276,7 +276,7 @@ class Application(VuetifyTemplate, HubListener):
                 snackbar_message = SnackbarMessage(msg_text, sender=self,
                                                    color='error')
                 self.hub.broadcast(snackbar_message)
-                return
+                raise FileNotFoundError("Could not locate file: {}".format(file_obj))
             else:
                 # Convert path to properly formatted string (Parsers do not accept path objs)
                 file_obj = str(file_obj)
