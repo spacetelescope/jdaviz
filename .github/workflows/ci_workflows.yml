@@ -10,12 +10,35 @@ on:
   #  - master
 
 jobs:
+  initial_checks:
+    name: Mandatory checks before CI
+    runs-on: ubuntu-latest
+    outputs:
+      run_next: ${{ steps.skip_ci_step.outputs.run_next }}
+    steps:
+    - name: Check skip CI
+      uses: pllim/action-skip-ci@main
+      id: skip_ci_step
+      with:
+        NO_FAIL: true
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # This should only run if we did not skip CI
+    - name: Cancel previous runs
+      uses: styfle/cancel-workflow-action@ce17749
+      if: steps.skip_ci_step.outputs.run_next == 'true'
+      with:
+        access_token: ${{ secrets.GITHUB_TOKEN }}
+
+  # The rest only run if above are done
+
   # Github Actions supports ubuntu, windows, and macos virtual environments:
   # https://help.github.com/en/actions/reference/virtual-environments-for-github-hosted-runners
   ci_tests:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.allow_failure }}
+    needs: initial_checks
+    if: needs.initial_checks.outputs.run_next == 'true'
     strategy:
       matrix:
         include:
