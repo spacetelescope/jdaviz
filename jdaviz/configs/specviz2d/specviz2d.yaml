@@ -18,14 +18,15 @@ tray:
   - g-line-list
   - specviz-line-analysis
 viewer_area:
-  - container: row
-    viewers:
-      - name: 2D Spectrum viewer
-        plot: mosviz-profile-2d-viewer
-        reference: spectrum-2d-viewer
-    
-  - container: row
-    viewers:
-      - name: Spectrum
-        plot: specviz-profile-viewer
-        reference: spectrum-viewer
+  - container: col
+    children:
+      - container: row
+        viewers:
+          - name: 2D Spectrum viewer
+            plot: mosviz-profile-2d-viewer
+            reference: spectrum-2d-viewer
+      - container: row
+        viewers:
+          - name: Spectrum
+            plot: specviz-profile-viewer
+            reference: spectrum-viewer
