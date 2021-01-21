@@ -1,0 +1,31 @@
+settings:
+  configuration: mosviz
+  visible:
+    menu_bar: false
+    toolbar: true
+    tray: true
+    tab_headers: false
+  context:
+    notebook:
+      max_height: 600px
+toolbar:
+  - g-data-tools
+  - g-subset-tools
+tray:
+  - g-gaussian-smooth
+  - g-model-fitting
+  - g-unit-conversion
+  - g-line-list
+  - specviz-line-analysis
+viewer_area:
+  - container: row
+    viewers:
+      - name: 2D Spectrum viewer
+        plot: mosviz-profile-2d-viewer
+        reference: spectrum-2d-viewer
+    
+  - container: row
+    viewers:
+      - name: Spectrum
+        plot: specviz-profile-viewer
+        reference: spectrum-viewer
