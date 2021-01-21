@@ -11,11 +11,11 @@ from echo import delay_callback
 from astropy import units as u
 
 
-__all__ = ['MOSVizProfileView', 'MOSVizImageView']
+__all__ = ['SpecVizProfileView', 'SpecVizProfile2DView']
 
 
-@viewer_registry("mosviz-profile-viewer", label="Profile 1D (MOSViz)")
-class MOSVizProfileView(BqplotProfileView):
+@viewer_registry("s2d-profile-viewer", label="Profile 1D (MOSViz)")
+class SpecVizProfileView(BqplotProfileView):
     default_class = Spectrum1D
 
     def data(self, cls=None):
@@ -43,8 +43,8 @@ class MOSVizProfileView(BqplotProfileView):
         # Make it so y axis label is not covering tick numbers.
         self.figure.axes[1].label_offset = "-50"
 
-@viewer_registry("mosviz-profile-2d-viewer", label="Spectrum 2D (MOSViz)")
-class MOSVizProfile2DView(BqplotImageView):
+@viewer_registry("s2d-profile-2d-viewer", label="Spectrum 2D (MOSViz)")
+class SpecVizProfile2DView(BqplotImageView):
     # Due to limitations in CCDData and 2D data that has spectral and spatial
     #  axes, the default conversion class must handle cubes
     default_class = SpectralCube

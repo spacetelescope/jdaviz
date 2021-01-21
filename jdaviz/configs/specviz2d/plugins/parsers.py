@@ -17,7 +17,7 @@ def _check_is_file(path):
     return isinstance(path, str) and Path(path).is_file()
 
 
-@data_parser_registry("mosviz-spec1d-parser")
+@data_parser_registry("spec1d-parser")
 def mos_spec1d_parser(app, data_obj, data_labels=None):
     """
     Attempts to parse a 1D spectrum object.
@@ -58,7 +58,7 @@ def mos_spec1d_parser(app, data_obj, data_labels=None):
         app.data_collection[data_labels[i]] = data_obj[i]
 
 
-@data_parser_registry("mosviz-spec2d-parser")
+@data_parser_registry("spec2d-parser")
 def mos_spec2d_parser(app, data_obj, data_labels=None):
     """
     Attempts to parse a 2D spectrum object.
