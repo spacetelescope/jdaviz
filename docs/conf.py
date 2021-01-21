@@ -28,7 +28,7 @@
 import os
 import sys
 import datetime
-from importlib import import_module
+from pkg_resources import get_distribution
 
 try:
     from sphinx_astropy.conf.v1 import *  # noqa
@@ -40,8 +40,8 @@ except ImportError:
 from configparser import ConfigParser
 conf = ConfigParser()
 
-conf.read([os.path.join(os.path.dirname(__file__), '..', 'setup.cfg')])
-setup_cfg = dict(conf.items('metadata'))
+conf.read(os.path.join(os.pardir, 'setup.cfg'))
+setup_cfg = conf['metadata']
 
 # -- General configuration ----------------------------------------------------
 
@@ -70,20 +70,18 @@ rst_epilog += """
 project = setup_cfg['name']
 author = setup_cfg['author']
 copyright = '{0}, {1}'.format(
-    datetime.datetime.now().year, setup_cfg['author'])
+    datetime.datetime.now().year, author)
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 
-import_module(setup_cfg['name'])
-package = sys.modules[setup_cfg['name']]
+package = get_distribution(project)
 
-# The short X.Y version.
-version = package.__version__.split('-', 1)[0]
 # The full version, including alpha/beta/rc tags.
-release = package.__version__
-
+release = package.version
+# The short X.Y version.
+version = '.'.join(release.split('.')[:2])
 
 # -- Options for HTML output --------------------------------------------------
 
@@ -104,9 +102,7 @@ release = package.__version__
 # name of a builtin theme or the name of a custom theme in html_theme_path.
 #html_theme = None
 
-
 html_theme = "sphinx_rtd_theme"
-
 
 # Custom sidebar templates, maps document names to template names.
 #html_sidebars = {}

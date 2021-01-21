@@ -1,5 +1,5 @@
 exclude_dirs:
   - jdaviz/tests
 
-skips: ['B101' # skip warning about asserts - they are used as behavior checks not as code tools
-       ]
+# skip warning about asserts - they are used as behavior checks not as code tools
+skips: ['B101']

@@ -55,12 +55,6 @@ jobs:
             toxenv: py38-test
             allow_failure: false
 
-          - name: Documentation build
-            os: ubuntu-latest
-            python: 3.8
-            toxenv: build_docs
-            allow_failure: false
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v2

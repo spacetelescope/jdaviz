@@ -1,16 +1,14 @@
 import logging
 import os
 import pathlib
+import pkg_resources
 import re
 import uuid
 from inspect import isclass
 
 import ipywidgets as w
-import numpy as np
-from astropy import units as u
-import pkg_resources
+
 from astropy.nddata import CCDData
-from spectral_cube import SpectralCube
 from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
 from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
@@ -20,7 +18,6 @@ from specutils import Spectrum1D
 
 from glue.config import data_translator
 from glue.core import BaseData, HubListener, Data, DataCollection
-from glue.core.autolinking import find_possible_links
 from glue.core.link_helpers import LinkSame
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
@@ -32,12 +29,11 @@ from ipyvuetify import VuetifyTemplate
 
 from .core.config import read_configuration, get_configuration
 from .core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
-                          SnackbarMessage, RemoveDataMessage, ConfigurationLoadedMessage, AddDataToViewerMessage, RemoveDataFromViewerMessage)
+                          SnackbarMessage, RemoveDataMessage,
+                          AddDataToViewerMessage, RemoveDataFromViewerMessage)
 from .core.registries import (tool_registry, tray_registry, viewer_registry,
                               data_parser_registry)
 from .utils import load_template
-
-#from .configs.mosviz.plugins.viewers import MOSVizProfile2DView
 
 __all__ = ['Application']
 
