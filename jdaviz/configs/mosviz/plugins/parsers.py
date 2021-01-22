@@ -43,6 +43,7 @@ def _add_to_table(app, data, comp_label):
         viewer.add_data(table_data)
     else:
         mos_table = app.data_collection['MOS Table']
+        print(data)
         mos_table.add_component(data, comp_label)
 
 
@@ -361,6 +362,9 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                   "1D Spectra R": spec1d_r
                  }
 
+    print(len(file_lists["Source Catalog"]), len(file_lists["Direct Image"]), len(file_lists["2D Spectra C"]),
+          len(file_lists["2D Spectra R"]), len(file_lists["1D Spectra C"]), len(file_lists["1D Spectra R"]))
+
     # Convert from pathlib Paths back to strings
     for key in file_lists:
         file_lists[key] = [str(x) for x in file_lists[key]]
@@ -369,29 +373,45 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
 
     # Parse relevant information from source catalog
     cat_fields = ["id", "sky_centroid.ra", "sky_centroid.dec"]
-    cat_file = file_lists["Source Catalog"][0]
-    parsed_cat_fields = _fields_from_ecsv(cat_file, cat_fields, delimiter=" ")
-    # Need to change to column lists rather than row lists
     source_ids = []
     ras = []
     decs = []
-    for row in parsed_cat_fields:
-        source_ids.append(row[0])
-        ras.append(row[1])
-        decs.append(row[2])
+    image_order = []
+    ##########################
+    for source_catalog_num in range(0, len(file_lists["Source Catalog"])):
+        cat_file = file_lists["Source Catalog"][source_catalog_num]
+        parsed_cat_fields = _fields_from_ecsv(cat_file, cat_fields, delimiter=" ")
+        # Need to change to column lists rather than row lists
+
+        for row in parsed_cat_fields:
+            print(cat_file.split("/")[-1].split("_")[1])
+            image_order.append(cat_file.split("/")[-1].split("_")[1])
+            source_ids.append("Source Catalog: {} Source ID: {}".format(cat_file.split("/")[-1].split("_")[1], row[0]))
+            ras.append(row[1])
+            decs.append(row[2])
     _add_to_table(app, source_ids, "Source ID")
     _add_to_table(app, ras, "Right Ascension")
     _add_to_table(app, decs, "Declination")
 
+    ##########################
+
     # Read in direct image (NIRISS only has one image containing all sources)
+    image_dict = {}
     for image_file in file_lists["Direct Image"]:
         im_split = image_file.split("/")[-1].split("_")
         image_label = "Image {} {}".format(im_split[0], im_split[1])
         image_data = CCDData.read(direct_image[0])
         app.data_collection[image_label] = image_data
+
+        image_dict[im_split[1]] = image_label
         # Only one image, duplicate for table
-        image_list = [image_label]*len(source_ids)
-        _add_to_table(app, image_list, "Images")
+        #image_list = [image_label]*len(source_ids)
+
+    image_add = []
+    for image in image_order:
+        image_add.append(image_dict[image])
+
+    _add_to_table(app, image_add, "Images")
 
     # Parse 2D spectra
     for f in ["2D Spectra C", "2D Spectra R"]:
@@ -407,13 +427,16 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
             # Now get a CCDData object for each SCI HDU
             for i in sci_hdus:
                 spec2d = CCDData.read(fname, hdu=i)
+                spec2d.meta['S_REGION'] = 'POLYGON ICRS  5.029236065 4.992154276 5.029513148 4.992154276 5.029513148 4.992468585 5.029236065 4.992468585'
                 print(spec2d.meta["SOURCEID"])
                 label = "Source {} spec2d {}".format(spec2d.meta["SOURCEID"],
                                                orientation)
                 spec_labels.append(label)
                 app.data_collection[label] = spec2d
-            if orientation == "C":
-                _add_to_table(app, spec_labels, "2D Spectra")
+            #if orientation == "C":
+        if f == "2D Spectra C":
+            _add_to_table(app, spec_labels[:6], "2D Spectra")
+                #_add_to_table(app, [spec_labels[0]], "2D Spectra")
 
     # Parse 1D spectra using SpectumList reader
     for f in ["1D Spectra C", "1D Spectra R"]:
@@ -430,5 +453,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                 app.data_collection[label] = spec
 
             # We default to show the "C" spectra, show those in the table for now
-            if orientation == "C":
-                _add_to_table(app, spec_labels, "1D Spectra")
+            #if orientation == "C":
+        if f == "1D Spectra C":
+            _add_to_table(app, spec_labels[:6], "1D Spectra")
+                #_add_to_table(app, [spec_labels[0]], "1D Spectra")
