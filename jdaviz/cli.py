@@ -18,8 +18,8 @@ CONFIGS_DIR = os.path.join(os.path.dirname(__file__), 'configs')
               default='default',
               nargs=1,
               show_default=True,
-              type=click.Choice(['default', 'cubeviz', 'specviz', 'mosviz'],
-                                case_sensitive=False),
+              type=click.Choice(['default', 'cubeviz', 'specviz', 'mosviz',
+                                 'imviz'], case_sensitive=False),
               help="Configuration to use on application startup")
 def main(filename, layout='default'):
     """
