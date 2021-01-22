@@ -87,7 +87,7 @@ class SpecViz(ConfigHelper, LineListMixin):
 
         # Retrieve the spectral axis
         ref_index = self.app.get_viewer("spectrum-viewer").state.reference_data.label
-        spectral_axis = self.get_spectra(ref_index).spectral_axis
+        spectral_axis = self.get_spectra(ref_index, apply_slider_redshift=False).spectral_axis
         self._set_scale(scale, spectral_axis, x_min, x_max)
 
     def y_limits(self, y_min=None, y_max=None):
@@ -106,7 +106,7 @@ class SpecViz(ConfigHelper, LineListMixin):
 
         # Retrieve the flux axis
         ref_index = self.app.get_viewer("spectrum-viewer").state.reference_data.label
-        flux_axis = self.get_spectra(ref_index).flux
+        flux_axis = self.get_spectra(ref_index, apply_slider_redshift=False).flux
         self._set_scale(scale, flux_axis, y_min, y_max)
 
     def _set_scale(self, scale, axis, min_val=None, max_val=None):
@@ -175,108 +175,6 @@ class SpecViz(ConfigHelper, LineListMixin):
 
     def show(self):
         self.app
-
-    def x_limits(self, x_min=None, x_max=None):
-        """Sets the limits of the x-axis
-
-        Parameters
-        ----------
-        x_min
-            The lower bound of the axis. Can also be a Specutils SpectralRegion
-        x_max
-            The upper bound of the axis
-        """
-        scale = self.app.get_viewer("spectrum-viewer").scale_x
-        if x_min is None and x_max is None:
-            return scale
-
-        # Retrieve the spectral axis
-        ref_index = self.app.get_viewer("spectrum-viewer").state.reference_data.label
-        spectral_axis = self.get_spectra(ref_index).spectral_axis
-        self._set_scale(scale, spectral_axis, x_min, x_max)
-
-    def y_limits(self, y_min=None, y_max=None):
-        """Sets the limits of the y-axis
-
-        Parameters
-        ----------
-        y_min
-            The lower bound of the axis. Can also be a Specutils SpectralRegion
-        y_max
-            The upper bound of the axis
-        """
-        scale = self.app.get_viewer("spectrum-viewer").scale_y
-        if y_min is None and y_max is None:
-            return scale
-
-        # Retrieve the flux axis
-        ref_index = self.app.get_viewer("spectrum-viewer").state.reference_data.label
-        flux_axis = self.get_spectra(ref_index).flux
-        self._set_scale(scale, flux_axis, y_min, y_max)
-
-    def _set_scale(self, scale, axis, min_val=None, max_val=None):
-        """Internal helper method to set the bqplot scale
-
-        Parameters
-        ----------
-        scale
-            The Bqplot viewer scale
-        axis
-            The Specutils data axis
-        min_val
-            The lower bound of the axis to set. Can also be a Specutils SpectralRegion
-        max_val
-            The upper bound of the axis to set
-        """
-        if min_val is not None:
-            # If SpectralRegion, set limits to region's lower and upper bounds
-            if isinstance(min_val, SpectralRegion):
-                return self._set_scale(scale, axis, min_val.lower, min_val.upper)
-            # If user's value has a unit, convert it to the current axis' units
-            elif isinstance(min_val, u.Quantity):
-                # Convert user's value to axis' units
-                min_val = min_val.to(axis.unit).value
-            # If auto, set to min_valimum wavelength value
-            elif min_val == "auto":
-                min_val = min(axis).value
-
-            scale.min = float(min_val)
-        if max_val is not None:
-            # If user's value has a unit, convert it to the current axis' units
-            if isinstance(max_val, u.Quantity):
-                # Convert user's value to axis' units
-                max_val = max_val.to(axis.unit).value
-            # If auto, set to max_valimum wavelength value
-            elif max_val == "auto":
-                max_val = max(axis).value
-
-            scale.max = float(max_val)
-
-    def autoscale_x(self):
-        """Sets the x-axis limits to the min/max of the reference data
-
-        """
-        self.x_limits("auto", "auto")
-
-    def autoscale_y(self):
-        """Sets the y-axis limits to the min/max of the reference data
-
-        """
-        self.y_limits("auto", "auto")
-
-    def flip_x(self):
-        """Flips the current limits of the x-axis
-
-        """
-        scale = self.app.get_viewer("spectrum-viewer").scale_x
-        self.x_limits(x_min=scale.max, x_max=scale.min)
-
-    def flip_y(self):
-        """Flips the current limits of the y-axis
-
-        """
-        scale = self.app.get_viewer("spectrum-viewer").scale_y
-        self.y_limits(y_min=scale.max, y_max=scale.min)
 
     def set_redshift_slider_bounds(self, lower = None, upper = None, step = None):
         '''
