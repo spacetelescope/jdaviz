@@ -37,6 +37,8 @@ def read_configuration(path=None):
         path = default_path / "specviz" / "specviz.yaml"
     elif path == 'mosviz':
         path = default_path / "mosviz" / "mosviz.yaml"
+    elif path == 'imviz':
+        path = default_path / "imviz" / "imviz.yaml"
     elif not os.path.isfile(path):
         raise ValueError("Configuration must be path to a .yaml file.")
 
