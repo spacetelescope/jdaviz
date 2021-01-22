@@ -1,0 +1,20 @@
+settings:
+  configuration: imviz
+  data:
+    parser: imviz-image-parser
+  visible:
+    menu_bar: false
+    toolbar: false
+    tray: false
+    tab_headers: false
+  context:
+    notebook:
+      max_height: 600px
+viewer_area:
+  - container: col
+    children:
+      - container: row
+        viewers:
+          - name: Image
+            plot: imviz-image-viewer
+            reference: image-viewer
