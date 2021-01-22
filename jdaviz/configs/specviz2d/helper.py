@@ -89,7 +89,7 @@ class Specviz2d(ConfigHelper):
             if val != old_val:
                 setattr(scales['x'], name, val)
 
-    def load_data(self, spectrum_2d, spectrum_1d=None, spectrum_1d_label=None,
+    def load_data(self, spectrum_2d=None, spectrum_1d=None, spectrum_1d_label=None,
                   spectrum_2d_label=None):
         """
         Load and parse a pair of corresponding 1D and 2D spectra
@@ -117,12 +117,12 @@ class Specviz2d(ConfigHelper):
             for each item in ``data_obj`` if  ``data_obj`` is a list.
 
         """
-
-        self.load_2d_spectrum(spectrum_2d, spectrum_2d_label)
+        if spectrum_2d is not None:
+            self.load_2d_spectrum(spectrum_2d, spectrum_2d_label)
         # Collapse the 2d spectrum to 1d if no 1d spectrum provided
-        if spectrum_1d is None:
-            return
-        self.load_1d_spectrum(self, spectrum_1d, spectrum_1d_label)
+        if spectrum_1d is not None:
+            self.app.load_data(spectrum_1d, data_label = spectrum_1d_label,
+                               parser_reference="specviz-spectrum1d-parser")
 
     def load_1d_spectrum(self, data_obj, data_labels=None):
         """
