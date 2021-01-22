@@ -142,7 +142,7 @@ class Specviz2d(ConfigHelper):
         super().load_data(data_obj, parser_reference="mosviz-spec1d-parser",
                            data_labels=data_labels)
 
-    def load_2d_spectrum(self, data_obj, data_labels=None):
+    def load_2d_spectrum(self, data_obj, data_label=None):
         """
         Load and parse a set of 2D spectra objects.
 
@@ -157,6 +157,6 @@ class Specviz2d(ConfigHelper):
             ``data_obj``. Can be a list of strings representing data labels
             for each item in ``data_obj`` if  ``data_obj`` is a list.
         """
-        super().load_data(data_obj, parser_reference="mosviz-spec2d-parser",
-                           data_labels=data_labels)
+        super().load_data(data_obj, parser_reference="spec2d-parser",
+                           data_label=data_label)
 

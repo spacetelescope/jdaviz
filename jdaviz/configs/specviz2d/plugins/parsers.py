@@ -5,6 +5,7 @@ from jdaviz.core.registries import data_parser_registry
 from astropy.nddata import CCDData
 from specutils import Spectrum1D
 from astropy.io import fits
+import astropy.units as u
 import numpy as np
 import logging
 from astropy.wcs import WCS
@@ -16,7 +17,7 @@ def _check_is_file(path):
     return isinstance(path, str) and Path(path).is_file()
 
 @data_parser_registry("spec2d-parser")
-def spec2d_parser(app, data_obj, data_labels=None):
+def spec2d_parser(app, data_obj, data_label=None):
     """
     Attempts to parse a 2D spectrum object.
 
@@ -43,30 +44,17 @@ def spec2d_parser(app, data_obj, data_labels=None):
         with fits.open(path) as hdulist:
             data = hdulist[1].data
             header = hdulist[1].header
+            data = data * u.Unit(header['BUNIT'])
             wcs = WCS(header)
 
         return CCDData(data, wcs=wcs)
 
 
     if _check_is_file(data_obj):
-        data_obj = [_parse_2d(data_obj)]
+        data_obj = _parse_2d(data_obj)
 
-    if isinstance(data_labels, str):
-        data_labels = [data_labels]
+    if data_label is None:
+        data_labels = f"2D Spectrum"
 
-    # Coerce into list-like object
-    if not isinstance(data_obj, (list, set)):
-        data_obj = [data_obj]
-    else:
-        data_obj = [_parse_as_cube(x)
-                    if _check_is_file(x) else x
-                    for x in data_obj]
-
-    if data_labels is None:
-        data_labels = [f"2D Spectrum {i}" for i in range(len(data_obj))]
-    elif len(data_obj) != len(data_labels):
-        data_labels = [f"{data_labels} {i}" for i in range(len(data_obj))]
-
-    for i in range(len(data_obj)):
-        app.data_collection[data_labels[i]] = data_obj[i]
+    app.data_collection[data_label] = data_obj
 
