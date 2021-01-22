@@ -1,2 +1,2 @@
 from .plugins import *
-from .helper import SpecViz2D
+from .helper import Specviz2d

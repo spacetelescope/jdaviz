@@ -6,7 +6,7 @@ from astropy.table import QTable
 import astropy.units as u
 
 
-class SpecViz2D(ConfigHelper):
+class Specviz2d(ConfigHelper):
     """SpecViz2D Helper class"""
 
     _default_configuration = "specviz2d"
@@ -89,39 +89,42 @@ class SpecViz2D(ConfigHelper):
             if val != old_val:
                 setattr(scales['x'], name, val)
 
-    def load_data(self, spectra_1d, spectra_2d, spectra_1d_label=None,
-                  spectra_2d_label=None):
+    def load_data(self, spectrum_2d, spectrum_1d=None, spectrum_1d_label=None,
+                  spectrum_2d_label=None):
         """
-        Load and parse a set of MOS spectra and images
+        Load and parse a pair of corresponding 1D and 2D spectra
 
         Parameters
         ----------
-        spectra_1d: list or str
-            A list of spectra as translatable container objects (e.g.
+        spectrum_1d: str or Spectrum1D
+            A spectrum as translatable container objects (e.g.
             ``Spectrum1D``) that can be read by glue-jupyter. Alternatively,
             can be a string file path.
 
-        spectra_2d: list or str
-            A list of spectra as translatable container objects (e.g.
+        spectrum_2d: str
+            A spectrum as translatable container objects (e.g.
             ``Spectrum1D``) that can be read by glue-jupyter. Alternatively,
             can be a string file path.
 
-        spectra_1d_label : str or list
+        spectrum_1d_label : str
             String representing the label for the data item loaded via
             ``onedspectra``. Can be a list of strings representing data labels
             for each item in ``data_obj`` if  ``data_obj`` is a list.
 
-        spectra_2d_label : str or list
+        spectrum_2d_label : str
             String representing the label for the data item loaded via
             ``twodspectra``. Can be a list of strings representing data labels
             for each item in ``data_obj`` if  ``data_obj`` is a list.
 
         """
 
-        self.load_2d_spectra(spectra_2d, spectra_2d_label)
-        self.load_1d_spectra(spectra_1d, spectra_1d_label)
+        self.load_2d_spectrum(spectrum_2d, spectrum_2d_label)
+        # Collapse the 2d spectrum to 1d if no 1d spectrum provided
+        if spectrum_1d is None:
+            return
+        self.load_1d_spectrum(self, spectrum_1d, spectrum_1d_label)
 
-    def load_1d_spectra(self, data_obj, data_labels=None):
+    def load_1d_spectrum(self, data_obj, data_labels=None):
         """
         Load and parse a set of 1D spectra objects.
 
@@ -139,7 +142,7 @@ class SpecViz2D(ConfigHelper):
         super().load_data(data_obj, parser_reference="mosviz-spec1d-parser",
                            data_labels=data_labels)
 
-    def load_2d_spectra(self, data_obj, data_labels=None):
+    def load_2d_spectrum(self, data_obj, data_labels=None):
         """
         Load and parse a set of 2D spectra objects.
 
