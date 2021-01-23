@@ -23,7 +23,7 @@ For example, to load a SDSS MaNGA IFU data cube into ``CubeViz``, you would run 
 
     jdaviz /my/manga/cube/manga-8485-1901-LOGCUBE.fits.gz --layout=cubeviz
 
-In a Juypter Notebook
+In a Jupyter Notebook
 ---------------------
 
 ``jdaviz`` provides a directory of sample notebooks to test the application, located in the `notebooks` sub-directory
