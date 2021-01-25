@@ -912,6 +912,10 @@ class Application(VuetifyTemplate, HubListener):
                                               sender=self)
             self.hub.broadcast(add_data_message)
 
+        # Temporary workaround since ImageWidget doesn't have a state attribute
+        if not hasattr(viewer, "state"):
+            return
+
         # Remove any deselected data objects from viewer
         viewer_data = [layer_state.layer
                        for layer_state in viewer.state.layers

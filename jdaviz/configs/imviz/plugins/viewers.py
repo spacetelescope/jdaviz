@@ -1,5 +1,6 @@
 from astrowidgets.core import ImageWidget
 from ginga.misc.log import get_logger
+from glue.core import Data
 
 from jdaviz.core.registries import viewer_registry
 
@@ -33,6 +34,11 @@ class ImvizImageWidget(ImageWidget):
 
     def register_to_hub(self, *args, **kwargs):
         pass
+
+    def add_data(self, data):
+        if type(data) == Data:
+            data = data.get_object()
+        self.load_nddata(data)
 
     @property
     def toolbar_selection_tools(self):
