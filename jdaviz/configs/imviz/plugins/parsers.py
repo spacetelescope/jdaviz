@@ -2,6 +2,8 @@ import base64
 import pathlib
 import uuid
 
+from astropy.nddata import CCDData
+
 from jdaviz.core.registries import data_parser_registry
 
 __all__ = ["imviz_image_parser"]
@@ -18,8 +20,7 @@ def imviz_image_parser(app, data, data_label=None, show_in_viewer=True):
     path = pathlib.Path(data)
     if path.is_file():
         # TODO: Support other image formats
-        from astropy.io import fits
-        data = fits.getdata(path)
+        data = CCDData.read(path)
     else:
         raise FileNotFoundError(f"No such file: {path}")
 
