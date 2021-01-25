@@ -41,7 +41,7 @@ class Specviz2d(ConfigHelper):
             if name not in ['min', 'max']:
                 return
             new_val = change['new']
-            spec1d = self.app.get_viewer('table-viewer')._selected_data["spectrum-viewer"]
+            spec1d = self.app.get_viewer('spectrum-viewer').state.reference_data.label
             extend_by = int(self.app.data_collection[spec1d]["World 0"].shape[0])
             world = self._extend_world(spec1d, extend_by)
 
@@ -69,7 +69,7 @@ class Specviz2d(ConfigHelper):
             if name not in ['min', 'max']:
                 return
             new_idx = int(np.around(change['new']))
-            spec1d = self.app.get_viewer('table-viewer')._selected_data["spectrum-viewer"]
+            spec1d = self.app.get_viewer('spectrum-viewer').state.reference_data.label
             extend_by = int(self.app.data_collection[spec1d]["World 0"].shape[0])
             world = self._extend_world(spec1d, extend_by)
 

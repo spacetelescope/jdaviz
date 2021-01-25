@@ -3,6 +3,7 @@ from glue.core.data import Data
 from jdaviz.core.registries import data_parser_registry
 
 from astropy.nddata import CCDData
+from spectral_cube import SpectralCube
 from specutils import Spectrum1D
 from astropy.io import fits
 import astropy.units as u
@@ -40,7 +41,7 @@ def spec2d_parser(app, data_obj, data_label=None):
     #  a fits file.
     # TODO: this current does not handle the case where the file in the path is
     #  anything but a fits file whose wcs can be extracted.
-    def _parse_2d(path):
+    def _parse_as_ccddata(path):
         with fits.open(path) as hdulist:
             data = hdulist[1].data
             header = hdulist[1].header
@@ -49,9 +50,26 @@ def spec2d_parser(app, data_obj, data_label=None):
 
         return CCDData(data, wcs=wcs)
 
+    def _parse_as_cube(path):
+        with fits.open(path) as hdulist:
+            data = hdulist[1].data
+            header = hdulist[1].header
+            if header['NAXIS'] == 2:
+                new_data = np.expand_dims(data, axis=1)
+                header['NAXIS'] = 3
+
+            header['NAXIS3'] = 1
+            header['BUNIT'] = 'dN/s'
+            header['CUNIT3'] = 'um'
+            wcs = WCS(header)
+
+            meta = {'S_REGION': header['S_REGION']}
+
+        return SpectralCube(new_data, wcs=wcs, meta=meta)
 
     if _check_is_file(data_obj):
-        data_obj = _parse_2d(data_obj)
+        # data_obj = _parse_as_ccddata(data_obj)
+        data_obj = _parse_as_cube(data_obj)
 
     if data_label is None:
         data_labels = f"2D Spectrum"
