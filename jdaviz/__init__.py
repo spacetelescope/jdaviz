@@ -11,3 +11,4 @@ from jdaviz.app import *
 from jdaviz.configs.specviz import SpecViz
 from jdaviz.configs.mosviz import MosViz
 from jdaviz.configs.cubeviz import CubeViz
+from jdaviz.configs.imviz import Imviz
