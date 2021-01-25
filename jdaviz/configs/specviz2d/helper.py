@@ -118,11 +118,16 @@ class Specviz2d(ConfigHelper):
 
         """
         if spectrum_2d is not None:
-            self.load_2d_spectrum(spectrum_2d, spectrum_2d_label)
+            label_2d = self.load_2d_spectrum(spectrum_2d, spectrum_2d_label)
         # Collapse the 2d spectrum to 1d if no 1d spectrum provided
-        if spectrum_1d is not None:
+        if spectrum_1d is None:
+            pass
+        else:
             self.app.load_data(spectrum_1d, data_label = spectrum_1d_label,
                                parser_reference="specviz-spectrum1d-parser")
+
+        # Temporary return for debuggin
+        return label_2d
 
     def load_1d_spectrum(self, data_obj, data_labels=None):
         """
