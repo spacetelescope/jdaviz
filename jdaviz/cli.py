@@ -18,7 +18,7 @@ CONFIGS_DIR = os.path.join(os.path.dirname(__file__), 'configs')
               default='default',
               nargs=1,
               show_default=True,
-              type=click.Choice(['default', 'cubeviz', 'specviz', 'mosviz'],
+              type=click.Choice(['default', 'cubeviz', 'specviz', 'mosviz', 'imviz'],
                                 case_sensitive=False),
               help="Configuration to use on application startup")
 def main(filename, layout='default'):
@@ -32,6 +32,10 @@ def main(filename, layout='default'):
     layout : str, optional
         Optional specification for which configuration to use on startup.
     """
+    if layout == 'imviz':
+        from ginga.rv.main import reference_viewer
+        reference_viewer((filename, ))
+
     # Tornado Webserver py3.8 compatibility hotfix for windows
     if sys.platform == 'win32':
         import asyncio
