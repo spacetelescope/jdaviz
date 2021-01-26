@@ -100,9 +100,12 @@ def spec2d_1d_parser(app, data_obj, data_label=None):
             header = hdulist[1].header
 
         # Should only be 2D, so DISPAXIS-1 should be 0 or -1 and sum over the
-        # correct axis. Leaving the flux unitless for now until I understand
-        # how to convert to Jy
-        flux = u.Quantity(np.sum(data, header['DISPAXIS']-1))
+        # correct axis. If Unit doesn't understand the BUNIT we leave flux
+        # unitless
+        try:
+            flux = np.sum(data, header['DISPAXIS']-1)*u.Unit(header["BUNIT"])
+        except ValueError:
+            flux = u.Quantity(np.sum(data, header['DISPAXIS']-1))
         step = (header["WAVEND"] - header["WAVSTART"])/len(flux)
         spectral_axis = np.arange(header["WAVSTART"], header["WAVEND"],
                                   step) * u.Unit("m")
