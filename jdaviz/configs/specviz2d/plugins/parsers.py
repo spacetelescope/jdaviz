@@ -71,20 +71,13 @@ def spec2d_parser(app, data_obj, data_label=None):
         # data_obj = _parse_as_ccddata(data_obj)
         data_obj = _parse_as_cube(data_obj)
 
-    if data_label is None:
-        data_label = f"Spectrum 2D"
-    else:
-        data_label = "{} 2D".format(data_label)
-
     app.data_collection[data_label] = data_obj
-
-    print(data_label)
-    return data_label
 
 @data_parser_registry("spec2d-1d-parser")
 def spec2d_1d_parser(app, data_obj, data_label=None):
     """
-    Attempts to parse a 2D spectrum object.
+    Generate a quicklook 1D spectrum from an input 2D spectrum by summing
+    over the cross-dispersion axis.
 
     Notes
     -----
@@ -102,7 +95,18 @@ def spec2d_1d_parser(app, data_obj, data_label=None):
         The label applied to the glue data component.
     """
     if _check_is_file(data_obj):
-        with fits.open(path) as hdulist:
+        with fits.open(data_obj) as hdulist:
             data = hdulist[1].data
             header = hdulist[1].header
 
+        # Should only be 2D, so DISPAXIS-1 should be 0 or -1 and sum over the
+        # correct axis. Leaving the flux unitless for now until I understand
+        # how to convert to Jy
+        flux = u.Quantity(np.sum(data, header['DISPAXIS']-1))
+        step = (header["WAVEND"] - header["WAVSTART"])/len(flux)
+        spectral_axis = np.arange(header["WAVSTART"], header["WAVEND"],
+                                  step) * u.Unit("m")
+
+        data_obj = Spectrum1D(flux, spectral_axis=spectral_axis)
+
+    app.data_collection[data_label] = data_obj

@@ -117,17 +117,23 @@ class Specviz2d(ConfigHelper):
             for each item in ``data_obj`` if  ``data_obj`` is a list.
 
         """
+        if spectrum_2d_label is None:
+            spectrum_2d_label = "Spectrum 2D"
+        elif spectrum_2d_label[-2:] != "2D":
+            spectrum_2d_label = "{} 2D".format(spectrum_2d_label)
+
+        if spectrum_1d_label is None:
+            spectrum_1d_label = spectrum_2d_label.replace("2D", "1D")
+
         if spectrum_2d is not None:
-            label_2d = self.load_2d_spectrum(spectrum_2d, spectrum_2d_label)
+            self.load_2d_spectrum(spectrum_2d, spectrum_2d_label)
         # Collapse the 2d spectrum to 1d if no 1d spectrum provided
         if spectrum_1d is None:
-            pass
+            self.create_1d_spectrum(spectrum_2d, spectrum_1d_label)
+
         else:
             self.app.load_data(spectrum_1d, data_label = spectrum_1d_label,
                                parser_reference="specviz-spectrum1d-parser")
-
-        # Temporary return for debuggin
-        return label_2d
 
     def load_1d_spectrum(self, data_obj, data_labels=None):
         """
@@ -153,8 +159,8 @@ class Specviz2d(ConfigHelper):
 
         Parameters
         ----------
-        data_obj : list or str
-            A list of 2D spectra as translatable container objects (e.g.
+        data_obj : str
+            A 2D spectrum as translatable container objects (e.g.
             ``Spectrum1D``) that can be read by glue-jupyter. Alternatively,
             can be a string file path.
         data_labels : str or list
@@ -165,3 +171,10 @@ class Specviz2d(ConfigHelper):
         super().load_data(data_obj, parser_reference="spec2d-parser",
                            data_label=data_label)
 
+    def create_1d_spectrum(self, data_obj, data_label=None):
+        """
+        Do a simple summation over the non-dispersion axis to create a
+        quicklook 1D spectrum from an input 2D spectrum
+        """
+        super().load_data(data_obj, parser_reference="spec2d-1d-parser",
+                          data_label=data_label)
