@@ -90,7 +90,7 @@ class MOSVizProfile2DView(BqplotImageView):
         if data is not None:
             with delay_callback(self.state, 'x_att_world', 'y_att_world'):
                 if 'Wave' in data.components:
-                    print(data.components, data.id['Pixel Axis 0 [y]'])
+                    #print(data.components, data.id['Pixel Axis 0 [y]'])
                     try:
                         self.state.x_att_world = data.id['Right Ascension']
                         self.state.y_att_world = data.id['Wave']

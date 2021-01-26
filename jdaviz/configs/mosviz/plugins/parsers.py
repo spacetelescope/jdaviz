@@ -321,13 +321,6 @@ def mos_meta_parser(app, data_obj):
     _add_to_table(app, ra, "Right Ascension")
     _add_to_table(app, dec, "Declination")
 
-@data_parser_registry("mosviz-nirspec-parser")
-def mos_nirspec_parser(app, data_dir, obs_label=""):
-    p = Path(data_dir)
-    if not p.is_dir():
-        raise ValueError("{} is not a valid directory path".format(data_dir))
-    x1d = list(p.glob("{}*noflat_nooutlierdet_combined_*_x1d.fits".format(obs_label)))
-    s2d = list(p.glob("{}*noflat_nooutlierdet_combined_*_s2d.fits".format(obs_label)))
 
 @data_parser_registry("mosviz-niriss-parser")
 def mos_niriss_parser(app, data_dir, obs_label=""):
@@ -385,10 +378,11 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
 
         for row in parsed_cat_fields:
             print(cat_file.split("/")[-1].split("_")[1])
-            image_order.append(cat_file.split("/")[-1].split("_")[1])
-            source_ids.append("Source Catalog: {} Source ID: {}".format(cat_file.split("/")[-1].split("_")[1], row[0]))
-            ras.append(row[1])
-            decs.append(row[2])
+            if row[0] == "1":
+                image_order.append(cat_file.split("/")[-1].split("_")[1])
+                source_ids.append("Source Catalog: {} Source ID: {}".format(cat_file.split("/")[-1].split("_")[1], row[0]))
+                ras.append(row[1])
+                decs.append(row[2])
     _add_to_table(app, source_ids, "Source ID")
     _add_to_table(app, ras, "Right Ascension")
     _add_to_table(app, decs, "Declination")
@@ -397,10 +391,15 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
 
     # Read in direct image (NIRISS only has one image containing all sources)
     image_dict = {}
+    filter_wcs = {}
     for image_file in file_lists["Direct Image"]:
         im_split = image_file.split("/")[-1].split("_")
         image_label = "Image {} {}".format(im_split[0], im_split[1])
-        image_data = CCDData.read(direct_image[0])
+
+        image_data = CCDData.read(image_file)
+        temp = fits.open(image_file)
+        filter_wcs[im_split[1]] = temp[1].header
+
         app.data_collection[image_label] = image_data
 
         image_dict[im_split[1]] = image_label
@@ -416,24 +415,55 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
     # Parse 2D spectra
     for f in ["2D Spectra C", "2D Spectra R"]:
         spec_labels = []
-        for fname in file_lists[f]:
-            orientation = fname.split("/")[-1].split("_")[2][-1]
-            sci_hdus = []
-            temp = fits.open(fname)
-            for i in range(len(temp)):
-                if "EXTNAME" in temp[i].header:
-                    if temp[i].header["EXTNAME"] == "SCI":
-                        sci_hdus.append(i)
-            # Now get a CCDData object for each SCI HDU
-            for i in sci_hdus:
-                spec2d = CCDData.read(fname, hdu=i)
-                spec2d.meta['S_REGION'] = 'POLYGON ICRS  5.029236065 4.992154276 5.029513148 4.992154276 5.029513148 4.992468585 5.029236065 4.992468585'
-                print(spec2d.meta["SOURCEID"])
-                label = "Source {} spec2d {}".format(spec2d.meta["SOURCEID"],
-                                               orientation)
-                spec_labels.append(label)
-                app.data_collection[label] = spec2d
-            #if orientation == "C":
+        for image_filter in image_order:
+            for fname in file_lists[f]:
+                orientation = fname.split("/")[-1].split("_")[2][-1]
+                filter_name = fname.split("/")[-1].split("_")[1]
+                print(image_filter, filter_name)
+                if filter_name != image_filter:
+                    continue
+                sci_hdus = []
+                #temp = fits.open(fname)
+
+                # for i in range(len(temp)):
+                #     if "EXTNAME" in temp[i].header:
+                #         if temp[i].header["EXTNAME"] == "SCI":
+                #             sci_hdus.append(i)
+                # Now get a CCDData object for each SCI HDU
+                # for i in sci_hdus:
+                with fits.open(fname) as temp:
+                    if temp[1].header["SOURCEID"] == 1:
+
+                        data = temp[1].data
+                        header = filter_wcs[filter_name]
+                        if header['NAXIS'] == 2:
+                            new_data = np.expand_dims(data, axis=1)
+                            header['NAXIS'] = 3
+
+                        header['NAXIS3'] = 1
+                        header['BUNIT'] = 'dN/s'
+                        header['CUNIT3'] = 'um'
+                        header['WCSAXES'] = 3
+                        header['CRPIX3'] = 0.0
+                        header['CDELT3'] = 1E-06
+                        header['CUNIT3'] = 'm'
+                        header['CTYPE3'] = 'WAVE'
+                        header['CRVAL3'] = 0.0
+
+                        wcs = WCS(header)
+
+                        meta = {}
+
+                        spec2d =  SpectralCube(new_data, wcs=wcs, meta=meta)
+                        #spec2d = CCDData.read(new_data)
+                        spec2d.meta['S_REGION'] = 'POLYGON ICRS  5.029236065 4.992154276 5.029513148 4.992154276 5.029513148 4.992468585 5.029236065 4.992468585'
+                        spec2d.meta['SOURCEID'] = "1"
+                        print(spec2d.meta["SOURCEID"])
+                        label = "Source {} spec2d {}".format(filter_name,
+                                                       orientation)
+                        spec_labels.append(label)
+                        app.data_collection[label] = spec2d
+                #if orientation == "C":
         if f == "2D Spectra C":
             _add_to_table(app, spec_labels[:6], "2D Spectra")
                 #_add_to_table(app, [spec_labels[0]], "2D Spectra")
@@ -441,19 +471,26 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
     # Parse 1D spectra using SpectumList reader
     for f in ["1D Spectra C", "1D Spectra R"]:
         spec_labels = []
-        for fname in file_lists[f]:
-            specs = SpectrumList.read(fname)
-            # Orientation denoted by "C" or "R"
-            orientation = fname.split("/")[-1].split("_")[2][-1]
-            for spec in specs:
+        for image_filter in image_order:
 
-                label = "Source {} spec1d {}".format(spec.meta['header']['SOURCEID'],
-                                                  orientation)
-                spec_labels.append(label)
-                app.data_collection[label] = spec
+            for fname in file_lists[f]:
+                specs = SpectrumList.read(fname)
+                filter_name = fname.split("/")[-1].split("_")[1]
+                if filter_name != image_filter:
+                    continue
 
-            # We default to show the "C" spectra, show those in the table for now
-            #if orientation == "C":
+                # Orientation denoted by "C" or "R"
+                orientation = fname.split("/")[-1].split("_")[2][-1]
+                for spec in specs:
+                    if spec.meta['header']['SOURCEID'] == 1:
+
+                        label = "Source {} spec1d {}".format(spec.meta['header']['SOURCEID'],
+                                                          orientation)
+                        spec_labels.append(label)
+                        app.data_collection[label] = spec
+
+                # We default to show the "C" spectra, show those in the table for now
+                #if orientation == "C":
         if f == "1D Spectra C":
-            _add_to_table(app, spec_labels[:6], "1D Spectra")
+            _add_to_table(app, spec_labels[:3], "1D Spectra")
                 #_add_to_table(app, [spec_labels[0]], "1D Spectra")
