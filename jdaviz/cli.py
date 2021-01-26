@@ -34,7 +34,7 @@ def main(filename, layout='default'):
     """
     if layout == 'imviz':
         from ginga.rv.main import reference_viewer
-        reference_viewer((filename, ))
+        reference_viewer(('ginga', filename, ))
 
     # Tornado Webserver py3.8 compatibility hotfix for windows
     if sys.platform == 'win32':
