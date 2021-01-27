@@ -135,6 +135,15 @@ class Specviz2d(ConfigHelper):
                                   parser_reference="spec2d-1d-parser",
                                   data_label=spectrum_1d_label,
                                   show_in_viewer=show_in_viewer)
+
+                # Warn that this shouldn't be used for science
+                msg = "Warning: The collapsed 1D spectrum is for quicklook" +\
+                    " purposes only. A robust extraction should be used for" +\
+                    " scientific use cases."
+                msg = SnackbarMessage(msg, color='warning', sender=self,
+                                      timeout = 10000)
+                self.app.hub.broadcast(msg)
+
                 return
 
         self.app.load_data(spectrum_1d, data_label = spectrum_1d_label,
