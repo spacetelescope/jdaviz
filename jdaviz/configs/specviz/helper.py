@@ -90,8 +90,8 @@ class SpecViz(ConfigHelper, LineListMixin):
 
         # Retrieve the spectral axis
         ref_index = self.app.get_viewer("spectrum-viewer").state.reference_data.label
-        spectral_axis = self.get_spectra(ref_index).spectral_axis
-        self._set_scale(scale, spectral_axis, x_min, x_max)
+        ref_spec = self.get_spectra(ref_index, apply_slider_redshift=False)
+        self._set_scale(scale, ref_spec.spectral_axis, x_min, x_max)
 
     def y_limits(self, y_min=None, y_max=None):
         """Sets the limits of the y-axis
