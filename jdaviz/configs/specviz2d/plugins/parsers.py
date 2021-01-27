@@ -18,7 +18,7 @@ def _check_is_file(path):
     return isinstance(path, str) and Path(path).is_file()
 
 @data_parser_registry("spec2d-parser")
-def spec2d_parser(app, data_obj, data_label=None):
+def spec2d_parser(app, data_obj, data_label=None, show_in_viewer=True):
     """
     Attempts to parse a 2D spectrum object.
 
@@ -73,8 +73,11 @@ def spec2d_parser(app, data_obj, data_label=None):
 
     app.data_collection[data_label] = data_obj
 
+    if show_in_viewer:
+        app.add_data_to_viewer("spectrum-2d-viewer", data_label)
+
 @data_parser_registry("spec2d-1d-parser")
-def spec2d_1d_parser(app, data_obj, data_label=None):
+def spec2d_1d_parser(app, data_obj, data_label=None, show_in_viewer=True):
     """
     Generate a quicklook 1D spectrum from an input 2D spectrum by summing
     over the cross-dispersion axis.
@@ -113,3 +116,6 @@ def spec2d_1d_parser(app, data_obj, data_label=None):
         data_obj = Spectrum1D(flux, spectral_axis=spectral_axis)
 
     app.data_collection[data_label] = data_obj
+
+    if show_in_viewer:
+        app.add_data_to_viewer("spectrum-viewer", data_label)

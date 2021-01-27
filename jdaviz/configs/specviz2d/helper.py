@@ -90,7 +90,7 @@ class Specviz2d(ConfigHelper):
                 setattr(scales['x'], name, val)
 
     def load_data(self, spectrum_2d=None, spectrum_1d=None, spectrum_1d_label=None,
-                  spectrum_2d_label=None):
+                  spectrum_2d_label=None, show_in_viewer=True):
         """
         Load and parse a pair of corresponding 1D and 2D spectra
 
@@ -126,55 +126,17 @@ class Specviz2d(ConfigHelper):
             spectrum_1d_label = spectrum_2d_label.replace("2D", "1D")
 
         if spectrum_2d is not None:
-            self.load_2d_spectrum(spectrum_2d, spectrum_2d_label)
-        # Collapse the 2d spectrum to 1d if no 1d spectrum provided
-        if spectrum_1d is None:
-            self.create_1d_spectrum(spectrum_2d, spectrum_1d_label)
+            self.app.load_data(spectrum_2d, parser_reference="spec2d-parser",
+                               data_label=spectrum_2d_label,
+                               show_in_viewer=show_in_viewer)
+            # Collapse the 2D spectrum to 1D if no 1D spectrum provided
+            if spectrum_1d is None:
+                self.app.load_data(spectrum_2d,
+                                  parser_reference="spec2d-1d-parser",
+                                  data_label=spectrum_1d_label,
+                                  show_in_viewer=show_in_viewer)
+                return
 
-        else:
-            self.app.load_data(spectrum_1d, data_label = spectrum_1d_label,
-                               parser_reference="specviz-spectrum1d-parser")
-
-    def load_1d_spectrum(self, data_obj, data_labels=None):
-        """
-        Load and parse a set of 1D spectra objects.
-
-        Parameters
-        ----------
-        data_obj : list or str
-            A list of spectra as translatable container objects (e.g.
-            ``Spectrum1D``) that can be read by glue-jupyter. Alternatively,
-            can be a string file path.
-        data_labels : str or list
-            String representing the label for the data item loaded via
-            ``data_obj``. Can be a list of strings representing data labels
-            for each item in ``data_obj`` if  ``data_obj`` is a list.
-        """
-        super().load_data(data_obj, parser_reference="mosviz-spec1d-parser",
-                           data_labels=data_labels)
-
-    def load_2d_spectrum(self, data_obj, data_label=None):
-        """
-        Load and parse a set of 2D spectra objects.
-
-        Parameters
-        ----------
-        data_obj : str
-            A 2D spectrum as translatable container objects (e.g.
-            ``Spectrum1D``) that can be read by glue-jupyter. Alternatively,
-            can be a string file path.
-        data_labels : str or list
-            String representing the label for the data item loaded via
-            ``data_obj``. Can be a list of strings representing data labels
-            for each item in ``data_obj`` if  ``data_obj`` is a list.
-        """
-        super().load_data(data_obj, parser_reference="spec2d-parser",
-                           data_label=data_label)
-
-    def create_1d_spectrum(self, data_obj, data_label=None):
-        """
-        Do a simple summation over the non-dispersion axis to create a
-        quicklook 1D spectrum from an input 2D spectrum
-        """
-        super().load_data(data_obj, parser_reference="spec2d-1d-parser",
-                          data_label=data_label)
+        self.app.load_data(spectrum_1d, data_label = spectrum_1d_label,
+                           parser_reference="specviz-spectrum1d-parser",
+                           show_in_viewer=show_in_viewer)
