@@ -25,21 +25,22 @@ repository.
 
 ``jdaviz`` provides data viewers and analysis plugins that can be flexibly
 combined as desired to create interactive applications that fit your workflow.
-Three named preset configurations for common use cases are provided. **Specviz**
-is a tool for visualization and quick-look analysis of 1D astronomical spectra.
-**MOSviz** is a visualization tool for many astronomical spectra,
-typically the output of a multi-object spectrograph (e.g., JWST
-NIRSpec), and includes viewers for 1D and 2D spectra as well as
-contextual information like on-sky views of the spectrograph slit.
-**Cubeviz** provides a view of spectroscopic data cubes (like those to be
-produced by JWST MIRI), along with 1D spectra extracted from the cube.
+Several named preset configurations for common use cases are provided:
+
+* **Specviz**: Visualization and quick-look analysis of 1D astronomical spectra.
+* **MOSviz**: Visualization tool for many astronomical spectra,
+  typically the output of a multi-object spectrograph (e.g., JWST
+  NIRSpec), and includes viewers for 1D and 2D spectra as well as
+  contextual information like on-sky views of the spectrograph slit.
+* **Cubeviz**: View of spectroscopic data cubes (like those to be
+  produced by JWST MIRI), along with 1D spectra extracted from the cube.
+* **Imviz**: Visualization and quick-look analysis of 2D astronomical images.
 
 
 Installing
 ----------
 For details on installing and using JDAViz, see the
 `Jdaviz documentation <https://jdaviz.readthedocs.io/en/latest/>`_.
-
 
 
 License

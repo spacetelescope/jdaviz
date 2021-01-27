@@ -12,7 +12,11 @@ class Imviz(ImageWidget):
         super().__init__(**kwargs)
 
     def load_data(self, filename, **kwargs):
-        if filename.endswith(('.fits', '.fit', '.fits.gz')):
+        try:
+            # TODO: Support different file formats.
+            # File downloaded with download_file does not have extension
+            # to check.
             self.load_fits(filename, **kwargs)
-        else:
-            raise NotImplementedError(f'Format for {filename} not supported')
+        except Exception as e:
+            raise NotImplementedError(
+                f'Format for {filename} not supported: {repr(e)}') from None
