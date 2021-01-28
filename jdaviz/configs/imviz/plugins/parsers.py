@@ -26,4 +26,4 @@ def imviz_image_parser(app, data, data_label=None, show_in_viewer=True):
 
     app.add_data(data, data_label)
     if show_in_viewer:
-        app.add_data_to_viewer("image-viewer", data_label)
+        app.add_data_to_viewer("imviz-image-viewer", data_label, clear_other_data=True)

@@ -17,4 +17,4 @@ viewer_area:
         viewers:
           - name: Image
             plot: imviz-image-viewer
-            reference: image-viewer
+            reference: imviz-image-viewer
