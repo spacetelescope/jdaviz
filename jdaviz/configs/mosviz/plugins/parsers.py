@@ -92,7 +92,8 @@ def mos_spec1d_parser(app, data_obj, data_labels=None):
 
 
 @data_parser_registry("mosviz-spec2d-parser")
-def mos_spec2d_parser(app, data_obj, data_labels=None):
+def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
+                      show_in_viewer=False):
     """
     Attempts to parse a 2D spectrum object.
 
@@ -186,7 +187,14 @@ def mos_spec2d_parser(app, data_obj, data_labels=None):
     for i in range(len(data_obj)):
         app.data_collection[data_labels[i]] = data_obj[i]
 
-    _add_to_table(app, data_labels, '2D Spectra')
+    if show_in_viewer:
+        if len(data_labels) > 1:
+            raise ValueError("More than one data label provided, unclear " +
+                             "which to show in viewer")
+        app.add_data_to_viewer("spectrum-2d-viewer", data_labels[0])
+
+    if add_to_table:
+        _add_to_table(app, data_labels, '2D Spectra')
 
 
 @data_parser_registry("mosviz-image-parser")
