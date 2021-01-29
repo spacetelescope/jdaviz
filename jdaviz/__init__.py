@@ -9,5 +9,6 @@ from ._astropy_init import *   # noqa
 # top-level API as exposed to users
 from jdaviz.app import *
 from jdaviz.configs.specviz import SpecViz
+from jdaviz.configs.specviz2d import Specviz2d
 from jdaviz.configs.mosviz import MosViz
 from jdaviz.configs.cubeviz import CubeViz
