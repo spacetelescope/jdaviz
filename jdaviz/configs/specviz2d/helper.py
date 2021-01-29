@@ -126,9 +126,10 @@ class Specviz2d(ConfigHelper):
             spectrum_1d_label = spectrum_2d_label.replace("2D", "1D")
 
         if spectrum_2d is not None:
-            self.app.load_data(spectrum_2d, parser_reference="spec2d-parser",
-                               data_label=spectrum_2d_label,
-                               show_in_viewer=show_in_viewer)
+            self.app.load_data(spectrum_2d, parser_reference="mosviz-spec2d-parser",
+                               data_labels=spectrum_2d_label,
+                               show_in_viewer=show_in_viewer,
+                               add_to_table=False)
             # Collapse the 2D spectrum to 1D if no 1D spectrum provided
             if spectrum_1d is None:
                 self.app.load_data(spectrum_2d,
