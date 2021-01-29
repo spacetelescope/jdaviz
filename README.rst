@@ -4,7 +4,7 @@
     :target: https://github.com/spacetelescope/jdaviz/actions
     :alt: GitHub Actions CI Status
 
-.. image:: https://codecov.io/gh/spacetelescope/jdaviz/branch/master/graph/badge.svg
+.. image:: https://codecov.io/gh/spacetelescope/jdaviz/branch/main/graph/badge.svg
     :target: https://codecov.io/gh/spacetelescope/jdaviz
 
 .. image:: https://readthedocs.org/projects/jdaviz/badge/?version=latest
