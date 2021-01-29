@@ -9,6 +9,7 @@ from astropy.io import fits
 import numpy as np
 import logging
 from astropy.wcs import WCS
+from asdf.fits_embed import AsdfInFits
 from pathlib import Path
 
 __all__ = ['mos_spec1d_parser', 'mos_spec2d_parser', 'mos_image_parser']
@@ -125,10 +126,41 @@ def mos_spec2d_parser(app, data_obj, data_labels=None):
             header['NAXIS3'] = 1
             header['BUNIT'] = 'dN/s'
             header['CUNIT3'] = 'um'
+            header['CTYPE3'] = 'WAVE'
+
+            # Information not present in the SCI header has to be put there
+            # so spectral_cube won't choke. We cook up a simple linear wcs
+            # with the only intention of making the code run beyond the
+            # spectral_cube processing. There is no guarantee that this will
+            # result in the correct axis label values being displayed.
+            #
+            # This is a stopgap solution that will be replaced when specutils
+            # absorbs the functionality provided by spectral_cube.
+
+            fa = AsdfInFits.open(path)
+            gwcs = fa.tree['meta']['wcs']
+
+            header['CTYPE1'] = 'RA---TAN'
+            header['CTYPE2'] = 'DEC--TAN'
+            header['CUNIT1'] = 'deg'
+            header['CUNIT2'] = 'deg'
+
+            header['CRVAL1'] = gwcs.forward_transform.lon_4.value
+            header['CRVAL2'] = gwcs.forward_transform.lat_4.value
+            header['CRPIX1'] = gwcs.forward_transform.intercept_1.value
+            header['CRPIX2'] = gwcs.forward_transform.intercept_2.value
+            header['CDELT1'] = gwcs.forward_transform.slope_1.value
+            header['CDELT2'] = gwcs.forward_transform.slope_2.value
+            header['PC1_1'] = -1.
+            header['PC1_2'] = 0.
+            header['PC2_1'] = 0.
+            header['PC2_2'] = 1.
+            header['PC3_1'] = 1.
+            header['PC3_2'] = 0.
+
             wcs = WCS(header)
 
             meta = {'S_REGION': header['S_REGION']}
-
 
         return SpectralCube(new_data, wcs=wcs, meta=meta)
 
