@@ -53,7 +53,9 @@ def main(filename, layout='default'):
 
     try:
         Voila.notebook_path = 'notebook.ipynb'
-        if layout != 'imviz':
+        if layout == 'imviz':
+            VoilaConfiguration.theme = 'dark'  # Save my eyes!
+        else:
             VoilaConfiguration.template = 'jdaviz-default'
         VoilaConfiguration.enable_nbextensions = True
         sys.exit(Voila().launch_instance(argv=[]))
