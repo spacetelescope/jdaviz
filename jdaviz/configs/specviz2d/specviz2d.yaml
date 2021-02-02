@@ -1,5 +1,5 @@
 settings:
-  configuration: mosviz
+  configuration: specviz2d
   visible:
     menu_bar: false
     toolbar: true

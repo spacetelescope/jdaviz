@@ -11,8 +11,8 @@ class Specviz2d(ConfigHelper):
 
     _default_configuration = "specviz2d"
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         spec1d = self.app.get_viewer("spectrum-viewer")
         spec1d.scales['x'].observe(self._update_spec2d_x_axis)
