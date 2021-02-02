@@ -10,7 +10,7 @@ from jdaviz.core.config import list_configurations
 
 
 # create a default file format to configuration mapping
-default_mapping = {'JWST x1d': 'specviz', 'JWST s2d': 'imviz',
+default_mapping = {'JWST x1d': 'specviz', 'JWST s2d': 'specviz2d',
                    'JWST s3d': 'cubeviz', 'MaNGA cube': 'cubeviz',
                    'MaNGA rss': 'imviz'}
 
@@ -21,7 +21,7 @@ file_to_config_mapping = {i: default_mapping.get(
     i, 'specviz') for i in formats_table['Format']}
 
 # default n-dimension to configuration mapping
-ndim_to_config_mapping = {1: 'specviz', 2: 'imviz', 3: 'cubeviz'}
+ndim_to_config_mapping = {1: 'specviz', 2: 'specviz2d', 3: 'cubeviz'}
 
 
 def guess_dimensionality(filename):

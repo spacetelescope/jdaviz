@@ -83,10 +83,11 @@ def create_fake_fits(tmp_path):
                          [('MaNGA cube', 'cubeviz'),
                           ('MaNGA rss', 'imviz'),
                           ('JWST s3d', 'cubeviz'),
-                          ('JWST s2d', 'imviz'),
+                          ('JWST s2d', 'specviz2d'),
                           ('JWST x1d', 'specviz'),
                           ('SDSS-III/IV spec', 'specviz'),
                           ('generic 3d', 'cubeviz'),
+                          ('generic 2d', 'specviz2d'),
                           ('generic 1d', 'specviz')])
 def test_get_valid_format(create_fake_fits, name, expconf):
     """ test correct file format and config is returned """
@@ -102,7 +103,7 @@ def test_get_valid_format(create_fake_fits, name, expconf):
 def test_list_configurations():
     """ test correct configurations are listed """
     configs = list_configurations()
-    assert set(configs).issubset({'default', 'cubeviz', 'specviz', 'mosviz'})
+    assert set(configs).issubset({'default', 'cubeviz', 'specviz', 'mosviz', 'specviz2d'})
 
 
 @pytest.mark.parametrize('name, expconf, expstat',
