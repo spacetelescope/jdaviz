@@ -87,7 +87,6 @@ def create_fake_fits(tmp_path):
                           ('JWST x1d', 'specviz'),
                           ('SDSS-III/IV spec', 'specviz'),
                           ('generic 3d', 'cubeviz'),
-                          ('generic 2d', 'specviz2d'),
                           ('generic 1d', 'specviz')])
 def test_get_valid_format(create_fake_fits, name, expconf):
     """ test correct file format and config is returned """
