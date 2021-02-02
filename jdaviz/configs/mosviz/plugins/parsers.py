@@ -339,7 +339,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
     if not p.is_dir():
         raise ValueError("{} is not a valid directory path".format(data_dir))
     source_cat = list(p.glob("{}*_direct_*_cat.ecsv".format(obs_label)))
-    direct_image = list(p.glob("{}*_direct_*_cal.fits".format(obs_label)))
+    direct_image = list(p.glob("{}*_direct_dit1_nis_cal.fits".format(obs_label)))
     spec2d_r = list(p.glob("{}*_WFSSR_*_cal.fits".format(obs_label)))
     spec2d_c = list(p.glob("{}*_WFSSC_*_cal.fits".format(obs_label)))
     spec1d_r = list(p.glob("{}*_WFSSR_*_x1d.fits".format(obs_label)))
