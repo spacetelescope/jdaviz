@@ -2,12 +2,12 @@ name: CI
 
 on:
   push:
-  #  branches:  #uncomment to run only on master
-  #  - master
+  #  branches:  #uncomment to run only on main
+  #  - main
   #  tags: # run CI if specific tags are pushed
   pull_request:
   #  branches: # only build on PRs against 'main' if you need to further limit when CI is run.
-  #  - master
+  #  - main
 
 jobs:
   # Github Actions supports ubuntu, windows, and macos virtual environments:

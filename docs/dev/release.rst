@@ -7,7 +7,7 @@ PyPI. Currently, these do not cover submitting package updates to the
 ``astroconda`` channel.
 
 This process currently requires admin-level access to the JDAViz repository,
-as it relies on the ability to commit to master directly. To do this, it is
+as it relies on the ability to commit to main directly. To do this, it is
 recommended that you create a ``temp`` directory in a different directory where
 you do your development. Inside this ``temp`` directory, ``git clone`` the ``jdaviz``
 repository. This will ensure that you do not have incorrect ``git remote`` commands
@@ -116,10 +116,10 @@ development directory.
    instructions. Check that the entry on PyPI is correct, and that
    the tarfile is present.
 
-#. Go back to the master branch and push your changes to github::
+#. Go back to the main branch and push your changes to github::
 
-        git checkout master
-        git push --tags origin master
+        git checkout main
+        git push --tags origin main
 
    Once you have done this, if you use Read the Docs, trigger a ``latest`` build
    then go to the project settings, and under **Versions** you should see the
