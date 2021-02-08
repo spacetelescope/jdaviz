@@ -70,7 +70,6 @@ class SpecvizProfileView(BqplotProfileView):
 
         return data
 
-
     def load_line_list(self, line_table, replace=False, return_table=False):
         if type(line_table) == str:
             self.load_line_list(load_preset_linelist(line_table),
@@ -89,7 +88,6 @@ class SpecvizProfileView(BqplotProfileView):
             line_table["redshift"] = self.data()[0].spectral_axis.redshift
         # Make sure the redshift column is a quantity
         line_table["redshift"] = u.Quantity(line_table["redshift"])
-
 
         # Set all of the lines to be shown on the plot by default on load
         line_table["show"] = True
@@ -194,7 +192,7 @@ class SpecvizProfileView(BqplotProfileView):
         # with the scale retrieval
         if self.toolbar.active_tool is not None:
             self.toolbar.active_tool = None
-        return {'x': fig.interaction.x_scale, 'y':fig.interaction.y_scale}
+        return {'x': fig.interaction.x_scale, 'y': fig.interaction.y_scale}
 
     def plot_spectral_line(self, line, scales=None, plot_units=None, **kwargs):
         if type(line) == str:
@@ -347,7 +345,7 @@ class SpecvizProfileView(BqplotProfileView):
         if 'mask' in _data.components and self.display_mask:
 
             # If a mask was already plotted, remove it.
-            if hasattr(self,'mask_trace_pointer') and \
+            if hasattr(self, 'mask_trace_pointer') and \
                     self.mask_trace_pointer is not None:
                 marks = self.figure.marks[:]
                 self._clean_mask(marks)
@@ -365,15 +363,15 @@ class SpecvizProfileView(BqplotProfileView):
 
             # there is no 'X' marker option in bqplot
             self.mask_line_mark = Scatter(scales=self.scales,
-                                marker='cross',
-                                x=x,
-                                y=y,
-                                stroke_width=0.5,
-                                # colors=['red'],
-                                colors=[self._color],
-                                default_size=25,
-                                default_opacities=[self._alpha],
-                                )
+                                          marker='cross',
+                                          x=x,
+                                          y=y,
+                                          stroke_width=0.5,
+                                          # colors=['red'],
+                                          colors=[self._color],
+                                          default_size=25,
+                                          default_opacities=[self._alpha],
+                                         )
             self.figure.marks = list(self.figure.marks) + [self.mask_line_mark]
 
             # We added an extra trace. Get pointer to it.
@@ -434,7 +432,8 @@ class SpecvizProfileView(BqplotProfileView):
         elif data.spectral_axis.unit.is_equivalent(u.pixel):
             spectral_axis_unit_type = "pixel"
 
-        self.figure.axes[0].label = f"{spectral_axis_unit_type} [{data.spectral_axis.unit.to_string()}]"
+        label_0 = f"{spectral_axis_unit_type} [{data.spectral_axis.unit.to_string()}]"
+        self.figure.axes[0].label = label_0
         self.figure.axes[1].label = f"{flux_unit_type} [{data.flux.unit.to_string()}]"
 
         # Make it so y axis label is not covering tick numbers.

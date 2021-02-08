@@ -54,8 +54,7 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
         current_unit = current_spec[spec_key].spectral_axis.unit
         if data.spectral_axis.unit != current_unit:
             data = Spectrum1D(flux=data.flux,
-                                spectral_axis=data.spectral_axis.to(current_unit))
-
+                              spectral_axis=data.spectral_axis.to(current_unit))
 
     app.add_data(data, data_label)
     if show_in_viewer:
