@@ -1,9 +1,6 @@
 from astropy import units as u
-from astropy.nddata import (VarianceUncertainty, StdDevUncertainty,
-                            InverseVariance, UnknownUncertainty)
+from astropy.nddata import VarianceUncertainty, StdDevUncertainty, InverseVariance
 import numpy as np
-
-from regions import RectanglePixelRegion
 
 from specutils import Spectrum1D
 from traitlets import List, Unicode, Any
@@ -280,7 +277,7 @@ class UnitConversion(TemplateMixin):
                     # TODO: simplify this when astropy handles it
                     temp_uncertainty = spectrum.uncertainty.quantity**(1/unit_exp)
                     temp_uncertainty = temp_uncertainty.to(u.Unit(set_flux_unit.unit),
-                            equivalencies=u.spectral_density(set_spectral_axis_unit))
+                                       equivalencies=u.spectral_density(set_spectral_axis_unit)) # noqa
                     temp_uncertainty **= unit_exp
                     temp_uncertainty = spectrum.uncertainty.__class__(temp_uncertainty.value)
                 except u.UnitConversionError:

@@ -411,7 +411,7 @@ class SpecvizProfileView(BqplotProfileView):
                                          fill_opacities=[self._alpha_shade, self._alpha_shade],
                                          fill='between',
                                          close_path=False
-                                        )
+                                         )
             self.figure.marks = list(self.figure.marks) + [self.error_line_mark]
 
             # We added an extra trace. Get pointer to it.

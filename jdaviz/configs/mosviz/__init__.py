@@ -1,2 +1,2 @@
-from .plugins import *
-from .helper import MosViz
+from .plugins import *  # noqa
+from .helper import MosViz  # noqa

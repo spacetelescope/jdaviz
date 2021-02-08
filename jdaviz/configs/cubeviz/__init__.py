@@ -1,2 +1,2 @@
-from .plugins import *
-from .helper import CubeViz
+from .plugins import *  # noqa
+from .helper import CubeViz  # noqa
