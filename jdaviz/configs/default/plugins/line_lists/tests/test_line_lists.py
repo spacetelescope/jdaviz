@@ -24,7 +24,7 @@ def test_line_lists():
 
     viz.erase_spectral_lines()
 
-    assert np.all(viz.spectral_lines["show"] is False)
+    assert np.all(viz.spectral_lines["show"] == False)  # noqa
 
     viz.plot_spectral_line("Halpha")
     viz.plot_spectral_line("O III 5007.0")
