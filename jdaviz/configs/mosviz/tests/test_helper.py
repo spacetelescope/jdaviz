@@ -136,7 +136,7 @@ def test_load_spectrum1d(mosviz_app, spectrum1d):
     assert isinstance(list(data.values())[0], Spectrum1D)
     assert list(data.keys())[0] == label
 
-    with pytest.raises(TypeError) as e:
+    with pytest.raises(TypeError):
         mosviz_app.load_1d_spectra([1, 2, 3])
 
 

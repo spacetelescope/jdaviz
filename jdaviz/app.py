@@ -130,13 +130,6 @@ class Application(VuetifyTemplate, HubListener):
         #  underlying glue infrastructure
         self._application_handler = JupyterApplication()
 
-        # We manually load plugins that are part of the "jdaviz_plugins"
-        #  group into the current namespace
-        plugins = {
-            entry_point.name: entry_point.load()
-            for entry_point
-            in pkg_resources.iter_entry_points(group='jdaviz_plugins')}
-
         # Create a dictionary for holding non-ipywidget viewer objects so we
         #  can reference their state easily since glue does not store viewers
         self._viewer_store = {}
@@ -565,7 +558,6 @@ class Application(VuetifyTemplate, HubListener):
             The name associated with this data. If none is given, a generic
             name is generated.
         """
-        old_data_len = len(self.data_collection)
 
         # Include the data in the data collection
         data_label = data_label or "New Data"
