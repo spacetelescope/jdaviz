@@ -237,38 +237,38 @@ def _setattr(instance, mname, pname, value):
 # and roles are the same as in a typical line profile, so they can be
 # initialized in the same way.
 _initializers = {
-    'Beta1D':                     _WideBand1DInitializer,
-    'Const1D':                    _WideBand1DInitializer,
-    'PowerLaw1D':                 _WideBand1DInitializer,
-    'BrokenPowerLaw1D':           _WideBand1DInitializer,
-    'ExponentialCutoffPowerLaw1D':_WideBand1DInitializer,
-    'LogParabola1D':              _WideBand1DInitializer,
-    'Box1D':                      _Width_LineProfile1DInitializer,
-    'Gaussian1D':                 _Sigma_LineProfile1DInitializer,
-    'Lorentz1D':                  _Width_LineProfile1DInitializer,
-    'Voigt1D':                    _Width_LineProfile1DInitializer,
-    'MexicanHat1D':               _Sigma_LineProfile1DInitializer,
-    'Trapezoid1D':                _Width_LineProfile1DInitializer,
-    'Linear1D':                   _Linear1DInitializer,
+    'Beta1D':                      _WideBand1DInitializer,
+    'Const1D':                     _WideBand1DInitializer,
+    'PowerLaw1D':                  _WideBand1DInitializer,
+    'BrokenPowerLaw1D':            _WideBand1DInitializer,
+    'ExponentialCutoffPowerLaw1D': _WideBand1DInitializer,
+    'LogParabola1D':               _WideBand1DInitializer,
+    'Box1D':                       _Width_LineProfile1DInitializer,
+    'Gaussian1D':                  _Sigma_LineProfile1DInitializer,
+    'Lorentz1D':                   _Width_LineProfile1DInitializer,
+    'Voigt1D':                     _Width_LineProfile1DInitializer,
+    'MexicanHat1D':                _Sigma_LineProfile1DInitializer,
+    'Trapezoid1D':                 _Width_LineProfile1DInitializer,
+    'Linear1D':                    _Linear1DInitializer,
     # 'Spline1D':                   spline.Spline1DInitializer
 }
 
 # Models can have parameter names that are similar amongst them, but not quite the same.
 # This maps the standard names used in the code to the actual names used by astropy.
 _p_names = {
-    'Gaussian1D':                 {AMPLITUDE:'amplitude',  POSITION:'mean', WIDTH:'stddev'},
-    'GaussianAbsorption':         {AMPLITUDE:'amplitude',  POSITION:'mean', WIDTH:'stddev'},
-    'Lorentz1D':                  {AMPLITUDE:'amplitude',  POSITION:'x_0',  WIDTH:'fwhm'},
-    'Voigt1D':                    {AMPLITUDE:'amplitude_L',POSITION:'x_0',  WIDTH:'fwhm_G'},
-    'Box1D':                      {AMPLITUDE:'amplitude',  POSITION:'x_0',  WIDTH:'width'},
-    'MexicanHat1D':               {AMPLITUDE:'amplitude',  POSITION:'x_0',  WIDTH:'sigma'},
-    'Trapezoid1D':                {AMPLITUDE:'amplitude',  POSITION:'x_0',  WIDTH:'width'},
-    'Beta1D':                     {AMPLITUDE:'amplitude',  POSITION:'x_0'},
-    'PowerLaw1D':                 {AMPLITUDE:'amplitude',  POSITION:'x_0'},
-    'ExponentialCutoffPowerLaw1D':{AMPLITUDE:'amplitude',  POSITION:'x_0'},
-    'LogParabola1D':              {AMPLITUDE:'amplitude',  POSITION:'x_0'},
-    'BrokenPowerLaw1D':           {AMPLITUDE:'amplitude',  POSITION:'x_break'},
-    'Const1D':                    {AMPLITUDE:'amplitude'},
+    'Gaussian1D':                  {AMPLITUDE: 'amplitude',  POSITION: 'mean', WIDTH: 'stddev'},
+    'GaussianAbsorption':          {AMPLITUDE: 'amplitude',  POSITION: 'mean', WIDTH: 'stddev'},
+    'Lorentz1D':                   {AMPLITUDE: 'amplitude',  POSITION: 'x_0',  WIDTH: 'fwhm'},
+    'Voigt1D':                     {AMPLITUDE: 'amplitude_L', POSITION: 'x_0',  WIDTH: 'fwhm_G'},
+    'Box1D':                       {AMPLITUDE: 'amplitude',  POSITION: 'x_0',  WIDTH: 'width'},
+    'MexicanHat1D':                {AMPLITUDE: 'amplitude',  POSITION: 'x_0',  WIDTH: 'sigma'},
+    'Trapezoid1D':                 {AMPLITUDE: 'amplitude',  POSITION: 'x_0',  WIDTH: 'width'},
+    'Beta1D':                      {AMPLITUDE: 'amplitude',  POSITION: 'x_0'},
+    'PowerLaw1D':                  {AMPLITUDE: 'amplitude',  POSITION: 'x_0'},
+    'ExponentialCutoffPowerLaw1D': {AMPLITUDE: 'amplitude',  POSITION: 'x_0'},
+    'LogParabola1D':               {AMPLITUDE: 'amplitude',  POSITION: 'x_0'},
+    'BrokenPowerLaw1D':            {AMPLITUDE: 'amplitude',  POSITION: 'x_break'},
+    'Const1D':                     {AMPLITUDE: 'amplitude'},
     }
 
 

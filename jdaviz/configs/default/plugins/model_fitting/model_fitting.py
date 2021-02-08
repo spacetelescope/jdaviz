@@ -473,8 +473,8 @@ class ModelFitting(TemplateMixin):
             spectrum = event["spectrum"]
         else:
             model, spectrum = fit_model_to_spectrum(self._spectrum1d,
-                                                self._initialized_models.values(),
-                                                self.model_equation)
+                                                    self._initialized_models.values(),
+                                                    self.model_equation)
 
         self.n_models += 1
         label = self.model_label

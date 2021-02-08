@@ -243,7 +243,7 @@ class Application(VuetifyTemplate, HubListener):
             if self.data_collection[i].world_component_ids == []:
                 continue
             self.data_collection.add_link(LinkSame(self.data_collection[i].world_component_ids[0],
-                    self.data_collection[new_len-1].world_component_ids[0]))
+                                          self.data_collection[new_len-1].world_component_ids[0]))
 
     def load_data(self, file_obj, parser_reference=None, **kwargs):
         """
@@ -631,10 +631,10 @@ class Application(VuetifyTemplate, HubListener):
         else:
             raise ValueError(
                 f"No data item found with label '{data_label}'. Label must be one "
-                f"of:\n\t" + f"\n\t".join([
+                "of:\n\t" + "\n\t".join([
                     data_item['name'] for data_item in self.state.data_items]))
 
-    def _set_plot_axes_labels(self,viewer_id):
+    def _set_plot_axes_labels(self, viewer_id):
         """
         Sets the plot axes labels to be the units of the data to be loaded.
 

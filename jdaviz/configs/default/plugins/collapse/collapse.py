@@ -108,7 +108,7 @@ class Collapse(TemplateMixin):
             spec = self._selected_data.get_object(cls=SpectralCube)
         except AttributeError:
             snackbar_message = SnackbarMessage(
-                f"Unable to perform collapse over selected data.",
+                "Unable to perform collapse over selected data.",
                 color="error",
                 sender=self)
             self.hub.broadcast(snackbar_message)
@@ -142,10 +142,13 @@ class Collapse(TemplateMixin):
         # the selected axis.
         (i1, i2), (i1c, i2c) = AXES_MAPPING[self.selected_axis]
 
-        self.data_collection.add_link(LinkSame(self._selected_data.pixel_component_ids[i1],
-                                               self.data_collection[label].pixel_component_ids[i1c]))
-        self.data_collection.add_link(LinkSame(self._selected_data.pixel_component_ids[i2],
-                                               self.data_collection[label].pixel_component_ids[i2c]))
+        pix_id_1 = self._selected_data.pixel_component_ids[i1]
+        pix_id_1c = self.data_collection[label].pixel_component_ids[i1c]
+        pix_id_2 = self._selected_data.pixel_component_ids[i2]
+        pix_id_2c = self.data_collection[label].pixel_component_ids[i2c]
+
+        self.data_collection.add_link(LinkSame(pix_id_1, pix_id_1c))
+        self.data_collection.add_link(LinkSame(pix_id_2, pix_id_2c))
 
         snackbar_message = SnackbarMessage(
             f"Data set '{self._selected_data.label}' collapsed successfully.",

@@ -133,9 +133,9 @@ class Specviz2d(ConfigHelper):
             # Collapse the 2D spectrum to 1D if no 1D spectrum provided
             if spectrum_1d is None:
                 self.app.load_data(spectrum_2d,
-                                  parser_reference="spec2d-1d-parser",
-                                  data_label=spectrum_1d_label,
-                                  show_in_viewer=show_in_viewer)
+                                   parser_reference="spec2d-1d-parser",
+                                   data_label=spectrum_1d_label,
+                                   show_in_viewer=show_in_viewer)
 
                 # Warn that this shouldn't be used for science
                 msg = "Warning: The collapsed 1D spectrum is for quicklook" +\

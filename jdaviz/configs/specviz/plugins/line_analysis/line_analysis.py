@@ -17,10 +17,10 @@ from jdaviz.utils import load_template
 __all__ = ['LineAnalysis']
 
 FUNCTIONS = {"Line Flux": analysis.line_flux,
-        "Equivalent Width": analysis.equivalent_width,
-        "Gaussian Sigma Width": analysis.gaussian_sigma_width,
-        "Gaussian FWHM": analysis.gaussian_fwhm,
-        "Centroid": analysis.centroid}
+             "Equivalent Width": analysis.equivalent_width,
+             "Gaussian Sigma Width": analysis.gaussian_sigma_width,
+             "Gaussian FWHM": analysis.gaussian_fwhm,
+             "Centroid": analysis.centroid}
 
 
 @tray_registry('specviz-line-analysis', label="Line Analysis")
@@ -135,7 +135,8 @@ class LineAnalysis(TemplateMixin):
                 if self._spectrum1d.mask is None:
                     spec_region = SpectralRegion(spectral_axis[0], spectral_axis[-1])
                 else:
-                    spec_region = self._spectrum1d.spectral_axis[np.where(self._spectrum1d.mask == False)]
+                    spec_region = self._spectrum1d.spectral_axis[np.where(self._spectrum1d.mask ==
+                                                                          False)]
                     spec_region = SpectralRegion(spec_region[0], spec_region[-1])
                 temp_result = FUNCTIONS[function](self._spectrum1d, spec_region)
             else:

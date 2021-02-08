@@ -39,4 +39,4 @@ def test_spatial_convolution(spectral_cube_wcs):
 
     assert len(dc) == 2
     assert dc[1].label == "Smoothed test"
-    assert dc["Smoothed test"].get_object(cls=SpectralCube).shape == (3,4,5)
+    assert dc["Smoothed test"].get_object(cls=SpectralCube).shape == (3, 4, 5)

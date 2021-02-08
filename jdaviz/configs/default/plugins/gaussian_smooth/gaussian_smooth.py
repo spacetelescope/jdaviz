@@ -64,7 +64,7 @@ class GaussianSmooth(TemplateMixin):
             spec = self._selected_data.get_object(cls=Spectrum1D)
         except TypeError:
             snackbar_message = SnackbarMessage(
-                f"Unable to perform smoothing over selected data.",
+                "Unable to perform smoothing over selected data.",
                 color="error",
                 sender=self)
             self.hub.broadcast(snackbar_message)

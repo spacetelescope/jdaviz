@@ -125,12 +125,14 @@ class LineListTool(TemplateMixin):
 
     def _list_from_notebook(self, msg):
         """
-        Callback method for when a spectral line list is added to the specviz instance from the notebook.
+        Callback method for when a spectral line list is added to the specviz
+        instance from the notebook.
 
         Parameters
         ----------
         msg : `glue.core.Message`
-            The glue message passed to this callback method. Includes the line data added in msg.table.
+            The glue message passed to this callback method. Includes the line
+            data added in msg.table.
         """
         #list_contents = self.list_contents
         #loaded_lists = self.loaded_lists
