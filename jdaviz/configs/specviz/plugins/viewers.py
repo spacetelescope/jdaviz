@@ -345,8 +345,8 @@ class SpecvizProfileView(BqplotProfileView):
         if 'mask' in _data.components and self.display_mask:
 
             # If a mask was already plotted, remove it.
-            if hasattr(self, 'mask_trace_pointer') and \
-                    self.mask_trace_pointer is not None:
+            if (hasattr(self, 'mask_trace_pointer') and
+                    self.mask_trace_pointer is not None):
                 marks = self.figure.marks[:]
                 self._clean_mask(marks)
                 self.figure.marks = marks
@@ -386,8 +386,8 @@ class SpecvizProfileView(BqplotProfileView):
             error = np.array(_data['uncertainty'].data)
 
             # If uncertainties were already plotted, remove them.
-            if hasattr(self, 'error_trace_pointer') and \
-                    self.error_trace_pointer is not None:
+            if (hasattr(self, 'error_trace_pointer') and
+                    self.error_trace_pointer is not None):
                 marks = self.figure.marks[:]
                 self._clean_error(marks)
                 self.figure.marks = marks
