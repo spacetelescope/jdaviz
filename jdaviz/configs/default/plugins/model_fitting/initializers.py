@@ -16,12 +16,13 @@ POSITION  = 'position'
 WIDTH     = 'width'
 
 model_parameters = {"Gaussian1D": ["amplitude", "stddev", "mean"],
-                     "Const1D": ["amplitude"],
-                     "Linear1D": ["slope", "intercept"],
-                     "PowerLaw1D": ["amplitude", "x_0", "alpha"],
-                     "Lorentz1D": ["amplitude", "x_0", "fwhm"],
-                     "Voigt1D": ["x_0", "amplitude_L", "fwhm_L", "fwhm_G"],
-                     }
+                    "Const1D": ["amplitude"],
+                    "Linear1D": ["slope", "intercept"],
+                    "PowerLaw1D": ["amplitude", "x_0", "alpha"],
+                    "Lorentz1D": ["amplitude", "x_0", "fwhm"],
+                    "Voigt1D": ["x_0", "amplitude_L", "fwhm_L", "fwhm_G"],
+                   }
+
 
 def _get_model_name(model):
     class_string = str(model.__class__)
@@ -180,7 +181,7 @@ class _LineProfile1DInitializer(object):
         # amplitude is derived from area.
         delta_x = x[1:] - x[:-1]
         sum_y = np.sum((y[1:] - np.min(y[1:])) * delta_x)
-        height = sum_y / (fwhm / 2.355 * np.sqrt( 2 * np.pi))
+        height = sum_y / (fwhm / 2.355 * np.sqrt(2 * np.pi))
 
         name = _get_model_name(instance)
 

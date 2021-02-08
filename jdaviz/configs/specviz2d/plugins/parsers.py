@@ -1,21 +1,17 @@
-from glue.core.data import Data
-
 from jdaviz.core.registries import data_parser_registry
 
-from astropy.nddata import CCDData
-from spectral_cube import SpectralCube
 from specutils import Spectrum1D
 from astropy.io import fits
 import astropy.units as u
 import numpy as np
-import logging
-from astropy.wcs import WCS
 from pathlib import Path
 
 __all__ = ['spec2d_1d_parser']
 
+
 def _check_is_file(path):
     return isinstance(path, str) and Path(path).is_file()
+
 
 @data_parser_registry("spec2d-1d-parser")
 def spec2d_1d_parser(app, data_obj, data_label=None, show_in_viewer=True):

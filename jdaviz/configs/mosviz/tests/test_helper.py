@@ -206,6 +206,7 @@ def test_load_image(mosviz_app, image):
     assert list(data.values())[0].shape == (55, 55)
     assert list(data.keys())[0] == f"{label} 0"
 
+
 def test_viewer_axis_link(mosviz_app, spectrum1d, spectrum2d):
     label1d = "Test 1D Spectrum"
     mosviz_app.load_1d_spectra(spectrum1d, data_labels=label1d)

@@ -26,6 +26,7 @@ def test_linking_after_spectral_smooth(spectral_cube_wcs):
     assert dc.external_links[0].cids1[0] is dc[0].world_component_ids[0]
     assert dc.external_links[0].cids2[0] is dc[1].world_component_ids[0]
 
+
 def test_spatial_convolution(spectral_cube_wcs):
 
     app = Application()

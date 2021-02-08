@@ -1,12 +1,10 @@
 import numpy as np
 
-from glue.core import Data
 import astropy.units as u
 from astropy.table import QTable
 from jdaviz import SpecViz
 from specutils import Spectrum1D
 
-from ..line_lists import LineListTool
 
 def test_line_lists():
     viz = SpecViz()
@@ -22,13 +20,13 @@ def test_line_lists():
 
     assert len(viz.spectral_lines) == 2
     assert viz.spectral_lines.loc["linename", "Halpha"]["listname"] == "Custom"
-    assert np.all(viz.spectral_lines["show"] == True)
+    assert np.all(viz.spectral_lines["show"])
 
     viz.erase_spectral_lines()
 
-    assert np.all(viz.spectral_lines["show"] == False)
+    assert np.all(viz.spectral_lines["show"] is False)
 
     viz.plot_spectral_line("Halpha")
     viz.plot_spectral_line("O III 5007.0")
 
-    assert np.all(viz.spectral_lines["show"] == True)
+    assert np.all(viz.spectral_lines["show"])

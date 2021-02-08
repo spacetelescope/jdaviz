@@ -6,7 +6,7 @@ from specutils.spectra import Spectrum1D
 from .. import unit_conversion as uc
 
 
-SPECTRUM_SIZE = 10 # length of spectrum
+SPECTRUM_SIZE = 10  # length of spectrum
 
 
 def build_spectrum(sigma=0.1):
@@ -20,6 +20,7 @@ def build_spectrum(sigma=0.1):
     noise = np.random.normal(4., sigma, x.shape)
 
     return x, y + noise
+
 
 def test_spectral_axis_conversion():
     np.random.seed(42)
@@ -37,9 +38,9 @@ def test_spectral_axis_conversion():
                             4.44444444, 5.55555556, 6.66666667, 7.77777778,
                             8.88888889, 10]
 
-
     assert np.allclose(converted_spectrum.spectral_axis.value,
                        result_spectral_axis, atol=1e-5)
+
 
 def test_flux_conversion():
 
@@ -61,6 +62,7 @@ def test_flux_conversion():
 
     # TODO: first element is `inf`, why is this?
     assert np.allclose(converted_spectrum.flux.value[1:], result_flux, atol=1e-5)
+
 
 def test_both_conversion():
     np.random.seed(42)

@@ -13,13 +13,12 @@ from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
 from jdaviz.utils import load_template
 
-
-
 __all__ = ['UnitConversion']
 
 unit_exponents = {StdDevUncertainty: 1,
                   InverseVariance: -2,
                   VarianceUncertainty: 2}
+
 
 @tray_registry('g-unit-conversion', label="Unit Conversion")
 class UnitConversion(TemplateMixin):
@@ -50,7 +49,6 @@ class UnitConversion(TemplateMixin):
         self.hub.subscribe(self, RemoveDataMessage,
                            handler=self._on_viewer_data_changed)
 
-
     def _on_viewer_data_changed(self, msg=None):
         """
         Callback method for when data is added or removed from a viewer, or
@@ -78,7 +76,6 @@ class UnitConversion(TemplateMixin):
         # viewer we care about.
         if msg is not None and msg.viewer_id != self._viewer_id:
             return
-
 
         self._viewer_data = self.app.get_data_from_viewer('spectrum-viewer')
 
@@ -166,10 +163,10 @@ class UnitConversion(TemplateMixin):
                     color="warning",
                     sender=self)
                 self.hub.broadcast(msg)
-
                 return
+
             elif converted_spec.flux.unit == original_flux and \
-                converted_spec.spectral_axis.unit == original_spectral_axis:
+                    converted_spec.spectral_axis.unit == original_spectral_axis:
                 # Check if converted units already exist in the original spectrum.
                 msg = SnackbarMessage(
                     "These are the units of the original spectrum, please use "
@@ -177,8 +174,8 @@ class UnitConversion(TemplateMixin):
                     color="warning",
                     sender=self)
                 self.hub.broadcast(msg)
-
                 return
+
             else:
                 # Add spectrum with converted units to app.
                 self.app.add_data(converted_spec, new_label)
@@ -252,9 +249,9 @@ class UnitConversion(TemplateMixin):
                 and new_flux != "" \
                 and new_flux != current_flux_unit:
             try:
-
+                equivalencies = u.spectral_density(set_spectral_axis_unit)
                 set_flux_unit = spectrum.flux.to(u.Unit(new_flux),
-                                                 equivalencies=u.spectral_density(set_spectral_axis_unit))
+                                                 equivalencies=equivalencies)
             except ValueError:
                 snackbar_message = SnackbarMessage(
                     "Unable to convert flux units for selected data. Try different units.",

@@ -4,6 +4,7 @@ from jdaviz.core.events import AddLineListMessage
 
 __all__ = ['LineListMixin']
 
+
 class LineListMixin:
     """
     Line list-related methods and properties for use in the configuration

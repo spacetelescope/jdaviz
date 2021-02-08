@@ -1,5 +1,6 @@
 from bqplot.marks import Lines
 
+
 class SpectralLine(Lines):
     """
     Subclass on bqplot Lines, mostly so that we can erase spectral lines
