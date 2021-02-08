@@ -1,12 +1,8 @@
-import os
-
-import ipywidgets as w
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode)
-from glue.core.message import EditSubsetMessage
 from glue_jupyter.widgets.subset_mode_vuetify import SelectionModeMenu
 from glue_jupyter.widgets.subset_select_vuetify import SubsetSelect
-from traitlets import Int, List, Unicode
+from traitlets import Int, List
 
 from jdaviz.core.registries import tool_registry
 from jdaviz.core.template_mixin import TemplateMixin

@@ -1,7 +1,6 @@
 import logging
 import os
 import pathlib
-import pkg_resources
 import re
 import uuid
 from inspect import isclass

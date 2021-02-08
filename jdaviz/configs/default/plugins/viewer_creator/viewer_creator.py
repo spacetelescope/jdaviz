@@ -1,7 +1,4 @@
-import os
-
-from glue_jupyter.utils import validate_data_argument
-from traitlets import List, Unicode, observe
+from traitlets import List
 
 from jdaviz.core.events import NewViewerMessage
 from jdaviz.core.registries import tool_registry, viewer_registry

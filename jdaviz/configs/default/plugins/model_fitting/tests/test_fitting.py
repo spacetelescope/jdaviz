@@ -6,8 +6,8 @@ from specutils.spectra import Spectrum1D
 from .. import fitting_backend as fb
 
 
-SPECTRUM_SIZE = 200 # length of spectrum
-IMAGE_SIZE    =  15 # size of slab (IMAGE_SIZE x IMAGE_SIZE spaxels)
+SPECTRUM_SIZE = 200  # length of spectrum
+IMAGE_SIZE = 15  # size of slab (IMAGE_SIZE x IMAGE_SIZE spaxels)
 
 
 def build_spectrum(sigma=0.1):
@@ -60,7 +60,7 @@ def test_cube_fitting_backend():
     np.random.seed(42)
 
     SIGMA = 0.1  # noise in data
-    TOL   = 0.4  # test tolerance
+    TOL = 0.4  # test tolerance
 
     # Flux cube oriented as in JWST data. To build a Spectrum1D
     # instance with this, one need to transpose it so the spectral
@@ -118,8 +118,8 @@ def test_cube_fitting_backend():
     # interested here in checking the correctness of the data
     # packaging into the output products.
 
-    assert np.allclose(fitted_parameters['amplitude_0'].value,  1.,  atol=TOL)
-    assert np.allclose(fitted_parameters['amplitude_1'].value,  2.5, atol=TOL)
+    assert np.allclose(fitted_parameters['amplitude_0'].value, 1., atol=TOL)
+    assert np.allclose(fitted_parameters['amplitude_1'].value, 2.5, atol=TOL)
     assert np.allclose(fitted_parameters['amplitude_2'].value, -1.7, atol=TOL)
 
     assert np.allclose(fitted_parameters['mean_0'].value, 4.6, atol=TOL)

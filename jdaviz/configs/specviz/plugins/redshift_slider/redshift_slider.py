@@ -1,8 +1,6 @@
 from traitlets import Bool, Float, observe, Any, Int
 import astropy.units as u
 from astropy.constants import c
-from specutils import SpectralAxis
-from glue_astronomy.spectral_coordinates import SpectralCoordinates
 import numpy as np
 
 from jdaviz.core.events import AddDataMessage, RedshiftMessage
@@ -127,9 +125,9 @@ class RedshiftSlider(TemplateMixin):
                 data_item.coords = SpectralCoordinates(new_axis)
         '''
 
-    #def _slider_value_updated(self, value):
-    #    if len(value) > 0:
-    #        self.slider = float(value[0])
+    # def _slider_value_updated(self, value):
+    #     if len(value) > 0:
+    #         self.slider = float(value[0])
 
     def _set_bounds_orderly(self, new_min, new_max, new_val):
         '''Have to do this in the right order so our slider value is never out of bounds'''

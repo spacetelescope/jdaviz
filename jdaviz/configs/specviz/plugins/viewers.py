@@ -371,7 +371,7 @@ class SpecvizProfileView(BqplotProfileView):
                                           colors=[self._color],
                                           default_size=25,
                                           default_opacities=[self._alpha],
-                                         )
+                                          )
             self.figure.marks = list(self.figure.marks) + [self.mask_line_mark]
 
             # We added an extra trace. Get pointer to it.
@@ -386,7 +386,7 @@ class SpecvizProfileView(BqplotProfileView):
             error = np.array(_data['uncertainty'].data)
 
             # If uncertainties were already plotted, remove them.
-            if hasattr(self,'error_trace_pointer') and \
+            if hasattr(self, 'error_trace_pointer') and \
                     self.error_trace_pointer is not None:
                 marks = self.figure.marks[:]
                 self._clean_error(marks)
@@ -402,16 +402,16 @@ class SpecvizProfileView(BqplotProfileView):
             # A Lines bqplot instance with two lines and shaded area
             # in between.
             self.error_line_mark = Lines(scales=self.scales,
-                              x=[x],
-                              y=[y],
-                              stroke_width=1,
-                              colors=[self._color, self._color],
-                              fill_colors=[self._color, self._color],
-                              opacities=[0.0, 0.0],
-                              fill_opacities=[self._alpha_shade, self._alpha_shade],
-                              fill='between',
-                              close_path=False
-                              )
+                                         x=[x],
+                                         y=[y],
+                                         stroke_width=1,
+                                         colors=[self._color, self._color],
+                                         fill_colors=[self._color, self._color],
+                                         opacities=[0.0, 0.0],
+                                         fill_opacities=[self._alpha_shade, self._alpha_shade],
+                                         fill='between',
+                                         close_path=False
+                                        )
             self.figure.marks = list(self.figure.marks) + [self.error_line_mark]
 
             # We added an extra trace. Get pointer to it.

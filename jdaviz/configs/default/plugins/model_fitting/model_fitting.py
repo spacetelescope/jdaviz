@@ -436,7 +436,7 @@ class ModelFitting(TemplateMixin):
         # Transpose the axis order back
         values = np.moveaxis(fitted_spectrum.flux.value, -1, 0)
 
-        count = max(map(lambda s: int(next(iter(re.findall("\d$", s)), 0)),
+        count = max(map(lambda s: int(next(iter(re.findall(r"\d$", s)), 0)),
                         self.data_collection.labels)) + 1
 
         label = f"{self.model_label} [Cube] {count}"

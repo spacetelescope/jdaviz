@@ -1,6 +1,5 @@
 from glue.config import DictRegistry
 import re
-from functools import wraps
 from ipyvuetify import VuetifyTemplate
 from ipywidgets import Widget
 

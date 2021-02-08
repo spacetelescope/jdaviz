@@ -1,6 +1,6 @@
 from astropy import units as u
-from astropy.nddata import VarianceUncertainty, StdDevUncertainty,
-                           InverseVariance, UnknownUncertainty
+from astropy.nddata import (VarianceUncertainty, StdDevUncertainty,
+                            InverseVariance, UnknownUncertainty)
 import numpy as np
 
 from regions import RectanglePixelRegion
@@ -280,7 +280,7 @@ class UnitConversion(TemplateMixin):
                     # TODO: simplify this when astropy handles it
                     temp_uncertainty = spectrum.uncertainty.quantity**(1/unit_exp)
                     temp_uncertainty = temp_uncertainty.to(u.Unit(set_flux_unit.unit),
-                                       equivalencies=u.spectral_density(set_spectral_axis_unit))
+                            equivalencies=u.spectral_density(set_spectral_axis_unit))
                     temp_uncertainty **= unit_exp
                     temp_uncertainty = spectrum.uncertainty.__class__(temp_uncertainty.value)
                 except u.UnitConversionError:
@@ -323,8 +323,8 @@ class UnitConversion(TemplateMixin):
             curr_spectral_axis_unit_equivalencies))
 
         # Concatenate both lists with the local units coming first.
-        spectral_axis_unit_equivalencies_titles = sorted(self.convert_units_to_strings(local_units)) \
-                                                  + spectral_axis_unit_equivalencies_titles
+        spectral_axis_unit_equivalencies_titles = sorted(self.convert_units_to_strings(
+            local_units)) + spectral_axis_unit_equivalencies_titles
 
         return spectral_axis_unit_equivalencies_titles
 
@@ -336,21 +336,22 @@ class UnitConversion(TemplateMixin):
         curr_flux_unit_equivalencies = u.Unit(
             self.spectrum.flux.unit).find_equivalent_units(
             equivalencies=u.spectral_density(np.sum(self.spectrum.spectral_axis)),
-                                             include_prefix_units=False)
+                                             include_prefix_units=False) # noqa
 
         # Get local units.
         local_units = [u.Unit(unit) for unit in self._locally_defined_flux_units()]
 
         # Remove overlap units.
         curr_flux_unit_equivalencies = list(set(curr_flux_unit_equivalencies)
-                                                     - set(local_units))
+                                            - set(local_units))
 
         # Convert equivalencies into readable versions of the units and sort them alphabetically.
-        flux_unit_equivalencies_titles = sorted(self.convert_units_to_strings(curr_flux_unit_equivalencies))
+        to_str_func = self.convert_units_to_strings
+        flux_unit_equivalencies_titles = sorted(to_str_func(curr_flux_unit_equivalencies))
 
         # Concatenate both lists with the local units coming first.
-        flux_unit_equivalencies_titles = sorted(self.convert_units_to_strings(local_units)) + \
-                                         flux_unit_equivalencies_titles
+        flux_unit_equivalencies_titles = sorted(to_str_func(local_units)) + \
+                                         flux_unit_equivalencies_titles # noqa
 
         return flux_unit_equivalencies_titles
 

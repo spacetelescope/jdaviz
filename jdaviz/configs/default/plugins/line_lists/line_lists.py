@@ -233,7 +233,7 @@ class LineListTool(TemplateMixin):
                      "colors": list_contents["Custom"]["color"],
                      "show": True,
                      "redshift": self._global_redshift
-                    }
+                     }
 
         # Add to viewer astropy table
         temp_table = QTable()
