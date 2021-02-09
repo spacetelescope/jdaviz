@@ -72,8 +72,10 @@
       >
         Close
       </v-btn>
-
     </v-snackbar>
+    <v-fade-transition>
+      <div v-show="loading" class="jd-loading-overlay"></div>
+    </v-fade-transition>
   </v-app>
 </template>
 
@@ -109,6 +111,20 @@ export default {
 </script>
 
 <style id="web-app">
+
+/* fix for loading overlay z-index */
+div.output_wrapper {
+  z-index: auto;
+}
+
+.jd-loading-overlay {
+  position: absolute;
+  inset: 0;
+  background-color: white;
+  z-index: 100;
+  opacity: 0.5;
+}
+
 .v-toolbar__content,
 .vuetify-styles .v-toolbar__content {
   padding-left: 0px;
