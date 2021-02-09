@@ -873,12 +873,10 @@ class Application(VuetifyTemplate, HubListener):
 
     def _update_selected_data_items(self, viewer_id, selected_items):
         # Find the active viewer
-        viewer_item = self._viewer_item_by_id(viewer_id)
         viewer = self._viewer_by_id(viewer_id)
 
         # Update the stored selected data items
-        viewer_item['selected_data_items'] = selected_items
-        data_ids = viewer_item['selected_data_items']
+        data_ids = selected_items
 
         active_data_labels = []
 
