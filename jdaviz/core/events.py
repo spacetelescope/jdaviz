@@ -6,6 +6,7 @@ __all__ = ['NewViewerMessage', 'AddViewerMessage', 'LoadDataMessage',
            'AddDataMessage', 'SnackbarMessage', 'RemoveDataMessage',
            'AddLineListMessage']
 
+
 class NewViewerMessage(Message):
     def __init__(self, cls, data, x_attr=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -230,6 +231,7 @@ class AddLineListMessage(Message):
     @property
     def table(self):
         return self._table
+
 
 class RedshiftMessage(Message):
     '''Messages related to Specviz redshift slider'''

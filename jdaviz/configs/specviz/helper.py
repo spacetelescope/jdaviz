@@ -1,11 +1,12 @@
 import logging
 
 import astropy.units as u
-from specutils import Spectrum1D, SpectrumCollection, SpectralRegion
+from specutils import SpectralRegion
 
 from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import RedshiftMessage
 from ..default.plugins.line_lists.line_list_mixin import LineListMixin
+
 
 class SpecViz(ConfigHelper, LineListMixin):
     """
@@ -21,7 +22,7 @@ class SpecViz(ConfigHelper, LineListMixin):
 
         # Listen for new redshifts from the redshift slider
         self.app.hub.subscribe(self, RedshiftMessage,
-                                       handler=self._redshift_listener)
+                               handler=self._redshift_listener)
 
     def load_spectrum(self, data, data_label=None, format=None, show_in_viewer=True):
         super().load_data(data,
@@ -45,9 +46,9 @@ class SpecViz(ConfigHelper, LineListMixin):
                 spectra.redshift = self._redshift
             if apply_slider_redshift == "Warn":
                 logging.warning("Warning: Applying the value from the redshift "
-                        "slider to the output spectra. To avoid seeing this "
-                        "warning, explicitly set the apply_slider_redshift "
-                        "argument to True or False.")
+                                "slider to the output spectra. To avoid seeing this "
+                                "warning, explicitly set the apply_slider_redshift "
+                                "argument to True or False.")
         return spectra
 
     def get_spectral_regions(self):
@@ -179,7 +180,7 @@ class SpecViz(ConfigHelper, LineListMixin):
     def show(self):
         self.app
 
-    def set_redshift_slider_bounds(self, lower = None, upper = None, step = None):
+    def set_redshift_slider_bounds(self, lower=None, upper=None, step=None):
         '''
         Set the upper, lower, or both bounds of the redshift slider. Note
         that this does not do any sanity checks on the numbers provided based
@@ -207,6 +208,3 @@ class SpecViz(ConfigHelper, LineListMixin):
         '''Save new redshifts (including from the helper itself)'''
         if msg.param == "redshift":
             self._redshift = msg.value
-
-    def show(self):
-        self.app

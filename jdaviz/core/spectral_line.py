@@ -1,5 +1,6 @@
 from bqplot.marks import Lines
 
+
 class SpectralLine(Lines):
     """
     Subclass on bqplot Lines, mostly so that we can erase spectral lines
@@ -21,4 +22,4 @@ class SpectralLine(Lines):
         y_coords = [scales['y'].min, scales['y'].max]
 
         super().__init__(x=x_coords, y=y_coords, scales=scales, stroke_width=1,
-                       fill='none', close_path=False, **kwargs)
+                         fill='none', close_path=False, **kwargs)

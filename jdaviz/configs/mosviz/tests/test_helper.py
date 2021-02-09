@@ -136,7 +136,7 @@ def test_load_spectrum1d(mosviz_app, spectrum1d):
     assert isinstance(list(data.values())[0], Spectrum1D)
     assert list(data.keys())[0] == label
 
-    with pytest.raises(TypeError) as e:
+    with pytest.raises(TypeError):
         mosviz_app.load_1d_spectra([1, 2, 3])
 
 
@@ -205,6 +205,7 @@ def test_load_image(mosviz_app, image):
     # assert isinstance(list(data.values())[0], CCDData)
     assert list(data.values())[0].shape == (55, 55)
     assert list(data.keys())[0] == f"{label} 0"
+
 
 def test_viewer_axis_link(mosviz_app, spectrum1d, spectrum2d):
     label1d = "Test 1D Spectrum"

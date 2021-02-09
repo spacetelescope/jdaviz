@@ -20,6 +20,6 @@ def test_moment_calculation(spectral_cube_wcs):
 
     print(dc[1].get_object())
 
-    assert mm.moment_available == True
+    assert mm.moment_available
     assert dc[1].label == 'Moment 0: test'
-    assert dc[1].get_object().shape == (4,5)
+    assert dc[1].get_object().shape == (4, 5)

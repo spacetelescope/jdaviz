@@ -81,7 +81,7 @@ class MosViz(ConfigHelper):
             try:
                 val = world[new_idx+extend_by]
             except IndexError:
-                val=old_val
+                val = old_val
                 msg = "Warning: panning too far away from the data may desync \
                        the 1D and 2D spectrum viewers"
                 msg = SnackbarMessage(msg, color='warning', sender=self)
@@ -160,7 +160,7 @@ class MosViz(ConfigHelper):
             for each item in ``data_obj`` if  ``data_obj`` is a list.
         """
         super().load_data(data_obj, parser_reference="mosviz-spec1d-parser",
-                           data_labels=data_labels)
+                          data_labels=data_labels)
 
     def load_2d_spectra(self, data_obj, data_labels=None):
         """
@@ -178,7 +178,7 @@ class MosViz(ConfigHelper):
             for each item in ``data_obj`` if  ``data_obj`` is a list.
         """
         super().load_data(data_obj, parser_reference="mosviz-spec2d-parser",
-                           data_labels=data_labels)
+                          data_labels=data_labels)
 
     def load_images(self, data_obj, data_labels=None):
         """
@@ -197,7 +197,7 @@ class MosViz(ConfigHelper):
             for each item in ``data_obj`` if  ``data_obj`` is a list.
         """
         super().load_data(data_obj, parser_reference="mosviz-image-parser",
-                           data_labels=data_labels)
+                          data_labels=data_labels)
 
     def add_column(self, data, column_name=None):
         """

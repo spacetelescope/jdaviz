@@ -47,7 +47,8 @@ def main(filename, layout='default'):
     nbdir = tempfile.mkdtemp()
 
     with open(os.path.join(nbdir, 'notebook.ipynb'), 'w') as nbf:
-        nbf.write(notebook_template.replace('DATA_FILENAME', str(filepath).replace('\\', '/')).strip())
+        nbf.write(notebook_template.replace('DATA_FILENAME',
+                                            str(filepath).replace('\\', '/')).strip())
 
     os.chdir(nbdir)
 
@@ -58,6 +59,7 @@ def main(filename, layout='default'):
         sys.exit(Voila().launch_instance(argv=[]))
     finally:
         os.chdir(start_dir)
+
 
 if __name__ == '__main__':
     main()

@@ -4,7 +4,6 @@ from jdaviz.utils import load_template
 from jdaviz.core.events import SnackbarMessage
 
 from traitlets import Bool
-from bqplot.interacts import PanZoom
 
 import numpy as np
 from regions import RectangleSkyRegion
@@ -15,6 +14,7 @@ from astropy.wcs import WCS
 import bqplot
 
 __all__ = ['SlitOverlay']
+
 
 @tray_registry('g-slit-overlay', label="Slit Overlay")
 class SlitOverlay(TemplateMixin):
@@ -87,7 +87,6 @@ class SlitOverlay(TemplateMixin):
             wcs_image = WCS(image_data[0].meta)
             pixel_region = sky_region.to_pixel(wcs_image)
 
-
             # Create polygon region from the pixel region and set vertices
             pix_rec = pixel_region.to_polygon()
 
@@ -103,12 +102,12 @@ class SlitOverlay(TemplateMixin):
             scales = {'x': fig_image.interaction.x_scale, 'y': fig_image.interaction.y_scale}
 
             # Create slit
-            patch2 = bqplot.Lines(x=x_coords, y=y_coords, scales=scales, fill='none', colors=["red"], stroke_width=2,
+            patch2 = bqplot.Lines(x=x_coords, y=y_coords, scales=scales,
+                                  fill='none', colors=["red"], stroke_width=2,
                                   close_path=True)
 
             # Visualize slit on the figure
             fig_image.marks = fig_image.marks + [patch2]
-
 
         else:
             snackbar_message = SnackbarMessage(

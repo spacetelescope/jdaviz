@@ -12,16 +12,17 @@ __all__ = [
 ]
 
 AMPLITUDE = 'amplitude'
-POSITION  = 'position'
-WIDTH     = 'width'
+POSITION = 'position'
+WIDTH = 'width'
 
 model_parameters = {"Gaussian1D": ["amplitude", "stddev", "mean"],
-                     "Const1D": ["amplitude"],
-                     "Linear1D": ["slope", "intercept"],
-                     "PowerLaw1D": ["amplitude", "x_0", "alpha"],
-                     "Lorentz1D": ["amplitude", "x_0", "fwhm"],
-                     "Voigt1D": ["x_0", "amplitude_L", "fwhm_L", "fwhm_G"],
-                     }
+                    "Const1D": ["amplitude"],
+                    "Linear1D": ["slope", "intercept"],
+                    "PowerLaw1D": ["amplitude", "x_0", "alpha"],
+                    "Lorentz1D": ["amplitude", "x_0", "fwhm"],
+                    "Voigt1D": ["x_0", "amplitude_L", "fwhm_L", "fwhm_G"],
+                    }
+
 
 def _get_model_name(model):
     class_string = str(model.__class__)
@@ -180,7 +181,7 @@ class _LineProfile1DInitializer(object):
         # amplitude is derived from area.
         delta_x = x[1:] - x[:-1]
         sum_y = np.sum((y[1:] - np.min(y[1:])) * delta_x)
-        height = sum_y / (fwhm / 2.355 * np.sqrt( 2 * np.pi))
+        height = sum_y / (fwhm / 2.355 * np.sqrt(2 * np.pi))
 
         name = _get_model_name(instance)
 
@@ -237,38 +238,38 @@ def _setattr(instance, mname, pname, value):
 # and roles are the same as in a typical line profile, so they can be
 # initialized in the same way.
 _initializers = {
-    'Beta1D':                     _WideBand1DInitializer,
-    'Const1D':                    _WideBand1DInitializer,
-    'PowerLaw1D':                 _WideBand1DInitializer,
-    'BrokenPowerLaw1D':           _WideBand1DInitializer,
-    'ExponentialCutoffPowerLaw1D':_WideBand1DInitializer,
-    'LogParabola1D':              _WideBand1DInitializer,
-    'Box1D':                      _Width_LineProfile1DInitializer,
-    'Gaussian1D':                 _Sigma_LineProfile1DInitializer,
-    'Lorentz1D':                  _Width_LineProfile1DInitializer,
-    'Voigt1D':                    _Width_LineProfile1DInitializer,
-    'MexicanHat1D':               _Sigma_LineProfile1DInitializer,
-    'Trapezoid1D':                _Width_LineProfile1DInitializer,
-    'Linear1D':                   _Linear1DInitializer,
+    'Beta1D':                      _WideBand1DInitializer,  # noqa
+    'Const1D':                     _WideBand1DInitializer,  # noqa
+    'PowerLaw1D':                  _WideBand1DInitializer,  # noqa
+    'BrokenPowerLaw1D':            _WideBand1DInitializer,  # noqa
+    'ExponentialCutoffPowerLaw1D': _WideBand1DInitializer,  # noqa
+    'LogParabola1D':               _WideBand1DInitializer,  # noqa
+    'Box1D':                       _Width_LineProfile1DInitializer,  # noqa
+    'Gaussian1D':                  _Sigma_LineProfile1DInitializer,  # noqa
+    'Lorentz1D':                   _Width_LineProfile1DInitializer,  # noqa
+    'Voigt1D':                     _Width_LineProfile1DInitializer,  # noqa
+    'MexicanHat1D':                _Sigma_LineProfile1DInitializer,  # noqa
+    'Trapezoid1D':                 _Width_LineProfile1DInitializer,  # noqa
+    'Linear1D':                    _Linear1DInitializer,  # noqa
     # 'Spline1D':                   spline.Spline1DInitializer
 }
 
 # Models can have parameter names that are similar amongst them, but not quite the same.
 # This maps the standard names used in the code to the actual names used by astropy.
 _p_names = {
-    'Gaussian1D':                 {AMPLITUDE:'amplitude',  POSITION:'mean', WIDTH:'stddev'},
-    'GaussianAbsorption':         {AMPLITUDE:'amplitude',  POSITION:'mean', WIDTH:'stddev'},
-    'Lorentz1D':                  {AMPLITUDE:'amplitude',  POSITION:'x_0',  WIDTH:'fwhm'},
-    'Voigt1D':                    {AMPLITUDE:'amplitude_L',POSITION:'x_0',  WIDTH:'fwhm_G'},
-    'Box1D':                      {AMPLITUDE:'amplitude',  POSITION:'x_0',  WIDTH:'width'},
-    'MexicanHat1D':               {AMPLITUDE:'amplitude',  POSITION:'x_0',  WIDTH:'sigma'},
-    'Trapezoid1D':                {AMPLITUDE:'amplitude',  POSITION:'x_0',  WIDTH:'width'},
-    'Beta1D':                     {AMPLITUDE:'amplitude',  POSITION:'x_0'},
-    'PowerLaw1D':                 {AMPLITUDE:'amplitude',  POSITION:'x_0'},
-    'ExponentialCutoffPowerLaw1D':{AMPLITUDE:'amplitude',  POSITION:'x_0'},
-    'LogParabola1D':              {AMPLITUDE:'amplitude',  POSITION:'x_0'},
-    'BrokenPowerLaw1D':           {AMPLITUDE:'amplitude',  POSITION:'x_break'},
-    'Const1D':                    {AMPLITUDE:'amplitude'},
+    'Gaussian1D':                  {AMPLITUDE: 'amplitude',  POSITION: 'mean', WIDTH: 'stddev'},  # noqa
+    'GaussianAbsorption':          {AMPLITUDE: 'amplitude',  POSITION: 'mean', WIDTH: 'stddev'},  # noqa
+    'Lorentz1D':                   {AMPLITUDE: 'amplitude',  POSITION: 'x_0',  WIDTH: 'fwhm'},  # noqa
+    'Voigt1D':                     {AMPLITUDE: 'amplitude_L', POSITION: 'x_0',  WIDTH: 'fwhm_G'},  # noqa
+    'Box1D':                       {AMPLITUDE: 'amplitude',  POSITION: 'x_0',  WIDTH: 'width'},  # noqa
+    'MexicanHat1D':                {AMPLITUDE: 'amplitude',  POSITION: 'x_0',  WIDTH: 'sigma'},  # noqa
+    'Trapezoid1D':                 {AMPLITUDE: 'amplitude',  POSITION: 'x_0',  WIDTH: 'width'},  # noqa
+    'Beta1D':                      {AMPLITUDE: 'amplitude',  POSITION: 'x_0'},  # noqa
+    'PowerLaw1D':                  {AMPLITUDE: 'amplitude',  POSITION: 'x_0'},  # noqa
+    'ExponentialCutoffPowerLaw1D': {AMPLITUDE: 'amplitude',  POSITION: 'x_0'},  # noqa
+    'LogParabola1D':               {AMPLITUDE: 'amplitude',  POSITION: 'x_0'},  # noqa
+    'BrokenPowerLaw1D':            {AMPLITUDE: 'amplitude',  POSITION: 'x_break'},  # noqa
+    'Const1D':                     {AMPLITUDE: 'amplitude'},  # noqa
     }
 
 

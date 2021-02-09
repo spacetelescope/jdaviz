@@ -37,7 +37,8 @@ class MOSVizProfileView(BqplotProfileView):
         elif data.spectral_axis.unit.is_equivalent(u.pixel):
             spectral_axis_unit_type = "pixel"
 
-        self.figure.axes[0].label = f"{spectral_axis_unit_type} [{data.spectral_axis.unit.to_string()}]"
+        label_0 = f"{spectral_axis_unit_type} [{data.spectral_axis.unit.to_string()}]"
+        self.figure.axes[0].label = label_0
         self.figure.axes[1].label = f"{flux_unit_type} [{data.flux.unit.to_string()}]"
 
         # Make it so y axis label is not covering tick numbers.
@@ -49,7 +50,7 @@ class MOSVizImageView(BqplotImageView):
     default_class = None
 
     def data(self, cls=None):
-        return [layer_state.layer #.get_object(cls=cls or self.default_class)
+        return [layer_state.layer  # .get_object(cls=cls or self.default_class)
                 for layer_state in self.state.layers
                 if hasattr(layer_state, 'layer') and
                 isinstance(layer_state.layer, BaseData)]

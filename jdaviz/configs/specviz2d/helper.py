@@ -2,8 +2,6 @@ import numpy as np
 
 from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import SnackbarMessage
-from astropy.table import QTable
-import astropy.units as u
 
 
 class Specviz2d(ConfigHelper):
@@ -81,7 +79,7 @@ class Specviz2d(ConfigHelper):
             try:
                 val = world[new_idx+extend_by]
             except IndexError:
-                val=old_val
+                val = old_val
                 msg = "Warning: panning too far away from the data may desync \
                        the 1D and 2D spectrum viewers"
                 msg = SnackbarMessage(msg, color='warning', sender=self)
@@ -133,20 +131,20 @@ class Specviz2d(ConfigHelper):
             # Collapse the 2D spectrum to 1D if no 1D spectrum provided
             if spectrum_1d is None:
                 self.app.load_data(spectrum_2d,
-                                  parser_reference="spec2d-1d-parser",
-                                  data_label=spectrum_1d_label,
-                                  show_in_viewer=show_in_viewer)
+                                   parser_reference="spec2d-1d-parser",
+                                   data_label=spectrum_1d_label,
+                                   show_in_viewer=show_in_viewer)
 
                 # Warn that this shouldn't be used for science
                 msg = "Warning: The collapsed 1D spectrum is for quicklook" +\
                     " purposes only. A robust extraction should be used for" +\
                     " scientific use cases."
                 msg = SnackbarMessage(msg, color='warning', sender=self,
-                                      timeout = 10000)
+                                      timeout=10000)
                 self.app.hub.broadcast(msg)
 
                 return
 
-        self.app.load_data(spectrum_1d, data_label = spectrum_1d_label,
+        self.app.load_data(spectrum_1d, data_label=spectrum_1d_label,
                            parser_reference="specviz-spectrum1d-parser",
                            show_in_viewer=show_in_viewer)

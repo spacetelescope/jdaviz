@@ -1,7 +1,6 @@
 import logging
 import os
 import pathlib
-import pkg_resources
 import re
 import uuid
 from inspect import isclass
@@ -130,13 +129,6 @@ class Application(VuetifyTemplate, HubListener):
         #  underlying glue infrastructure
         self._application_handler = JupyterApplication()
 
-        # We manually load plugins that are part of the "jdaviz_plugins"
-        #  group into the current namespace
-        plugins = {
-            entry_point.name: entry_point.load()
-            for entry_point
-            in pkg_resources.iter_entry_points(group='jdaviz_plugins')}
-
         # Create a dictionary for holding non-ipywidget viewer objects so we
         #  can reference their state easily since glue does not store viewers
         self._viewer_store = {}
@@ -250,7 +242,7 @@ class Application(VuetifyTemplate, HubListener):
             if self.data_collection[i].world_component_ids == []:
                 continue
             self.data_collection.add_link(LinkSame(self.data_collection[i].world_component_ids[0],
-                    self.data_collection[new_len-1].world_component_ids[0]))
+                                          self.data_collection[new_len-1].world_component_ids[0]))
 
     def load_data(self, file_obj, parser_reference=None, **kwargs):
         """
@@ -565,7 +557,6 @@ class Application(VuetifyTemplate, HubListener):
             The name associated with this data. If none is given, a generic
             name is generated.
         """
-        old_data_len = len(self.data_collection)
 
         # Include the data in the data collection
         data_label = data_label or "New Data"
@@ -639,10 +630,10 @@ class Application(VuetifyTemplate, HubListener):
         else:
             raise ValueError(
                 f"No data item found with label '{data_label}'. Label must be one "
-                f"of:\n\t" + f"\n\t".join([
+                "of:\n\t" + "\n\t".join([
                     data_item['name'] for data_item in self.state.data_items]))
 
-    def _set_plot_axes_labels(self,viewer_id):
+    def _set_plot_axes_labels(self, viewer_id):
         """
         Sets the plot axes labels to be the units of the data to be loaded.
 

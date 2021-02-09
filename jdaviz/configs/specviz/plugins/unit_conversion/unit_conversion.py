@@ -1,8 +1,6 @@
 from astropy import units as u
-from astropy.nddata import VarianceUncertainty, StdDevUncertainty, InverseVariance, UnknownUncertainty
+from astropy.nddata import VarianceUncertainty, StdDevUncertainty, InverseVariance
 import numpy as np
-
-from regions import RectanglePixelRegion
 
 from specutils import Spectrum1D
 from traitlets import List, Unicode, Any
@@ -12,13 +10,12 @@ from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
 from jdaviz.utils import load_template
 
-
-
 __all__ = ['UnitConversion']
 
 unit_exponents = {StdDevUncertainty: 1,
                   InverseVariance: -2,
                   VarianceUncertainty: 2}
+
 
 @tray_registry('g-unit-conversion', label="Unit Conversion")
 class UnitConversion(TemplateMixin):
@@ -49,7 +46,6 @@ class UnitConversion(TemplateMixin):
         self.hub.subscribe(self, RemoveDataMessage,
                            handler=self._on_viewer_data_changed)
 
-
     def _on_viewer_data_changed(self, msg=None):
         """
         Callback method for when data is added or removed from a viewer, or
@@ -77,7 +73,6 @@ class UnitConversion(TemplateMixin):
         # viewer we care about.
         if msg is not None and msg.viewer_id != self._viewer_id:
             return
-
 
         self._viewer_data = self.app.get_data_from_viewer('spectrum-viewer')
 
@@ -138,9 +133,12 @@ class UnitConversion(TemplateMixin):
         and are valid.
         """
 
-        converted_spec = self.process_unit_conversion(self.spectrum, self.new_flux_unit, self.new_spectral_axis_unit)
+        converted_spec = self.process_unit_conversion(self.spectrum,
+                                                      self.new_flux_unit,
+                                                      self.new_spectral_axis_unit)
 
-        label = f"_units_copy_Flux:{converted_spec.flux.unit}_SpectralAxis:{converted_spec.spectral_axis.unit}"
+        label = f"_units_copy_Flux:{converted_spec.flux.unit}_" +\
+                f"SpectralAxis:{converted_spec.spectral_axis.unit}"
         new_label = ""
 
         # Finds the '_units_copy_' spectrum and does unit conversions in that copy.
@@ -151,8 +149,9 @@ class UnitConversion(TemplateMixin):
 
             new_label = selected_data_label_split[0] + label
 
-            original_flux = self.data_collection[selected_data_label_split[0]].get_object().flux.unit
-            original_spectral_axis = self.data_collection[selected_data_label_split[0]].get_object().spectral_axis.unit
+            original_spectrum = self.data_collection[selected_data_label_split[0]]
+            original_flux = original_spectrum.get_object().flux.unit
+            original_spectral_axis = original_spectrum.get_object().spectral_axis.unit
 
             if new_label in self.data_collection:
                 # Spectrum with these converted units already exists.
@@ -161,18 +160,19 @@ class UnitConversion(TemplateMixin):
                     color="warning",
                     sender=self)
                 self.hub.broadcast(msg)
-
                 return
+
             elif converted_spec.flux.unit == original_flux and \
-                converted_spec.spectral_axis.unit == original_spectral_axis:
+                    converted_spec.spectral_axis.unit == original_spectral_axis:
                 # Check if converted units already exist in the original spectrum.
                 msg = SnackbarMessage(
-                    "These are the units of the original spectrum, please use the that spectrum instead.",
+                    "These are the units of the original spectrum, please use "
+                    "that spectrum instead.",
                     color="warning",
                     sender=self)
                 self.hub.broadcast(msg)
-
                 return
+
             else:
                 # Add spectrum with converted units to app.
                 self.app.add_data(converted_spec, new_label)
@@ -233,7 +233,8 @@ class UnitConversion(TemplateMixin):
                 set_spectral_axis_unit = spectrum.spectral_axis.to(u.Unit(new_spectral_axis))
             except ValueError:
                 snackbar_message = SnackbarMessage(
-                    f"Unable to convert spectral axis units for selected data. Try different units.",
+                    "Unable to convert spectral axis units for selected data. "
+                    "Try different units.",
                     color="error",
                     sender=self)
                 self.hub.broadcast(snackbar_message)
@@ -245,12 +246,12 @@ class UnitConversion(TemplateMixin):
                 and new_flux != "" \
                 and new_flux != current_flux_unit:
             try:
-
+                equivalencies = u.spectral_density(set_spectral_axis_unit)
                 set_flux_unit = spectrum.flux.to(u.Unit(new_flux),
-                                                      equivalencies=u.spectral_density(set_spectral_axis_unit))
+                                                 equivalencies=equivalencies)
             except ValueError:
                 snackbar_message = SnackbarMessage(
-                    f"Unable to convert flux units for selected data. Try different units.",
+                    "Unable to convert flux units for selected data. Try different units.",
                     color="error",
                     sender=self)
                 self.hub.broadcast(snackbar_message)
@@ -263,7 +264,8 @@ class UnitConversion(TemplateMixin):
             # If uncertainty type not in our lookup, drop the uncertainty
             if unit_exp is None:
                 msg = SnackbarMessage(
-                    "Warning: Unrecognized uncertainty type, cannot guarantee conversion so dropping uncertainty in resulting data",
+                    "Warning: Unrecognized uncertainty type, cannot guarantee "
+                    "conversion so dropping uncertainty in resulting data",
                     color="warning",
                     sender=self)
                 self.hub.broadcast(msg)
@@ -275,12 +277,13 @@ class UnitConversion(TemplateMixin):
                     # TODO: simplify this when astropy handles it
                     temp_uncertainty = spectrum.uncertainty.quantity**(1/unit_exp)
                     temp_uncertainty = temp_uncertainty.to(u.Unit(set_flux_unit.unit),
-                                    equivalencies=u.spectral_density(set_spectral_axis_unit))
+                                       equivalencies=u.spectral_density(set_spectral_axis_unit)) # noqa
                     temp_uncertainty **= unit_exp
                     temp_uncertainty = spectrum.uncertainty.__class__(temp_uncertainty.value)
                 except u.UnitConversionError:
                     msg = SnackbarMessage(
-                        "Warning: Could not convert uncertainty, setting to None in converted data",
+                        "Warning: Could not convert uncertainty, setting to "
+                        "None in converted data",
                         color="warning",
                         sender=self)
                     self.hub.broadcast(msg)
@@ -290,10 +293,10 @@ class UnitConversion(TemplateMixin):
 
         # Create new spectrum with new units.
         converted_spectrum = spectrum._copy(flux=set_flux_unit,
-                                             spectral_axis=set_spectral_axis_unit,
-                                             unit=set_flux_unit.unit,
-                                             uncertainty=temp_uncertainty
-                                             )
+                                            spectral_axis=set_spectral_axis_unit,
+                                            unit=set_flux_unit.unit,
+                                            uncertainty=temp_uncertainty
+                                            )
         return converted_spectrum
 
     def create_spectral_equivalencies_list(self):
@@ -317,8 +320,8 @@ class UnitConversion(TemplateMixin):
             curr_spectral_axis_unit_equivalencies))
 
         # Concatenate both lists with the local units coming first.
-        spectral_axis_unit_equivalencies_titles = sorted(self.convert_units_to_strings(local_units)) \
-                                                  + spectral_axis_unit_equivalencies_titles
+        spectral_axis_unit_equivalencies_titles = sorted(self.convert_units_to_strings(
+            local_units)) + spectral_axis_unit_equivalencies_titles
 
         return spectral_axis_unit_equivalencies_titles
 
@@ -329,21 +332,23 @@ class UnitConversion(TemplateMixin):
         # Get unit equivalencies.
         curr_flux_unit_equivalencies = u.Unit(
             self.spectrum.flux.unit).find_equivalent_units(
-            equivalencies=u.spectral_density(np.sum(self.spectrum.spectral_axis)), include_prefix_units=False)
+            equivalencies=u.spectral_density(np.sum(self.spectrum.spectral_axis)),
+                                             include_prefix_units=False) # noqa
 
         # Get local units.
         local_units = [u.Unit(unit) for unit in self._locally_defined_flux_units()]
 
         # Remove overlap units.
         curr_flux_unit_equivalencies = list(set(curr_flux_unit_equivalencies)
-                                                     - set(local_units))
+                                            - set(local_units))
 
         # Convert equivalencies into readable versions of the units and sort them alphabetically.
-        flux_unit_equivalencies_titles = sorted(self.convert_units_to_strings(curr_flux_unit_equivalencies))
+        to_str_func = self.convert_units_to_strings
+        flux_unit_equivalencies_titles = sorted(to_str_func(curr_flux_unit_equivalencies))
 
         # Concatenate both lists with the local units coming first.
-        flux_unit_equivalencies_titles = sorted(self.convert_units_to_strings(local_units)) + \
-                                         flux_unit_equivalencies_titles
+        flux_unit_equivalencies_titles = sorted(to_str_func(local_units)) + \
+                                         flux_unit_equivalencies_titles # noqa
 
         return flux_unit_equivalencies_titles
 
@@ -389,8 +394,8 @@ class UnitConversion(TemplateMixin):
             A list of the units with their best (i.e., most readable) string version.
         """
         return [u.Unit(unit).name
-            if u.Unit(unit) == u.Unit("Angstrom")
-            else u.Unit(unit).long_names[0] if (
-                        hasattr(u.Unit(unit), "long_names") and len(u.Unit(unit).long_names) > 0)
-            else u.Unit(unit).to_string()
-            for unit in unit_list]
+                if u.Unit(unit) == u.Unit("Angstrom")
+                else u.Unit(unit).long_names[0] if (
+                    hasattr(u.Unit(unit), "long_names") and len(u.Unit(unit).long_names) > 0)
+                else u.Unit(unit).to_string()
+                for unit in unit_list]

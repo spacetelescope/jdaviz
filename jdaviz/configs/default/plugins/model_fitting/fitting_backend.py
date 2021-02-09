@@ -225,7 +225,7 @@ class SpaxelWorker:
             # spectrum reference into the callable somehow prevents it
             # to execute. This behavior was seen also with other functions
             # passed to the callable.
-            flux = self.cube[x, y, :] # transposed!
+            flux = self.cube[x, y, :]  # transposed!
             sp = Spectrum1D(spectral_axis=self.wave, flux=flux)
 
             fitted_model = fit_lines(sp, self.model)

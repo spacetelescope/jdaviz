@@ -4,6 +4,7 @@ from jdaviz.core.events import AddLineListMessage
 
 __all__ = ['LineListMixin']
 
+
 class LineListMixin:
     """
     Line list-related methods and properties for use in the configuration
@@ -21,8 +22,8 @@ class LineListMixin:
             line_table["redshift"] = u.Quantity(self._redshift)
 
         lt = self.app.get_viewer('spectrum-viewer').load_line_list(line_table,
-                                                              replace=replace,
-                                                              return_table=True)
+                                                                   replace=replace,
+                                                                   return_table=True)
         # Preset lists were returning None table despite loading correctly
         if lt is None:
             if replace:

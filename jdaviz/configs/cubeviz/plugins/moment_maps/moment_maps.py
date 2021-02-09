@@ -1,13 +1,11 @@
-import os
 import pathlib
 import re
 
 from astropy import units as u
 from astropy.nddata import CCDData
 from glue.core.message import (DataCollectionAddMessage,
-                               DataCollectionDeleteMessage,
-                               SubsetCreateMessage)
-from traitlets import List, Unicode, Int, Any, Bool, observe
+                               DataCollectionDeleteMessage)
+from traitlets import List, Unicode, Any, Bool, observe
 from spectral_cube import SpectralCube
 from specutils import SpectralRegion
 from regions import RectanglePixelRegion
@@ -47,7 +45,7 @@ class MomentMap(TemplateMixin):
                            handler=self._on_data_updated)
         self.hub.subscribe(self, DataCollectionDeleteMessage,
                            handler=self._on_data_updated)
-        #self.hub.subscribe(self, SubsetCreateMessage,
+        # self.hub.subscribe(self, SubsetCreateMessage,
         #                   handler=self._on_subset_created)
         self._selected_data = None
         self.n_moment = 0
@@ -123,7 +121,7 @@ class MomentMap(TemplateMixin):
         self.spectral_subset_items = temp_list
 
     def vue_calculate_moment(self, event):
-        #Retrieve the data cube and slice out desired region, if specified
+        # Retrieve the data cube and slice out desired region, if specified
         cube = self._selected_data.get_object(cls=SpectralCube)
         spec_min = float(self.spectral_min) * u.Unit(self.spectral_unit)
         spec_max = float(self.spectral_max) * u.Unit(self.spectral_unit)

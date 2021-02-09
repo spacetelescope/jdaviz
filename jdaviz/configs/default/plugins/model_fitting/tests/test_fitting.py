@@ -6,8 +6,8 @@ from specutils.spectra import Spectrum1D
 from .. import fitting_backend as fb
 
 
-SPECTRUM_SIZE = 200 # length of spectrum
-IMAGE_SIZE    =  15 # size of slab (IMAGE_SIZE x IMAGE_SIZE spaxels)
+SPECTRUM_SIZE = 200  # length of spectrum
+IMAGE_SIZE = 15  # size of slab (IMAGE_SIZE x IMAGE_SIZE spaxels)
 
 
 def build_spectrum(sigma=0.1):
@@ -39,13 +39,16 @@ def test_fitting_backend():
     expression = "g1 + g2 + g3 + const1d"
 
     # Returns the intial model
-    fm, fitted_spectrum = fb.fit_model_to_spectrum(spectrum, model_list, expression, run_fitter=False)
+    fm, fitted_spectrum = fb.fit_model_to_spectrum(spectrum, model_list, expression,
+                                                   run_fitter=False)
 
-    parameters_expected = np.array([0.7,4.65,0.3,2.,5.55,0.3,-2.,8.15,0.2,1.])
+    parameters_expected = np.array([0.7, 4.65, 0.3, 2., 5.55, 0.3, -2.,
+                                    8.15, 0.2, 1.])
     assert np.allclose(fm.parameters, parameters_expected, atol=1e-5)
 
     # Returns the fitted model
-    fm, fitted_spectrum = fb.fit_model_to_spectrum(spectrum, model_list, expression, run_fitter=True)
+    fm, fitted_spectrum = fb.fit_model_to_spectrum(spectrum, model_list, expression,
+                                                   run_fitter=True)
 
     parameters_expected = np.array([1.0104705, 4.58956282, 0.19590464, 2.39892026,
                                     5.49867754, 0.10834472, -1.66902953, 8.19714439,
@@ -57,7 +60,7 @@ def test_cube_fitting_backend():
     np.random.seed(42)
 
     SIGMA = 0.1  # noise in data
-    TOL   = 0.4  # test tolerance
+    TOL = 0.4  # test tolerance
 
     # Flux cube oriented as in JWST data. To build a Spectrum1D
     # instance with this, one need to transpose it so the spectral
@@ -72,7 +75,7 @@ def test_cube_fitting_backend():
     # each other only by their noise component.
     x, _ = build_spectrum()
     for spx in spaxels:
-        flux_cube[:,spx[0],spx[1]] = build_spectrum(sigma=SIGMA)[1]
+        flux_cube[:, spx[0], spx[1]] = build_spectrum(sigma=SIGMA)[1]
 
     # Transpose so it can be packed in a Spectrum1D instance.
     flux_cube = flux_cube.transpose(1, 2, 0)
@@ -115,8 +118,8 @@ def test_cube_fitting_backend():
     # interested here in checking the correctness of the data
     # packaging into the output products.
 
-    assert np.allclose(fitted_parameters['amplitude_0'].value,  1.,  atol=TOL)
-    assert np.allclose(fitted_parameters['amplitude_1'].value,  2.5, atol=TOL)
+    assert np.allclose(fitted_parameters['amplitude_0'].value, 1., atol=TOL)
+    assert np.allclose(fitted_parameters['amplitude_1'].value, 2.5, atol=TOL)
     assert np.allclose(fitted_parameters['amplitude_2'].value, -1.7, atol=TOL)
 
     assert np.allclose(fitted_parameters['mean_0'].value, 4.6, atol=TOL)

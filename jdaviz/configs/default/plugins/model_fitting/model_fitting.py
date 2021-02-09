@@ -6,7 +6,6 @@ import numpy as np
 
 import astropy.modeling.models as models
 import astropy.units as u
-import numpy as np
 from astropy.wcs import WCSSUB_SPECTRAL
 from glue.core.message import (SubsetCreateMessage,
                                SubsetDeleteMessage,
@@ -118,7 +117,7 @@ class ModelFitting(TemplateMixin):
         self.dc_items = [layer_state.layer.label
                          for layer_state in viewer.state.layers]
 
-    def _param_units(self, param, order = 0):
+    def _param_units(self, param, order=0):
         """Helper function to handle units that depend on x and y"""
         y_params = ["amplitude", "amplitude_L", "intercept"]
 
@@ -421,7 +420,7 @@ class ModelFitting(TemplateMixin):
 
         # Retrieve copy of the models with proper "fixed" dictionaries
         # TODO: figure out why this was causing the parallel fitting to fail
-        #models_to_fit = self._reinitialize_with_fixed()
+        # models_to_fit = self._reinitialize_with_fixed()
         models_to_fit = self._initialized_models.values()
 
         fitted_model, fitted_spectrum = fit_model_to_spectrum(
@@ -437,7 +436,7 @@ class ModelFitting(TemplateMixin):
         # Transpose the axis order back
         values = np.moveaxis(fitted_spectrum.flux.value, -1, 0)
 
-        count = max(map(lambda s: int(next(iter(re.findall("\d$", s)), 0)),
+        count = max(map(lambda s: int(next(iter(re.findall(r"\d$", s)), 0)),
                         self.data_collection.labels)) + 1
 
         label = f"{self.model_label} [Cube] {count}"
@@ -473,8 +472,8 @@ class ModelFitting(TemplateMixin):
             spectrum = event["spectrum"]
         else:
             model, spectrum = fit_model_to_spectrum(self._spectrum1d,
-                                                self._initialized_models.values(),
-                                                self.model_equation)
+                                                    self._initialized_models.values(),
+                                                    self.model_equation)
 
         self.n_models += 1
         label = self.model_label
@@ -485,4 +484,4 @@ class ModelFitting(TemplateMixin):
         self.data_collection[label] = spectrum
         self.save_enabled = True
 
-        #self.app.add_data_to_viewer('spectrum-viewer', label)
+        # self.app.add_data_to_viewer('spectrum-viewer', label)

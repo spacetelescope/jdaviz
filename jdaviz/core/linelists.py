@@ -1,18 +1,20 @@
 import pkg_resources
 import json
-import csv
 
-import astropy.units as u
 from astropy.table import QTable
 
+
 def get_linelist_metadata():
-    metadata_file = pkg_resources.resource_filename("jdaviz", "data/linelists/linelist_metadata.json")
+    metadata_file = pkg_resources.resource_filename("jdaviz",
+                                                    "data/linelists/linelist_metadata.json")
     with open(metadata_file) as f:
         metadata = json.load(f)
     return metadata
 
+
 def get_available_linelists():
     return list(get_linelist_metadata().keys())
+
 
 def load_preset_linelist(name):
     """

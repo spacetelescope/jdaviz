@@ -7,7 +7,7 @@ from glue.core.message import (DataCollectionAddMessage,
 from specutils import Spectrum1D
 from specutils.manipulation import gaussian_smooth
 from spectral_cube import SpectralCube
-from traitlets import List, Unicode, Int, Any, Bool, observe
+from traitlets import List, Unicode, Any, Bool, observe
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
@@ -64,7 +64,7 @@ class GaussianSmooth(TemplateMixin):
             spec = self._selected_data.get_object(cls=Spectrum1D)
         except TypeError:
             snackbar_message = SnackbarMessage(
-                f"Unable to perform smoothing over selected data.",
+                "Unable to perform smoothing over selected data.",
                 color="error",
                 sender=self)
             self.hub.broadcast(snackbar_message)

@@ -1,5 +1,3 @@
-from warnings import warn
-
 from ipyvuetify import VuetifyTemplate
 from glue.core import HubListener
 

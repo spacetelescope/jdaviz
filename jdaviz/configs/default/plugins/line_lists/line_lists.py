@@ -1,14 +1,9 @@
-import os
-
-import bqplot
-from bqplot.marks import Lines
 import astropy.units as u
 from astropy.table import QTable
-from glue.core.link_helpers import LinkSame
 from glue.core.message import (SubsetCreateMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
-from traitlets import Bool, Int, List, Unicode, Dict, Float
+from traitlets import Bool, List, Unicode, Dict
 
 from jdaviz.core.events import (AddDataMessage,
                                 RemoveDataMessage,
@@ -102,7 +97,7 @@ class LineListTool(TemplateMixin):
             viewer_data = self.app.get_viewer('spectrum-viewer').data()
         except TypeError:
             warn_message = SnackbarMessage("Line list plugin could not retrieve data from viewer",
-                                            sender=self, color="error")
+                                           sender=self, color="error")
             self.hub.broadcast(warn_message)
             return
 
@@ -125,22 +120,26 @@ class LineListTool(TemplateMixin):
 
     def _list_from_notebook(self, msg):
         """
-        Callback method for when a spectral line list is added to the specviz instance from the notebook.
+        Callback method for when a spectral line list is added to the specviz
+        instance from the notebook.
 
         Parameters
         ----------
         msg : `glue.core.Message`
-            The glue message passed to this callback method. Includes the line data added in msg.table.
+            The glue message passed to this callback method. Includes the line
+            data added in msg.table.
         """
-        #list_contents = self.list_contents
-        #loaded_lists = self.loaded_lists
+        # list_contents = self.list_contents
+        # loaded_lists = self.loaded_lists
         loaded_lists = ["Custom"]
         list_contents = {"Custom": {"lines": [], "color": "#FF0000FF"}}
         for row in msg.table:
             if row["listname"] not in loaded_lists:
                 loaded_lists.append(row["listname"])
+
             if row["listname"] not in list_contents:
                 list_contents[row["listname"]] = {"lines": [], "color": "#FF0000FF"}
+
             temp_dict = {"linename": row["linename"],
                          "rest": row["rest"].value,
                          "unit": str(row["rest"].unit),
@@ -148,7 +147,7 @@ class LineListTool(TemplateMixin):
                          "show": True,
                          "name_rest": row["name_rest"],
                          "redshift": row["redshift"] if "redshift" in row else
-                                     self._global_redshift}
+                         self._global_redshift}
             list_contents[row["listname"]]["lines"].append(temp_dict)
 
         self.loaded_lists = []
@@ -159,12 +158,6 @@ class LineListTool(TemplateMixin):
         lines_loaded_message = SnackbarMessage("Spectral lines loaded from notebook",
                                                sender=self, color="success")
         self.hub.broadcast(lines_loaded_message)
-
-    def vue_update_available(self):
-        """
-        Check that the list to select from is up to date
-        """
-        self.available_lists = get_available_linelists()
 
     def update_line_mark_dict(self):
         self.line_mark_dict = {}
@@ -198,7 +191,7 @@ class LineListTool(TemplateMixin):
         temp_table = self._viewer.load_line_list(temp_table, return_table=True)
 
         line_list_dict = {"lines": [], "color": "#FF000080"}
-        #extra_fields = [x for x in temp_table.colnames if x not in
+        # extra_fields = [x for x in temp_table.colnames if x not in
         #                ("linename", "rest", "name_rest")]
 
         for row in temp_table:
@@ -209,8 +202,8 @@ class LineListTool(TemplateMixin):
                          "show": True,
                          "name_rest": str(row["name_rest"]),
                          "redshift": self._global_redshift}
-            #for field in extra_fields:
-            #    temp_dict[field] = row[field]
+            # for field in extra_fields:
+            #     temp_dict[field] = row[field]
             line_list_dict["lines"].append(temp_dict)
 
         list_contents = self.list_contents
@@ -240,7 +233,7 @@ class LineListTool(TemplateMixin):
                      "colors": list_contents["Custom"]["color"],
                      "show": True,
                      "redshift": self._global_redshift
-                }
+                     }
 
         # Add to viewer astropy table
         temp_table = QTable()
@@ -300,7 +293,7 @@ class LineListTool(TemplateMixin):
         """
         if self._viewer.spectral_lines is None:
             warn_message = SnackbarMessage("No spectral lines loaded to plot",
-                                            sender=self, color="error")
+                                           sender=self, color="error")
             self.hub.broadcast(warn_message)
             return
         lc = self.list_contents
@@ -321,7 +314,7 @@ class LineListTool(TemplateMixin):
         """
         if self._viewer.spectral_lines is None:
             warn_message = SnackbarMessage("No spectral lines to erase",
-                                            sender=self, color="error")
+                                           sender=self, color="error")
             self.hub.broadcast(warn_message)
             return
         lc = self.list_contents
@@ -378,7 +371,7 @@ class LineListTool(TemplateMixin):
         name_rests = []
         for line in lc["lines"]:
             name_rests.append(self.vue_remove_line(line, erase=False))
-        self._viewer.erase_spectral_lines(name_rest = name_rests)
+        self._viewer.erase_spectral_lines(name_rest=name_rests)
 
         self.loaded_lists = [x for x in self.loaded_lists if x != listname]
         del(self.list_contents[listname])
