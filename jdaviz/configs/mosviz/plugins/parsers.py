@@ -396,8 +396,9 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
         image_label = "Image {} {}".format(im_split[0], pupil)
 
         image_data = CCDData.read(image_file)
-        temp = fits.open(image_file)
-        filter_wcs[pupil] = temp[1].header
+
+        with fits.open(image_file) as temp:
+            filter_wcs[pupil] = temp[1].header
 
         app.data_collection[image_label] = image_data
 
