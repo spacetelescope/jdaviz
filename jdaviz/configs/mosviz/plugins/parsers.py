@@ -49,6 +49,7 @@ def _add_to_table(app, data, comp_label):
 def _check_is_file(path):
     return isinstance(path, str) and Path(path).is_file()
 
+
 def _warn_if_not_found(app, file_lists):
     """
     Take a list of labels and associated file lists and send a snackbar
@@ -71,10 +72,11 @@ def _warn_if_not_found(app, file_lists):
 
     return found
 
+
 def _fields_from_ecsv(fname, fields, delimiter=","):
     parsed_fields = []
     with open(fname, "r") as f:
-        reader = csv.DictReader(filter(lambda row: row[0]!="#", f),
+        reader = csv.DictReader(filter(lambda r: r[0] != "#", f),
                                 delimiter=delimiter)
         for row in reader:
             temp_list = []
@@ -358,7 +360,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
     for key in file_lists:
         file_lists[key] = [str(x) for x in file_lists[key]]
 
-    found_files = _warn_if_not_found(app, file_lists)
+    _warn_if_not_found(app, file_lists)
 
     # Parse relevant information from source catalog
     cat_fields = ["id", "sky_centroid.ra", "sky_centroid.dec"]
@@ -403,14 +405,14 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
 
     # Parse 2D spectra
     spec_labels_2d = []
-    for f in ["2D Spectra C"]:
+    for f in ["2D Spectra C", "2D Spectra R"]:
         for fname in file_lists[f]:
             orientation = f[-1]
             filter_name = [x
                            for x in fname.split("/")[-1].split("_")
                            if x[0] == "F" or x[0] == "f"][0]
 
-            with fits.open(fname,memmap=False) as temp:
+            with fits.open(fname, memmap=False) as temp:
                 sci_hdus = []
                 for i in range(len(temp)):
                     if "EXTNAME" in temp[i].header:
@@ -444,7 +446,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
 
                         wcs = WCS(header)
 
-                        spec2d =  SpectralCube(new_data, wcs=wcs, meta=meta)
+                        spec2d = SpectralCube(new_data, wcs=wcs, meta=meta)
 
                         # TODO: Make slit overlay optional to avoid having to hardcode
                         # TODO: S_REGION header
@@ -473,7 +475,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
             del temp
 
     spec_labels_1d = []
-    for f in ["1D Spectra C"]:
+    for f in ["1D Spectra C", "1D Spectra R"]:
         for fname in file_lists[f]:
             with fits.open(fname, memmap=False) as temp:
                 # TODO: Remove this once valid SRCTYPE values are present in all headers
@@ -509,7 +511,6 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                         del spec
                 del specs
             del temp
-
 
     _add_to_table(app, source_ids, "Source ID")
     _add_to_table(app, ras, "Right Ascension")
