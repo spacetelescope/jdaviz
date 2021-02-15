@@ -337,6 +337,11 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
     The spectra from the "C" files (horizontal orientation) are showed
     in the viewers by default.
     """
+    warn_msg = "The NIRISS parser is still in heavy development and may take a long " \
+               "time to load."
+    warn_msg = SnackbarMessage(warn_msg, color="warning", sender=app)
+    app.hub.broadcast(warn_msg)
+
     p = Path(data_dir)
     if not p.is_dir():
         raise ValueError("{} is not a valid directory path".format(data_dir))
@@ -459,7 +464,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                                                                 temp[sci].header["SOURCEID"],
                                                                 orientation
                                                                 )
-                        print(label)
+                        print(f"Loading {label}")
                         ra, dec = pupil_id_dict[filter_name][temp[sci].header["SOURCEID"]]
                         source_ids.append("Source Catalog: {} Source ID: {}".
                                           format(filter_name, temp[sci].header["SOURCEID"]))
@@ -503,7 +508,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                                                                 spec.meta['header']['SOURCEID'],
                                                                 orientation
                                                                 )
-                        print(label)
+                        print(f"Loading {label}")
                         spec_labels_1d.append(label)
                         app.data_collection[label] = spec
 
