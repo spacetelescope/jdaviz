@@ -115,7 +115,11 @@ def test_identify_data(create_fake_fits, name, expconf, expstat):
     filename = create_fake_fits(name)
     name = name if 'generic' not in name else []
 
-    valid_format, config, status = identify_data(filename)
+    try:
+        valid_format, config = identify_data(filename)
+        status = 'Success: Valid Format'
+    except ValueError as e:
+        status = f'Error: {e}'
     assert (valid_format, config) == (name, expconf)
     assert expstat in status
 
