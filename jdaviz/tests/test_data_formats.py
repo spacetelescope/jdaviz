@@ -128,5 +128,6 @@ def test_identify_data(create_fake_fits, name, expconf, expstat):
 def test_identify_current_mismatch(create_fake_fits):
     """ test correct mismatch config status """
     filename = create_fake_fits('MaNGA cube')
-    with pytest.raises(ValueError, match='Mismatch between input file format and loaded configuration.'):
+    with pytest.raises(ValueError,
+                       match='Mismatch between input file format and loaded configuration.'):
         identify_data(filename, current='specviz')
