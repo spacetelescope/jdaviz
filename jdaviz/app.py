@@ -1095,6 +1095,9 @@ class Application(VuetifyTemplate, HubListener):
                                            sender=self)
         self.hub.broadcast(snackbar_message)
 
+        print("ADDING")
+        self.session.application.viewers.append(viewer)
+
         return viewer
 
     def load_configuration(self, path=None, config=None):
