@@ -1,22 +1,15 @@
 from astrowidgets.core import ImageWidget
 from ginga.misc.log import get_logger
 from glue.core import Data
+import ipywidgets as widgets
 
 from jdaviz.core.registries import viewer_registry
 
 __all__ = ['ImvizImageView']
 
 
-class DummyLayout:
-    def __init__(self):
-        self.height = ''
-        self.width = ''
-
-
-class DummyModelID:
-    def __init__(self):
-        self.model_id = '1234'
-        self.layout = DummyLayout()
+class DummyModelID(widgets.Label):
+    pass
 
 
 class DummyState:
@@ -60,7 +53,7 @@ class ImvizImageView(ImageWidget):
 
     @property
     def figure_widget(self):
-        return DummyModelID()
+        return self
 
     @property
     def layer_options(self):
