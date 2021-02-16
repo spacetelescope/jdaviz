@@ -119,6 +119,7 @@ def test_identify_data(create_fake_fits, name, expconf, expstat):
         valid_format, config = identify_data(filename)
         status = 'Success: Valid Format'
     except ValueError as e:
+        valid_format, config = name, expconf
         status = f'Error: {e}'
     assert (valid_format, config) == (name, expconf)
     assert expstat in status
@@ -127,6 +128,5 @@ def test_identify_data(create_fake_fits, name, expconf, expstat):
 def test_identify_current_mismatch(create_fake_fits):
     """ test correct mismatch config status """
     filename = create_fake_fits('MaNGA cube')
-    valid_format, config, status = identify_data(filename, current='specviz')
-    assert (valid_format, config) == ("MaNGA cube", 'cubeviz')
-    assert 'Error: Mismatch between input file format and loaded configuration.' in status
+    with pytest.raises(ValueError, match='Mismatch between input file format and loaded configuration.'):
+        identify_data(filename, current='specviz')
