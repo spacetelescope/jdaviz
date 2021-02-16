@@ -25,11 +25,11 @@ ndim_to_config_mapping = {1: 'specviz', 2: 'specviz2d', 3: 'cubeviz'}
 
 
 def guess_dimensionality(filename):
-    """ Guess the dimensionality of a file
+    """ Guess the dimensionality of a file.
 
     Parameters
     ----------
-    filename : str
+    filename : str or `pathlib.Path` or file-like object
         The filename of the loaded data
 
     Returns
@@ -75,13 +75,13 @@ def get_valid_format(filename):
 
 
 def identify_data(filename, current=None):
-    """ Identify the data format and application configuration from a filename
+    """ Identify the data format and application configuration from a filename.
 
     Parameters
     ----------
-    filename : str
+    filename : str or `pathlib.Path` or file-like object
         The filename of the loaded data
-    current : str
+    current : str or ``None``
         The currently loading application configuration, if any
 
     Returns
@@ -104,12 +104,10 @@ def identify_data(filename, current=None):
     # - check that config does not conflict with the existing configuration
 
     if not valid_format:
-        status = 'Error: Cannot determine format of the file to load.  Please specify a format'
+        raise ValueError('Cannot determine format of the file to load.  Please specify a format')
     elif config not in valid_configs:
-        status = f"Error: Config {config} not a valid configuration."
+        raise ValueError(f"Config {config} not a valid configuration.")
     elif current and config != current:
-        status = 'Error: Mismatch between input file format and loaded configuration.'
-    else:
-        status = 'Success: Valid Format'
+        raise ValueError('Mismatch between input file format and loaded configuration.')
 
-    return valid_format, config, status
+    return valid_format, config
