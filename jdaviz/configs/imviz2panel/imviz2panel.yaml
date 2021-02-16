@@ -1,0 +1,26 @@
+settings:
+  configuration: imviz
+  data:
+    auto_populate: true
+  visible:
+    menu_bar: false
+    toolbar: true
+    tray: true
+    tab_headers: false
+  context:
+    notebook:
+      max_height: 600px
+toolbar:
+  - g-data-tools
+  - g-subset-tools
+viewer_area:
+  - container: col
+    children:
+      - container: row
+        viewers:
+          - name: Image
+            plot: cubeviz-image-viewer
+            reference: viewer-1
+          - name: Image
+            plot: cubeviz-image-viewer
+            reference: viewer-2
