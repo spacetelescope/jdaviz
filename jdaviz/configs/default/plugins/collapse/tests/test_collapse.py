@@ -33,21 +33,21 @@ def test_linking_after_collapse(spectral_cube_wcs):
 
     assert len(dc) == 3
     assert dc[2].label == 'Collapsed 2 test'
-    assert len(dc.external_links) == 7
+    assert len(dc.external_links) == 6
 
-    assert dc.external_links[5].cids1[0] is dc[0].pixel_component_ids[0]
-    assert dc.external_links[5].cids2[0] is dc[2].pixel_component_ids[0]
-    assert dc.external_links[6].cids1[0] is dc[0].pixel_component_ids[2]
-    assert dc.external_links[6].cids2[0] is dc[2].pixel_component_ids[1]
+    assert dc.external_links[4].cids1[0] is dc[0].pixel_component_ids[0]
+    assert dc.external_links[4].cids2[0] is dc[2].pixel_component_ids[0]
+    assert dc.external_links[5].cids1[0] is dc[0].pixel_component_ids[2]
+    assert dc.external_links[5].cids2[0] is dc[2].pixel_component_ids[1]
 
     coll.selected_axis = 2
     coll.vue_collapse()
 
     assert len(dc) == 4
     assert dc[3].label == 'Collapsed 3 test'
-    assert len(dc.external_links) == 12
+    assert len(dc.external_links) == 9
 
-    assert dc.external_links[10].cids1[0] is dc[0].pixel_component_ids[0]
-    assert dc.external_links[10].cids2[0] is dc[3].pixel_component_ids[0]
-    assert dc.external_links[11].cids1[0] is dc[0].pixel_component_ids[1]
-    assert dc.external_links[11].cids2[0] is dc[3].pixel_component_ids[1]
+    assert dc.external_links[7].cids1[0] is dc[0].pixel_component_ids[0]
+    assert dc.external_links[7].cids2[0] is dc[3].pixel_component_ids[0]
+    assert dc.external_links[8].cids1[0] is dc[0].pixel_component_ids[1]
+    assert dc.external_links[8].cids2[0] is dc[3].pixel_component_ids[1]
