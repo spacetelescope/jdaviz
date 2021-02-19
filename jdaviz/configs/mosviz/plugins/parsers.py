@@ -464,7 +464,6 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                                                                 temp[sci].header["SOURCEID"],
                                                                 orientation
                                                                 )
-                        print(f"Loading {label}")
                         ra, dec = pupil_id_dict[filter_name][temp[sci].header["SOURCEID"]]
                         source_ids.append("Source Catalog: {} Source ID: {}".
                                           format(filter_name, temp[sci].header["SOURCEID"]))
@@ -474,11 +473,6 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                         spec_labels_2d.append(label)
 
                         app.data_collection[label] = spec2d
-
-                        # Attempt to speed up data loading by doing manual
-                        # garbage collection
-                        del data, new_data, temp[sci].data, meta, header, wcs, spec2d
-            del temp
 
     spec_labels_1d = []
     for f in ["1D Spectra C", "1D Spectra R"]:
@@ -508,15 +502,8 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                                                                 spec.meta['header']['SOURCEID'],
                                                                 orientation
                                                                 )
-                        print(f"Loading {label}")
                         spec_labels_1d.append(label)
                         app.data_collection[label] = spec
-
-                        # Attempt to speed up data loading by doing manual
-                        # garbage collection
-                        del spec
-                del specs
-            del temp
 
     _add_to_table(app, source_ids, "Source ID")
     _add_to_table(app, ras, "Right Ascension")
