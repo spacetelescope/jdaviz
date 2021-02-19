@@ -8,10 +8,10 @@ from inspect import isclass
 import ipywidgets as w
 import numpy as np
 from astropy import units as u
-import pkg_resources
 from astropy.nddata import CCDData
 from spectral_cube import SpectralCube
 from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
+import entrypoints
 from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
 from traitlets import Dict
@@ -139,7 +139,7 @@ class Application(VuetifyTemplate, HubListener):
         plugins = {
             entry_point.name: entry_point.load()
             for entry_point
-            in pkg_resources.iter_entry_points(group='jdaviz_plugins')}
+            in entrypoints.get_group_all(group='jdaviz_plugins')}
 
         # Create a dictionary for holding non-ipywidget viewer objects so we
         #  can reference their state easily since glue does not store viewers
