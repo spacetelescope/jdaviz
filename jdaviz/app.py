@@ -236,13 +236,18 @@ class Application(VuetifyTemplate, HubListener):
         """
         new_len = len(self.data_collection)
         # Can't link if there's no world_component_ids
-        if self.data_collection[new_len-1].world_component_ids == []:
+        wc_new = self.data_collection[new_len-1].world_component_ids
+        if wc_new == []:
             return
+
+        # Link to the first dataset with compatible coordinates
         for i in range(0, new_len-1):
-            if self.data_collection[i].world_component_ids == []:
+            wc_old = self.data_collection[i].world_component_ids
+            if wc_old == []:
                 continue
-            self.data_collection.add_link(LinkSame(self.data_collection[i].world_component_ids[0],
-                                          self.data_collection[new_len-1].world_component_ids[0]))
+            else:
+                self.data_collection.add_link(LinkSame(wc_old[0], wc_new[0]))
+                break
 
     def load_data(self, file_obj, parser_reference=None, **kwargs):
         """
