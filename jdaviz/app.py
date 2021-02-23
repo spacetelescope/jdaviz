@@ -11,7 +11,7 @@ from astropy.nddata import CCDData
 from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
 from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
-from traitlets import Dict
+from traitlets import Dict, Bool
 from regions import RectanglePixelRegion, PixCoord
 from specutils import Spectrum1D
 
@@ -117,6 +117,8 @@ class Application(VuetifyTemplate, HubListener):
     components = Dict({"g-viewer-tab": load_template(
         "container.vue", __file__, traitlet=False)}).tag(
             sync=True, **w.widget_serialization)
+
+    loading = Bool(False).tag(sync=True)
 
     def __init__(self, configuration=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -261,50 +263,54 @@ class Application(VuetifyTemplate, HubListener):
         file_obj : str or file-like
             File object for the data to be loaded.
         """
+        self.loading = True
         try:
-            # Properly form path and check if a valid file
-            file_obj = pathlib.Path(file_obj)
-            if not file_obj.exists():
-                msg_text = "Error: File {} does not exist".format(file_obj)
-                snackbar_message = SnackbarMessage(msg_text, sender=self,
-                                                   color='error')
-                self.hub.broadcast(snackbar_message)
-                raise FileNotFoundError("Could not locate file: {}".format(file_obj))
+            try:
+                # Properly form path and check if a valid file
+                file_obj = pathlib.Path(file_obj)
+                if not file_obj.exists():
+                    msg_text = "Error: File {} does not exist".format(file_obj)
+                    snackbar_message = SnackbarMessage(msg_text, sender=self,
+                                                       color='error')
+                    self.hub.broadcast(snackbar_message)
+                    raise FileNotFoundError("Could not locate file: {}".format(file_obj))
+                else:
+                    # Convert path to properly formatted string (Parsers do not accept path objs)
+                    file_obj = str(file_obj)
+            except TypeError:
+                # If it's not a str/path type, it might be a compatible class.
+                # Pass to parsers to see if they can accept it
+                pass
+
+            # attempt to get a data parser from the config settings
+            parser = None
+            data = self.state.settings.get('data', None)
+            if parser_reference:
+                parser = data_parser_registry.members.get(parser_reference)
+            elif data and isinstance(data, dict):
+                data_parser = data.get('parser', None)
+                if data_parser:
+                    parser = data_parser_registry.members.get(data_parser)
+
+            if parser is not None:
+                # If the parser returns something other than known, assume it's
+                #  a message we want to make the user aware of.
+                msg = parser(self, file_obj, **kwargs)
+
+                if msg is not None:
+                    snackbar_message = SnackbarMessage(
+                        msg, color='error', sender=self)
+                    self.hub.broadcast(snackbar_message)
+                    return
             else:
-                # Convert path to properly formatted string (Parsers do not accept path objs)
-                file_obj = str(file_obj)
-        except TypeError:
-            # If it's not a str/path type, it might be a compatible class.
-            # Pass to parsers to see if they can accept it
-            pass
+                self._application_handler.load_data(file_obj)
 
-        # attempt to get a data parser from the config settings
-        parser = None
-        data = self.state.settings.get('data', None)
-        if parser_reference:
-            parser = data_parser_registry.members.get(parser_reference)
-        elif data and isinstance(data, dict):
-            data_parser = data.get('parser', None)
-            if data_parser:
-                parser = data_parser_registry.members.get(data_parser)
-
-        if parser is not None:
-            # If the parser returns something other than known, assume it's
-            #  a message we want to make the user aware of.
-            msg = parser(self, file_obj, **kwargs)
-
-            if msg is not None:
-                snackbar_message = SnackbarMessage(
-                    msg, color='error', sender=self)
-                self.hub.broadcast(snackbar_message)
-                return
-        else:
-            self._application_handler.load_data(file_obj)
-
-        # Send out a toast message
-        snackbar_message = SnackbarMessage("Data successfully loaded.",
-                                           sender=self)
-        self.hub.broadcast(snackbar_message)
+            # Send out a toast message
+            snackbar_message = SnackbarMessage("Data successfully loaded.",
+                                               sender=self)
+            self.hub.broadcast(snackbar_message)
+        finally:
+            self.loading = False
 
     def get_viewer(self, viewer_reference):
         """
@@ -878,12 +884,10 @@ class Application(VuetifyTemplate, HubListener):
 
     def _update_selected_data_items(self, viewer_id, selected_items):
         # Find the active viewer
-        viewer_item = self._viewer_item_by_id(viewer_id)
         viewer = self._viewer_by_id(viewer_id)
 
         # Update the stored selected data items
-        viewer_item['selected_data_items'] = selected_items
-        data_ids = viewer_item['selected_data_items']
+        data_ids = selected_items
 
         active_data_labels = []
 
