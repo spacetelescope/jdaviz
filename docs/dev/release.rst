@@ -18,7 +18,7 @@ development directory.
     These instructions are adapted from the Astropy package template releasing
     instructions.
 
-#. Ensure Travis and any other continuous integration is passing in the main
+#. Ensure GitHub Actions and any other continuous integration is passing in the main
    repository.
 
 #. Update the ``CHANGES.rst`` file to make sure that all the changes are listed,
