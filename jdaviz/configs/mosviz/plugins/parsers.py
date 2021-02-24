@@ -64,7 +64,7 @@ def _warn_if_not_found(app, file_lists):
             found.append(key)
 
     if len(found) == 0:
-        raise ValueError("No valid NIRISS files found in specified directory")
+        raise ValueError("No valid files found in specified directory")
     if len(not_found) > 0:
         warn_msg = "Some files not found: {}".format(", ".join(not_found))
         warn_msg = SnackbarMessage(warn_msg, color="warning", sender=app)
@@ -388,6 +388,9 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
     # Read in direct image filters
     image_dict = {}
     filter_wcs = {}
+
+    print("Loading: Images")
+
     for image_file in file_lists["Direct Image"]:
         im_split = image_file.split("/")[-1].split("_")
         pupil = [x
@@ -408,6 +411,9 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
     # Parse 2D spectra
     spec_labels_2d = []
     for f in ["2D Spectra C", "2D Spectra R"]:
+
+        print(f"Loading: {f} sources")
+
         for fname in file_lists[f]:
             orientation = f[-1]
             filter_name = [x
@@ -467,12 +473,14 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                         decs.append(dec)
                         image_add.append(image_dict[filter_name])
                         spec_labels_2d.append(label)
-                        print(f"Loading: {label}")
 
                         app.data_collection[label] = spec2d
 
     spec_labels_1d = []
     for f in ["1D Spectra C", "1D Spectra R"]:
+
+        print(f"Loading: {f} sources")
+
         for fname in file_lists[f]:
             with fits.open(fname, memmap=False) as temp:
                 # TODO: Remove this once valid SRCTYPE values are present in all headers
@@ -500,7 +508,6 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                                                                 orientation
                                                                 )
                         spec_labels_1d.append(label)
-                        print(f"Loading: {label}")
                         app.data_collection[label] = spec
 
     print("Now loading data into the table")
@@ -511,3 +518,5 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
     _add_to_table(app, image_add, "Images")
     _add_to_table(app, spec_labels_1d, "1D Spectra")
     _add_to_table(app, spec_labels_2d, "2D Spectra")
+
+    print("Done")
