@@ -510,7 +510,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                         spec_labels_1d.append(label)
                         app.data_collection[label] = spec
 
-    print("Now loading data into the table")
+    print("Populating table")
 
     _add_to_table(app, source_ids, "Source ID")
     _add_to_table(app, ras, "Right Ascension")
