@@ -413,9 +413,9 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
     spec_labels_2d = []
     for f in ["2D Spectra C", "2D Spectra R"]:
 
-        print(f"Loading: {f} sources")
-
         for fname in file_lists[f]:
+            print(f"Loading: {f} sources")
+
             orientation = f[-1]
             filter_name = [x
                            for x in fname.split("/")[-1].split("_")
@@ -480,9 +480,9 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
     spec_labels_1d = []
     for f in ["1D Spectra C", "1D Spectra R"]:
 
-        print(f"Loading: {f} sources")
-
         for fname in file_lists[f]:
+            print(f"Loading: {f} sources")
+
             with fits.open(fname, memmap=False) as temp:
                 # TODO: Remove this once valid SRCTYPE values are present in all headers
                 for hdu in temp:
