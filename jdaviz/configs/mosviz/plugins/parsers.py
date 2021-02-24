@@ -67,6 +67,7 @@ def _warn_if_not_found(app, file_lists):
         raise ValueError("No valid files found in specified directory")
     if len(not_found) > 0:
         warn_msg = "Some files not found: {}".format(", ".join(not_found))
+        print(warn_msg)
         warn_msg = SnackbarMessage(warn_msg, color="warning", sender=app)
         app.hub.broadcast(warn_msg)
 
