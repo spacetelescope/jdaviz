@@ -75,7 +75,16 @@ class GaussianSmooth(TemplateMixin):
         # define a standard deviation for gaussian smoothing
         spec_smoothed = gaussian_smooth(spec, stddev=size)
 
-        label = f"Smoothed {self._selected_data.label}"
+        label = f"Smoothed {self._selected_data.label} stddev {size}"
+
+        if label in self.data_collection:
+            snackbar_message = SnackbarMessage(
+                "Data with selected stddev already exists, canceling operation.",
+                color="error",
+                sender=self)
+            self.hub.broadcast(snackbar_message)
+
+            return
 
         self.data_collection[label] = spec_smoothed
 
@@ -112,7 +121,16 @@ class GaussianSmooth(TemplateMixin):
                                mask=cube.mask, meta=cube.meta,
                                fill_value=cube.fill_value)
 
-        label = f"Smoothed {self._selected_data.label}"
+        label = f"Smoothed {self._selected_data.label} spatial stddev {size}"
+
+        if label in self.data_collection:
+            snackbar_message = SnackbarMessage(
+                "Data with selected stddev already exists, canceling operation.",
+                color="error",
+                sender=self)
+            self.hub.broadcast(snackbar_message)
+
+            return
 
         self.data_collection[label] = newcube
 
