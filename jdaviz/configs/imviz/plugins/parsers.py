@@ -1,6 +1,4 @@
-import base64
 import pathlib
-import uuid
 
 from astropy.nddata import CCDData
 
@@ -14,8 +12,8 @@ def imviz_image_parser(app, data, data_label=None, show_in_viewer=True):
     """Loads an image into Imviz"""
     # If no data label is assigned, give it a unique identifier
     if not data_label:
-        data_label = "imviz_data|" + str(
-            base64.b85encode(uuid.uuid4().bytes), "utf-8")
+        from astrowidgets.glupyter import _gen_random_label
+        data_label = _gen_random_label(prefix="imviz_data|")
 
     path = pathlib.Path(data)
     if path.is_file():

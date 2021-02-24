@@ -1,20 +1,9 @@
-from astrowidgets.core import ImageWidget
-from ginga.misc.log import get_logger
-from glue.core import Data
-import ipywidgets as widgets
+from astrowidgets.glupyter import ImageWidget
+from glue.core import BaseData
 
 from jdaviz.core.registries import viewer_registry
 
 __all__ = ['ImvizImageView']
-
-
-class DummyModelID(widgets.Label):
-    pass
-
-
-class DummyState:
-    def __init__(self):
-        self.layers = []
 
 
 @viewer_registry("imviz-image-viewer", label="Image 2D (Imviz)")
@@ -22,34 +11,29 @@ class ImvizImageView(ImageWidget):
     """Image widget for Imviz."""
 
     default_class = None
-    state = DummyState()
 
     # session is a glue thing
     def __init__(self, session, *args, **kwargs):
-        # logger needs special handling because using default logger of None
-        # will crash Ginga internals.
-        kwargs['logger'] = get_logger('imviz', log_stderr=True, log_file=None,
-                                      level=30)
+
         super().__init__(*args, **kwargs)
+        self._viewer._session = session
 
     # More glue things
 
     def register_to_hub(self, *args, **kwargs):
-        pass
+        self._viewer.register_to_hub(*args, **kwargs)
 
     def add_data(self, data):
-        if type(data) == Data:
-            data = data.get_object()
-        self.load_nddata(data)
+        self._viewer.add_data(data)
+        self._link_image_to_cb()
+
+    def remove_data(self, data):
+        self._viewer.remove_data(data)
+        self.viewer.interaction = None
 
     @property
     def toolbar_selection_tools(self):
-        class Dummy(DummyModelID):
-            def __init__(self):
-                super().__init__()
-                self.borderless = False
-
-        return Dummy()
+        return self._viewer.toolbar_selection_tools
 
     @property
     def figure_widget(self):
@@ -57,17 +41,28 @@ class ImvizImageView(ImageWidget):
 
     @property
     def layer_options(self):
-        return DummyModelID()
+        return self._viewer.layer_options
 
     @property
     def viewer_options(self):
-        return DummyModelID()
+        return self._viewer.viewer_options
 
-    def set_plot_axes(self, *args, **kwargs):
-        pass
+    @property
+    def state(self):
+        return self._viewer.state
+
+    def set_plot_axes(self):
+        self.viewer.axes[1].tick_format = None
+        self.viewer.axes[0].tick_format = None
+
+        self.viewer.axes[1].label = "y: pixels"
+        self.viewer.axes[0].label = "x: pixels"
+
+        # Make it so y axis label is not covering tick numbers.
+        self.viewer.axes[1].label_offset = "-50"
 
     def data(self, cls=None):
         return [layer_state.layer
-                for layer_state in self.state.layers
+                for layer_state in self._viewer.state.layers
                 if hasattr(layer_state, 'layer') and
                 isinstance(layer_state.layer, BaseData)]
