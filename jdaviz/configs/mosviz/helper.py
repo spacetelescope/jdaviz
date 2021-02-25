@@ -180,6 +180,9 @@ class MosViz(ConfigHelper):
         super().load_data(data_obj, parser_reference="mosviz-spec2d-parser",
                           data_labels=data_labels)
 
+    def load_niriss_data(self, data_obj, data_labels=None):
+        super().load_data(data_obj, parser_reference="mosviz-niriss-parser")
+
     def load_images(self, data_obj, data_labels=None):
         """
         Load and parse a set of image objects. If providing a file path, it
