@@ -75,16 +75,29 @@
 
               <v-tabs-items v-model="viewer.tab" style="max-height: 500px; width: 350px;">
                 <v-tab-item key="0" class="overflow-y-auto" style="height: 450px">
-                  <v-treeview
-                    dense
-                    selectable
-                    :items="dataItems"
-                    hoverable
-                    v-model="viewer.selected_data_items"
-                    activatable
-                    item-disabled="locked"
-                    @input="$emit('data-item-selected', {'id': viewer.id, 'selected_items': $event})"
-                  ></v-treeview>
+<!--                  /* Workaround for https://github.com/vuetifyjs/vuetify/issues/13181 */-->
+<!--                  <v-treeview-->
+<!--                    dense-->
+<!--                    selectable-->
+<!--                    :items="dataItems"-->
+<!--                    hoverable-->
+<!--                    v-model="viewer.selected_data_items"-->
+<!--                    activatable-->
+<!--                    item-disabled="locked"-->
+<!--                    @input="$emit('data-item-selected', {'id': viewer.id, 'selected_items': $event})"-->
+<!--                  ></v-treeview>-->
+                  <v-btn-toggle
+                      dense
+                      multiple
+                      class="data-toggles"
+                      :value="viewer.selected_data_items"
+                      color="blue accent-5"
+                      @change="$emit('data-item-selected', {'id': viewer.id, 'selected_items': $event})"
+                  >
+                    <v-btn v-for="item in dataItems" :value="item.id" :key="item.id" block>
+                      {{ item.name }}
+                    </v-btn>
+                  </v-btn-toggle>
                 </v-tab-item>
 
                 <v-tab-item key="1" eager class="overflow-y-auto" style="height: 100%">
@@ -132,3 +145,10 @@ module.exports = {
   }
 };
 </script>
+
+<style id="jdaviz-container">
+.data-toggles.v-btn-toggle {
+  flex-direction: column;
+  width: 100%;
+}
+</style>
