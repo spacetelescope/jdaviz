@@ -866,7 +866,14 @@ class Application(VuetifyTemplate, HubListener):
         event : dict
             Traitlet event provided the 'old' and 'new' values.
         """
-        viewer_id, selected_items = event['id'], event['selected_items']
+        viewer_id, item_id, checked = event['id'], event['item_id'], event['checked']
+        viewer_item = self._viewer_item_by_id(viewer_id)
+
+        if checked:
+            selected_items = [*viewer_item['selected_data_items'], item_id]
+        else:
+            selected_items = list(filter(
+                lambda id: id != item_id, viewer_item['selected_data_items']))
 
         self._update_selected_data_items(viewer_id, selected_items)
 
