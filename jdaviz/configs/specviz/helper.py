@@ -1,7 +1,7 @@
 import logging
 
 import astropy.units as u
-from specutils import SpectralRegion
+from specutils import SpectralRegion, Spectrum1D
 
 from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import RedshiftMessage
@@ -39,17 +39,31 @@ class SpecViz(ConfigHelper, LineListMixin):
         if not apply_slider_redshift:
             return spectra
         else:
-            if data_label is None:
-                for key in spectra.keys():
-                    spectra[key].redshift = self._redshift
-            else:
-                spectra.redshift = self._redshift
+            output_spectra = {}
+            # We need to create new Spectrum1D outputs with the redshifts set
+            if data_label is not None:
+                spectra = {data_label: spectra}
+            for key in spectra.keys():
+                flux = spectra[key].flux
+                # This is a hack around inability to input separate redshift with
+                # a SpectralAxis instance in Spectrum1D
+                spaxis = spectra[key].spectral_axis.value * spectra[key].spectral_axis.unit
+                mask = spectra[key].mask
+                uncertainty = spectra[key].uncertainty
+                print(self._redshift)
+                output_spectra[key] = Spectrum1D(flux, spectral_axis=spaxis,
+                                                 redshift=self._redshift, mask=mask,
+                                                 uncertainty=uncertainty)
             if apply_slider_redshift == "Warn":
                 logging.warning("Warning: Applying the value from the redshift "
                                 "slider to the output spectra. To avoid seeing this "
                                 "warning, explicitly set the apply_slider_redshift "
                                 "argument to True or False.")
-        return spectra
+
+            if data_label is not None:
+                output_spectra = output_spectra[data_label]
+
+            return output_spectra
 
     def get_spectral_regions(self):
         """
