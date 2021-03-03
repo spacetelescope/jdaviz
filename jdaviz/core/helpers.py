@@ -35,3 +35,50 @@ class ConfigHelper(HubListener):
 
     def load_data(self, data, parser_reference=None, **kwargs):
         self.app.load_data(data, parser_reference=parser_reference, **kwargs)
+
+    @property
+    def fitted_models(self):
+        """
+        Returns the fitted model parameters.
+
+        Returns
+        -------
+        parameters : dict
+            dict of Quantity arrays, or None.
+        """
+        all_models = {}
+        if hasattr(self.app, '_fitted_1d_models'):
+            all_models = {**all_models, **self.app._fitted_1d_models}
+        if hasattr(self.app, '_fitted_3d_model'):
+            all_models = {**all_models, **self.app._fitted_3d_model}
+
+        return all_models
+
+    def get_1d_models(self):
+        """
+        Returns the 1D fitted model parameters.
+
+        Returns
+        -------
+        parameters : dict
+            dict with key being the model name and value being the Quantity model, or None.
+        """
+        if hasattr(self.app, '_fitted_1d_models'):
+            return self.app._fitted_1d_models
+        else:
+            return None
+
+
+    def get_3d_models(self):
+        """
+        Returns the 3D fitted model parameters.
+
+        Returns
+        -------
+        parameters : dict
+            dict of Quantity 2D arrays, or None.
+        """
+        if hasattr(self.app, '_fitted_3d_model'):
+            return self.app._fitted_3d_model
+        else:
+            return None
