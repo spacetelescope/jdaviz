@@ -68,7 +68,6 @@ class ConfigHelper(HubListener):
         else:
             return None
 
-
     def get_3d_models(self):
         """
         Returns the 3D fitted model parameters.
