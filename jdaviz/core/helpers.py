@@ -53,7 +53,7 @@ class ConfigHelper(HubListener):
             attrname = f'_fitted_{dim}d_models'
             model = getattr(self.app, attrname, None)
             if model:
-                all_models = {**all_models, **model}
+                all_models.update(model)
 
         return all_models
 
