@@ -46,38 +46,30 @@ class ConfigHelper(HubListener):
         parameters : dict
             dict of Quantity arrays, or None.
         """
+        MAX_DIMENSIONS = 5
         all_models = {}
-        if hasattr(self.app, '_fitted_1d_models'):
-            all_models = {**all_models, **self.app._fitted_1d_models}
-        if hasattr(self.app, '_fitted_3d_model'):
-            all_models = {**all_models, **self.app._fitted_3d_model}
+
+        for dim in range(1, MAX_DIMENSIONS):
+            attrname = f'_fitted_{dim}d_models'
+            model = getattr(self.app, attrname, None)
+            if model:
+                all_models = {**all_models, **model}
 
         return all_models
 
-    def get_1d_models(self):
+    def get_models(self, ndim=1):
         """
-        Returns the 1D fitted model parameters.
+        Returns the fitted model parameters of ndim dimension(s).
+
+        Parameters
+        ----------
+        ndim : int
+            int that determines the dimension of the models that are returned
 
         Returns
         -------
         parameters : dict
             dict with key being the model name and value being the Quantity model, or None.
         """
-        if hasattr(self.app, '_fitted_1d_models'):
-            return self.app._fitted_1d_models
-        else:
-            return None
-
-    def get_3d_models(self):
-        """
-        Returns the 3D fitted model parameters.
-
-        Returns
-        -------
-        parameters : dict
-            dict of Quantity 2D arrays, or None.
-        """
-        if hasattr(self.app, '_fitted_3d_model'):
-            return self.app._fitted_3d_model
-        else:
-            return None
+        attrname = f'_fitted_{ndim}d_models'
+        return getattr(self.app, attrname, None)
