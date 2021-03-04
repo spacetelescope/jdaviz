@@ -20,8 +20,8 @@ class RedshiftSlider(TemplateMixin):
     slider_textbox = Any(0).tag(sync=True)
     slider_type = Any("Redshift").tag(sync=True)
     min_value = Float(0).tag(sync=True)
-    max_value = Float(1).tag(sync=True)
-    slider_step = Float(0.001).tag(sync=True)
+    max_value = Float(0.1).tag(sync=True)
+    slider_step = Float(0.00001).tag(sync=True)
     linked = Bool(True).tag(sync=True)
     wait = Int(100).tag(sync=True)
 
