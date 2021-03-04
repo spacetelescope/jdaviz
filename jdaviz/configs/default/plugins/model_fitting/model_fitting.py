@@ -370,8 +370,6 @@ class ModelFitting(TemplateMixin):
         self._fitted_spectrum = fitted_spectrum
 
         self.vue_register_spectrum({"spectrum": fitted_spectrum})
-        if not hasattr(self.app, "_fitted_1d_models"):
-            self.app._fitted_1d_models = {}
         self.app.fitted_models[self.model_label] = fitted_model
 
         # Update component model parameters with fitted values
