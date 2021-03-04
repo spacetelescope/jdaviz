@@ -50,7 +50,6 @@ class SpecViz(ConfigHelper, LineListMixin):
                 spaxis = spectra[key].spectral_axis.value * spectra[key].spectral_axis.unit
                 mask = spectra[key].mask
                 uncertainty = spectra[key].uncertainty
-                print(self._redshift)
                 output_spectra[key] = Spectrum1D(flux, spectral_axis=spaxis,
                                                  redshift=self._redshift, mask=mask,
                                                  uncertainty=uncertainty)
