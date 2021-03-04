@@ -372,7 +372,7 @@ class ModelFitting(TemplateMixin):
         self.vue_register_spectrum({"spectrum": fitted_spectrum})
         if not hasattr(self.app, "_fitted_1d_models"):
             self.app._fitted_1d_models = {}
-        self.app._fitted_1d_models[self.model_label] = fitted_model
+        self.app.fitted_models[self.model_label] = fitted_model
 
         # Update component model parameters with fitted values
         if type(self._fitted_model) == QuantityModel:
@@ -431,7 +431,9 @@ class ModelFitting(TemplateMixin):
 
         # Save fitted 3D model in a way that the cubeviz
         # helper can access it.
-        self.app._fitted_3d_models = fitted_model
+        for m in fitted_model:
+            temp_label = "{} ({}, {})".format(self.model_label, m["x"], m["y"])
+            self.app.fitted_models[temp_label] = m["model"]
 
         # Transpose the axis order back
         values = np.moveaxis(fitted_spectrum.flux.value, -1, 0)
