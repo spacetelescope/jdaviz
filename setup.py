@@ -81,12 +81,14 @@ def jupyter_config_dir():
     """Get the Jupyter config directory for this platform and user.
     Returns JUPYTER_CONFIG_DIR if defined, else ~/.jupyter
     """
+    import pathlib
+    from tempfile import mkdtemp
 
     env = os.environ
-    home_dir = get_home_dir()
+    home_dir = pathlib.Path.home().as_posix()
 
     if env.get('JUPYTER_NO_CONFIG'):
-        return _mkdtemp_once('jupyter-clean-cfg')
+        return mkdtemp(suffix='jupyter-clean-cfg')
 
     if env.get('JUPYTER_CONFIG_DIR'):
         return env['JUPYTER_CONFIG_DIR']
@@ -109,6 +111,9 @@ def user_dir():
             return os.path.join(jupyter_config_dir(), 'data')
     else:
         # Linux, non-OS X Unix, AIX, etc.
+        import pathlib
+        env = os.environ
+        home = pathlib.Path.home().as_posix()
         xdg = env.get("XDG_DATA_HOME", None)
         if not xdg:
             xdg = os.path.join(home, '.local', 'share')
@@ -137,7 +142,7 @@ class DevelopCmd(develop):
                 source), os.path.abspath(target_subdir))
             try:
                 os.remove(target)
-            except:
+            except Exception:
                 pass
             print(rel_source, '->', target)
             os.symlink(rel_source, target)
