@@ -50,8 +50,7 @@ class ConfigHelper(HubListener):
         all_models = {}
 
         for dim in range(1, MAX_DIMENSIONS):
-            attrname = f'_fitted_{dim}d_models'
-            model = getattr(self.app, attrname, None)
+            model = self.get_models(ndim=dim)
             if model:
                 all_models.update(model)
 
