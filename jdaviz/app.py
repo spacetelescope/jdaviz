@@ -175,6 +175,9 @@ class Application(VuetifyTemplate, HubListener):
         # Add callback that updates the layout when the data item array changes
         self.state.add_callback('stack_items', self.vue_relayout)
 
+        # Add a fitted_models dictionary that the helpers (or user) can access
+        self.fitted_models = {}
+
     @property
     def hub(self):
         """

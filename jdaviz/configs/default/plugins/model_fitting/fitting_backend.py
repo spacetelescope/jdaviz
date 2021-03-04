@@ -123,9 +123,11 @@ def _fit_3D(initial_model, spectrum):
 
     # Build cube with empty slabs, one per model parameter. These
     # will store only parameter values for now, so a cube suffices.
-    parameters_cube = np.zeros(shape=(len(initial_model.parameters),
-                                      spectrum.flux.shape[0],
-                                      spectrum.flux.shape[1]))
+    #parameters_cube = np.zeros(shape=(len(initial_model.parameters),
+    #                                  spectrum.flux.shape[0],
+    #                                  spectrum.flux.shape[1]))
+
+    fitted_models = []
 
     # Build cube with empty arrays, one per input spaxel. These
     # will store the flux values corresponding to the fitted
@@ -141,9 +143,10 @@ def _fit_3D(initial_model, spectrum):
             fitted_values = results['fitted_values'][i]
 
             # Store fitted model parameters
-            for index, name in enumerate(model.param_names):
-                param = getattr(model, name)
-                parameters_cube[index, x, y] = param.value
+            #for index, name in enumerate(model.param_names):
+            #    param = getattr(model, name)
+            #    parameters_cube[index, x, y] = param.value
+            fitted_models.append({"x": x, "y": y, "model": model})
 
             # Store fitted values
             output_flux_cube[x, y, :] = fitted_values
@@ -172,22 +175,22 @@ def _fit_3D(initial_model, spectrum):
     pool.close()
 
     # Collect units from all parameters
-    param_units = []
-    for name in initial_model.param_names:
-        param = getattr(initial_model, name)
-        param_units.append(param.unit)
+    #param_units = []
+    #for name in initial_model.param_names:
+    #    param = getattr(initial_model, name)
+    #    param_units.append(param.unit)
 
     # Re-format parameters cube to a dict of 2D Quantity arrays.
-    fitted_parameters = _handle_parameter_units(initial_model,
-                                                parameters_cube,
-                                                param_units)
+    #fitted_parameters = _handle_parameter_units(initial_model,
+    #                                            parameters_cube,
+    #                                            param_units)
 
     # Build output 3D spectrum
     funit = spectrum.flux.unit
     output_spectrum = Spectrum1D(spectral_axis=spectrum.spectral_axis,
                                  flux=output_flux_cube * funit)
 
-    return fitted_parameters, output_spectrum
+    return fitted_models, output_spectrum
 
 
 class SpaxelWorker:
