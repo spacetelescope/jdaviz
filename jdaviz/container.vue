@@ -75,16 +75,16 @@
 
               <v-tabs-items v-model="viewer.tab" style="max-height: 500px; width: 350px;">
                 <v-tab-item key="0" class="overflow-y-auto" style="height: 450px">
-                  <v-treeview
-                    dense
-                    selectable
-                    :items="dataItems"
-                    hoverable
-                    v-model="viewer.selected_data_items"
-                    activatable
-                    item-disabled="locked"
-                    @input="$emit('data-item-selected', {'id': viewer.id, 'selected_items': $event})"
-                  ></v-treeview>
+                  <v-checkbox
+                    v-for="item in dataItems" :key="item.id" :label="item.name" dense hide-details
+                    :input-value="viewer.selected_data_items.includes(item.id)"
+                    @change="$emit('data-item-selected', {
+                      id: viewer.id,
+                      item_id: item.id,
+                      checked: $event
+                    })"
+                    class="pl-4"
+                  />
                 </v-tab-item>
 
                 <v-tab-item key="1" eager class="overflow-y-auto" style="height: 100%">
