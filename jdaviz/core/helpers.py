@@ -6,6 +6,8 @@ application objects.
 See also https://github.com/spacetelescope/jdaviz/issues/104 for more details
 on the motivation behind this concept.
 """
+import re
+
 from ..app import Application
 from glue.core import HubListener
 
@@ -46,29 +48,64 @@ class ConfigHelper(HubListener):
         parameters : dict
             dict of Quantity arrays, or None.
         """
-        MAX_DIMENSIONS = 5
-        all_models = {}
 
-        for dim in range(1, MAX_DIMENSIONS):
-            model = self.get_models(ndim=dim)
-            if model:
-                all_models.update(model)
+        return self.app.fitted_models
 
-        return all_models
-
-    def get_models(self, ndim=1):
+    def get_models(self, models=None, model_label="default", x=None, y=None):
         """
-        Returns the fitted model parameters of ndim dimension(s).
+        Loop through all models and output models of the label model_label.
+        If x or y is set, return model_labels of those (x, y) coordinates.
+        If x and y are None, print all models regardless of coordinates.
 
         Parameters
         ----------
-        ndim : int
-            int that determines the dimension of the models that are returned
+        models : dict
+            A dict of models, with the key being the label name and the value
+            being the model object. Defaults to `self.fitted_models` if no
+            parameter is provided.
+        model_label : str
+            The name of the model that will be found and returned. If it
+            equals default, every model present will be returned.
+        x : int
+            The x coordinate of the model spaxels that will be returned.
+        y : int
+            The y coordinate of the model spaxels that will be returned.
 
         Returns
         -------
-        parameters : dict
-            dict with key being the model name and value being the Quantity model, or None.
+        :dict: dict of the selected models.
         """
-        attrname = f'_fitted_{ndim}d_models'
-        return getattr(self.app, attrname, None)
+        selected_models = {}
+        # If models is not provided, use the app's fitted models
+        if not models:
+            models = self.fitted_models
+
+        # Loop through all keys in the dict models
+        for label in models:
+            # If no label was provided, use label name without coordinates.
+            if model_label == "default" and " (" in label:
+                find_label = label.split(" (")[0]
+            # If coordinates are not present, just use the label.
+            elif model_label == "default":
+                find_label = label
+            else:
+                find_label = model_label
+
+            # If x and y is set, return keys that match the model plus that
+            # coordinate pair. If only x or y is set, return keys that fit
+            # that value for the appropriate coordinate. If neither is set,
+            # add the model object to the selected_models dict with the label
+            # as the key.
+            if x and y:
+                find_label = f"{find_label} ({x}, {y})"
+            elif x:
+                find_label = r"{} \({}, .+\)".format(find_label, x)
+            elif y:
+                find_label = f"{find_label} (.+, {y})"
+            else:
+                selected_models[label] = models[label]
+
+            if re.search(find_label, label):
+                selected_models[label] = models[label]
+
+        return selected_models

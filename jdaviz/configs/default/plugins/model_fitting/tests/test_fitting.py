@@ -1,4 +1,5 @@
 import astropy.modeling.models as models
+import astropy.modeling.parameters as params
 import astropy.units as u
 import numpy as np
 from specutils.spectra import Spectrum1D
@@ -96,16 +97,19 @@ def test_cube_fitting_backend():
         spectrum, model_list, expression)
 
     # Check that parameter results are formatted as expected.
-    assert type(fitted_parameters) == dict
-    assert len(fitted_parameters) == 10
+    assert type(fitted_parameters) == list
+    assert len(fitted_parameters) == 225
 
-    assert type(fitted_parameters['amplitude_0']) == u.Quantity
-    assert fitted_parameters['amplitude_0'].unit == u.Jy
-    assert fitted_parameters['amplitude_0'].shape == (IMAGE_SIZE, IMAGE_SIZE)
+    for m in fitted_parameters:
+        if m['x'] == 3 and m['y'] == 2:
+            fitted_model = m['model']
 
-    assert type(fitted_parameters['mean_0']) == u.Quantity
-    assert fitted_parameters['mean_0'].unit == u.um
-    assert fitted_parameters['mean_0'].shape == (IMAGE_SIZE, IMAGE_SIZE)
+    assert type(fitted_model[0].amplitude.value) == np.float64
+    assert fitted_model[0].amplitude.unit == u.Jy
+
+    assert type(fitted_model[0] == params.Parameter)
+    assert type(fitted_model[0].mean.value) == np.float64
+    assert fitted_model[0].mean.unit == u.um
 
     # Check that spectrum result is formatted as expected.
     assert type(fitted_spectrum) == Spectrum1D
@@ -118,16 +122,16 @@ def test_cube_fitting_backend():
     # interested here in checking the correctness of the data
     # packaging into the output products.
 
-    assert np.allclose(fitted_parameters['amplitude_0'].value, 1., atol=TOL)
-    assert np.allclose(fitted_parameters['amplitude_1'].value, 2.5, atol=TOL)
-    assert np.allclose(fitted_parameters['amplitude_2'].value, -1.7, atol=TOL)
+    assert np.allclose(fitted_model[0].amplitude.value, 1.09, atol=TOL)
+    assert np.allclose(fitted_model[1].amplitude.value, 2.4, atol=TOL)
+    assert np.allclose(fitted_model[2].amplitude.value, -1.7, atol=TOL)
 
-    assert np.allclose(fitted_parameters['mean_0'].value, 4.6, atol=TOL)
-    assert np.allclose(fitted_parameters['mean_1'].value, 5.5, atol=TOL)
-    assert np.allclose(fitted_parameters['mean_2'].value, 8.2, atol=TOL)
+    assert np.allclose(fitted_model[0].mean.value, 4.6, atol=TOL)
+    assert np.allclose(fitted_model[1].mean.value, 5.5, atol=TOL)
+    assert np.allclose(fitted_model[2].mean.value, 8.2, atol=TOL)
 
-    assert np.allclose(fitted_parameters['stddev_0'].value, 0.2, atol=TOL)
-    assert np.allclose(fitted_parameters['stddev_1'].value, 0.1, atol=TOL)
-    assert np.allclose(fitted_parameters['stddev_2'].value, 0.1, atol=TOL)
+    assert np.allclose(fitted_model[0].stddev.value, 0.2, atol=TOL)
+    assert np.allclose(fitted_model[1].stddev.value, 0.1, atol=TOL)
+    assert np.allclose(fitted_model[2].stddev.value, 0.1, atol=TOL)
 
-    assert np.allclose(fitted_parameters['amplitude_3'].value, 4.0, atol=TOL)
+    assert np.allclose(fitted_model[3].amplitude.value, 4.0, atol=TOL)
