@@ -7,6 +7,8 @@ See also https://github.com/spacetelescope/jdaviz/issues/104 for more details
 on the motivation behind this concept.
 """
 import re
+import numpy as np
+import astropy.units as u
 
 from ..app import Application
 from glue.core import HubListener
@@ -61,8 +63,8 @@ class ConfigHelper(HubListener):
         ----------
         models : dict
             A dict of models, with the key being the label name and the value
-            being the model object. Defaults to `self.fitted_models` if no
-            parameter is provided.
+            being an `astropy.modeling.CompoundModel` object. Defaults to
+            `self.fitted_models` if no parameter is provided.
         model_label : str
             The name of the model that will be found and returned. If it
             equals default, every model present will be returned.
@@ -73,7 +75,7 @@ class ConfigHelper(HubListener):
 
         Returns
         -------
-        :dict: dict of the selected models.
+        :dict: dictionary of the selected models.
         """
         selected_models = {}
         # If models is not provided, use the app's fitted models
@@ -109,3 +111,125 @@ class ConfigHelper(HubListener):
                 selected_models[label] = models[label]
 
         return selected_models
+
+    def get_model_parameters(self, models=None):
+        """
+        Convert each parameter of model inside models into a coordinate that
+        maps the model name and parameter name to a `astropy.units.Quantity`
+        object.
+
+        Parameters
+        ----------
+        models : dict
+            A dictionary where the key is a model name and the value is an
+            `astropy.modeling.CompoundModel` object.
+
+        Returns
+        -------
+        :dict: a dictionary of the form
+            {model name: {parameter name: [[`astropy.units.Quantity`]]}}
+            for 3d models or
+            {model name: {parameter name: `astropy.units.Quantity`}} where the
+            Quantity object represents the parameter value and unit of one of
+            spaxel models or the 1d models, respectively.
+        """
+        if not models:
+            models = self.fitted_models
+
+        param_dict = {}
+        parameters_cube = {}
+        param_x_y = {}
+        param_units = {}
+
+        for label in models:
+            # 3d models take the form of "Model (1,2)" so this if statement
+            # looks for that style and separates out the pertinent information.
+            if " (" in label:
+                label_split = label.split(" (")
+                model_name = label_split[0] + "_3d"
+                x = int(label_split[1].split(", ")[0])
+                y = int(label_split[1].split(", ")[1][:-1])
+
+                # x and y values are added to this dict where they will be used
+                # to convert the models of each spaxel into a single
+                # coordinate in the parameters_cube dictionary.
+                if model_name not in param_x_y:
+                    param_x_y[model_name] = {'x': [], 'y': []}
+                if x not in param_x_y[model_name]['x']:
+                    param_x_y[model_name]['x'].append(x)
+                if y not in param_x_y[model_name]['y']:
+                    param_x_y[model_name]['y'].append(y)
+
+            # 1d models will be handled by this else statement.
+            else:
+                model_name = label
+
+            if model_name not in param_dict:
+                param_dict[model_name] = list(models[label].param_names)
+
+        # This adds another dictionary as the value of
+        # parameters_cube[model_name] where the key is the parameter name
+        # and the value is either a 2d array of zeros or a single value, depending
+        # on whether the model in question is 3d or 1d, respectively.
+        for model_name in param_dict:
+            if model_name in param_x_y:
+                x_size = len(param_x_y[model_name]['x'])
+                y_size = len(param_x_y[model_name]['y'])
+
+                parameters_cube[model_name] = {x: np.zeros(shape=(x_size, y_size))
+                                               for x in param_dict[model_name]}
+            else:
+                parameters_cube[model_name] = {x: 0
+                                               for x in param_dict[model_name]}
+
+        # This loop handles the actual placement of param.values and
+        # param.units into the parameter_cubes dictionary.
+        for label in models:
+            if " (" in label:
+                label_split = label.split(" (")
+                model_name = label_split[0] + "_3d"
+
+                # If the get_models method is used to build a dictionary of
+                # models and a value is set for the x or y parameters, that
+                # will mean that only one x or y value is present in the
+                # models.
+                if len(param_x_y[model_name]['x']) == 1:
+                    x = 0
+                else:
+                    x = int(label_split[1].split(", ")[0])
+
+                if len(param_x_y[model_name]['y']) == 1:
+                    y = 0
+                else:
+                    y = int(label_split[1].split(", ")[1][:-1])
+
+                param_units[model_name] = {}
+
+                for name in param_dict[model_name]:
+                    param = getattr(models[label], name)
+                    parameters_cube[model_name][name][x][y] = param.value
+                    param_units[model_name][name] = param.unit
+            else:
+                model_name = label
+                param_units[model_name] = {}
+
+                # 1d models do not have anything set of param.unit, so the
+                # return_units and input_units properties need to be used
+                # instead, depending on the type of parameter `name` is.
+                for name in param_dict[model_name]:
+                    param = getattr(models[label], name)
+                    parameters_cube[model_name][name] = param.value
+                    if "amplitude" in name:
+                        param_units[model_name][name] = models[model_name].return_units
+                    elif "mean" in name or "stddev" in name:
+                        param_units[model_name][name] = models[model_name].input_units
+
+        # Convert values of parameters_cube[key][param_name] into u.Quantity
+        # objects that contain the appropriate unit set in
+        # param_units[key][param_name]
+        for key in parameters_cube:
+            for param_name in parameters_cube[key]:
+                parameters_cube[key][param_name] = u.Quantity(parameters_cube[key][param_name],
+                                                              param_units[key][param_name])
+
+        return parameters_cube
