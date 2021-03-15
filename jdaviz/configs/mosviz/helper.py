@@ -237,3 +237,17 @@ class MosViz(ConfigHelper):
             data_dict[cid.label] = comp.data * unit
 
         return QTable(data_dict)
+
+    def to_csv(self, filename=None, selected=False):
+        """
+        Creates a csv file with the contects of the MOS table viewer
+        """
+
+        table_data = self.app.data_collection['MOS Table']
+
+        if filename is None:
+            filename = "MOS_data.csv"
+        elif filename[-4:] != ".csv":
+            filename += ".csv"
+
+        table_data.to_dataframe.to_csv(filename)
