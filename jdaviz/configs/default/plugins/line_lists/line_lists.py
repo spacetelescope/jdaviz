@@ -144,7 +144,7 @@ class LineListTool(TemplateMixin):
                          "rest": row["rest"].value,
                          "unit": str(row["rest"].unit),
                          "colors": row["colors"] if "colors" in row else "#FF0000FF",
-                         "show": True,
+                         "show": row["show"],
                          "name_rest": row["name_rest"],
                          "redshift": row["redshift"] if "redshift" in row else
                          self._global_redshift}

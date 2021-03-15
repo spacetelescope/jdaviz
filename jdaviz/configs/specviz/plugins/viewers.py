@@ -93,7 +93,8 @@ class SpecvizProfileView(BqplotProfileView):
         line_table["redshift"] = u.Quantity(line_table["redshift"])
 
         # Set whether to show all of the lines on the plot by default on load
-        line_table["show"] = show
+        # We convert bool to int to work around ipywidgets json serialization
+        line_table["show"] = int(show)
 
         # If there is already a loaded table, convert units to match. This
         # attempts to do some sane rounding after the unit conversion.
