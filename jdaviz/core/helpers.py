@@ -95,17 +95,13 @@ class ConfigHelper(HubListener):
 
             # If x and y is set, return keys that match the model plus that
             # coordinate pair. If only x or y is set, return keys that fit
-            # that value for the appropriate coordinate. If neither is set,
-            # add the model object to the selected_models dict with the label
-            # as the key.
-            if x and y:
-                find_label = f"{find_label} ({x}, {y})"
+            # that value for the appropriate coordinate.
+            if x is not None and y is not None:
+                find_label = r"{} \({}, {}\)".format(find_label, x, y)
             elif x:
                 find_label = r"{} \({}, .+\)".format(find_label, x)
             elif y:
-                find_label = f"{find_label} (.+, {y})"
-            else:
-                selected_models[label] = models[label]
+                find_label = r"{} \(.+, {}\)".format(find_label, y)
 
             if re.search(find_label, label):
                 selected_models[label] = models[label]
