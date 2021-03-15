@@ -155,8 +155,10 @@ class LineListTool(TemplateMixin):
         self.list_contents = {}
         self.list_contents = list_contents
 
-        lines_loaded_message = SnackbarMessage("Spectral lines loaded from notebook",
-                                               sender=self, color="success")
+        msg_text = ("Spectral lines loaded from notebook. Lines can be hidden"
+                    "/shown in the Line Lists plugin")
+        lines_loaded_message = SnackbarMessage(msg_text, sender=self,
+                                               color="success", timeout=15000)
         self.hub.broadcast(lines_loaded_message)
 
     def update_line_mark_dict(self):
