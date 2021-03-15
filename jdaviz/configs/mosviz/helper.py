@@ -252,7 +252,7 @@ class MosViz(ConfigHelper):
 
         table_df = self.app.data_collection['MOS Table'].to_dataframe()
 
-        elif filename[-4:] != ".csv":
+        if filename[-4:] != ".csv":
             filename += ".csv"
 
         # Restrict to only checked rows if desired
