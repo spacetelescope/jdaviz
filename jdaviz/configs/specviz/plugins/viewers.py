@@ -70,10 +70,13 @@ class SpecvizProfileView(BqplotProfileView):
 
         return data
 
-    def load_line_list(self, line_table, replace=False, return_table=False):
+    def load_line_list(self, line_table, replace=False, return_table=False, show=True):
+        # If string, load the named preset list and don't show by default
+        # since there might be too many lines
         if type(line_table) == str:
             self.load_line_list(load_preset_linelist(line_table),
-                                replace=replace, return_table=return_table)
+                                replace=replace, return_table=return_table,
+                                show=False)
             return
         elif type(line_table) != table.QTable:
             raise TypeError("Line list must be an astropy QTable with\
@@ -89,8 +92,8 @@ class SpecvizProfileView(BqplotProfileView):
         # Make sure the redshift column is a quantity
         line_table["redshift"] = u.Quantity(line_table["redshift"])
 
-        # Set all of the lines to be shown on the plot by default on load
-        line_table["show"] = True
+        # Set whether to show all of the lines on the plot by default on load
+        line_table["show"] = show
 
         # If there is already a loaded table, convert units to match. This
         # attempts to do some sane rounding after the unit conversion.
