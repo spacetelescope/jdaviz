@@ -84,6 +84,11 @@ class ConfigHelper(HubListener):
 
         # Loop through all keys in the dict models
         for label in models:
+            # Prevent "Model 2" from being returned when model_label is "Model"
+            if model_label is not None:
+                if label.split(" (")[0] != model_label:
+                    continue
+
             # If no label was provided, use label name without coordinates.
             if model_label is None and " (" in label:
                 find_label = label.split(" (")[0]
