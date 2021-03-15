@@ -108,7 +108,7 @@ class ConfigHelper(HubListener):
 
         return selected_models
 
-    def get_model_parameters(self, models=None):
+    def get_model_parameters(self, models=None, model_label=None):
         """
         Convert each parameter of model inside models into a coordinate that
         maps the model name and parameter name to a `astropy.units.Quantity`
@@ -119,6 +119,8 @@ class ConfigHelper(HubListener):
         models : dict
             A dictionary where the key is a model name and the value is an
             `astropy.modeling.CompoundModel` object.
+        model_label : str
+            Get model parameters for a particular model by inputting its label.
 
         Returns
         -------
@@ -129,7 +131,9 @@ class ConfigHelper(HubListener):
             Quantity object represents the parameter value and unit of one of
             spaxel models or the 1d models, respectively.
         """
-        if not models:
+        if not models and model_label:
+            models = self.get_models(model_label=model_label)
+        elif not models:
             models = self.fitted_models
 
         param_dict = {}
