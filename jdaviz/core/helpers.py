@@ -53,7 +53,7 @@ class ConfigHelper(HubListener):
 
         return self.app.fitted_models
 
-    def get_models(self, models=None, model_label="default", x=None, y=None):
+    def get_models(self, models=None, model_label=None, x=None, y=None):
         """
         Loop through all models and output models of the label model_label.
         If x or y is set, return model_labels of those (x, y) coordinates.
@@ -85,15 +85,15 @@ class ConfigHelper(HubListener):
         # Loop through all keys in the dict models
         for label in models:
             # If no label was provided, use label name without coordinates.
-            if model_label == "default" and " (" in label:
+            if model_label is None and " (" in label:
                 find_label = label.split(" (")[0]
             # If coordinates are not present, just use the label.
-            elif model_label == "default":
+            elif model_label is None:
                 find_label = label
             else:
                 find_label = model_label
 
-            # If x and y is set, return keys that match the model plus that
+            # If x and y are set, return keys that match the model plus that
             # coordinate pair. If only x or y is set, return keys that fit
             # that value for the appropriate coordinate.
             if x is not None and y is not None:
@@ -108,7 +108,7 @@ class ConfigHelper(HubListener):
 
         return selected_models
 
-    def get_model_parameters(self, models=None, model_label=None):
+    def get_model_parameters(self, models=None, model_label=None, x=None, y=None):
         """
         Convert each parameter of model inside models into a coordinate that
         maps the model name and parameter name to a `astropy.units.Quantity`
@@ -121,6 +121,12 @@ class ConfigHelper(HubListener):
             `astropy.modeling.CompoundModel` object.
         model_label : str
             Get model parameters for a particular model by inputting its label.
+        x : int
+            The x coordinate of the model spaxels that will be returned from
+            get_models.
+        y : int
+            The y coordinate of the model spaxels that will be returned from
+            get_models.
 
         Returns
         -------
@@ -132,10 +138,10 @@ class ConfigHelper(HubListener):
             spaxel models or the 1d models, respectively.
         """
         if models and model_label:
-            models = self.get_models(models=models, model_label=model_label)
-        elif not models and model_label:
-            models = self.get_models(model_label=model_label)
-        elif not models:
+            models = self.get_models(models=models, model_label=model_label, x=x, y=y)
+        elif models is None and model_label:
+            models = self.get_models(model_label=model_label, x=x, y=y)
+        elif models is None:
             models = self.fitted_models
 
         param_dict = {}
