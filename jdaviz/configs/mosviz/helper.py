@@ -241,13 +241,28 @@ class MosViz(ConfigHelper):
     def to_csv(self, filename=None, selected=False):
         """
         Creates a csv file with the contects of the MOS table viewer
+
+        Parameters
+        ----------
+        filename: str
+            Filename for the output CSV file.
+        selected: bool
+            If set to True, only the checked rows in the table will be output.
         """
 
-        table_data = self.app.data_collection['MOS Table']
+        table_df = self.app.data_collection['MOS Table'].to_dataframe()
 
         if filename is None:
             filename = "MOS_data.csv"
         elif filename[-4:] != ".csv":
             filename += ".csv"
 
-        table_data.to_dataframe.to_csv(filename)
+        # Restrict to only checked rows if desired
+        if selected:
+            checked_rows = self.app.get_viewer("table-viewer").widget_table.checked
+            table_df = table_df.iloc[checked_rows]
+
+        # This column is an artifact of the table widget construction with no meaning
+        table_df = table_df.drop(labels="Pixel Axis 0 [x]", axis=1)
+
+        table_df.to_csv(filename, index_label="Table Index")
