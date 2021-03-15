@@ -131,7 +131,9 @@ class ConfigHelper(HubListener):
             Quantity object represents the parameter value and unit of one of
             spaxel models or the 1d models, respectively.
         """
-        if not models and model_label:
+        if models and model_label:
+            models = self.get_models(models=models, model_label=model_label)
+        elif not models and model_label:
             models = self.get_models(model_label=model_label)
         elif not models:
             models = self.fitted_models
