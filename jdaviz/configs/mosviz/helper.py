@@ -238,7 +238,7 @@ class MosViz(ConfigHelper):
 
         return QTable(data_dict)
 
-    def to_csv(self, filename=None, selected=False):
+    def to_csv(self, filename="MOS_data.csv", selected=False):
         """
         Creates a csv file with the contects of the MOS table viewer
 
@@ -252,8 +252,6 @@ class MosViz(ConfigHelper):
 
         table_df = self.app.data_collection['MOS Table'].to_dataframe()
 
-        if filename is None:
-            filename = "MOS_data.csv"
         elif filename[-4:] != ".csv":
             filename += ".csv"
 
