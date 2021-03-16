@@ -25,12 +25,15 @@ The `~jdaviz.configs.mosviz.helper.MosViz` helper class can be used similarly to
 The viewers in `mosviz` that can be used that way are `image-viewer`, `spectrum-viewer`,
 and `spectrum-2d-viewer`.
 
-It is also possible to extract data from the `table-viewer` using the following code::
+It is also possible to extract the contents of `table-viewer` via::
 
-    mosviz.to_csv()
+    mosviz.to_csv(filename="MOS_data.csv", selected=False)
 
-Which will load the data from the `mosviz` table into a csv file and::
+Which will load the data from the `mosviz` table into a csv file named
+`filename`. If the `selected` parameter is set to `True`, only the checked
+rows in the table will be output.
+The contents of `table-viewer` can also be extracted to a notebook cell by
+running the following::
 
     mosviz.to_table()
 
-Can be used to return the contents of the `mosviz` table into a Jupyter Notebook cell.
