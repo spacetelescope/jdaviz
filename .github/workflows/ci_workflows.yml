@@ -43,17 +43,25 @@ jobs:
             toxenv: py38-test-cov
             allow_failure: false
 
-          - name: OS X - Python 3.8
+          - name: OS X - Python 3.7
             os: macos-latest
-            python: 3.8
-            toxenv: py38-test
+            python: 3.7
+            toxenv: py37-test
             allow_failure: false
 
-          - name: Windows - Python 3.8
+          - name: Windows - Python 3.9
             os: windows-latest
-            python: 3.8
-            toxenv: py38-test
+            python: 3.9
+            toxenv: py39-test
             allow_failure: false
+
+          # This also runs on cron but we want to make sure new changes
+          # won't break this job at the PR stage.
+          - name: Python 3.9 with latest dev versions of key dependencies
+            os: ubuntu-latest
+            python: 3.9
+            toxenv: py39-test-devdeps
+            allow_failure: true
 
     steps:
     - name: Checkout code

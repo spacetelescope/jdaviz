@@ -1,22 +1,6 @@
-# This file is used to configure the behavior of pytest when using the Astropy
-# test infrastructure. It needs to live inside the package in order for it to
-# get picked up when running the tests inside an interpreter using
-# packagename.test
-
-import pytest
+# This copies over some pytest setup from jdaviz/conftest.py so tox can see it.
 
 from astropy.tests.helper import enable_deprecations_as_exceptions
-from astropy.wcs import WCS
-
-
-@pytest.fixture
-def spectral_cube_wcs(request):
-    # A simple spectral cube WCS used by some tests
-    wcs = WCS(naxis=3)
-    wcs.wcs.ctype = 'RA---TAN', 'DEC--TAN', 'FREQ'
-    wcs.wcs.set()
-    return wcs
-
 
 try:
     from pytest_astropy_header.display import PYTEST_HEADER_MODULES, TESTED_VERSIONS
@@ -51,7 +35,7 @@ def pytest_configure(config):
         PYTEST_HEADER_MODULES['voila'] = 'voila'
         PYTEST_HEADER_MODULES['vispy'] = 'vispy'
 
-        from . import __version__
+        from jdaviz import __version__
         TESTED_VERSIONS['jdaviz'] = __version__
 
 
