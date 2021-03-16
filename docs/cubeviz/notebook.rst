@@ -33,4 +33,6 @@ Data can also be accessed directly from ``data_collection`` using the following 
 
     cubeviz.app.data_collection[0]
 
-Which is returned as a `~glue.core.data.Data` object.
+Which is returned as a `~glue.core.data.Data` object. The `data_collection` object
+can be indexed to return all available data (i.e. not just using `0` like in the
+previous example).
