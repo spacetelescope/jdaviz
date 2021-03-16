@@ -144,7 +144,7 @@ class LineListTool(TemplateMixin):
                          "rest": row["rest"].value,
                          "unit": str(row["rest"].unit),
                          "colors": row["colors"] if "colors" in row else "#FF0000FF",
-                         "show": True,
+                         "show": row["show"],
                          "name_rest": row["name_rest"],
                          "redshift": row["redshift"] if "redshift" in row else
                          self._global_redshift}
@@ -155,8 +155,10 @@ class LineListTool(TemplateMixin):
         self.list_contents = {}
         self.list_contents = list_contents
 
-        lines_loaded_message = SnackbarMessage("Spectral lines loaded from notebook",
-                                               sender=self, color="success")
+        msg_text = ("Spectral lines loaded from notebook. Lines can be hidden"
+                    "/shown in the Line Lists plugin")
+        lines_loaded_message = SnackbarMessage(msg_text, sender=self,
+                                               color="success", timeout=15000)
         self.hub.broadcast(lines_loaded_message)
 
     def update_line_mark_dict(self):
@@ -188,7 +190,8 @@ class LineListTool(TemplateMixin):
 
         # Load the table into the main astropy table and get it back, to make
         # sure all values match between the main table and local plugin
-        temp_table = self._viewer.load_line_list(temp_table, return_table=True)
+        temp_table = self._viewer.load_line_list(temp_table, return_table=True,
+                                                 show=False)
 
         line_list_dict = {"lines": [], "color": "#FF000080"}
         # extra_fields = [x for x in temp_table.colnames if x not in
@@ -199,7 +202,7 @@ class LineListTool(TemplateMixin):
                          "rest": row["rest"].value,
                          "unit": str(row["rest"].unit),
                          "colors": row["colors"],
-                         "show": True,
+                         "show": False,
                          "name_rest": str(row["name_rest"]),
                          "redshift": self._global_redshift}
             # for field in extra_fields:
@@ -218,8 +221,10 @@ class LineListTool(TemplateMixin):
         self._viewer.plot_spectral_lines()
         self.update_line_mark_dict()
 
-        lines_loaded_message = SnackbarMessage("Spectral lines loaded from preset",
-                                               sender=self, color="success")
+        msg_text = ("Spectral lines loaded from preset. Lines can be shown/hidden"
+                    f" in the {self.list_to_load} dropdown in the Line Lists plugin")
+        lines_loaded_message = SnackbarMessage(msg_text, sender=self,
+                                               color="success", timeout=15000)
         self.hub.broadcast(lines_loaded_message)
 
     def vue_add_custom_line(self, event):

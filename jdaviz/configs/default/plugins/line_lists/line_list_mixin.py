@@ -18,12 +18,14 @@ class LineListMixin:
         """
 
         # If the helper class has a global redshift (as in Specviz), use it
-        if hasattr(self, "_redshift") and "redshift" not in line_table.colnames:
-            line_table["redshift"] = u.Quantity(self._redshift)
+        if not isinstance(line_table, str):
+            if hasattr(self, "_redshift") and "redshift" not in line_table.colnames:
+                line_table["redshift"] = u.Quantity(self._redshift)
 
         lt = self.app.get_viewer('spectrum-viewer').load_line_list(line_table,
                                                                    replace=replace,
                                                                    return_table=True)
+
         # Preset lists were returning None table despite loading correctly
         if lt is None:
             if replace:
