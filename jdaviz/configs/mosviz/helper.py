@@ -1,4 +1,5 @@
 import numpy as np
+from pathlib import Path
 
 from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import SnackbarMessage
@@ -249,7 +250,7 @@ class MosViz(ConfigHelper):
 
         return QTable(data_dict)
 
-    def to_csv(self, filename="MOS_data.csv", selected=False):
+    def to_csv(self, filename="MOS_data.csv", selected=False, overwrite=False):
         """
         Creates a csv file with the contects of the MOS table viewer
 
@@ -260,6 +261,12 @@ class MosViz(ConfigHelper):
         selected: bool
             If set to True, only the checked rows in the table will be output.
         """
+
+        path = Path(filename)
+        if path.is_file():
+            if not overwrite:
+                raise FileExistsError(f"File {filename} exists, choose another"
+                                      " file name or set overwrite=True")
 
         table_df = self.app.data_collection['MOS Table'].to_dataframe()
 
