@@ -232,9 +232,20 @@ class MosViz(ConfigHelper):
 
         for cid in table_data.components:
             comp = table_data.get_component(cid)
-            unit = u.Unit(comp.units)
+            # Rename the first column to something more sensible
+            if cid.label == "Pixel Axis 0 [x]":
+                label = "Table Index"
+            else:
+                label = cid.label
 
-            data_dict[cid.label] = comp.data * unit
+            if comp.units is not None:
+                if comp.units == "":
+                    data_dict[label] = comp.data
+                else:
+                    unit = u.Unit(comp.units)
+                    data_dict[label] = comp.data * unit
+            else:
+                data_dict[label] = comp.data
 
         return QTable(data_dict)
 
