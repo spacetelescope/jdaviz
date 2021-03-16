@@ -5,7 +5,6 @@
 
 import pytest
 
-from astropy.tests.helper import enable_deprecations_as_exceptions
 from astropy.wcs import WCS
 
 
@@ -57,4 +56,5 @@ def pytest_configure(config):
 
 # Uncomment the last two lines in this block to treat all DeprecationWarnings as
 # exceptions.
-enable_deprecations_as_exceptions()
+# from astropy.tests.helper import enable_deprecations_as_exceptions
+# enable_deprecations_as_exceptions()

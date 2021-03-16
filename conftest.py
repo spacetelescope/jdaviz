@@ -1,7 +1,5 @@
 # This copies over some pytest setup from jdaviz/conftest.py so tox can see it.
 
-from astropy.tests.helper import enable_deprecations_as_exceptions
-
 try:
     from pytest_astropy_header.display import PYTEST_HEADER_MODULES, TESTED_VERSIONS
     ASTROPY_HEADER = True
@@ -41,4 +39,5 @@ def pytest_configure(config):
 
 # Uncomment the last two lines in this block to treat all DeprecationWarnings as
 # exceptions.
-enable_deprecations_as_exceptions()
+# from astropy.tests.helper import enable_deprecations_as_exceptions
+# enable_deprecations_as_exceptions()
