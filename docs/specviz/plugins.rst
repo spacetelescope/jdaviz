@@ -58,6 +58,17 @@ The model components are specified by their :guilabel:`Model ID`.
 For example, add together Constant and Gaussian models with
 model IDs 'C' and 'G1' by entering the Model Equation 'C+G1'.
 
+Models can be extracted from notebook cells by using a configuration's
+`helper` class. This can be done using the following code::
+
+    specviz.get_models(model_label="Model")
+
+The parameters of model can also be extracted using the following code::
+
+    specviz.get_model_parameters(model_label="Model")
+
+If nothing is specified for the `model_label` parameter, information for
+all models will be returned.
 
 Unit Conversion
 ===============
