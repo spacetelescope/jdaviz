@@ -227,6 +227,7 @@ def test_viewer_axis_link(mosviz_app, spectrum1d, spectrum2d):
     scale_1d.max = 7564
     assert scale_2d.max == 800.0
 
+
 def test_to_csv(mosviz_app, spectrum_collection):
     labels = [f"Test Spectrum Collection {i}" for i in range(5)]
     mosviz_app.load_1d_spectra(spectrum_collection, data_labels=labels)
@@ -237,8 +238,8 @@ def test_to_csv(mosviz_app, spectrum_collection):
     found_index_label = False
 
     with open("MOS_data.csv", "r") as f:
-         freader = csv.reader(f)
-         for row in freader:
+        freader = csv.reader(f)
+        for row in freader:
             if row[0] == "Table Index":
                 found_index_label = True
             else:
