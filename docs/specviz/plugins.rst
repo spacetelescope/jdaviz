@@ -58,12 +58,14 @@ The model components are specified by their :guilabel:`Model ID`.
 For example, add together Constant and Gaussian models with
 model IDs 'C' and 'G1' by entering the Model Equation 'C+G1'.
 
-Models can be extracted from notebook cells by using a configuration's
-`helper` class. This can be done using the following code::
+Fitted models can be extracted from the app into notebook cells by using
+the `get_models` method of the configuration `helper` class , e.g. ::
 
     specviz.get_models(model_label="Model")
 
-The parameters of model can also be extracted using the following code::
+The `get_models` method returns the fitted `astropy` model objects. If only
+the parameters of the model are needed, those can be extracted using the
+following code::
 
     specviz.get_model_parameters(model_label="Model")
 

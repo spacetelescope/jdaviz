@@ -73,9 +73,10 @@ in a jupyter notebook by using the following code::
     cubeviz.get_models(model_label="Model", x=10)
 
 Where the `model_label` parameter identifies which model should be returned and the `x` and
-`y` parameters identify specifically which spaxel coordinates are to be returned. Leaving `x`
-or `y` as `None` will mean that all values are returned. Model parameters can also be accessed
-using the following code::
+`y` parameters identify specifically which spaxel fits are to be returned, for models
+applied to every spaxel using the :guilabel:`Apply to Cube` button. Leaving `x` or
+`y` as `None` will mean that the models fit to every spaxel across that axis will be
+returned. Model parameters can also be accessed using the following code::
 
     cubeviz.get_model_parameters(model_label="Model", y=52)
 
