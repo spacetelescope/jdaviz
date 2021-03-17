@@ -67,6 +67,21 @@ also saved to a dataset with the label specified in the :guilabel:`Model Label` 
     `Model Fitting <https://jdaviz.readthedocs.io/en/latest/specviz/plugins.html#model-fitting>`_
         Specviz documentation on fitting spectral models.
 
+As mentioned in the `specviz` documentation on model fitting, models can be accessed
+in a jupyter notebook by using the following code::
+
+    cubeviz.get_models(model_label="Model", x=10)
+
+Where the `model_label` parameter identifies which model should be returned and the `x` and
+`y` parameters identify specifically which spaxel fits are to be returned, for models
+applied to every spaxel using the :guilabel:`Apply to Cube` button. Leaving `x` or
+`y` as `None` will mean that the models fit to every spaxel across that axis will be
+returned. Model parameters can also be accessed using the following code::
+
+    cubeviz.get_model_parameters(model_label="Model", y=52)
+
+With the parameters following the same pattern as the `get_models()` method.
+
 Contours
 ========
 .. image:: img/contours_activated.png
