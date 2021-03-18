@@ -177,7 +177,6 @@
         >
         <v-btn color="primary" text @click="model_fitting">Fit</v-btn>
         <v-btn color="primary" text @click="fit_model_to_cube">Apply to Cube</v-btn>
-        <v-btn color="primary" text @click="register_spectrum">Add to Viewer</v-btn>
         </v-row>
       </v-card-actions>
     </v-card>

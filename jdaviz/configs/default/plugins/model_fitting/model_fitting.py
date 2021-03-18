@@ -470,4 +470,4 @@ class ModelFitting(TemplateMixin):
             self.data_collection.remove(self.data_collection[label])
         self.data_collection[label] = spectrum
 
-        # self.app.add_data_to_viewer('spectrum-viewer', label)
+        self.app.add_data_to_viewer('spectrum-viewer', label)
