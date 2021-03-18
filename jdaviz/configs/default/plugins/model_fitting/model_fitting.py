@@ -1,4 +1,3 @@
-import os
 # pickle is in principle a security risk, but we use it just for dumping of a known class here
 import pickle  # nosec
 import re
@@ -41,6 +40,7 @@ class ModelFitting(TemplateMixin):
     dc_items = List([]).tag(sync=True)
 
     model_label = Unicode().tag(sync=True)
+    cube_fit = Bool(False).tag(sync=True)
     temp_name = Unicode().tag(sync=True)
     temp_model = Unicode().tag(sync=True)
     model_equation = Unicode().tag(sync=True)
@@ -65,6 +65,8 @@ class ModelFitting(TemplateMixin):
         self._display_order = False
         self.model_label = "Model"
         self._selected_data_label = None
+        if self.app.state.settings.get("configuration") == "cubeviz":
+            self.cube_fit = True
 
         self.hub.subscribe(self, AddDataMessage,
                            handler=self._on_viewer_data_changed)
