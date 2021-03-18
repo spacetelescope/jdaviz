@@ -40,9 +40,7 @@ class ModelFitting(TemplateMixin):
     template = load_template("model_fitting.vue", __file__).tag(sync=True)
     dc_items = List([]).tag(sync=True)
 
-    save_enabled = Bool(False).tag(sync=True)
     model_label = Unicode().tag(sync=True)
-    model_save_path = Unicode().tag(sync=True)
     temp_name = Unicode().tag(sync=True)
     temp_model = Unicode().tag(sync=True)
     model_equation = Unicode().tag(sync=True)
@@ -65,7 +63,6 @@ class ModelFitting(TemplateMixin):
         self.component_models = []
         self._initialized_models = {}
         self._display_order = False
-        self.model_save_path = os.getcwd()
         self.model_label = "Model"
         self._selected_data_label = None
 
@@ -331,15 +328,6 @@ class ModelFitting(TemplateMixin):
                                  if x["id"] != event]
         del(self._initialized_models[event])
 
-    def vue_save_model(self, event):
-        if self.model_save_path[-1] == "/":
-            connector = ""
-        else:
-            connector = "/"
-        full_path = self.model_save_path + connector + self.model_label + ".pkl"
-        with open(full_path, 'wb') as f:
-            pickle.dump(self._fitted_model, f)
-
     def vue_equation_changed(self, event):
         # Length is a dummy check to test the infrastructure
         if len(self.model_equation) > 20:
@@ -378,7 +366,6 @@ class ModelFitting(TemplateMixin):
         else:
             self._update_parameters_from_fit()
 
-        self.save_enabled = True
 
     def vue_fit_model_to_cube(self, *args, **kwargs):
 
@@ -482,6 +469,5 @@ class ModelFitting(TemplateMixin):
             # Remove the actual Glue data object from the data_collection
             self.data_collection.remove(self.data_collection[label])
         self.data_collection[label] = spectrum
-        self.save_enabled = True
 
         # self.app.add_data_to_viewer('spectrum-viewer', label)
