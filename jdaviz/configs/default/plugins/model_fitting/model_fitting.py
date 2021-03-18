@@ -1,5 +1,3 @@
-# pickle is in principle a security risk, but we use it just for dumping of a known class here
-import pickle  # nosec
 import re
 import numpy as np
 
@@ -367,7 +365,6 @@ class ModelFitting(TemplateMixin):
             self._update_parameters_from_QM()
         else:
             self._update_parameters_from_fit()
-
 
     def vue_fit_model_to_cube(self, *args, **kwargs):
 
