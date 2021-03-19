@@ -167,14 +167,6 @@
           persistent-hint
         >
         </v-text-field>
-        <c-col cols=1><v-col>
-        <v-text-field
-          v-model="model_save_path"
-          label="Filepath"
-          hint="Path to save output file [Model Label].pkl"
-          persistent-hint
-        >
-        </v-text-field>
       </v-card-actions>
       <v-card-actions>
         <div class="flex-grow-1"></div>
@@ -184,14 +176,7 @@
           no-gutters
         >
         <v-btn color="primary" text @click="model_fitting">Fit</v-btn>
-        <v-btn color="primary" text @click="fit_model_to_cube">Apply to Cube</v-btn>
-        <v-btn color="primary" text @click="register_spectrum">Add to Viewer</v-btn>
-        <v-btn
-           color="primary"
-           text
-           @click="save_model">
-           Save to File
-         </v-btn>
+        <v-btn v-if="cube_fit" color="primary" text @click="fit_model_to_cube">Apply to Cube</v-btn>
         </v-row>
       </v-card-actions>
     </v-card>
