@@ -21,8 +21,8 @@
     - Fixed a WCS bug in Mosviz. [#377]
     - Fixed failing case of parsing cube extensions. [#374]
 
-    Other Changes and Additions
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    Miscellaneous Changes and Additions
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     - Cleaned up the Model Fitting plugin UI. [#485]
     - Improved performance when loading multiple datasets. [#435]
     - Updated example notebooks. [#418]
