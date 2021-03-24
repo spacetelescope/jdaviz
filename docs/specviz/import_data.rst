@@ -14,11 +14,11 @@ There are two primary ways in which a user can load their data into the Specviz 
 Importing data through the GUI
 ------------------------------
 
-The first way that users can load their data into the Specviz application is by using the "Import Data" button in the application's user interface.
+The first way that users can load their data into the Specviz application is by using the :guilabel:`Import Data` button in the application's user interface.
 
 .. image:: img/specviz_viewer.png
 
-This process is fairly straightforward, users need only click on the "Import Data" button:
+This process is fairly straightforward, users need only click on the :guilabel:`Import Data` button:
 
 .. image:: img/import_data_1.png
 
@@ -26,8 +26,8 @@ and enter the path of file that can be parsed as a :class:`~specutils.Spectrum1D
 
 .. image:: img/import_data_2.png
 
-After clicking "Import", the data file will be parsed and loaded into the application. A notification will appear to let users know if the data import was successful. Afterward, the new data set can be found in the "Data" tab of each viewer's options menu.
-To access the data tab, click the "hammer and screwdriver" icon to open the tool menu of a viewer. Then, click the "gear" icon.
+After clicking :guilabel:`Import`, the data file will be parsed and loaded into the application. A notification will appear to let users know if the data import was successful. Afterward, the new data set can be found in the :guilabel:`Data` tab of each viewer's options menu.
+To access the data tab, click the :guilabel:`hammer and screwdriver` icon to open the tool menu of a viewer. Then, click the :guilabel:`gear` icon.
 
 .. image:: img/import_data_3.png
 
