@@ -1,6 +1,14 @@
 Known Issues
 ============
 
+On some platforms, install fails due to `scikit-image`
+------------------------------------------------------
+
+This can be fixed by running::
+
+    pip uninstall scikit-image
+    conda install scikit-image
+
 On some platforms, install fails due to `vispy`
 -----------------------------------------------
 
