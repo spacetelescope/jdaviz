@@ -1,8 +1,8 @@
 Known Issues
 ============
 
-On some platforms, install fails due to `scikit-image`
-------------------------------------------------------
+In some conda environments, install fails due to `scikit-image`
+---------------------------------------------------------------
 
 This can be fixed by running::
 
