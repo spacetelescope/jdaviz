@@ -254,6 +254,10 @@ def mos_image_parser(app, data_obj, data_labels=None):
     # Parse and load the 2d images. `CCData` objects require a unit be defined
     #  in the fits header, however, if none is provided, use a fallback and
     #  raise an error.
+
+    if data_obj is None:
+        return
+
     def _parse_as_image(path):
         with fits.open(path) as hdulist:
             if 'BUNIT' not in hdulist[0].header:
@@ -305,6 +309,9 @@ def mos_meta_parser(app, data_obj):
     data_obj : str or list or HDUList
         File path, list, or an HDUList to extract metadata from.
     """
+
+    if data_obj is None:
+        return
 
     # Coerce into list-like object
     if not hasattr(data_obj, '__len__'):

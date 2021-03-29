@@ -78,42 +78,43 @@ class SlitOverlay(TemplateMixin):
         image_data = self.app.get_viewer("image-viewer").data()
         spec2d_data = self.app.get_viewer("spectrum-2d-viewer").data()
 
-        # 'S_REGION' contains slit information
-        if len(spec2d_data) > 0 and 'S_REGION' in spec2d_data[0].meta:
-            header = spec2d_data[0].meta
-            sky_region = self.jwst_header_to_skyregion(header)
+        # 'S_REGION' contains slit information. Bypass in case no images exist.
+        if len(image_data) > 0:
+            if len(spec2d_data) > 0 and 'S_REGION' in spec2d_data[0].meta:
+                header = spec2d_data[0].meta
+                sky_region = self.jwst_header_to_skyregion(header)
 
-            # Use wcs of image viewer to scale slit dimensions correctly
-            wcs_image = WCS(image_data[0].meta)
-            pixel_region = sky_region.to_pixel(wcs_image)
+                # Use wcs of image viewer to scale slit dimensions correctly
+                wcs_image = WCS(image_data[0].meta)
+                pixel_region = sky_region.to_pixel(wcs_image)
 
-            # Create polygon region from the pixel region and set vertices
-            pix_rec = pixel_region.to_polygon()
+                # Create polygon region from the pixel region and set vertices
+                pix_rec = pixel_region.to_polygon()
 
-            x_coords = pix_rec.vertices.x
-            y_coords = pix_rec.vertices.y
+                x_coords = pix_rec.vertices.x
+                y_coords = pix_rec.vertices.y
 
-            fig_image = self.app.get_viewer("image-viewer").figure
+                fig_image = self.app.get_viewer("image-viewer").figure
 
-            if self.app.get_viewer("image-viewer").toolbar.active_tool is not None:
-                self.app.get_viewer("image-viewer").toolbar.active_tool = None
+                if self.app.get_viewer("image-viewer").toolbar.active_tool is not None:
+                    self.app.get_viewer("image-viewer").toolbar.active_tool = None
 
-            # Create LinearScale that is the same size as the image viewer
-            scales = {'x': fig_image.interaction.x_scale, 'y': fig_image.interaction.y_scale}
+                # Create LinearScale that is the same size as the image viewer
+                scales = {'x': fig_image.interaction.x_scale, 'y': fig_image.interaction.y_scale}
 
-            # Create slit
-            patch2 = bqplot.Lines(x=x_coords, y=y_coords, scales=scales,
-                                  fill='none', colors=["red"], stroke_width=2,
-                                  close_path=True)
+                # Create slit
+                patch2 = bqplot.Lines(x=x_coords, y=y_coords, scales=scales,
+                                      fill='none', colors=["red"], stroke_width=2,
+                                      close_path=True)
 
-            # Visualize slit on the figure
-            fig_image.marks = fig_image.marks + [patch2]
+                # Visualize slit on the figure
+                fig_image.marks = fig_image.marks + [patch2]
 
-        else:
-            snackbar_message = SnackbarMessage(
-                "\'S_REGION\' not found in Spectrum 2D meta attribute",
-                color="error",
-                sender=self)
+            else:
+                snackbar_message = SnackbarMessage(
+                    "\'S_REGION\' not found in Spectrum 2D meta attribute",
+                    color="error",
+                    sender=self)
 
         if snackbar_message:
             self.hub.broadcast(snackbar_message)
