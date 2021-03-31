@@ -1,13 +1,23 @@
 Known Issues
 ============
 
-In some conda environments, install fails due to `scikit-image`
----------------------------------------------------------------
+On MacOS versions 10.13 and older, install fails due to `scikit-image`
+----------------------------------------------------------------------
 
-This can be fixed by running::
+This can be fixed by reinstalling scikit-image::
 
     pip uninstall scikit-image
     conda install scikit-image
+
+The reason for this issue is that prebuilt binaries for `scikit-image` don't
+work on Mac versions of 10.13 or older and conda installs an older
+version of scikit-image that works with those versions.
+Another way to get the up-to-date `scikit-image` version is::
+
+    pip install -U --no-binary scikit-image scikit-image.
+
+Although this solution takes much longer (~5 minutes) to install than the
+first solution.
 
 On some platforms, install fails due to `vispy`
 -----------------------------------------------
