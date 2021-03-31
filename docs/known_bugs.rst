@@ -41,18 +41,6 @@ Collapse Plugin spectral bounds don't match selected region
 Spectral bounds are off in the plugin compared to the spectrum viewer.
 
 
-Specviz Unit Conversion with subset selected
---------------------------------------------
-
-Trying to convert units with a subset selected in the spectrum viewer results
-in error messages, but works when there is no subset selected.
-
-The bug doesn't happen when a subset is selected before the first conversion,
-but does happen when a subset is selected after the first conversion and a
-second conversion is applied. It doesn't happen when no subset is selected
-and successive conversions are applied.
-
-
 Ghost subsets and models in spectrum viewer
 -------------------------------------------
 
@@ -70,14 +58,6 @@ the region bounds are correct. However, applying Collapse again, it errors out a
 the image viewer that contained the intial collapse goes blank.
 
 
-Flashing display when data is added or removed too quickly
-----------------------------------------------------------
-
-If data addition/removal is done too quickly, the front-end can get "desynced" from
-the kernel. The stopgap solution for this is to just restart the kernel or restart
-jupyter notebook entirely if the bug persists.
-
-
 Cubeviz cube viewer colormap printed out
 ----------------------------------------
 
@@ -92,14 +72,6 @@ In order to see the full Cubeviz app in a Jupyter notebook, one can click on
 the side of the cell output to collapse or expand the scrollable window. This
 has the unintended consequence of changing the contrast of the image displayed
 in the Cubeviz cube viewer.
-
-
-Gaussian smooth crashes after selecting smoothed data in spectrum viewer
-------------------------------------------------------------------------
-
-Attempting to apply the Gaussian Smooth functionality on a spectrum that is
-itself the result of a previous application of Gaussian Smooth, results in
-an error dump.
 
 
 Reporting a bug
