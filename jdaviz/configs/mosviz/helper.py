@@ -252,7 +252,7 @@ class MosViz(ConfigHelper):
 
     def to_csv(self, filename="MOS_data.csv", selected=False, overwrite=False):
         """
-        Creates a csv file with the contects of the MOS table viewer
+        Creates a csv file with the contents of the MOS table viewer
 
         Parameters
         ----------
