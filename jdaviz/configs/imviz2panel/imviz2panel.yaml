@@ -19,8 +19,8 @@ viewer_area:
       - container: row
         viewers:
           - name: Image
-            plot: cubeviz-image-viewer
+            plot: imviz-image-viewer
             reference: viewer-1
           - name: Image
-            plot: cubeviz-image-viewer
+            plot: imviz-image-viewer
             reference: viewer-2
