@@ -102,12 +102,12 @@ def test_get_valid_format(create_fake_fits, name, expconf):
 def test_list_configurations():
     """ test correct configurations are listed """
     configs = list_configurations()
-    assert set(configs).issubset({'default', 'cubeviz', 'specviz', 'mosviz', 'specviz2d'})
+    assert set(configs).issubset({'default', 'cubeviz', 'specviz', 'mosviz', 'imviz', 'imviz2panel', 'specviz2d'})
 
 
 @pytest.mark.parametrize('name, expconf, expstat',
                          [('MaNGA cube', 'cubeviz', 'Success: Valid Format'),
-                          ('MaNGA rss', 'imviz', 'Error: Config imviz not a valid configuration.'),
+                          ('MaNGA rss', 'imviz', 'Success: Valid Format'),
                           ('generic 1d', 'specviz', 'Error: Cannot determine format of '
                                                     'the file to load.')])
 def test_identify_data(create_fake_fits, name, expconf, expstat):
