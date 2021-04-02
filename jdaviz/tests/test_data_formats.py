@@ -102,7 +102,8 @@ def test_get_valid_format(create_fake_fits, name, expconf):
 def test_list_configurations():
     """ test correct configurations are listed """
     configs = list_configurations()
-    assert set(configs).issubset({'default', 'cubeviz', 'specviz', 'mosviz', 'imviz', 'imviz2panel', 'specviz2d'})
+    assert set(configs).issubset({'default', 'cubeviz', 'specviz', 'mosviz',
+                                  'imviz', 'imviz2panel', 'specviz2d'})
 
 
 @pytest.mark.parametrize('name, expconf, expstat',
