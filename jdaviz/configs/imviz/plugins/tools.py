@@ -35,4 +35,3 @@ class BqplotMatchWCS(InteractCheckableTool):
                     viewer.state.x_max = x + dx / 2
                     viewer.state.y_min = y - dy / 2
                     viewer.state.y_max = y + dy / 2
-

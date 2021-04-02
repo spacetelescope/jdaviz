@@ -19,7 +19,8 @@ class ImVizImageView(BqplotImageView):
 
         super().__init__(*args, **kwargs)
 
-        self.label_mouseover = Label(x=[0.05], y=[0.05], text=[''], default_size=12, colors=['orange'])
+        self.label_mouseover = Label(x=[0.05], y=[0.05], text=[''],
+                                     default_size=12, colors=['orange'])
         self.figure.marks = self.figure.marks + [self.label_mouseover]
 
         self.add_event_callback(self.on_mouse_or_key_event)
@@ -50,7 +51,7 @@ class ImVizImageView(BqplotImageView):
             if x > -0.5 and y > -0.5 and x < image.shape[1] and y < image.shape[0]:
                 value = image.get_data(image.main_components[0])[int(round(y)), int(round(x))]
                 overlay += f' data={value:.2g}'
-            
+
             self.label_mouseover.text = [overlay]
 
         elif data['event'] == 'mouseleave' or data['event'] == 'mouseenter':
@@ -67,7 +68,8 @@ class ImVizImageView(BqplotImageView):
                 # If only one layer is visible, pick the next one to be visible,
                 # otherwise start from the last visible one.
 
-                visible = [ilayer for ilayer, layer in enumerate(self.state.layers) if layer.visible]
+                visible = [ilayer for ilayer, layer in
+                           enumerate(self.state.layers) if layer.visible]
 
                 if len(visible) > 0:
                     next_layer = (visible[-1] + 1) % len(self.state.layers)
