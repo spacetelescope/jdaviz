@@ -108,9 +108,9 @@ class MosViz(ConfigHelper):
             can be a string file path.
 
         images : list or str
-            A list of spectra as translatable container objects (e.g.
+            A list of images as translatable container objects (e.g.
             ``CCDData``) that can be read by glue-jupyter. Alternatively,
-            can be a string file path.
+            can be a string file path. If None, no images are displayed.
 
         spectra_1d_label : str or list
             String representing the label for the data item loaded via
