@@ -23,7 +23,7 @@ class ImVizImageView(BqplotImageView):
                                      default_size=12, colors=['orange'])
         self.figure.marks = self.figure.marks + [self.label_mouseover]
 
-        self.add_event_callback(self.on_mouse_or_key_event)
+        self.add_event_callback(self.on_mouse_or_key_event, events=['mousemove', 'keydown'])
 
         self.state.show_axes = False
 

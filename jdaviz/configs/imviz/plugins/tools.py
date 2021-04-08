@@ -18,7 +18,7 @@ class BqplotMatchWCS(InteractCheckableTool):
         super().__init__(viewer, **kwargs)
 
     def activate(self):
-        self.viewer.add_event_callback(self.on_mouse_or_key_event)
+        self.viewer.add_event_callback(self.on_mouse_or_key_event, events=['click'])
 
     def deactivate(self):
         self.viewer.remove_event_callback(self.on_mouse_or_key_event)
