@@ -12,13 +12,13 @@
     </v-app-bar>
 
     <v-content
-      :style="checkNotebookContext() ? 'height: ' + state.settings.context.notebook.max_height + '; border: solid 1px #e5e5e5;' : ''"
+      :style="checkNotebookContext() ? 'height: ' + state.settings.context.notebook.max_height + '; border: solid 1px #e5e5e5;' : 'max-height: calc(100% - 48px)'"
     >
       <v-container class="fill-height pa-0" fluid>
         <splitpanes @resize="relayout">
           <pane size="75">
             <golden-layout
-              style="height: 100%"
+              style="height: 100%;"
               :has-headers="state.settings.visible.tab_headers"
             >
               <gl-row :closable="false">
