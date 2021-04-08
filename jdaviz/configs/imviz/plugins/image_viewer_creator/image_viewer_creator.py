@@ -2,7 +2,7 @@ from traitlets import List
 
 from jdaviz.core.events import NewViewerMessage
 from jdaviz.core.template_mixin import TemplateMixin
-from jdaviz.core.registries import tool_registry, viewer_registry
+from jdaviz.core.registries import tool_registry
 from jdaviz.configs.imviz.plugins.viewers import ImVizImageView
 from jdaviz.utils import load_template
 
