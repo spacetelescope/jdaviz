@@ -18,7 +18,7 @@
         <splitpanes @resize="relayout">
           <pane size="75">
             <golden-layout
-              :style="checkNotebookContext() ? 'height: 100%;' : 'height: calc(100vh - 48px)'"
+              style="height: 100%"
               :has-headers="state.settings.visible.tab_headers"
             >
               <gl-row :closable="false">
