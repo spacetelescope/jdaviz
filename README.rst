@@ -33,13 +33,14 @@ NIRSpec), and includes viewers for 1D and 2D spectra as well as
 contextual information like on-sky views of the spectrograph slit.
 **Cubeviz** provides a view of spectroscopic data cubes (like those to be
 produced by JWST MIRI), along with 1D spectra extracted from the cube.
+**Imviz** provides visualization and quick-look analysis for 2D astronomical
+images.
 
 
 Installing
 ----------
 For details on installing and using JDAViz, see the
 `Jdaviz documentation <https://jdaviz.readthedocs.io/en/latest/>`_.
-
 
 
 License

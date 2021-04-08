@@ -5,11 +5,11 @@ from bqplot import Label
 
 from jdaviz.core.registries import viewer_registry
 
-__all__ = ['ImVizImageView']
+__all__ = ['ImvizImageView']
 
 
-@viewer_registry("imviz-image-viewer", label="Image 2D (ImViz)")
-class ImVizImageView(BqplotImageView):
+@viewer_registry("imviz-image-viewer", label="Image 2D (Imviz)")
+class ImvizImageView(BqplotImageView):
 
     tools = ['bqplot:panzoom', 'bqplot:rectangle', 'bqplot:circle', 'bqplot:matchwcs']
 

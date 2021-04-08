@@ -1,6 +1,6 @@
 from jdaviz.core.helpers import ConfigHelper
 
 
-class ImViz(ConfigHelper):
-    """ImViz Helper class"""
+class Imviz(ConfigHelper):
+    """Imviz Helper class"""
     _default_configuration = 'imviz'

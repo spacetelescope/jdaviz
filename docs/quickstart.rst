@@ -40,4 +40,4 @@ or simply start a new Jupyter notebook and run the following in a cell::
     app
 
 To learn more about the various ``jdaviz`` application configurations and loading data, see the :ref:`cubeviz`,
-:ref:`specviz`, or :ref:`mosviz` tools.
+:ref:`specviz`, :ref:`mosviz`, or :ref:`imviz` tools.
