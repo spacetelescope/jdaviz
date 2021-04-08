@@ -874,6 +874,9 @@ class Application(VuetifyTemplate, HubListener):
         viewer_id, item_id, checked = event['id'], event['item_id'], event['checked']
         viewer_item = self._viewer_item_by_id(viewer_id)
 
+        if viewer_item is None:
+            raise ValueError(f'viewer {viewer_id} not found')
+
         if checked:
             selected_items = [*viewer_item['selected_data_items'], item_id]
         else:
