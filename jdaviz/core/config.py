@@ -41,8 +41,6 @@ def read_configuration(path=None):
         path = default_path / "specviz2d" / "specviz2d.yaml"
     elif path == 'imviz':
         path = default_path / "imviz" / "imviz.yaml"
-    elif path == 'imviz2panel':
-        path = default_path / "imviz2panel" / "imviz2panel.yaml"
     elif not os.path.isfile(path):
         raise ValueError("Configuration must be path to a .yaml file.")
 

@@ -13,4 +13,3 @@ from jdaviz.configs.specviz2d import Specviz2d  # noqa
 from jdaviz.configs.mosviz import MosViz  # noqa
 from jdaviz.configs.cubeviz import CubeViz  # noqa
 from jdaviz.configs.imviz import ImViz  # noqa
-from jdaviz.configs.imviz2panel import ImVizTwoPanel  # noqa
