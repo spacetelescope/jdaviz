@@ -25,7 +25,12 @@ class ImVizImageView(BqplotImageView):
 
         self.add_event_callback(self.on_mouse_or_key_event)
 
+        self.state.show_axes = False
+
     def on_mouse_or_key_event(self, data):
+
+        if len(self.state.layers) == 0:
+            return
 
         if data['event'] == 'mousemove':
 

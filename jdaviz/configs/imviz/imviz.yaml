@@ -13,6 +13,7 @@ settings:
 toolbar:
   - g-data-tools
   - g-subset-tools
+  - g-image-viewer-creator
 viewer_area:
   - container: col
     children:
