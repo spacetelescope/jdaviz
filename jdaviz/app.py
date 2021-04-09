@@ -745,7 +745,9 @@ class Application(VuetifyTemplate, HubListener):
                         return viewer_item
 
                 if len(stack_item.get('children')) > 0:
-                    return find_viewer_item(stack_item.get('children'))
+                    result = find_viewer_item(stack_item.get('children'))
+                    if result is not None:
+                        return result
 
         viewer_item = find_viewer_item(self.state.stack_items)
 
@@ -871,6 +873,9 @@ class Application(VuetifyTemplate, HubListener):
         """
         viewer_id, item_id, checked = event['id'], event['item_id'], event['checked']
         viewer_item = self._viewer_item_by_id(viewer_id)
+
+        if viewer_item is None:
+            raise ValueError(f'viewer {viewer_id} not found')
 
         if checked:
             selected_items = [*viewer_item['selected_data_items'], item_id]
