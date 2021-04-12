@@ -9,7 +9,6 @@ from jdaviz.core.events import SnackbarMessage
 from jdaviz.configs.specviz import SpecViz
 
 
-
 class MosViz(ConfigHelper):
     """MosViz Helper class"""
 
