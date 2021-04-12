@@ -1,10 +1,12 @@
 import numpy as np
 from pathlib import Path
 
-from jdaviz.core.helpers import ConfigHelper
-from jdaviz.core.events import SnackbarMessage
 from astropy.table import QTable
 import astropy.units as u
+
+from jdaviz.core.helpers import ConfigHelper
+from jdaviz.core.events import SnackbarMessage
+from jdaviz.configs.specviz import SpecViz
 
 
 class MosViz(ConfigHelper):
@@ -282,3 +284,13 @@ class MosViz(ConfigHelper):
         table_df = table_df.drop(labels="Pixel Axis 0 [x]", axis=1)
 
         table_df.to_csv(filename, index_label="Table Index")
+
+    @property
+    def specviz(self):
+        """
+        A specviz helper (`~jdaviz.configs.specviz.SpecViz`) for the Jdaviz
+        application that is wrapped by mosviz
+        """
+        if not hasattr(self, '_specviz'):
+            self._specviz = SpecViz(app=self.app)
+        return self._specviz
