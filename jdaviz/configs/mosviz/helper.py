@@ -289,7 +289,8 @@ class MosViz(ConfigHelper):
     @property
     def specviz(self):
         """
-        A specviz helper for the app this helper wraps
+        A specviz helper (`~jdaviz.configs.specviz.SpecViz`) for the Jdaviz
+        application that is wrapped by mosviz
         """
         if not hasattr(self, '_specviz'):
             self._specviz = SpecViz(app=self.app)
