@@ -10,6 +10,9 @@ with 2d spectra populating the top right viewer, and 1d spectra populating the v
     `Display Spectra <https://jdaviz.readthedocs.io/en/latest/specviz/displaying.html#>`_
         Specviz documentation on displaying spectra.
 
+The functionality of the `Specviz` API can be accessed in Moseviz via
+the `specviz` attribute of the `Mosviz` class, e.g. `mosviz.specviz.get_spectra()`.`
+
 Pan/Zoom
 ========
 
