@@ -131,8 +131,8 @@ class LineAnalysis(TemplateMixin):
                 if self._spectrum1d.mask is None:
                     spec_region = SpectralRegion(spectral_axis[0], spectral_axis[-1])
                 else:
-                    spec_region = self._spectrum1d.spectral_axis[np.where(self._spectrum1d.mask is
-                                                                          False)]
+                    spec_region = self._spectrum1d.spectral_axis[np.where(
+                                                                 self._spectrum1d.mask == 0)]
                     spec_region = SpectralRegion(spec_region[0], spec_region[-1])
                 temp_result = FUNCTIONS[function](self._spectrum1d, spec_region)
             else:

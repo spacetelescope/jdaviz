@@ -477,6 +477,9 @@ class Application(VuetifyTemplate, HubListener):
                                          cls=None)
         regions = {}
 
+        if data_label is not None:
+            data = {data_label: data}
+
         for key, value in data.items():
             if isinstance(value, Subset):
                 # Range selection on a profile is currently not supported in
