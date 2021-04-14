@@ -22,17 +22,11 @@ from specutils import Spectrum1D
 
 from jdaviz.core.config import list_configurations
 from jdaviz.core.events import DataPromptMessage
-import jdaviz.core.data_identifiers as dataid
-from jdaviz.core.config import list_configurations
 
 # create a default file format to configuration mapping
 default_mapping = {'JWST x1d': 'specviz', 'JWST s2d': 'specviz2d',
                    'JWST s3d': 'cubeviz', 'MaNGA cube': 'cubeviz',
                    'MaNGA rss': 'imviz'}
-
-# create a default file format to configuration mapping
-default_mapping = {'JWST x1d': 'specviz', 'JWST s2d': 'imviz', 'JWST s3d': 'cubeviz',
-                   'MaNGA cube': 'cubeviz'}
 
 formats_table = astropy.io.registry.get_formats(data_class=Spectrum1D, readwrite='Read')
 
@@ -151,7 +145,14 @@ def prompt_data(app, filename):
     current_config = app.get_configuration().get('settings').get('configuration', 'default')
 
     # get a valid file format, config, and status
-    valid_format, config, status = identify_data(filename, current=current_config)
+    try:
+        valid_format, config = identify_data(filename, current=current_config)
+    except ValueError as err:
+        status = f'Error: {err}'
+        valid_format = ''
+        config = ''
+    else:
+        status = 'Success: Valid Format'
 
     # broadcast a message
     msg = DataPromptMessage(status=status, data_format=valid_format, config=config,
