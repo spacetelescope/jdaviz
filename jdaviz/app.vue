@@ -1,5 +1,5 @@
 <template>
-  <v-app id="web-app">
+  <v-app id="web-app" class="jdaviz">
     <v-app-bar color="primary" dark dense flat app absolute clipped-right>
       <jupyter-widget :widget="item.widget" v-for="item in state.tool_items" :key="item.name"></jupyter-widget>
       <v-spacer></v-spacer>
