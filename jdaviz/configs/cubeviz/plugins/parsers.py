@@ -31,7 +31,7 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
     data_type : str, {'flux', 'mask', 'uncert'}
         The data type used to explicitly differentiate parsed data.
     data_label : str, optional
-        The label applicad to the glue data component.
+        The label to be applied to the Glue data component.
     """
     if data_type is not None and data_type.lower() not in ['flux', 'mask', 'uncert']:
         msg = "Data type must be one of 'flux', 'mask', or 'uncertainty'."
@@ -49,7 +49,6 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
         file_name = os.path.basename(file_obj)
 
         with fits.open(file_obj) as hdulist:
-            hdulist = fits.open(file_obj)
             _parse_hdu(app, hdulist, file_name=data_label or file_name)
 
     # If the data types are custom data objects, use explicit parsers. Note
