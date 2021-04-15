@@ -38,6 +38,7 @@ Using Jdaviz
   specviz/index.rst
   cubeviz/index.rst
   mosviz/index.rst
+  imviz/index.rst
 
 Reference/API
 =============
