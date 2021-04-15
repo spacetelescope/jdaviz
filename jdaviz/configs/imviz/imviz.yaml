@@ -6,7 +6,7 @@ settings:
     menu_bar: false
     toolbar: true
     tray: true
-    tab_headers: false
+    tab_headers: true
   context:
     notebook:
       max_height: 600px
