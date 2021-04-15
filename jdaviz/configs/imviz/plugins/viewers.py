@@ -1,3 +1,5 @@
+from astropy.wcs.wcsapi import BaseHighLevelWCS
+
 from glue.core import BaseData
 from glue_jupyter.bqplot.image import BqplotImageView
 
@@ -46,14 +48,16 @@ class ImvizImageView(BqplotImageView):
 
             image = self.state.layers[0].layer
 
-            # Convert these to a SkyCoord via WCS - note that for other datasets
-            # we aren't actually guaranteed to get a SkyCoord out, just for images
-            # with valid celestial WCS
-            celestial_coordinates = image.coords.pixel_to_world(x, y).icrs.to_string('hmsdms')
-            overlay += f' ICRS={celestial_coordinates}'
+            if isinstance(image.coords, BaseHighLevelWCS):
+
+                # Convert these to a SkyCoord via WCS - note that for other datasets
+                # we aren't actually guaranteed to get a SkyCoord out, just for images
+                # with valid celestial WCS
+                celestial_coordinates = image.coords.pixel_to_world(x, y).icrs.to_string('hmsdms')
+                overlay += f' ICRS={celestial_coordinates}'
 
             # Extract data values at this position
-            if x > -0.5 and y > -0.5 and x < image.shape[1] and y < image.shape[0]:
+            if x > -0.5 and y > -0.5 and x < image.shape[1] - 0.5 and y < image.shape[0] - 0.5:
                 value = image.get_data(image.main_components[0])[int(round(y)), int(round(x))]
                 overlay += f' data={value:.2g}'
 

@@ -22,7 +22,6 @@ from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
 from glue.core.state_objects import State
 from glue.core.subset import Subset
-from glue.plugins.wcs_autolinking.wcs_autolinking import wcs_autolink, WCSLink
 from glue_jupyter.app import JupyterApplication
 from glue_jupyter.state_traitlets_helpers import GlueState
 from ipyvuetify import VuetifyTemplate
@@ -308,24 +307,6 @@ class Application(VuetifyTemplate, HubListener):
                     return
             else:
                 self._application_handler.load_data(file_obj)
-
-            # FIXME: for now we automatically add WCS links between all datasets. We might
-            # not want to do this by default for all applications, and we probably need a
-            # way for the user to view/add/remove links.
-
-            # Find all possible WCS links in the data collection
-            wcs_links = wcs_autolink(self.data_collection)
-
-            # Add only those links that don't already exist
-            for link in wcs_links:
-                exists = False
-                for existing_link in self.data_collection.external_links:
-                    if isinstance(existing_link, WCSLink):
-                        if (link.data1 is existing_link.data1
-                                and link.data2 is existing_link.data2):
-                            exists = True
-                if not exists:
-                    self.data_collection.add_link(link)
 
             # Send out a toast message
             snackbar_message = SnackbarMessage("Data successfully loaded.",
