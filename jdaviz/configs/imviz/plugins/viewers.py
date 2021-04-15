@@ -53,8 +53,11 @@ class ImvizImageView(BqplotImageView):
                 # Convert these to a SkyCoord via WCS - note that for other datasets
                 # we aren't actually guaranteed to get a SkyCoord out, just for images
                 # with valid celestial WCS
-                celestial_coordinates = image.coords.pixel_to_world(x, y).icrs.to_string('hmsdms')
-                overlay += f' ICRS={celestial_coordinates}'
+                try:
+                    celestial_coordinates = image.coords.pixel_to_world(x, y).icrs.to_string('hmsdms')  # noqa: E501
+                    overlay += f' ICRS={celestial_coordinates}'
+                except Exception:
+                    overlay += ' ICRS=unknown'
 
             # Extract data values at this position
             if x > -0.5 and y > -0.5 and x < image.shape[1] - 0.5 and y < image.shape[0] - 0.5:

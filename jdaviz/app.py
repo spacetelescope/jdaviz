@@ -260,7 +260,7 @@ class Application(VuetifyTemplate, HubListener):
                 self.data_collection.add_link(LinkSame(wc_old[0], wc_new[0]))
                 break
 
-    def load_data(self, file_obj, parser_reference=None, **kwargs):
+    def load_data(self, file_obj, parser_reference=None, skip_checks=False, **kwargs):
         """
         Provided a path to a data file, open and parse the data into the
         `~glue.core.DataCollection` for this session. This also attempts to
@@ -271,13 +271,22 @@ class Application(VuetifyTemplate, HubListener):
         ----------
         file_obj : str or file-like
             File object for the data to be loaded.
+
+        parser_reference
+
+        skip_checks : bool
+            If `True`, do not try to vet the given ``file_obj`` and rely on
+            lower level parser to handle invalid input.
+
+        kwargs : dict
+
         """
         self.loading = True
         try:
             try:
                 # Properly form path and check if a valid file
                 file_obj = pathlib.Path(file_obj)
-                if not file_obj.exists():
+                if not skip_checks and not file_obj.exists():
                     msg_text = "Error: File {} does not exist".format(file_obj)
                     snackbar_message = SnackbarMessage(msg_text, sender=self,
                                                        color='error')
