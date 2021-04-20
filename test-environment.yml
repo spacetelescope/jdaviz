@@ -1,0 +1,10 @@
+name: jdaviz-test
+channels:
+    - conda-forge
+dependencies:
+    - pip
+    - python
+    - yarn
+    - nodejs=12
+    - jupyterlab=3.0.3  # to build the lab federated bundle
+    - jupyter-packaging # to build the wheel
