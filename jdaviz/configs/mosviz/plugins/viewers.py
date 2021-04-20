@@ -28,7 +28,11 @@ class MOSVizProfileView(BqplotProfileView):
         data = self.data()[0]
         # Set axes labels for the spectrum viewer
 
-        spectral_axis_unit_type = data.spectral_axis.unit.physical_type.title()
+        try:
+            spectral_axis_unit_type = data.spectral_axis.unit.physical_type.title()
+        except:
+            # physical_type changed from str to class in astropy 4.3
+            spectral_axis_unit_type = str(data.spectral_axis.unit.physical_type).title()
         # flux_unit_type = data.flux.unit.physical_type.title()
         flux_unit_type = "Flux density"
 
