@@ -10,7 +10,13 @@
         </v-btn>
       </v-toolbar-items>
     </v-app-bar>
-
+    <v-content>
+      <v-row color="primary">
+        <v-col v-for="item in state.info_items" :key="item.name">
+          <jupyter-widget :widget="item.widget"></jupyter-widget>
+        </v-col>
+      </v-row>
+    </v-content>
     <v-content
       :style="checkNotebookContext() ? 'height: ' + state.settings.context.notebook.max_height + '; border: solid 1px #e5e5e5;' : 'max-height: calc(100% - 48px)'"
     >

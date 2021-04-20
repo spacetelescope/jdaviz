@@ -31,7 +31,7 @@ from .core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
                           SnackbarMessage, RemoveDataMessage,
                           AddDataToViewerMessage, RemoveDataFromViewerMessage)
 from .core.registries import (tool_registry, tray_registry, viewer_registry,
-                              data_parser_registry)
+                              data_parser_registry, info_registry)
 from .utils import load_template
 
 __all__ = ['Application']
@@ -94,6 +94,9 @@ class ApplicationState(State):
 
     tray_items = ListCallbackProperty(
         docstring="List of plugins displayed in the sidebar tray area.")
+
+    info_items = ListCallbackProperty(
+        docstring="List of plugins displayed in the info bar.")
 
     stack_items = ListCallbackProperty(
         docstring="Nested collection of viewers constructed to support the "
@@ -1200,10 +1203,21 @@ class Application(VuetifyTemplate, HubListener):
                 'widget': "IPY_MODEL_" + tray_item_instance.model_id
             })
 
+        for name in config.get('info', []):
+            info = info_registry.members.get(name)(app=self)
+
+            self.state.info_items.append({
+                'name': name,
+                'widget': "IPY_MODEL_" + info.model_id
+            })
+
+            self._application_handler._tools[name] = info
+
     def _reset_state(self):
         """ Resets the application state """
         self.state = ApplicationState()
         self.state.add_callback('stack_items', self.vue_relayout)
+        self._application_handler._tools = {}
 
     def get_configuration(self, path=None, section=None):
         """ Returns a copy of the application configuration

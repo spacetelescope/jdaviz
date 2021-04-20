@@ -14,6 +14,8 @@ toolbar:
   - g-data-tools
   - g-subset-tools
   - g-image-viewer-creator
+info:
+  - g-coords-info
 viewer_area:
   - container: col
     children:

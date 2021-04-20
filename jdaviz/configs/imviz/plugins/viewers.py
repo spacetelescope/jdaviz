@@ -21,9 +21,7 @@ class ImvizImageView(BqplotImageView):
 
         super().__init__(*args, **kwargs)
 
-        self.label_mouseover = Label(x=[0.05], y=[0.05], text=[''],
-                                     default_size=12, colors=['orange'])
-        self.figure.marks = self.figure.marks + [self.label_mouseover]
+        self.label_mouseover = None
 
         self.add_event_callback(self.on_mouse_or_key_event, events=['mousemove', 'keydown'])
 
@@ -33,6 +31,12 @@ class ImvizImageView(BqplotImageView):
 
         if len(self.state.layers) == 0:
             return
+
+        if self.label_mouseover is None:
+            if 'g-coords-info' in self.session.application._tools:
+                self.label_mouseover = self.session.application._tools['g-coords-info']
+            else:
+                return
 
         if data['event'] == 'mousemove':
 
@@ -61,7 +65,7 @@ class ImvizImageView(BqplotImageView):
                 value = image.get_data(image.main_components[0])[int(round(y)), int(round(x))]
                 overlay += f' data={value:.2g}'
 
-            self.label_mouseover.text = [overlay]
+            self.label_mouseover.text = overlay
 
         elif data['event'] == 'mouseleave' or data['event'] == 'mouseenter':
 

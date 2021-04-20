@@ -6,7 +6,8 @@ from ipywidgets import Widget
 
 __all__ = ['viewer_registry', 'tray_registry', 'tool_registry',
            'data_parser_registry', 'ViewerRegistry', 'TrayRegistry',
-           'ToolRegistry', 'MenuRegistry', 'DataParserRegistry']
+           'ToolRegistry', 'MenuRegistry', 'DataParserRegistry',
+           'info_registry', 'InfoRegistry']
 
 
 def convert(name):
@@ -163,6 +164,25 @@ class MenuRegistry(UniqueDictRegistry):
         return decorator
 
 
+class InfoRegistry(UniqueDictRegistry):
+    """
+    Registry containing references to plugins which will populate the
+    info bar.
+    """
+    def __call__(self, name=None):
+        def decorator(cls):
+            # The class must inherit from `Widget` in order to be
+            # ingestible by the component initialization.
+            if not issubclass(cls, Widget):
+                raise ValueError(
+                    f"Unrecognized superclass for `{cls.__name__}`. All "
+                    f"registered tools must inherit from "
+                    f"`ipywidgets.Widget`.")
+
+            self.add(name, cls)
+            return cls
+        return decorator
+
 class DataParserRegistry(UniqueDictRegistry):
     """
     Registry containing parsing functions for attempting to auto-populate the
@@ -179,4 +199,5 @@ viewer_registry = ViewerRegistry()
 tray_registry = TrayRegistry()
 tool_registry = ToolRegistry()
 menu_registry = MenuRegistry()
+info_registry = InfoRegistry()
 data_parser_registry = DataParserRegistry()
