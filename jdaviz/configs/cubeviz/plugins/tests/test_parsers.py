@@ -1,31 +1,20 @@
-import os
-
-import astropy.units as u
 import numpy as np
 import pytest
+from astropy import units as u
 from astropy.io import fits
-from astropy.nddata import StdDevUncertainty
 from astropy.wcs import WCS
-from spectral_cube import SpectralCube
 from specutils import Spectrum1D
-
-from jdaviz.app import Application
-
-
-@pytest.fixture
-def cubeviz_app():
-    return Application(configuration='cubeviz')
 
 
 @pytest.fixture
 def image_hdu_obj():
-    flux_hdu = fits.ImageHDU(np.random.sample((10, 10, 10)))
+    flux_hdu = fits.ImageHDU(np.ones((10, 10, 10)))
     flux_hdu.name = 'FLUX'
 
     mask_hdu = fits.ImageHDU(np.zeros((10, 10, 10)))
     mask_hdu.name = 'MASK'
 
-    uncert_hdu = fits.ImageHDU(np.random.sample((10, 10, 10)))
+    uncert_hdu = fits.ImageHDU(np.ones((10, 10, 10)))
     uncert_hdu.name = 'ERR'
 
     wcs = WCS(header={
@@ -41,7 +30,7 @@ def image_hdu_obj():
     })
 
     flux_hdu.header.update(wcs.to_header())
-    flux_hdu.header['BUNIT'] = '1E-17 erg/s/cm^2/Angstrom/spaxel'
+    flux_hdu.header['BUNIT'] = '1E-17 erg*s^-1*cm^-2*Angstrom^-1*pix^-1'
 
     mask_hdu.header.update(wcs.to_header())
     uncert_hdu.header.update(wcs.to_header())
@@ -49,35 +38,43 @@ def image_hdu_obj():
     return fits.HDUList([fits.PrimaryHDU(), flux_hdu, mask_hdu, uncert_hdu])
 
 
-@pytest.mark.filterwarnings('ignore:.* contains multiple slashes')
+@pytest.mark.filterwarnings('ignore')
 def test_fits_image_hdu_parse(image_hdu_obj, cubeviz_app):
     cubeviz_app.load_data(image_hdu_obj)
 
-    assert len(cubeviz_app.data_collection) == 3
-    assert cubeviz_app.data_collection[0].label.endswith('[FLUX]')
+    assert len(cubeviz_app.app.data_collection) == 3
+    assert cubeviz_app.app.data_collection[0].label.endswith('[FLUX]')
 
 
-@pytest.mark.filterwarnings('ignore:.* contains multiple slashes')
-def test_spectral_cube_parse(tmpdir, image_hdu_obj, cubeviz_app):
+@pytest.mark.filterwarnings('ignore')
+def test_fits_image_hdu_parse_from_file(tmpdir, image_hdu_obj, cubeviz_app):
     f = tmpdir.join("test_fits_image.fits")
-    path = os.path.join(f.dirname, f.basename)
-    image_hdu_obj.writeto(path)
+    path = f.strpath
+    image_hdu_obj.writeto(path, overwrite=True)
+    cubeviz_app.load_data(path)
 
-    sc = SpectralCube.read(path, hdu=1)
+    assert len(cubeviz_app.app.data_collection) == 3
+    assert cubeviz_app.app.data_collection[0].label.endswith('[FLUX]')
 
+
+@pytest.mark.filterwarnings('ignore')
+def test_spectrum3d_parse(image_hdu_obj, cubeviz_app):
+    flux = image_hdu_obj[1].data << u.Unit(image_hdu_obj[1].header['BUNIT'])
+    wcs = WCS(image_hdu_obj[1].header, image_hdu_obj)
+    sc = Spectrum1D(flux=flux, wcs=wcs)
     cubeviz_app.load_data(sc)
 
-    assert len(cubeviz_app.data_collection) == 1
-    assert cubeviz_app.data_collection[0].label.endswith('[FLUX]')
+    assert len(cubeviz_app.app.data_collection) == 1
+    assert cubeviz_app.app.data_collection[0].label.endswith('[FLUX]')
 
 
-def test_spectrum1d_parse(image_hdu_obj, cubeviz_app):
-    spec = Spectrum1D(flux=np.random.sample(10) * u.Jy,
-                      spectral_axis=np.arange(10) * u.nm,
-                      uncertainty=StdDevUncertainty(
-                          np.random.sample(10) * u.Jy))
+def test_spectrum1d_parse(spectrum1d, cubeviz_app):
+    cubeviz_app.load_data(spectrum1d)
 
-    cubeviz_app.load_data(spec)
+    assert len(cubeviz_app.app.data_collection) == 1
+    assert cubeviz_app.app.data_collection[0].label.endswith('[FLUX]')
 
-    assert len(cubeviz_app.data_collection) == 1
-    assert cubeviz_app.data_collection[0].label.endswith('[FLUX]')
+
+def test_numpy_cube(cubeviz_app):
+    with pytest.raises(NotImplementedError, match='Unsupported data format'):
+        cubeviz_app.load_data(np.ones(27).reshape((3, 3, 3)))
