@@ -4,8 +4,10 @@ import os
 import numpy as np
 from astropy.io import fits
 from spectral_cube import SpectralCube
-from spectral_cube.io.fits import FITSReadError
 from specutils import Spectrum1D
+
+from astropy.wcs import WCS
+from astropy import units as u
 
 from jdaviz.core.registries import data_parser_registry
 
@@ -56,6 +58,8 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
     #  into something glue can understand.
     elif isinstance(file_obj, SpectralCube):
         _parse_spectral_cube(app, file_obj, data_type or 'flux', data_label)
+    elif isinstance(file_obj, Spectrum1D) and len(file_obj.shape) == 3:
+        _parse_spectrum1d_3d(app, file_obj)
     elif isinstance(file_obj, Spectrum1D):
         _parse_spectrum1d(app, file_obj)
 
@@ -67,48 +71,33 @@ def _parse_hdu(app, hdulist, file_name=None):
 
     file_name = file_name or "Unknown HDU object"
 
-    # WCS may only exist in a single extension (in this case, just the flux
-    #  flux extension), so first find and store then wcs information.
-    wcs = None
-
-    for hdu in hdulist:
-        if hdu.data is None or not hdu.is_image:
-            continue
-
-        try:
-            sc = SpectralCube.read(hdu, format='fits')
-        except (ValueError, FITSReadError):
-            continue
-        else:
-            wcs = sc.wcs
-
     # Now loop through and attempt to parse the fits extensions as spectral
     #  cube object. If the wcs fails to parse in any case, use the wcs
     #  information we scraped above.
     for hdu in hdulist:
         data_label = f"{file_name}[{hdu.name}]"
 
-        if hdu.data is None or not hdu.is_image:
+        if hdu.data is None or not hdu.is_image or len(hdu.data.shape) != 3:
             continue
 
-        # This is supposed to fail on attempting to load anything that
-        # isn't cube-shaped. But it's not terribly reliable
+        wcs = WCS(hdu.header)
+
         try:
-            sc = SpectralCube.read(hdu, format='fits')
-        except (ValueError, OSError):
-            # This will fail if the parsing of the wcs does not provide
-            # proper celestial axes
-            try:
-                hdu.header.update(wcs.to_header())
-                sc = SpectralCube.read(hdu)
-            except (ValueError, AttributeError) as e:
-                logging.warning(e)
-                continue
-        except FITSReadError as e:
-            logging.warning(e)
-            continue
+            flux_unit = u.Unit(hdu.header['BUNIT'])
+        except KeyError:
+            logging.warn("No flux units found in hdu, using u.count as a stand-in")
+            flux_unit = u.count
+        finally:
+            flux = hdu.data * flux_unit
 
-        app.add_data(sc, data_label)
+        # flux = np.moveaxis(flux, 1, 2)
+
+        try:
+            sc = Spectrum1D(flux=flux, wcs=wcs)
+            app.data_collection[data_label] = sc
+        except Exception as e:
+            logging.warn(e)
+            continue
 
         # If the data type is some kind of integer, assume it's the mask/dq
         if hdu.data.dtype in (int, np.uint, np.uint32) or \
@@ -122,6 +111,23 @@ def _parse_hdu(app, hdulist, file_name=None):
         if any(x in hdu.name.lower() for x in EXT_TYPES['flux']):
             app.add_data_to_viewer('flux-viewer', data_label)
             app.add_data_to_viewer('spectrum-viewer', data_label)
+
+    # _fix_axes(app)
+
+
+def _fix_axes(app):
+    # Calibrate viewers to work with the updated Spectrum1D that can handle
+    # cubes. This needs to be done because the shape is different from
+    # SpectralCube, which was used previously.
+    # Setting the y and x axes needs to happen in this order to avoid an
+    # error for setting both axes to the same value.
+    app.get_viewer("mask-viewer").viewer_options.y_att_world_selected = 1
+    app.get_viewer("mask-viewer").viewer_options.x_att_world_selected = 0
+    app.get_viewer("uncert-viewer").viewer_options.y_att_world_selected = 1
+    app.get_viewer("uncert-viewer").viewer_options.x_att_world_selected = 0
+    app.get_viewer("flux-viewer").viewer_options.y_att_world_selected = 1
+    app.get_viewer("flux-viewer").viewer_options.x_att_world_selected = 0
+    app.get_viewer("spectrum-viewer").viewer_options.x_att_selected = 5
 
 
 def _parse_spectral_cube(app, file_obj, data_type='flux', data_label=None):
@@ -139,6 +145,36 @@ def _parse_spectral_cube(app, file_obj, data_type='flux', data_label=None):
 
     # TODO: SpectralCube does not store mask information
     # TODO: SpectralCube does not store data quality information
+
+
+def _parse_spectrum1d_3d(app, file_obj):
+    # Load spectrum1d as a cube
+
+    for attr in ["flux", "mask", "uncertainty"]:
+        if attr == "mask":
+            flux = getattr(file_obj, attr) * file_obj.flux.unit
+        elif attr == "uncertainty":
+            flux = getattr(file_obj, attr)
+            flux = u.Quantity(flux.array) * file_obj.flux.unit
+        else:
+            flux = getattr(file_obj, attr)
+
+        flux = np.moveaxis(flux, 1, 0)
+
+        s1d = Spectrum1D(flux=flux, wcs=file_obj.wcs)
+
+        data_label = f"Unknown spectrum object[{attr}]"
+        app.data_collection[data_label] = s1d
+
+        if attr == 'flux':
+            app.add_data_to_viewer('flux-viewer', f"{data_label}")
+            app.add_data_to_viewer('spectrum-viewer', f"{data_label}")
+        elif attr == 'mask':
+            app.add_data_to_viewer('mask-viewer', f"{data_label}")
+        elif attr == 'uncertainty':
+            app.add_data_to_viewer('uncert-viewer', f"{data_label}")
+
+    # _fix_axes(app)
 
 
 def _parse_spectrum1d(app, file_obj):
