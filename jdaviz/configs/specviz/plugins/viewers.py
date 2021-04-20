@@ -429,7 +429,7 @@ class SpecvizProfileView(BqplotProfileView):
 
         try:
             spectral_axis_unit_type = data.spectral_axis.unit.physical_type.title()
-        except:
+        except AttributeError:
             # physical_type changed from str to class in astropy 4.3
             spectral_axis_unit_type = str(data.spectral_axis.unit.physical_type).title()
         # flux_unit_type = data.flux.unit.physical_type.title()
