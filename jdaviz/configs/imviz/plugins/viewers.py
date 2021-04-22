@@ -58,12 +58,12 @@ class ImvizImageView(BqplotImageView):
                 # we aren't actually guaranteed to get a SkyCoord out, just for images
                 # with valid celestial WCS
                 celestial_coordinates = image.coords.pixel_to_world(x, y).icrs.to_string('hmsdms', precision=4, pad=True)
-                overlay += f' ICRS={celestial_coordinates:32s}'
+                overlay += f'   ICRS={celestial_coordinates:32s}'
 
             # Extract data values at this position
             if x > -0.5 and y > -0.5 and x < image.shape[1] - 0.5 and y < image.shape[0] - 0.5:
                 value = image.get_data(image.main_components[0])[int(round(y)), int(round(x))]
-                overlay += f' data={value:10.2g}'
+                overlay += f'   data={value:10.2g}'
 
             self.label_mouseover.text = overlay
 
