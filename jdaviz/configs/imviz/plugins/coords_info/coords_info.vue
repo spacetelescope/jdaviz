@@ -2,6 +2,6 @@
     <div>
         <b>Pixel: </b>{{ pixel }}<br>
         <b>World: </b>{{ world }}<br>
-        <b>Data: </b>{{ data }}
+        <b>Value: </b>{{ value }}
     </div>
 </template>

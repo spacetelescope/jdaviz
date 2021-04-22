@@ -12,4 +12,4 @@ class CoordsInfo(TemplateMixin):
     template = load_template("coords_info.vue", __file__).tag(sync=True)
     pixel = Unicode("").tag(sync=True)
     world = Unicode("").tag(sync=True)
-    data = Unicode("").tag(sync=True)
+    value = Unicode("").tag(sync=True)
