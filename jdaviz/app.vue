@@ -11,9 +11,9 @@
       </v-toolbar-items>
     </v-app-bar>
     <v-content
-      :style="checkNotebookContext() ? 'height: ' + state.settings.context.notebook.max_height + '; border: solid 1px #e5e5e5;' : 'max-height: calc(100% - 48px)'"
+      :style="checkNotebookContext() ? 'height: ' + state.settings.context.notebook.max_height + '; border: solid 1px #e5e5e5;' : `max-height: calc(100% - 48px${state.info_items && state.info_items.length > 0 ? ' - 44px' : ''})`"
     >
-      <v-row color="primary">
+      <v-row class="info-bar">
         <v-col v-for="item in state.info_items" :key="item.name">
           <jupyter-widget :widget="item.widget"></jupyter-widget>
         </v-col>
@@ -193,6 +193,13 @@ div.output_wrapper {
 }
 
 .vuetify-styles .v-expansion-panel-content__wrap {
+  padding: 0px;
+  margin: 0px;
+}
+
+.info-bar {
+  height: 44px;
+  background: #325e74;
   padding: 0px;
   margin: 0px;
 }
