@@ -83,6 +83,7 @@ class ApplicationState(State):
             'tray': True,
             'tab_headers': True,
         },
+        'dense_toolbar': True,
         'context': {
             'notebook': {
                 'max_height': '600px'
@@ -1151,6 +1152,8 @@ class Application(VuetifyTemplate, HubListener):
         self._loaded_configuration = config
 
         self.state.settings.update(config.get('settings'))
+
+        print(dict(self.state.settings))
 
         def compose_viewer_area(viewer_area_items):
             stack_items = []
