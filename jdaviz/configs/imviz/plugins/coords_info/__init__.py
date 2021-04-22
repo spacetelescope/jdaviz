@@ -1,1 +1,1 @@
-from .coords_info import *
+from .coords_info import *  # noqa

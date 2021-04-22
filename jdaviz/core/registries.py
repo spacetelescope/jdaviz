@@ -3,7 +3,6 @@ import re
 from ipyvuetify import VuetifyTemplate
 from ipywidgets import Widget
 
-
 __all__ = ['viewer_registry', 'tray_registry', 'tool_registry',
            'data_parser_registry', 'ViewerRegistry', 'TrayRegistry',
            'ToolRegistry', 'MenuRegistry', 'DataParserRegistry',
@@ -182,6 +181,7 @@ class InfoRegistry(UniqueDictRegistry):
             self.add(name, cls)
             return cls
         return decorator
+
 
 class DataParserRegistry(UniqueDictRegistry):
     """
