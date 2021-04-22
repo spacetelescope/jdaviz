@@ -10,4 +10,4 @@ __all__ = ['CoordsInfo']
 @info_registry('g-coords-info')
 class CoordsInfo(TemplateMixin):
     template = load_template("coordinates_overlay.vue", __file__).tag(sync=True)
-    text = Unicode("Initial coords").tag(sync=True)
+    text = Unicode("").tag(sync=True)

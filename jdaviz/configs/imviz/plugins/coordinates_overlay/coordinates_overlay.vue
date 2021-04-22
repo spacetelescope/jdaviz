@@ -1,3 +1,3 @@
 <template>
-    <span>{{ text }}</span>
+    <span style="color: #ffffff">{{ text }}</span>
 </template>
