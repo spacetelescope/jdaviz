@@ -35,7 +35,6 @@ class ImvizImageView(BqplotImageView):
             if 'g-coords-info' in self.session.application._tools:
                 self.label_mouseover = self.session.application._tools['g-coords-info']
             else:
-                print('tool not found in ', self.session.application._tools)
                 return
 
         if data['event'] == 'mousemove':

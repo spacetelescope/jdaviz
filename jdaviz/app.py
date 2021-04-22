@@ -1153,8 +1153,6 @@ class Application(VuetifyTemplate, HubListener):
 
         self.state.settings.update(config.get('settings'))
 
-        print(dict(self.state.settings))
-
         def compose_viewer_area(viewer_area_items):
             stack_items = []
 
