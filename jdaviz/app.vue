@@ -1,6 +1,6 @@
 <template>
   <v-app id="web-app" class="jdaviz">
-    <v-app-bar color="primary" dark short flat app absolute clipped-right>
+    <v-app-bar color="primary" dark flat app absolute clipped-right>
       <jupyter-widget :widget="item.widget" v-for="item in state.tool_items" :key="item.name"></jupyter-widget>
       <v-spacer></v-spacer>
       <v-toolbar-items>
