@@ -47,7 +47,8 @@ def split_filename_with_fits_ext(filename):
         FITS extension, if given. Examples: ``'SCI'`` or ``('SCI', 1)``
 
     data_label : str
-        Human-readable data label for Glue.
+        Human-readable data label for Glue. Extension info will be added
+        later in the parser.
 
     """
     s = os.path.splitext(filename)
@@ -55,17 +56,15 @@ def split_filename_with_fits_ext(filename):
     if ext_match is None:
         sfx = s[1]
         ext = None
-        label_sfx = ''
     else:
         sfx = ext_match.group(1)
         ext = ext_match.group(2)
-        label_sfx = f'[{ext.upper()}]'
         if ',' in ext:
             ext = ext.split(',')
             ext[1] = int(ext[1])
             ext = tuple(ext)
 
     filepath = f'{s[0]}{sfx}'
-    data_label = f'{os.path.basename(s[0])}{label_sfx}'
+    data_label = os.path.basename(s[0])
 
     return filepath, ext, data_label

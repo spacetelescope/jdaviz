@@ -58,20 +58,20 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
     if isinstance(file_obj, fits.HDUList):
         if 'ASDF' in file_obj:  # JWST ASDF-in-FITS
             if HAS_JWST_ASDF:
-                data = _jwst_to_glue_data(file_obj, ext, data_label)
+                data, data_label = _jwst_to_glue_data(file_obj, ext, data_label)
             else:
                 raise ImportError('jwst package is missing')
 
         elif ext is not None:  # Load just the EXT user wants
             hdu = file_obj[ext]
             _validate_image2d(hdu)
-            data = _hdu_to_glue_data(hdu, data_label)
+            data, data_label = _hdu_to_glue_data(hdu, data_label)
 
         else:  # Load first image extension found
             found = False
             for hdu in file_obj:
                 if _validate_image2d(hdu, raise_error=False):
-                    data = _hdu_to_glue_data(hdu, data_label)
+                    data, data_label = _hdu_to_glue_data(hdu, data_label)
                     found = True
                     break
             if not found:
@@ -80,7 +80,7 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
     elif isinstance(file_obj, (fits.ImageHDU, fits.CompImageHDU, fits.PrimaryHDU)):
         # NOTE: ext is not used here. It only means something if HDUList is given.
         _validate_image2d(file_obj)
-        data = _hdu_to_glue_data(file_obj, data_label)
+        data, data_label = _hdu_to_glue_data(file_obj, data_label)
 
     else:
         raise NotImplementedError(f'Imviz does not support {file_obj}')
@@ -121,6 +121,10 @@ def _jwst_to_glue_data(file_obj, ext, data_label):
         if ext in ('sci', 'asdf'):
             ext = 'data'
 
+    comp_label = ext.upper()
+    data_label = f'{data_label}[{comp_label}]'
+    data = Data(label=data_label)
+
     # This is very specific to JWST pipeline image output.
     with datamodels.open(file_obj) as dm:
         if 'bunit' in dm.meta and _validate_bunit(dm.meta.bunit, raise_error=False):
@@ -128,16 +132,14 @@ def _jwst_to_glue_data(file_obj, ext, data_label):
         else:
             bunit = 'count'
 
-        data = Data(label=data_label)
-
         # This is instance of gwcs.WCS, not astropy.wcs.WCS
         data.coords = dm.meta.wcs
 
         imdata = getattr(dm, ext)
         component = Component.autotyped(imdata, units=bunit)
-        data.add_component(component=component, label=ext)
+        data.add_component(component=component, label=comp_label)
 
-    return data
+    return data, data_label
 
 
 def _hdu_to_glue_data(hdu, data_label):
@@ -146,8 +148,10 @@ def _hdu_to_glue_data(hdu, data_label):
     else:
         bunit = 'count'
 
+    comp_label = f'{hdu.name.upper()},{hdu.ver}'
+    data_label = f'{data_label}[{comp_label}]'
     data = Data(label=data_label)
     data.coords = WCS(hdu.header)
     component = Component.autotyped(hdu.data, units=bunit)
-    data.add_component(component=component, label=f'{hdu.name},{hdu.ver}')
-    return data
+    data.add_component(component=component, label=comp_label)
+    return data, data_label
