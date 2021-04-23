@@ -1,9 +1,8 @@
 Licenses
 ========
 
-This directory holds license and credit information for the package,
-works the package is derived from, and/or datasets.
+This directory holds license and credit information for works the Jdaviz
+package is derived from or distributes, and/or datasets.
 
-Ensure that you pick a package license which is in this folder and it matches
-the one mentioned in the top level README.rst file. If you are using the
-pre-rendered version of this template check for the word 'Other' in the README.
+The license file for the Jdaviz package itself is located in the root of
+this repository.

@@ -1,0 +1,29 @@
+documentation:
+  - docs/**/*
+  - licenses/*
+  - notebooks/**/*
+  - .readthedocs.yml
+  - README.rst
+
+testing:
+  - jdaviz/conftest.py
+  - jdaviz/tests/*
+  - .bandit.yaml
+  - tox.ini
+
+embed:
+  - jdaviz/*.vue
+  - share/**/*
+
+cubeviz:
+  - jdaviz/configs/cubeviz/**/*
+
+imviz:
+  - jdaviz/configs/imviz/**/*
+
+mosviz:
+  - jdaviz/configs/mosviz/**/*
+
+specviz:
+  - jdaviz/configs/specviz/**/*
+  - jdaviz/configs/specviz2d/**/*
