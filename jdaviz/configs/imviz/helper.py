@@ -63,6 +63,8 @@ def split_filename_with_fits_ext(filename):
             ext = ext.split(',')
             ext[1] = int(ext[1])
             ext = tuple(ext)
+        elif not re.match(r'\D+', ext):
+            ext = int(ext)
 
     filepath = f'{s[0]}{sfx}'
     data_label = os.path.basename(s[0])
