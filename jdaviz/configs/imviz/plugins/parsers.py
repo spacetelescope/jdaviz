@@ -39,7 +39,6 @@ def parse_data(app, file_obj, ext=None, data_label=None, show_in_viewer=True):
         Show data in viewer.
 
     """
-    # TODO: How much support needed for URL/URI?
     if isinstance(file_obj, str):
         if data_label is None:
             data_label = os.path.splitext(os.path.basename(file_obj))[0]
