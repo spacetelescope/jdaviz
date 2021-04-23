@@ -16,6 +16,8 @@ If a similar issue is closed, have a quick look to see if you are satisfied
 by the resolution.
 If not please go ahead and open an issue! -->
 
+<!-- This is a public repository, please scrub out sensitive information! -->
+
 **Describe the bug**
 A clear and concise description of what the bug is.
 
