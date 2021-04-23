@@ -14,9 +14,13 @@ class Imviz(ConfigHelper):
         if isinstance(data, str):
             filepath, ext, data_label = split_filename_with_fits_ext(data)
 
-            # These will overwrite inputs, if any.
-            kwargs['ext'] = ext
-            kwargs['data_label'] = data_label
+            # This, if valid, will overwrite input.
+            if ext is not None:
+                kwargs['ext'] = ext
+
+            # This will only overwrite if not provided.
+            if 'data_label' not in kwargs:
+                kwargs['data_label'] = data_label
 
         self.app.load_data(filepath, parser_reference=parser_reference, **kwargs)
 
@@ -51,15 +55,17 @@ def split_filename_with_fits_ext(filename):
     if ext_match is None:
         sfx = s[1]
         ext = None
+        label_sfx = ''
     else:
         sfx = ext_match.group(1)
         ext = ext_match.group(2)
+        label_sfx = f'[{ext.upper()}]'
         if ',' in ext:
             ext = ext.split(',')
             ext[1] = int(ext[1])
             ext = tuple(ext)
 
     filepath = f'{s[0]}{sfx}'
-    data_label = f'{os.path.basename(s[0])}[{ext.upper()}]'
+    data_label = f'{os.path.basename(s[0])}{label_sfx}'
 
     return filepath, ext, data_label
