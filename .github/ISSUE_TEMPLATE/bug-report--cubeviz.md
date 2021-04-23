@@ -67,5 +67,5 @@ import jdaviz; print("Jdaviz", jdaviz.__version__)
 -->
 
 
-**Additional context**
+**Additional context (e.g. data files)**
 Add any other context about the problem here.
