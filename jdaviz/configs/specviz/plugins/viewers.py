@@ -7,6 +7,8 @@ from glue.core.subset import Subset
 from glue.config import data_translator
 from glue_jupyter.bqplot.profile import BqplotProfileView
 
+import astropy
+from astropy.utils.introspection import minversion
 from astropy import table
 from specutils import Spectrum1D
 from matplotlib.colors import cnames
@@ -427,9 +429,9 @@ class SpecvizProfileView(BqplotProfileView):
 
         # Set axes labels for the spectrum viewer
 
-        try:
+        if not minversion(astropy, '4.3'):
             spectral_axis_unit_type = data.spectral_axis.unit.physical_type.title()
-        except AttributeError:
+        else:
             # physical_type changed from str to class in astropy 4.3
             spectral_axis_unit_type = str(data.spectral_axis.unit.physical_type).title()
         # flux_unit_type = data.flux.unit.physical_type.title()
