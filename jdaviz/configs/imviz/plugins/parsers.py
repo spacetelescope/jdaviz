@@ -2,6 +2,7 @@ import base64
 import os
 import uuid
 
+from astropy import units as u
 from astropy.io import fits
 from astropy.wcs import WCS
 from glue.core.data import Component, Data
@@ -97,6 +98,18 @@ def _validate_image2d(hdu, raise_error=True):
     return valid
 
 
+def _validate_bunit(bunit, raise_error=True):
+    try:
+        u.Unit(bunit)
+    except Exception:
+        if raise_error:
+            raise
+        valid = False
+    else:
+        valid = True
+    return valid
+
+
 def _jwst_to_glue_data(file_obj, ext, data_label):
     # Translate FITS extension into JWST ASDF convention.
     if ext is None:
@@ -110,7 +123,7 @@ def _jwst_to_glue_data(file_obj, ext, data_label):
 
     # This is very specific to JWST pipeline image output.
     with datamodels.open(file_obj) as dm:
-        if 'bunit' in dm.meta:
+        if 'bunit' in dm.meta and _validate_bunit(dm.meta.bunit, raise_error=False):
             bunit = dm.meta.bunit
         else:
             bunit = 'count'
@@ -128,8 +141,13 @@ def _jwst_to_glue_data(file_obj, ext, data_label):
 
 
 def _hdu_to_glue_data(hdu, data_label):
+    if 'BUNIT' in hdu.header and _validate_bunit(hdu.header['BUNIT'], raise_error=False):
+        bunit = hdu.header['BUNIT']
+    else:
+        bunit = 'count'
+
     data = Data(label=data_label)
     data.coords = WCS(hdu.header)
-    component = Component.autotyped(hdu.data, units=hdu.header.get('BUNIT', 'count'))
+    component = Component.autotyped(hdu.data, units=bunit)
     data.add_component(component=component, label=f'{hdu.name},{hdu.ver}')
     return data
