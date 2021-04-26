@@ -48,7 +48,7 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
             raise TypeError("Data is not a Spectrum1D object or compatible file")
 
     # If there's already data in the viewer, convert units if needed
-    current_spec = app.get_data_from_viewer("spectrum-viewer", data_label=data_label)
+    current_spec = app.get_data_from_viewer("spectrum-viewer")
     if current_spec != {} and current_spec is not None:
         spec_key = list(current_spec.keys())[0]
         current_unit = current_spec[spec_key].spectral_axis.unit
