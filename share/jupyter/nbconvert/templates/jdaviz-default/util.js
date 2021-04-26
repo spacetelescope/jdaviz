@@ -77,6 +77,24 @@ function getWidgetManager(voila, kernel) {
                 saveState: {
                     connect: () => {}
                 },
+                /* voila >= 0.2.8 */
+                sessionContext: {
+                    session: {
+                        kernel
+                    },
+                    kernelChanged: {
+                        connect: () => {
+                        }
+                    },
+                    statusChanged: {
+                        connect: () => {
+                        }
+                    },
+                    connectionStatusChanged: {
+                        connect: () => {
+                        }
+                    },
+                },
             };
 
             const settings = {
