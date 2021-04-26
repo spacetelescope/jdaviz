@@ -37,10 +37,11 @@ jobs:
             toxenv: securityaudit
             allow_failure: false
 
-          - name: Python 3.8 with coverage checking
+          - name: Python 3.8 with coverage checking, all deps, and remote data
             os: ubuntu-latest
             python: 3.8
-            toxenv: py38-test-cov
+            toxenv: py38-test-alldeps-cov
+            toxposargs: --remote-data
             allow_failure: false
 
           - name: OS X - Python 3.8
@@ -70,7 +71,7 @@ jobs:
         python -m pip install tox codecov
     - name: Test/run with tox
       run: |
-        tox -e ${{ matrix.toxenv }}
+        tox -e ${{ matrix.toxenv }} -- ${{ matrix.toxposargs }}
     # Activate your repo on codecov.io first.
     - name: Upload coverage to codecov
       if: "contains(matrix.toxenv, '-cov')"
