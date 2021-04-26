@@ -92,12 +92,15 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
 def _validate_image2d(hdu, raise_error=True):
     valid = hdu.data is not None and hdu.is_image and hdu.data.ndim == 2
     if not valid and raise_error:
-        raise ValueError(f'Imviz cannot load this HDU ({hdu}): '
-                         f'is_image={hdu.is_image}, data={hdu.data}')
+        raise ValueError(
+            f'Imviz cannot load this HDU ({hdu}): '
+            f'has_data={hdu.data is not None}, is_image={hdu.is_image}, '
+            f'name={hdu.name}, ver={hdu.ver}')
     return valid
 
 
 def _validate_bunit(bunit, raise_error=True):
+    # TODO: Do we want to handle weird FITS BUNIT values here?
     try:
         u.Unit(bunit)
     except Exception:
