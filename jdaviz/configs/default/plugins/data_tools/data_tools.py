@@ -20,14 +20,21 @@ class DataTools(TemplateMixin):
         super().__init__(*args, **kwargs)
 
         self._file_upload = FileChooser(os.path.expanduser('~'), use_dir_icons=True)
+        self._file_upload._show_dialog()
+        self._file_upload._select.layout.visibility = 'hidden'
+        self._file_upload._cancel.layout.visibility = 'hidden'
+        self._file_upload._label.layout.visibility = 'hidden'
 
         self.components = {'g-file-import': self._file_upload}
 
-        self._file_upload.register_callback(self._on_file_path_changed)
+        self._file_upload._filename.observe(self._on_file_path_changed, names='value')
 
     @property
     def file_path(self):
-        return self._file_upload.selected
+        return os.path.join(
+            self._file_upload._pathlist.value,
+            self._file_upload._filename.value
+        )
 
     @observe("file_path")
     def _on_file_path_changed(self, event):
@@ -49,4 +56,3 @@ class DataTools(TemplateMixin):
                 self.error_message = "An error occurred when loading the file"
             else:
                 self.dialog = False
-                self._file_upload.reset()
