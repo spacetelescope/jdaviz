@@ -90,7 +90,7 @@ class TestParseImage:
         assert data.label == 'contents[DATA]'  # download_file returns cache loc
         assert data.shape == (2048, 2048)
         assert isinstance(data.coords, GWCS)
-        assert comp.units == 'count'  # dm.meta.bunit is not set
+        assert comp.units == 'MJy/sr'
         assert comp.data.shape == (2048, 2048)
 
         # Request specific extension (name + ver, but ver is not used), use given label
@@ -98,8 +98,9 @@ class TestParseImage:
                    data_label='jw01072001001_01101_00001_nrcb1_cal',
                    show_in_viewer=False)
         data = imviz_app.app.data_collection[1]
+        comp = data.get_component('DQ')
         assert data.label == 'jw01072001001_01101_00001_nrcb1_cal[DQ]'
-        assert 'DQ' in data.components
+        assert comp.units == 'count'
 
         # Pass in HDUList directly + ext (name only), use given label
         with fits.open(filename) as pf:
@@ -110,7 +111,7 @@ class TestParseImage:
             comp = data.get_component('DATA')  # SCI = DATA
             assert data.label == 'jw01072001001_01101_00001_nrcb1_cal[DATA]'
             assert isinstance(data.coords, GWCS)
-            assert comp.units == 'count'
+            assert comp.units == 'MJy/sr'
 
         # Invalid ASDF attribute (extension)
         with pytest.raises(AttributeError, match='No attribute'):
