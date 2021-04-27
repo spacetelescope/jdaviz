@@ -39,7 +39,14 @@ class DataTools(TemplateMixin):
             self.valid_path = True
 
     def vue_load_data(self, *args, **kwargs):
-        if os.path.exists(self.file_path):
-            load_data_message = LoadDataMessage(self.file_path, sender=self)
-            self.hub.broadcast(load_data_message)
-            self.dialog = False
+        if self.file_path is None:
+            self.error_message = "No file selected"
+        elif os.path.exists(self.file_path):
+            try:
+                load_data_message = LoadDataMessage(self.file_path, sender=self)
+                self.hub.broadcast(load_data_message)
+            except Exception:
+                self.error_message = "An error occurred when loading the file"
+            else:
+                self.dialog = False
+                self._file_upload.reset()
