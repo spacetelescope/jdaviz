@@ -3,6 +3,7 @@ from jdaviz.utils import load_template
 from jdaviz.core.events import LoadDataMessage
 from traitlets import Unicode, Bool, observe
 import os
+from ipyfilechooser import FileChooser
 from jdaviz.core.registries import tool_registry
 
 __all__ = ['DataTools']
@@ -15,6 +16,15 @@ class DataTools(TemplateMixin):
     dialog = Bool(False).tag(sync=True)
     valid_path = Bool(True).tag(sync=True)
     error_message = Unicode().tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self._file_upload = FileChooser(os.path.expanduser('~'), use_dir_icons=True)
+
+        self.components = {'g-file-import': self._file_upload}
+
+        self._file_upload.register_callback(self._on_file_path_changed)
 
     @observe("file_path")
     def _on_file_path_changed(self, event):
