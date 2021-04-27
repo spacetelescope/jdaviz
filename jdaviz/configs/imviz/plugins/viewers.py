@@ -28,7 +28,10 @@ class ImvizImageView(BqplotImageView):
 
     def on_mouse_or_key_event(self, data):
 
-        if len(self.state.layers) == 0:
+        # Find visible layers
+        visible_layers = [layer for layer in self.state.layers if layer.visible]
+
+        if len(visible_layers) == 0:
             return
 
         if self.label_mouseover is None:
@@ -49,7 +52,9 @@ class ImvizImageView(BqplotImageView):
 
             self.label_mouseover.pixel = f'x={x:05.1f} y={y:05.1f}'
 
-            image = self.state.layers[0].layer
+            # Extract first dataset from visible layers and use this for coordinates - the choice
+            # of dataset shouldn't matter if the datasets are linked correctly
+            image = visible_layers[0].layer
 
             if isinstance(image.coords, BaseHighLevelWCS):
                 # Convert these to a SkyCoord via WCS - note that for other datasets
@@ -65,10 +70,14 @@ class ImvizImageView(BqplotImageView):
             else:
                 self.label_mouseover.world = ''
 
-            # Extract data values at this position
+            # Extract data values at this position.
+            # TODO: for now we just use the first visible layer but we should think
+            # of how to display values when multiple datasets are present.
             if x > -0.5 and y > -0.5 and x < image.shape[1] - 0.5 and y < image.shape[0] - 0.5:
-                value = image.get_data(image.main_components[0])[int(round(y)), int(round(x))]
-                self.label_mouseover.value = f'{value:10.5g}'
+                attribute = visible_layers[0].attribute
+                value = image.get_data(attribute)[int(round(y)), int(round(x))]
+                unit = image.get_component(attribute).units
+                self.label_mouseover.value = f'{value:10.5g} {unit}'
             else:
                 self.label_mouseover.value = ''
 
