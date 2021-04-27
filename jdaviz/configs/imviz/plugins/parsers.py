@@ -126,11 +126,13 @@ def _jwst_to_glue_data(file_obj, ext, data_label):
     comp_label = ext.upper()
     data_label = f'{data_label}[{comp_label}]'
     data = Data(label=data_label)
+    unit_attr = f'bunit_{ext}'
 
     # This is very specific to JWST pipeline image output.
     with datamodels.open(file_obj) as dm:
-        if 'bunit' in dm.meta and _validate_bunit(dm.meta.bunit, raise_error=False):
-            bunit = dm.meta.bunit
+        if (unit_attr in dm.meta and
+                _validate_bunit(getattr(dm.meta, unit_attr), raise_error=False)):
+            bunit = getattr(dm.meta, unit_attr)
         else:
             bunit = 'count'
 
