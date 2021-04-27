@@ -47,7 +47,7 @@ class ImvizImageView(BqplotImageView):
             x = data['domain']['x']
             y = data['domain']['y']
 
-            self.label_mouseover.pixel = f'x={x:5.1f} y={y:5.1f}'
+            self.label_mouseover.pixel = f'x={x:05.1f} y={y:05.1f}'
 
             image = self.state.layers[0].layer
 
@@ -68,7 +68,7 @@ class ImvizImageView(BqplotImageView):
             # Extract data values at this position
             if x > -0.5 and y > -0.5 and x < image.shape[1] - 0.5 and y < image.shape[0] - 0.5:
                 value = image.get_data(image.main_components[0])[int(round(y)), int(round(x))]
-                self.label_mouseover.value = f'{value:10.2g}'
+                self.label_mouseover.value = f'{value:10.5g}'
             else:
                 self.label_mouseover.value = ''
 
