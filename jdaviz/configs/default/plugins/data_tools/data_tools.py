@@ -12,7 +12,6 @@ __all__ = ['DataTools']
 @tool_registry('g-data-tools')
 class DataTools(TemplateMixin):
     template = load_template("data_tools.vue", __file__).tag(sync=True)
-    file_path = Unicode("").tag(sync=True)
     dialog = Bool(False).tag(sync=True)
     valid_path = Bool(True).tag(sync=True)
     error_message = Unicode().tag(sync=True)
@@ -26,9 +25,13 @@ class DataTools(TemplateMixin):
 
         self._file_upload.register_callback(self._on_file_path_changed)
 
+    @property
+    def file_path(self):
+        return self._file_upload.selected
+
     @observe("file_path")
     def _on_file_path_changed(self, event):
-        if not os.path.exists(event['new']) or not os.path.isfile(event['new']):
+        if not os.path.exists(self.file_path) or not os.path.isfile(self.file_path):
             self.error_message = "No file exists at given path"
             self.valid_path = False
         else:

@@ -1,6 +1,6 @@
 <template>
   <v-toolbar-items>
-    <v-dialog v-model="dialog" width="500" @keydown.stop>
+    <v-dialog v-model="dialog" height="400" width="600">
       <template v-slot:activator="{ on }">
         <v-btn tile depressed v-on="on" color="accent">
           Import
@@ -16,7 +16,8 @@
           <v-container>
             <v-row>
               <v-col>
-                <g-file-import id="file-uploader" :error-messages="error_message"></g-file-import>
+                <span>{{ error_message }}</span>
+                <g-file-import id="file-uploader"></g-file-import>
               </v-col>
             </v-row>
           </v-container>
