@@ -1,5 +1,5 @@
 <template>
-  <v-app id="web-app">
+  <v-app id="web-app" class="jdaviz">
     <v-app-bar color="primary" dark dense flat app absolute clipped-right>
       <jupyter-widget :widget="item.widget" v-for="item in state.tool_items" :key="item.name"></jupyter-widget>
       <v-spacer></v-spacer>
@@ -12,13 +12,13 @@
     </v-app-bar>
 
     <v-content
-      :style="checkNotebookContext() ? 'height: ' + state.settings.context.notebook.max_height + '; border: solid 1px #e5e5e5;' : ''"
+      :style="checkNotebookContext() ? 'height: ' + state.settings.context.notebook.max_height + '; border: solid 1px #e5e5e5;' : 'max-height: calc(100% - 48px)'"
     >
       <v-container class="fill-height pa-0" fluid>
         <splitpanes @resize="relayout">
           <pane size="75">
             <golden-layout
-              :style="checkNotebookContext() ? 'height: 100%;' : 'height: calc(100vh - 48px)'"
+              style="height: 100%;"
               :has-headers="state.settings.visible.tab_headers"
             >
               <gl-row :closable="false">
