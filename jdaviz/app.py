@@ -16,6 +16,7 @@ from regions import RectanglePixelRegion, PixCoord
 from specutils import Spectrum1D
 
 from glue.config import data_translator
+from glue.config import settings as glue_settings
 from glue.core import BaseData, HubListener, Data, DataCollection
 from glue.core.link_helpers import LinkSame
 from glue.core.message import (DataCollectionAddMessage,
@@ -43,6 +44,11 @@ CONTAINER_TYPES = dict(row='gl-row', col='gl-col', stack='gl-stack')
 EXT_TYPES = dict(flux=['flux', 'sci'],
                  uncert=['ivar', 'err', 'var', 'uncert'],
                  mask=['mask', 'dq'])
+
+
+# Set default opacity for data layers to 1 instead of 0.8 in
+# some glue-core versions
+glue_settings.DATA_ALPHA = 1
 
 
 class ApplicationState(State):
