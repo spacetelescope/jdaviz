@@ -68,7 +68,7 @@ class ImvizImageView(BqplotImageView):
                 # with valid celestial WCS
                 try:
                     celestial_coordinates = (image.coords.pixel_to_world(x, y).icrs
-                                            .to_string('hmsdms', precision=4, pad=True))
+                                             .to_string('hmsdms', precision=4, pad=True))
                 except Exception:
                     self.label_mouseover.world = ''
                 else:
