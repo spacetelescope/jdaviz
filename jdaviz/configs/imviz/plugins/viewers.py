@@ -13,8 +13,7 @@ __all__ = ['ImvizImageView']
 @viewer_registry("imviz-image-viewer", label="Image 2D (Imviz)")
 class ImvizImageView(BqplotImageView):
 
-    tools = ['bqplot:home', 'bqplot:panzoom', 'bqplot:rectangle',
-             'bqplot:circle', 'bqplot:matchwcs']
+    tools = ['bqplot:panzoom', 'bqplot:rectangle', 'bqplot:circle', 'bqplot:matchwcs']
 
     default_class = None
 
