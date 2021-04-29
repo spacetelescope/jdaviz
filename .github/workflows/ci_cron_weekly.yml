@@ -43,11 +43,6 @@ jobs:
             python: 3.9
             toxenv: py39-test-devdeps
 
-          - name: Python 3.6 astropy LTS and Numpy 1.16
-            os: ubuntu-latest
-            python: 3.6
-            toxenv: py36-test-astropylts-numpy116
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
