@@ -6,6 +6,7 @@ documentation:
   - README.rst
 
 testing:
+  - .github/workflows/*
   - jdaviz/conftest.py
   - jdaviz/tests/*
   - .bandit.yaml
