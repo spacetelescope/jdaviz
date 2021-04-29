@@ -56,6 +56,14 @@ jobs:
             toxenv: py38-test
             allow_failure: false
 
+          # This also runs on cron but we want to make sure new changes
+          # won't break this job at the PR stage.
+          - name: Python 3.9 with latest dev versions of key dependencies
+            os: ubuntu-latest
+            python: 3.9
+            toxenv: py39-test-devdeps
+            allow_failure: true
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
