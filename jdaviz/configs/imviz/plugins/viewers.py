@@ -1,3 +1,5 @@
+import numpy as np
+
 from astropy.wcs.wcsapi import BaseHighLevelWCS
 
 from glue.core import BaseData
@@ -46,15 +48,19 @@ class ImvizImageView(BqplotImageView):
             # well as data values. For now we use the first dataset in the
             # viewer for the data values.
 
+            # Extract first dataset from visible layers and use this for coordinates - the choice
+            # of dataset shouldn't matter if the datasets are linked correctly
+            image = visible_layers[0].layer
+
             # Extract data coordinates - these are pixels in the image
             x = data['domain']['x']
             y = data['domain']['y']
 
-            self.label_mouseover.pixel = f'x={x:05.1f} y={y:05.1f}'
+            maxsize = int(np.ceil(np.log10(np.max(image.shape)))) + 3
 
-            # Extract first dataset from visible layers and use this for coordinates - the choice
-            # of dataset shouldn't matter if the datasets are linked correctly
-            image = visible_layers[0].layer
+            fmt = 'x={0:0' + str(maxsize) + '.1f} y={1:0' + str(maxsize) + '.1f}'
+
+            self.label_mouseover.pixel = (fmt.format(x, y))
 
             if isinstance(image.coords, BaseHighLevelWCS):
                 # Convert these to a SkyCoord via WCS - note that for other datasets
@@ -77,7 +83,7 @@ class ImvizImageView(BqplotImageView):
                 attribute = visible_layers[0].attribute
                 value = image.get_data(attribute)[int(round(y)), int(round(x))]
                 unit = image.get_component(attribute).units
-                self.label_mouseover.value = f'{value:10.5g} {unit}'
+                self.label_mouseover.value = f'{value:+10.5e} {unit}'
             else:
                 self.label_mouseover.value = ''
 
