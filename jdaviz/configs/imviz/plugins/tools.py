@@ -92,39 +92,36 @@ class BqplotContrastBias(InteractCheckableTool):
     icon = 'glue_contrast'
     tool_id = 'bqplot:contrastbias'
     action_text = 'Adjust contrast/bias'
-    tool_tip = 'Drag left/right for cut level range and up/down for center value'
+    tool_tip = 'Click to adjust, double-click to reset'
 
     def __init__(self, viewer, **kwargs):
         super().__init__(viewer, **kwargs)
-        self._reset()
-
-    def _reset(self):
-        self._prev_x = None
-        self._prev_y = None
 
     def activate(self):
-        # Other drag events: dragstart, dragend
+        # TODO: Replace clicks with drags
         self.viewer.add_event_callback(self.on_mouse_or_key_event,
-                                       events=['dragstart', 'dragmove', 'dragend'])
+                                       events=['click', 'dblclick'])
 
     def deactivate(self):
-        self._reset()
         self.viewer.remove_event_callback(self.on_mouse_or_key_event)
 
     def on_mouse_or_key_event(self, data):
         event = data['event']
-        if event == 'dragmove':
-            cur_x = data['domain']['x']
-            cur_y = data['domain']['y']
-            # TODO:
-            # 1. Decide whether moving up/down or left/right. What about diagonal?
-            # 2a. up/down = Grab current cut center, translate delta movement to delta cut center, apply
-            # 2b. left/right = Grab current cut level range, translate movement..., apply
-            # 3. Profit!!!
-            self._prev_x = cur_x
-            self._prev_y = cur_y
-        elif event == 'dragstart':
-            self._prev_x = data['domain']['x']
-            self._prev_y = data['domain']['y']
-        elif event == 'dragend':
-            self._reset()
+
+        # TODO: Replace clicks with drags
+        if event == 'click':
+            x = data['domain']['x'] / (self.viewer.state.x_max - self.viewer.state.x_min)
+            y = data['domain']['y'] / (self.viewer.state.y_max - self.viewer.state.y_min)
+            state = self.viewer.layers[0].state
+
+            # https://github.com/glue-viz/glue/blob/master/glue/viewers/image/qt/contrast_mouse_mode.py
+            with delay_callback(state, 'bias', 'contrast'):
+                state.bias = -(x * 2 - 1.5)
+                state.contrast = 10. ** (y * 2 - 1)
+
+        elif event == 'dblclick':
+            # Restore defaults that are applied on load
+            state = self.viewer.layers[0].state
+            with delay_callback(state, 'bias', 'contrast'):
+                state.bias = 0.5
+                state.contrast = 1
