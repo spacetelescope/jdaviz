@@ -9,9 +9,12 @@ import click
 from voila.app import Voila
 from voila.configuration import VoilaConfiguration
 
+from jdaviz import __version__
+
 CONFIGS_DIR = os.path.join(os.path.dirname(__file__), 'configs')
 
 
+@click.version_option(__version__)
 @click.command()
 @click.argument('filename', nargs=1, type=click.Path(exists=True))
 @click.option('--layout',
