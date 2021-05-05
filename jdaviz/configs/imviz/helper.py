@@ -21,6 +21,8 @@ class Imviz(ConfigHelper):
             # This will only overwrite if not provided.
             if 'data_label' not in kwargs:
                 kwargs['data_label'] = data_label
+        else:
+            filepath = data
 
         self.app.load_data(filepath, parser_reference=parser_reference, **kwargs)
 
