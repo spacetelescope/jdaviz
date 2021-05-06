@@ -1,3 +1,4 @@
+import time
 from echo import delay_callback
 from glue.config import viewer_tool
 from glue_jupyter.bqplot.common.tools import InteractCheckableTool, Tool
@@ -95,21 +96,24 @@ class BqplotContrastBias(InteractCheckableTool):
     tool_tip = 'Click to adjust, double-click to reset'
 
     def __init__(self, viewer, **kwargs):
+        self._time_last = 0
         super().__init__(viewer, **kwargs)
 
     def activate(self):
         # TODO: Replace clicks with drags
         self.viewer.add_event_callback(self.on_mouse_or_key_event,
-                                       events=['click', 'dblclick'])
+                                       events=['dragmove', 'dblclick'])
 
     def deactivate(self):
         self.viewer.remove_event_callback(self.on_mouse_or_key_event)
 
     def on_mouse_or_key_event(self, data):
+
         event = data['event']
 
-        # TODO: Replace clicks with drags
-        if event == 'click':
+        # Note that we throttle this to 200ms here as changing the contrast
+        # and bias it expensive since it forces the whole image to be redrawn
+        if event == 'dragmove' and time.time() - self._time_last > 0.2:
             x = data['domain']['x'] / (self.viewer.state.x_max - self.viewer.state.x_min)
             y = data['domain']['y'] / (self.viewer.state.y_max - self.viewer.state.y_min)
             state = self.viewer.layers[0].state
@@ -118,6 +122,8 @@ class BqplotContrastBias(InteractCheckableTool):
             with delay_callback(state, 'bias', 'contrast'):
                 state.bias = -(x * 2 - 1.5)
                 state.contrast = 10. ** (y * 2 - 1)
+
+            self._time_last = time.time()
 
         elif event == 'dblclick':
             # Restore defaults that are applied on load
