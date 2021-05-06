@@ -100,7 +100,6 @@ class BqplotContrastBias(InteractCheckableTool):
         super().__init__(viewer, **kwargs)
 
     def activate(self):
-        # TODO: Replace clicks with drags
         self.viewer.add_event_callback(self.on_mouse_or_key_event,
                                        events=['dragmove', 'dblclick'])
 
