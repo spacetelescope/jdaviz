@@ -1,7 +1,8 @@
 import time
 from echo import delay_callback
 from glue.config import viewer_tool
-from glue_jupyter.bqplot.common.tools import InteractCheckableTool, Tool
+from glue_jupyter.bqplot.common.tools import Tool
+from glue.viewers.common.tool import CheckableTool
 from glue.plugins.wcs_autolinking.wcs_autolinking import wcs_autolink, WCSLink
 
 __all__ = []
@@ -23,7 +24,7 @@ class BlinkOnce(Tool):
 
 
 @viewer_tool
-class BqplotMatchWCS(InteractCheckableTool):
+class BqplotMatchWCS(CheckableTool):
 
     icon = 'glue_link'
     tool_id = 'bqplot:matchwcs'
@@ -88,7 +89,7 @@ class BqplotMatchWCS(InteractCheckableTool):
 
 
 @viewer_tool
-class BqplotContrastBias(InteractCheckableTool):
+class BqplotContrastBias(CheckableTool):
 
     icon = 'glue_contrast'
     tool_id = 'bqplot:contrastbias'
@@ -101,7 +102,8 @@ class BqplotContrastBias(InteractCheckableTool):
 
     def activate(self):
         self.viewer.add_event_callback(self.on_mouse_or_key_event,
-                                       events=['dragmove', 'dblclick'])
+                                       events=['dragstart', 'dragmove',
+                                               'dragend', 'dblclick'])
 
     def deactivate(self):
         self.viewer.remove_event_callback(self.on_mouse_or_key_event)
