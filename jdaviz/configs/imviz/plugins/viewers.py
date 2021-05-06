@@ -1,9 +1,9 @@
+import numpy as np
+
 from astropy.wcs.wcsapi import BaseHighLevelWCS
 
 from glue.core import BaseData
 from glue_jupyter.bqplot.image import BqplotImageView
-
-from bqplot import Label
 
 from jdaviz.core.registries import viewer_registry
 
@@ -21,18 +21,26 @@ class ImvizImageView(BqplotImageView):
 
         super().__init__(*args, **kwargs)
 
-        self.label_mouseover = Label(x=[0.05], y=[0.05], text=[''],
-                                     default_size=12, colors=['orange'])
-        self.figure.marks = self.figure.marks + [self.label_mouseover]
+        self.label_mouseover = None
 
-        self.add_event_callback(self.on_mouse_or_key_event, events=['mousemove', 'keydown'])
+        self.add_event_callback(self.on_mouse_or_key_event, events=['mousemove', 'mouseenter',
+                                                                    'mouseleave', 'keydown'])
 
         self.state.show_axes = False
 
     def on_mouse_or_key_event(self, data):
 
-        if len(self.state.layers) == 0:
+        # Find visible layers
+        visible_layers = [layer for layer in self.state.layers if layer.visible]
+
+        if len(visible_layers) == 0:
             return
+
+        if self.label_mouseover is None:
+            if 'g-coords-info' in self.session.application._tools:
+                self.label_mouseover = self.session.application._tools['g-coords-info']
+            else:
+                return
 
         if data['event'] == 'mousemove':
 
@@ -40,35 +48,50 @@ class ImvizImageView(BqplotImageView):
             # well as data values. For now we use the first dataset in the
             # viewer for the data values.
 
+            # Extract first dataset from visible layers and use this for coordinates - the choice
+            # of dataset shouldn't matter if the datasets are linked correctly
+            image = visible_layers[0].layer
+
             # Extract data coordinates - these are pixels in the image
             x = data['domain']['x']
             y = data['domain']['y']
 
-            overlay = f'x={x:.1f} y={y:.1f}'
+            maxsize = int(np.ceil(np.log10(np.max(image.shape)))) + 3
 
-            image = self.state.layers[0].layer
+            fmt = 'x={0:0' + str(maxsize) + '.1f} y={1:0' + str(maxsize) + '.1f}'
+
+            self.label_mouseover.pixel = (fmt.format(x, y))
 
             if isinstance(image.coords, BaseHighLevelWCS):
-
                 # Convert these to a SkyCoord via WCS - note that for other datasets
                 # we aren't actually guaranteed to get a SkyCoord out, just for images
                 # with valid celestial WCS
                 try:
-                    celestial_coordinates = image.coords.pixel_to_world(x, y).icrs.to_string('hmsdms')  # noqa: E501
-                    overlay += f' ICRS={celestial_coordinates}'
+                    celestial_coordinates = (image.coords.pixel_to_world(x, y).icrs
+                                             .to_string('hmsdms', precision=4, pad=True))
                 except Exception:
-                    overlay += ' ICRS=unknown'
+                    self.label_mouseover.world = ''
+                else:
+                    self.label_mouseover.world = f'{celestial_coordinates:32s} (ICRS)'
+            else:
+                self.label_mouseover.world = ''
 
-            # Extract data values at this position
+            # Extract data values at this position.
+            # TODO: for now we just use the first visible layer but we should think
+            # of how to display values when multiple datasets are present.
             if x > -0.5 and y > -0.5 and x < image.shape[1] - 0.5 and y < image.shape[0] - 0.5:
-                value = image.get_data(image.main_components[0])[int(round(y)), int(round(x))]
-                overlay += f' data={value:.2g}'
-
-            self.label_mouseover.text = [overlay]
+                attribute = visible_layers[0].attribute
+                value = image.get_data(attribute)[int(round(y)), int(round(x))]
+                unit = image.get_component(attribute).units
+                self.label_mouseover.value = f'{value:+10.5e} {unit}'
+            else:
+                self.label_mouseover.value = ''
 
         elif data['event'] == 'mouseleave' or data['event'] == 'mouseenter':
 
-            self.label_mouseover.text = ""
+            self.label_mouseover.pixel = ""
+            self.label_mouseover.world = ""
+            self.label_mouseover.value = ""
 
         if data['event'] == 'keydown' and data['key'] == 'b':
 

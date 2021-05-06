@@ -83,6 +83,7 @@ class ApplicationState(State):
             'tray': True,
             'tab_headers': True,
         },
+        'dense_toolbar': True,
         'context': {
             'notebook': {
                 'max_height': '600px'
@@ -1195,6 +1196,8 @@ class Application(VuetifyTemplate, HubListener):
                 'widget': "IPY_MODEL_" + tool.model_id
             })
 
+            self._application_handler._tools[name] = tool
+
         for name in config.get('tray', []):
             tray = tray_registry.members.get(name)
             tray_item_instance = tray.get('cls')(app=self)
@@ -1210,6 +1213,7 @@ class Application(VuetifyTemplate, HubListener):
         """ Resets the application state """
         self.state = ApplicationState()
         self.state.add_callback('stack_items', self.vue_relayout)
+        self._application_handler._tools = {}
 
     def get_configuration(self, path=None, section=None):
         """ Returns a copy of the application configuration

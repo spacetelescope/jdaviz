@@ -8,6 +8,7 @@ settings:
     toolbar: true
     tray: true
     tab_headers: true
+  dense_toolbar: false
   context:
     notebook:
       max_height: 600px
@@ -15,6 +16,7 @@ toolbar:
   - g-data-tools
   - g-subset-tools
   - g-image-viewer-creator
+  - g-coords-info
 viewer_area:
   - container: col
     children:
