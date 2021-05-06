@@ -175,8 +175,21 @@ class DataParserRegistry(UniqueDictRegistry):
         return decorator
 
 
+class ComponentRegistry(UniqueDictRegistry):
+    """
+    Registry containing references to standalone UI components like dialog prompts
+    """
+
+    def __call__(self, name=None):
+        def decorator(func):
+            self.add(name, func)
+            return func
+        return decorator
+
+
 viewer_registry = ViewerRegistry()
 tray_registry = TrayRegistry()
 tool_registry = ToolRegistry()
 menu_registry = MenuRegistry()
 data_parser_registry = DataParserRegistry()
+component_registry = ComponentRegistry()
