@@ -29,9 +29,10 @@ from ipyvuetify import VuetifyTemplate
 from .core.config import read_configuration, get_configuration
 from .core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
                           SnackbarMessage, RemoveDataMessage,
-                          AddDataToViewerMessage, RemoveDataFromViewerMessage)
+                          AddDataToViewerMessage, RemoveDataFromViewerMessage,
+                          DataPromptMessage)
 from .core.registries import (tool_registry, tray_registry, viewer_registry,
-                              data_parser_registry)
+                              data_parser_registry, component_registry)
 from .utils import load_template
 
 __all__ = ['Application']
@@ -99,6 +100,15 @@ class ApplicationState(State):
         docstring="Nested collection of viewers constructed to support the "
                   "Golden Layout viewer area.")
 
+    data_prompt = DictCallbackProperty({
+        'status': '',
+        'dialog': False,
+        'load': False
+    }, docstring="State of the data prompt messages.")
+
+    component_items = ListCallbackProperty(
+        docstring='List of components used by the application'
+    )
 
 class Application(VuetifyTemplate, HubListener):
     """
@@ -1193,6 +1203,11 @@ class Application(VuetifyTemplate, HubListener):
                 'label': tray_item_label,
                 'widget': "IPY_MODEL_" + tray_item_instance.model_id
             })
+
+        # Add any components to the stack of component items
+        for name, component in component_registry.members.items():
+            comp = component(app=self)
+            self.state.component_items.append({'name': name, 'widget': "IPY_MODEL_" + comp.model_id})
 
     def _reset_state(self):
         """ Resets the application state """

@@ -247,3 +247,51 @@ class RedshiftMessage(Message):
     @property
     def value(self):
         return self._value
+
+
+class DataPromptMessage(Message):
+    """ Messages related to identifying data formats """
+    def __init__(self, status, data_format=None, config=None, current=None, suggested_format=None,
+                 suggested_config=None, filename=None, hdr=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self._status = status
+        self._data_format = data_format
+        self._config = config
+        self._current = current
+        self._suggested_format = suggested_format
+        self._suggested_config = suggested_config
+        self._filename = filename
+        self._header = hdr
+
+    @property
+    def status(self):
+        return self._status
+
+    @property
+    def data_format(self):
+        return self._data_format
+
+    @property
+    def config(self):
+        return self._config
+
+    @property
+    def current(self):
+        return self._current
+
+    @property
+    def suggested_format(self):
+        return self._suggested_format
+
+    @property
+    def suggested_config(self):
+        return self._suggested_config
+
+    @property
+    def filename(self):
+        return self._filename
+
+    @property
+    def header(self):
+        return self._header
