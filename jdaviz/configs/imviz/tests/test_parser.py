@@ -100,7 +100,7 @@ class TestParseImage:
         data = imviz_app.app.data_collection[1]
         comp = data.get_component('DQ')
         assert data.label == 'jw01072001001_01101_00001_nrcb1_cal[DQ]'
-        assert comp.units == 'count'
+        assert comp.units == ''
 
         # Pass in HDUList directly + ext (name only), use given label
         with fits.open(filename) as pf:
@@ -130,7 +130,7 @@ class TestParseImage:
         assert data.label == 'contents[SCI,1]'  # download_file returns cache loc
         assert data.shape == (4300, 4219)
         assert isinstance(data.coords, WCS)
-        assert comp.units == 'count'  # "ELECTRONS/S" is not valid
+        assert comp.units == ''  # "ELECTRONS/S" is not valid
         assert comp.data.shape == (4300, 4219)
 
         # Request specific extension (name only), use given label
@@ -139,7 +139,7 @@ class TestParseImage:
         data = imviz_app.app.data_collection[1]
         comp = data.get_component('CTX,1')
         assert data.label == 'jclj01010_drz[CTX,1]'
-        assert comp.units == 'count'  # BUNIT is not set
+        assert comp.units == ''  # BUNIT is not set
 
         # Request specific extension (name + ver), use given label
         parse_data(imviz_app.app, filename, ext=('WHT', 1),
@@ -147,7 +147,7 @@ class TestParseImage:
         data = imviz_app.app.data_collection[2]
         comp = data.get_component('WHT,1')
         assert data.label == 'jclj01010_drz[WHT,1]'
-        assert comp.units == 'count'  # BUNIT is not set
+        assert comp.units == ''  # BUNIT is not set
 
         # Pass in file obj directly
         with fits.open(filename) as pf:
