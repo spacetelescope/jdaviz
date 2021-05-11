@@ -3,7 +3,7 @@ from jdaviz.utils import load_template
 from jdaviz.core.events import LoadDataMessage
 from traitlets import Unicode, Bool, observe
 import os
-from ipyfilechooser import FileChooser
+from jdaviz.configs.default.plugins.data_tools.file_chooser import FileChooser
 from jdaviz.core.registries import tool_registry
 
 __all__ = ['DataTools']
@@ -20,25 +20,15 @@ class DataTools(TemplateMixin):
         super().__init__(*args, **kwargs)
 
         self._file_upload = FileChooser(os.path.expanduser('~'), use_dir_icons=True)
-        self._file_upload._show_dialog()
-        self._file_upload._select.layout.visibility = 'hidden'
-        self._file_upload._cancel.layout.visibility = 'hidden'
-        self._file_upload._label.layout.visibility = 'hidden'
 
         self.components = {'g-file-import': self._file_upload}
 
-        self._file_upload._filename.observe(self._on_file_path_changed, names='value')
+        self._file_upload.observe(self._on_file_path_changed, names='file_path')
 
-    @property
-    def file_path(self):
-        return os.path.join(
-            self._file_upload._pathlist.value,
-            self._file_upload._filename.value
-        )
-
-    @observe("file_path")
     def _on_file_path_changed(self, event):
-        if not os.path.exists(self.file_path) or not os.path.isfile(self.file_path):
+        if (self._file_upload.file_path is not None
+                and not os.path.exists(self._file_upload.file_path)
+                or not os.path.isfile(self._file_upload.file_path)):
             self.error_message = "No file exists at given path"
             self.valid_path = False
         else:
@@ -46,11 +36,11 @@ class DataTools(TemplateMixin):
             self.valid_path = True
 
     def vue_load_data(self, *args, **kwargs):
-        if self.file_path is None:
+        if self._file_upload.file_path is None:
             self.error_message = "No file selected"
-        elif os.path.exists(self.file_path):
+        elif os.path.exists(self._file_upload.file_path):
             try:
-                load_data_message = LoadDataMessage(self.file_path, sender=self)
+                load_data_message = LoadDataMessage(self._file_upload.file_path, sender=self)
                 self.hub.broadcast(load_data_message)
             except Exception:
                 self.error_message = "An error occurred when loading the file"
