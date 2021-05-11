@@ -188,7 +188,8 @@ class FileChooser(VBox, ValueWidget):
             self._on_dircontent_select,
             names='value'
         )
-       # Layout
+
+        # Layout
         self._gb = GridBox(
             children=[
                 self._pathlist,
@@ -440,23 +441,3 @@ class FileChooser(VBox, ValueWidget):
             )
         except TypeError:
             return None
-
-    def __repr__(self):
-        """Build string representation."""
-        str_ = (
-            "FileChooser("
-            "path='{0}', "
-            "filename='{1}', "
-            "show_hidden='{3}', "
-            "use_dir_icons='{4}', "
-            "select_desc='{6}', "
-            "change_desc='{7}')"
-        ).format(
-            self._default_path,
-            self._default_filename,
-            self._show_hidden,
-            self._use_dir_icons,
-            self._select_desc,
-            self._change_desc
-        )
-        return str_

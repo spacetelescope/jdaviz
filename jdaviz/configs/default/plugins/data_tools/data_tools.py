@@ -1,7 +1,7 @@
 from jdaviz.core.template_mixin import TemplateMixin
 from jdaviz.utils import load_template
 from jdaviz.core.events import LoadDataMessage
-from traitlets import Unicode, Bool, observe
+from traitlets import Unicode, Bool
 import os
 from jdaviz.configs.default.plugins.data_tools.file_chooser import FileChooser
 from jdaviz.core.registries import tool_registry
