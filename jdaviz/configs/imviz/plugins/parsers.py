@@ -87,6 +87,7 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
     app.add_data(data, data_label)
     if show_in_viewer:
         app.add_data_to_viewer("viewer-1", data_label)
+        app.get_viewer("viewer-1").state.layers[0].percentile = 95
 
 
 def _validate_image2d(hdu, raise_error=True):
