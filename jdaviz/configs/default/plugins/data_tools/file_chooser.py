@@ -90,7 +90,11 @@ def get_dir_contents(
     if prepend_icons:
         return prepend_dir_icons(sorted(dirs)) + sorted(files)
     else:
-        return sorted(dirs) + sorted(files)
+        return add_trailing_slash(sorted(dirs)) + sorted(files)
+
+
+def add_trailing_slash(dir_list):
+    return [dirname + '/' for dirname in dir_list]
 
 
 def prepend_dir_icons(dir_list):
@@ -123,10 +127,7 @@ class FileChooser(VBox, ValueWidget):
             self,
             path=os.getcwd(),
             filename='',
-            select_desc='Select',
-            change_desc='Change',
             show_hidden=False,
-            select_default=False,
             use_dir_icons=False,
             filter_pattern=None,
             **kwargs):
@@ -134,8 +135,6 @@ class FileChooser(VBox, ValueWidget):
         self._default_path = path.rstrip(os.path.sep)
         self._default_filename = filename
         self._show_hidden = show_hidden
-        self._select_desc = select_desc
-        self._change_desc = change_desc
         self._use_dir_icons = use_dir_icons
         self._filter_pattern = filter_pattern
 

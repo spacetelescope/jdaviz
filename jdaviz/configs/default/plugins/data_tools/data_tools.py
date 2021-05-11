@@ -19,7 +19,7 @@ class DataTools(TemplateMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self._file_upload = FileChooser(os.path.expanduser('~'), use_dir_icons=True)
+        self._file_upload = FileChooser(os.path.abspath(os.path.curdir))
 
         self.components = {'g-file-import': self._file_upload}
 
