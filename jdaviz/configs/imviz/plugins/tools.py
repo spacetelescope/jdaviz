@@ -1,9 +1,43 @@
 from echo import delay_callback
 from glue.config import viewer_tool
-from glue_jupyter.bqplot.common.tools import InteractCheckableTool
+from glue_jupyter.bqplot.common.tools import InteractCheckableTool, Tool
 from glue.plugins.wcs_autolinking.wcs_autolinking import wcs_autolink, WCSLink
 
 __all__ = []
+
+
+@viewer_tool
+class BlinkOnce(Tool):
+    icon = 'glue_forward'
+    tool_id = 'bqplot:blinkonce'
+    action_text = 'Go to next image'
+    tool_tip = ('Click on this button to display the next image, '
+                'or you can also press the "b" key anytime')
+
+    def __init__(self, viewer, **kwargs):
+        super().__init__(viewer, **kwargs)
+
+    def activate(self):
+        # Simple blinking of images - this will make it so that only one
+        # layer is visible at a time and cycles through the layers.
+
+        state = self.viewer.state
+        n_layers = len(state.layers)
+
+        if n_layers > 1:
+
+            # If only one layer is visible, pick the next one to be visible,
+            # otherwise start from the last visible one.
+
+            visible = [ilayer for ilayer, layer in
+                       enumerate(state.layers) if layer.visible]
+
+            if len(visible) > 0:
+                next_layer = (visible[-1] + 1) % n_layers
+                state.layers[next_layer].visible = True
+                for ilayer in visible:
+                    if ilayer != next_layer:
+                        state.layers[ilayer].visible = False
 
 
 @viewer_tool

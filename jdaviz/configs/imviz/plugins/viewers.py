@@ -13,7 +13,8 @@ __all__ = ['ImvizImageView']
 @viewer_registry("imviz-image-viewer", label="Image 2D (Imviz)")
 class ImvizImageView(BqplotImageView):
 
-    tools = ['bqplot:panzoom', 'bqplot:rectangle', 'bqplot:circle', 'bqplot:matchwcs']
+    tools = ['bqplot:panzoom', 'bqplot:blinkonce', 'bqplot:rectangle',
+             'bqplot:circle', 'bqplot:matchwcs']
 
     default_class = None
 
@@ -98,7 +99,9 @@ class ImvizImageView(BqplotImageView):
             # Simple blinking of images - this will make it so that only one
             # layer is visible at a time and cycles through the layers.
 
-            if len(self.state.layers) > 1:
+            n_layers = len(self.state.layers)
+
+            if n_layers > 1:
 
                 # If only one layer is visible, pick the next one to be visible,
                 # otherwise start from the last visible one.
@@ -107,7 +110,7 @@ class ImvizImageView(BqplotImageView):
                            enumerate(self.state.layers) if layer.visible]
 
                 if len(visible) > 0:
-                    next_layer = (visible[-1] + 1) % len(self.state.layers)
+                    next_layer = (visible[-1] + 1) % n_layers
                     self.state.layers[next_layer].visible = True
                     for ilayer in visible:
                         if ilayer != next_layer:
