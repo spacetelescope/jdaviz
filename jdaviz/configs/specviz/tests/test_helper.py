@@ -60,3 +60,41 @@ def test_get_spectra_no_redshift(specviz_app, spectrum1d):
     assert spectra[label].flux.unit == spectrum1d.flux.unit
 
 
+def test_get_spectra_no_data_label(specviz_app, spectrum1d):
+    label = "Test 1D Spectrum"
+    specviz_app.load_spectrum(spectrum1d, data_label=label)
+
+    spectra = specviz_app.get_spectra(data_label=None, apply_slider_redshift="Error")
+
+    assert np.allclose(spectra[label].flux, spectrum1d.flux)
+    assert spectra[label].flux.unit == spectrum1d.flux.unit
+
+
+def test_get_spectra_no_label_redshift_warn(specviz_app, spectrum1d):
+    label = "Test 1D Spectrum"
+    specviz_app.load_spectrum(spectrum1d, data_label=label)
+
+    spectra = specviz_app.get_spectra(data_label=None, apply_slider_redshift="Warn")
+
+    assert np.allclose(spectra[label].flux, spectrum1d.flux)
+    assert spectra[label].flux.unit == spectrum1d.flux.unit
+
+
+def test_get_spectra_label_redshift(specviz_app, spectrum1d):
+    label = "Test 1D Spectrum"
+    specviz_app.load_spectrum(spectrum1d, data_label=label)
+
+    spectra = specviz_app.get_spectra(data_label=label, apply_slider_redshift="Error")
+
+    assert np.allclose(spectra.flux, spectrum1d.flux)
+    assert spectra.flux.unit == spectrum1d.flux.unit
+
+
+def test_get_spectra_label_redshift_warn(specviz_app, spectrum1d):
+    label = "Test 1D Spectrum"
+    specviz_app.load_spectrum(spectrum1d, data_label=label)
+
+    spectra = specviz_app.get_spectra(data_label=label, apply_slider_redshift="Warn")
+
+    assert np.allclose(spectra.flux, spectrum1d.flux)
+    assert spectra.flux.unit == spectrum1d.flux.unit
