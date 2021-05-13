@@ -90,7 +90,7 @@ development directory.
    scenario. This is not strictly necessary because you ran the tests above, but
    it can sometimes be useful to catch subtle bugs that might come from you
    using a customized developer environment.  For more on setting up virtual
-   environments, see :ref:`virtual_envs`, but for the sake of example we will
+   environments, see `virtual_envs <https://docs.astropy.org/en/latest/development/workflow/virtual_pythons.html#virtual-envs>`_, but for the sake of example we will
    assume you're using `Anaconda <https://conda.io/docs/>`_. Do::
 
        conda create -n myaffilpkg_rel_test astropy <any more dependencies here>
