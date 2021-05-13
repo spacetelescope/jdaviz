@@ -55,6 +55,10 @@ def main(filename, layout='default', browser='default'):
 
     start_dir = os.path.abspath('.')
 
+    # Keep track of start directory in environment variable so that it can be
+    # easily accessed e.g. in the file load dialog.
+    os.environ['JDAVIZ_START_DIR'] = start_dir
+
     nbdir = tempfile.mkdtemp()
 
     with open(os.path.join(nbdir, 'notebook.ipynb'), 'w') as nbf:

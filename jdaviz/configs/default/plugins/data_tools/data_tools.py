@@ -19,7 +19,12 @@ class DataTools(TemplateMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self._file_upload = FileChooser(os.path.abspath(os.path.curdir))
+        if 'JDAVIZ_START_DIR' in os.environ:
+            start_path = os.environ['JDAVIZ_START_DIR']
+        else:
+            start_path = os.path.abspath(os.path.curdir)
+
+        self._file_upload = FileChooser(start_path)
 
         self.components = {'g-file-import': self._file_upload}
 
