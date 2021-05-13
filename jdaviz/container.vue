@@ -18,7 +18,56 @@
       @resize="$emit('resize')"
       @destroy="$emit('destroy', viewer.id)"
     >
-      <v-card tile flat style="height: calc(100% - 2px); margin-top: -2px;">
+        <v-banner single-line color="#205f76" style="height: 62px; margin-top: -18px;">
+          <v-row >
+            <v-col>
+            </v-col>
+            <v-col>
+            <div class="text-center">
+              <v-menu offset-y>
+
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn
+                    color="#205f76"
+                    dark
+                    v-bind="attrs"
+                    v-on="on"
+                  >
+                    Data
+                  </v-btn>
+                </template>
+                <v-list>
+                <v-checkbox
+                  v-for="item in dataItems" :key="item.id" :label="item.name" dense hide-details
+                  :input-value="viewer.selected_data_items.includes(item.id)"
+                  @change="$emit('data-item-selected', {
+                    id: viewer.id,
+                    item_id: item.id,
+                    checked: $event
+                  })"
+                  class="pl-4"
+                />
+                </v-list>
+
+              </v-menu>
+            </div>
+              </v-col>
+               <v-col class="text-right">
+                <v-btn icon>
+                  <v-icon >mdi-hammer-screwdriver</v-icon>
+                </v-btn>
+                <v-btn icon>
+                  <v-icon >tune</v-icon>
+                </v-btn>
+                <v-btn icon>
+                  <v-icon >more_horiz</v-icon>
+                </v-btn>
+              </v-col>
+          </row>
+
+        </v-banner>
+        <v-card tile flat style="height: calc(100% - 2px); margin-top: -2px;">
+
         <v-toolbar
           dense
           floating
@@ -33,6 +82,7 @@
               <v-icon v-if="viewer.collapse">mdi-hammer-screwdriver</v-icon>
               <v-icon v-else>mdi-close</v-icon>
             </v-btn>
+
             <!-- <v-divider vertical></v-divider> -->
             <jupyter-widget :widget="viewer.tools"></jupyter-widget>
             <v-menu offset-y :close-on-content-click="true" style="z-index: 10">
@@ -43,16 +93,16 @@
              </template>
              <v-list>
               <v-list-item>
-               <v-btn 
-                color="primary" 
+               <v-btn
+                color="primary"
                 @click="$emit('save-figure', {'id': viewer.id, 'filetype': 'png'})"
                >
                 Save as PNG
                </v-btn>
               </v-list-item>
               <v-list-item>
-               <v-btn 
-                color="primary" 
+               <v-btn
+                color="primary"
                 @click="$emit('save-figure', {'id': viewer.id, 'filetype': 'svg'})"
                >
                 Save as SVG
