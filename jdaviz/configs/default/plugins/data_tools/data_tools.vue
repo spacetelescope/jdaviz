@@ -13,6 +13,7 @@
         <v-card-title class="headline" color="primary" primary-title>Import Data</v-card-title>
 
         <v-card-text>
+          Single click to select directory. Select and click "IMPORT" to open a file.
           <v-container>
             <v-row>
               <v-col>
