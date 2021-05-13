@@ -18,7 +18,7 @@
             :items="axes"
             v-model="selected_axis"
             label="Axis"
-            hint="Select the axis along with the data with be collapsed."
+            hint="Select the axis along which the data will be collapsed."
             persistent-hint
           ></v-select>
         </v-col>
