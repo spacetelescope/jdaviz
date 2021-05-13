@@ -127,9 +127,7 @@ div.output_wrapper {
 
 .v-toolbar__content,
 .vuetify-styles .v-toolbar__content {
-  padding-left: 0px;
-  padding-right: 0px;
-  padding-top: 0;
+  padding: 0px;
 }
 
 .v-tabs-items {
