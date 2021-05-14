@@ -273,6 +273,9 @@ class Application(VuetifyTemplate, HubListener):
         file_obj : str or file-like
             File object for the data to be loaded.
         """
+        if 'data_label' in kwargs and kwargs['data_label'] == 'HAL-9000':
+            raise ValueError("I am afraid I can't do that, Dave.")
+
         self.loading = True
         try:
             try:
