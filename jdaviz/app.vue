@@ -130,6 +130,11 @@ div.output_wrapper {
   padding: 0px;
 }
 
+.glue__subset-select {
+  display: flex;
+  align-items: center;
+}
+
 .v-tabs-items {
   height: 100%;
 }
