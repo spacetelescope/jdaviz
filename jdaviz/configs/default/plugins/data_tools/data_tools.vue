@@ -1,6 +1,6 @@
 <template>
   <v-toolbar-items>
-    <v-dialog v-model="dialog" width="500" persistent>
+    <v-dialog v-model="dialog" height="400" width="600">
       <template v-slot:activator="{ on }">
         <v-btn tile depressed v-on="on" color="accent">
           Import
@@ -9,39 +9,28 @@
       </template>
 
       <v-card>
+
         <v-card-title class="headline" color="primary" primary-title>Import Data</v-card-title>
+
         <v-card-text>
+          Single click to select directory. Select and click "IMPORT" to open a file.
           <v-container>
             <v-row>
               <v-col>
-                <!-- <v-file-input v-model="files" label="File input"></v-file-input> -->
-                <v-text-field
-                  label="File Path"
-                  placeholder="/path/to/data/file"
-                  v-model="file_path"
-                  :error-messages="error_message"
-                ></v-text-field>
+                <g-file-import id="file-uploader"></g-file-import>
+                <span style="color: red;">{{ error_message }}</span>
               </v-col>
             </v-row>
           </v-container>
         </v-card-text>
-        <!-- <v-divider></v-divider> -->
+
         <v-card-actions>
           <div class="flex-grow-1"></div>
           <v-btn color="primary" text @click="dialog = false">Cancel</v-btn>
           <v-btn color="primary" text @click="load_data" :disabled="!valid_path">Import</v-btn>
         </v-card-actions>
+
       </v-card>
     </v-dialog>
-
-    <v-tooltip bottom>
-      <template v-slot:activator="{ on }">
-        <v-btn disabled v-on="on" icon tile>
-          <v-icon>mdi-format-blank</v-icon>
-        </v-btn>
-      </template>
-      <span>Spacer</span>
-    </v-tooltip>
-    <!-- <v-divider vertical></v-divider> -->
   </v-toolbar-items>
 </template>
