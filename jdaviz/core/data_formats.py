@@ -4,7 +4,7 @@ import pathlib
 
 import astropy.io
 from specutils.io.registers import identify_spectrum_format
-from specutils import Spectrum1D
+from specutils import Spectrum1D, SpectrumList
 
 from jdaviz.core.config import list_configurations
 from jdaviz.core.events import DataPromptMessage
@@ -13,11 +13,13 @@ from jdaviz.core.events import DataPromptMessage
 # create a default file format to configuration mapping
 default_mapping = {'JWST x1d': 'specviz', 'JWST s2d': 'specviz2d',
                    'JWST s3d': 'cubeviz', 'MaNGA cube': 'cubeviz',
-                   'MaNGA rss': 'imviz'}
+                   'MaNGA rss': 'specviz'}
 
 # get formats table for specutils objects
-formats_table = astropy.io.registry.get_formats(data_class=Spectrum1D,
-                                                readwrite='Read')
+formats_table = astropy.io.registry.get_formats(readwrite='Read')
+formats_table.add_index('Data class')
+formats_table = formats_table.loc[['Spectrum1D', 'SpectrumList']]
+formats_table.sort(['Data class', 'Format'])
 
 file_to_config_mapping = {i: default_mapping.get(
     i, 'specviz') for i in formats_table['Format']}
@@ -65,7 +67,7 @@ def get_valid_format(filename):
             The recommended application configuration
     """
 
-    valid_file_format = identify_spectrum_format(filename)
+    valid_file_format = identify_spectrum_format(filename, SpectrumList)
     ndim = guess_dimensionality(filename)
 
     if valid_file_format:
