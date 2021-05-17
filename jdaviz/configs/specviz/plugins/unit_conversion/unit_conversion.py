@@ -249,6 +249,8 @@ class UnitConversion(TemplateMixin):
                 equivalencies = u.spectral_density(set_spectral_axis_unit)
                 set_flux_unit = spectrum.flux.to(u.Unit(new_flux),
                                                  equivalencies=equivalencies)
+            except u.UnitConversionError:
+                pass
             except ValueError:
                 snackbar_message = SnackbarMessage(
                     "Unable to convert flux units for selected data. Try different units.",
@@ -271,12 +273,18 @@ class UnitConversion(TemplateMixin):
                 self.hub.broadcast(msg)
                 temp_uncertainty = None
             else:
+                if set_flux_unit.unit == spectrum.flux.unit and new_flux is not None:
+                    temp_flux_unit = new_flux
+                elif new_flux is None:
+                    temp_flux_unit = "W/Hz"
+                else:
+                    temp_flux_unit = set_flux_unit.unit
                 try:
                     # Catch and handle error trying to convert variance uncertainties
                     # between frequency and wavelength space.
                     # TODO: simplify this when astropy handles it
                     temp_uncertainty = spectrum.uncertainty.quantity**(1/unit_exp)
-                    temp_uncertainty = temp_uncertainty.to(u.Unit(set_flux_unit.unit),
+                    temp_uncertainty = temp_uncertainty.to(u.Unit(temp_flux_unit),
                                        equivalencies=u.spectral_density(set_spectral_axis_unit)) # noqa
                     temp_uncertainty **= unit_exp
                     temp_uncertainty = spectrum.uncertainty.__class__(temp_uncertainty.value)
