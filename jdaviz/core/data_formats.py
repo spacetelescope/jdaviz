@@ -4,7 +4,7 @@ import pathlib
 
 import astropy.io
 from specutils.io.registers import identify_spectrum_format
-from specutils import Spectrum1D, SpectrumList
+from specutils import SpectrumList
 
 from jdaviz.core.config import list_configurations
 
