@@ -41,10 +41,10 @@ def create_jwst(n_dim=None, multi=None, ext=None):
         exts.append(ex1d)
         # create two more extensions
         if multi:
-            for i in range(1,3):
+            for i in range(1, 3):
                 ex1d = _create_bintable(ext, ver=i)
                 exts.append(ex1d)
-    shape = (1,) if n_dim == 1 else (1, 2,) if n_dim == 2 else (1, 2, 3) if n_dim == 3 else (1,)
+    shape = (1,) if n_dim == 1 else (1, 2,) if n_dim == 2 else (1, 2, 3) if n_dim == 3 else (1, )
     sci.data = np.empty(shape)
     if n_dim > 1:
         exts.append(sci)

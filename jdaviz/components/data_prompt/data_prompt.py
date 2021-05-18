@@ -13,6 +13,7 @@ __all__ = ['DataPrompt']
 with open(pathlib.Path(__file__).parent / 'missions.json', 'r') as f:
     missions = json.loads(f.read())
 
+
 @component_registry('data-prompt')
 class DataPrompt(TemplateMixin):
     template = load_template("data_prompt.vue", __file__).tag(sync=True)

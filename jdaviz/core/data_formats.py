@@ -4,7 +4,7 @@ import pathlib
 
 import astropy.io
 from specutils.io.registers import identify_spectrum_format
-from specutils import Spectrum1D, SpectrumList
+from specutils import SpectrumList
 
 from jdaviz.core.config import list_configurations
 from jdaviz.core.events import DataPromptMessage
@@ -145,7 +145,6 @@ def prompt_data(app, filename):
         # identify a suggested config
         suggested_format, suggested_config = get_valid_format(filename)
 
-
     # get primary header and convert to dict; remove header comments
     hdr = dict(astropy.io.fits.getheader(filename, ext=0))
     hdr.pop('')
@@ -153,5 +152,6 @@ def prompt_data(app, filename):
     # broadcast a message
     msg = DataPromptMessage(status=status, data_format=valid_format, config=config,
                             current=current_config, suggested_format=suggested_format,
-                            suggested_config=suggested_config, filename=filename, hdr=hdr, sender=app)
+                            suggested_config=suggested_config, filename=filename,
+                            hdr=hdr, sender=app)
     app.hub.broadcast(msg)

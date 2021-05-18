@@ -30,8 +30,8 @@ from ipyvuetify import VuetifyTemplate
 from .core.config import read_configuration, get_configuration
 from .core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
                           SnackbarMessage, RemoveDataMessage,
-                          AddDataToViewerMessage, RemoveDataFromViewerMessage,
-                          DataPromptMessage)
+                          AddDataToViewerMessage, RemoveDataFromViewerMessage)
+
 from .core.registries import (tool_registry, tray_registry, viewer_registry,
                               data_parser_registry, component_registry)
 from .utils import load_template
@@ -116,6 +116,7 @@ class ApplicationState(State):
     component_items = ListCallbackProperty(
         docstring='List of components used by the application'
     )
+
 
 class Application(VuetifyTemplate, HubListener):
     """
@@ -1222,7 +1223,8 @@ class Application(VuetifyTemplate, HubListener):
         # Add any components to the stack of component items
         for name, component in component_registry.members.items():
             comp = component(app=self)
-            self.state.component_items.append({'name': name, 'widget': "IPY_MODEL_" + comp.model_id})
+            self.state.component_items.append({'name': name,
+                                               'widget': "IPY_MODEL_" + comp.model_id})
 
     def _reset_state(self):
         """ Resets the application state """
