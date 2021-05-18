@@ -2,11 +2,9 @@
 import pathlib
 from jdaviz.core.template_mixin import TemplateMixin
 from jdaviz.utils import load_template
-from jdaviz.core.events import SnackbarMessage, DataPromptMessage
-from traitlets import Unicode, Bool, observe, Dict, Int, Float, default, Union
+from jdaviz.core.events import DataPromptMessage
+from traitlets import Unicode, Bool, observe, List
 from jdaviz.core.registries import component_registry
-from astropy.io.fits import Header
-import json
 
 __all__ = ['DataPrompt']
 
@@ -18,14 +16,8 @@ class DataPrompt(TemplateMixin):
     status = Unicode("").tag(sync=True)
     filename = Unicode("").tag(sync=True)
     dialog = Bool(False).tag(sync=True)
-    load = Bool(False).tag(sync=True)
-    error_message = Unicode().tag(sync=True)
-    config = Unicode("Unknown").tag(sync=True)
-    data_format = Unicode("Unknown").tag(sync=True)
-    current = Unicode("Unknown").tag(sync=True)
-    suggested_format = Unicode("Unknown").tag(sync=True)
-    suggested_config = Unicode("Unknown").tag(sync=True)
-    header = Dict(Union([Unicode("Unknown"), Bool(None), Int(-9999), Float(-9999)]) ).tag(sync=True)
+    products = List().tag(sync=True)
+    configs = List().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -35,45 +27,30 @@ class DataPrompt(TemplateMixin):
 
     def _on_status_updated(self, msg):
         self.status_msg = msg.status
-        self.status = 'success' if 'Success' in msg.status else 'error' if 'Error' in msg.status else 'unknown'
-        self.config = msg.config
-        self.data_format = msg.data_format
-        self.current = msg.current
-        self.suggested_format = msg.suggested_format
-        self.suggested_config = msg.suggested_config
+        self.status = ('success' if 'Success' in msg.status else 'error'
+                       if 'Error' in msg.status else 'unknown')
         self.filename = str(pathlib.Path(msg.filename).stem)
 
-        self.header = msg.header
+        self.products = [{"title": "Mission", "subtitle": msg.header.get('TELESCOP')},
+                         {"title": "Instrument", "subtitle": msg.header.get('INSTRUME')},
+                         {"title": "Exposure Type", "subtitle": msg.header.get('EXP_TYPE')},
+                         {"title": "Template", "subtitle": msg.header.get('TEMPLATE')}]
+
+        self.configs = [{"title": "Data Format", "subtitle": msg.data_format},
+                        {"title": "Current Config", "subtitle": msg.current},
+                        {"title": "Suggested Format", "subtitle": msg.suggested_format},
+                        {"title": "Suggested Config", "subtitle": msg.suggested_config},
+                        {"title": "Config", "subtitle": msg.config}]
 
     @observe("status_msg")
     def _on_status_changed(self, event):
         old_status = event['old']
         new_status = event['new']
-        print('event', event)
         if new_status and new_status != old_status:
-            print('updating status')
             self.status = new_status
             self.dialog = True
 
-    @observe("load")
-    def _update_data_load_state(self, event):
-        print('updating loading')
-        self.app.state.data_prompt['dialog'] = False
-        self.app.state.data_prompt['load'] = event['new']
-        self.app.state.data_prompt['status'] = ''
-        print('new load', self.app.state.data_prompt.get('load', ''))
-
     def vue_close(self, *args, **kwargs):
-        print('close', self.app.state.data_prompt.get('status', ''),
-              self.app.state.data_prompt.get('dialog', ''))
         self.status = ''
         self.load = False
-        self.dialog = False
-
-    def vue_load_data(self, *args, **kwargs):
-        print('load', self.app.state.data_prompt.get('status', ''),
-              self.app.state.data_prompt.get('dialog', ''))
-        snack = SnackbarMessage(self.status, sender=self, color='error')
-        self.hub.broadcast(snack)
-        self.load = True
         self.dialog = False
