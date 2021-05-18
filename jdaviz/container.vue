@@ -19,17 +19,14 @@
       @destroy="$emit('destroy', viewer.id)"
       style="display: flex; flex-flow: column; overflow: hidden"
     >
-        <v-banner single-line color="#205f76" style="height: 62px; margin-top: -18px;">
-          <v-row >
-            <v-col>
-            </v-col>
-            <v-col>
-            <div class="text-center">
+        <div>
+          <v-row dense style="background-color: #205f76">
+            <v-col md="auto">
               <v-menu offset-y>
 
                 <template v-slot:activator="{ on, attrs }">
                   <v-btn
-                    color="#205f76"
+                    text
                     dark
                     v-bind="attrs"
                     v-on="on"
@@ -51,9 +48,10 @@
                 </v-list>
 
               </v-menu>
-            </div>
+
               </v-col>
-               <v-col class="text-right">
+              <v-spacer></v-spacer>
+               <v-col md="auto">
                 <v-btn icon>
                   <v-icon >mdi-hammer-screwdriver</v-icon>
                 </v-btn>
@@ -64,9 +62,10 @@
                   <v-icon >more_horiz</v-icon>
                 </v-btn>
               </v-col>
-          </row>
+          </v-row>
 
-        </v-banner>
+        </div>
+
         <v-card tile flat style="flex: 1; margin-top: -2px;">
 
         <v-toolbar
