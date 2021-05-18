@@ -17,6 +17,7 @@
       :tab-id="viewer.id"
       @resize="$emit('resize')"
       @destroy="$emit('destroy', viewer.id)"
+      style="display: flex; flex-flow: column; overflow: hidden"
     >
         <v-banner single-line color="#205f76" style="height: 62px; margin-top: -18px;">
           <v-row >
@@ -66,7 +67,7 @@
           </row>
 
         </v-banner>
-        <v-card tile flat style="height: calc(100% - 2px); margin-top: -2px;">
+        <v-card tile flat style="flex: 1; margin-top: -2px;">
 
         <v-toolbar
           dense
