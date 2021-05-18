@@ -5,9 +5,13 @@ from jdaviz.utils import load_template
 from jdaviz.core.events import DataPromptMessage
 from traitlets import Unicode, Bool, observe, List
 from jdaviz.core.registries import component_registry
+import json
 
 __all__ = ['DataPrompt']
 
+
+with open(pathlib.Path(__file__).parent / 'missions.json', 'r') as f:
+    missions = json.loads(f.read())
 
 @component_registry('data-prompt')
 class DataPrompt(TemplateMixin):
@@ -31,16 +35,26 @@ class DataPrompt(TemplateMixin):
                        if 'Error' in msg.status else 'unknown')
         self.filename = str(pathlib.Path(msg.filename).stem)
 
+        # get the primary helper based on telescope-instrument-exposure type
+        exptypes = missions.get(msg.header.get('TELESCOP'), {}).get(msg.header.get('INSTRUME'))
+        if exptypes:
+            exptype = [ee for ee in exptypes if ee['exp_type'] == msg.header.get('EXP_TYPE')]
+            if exptype:
+                primary_helper = exptype[0].get('primary', 'Unknown')
+
         self.products = [{"title": "Mission", "subtitle": msg.header.get('TELESCOP')},
                          {"title": "Instrument", "subtitle": msg.header.get('INSTRUME')},
                          {"title": "Exposure Type", "subtitle": msg.header.get('EXP_TYPE')},
                          {"title": "Template", "subtitle": msg.header.get('TEMPLATE')}]
 
-        self.configs = [{"title": "Data Format", "subtitle": msg.data_format},
-                        {"title": "Current Config", "subtitle": msg.current},
-                        {"title": "Suggested Format", "subtitle": msg.suggested_format},
-                        {"title": "Suggested Config", "subtitle": msg.suggested_config},
-                        {"title": "Config", "subtitle": msg.config}]
+        self.configs = [
+            {"ltitle": "Data Format", "lsubtitle": msg.data_format or "Unknown",
+             'rtitle': 'Current Config', 'rsubtitle': msg.current or "Unknown"},
+            {"ltitle": "Suggested Format", "lsubtitle": msg.suggested_format,
+             'rtitle': 'Suggested Config', 'rsubtitle': msg.suggested_config},
+            {"ltitle": "Primary Helper", "lsubtitle": primary_helper or "Unknown",
+             'rtitle': 'Identified Config', 'rsubtitle': msg.config or "Unknown"},
+        ]
 
     @observe("status_msg")
     def _on_status_changed(self, event):

@@ -1,0 +1,120 @@
+{
+    "JWST": {
+        "MIRI" : [
+            {
+                "exp_type": "MIRI_MRS",
+                "template": "MIRI Medium Resolution Spectroscopy",
+                "primary": "Cubeviz",
+                "helpers": [
+                    {"product": "x1d",
+                    "config": "Specviz"},
+                    {"product": "s3d",
+                    "config": "Cubeviz"}
+                ]
+            },
+            {
+                "exp_type": "MIRI_LRS-FIXEDSLIT",
+                "template": "MIRI Low Resolution Spectroscopy",
+                "primary": "Specviz2d",
+                "helpers": [
+                    {"product": "x1d",
+                    "config": "Specviz"},
+                    {"product": "s2d",
+                    "config": "Specviz2d"}
+                ]
+            }
+        ],
+        "NIRSPEC": [
+            {
+                "exp_type": "NRS_IFU",
+                "template": "NIRSpec IFU Spectroscopy",
+                "primary": "Cubeviz",
+                "helpers": [
+                    {"product": "x1d",
+                    "config": "Specviz"},
+                    {"product": "s3d",
+                    "config": "Cubeviz"}
+                ]
+            },
+            {
+                "exp_type": "NRS_FIXEDSLIT",
+                "template": "NIRSpec Fixed Slit Spectroscopy",
+                "primary": "Specviz2d",
+                "helpers": [
+                    {"product": "x1d",
+                    "config": "Specviz"},
+                    {"product": "s2d",
+                    "config": "Specviz2d"}
+                ]
+            },
+            {
+                "exp_type": "NRS_MSASPEC",
+                "template": "NIRSpec MultiObject Spectroscopy",
+                "primary": "Mosviz",
+                "helpers": [
+                    {"product": "x1d",
+                    "config": "Specviz"},
+                    {"product": "s2d",
+                    "config": "Specviz2d"}
+                ]
+            }
+        ],
+        "NIRISS": [
+            {
+                "exp_type": "NIS_WFSS",
+                "template": "NIRISS Wide Field Slitless Spectroscopy",
+                "primary": "Specviz",
+                "helpers": [
+                    {"product": "x1d",
+                    "config": "Specviz"},
+                    {"product": "c1d",
+                    "config": "Specviz"}
+                ]
+            },
+            {
+                "exp_type": "NIS_SOSS",
+                "template": "NIRISS Single Object Slitless Spectroscopy",
+                "primary": "Specviz",
+                "helpers": [
+                    {"product": "x1d",
+                    "config": "Specviz"},
+                    {"product": "c1d",
+                    "config": "Specviz"}
+                ]
+            }
+        ],
+        "NIRCAM": [
+            {
+                "exp_type": "NRC_WFSS",
+                "template": "NIRCam Wide Field Slitless Spectroscopy",
+                "primary": "Specviz",
+                "helpers": [
+                    {"product": "x1d",
+                    "config": "Specviz"},
+                    {"product": "c1d",
+                    "config": "Specviz"}
+                ]
+            },
+            {
+                "exp_type": "NRC_TSGRISM",
+                "template": "NIRCam Time-Series",
+                "primary": "Timeviz",
+                "helpers": [
+                    {"product": "x1dints",
+                    "config": "Specviz"}
+                ]
+            },
+            {
+                "exp_type": "NRC_GRISM",
+                "template": "NIRCam Grism",
+                "primary": "Specviz",
+                "helpers": [
+                    {"product": "x1d",
+                    "config": "Specviz"},
+                    {"product": "c1d",
+                    "config": "Specviz"}
+                ]
+            }
+        ]
+    }
+}

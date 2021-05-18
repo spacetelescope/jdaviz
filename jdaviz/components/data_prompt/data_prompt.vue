@@ -4,7 +4,7 @@
       <v-row>
         <v-col>
 
-        <v-card class='d-flex flex-column mx-auto my-12' tile max-width=800>
+        <v-card class='d-flex flex-column mx-auto my-12' tile max-width=600>
             <div class='headline blue lighten-4'>
                 <v-card-title >Data Prompt</v-card-title>
                 <v-card-subtitle >{{ filename}} </v-card-subtitle>
@@ -22,7 +22,7 @@
                     <v-card class='mx-auto' tile>
                         <v-card-title>Product Info</v-card-title>
                         <v-card-text>
-                            <v-list disabled two-line>
+                            <v-list disabled two-line dense>
                                 <v-list-item-group>
                                     <v-list-item v-for='product in products'>
                                         <v-list-item-content>
@@ -39,12 +39,16 @@
                     <v-card class='mx-auto' tile>
                         <v-card-title>Jdaviz Configuration</v-card-title>
                         <v-card-text>
-                            <v-list disabled two-line>
+                            <v-list disabled two-line dense>
                                 <v-list-item-group>
                                     <v-list-item v-for='config in configs'>
                                         <v-list-item-content>
-                                            <v-list-item-title><p class="font-weight-black">{{ config.title}}:</p></v-list-item-title>
-                                            <v-list-item-subtitle>{{ config.subtitle }}</v-list-item-subtitle>
+                                            <v-list-item-title><p class="font-weight-black">{{ config.ltitle}}:</p></v-list-item-title>
+                                            <v-list-item-subtitle>{{ config.lsubtitle }}</v-list-item-subtitle>
+                                        </v-list-item-content>
+                                        <v-list-item-content>
+                                            <v-list-item-title><p class="font-weight-black">{{ config.rtitle}}:</p></v-list-item-title>
+                                            <v-list-item-subtitle>{{ config.rsubtitle }}</v-list-item-subtitle>
                                         </v-list-item-content>
                                     </v-list-item>
                                 </v-list-item-group>
