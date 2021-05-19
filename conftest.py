@@ -10,6 +10,7 @@ except ImportError:
 # This is repeated from jdaviz/conftest.py because tox cannot grab test
 # header from that file.
 def pytest_configure(config):
+    PYTEST_HEADER_MODULES['some-fake-pkg-1234'] = 'some_fake_pkg_1234'
     PYTEST_HEADER_MODULES['astropy'] = 'astropy'
     PYTEST_HEADER_MODULES['pyyaml'] = 'yaml'
     PYTEST_HEADER_MODULES['specutils'] = 'specutils'
