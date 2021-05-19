@@ -25,7 +25,6 @@ def spectrum1d():
     return Spectrum1D(spectral_axis=spec_axis, flux=flux)
 
 
-# 1 4
 def test_bounds_orderly_new_val_greater_than(specviz_app, spectrum1d):
     label = "Test 1D Spectrum"
     specviz_app.load_spectrum(spectrum1d, data_label=label)
@@ -40,7 +39,6 @@ def test_bounds_orderly_new_val_greater_than(specviz_app, spectrum1d):
     assert redshift_slider.slider == 100500
 
 
-# 1 2 4
 def test_bounds_orderly_new_val_less_than(specviz_app, spectrum1d):
     label = "Test 1D Spectrum"
     specviz_app.load_spectrum(spectrum1d, data_label=label)
@@ -55,7 +53,6 @@ def test_bounds_orderly_new_val_less_than(specviz_app, spectrum1d):
     assert redshift_slider.slider == -500
 
 
-# 1 2 3 4
 def test_bounds_orderly_new_val_else(specviz_app, spectrum1d):
     label = "Test 1D Spectrum"
     specviz_app.load_spectrum(spectrum1d, data_label=label)
