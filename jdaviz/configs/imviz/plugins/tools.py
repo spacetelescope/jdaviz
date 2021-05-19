@@ -114,9 +114,21 @@ class BqplotContrastBias(CheckableTool):
 
         # Note that we throttle this to 200ms here as changing the contrast
         # and bias it expensive since it forces the whole image to be redrawn
-        if event == 'dragmove' and time.time() - self._time_last > 0.2:
-            x = data['domain']['x'] / (self.viewer.state.x_max - self.viewer.state.x_min)
-            y = data['domain']['y'] / (self.viewer.state.y_max - self.viewer.state.y_min)
+        if event == 'dragmove':
+            if (time.time() - self._time_last) <= 0.2:
+                return
+
+            event_x = data['domain']['x']
+            event_y = data['domain']['y']
+
+            if ((event_x < self.viewer.state.x_min) or
+                    (event_x >= self.viewer.state.x_max) or
+                    (event_y < self.viewer.state.y_min) or
+                    (event_y >= self.viewer.state.y_max)):
+                return
+
+            x = event_x / (self.viewer.state.x_max - self.viewer.state.x_min)
+            y = event_y / (self.viewer.state.y_max - self.viewer.state.y_min)
             state = self.viewer.layers[0].state
 
             # https://github.com/glue-viz/glue/blob/master/glue/viewers/image/qt/contrast_mouse_mode.py
