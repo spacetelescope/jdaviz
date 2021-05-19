@@ -158,20 +158,6 @@ def test_no_spec_flux_no_uncert(specviz_app, spectrum1d):
     assert converted_spectrum.spectral_axis.unit == spectrum1d.spectral_axis.unit
 
 
-def test_no_spec_no_flux_uncert_except_conversion_error(specviz_app, spectrum1d):
-    np.random.seed(42)
-    label = "Test 1D Spectrum"
-    specviz_app.load_spectrum(spectrum1d, data_label=label)
-
-    spectrum1d.uncertainty = VarianceUncertainty(np.abs(np.random.randn(len(spectrum1d.spectral_axis.value))))
-
-    conv_func = uc.UnitConversion.process_unit_conversion
-    converted_spectrum = conv_func(specviz_app.app, spectrum=spectrum1d)
-
-    assert converted_spectrum.spectral_axis.unit == spectrum1d.spectral_axis.unit
-    assert converted_spectrum.uncertainty is None
-
-
 def test_no_spec_flux_unit_exp_not_none(specviz_app, spectrum1d):
     label = "Test 1D Spectrum"
     specviz_app.load_spectrum(spectrum1d, data_label=label)
@@ -254,41 +240,6 @@ def test_spec_no_flux_uncert_unit_exp(specviz_app, spectrum1d):
                        RESULT_SPECTRAL_AXIS, atol=1e-5)
 
 
-def test_no_spec_flux_uncert_unit_exp_conversion_error(specviz_app, spectrum1d):
-    np.random.seed(42)
-    label = "Test 1D Spectrum"
-    specviz_app.load_spectrum(spectrum1d, data_label=label)
-
-    new_flux = "W/Hz"
-
-    spectrum1d.uncertainty = VarianceUncertainty(np.abs(np.random.randn(len(spectrum1d.spectral_axis.value))))
-
-    conv_func = uc.UnitConversion.process_unit_conversion
-    converted_spectrum = conv_func(specviz_app.app, spectrum=spectrum1d,
-                                   new_flux=new_flux)
-
-    assert converted_spectrum.spectral_axis.unit == spectrum1d.spectral_axis.unit
-    assert converted_spectrum.uncertainty is None
-
-
-def test_spec_no_flux_uncert_unit_exp_conversion_error(specviz_app, spectrum1d):
-    np.random.seed(42)
-    label = "Test 1D Spectrum"
-    specviz_app.load_spectrum(spectrum1d, data_label=label)
-
-    new_spectral_axis = "micron"
-
-    spectrum1d.uncertainty = VarianceUncertainty(np.abs(np.random.randn(len(spectrum1d.spectral_axis.value))))
-
-    conv_func = uc.UnitConversion.process_unit_conversion
-    converted_spectrum = conv_func(specviz_app.app, spectrum=spectrum1d,
-                                   new_spectral_axis=new_spectral_axis)
-
-    assert np.allclose(converted_spectrum.spectral_axis.value,
-                       RESULT_SPECTRAL_AXIS, atol=1e-5)
-    assert converted_spectrum.uncertainty is None
-
-
 def test_spec_flux_uncert_no_unit_exp(specviz_app, spectrum1d):
     label = "Test 1D Spectrum"
     specviz_app.load_spectrum(spectrum1d, data_label=label)
@@ -325,22 +276,3 @@ def test_spec_flux_uncert_no_unit_exp(specviz_app, spectrum1d):
                        RESULT_SPECTRAL_AXIS, atol=1e-5)
     assert np.allclose(converted_spectrum.flux.value,
                        RESULT_FLUX, atol=1e-5)
-
-
-def test_spec_flux_uncert_unit_exp_conversion_error(specviz_app, spectrum1d):
-    label = "Test 1D Spectrum"
-    specviz_app.load_spectrum(spectrum1d, data_label=label)
-
-    new_spectral_axis = "micron"
-    new_flux = "W/Hz"
-
-    spectrum1d.uncertainty = VarianceUncertainty(np.abs(np.random.randn(len(spectrum1d.spectral_axis.value))))
-
-    conv_func = uc.UnitConversion.process_unit_conversion
-    converted_spectrum = conv_func(specviz_app.app, spectrum=spectrum1d,
-                                   new_flux=new_flux,
-                                   new_spectral_axis=new_spectral_axis)
-
-    assert np.allclose(converted_spectrum.spectral_axis.value,
-                       RESULT_SPECTRAL_AXIS, atol=1e-5)
-    assert converted_spectrum.uncertainty is None
