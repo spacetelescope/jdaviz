@@ -134,7 +134,7 @@ def _jwst_to_glue_data(file_obj, ext, data_label):
                 _validate_bunit(getattr(dm.meta, unit_attr), raise_error=False)):
             bunit = getattr(dm.meta, unit_attr)
         else:
-            bunit = 'count'
+            bunit = ''
 
         # This is instance of gwcs.WCS, not astropy.wcs.WCS
         data.coords = dm.meta.wcs
@@ -150,7 +150,7 @@ def _hdu_to_glue_data(hdu, data_label):
     if 'BUNIT' in hdu.header and _validate_bunit(hdu.header['BUNIT'], raise_error=False):
         bunit = hdu.header['BUNIT']
     else:
-        bunit = 'count'
+        bunit = ''
 
     comp_label = f'{hdu.name.upper()},{hdu.ver}'
     data_label = f'{data_label}[{comp_label}]'
