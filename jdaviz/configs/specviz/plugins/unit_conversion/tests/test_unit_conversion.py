@@ -1,12 +1,7 @@
-import astropy.modeling.models as models
-import astropy.units as u
 import numpy as np
-from specutils import Spectrum1D, SpectrumCollection
-from jdaviz.configs.specviz.helper import SpecViz
 from .. import unit_conversion as uc
-import pytest
-from astropy.nddata import VarianceUncertainty, StdDevUncertainty,\
-    InverseVariance, UnknownUncertainty
+from astropy.nddata import (VarianceUncertainty, StdDevUncertainty,
+                            InverseVariance, UnknownUncertainty)
 
 
 SPECTRUM_SIZE = 10  # length of spectrum
@@ -23,23 +18,6 @@ RESULT_FLUX = [1.04067240e-07, 9.52912307e-08, 9.77144651e-08,
                1.00212528e-07, 8.55573341e-08, 8.29285448e-08,
                9.05651431e-08, 8.33870526e-08, 7.47628902e-08,
                7.74896053e-08]
-
-@pytest.fixture
-def specviz_app():
-    return SpecViz()
-
-
-@pytest.fixture
-def spectrum1d():
-    np.random.seed(42)
-
-    spec_axis = np.linspace(6000, 8000, SPECTRUM_SIZE) * u.AA
-    flux = (np.random.randn(len(spec_axis.value)) +
-            10*np.exp(-0.001*(spec_axis.value-6563)**2) +
-            spec_axis.value/500) * u.Jy
-    uncertainty = StdDevUncertainty(np.abs(np.random.randn(len(spec_axis.value))) * u.Jy)
-
-    return Spectrum1D(spectral_axis=spec_axis, flux=flux, uncertainty=uncertainty)
 
 
 def test_value_error_spec_axis_exception(specviz_app, spectrum1d):
@@ -132,7 +110,8 @@ def test_no_spec_no_flux_uncert_unit_exp_none(specviz_app, spectrum1d):
     label = "Test 1D Spectrum"
     specviz_app.load_spectrum(spectrum1d, data_label=label)
 
-    spectrum1d.uncertainty = UnknownUncertainty(np.abs(np.random.randn(len(spectrum1d.spectral_axis.value))))
+    spectrum1d.uncertainty = UnknownUncertainty(np.abs(
+        np.random.randn(len(spectrum1d.spectral_axis.value))))
 
     conv_func = uc.UnitConversion.process_unit_conversion
     converted_spectrum = conv_func(specviz_app.app, spectrum=spectrum1d)
@@ -198,7 +177,8 @@ def test_spec_no_flux_uncert_no_unit_exp(specviz_app, spectrum1d):
 
     new_spectral_axis = "micron"
 
-    spectrum1d.uncertainty = UnknownUncertainty(np.abs(np.random.randn(len(spectrum1d.spectral_axis.value))))
+    spectrum1d.uncertainty = UnknownUncertainty(np.abs(
+        np.random.randn(len(spectrum1d.spectral_axis.value))))
 
     conv_func = uc.UnitConversion.process_unit_conversion
     converted_spectrum = conv_func(specviz_app.app, spectrum=spectrum1d,
@@ -215,7 +195,8 @@ def test_no_spec_flux_uncert_no_unit_exp(specviz_app, spectrum1d):
 
     new_flux = "erg / (s cm2 um)"
 
-    spectrum1d.uncertainty = UnknownUncertainty(np.abs(np.random.randn(len(spectrum1d.spectral_axis.value))))
+    spectrum1d.uncertainty = UnknownUncertainty(np.abs(
+        np.random.randn(len(spectrum1d.spectral_axis.value))))
 
     conv_func = uc.UnitConversion.process_unit_conversion
     converted_spectrum = conv_func(specviz_app.app, spectrum=spectrum1d,
@@ -247,7 +228,8 @@ def test_spec_flux_uncert_no_unit_exp(specviz_app, spectrum1d):
     new_spectral_axis = "micron"
     new_flux = "erg / (s cm2 um)"
 
-    spectrum1d.uncertainty = UnknownUncertainty(np.abs(np.random.randn(len(spectrum1d.spectral_axis.value))))
+    spectrum1d.uncertainty = UnknownUncertainty(np.abs(
+        np.random.randn(len(spectrum1d.spectral_axis.value))))
 
     conv_func = uc.UnitConversion.process_unit_conversion
     converted_spectrum = conv_func(specviz_app.app, spectrum=spectrum1d,
@@ -260,7 +242,7 @@ def test_spec_flux_uncert_no_unit_exp(specviz_app, spectrum1d):
                        RESULT_FLUX, atol=1e-5)
 
 
-def test_spec_flux_uncert_no_unit_exp(specviz_app, spectrum1d):
+def test_spec_flux_uncert_unit_exp(specviz_app, spectrum1d):
     label = "Test 1D Spectrum"
     specviz_app.load_spectrum(spectrum1d, data_label=label)
 

@@ -7,6 +7,14 @@ import os
 import pytest
 
 from astropy.wcs import WCS
+from astropy import units as u
+from astropy.nddata import StdDevUncertainty
+import numpy as np
+from specutils import Spectrum1D
+from jdaviz.configs.specviz.helper import SpecViz
+
+
+SPECTRUM_SIZE = 10  # length of spectrum
 
 
 @pytest.fixture
@@ -16,6 +24,24 @@ def spectral_cube_wcs(request):
     wcs.wcs.ctype = 'RA---TAN', 'DEC--TAN', 'FREQ'
     wcs.wcs.set()
     return wcs
+
+
+@pytest.fixture
+def specviz_app():
+    return SpecViz()
+
+
+@pytest.fixture
+def spectrum1d():
+    np.random.seed(42)
+
+    spec_axis = np.linspace(6000, 8000, SPECTRUM_SIZE) * u.AA
+    flux = (np.random.randn(len(spec_axis.value)) +
+            10*np.exp(-0.001*(spec_axis.value-6563)**2) +
+            spec_axis.value/500) * u.Jy
+    uncertainty = StdDevUncertainty(np.abs(np.random.randn(len(spec_axis.value))) * u.Jy)
+
+    return Spectrum1D(spectral_axis=spec_axis, flux=flux, uncertainty=uncertainty)
 
 
 try:
