@@ -79,6 +79,32 @@ class Imviz(ConfigHelper):
             self.app.load_data(
                 data, parser_reference=parser_reference, **kwargs)
 
+    def load_regions(self, regions):
+        """Load a given region into viewer.
+
+        Parameters
+        ----------
+        regions : dict
+            Dictionary mapping desired region names to respective Astropy
+            region objects.
+
+        """
+        for key, val in regions.items():
+            self.app.add_subset(val, key)
+
+    def get_regions(self):
+        """Return regions defined in the viewer.
+
+        Returns
+        -------
+        regions : dict
+            Dictionary mapping defined region names to respective Astropy
+            region objects.
+
+        """
+        # TODO: Is there a simpler way to do this?
+        return self.app.get_subsets_from_viewer('viewer-1')
+
 
 def split_filename_with_fits_ext(filename):
     """Split a ``filename[ext]`` input into filename and FITS extension.

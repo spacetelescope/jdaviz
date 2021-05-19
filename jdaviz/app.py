@@ -591,6 +591,14 @@ class Application(VuetifyTemplate, HubListener):
             f"Data '{data_label}' successfully added.", sender=self)
         self.hub.broadcast(snackbar_message)
 
+    def add_subset(self, subset, subset_label):
+        """Add subset to Glue ``DataCollection``."""
+
+        # TODO: Need translation magic from Astropy region to Glue subset
+
+        subset_label = subset_label or "New Subset"
+        self.data_collection.new_subset_group(subset_label, subset)
+
     @staticmethod
     def _build_data_label(path, ext=None):
         """ Build a data label from a filename and data extension
