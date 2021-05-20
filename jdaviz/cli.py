@@ -1,5 +1,6 @@
 # Command-line interface for jdaviz
 
+import logging
 import pathlib
 import os
 import sys
@@ -68,9 +69,11 @@ def main(filename, layout='default', browser='default'):
     os.chdir(nbdir)
 
     try:
+        logging.getLogger('tornado.access').disabled = True
         Voila.notebook_path = 'notebook.ipynb'
         VoilaConfiguration.template = 'jdaviz-default'
         VoilaConfiguration.enable_nbextensions = True
+        VoilaConfiguration.file_whitelist = ['.*']
         if browser != 'default':
             Voila.browser = browser
         sys.exit(Voila().launch_instance(argv=[]))
