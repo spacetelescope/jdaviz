@@ -76,6 +76,12 @@
     <v-fade-transition>
       <div v-show="loading" class="jd-loading-overlay"></div>
     </v-fade-transition>
+
+    <!-- add containers for all the component widgets -->
+    <v-container v-for="(comp, index) in state.component_items" :key="index">
+      <jupyter-widget :id="comp.name" :widget="comp.widget"></jupyter-widget>
+    </v-container>
+
   </v-app>
 </template>
 

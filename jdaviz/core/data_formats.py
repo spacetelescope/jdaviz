@@ -4,18 +4,22 @@ import pathlib
 
 import astropy.io
 from specutils.io.registers import identify_spectrum_format
-from specutils import Spectrum1D
+from specutils import SpectrumList
 
 from jdaviz.core.config import list_configurations
+from jdaviz.core.events import DataPromptMessage
 
 
 # create a default file format to configuration mapping
 default_mapping = {'JWST x1d': 'specviz', 'JWST s2d': 'specviz2d',
                    'JWST s3d': 'cubeviz', 'MaNGA cube': 'cubeviz',
-                   'MaNGA rss': 'imviz'}
+                   'MaNGA rss': 'specviz'}
 
-formats_table = astropy.io.registry.get_formats(data_class=Spectrum1D,
-                                                readwrite='Read')
+# get formats table for specutils objects
+formats_table = astropy.io.registry.get_formats(readwrite='Read')
+formats_table.add_index('Data class')
+formats_table = formats_table.loc[['Spectrum1D', 'SpectrumList']]
+formats_table.sort(['Data class', 'Format'])
 
 file_to_config_mapping = {i: default_mapping.get(
     i, 'specviz') for i in formats_table['Format']}
@@ -63,7 +67,7 @@ def get_valid_format(filename):
             The recommended application configuration
     """
 
-    valid_file_format = identify_spectrum_format(filename)
+    valid_file_format = identify_spectrum_format(filename, SpectrumList)
     ndim = guess_dimensionality(filename)
 
     if valid_file_format:
@@ -111,3 +115,43 @@ def identify_data(filename, current=None):
         raise ValueError('Mismatch between input file format and loaded configuration.')
 
     return valid_format, config
+
+
+def prompt_data(app, filename):
+    ''' Prompt for a data dialog modal
+    Given a JDAviz application instance and a data filename, checks
+    for a valid file format and recommended configuration and triggers
+    the data prompt dialog window with a message.
+    Parameters
+    ----------
+    app : application instance
+        The current jdaviz application
+    filename : str
+        The filename of the loaded data
+    '''
+    # get the current configuration
+    current_config = app.get_configuration().get('settings').get('configuration', 'default')
+
+    # get a valid file format, config, and status
+    try:
+        valid_format, config = identify_data(filename, current=current_config)
+    except ValueError as err:
+        status = f'Error: {err}'
+        valid_format = ''
+        config = ''
+    else:
+        status = 'Success: Valid Format'
+    finally:
+        # identify a suggested config
+        suggested_format, suggested_config = get_valid_format(filename)
+
+    # get primary header and convert to dict; remove header comments
+    hdr = dict(astropy.io.fits.getheader(filename, ext=0))
+    hdr.pop('')
+
+    # broadcast a message
+    msg = DataPromptMessage(status=status, data_format=valid_format, config=config,
+                            current=current_config, suggested_format=suggested_format,
+                            suggested_config=suggested_config, filename=filename,
+                            hdr=hdr, sender=app)
+    app.hub.broadcast(msg)
