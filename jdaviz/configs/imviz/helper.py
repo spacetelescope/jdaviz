@@ -11,6 +11,21 @@ class Imviz(ConfigHelper):
     """Imviz Helper class"""
     _default_configuration = 'imviz'
 
+    def __init__(self, app=None, **kwargs):
+        super().__init__(app=app)
+
+        # astrowidgets ducktyping (not MVP)
+
+        if 'image_width' in kwargs:
+            self.image_width = kwargs['image_width']
+
+        if 'image_height' in kwargs:
+            self.image_height = kwargs['image_height']
+
+        if 'pixel_coords_offset' in kwargs:
+            # This gets tied to self.pixel_offset
+            raise NotImplementedError
+
     def load_data(self, data, parser_reference=None, **kwargs):
         """Load data into Imviz.
 
@@ -78,6 +93,157 @@ class Imviz(ConfigHelper):
         else:
             self.app.load_data(
                 data, parser_reference=parser_reference, **kwargs)
+
+    # astrowidgets ducktyping (MVP)
+
+    def center_on(self, point):
+        raise NotImplementedError
+
+    def offset_to(self, dx, dy, skycoord_offset=False):
+        raise NotImplementedError
+
+    @property
+    def zoom_level(self):
+        raise NotImplementedError
+
+    @zoom_level.setter
+    def zoom_level(self, val):
+        raise NotImplementedError
+
+    def zoom(self, val):
+        raise NotImplementedError
+
+    @property
+    def stretch_options(self):
+        raise NotImplementedError
+
+    @property
+    def stretch(self):
+        raise NotImplementedError
+
+    @stretch.setter
+    def stretch(self, val):
+        raise NotImplementedError
+
+    @property
+    def autocut_options(self):
+        raise NotImplementedError
+
+    @property
+    def cuts(self):
+        raise NotImplementedError
+
+    @cuts.setter
+    def cuts(self, val):
+        raise NotImplementedError
+
+    @property
+    def colormap_options(self):
+        raise NotImplementedError
+
+    def set_colormap(self, cmap):
+        raise NotImplementedError
+
+    @property
+    def click_center(self):
+        return False  # No way to do this right now
+
+    @click_center.setter
+    def click_center(self, val):
+        raise NotImplementedError
+
+    @property
+    def click_drag(self):
+        return False  # No way to do this right now
+
+    @click_drag.setter
+    def click_drag(self, value):
+        raise NotImplementedError
+
+    @property
+    def scroll_pan(self):
+        return False  # No way to do this right now
+
+    @scroll_pan.setter
+    def scroll_pan(self, value):
+        raise NotImplementedError
+
+    def save(self, filename):
+        raise NotImplementedError
+
+    # astrowidgets ducktyping (not MVP)
+    #
+    # NOTES:
+    # * logger is excluded because it is too Ginga-specific.
+    # * cursor is excluded because coordinate info is in a plugin.
+
+    @property
+    def image_width(self):
+        raise NotImplementedError
+
+    @image_width.setter
+    def image_width(self, value):
+        raise NotImplementedError
+
+    @property
+    def image_height(self):
+        raise NotImplementedError
+
+    @image_height.setter
+    def image_height(self, value):
+        raise NotImplementedError
+
+    @property
+    def pixel_offset(self):
+        return 0  # No way to customize right now
+
+    # Loaders
+
+    def load_fits(self, fitsorfn, numhdu=None, memmap=None):
+        raise NotImplementedError
+
+    def load_nddata(self, nddata):
+        raise NotImplementedError
+
+    def load_array(self, arr):
+        raise NotImplementedError
+
+    # Markers
+
+    RESERVED_MARKER_SET_NAMES = ['all']
+
+    @property
+    def is_marking(self):
+        return False  # No way to mark right now
+
+    def start_marking(self, marker_name=None, marker=None):
+        raise NotImplementedError
+
+    def stop_marking(self, clear_markers=False):
+        raise NotImplementedError
+
+    @property
+    def marker(self):
+        return {}  # No way to mark right now
+
+    @marker.setter
+    def marker(self, val):
+        raise NotImplementedError
+
+    def get_markers(self, x_colname='x', y_colname='y',
+                    skycoord_colname='coord', marker_name=None):
+        raise NotImplementedError
+
+    def add_markers(self, table, x_colname='x', y_colname='y',
+                    skycoord_colname='coord', use_skycoord=False,
+                    marker_name=None):
+        raise NotImplementedError
+
+    def remove_markers(self, marker_name=None):
+        raise NotImplementedError
+
+    def reset_markers(self):
+        raise NotImplementedError
 
 
 def split_filename_with_fits_ext(filename):
