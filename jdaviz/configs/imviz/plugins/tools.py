@@ -71,6 +71,7 @@ class BqplotMatchWCS(InteractCheckableTool):
                     if (link.data1 is existing_link.data1
                             and link.data2 is existing_link.data2):
                         exists = True
+                        break
             if not exists:
                 self.viewer.session.data_collection.add_link(link)
 
