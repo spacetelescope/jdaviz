@@ -2,6 +2,10 @@ import os
 import re
 from copy import deepcopy
 
+import numpy as np
+from glue.core import BaseData
+from glue.core.subset import ElementSubsetState
+
 from jdaviz.core.helpers import ConfigHelper
 
 __all__ = ['Imviz']
@@ -79,7 +83,8 @@ class Imviz(ConfigHelper):
             self.app.load_data(
                 data, parser_reference=parser_reference, **kwargs)
 
-    def load_regions(self, regions):
+    def load_regions(self, regions, data_label, viewer_reference='viewer-1',
+                     **kwargs):
         """Load a given region into viewer.
 
         Parameters
@@ -88,9 +93,41 @@ class Imviz(ConfigHelper):
             Dictionary mapping desired region names to respective Astropy
             region objects.
 
+        data_label : str
+            Label to retrieve a specific data set from the viewer instance.
+            Subset from region will be created based on this data.
+
+        viewer_reference : str
+            The reference to the viewer defined with the ``reference`` key
+            in the Imviz YAML configuration file.
+
+        kwargs : dict
+            Extra keywords to be passed into the region's ``to_mask`` method.
+
         """
-        for key, val in regions.items():
-            self.app.add_subset(val, key)
+        viewer = self.app.get_viewer(viewer_reference)
+        data = None
+
+        # Cannot use self.app.get_data_from_viewer because we want to bypass
+        # data translator.
+        for layer_state in viewer.state.layers:
+            if (hasattr(layer_state, 'layer') and
+                    layer_state.layer.label == data_label and
+                    isinstance(layer_state.layer, BaseData)):
+                data = layer_state.layer
+                break
+
+        if data is None:
+            raise ValueError('data not found')
+
+        for subset_label, region in regions.items():
+            mask = region.to_mask(**kwargs)
+            im = mask.to_image(data.shape)
+
+            # TODO: This is not registering to GUI. Also breaks get_regions().
+            # ValueError: Several subsets are present, specify which one to retrieve with subset_id=
+            state = ElementSubsetState(indices=np.where((im > 0).flat)[0])
+            data.new_subset(state, label=subset_label)
 
     def get_regions(self):
         """Return regions defined in the viewer.
