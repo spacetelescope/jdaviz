@@ -126,7 +126,7 @@ def test_no_spec_flux_unit_exp_not_none(specviz_app, spectrum1d):
     assert_quantity_allclose(converted_spectrum.flux,
                              RESULT_FLUX, atol=1e-5*u.Unit(new_flux))
     assert_quantity_allclose(converted_spectrum.uncertainty.quantity.value,
-                             RESULT_UNCERTAINTY, atol=1e-5)
+                             RESULT_UNCERTAINTY, atol=1e-11)
 
 
 def test_spec_flux_no_uncert(specviz_app, spectrum1d):
@@ -244,4 +244,4 @@ def test_spec_flux_uncert_unit_exp(specviz_app, spectrum1d):
     assert_quantity_allclose(converted_spectrum.flux,
                              RESULT_FLUX, atol=1e-5*u.Unit(new_flux))
     assert_quantity_allclose(converted_spectrum.uncertainty.quantity.value,
-                             RESULT_UNCERTAINTY, atol=1e-5)
+                             RESULT_UNCERTAINTY, atol=1e-11)
