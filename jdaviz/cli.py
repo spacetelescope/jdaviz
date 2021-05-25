@@ -17,7 +17,7 @@ CONFIGS_DIR = os.path.join(os.path.dirname(__file__), 'configs')
 
 @click.version_option(__version__)
 @click.command()
-@click.argument('filename', nargs=1, type=click.Path(exists=True))
+@click.argument('filename', nargs=1)
 @click.option('--layout',
               default='default',
               nargs=1,
@@ -49,7 +49,9 @@ def main(filename, layout='default', browser='default'):
         import asyncio
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
-    filepath = pathlib.Path(filename).absolute()
+    # Support comma-separate file list
+    filepath = ','.join([str(pathlib.Path(f).absolute()).replace('\\', '/')
+                         for f in filename.split(',')])
 
     with open(os.path.join(CONFIGS_DIR, layout, layout + '.ipynb')) as f:
         notebook_template = f.read()
@@ -63,8 +65,7 @@ def main(filename, layout='default', browser='default'):
     nbdir = tempfile.mkdtemp()
 
     with open(os.path.join(nbdir, 'notebook.ipynb'), 'w') as nbf:
-        nbf.write(notebook_template.replace('DATA_FILENAME',
-                                            str(filepath).replace('\\', '/')).strip())
+        nbf.write(notebook_template.replace('DATA_FILENAME', filepath).strip())
 
     os.chdir(nbdir)
 

@@ -155,6 +155,29 @@ class TestParseImage:
         assert data.label == 'myimage'
         assert data.shape == (10, 10)
 
+    def test_filelist(self, imviz_app, tmp_path):
+        flist = []
+
+        # Generate some files to parse.
+        for i in range(2):
+            fpath = tmp_path / f'myfits_{i}.fits'
+            flist.append(str(fpath))
+            hdu = fits.PrimaryHDU(np.zeros((2, 2)) + i)
+            hdu.writeto(fpath, overwrite=True)
+
+        flist = ','.join(flist)
+        imviz_app.load_data(flist, show_in_viewer=False)
+
+        for i in range(2):
+            data = imviz_app.app.data_collection[i]
+            comp = data.get_component('PRIMARY,1')
+            assert data.label == f'myfits_{i}[PRIMARY,1]'
+            assert data.shape == (2, 2)
+            np.testing.assert_allclose(comp.data.mean(), i)
+
+        with pytest.raises(ValueError, match='Do not manually overwrite data_label'):
+            imviz_app.load_data(flist, data_label='foo', show_in_viewer=False)
+
     @pytest.mark.skipif(HAS_JWST_ASDF, reason='jwst is installed')
     @pytest.mark.remote_data
     def test_parse_jwst_nircam_level2_no_jwst(self, imviz_app):

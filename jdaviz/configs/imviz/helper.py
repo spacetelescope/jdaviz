@@ -1,5 +1,6 @@
 import os
 import re
+from copy import deepcopy
 
 from jdaviz.core.helpers import ConfigHelper
 
@@ -53,19 +54,30 @@ class Imviz(ConfigHelper):
         image as Numpy array and load the latter instead.
         """
         if isinstance(data, str):
-            filepath, ext, data_label = split_filename_with_fits_ext(data)
+            filelist = data.split(',')
 
-            # This, if valid, will overwrite input.
-            if ext is not None:
-                kwargs['ext'] = ext
+            if len(filelist) > 1 and 'data_label' in kwargs:
+                raise ValueError('Do not manually overwrite data_label for '
+                                 'a list of images')
 
-            # This will only overwrite if not provided.
-            if 'data_label' not in kwargs:
-                kwargs['data_label'] = data_label
+            for data in filelist:
+                kw = deepcopy(kwargs)
+                filepath, ext, data_label = split_filename_with_fits_ext(data)
+
+                # This, if valid, will overwrite input.
+                if ext is not None:
+                    kw['ext'] = ext
+
+                # This will only overwrite if not provided.
+                if 'data_label' not in kw:
+                    kw['data_label'] = data_label
+
+                self.app.load_data(
+                    filepath, parser_reference=parser_reference, **kw)
+
         else:
-            filepath = data
-
-        self.app.load_data(filepath, parser_reference=parser_reference, **kwargs)
+            self.app.load_data(
+                data, parser_reference=parser_reference, **kwargs)
 
 
 def split_filename_with_fits_ext(filename):
