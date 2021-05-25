@@ -2,9 +2,8 @@ import os
 import re
 from copy import deepcopy
 
-import numpy as np
 from glue.core import BaseData
-from glue.core.subset import ElementSubsetState
+from glue.core.subset import MaskSubsetState
 
 from jdaviz.core.helpers import ConfigHelper
 
@@ -124,10 +123,11 @@ class Imviz(ConfigHelper):
             mask = region.to_mask(**kwargs)
             im = mask.to_image(data.shape)
 
-            # TODO: This is not registering to GUI. Also breaks get_regions().
-            # ValueError: Several subsets are present, specify which one to retrieve with subset_id=
-            state = ElementSubsetState(indices=np.where((im > 0).flat)[0])
-            data.new_subset(state, label=subset_label)
+            # TODO: This breaks get_regions() in 2 ways.
+            # ValueError: Several subsets are present, specify which one to retrieve with subset_id
+            # NotImplementedError: Subset states of type MaskSubsetState are not supported
+            state = MaskSubsetState(im, data.pixel_component_ids)
+            self.app.data_collection.new_subset_group(subset_label, state)
 
     def get_regions(self):
         """Return regions defined in the viewer.
