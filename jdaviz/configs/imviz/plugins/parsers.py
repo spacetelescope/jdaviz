@@ -77,13 +77,13 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
         elif ext is not None:  # Load just the EXT user wants
             hdu = file_obj[ext]
             _validate_fits_image2d(hdu)
-            data_iter = _hdu_to_glue_data(hdu, data_label)
+            data_iter = _hdu_to_glue_data(hdu, data_label, hdulist=file_obj)
 
         else:  # Load first image extension found
             found = False
             for hdu in file_obj:
                 if _validate_fits_image2d(hdu, raise_error=False):
-                    data_iter = _hdu_to_glue_data(hdu, data_label)
+                    data_iter = _hdu_to_glue_data(hdu, data_label, hdulist=file_obj)
                     found = True
                     break
             if not found:
@@ -166,7 +166,7 @@ def _jwst_to_glue_data(file_obj, ext, data_label):
     yield data, data_label
 
 
-def _hdu_to_glue_data(hdu, data_label):
+def _hdu_to_glue_data(hdu, data_label, hdulist=None):
     if 'BUNIT' in hdu.header and _validate_bunit(hdu.header['BUNIT'], raise_error=False):
         bunit = hdu.header['BUNIT']
     else:
@@ -175,7 +175,10 @@ def _hdu_to_glue_data(hdu, data_label):
     comp_label = f'{hdu.name.upper()},{hdu.ver}'
     data_label = f'{data_label}[{comp_label}]'
     data = Data(label=data_label)
-    data.coords = WCS(hdu.header)
+    if hdulist is None:
+        data.coords = WCS(hdu.header)
+    else:
+        data.coords = WCS(hdu.header, hdulist)
     component = Component.autotyped(hdu.data, units=bunit)
     data.add_component(component=component, label=comp_label)
     yield data, data_label
