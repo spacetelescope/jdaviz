@@ -349,6 +349,13 @@ class Application(VuetifyTemplate, HubListener):
         """
         return self._viewer_by_reference(viewer_reference)
 
+    # Bypass glue-astronomy translator. Maybe there is a better way to do this
+    # depending on answer for https://github.com/glue-viz/glue/issues/2195
+    def get_glue_data_by_label(self, data_label):
+        """Return native Glue Data object for a given label."""
+        i = self.data_collection.labels.index(data_label)
+        return self.data_collection[i]
+
     def get_data_from_viewer(self, viewer_reference, data_label=None,
                              cls='default', include_subsets=True):
         """
