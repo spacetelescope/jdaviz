@@ -489,13 +489,18 @@ class Application(VuetifyTemplate, HubListener):
 
         for key, value in data.items():
             if isinstance(value, Subset):
+                # TODO: Remove this when you support round-tripping, see
+                # https://github.com/spacetelescope/jdaviz/pull/630
+                if not key.startswith('Subset'):
+                    continue
+
                 # Range selection on a profile is currently not supported in
                 #  the glue translation machinery for astropy regions, so we
                 #  have to do it manually. Only data that is 2d is supported,
                 #  therefore, if the data is already 2d, simply use as is.
                 if value.data.ndim == 2:
                     region = value.data.get_selection_definition(
-                        format='astropy-regions')
+                        subset_id=key, format='astropy-regions')
                     regions[key] = region
                     continue
                 # There is a special case for 1d data (which is also not

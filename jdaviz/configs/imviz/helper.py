@@ -1,8 +1,9 @@
 import os
 import re
 from copy import deepcopy
+import warnings
 
-from glue.core import BaseData
+import numpy as np
 from glue.core.subset import MaskSubsetState
 
 from jdaviz.core.helpers import ConfigHelper
@@ -82,64 +83,69 @@ class Imviz(ConfigHelper):
             self.app.load_data(
                 data, parser_reference=parser_reference, **kwargs)
 
-    def load_regions(self, regions, data_label, viewer_reference='viewer-1',
-                     **kwargs):
-        """Load a given region into viewer.
+    def load_static_regions(self, regions, data_label, **kwargs):
+        """Load given region(s) into the viewer.
+        Once loaded, the region(s) cannot be modified.
 
         Parameters
         ----------
         regions : dict
-            Dictionary mapping desired region names to respective Astropy
-            region objects.
+            Dictionary mapping desired region name to one of the following:
+
+            * Astropy ``regions`` object
+            * ``photutils`` apertures (limited support until ``photutils``
+              fully supports ``regions``)
+            * Numpy boolean array (shape must match data)
+
+            Region name that starts with "Subset" is forbidden and reserved
+            for internal use only.
 
         data_label : str
             Label to retrieve a specific data set from the viewer instance.
-            Subset from region will be created based on this data.
-
-        viewer_reference : str
-            The reference to the viewer defined with the ``reference`` key
-            in the Imviz YAML configuration file.
+            Glue Subset object representing this region will be created
+            based on this data set.
 
         kwargs : dict
             Extra keywords to be passed into the region's ``to_mask`` method.
+            This is ignored if Numpy array is given.
 
         """
-        viewer = self.app.get_viewer(viewer_reference)
-        data = None
-
-        # Cannot use self.app.get_data_from_viewer because we want to bypass
-        # data translator.
-        for layer_state in viewer.state.layers:
-            if (hasattr(layer_state, 'layer') and
-                    layer_state.layer.label == data_label and
-                    isinstance(layer_state.layer, BaseData)):
-                data = layer_state.layer
-                break
-
-        if data is None:
-            raise ValueError('data not found')
+        # TODO: Refactor after https://github.com/spacetelescope/jdaviz/pull/644
+        # is merged.
+        # Or do I have to use self.app.get_data_from_viewer for some reason?
+        data = self.app.data_collection[
+            self.app.data_collection.labels.index(data_label)]
 
         for subset_label, region in regions.items():
-            mask = region.to_mask(**kwargs)
-            im = mask.to_image(data.shape)
+            if subset_label.startswith('Subset'):
+                warnings.warn(f'{subset_label} is now allowed, skipping. '
+                              'Do not use region name that starts with Subset.')
+                continue
 
-            # TODO: This breaks get_regions() in 2 ways.
-            # ValueError: Several subsets are present, specify which one to retrieve with subset_id
-            # NotImplementedError: Subset states of type MaskSubsetState are not supported
+            if hasattr(region, 'to_mask'):
+                mask = region.to_mask(**kwargs)
+                im = mask.to_image(data.shape)
+            elif (isinstance(region, np.ndarray) and region.shape == data.shape
+                    and region.dtype == np.bool_):
+                im = region
+            else:
+                raise TypeError(f'Unsupported region type: {type(region)}')
+
+            # NOTE: Region creation info is thus lost.
             state = MaskSubsetState(im, data.pixel_component_ids)
             self.app.data_collection.new_subset_group(subset_label, state)
 
-    def get_regions(self):
-        """Return regions defined in the viewer.
+    def get_interactive_regions(self):
+        """Return regions interactively drawn in the viewer.
+        This does not return regions added via :meth:`load_static_regions`.
 
         Returns
         -------
         regions : dict
-            Dictionary mapping defined region names to respective Astropy
-            region objects.
+            Dictionary mapping interactive region names to respective Astropy
+            ``regions`` objects.
 
         """
-        # TODO: Is there a simpler way to do this?
         return self.app.get_subsets_from_viewer('viewer-1')
 
 
