@@ -4,6 +4,7 @@ from copy import deepcopy
 import warnings
 
 import numpy as np
+from astropy.wcs import WCS
 from glue.core.subset import MaskSubsetState
 
 from jdaviz.core.helpers import ConfigHelper
@@ -122,7 +123,18 @@ class Imviz(ConfigHelper):
                               'Do not use region name that starts with Subset.')
                 continue
 
-            if hasattr(region, 'to_mask'):
+            if hasattr(region, 'to_pixel'):
+                # TODO: GWCS not yet supported, see
+                # https://github.com/astropy/photutils/issues/1219
+                # https://github.com/astropy/regions/issues/374
+                if hasattr(data, 'coords') and isinstance(data.coords, WCS):
+                    pixreg = region.to_pixel(data.coords)
+                    mask = pixreg.to_mask(**kwargs)
+                    im = mask.to_image(data.shape)
+                else:
+                    warnings.warn(f'{region} given but data has no valid WCS, skipping')
+                    continue
+            elif hasattr(region, 'to_mask'):
                 mask = region.to_mask(**kwargs)
                 im = mask.to_image(data.shape)
             elif (isinstance(region, np.ndarray) and region.shape == data.shape
