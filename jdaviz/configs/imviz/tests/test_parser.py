@@ -143,9 +143,9 @@ class TestParseImage:
         from skimage.io import imsave
 
         if format == 'png':  # Cross-test PNG with RGBA
-            a = np.zeros((10, 10, 4))
+            a = np.zeros((10, 10, 4), dtype='uint8')
         else:  # Cross-test JPG with RGB only
-            a = np.zeros((10, 10, 3))
+            a = np.zeros((10, 10, 3), dtype='uint8')
 
         filename = tmp_path / f'myimage.{format}'
         imsave(filename, a)

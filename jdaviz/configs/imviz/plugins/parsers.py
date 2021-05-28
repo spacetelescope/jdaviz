@@ -44,7 +44,7 @@ def parse_data(app, file_obj, ext=None, data_label=None, show_in_viewer=True):
     if isinstance(file_obj, str):
         if data_label is None:
             data_label = os.path.splitext(os.path.basename(file_obj))[0]
-        if file_obj.lower().endswith(('.jpg', '.jpeg', '.png')):  # pragma: no cover
+        if file_obj.lower().endswith(('.jpg', '.jpeg', '.png')):
             from skimage.io import imread
             from skimage.color import rgb2gray, rgba2rgb
             im = imread(file_obj)
