@@ -11,6 +11,12 @@ from jdaviz.configs.imviz.plugins.parsers import (
     HAS_JWST_ASDF, parse_data, _validate_fits_image2d, _validate_bunit,
     _parse_image)
 
+try:
+    import skimage  # noqa
+    HAS_SKIMAGE = True
+except ImportError:
+    HAS_SKIMAGE = False
+
 
 @pytest.fixture
 def imviz_app():
@@ -130,6 +136,24 @@ class TestParseImage:
             else:
                 assert comp.units == 'MJy / sr'
         assert len(imviz_app.app.data_collection) == 3
+
+    @pytest.mark.skipif(not HAS_SKIMAGE, reason='scikit-image is missing')
+    @pytest.mark.parametrize('format', ('jpg', 'png'))
+    def test_parse_rgba(self, imviz_app, tmp_path, format):
+        from skimage.io import imsave
+
+        if format == 'png':  # Cross-test PNG with RGBA
+            a = np.zeros((10, 10, 4))
+        else:  # Cross-test JPG with RGB only
+            a = np.zeros((10, 10, 3))
+
+        filename = tmp_path / f'myimage.{format}'
+        imsave(filename, a)
+
+        parse_data(imviz_app.app, filename, show_in_viewer=False)
+        data = imviz_app.app.data_collection[0]
+        assert data.label == 'myimage'
+        assert data.shape == (10, 10)
 
     @pytest.mark.skipif(HAS_JWST_ASDF, reason='jwst is installed')
     @pytest.mark.remote_data

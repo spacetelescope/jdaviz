@@ -44,8 +44,19 @@ def parse_data(app, file_obj, ext=None, data_label=None, show_in_viewer=True):
     if isinstance(file_obj, str):
         if data_label is None:
             data_label = os.path.splitext(os.path.basename(file_obj))[0]
-        with fits.open(file_obj) as pf:
+        if file_obj.lower().endswith(('.jpg', '.jpeg', '.png')):  # pragma: no cover
+            from skimage.io import imread
+            from skimage.color import rgb2gray, rgba2rgb
+            im = imread(file_obj)
+            if im.shape[2] == 4:
+                pf = rgb2gray(rgba2rgb(im))
+            else:  # Assume RGB
+                pf = rgb2gray(im)
+            pf = pf[::-1, :]  # Flip it
             _parse_image(app, pf, data_label, show_in_viewer, ext=ext)
+        else:  # Assume FITS
+            with fits.open(file_obj) as pf:
+                _parse_image(app, pf, data_label, show_in_viewer, ext=ext)
     else:
         if data_label is None:
             data_label = f'imviz_data|{str(base64.b85encode(uuid.uuid4().bytes), "utf-8")}'
