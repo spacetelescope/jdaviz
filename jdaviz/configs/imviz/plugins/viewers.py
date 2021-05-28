@@ -110,7 +110,7 @@ class ImvizImageView(BqplotImageView):
 
         if n_layers == 1:
             msg = SnackbarMessage(
-                'Nothing to blink. Select a second image in the Data menu to use this feature', 
+                'Nothing to blink. Select a second image in the Data menu to use this feature.',
                 color='warning', sender=self)
             self.session.hub.broadcast(msg)
 
