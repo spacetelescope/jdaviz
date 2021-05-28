@@ -147,7 +147,7 @@ class TestParseImage:
         else:  # Cross-test JPG with RGB only
             a = np.zeros((10, 10, 3), dtype='uint8')
 
-        filename = tmp_path / f'myimage.{format}'
+        filename = str(tmp_path / f'myimage.{format}')
         imsave(filename, a)
 
         parse_data(imviz_app.app, filename, show_in_viewer=False)
