@@ -489,9 +489,9 @@ class Application(VuetifyTemplate, HubListener):
 
         for key, value in data.items():
             if isinstance(value, Subset):
-                # TODO: Remove this when you support round-tripping, see
+                # TODO: Remove this when Imviz support round-tripping, see
                 # https://github.com/spacetelescope/jdaviz/pull/630
-                if not key.startswith('Subset'):
+                if viewer_reference == 'viewer-1' and not key.startswith('Subset'):
                     continue
 
                 # Range selection on a profile is currently not supported in
