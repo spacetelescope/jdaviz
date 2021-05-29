@@ -119,7 +119,7 @@ class Imviz(ConfigHelper):
 
         for subset_label, region in regions.items():
             if subset_label.startswith('Subset'):
-                warnings.warn(f'{subset_label} is now allowed, skipping. '
+                warnings.warn(f'{subset_label} is not allowed, skipping. '
                               'Do not use region name that starts with Subset.')
                 continue
 

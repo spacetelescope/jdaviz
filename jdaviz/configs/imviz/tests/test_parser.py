@@ -6,7 +6,7 @@ from astropy.nddata import NDData, StdDevUncertainty
 from astropy.utils.data import download_file
 from astropy.wcs import WCS
 
-from jdaviz.configs.imviz.helper import Imviz, split_filename_with_fits_ext
+from jdaviz.configs.imviz.helper import split_filename_with_fits_ext
 from jdaviz.configs.imviz.plugins.parsers import (
     HAS_JWST_ASDF, parse_data, _validate_fits_image2d, _validate_bunit,
     _parse_image)
@@ -16,11 +16,6 @@ try:
     HAS_SKIMAGE = True
 except ImportError:
     HAS_SKIMAGE = False
-
-
-@pytest.fixture
-def imviz_app():
-    return Imviz()
 
 
 @pytest.mark.parametrize(
