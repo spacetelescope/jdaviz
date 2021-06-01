@@ -15,8 +15,7 @@ __all__ = ['ImvizImageView']
 class ImvizImageView(BqplotImageView):
 
     tools = ['bqplot:panzoom', 'bqplot:blinkonce', 'bqplot:rectangle',
-             'bqplot:circle', 'bqplot:matchwcs']
-
+             'bqplot:circle', 'bqplot:matchwcs', 'pizza']
     default_class = None
 
     def __init__(self, *args, **kwargs):

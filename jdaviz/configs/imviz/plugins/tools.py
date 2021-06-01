@@ -1,9 +1,13 @@
+import os
+
 from echo import delay_callback
 from glue.config import viewer_tool
 from glue_jupyter.bqplot.common.tools import InteractCheckableTool, Tool
 from glue.plugins.wcs_autolinking.wcs_autolinking import wcs_autolink, WCSLink
 
 __all__ = []
+
+ICON_DIR = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'icons')
 
 
 @viewer_tool
@@ -84,3 +88,18 @@ class BqplotMatchWCS(InteractCheckableTool):
                     viewer.state.x_max = x + dx / 2
                     viewer.state.y_min = y - dy / 2
                     viewer.state.y_max = y + dy / 2
+
+
+@viewer_tool
+class Pizza(Tool):
+    icon = os.path.join(ICON_DIR, 'pizza.png')
+    tool_id = 'pizza'
+    action_text = '/pizza'
+    tool_tip = 'Feeling hungry?'
+
+    def __init__(self, viewer, **kwargs):
+        super().__init__(viewer, **kwargs)
+
+    def activate(self):
+        from astropy.utils.misc import pizza
+        pizza()
