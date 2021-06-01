@@ -1,9 +1,24 @@
 from echo import delay_callback
 from glue.config import viewer_tool
-from glue_jupyter.bqplot.common.tools import InteractCheckableTool
+from glue_jupyter.bqplot.common.tools import InteractCheckableTool, Tool
 from glue.plugins.wcs_autolinking.wcs_autolinking import wcs_autolink, WCSLink
 
 __all__ = []
+
+
+@viewer_tool
+class BlinkOnce(Tool):
+    icon = 'glue_forward'
+    tool_id = 'bqplot:blinkonce'
+    action_text = 'Go to next image'
+    tool_tip = ('Click on this button to display the next image, '
+                'or you can also press the "b" key anytime')
+
+    def __init__(self, viewer, **kwargs):
+        super().__init__(viewer, **kwargs)
+
+    def activate(self):
+        self.viewer.blink_once()
 
 
 @viewer_tool
@@ -37,6 +52,7 @@ class BqplotMatchWCS(InteractCheckableTool):
                     if (link.data1 is existing_link.data1
                             and link.data2 is existing_link.data2):
                         exists = True
+                        break
             if not exists:
                 self.viewer.session.data_collection.add_link(link)
 

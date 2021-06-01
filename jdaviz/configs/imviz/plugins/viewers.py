@@ -5,6 +5,7 @@ from astropy.wcs.wcsapi import BaseHighLevelWCS
 from glue.core import BaseData
 from glue_jupyter.bqplot.image import BqplotImageView
 
+from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import viewer_registry
 
 __all__ = ['ImvizImageView']
@@ -13,7 +14,8 @@ __all__ = ['ImvizImageView']
 @viewer_registry("imviz-image-viewer", label="Image 2D (Imviz)")
 class ImvizImageView(BqplotImageView):
 
-    tools = ['bqplot:panzoom', 'bqplot:rectangle', 'bqplot:circle', 'bqplot:matchwcs']
+    tools = ['bqplot:panzoom', 'bqplot:blinkonce', 'bqplot:rectangle',
+             'bqplot:circle', 'bqplot:matchwcs']
 
     default_class = None
 
@@ -43,7 +45,6 @@ class ImvizImageView(BqplotImageView):
                 return
 
         if data['event'] == 'mousemove':
-
             # Display the current cursor coordinates (both pixel and world) as
             # well as data values. For now we use the first dataset in the
             # viewer for the data values.
@@ -62,7 +63,7 @@ class ImvizImageView(BqplotImageView):
 
             self.label_mouseover.pixel = (fmt.format(x, y))
 
-            if isinstance(image.coords, BaseHighLevelWCS):
+            if hasattr(image, 'coords') and isinstance(image.coords, BaseHighLevelWCS):
                 # Convert these to a SkyCoord via WCS - note that for other datasets
                 # we aren't actually guaranteed to get a SkyCoord out, just for images
                 # with valid celestial WCS
@@ -79,7 +80,9 @@ class ImvizImageView(BqplotImageView):
             # Extract data values at this position.
             # TODO: for now we just use the first visible layer but we should think
             # of how to display values when multiple datasets are present.
-            if x > -0.5 and y > -0.5 and x < image.shape[1] - 0.5 and y < image.shape[0] - 0.5:
+            if (x > -0.5 and y > -0.5
+                    and x < image.shape[1] - 0.5 and y < image.shape[0] - 0.5
+                    and hasattr(visible_layers[0], 'attribute')):
                 attribute = visible_layers[0].attribute
                 value = image.get_data(attribute)[int(round(y)), int(round(x))]
                 unit = image.get_component(attribute).units
@@ -93,25 +96,40 @@ class ImvizImageView(BqplotImageView):
             self.label_mouseover.world = ""
             self.label_mouseover.value = ""
 
-        if data['event'] == 'keydown' and data['key'] == 'b':
+        elif data['event'] == 'keydown' and data['key'] == 'b':
+            self.blink_once()
 
-            # Simple blinking of images - this will make it so that only one
-            # layer is visible at a time and cycles through the layers.
+    def blink_once(self):
+        # Simple blinking of images - this will make it so that only one
+        # layer is visible at a time and cycles through the layers.
 
-            if len(self.state.layers) > 1:
+        # Exclude Subsets: They are global
+        valid = [ilayer for ilayer, layer in enumerate(self.state.layers)
+                 if isinstance(layer.layer, BaseData)]
+        n_layers = len(valid)
 
-                # If only one layer is visible, pick the next one to be visible,
-                # otherwise start from the last visible one.
+        if n_layers == 1:
+            msg = SnackbarMessage(
+                'Nothing to blink. Select a second image in the Data menu to use this feature.',
+                color='warning', sender=self)
+            self.session.hub.broadcast(msg)
 
-                visible = [ilayer for ilayer, layer in
-                           enumerate(self.state.layers) if layer.visible]
+        elif n_layers > 1:
+            # If only one layer is visible, pick the next one to be visible,
+            # otherwise start from the last visible one.
 
-                if len(visible) > 0:
-                    next_layer = (visible[-1] + 1) % len(self.state.layers)
-                    self.state.layers[next_layer].visible = True
-                    for ilayer in visible:
-                        if ilayer != next_layer:
-                            self.state.layers[ilayer].visible = False
+            visible = [ilayer for ilayer in valid if self.state.layers[ilayer].visible]
+            n_visible = len(visible)
+
+            if n_visible == 0:
+                msg = SnackbarMessage('No visible layer to blink',
+                                      color='warning', sender=self)
+                self.session.hub.broadcast(msg)
+            elif n_visible > 0:
+                next_layer = valid[(valid.index(visible[-1]) + 1) % n_layers]
+                self.state.layers[next_layer].visible = True
+                for ilayer in (set(valid) - set([next_layer])):
+                    self.state.layers[ilayer].visible = False
 
     def set_plot_axes(self):
         self.figure.axes[1].tick_format = None
