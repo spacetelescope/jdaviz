@@ -28,13 +28,14 @@
                   <v-btn
                     text
                     dark
+                    elevation="3"
                     v-bind="attrs"
                     v-on="on"
                   >
                     Data
                   </v-btn>
                 </template>
-                <v-list>
+                <v-list style="max-height: 500px; width: 350px;" class="overflow-y-auto">
                 <v-checkbox
                   v-for="item in dataItems" :key="item.id" :label="item.name" dense hide-details
                   :input-value="viewer.selected_data_items.includes(item.id)"
@@ -64,32 +65,19 @@
                   </template>
 
                   <v-tabs v-model="viewer.tab" grow height="36px">
-                    <v-tab key="0">Data</v-tab>
-                    <v-tab key="1">Layer</v-tab>
-                    <v-tab key="2">Viewer</v-tab>
+                    <v-tab key="0">Layer</v-tab>
+                    <v-tab key="1">Viewer</v-tab>
                   </v-tabs>
 
                   <v-tabs-items v-model="viewer.tab" style="max-height: 500px; width: 350px;">
-                    <v-tab-item key="0" class="overflow-y-auto" style="height: 450px">
-                      <v-checkbox
-                        v-for="item in dataItems" :key="item.id" :label="item.name" dense hide-details
-                        :input-value="viewer.selected_data_items.includes(item.id)"
-                        @change="$emit('data-item-selected', {
-                          id: viewer.id,
-                          item_id: item.id,
-                          checked: $event
-                        })"
-                        class="pl-4"
-                      />
-                    </v-tab-item>
 
-                    <v-tab-item key="1" eager class="overflow-y-auto" style="height: 100%">
+                    <v-tab-item key="0" class="overflow-y-auto" style="height: 100%">
                       <v-sheet class="px-4">
                         <jupyter-widget :widget="viewer.layer_options" />
                       </v-sheet>
                     </v-tab-item>
 
-                    <v-tab-item key="2" eager class="overflow-y-auto" style="height: 100%">
+                    <v-tab-item key="1" eager class="overflow-y-auto" style="height: 100%">
                       <v-sheet class="px-4">
                         <jupyter-widget :widget="viewer.viewer_options" />
                       </v-sheet>
@@ -116,7 +104,6 @@
           :width="viewer.collapse ? '0px' : null"
         >
           <v-toolbar-items>
-          <spacer></spacer>
 
             <!-- <v-divider vertical></v-divider> -->
             <jupyter-widget :widget="viewer.tools"></jupyter-widget>
