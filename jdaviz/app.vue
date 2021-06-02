@@ -83,7 +83,8 @@
 export default {
   methods: {
     checkNotebookContext() {
-      this.notebook_context = document.getElementById("ipython-main-app");
+      this.notebook_context = document.getElementById("ipython-main-app")
+        || document.querySelector('.jp-LabShell');
       return this.notebook_context;
     }
   },
