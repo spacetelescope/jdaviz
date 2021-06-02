@@ -291,6 +291,7 @@ class ModelFitting(TemplateMixin):
             for p in m["parameters"]:
                 setattr(temp_model, p["name"], p["value"])
             temp_models.append(temp_model)
+
         return temp_models
 
     def vue_add_model(self, event):
@@ -405,13 +406,42 @@ class ModelFitting(TemplateMixin):
         # Retrieve copy of the models with proper "fixed" dictionaries
         # TODO: figure out why this was causing the parallel fitting to fail
         # models_to_fit = self._reinitialize_with_fixed()
-        models_to_fit = self._initialized_models.values()
+        models_to_fit = list(self._initialized_models.values())
 
-        fitted_model, fitted_spectrum = fit_model_to_spectrum(
-            spec,
-            models_to_fit,
-            self.model_equation,
-            run_fitter=True)
+        # Remove units if necessary to work around current specutils limitations
+        removed_units = {}
+        remove_units = False
+        for m in models_to_fit:
+            if type(m) in (models.Polynomial1D, models.Linear1D):
+                remove_units = True
+                break
+        if remove_units:
+            unitless_models = []
+            for m in models_to_fit:
+                removed_units[m.name] = {}
+                if type(m) == models.Polynomial1D:
+                    temp_model = m.__class__(name=m.name, degree=m.degree)
+                else:
+                    temp_model = m.__class__(name=m.name)
+                for pname in m.param_names:
+                    p = getattr(m, pname)
+                    removed_units[m.name][pname] = p.unit
+                    setattr(temp_model, pname, p.value)
+                unitless_models.append(temp_model)
+            models_to_fit = unitless_models
+
+        try:
+            fitted_model, fitted_spectrum = fit_model_to_spectrum(
+                spec,
+                models_to_fit,
+                self.model_equation,
+                run_fitter=True)
+        except ValueError:
+            snackbar_message = SnackbarMessage(
+                "Cube fitting failed",
+                color='error', loading=False, sender=self)
+            self.hub.broadcast(snackbar_message)
+            raise
 
         # Save fitted 3D model in a way that the cubeviz
         # helper can access it.
