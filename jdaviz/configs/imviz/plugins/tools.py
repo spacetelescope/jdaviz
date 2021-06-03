@@ -144,8 +144,12 @@ class BqplotContrastBias(CheckableTool):
             self._time_last = time.time()
 
         elif event == 'dblclick':
+            # When blinked, first layer might not be top layer
+            i_top = [i for i, lyr in enumerate(self.viewer.layers)
+                     if lyr.visible and isinstance(lyr.layer, BaseData)][-1]
+            state = self.viewer.layers[i_top].state
+
             # Restore defaults that are applied on load
-            state = self.viewer.layers[0].state
             with delay_callback(state, 'bias', 'contrast'):
                 state.bias = 0.5
                 state.contrast = 1
