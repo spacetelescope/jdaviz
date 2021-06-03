@@ -1,6 +1,9 @@
+import time
 from echo import delay_callback
 from glue.config import viewer_tool
-from glue_jupyter.bqplot.common.tools import InteractCheckableTool, Tool
+from glue.core import BaseData
+from glue_jupyter.bqplot.common.tools import Tool
+from glue.viewers.common.tool import CheckableTool
 from glue.plugins.wcs_autolinking.wcs_autolinking import wcs_autolink, WCSLink
 
 __all__ = []
@@ -22,7 +25,7 @@ class BlinkOnce(Tool):
 
 
 @viewer_tool
-class BqplotMatchWCS(InteractCheckableTool):
+class BqplotMatchWCS(CheckableTool):
 
     icon = 'glue_link'
     tool_id = 'bqplot:matchwcs'
@@ -84,3 +87,69 @@ class BqplotMatchWCS(InteractCheckableTool):
                     viewer.state.x_max = x + dx / 2
                     viewer.state.y_min = y - dy / 2
                     viewer.state.y_max = y + dy / 2
+
+
+@viewer_tool
+class BqplotContrastBias(CheckableTool):
+
+    icon = 'glue_contrast'
+    tool_id = 'bqplot:contrastbias'
+    action_text = 'Adjust contrast/bias'
+    tool_tip = 'Click and drag to adjust, double-click to reset'
+
+    def __init__(self, viewer, **kwargs):
+        self._time_last = 0
+        super().__init__(viewer, **kwargs)
+
+    def activate(self):
+        self.viewer.add_event_callback(self.on_mouse_or_key_event,
+                                       events=['dragstart', 'dragmove',
+                                               'dragend', 'dblclick'])
+
+    def deactivate(self):
+        self.viewer.remove_event_callback(self.on_mouse_or_key_event)
+
+    def on_mouse_or_key_event(self, data):
+
+        event = data['event']
+
+        # Note that we throttle this to 200ms here as changing the contrast
+        # and bias it expensive since it forces the whole image to be redrawn
+        if event == 'dragmove':
+            if (time.time() - self._time_last) <= 0.2:
+                return
+
+            event_x = data['domain']['x']
+            event_y = data['domain']['y']
+
+            if ((event_x < self.viewer.state.x_min) or
+                    (event_x >= self.viewer.state.x_max) or
+                    (event_y < self.viewer.state.y_min) or
+                    (event_y >= self.viewer.state.y_max)):
+                return
+
+            x = event_x / (self.viewer.state.x_max - self.viewer.state.x_min)
+            y = event_y / (self.viewer.state.y_max - self.viewer.state.y_min)
+
+            # When blinked, first layer might not be top layer
+            i_top = [i for i, lyr in enumerate(self.viewer.layers)
+                     if lyr.visible and isinstance(lyr.layer, BaseData)][-1]
+            state = self.viewer.layers[i_top].state
+
+            # https://github.com/glue-viz/glue/blob/master/glue/viewers/image/qt/contrast_mouse_mode.py
+            with delay_callback(state, 'bias', 'contrast'):
+                state.bias = -(x * 2 - 1.5)
+                state.contrast = 10. ** (y * 2 - 1)
+
+            self._time_last = time.time()
+
+        elif event == 'dblclick':
+            # When blinked, first layer might not be top layer
+            i_top = [i for i, lyr in enumerate(self.viewer.layers)
+                     if lyr.visible and isinstance(lyr.layer, BaseData)][-1]
+            state = self.viewer.layers[i_top].state
+
+            # Restore defaults that are applied on load
+            with delay_callback(state, 'bias', 'contrast'):
+                state.bias = 0.5
+                state.contrast = 1
