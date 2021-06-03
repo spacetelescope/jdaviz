@@ -22,7 +22,7 @@
         <div>
           <v-row dense style="background-color: #205f76">
             <v-col md="auto">
-              <v-menu offset-y>
+              <v-menu offset-y :close-on-content-click="false">
                 <template v-slot:activator="{ on, attrs }">
                     <v-btn
                       text
@@ -35,18 +35,17 @@
                     </v-btn>
                 </template>
                 <v-list style="max-height: 500px; width: 350px;" class="overflow-y-auto">
-                <v-checkbox
-                  v-for="item in dataItems" :key="item.id" :label="item.name" dense hide-details
-                  :input-value="viewer.selected_data_items.includes(item.id)"
-                  @change="$emit('data-item-selected', {
-                    id: viewer.id,
-                    item_id: item.id,
-                    checked: $event
-                  })"
-                  class="pl-4"
-                />
+                    <v-checkbox
+                      v-for="item in dataItems" :key="item.id" :label="item.name" dense hide-details
+                      :input-value="viewer.selected_data_items.includes(item.id)"
+                      @change="$emit('data-item-selected', {
+                        id: viewer.id,
+                        item_id: item.id,
+                        checked: $event
+                      })"
+                      class="pl-4"
+                    />
                 </v-list>
-
               </v-menu>
               </v-col>
               <v-spacer></v-spacer>
