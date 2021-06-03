@@ -1,11 +1,21 @@
+import numpy as np
 import pytest
+from astropy import units as u
 from astropy.io import fits
+from astropy.nddata import NDData, StdDevUncertainty
 from astropy.utils.data import download_file
 from astropy.wcs import WCS
 
 from jdaviz.configs.imviz.helper import Imviz, split_filename_with_fits_ext
 from jdaviz.configs.imviz.plugins.parsers import (
-    HAS_JWST_ASDF, parse_data, _validate_image2d, _validate_bunit, _parse_image)
+    HAS_JWST_ASDF, parse_data, _validate_fits_image2d, _validate_bunit,
+    _parse_image)
+
+try:
+    import skimage  # noqa
+    HAS_SKIMAGE = True
+except ImportError:
+    HAS_SKIMAGE = False
 
 
 @pytest.fixture
@@ -30,16 +40,16 @@ def test_filename_split(filename, ans):
     assert data_label == ans[2]
 
 
-def test_validate_image2d():
+def test_validate_fits_image2d():
     # Not 2D image
     hdu = fits.ImageHDU([0, 0])
-    assert not _validate_image2d(hdu, raise_error=False)
+    assert not _validate_fits_image2d(hdu, raise_error=False)
     with pytest.raises(ValueError, match='Imviz cannot load this HDU'):
-        _validate_image2d(hdu)
+        _validate_fits_image2d(hdu)
 
     # 2D Image
     hdu = fits.ImageHDU([[0, 0], [0, 0]])
-    assert _validate_image2d(hdu)
+    assert _validate_fits_image2d(hdu)
 
 
 def test_validate_bunit():
@@ -63,10 +73,87 @@ class TestParseImage:
         with pytest.raises(ValueError, match='does not have any FITS image'):
             parse_data(imviz_app.app, hdulist, show_in_viewer=False)
 
-    def test_invalid_file_obj(self, imviz_app):
-        some_obj = WCS()  # Might as well re-use existing import
+    @pytest.mark.parametrize('some_obj', (WCS(), [[1, 2], [3, 4]]))
+    def test_invalid_file_obj(self, imviz_app, some_obj):
         with pytest.raises(NotImplementedError, match='Imviz does not support'):
             parse_data(imviz_app.app, some_obj, show_in_viewer=False)
+
+    def test_parse_numpy_array(self, imviz_app):
+        with pytest.raises(ValueError, match='Imviz cannot load this array with ndim=1'):
+            parse_data(imviz_app.app, np.zeros(2), show_in_viewer=False)
+
+        parse_data(imviz_app.app, np.zeros((2, 2)), data_label='some_array',
+                   show_in_viewer=False)
+        data = imviz_app.app.data_collection[0]
+        comp = data.get_component('DATA')
+        assert data.label == 'some_array'
+        assert data.shape == (2, 2)
+        assert comp.data.shape == (2, 2)
+
+    def test_parse_nddata_simple(self, imviz_app):
+        with pytest.raises(ValueError, match='Imviz cannot load this NDData with ndim=1'):
+            parse_data(imviz_app.app, NDData([1, 2, 3, 4]), show_in_viewer=False)
+
+        ndd = NDData([[1, 2], [3, 4]])
+        parse_data(imviz_app.app, ndd, data_label='some_data', show_in_viewer=False)
+        data = imviz_app.app.data_collection[0]
+        comp = data.get_component('DATA')
+        assert data.label == 'some_data[DATA]'
+        assert data.shape == (2, 2)
+        assert comp.data.shape == (2, 2)
+        assert len(imviz_app.app.data_collection) == 1
+
+    @pytest.mark.parametrize(
+        ('ndd', 'attributes'),
+        [(NDData([[1, 2], [3, 4]], mask=[[True, False], [False, False]]),
+          ['DATA', 'MASK']),
+         (NDData([[1, 2], [3, 4]], uncertainty=StdDevUncertainty([[0.1, 0.2], [0.3, 0.4]])),
+          ['DATA', 'UNCERTAINTY'])])
+    def test_parse_nddata_with_one_only(self, imviz_app, ndd, attributes):
+        parse_data(imviz_app.app, ndd, data_label='some_data', show_in_viewer=False)
+        for i, attrib in enumerate(attributes):
+            data = imviz_app.app.data_collection[i]
+            comp = data.get_component(attrib)
+            assert data.label == f'some_data[{attrib}]'
+            assert data.shape == (2, 2)
+            assert comp.data.shape == (2, 2)
+        assert len(imviz_app.app.data_collection) == 2
+
+    def test_parse_nddata_with_everything(self, imviz_app):
+        ndd = NDData([[1, 2], [3, 4]], mask=[[True, False], [False, False]],
+                     uncertainty=StdDevUncertainty([[0.1, 0.2], [0.3, 0.4]]),
+                     unit=u.MJy/u.sr, wcs=WCS(naxis=2))
+        parse_data(imviz_app.app, ndd, data_label='some_data', show_in_viewer=False)
+        for i, attrib in enumerate(['DATA', 'MASK', 'UNCERTAINTY']):
+            data = imviz_app.app.data_collection[i]
+            comp = data.get_component(attrib)
+            assert data.label == f'some_data[{attrib}]'
+            assert data.shape == (2, 2)
+            assert isinstance(data.coords, WCS)
+            assert comp.data.shape == (2, 2)
+            if attrib == 'MASK':
+                assert comp.units == ''
+            else:
+                assert comp.units == 'MJy / sr'
+        assert len(imviz_app.app.data_collection) == 3
+
+    @pytest.mark.skipif(not HAS_SKIMAGE, reason='scikit-image is missing')
+    @pytest.mark.parametrize('format', ('jpg', 'png'))
+    def test_parse_rgba(self, imviz_app, tmp_path, format):
+        from skimage.io import imsave
+
+        if format == 'png':  # Cross-test PNG with RGBA
+            a = np.zeros((10, 10, 4), dtype='uint8')
+        else:  # Cross-test JPG with RGB only
+            a = np.zeros((10, 10, 3), dtype='uint8')
+
+        filename = str(tmp_path / f'myimage.{format}')
+        imsave(filename, a)
+
+        parse_data(imviz_app.app, filename, show_in_viewer=False)
+        data = imviz_app.app.data_collection[0]
+        assert data.label == 'myimage'
+        assert data.shape == (10, 10)
 
     @pytest.mark.skipif(HAS_JWST_ASDF, reason='jwst is installed')
     @pytest.mark.remote_data

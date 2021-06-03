@@ -11,6 +11,47 @@ class Imviz(ConfigHelper):
     _default_configuration = 'imviz'
 
     def load_data(self, data, parser_reference=None, **kwargs):
+        """Load data into Imviz.
+
+        Parameters
+        ----------
+        data : obj or str
+            File name or object to be loaded. Supported formats include:
+
+            * ``'filename.fits'`` (or any extension that ``astropy.io.fits``
+              supports; first image extension found is loaded unless ``ext``
+              keyword is also given)
+            * ``'filename.fits[SCI]'`` (loads only first SCI extension)
+            * ``'filename.fits[SCI,2]'`` (loads the second SCI extension)
+            * ``'filename.jpg'`` (requires ``scikit-image``; grayscale only)
+            * ``'filename.png'`` (requires ``scikit-image``; grayscale only)
+            * JWST ASDF-in-FITS file (requires ``jwst``; ``data`` or given
+              ``ext`` + GWCS)
+            * ``astropy.io.fits.HDUList`` object (first image extension found
+              is loaded unless ``ext`` keyword is also given)
+            * ``astropy.io.fits.ImageHDU`` object
+            * ``astropy.nddata.NDData`` object (2D only but may have unit,
+              mask, or uncertainty attached)
+            * Numpy array (2D only)
+
+        parser_reference
+            This is used internally by the app.
+
+        kwargs : dict
+            Extra keywords to be passed into app-level parser.
+            The only one you might call directly here is ``ext`` (any FITS
+            extension format supported by ``astropy.io.fits``) and
+            ``show_in_viewer`` (bool).
+
+        Notes
+        -----
+        When loading image formats that support RGB color like JPG or PNG, the
+        files are converted to greyscale. This is done following the algorithm
+        of ``skimage.color.rgb2grey``, which involves weighting the channels as
+        ``0.2125 R + 0.7154 G + 0.0721 B``. If you prefer a different weighting,
+        you can use ``skimage.io.imread`` to produce your own greyscale
+        image as Numpy array and load the latter instead.
+        """
         if isinstance(data, str):
             filepath, ext, data_label = split_filename_with_fits_ext(data)
 

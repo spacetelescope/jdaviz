@@ -2,8 +2,10 @@ import base64
 import os
 import uuid
 
+import numpy as np
 from astropy import units as u
 from astropy.io import fits
+from astropy.nddata import NDData
 from astropy.wcs import WCS
 from glue.core.data import Component, Data
 try:
@@ -42,8 +44,19 @@ def parse_data(app, file_obj, ext=None, data_label=None, show_in_viewer=True):
     if isinstance(file_obj, str):
         if data_label is None:
             data_label = os.path.splitext(os.path.basename(file_obj))[0]
-        with fits.open(file_obj) as pf:
+        if file_obj.lower().endswith(('.jpg', '.jpeg', '.png')):
+            from skimage.io import imread
+            from skimage.color import rgb2gray, rgba2rgb
+            im = imread(file_obj)
+            if im.shape[2] == 4:
+                pf = rgb2gray(rgba2rgb(im))
+            else:  # Assume RGB
+                pf = rgb2gray(im)
+            pf = pf[::-1, :]  # Flip it
             _parse_image(app, pf, data_label, show_in_viewer, ext=ext)
+        else:  # Assume FITS
+            with fits.open(file_obj) as pf:
+                _parse_image(app, pf, data_label, show_in_viewer, ext=ext)
     else:
         if data_label is None:
             data_label = f'imviz_data|{str(base64.b85encode(uuid.uuid4().bytes), "utf-8")}'
@@ -57,20 +70,20 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
     if isinstance(file_obj, fits.HDUList):
         if 'ASDF' in file_obj:  # JWST ASDF-in-FITS
             if HAS_JWST_ASDF:
-                data, data_label = _jwst_to_glue_data(file_obj, ext, data_label)
+                data_iter = _jwst_to_glue_data(file_obj, ext, data_label)
             else:
                 raise ImportError('jwst package is missing')
 
         elif ext is not None:  # Load just the EXT user wants
             hdu = file_obj[ext]
-            _validate_image2d(hdu)
-            data, data_label = _hdu_to_glue_data(hdu, data_label)
+            _validate_fits_image2d(hdu)
+            data_iter = _hdu_to_glue_data(hdu, data_label)
 
         else:  # Load first image extension found
             found = False
             for hdu in file_obj:
-                if _validate_image2d(hdu, raise_error=False):
-                    data, data_label = _hdu_to_glue_data(hdu, data_label)
+                if _validate_fits_image2d(hdu, raise_error=False):
+                    data_iter = _hdu_to_glue_data(hdu, data_label)
                     found = True
                     break
             if not found:
@@ -78,18 +91,25 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
 
     elif isinstance(file_obj, (fits.ImageHDU, fits.CompImageHDU, fits.PrimaryHDU)):
         # NOTE: ext is not used here. It only means something if HDUList is given.
-        _validate_image2d(file_obj)
-        data, data_label = _hdu_to_glue_data(file_obj, data_label)
+        _validate_fits_image2d(file_obj)
+        data_iter = _hdu_to_glue_data(file_obj, data_label)
+
+    elif isinstance(file_obj, NDData):
+        data_iter = _nddata_to_glue_data(file_obj, data_label)
+
+    elif isinstance(file_obj, np.ndarray):
+        data_iter = _ndarray_to_glue_data(file_obj, data_label)
 
     else:
         raise NotImplementedError(f'Imviz does not support {file_obj}')
 
-    app.add_data(data, data_label)
-    if show_in_viewer:
-        app.add_data_to_viewer("viewer-1", data_label)
+    for data, data_label in data_iter:
+        app.add_data(data, data_label)
+        if show_in_viewer:
+            app.add_data_to_viewer("viewer-1", data_label)
 
 
-def _validate_image2d(hdu, raise_error=True):
+def _validate_fits_image2d(hdu, raise_error=True):
     valid = hdu.data is not None and hdu.is_image and hdu.data.ndim == 2
     if not valid and raise_error:
         raise ValueError(
@@ -143,7 +163,7 @@ def _jwst_to_glue_data(file_obj, ext, data_label):
         component = Component.autotyped(imdata, units=bunit)
         data.add_component(component=component, label=comp_label)
 
-    return data, data_label
+    yield data, data_label
 
 
 def _hdu_to_glue_data(hdu, data_label):
@@ -158,4 +178,40 @@ def _hdu_to_glue_data(hdu, data_label):
     data.coords = WCS(hdu.header)
     component = Component.autotyped(hdu.data, units=bunit)
     data.add_component(component=component, label=comp_label)
-    return data, data_label
+    yield data, data_label
+
+
+def _nddata_to_glue_data(ndd, data_label):
+    if ndd.data.ndim != 2:
+        raise ValueError(f'Imviz cannot load this NDData with ndim={ndd.data.ndim}')
+
+    for attrib in ['data', 'mask', 'uncertainty']:
+        arr = getattr(ndd, attrib)
+        if arr is None:
+            continue
+        comp_label = attrib.upper()
+        cur_label = f'{data_label}[{comp_label}]'
+        cur_data = Data(label=cur_label)
+        if ndd.wcs is not None:
+            cur_data.coords = ndd.wcs
+        raw_arr = arr
+        if attrib == 'data':
+            bunit = ndd.unit or ''
+        elif attrib == 'uncertainty':
+            raw_arr = arr.array
+            bunit = arr.unit or ''
+        else:
+            bunit = ''
+        component = Component.autotyped(raw_arr, units=bunit)
+        cur_data.add_component(component=component, label=comp_label)
+        yield cur_data, cur_label
+
+
+def _ndarray_to_glue_data(arr, data_label):
+    if arr.ndim != 2:
+        raise ValueError(f'Imviz cannot load this array with ndim={arr.ndim}')
+
+    data = Data(label=data_label)
+    component = Component.autotyped(arr)
+    data.add_component(component=component, label='DATA')
+    yield data, data_label
