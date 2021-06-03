@@ -1,6 +1,7 @@
 import time
 from echo import delay_callback
 from glue.config import viewer_tool
+from glue.core import BaseData
 from glue_jupyter.bqplot.common.tools import Tool
 from glue.viewers.common.tool import CheckableTool
 from glue.plugins.wcs_autolinking.wcs_autolinking import wcs_autolink, WCSLink
@@ -129,7 +130,11 @@ class BqplotContrastBias(CheckableTool):
 
             x = event_x / (self.viewer.state.x_max - self.viewer.state.x_min)
             y = event_y / (self.viewer.state.y_max - self.viewer.state.y_min)
-            state = self.viewer.layers[0].state
+
+            # When blinked, first layer might not be top layer
+            i_top = [i for i, lyr in enumerate(self.viewer.layers)
+                     if lyr.visible and isinstance(lyr.layer, BaseData)][-1]
+            state = self.viewer.layers[i_top].state
 
             # https://github.com/glue-viz/glue/blob/master/glue/viewers/image/qt/contrast_mouse_mode.py
             with delay_callback(state, 'bias', 'contrast'):
