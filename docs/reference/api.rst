@@ -21,6 +21,7 @@ Application
 .. automodapi:: jdaviz.app
    :no-inheritance-diagram:
 
+
 Configurations
 ==============
 
@@ -28,4 +29,7 @@ Configurations
    :no-inheritance-diagram:
 
 .. automodapi:: jdaviz.configs.cubeviz.plugins
+   :no-inheritance-diagram:
+
+.. automodapi:: jdaviz.configs.imviz
    :no-inheritance-diagram:
