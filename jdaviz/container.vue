@@ -23,17 +23,16 @@
           <v-row dense style="background-color: #205f76">
             <v-col md="auto">
               <v-menu offset-y>
-
                 <template v-slot:activator="{ on, attrs }">
-                  <v-btn
-                    text
-                    dark
-                    elevation="3"
-                    v-bind="attrs"
-                    v-on="on"
-                  >
-                    Data
-                  </v-btn>
+                    <v-btn
+                      text
+                      dark
+                      elevation="3"
+                      v-bind="attrs"
+                      v-on="on"
+                    >
+                      Data
+                    </v-btn>
                 </template>
                 <v-list style="max-height: 500px; width: 350px;" class="overflow-y-auto">
                 <v-checkbox
@@ -49,7 +48,6 @@
                 </v-list>
 
               </v-menu>
-
               </v-col>
               <v-spacer></v-spacer>
                <v-col md="auto">
