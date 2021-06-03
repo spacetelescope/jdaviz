@@ -43,6 +43,14 @@ class Imviz(ConfigHelper):
             extension format supported by ``astropy.io.fits``) and
             ``show_in_viewer`` (bool).
 
+        Notes
+        -----
+        When loading image formats that support RGB color like jpg or png, the
+        files are  converted to greyscale. This is done following the algorithm
+        of `skimage.color.rgb2grey`, which involves weighting the channels as
+        ``0.2125 R + 0.7154 G + 0.0721 B``. If you prefer a different weighting,
+        you can use `skimage.io.imread` and from that produce your own greyscale
+        image.
         """
         if isinstance(data, str):
             filepath, ext, data_label = split_filename_with_fits_ext(data)
