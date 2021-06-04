@@ -175,10 +175,7 @@ def _hdu_to_glue_data(hdu, data_label, hdulist=None):
     comp_label = f'{hdu.name.upper()},{hdu.ver}'
     data_label = f'{data_label}[{comp_label}]'
     data = Data(label=data_label)
-    if hdulist is None:
-        data.coords = WCS(hdu.header)
-    else:
-        data.coords = WCS(hdu.header, hdulist)
+    data.coords = WCS(hdu.header, hdulist)
     component = Component.autotyped(hdu.data, units=bunit)
     data.add_component(component=component, label=comp_label)
     yield data, data_label
