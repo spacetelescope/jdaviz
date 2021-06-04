@@ -1,12 +1,18 @@
 import time
+import os
+
 from echo import delay_callback
+
 from glue.config import viewer_tool
 from glue.core import BaseData
 from glue_jupyter.bqplot.common.tools import Tool
 from glue.viewers.common.tool import CheckableTool
 from glue.plugins.wcs_autolinking.wcs_autolinking import wcs_autolink, WCSLink
+from glue_jupyter.bqplot.common.tools import BqplotPanZoomMode
 
 __all__ = []
+
+ICON_DIR = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'icons')
 
 
 @viewer_tool
@@ -17,30 +23,28 @@ class BlinkOnce(Tool):
     tool_tip = ('Click on this button to display the next image, '
                 'or you can also press the "b" key anytime')
 
-    def __init__(self, viewer, **kwargs):
-        super().__init__(viewer, **kwargs)
-
     def activate(self):
         self.viewer.blink_once()
 
 
 @viewer_tool
-class BqplotMatchWCS(CheckableTool):
+class BqplotMatchWCS(BqplotPanZoomMode):
 
-    icon = 'glue_link'
-    tool_id = 'bqplot:matchwcs'
-    action_text = 'Match WCS between images'
-    tool_tip = 'Click on image to have the other image viewer show the same coordinates'
-
-    def __init__(self, viewer, **kwargs):
-
-        super().__init__(viewer, **kwargs)
+    icon = os.path.join(ICON_DIR, 'pan_wcs.png')
+    tool_id = 'bqplot:panzoomwcs'
+    action_text = 'Pan, matching WCS between viwers'
+    tool_tip = 'Pan and Zoom in this viewer to see the same regions in other viewers'
 
     def activate(self):
 
-        self.viewer.add_event_callback(self.on_mouse_or_key_event, events=['click'])
+        super().activate()
 
-        # For now clickling this will automatically set up links between datasets. We
+        self.viewer.state.add_callback('x_min', self.on_limits_change)
+        self.viewer.state.add_callback('x_max', self.on_limits_change)
+        self.viewer.state.add_callback('y_min', self.on_limits_change)
+        self.viewer.state.add_callback('y_max', self.on_limits_change)
+
+        # For now clicking this will automatically set up links between datasets. We
         # do this when activating this tool so that this ends up being 'opt-in' only
         # when the user wants to match WCS.
 
@@ -72,21 +76,26 @@ class BqplotMatchWCS(CheckableTool):
                             break
                 viewer.state.reference_data = self.viewer.state.reference_data
 
-    def deactivate(self):
-        self.viewer.remove_event_callback(self.on_mouse_or_key_event)
+        # Trigger a sync so the initial limits match
+        self.on_limits_change()
 
-    def on_mouse_or_key_event(self, data):
-        if data['event'] == 'click':
-            x = data['domain']['x']
-            y = data['domain']['y']
-            dx = self.viewer.state.x_max - self.viewer.state.x_min
-            dy = self.viewer.state.y_max - self.viewer.state.y_min
-            for viewer in self.viewer.session.application.viewers:
+    def deactivate(self):
+
+        self.viewer.state.remove_callback('x_min', self.on_limits_change)
+        self.viewer.state.remove_callback('x_max', self.on_limits_change)
+        self.viewer.state.remove_callback('y_min', self.on_limits_change)
+        self.viewer.state.remove_callback('y_max', self.on_limits_change)
+
+        super().deactivate()
+
+    def on_limits_change(self, *args):
+        for viewer in self.viewer.session.application.viewers:
+            if viewer is not self.viewer:
                 with delay_callback(viewer.state, 'x_min', 'x_max', 'y_min', 'y_max'):
-                    viewer.state.x_min = x - dx / 2
-                    viewer.state.x_max = x + dx / 2
-                    viewer.state.y_min = y - dy / 2
-                    viewer.state.y_max = y + dy / 2
+                    viewer.state.x_min = self.viewer.state.x_min
+                    viewer.state.x_max = self.viewer.state.x_max
+                    viewer.state.y_min = self.viewer.state.y_min
+                    viewer.state.y_max = self.viewer.state.y_max
 
 
 @viewer_tool

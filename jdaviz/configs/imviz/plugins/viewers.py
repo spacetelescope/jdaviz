@@ -14,8 +14,14 @@ __all__ = ['ImvizImageView']
 @viewer_registry("imviz-image-viewer", label="Image 2D (Imviz)")
 class ImvizImageView(BqplotImageView):
 
-    tools = ['bqplot:panzoom', 'bqplot:contrastbias', 'bqplot:blinkonce', 'bqplot:rectangle',
-             'bqplot:circle', 'bqplot:matchwcs']
+    # Whether to inherit tools from glue-jupyter automatically. Set this to
+    # False to have full control here over which tools are shown in case new
+    # ones are added in glue-jupyter in future that we don't want here.
+    inherit_tools = False
+
+    tools = ['bqplot:home', 'bqplot:panzoom', 'bqplot:panzoomwcs',
+             'bqplot:contrastbias', 'bqplot:blinkonce',
+             'bqplot:rectangle', 'bqplot:circle']
     default_class = None
 
     def __init__(self, *args, **kwargs):
