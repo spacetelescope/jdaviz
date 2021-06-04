@@ -23,9 +23,6 @@ class BlinkOnce(Tool):
     tool_tip = ('Click on this button to display the next image, '
                 'or you can also press the "b" key anytime')
 
-    def __init__(self, viewer, **kwargs):
-        super().__init__(viewer, **kwargs)
-
     def activate(self):
         self.viewer.blink_once()
 
@@ -62,6 +59,7 @@ class BqplotMatchWCS(BqplotPanZoomMode):
                     if (link.data1 is existing_link.data1
                             and link.data2 is existing_link.data2):
                         exists = True
+                        break
             if not exists:
                 self.viewer.session.data_collection.add_link(link)
 
