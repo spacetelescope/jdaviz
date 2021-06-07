@@ -161,7 +161,6 @@ def _fit_3D(initial_model, spectrum):
         r = pool.apply_async(worker, callback=collect_result)
         results.append(r)
     for r in results:
-        r.get()
         r.wait()
 
     pool.close()
@@ -213,6 +212,7 @@ class SpaxelWorker:
             sp = Spectrum1D(spectral_axis=self.wave, flux=flux)
 
             fitted_model = fit_lines(sp, self.model)
+
             fitted_values = fitted_model(self.wave)
 
             results['x'].append(x)
