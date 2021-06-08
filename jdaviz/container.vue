@@ -13,7 +13,7 @@
     <gl-component
       v-for="(viewer, index) in stack.viewers"
       :key="index"
-      title="Test"
+      title="Viewer"
       :tab-id="viewer.id"
       @resize="$emit('resize')"
       @destroy="$emit('destroy', viewer.id)"
