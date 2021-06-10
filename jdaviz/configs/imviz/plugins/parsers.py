@@ -74,7 +74,10 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
             else:
                 raise ImportError('jwst package is missing')
 
-        elif ext is not None:  # Load just the EXT user wants
+        elif ext is not None and ext in ['*']:  # Load all extensions
+            data_iter = _hdus_to_glue_data(file_obj, data_label)
+
+        elif ext is not None and ext not in ['*']:  # Load just the EXT user wants
             hdu = file_obj[ext]
             _validate_fits_image2d(hdu)
             data_iter = _hdu_to_glue_data(hdu, data_label, hdulist=file_obj)
@@ -167,18 +170,29 @@ def _jwst_to_glue_data(file_obj, ext, data_label):
 
 
 def _hdu_to_glue_data(hdu, data_label, hdulist=None):
+    data, data_label = _hdu2data(data_label, hdu, hdulist)
+    yield data, data_label
+
+
+def _hdus_to_glue_data(file_obj, data_label):
+    for hdu in file_obj:
+        if _validate_fits_image2d(hdu, raise_error=False):
+            data, new_data_label = _hdu2data(data_label, hdu, file_obj)
+            yield data, new_data_label
+
+
+def _hdu2data(data_label, hdu, hdulist):
     if 'BUNIT' in hdu.header and _validate_bunit(hdu.header['BUNIT'], raise_error=False):
         bunit = hdu.header['BUNIT']
     else:
         bunit = ''
-
     comp_label = f'{hdu.name.upper()},{hdu.ver}'
-    data_label = f'{data_label}[{comp_label}]'
-    data = Data(label=data_label)
+    new_data_label = f'{data_label}[{comp_label}]'
+    data = Data(label=new_data_label)
     data.coords = WCS(hdu.header, hdulist)
     component = Component.autotyped(hdu.data, units=bunit)
     data.add_component(component=component, label=comp_label)
-    yield data, data_label
+    return data, new_data_label
 
 
 def _nddata_to_glue_data(ndd, data_label):
