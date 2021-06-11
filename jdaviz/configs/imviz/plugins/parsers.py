@@ -1,6 +1,7 @@
 import base64
 import os
 import uuid
+import logging
 
 import numpy as np
 from astropy import units as u
@@ -15,6 +16,8 @@ except ImportError:
     HAS_JWST_ASDF = False
 
 from jdaviz.core.registries import data_parser_registry
+from jdaviz.core.events import SnackbarMessage
+
 
 __all__ = ['parse_data']
 
@@ -83,13 +86,24 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
             data_iter = _hdu_to_glue_data(hdu, data_label, hdulist=file_obj)
 
         else:  # Load first image extension found
-            found = False
+            found = 0
             for hdu in file_obj:
                 if _validate_fits_image2d(hdu, raise_error=False):
                     data_iter = _hdu_to_glue_data(hdu, data_label, hdulist=file_obj)
-                    found = True
+
+                    # if more than one viewable extension is found in the file,
+                    # warn user.
+                    found = _count_image2d_extensions(file_obj)
+
+                    if found > 1:
+                        warn_msg = "The file contains more viewable extensions. Add the '[*]' suffix" \
+                                   " to the file name to read all of them. "
+                        logging.warning(warn_msg)
+                        warn_msg = SnackbarMessage(warn_msg, color="warning",timeout=10000, sender=app)
+                        app.hub.broadcast(warn_msg)
+
                     break
-            if not found:
+            if found == 0:
                 raise ValueError(f'{file_obj} does not have any FITS image')
 
     elif isinstance(file_obj, (fits.ImageHDU, fits.CompImageHDU, fits.PrimaryHDU)):
@@ -110,6 +124,14 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
         app.add_data(data, data_label)
         if show_in_viewer:
             app.add_data_to_viewer("viewer-1", data_label)
+
+
+def _count_image2d_extensions(file_obj):
+    count = 0
+    for hdu in file_obj:
+        if _validate_fits_image2d(hdu, raise_error=False):
+            count += 1
+    return count
 
 
 def _validate_fits_image2d(hdu, raise_error=True):
