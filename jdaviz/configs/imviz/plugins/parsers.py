@@ -73,7 +73,15 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
     if isinstance(file_obj, fits.HDUList):
         if 'ASDF' in file_obj:  # JWST ASDF-in-FITS
             if HAS_JWST_ASDF:
-                data_iter = _jwst_to_glue_data(file_obj, ext, data_label)
+
+                # Load all extensions
+                if ext is not None and ext in ['*']:
+                    data_iter = _jwst_all_to_glue_data(file_obj, data_label)
+
+                # Load only specified extension
+                else:
+                    data_iter = _jwst_to_glue_data(file_obj, ext, data_label)
+
             else:
                 raise ImportError('jwst package is missing')
 
@@ -157,6 +165,13 @@ def _validate_bunit(bunit, raise_error=True):
     return valid
 
 
+#TODO this function will loop over all extensions, and yield for each ImageHDU that it finds.
+def _jwst_all_to_glue_data(file_obj, data_label):
+    data, new_data_label = _jwst2data(data_label, 'data', file_obj)
+
+    yield data, new_data_label
+
+
 def _jwst_to_glue_data(file_obj, ext, data_label):
     # Translate FITS extension into JWST ASDF convention.
     if ext is None:
@@ -168,9 +183,15 @@ def _jwst_to_glue_data(file_obj, ext, data_label):
         if ext in ('sci', 'asdf'):
             ext = 'data'
 
+    data, new_data_label = _jwst2data(data_label, ext, file_obj)
+
+    yield data, new_data_label
+
+
+def _jwst2data(data_label, ext, file_obj):
     comp_label = ext.upper()
-    data_label = f'{data_label}[{comp_label}]'
-    data = Data(label=data_label)
+    new_data_label = f'{data_label}[{comp_label}]'
+    data = Data(label=new_data_label)
     unit_attr = f'bunit_{ext}'
 
     # This is very specific to JWST pipeline image output.
@@ -188,7 +209,7 @@ def _jwst_to_glue_data(file_obj, ext, data_label):
         component = Component.autotyped(imdata, units=bunit)
         data.add_component(component=component, label=comp_label)
 
-    yield data, data_label
+    return data, new_data_label
 
 
 def _hdu_to_glue_data(hdu, data_label, hdulist=None):
