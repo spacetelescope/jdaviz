@@ -367,6 +367,10 @@ class ModelFitting(TemplateMixin):
         else:
             self._update_parameters_from_fit()
 
+        # Also update the _initialized_models so we can use these values
+        # as the starting point for cube fitting
+        self._update_initialized_parameters()
+
     def vue_fit_model_to_cube(self, *args, **kwargs):
 
         if self._warn_if_no_equation():
