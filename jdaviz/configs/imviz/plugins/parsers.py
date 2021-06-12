@@ -21,6 +21,9 @@ from jdaviz.core.events import SnackbarMessage
 
 __all__ = ['parse_data']
 
+INFO_MSG = "The file contains more viewable extensions. Add the '[*]' suffix" \
+           " to the file name to read all of them. "
+
 
 @data_parser_registry("imviz-data-parser")
 def parse_data(app, file_obj, ext=None, data_label=None, show_in_viewer=True):
@@ -82,6 +85,10 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
                 else:
                     data_iter = _jwst_to_glue_data(file_obj, ext, data_label)
 
+                    # if more than one viewable extension is found in the file,
+                    # issue info message.
+                    _info_nextensions(app, file_obj)
+
             else:
                 raise ImportError('jwst package is missing')
 
@@ -100,17 +107,11 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
                     data_iter = _hdu_to_glue_data(hdu, data_label, hdulist=file_obj)
 
                     # if more than one viewable extension is found in the file,
-                    # warn user.
-                    found = _count_image2d_extensions(file_obj)
-
-                    if found > 1:
-                        warn_msg = "The file contains more viewable extensions. Add the '[*]' suffix" \
-                                   " to the file name to read all of them. "
-                        logging.warning(warn_msg)
-                        warn_msg = SnackbarMessage(warn_msg, color="warning",timeout=10000, sender=app)
-                        app.hub.broadcast(warn_msg)
+                    # issue info message.
+                    found = _info_nextensions(app, file_obj)
 
                     break
+
             if found == 0:
                 raise ValueError(f'{file_obj} does not have any FITS image')
 
@@ -132,6 +133,17 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
         app.add_data(data, data_label)
         if show_in_viewer:
             app.add_data_to_viewer("viewer-1", data_label)
+
+
+def _info_nextensions(app, file_obj):
+    next = _count_image2d_extensions(file_obj)
+
+    if next > 1:
+        logging.warning(INFO_MSG)
+        warn_msg = SnackbarMessage(INFO_MSG, color="info", timeout=15000, sender=app)
+        app.hub.broadcast(warn_msg)
+
+    return next
 
 
 def _count_image2d_extensions(file_obj):
@@ -165,11 +177,20 @@ def _validate_bunit(bunit, raise_error=True):
     return valid
 
 
-#TODO this function will loop over all extensions, and yield for each ImageHDU that it finds.
-def _jwst_all_to_glue_data(file_obj, data_label):
-    data, new_data_label = _jwst2data(data_label, 'data', file_obj)
+##### Functions that handle input from JWST FITS files #####
 
-    yield data, new_data_label
+def _jwst_all_to_glue_data(file_obj, data_label):
+    for hdu in file_obj:
+        if _validate_fits_image2d(hdu, raise_error=False):
+
+            ext = hdu.name.lower()
+            if ext in ('sci', 'asdf'):
+                ext = 'data'
+
+            data, new_data_label = _jwst2data(data_label, ext, file_obj)
+
+            yield data, new_data_label
+
 
 
 def _jwst_to_glue_data(file_obj, ext, data_label):
@@ -212,6 +233,8 @@ def _jwst2data(data_label, ext, file_obj):
     return data, new_data_label
 
 
+##### Functions that handle input from non-JWST FITS files #####
+
 def _hdu_to_glue_data(hdu, data_label, hdulist=None):
     data, data_label = _hdu2data(data_label, hdu, hdulist)
     yield data, data_label
@@ -229,14 +252,19 @@ def _hdu2data(data_label, hdu, hdulist):
         bunit = hdu.header['BUNIT']
     else:
         bunit = ''
+
     comp_label = f'{hdu.name.upper()},{hdu.ver}'
     new_data_label = f'{data_label}[{comp_label}]'
+
     data = Data(label=new_data_label)
     data.coords = WCS(hdu.header, hdulist)
     component = Component.autotyped(hdu.data, units=bunit)
     data.add_component(component=component, label=comp_label)
+
     return data, new_data_label
 
+
+##### Functions that handle input from arrays #####
 
 def _nddata_to_glue_data(ndd, data_label):
     if ndd.data.ndim != 2:
