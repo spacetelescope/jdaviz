@@ -223,6 +223,17 @@ class TestParseImage:
             assert isinstance(data.coords, GWCS)
             assert comp.units == 'MJy/sr'
 
+        # Test duplicate label functionality
+        with fits.open(filename) as pf:
+            imviz_app.app.data_collection.clear ()
+            parse_data(imviz_app.app, pf, ext='SCI', show_in_viewer=False, data_label='TEST')
+            data = imviz_app.app.data_collection[0]
+            assert data.label.endswith('DATA]')
+
+            parse_data(imviz_app.app, pf, ext='SCI', show_in_viewer=False, data_label='TEST')
+            data = imviz_app.app.data_collection[1]
+            assert data.label.endswith('DATA]_2')
+
         # Load all extensions
         with fits.open(filename) as pf:
             imviz_app.app.data_collection.clear ()
