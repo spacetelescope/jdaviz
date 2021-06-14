@@ -223,6 +223,23 @@ class TestParseImage:
             assert isinstance(data.coords, GWCS)
             assert comp.units == 'MJy/sr'
 
+        # Load all extensions
+        with fits.open(filename) as pf:
+            parse_data(imviz_app.app, pf, ext='*', show_in_viewer=False)
+            data = imviz_app.app.data_collection
+
+            assert len(data.labels) == 10
+            assert data.labels[0].endswith('DATA]')
+            assert data.labels[1].endswith('DQ]')
+            assert data.labels[2].endswith('DATA]')
+            assert data.labels[3].endswith('DATA]')
+            assert data.labels[4].endswith('ERR]')
+            assert data.labels[5].endswith('DQ]')
+            assert data.labels[5].endswith('DQ]')
+            assert data.labels[5].endswith('DQ]')
+            assert data.labels[5].endswith('DQ]')
+            assert data.labels[5].endswith('DQ]')
+
         # Invalid ASDF attribute (extension)
         with pytest.raises(AttributeError, match='No attribute'):
             parse_data(imviz_app.app, filename, ext='DOES_NOT_EXIST',

@@ -22,7 +22,7 @@ from jdaviz.core.events import SnackbarMessage
 __all__ = ['parse_data']
 
 INFO_MSG = "The file contains more viewable extensions. Add the '[*]' suffix" \
-           " to the file name to read all of them. "
+           " to the file name to load all of them. "
 
 
 @data_parser_registry("imviz-data-parser")
