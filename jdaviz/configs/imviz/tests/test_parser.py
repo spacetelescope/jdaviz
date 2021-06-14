@@ -225,20 +225,17 @@ class TestParseImage:
 
         # Load all extensions
         with fits.open(filename) as pf:
+            imviz_app.app.data_collection.clear ()
             parse_data(imviz_app.app, pf, ext='*', show_in_viewer=False)
             data = imviz_app.app.data_collection
-
-            assert len(data.labels) == 10
+            assert len(data.labels) == 7
             assert data.labels[0].endswith('DATA]')
-            assert data.labels[1].endswith('DQ]')
-            assert data.labels[2].endswith('DATA]')
-            assert data.labels[3].endswith('DATA]')
-            assert data.labels[4].endswith('ERR]')
-            assert data.labels[5].endswith('DQ]')
-            assert data.labels[5].endswith('DQ]')
-            assert data.labels[5].endswith('DQ]')
-            assert data.labels[5].endswith('DQ]')
-            assert data.labels[5].endswith('DQ]')
+            assert data.labels[1].endswith('ERR]')
+            assert data.labels[2].endswith('DQ]')
+            assert data.labels[3].endswith('AREA]')
+            assert data.labels[4].endswith('VAR_POISSON]')
+            assert data.labels[5].endswith('VAR_RNOISE]')
+            assert data.labels[6].endswith('VAR_FLAT]')
 
         # Invalid ASDF attribute (extension)
         with pytest.raises(AttributeError, match='No attribute'):
@@ -295,6 +292,15 @@ class TestParseImage:
             data = imviz_app.app.data_collection[5]
             assert data.label == 'foo[WHT,1]'
             assert 'WHT,1' in data.components
+
+            # Load all extensions
+            imviz_app.app.data_collection.clear()
+            parse_data(imviz_app.app, filename, ext='*', show_in_viewer=False)
+            data = imviz_app.app.data_collection
+            assert len(data.labels) == 3
+            assert data.labels[0].endswith('SCI,1]')
+            assert data.labels[1].endswith('WHT,1]')
+            assert data.labels[2].endswith('CTX,1]')
 
         # Cannot load non-image extension
         with pytest.raises(ValueError, match='Imviz cannot load this HDU'):
