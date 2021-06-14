@@ -133,7 +133,7 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
 
         # avoid duplicate data labels in colection
         if data_label in app.data_collection.labels:
-            data_label = data_label + "_2" # 0th-order solution as proposed in github #600
+            data_label = data_label + "_2" # 0th-order solution as proposed in issue #600
 
         app.add_data(data, data_label)
         if show_in_viewer:
@@ -145,8 +145,8 @@ def _info_nextensions(app, file_obj):
 
     if next > 1:
         logging.warning(INFO_MSG)
-        warn_msg = SnackbarMessage(INFO_MSG, color="info", timeout=15000, sender=app)
-        app.hub.broadcast(warn_msg)
+        info_msg = SnackbarMessage(INFO_MSG, color="info", timeout=15000, sender=app)
+        app.hub.broadcast(info_msg)
 
     return next
 
