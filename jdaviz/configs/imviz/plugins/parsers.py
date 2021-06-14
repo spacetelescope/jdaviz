@@ -130,6 +130,11 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
         raise NotImplementedError(f'Imviz does not support {file_obj}')
 
     for data, data_label in data_iter:
+
+        # avoid duplicate data labels in colection
+        if data_label in app.data_collection.labels:
+            data_label = data_label + "_2"
+
         app.add_data(data, data_label)
         if show_in_viewer:
             app.add_data_to_viewer("viewer-1", data_label)
