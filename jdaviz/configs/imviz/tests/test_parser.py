@@ -225,7 +225,7 @@ class TestParseImage:
 
         # Test duplicate label functionality
         with fits.open(filename) as pf:
-            imviz_app.app.data_collection.clear ()
+            imviz_app.app.data_collection.clear()
             parse_data(imviz_app.app, pf, ext='SCI', show_in_viewer=False, data_label='TEST')
             data = imviz_app.app.data_collection[0]
             assert data.label.endswith('DATA]')
@@ -236,7 +236,7 @@ class TestParseImage:
 
         # Load all extensions
         with fits.open(filename) as pf:
-            imviz_app.app.data_collection.clear ()
+            imviz_app.app.data_collection.clear()
             parse_data(imviz_app.app, pf, ext='*', show_in_viewer=False)
             data = imviz_app.app.data_collection
             assert len(data.labels) == 7

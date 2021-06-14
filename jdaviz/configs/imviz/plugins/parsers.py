@@ -133,7 +133,7 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
 
         # avoid duplicate data labels in colection
         if data_label in app.data_collection.labels:
-            data_label = data_label + "_2" # 0th-order solution as proposed in issue #600
+            data_label = data_label + "_2"  # 0th-order solution as proposed in issue #600
 
         app.add_data(data, data_label)
         if show_in_viewer:
@@ -182,7 +182,7 @@ def _validate_bunit(bunit, raise_error=True):
     return valid
 
 
-##### Functions that handle input from JWST FITS files #####
+# ---- Functions that handle input from JWST FITS files -----
 
 def _jwst_all_to_glue_data(file_obj, data_label):
     for hdu in file_obj:
@@ -195,7 +195,6 @@ def _jwst_all_to_glue_data(file_obj, data_label):
             data, new_data_label = _jwst2data(data_label, ext, file_obj)
 
             yield data, new_data_label
-
 
 
 def _jwst_to_glue_data(file_obj, ext, data_label):
@@ -238,7 +237,7 @@ def _jwst2data(data_label, ext, file_obj):
     return data, new_data_label
 
 
-##### Functions that handle input from non-JWST FITS files #####
+# ---- Functions that handle input from non-JWST FITS files -----
 
 def _hdu_to_glue_data(hdu, data_label, hdulist=None):
     data, data_label = _hdu2data(data_label, hdu, hdulist)
@@ -269,7 +268,7 @@ def _hdu2data(data_label, hdu, hdulist):
     return data, new_data_label
 
 
-##### Functions that handle input from arrays #####
+# ---- Functions that handle input from arrays -----
 
 def _nddata_to_glue_data(ndd, data_label):
     if ndd.data.ndim != 2:
