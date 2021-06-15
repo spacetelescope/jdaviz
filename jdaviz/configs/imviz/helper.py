@@ -171,6 +171,21 @@ class Imviz(ConfigHelper):
     def save(self, filename):
         raise NotImplementedError
 
+    # markers (MVP)
+
+    RESERVED_MARKER_SET_NAMES = ['all']
+
+    def add_markers(self, table, x_colname='x', y_colname='y',
+                    skycoord_colname='coord', use_skycoord=False,
+                    marker_name=None):
+        raise NotImplementedError
+
+    def remove_markers(self, marker_name=None):
+        raise NotImplementedError
+
+    def reset_markers(self):
+        raise NotImplementedError
+
     # astrowidgets ducktyping (not MVP)
     #
     # NOTES:
@@ -197,7 +212,7 @@ class Imviz(ConfigHelper):
     def pixel_offset(self):
         return 0  # No way to customize right now
 
-    # Loaders
+    # Loaders (not MVP)
 
     def load_fits(self, fitsorfn, numhdu=None, memmap=None):
         raise NotImplementedError
@@ -208,9 +223,7 @@ class Imviz(ConfigHelper):
     def load_array(self, arr):
         raise NotImplementedError
 
-    # Markers
-
-    RESERVED_MARKER_SET_NAMES = ['all']
+    # Markers (not MVP)
 
     @property
     def is_marking(self):
@@ -232,17 +245,6 @@ class Imviz(ConfigHelper):
 
     def get_markers(self, x_colname='x', y_colname='y',
                     skycoord_colname='coord', marker_name=None):
-        raise NotImplementedError
-
-    def add_markers(self, table, x_colname='x', y_colname='y',
-                    skycoord_colname='coord', use_skycoord=False,
-                    marker_name=None):
-        raise NotImplementedError
-
-    def remove_markers(self, marker_name=None):
-        raise NotImplementedError
-
-    def reset_markers(self):
         raise NotImplementedError
 
 
