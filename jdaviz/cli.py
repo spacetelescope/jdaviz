@@ -31,8 +31,13 @@ CONFIGS_DIR = os.path.join(os.path.dirname(__file__), 'configs')
               show_default=True,
               type=str,
               help="Browser to use for application")
-@click.option('--dark-mode/--no-dark-mode', default=False)
-def main(filename, layout='default', browser='default', dark_mode=False):
+@click.option('--theme',
+              default='light',
+              nargs=1,
+              show_default=True,
+              type=click.Choice(['light', 'dark']),
+              help="Theme to use for application")
+def main(filename, layout='default', browser='default', theme='light'):
     """
     Start a JDAViz application instance with data loaded from FILENAME.\f
 
@@ -44,8 +49,8 @@ def main(filename, layout='default', browser='default', dark_mode=False):
         Optional specification for which configuration to use on startup.
     browser : str, optional
         Path to browser executable.
-    dark_mode : bool
-        If true, use dark mode
+    theme : {'light', 'dark'}
+        Theme to use for Voila app or Jupyter Lab.
     """
     # Tornado Webserver py3.8 compatibility hotfix for windows
     if sys.platform == 'win32':
@@ -78,10 +83,9 @@ def main(filename, layout='default', browser='default', dark_mode=False):
         VoilaConfiguration.template = 'jdaviz-default'
         VoilaConfiguration.enable_nbextensions = True
         VoilaConfiguration.file_whitelist = ['.*']
+        VoilaConfiguration.theme = theme
         if browser != 'default':
             Voila.browser = browser
-        if dark_mode:
-            VoilaConfiguration.theme = 'dark'
         sys.exit(Voila().launch_instance(argv=[]))
     finally:
         os.chdir(start_dir)
