@@ -7,12 +7,26 @@
         <link href='https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons' rel="stylesheet">
         <link href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css" rel="stylesheet">
         <link href='{{resources.base_url}}voila/static/index.css' rel="stylesheet">
+        {% if resources.theme == 'dark' %}
+        <link href='{{resources.base_url}}voila/static/theme-dark.css' rel="stylesheet">
+        {% else %}
         <link href='{{resources.base_url}}voila/static/theme-light.css' rel="stylesheet">
+        {% endif-%}
+
+        {% block stylesheets %}
+        {% endblock %}
+
         <script src="{{resources.base_url}}voila/static/require.min.js" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" crossorigin="anonymous"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
     </head>
+    {%- block body_header -%}
+    {% if resources.theme == 'dark' %}
+    <body class="theme-dark" data-base-url="{{resources.base_url}}voila/">
+    {% else %}
+    <body class="theme-light" data-base-url="{{resources.base_url}}voila/">
+    {% endif-%}
+    {%- endblock body_header -%}
 
-    <body data-base-url="{{resources.base_url}}voila/">
         <script>
             {% include "ansi.js" %}
             {% include "util.js" %}
