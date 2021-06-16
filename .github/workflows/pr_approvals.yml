@@ -1,6 +1,8 @@
 name: Approvals
 
 on:
+  pull_request:
+    types: [opened, reopened, labeled, unlabeled, synchronize]
   pull_request_review:
 
 jobs:
