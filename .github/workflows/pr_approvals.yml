@@ -2,7 +2,7 @@ name: Approvals
 
 on:
   pull_request:
-    types: [opened, reopened]
+    types: [opened, reopened, labeled, unlabeled]
   pull_request_review:
 
 jobs:
