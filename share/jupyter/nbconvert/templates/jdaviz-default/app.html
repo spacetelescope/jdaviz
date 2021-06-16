@@ -67,6 +67,7 @@ var app = new Vue({
     el: '#web-app',
     mounted() {
         document.querySelector('#web-app').removeAttribute("style");
+        this.$vuetify.theme.dark = !!document.querySelector('body.theme-dark');
     },
     data() {
         return {
