@@ -223,7 +223,8 @@ def _jwst2data(file_obj, ext, data_label):
             bunit = ''
 
         # This is instance of gwcs.WCS, not astropy.wcs.WCS
-        data.coords = dm.meta.wcs
+        if hasattr(dm.meta, 'wcs'):
+            data.coords = dm.meta.wcs
 
         imdata = getattr(dm, ext)
         component = Component.autotyped(imdata, units=bunit)
