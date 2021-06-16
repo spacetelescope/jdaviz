@@ -849,20 +849,12 @@ class Application(VuetifyTemplate, HubListener):
                     if viewer['id'] == cid:
                         stack['viewers'].remove(viewer)
 
-                # If the stack is empty of viewers, also delete the stack
-                if len(stack['viewers']) == 0 and \
-                        len(stack['children']) == 0:
-                    stack_items.remove(stack)
-                    continue
-
                 if len(stack.get('children', [])) > 0:
                     stack['children'] = remove(stack['children'])
 
             return stack_items
 
         remove(self.state.stack_items)
-
-        # self.vue_relayout()
 
         # Also remove the viewer from the stored viewer instance dictionary
         # FIXME: This is getting called twice for some reason
