@@ -1,7 +1,6 @@
 import base64
 import os
 import uuid
-import logging
 
 import numpy as np
 from astropy import units as u
@@ -78,7 +77,7 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
             if HAS_JWST_ASDF:
 
                 # Load all extensions
-                if ext is not None and ext in ['*']:
+                if ext == '*':
                     data_iter = _jwst_all_to_glue_data(file_obj, data_label)
 
                 # Load only specified extension
@@ -92,27 +91,28 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
             else:
                 raise ImportError('jwst package is missing')
 
-        elif ext is not None and ext in ['*']:  # Load all extensions
+        elif ext == '*':  # Load all extensions
             data_iter = _hdus_to_glue_data(file_obj, data_label)
 
-        elif ext is not None and ext not in ['*']:  # Load just the EXT user wants
+        elif ext is not None:  # Load just the EXT user wants
             hdu = file_obj[ext]
             _validate_fits_image2d(hdu)
             data_iter = _hdu_to_glue_data(hdu, data_label, hdulist=file_obj)
 
         else:  # Load first image extension found
-            found = 0
+            found = False
             for hdu in file_obj:
                 if _validate_fits_image2d(hdu, raise_error=False):
                     data_iter = _hdu_to_glue_data(hdu, data_label, hdulist=file_obj)
+                    found = True
 
                     # if more than one viewable extension is found in the file,
                     # issue info message.
-                    found = _info_nextensions(app, file_obj)
+                    _info_nextensions(app, file_obj)
 
                     break
 
-            if found == 0:
+            if not found:
                 raise ValueError(f'{file_obj} does not have any FITS image')
 
     elif isinstance(file_obj, (fits.ImageHDU, fits.CompImageHDU, fits.PrimaryHDU)):
@@ -141,14 +141,9 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
 
 
 def _info_nextensions(app, file_obj):
-    next = _count_image2d_extensions(file_obj)
-
-    if next > 1:
-        logging.warning(INFO_MSG)
+    if _count_image2d_extensions(file_obj) > 1:
         info_msg = SnackbarMessage(INFO_MSG, color="info", timeout=15000, sender=app)
         app.hub.broadcast(info_msg)
-
-    return next
 
 
 def _count_image2d_extensions(file_obj):
@@ -189,10 +184,10 @@ def _jwst_all_to_glue_data(file_obj, data_label):
         if _validate_fits_image2d(hdu, raise_error=False):
 
             ext = hdu.name.lower()
-            if ext in ('sci', 'asdf'):
+            if ext == 'sci':
                 ext = 'data'
 
-            data, new_data_label = _jwst2data(data_label, ext, file_obj)
+            data, new_data_label = _jwst2data(file_obj, ext, data_label)
 
             yield data, new_data_label
 
@@ -208,12 +203,12 @@ def _jwst_to_glue_data(file_obj, ext, data_label):
         if ext in ('sci', 'asdf'):
             ext = 'data'
 
-    data, new_data_label = _jwst2data(data_label, ext, file_obj)
+    data, new_data_label = _jwst2data(file_obj, ext, data_label)
 
     yield data, new_data_label
 
 
-def _jwst2data(data_label, ext, file_obj):
+def _jwst2data(file_obj, ext, data_label):
     comp_label = ext.upper()
     new_data_label = f'{data_label}[{comp_label}]'
     data = Data(label=new_data_label)
@@ -240,18 +235,18 @@ def _jwst2data(data_label, ext, file_obj):
 # ---- Functions that handle input from non-JWST FITS files -----
 
 def _hdu_to_glue_data(hdu, data_label, hdulist=None):
-    data, data_label = _hdu2data(data_label, hdu, hdulist)
+    data, data_label = _hdu2data(hdu, data_label, hdulist)
     yield data, data_label
 
 
 def _hdus_to_glue_data(file_obj, data_label):
     for hdu in file_obj:
         if _validate_fits_image2d(hdu, raise_error=False):
-            data, new_data_label = _hdu2data(data_label, hdu, file_obj)
+            data, new_data_label = _hdu2data(hdu, data_label, file_obj)
             yield data, new_data_label
 
 
-def _hdu2data(data_label, hdu, hdulist):
+def _hdu2data(hdu, data_label, hdulist):
     if 'BUNIT' in hdu.header and _validate_bunit(hdu.header['BUNIT'], raise_error=False):
         bunit = hdu.header['BUNIT']
     else:

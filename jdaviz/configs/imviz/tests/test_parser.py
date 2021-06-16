@@ -29,6 +29,7 @@ def imviz_app():
      ('file://path/image.fits[SCI]', ['file://path/image.fits', 'SCI', 'image']),
      ('image.fits[dq,2]', ['image.fits', ('dq', 2), 'image']),
      ('/path/to/image.fits', ['/path/to/image.fits', None, 'image']),
+     ('/path/to/image.fits[*]', ['/path/to/image.fits', '*', 'image']),
      ('../image.fits.gz[1]', ['../image.fits.gz', 1, 'image.fits'])])
 def test_filename_split(filename, ans):
     filepath, ext, data_label = split_filename_with_fits_ext(filename)
@@ -223,30 +224,28 @@ class TestParseImage:
             assert isinstance(data.coords, GWCS)
             assert comp.units == 'MJy/sr'
 
-        # Test duplicate label functionality
-        with fits.open(filename) as pf:
+            # Test duplicate label functionality
             imviz_app.app.data_collection.clear()
             parse_data(imviz_app.app, pf, ext='SCI', show_in_viewer=False, data_label='TEST')
             data = imviz_app.app.data_collection[0]
-            assert data.label.endswith('DATA]')
+            assert data.label.endswith('[DATA]')
 
             parse_data(imviz_app.app, pf, ext='SCI', show_in_viewer=False, data_label='TEST')
             data = imviz_app.app.data_collection[1]
-            assert data.label.endswith('DATA]_2')
+            assert data.label.endswith('[DATA]_2')
 
-        # Load all extensions
-        with fits.open(filename) as pf:
+            # Load all extensions
             imviz_app.app.data_collection.clear()
             parse_data(imviz_app.app, pf, ext='*', show_in_viewer=False)
             data = imviz_app.app.data_collection
             assert len(data.labels) == 7
-            assert data.labels[0].endswith('DATA]')
-            assert data.labels[1].endswith('ERR]')
-            assert data.labels[2].endswith('DQ]')
-            assert data.labels[3].endswith('AREA]')
-            assert data.labels[4].endswith('VAR_POISSON]')
-            assert data.labels[5].endswith('VAR_RNOISE]')
-            assert data.labels[6].endswith('VAR_FLAT]')
+            assert data.labels[0].endswith('[DATA]')
+            assert data.labels[1].endswith('[ERR]')
+            assert data.labels[2].endswith('[DQ]')
+            assert data.labels[3].endswith('[AREA]')
+            assert data.labels[4].endswith('[VAR_POISSON]')
+            assert data.labels[5].endswith('[VAR_RNOISE]')
+            assert data.labels[6].endswith('[VAR_FLAT]')
 
         # Invalid ASDF attribute (extension)
         with pytest.raises(AttributeError, match='No attribute'):
@@ -309,9 +308,9 @@ class TestParseImage:
             parse_data(imviz_app.app, filename, ext='*', show_in_viewer=False)
             data = imviz_app.app.data_collection
             assert len(data.labels) == 3
-            assert data.labels[0].endswith('SCI,1]')
-            assert data.labels[1].endswith('WHT,1]')
-            assert data.labels[2].endswith('CTX,1]')
+            assert data.labels[0].endswith('[SCI,1]')
+            assert data.labels[1].endswith('[WHT,1]')
+            assert data.labels[2].endswith('[CTX,1]')
 
         # Cannot load non-image extension
         with pytest.raises(ValueError, match='Imviz cannot load this HDU'):
