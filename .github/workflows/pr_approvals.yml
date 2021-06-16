@@ -1,0 +1,43 @@
+name: Approvals
+
+on:
+  pull_request:
+    types: [opened, reopened]
+  pull_request_review:
+
+jobs:
+  approvals:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Count approvals
+      uses: actions/github-script@v4
+      with:
+        script: |
+          const pr = context.payload.pull_request;
+          if (pr.labels.find(lbl => lbl.name === 'trivial')) {
+            core.info(`This PR will follow default repo approval rule, skipping check.`);
+            return;
+          }
+
+          const approvedResponse = await github.graphql(`
+            query($name: String!, $owner: String!, $pull_number: Int!) {
+              repository(name: $name, owner: $owner) {
+                pullRequest(number: $pull_number) {
+                  reviews(states: APPROVED) {
+                    totalCount
+                  }
+                }
+              }
+            }
+          `, {
+            name: context.repo.repo,
+            owner: context.repo.owner,
+            pull_number: context.issue.number
+          });
+          const approvalsRequired = 2;
+          const approvals = approvedResponse.repository.pullRequest.reviews.totalCount;
+          if (approvals < approvalsRequired) {
+            core.setFailed(`Needs ${approvalsRequired} approvals but only has ${approvals}`);
+          } else {
+            core.info(`Needs ${approvalsRequired} approvals and has ${approvals}`);
+          }
