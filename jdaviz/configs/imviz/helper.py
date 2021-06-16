@@ -2,6 +2,9 @@ import os
 import re
 from copy import deepcopy
 
+from astropy.coordinates import SkyCoord
+from echo import delay_callback
+
 from jdaviz.core.helpers import ConfigHelper
 
 __all__ = ['Imviz']
@@ -78,6 +81,57 @@ class Imviz(ConfigHelper):
         else:
             self.app.load_data(
                 data, parser_reference=parser_reference, **kwargs)
+
+    def center_on(self, point):
+        """Centers the view on a particular point.
+
+        Parameters
+        ----------
+        point : tuple or `~astropy.coordinates.SkyCoord`
+            If tuple of ``(X, Y)`` is given, it is assumed
+            to be in data coordinates and 0-indexed.
+
+        """
+        viewer = self.app.get_viewer("viewer-1")
+
+        if isinstance(point, SkyCoord):
+            raise NotImplementedError
+        else:
+            with delay_callback(viewer.state, 'x_min', 'x_max', 'y_min', 'y_max'):
+                width = viewer.state.x_max - viewer.state.x_min
+                height = viewer.state.y_max - viewer.state.y_min
+                viewer.state.x_min = point[0] - (width * 0.5)
+                viewer.state.y_min = point[1] - (height * 0.5)
+                viewer.state.x_max = viewer.state.x_min + width
+                viewer.state.y_max = viewer.state.y_min + height
+
+    def offset_to(self, dx, dy, skycoord_offset=False):
+        """Move the center to a point that is given offset
+        away from the current center.
+
+        Parameters
+        ----------
+        dx, dy : float
+            Offset value. Unit is assumed based on
+            ``skycoord_offset``.
+
+        skycoord_offset : bool
+            If `True`, offset must be given in degrees.
+            Otherwise, they are in pixel values.
+
+        """
+        viewer = self.app.get_viewer("viewer-1")
+
+        if skycoord_offset:
+            raise NotImplementedError
+        else:
+            with delay_callback(viewer.state, 'x_min', 'x_max', 'y_min', 'y_max'):
+                width = viewer.state.x_max - viewer.state.x_min
+                height = viewer.state.y_max - viewer.state.y_min
+                viewer.state.x_min += dx
+                viewer.state.y_min += dy
+                viewer.state.x_max = viewer.state.x_min + width
+                viewer.state.y_max = viewer.state.y_min + height
 
 
 def split_filename_with_fits_ext(filename):
