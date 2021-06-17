@@ -35,6 +35,15 @@ compatible version:
 See `Issue #305 <https://github.com/spacetelescope/jdaviz/issues/305>`_ for
 updates on this topic.
 
+On some platforms, install fails due to `bottleneck`
+----------------------------------------------------
+
+In a conda environment, where numpy was installed using conda, installing
+jdaviz using pip will attempt to pull bottleneck from PyPI. This might result
+in bottleneck trying to build numpy from source and crash, stalling the
+installation altogether. When this happens, exit the installation, install
+bottleneck with conda, and try to install jdaviz again.
+
 Collapse Plugin spectral bounds don't match selected region
 -----------------------------------------------------------
 
