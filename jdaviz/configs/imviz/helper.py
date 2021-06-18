@@ -3,11 +3,16 @@ import re
 from copy import deepcopy
 
 from astropy.coordinates import SkyCoord
+from astropy.utils.introspection import minversion
+from astropy.wcs.wcsapi import BaseHighLevelWCS
 from echo import delay_callback
+from glue.core import BaseData
 
 from jdaviz.core.helpers import ConfigHelper
 
 __all__ = ['Imviz']
+
+ASTROPY_LT_4_3 = not minversion('astropy', '4.3')
 
 
 class Imviz(ConfigHelper):
@@ -91,19 +96,31 @@ class Imviz(ConfigHelper):
             If tuple of ``(X, Y)`` is given, it is assumed
             to be in data coordinates and 0-indexed.
 
+        Raises
+        ------
+        AttributeError
+            Sky coordinates are given but image does not have a valid WCS.
+
         """
         viewer = self.app.get_viewer("viewer-1")
 
         if isinstance(point, SkyCoord):
-            raise NotImplementedError
+            i_top = get_top_layer_index(viewer)
+            image = viewer.layers[i_top].layer
+            if hasattr(image, 'coords') and isinstance(image.coords, BaseHighLevelWCS):
+                pix = image.coords.world_to_pixel(point)  # 0-indexed X, Y
+            else:
+                raise AttributeError(f'{image} does not have a valid WCS')
         else:
-            with delay_callback(viewer.state, 'x_min', 'x_max', 'y_min', 'y_max'):
-                width = viewer.state.x_max - viewer.state.x_min
-                height = viewer.state.y_max - viewer.state.y_min
-                viewer.state.x_min = point[0] - (width * 0.5)
-                viewer.state.y_min = point[1] - (height * 0.5)
-                viewer.state.x_max = viewer.state.x_min + width
-                viewer.state.y_max = viewer.state.y_min + height
+            pix = point
+
+        with delay_callback(viewer.state, 'x_min', 'x_max', 'y_min', 'y_max'):
+            width = viewer.state.x_max - viewer.state.x_min
+            height = viewer.state.y_max - viewer.state.y_min
+            viewer.state.x_min = pix[0] - (width * 0.5)
+            viewer.state.y_min = pix[1] - (height * 0.5)
+            viewer.state.x_max = viewer.state.x_min + width
+            viewer.state.y_max = viewer.state.y_min + height
 
     def offset_to(self, dx, dy, skycoord_offset=False):
         """Move the center to a point that is given offset
@@ -111,23 +128,43 @@ class Imviz(ConfigHelper):
 
         Parameters
         ----------
-        dx, dy : float
-            Offset value. Unit is assumed based on
-            ``skycoord_offset``.
+        dx, dy : float or `~astropy.units.Quantity`
+            Offset value. The presence of unit depends on ``skycoord_offset``.
 
         skycoord_offset : bool
-            If `True`, offset must be given in degrees.
-            Otherwise, they are in pixel values.
+            If `True`, offset (lon, lat) must be given as ``Quantity``.
+            Otherwise, they are in pixel values (float).
+
+        Raises
+        ------
+        AttributeError
+            Sky offset is given but image does not have a valid WCS.
 
         """
         viewer = self.app.get_viewer("viewer-1")
+        width = viewer.state.x_max - viewer.state.x_min
+        height = viewer.state.y_max - viewer.state.y_min
 
         if skycoord_offset:
-            raise NotImplementedError
+            i_top = get_top_layer_index(viewer)
+            image = viewer.layers[i_top].layer
+            if hasattr(image, 'coords') and isinstance(image.coords, BaseHighLevelWCS):
+                # To avoid distortion headache, assume offset is relative to
+                # displayed center.
+                x_cen = viewer.state.x_min + (width * 0.5)
+                y_cen = viewer.state.y_min + (height * 0.5)
+                sky_cen = image.coords.pixel_to_world(x_cen, y_cen)
+                if ASTROPY_LT_4_3:
+                    from astropy.coordinates import SkyOffsetFrame
+                    new_sky_cen = sky_cen.__class__(
+                        SkyOffsetFrame(dx, dy, origin=sky_cen.frame).transform_to(sky_cen))
+                else:
+                    new_sky_cen = sky_cen.spherical_offsets_by(dx, dy)
+                self.center_on(new_sky_cen)
+            else:
+                raise AttributeError(f'{image} does not have a valid WCS')
         else:
             with delay_callback(viewer.state, 'x_min', 'x_max', 'y_min', 'y_max'):
-                width = viewer.state.x_max - viewer.state.x_min
-                height = viewer.state.y_max - viewer.state.y_min
                 viewer.state.x_min += dx
                 viewer.state.y_min += dy
                 viewer.state.x_max = viewer.state.x_min + width
@@ -179,3 +216,12 @@ def split_filename_with_fits_ext(filename):
     data_label = os.path.basename(s[0])
 
     return filepath, ext, data_label
+
+
+def get_top_layer_index(viewer):
+    """Get index of the top visible layer in Imviz.
+    This is because when blinked, first layer might not be top visible layer.
+
+    """
+    return [i for i, lyr in enumerate(viewer.layers)
+            if lyr.visible and isinstance(lyr.layer, BaseData)][-1]
