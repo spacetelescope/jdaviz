@@ -110,7 +110,7 @@ class Imviz(ConfigHelper):
             if hasattr(image, 'coords') and isinstance(image.coords, BaseHighLevelWCS):
                 pix = image.coords.world_to_pixel(point)  # 0-indexed X, Y
             else:
-                raise AttributeError(f'{image} does not have a valid WCS')
+                raise AttributeError(f'{image.label} does not have a valid WCS')
         else:
             pix = point
 
@@ -162,7 +162,7 @@ class Imviz(ConfigHelper):
                     new_sky_cen = sky_cen.spherical_offsets_by(dx, dy)
                 self.center_on(new_sky_cen)
             else:
-                raise AttributeError(f'{image} does not have a valid WCS')
+                raise AttributeError(f'{image.label} does not have a valid WCS')
         else:
             with delay_callback(viewer.state, 'x_min', 'x_max', 'y_min', 'y_max'):
                 viewer.state.x_min += dx
