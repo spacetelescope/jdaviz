@@ -15,8 +15,13 @@ except ImportError:
     HAS_JWST_ASDF = False
 
 from jdaviz.core.registries import data_parser_registry
+from jdaviz.core.events import SnackbarMessage
+
 
 __all__ = ['parse_data']
+
+INFO_MSG = ("The file contains more viewable extensions. Add the '[*]' suffix"
+            " to the file name to load all of them.")
 
 
 @data_parser_registry("imviz-data-parser")
@@ -70,9 +75,24 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
     if isinstance(file_obj, fits.HDUList):
         if 'ASDF' in file_obj:  # JWST ASDF-in-FITS
             if HAS_JWST_ASDF:
-                data_iter = _jwst_to_glue_data(file_obj, ext, data_label)
+
+                # Load all extensions
+                if ext == '*':
+                    data_iter = _jwst_all_to_glue_data(file_obj, data_label)
+
+                # Load only specified extension
+                else:
+                    data_iter = _jwst_to_glue_data(file_obj, ext, data_label)
+
+                    # if more than one viewable extension is found in the file,
+                    # issue info message.
+                    _info_nextensions(app, file_obj)
+
             else:
                 raise ImportError('jwst package is missing')
+
+        elif ext == '*':  # Load all extensions
+            data_iter = _hdus_to_glue_data(file_obj, data_label)
 
         elif ext is not None:  # Load just the EXT user wants
             hdu = file_obj[ext]
@@ -85,7 +105,13 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
                 if _validate_fits_image2d(hdu, raise_error=False):
                     data_iter = _hdu_to_glue_data(hdu, data_label, hdulist=file_obj)
                     found = True
+
+                    # if more than one viewable extension is found in the file,
+                    # issue info message.
+                    _info_nextensions(app, file_obj)
+
                     break
+
             if not found:
                 raise ValueError(f'{file_obj} does not have any FITS image')
 
@@ -104,9 +130,28 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
         raise NotImplementedError(f'Imviz does not support {file_obj}')
 
     for data, data_label in data_iter:
+
+        # avoid duplicate data labels in colection
+        if data_label in app.data_collection.labels:
+            data_label = data_label + "_2"  # 0th-order solution as proposed in issue #600
+
         app.add_data(data, data_label)
         if show_in_viewer:
             app.add_data_to_viewer("viewer-1", data_label)
+
+
+def _info_nextensions(app, file_obj):
+    if _count_image2d_extensions(file_obj) > 1:
+        info_msg = SnackbarMessage(INFO_MSG, color="info", timeout=15000, sender=app)
+        app.hub.broadcast(info_msg)
+
+
+def _count_image2d_extensions(file_obj):
+    count = 0
+    for hdu in file_obj:
+        if _validate_fits_image2d(hdu, raise_error=False):
+            count += 1
+    return count
 
 
 def _validate_fits_image2d(hdu, raise_error=True):
@@ -132,6 +177,21 @@ def _validate_bunit(bunit, raise_error=True):
     return valid
 
 
+# ---- Functions that handle input from JWST FITS files -----
+
+def _jwst_all_to_glue_data(file_obj, data_label):
+    for hdu in file_obj:
+        if _validate_fits_image2d(hdu, raise_error=False):
+
+            ext = hdu.name.lower()
+            if ext == 'sci':
+                ext = 'data'
+
+            data, new_data_label = _jwst2data(file_obj, ext, data_label)
+
+            yield data, new_data_label
+
+
 def _jwst_to_glue_data(file_obj, ext, data_label):
     # Translate FITS extension into JWST ASDF convention.
     if ext is None:
@@ -143,9 +203,15 @@ def _jwst_to_glue_data(file_obj, ext, data_label):
         if ext in ('sci', 'asdf'):
             ext = 'data'
 
+    data, new_data_label = _jwst2data(file_obj, ext, data_label)
+
+    yield data, new_data_label
+
+
+def _jwst2data(file_obj, ext, data_label):
     comp_label = ext.upper()
-    data_label = f'{data_label}[{comp_label}]'
-    data = Data(label=data_label)
+    new_data_label = f'{data_label}[{comp_label}]'
+    data = Data(label=new_data_label)
     unit_attr = f'bunit_{ext}'
 
     # This is very specific to JWST pipeline image output.
@@ -157,29 +223,48 @@ def _jwst_to_glue_data(file_obj, ext, data_label):
             bunit = ''
 
         # This is instance of gwcs.WCS, not astropy.wcs.WCS
-        data.coords = dm.meta.wcs
+        if hasattr(dm.meta, 'wcs'):
+            data.coords = dm.meta.wcs
 
         imdata = getattr(dm, ext)
         component = Component.autotyped(imdata, units=bunit)
         data.add_component(component=component, label=comp_label)
 
+    return data, new_data_label
+
+
+# ---- Functions that handle input from non-JWST FITS files -----
+
+def _hdu_to_glue_data(hdu, data_label, hdulist=None):
+    data, data_label = _hdu2data(hdu, data_label, hdulist)
     yield data, data_label
 
 
-def _hdu_to_glue_data(hdu, data_label, hdulist=None):
+def _hdus_to_glue_data(file_obj, data_label):
+    for hdu in file_obj:
+        if _validate_fits_image2d(hdu, raise_error=False):
+            data, new_data_label = _hdu2data(hdu, data_label, file_obj)
+            yield data, new_data_label
+
+
+def _hdu2data(hdu, data_label, hdulist):
     if 'BUNIT' in hdu.header and _validate_bunit(hdu.header['BUNIT'], raise_error=False):
         bunit = hdu.header['BUNIT']
     else:
         bunit = ''
 
     comp_label = f'{hdu.name.upper()},{hdu.ver}'
-    data_label = f'{data_label}[{comp_label}]'
-    data = Data(label=data_label)
+    new_data_label = f'{data_label}[{comp_label}]'
+
+    data = Data(label=new_data_label)
     data.coords = WCS(hdu.header, hdulist)
     component = Component.autotyped(hdu.data, units=bunit)
     data.add_component(component=component, label=comp_label)
-    yield data, data_label
 
+    return data, new_data_label
+
+
+# ---- Functions that handle input from arrays -----
 
 def _nddata_to_glue_data(ndd, data_label):
     if ndd.data.ndim != 2:
