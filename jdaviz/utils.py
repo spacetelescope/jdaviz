@@ -1,5 +1,10 @@
 import os
+from queue import Queue
+
 from traitlets import Unicode
+
+from echo import DictCallbackProperty
+
 
 __all__ = ['load_template']
 
@@ -31,3 +36,21 @@ def load_template(file_name, path=None, traitlet=True):
         return Unicode(TEMPLATE)
 
     return TEMPLATE
+
+
+class SnackbarQueue:
+
+    def __init__(self):
+        self.queue = Queue()
+
+    def put(self, state, msg):
+
+        if self.queue.empty():
+            state.snackbar['show'] = False
+            state.snackbar['text'] = msg.text
+            state.snackbar['color'] = msg.color
+            state.snackbar['timeout'] = msg.timeout
+            state.snackbar['loading'] = msg.loading
+            state.snackbar['show'] = True
+
+        self.queue.put(msg)
