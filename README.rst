@@ -36,12 +36,147 @@ produced by JWST MIRI), along with 1D spectra extracted from the cube.
 **Imviz** provides visualization and quick-look analysis for 2D astronomical
 images.
 
+This tool is designed with instrument modes from the James Webb Space Telescope (JWST) in mind, but 
+the tool should be flexible enough to read in data from many astronomical telescopes.  The table below
+summarizes Jdaviz file support specific to JWST instrument modes.
+
+..
+    #%==========  ======== ======  ======== =============
+    #%Instrument  Template File    Pipeline Primary
+    #%            Mode     Type    Level    Configuration
+    #%==========  ======== ======  ======== =============
+
+
+.. list-table:: JWST Instrument Modes in Jdaviz
+   :widths: 25 15 10 15 20
+   :header-rows: 1
+
+   * - Instrument
+     - Template Mode
+     - File Type
+     - Pipeline Level
+     - Primary Configuration
+   * - NIRSpec
+     - MOS
+     - S2D
+     - 2b,3
+     - Mosviz
+   * -
+     -
+     - X1D
+     - 2b,3
+     - Specviz
+   * -
+     - IFU
+     - S3D
+     - 2b,3
+     - Cubeviz
+   * -
+     -
+     - X1D
+     - 2b,3
+     - Specviz
+   * -
+     - FS
+     - S2D
+     - 2b,3
+     - Specviz2d
+   * -
+     -
+     - X1D
+     - 2b,3
+     - Specviz
+   * -
+     - BOTS
+     - X1DINTS
+     - --
+     - No Support
+   * - NIRISS
+     - IMAGING
+     - I2D
+     - 2b,3
+     - Imviz
+   * -
+     - WFSS
+     - X1D
+     - 2b
+     - Specviz
+   * -
+     - AMI
+     - AMINORM
+     - --
+     - No Support
+   * -
+     - SOSS
+     - X1DINTS
+     - --
+     - No Support
+   * - NIRCam
+     - Imaging
+     - I2D
+     - 2b,3
+     - Imviz
+   * -
+     - Coronagraphic Imaging
+     - I2D
+     - 2b,3
+     - Imviz
+   * -
+     - WFSS
+     - X1D
+     - 2b
+     - Specviz
+   * -
+     - Grism TSO
+     - X1DINTS
+     - --
+     - No Support
+   * - MIRI
+     - Imaging
+     - I2D
+     - 2b,3
+     - Imviz
+   * -
+     - Coronagraphic Imaging
+     - I2D
+     - 2b,3
+     - Imviz
+   * -
+     - LRS-slit
+     - S2D
+     - 2b,3
+     - Specviz2d
+   * -
+     -
+     - X1D
+     - 2b,3
+     - Specviz
+   * -
+     - LRS-slitless
+     - X1DINTS
+     - --
+     - No Support
+   * -
+     - MRS
+     - S3D
+     - 2b,3
+     - Cubeviz
+   * -
+     -
+     - X1D
+     - 2b, 3
+     - Specviz
+
 
 Installing
 ----------
 For details on installing and using JDAViz, see the
 `Jdaviz documentation <https://jdaviz.readthedocs.io/en/latest/>`_.
 
+Help
+----------
+
+If you uncover any issues or bugs, you can open a GitHub ticket.  For faster responses, however, we encourage you to submit a JWST Help Desk Ticket: jwsthelp.stsci.edu
 
 License
 -------
