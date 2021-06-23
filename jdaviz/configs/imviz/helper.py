@@ -7,7 +7,7 @@ from astropy.utils.introspection import minversion
 from astropy.wcs import NoConvergence
 from astropy.wcs.wcsapi import BaseHighLevelWCS
 from echo import delay_callback
-from glue.core import BaseData
+from glue.core import BaseData, Data
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.helpers import ConfigHelper
@@ -15,11 +15,19 @@ from jdaviz.core.helpers import ConfigHelper
 __all__ = ['Imviz']
 
 ASTROPY_LT_4_3 = not minversion('astropy', '4.3')
+RESERVED_MARKER_SET_NAMES = ['all']
 
 
 class Imviz(ConfigHelper):
     """Imviz Helper class"""
     _default_configuration = 'imviz'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Markers
+        self._marktags = set()
+        self._default_mark_tag_name = 'default-marker-name'
 
     def load_data(self, data, parser_reference=None, **kwargs):
         """Load data into Imviz.
@@ -184,6 +192,60 @@ class Imviz(ConfigHelper):
                 viewer.state.y_min += dy
                 viewer.state.x_max = viewer.state.x_min + width
                 viewer.state.y_max = viewer.state.y_min + height
+
+    def _validate_marker_name(self, marker_name):
+        """Raise an error if the marker_name is not allowed."""
+        if marker_name in RESERVED_MARKER_SET_NAMES:
+            raise ValueError(
+                f"The marker name {marker_name} is not allowed. Any name is "
+                f"allowed except these: {', '.join(RESERVED_MARKER_SET_NAMES)}")
+
+    def add_markers(self, table, x_colname='x', y_colname='y',
+                    skycoord_colname='coord', use_skycoord=False,
+                    marker_name=None):
+        """Creates markers in the image at given points.
+
+        Parameters
+        ----------
+        table : `~astropy.table.Table`
+            Table containing marker locations.
+
+        x_colname, y_colname : str
+            Column names for X and Y.
+            Coordinates must be 0-indexed.
+
+        skycoord_colname : str
+            Column name with ``SkyCoord`` objects.
+
+        use_skycoord : bool
+            If `True`, use ``skycoord_colname`` to mark.
+            Otherwise, use ``x_colname`` and ``y_colname``.
+
+        marker_name : str, optional
+            Name to assign the markers in the table. Providing a name
+            allows markers to be removed by name at a later time.
+
+        """
+        if marker_name is None:
+            marker_name = self._default_mark_tag_name
+
+        self._validate_marker_name(marker_name)
+        self._marktags.add(marker_name)
+        viewer = self.app.get_viewer("viewer-1")
+
+        # TODO: Is this really the correct Data to use?
+        image = viewer.state.reference_data
+
+        if use_skycoord:
+            raise NotImplementedError
+        else:
+            # TODO: Doing it this way is not compatible with blink
+            t_glue = Data(marker_name, **table[x_colname, y_colname])
+            jglue = self.app.session.application
+            jglue.data_collection[marker_name] = t_glue
+            jglue.add_link(t_glue, x_colname, image, image.pixel_component_ids[1].label)
+            jglue.add_link(t_glue, y_colname, image, image.pixel_component_ids[0].label)
+            viewer.add_data(t_glue)
 
 
 def split_filename_with_fits_ext(filename):
