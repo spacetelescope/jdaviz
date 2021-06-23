@@ -68,7 +68,7 @@
       <v-btn
               v-if="!state.snackbar.loading"
               text
-              @click="state.snackbar.show = false"
+              @click="close_snackbar_message($event)"
       >
         Close
       </v-btn>

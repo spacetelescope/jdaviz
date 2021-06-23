@@ -142,7 +142,7 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
 
 def _info_nextensions(app, file_obj):
     if _count_image2d_extensions(file_obj) > 1:
-        info_msg = SnackbarMessage(INFO_MSG, color="info", timeout=15000, sender=app)
+        info_msg = SnackbarMessage(INFO_MSG, color="info", timeout=8000, sender=app)
         app.hub.broadcast(info_msg)
 
 

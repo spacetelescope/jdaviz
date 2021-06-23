@@ -54,3 +54,25 @@ class SnackbarQueue:
             state.snackbar['show'] = True
 
         self.queue.put(msg)
+
+    def close_event_handler(self, state):
+
+        # turn off snackbar and remove corresponding
+        # message from  queue.
+        state.snackbar['show'] = False
+        self.queue.get()
+
+        # in case there are messages in the queue still,
+        # display the next.
+        if not self.queue.empty():
+            msg = self.queue.get()
+            self.queue.put(msg)
+            state.snackbar['show'] = False
+            state.snackbar['text'] = msg.text
+            state.snackbar['color'] = msg.color
+            state.snackbar['timeout'] = msg.timeout
+            state.snackbar['loading'] = msg.loading
+            state.snackbar['show'] = True
+
+
+
