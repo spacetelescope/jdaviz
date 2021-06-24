@@ -46,16 +46,11 @@ class SnackbarQueue:
     def put(self, state, msg):
 
         if self.queue.empty():
-            state.snackbar['show'] = False
-            state.snackbar['text'] = msg.text
-            state.snackbar['color'] = msg.color
-            state.snackbar['timeout'] = msg.timeout
-            state.snackbar['loading'] = msg.loading
-            state.snackbar['show'] = True
+            _write_message(state, msg)
 
         self.queue.put(msg)
 
-    def close_event_handler(self, state):
+    def close_current_message(self, state):
 
         # turn off snackbar and remove corresponding
         # message from  queue.
@@ -67,12 +62,15 @@ class SnackbarQueue:
         if not self.queue.empty():
             msg = self.queue.get()
             self.queue.put(msg)
-            state.snackbar['show'] = False
-            state.snackbar['text'] = msg.text
-            state.snackbar['color'] = msg.color
-            state.snackbar['timeout'] = msg.timeout
-            state.snackbar['loading'] = msg.loading
-            state.snackbar['show'] = True
+            _write_message(state, msg)
 
+
+def _write_message(state, msg):
+    state.snackbar['show'] = False
+    state.snackbar['text'] = msg.text
+    state.snackbar['color'] = msg.color
+    state.snackbar['timeout'] = msg.timeout
+    state.snackbar['loading'] = msg.loading
+    state.snackbar['show'] = True
 
 

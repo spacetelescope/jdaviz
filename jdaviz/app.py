@@ -912,7 +912,7 @@ class Application(VuetifyTemplate, HubListener):
         Still need to find out how to perform the same action, but
         triggered by a snackbar message timeout.
         """
-        self.state.snackbar_queue.close_event_handler(self.state)
+        self.state.snackbar_queue.close_current_message(self.state)
 
     def _update_selected_data_items(self, viewer_id, selected_items):
         # Find the active viewer
