@@ -1,9 +1,9 @@
 import os
-from queue import Queue
+import time
+import threading
+from collections import deque
 
 from traitlets import Unicode
-
-from echo import DictCallbackProperty
 
 
 __all__ = ['load_template']
@@ -41,36 +41,44 @@ def load_template(file_name, path=None, traitlet=True):
 class SnackbarQueue:
 
     def __init__(self):
-        self.queue = Queue()
+        self.queue = deque()
 
     def put(self, state, msg):
 
-        if self.queue.empty():
-            _write_message(state, msg)
+        if len(self.queue) == 0:
+            self._write_message(state, msg)
 
-        self.queue.put(msg)
+        self.queue.appendleft(msg)
 
     def close_current_message(self, state):
 
         # turn off snackbar and remove corresponding
         # message from  queue.
         state.snackbar['show'] = False
-        self.queue.get()
+        _ = self.queue.pop()
 
         # in case there are messages in the queue still,
         # display the next.
-        if not self.queue.empty():
-            msg = self.queue.get()
-            self.queue.put(msg)
-            _write_message(state, msg)
+        if len(self.queue) > 0:
+            msg = self.queue.pop()
+            self.queue.append(msg)
+            self._write_message(state, msg)
 
+    def _write_message(self, state, msg):
+        state.snackbar['show'] = False
+        state.snackbar['text'] = msg.text
+        state.snackbar['color'] = msg.color
+        state.snackbar['timeout'] = 0
+        state.snackbar['loading'] = msg.loading
+        state.snackbar['show'] = True
 
-def _write_message(state, msg):
-    state.snackbar['show'] = False
-    state.snackbar['text'] = msg.text
-    state.snackbar['color'] = msg.color
-    state.snackbar['timeout'] = msg.timeout
-    state.snackbar['loading'] = msg.loading
-    state.snackbar['show'] = True
+        def sleep_function(timeout):
+            timeout_ = float(timeout) / 1000
+            time.sleep(timeout_)
+            self.close_current_message(state)
 
+        x = threading.Thread(target=sleep_function,
+                             args=(msg.timeout,),
+                             daemon=True)
+        x.start()
 
