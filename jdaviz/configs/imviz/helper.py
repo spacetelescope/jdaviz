@@ -122,6 +122,13 @@ class Imviz(ConfigHelper):
         else:
             pix = point
 
+        # Disallow centering outside of display.
+        if (pix[0] < viewer.state.x_min or pix[0] > viewer.state.x_max
+                or pix[1] < viewer.state.y_min or pix[1] > viewer.state.y_max):
+            self.app.hub.broadcast(SnackbarMessage(
+                f'{pix} is out of bounds', color="warning", sender=self.app))
+            return
+
         with delay_callback(viewer.state, 'x_min', 'x_max', 'y_min', 'y_max'):
             width = viewer.state.x_max - viewer.state.x_min
             height = viewer.state.y_max - viewer.state.y_min
