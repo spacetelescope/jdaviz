@@ -59,7 +59,8 @@ class SnackbarQueue:
         # turn off snackbar and remove corresponding
         # message from  queue.
         state.snackbar['show'] = False
-        _ = self.queue.pop()
+        if len(self.queue) > 0:
+            _ = self.queue.pop()
 
         # in case there are messages in the queue still,
         # display the next.
