@@ -33,7 +33,7 @@ from .core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
                           AddDataToViewerMessage, RemoveDataFromViewerMessage)
 from .core.registries import (tool_registry, tray_registry, viewer_registry,
                               data_parser_registry)
-from .utils import load_template
+from .utils import load_template, SnackbarQueue
 
 __all__ = ['Application']
 
@@ -71,6 +71,8 @@ class ApplicationState(State):
         'timeout': 3000,
         'loading': False
     }, docstring="State of the quick toast messages.")
+
+    snackbar_queue = SnackbarQueue()
 
     settings = DictCallbackProperty({
         'data': {
@@ -233,12 +235,7 @@ class Application(VuetifyTemplate, HubListener):
             The Glue snackbar message containing information about displaying
             the message box.
         """
-        self.state.snackbar['show'] = False
-        self.state.snackbar['text'] = msg.text
-        self.state.snackbar['color'] = msg.color
-        self.state.snackbar['timeout'] = msg.timeout
-        self.state.snackbar['loading'] = msg.loading
-        self.state.snackbar['show'] = True
+        self.state.snackbar_queue.put(self.state, msg)
 
     def _link_new_data(self):
         """
@@ -898,6 +895,13 @@ class Application(VuetifyTemplate, HubListener):
             viewer.figure.save_png()
         elif filetype == "svg":
             viewer.figure.save_svg()
+
+    def vue_close_snackbar_message(self, event):
+        """
+        Callback to close a message in the snackbar when the "close"
+        button is clicked.
+        """
+        self.state.snackbar_queue.close_current_message(self.state)
 
     def _update_selected_data_items(self, viewer_id, selected_items):
         # Find the active viewer
