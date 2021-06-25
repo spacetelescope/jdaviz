@@ -900,9 +900,6 @@ class Application(VuetifyTemplate, HubListener):
         """
         Callback to close a message in the snackbar when the "close"
         button is clicked.
-
-        Still need to find out how to perform the same action, but
-        triggered by a snackbar message timeout.
         """
         self.state.snackbar_queue.close_current_message(self.state)
 
