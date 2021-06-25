@@ -62,6 +62,12 @@ class ImvizImageView(BqplotImageView):
             x = data['domain']['x']
             y = data['domain']['y']
 
+            if x is None or y is None:  # Out of bounds
+                self.label_mouseover.pixel = ""
+                self.label_mouseover.world = ""
+                self.label_mouseover.value = ""
+                return
+
             maxsize = int(np.ceil(np.log10(np.max(image.shape)))) + 3
 
             fmt = 'x={0:0' + str(maxsize) + '.1f} y={1:0' + str(maxsize) + '.1f}'

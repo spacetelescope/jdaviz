@@ -4,7 +4,6 @@ import os
 from echo import delay_callback
 
 from glue.config import viewer_tool
-from glue.core import BaseData
 from glue_jupyter.bqplot.common.tools import Tool
 from glue.viewers.common.tool import CheckableTool
 from glue.plugins.wcs_autolinking.wcs_autolinking import wcs_autolink, WCSLink
@@ -119,6 +118,7 @@ class BqplotContrastBias(CheckableTool):
         self.viewer.remove_event_callback(self.on_mouse_or_key_event)
 
     def on_mouse_or_key_event(self, data):
+        from jdaviz.configs.imviz.helper import get_top_layer_index
 
         event = data['event']
 
@@ -141,8 +141,7 @@ class BqplotContrastBias(CheckableTool):
             y = event_y / (self.viewer.state.y_max - self.viewer.state.y_min)
 
             # When blinked, first layer might not be top layer
-            i_top = [i for i, lyr in enumerate(self.viewer.layers)
-                     if lyr.visible and isinstance(lyr.layer, BaseData)][-1]
+            i_top = get_top_layer_index(self.viewer)
             state = self.viewer.layers[i_top].state
 
             # https://github.com/glue-viz/glue/blob/master/glue/viewers/image/qt/contrast_mouse_mode.py
@@ -154,8 +153,7 @@ class BqplotContrastBias(CheckableTool):
 
         elif event == 'dblclick':
             # When blinked, first layer might not be top layer
-            i_top = [i for i, lyr in enumerate(self.viewer.layers)
-                     if lyr.visible and isinstance(lyr.layer, BaseData)][-1]
+            i_top = get_top_layer_index(self.viewer)
             state = self.viewer.layers[i_top].state
 
             # Restore defaults that are applied on load

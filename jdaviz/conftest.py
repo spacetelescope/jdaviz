@@ -11,7 +11,7 @@ from astropy.nddata import StdDevUncertainty
 import numpy as np
 from specutils import Spectrum1D
 from jdaviz.configs.specviz.helper import SpecViz
-
+from jdaviz.configs.imviz.helper import Imviz
 
 SPECTRUM_SIZE = 10  # length of spectrum
 
@@ -43,6 +43,11 @@ def spectrum1d():
     uncertainty = StdDevUncertainty(np.abs(np.random.randn(len(spec_axis.value))) * u.Jy)
 
     return Spectrum1D(spectral_axis=spec_axis, flux=flux, uncertainty=uncertainty)
+
+
+@pytest.fixture
+def imviz_app():
+    return Imviz()
 
 
 try:
