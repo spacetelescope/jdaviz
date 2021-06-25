@@ -235,14 +235,6 @@ class Application(VuetifyTemplate, HubListener):
             The Glue snackbar message containing information about displaying
             the message box.
         """
-        # if self.state.snackbar_queue.queue.empty():
-        #     self.state.snackbar['show'] = False
-        #     self.state.snackbar['text'] = msg.text
-        #     self.state.snackbar['color'] = msg.color
-        #     self.state.snackbar['timeout'] = msg.timeout
-        #     self.state.snackbar['loading'] = msg.loading
-        #     self.state.snackbar['show'] = True
-
         self.state.snackbar_queue.put(self.state, msg)
 
     def _link_new_data(self):
