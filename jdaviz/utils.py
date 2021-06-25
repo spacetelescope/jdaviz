@@ -48,11 +48,11 @@ class SnackbarQueue:
         self.first = True
 
     def put(self, state, msg):
-
         if len(self.queue) == 0:
             self._write_message(state, msg)
 
-        self.queue.appendleft(msg)
+        if not msg.loading:
+            self.queue.appendleft(msg)
 
     def close_current_message(self, state):
 
@@ -76,6 +76,9 @@ class SnackbarQueue:
         state.snackbar['timeout'] = 0  # timeout controlled by thread
         state.snackbar['loading'] = msg.loading
         state.snackbar['show'] = True
+
+        if msg.loading:
+            return
 
         # timeout of the first message needs to be increased by a
         # few seconds to account for the time spent in page rendering.
