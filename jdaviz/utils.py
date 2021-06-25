@@ -73,7 +73,7 @@ class SnackbarQueue:
         state.snackbar['show'] = False
         state.snackbar['text'] = msg.text
         state.snackbar['color'] = msg.color
-        state.snackbar['timeout'] = 0 # timeout controlled by thread
+        state.snackbar['timeout'] = 0  # timeout controlled by thread
         state.snackbar['loading'] = msg.loading
         state.snackbar['show'] = True
 
@@ -98,4 +98,3 @@ class SnackbarQueue:
                              args=(timeout,),
                              daemon=True)
         x.start()
-
