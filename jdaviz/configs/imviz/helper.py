@@ -4,10 +4,12 @@ from copy import deepcopy
 
 from astropy.coordinates import SkyCoord
 from astropy.utils.introspection import minversion
+from astropy.wcs import NoConvergence
 from astropy.wcs.wcsapi import BaseHighLevelWCS
 from echo import delay_callback
 from glue.core import BaseData
 
+from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.helpers import ConfigHelper
 
 __all__ = ['Imviz']
@@ -108,7 +110,13 @@ class Imviz(ConfigHelper):
             i_top = get_top_layer_index(viewer)
             image = viewer.layers[i_top].layer
             if hasattr(image, 'coords') and isinstance(image.coords, BaseHighLevelWCS):
-                pix = image.coords.world_to_pixel(point)  # 0-indexed X, Y
+                try:
+                    pix = image.coords.world_to_pixel(point)  # 0-indexed X, Y
+                except NoConvergence as e:  # pragma: no cover
+                    self.app.hub.broadcast(SnackbarMessage(
+                        f'{point} is likely out of bounds: {repr(e)}',
+                        color="warning", sender=self.app))
+                    return
             else:
                 raise AttributeError(f'{image.label} does not have a valid WCS')
         else:
