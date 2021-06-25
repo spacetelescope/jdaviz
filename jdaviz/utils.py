@@ -39,9 +39,13 @@ def load_template(file_name, path=None, traitlet=True):
 
 
 class SnackbarQueue:
-
+    '''
+    Class that performs the role of VSnackbarQueue, which is not
+    implemented in ipyvuetify.
+    '''
     def __init__(self):
         self.queue = deque()
+        self.first = True
 
     def put(self, state, msg):
 
@@ -65,12 +69,25 @@ class SnackbarQueue:
             self._write_message(state, msg)
 
     def _write_message(self, state, msg):
+
         state.snackbar['show'] = False
         state.snackbar['text'] = msg.text
         state.snackbar['color'] = msg.color
-        state.snackbar['timeout'] = 0
+        state.snackbar['timeout'] = 0 # timeout controlled by thread
         state.snackbar['loading'] = msg.loading
         state.snackbar['show'] = True
+
+        # timeout of the first message needs to be increased by a
+        # few seconds to account for the time spent in page rendering.
+        # A more elegant way to address this should be via a callback
+        # from a vue hook such as  mounted(). It doesn't work though.
+        # Since this entire queue effort is temporary anyway (pending
+        # the implementation of VSnackbarQueue in ipyvuetify, it's
+        # better to keep the solution contained all in one place here.
+        timeout = msg.timeout
+        if self.first:
+            timeout += 5000
+            self.first = False
 
         def sleep_function(timeout):
             timeout_ = float(timeout) / 1000
@@ -78,7 +95,7 @@ class SnackbarQueue:
             self.close_current_message(state)
 
         x = threading.Thread(target=sleep_function,
-                             args=(msg.timeout,),
+                             args=(timeout,),
                              daemon=True)
         x.start()
 
