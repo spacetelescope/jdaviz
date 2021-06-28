@@ -27,6 +27,11 @@ contextual information like on-sky views of the spectrograph slit.
 Cubeviz provides a view of spectroscopic data cubes (like those to be
 produced by JWST MIRI), along with 1D spectra extracted from the cube.
 
+.. _jdaviz_instrument_table:
+
+JWST Instrument Modes in Jdaviz
+===============================
+
 This tool is designed with instrument modes from the James Webb Space Telescope (JWST) in mind, but
 the tool should be flexible enough to read in data from many astronomical telescopes.  The table below
 summarizes Jdaviz file support specific to JWST instrument modes.
