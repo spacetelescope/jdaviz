@@ -46,9 +46,12 @@ For details on installing and using JDAViz, see the
 `Jdaviz documentation <https://jdaviz.readthedocs.io/en/latest/>`_.
 
 Help
-----------
+----
 
-If you uncover any issues or bugs, you can open a GitHub ticket.  For faster responses, however, we encourage you to submit a JWST Help Desk Ticket: jwsthelp.stsci.edu
+If you uncover any issues or bugs, you can
+`open a GitHub issue <https://github.com/spacetelescope/jdaviz/issues/new/choose>`_
+if they are not already reported. For faster responses, however, we encourage you to
+submit a `JWST Help Desk Ticket <https://jwsthelp.stsci.edu>`_.
 
 License
 -------
