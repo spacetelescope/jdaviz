@@ -37,7 +37,7 @@ produced by JWST MIRI), along with 1D spectra extracted from the cube.
 images.
 
 This tool is designed with instrument modes from the James Webb Space Telescope (JWST) in mind, but 
-the tool should be flexible enough to read in data from many astronomical telescopes.  The documentation provides a complete `table of all supported modes <https://jdaviz.readthedocs.io/en/latest/#jdaviz_instrument_table>`_.
+the tool should be flexible enough to read in data from many astronomical telescopes.  The documentation provides a complete `table of all supported modes <https://jdaviz.readthedocs.io/en/latest/#jwst-instrument-modes-in-jdaviz>`_.
 
 
 Installing
