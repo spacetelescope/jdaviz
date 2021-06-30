@@ -28,8 +28,8 @@ class Imviz(ConfigHelper):
         # Markers
         self._marktags = set()
         self._default_mark_tag_name = 'default-marker-name'
-        # TODO: {'marker': 's', 'markersize': 10} does not work. How to fix?
-        self.marker = {'color': 'red', 'alpha': 1.0}
+        # marker shape not settable: https://github.com/glue-viz/glue/issues/2202
+        self.marker = {'color': 'red', 'alpha': 1.0, 'markersize': 5}
 
     def load_data(self, data, parser_reference=None, **kwargs):
         """Load data into Imviz.
@@ -128,7 +128,7 @@ class Imviz(ConfigHelper):
                         color="warning", sender=self.app))
                     return
             else:
-                raise AttributeError(f'{image.label} does not have a valid WCS')
+                raise AttributeError(f'{getattr(image, "label", None)} does not have a valid WCS')
         else:
             pix = point
 
@@ -187,7 +187,7 @@ class Imviz(ConfigHelper):
                     new_sky_cen = sky_cen.spherical_offsets_by(dx, dy)
                 self.center_on(new_sky_cen)
             else:
-                raise AttributeError(f'{image.label} does not have a valid WCS')
+                raise AttributeError(f'{getattr(image, "label", None)} does not have a valid WCS')
         else:
             with delay_callback(viewer.state, 'x_min', 'x_max', 'y_min', 'y_max'):
                 viewer.state.x_min += dx
@@ -201,10 +201,9 @@ class Imviz(ConfigHelper):
 
         Marker can be set as follows; e.g.::
 
-            {'color': 'red', 'alpha': 1.0}
-            {'color': '#ff0000', 'alpha': 0.5}
-            {'color': (1, 0, 0), 'alpha': 0.75}
-            {'color': '0.0', 'alpha': 0.1}
+            {'color': 'red', 'alpha': 1.0, 'markersize': 3}
+            {'color': '#ff0000', 'alpha': 0.5, 'markersize': 10}
+            {'color': (1, 0, 0)}
 
         Also see: https://docs.glueviz.org/en/stable/api/glue.core.visual.VisualAttributes.html
 
@@ -213,8 +212,26 @@ class Imviz(ConfigHelper):
 
     @marker.setter
     def marker(self, val):
-        # TODO: Add glupyter specific validation.
-        # Only set this once we have successfully created a marker
+        # Validation: Ideally Glue should do this but we have to due to
+        # https://github.com/glue-viz/glue/issues/2203
+        given = set(val.keys())
+        allowed = set(('color', 'alpha', 'markersize'))
+        if not given.issubset(allowed):
+            raise KeyError(f'Invalid attribute(s): {given - allowed}')
+        if 'color' in val:
+            from matplotlib.colors import ColorConverter
+            ColorConverter().to_rgb(val['color'])  # ValueError: Invalid RGBA argument
+        if 'alpha' in val:
+            alpha = val['alpha']
+            if not isinstance(alpha, (int, float)) or alpha < 0 or alpha > 1:
+                raise ValueError(f'Invalid alpha: {alpha}')
+        if 'markersize' in val:
+            size = val['markersize']
+            if not isinstance(size, (int, float)):
+                raise ValueError(f'Invalid marker size: {size}')
+
+        # Only set this once we have successfully validated a marker.
+        # Those not set here use Glue defaults.
         self._marker_dict = val
 
     def _validate_marker_name(self, marker_name):
@@ -266,14 +283,14 @@ class Imviz(ConfigHelper):
         viewer = self.app.get_viewer("viewer-1")
         jglue = self.app.session.application
 
-        # TODO: How to link to invidual images separately? add_link in loop does not work.
+        # TODO: How to link to invidual images separately for X/Y? add_link in loop does not work.
         # Link markers to reference image data.
         image = viewer.state.reference_data
 
         # TODO: Is Glue smart enough to no-op if link already there?
         if use_skycoord:
             if not data_has_valid_wcs(image):
-                raise AttributeError(f'{image.label} does not have a valid WCS')
+                raise AttributeError(f'{getattr(image, "label", None)} does not have a valid WCS')
             sky = table[skycoord_colname]
             t_glue = Data(marker_name, ra=sky.ra.deg, dec=sky.dec.deg)
             jglue.data_collection[marker_name] = t_glue
@@ -286,12 +303,17 @@ class Imviz(ConfigHelper):
             jglue.add_link(t_glue, y_colname, image, image.pixel_component_ids[0].label)
 
         try:
-            viewer.add_data(t_glue, **self.marker)
+            viewer.add_data(t_glue)
         except Exception as e:  # pragma: no cover
             self.app.hub.broadcast(SnackbarMessage(
                 f"Failed to add markers '{marker_name}': {repr(e)}",
                 color="warning", sender=self.app))
         else:
+            # Only can set alpha and color using viewer.add_data(), so brute force here instead.
+            # https://github.com/glue-viz/glue/issues/2201
+            for key, val in self.marker.items():
+                setattr(self.app.data_collection[self.app.data_collection.labels.index(marker_name)].style, key, val)  # noqa
+
             self._marktags.add(marker_name)
 
     def remove_markers(self, marker_name=None):
