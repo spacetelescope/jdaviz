@@ -138,7 +138,8 @@ class Application(VuetifyTemplate, HubListener):
 
         # The application handler stores the state of the data and the
         #  underlying glue infrastructure
-        self._application_handler = JupyterApplication()
+        self._application_handler = JupyterApplication(
+            settings={'new_subset_on_selection_tool_change': True})
 
         # Create a dictionary for holding non-ipywidget viewer objects so we
         #  can reference their state easily since glue does not store viewers
