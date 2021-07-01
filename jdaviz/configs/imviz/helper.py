@@ -2,6 +2,7 @@ import os
 import re
 from copy import deepcopy
 
+from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.utils.introspection import minversion
 from astropy.wcs import NoConvergence
@@ -147,30 +148,40 @@ class Imviz(ConfigHelper):
             viewer.state.x_max = viewer.state.x_min + width
             viewer.state.y_max = viewer.state.y_min + height
 
-    def offset_to(self, dx, dy, skycoord_offset=False):
+    def offset_by(self, dx, dy):
         """Move the center to a point that is given offset
         away from the current center.
 
         Parameters
         ----------
         dx, dy : float or `~astropy.units.Quantity`
-            Offset value. The presence of unit depends on ``skycoord_offset``.
-
-        skycoord_offset : bool
-            If `True`, offset (lon, lat) must be given as ``Quantity``.
-            Otherwise, they are in pixel values (float).
+            Offset value. Without a unit, assumed to be pixel offsets.
+            If a unit is attached, offset by pixel or sky is assumed from
+            the unit.
 
         Raises
         ------
         AttributeError
             Sky offset is given but image does not have a valid WCS.
 
+        ValueError
+            Offsets are of different types.
+
+        astropy.units.core.UnitTypeError
+            Sky offset has invalid unit.
+
         """
         viewer = self.app.get_viewer("viewer-1")
         width = viewer.state.x_max - viewer.state.x_min
         height = viewer.state.y_max - viewer.state.y_min
 
-        if skycoord_offset:
+        dx, dx_coord = _offset_is_pixel_or_sky(dx)
+        dy, dy_coord = _offset_is_pixel_or_sky(dy)
+
+        if dx_coord != dy_coord:
+            raise ValueError(f'dx is of type {dx_coord} but dy is of type {dy_coord}')
+
+        if dx_coord == 'wcs':
             i_top = get_top_layer_index(viewer)
             image = viewer.layers[i_top].layer
             if data_has_valid_wcs(image):
@@ -415,3 +426,18 @@ def get_top_layer_index(viewer):
     """
     return [i for i, lyr in enumerate(viewer.layers)
             if lyr.visible and layer_is_image_data(lyr.layer)][-1]
+
+
+def _offset_is_pixel_or_sky(x):
+    if isinstance(x, u.Quantity):
+        if x.unit in (u.dimensionless_unscaled, u.pix):
+            coord = 'data'
+            val = x.value
+        else:
+            coord = 'wcs'
+            val = x  # Can stay Quantity
+    else:
+        coord = 'data'
+        val = x
+
+    return val, coord
