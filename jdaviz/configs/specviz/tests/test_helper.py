@@ -1,5 +1,7 @@
 import numpy as np
 import pytest
+from astropy import units as u
+from astropy.tests.helper import assert_quantity_allclose
 
 from specutils import Spectrum1D
 
@@ -23,8 +25,8 @@ def test_get_spectra(specviz_app, spectrum1d):
 
     spectra = specviz_app.get_spectra()
 
-    assert np.allclose(spectra[label].flux, spectrum1d.flux)
-    assert spectra[label].flux.unit == spectrum1d.flux.unit
+    assert_quantity_allclose(spectra[label].flux,
+                             spectrum1d.flux, atol=1e-5*u.Unit(spectrum1d.flux.unit))
 
 
 def test_get_spectra_no_redshift(specviz_app, spectrum1d):
@@ -33,8 +35,8 @@ def test_get_spectra_no_redshift(specviz_app, spectrum1d):
 
     spectra = specviz_app.get_spectra(apply_slider_redshift=None)
 
-    assert np.allclose(spectra[label].flux, spectrum1d.flux)
-    assert spectra[label].flux.unit == spectrum1d.flux.unit
+    assert_quantity_allclose(spectra[label].flux,
+                             spectrum1d.flux, atol=1e-5*u.Unit(spectrum1d.flux.unit))
 
 
 def test_get_spectra_no_data_label(specviz_app, spectrum1d):
@@ -43,8 +45,8 @@ def test_get_spectra_no_data_label(specviz_app, spectrum1d):
 
     spectra = specviz_app.get_spectra(data_label=None, apply_slider_redshift="Error")
 
-    assert np.allclose(spectra[label].flux, spectrum1d.flux)
-    assert spectra[label].flux.unit == spectrum1d.flux.unit
+    assert_quantity_allclose(spectra[label].flux,
+                             spectrum1d.flux, atol=1e-5*u.Unit(spectrum1d.flux.unit))
 
 
 def test_get_spectra_label_redshift(specviz_app, spectrum1d):
@@ -53,8 +55,8 @@ def test_get_spectra_label_redshift(specviz_app, spectrum1d):
 
     spectra = specviz_app.get_spectra(data_label=label, apply_slider_redshift="Error")
 
-    assert np.allclose(spectra.flux, spectrum1d.flux)
-    assert spectra.flux.unit == spectrum1d.flux.unit
+    assert_quantity_allclose(spectra.flux,
+                             spectrum1d.flux, atol=1e-5*u.Unit(spectrum1d.flux.unit))
 
 
 def test_get_spectra_label_redshift_warn(specviz_app, spectrum1d):
@@ -63,8 +65,8 @@ def test_get_spectra_label_redshift_warn(specviz_app, spectrum1d):
 
     spectra = specviz_app.get_spectra(data_label=label, apply_slider_redshift="Warn")
 
-    assert np.allclose(spectra.flux, spectrum1d.flux)
-    assert spectra.flux.unit == spectrum1d.flux.unit
+    assert_quantity_allclose(spectra.flux,
+                             spectrum1d.flux, atol=1e-5*u.Unit(spectrum1d.flux.unit))
 
 
 def test_get_spectra_no_spectra(specviz_app, spectrum1d):
