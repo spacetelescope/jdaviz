@@ -205,7 +205,7 @@ class Imviz(ConfigHelper):
             {'color': '#ff0000', 'alpha': 0.5, 'markersize': 10}
             {'color': (1, 0, 0)}
 
-        Also see: https://docs.glueviz.org/en/stable/api/glue.core.visual.VisualAttributes.html
+        The valid properties for markers in imviz are listed at  https://docs.glueviz.org/en/stable/api/glue.core.visual.VisualAttributes.html
 
         """
         return self._marker_dict
