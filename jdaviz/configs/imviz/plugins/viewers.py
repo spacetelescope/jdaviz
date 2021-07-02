@@ -1,12 +1,28 @@
 import numpy as np
-
+from glue.viewers.matplotlib.state import DeferredDrawSelectionCallbackProperty as DDSCProperty
 from glue_jupyter.bqplot.image import BqplotImageView
+from glue_jupyter.bqplot.image.layer_artist import (
+    BqplotImageLayerArtist, BqplotImageSubsetLayerArtist)
+from glue_jupyter.bqplot.image.state import BqplotImageLayerState
+from glue_jupyter.bqplot.scatter.layer_artist import BqplotScatterLayerArtist
+from glue_jupyter.common.state_widgets.layer_image import (
+    ImageLayerStateWidget, ImageSubsetLayerStateWidget)
+from glue_jupyter.common.state_widgets.layer_scatter import ScatterLayerStateWidget
 
 from jdaviz.configs.imviz.helper import data_has_valid_wcs, layer_is_image_data
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import viewer_registry
 
 __all__ = ['ImvizImageView']
+
+
+class ImvizLayerState(BqplotImageLayerState):
+    percentile = DDSCProperty(95, docstring='The percentile value used to '
+                              'automatically calculate levels')
+
+
+class ImvizLayerArtist(BqplotImageLayerArtist):
+    _layer_state_cls = ImvizLayerState
 
 
 @viewer_registry("imviz-image-viewer", label="Image 2D (Imviz)")
@@ -17,6 +33,9 @@ class ImvizImageView(BqplotImageView):
     # ones are added in glue-jupyter in future that we don't want here.
     inherit_tools = False
 
+    _layer_style_widget_cls = {ImvizLayerArtist: ImageLayerStateWidget,
+                               BqplotImageSubsetLayerArtist: ImageSubsetLayerStateWidget,
+                               BqplotScatterLayerArtist: ScatterLayerStateWidget}
     tools = ['bqplot:home', 'bqplot:panzoom', 'bqplot:panzoomwcs',
              'bqplot:contrastbias', 'bqplot:blinkonce',
              'bqplot:rectangle', 'bqplot:circle']
