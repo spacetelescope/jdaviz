@@ -1,10 +1,8 @@
 import numpy as np
 
-from astropy.wcs.wcsapi import BaseHighLevelWCS
-
-from glue.core import BaseData
 from glue_jupyter.bqplot.image import BqplotImageView
 
+from jdaviz.configs.imviz.helper import data_has_valid_wcs, layer_is_image_data
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import viewer_registry
 
@@ -74,7 +72,7 @@ class ImvizImageView(BqplotImageView):
 
             self.label_mouseover.pixel = (fmt.format(x, y))
 
-            if hasattr(image, 'coords') and isinstance(image.coords, BaseHighLevelWCS):
+            if data_has_valid_wcs(image):
                 # Convert these to a SkyCoord via WCS - note that for other datasets
                 # we aren't actually guaranteed to get a SkyCoord out, just for images
                 # with valid celestial WCS
@@ -116,7 +114,7 @@ class ImvizImageView(BqplotImageView):
 
         # Exclude Subsets: They are global
         valid = [ilayer for ilayer, layer in enumerate(self.state.layers)
-                 if isinstance(layer.layer, BaseData)]
+                 if layer_is_image_data(layer.layer)]
         n_layers = len(valid)
 
         if n_layers == 1:
@@ -156,4 +154,4 @@ class ImvizImageView(BqplotImageView):
         return [layer_state.layer  # .get_object(cls=cls or self.default_class)
                 for layer_state in self.state.layers
                 if hasattr(layer_state, 'layer') and
-                isinstance(layer_state.layer, BaseData)]
+                layer_is_image_data(layer_state.layer)]

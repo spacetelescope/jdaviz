@@ -7,7 +7,7 @@ from astropy.utils.introspection import minversion
 from astropy.wcs import NoConvergence
 from astropy.wcs.wcsapi import BaseHighLevelWCS
 from echo import delay_callback
-from glue.core import BaseData
+from glue.core import BaseData, Data
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.helpers import ConfigHelper
@@ -15,11 +15,21 @@ from jdaviz.core.helpers import ConfigHelper
 __all__ = ['Imviz']
 
 ASTROPY_LT_4_3 = not minversion('astropy', '4.3')
+RESERVED_MARKER_SET_NAMES = ['all']
 
 
 class Imviz(ConfigHelper):
     """Imviz Helper class"""
     _default_configuration = 'imviz'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Markers
+        self._marktags = set()
+        self._default_mark_tag_name = 'default-marker-name'
+        # marker shape not settable: https://github.com/glue-viz/glue/issues/2202
+        self.marker = {'color': 'red', 'alpha': 1.0, 'markersize': 5}
 
     def load_data(self, data, parser_reference=None, **kwargs):
         """Load data into Imviz.
@@ -109,7 +119,7 @@ class Imviz(ConfigHelper):
         if isinstance(point, SkyCoord):
             i_top = get_top_layer_index(viewer)
             image = viewer.layers[i_top].layer
-            if hasattr(image, 'coords') and isinstance(image.coords, BaseHighLevelWCS):
+            if data_has_valid_wcs(image):
                 try:
                     pix = image.coords.world_to_pixel(point)  # 0-indexed X, Y
                 except NoConvergence as e:  # pragma: no cover
@@ -118,13 +128,13 @@ class Imviz(ConfigHelper):
                         color="warning", sender=self.app))
                     return
             else:
-                raise AttributeError(f'{image.label} does not have a valid WCS')
+                raise AttributeError(f'{getattr(image, "label", None)} does not have a valid WCS')
         else:
             pix = point
 
         # Disallow centering outside of display.
         if (pix[0] < viewer.state.x_min or pix[0] > viewer.state.x_max
-                or pix[1] < viewer.state.y_min or pix[1] > viewer.state.y_max):
+                or pix[1] < viewer.state.y_min or pix[1] > viewer.state.y_max):  # pragma: no cover
             self.app.hub.broadcast(SnackbarMessage(
                 f'{pix} is out of bounds', color="warning", sender=self.app))
             return
@@ -163,7 +173,7 @@ class Imviz(ConfigHelper):
         if skycoord_offset:
             i_top = get_top_layer_index(viewer)
             image = viewer.layers[i_top].layer
-            if hasattr(image, 'coords') and isinstance(image.coords, BaseHighLevelWCS):
+            if data_has_valid_wcs(image):
                 # To avoid distortion headache, assume offset is relative to
                 # displayed center.
                 x_cen = viewer.state.x_min + (width * 0.5)
@@ -177,13 +187,170 @@ class Imviz(ConfigHelper):
                     new_sky_cen = sky_cen.spherical_offsets_by(dx, dy)
                 self.center_on(new_sky_cen)
             else:
-                raise AttributeError(f'{image.label} does not have a valid WCS')
+                raise AttributeError(f'{getattr(image, "label", None)} does not have a valid WCS')
         else:
             with delay_callback(viewer.state, 'x_min', 'x_max', 'y_min', 'y_max'):
                 viewer.state.x_min += dx
                 viewer.state.y_min += dy
                 viewer.state.x_max = viewer.state.x_min + width
                 viewer.state.y_max = viewer.state.y_min + height
+
+    @property
+    def marker(self):
+        """Marker to use.
+
+        Marker can be set as follows; e.g.::
+
+            {'color': 'red', 'alpha': 1.0, 'markersize': 3}
+            {'color': '#ff0000', 'alpha': 0.5, 'markersize': 10}
+            {'color': (1, 0, 0)}
+
+        The valid properties for markers in imviz are listed at
+        https://docs.glueviz.org/en/stable/api/glue.core.visual.VisualAttributes.html
+
+        """
+        return self._marker_dict
+
+    @marker.setter
+    def marker(self, val):
+        # Validation: Ideally Glue should do this but we have to due to
+        # https://github.com/glue-viz/glue/issues/2203
+        given = set(val.keys())
+        allowed = set(('color', 'alpha', 'markersize'))
+        if not given.issubset(allowed):
+            raise KeyError(f'Invalid attribute(s): {given - allowed}')
+        if 'color' in val:
+            from matplotlib.colors import ColorConverter
+            ColorConverter().to_rgb(val['color'])  # ValueError: Invalid RGBA argument
+        if 'alpha' in val:
+            alpha = val['alpha']
+            if not isinstance(alpha, (int, float)) or alpha < 0 or alpha > 1:
+                raise ValueError(f'Invalid alpha: {alpha}')
+        if 'markersize' in val:
+            size = val['markersize']
+            if not isinstance(size, (int, float)):
+                raise ValueError(f'Invalid marker size: {size}')
+
+        # Only set this once we have successfully validated a marker.
+        # Those not set here use Glue defaults.
+        self._marker_dict = val
+
+    def _validate_marker_name(self, marker_name):
+        """Raise an error if the marker_name is not allowed."""
+        if marker_name in RESERVED_MARKER_SET_NAMES:
+            raise ValueError(
+                f"The marker name {marker_name} is not allowed. Any name is "
+                f"allowed except these: {', '.join(RESERVED_MARKER_SET_NAMES)}")
+
+    def add_markers(self, table, x_colname='x', y_colname='y',
+                    skycoord_colname='coord', use_skycoord=False,
+                    marker_name=None):
+        """Creates markers w.r.t. the reference image at given points
+        in the table.
+
+        .. note:: Use `marker` to change marker appearance.
+
+        Parameters
+        ----------
+        table : `~astropy.table.Table`
+            Table containing marker locations.
+
+        x_colname, y_colname : str
+            Column names for X and Y.
+            Coordinates must be 0-indexed.
+
+        skycoord_colname : str
+            Column name with `~astropy.coordinates.SkyCoord` objects.
+
+        use_skycoord : bool
+            If `True`, use ``skycoord_colname`` to mark.
+            Otherwise, use ``x_colname`` and ``y_colname``.
+
+        marker_name : str, optional
+            Name to assign the markers in the table. Providing a name
+            allows markers to be removed by name at a later time.
+
+        Raises
+        ------
+        AttributeError
+            Sky coordinates are given but reference image does not have a valid WCS.
+
+        ValueError
+            Invalid marker name.
+
+        """
+        if marker_name is None:
+            marker_name = self._default_mark_tag_name
+
+        self._validate_marker_name(marker_name)
+        viewer = self.app.get_viewer("viewer-1")
+        jglue = self.app.session.application
+
+        # TODO: How to link to invidual images separately for X/Y? add_link in loop does not work.
+        # Link markers to reference image data.
+        image = viewer.state.reference_data
+
+        # TODO: Is Glue smart enough to no-op if link already there?
+        if use_skycoord:
+            if not data_has_valid_wcs(image):
+                raise AttributeError(f'{getattr(image, "label", None)} does not have a valid WCS')
+            sky = table[skycoord_colname]
+            t_glue = Data(marker_name, ra=sky.ra.deg, dec=sky.dec.deg)
+            jglue.data_collection[marker_name] = t_glue
+            jglue.add_link(t_glue, 'ra', image, 'Right Ascension')
+            jglue.add_link(t_glue, 'dec', image, 'Declination')
+        else:
+            t_glue = Data(marker_name, **table[x_colname, y_colname])
+            jglue.data_collection[marker_name] = t_glue
+            jglue.add_link(t_glue, x_colname, image, image.pixel_component_ids[1].label)
+            jglue.add_link(t_glue, y_colname, image, image.pixel_component_ids[0].label)
+
+        try:
+            viewer.add_data(t_glue)
+        except Exception as e:  # pragma: no cover
+            self.app.hub.broadcast(SnackbarMessage(
+                f"Failed to add markers '{marker_name}': {repr(e)}",
+                color="warning", sender=self.app))
+        else:
+            # Only can set alpha and color using viewer.add_data(), so brute force here instead.
+            # https://github.com/glue-viz/glue/issues/2201
+            for key, val in self.marker.items():
+                setattr(self.app.data_collection[self.app.data_collection.labels.index(marker_name)].style, key, val)  # noqa
+
+            self._marktags.add(marker_name)
+
+    def remove_markers(self, marker_name=None):
+        """Remove some but not all of the markers by name used when
+        adding the markers.
+
+        Parameters
+        ----------
+        marker_name : str
+            Name used when the markers were added.
+            If not given, will delete markers added under default name.
+
+        """
+        if marker_name is None:
+            marker_name = self._default_mark_tag_name
+
+        try:
+            i = self.app.data_collection.labels.index(marker_name)
+        except ValueError as e:  # pragma: no cover
+            self.app.hub.broadcast(SnackbarMessage(
+                f"Failed to remove markers '{marker_name}': {repr(e)}",
+                color="warning", sender=self.app))
+            return
+
+        data = self.app.data_collection[i]
+        self.app.data_collection.remove(data)
+        self._marktags.remove(marker_name)
+
+    def reset_markers(self):
+        """Delete all markers."""
+        # Grab the entire list of marker names before iterating
+        # otherwise what we are iterating over changes.
+        for marker_name in list(self._marktags):
+            self.remove_markers(marker_name=marker_name)
 
 
 def split_filename_with_fits_ext(filename):
@@ -233,10 +400,18 @@ def split_filename_with_fits_ext(filename):
     return filepath, ext, data_label
 
 
+def data_has_valid_wcs(data):
+    return hasattr(data, 'coords') and isinstance(data.coords, BaseHighLevelWCS)
+
+
+def layer_is_image_data(layer):
+    return isinstance(layer, BaseData) and layer.ndim == 2
+
+
 def get_top_layer_index(viewer):
-    """Get index of the top visible layer in Imviz.
+    """Get index of the top visible image layer in Imviz.
     This is because when blinked, first layer might not be top visible layer.
 
     """
     return [i for i, lyr in enumerate(viewer.layers)
-            if lyr.visible and isinstance(lyr.layer, BaseData)][-1]
+            if lyr.visible and layer_is_image_data(lyr.layer)][-1]

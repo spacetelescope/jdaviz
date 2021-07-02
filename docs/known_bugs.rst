@@ -83,6 +83,15 @@ has the unintended consequence of changing the contrast of the image displayed
 in the Cubeviz cube viewer.
 
 
+Imviz add_markers may not show markers
+--------------------------------------
+
+In some OS/browser combinations, ``imviz.add_markers(...)`` might take a few tries
+to show the markers, or not at all. This is a known bug reported in
+https://github.com/glue-viz/glue-jupyter/issues/243 . If you encounter this,
+try a different OS/browser combo.
+
+
 Reporting a bug
 ---------------
 
