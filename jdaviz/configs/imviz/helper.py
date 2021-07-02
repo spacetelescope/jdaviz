@@ -247,6 +247,8 @@ class Imviz(ConfigHelper):
         """Creates markers w.r.t. the reference image at given points
         in the table.
 
+        .. note:: Use `marker` to change marker appearance.
+
         Parameters
         ----------
         table : `~astropy.table.Table`
