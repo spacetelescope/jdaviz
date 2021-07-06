@@ -19,7 +19,7 @@ class ImvizImageView(BqplotImageView):
 
     tools = ['bqplot:home', 'bqplot:panzoom', 'bqplot:panzoomwcs',
              'bqplot:contrastbias', 'bqplot:blinkonce',
-             'bqplot:rectangle', 'bqplot:circle']
+             'bqplot:rectangle', 'bqplot:circle', 'bqplot:ellipse']
     default_class = None
 
     def __init__(self, *args, **kwargs):
