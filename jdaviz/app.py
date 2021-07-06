@@ -313,10 +313,6 @@ class Application(VuetifyTemplate, HubListener):
             else:
                 self._application_handler.load_data(file_obj)
 
-            # Send out a toast message
-            snackbar_message = SnackbarMessage("Data successfully loaded.",
-                                               sender=self)
-            self.hub.broadcast(snackbar_message)
         finally:
             self.loading = False
 
