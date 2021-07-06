@@ -36,13 +36,13 @@ class TestSpecvizHelper:
                                  self.spec.flux, atol=1e-5*u.Unit(self.spec.flux.unit))
 
     def test_get_spectra_no_data_label(self):
-        spectra = self.spec_app.get_spectra(data_label=None, apply_slider_redshift="Error")
+        spectra = self.spec_app.get_spectra(data_label=None, apply_slider_redshift=True)
 
         assert_quantity_allclose(spectra[self.label].flux,
                                  self.spec.flux, atol=1e-5*u.Unit(self.spec.flux.unit))
 
     def test_get_spectra_label_redshift(self):
-        spectra = self.spec_app.get_spectra(data_label=self.label, apply_slider_redshift="Error")
+        spectra = self.spec_app.get_spectra(data_label=self.label, apply_slider_redshift=True)
 
         assert_quantity_allclose(spectra.flux,
                                  self.spec.flux, atol=1e-5*u.Unit(self.spec.flux.unit))
@@ -61,7 +61,7 @@ def test_get_spectra_no_spectra(specviz_app, spectrum1d):
 
 
 def test_get_spectra_no_spectra_redshift_error(specviz_app, spectrum1d):
-    spectra = specviz_app.get_spectra(apply_slider_redshift="Error")
+    spectra = specviz_app.get_spectra(apply_slider_redshift=True)
 
     assert spectra == {}
 
@@ -75,4 +75,4 @@ def test_get_spectra_no_spectra_label(specviz_app, spectrum1d):
 def test_get_spectra_no_spectra_label_redshift_error(specviz_app, spectrum1d):
     label = "label"
     with pytest.raises(AttributeError):
-        specviz_app.get_spectra(data_label=label, apply_slider_redshift="Error")
+        specviz_app.get_spectra(data_label=label, apply_slider_redshift=True)
