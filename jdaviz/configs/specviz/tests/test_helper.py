@@ -5,67 +5,59 @@ from astropy.tests.helper import assert_quantity_allclose
 from specutils import Spectrum1D
 
 
-def test_load_spectrum1d(specviz_app, spectrum1d):
-    label = "Test 1D Spectrum"
-    specviz_app.load_spectrum(spectrum1d, data_label=label)
+class TestSpecvizHelper:
+    @pytest.fixture(autouse=True)
+    def setup_class(self, specviz_app, spectrum1d):
+        self.spec_app = specviz_app
+        self.spec = spectrum1d
 
-    assert len(specviz_app.app.data_collection) == 1
-    assert specviz_app.app.data_collection[0].label == label
-
-    data = specviz_app.app.get_data_from_viewer('spectrum-viewer')
-
-    assert isinstance(list(data.values())[0], Spectrum1D)
-    assert list(data.keys())[0] == label
+        self.label = "Test 1D Spectrum"
+        self.spec_app.load_spectrum(spectrum1d, data_label=self.label)
 
 
-def test_get_spectra(specviz_app, spectrum1d):
-    label = "Test 1D Spectrum"
-    specviz_app.load_spectrum(spectrum1d, data_label=label)
+    def test_load_spectrum1d(self):
+        assert len(self.spec_app.app.data_collection) == 1
+        assert self.spec_app.app.data_collection[0].label == self.label
 
-    spectra = specviz_app.get_spectra()
+        data = self.spec_app.app.get_data_from_viewer('spectrum-viewer')
 
-    assert_quantity_allclose(spectra[label].flux,
-                             spectrum1d.flux, atol=1e-5*u.Unit(spectrum1d.flux.unit))
-
-
-def test_get_spectra_no_redshift(specviz_app, spectrum1d):
-    label = "Test 1D Spectrum"
-    specviz_app.load_spectrum(spectrum1d, data_label=label)
-
-    spectra = specviz_app.get_spectra(apply_slider_redshift=None)
-
-    assert_quantity_allclose(spectra[label].flux,
-                             spectrum1d.flux, atol=1e-5*u.Unit(spectrum1d.flux.unit))
+        assert isinstance(list(data.values())[0], Spectrum1D)
+        assert list(data.keys())[0] == self.label
 
 
-def test_get_spectra_no_data_label(specviz_app, spectrum1d):
-    label = "Test 1D Spectrum"
-    specviz_app.load_spectrum(spectrum1d, data_label=label)
+    def test_get_spectra(self):
+        spectra = self.spec_app.get_spectra()
 
-    spectra = specviz_app.get_spectra(data_label=None, apply_slider_redshift="Error")
-
-    assert_quantity_allclose(spectra[label].flux,
-                             spectrum1d.flux, atol=1e-5*u.Unit(spectrum1d.flux.unit))
+        assert_quantity_allclose(spectra[self.label].flux,
+                                 self.spec.flux, atol=1e-5*u.Unit(self.spec.flux.unit))
 
 
-def test_get_spectra_label_redshift(specviz_app, spectrum1d):
-    label = "Test 1D Spectrum"
-    specviz_app.load_spectrum(spectrum1d, data_label=label)
+    def test_get_spectra_no_redshift(self):
+        spectra = self.spec_app.get_spectra(apply_slider_redshift=None)
 
-    spectra = specviz_app.get_spectra(data_label=label, apply_slider_redshift="Error")
-
-    assert_quantity_allclose(spectra.flux,
-                             spectrum1d.flux, atol=1e-5*u.Unit(spectrum1d.flux.unit))
+        assert_quantity_allclose(spectra[self.label].flux,
+                                 self.spec.flux, atol=1e-5*u.Unit(self.spec.flux.unit))
 
 
-def test_get_spectra_label_redshift_warn(specviz_app, spectrum1d):
-    label = "Test 1D Spectrum"
-    specviz_app.load_spectrum(spectrum1d, data_label=label)
+    def test_get_spectra_no_data_label(self):
+        spectra = self.spec_app.get_spectra(data_label=None, apply_slider_redshift="Error")
 
-    spectra = specviz_app.get_spectra(data_label=label, apply_slider_redshift="Warn")
+        assert_quantity_allclose(spectra[self.label].flux,
+                                 self.spec.flux, atol=1e-5*u.Unit(self.spec.flux.unit))
 
-    assert_quantity_allclose(spectra.flux,
-                             spectrum1d.flux, atol=1e-5*u.Unit(spectrum1d.flux.unit))
+
+    def test_get_spectra_label_redshift(self):
+        spectra = self.spec_app.get_spectra(data_label=self.label, apply_slider_redshift="Error")
+
+        assert_quantity_allclose(spectra.flux,
+                                 self.spec.flux, atol=1e-5*u.Unit(self.spec.flux.unit))
+
+
+    def test_get_spectra_label_redshift_warn(self):
+        spectra = self.spec_app.get_spectra(data_label=self.label, apply_slider_redshift="Warn")
+
+        assert_quantity_allclose(spectra.flux,
+                                 self.spec.flux, atol=1e-5*u.Unit(self.spec.flux.unit))
 
 
 def test_get_spectra_no_spectra(specviz_app, spectrum1d):
