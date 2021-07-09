@@ -721,9 +721,29 @@ class Application(VuetifyTemplate, HubListener):
             if data_item['name'] == label:
                 return data_item['id']
 
-    def get_viewer_ids(self):
-        """Return a list of available viewer IDs."""
-        return sorted(self._viewer_store.keys())
+    def get_viewer_ids(self, prefix=None):
+        """Return a list of available viewer IDs.
+
+        Parameters
+        ----------
+        prefix : str or `None`
+            If not `None`, only return viewer IDs with given prefix
+            (case-sensitive). Otherwise, all viewer IDs are returned.
+
+        Returns
+        -------
+        vids : list of str
+            Sorted list of viewer IDs.
+
+        """
+        all_keys = sorted(self._viewer_store.keys())
+
+        if isinstance(prefix, str):
+            vids = [k for k in all_keys if k.startswith(prefix)]
+        else:
+            vids = all_keys
+
+        return vids
 
     def get_viewer_reference_names(self):
         """Return a list of available viewer reference names."""
@@ -1044,8 +1064,8 @@ class Application(VuetifyTemplate, HubListener):
             'children': children,
             'viewers': viewers}
 
-    def _next_viewer_num(self):
-        all_vids = self.get_viewer_ids()
+    def _next_viewer_num(self, prefix):
+        all_vids = self.get_viewer_ids(prefix=prefix)
         if len(all_vids) == 0:
             return 0
 
@@ -1077,8 +1097,9 @@ class Application(VuetifyTemplate, HubListener):
         tools.borderless = True
         tools.tile = True
 
-        n = self._next_viewer_num()
-        vid = f"{self.state.settings.get('configuration', 'unknown')}-{n}"
+        pfx = self.state.settings.get('configuration', str(name))
+        n = self._next_viewer_num(pfx)
+        vid = f"{pfx}-{n}"
 
         return {
             'id': vid,
@@ -1117,7 +1138,7 @@ class Application(VuetifyTemplate, HubListener):
 
         # Create the viewer item dictionary
         new_viewer_item = self._create_viewer_item(
-            viewer=viewer)
+            viewer=viewer, name=viewer.__class__.__name__)
 
         new_stack_item = self._create_stack_item(
             container='gl-stack',
