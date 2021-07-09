@@ -174,15 +174,15 @@ class TestParseImage:
         with pytest.raises(ValueError, match='Do not manually overwrite data_label'):
             imviz_app.load_data(flist, data_label='foo', show_in_viewer=False)
 
-    @pytest.mark.skipif(HAS_JWST_ASDF, reason='jwst is installed')
+    @pytest.mark.skipif(HAS_JWST_ASDF, reason='asdf and gwcs are installed')
     @pytest.mark.remote_data
     def test_parse_jwst_nircam_level2_no_jwst(self, imviz_app):
         filename = download_file(self.jwst_asdf_url_1, cache=True)
-        with pytest.raises(ImportError, match='jwst package is missing'):
+        with pytest.raises(ImportError, match='asdf or gwcs package is missing'):
             parse_data(imviz_app.app, filename, data_label='foo',
                        show_in_viewer=False)
 
-    @pytest.mark.skipif(not HAS_JWST_ASDF, reason='jwst not installed')
+    @pytest.mark.skipif(not HAS_JWST_ASDF, reason='asdf and gwcs not installed')
     @pytest.mark.remote_data
     def test_parse_jwst_nircam_level2(self, imviz_app):
         from gwcs import WCS as GWCS
