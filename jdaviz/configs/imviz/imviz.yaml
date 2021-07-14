@@ -17,6 +17,8 @@ toolbar:
   - g-subset-tools
   - g-image-viewer-creator
   - g-coords-info
+tray:
+  - imviz-subset-control
 viewer_area:
   - container: col
     children:
