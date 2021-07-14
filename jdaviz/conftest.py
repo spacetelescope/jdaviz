@@ -3,19 +3,41 @@
 # get picked up when running the tests inside an interpreter using
 # packagename.test
 
+import numpy as np
 import pytest
-
-from astropy.wcs import WCS
 from astropy import units as u
 from astropy.nddata import StdDevUncertainty
-import numpy as np
+from astropy.wcs import WCS
 from specutils import Spectrum1D
-from jdaviz.configs.specviz.helper import SpecViz
-from jdaviz.configs.imviz.helper import Imviz
+
+from jdaviz import __version__, CubeViz, Imviz, MosViz, SpecViz, Specviz2d
 
 SPECTRUM_SIZE = 10  # length of spectrum
 
-from jdaviz import __version__
+
+@pytest.fixture
+def cubeviz_app():
+    return CubeViz()
+
+
+@pytest.fixture
+def imviz_app():
+    return Imviz()
+
+
+@pytest.fixture
+def mosviz_app():
+    return MosViz()
+
+
+@pytest.fixture
+def specviz_app():
+    return SpecViz()
+
+
+@pytest.fixture
+def specviz2d_app():
+    return Specviz2d()
 
 
 @pytest.fixture
@@ -25,11 +47,6 @@ def spectral_cube_wcs(request):
     wcs.wcs.ctype = 'RA---TAN', 'DEC--TAN', 'FREQ'
     wcs.wcs.set()
     return wcs
-
-
-@pytest.fixture
-def specviz_app():
-    return SpecViz()
 
 
 @pytest.fixture
@@ -43,11 +60,6 @@ def spectrum1d():
     uncertainty = StdDevUncertainty(np.abs(np.random.randn(len(spec_axis.value))) * u.Jy)
 
     return Spectrum1D(spectral_axis=spec_axis, flux=flux, uncertainty=uncertainty)
-
-
-@pytest.fixture
-def imviz_app():
-    return Imviz()
 
 
 try:

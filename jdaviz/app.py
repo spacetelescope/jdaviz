@@ -347,6 +347,12 @@ class Application(VuetifyTemplate, HubListener):
         """
         return self._viewer_by_reference(viewer_reference)
 
+    def get_viewer_by_id(self, vid):
+        """Like :meth:`get_viewer` but use ID instead of reference name.
+        This is useful when reference name is `None`.
+        """
+        return self._viewer_store[vid]
+
     def get_data_from_viewer(self, viewer_reference, data_label=None,
                              cls='default', include_subsets=True):
         """
@@ -720,6 +726,35 @@ class Application(VuetifyTemplate, HubListener):
             if data_item['name'] == label:
                 return data_item['id']
 
+    def get_viewer_ids(self, prefix=None):
+        """Return a list of available viewer IDs.
+
+        Parameters
+        ----------
+        prefix : str or `None`
+            If not `None`, only return viewer IDs with given prefix
+            (case-sensitive). Otherwise, all viewer IDs are returned.
+
+        Returns
+        -------
+        vids : list of str
+            Sorted list of viewer IDs.
+
+        """
+        all_keys = sorted(self._viewer_store.keys())
+
+        if isinstance(prefix, str):
+            vids = [k for k in all_keys if k.startswith(prefix)]
+        else:
+            vids = all_keys
+
+        return vids
+
+    def get_viewer_reference_names(self):
+        """Return a list of available viewer reference names."""
+        # Cannot sort because of None
+        return [self._viewer_item_by_id(vid)['reference'] for vid in self._viewer_store]
+
     def _viewer_by_id(self, vid):
         """
         Viewer instance by id.
@@ -1034,8 +1069,17 @@ class Application(VuetifyTemplate, HubListener):
             'children': children,
             'viewers': viewers}
 
-    @staticmethod
-    def _create_viewer_item(viewer, name=None, reference=None):
+    def _next_viewer_num(self, prefix):
+        all_vids = self.get_viewer_ids(prefix=prefix)
+        if len(all_vids) == 0:
+            return 0
+
+        # Assume name-num format
+        last_vid = all_vids[-1]
+        last_num = int(last_vid.split('-')[-1])
+        return last_num + 1
+
+    def _create_viewer_item(self, viewer, name=None, reference=None):
         """
         Convenience method for generating viewer item dictionaries.
 
@@ -1058,9 +1102,13 @@ class Application(VuetifyTemplate, HubListener):
         tools.borderless = True
         tools.tile = True
 
+        pfx = self.state.settings.get('configuration', str(name))
+        n = self._next_viewer_num(pfx)
+        vid = f"{pfx}-{n}"
+
         return {
-            'id': str(uuid.uuid4()),
-            'name': name or "Unnamed Viewer",
+            'id': vid,
+            'name': name or vid,
             'widget': "IPY_MODEL_" + viewer.figure_widget.model_id,
             'tools': "IPY_MODEL_" + viewer.toolbar_selection_tools.model_id,
             'layer_options': "IPY_MODEL_" + viewer.layer_options.model_id,
@@ -1095,7 +1143,7 @@ class Application(VuetifyTemplate, HubListener):
 
         # Create the viewer item dictionary
         new_viewer_item = self._create_viewer_item(
-            viewer=viewer)
+            viewer=viewer, name=viewer.__class__.__name__)
 
         new_stack_item = self._create_stack_item(
             container='gl-stack',
