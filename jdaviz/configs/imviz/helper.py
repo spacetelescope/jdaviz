@@ -1,7 +1,9 @@
 import os
 import re
+import warnings
 from copy import deepcopy
 
+import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.utils.introspection import minversion
@@ -9,6 +11,7 @@ from astropy.wcs import NoConvergence
 from astropy.wcs.wcsapi import BaseHighLevelWCS
 from echo import delay_callback
 from glue.core import BaseData, Data
+from glue.core.subset import MaskSubsetState
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.helpers import ConfigHelper
@@ -362,6 +365,73 @@ class Imviz(ConfigHelper):
         # otherwise what we are iterating over changes.
         for marker_name in list(self._marktags):
             self.remove_markers(marker_name=marker_name)
+
+    def load_static_regions(self, regions, **kwargs):
+        """Load given region(s) into the viewer.
+        Region(s) is relative to the reference image.
+        Once loaded, the region(s) cannot be modified.
+
+        Parameters
+        ----------
+        regions : dict
+            Dictionary mapping desired region name to one of the following:
+
+            * Astropy ``regions`` object
+            * ``photutils`` apertures (limited support until ``photutils``
+              fully supports ``regions``)
+            * Numpy boolean array (shape must match data)
+
+            Region name that starts with "Subset" is forbidden and reserved
+            for internal use only.
+
+        kwargs : dict
+            Extra keywords to be passed into the region's ``to_mask`` method.
+            This is ignored if Numpy array is given.
+
+        """
+        viewer = self.app.get_viewer("viewer-1")
+        data = viewer.state.reference_data
+
+        for subset_label, region in regions.items():
+            if subset_label.startswith('Subset'):
+                warnings.warn(f'{subset_label} is not allowed, skipping. '
+                              'Do not use region name that starts with Subset.')
+                continue
+
+            if hasattr(region, 'to_pixel'):
+                if data_has_valid_wcs(data):
+                    pixreg = region.to_pixel(data.coords)
+                    mask = pixreg.to_mask(**kwargs)
+                    im = mask.to_image(data.shape)
+                else:
+                    warnings.warn(f'{region} given but data has no valid WCS, skipping')
+                    continue
+            elif hasattr(region, 'to_mask'):
+                mask = region.to_mask(**kwargs)
+                im = mask.to_image(data.shape)
+            elif (isinstance(region, np.ndarray) and region.shape == data.shape
+                    and region.dtype == np.bool_):
+                im = region
+            else:
+                warnings.warn(f'Unsupported region type: {type(region)}, skipping')
+                continue
+
+            # NOTE: Region creation info is thus lost.
+            state = MaskSubsetState(im, data.pixel_component_ids)
+            self.app.data_collection.new_subset_group(subset_label, state)
+
+    def get_interactive_regions(self):
+        """Return regions interactively drawn in the viewer.
+        This does not return regions added via :meth:`load_static_regions`.
+
+        Returns
+        -------
+        regions : dict
+            Dictionary mapping interactive region names to respective Astropy
+            ``regions`` objects.
+
+        """
+        return self.app.get_subsets_from_viewer('viewer-1')
 
 
 def split_filename_with_fits_ext(filename):
