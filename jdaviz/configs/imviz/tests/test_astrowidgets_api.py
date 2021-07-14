@@ -15,10 +15,16 @@ class TestCenterOffset(BaseImviz_WCS_NoWCS):
         assert_allclose(self.viewer.state.x_max, 5)
         assert_allclose(self.viewer.state.y_max, 6)
 
-        self.imviz.offset_to(1, -1)
+        self.imviz.offset_by(1 * u.pix, -1 * u.dimensionless_unscaled)
         assert_allclose(self.viewer.state.x_min, -4)
         assert_allclose(self.viewer.state.y_min, -5)
         assert_allclose(self.viewer.state.x_max, 6)
+        assert_allclose(self.viewer.state.y_max, 5)
+
+        self.imviz.offset_by(1, 0)
+        assert_allclose(self.viewer.state.x_min, -3)
+        assert_allclose(self.viewer.state.y_min, -5)
+        assert_allclose(self.viewer.state.x_max, 7)
         assert_allclose(self.viewer.state.y_max, 5)
 
     def test_center_offset_sky(self):
@@ -33,19 +39,21 @@ class TestCenterOffset(BaseImviz_WCS_NoWCS):
         assert_allclose(self.viewer.state.y_max, 6)
 
         dsky = 0.1 * u.arcsec
-        self.imviz.offset_to(dsky, dsky, skycoord_offset=True)
+        self.imviz.offset_by(dsky, dsky)
         assert_allclose(self.viewer.state.x_min, -5.100000000142565)
         assert_allclose(self.viewer.state.y_min, -3.90000000002971)
         assert_allclose(self.viewer.state.x_max, 4.899999999857435)
         assert_allclose(self.viewer.state.y_max, 6.09999999997029)
 
-        # astropy requires Quantity
-        with pytest.raises(u.UnitTypeError):
-            self.imviz.offset_to(0.1, 0.1, skycoord_offset=True)
+        # Cannot mix pixel with sky
+        with pytest.raises(ValueError, match='but dy is of type'):
+            self.imviz.offset_by(0.1, dsky)
 
-        # Cannot pass Quantity without specifying skycoord_offset=True
-        with pytest.raises(u.UnitConversionError):
-            self.imviz.offset_to(dsky, dsky)
+        # Cannot pass invalid Quantity
+        with pytest.raises(u.UnitTypeError):
+            self.imviz.offset_by(dsky, 1 * u.AA)
+        with pytest.raises(u.UnitTypeError):
+            self.imviz.offset_by(1 * u.AA, dsky)
 
         # Blink to the one without WCS
         self.viewer.blink_once()
@@ -54,7 +62,7 @@ class TestCenterOffset(BaseImviz_WCS_NoWCS):
             self.imviz.center_on(sky)
 
         with pytest.raises(AttributeError, match='does not have a valid WCS'):
-            self.imviz.offset_to(dsky, dsky, skycoord_offset=True)
+            self.imviz.offset_by(dsky, dsky)
 
 
 class TestMarkers(BaseImviz_WCS_NoWCS):
