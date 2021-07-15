@@ -280,33 +280,60 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
 
         return SpectralCube(new_data, wcs=wcs, meta=meta)
 
+    # If we're given a string, repeat it for each object
     if isinstance(data_labels, str):
-        data_labels = [data_labels]
+        data_labels = [f"{data_labels} {i}" for i in range(len(data_obj))]
 
     # Coerce into list if needed
     if not isinstance(data_obj, (list, tuple, SpectrumCollection)):
         data_obj = [data_obj]
 
-    data_obj = [_parse_as_cube(x) if _check_is_file(x) else x for x in data_obj]
-
-    if data_labels is None:
-        data_labels = [f"2D Spectrum {i}" for i in range(len(data_obj))]
-    elif len(data_obj) != len(data_labels):
-        data_labels = [f"{data_labels} {i}" for i in range(len(data_obj))]
-
     with app.data_collection.delay_link_manager_update():
 
-        for i in range(len(data_obj)):
-            app.add_data(data_obj[i], data_labels[i], notify_done=False)
+        for index, data in enumerate(data_obj):
+            # If we got a filepath, try to open it the ways we know how
+            if _check_is_file(data):
+                try:
+                    data = Spectrum1D.read(data)
+                except IORegistryError:
+                    try:
+                        data = SpectrumList.read(data)
+                        return mos_spec2d_parser(app, data, data_labels, add_to_table, show_in_viewer)
+                    except IORegistryError:
+                        data = _parse_as_cube(data)
+            # If not, let's try to load it directly and see if
+            # Glue-Astronomy has a translator for it
 
-        if add_to_table:
-            _add_to_table(app, data_labels, '2D Spectra')
+            # Initialize error var in case we get one so we can send it upstream
+            e = None
+            # Clear the previous label
+            label = None
+            # Get the corresponding label for this data product
+            try:
+                label = data_labels[index]
+            except Exception as e:
+                if type(e) is IndexError:
+                    # If we only ever got one label, duplicate it with the index
+                    if len(data_labels) == 1:
+                        label = f"{data_labels} {index}"
+
+            if not label:
+                label = f"2D Spectrum {index}"
+
+            app.data_collection[label] = data
 
     if show_in_viewer:
         if len(data_labels) > 1:
             raise ValueError("More than one data label provided, unclear " +
                              "which to show in viewer")
         app.add_data_to_viewer("spectrum-2d-viewer", data_labels[0])
+
+    if add_to_table:
+        _add_to_table(app, data_labels, '2D Spectra')
+
+    # If we got an error, send it upstream to notify the user
+    if e:
+        return e
 
 
 def _load_fits_image_from_filename(filename, app):
