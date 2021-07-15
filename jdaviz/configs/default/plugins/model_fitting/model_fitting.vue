@@ -13,6 +13,7 @@
                 persistent-hint
               ></v-select>
             </v-col>
+          </v-row>
         </v-container>
       </v-card-text>
       <v-divider></v-divider>
