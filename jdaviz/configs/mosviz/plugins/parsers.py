@@ -181,6 +181,12 @@ def mos_spec1d_parser(app, data_obj, data_labels=None):
     data_labels : str, optional
         The label applied to the glue data component.
     """
+    # If providing a file path, parse it using the specutils io tooling
+    if _check_is_file(data_obj):
+        try:
+            data_obj = [Spectrum1D.read(data_obj)]
+        except IORegistryError:
+            data_obj = SpectrumList.read(data_obj)
 
     if isinstance(data_labels, str):
         data_labels = [data_labels]
