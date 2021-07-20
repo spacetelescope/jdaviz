@@ -22,7 +22,7 @@ from glue.core.link_helpers import LinkSame
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
 from glue.core.state_objects import State
-from glue.core.subset import Subset
+from glue.core.subset import Subset, RangeSubsetState, RoiSubsetState
 from glue_jupyter.app import JupyterApplication
 from glue_jupyter.state_traitlets_helpers import GlueState
 from ipyvuetify import VuetifyTemplate
@@ -453,7 +453,7 @@ class Application(VuetifyTemplate, HubListener):
 
         return data
 
-    def get_subsets_from_viewer(self, viewer_reference, data_label=None):
+    def get_subsets_from_viewer(self, viewer_reference, data_label=None, subset_type=None):
         """
         Returns the subsets of a specified viewer converted to astropy regions
         objects.
@@ -496,6 +496,12 @@ class Application(VuetifyTemplate, HubListener):
                 # TODO: Remove this when Imviz support round-tripping, see
                 # https://github.com/spacetelescope/jdaviz/pull/721
                 if viewer_reference == 'viewer-1' and not key.startswith('Subset'):
+                    continue
+
+                # Skip spatial or spectral subsets if only the other is wanted
+                if subset_type == "spectral" and isinstance(value.subset_state, RoiSubsetState):
+                    continue
+                elif subset_type == "spatial" and isinstance(value.subset_state, RangeSubsetState):
                     continue
 
                 # Range selection on a profile is currently not supported in
