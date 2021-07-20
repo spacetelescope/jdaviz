@@ -24,7 +24,7 @@
             ref="new_subset_angle"
             label="New Angle"
             v-model="new_subset_angle"
-            v-show="has_subset_angle"
+            v-show="has_angle"
             hint="New angle in degrees for subset."
             persistent-hint
           ></v-text-field>
