@@ -92,7 +92,8 @@ class Collapse(TemplateMixin):
 
     def vue_list_subsets(self, event):
         """Populate the spectral subset selection dropdown"""
-        temp_subsets = self.app.get_subsets_from_viewer("spectrum-viewer")
+        temp_subsets = self.app.get_subsets_from_viewer("spectrum-viewer",
+                                                        subset_type="spectral")
         temp_list = ["None"]
         temp_dict = {}
         # Attempt to filter out spatial subsets

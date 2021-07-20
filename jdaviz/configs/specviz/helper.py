@@ -75,7 +75,7 @@ class SpecViz(ConfigHelper, LineListMixin):
             Mapping from the names of the subsets to the subsets expressed
             as `specutils.SpectralRegion` objects.
         """
-        regions = self.app.get_subsets_from_viewer("spectrum-viewer")
+        regions = self.app.get_subsets_from_viewer("spectrum-viewer", subset_type="spectral")
 
         spec_regs = {}
 
