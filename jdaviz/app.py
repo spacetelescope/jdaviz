@@ -474,6 +474,10 @@ class Application(VuetifyTemplate, HubListener):
         data_label : str, optional
             Optionally provide a label to retrieve a specific data set from the
             viewer instance.
+        subset_type : str, optional
+            Optionally specify either "spectral" or "spatial" to return only
+            subsets created in a profile (spectrum) viewer or image viewer,
+            respectively.
 
         Returns
         -------
