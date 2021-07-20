@@ -18,17 +18,12 @@ def test_region_from_subset_2d(jdaviz_app):
     data = Data(flux=np.ones((128, 128)), label='Test 2D Flux')
     jdaviz_app.data_collection.append(data)
 
-    subset_state = RoiSubsetState(data.pixel_component_ids[1],
-                                  data.pixel_component_ids[0],
-                                  RectangularROI(1, 3.5, -0.2, 3.3))
-
     jdaviz_app.add_data_to_viewer('flux-viewer', 'Test 2D Flux')
 
-    jdaviz_app.data_collection.new_subset_group(
-        subset_state=subset_state, label='rectangular')
+    jdaviz_app.get_viewer('flux-viewer').apply_roi(RectangularROI(1, 3.5, -0.2, 3.3))
 
     subsets = jdaviz_app.get_subsets_from_viewer('flux-viewer')
-    reg = subsets.get('rectangular')
+    reg = subsets.get('Subset 1')
 
     assert len(subsets) == 1
     assert isinstance(reg, RectanglePixelRegion)
@@ -44,17 +39,12 @@ def test_region_from_subset_3d(jdaviz_app):
     data = Data(flux=np.ones((256, 128, 128)), label='Test 3D Flux')
     jdaviz_app.data_collection.append(data)
 
-    subset_state = RoiSubsetState(data.pixel_component_ids[1],
-                                  data.pixel_component_ids[0],
-                                  RectangularROI(1, 3.5, -0.2, 3.3))
-
     jdaviz_app.add_data_to_viewer('flux-viewer', 'Test 3D Flux')
 
-    jdaviz_app.data_collection.new_subset_group(
-        subset_state=subset_state, label='rectangular')
+    jdaviz_app.get_viewer('flux-viewer').apply_roi(RectangularROI(1, 3.5, -0.2, 3.3))
 
     subsets = jdaviz_app.get_subsets_from_viewer('flux-viewer')
-    reg = subsets.get('rectangular')
+    reg = subsets.get('Subset 1')
 
     assert len(subsets) == 1
     assert isinstance(reg, RectanglePixelRegion)
@@ -96,6 +86,7 @@ def test_region_spectral_spatial(jdaviz_app, spectral_cube_wcs):
     jdaviz_app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(1, 3.5))
 
     flux_viewer = jdaviz_app.get_viewer("flux-viewer")
+    # We set the active tool here to trigger a reset of the Subset state to "Create new"
     flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['bqplot:rectangle']
     flux_viewer.apply_roi(RectangularROI(1, 3.5, -0.2, 3.3))
 
