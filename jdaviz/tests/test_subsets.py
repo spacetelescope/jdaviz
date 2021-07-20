@@ -2,7 +2,6 @@ import numpy as np
 import pytest
 from glue.core import Data
 from glue.core.roi import RectangularROI, XRangeROI
-from glue.core.subset import RoiSubsetState
 from numpy.testing import assert_allclose
 from regions import RectanglePixelRegion
 
