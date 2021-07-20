@@ -27,7 +27,7 @@ review this pull request. -->
 This checklist is meant to remind the package maintainer(s) who will review this pull request of some common things to look for. This list is not exhaustive.
 
 - [ ] Are two approvals required? Branch protection rule does not check for the second approval. If a second approval is not necessary, please apply the `trivial` label.
-- [ ] Do the proposed changes actually accomplish desired goals?
+- [ ] Do the proposed changes actually accomplish desired goals? Also manually run the affected example notebooks, if necessary.
 - [ ] Do the proposed changes follow the [STScI Style Guides](https://github.com/spacetelescope/style-guides)?
 - [ ] Are tests added/updated as required? If so, do they follow the [STScI Style Guides](https://github.com/spacetelescope/style-guides)?
 - [ ] Are docs added/updated as required? If so, do they follow the [STScI Style Guides](https://github.com/spacetelescope/style-guides)?
