@@ -210,6 +210,84 @@ class Imviz(ConfigHelper):
                 viewer.state.y_max = viewer.state.y_min + height
 
     @property
+    def zoom_level(self):
+        """Zoom level:
+
+        * 1 means real-pixel-size.
+        * 2 means zoomed in by a factor of 2.
+        * 0.5 means zoomed out by a factor of 2.
+        * 'fit' resets the zoom.
+
+        """
+        viewer = self.app.get_viewer("viewer-1")
+        i_top = get_top_layer_index(viewer)
+        image = viewer.layers[i_top].layer
+        nx = image.shape[viewer.state.x_att.axis]
+        ny = image.shape[viewer.state.y_att.axis]
+        zoom_x = nx / (viewer.state.x_max - viewer.state.x_min)
+        zoom_y = ny / (viewer.state.y_max - viewer.state.y_min)
+
+        return max(zoom_x, zoom_y)  # Similar to Ginga get_scale()
+
+    # Loosely based on glue/viewers/image/state.py
+    @zoom_level.setter
+    def zoom_level(self, val):
+        if ((not isinstance(val, (int, float)) and val != 'fit') or
+                (isinstance(val, (int, float)) and val <= 0)):
+            raise ValueError(f'Unsupported zoom level: {val}')
+
+        viewer = self.app.get_viewer("viewer-1")
+        if (viewer.state.reference_data is None or viewer.state.x_att is None
+                or viewer.state.y_att is None):
+            return
+
+        # Want to zoom what is actually visible.
+        # Zoom on X and Y will auto-adjust.
+        i_top = get_top_layer_index(viewer)
+        image = viewer.layers[i_top].layer
+        nx = image.shape[viewer.state.x_att.axis]
+
+        if val == 'fit':
+            # Similar to ImageViewerState.reset_limits() in Glue.
+            new_x_min = 0
+            new_x_max = nx
+        else:
+            width = viewer.state.x_max - viewer.state.x_min
+            cur_xcen = viewer.state.x_min + (width * 0.5)
+            new_dx = nx * 0.5 / val
+            new_x_min = cur_xcen - new_dx
+            new_x_max = cur_xcen + new_dx
+
+        with delay_callback(viewer.state, 'x_min', 'x_max'):
+            viewer.state.x_min = new_x_min - 0.5
+            viewer.state.x_max = new_x_max - 0.5
+
+        # We need to adjust the limits in here to avoid triggering all
+        # the update events then changing the limits again.
+        viewer.state._adjust_limits_aspect()
+
+    # Discussion on why we need two different ways to set zoom at
+    # https://github.com/astropy/astrowidgets/issues/144
+    def zoom(self, val):
+        """Zoom in or out by the given factor.
+
+        Parameters
+        ----------
+        val : int or float
+            The zoom level to zoom the image.
+            See `zoom_level`.
+
+        Raises
+        ------
+        ValueError
+            Invalid zoom factor.
+
+        """
+        if not isinstance(val, (int, float)):
+            raise ValueError(f"zoom only accepts int or float but got '{val}'")
+        self.zoom_level = self.zoom_level * val
+
+    @property
     def marker(self):
         """Marker to use.
 
