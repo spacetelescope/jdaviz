@@ -252,8 +252,7 @@ class Imviz(ConfigHelper):
             new_x_min = 0
             new_x_max = nx
         else:
-            width = viewer.state.x_max - viewer.state.x_min
-            cur_xcen = viewer.state.x_min + (width * 0.5)
+            cur_xcen = (viewer.state.x_min + viewer.state.x_max) * 0.5
             new_dx = nx * 0.5 / val
             new_x_min = cur_xcen - new_dx
             new_x_max = cur_xcen + new_dx
