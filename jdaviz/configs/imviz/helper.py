@@ -216,12 +216,13 @@ class Imviz(ConfigHelper):
         * 1 means real-pixel-size.
         * 2 means zoomed in by a factor of 2.
         * 0.5 means zoomed out by a factor of 2.
-        * 'fit' resets the zoom.
+        * 'fit' means zoomed to fit the whole image width into display.
 
         """
         viewer = self.app.get_viewer("viewer-1")
-        i_top = get_top_layer_index(viewer)
-        image = viewer.layers[i_top].layer
+        image = viewer.state.reference_data
+
+        # TODO: Need to fix formula to use "real pixel size"
         nx = image.shape[viewer.state.x_att.axis]
         ny = image.shape[viewer.state.y_att.axis]
         zoom_x = nx / (viewer.state.x_max - viewer.state.x_min)
@@ -237,14 +238,11 @@ class Imviz(ConfigHelper):
             raise ValueError(f'Unsupported zoom level: {val}')
 
         viewer = self.app.get_viewer("viewer-1")
-        if (viewer.state.reference_data is None or viewer.state.x_att is None
-                or viewer.state.y_att is None):
+        image = viewer.state.reference_data
+        if image is None or viewer.state.x_att is None or viewer.state.y_att is None:
             return
 
-        # Want to zoom what is actually visible.
         # Zoom on X and Y will auto-adjust.
-        i_top = get_top_layer_index(viewer)
-        image = viewer.layers[i_top].layer
         nx = image.shape[viewer.state.x_att.axis]
 
         if val == 'fit':
@@ -252,6 +250,7 @@ class Imviz(ConfigHelper):
             new_x_min = 0
             new_x_max = nx
         else:
+            # TODO: Need to fix formula to use "real pixel size"
             cur_xcen = (viewer.state.x_min + viewer.state.x_max) * 0.5
             new_dx = nx * 0.5 / val
             new_x_min = cur_xcen - new_dx
