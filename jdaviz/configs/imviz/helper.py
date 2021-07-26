@@ -220,13 +220,13 @@ class Imviz(ConfigHelper):
 
         """
         viewer = self.app.get_viewer("viewer-1")
-        image = viewer.state.reference_data
+        if viewer.shape is None:
+            raise ValueError('Viewer is still loading, try again later')
 
-        # TODO: Need to fix formula to use "real pixel size"
-        nx = image.shape[viewer.state.x_att.axis]
-        ny = image.shape[viewer.state.y_att.axis]
-        zoom_x = nx / (viewer.state.x_max - viewer.state.x_min)
-        zoom_y = ny / (viewer.state.y_max - viewer.state.y_min)
+        screenx = viewer.shape[1]
+        screeny = viewer.shape[0]
+        zoom_x = screenx / (viewer.state.x_max - viewer.state.x_min)
+        zoom_y = screeny / (viewer.state.y_max - viewer.state.y_min)
 
         return max(zoom_x, zoom_y)  # Similar to Ginga get_scale()
 
@@ -239,20 +239,18 @@ class Imviz(ConfigHelper):
 
         viewer = self.app.get_viewer("viewer-1")
         image = viewer.state.reference_data
-        if image is None or viewer.state.x_att is None or viewer.state.y_att is None:
+        if (image is None or viewer.shape is None or
+                viewer.state.x_att is None or viewer.state.y_att is None):
             return
 
         # Zoom on X and Y will auto-adjust.
-        nx = image.shape[viewer.state.x_att.axis]
-
         if val == 'fit':
             # Similar to ImageViewerState.reset_limits() in Glue.
             new_x_min = 0
-            new_x_max = nx
+            new_x_max = image.shape[viewer.state.x_att.axis]
         else:
-            # TODO: Need to fix formula to use "real pixel size"
             cur_xcen = (viewer.state.x_min + viewer.state.x_max) * 0.5
-            new_dx = nx * 0.5 / val
+            new_dx = viewer.shape[1] * 0.5 / val
             new_x_min = cur_xcen - new_dx
             new_x_max = cur_xcen + new_dx
 
