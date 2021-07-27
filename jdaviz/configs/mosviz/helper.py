@@ -92,7 +92,8 @@ class MosViz(ConfigHelper):
             if val != old_val:
                 setattr(scales['x'], name, val)
 
-    def load_data(self, spectra_1d, spectra_2d, images=None, spectra_1d_label=None,
+    def load_data(self, directory=None, instrument=None, spectra_1d=None,
+                  spectra_2d=None, images=None, spectra_1d_label=None,
                   spectra_2d_label=None, images_label=None):
         """
         Load and parse a set of MOS spectra and images
@@ -129,11 +130,23 @@ class MosViz(ConfigHelper):
             ``images``. Can be a list of strings representing data labels
             for each item in ``data_obj`` if  ``data_obj`` is a list.
         """
-
-        self.load_metadata(images)
-        self.load_images(images, images_label)
-        self.load_2d_spectra(spectra_2d, spectra_2d_label)
-        self.load_1d_spectra(spectra_1d, spectra_1d_label)
+        if directory is not None and instrument is not None:
+            if instrument.lower() is "nirspec":
+                super().load_data(directory, "mosviz-directory-parser")
+            elif instrument.lower() is "niriss":
+                self.load_niriss_data(directory)
+        elif directory is not None:
+            # Load a file from the directory and check the INSTRUME extension
+            pass
+        elif spectra_1d is not None and spectra_2d is not None\
+                and images is not None and spectra_1d_label is not None\
+                and spectra_2d_label is not None and images_label is not None:
+            self.load_metadata(images)
+            self.load_images(images, images_label)
+            self.load_2d_spectra(spectra_2d, spectra_2d_label)
+            self.load_1d_spectra(spectra_1d, spectra_1d_label)
+        else:
+            print("Set valid values")
 
     def load_metadata(self, data_obj):
         """

@@ -87,6 +87,11 @@ def _fields_from_ecsv(fname, fields, delimiter=","):
     return parsed_fields
 
 
+@data_parser_registry("mosviz-directory-parser")
+def mos_directory_parser(app, data_obj, data_labels=None):
+    pass
+
+
 @data_parser_registry("mosviz-spec1d-parser")
 def mos_spec1d_parser(app, data_obj, data_labels=None):
     """
