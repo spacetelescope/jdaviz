@@ -32,7 +32,7 @@ class BqplotMatchWCS(BqplotPanZoomMode):
     icon = os.path.join(ICON_DIR, 'pan_wcs.svg')
     tool_id = 'bqplot:panzoomwcs'
     action_text = 'Pan, matching WCS between viwers'
-    tool_tip = 'Pan and Zoom in this viewer to see the same regions in other viewers'
+    tool_tip = 'Pan (click-drag) and Zoom (scroll) in this viewer to see the same regions in other viewers'
 
     def activate(self):
 
