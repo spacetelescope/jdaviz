@@ -220,7 +220,7 @@ class Imviz(ConfigHelper):
 
         """
         viewer = self.app.get_viewer("viewer-1")
-        if viewer.shape is None:
+        if viewer.shape is None:  # pragma: no cover
             raise ValueError('Viewer is still loading, try again later')
 
         screenx = viewer.shape[1]
@@ -240,7 +240,7 @@ class Imviz(ConfigHelper):
         viewer = self.app.get_viewer("viewer-1")
         image = viewer.state.reference_data
         if (image is None or viewer.shape is None or
-                viewer.state.x_att is None or viewer.state.y_att is None):
+                viewer.state.x_att is None or viewer.state.y_att is None):  # pragma: no cover
             return
 
         # Zoom on X and Y will auto-adjust.
