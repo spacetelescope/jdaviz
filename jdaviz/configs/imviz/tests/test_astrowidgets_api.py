@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 from astropy import units as u
 from astropy.table import Table
@@ -27,6 +28,20 @@ class TestCenterOffset(BaseImviz_WCS_NoWCS):
         assert_allclose(self.viewer.state.x_max, 7)
         assert_allclose(self.viewer.state.y_max, 5)
 
+        # Out-of-bounds centering should be no-op
+        self.imviz.center_on((-1, 99999))
+        assert_allclose(self.viewer.state.x_min, -3)
+        assert_allclose(self.viewer.state.y_min, -5)
+        assert_allclose(self.viewer.state.x_max, 7)
+        assert_allclose(self.viewer.state.y_max, 5)
+
+        # Sometimes invalid WCS also gives such output, should be no-op
+        self.imviz.center_on((np.array(np.nan), np.array(np.nan)))
+        assert_allclose(self.viewer.state.x_min, -3)
+        assert_allclose(self.viewer.state.y_min, -5)
+        assert_allclose(self.viewer.state.x_max, 7)
+        assert_allclose(self.viewer.state.y_max, 5)
+
     def test_center_offset_sky(self):
         # Blink to the one with WCS because the last loaded data is shown.
         self.viewer.blink_once()
@@ -39,10 +54,10 @@ class TestCenterOffset(BaseImviz_WCS_NoWCS):
         assert_allclose(self.viewer.state.y_max, 6)
 
         dsky = 0.1 * u.arcsec
-        self.imviz.offset_by(dsky, dsky)
-        assert_allclose(self.viewer.state.x_min, -5.100000000142565)
+        self.imviz.offset_by(-dsky, dsky)
+        assert_allclose(self.viewer.state.x_min, -4.9)
         assert_allclose(self.viewer.state.y_min, -3.90000000002971)
-        assert_allclose(self.viewer.state.x_max, 4.899999999857435)
+        assert_allclose(self.viewer.state.x_max, 5.1)
         assert_allclose(self.viewer.state.y_max, 6.09999999997029)
 
         # Cannot mix pixel with sky

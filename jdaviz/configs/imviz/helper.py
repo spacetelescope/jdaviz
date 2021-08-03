@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 import warnings
 from copy import deepcopy
 
@@ -119,10 +120,10 @@ class Imviz(ConfigHelper):
 
         """
         viewer = self.app.get_viewer("viewer-1")
+        i_top = get_top_layer_index(viewer)
+        image = viewer.layers[i_top].layer
 
         if isinstance(point, SkyCoord):
-            i_top = get_top_layer_index(viewer)
-            image = viewer.layers[i_top].layer
             if data_has_valid_wcs(image):
                 try:
                     pix = image.coords.world_to_pixel(point)  # 0-indexed X, Y
@@ -136,9 +137,11 @@ class Imviz(ConfigHelper):
         else:
             pix = point
 
-        # Disallow centering outside of display.
-        if (pix[0] < viewer.state.x_min or pix[0] > viewer.state.x_max
-                or pix[1] < viewer.state.y_min or pix[1] > viewer.state.y_max):  # pragma: no cover
+        # Disallow centering outside of display; image.shape is (Y, X)
+        eps = sys.float_info.epsilon
+        if (not np.all(np.isfinite(pix))
+                or pix[0] < -eps or pix[0] >= (image.shape[1] + eps)
+                or pix[1] < -eps or pix[1] >= (image.shape[0] + eps)):
             self.app.hub.broadcast(SnackbarMessage(
                 f'{pix} is out of bounds', color="warning", sender=self.app))
             return
