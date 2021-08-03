@@ -130,14 +130,17 @@ class MosViz(ConfigHelper):
             ``images``. Can be a list of strings representing data labels
             for each item in ``data_obj`` if  ``data_obj`` is a list.
         """
+        print("load data")
         if directory is not None and instrument is not None:
-            if instrument.lower() is "nirspec":
-                super().load_data(directory, "mosviz-directory-parser")
-            elif instrument.lower() is "niriss":
+            print(f"direc {instrument.lower()}")
+            if instrument.lower() == "nirspec":
+                print("here")
+                super().load_data(directory, "mosviz-nirspec-directory-parser")
+            elif instrument.lower() == "niriss":
                 self.load_niriss_data(directory)
         elif directory is not None:
             # Load a file from the directory and check the INSTRUME extension
-            pass
+            super().load_data(directory, "mosviz-directory-parser")
         elif spectra_1d is not None and spectra_2d is not None\
                 and images is not None and spectra_1d_label is not None\
                 and spectra_2d_label is not None and images_label is not None:

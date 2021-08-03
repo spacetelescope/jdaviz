@@ -1,3 +1,4 @@
+import os
 from glue.core.data import Data
 
 from jdaviz.core.registries import data_parser_registry
@@ -13,6 +14,7 @@ import logging
 from astropy.wcs import WCS
 from asdf.fits_embed import AsdfInFits
 from pathlib import Path
+import glob
 
 __all__ = ['mos_spec1d_parser', 'mos_spec2d_parser', 'mos_image_parser']
 
@@ -89,7 +91,61 @@ def _fields_from_ecsv(fname, fields, delimiter=","):
 
 @data_parser_registry("mosviz-directory-parser")
 def mos_directory_parser(app, data_obj, data_labels=None):
-    pass
+
+    if os.path.isdir((Path(data_obj) / 'mosviz_nirspec_data_0.3' / 'level3')):
+        level3_path = (Path(data_obj) / 'mosviz_nirspec_data_0.3' / 'level3')
+    # elif os.path.isdir(Path(data_obj) / 'NIRISS_for_parser_p0171'):
+    #     level3_path = (Path(data_obj) / 'NIRISS_for_parser_p0171')
+    else:
+        level3_path = (Path(data_obj))
+
+    mos_niriss_parser(app, data_obj, data_labels)
+
+    for file_path in glob.iglob(str(level3_path / '*')):
+        print(file_path)
+        if ".fits" not in file_path:
+            continue
+        with fits.open(file_path, memmap=False) as temp:
+            # TODO: Remove this once valid SRCTYPE values are present in all headers
+            for hdu in temp:
+                if "INSTRUME" in hdu.header:
+                    if hdu.header["INSTRUME"].lower() == "niriss":
+                        print(type(data_obj), data_obj)
+                        mos_niriss_parser(app, data_obj, data_labels)
+                        return
+                    elif hdu.header["INSTRUME"].lower() == "nirspec":
+                        mos_nirspec_directory_parser(app, level3_path, data_labels)
+                        return
+                    else:
+                        continue
+
+
+@data_parser_registry("mosviz-nirspec-directory-parser")
+def mos_nirspec_directory_parser(app, data_obj, data_labels=None):
+
+    spectra_1d = []
+    spectra_2d = []
+
+    level3_path = (Path(data_obj) / 'mosviz_nirspec_data_0.3' / 'level3')
+    for file_path in glob.iglob(str(level3_path / '*')):
+        if 'x1d' in file_path:
+            spectra_1d.append(file_path)
+        elif 's2d' in file_path:
+            spectra_2d.append(file_path)
+
+    mos_spec1d_parser(app, spectra_1d)
+    mos_spec2d_parser(app, spectra_2d)
+
+    # TODO: Once the number of images in a directory matches the number of
+    # TODO: spectra, this can be uncommented
+    # if os.path.isdir(Path(str(level3_path / 'mosviz_cutouts'))):
+    #     images_dir = Path(str(level3_path / 'mosviz_cutouts'))
+    #     images = [file_path for file_path in glob.iglob(str(images_dir / '*'))]
+    #     mos_image_parser(app, images, data_labels)
+    # elif os.path.isdir(Path(str(level3_path / 'cutouts'))):
+    #     images_dir = Path(str(level3_path / 'cutouts'))
+    #     images = [file_path for file_path in glob.iglob(str(images_dir / '*'))]
+    #     mos_image_parser(app, images, data_labels)
 
 
 @data_parser_registry("mosviz-spec1d-parser")
@@ -352,6 +408,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
     """
 
     p = Path(data_dir)
+    print(type(data_dir), data_dir)
     if not p.is_dir():
         raise ValueError("{} is not a valid directory path".format(data_dir))
     source_cat = sorted(list(p.glob("{}*_direct_*_cat.ecsv".format(obs_label))))
@@ -373,7 +430,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
     # Convert from pathlib Paths back to strings
     for key in file_lists:
         file_lists[key] = [str(x) for x in file_lists[key]]
-
+    print(file_lists)
     _warn_if_not_found(app, file_lists)
 
     # Parse relevant information from source catalog
@@ -504,7 +561,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                     else:
                         hdu.header["SRCTYPE"] = "EXTENDED"
 
-                specs = SpectrumList.read(temp)
+                specs = SpectrumList.read(temp, format="JWST x1d multi")
                 filter_name = [x
                                for x in fname.split("/")[-1].split("_")
                                if x[0] == "F" or x[0] == "f"][0]
