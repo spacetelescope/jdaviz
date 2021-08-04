@@ -23,6 +23,8 @@ class MosViz(ConfigHelper):
         spec2d = self.app.get_viewer("spectrum-2d-viewer")
         spec2d.scales['x'].observe(self._update_spec1d_x_axis)
 
+        self._shared_image = False
+
     def _extend_world(self, spec1d, ext):
         # Extend 1D spectrum world axis to enable panning (within reason) past
         # the bounds of data
@@ -130,8 +132,17 @@ class MosViz(ConfigHelper):
             for each item in ``data_obj`` if  ``data_obj`` is a list.
         """
 
-        self.load_metadata(images)
-        self.load_images(images, images_label)
+        # If we have a single image for multiple spectra, tell the table viewer
+        if isinstance(images, str) and isinstance(spectra_1d, (list, tuple)):
+            self._shared_image = True
+            self.app.get_viewer('table-viewer')._shared_image = True
+            self.load_images(images, images_label, share_image = len(spectra_1d))
+        else:
+            self.load_images(images, images_label)
+
+        if images is not None and not self._shared_image:
+            self.load_metadata(images)
+
         self.load_2d_spectra(spectra_2d, spectra_2d_label)
         self.load_1d_spectra(spectra_1d, spectra_1d_label)
 
@@ -186,7 +197,7 @@ class MosViz(ConfigHelper):
     def load_niriss_data(self, data_obj, data_labels=None):
         super().load_data(data_obj, parser_reference="mosviz-niriss-parser")
 
-    def load_images(self, data_obj, data_labels=None):
+    def load_images(self, data_obj, data_labels=None, share_image=0):
         """
         Load and parse a set of image objects. If providing a file path, it
         must be readable by ``CCDData`` io registries.
@@ -203,7 +214,7 @@ class MosViz(ConfigHelper):
             for each item in ``data_obj`` if  ``data_obj`` is a list.
         """
         super().load_data(data_obj, parser_reference="mosviz-image-parser",
-                          data_labels=data_labels)
+                          data_labels=data_labels, share_image=share_image)
 
     def add_column(self, data, column_name=None):
         """

@@ -46,6 +46,8 @@ def _add_to_table(app, data, comp_label):
         mos_table.add_component(data, comp_label)
 
 
+
+
 def _check_is_file(path):
     return isinstance(path, str) and Path(path).is_file()
 
@@ -237,9 +239,9 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
 
 
 @data_parser_registry("mosviz-image-parser")
-def mos_image_parser(app, data_obj, data_labels=None):
+def mos_image_parser(app, data_obj, data_labels=None, share_image=0):
     """
-    Attempts to parse an image-like object.
+    Attempts to parse an image-like object or list of images.
 
     Parameters
     ----------
@@ -250,15 +252,20 @@ def mos_image_parser(app, data_obj, data_labels=None):
         the mosviz table.
     data_labels : str, optional
         The label applied to the glue data component.
+    share_image : int, optional
+        If 0, images are treated as applying to individual spectra. If non-zero,
+        a single image will be shared by multiple spectra. 
     """
-    # Parse and load the 2d images. `CCData` objects require a unit be defined
-    #  in the fits header, however, if none is provided, use a fallback and
-    #  raise an error.
 
     if data_obj is None:
         return
 
     def _parse_as_image(path):
+        """
+        Parse and load a 2D image. `CCData` objects require a unit be defined
+        in the fits header - if none is provided, use a fallback and
+        raise an error.
+        """
         with fits.open(path) as hdulist:
             if 'BUNIT' not in hdulist[0].header:
                 logging.warning("No 'BUNIT' defined in the header, using 'Jy'.")
@@ -287,12 +294,24 @@ def mos_image_parser(app, data_obj, data_labels=None):
                     for x in data_obj]
 
     if data_labels is None:
-        data_labels = [f"Image {i}" for i in range(len(data_obj))]
-    elif len(data_obj) != len(data_labels):
-        data_labels = [f"{data_labels} {i}" for i in range(len(data_obj))]
+        if share_image:
+            data_labels = ["Shared Image",]
+        else:
+            data_labels = [f"Image {i}" for i in range(len(data_obj))]
+    
+    elif isinstance(data_labels, str):
+        if share_image:
+            data_labels = [data_labels,]
+        else:
+            data_labels = [f"{data_labels} {i}" for i in range(len(data_obj))]
+
 
     for i in range(len(data_obj)):
         app.data_collection[data_labels[i]] = data_obj[i]
+
+    if share_image:
+        # Associate this image with multiple spectra
+        data_labels *= share_image
 
     _add_to_table(app, data_labels, 'Images')
 
@@ -316,6 +335,8 @@ def mos_meta_parser(app, data_obj):
     # Coerce into list-like object
     if not hasattr(data_obj, '__len__'):
         data_obj = [data_obj]
+    elif isinstance(data_obj, str):
+        data_obj = [fits.open(data_obj),]
     else:
         data_obj = [fits.open(x) if _check_is_file(x)
                     else x for x in data_obj]
