@@ -78,13 +78,10 @@ def main(filename, layout='default', browser='default', theme='light', verbosity
     # easily accessed e.g. in the file load dialog.
     os.environ['JDAVIZ_START_DIR'] = start_dir
 
-    # Also keep track of desired verbosity.
-    os.environ['JDAVIZ_VERBOSITY'] = verbosity
-
     nbdir = tempfile.mkdtemp()
 
     with open(os.path.join(nbdir, 'notebook.ipynb'), 'w') as nbf:
-        nbf.write(notebook_template.replace('DATA_FILENAME', filepath).strip())
+        nbf.write(notebook_template.replace('DATA_FILENAME', filepath).replace('JDAVIZ_VERBOSITY', verbosity).strip())  # noqa: E501
 
     os.chdir(nbdir)
 

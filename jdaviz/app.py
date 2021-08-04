@@ -131,9 +131,7 @@ class Application(VuetifyTemplate, HubListener):
 
     def __init__(self, configuration=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        # verbosity: viola will set it via env var that is already validated
-        self._verbosity = os.environ.get('JDAVIZ_VERBOSITY', 'info')
+        self._verbosity = 'info'
 
         # Generate a state object for this application to maintain the state of
         #  the user interface.
