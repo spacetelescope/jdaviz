@@ -37,7 +37,13 @@ CONFIGS_DIR = os.path.join(os.path.dirname(__file__), 'configs')
               show_default=True,
               type=click.Choice(['light', 'dark']),
               help="Theme to use for application")
-def main(filename, layout='default', browser='default', theme='light'):
+@click.option('--verbosity',
+              default='info',
+              nargs=1,
+              show_default=True,
+              type=click.Choice(['debug', 'info', 'warning', 'error']),
+              help="Verbosity of the application")
+def main(filename, layout='default', browser='default', theme='light', verbosity='info'):
     """
     Start a JDAViz application instance with data loaded from FILENAME.\f
 
@@ -51,6 +57,8 @@ def main(filename, layout='default', browser='default', theme='light'):
         Path to browser executable.
     theme : {'light', 'dark'}
         Theme to use for Voila app or Jupyter Lab.
+    verbosity : {'debug', 'info', 'warning', 'error'}
+        Verbosity of the application.
     """
     # Tornado Webserver py3.8 compatibility hotfix for windows
     if sys.platform == 'win32':
@@ -69,6 +77,9 @@ def main(filename, layout='default', browser='default', theme='light'):
     # Keep track of start directory in environment variable so that it can be
     # easily accessed e.g. in the file load dialog.
     os.environ['JDAVIZ_START_DIR'] = start_dir
+
+    # Also keep track of desired verbosity.
+    os.environ['JDAVIZ_VERBOSITY'] = verbosity
 
     nbdir = tempfile.mkdtemp()
 

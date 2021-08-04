@@ -28,14 +28,17 @@ class ConfigHelper(HubListener):
     app : jdaviz.app.Application or None
         The application object, or if None, creates a new one based on the
         default configuration for this helper.
+    verbosity : {'debug', 'info', 'warning', 'error'}
+        Verbosity of the application.
     """
     _default_configuration = 'default'
 
-    def __init__(self, app=None):
+    def __init__(self, app=None, verbosity='info'):
         if app is None:
             self.app = Application(configuration=self._default_configuration)
         else:
             self.app = app
+        self.app.verbosity = verbosity
 
     def load_data(self, data, parser_reference=None, **kwargs):
         self.app.load_data(data, parser_reference=parser_reference, **kwargs)
