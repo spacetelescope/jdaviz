@@ -104,6 +104,13 @@ class Imviz(ConfigHelper):
             self.app.load_data(
                 data, parser_reference=parser_reference, **kwargs)
 
+    def save(self, filename):
+        """Save out the current image view to given PNG filename."""
+        if not filename.lower().endswith('.png'):
+            filename = filename + '.png'
+        viewer = self.app.get_viewer("viewer-1")
+        viewer.figure.save_png(filename=filename)
+
     def center_on(self, point):
         """Centers the view on a particular point.
 
