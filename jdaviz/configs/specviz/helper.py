@@ -90,7 +90,7 @@ class SpecViz(ConfigHelper, LineListMixin):
                                         ).spectral_axis.unit
                                     )
             except (KeyError, LookupError, AttributeError):
-                unit = u.Unit('count')
+                unit = u.Unit('pixel')
 
             spec_reg = SpectralRegion.from_center(reg.center.x * unit,
                                                   reg.width * unit)
