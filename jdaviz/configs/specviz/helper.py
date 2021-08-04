@@ -80,7 +80,18 @@ class SpecViz(ConfigHelper, LineListMixin):
         spec_regs = {}
 
         for name, reg in regions.items():
-            unit = reg.meta.get("spectral_axis_unit", u.Unit("Angstrom"))
+            try:
+                # Use the region's unit. If N/A, use the reference_data's
+                unit = reg.meta.get("spectral_axis_unit",
+                                    self.get_spectra(
+                                        self.app.get_viewer("spectrum-viewer"
+                                                            ).state.reference_data.label,
+                                        apply_slider_redshift=False
+                                        ).spectral_axis.unit
+                                    )
+            except (KeyError, LookupError, AttributeError):
+                unit = u.Unit('count')
+
             spec_reg = SpectralRegion.from_center(reg.center.x * unit,
                                                   reg.width * unit)
 
