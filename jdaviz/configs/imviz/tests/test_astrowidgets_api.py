@@ -9,6 +9,8 @@ from numpy.testing import assert_allclose
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS
 
 
+# TODO: Remove skip when https://github.com/bqplot/bqplot/issues/1393 is resolved.
+@pytest.mark.skip(reason="Cannot test due to file dialog popup")
 class TestSave(BaseImviz_WCS_NoWCS):
 
     def test_save(self, tmpdir):
