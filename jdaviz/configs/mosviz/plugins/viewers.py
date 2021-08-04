@@ -172,10 +172,10 @@ class MOSVizTableViewer(TableViewer):
 
                     self._selected_data['image-viewer'] = selected_data
 
-                #TODO: If all objects share one large image, zoom to the image. 
+                # TODO: If all objects share one large image, zoom to the image.
                 if self._shared_image:
                     pass
-                    #self.zoom_to_object()
+                    # self.zoom_to_object()
 
     def set_plot_axes(self, *args, **kwargs):
         return

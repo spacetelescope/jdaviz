@@ -133,10 +133,10 @@ class MosViz(ConfigHelper):
         """
 
         # If we have a single image for multiple spectra, tell the table viewer
-        if isinstance(images, str) and isinstance(spectra_1d, (list, tuple)):
+        if not isinstance(images, (list, tuple)) and isinstance(spectra_1d, (list, tuple)):
             self._shared_image = True
             self.app.get_viewer('table-viewer')._shared_image = True
-            self.load_images(images, images_label, share_image = len(spectra_1d))
+            self.load_images(images, images_label, share_image=len(spectra_1d))
         else:
             self.load_images(images, images_label)
 

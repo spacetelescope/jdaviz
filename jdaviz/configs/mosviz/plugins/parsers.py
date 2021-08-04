@@ -46,8 +46,6 @@ def _add_to_table(app, data, comp_label):
         mos_table.add_component(data, comp_label)
 
 
-
-
 def _check_is_file(path):
     return isinstance(path, str) and Path(path).is_file()
 
@@ -254,7 +252,8 @@ def mos_image_parser(app, data_obj, data_labels=None, share_image=0):
         The label applied to the glue data component.
     share_image : int, optional
         If 0, images are treated as applying to individual spectra. If non-zero,
-        a single image will be shared by multiple spectra. 
+        a single image will be shared by multiple spectra so that clicking a
+        different row in the table does not reload the displayed image.
     """
 
     if data_obj is None:
@@ -262,7 +261,7 @@ def mos_image_parser(app, data_obj, data_labels=None, share_image=0):
 
     def _parse_as_image(path):
         """
-        Parse and load a 2D image. `CCData` objects require a unit be defined
+        Parse and load a 2D image. ``CCDData`` objects require a unit be defined
         in the fits header - if none is provided, use a fallback and
         raise an error.
         """
@@ -295,16 +294,15 @@ def mos_image_parser(app, data_obj, data_labels=None, share_image=0):
 
     if data_labels is None:
         if share_image:
-            data_labels = ["Shared Image",]
+            data_labels = ["Shared Image"]
         else:
             data_labels = [f"Image {i}" for i in range(len(data_obj))]
-    
+
     elif isinstance(data_labels, str):
         if share_image:
-            data_labels = [data_labels,]
+            data_labels = [data_labels]
         else:
             data_labels = [f"{data_labels} {i}" for i in range(len(data_obj))]
-
 
     for i in range(len(data_obj)):
         app.data_collection[data_labels[i]] = data_obj[i]
@@ -336,7 +334,7 @@ def mos_meta_parser(app, data_obj):
     if not hasattr(data_obj, '__len__'):
         data_obj = [data_obj]
     elif isinstance(data_obj, str):
-        data_obj = [fits.open(data_obj),]
+        data_obj = [fits.open(data_obj)]
     else:
         data_obj = [fits.open(x) if _check_is_file(x)
                     else x for x in data_obj]
