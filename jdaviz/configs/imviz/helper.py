@@ -321,6 +321,52 @@ class Imviz(ConfigHelper):
         viewer.state.layers[i_top].cmap = cm
 
     @property
+    def stretch_options(self):
+        """List of all available options for image stretching.
+
+        Their ``astropy.visualization`` counterparts are also accepted, as follows:
+
+        * ``'arcsinh'``: ``astropy.visualization.AsinhStretch``
+        * ``'linear'``: ``astropy.visualization.LinearStretch``
+        * ``'log'``: ``astropy.visualization.LogStretch``
+        * ``'sqrt'``: ``astropy.visualization.SqrtStretch``
+
+        """
+        # TODO: Is there a better way to access this in Glue? See glue/viewers/image/state.py
+        return ['arcsinh', 'linear', 'log', 'sqrt']
+
+    @property
+    def stretch(self):
+        """The image stretching algorithm in use."""
+        viewer = self.app.get_viewer("viewer-1")
+        i_top = get_top_layer_index(viewer)
+        return viewer.state.layers[i_top].stretch
+
+    @stretch.setter
+    def stretch(self, val):
+        valid_vals = self.stretch_options
+
+        if isinstance(val, type):  # is a class
+            # Translate astropy.visualization
+            from astropy.visualization import AsinhStretch, LinearStretch, LogStretch, SqrtStretch
+            if issubclass(val, AsinhStretch):
+                val = 'arcsinh'
+            elif issubclass(val, LinearStretch):
+                val = 'linear'
+            elif issubclass(val, LogStretch):
+                val = 'log'
+            elif issubclass(val, SqrtStretch):
+                val = 'sqrt'
+            else:
+                raise ValueError(f"Invalid stretch {val}, must be one of {valid_vals}")
+        elif val not in valid_vals:
+            raise ValueError(f"Invalid stretch '{val}', must be one of {valid_vals}")
+
+        viewer = self.app.get_viewer("viewer-1")
+        i_top = get_top_layer_index(viewer)
+        viewer.state.layers[i_top].stretch = val
+
+    @property
     def marker(self):
         """Marker to use.
 

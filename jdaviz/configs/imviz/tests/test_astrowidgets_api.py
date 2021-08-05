@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 from astropy import units as u
 from astropy.table import Table
+from astropy.visualization import AsinhStretch, LinearStretch, LogStretch, SqrtStretch
 from numpy.testing import assert_allclose
 
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS
@@ -144,27 +145,50 @@ class TestCmapStretchCuts(BaseImviz_WCS_NoWCS):
         with pytest.raises(ValueError, match='Invalid colormap'):
             self.imviz.set_colormap('foo')
 
+    def test_stretch_options(self):
+        assert self.imviz.stretch_options == ['arcsinh', 'linear', 'log', 'sqrt']
+
+    @pytest.mark.parametrize(('vizclass', 'ans'),
+                             [(AsinhStretch, 'asinh'),
+                              (LinearStretch, 'linear'),
+                              (LogStretch, 'log'),
+                              (SqrtStretch, 'sqrt')])
+    def test_stretch_astropy(self, vizclass, ans):
+        self.imviz.stretch = vizclass
+        assert self.imviz.stretch == ans
+
+    def test_invalid_stretch(self):
+        class FakeStretch:
+            pass
+
+        with pytest.raises(ValueError, match='Invalid stretch'):
+            self.imviz.stretch = FakeStretch
+
+        with pytest.raises(ValueError, match='Invalid stretch'):
+            self.imviz.stretch = 'foo'
+
     def test_cmap_stretch_cuts(self):
 
-        # Change colormap on one image
+        # Change colormap, stretch on one image
         self.imviz.set_colormap('viridis')
-
-        # TODO: Change stretch on one image
+        self.imviz.stretch = 'sqrt'
 
         # TODO: Change cut levels on one image
 
         self.viewer.blink_once()
 
-        # Change colormap on other image
+        # Change colormap, stretch on other image
         self.imviz.set_colormap('RdYlBu')
-
-        # TODO: Change stretch on other image
+        self.imviz.stretch = AsinhStretch
 
         # TODO: Change cut levels on other image
 
-        # TODO: Make sure settings stick on both images
+        # Make sure settings stick on both images
         assert self.viewer.state.layers[0].cmap.name == 'RdYlBu'
+        assert self.viewer.state.layers[0].stretch == 'asinh'
+
         assert self.viewer.state.layers[1].cmap.name == 'viridis'
+        assert self.viewer.state.layers[1].stretch == 'sqrt'
 
         # Go back to initial image for other tests.
         self.viewer.blink_once()
