@@ -14,8 +14,8 @@ class MosViz(ConfigHelper):
 
     _default_configuration = "mosviz"
 
-    def __init__(self, auto_link):
-        super().__init__(app=None, auto_link=auto_link)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         spec1d = self.app.get_viewer("spectrum-viewer")
         spec1d.scales['x'].observe(self._update_spec2d_x_axis)

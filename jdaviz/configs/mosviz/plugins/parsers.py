@@ -112,7 +112,10 @@ def link_data_in_table(app, data_obj=None, data_labels=None):
     for index in range(0, len(mos_data.get_component('1D Spectra').data)):
         spec_1d = mos_data.get_component('1D Spectra').data[index]
         spec_2d = mos_data.get_component('2D Spectra').data[index]
-        app.session.data_collection.add_link(LinkSame(spec_1d, spec_2d))
+
+        wc_spec_1d = app.session.data_collection[spec_1d].world_component_ids
+        wc_spec_2d = app.session.data_collection[spec_2d].world_component_ids
+        app.session.data_collection.add_link(LinkSame(wc_spec_1d[0], wc_spec_2d[0]))
 
 
 @data_parser_registry("mosviz-spec1d-parser")

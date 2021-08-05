@@ -129,7 +129,7 @@ class Application(VuetifyTemplate, HubListener):
 
     loading = Bool(False).tag(sync=True)
 
-    def __init__(self, configuration=None, auto_link=True, *args, **kwargs):
+    def __init__(self, configuration=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # Generate a state object for this application to maintain the state of
@@ -150,7 +150,7 @@ class Application(VuetifyTemplate, HubListener):
 
         # If true, link data on load. If false, do not link data to speed up
         # data loading
-        self.auto_link = auto_link
+        self.auto_link = kwargs.pop('auto_link')
 
         # Subscribe to messages indicating that a new viewer needs to be
         #  created. When received, information is passed to the application
