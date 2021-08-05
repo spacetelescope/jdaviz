@@ -367,6 +367,51 @@ class Imviz(ConfigHelper):
         viewer.state.layers[i_top].stretch = val
 
     @property
+    def autocut_options(self):
+        """List of all available options for automatic image cut levels."""
+        # See glue-jupyter/bqplot/image/state.py#L29
+        return ['minmax', '99.5%', '99%', '95%', '90%']
+
+    @property
+    def cuts(self):
+        """Current image cut levels.
+
+        To set new cut levels, either provide a tuple of ``(low, high)`` values
+        or one of the options from `autocut_options`.
+
+        """
+        viewer = self.app.get_viewer("viewer-1")
+        i_top = get_top_layer_index(viewer)
+        return viewer.state.layers[i_top].v_min, viewer.state.layers[i_top].v_max
+
+    # TODO: Support astropy.visualization, see https://github.com/glue-viz/glue/issues/2218
+    @cuts.setter
+    def cuts(self, val):
+        viewer = self.app.get_viewer("viewer-1")
+        i_top = get_top_layer_index(viewer)
+
+        if isinstance(val, str):  # autocut
+            if val == 'minmax':
+                val = 100
+            elif val == '99.5%':
+                val = 99.5
+            elif val == '99%':
+                val = 99
+            elif val == '95%':
+                val = 95
+            elif val == '90%':
+                val = 90
+            else:
+                raise ValueError(f"Invalid autocut '{val}', must be one of {self.autocut_options}")
+            viewer.state.layers[i_top].percentile = val
+        else:  # (low, high)
+            if (not isinstance(val, (list, tuple)) or len(val) != 2
+                    or not np.all([isinstance(x, (int, float)) for x in val])):
+                raise ValueError(f"Invalid cut levels {val}, must be (low, high)")
+            viewer.state.layers[i_top].v_min = val[0]
+            viewer.state.layers[i_top].v_max = val[1]
+
+    @property
     def marker(self):
         """Marker to use.
 

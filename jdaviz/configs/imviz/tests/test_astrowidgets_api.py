@@ -149,7 +149,7 @@ class TestCmapStretchCuts(BaseImviz_WCS_NoWCS):
         assert self.imviz.stretch_options == ['arcsinh', 'linear', 'log', 'sqrt']
 
     @pytest.mark.parametrize(('vizclass', 'ans'),
-                             [(AsinhStretch, 'asinh'),
+                             [(AsinhStretch, 'arcsinh'),
                               (LinearStretch, 'linear'),
                               (LogStretch, 'log'),
                               (SqrtStretch, 'sqrt')])
@@ -167,28 +167,51 @@ class TestCmapStretchCuts(BaseImviz_WCS_NoWCS):
         with pytest.raises(ValueError, match='Invalid stretch'):
             self.imviz.stretch = 'foo'
 
-    def test_cmap_stretch_cuts(self):
+    def test_autocut_options(self):
+        assert self.imviz.autocut_options == ['minmax', '99.5%', '99%', '95%', '90%']
 
-        # Change colormap, stretch on one image
+    @pytest.mark.parametrize(('auto_option', 'ans'),
+                             [('minmax', (0, 99)),
+                              ('99.5%', (0.2475, 98.7525)),
+                              ('99%', (0.495, 98.505)),
+                              ('95%', (2.475, 96.525)),
+                              ('90%', (4.95, 94.05))])
+    def test_autocut(self, auto_option, ans):
+        self.imviz.cuts = auto_option
+        assert_allclose(self.imviz.cuts, ans)
+
+    def test_invalid_autocut(self):
+        with pytest.raises(ValueError, match='Invalid autocut'):
+            self.imviz.cuts = 'foo'
+
+    @pytest.mark.parametrize('val', [99, (1, ), (1, 2, 3), (1, 'foo')])
+    def test_invalid_cuts(self, val):
+        with pytest.raises(ValueError, match='Invalid cut levels'):
+            self.imviz.cuts = val
+
+    def test_cmap_stretch_cuts(self):
+        # Change colormap, stretch, and cuts on one image
         self.imviz.set_colormap('viridis')
         self.imviz.stretch = 'sqrt'
-
-        # TODO: Change cut levels on one image
+        self.imviz.cuts = '95%'
 
         self.viewer.blink_once()
 
-        # Change colormap, stretch on other image
+        # Change colormap, stretch, and cuts on other image
         self.imviz.set_colormap('RdYlBu')
         self.imviz.stretch = AsinhStretch
+        self.imviz.cuts = (0, 100)
 
-        # TODO: Change cut levels on other image
-
-        # Make sure settings stick on both images
+        # Make sure settings stick on both images, second image displayed/changed first above.
         assert self.viewer.state.layers[0].cmap.name == 'RdYlBu'
-        assert self.viewer.state.layers[0].stretch == 'asinh'
+        assert self.viewer.state.layers[0].stretch == 'arcsinh'
+        assert_allclose((self.viewer.state.layers[0].v_min, self.viewer.state.layers[0].v_max),
+                        (0, 100))
 
         assert self.viewer.state.layers[1].cmap.name == 'viridis'
         assert self.viewer.state.layers[1].stretch == 'sqrt'
+        assert_allclose((self.viewer.state.layers[1].v_min, self.viewer.state.layers[1].v_max),
+                        (2.475, 96.525))
 
         # Go back to initial image for other tests.
         self.viewer.blink_once()
