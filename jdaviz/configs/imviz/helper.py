@@ -11,6 +11,7 @@ from astropy.utils.introspection import minversion
 from astropy.wcs import NoConvergence
 from astropy.wcs.wcsapi import BaseHighLevelWCS
 from echo import delay_callback
+from glue.config import colormaps
 from glue.core import BaseData, Data
 from glue.core.subset import MaskSubsetState
 
@@ -285,6 +286,39 @@ class Imviz(ConfigHelper):
         if not isinstance(val, (int, float)):
             raise ValueError(f"zoom only accepts int or float but got '{val}'")
         self.zoom_level = self.zoom_level * val
+
+    @property
+    def colormap_options(self):
+        """List of colormap names."""
+        return sorted(member[1].name for member in colormaps.members)
+
+    def set_colormap(self, cmap):
+        """Set colormap to the given colormap name.
+
+        Parameters
+        ----------
+        cmap : str
+            Colormap name. Possible values can be obtained from
+            :meth:`colormap_options`.
+
+        Raises
+        ------
+        ValueError
+            Invalid colormap name.
+
+        """
+        cm = None
+        for member in colormaps.members:
+            if member[1].name == cmap:
+                cm = member[1]
+                break
+
+        if cm is None:
+            raise ValueError(f"Invalid colormap '{cmap}', must be one of {self.colormap_options}")
+
+        viewer = self.app.get_viewer("viewer-1")
+        i_top = get_top_layer_index(viewer)
+        viewer.state.layers[i_top].cmap = cm
 
     @property
     def marker(self):

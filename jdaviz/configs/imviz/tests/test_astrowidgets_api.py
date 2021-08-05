@@ -133,6 +133,43 @@ class TestZoom(BaseImviz_WCS_NoWCS):
             self.assert_zoom_results(10, -0.5, 9.5, -0.5, 9.5, 0)
 
 
+class TestCmapStretchCuts(BaseImviz_WCS_NoWCS):
+
+    def test_colormap_options(self):
+        assert self.imviz.colormap_options == [
+            'BuGn', 'PRGn', 'PuBu', 'PuOr', 'RdBu', 'RdPu', 'RdYlBu', 'YlGnBu', 'YlOrRd',
+            'gray', 'hot', 'inferno', 'magma', 'plasma', 'viridis']
+
+    def test_invalid_colormap(self):
+        with pytest.raises(ValueError, match='Invalid colormap'):
+            self.imviz.set_colormap('foo')
+
+    def test_cmap_stretch_cuts(self):
+
+        # Change colormap on one image
+        self.imviz.set_colormap('viridis')
+
+        # TODO: Change stretch on one image
+
+        # TODO: Change cut levels on one image
+
+        self.viewer.blink_once()
+
+        # Change colormap on other image
+        self.imviz.set_colormap('RdYlBu')
+
+        # TODO: Change stretch on other image
+
+        # TODO: Change cut levels on other image
+
+        # TODO: Make sure settings stick on both images
+        assert self.viewer.state.layers[0].cmap.name == 'RdYlBu'
+        assert self.viewer.state.layers[1].cmap.name == 'viridis'
+
+        # Go back to initial image for other tests.
+        self.viewer.blink_once()
+
+
 class TestMarkers(BaseImviz_WCS_NoWCS):
 
     def test_invalid_markers(self):
