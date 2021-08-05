@@ -87,7 +87,7 @@ class SpecViz(ConfigHelper, LineListMixin):
                                                         ).state.reference_data.label,
                                     apply_slider_redshift=False
                                     ).spectral_axis.unit
-                                    )
+                                )
 
             spec_reg = SpectralRegion.from_center(reg.center.x * unit,
                                                   reg.width * unit)
