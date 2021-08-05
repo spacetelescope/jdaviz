@@ -150,7 +150,7 @@ class Application(VuetifyTemplate, HubListener):
 
         # If true, link data on load. If false, do not link data to speed up
         # data loading
-        self.auto_link = kwargs.pop('auto_link')
+        self.auto_link = kwargs.pop('auto_link', True)
 
         # Subscribe to messages indicating that a new viewer needs to be
         #  created. When received, information is passed to the application
