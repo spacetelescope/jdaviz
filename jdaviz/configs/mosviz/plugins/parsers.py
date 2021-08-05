@@ -339,11 +339,18 @@ def mos_meta_parser(app, data_obj):
         data_obj = [fits.open(x) if _check_is_file(x)
                     else x for x in data_obj]
 
-    ra = [x[0].header.get("OBJ_RA", float("nan")) for x in data_obj]
-    dec = [x[0].header.get("OBJ_DEC", float("nan")) for x in data_obj]
-    names = [x[0].header.get("OBJECT", "Unspecified Target") for x in data_obj]
+    if np.all([isinstance(x, fits.HDUList) for x in data_obj]):
+        ra = [x[0].header.get("OBJ_RA", float("nan")) for x in data_obj]
+        dec = [x[0].header.get("OBJ_DEC", float("nan")) for x in data_obj]
+        names = [x[0].header.get("OBJECT", "Unspecified Target") for x in data_obj]
 
-    [x.close() for x in data_obj]
+        [x.close() for x in data_obj]
+
+    else:
+        # TODO: Come up with more robust metadata parsing, perhaps from
+        # the spectra files.
+        logging.warn("Could not parse metadata from input images.")
+        return
 
     _add_to_table(app, names, "Source Names")
     _add_to_table(app, ra, "Right Ascension")
