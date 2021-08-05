@@ -13,6 +13,8 @@ import logging
 from astropy.wcs import WCS
 from asdf.fits_embed import AsdfInFits
 from pathlib import Path
+from glue.core.link_helpers import LinkSame
+
 
 __all__ = ['mos_spec1d_parser', 'mos_spec2d_parser', 'mos_image_parser']
 
@@ -85,6 +87,32 @@ def _fields_from_ecsv(fname, fields, delimiter=","):
                 temp_list.append(row[field])
             parsed_fields.append(temp_list)
     return parsed_fields
+
+
+@data_parser_registry("mosviz-link-data")
+def link_data_in_table(app, data_obj=None, data_labels=None):
+    """
+    Batch links data in the mosviz table viewer
+
+    Parameters
+    ----------
+    app : `~jdaviz.app.Application`
+        The application-level object used to reference the viewers.
+    data_obj : None
+        Passed in in order to use the data_parser_registry, otherwise
+        not used.
+    data_labels : None
+        Not used.
+    """
+    mos_data = app.session.data_collection['MOS Table']
+
+    # Loop through mos table rows and link Spectra 1D and Spectra 2D
+    # data objects. This speeds up performance significantly over linking
+    # data when loaded into the application.
+    for index in range(0, len(mos_data.get_component('1D Spectra').data)):
+        spec_1d = mos_data.get_component('1D Spectra').data[index]
+        spec_2d = mos_data.get_component('2D Spectra').data[index]
+        app.session.data_collection.add_link(LinkSame(spec_1d, spec_2d))
 
 
 @data_parser_registry("mosviz-spec1d-parser")

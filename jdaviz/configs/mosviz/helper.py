@@ -14,8 +14,8 @@ class MosViz(ConfigHelper):
 
     _default_configuration = "mosviz"
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, auto_link):
+        super().__init__(app=None, auto_link=auto_link)
 
         spec1d = self.app.get_viewer("spectrum-viewer")
         spec1d.scales['x'].observe(self._update_spec2d_x_axis)
@@ -145,6 +145,20 @@ class MosViz(ConfigHelper):
 
         self.load_2d_spectra(spectra_2d, spectra_2d_label)
         self.load_1d_spectra(spectra_1d, spectra_1d_label)
+        self.link_table_data(None)
+
+    def link_table_data(self, data_obj):
+        """
+        Batch link data in the mosviz table rather than doing it on
+        data load.
+
+        Parameters
+        ----------
+        data_obj : None
+            Not used in this method, only included to be able to access the
+            mosviz data parsers.
+        """
+        super().load_data(data_obj, parser_reference="mosviz-link-data")
 
     def load_metadata(self, data_obj):
         """
@@ -196,6 +210,7 @@ class MosViz(ConfigHelper):
 
     def load_niriss_data(self, data_obj, data_labels=None):
         super().load_data(data_obj, parser_reference="mosviz-niriss-parser")
+        self.link_table_data(data_obj)
 
     def load_images(self, data_obj, data_labels=None, share_image=0):
         """

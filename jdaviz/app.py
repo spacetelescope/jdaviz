@@ -129,7 +129,7 @@ class Application(VuetifyTemplate, HubListener):
 
     loading = Bool(False).tag(sync=True)
 
-    def __init__(self, configuration=None, *args, **kwargs):
+    def __init__(self, configuration=None, auto_link=True, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # Generate a state object for this application to maintain the state of
@@ -147,6 +147,10 @@ class Application(VuetifyTemplate, HubListener):
 
         # Parse the yaml configuration file used to compose the front-end UI
         self.load_configuration(configuration)
+
+        # If true, link data on load. If false, do not link data to speed up
+        # data loading
+        self.auto_link = auto_link
 
         # Subscribe to messages indicating that a new viewer needs to be
         #  created. When received, information is passed to the application
@@ -244,6 +248,11 @@ class Application(VuetifyTemplate, HubListener):
         any components are compatible with already loaded data. If so, link
         them so that they can be displayed on the same profile1D plot.
         """
+        # Allow for batch linking of data in the parser rather than on
+        # data load
+        if not self.auto_link:
+            return
+
         new_len = len(self.data_collection)
         # Can't link if there's no world_component_ids
         wc_new = self.data_collection[new_len-1].world_component_ids
