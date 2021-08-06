@@ -27,6 +27,12 @@ class SlitOverlay(TemplateMixin):
         table = self.app.get_viewer("table-viewer")
         table.figure_widget.observe(self.place_slit_overlay, names=['highlighted'])
 
+    def get_visible(self):
+        if self.visible:
+            return True
+        else:
+            return False
+
     def jwst_header_to_skyregion(self, header):
         s_region = header['S_REGION']
         footprint = s_region.split("POLYGON ICRS")[1].split()
@@ -56,6 +62,10 @@ class SlitOverlay(TemplateMixin):
 
     def vue_change_visible(self, *args, **kwargs):
         if self.visible:
+            # Clear existing slits on the image viewer
+            self.remove_slit_overlay()
+
+            # Place new slit
             self.place_slit_overlay()
         else:
             self.remove_slit_overlay()
@@ -70,9 +80,6 @@ class SlitOverlay(TemplateMixin):
             return
 
         snackbar_message = None
-
-        # Clear existing slits on the image viewer
-        self.remove_slit_overlay()
 
         # Get data from relevant viewers
         image_data = self.app.get_viewer("image-viewer").data()
