@@ -377,6 +377,12 @@ class Imviz(ConfigHelper):
         viewer = self.app.get_viewer("viewer-1")
         jglue = self.app.session.application
 
+        # Store the current zoom level so we can set back to this at the end.
+        cur_x_min = viewer.state.x_min
+        cur_y_min = viewer.state.y_min
+        cur_x_max = viewer.state.x_max
+        cur_y_max = viewer.state.y_max
+
         # TODO: How to link to invidual images separately for X/Y? add_link in loop does not work.
         # Link markers to reference image data.
         image = viewer.state.reference_data
@@ -409,6 +415,13 @@ class Imviz(ConfigHelper):
                 setattr(self.app.data_collection[self.app.data_collection.labels.index(marker_name)].style, key, val)  # noqa
 
             self._marktags.add(marker_name)
+
+        # Restore original zoom
+        with delay_callback(viewer.state, 'x_min', 'x_max', 'y_min', 'y_max'):
+            viewer.state.x_min = cur_x_min
+            viewer.state.y_min = cur_y_min
+            viewer.state.x_max = cur_x_max
+            viewer.state.y_max = cur_y_max
 
     def remove_markers(self, marker_name=None):
         """Remove some but not all of the markers by name used when
