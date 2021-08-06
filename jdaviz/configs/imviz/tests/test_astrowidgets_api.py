@@ -153,6 +153,11 @@ class TestMarkers(BaseImviz_WCS_NoWCS):
         sky = self.wcs.pixel_to_world(x_pix, y_pix)
         tbl = Table({'x': x_pix, 'y': y_pix, 'coord': sky})
 
+        # Zoom in a little to make sure zoom is preserved
+        self.imviz.zoom(2)
+        actual_viewer_limits = (self.viewer.state.x_min, self.viewer.state.x_max,
+                                self.viewer.state.y_min, self.viewer.state.y_max)
+
         self.imviz.add_markers(tbl)
         data = self.imviz.app.data_collection[2]
         assert data.label == 'default-marker-name'
@@ -162,6 +167,11 @@ class TestMarkers(BaseImviz_WCS_NoWCS):
         assert_allclose(data.style.alpha, 1)
         assert_allclose(data.get_component('x').data, x_pix)
         assert_allclose(data.get_component('y').data, y_pix)
+
+        # Make sure zoom is preserved
+        assert_allclose((self.viewer.state.x_min, self.viewer.state.x_max,
+                         self.viewer.state.y_min, self.viewer.state.y_max),
+                        actual_viewer_limits)
 
         # Table with only sky coordinates but no use_skycoord=True
         with pytest.raises(KeyError):
