@@ -36,3 +36,7 @@ class BaseImviz_WCS_NoWCS:
         self.wcs = WCS(hdu.header)
         self.imviz = imviz_app
         self.viewer = imviz_app.app.get_viewer('viewer-1')
+
+        # Since we are not really displaying, need this to test zoom.
+        self.viewer.shape = (100, 100)
+        self.viewer.state._set_axes_aspect_ratio(1)
