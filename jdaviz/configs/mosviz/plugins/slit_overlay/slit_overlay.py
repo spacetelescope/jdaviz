@@ -27,6 +27,12 @@ class SlitOverlay(TemplateMixin):
         table = self.app.get_viewer("table-viewer")
         table.figure_widget.observe(self.place_slit_overlay, names=['highlighted'])
 
+    def get_visible(self):
+        if self.visible:
+            return True
+        else:
+            return False
+
     def jwst_header_to_skyregion(self, header):
         s_region = header['S_REGION']
         footprint = s_region.split("POLYGON ICRS")[1].split()
@@ -56,6 +62,10 @@ class SlitOverlay(TemplateMixin):
 
     def vue_change_visible(self, *args, **kwargs):
         if self.visible:
+            # Clear existing slits on the image viewer
+            self.remove_slit_overlay()
+
+            # Place new slit
             self.place_slit_overlay()
         else:
             self.remove_slit_overlay()
@@ -71,16 +81,17 @@ class SlitOverlay(TemplateMixin):
 
         snackbar_message = None
 
-        # Clear existing slits on the image viewer
-        self.remove_slit_overlay()
-
         # Get data from relevant viewers
         image_data = self.app.get_viewer("image-viewer").data()
         spec2d_data = self.app.get_viewer("spectrum-2d-viewer").data()
 
         # 'S_REGION' contains slit information. Bypass in case no images exist.
         if len(image_data) > 0:
-            if len(spec2d_data) > 0 and 'S_REGION' in spec2d_data[0].meta:
+            # Only use S_REGION for Nirspec data, turn the plugin off
+            # if other data is loaded
+            if len(spec2d_data) > 0 and 'S_REGION' in spec2d_data[0].meta \
+                    and 'INSTRUME' in spec2d_data[0].meta \
+                    and spec2d_data[0].meta['INSTRUME'].lower() == "nirspec":
                 header = spec2d_data[0].meta
                 sky_region = self.jwst_header_to_skyregion(header)
 
@@ -111,9 +122,11 @@ class SlitOverlay(TemplateMixin):
                 fig_image.marks = fig_image.marks + [patch2]
 
             else:
+                self.visible = False
                 snackbar_message = SnackbarMessage(
-                    "\'S_REGION\' not found in Spectrum 2D meta attribute",
-                    color="error",
+                    "\'S_REGION\' not found in Spectrum 2D meta attribute, "
+                    "turning slit overlay off",
+                    color="warning",
                     sender=self)
 
         if snackbar_message:

@@ -7,6 +7,8 @@ from regions import RectangleSkyRegion
 from astropy.coordinates import Angle, SkyCoord
 from astropy import units as u
 
+from .. import slit_overlay as so
+
 header = {'S_REGION': 'POLYGON ICRS  5.029236065 4.992154276 5.029513148 '
           '4.992154276 5.029513148 4.992468585 5.029236065 4.992468585'}
 
@@ -18,16 +20,20 @@ sky_region = RectangleSkyRegion(center=skycoord, width=Angle(0.00031430899999992
                                 height=Angle(0.00027603191980735836, u.deg))
 
 
-def todo_fix_test_slit_overlay(spectral_cube_wcs):
+def test_slit_overlay(mosviz_app, spectrum1d, spectrum2d):
+    mosviz_app.load_data(spectrum1d, spectrum2d)
 
-    app = Application()
-    dc = app.data_collection
-    dc.append(Data(x=np.ones((3, 4, 5)), label='test', coords=spectral_cube_wcs))
+    assert so.SlitOverlay.get_visible(so.SlitOverlay) is True
 
-    # so = SlitOverlay(app=app)
-    #
-    # so_sky_region = so.jwst_header_to_skyregion(header)
-    #
-    # assert np.allclose(sky_region.width.value, so_sky_region.width.value)
-    # assert np.allclose(sky_region.height.value, so_sky_region.height.value)
-    # assert sky_region.center.to_string() == so_sky_region.center.to_string()
+
+def test_slit_overlay_no_slit(mosviz_app, spectrum1d, spectrum2d, image):
+    print(spectrum2d.meta)
+    spectrum2d.meta['INSTRUME'] = "NIRISS"
+    print(spectrum2d.meta)
+
+    mosviz_app.load_data(spectrum1d, spectrum2d, image)
+    pso = so.SlitOverlay.place_slit_overlay
+
+    pso(so.SlitOverlay)
+
+    assert so.SlitOverlay.get_visible(so.SlitOverlay) is False

@@ -200,7 +200,7 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
 
             wcs = WCS(header)
 
-            meta = {'S_REGION': header['S_REGION']}
+            meta = {'S_REGION': header['S_REGION'], 'INSTRUME': 'nirspec'}
 
         return SpectralCube(new_data, wcs=wcs, meta=meta)
 
@@ -464,11 +464,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
 
                         spec2d = SpectralCube(new_data, wcs=wcs, meta=meta)
 
-                        # TODO: Make slit overlay optional to avoid having to hardcode
-                        # TODO: S_REGION header
-                        spec2d.meta['S_REGION'] = 'POLYGON ICRS  5.029236065 4.992154276 ' \
-                                                  '5.029513148 4.992154276 5.029513148 ' \
-                                                  '4.992468585 5.029236065 4.992468585'
+                        spec2d.meta['INSTRUME'] = 'NIRISS'
 
                         label = "{} Source {} spec2d {}".format(filter_name,
                                                                 temp[sci].header["SOURCEID"],
