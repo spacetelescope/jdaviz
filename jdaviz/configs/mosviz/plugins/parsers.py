@@ -1,4 +1,3 @@
-import os
 from glue.core.data import Data
 
 from jdaviz.core.registries import data_parser_registry
