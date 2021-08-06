@@ -89,49 +89,19 @@ def _fields_from_ecsv(fname, fields, delimiter=","):
     return parsed_fields
 
 
-@data_parser_registry("mosviz-directory-parser")
-def mos_directory_parser(app, data_obj, data_labels=None):
-
-    if os.path.isdir((Path(data_obj) / 'mosviz_nirspec_data_0.3' / 'level3')):
-        level3_path = (Path(data_obj) / 'mosviz_nirspec_data_0.3' / 'level3')
-    # elif os.path.isdir(Path(data_obj) / 'NIRISS_for_parser_p0171'):
-    #     level3_path = (Path(data_obj) / 'NIRISS_for_parser_p0171')
-    else:
-        level3_path = (Path(data_obj))
-
-    mos_niriss_parser(app, data_obj, data_labels)
-
-    for file_path in glob.iglob(str(level3_path / '*')):
-        print(file_path)
-        if ".fits" not in file_path:
-            continue
-        with fits.open(file_path, memmap=False) as temp:
-            # TODO: Remove this once valid SRCTYPE values are present in all headers
-            for hdu in temp:
-                if "INSTRUME" in hdu.header:
-                    if hdu.header["INSTRUME"].lower() == "niriss":
-                        print(type(data_obj), data_obj)
-                        mos_niriss_parser(app, data_obj, data_labels)
-                        return
-                    elif hdu.header["INSTRUME"].lower() == "nirspec":
-                        mos_nirspec_directory_parser(app, level3_path, data_labels)
-                        return
-                    else:
-                        continue
-
-
 @data_parser_registry("mosviz-nirspec-directory-parser")
 def mos_nirspec_directory_parser(app, data_obj, data_labels=None):
 
     spectra_1d = []
     spectra_2d = []
 
-    level3_path = (Path(data_obj) / 'mosviz_nirspec_data_0.3' / 'level3')
+    level3_path = Path(data_obj)
     for file_path in glob.iglob(str(level3_path / '*')):
         if 'x1d' in file_path:
             spectra_1d.append(file_path)
         elif 's2d' in file_path:
             spectra_2d.append(file_path)
+        # TODO: check if file is an image and add to images list
 
     mos_spec1d_parser(app, spectra_1d)
     mos_spec2d_parser(app, spectra_2d)
@@ -408,7 +378,6 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
     """
 
     p = Path(data_dir)
-    print(type(data_dir), data_dir)
     if not p.is_dir():
         raise ValueError("{} is not a valid directory path".format(data_dir))
     source_cat = sorted(list(p.glob("{}*_direct_*_cat.ecsv".format(obs_label))))
@@ -430,7 +399,6 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
     # Convert from pathlib Paths back to strings
     for key in file_lists:
         file_lists[key] = [str(x) for x in file_lists[key]]
-    print(file_lists)
     _warn_if_not_found(app, file_lists)
 
     # Parse relevant information from source catalog

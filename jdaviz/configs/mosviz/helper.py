@@ -100,12 +100,18 @@ class MosViz(ConfigHelper):
 
         Parameters
         ----------
-        spectra_1d: list or str
+        directory : str
+            The path of the directory where Mosviz data is located
+
+        instrument : str
+            The instrument the Mosviz data originated from
+
+        spectra_1d : list or str
             A list of spectra as translatable container objects (e.g.
             ``Spectrum1D``) that can be read by glue-jupyter. Alternatively,
             can be a string file path.
 
-        spectra_2d: list or str
+        spectra_2d : list or str
             A list of spectra as translatable container objects (e.g.
             ``Spectrum1D``) that can be read by glue-jupyter. Alternatively,
             can be a string file path.
@@ -130,26 +136,36 @@ class MosViz(ConfigHelper):
             ``images``. Can be a list of strings representing data labels
             for each item in ``data_obj`` if  ``data_obj`` is a list.
         """
-        print("load data")
+        msg = ""
+
         if directory is not None and instrument is not None:
-            print(f"direc {instrument.lower()}")
             if instrument.lower() == "nirspec":
-                print("here")
                 super().load_data(directory, "mosviz-nirspec-directory-parser")
             elif instrument.lower() == "niriss":
                 self.load_niriss_data(directory)
+            else:
+                msg = "Warning: Data is not from NIRISS or Nirspec, " \
+                      "data loading may not work"
+                super().load_data(directory, "mosviz-nirspec-directory-parser")
         elif directory is not None:
-            # Load a file from the directory and check the INSTRUME extension
-            super().load_data(directory, "mosviz-directory-parser")
+            msg = "Warning: Please provide the name of the instrument" \
+                  " in the load_data method"
         elif spectra_1d is not None and spectra_2d is not None\
-                and images is not None and spectra_1d_label is not None\
-                and spectra_2d_label is not None and images_label is not None:
+                and images is not None:
             self.load_metadata(images)
             self.load_images(images, images_label)
             self.load_2d_spectra(spectra_2d, spectra_2d_label)
             self.load_1d_spectra(spectra_1d, spectra_1d_label)
+        elif spectra_1d is not None and spectra_2d is not None:
+            self.load_2d_spectra(spectra_2d, spectra_2d_label)
+            self.load_1d_spectra(spectra_1d, spectra_1d_label)
         else:
-            print("Set valid values")
+            msg = "Warning: Please set valid values for the load_data method"
+
+        if msg:
+            print(msg)
+            msg = SnackbarMessage(msg, color='warning', sender=self)
+            self.app.hub.broadcast(msg)
 
     def load_metadata(self, data_obj):
         """
