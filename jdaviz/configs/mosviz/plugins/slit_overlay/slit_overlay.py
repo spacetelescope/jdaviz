@@ -80,7 +80,11 @@ class SlitOverlay(TemplateMixin):
 
         # 'S_REGION' contains slit information. Bypass in case no images exist.
         if len(image_data) > 0:
-            if len(spec2d_data) > 0 and 'S_REGION' in spec2d_data[0].meta:
+            # Only use S_REGION for Nirspec data, turn the plugin off
+            # if other data is loaded
+            if len(spec2d_data) > 0 and 'S_REGION' in spec2d_data[0].meta \
+                    and 'INSTRUME' in spec2d_data[0].meta \
+                    and spec2d_data[0].meta['INSTRUME'].lower() == "nirspec":
                 header = spec2d_data[0].meta
                 sky_region = self.jwst_header_to_skyregion(header)
 
@@ -111,9 +115,11 @@ class SlitOverlay(TemplateMixin):
                 fig_image.marks = fig_image.marks + [patch2]
 
             else:
+                self.visible = False
                 snackbar_message = SnackbarMessage(
-                    "\'S_REGION\' not found in Spectrum 2D meta attribute",
-                    color="error",
+                    "\'S_REGION\' not found in Spectrum 2D meta attribute, "
+                    "turning slit overlay off",
+                    color="warning",
                     sender=self)
 
         if snackbar_message:
