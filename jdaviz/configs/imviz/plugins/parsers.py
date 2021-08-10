@@ -232,7 +232,13 @@ def _jwst2data(file_obj, ext, data_label):
 
         imdata = dm[ext]
         component = Component.autotyped(imdata, units=bunit)
-        data.add_component(component=component, label=comp_label)
+
+        # Might have bad GWCS. If so, we exclude it.
+        try:
+            data.add_component(component=component, label=comp_label)
+        except Exception:
+            data.coords = None
+            data.add_component(component=component, label=comp_label)
 
     return data, new_data_label
 
