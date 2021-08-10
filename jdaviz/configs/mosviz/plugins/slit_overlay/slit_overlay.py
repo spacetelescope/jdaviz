@@ -82,9 +82,8 @@ class SlitOverlay(TemplateMixin):
         if len(image_data) > 0:
             # Only use S_REGION for Nirspec data, turn the plugin off
             # if other data is loaded
-            if len(spec2d_data) > 0 and 'S_REGION' in spec2d_data[0].meta \
-                    and 'INSTRUME' in spec2d_data[0].meta \
-                    and spec2d_data[0].meta['INSTRUME'].lower() == "nirspec":
+            if (len(spec2d_data) > 0 and 'S_REGION' in spec2d_data[0].meta
+                    and spec2d_data[0].meta.get('INSTRUME', '').lower() == "nirspec"):
                 header = spec2d_data[0].meta
                 sky_region = self.jwst_header_to_skyregion(header)
 
