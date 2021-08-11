@@ -8,9 +8,11 @@ from echo import delay_callback
 import astropy
 from astropy import units as u
 from astropy.utils.introspection import minversion
+from astropy.coordinates import SkyCoord
 
 from jdaviz.core.events import (AddDataToViewerMessage,
-                                RemoveDataFromViewerMessage)
+                                RemoveDataFromViewerMessage,
+                                TableClickMessage)
 from jdaviz.core.registries import viewer_registry
 
 __all__ = ['MOSVizProfileView', 'MOSVizImageView']
@@ -174,8 +176,10 @@ class MOSVizTableViewer(TableViewer):
 
                 # TODO: If all objects share one large image, zoom to the image.
                 if self._shared_image:
-                    pass
-                    # self.zoom_to_object()
+                    ra = mos_data["Right Ascension"][selected_index]
+                    dec = mos_data["Declination"][selected_index]
+                    message = TableClickMessage(ra, dec, sender=self)
+                    self.sessions.hub.broadcast(message)
 
     def set_plot_axes(self, *args, **kwargs):
         return

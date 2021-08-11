@@ -7,7 +7,7 @@ from astropy.table import QTable
 import astropy.units as u
 
 from jdaviz.core.helpers import ConfigHelper
-from jdaviz.core.events import SnackbarMessage
+from jdaviz.core.events import SnackbarMessage, TableClickMessage
 from jdaviz.configs.specviz import SpecViz
 
 
@@ -24,6 +24,10 @@ class MosViz(ConfigHelper):
 
         spec2d = self.app.get_viewer("spectrum-2d-viewer")
         spec2d.scales['x'].observe(self._update_spec1d_x_axis)
+
+        # Listen for clicks on the table in case we need to zoom the image
+        self.app.hub.subscribe(self, TableClickMessage,
+                               handler=self._zoom_image_to_target)
 
         self._shared_image = False
 
