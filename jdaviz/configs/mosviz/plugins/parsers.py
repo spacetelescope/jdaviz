@@ -76,6 +76,29 @@ def _warn_if_not_found(app, file_lists):
     return found
 
 
+def _parse_as_image(path):
+    """
+    Parse and load a 2D image. ``CCDData`` objects require a unit be defined
+    in the fits header - if none is provided, use a fallback and
+    raise an error.
+    """
+    with fits.open(path) as hdulist:
+        if 'BUNIT' not in hdulist[0].header:
+            logging.warning("No 'BUNIT' defined in the header, using 'Jy'.")
+
+        unit = hdulist[0].header.get('BUNIT', 'Jy')
+
+        header = hdulist[0].header.copy()
+        meta = dict(header)
+
+        wcs = WCS(header)
+
+        image_ccd = CCDData.read(path, unit=unit, wcs=wcs)
+        image_ccd.meta = meta
+
+    return image_ccd
+
+
 def _fields_from_ecsv(fname, fields, delimiter=","):
     parsed_fields = []
     with open(fname, "r") as f:
@@ -312,28 +335,6 @@ def mos_image_parser(app, data_obj, data_labels=None, share_image=0):
     if data_obj is None:
         return
 
-    def _parse_as_image(path):
-        """
-        Parse and load a 2D image. ``CCDData`` objects require a unit be defined
-        in the fits header - if none is provided, use a fallback and
-        raise an error.
-        """
-        with fits.open(path) as hdulist:
-            if 'BUNIT' not in hdulist[0].header:
-                logging.warning("No 'BUNIT' defined in the header, using 'Jy'.")
-
-            unit = hdulist[0].header.get('BUNIT', 'Jy')
-
-            header = hdulist[0].header.copy()
-            meta = dict(header)
-
-            wcs = WCS(header)
-
-            image_ccd = CCDData.read(path, unit=unit, wcs=wcs)
-            image_ccd.meta = meta
-
-        return image_ccd
-
     if isinstance(data_obj, str):
         data_obj = [_parse_as_image(data_obj)]
 
@@ -492,7 +493,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
 
         image_label = "Image {} {}".format(im_split[0], pupil)
 
-        image_data = CCDData.read(image_file)
+        image_data = _parse_as_image(image_file)
 
         with fits.open(image_file) as temp:
             filter_wcs[pupil] = temp[1].header
