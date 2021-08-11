@@ -236,7 +236,7 @@ def _jwst2data(file_obj, ext, data_label):
         # Might have bad GWCS. If so, we exclude it.
         try:
             data.add_component(component=component, label=comp_label)
-        except Exception:
+        except Exception:  # pragma: no cover
             data.coords = None
             data.add_component(component=component, label=comp_label)
 
