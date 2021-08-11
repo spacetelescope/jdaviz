@@ -83,17 +83,21 @@ def _parse_as_image(path):
     raise an error.
     """
     with fits.open(path) as hdulist:
-        if 'BUNIT' not in hdulist[0].header:
-            logging.warning("No 'BUNIT' defined in the header, using 'Jy'.")
-
-        unit = hdulist[0].header.get('BUNIT', 'Jy')
 
         header = hdulist[0].header.copy()
         meta = dict(header)
 
         wcs = WCS(header)
 
-        image_ccd = CCDData.read(path, unit=unit, wcs=wcs)
+        try:
+            image_ccd = CCDData.read(path, wcs=wcs)
+        except ValueError as e:
+            if str(e) == "a unit for CCDData must be specified.":
+                logging.warning("No 'BUNIT' defined in the header, using 'Jy'.")
+                image_ccd = CCDData.read(path, unit='Jy', wcs=wcs)
+            else:
+                raise
+
         image_ccd.meta = meta
 
     return image_ccd
