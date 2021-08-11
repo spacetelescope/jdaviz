@@ -58,7 +58,7 @@ def test_validate_bunit():
 
 class TestParseImage:
     def setup_class(self):
-        self.jwst_asdf_url_1 = 'https://data.science.stsci.edu/redirect/JWST/jwst-data_analysis_tools/stellar_photometry/jw01072001001_01101_00001_nrcb1_cal.fits'  # noqa: E501
+        self.jwst_asdf_url_1 = 'https://data.science.stsci.edu/redirect/JWST/jwst-data_analysis_tools/imviz_test_data/jw00042001001_01101_00001_nrcb5_cal.fits'  # noqa: E501
 
     def test_no_data_label(self):
         with pytest.raises(NotImplementedError, match='should be set'):
@@ -243,7 +243,7 @@ class TestParseImage:
             assert data.labels[6].endswith('[VAR_FLAT]')
 
         # Invalid ASDF attribute (extension)
-        with pytest.raises(AttributeError, match='No attribute'):
+        with pytest.raises(KeyError, match='does_not_exist'):
             parse_data(imviz_app.app, filename, ext='DOES_NOT_EXIST',
                        data_label='foo', show_in_viewer=False)
 
