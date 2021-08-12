@@ -1,5 +1,3 @@
-from collections import OrderedDict
-
 from glue.core.data import Data
 
 from jdaviz.core.registries import data_parser_registry
@@ -426,7 +424,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
     filter_wcs = {}
 
     # Set up a dictionary of datasets to add to glue
-    add_to_glue = OrderedDict()
+    add_to_glue = {}
 
     print("Loading: Images")
 
