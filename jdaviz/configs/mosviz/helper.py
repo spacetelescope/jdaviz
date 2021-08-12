@@ -212,6 +212,12 @@ class MosViz(ConfigHelper):
             String representing the label for the data item loaded via
             ``data_obj``. Can be a list of strings representing data labels
             for each item in ``data_obj`` if  ``data_obj`` is a list.
+        share_image : int, optional
+            If 0, images are treated as applying to individual spectra. If non-zero,
+            a single image will be shared by multiple spectra so that clicking a
+            different row in the table does not reload the displayed image.
+            Currently, if non-zero, the provided number must match the number of
+            spectra.
         """
         super().load_data(data_obj, parser_reference="mosviz-image-parser",
                           data_labels=data_labels, share_image=share_image)
