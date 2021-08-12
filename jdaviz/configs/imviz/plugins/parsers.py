@@ -64,10 +64,10 @@ def parse_data(app, file_obj, ext=None, data_label=None, show_in_viewer=True):
         _parse_image(app, file_obj, data_label, show_in_viewer, ext=ext)
 
 
-def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
-    if data_label is None:
-        raise NotImplementedError('data_label should be set by now')
-
+def get_image_data_iterator(app, file_obj, data_label, ext=None):
+    """This function is for internal use, so other viz can also extract image data
+    like Imviz does.
+    """
     if isinstance(file_obj, fits.HDUList):
         if 'ASDF' in file_obj:  # JWST ASDF-in-FITS
             # Load all extensions
@@ -119,6 +119,15 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
 
     else:
         raise NotImplementedError(f'Imviz does not support {file_obj}')
+
+    return data_iter
+
+
+def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
+    if data_label is None:
+        raise NotImplementedError('data_label should be set by now')
+
+    data_iter = get_image_data_iterator(app, file_obj, data_label, ext=ext)
 
     for data, data_label in data_iter:
 
