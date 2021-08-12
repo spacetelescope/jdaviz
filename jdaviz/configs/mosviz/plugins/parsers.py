@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from glue.core.data import Data
 
 from jdaviz.core.registries import data_parser_registry
@@ -423,6 +425,9 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
     image_dict = {}
     filter_wcs = {}
 
+    # Set up a dictionary of datasets to add to glue
+    add_to_glue = OrderedDict()
+
     print("Loading: Images")
 
     for image_file in file_lists["Direct Image"]:
@@ -438,7 +443,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
         with fits.open(image_file) as temp:
             filter_wcs[pupil] = temp[1].header
 
-        app.data_collection[image_label] = image_data
+        add_to_glue[image_label] = image_data
 
         image_dict[pupil] = image_label
 
@@ -504,7 +509,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                         image_add.append(image_dict[filter_name])
                         spec_labels_2d.append(label)
 
-                        app.data_collection[label] = spec2d
+                        add_to_glue[label] = spec2d
 
     spec_labels_1d = []
     for f in ["1D Spectra C", "1D Spectra R"]:
@@ -538,15 +543,26 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                                                                 orientation
                                                                 )
                         spec_labels_1d.append(label)
-                        app.data_collection[label] = spec
+                        add_to_glue[label] = spec
 
-    print("Populating table")
+    # Add the datasets to glue - we do this in one step so that we can easily
+    # optimize by avoiding recomputing the full link graph at every add
 
-    _add_to_table(app, source_ids, "Source ID")
-    _add_to_table(app, ras, "Right Ascension")
-    _add_to_table(app, decs, "Declination")
-    _add_to_table(app, image_add, "Images")
-    _add_to_table(app, spec_labels_1d, "1D Spectra")
-    _add_to_table(app, spec_labels_2d, "2D Spectra")
+    with app.data_collection.delay_link_manager_update():
+
+        for label, data in add_to_glue.items():
+            app.data_collection[label] = data
+
+        # We then populate the table inside this context manager as _add_to_table
+        # does operations that also trigger link manager updates.
+
+        print("Populating table")
+
+        _add_to_table(app, source_ids, "Source ID")
+        _add_to_table(app, ras, "Right Ascension")
+        _add_to_table(app, decs, "Declination")
+        _add_to_table(app, image_add, "Images")
+        _add_to_table(app, spec_labels_1d, "1D Spectra")
+        _add_to_table(app, spec_labels_2d, "2D Spectra")
 
     print("Done")
