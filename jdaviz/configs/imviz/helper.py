@@ -12,7 +12,7 @@ from astropy.wcs import NoConvergence
 from astropy.wcs.wcsapi import BaseHighLevelWCS
 from echo import delay_callback
 from glue.core import BaseData, Data
-from glue.core.subset import MaskSubsetState
+from glue.core.subset import Subset, MaskSubsetState
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.helpers import ConfigHelper
@@ -508,7 +508,27 @@ class Imviz(ConfigHelper):
             ``regions`` objects.
 
         """
-        return self.app.get_subsets_from_viewer('viewer-1')
+        regions = {}
+        viewer = self.app.get_viewer("viewer-1")
+
+        for lyr in viewer.layers:
+            if (not hasattr(lyr, 'layer') or not isinstance(lyr.layer, Subset)
+                    or lyr.layer.ndim != 2):
+                continue
+
+            subset_data = lyr.layer
+            subset_label = subset_data.label
+
+            # TODO: Remove this when Imviz support round-tripping, see
+            # https://github.com/spacetelescope/jdaviz/pull/721
+            if not subset_label.startswith('Subset'):
+                continue
+
+            region = subset_data.data.get_selection_definition(
+                subset_id=subset_label, format='astropy-regions')
+            regions[subset_label] = region
+
+        return regions
 
 
 def split_filename_with_fits_ext(filename):
