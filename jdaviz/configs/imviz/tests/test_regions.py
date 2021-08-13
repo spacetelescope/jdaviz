@@ -30,15 +30,6 @@ class BaseRegionHandler:
                 assert layer.visible
         assert n == count
 
-    # See https://github.com/glue-viz/glue-jupyter/issues/253
-    def apply_interactive_region(self, toolname, from_pix, to_pix):
-        """Mimic interactive region drawing."""
-        tool = self.viewer.toolbar.tools[toolname]
-        tool.activate()
-        tool.interact.brushing = True
-        tool.interact.selected = [from_pix, to_pix]
-        tool.interact.brushing = False
-
 
 class TestLoadStaticRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
 
@@ -77,15 +68,15 @@ class TestLoadStaticRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
                              EllipsePixelRegion)
 
         # Mimic interactive region (before)
-        self.apply_interactive_region('bqplot:circle', (1.5, 2.5), (3.6, 4.6))
+        self.imviz._apply_interactive_region('bqplot:circle', (1.5, 2.5), (3.6, 4.6))
 
         sky = SkyCoord(ra=337.5202808, dec=-20.833333059999998, unit='deg')
         my_reg_sky = CircleSkyRegion(sky, Angle(0.5, u.arcsec))
         self.imviz.load_static_regions({'my_reg_sky_1': my_reg_sky})
 
         # Mimic interactive regions (after)
-        self.apply_interactive_region('bqplot:ellipse', (-2, 0), (5, 4.5))
-        self.apply_interactive_region('bqplot:rectangle', (0, 0), (10, 10))
+        self.imviz._apply_interactive_region('bqplot:ellipse', (-2, 0), (5, 4.5))
+        self.imviz._apply_interactive_region('bqplot:rectangle', (0, 0), (10, 10))
 
         # Check interactive regions. We do not check if the translation is correct,
         # that check hopefully is already done in glue-astronomy.

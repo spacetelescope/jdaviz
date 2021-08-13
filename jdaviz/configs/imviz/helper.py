@@ -530,6 +530,18 @@ class Imviz(ConfigHelper):
 
         return regions
 
+    # See https://github.com/glue-viz/glue-jupyter/issues/253
+    def _apply_interactive_region(self, toolname, from_pix, to_pix):
+        """Mimic interactive region drawing.
+        This is for internal testing only.
+        """
+        viewer = self.app.get_viewer("viewer-1")
+        tool = viewer.toolbar.tools[toolname]
+        tool.activate()
+        tool.interact.brushing = True
+        tool.interact.selected = [from_pix, to_pix]
+        tool.interact.brushing = False
+
 
 def split_filename_with_fits_ext(filename):
     """Split a ``filename[ext]`` input into filename and FITS extension.
