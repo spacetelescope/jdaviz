@@ -124,10 +124,13 @@ def mos_spec1d_parser(app, data_obj, data_labels=None):
         data_labels = [f"{data_labels[0]} {i}" for i in range(len(data_obj))]
 
     # Handle the case where the 1d spectrum is a collection of spectra
-    for i in range(len(data_obj)):
-        app.data_collection[data_labels[i]] = data_obj[i]
 
-    _add_to_table(app, data_labels, '1D Spectra')
+    with app.data_collection.delay_link_manager_update():
+
+        for i in range(len(data_obj)):
+            app.data_collection[data_labels[i]] = data_obj[i]
+
+        _add_to_table(app, data_labels, '1D Spectra')
 
 
 @data_parser_registry("mosviz-spec2d-parser")
@@ -223,17 +226,19 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
     elif len(data_obj) != len(data_labels):
         data_labels = [f"{data_labels} {i}" for i in range(len(data_obj))]
 
-    for i in range(len(data_obj)):
-        app.data_collection[data_labels[i]] = data_obj[i]
+    with app.data_collection.delay_link_manager_update():
+
+        for i in range(len(data_obj)):
+            app.data_collection[data_labels[i]] = data_obj[i]
+
+        if add_to_table:
+            _add_to_table(app, data_labels, '2D Spectra')
 
     if show_in_viewer:
         if len(data_labels) > 1:
             raise ValueError("More than one data label provided, unclear " +
                              "which to show in viewer")
         app.add_data_to_viewer("spectrum-2d-viewer", data_labels[0])
-
-    if add_to_table:
-        _add_to_table(app, data_labels, '2D Spectra')
 
 
 @data_parser_registry("mosviz-image-parser")
@@ -304,14 +309,16 @@ def mos_image_parser(app, data_obj, data_labels=None, share_image=0):
         else:
             data_labels = [f"{data_labels} {i}" for i in range(len(data_obj))]
 
-    for i in range(len(data_obj)):
-        app.data_collection[data_labels[i]] = data_obj[i]
+    with app.data_collection.delay_link_manager_update():
 
-    if share_image:
-        # Associate this image with multiple spectra
-        data_labels *= share_image
+        for i in range(len(data_obj)):
+            app.data_collection[data_labels[i]] = data_obj[i]
 
-    _add_to_table(app, data_labels, 'Images')
+        if share_image:
+            # Associate this image with multiple spectra
+            data_labels *= share_image
+
+        _add_to_table(app, data_labels, 'Images')
 
 
 @data_parser_registry("mosviz-metadata-parser")
@@ -352,9 +359,11 @@ def mos_meta_parser(app, data_obj):
         logging.warn("Could not parse metadata from input images.")
         return
 
-    _add_to_table(app, names, "Source Names")
-    _add_to_table(app, ra, "Right Ascension")
-    _add_to_table(app, dec, "Declination")
+    with app.data_collection.delay_link_manager_update():
+
+        _add_to_table(app, names, "Source Names")
+        _add_to_table(app, ra, "Right Ascension")
+        _add_to_table(app, dec, "Declination")
 
 
 @data_parser_registry("mosviz-niriss-parser")
