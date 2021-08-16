@@ -1,11 +1,8 @@
 import pytest
-import tempfile
 from zipfile import ZipFile
 import pathlib
 
 from astropy.utils.data import download_file
-
-from jdaviz.configs.mosviz.helper import MosViz
 
 
 @pytest.mark.remote_data
