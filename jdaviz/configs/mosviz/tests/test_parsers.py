@@ -8,7 +8,7 @@ from astropy.utils.data import download_file
 @pytest.mark.remote_data
 def test_niriss_parser(mosviz_app, tmpdir):
 
-    test_data = 'https://stsci.box.com/shared/static/9lkf5zha6zkf8ujnairy6krobbh038wt.zip'
+    test_data = 'https://stsci.box.com/shared/static/l2azhcqd3tvzhybdlpx2j2qlutkaro3z.zip'
     fn = download_file(test_data, cache=True)
     with ZipFile(fn, 'r') as sample_data_zip:
         sample_data_zip.extractall(tmpdir)
