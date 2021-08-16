@@ -115,11 +115,3 @@ Collapse Plugin spectral bounds do not match selected region
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Spectral bounds are off in the plugin compared to the spectrum viewer.
-
-
-Ghost subsets and models in spectrum viewer
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Mysterious extra subsets and models appear in the Specviz spectrum viewer
-after fitting a model. Pan/zoom and resize were also used, but it is unclear
-if they play a role or not in this bug.
