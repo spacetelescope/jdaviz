@@ -12,7 +12,7 @@ from astropy.wcs import NoConvergence
 from astropy.wcs.wcsapi import BaseHighLevelWCS
 from echo import delay_callback
 from glue.core import BaseData, Data
-from glue.core.subset import MaskSubsetState
+from glue.core.subset import Subset, MaskSubsetState
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.helpers import ConfigHelper
@@ -515,7 +515,39 @@ class Imviz(ConfigHelper):
             ``regions`` objects.
 
         """
-        return self.app.get_subsets_from_viewer('viewer-1')
+        regions = {}
+        viewer = self.app.get_viewer("viewer-1")
+
+        for lyr in viewer.layers:
+            if (not hasattr(lyr, 'layer') or not isinstance(lyr.layer, Subset)
+                    or lyr.layer.ndim != 2):
+                continue
+
+            subset_data = lyr.layer
+            subset_label = subset_data.label
+
+            # TODO: Remove this when Imviz support round-tripping, see
+            # https://github.com/spacetelescope/jdaviz/pull/721
+            if not subset_label.startswith('Subset'):
+                continue
+
+            region = subset_data.data.get_selection_definition(
+                subset_id=subset_label, format='astropy-regions')
+            regions[subset_label] = region
+
+        return regions
+
+    # See https://github.com/glue-viz/glue-jupyter/issues/253
+    def _apply_interactive_region(self, toolname, from_pix, to_pix):
+        """Mimic interactive region drawing.
+        This is for internal testing only.
+        """
+        viewer = self.app.get_viewer("viewer-1")
+        tool = viewer.toolbar.tools[toolname]
+        tool.activate()
+        tool.interact.brushing = True
+        tool.interact.selected = [from_pix, to_pix]
+        tool.interact.brushing = False
 
 
 def split_filename_with_fits_ext(filename):

@@ -497,11 +497,6 @@ class Application(VuetifyTemplate, HubListener):
 
         for key, value in data.items():
             if isinstance(value, Subset):
-                # TODO: Remove this when Imviz support round-tripping, see
-                # https://github.com/spacetelescope/jdaviz/pull/721
-                if viewer_reference == 'viewer-1' and not key.startswith('Subset'):
-                    continue
-
                 # Skip spatial or spectral subsets if only the other is wanted
                 if subset_type == "spectral" and isinstance(value.subset_state, RoiSubsetState):
                     continue
