@@ -243,7 +243,7 @@ def _jwst2data(file_obj, ext, data_label):
 
     # TODO: Do not need this when jwst.datamodels finally its own package.
     # This might happen for grism image; fall back to FITS loader without WCS.
-    except Exception:  # pragma: no cover
+    except Exception:
         if ext == 'data':
             ext = 'sci'
         hdu = file_obj[ext]
