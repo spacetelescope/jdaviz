@@ -375,7 +375,10 @@ class ModelFitting(TemplateMixin):
 
         if self._warn_if_no_equation():
             return
-        data = self.app.data_collection[self._selected_data_label]
+        if self._selected_data_label in self.app.data_collection.labels:
+            data = self.app.data_collection[self._selected_data_label]
+        else:  # User selected some subset from spectrum viewer, just use original cube
+            data = self.app.data_collection[0]
 
         # First, ensure that the selected data is cube-like. It is possible
         # that the user has selected a pre-existing 1d data object.
