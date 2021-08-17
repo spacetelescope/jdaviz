@@ -103,7 +103,7 @@ class BqplotContrastBias(CheckableTool):
     icon = 'glue_contrast'
     tool_id = 'bqplot:contrastbias'
     action_text = 'Adjust contrast/bias'
-    tool_tip = 'Click and drag to adjust, double-click to reset'
+    tool_tip = 'Click and drag to adjust contrast and bias, double-click to reset'
 
     def __init__(self, viewer, **kwargs):
         self._time_last = 0
