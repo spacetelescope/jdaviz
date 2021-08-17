@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 import pytest
 from astropy import units as u
@@ -5,6 +7,18 @@ from astropy.table import Table
 from numpy.testing import assert_allclose
 
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS
+
+
+# TODO: Remove skip when https://github.com/bqplot/bqplot/issues/1393 is resolved.
+@pytest.mark.skip(reason="Cannot test due to file dialog popup")
+class TestSave(BaseImviz_WCS_NoWCS):
+
+    def test_save(self, tmpdir):
+        filename = os.path.join(tmpdir.strpath, 'myimage')
+        self.imviz.save(filename)
+
+        # This only tests that something saved, not the content.
+        assert os.path.isfile(os.path.join(tmpdir.strpath, 'myimage.png'))
 
 
 class TestCenterOffset(BaseImviz_WCS_NoWCS):
