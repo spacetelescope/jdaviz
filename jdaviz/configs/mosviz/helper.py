@@ -12,6 +12,7 @@ from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import SnackbarMessage, TableClickMessage
 from jdaviz.configs.specviz import SpecViz
 
+from .plugins.slit_overlay import jwst_header_to_skyregion
 
 class MosViz(ConfigHelper):
     """MosViz Helper class"""
@@ -29,7 +30,7 @@ class MosViz(ConfigHelper):
 
         # Listen for clicks on the table in case we need to zoom the image
         self.app.hub.subscribe(self, TableClickMessage,
-                               handler=self._zoom_image_to_target)
+                               handler=self._row_click_message_handler)
 
         self._shared_image = False
 
@@ -102,7 +103,13 @@ class MosViz(ConfigHelper):
             if val != old_val:
                 setattr(scales['x'], name, val)
 
-    def _zoom_image_to_target(self, msg):
+    def _row_click_message_handler(self, msg):
+        if msg.slit_or_object == "object":
+            self._zoom_image_to_object(msg)
+        else:
+            self._zoom_image_to_slit(msg)
+
+    def _zoom_image_to_object(self, msg):
 
         print(msg)
         ra = msg.ra
@@ -127,9 +134,12 @@ class MosViz(ConfigHelper):
             imview.state.x_max = pix[0] + image_axis_ratio*width
             imview.state.y_max = pix[1] + width
 
+    def _zoom_image_to_slit(self, msg):
+        pass
+
     def load_data(self, spectra_1d=None, spectra_2d=None, images=None,
-                  spectra_1d_label=None, spectra_2d_label=None,
-                  images_label=None, *args, **kwargs):
+                   spectra_1d_label=None, spectra_2d_label=None,
+                   images_label=None, *args, **kwargs):
         """
         Load and parse a set of MOS spectra and images
 
