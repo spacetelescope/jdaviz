@@ -8,7 +8,6 @@ from echo import delay_callback
 import astropy
 from astropy import units as u
 from astropy.utils.introspection import minversion
-from astropy.coordinates import SkyCoord
 
 from jdaviz.core.events import (AddDataToViewerMessage,
                                 RemoveDataFromViewerMessage,
@@ -128,11 +127,12 @@ class MOSVizTableViewer(TableViewer):
         selected_index = event['new']
         mos_data = self.session.data_collection['MOS Table']
 
-        for component in mos_data.components:
-            comp_data = mos_data.get_component(component).data
+        for component_label in ["1D Spectra", "2D Spectra", "Images"]:
+            cid = mos_data.find_component_id(component_label)
+            comp_data = mos_data.get_component(cid).data
             selected_data = comp_data[selected_index]
 
-            if component.label == '1D Spectra':
+            if component_label == '1D Spectra':
                 prev_data = self._selected_data.get('spectrum-viewer')
                 if prev_data != selected_data:
                     if prev_data:
@@ -146,7 +146,7 @@ class MOSVizTableViewer(TableViewer):
 
                     self._selected_data['spectrum-viewer'] = selected_data
 
-            if component.label == '2D Spectra':
+            if component_label == '2D Spectra':
                 prev_data = self._selected_data.get('spectrum-2d-viewer')
                 if prev_data != selected_data:
                     if prev_data:
@@ -160,7 +160,7 @@ class MOSVizTableViewer(TableViewer):
 
                     self._selected_data['spectrum-2d-viewer'] = selected_data
 
-            if component.label == 'Images':
+            if component_label == 'Images':
                 prev_data = self._selected_data.get('image-viewer')
                 if prev_data != selected_data:
                     if prev_data:
@@ -179,7 +179,7 @@ class MOSVizTableViewer(TableViewer):
                     ra = mos_data["Right Ascension"][selected_index]
                     dec = mos_data["Declination"][selected_index]
                     message = TableClickMessage(ra, dec, sender=self)
-                    self.sessions.hub.broadcast(message)
+                    self.session.hub.broadcast(message)
 
     def set_plot_axes(self, *args, **kwargs):
         return

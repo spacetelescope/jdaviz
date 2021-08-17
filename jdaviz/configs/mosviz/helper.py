@@ -3,8 +3,10 @@ import logging
 import numpy as np
 from pathlib import Path
 
-from astropy.table import QTable
 import astropy.units as u
+from astropy.table import QTable
+from astropy.coordinates import SkyCoord
+from echo import delay_callback
 
 from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import SnackbarMessage, TableClickMessage
@@ -99,6 +101,31 @@ class MosViz(ConfigHelper):
                 self.app.hub.broadcast(msg)
             if val != old_val:
                 setattr(scales['x'], name, val)
+
+    def _zoom_image_to_target(self, msg):
+
+        print(msg)
+        ra = msg.ra
+        dec = msg.dec
+        coord_unit = msg.coord_unit
+
+        imview = self.app.get_viewer("image-viewer")
+        specview = self.app.get_viewer("spectrum-2d-viewer")
+
+        image_axis_ratio = ((imview.axis_x.scale.max - imview.axis_x.scale.min) /
+                            (imview.axis_y.scale.max - imview.axis_y.scale.min))
+        width = 0.5*(specview.axis_y.scale.max - specview.axis_y.scale.min)
+        point = SkyCoord(ra*u.Unit(coord_unit), dec*u.Unit(coord_unit))
+
+        pix = imview.layers[0].layer.coords.world_to_pixel(point)
+
+        print(width, pix, image_axis_ratio)
+
+        with delay_callback(imview.state, 'x_min', 'x_max', 'y_min', 'y_max'):
+            imview.state.x_min = pix[0] - image_axis_ratio*width
+            imview.state.y_min = pix[1] - width
+            imview.state.x_max = pix[0] + image_axis_ratio*width
+            imview.state.y_max = pix[1] + width
 
     def load_data(self, spectra_1d=None, spectra_2d=None, images=None,
                   spectra_1d_label=None, spectra_2d_label=None,
