@@ -243,6 +243,6 @@ class ConfigHelper(HubListener):
         for key in parameters_cube:
             for param_name in parameters_cube[key]:
                 parameters_cube[key][param_name] = u.Quantity(parameters_cube[key][param_name],
-                                                              param_units[key][param_name])
+                                                              param_units[key].get(param_name, None))
 
         return parameters_cube
