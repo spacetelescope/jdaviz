@@ -65,6 +65,7 @@ def test_validate_bunit():
 class TestParseImage:
     def setup_class(self):
         self.jwst_asdf_url_1 = 'https://data.science.stsci.edu/redirect/JWST/jwst-data_analysis_tools/imviz_test_data/jw00042001001_01101_00001_nrcb5_cal.fits'  # noqa: E501
+        self.jwst_asdf_url_2 = 'https://stsci.box.com/shared/static/d5k9z5j05dgfv6ljgie483w21kmpevni.fits'  # noqa: E501
 
     def test_no_data_label(self):
         with pytest.raises(NotImplementedError, match='should be set'):
@@ -264,6 +265,21 @@ class TestParseImage:
         with pytest.raises(KeyError, match='does_not_exist'):
             parse_data(imviz_app.app, filename, ext='DOES_NOT_EXIST',
                        data_label='foo', show_in_viewer=False)
+
+    @pytest.mark.skipif(not HAS_JWST_ASDF, reason='asdf and gwcs not installed')
+    @pytest.mark.remote_data
+    def test_parse_jwst_niriss_grism(self, imviz_app):
+        """No valid image GWCS for Imviz, will fall back to FITS loading without WCS."""
+        filename = download_file(self.jwst_asdf_url_2, cache=True)
+
+        parse_data(imviz_app.app, filename, show_in_viewer=False)
+        data = imviz_app.app.data_collection[0]
+        comp = data.get_component('SCI,1')
+        assert data.label == 'contents[SCI,1]'  # download_file returns cache loc
+        assert data.shape == (2048, 2048)
+        assert data.coords is None
+        assert comp.units == 'DN/s'
+        assert comp.data.shape == (2048, 2048)
 
     @pytest.mark.remote_data
     def test_parse_hst_drz(self, imviz_app):

@@ -215,24 +215,39 @@ def _jwst2data(file_obj, ext, data_label):
     data = Data(label=new_data_label)
     unit_attr = f'bunit_{ext}'
 
-    # This is very specific to JWST pipeline image output.
-    with AsdfInFits.open(file_obj) as af:
-        dm = af.tree
-        dm_meta = af.tree["meta"]
+    try:
+        # This is very specific to JWST pipeline image output.
+        with AsdfInFits.open(file_obj) as af:
+            dm = af.tree
+            dm_meta = af.tree["meta"]
 
-        if (unit_attr in dm_meta and
-                _validate_bunit(dm_meta[unit_attr], raise_error=False)):
-            bunit = dm_meta[unit_attr]
-        else:
-            bunit = ''
+            if (unit_attr in dm_meta and
+                    _validate_bunit(dm_meta[unit_attr], raise_error=False)):
+                bunit = dm_meta[unit_attr]
+            else:
+                bunit = ''
 
-        # This is instance of gwcs.WCS, not astropy.wcs.WCS
-        if 'wcs' in dm_meta:
-            data.coords = dm_meta['wcs']
+            # This is instance of gwcs.WCS, not astropy.wcs.WCS
+            if 'wcs' in dm_meta:
+                data.coords = dm_meta['wcs']
 
-        imdata = dm[ext]
-        component = Component.autotyped(imdata, units=bunit)
-        data.add_component(component=component, label=comp_label)
+            imdata = dm[ext]
+            component = Component.autotyped(imdata, units=bunit)
+
+            # Might have bad GWCS. If so, we exclude it.
+            try:
+                data.add_component(component=component, label=comp_label)
+            except Exception:  # pragma: no cover
+                data.coords = None
+                data.add_component(component=component, label=comp_label)
+
+    # TODO: Do not need this when jwst.datamodels finally its own package.
+    # This might happen for grism image; fall back to FITS loader without WCS.
+    except Exception:
+        if ext == 'data':
+            ext = 'sci'
+        hdu = file_obj[ext]
+        return _hdu2data(hdu, data_label, file_obj, include_wcs=False)
 
     return data, new_data_label
 
@@ -251,7 +266,7 @@ def _hdus_to_glue_data(file_obj, data_label):
             yield data, new_data_label
 
 
-def _hdu2data(hdu, data_label, hdulist):
+def _hdu2data(hdu, data_label, hdulist, include_wcs=True):
     if 'BUNIT' in hdu.header and _validate_bunit(hdu.header['BUNIT'], raise_error=False):
         bunit = hdu.header['BUNIT']
     else:
@@ -261,7 +276,8 @@ def _hdu2data(hdu, data_label, hdulist):
     new_data_label = f'{data_label}[{comp_label}]'
 
     data = Data(label=new_data_label)
-    data.coords = WCS(hdu.header, hdulist)
+    if include_wcs:
+        data.coords = WCS(hdu.header, hdulist)
     component = Component.autotyped(hdu.data, units=bunit)
     data.add_component(component=component, label=comp_label)
 
