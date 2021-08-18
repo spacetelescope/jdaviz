@@ -105,17 +105,25 @@ def link_data_in_table(app, data_obj=None, data_labels=None):
         Not used.
     """
     mos_data = app.session.data_collection['MOS Table']
+    wc_spec_ids = []
 
-    # Loop through mos table rows and link Spectra 1D and Spectra 2D
-    # data objects. This speeds up performance significantly over linking
-    # data when loaded into the application.
-    for index in range(0, len(mos_data.get_component('1D Spectra').data)):
-        spec_1d = mos_data.get_component('1D Spectra').data[index]
-        spec_2d = mos_data.get_component('2D Spectra').data[index]
+    # Optimize linking speed through a) delaying link manager updates with a
+    # context manager, b) handling intra-row linkage of 1D and 2D spectra in a
+    # loop, and c) handling inter-row linkage after that in one fell swoop.
+    with app.data_collection.delay_link_manager_update():
+        for index in range(0, len(mos_data.get_component('1D Spectra').data)):
+            spec_1d = mos_data.get_component('1D Spectra').data[index]
+            spec_2d = mos_data.get_component('2D Spectra').data[index]
+            #image = mos_data.get_component('Images').data[index] # include?
 
-        wc_spec_1d = app.session.data_collection[spec_1d].world_component_ids
-        wc_spec_2d = app.session.data_collection[spec_2d].world_component_ids
-        app.session.data_collection.add_link(LinkSame(wc_spec_1d[0], wc_spec_2d[0]))
+            wc_spec_1d = app.session.data_collection[spec_1d].world_component_ids
+            wc_spec_2d = app.session.data_collection[spec_2d].world_component_ids
+            #wc_image = app.session.data_collection[image].world_component_ids # [RA, Dec] instead of [World]
+
+            wc_spec_ids.append(LinkSame(wc_spec_1d[0], wc_spec_2d[0]))
+
+    app.session.data_collection.add_link(wc_spec_ids)
+
 
 
 @data_parser_registry("mosviz-spec1d-parser")
