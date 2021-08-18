@@ -128,26 +128,28 @@ class BqplotContrastBias(CheckableTool):
             if (time.time() - self._time_last) <= 0.2:
                 return
 
-            event_x = data['domain']['x']
-            event_y = data['domain']['y']
+            event_x = data['pixel']['x']
+            event_y = data['pixel']['y']
+            max_x = self.viewer.shape[1]
+            max_y = self.viewer.shape[0]
 
-            if ((event_x < self.viewer.state.x_min) or
-                    (event_x >= self.viewer.state.x_max) or
-                    (event_y < self.viewer.state.y_min) or
-                    (event_y >= self.viewer.state.y_max)):
+            if ((event_x < 0) or (event_x >= max_x) or
+                    (event_y < 0) or (event_y >= max_y)):
                 return
 
-            x = event_x / (self.viewer.state.x_max - self.viewer.state.x_min)
-            y = event_y / (self.viewer.state.y_max - self.viewer.state.y_min)
+            # Normalize w.r.t. viewer display from 0 to 1
+            x = event_x / (max_x - 1)
+            y = event_y / (max_y - 1)
 
             # When blinked, first layer might not be top layer
             i_top = get_top_layer_index(self.viewer)
             state = self.viewer.layers[i_top].state
 
-            # https://github.com/glue-viz/glue/blob/master/glue/viewers/image/qt/contrast_mouse_mode.py
+            # bias range 0..1
+            # contrast range 0..4
             with delay_callback(state, 'bias', 'contrast'):
-                state.bias = -(x * 2 - 1.5)
-                state.contrast = 10. ** (y * 2 - 1)
+                state.bias = x
+                state.contrast = y * 4
 
             self._time_last = time.time()
 
