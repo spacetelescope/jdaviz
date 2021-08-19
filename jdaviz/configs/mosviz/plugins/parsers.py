@@ -259,6 +259,8 @@ def mos_image_parser(app, data_obj, data_labels=None, share_image=0):
         If 0, images are treated as applying to individual spectra. If non-zero,
         a single image will be shared by multiple spectra so that clicking a
         different row in the table does not reload the displayed image.
+        Currently, if non-zero, the provided number must match the number of
+        spectra.
     """
 
     if data_obj is None:
