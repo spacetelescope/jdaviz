@@ -9,7 +9,7 @@ __all__ = ['BaseImviz_WCS_NoWCS']
 class BaseImviz_WCS_NoWCS:
     @pytest.fixture(autouse=True)
     def setup_class(self, imviz_app):
-        hdu = fits.ImageHDU(np.zeros((10, 10)), name='SCI')
+        hdu = fits.ImageHDU(np.arange(100).reshape((10, 10)), name='SCI')
 
         # Apply some celestial WCS from
         # https://learn.astropy.org/rst-tutorials/celestial_coords1.html

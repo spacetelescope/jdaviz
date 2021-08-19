@@ -11,6 +11,7 @@ from astropy.utils.introspection import minversion
 from astropy.wcs import NoConvergence
 from astropy.wcs.wcsapi import BaseHighLevelWCS
 from echo import delay_callback
+from glue.config import colormaps
 from glue.core import BaseData, Data
 from glue.core.subset import Subset, MaskSubsetState
 
@@ -292,6 +293,130 @@ class Imviz(ConfigHelper):
         if not isinstance(val, (int, float)):
             raise ValueError(f"zoom only accepts int or float but got '{val}'")
         self.zoom_level = self.zoom_level * val
+
+    @property
+    def colormap_options(self):
+        """List of colormap names."""
+        return sorted(member[1].name for member in colormaps.members)
+
+    def set_colormap(self, cmap):
+        """Set colormap to the given colormap name.
+
+        Parameters
+        ----------
+        cmap : str
+            Colormap name. Possible values can be obtained from
+            :meth:`colormap_options`.
+
+        Raises
+        ------
+        ValueError
+            Invalid colormap name.
+
+        """
+        cm = None
+        for member in colormaps.members:
+            if member[1].name == cmap:
+                cm = member[1]
+                break
+
+        if cm is None:
+            raise ValueError(f"Invalid colormap '{cmap}', must be one of {self.colormap_options}")
+
+        viewer = self.app.get_viewer("viewer-1")
+        i_top = get_top_layer_index(viewer)
+        viewer.state.layers[i_top].cmap = cm
+
+    @property
+    def stretch_options(self):
+        """List of all available options for image stretching.
+
+        Their ``astropy.visualization`` counterparts are also accepted, as follows:
+
+        * ``'arcsinh'``: ``astropy.visualization.AsinhStretch``
+        * ``'linear'``: ``astropy.visualization.LinearStretch``
+        * ``'log'``: ``astropy.visualization.LogStretch``
+        * ``'sqrt'``: ``astropy.visualization.SqrtStretch``
+
+        """
+        # TODO: Is there a better way to access this in Glue? See glue/viewers/image/state.py
+        return ['arcsinh', 'linear', 'log', 'sqrt']
+
+    @property
+    def stretch(self):
+        """The image stretching algorithm in use."""
+        viewer = self.app.get_viewer("viewer-1")
+        i_top = get_top_layer_index(viewer)
+        return viewer.state.layers[i_top].stretch
+
+    @stretch.setter
+    def stretch(self, val):
+        valid_vals = self.stretch_options
+
+        if isinstance(val, type):  # is a class
+            # Translate astropy.visualization
+            from astropy.visualization import AsinhStretch, LinearStretch, LogStretch, SqrtStretch
+            if issubclass(val, AsinhStretch):
+                val = 'arcsinh'
+            elif issubclass(val, LinearStretch):
+                val = 'linear'
+            elif issubclass(val, LogStretch):
+                val = 'log'
+            elif issubclass(val, SqrtStretch):
+                val = 'sqrt'
+            else:
+                raise ValueError(f"Invalid stretch {val}, must be one of {valid_vals}")
+        elif val not in valid_vals:
+            raise ValueError(f"Invalid stretch '{val}', must be one of {valid_vals}")
+
+        viewer = self.app.get_viewer("viewer-1")
+        i_top = get_top_layer_index(viewer)
+        viewer.state.layers[i_top].stretch = val
+
+    @property
+    def autocut_options(self):
+        """List of all available options for automatic image cut levels."""
+        # See glue-jupyter/bqplot/image/state.py#L29
+        return ['minmax', '99.5%', '99%', '95%', '90%']
+
+    @property
+    def cuts(self):
+        """Current image cut levels.
+
+        To set new cut levels, either provide a tuple of ``(low, high)`` values
+        or one of the options from `autocut_options`.
+
+        """
+        viewer = self.app.get_viewer("viewer-1")
+        i_top = get_top_layer_index(viewer)
+        return viewer.state.layers[i_top].v_min, viewer.state.layers[i_top].v_max
+
+    # TODO: Support astropy.visualization, see https://github.com/glue-viz/glue/issues/2218
+    @cuts.setter
+    def cuts(self, val):
+        viewer = self.app.get_viewer("viewer-1")
+        i_top = get_top_layer_index(viewer)
+
+        if isinstance(val, str):  # autocut
+            if val == 'minmax':
+                val = 100
+            elif val == '99.5%':
+                val = 99.5
+            elif val == '99%':
+                val = 99
+            elif val == '95%':
+                val = 95
+            elif val == '90%':
+                val = 90
+            else:
+                raise ValueError(f"Invalid autocut '{val}', must be one of {self.autocut_options}")
+            viewer.state.layers[i_top].percentile = val
+        else:  # (low, high)
+            if (not isinstance(val, (list, tuple)) or len(val) != 2
+                    or not np.all([isinstance(x, (int, float)) for x in val])):
+                raise ValueError(f"Invalid cut levels {val}, must be (low, high)")
+            viewer.state.layers[i_top].v_min = val[0]
+            viewer.state.layers[i_top].v_max = val[1]
 
     @property
     def marker(self):
