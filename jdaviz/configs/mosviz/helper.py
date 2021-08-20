@@ -104,38 +104,62 @@ class MosViz(ConfigHelper):
                 setattr(scales['x'], name, val)
 
     def _row_click_message_handler(self, msg):
-        if msg.slit_or_object == "object":
+
+        if msg.shared_image:
             self._zoom_image_to_object(msg)
         else:
             self._zoom_image_to_slit(msg)
 
     def _zoom_image_to_object(self, msg):
 
-        print(msg)
-        ra = msg.ra
-        dec = msg.dec
-        coord_unit = msg.coord_unit
+        table_data = self.app.data_collection['MOS Table']
+        imview = self.app.get_viewer("image-viewer")
+        specview = self.app.get_viewer("spectrum-2d-viewer")
 
+        ra = table_data["Right Ascension"][msg.selected_index]
+        dec = table_data["Declination"][msg.selected_index]
+
+        image_axis_ratio = ((imview.axis_x.scale.max - imview.axis_x.scale.min) /
+                            (imview.axis_y.scale.max - imview.axis_y.scale.min))
+
+        height = 0.5*(specview.axis_y.scale.max - specview.axis_y.scale.min)
+        point = SkyCoord(ra*u.deg, dec*u.deg)
+
+        pix = imview.layers[0].layer.coords.world_to_pixel(point)
+
+        print(height, pix, image_axis_ratio)
+
+        with delay_callback(imview.state, 'x_min', 'x_max', 'y_min', 'y_max'):
+            imview.state.x_min = pix[0] - image_axis_ratio*height
+            imview.state.y_min = pix[1] - height
+            imview.state.x_max = pix[0] + image_axis_ratio*height
+            imview.state.y_max = pix[1] + height
+
+    def _zoom_image_to_slit(self, msg):
         imview = self.app.get_viewer("image-viewer")
         specview = self.app.get_viewer("spectrum-2d-viewer")
 
         image_axis_ratio = ((imview.axis_x.scale.max - imview.axis_x.scale.min) /
                             (imview.axis_y.scale.max - imview.axis_y.scale.min))
-        width = 0.5*(specview.axis_y.scale.max - specview.axis_y.scale.min)
-        point = SkyCoord(ra*u.Unit(coord_unit), dec*u.Unit(coord_unit))
 
-        pix = imview.layers[0].layer.coords.world_to_pixel(point)
+        sky_region = jwst_header_to_skyregion(specview.layers[0].layer.meta)
+        ra = sky_region.center.ra.deg
+        dec = sky_region.center.dec.deg
 
-        print(width, pix, image_axis_ratio)
+        pix = imview.layers[0].layer.coords.world_to_pixel(sky_region.center)
+
+        # Height of slit in decimal degrees
+        height = sky_region.height.deg
+
+        upper = imview.layers[0].layer.coords.world_to_pixel(SkyCoord(ra*u.deg,
+                                                             (dec + height)*u.deg))
+        pixel_height = upper[1] - pix[1]
 
         with delay_callback(imview.state, 'x_min', 'x_max', 'y_min', 'y_max'):
-            imview.state.x_min = pix[0] - image_axis_ratio*width
-            imview.state.y_min = pix[1] - width
-            imview.state.x_max = pix[0] + image_axis_ratio*width
-            imview.state.y_max = pix[1] + width
-
-    def _zoom_image_to_slit(self, msg):
-        pass
+             imview.state.x_min = pix[0] - image_axis_ratio*pixel_height
+             imview.state.y_min = pix[1] - pixel_height
+             imview.state.x_max = pix[0] + image_axis_ratio*pixel_height
+             imview.state.y_max = pix[1] + pixel_height
 
     def load_data(self, spectra_1d=None, spectra_2d=None, images=None,
                    spectra_1d_label=None, spectra_2d_label=None,

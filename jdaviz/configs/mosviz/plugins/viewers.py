@@ -174,15 +174,13 @@ class MOSVizTableViewer(TableViewer):
 
                     self._selected_data['image-viewer'] = selected_data
 
-                # If all objects share one large image, zoom to the image.
-                # If there are separate images, check for slit information and zoom to slit
-                if self._shared_image:
-                    ra = mos_data["Right Ascension"][selected_index]
-                    dec = mos_data["Declination"][selected_index]
-                    message = TableClickMessage(ra=ra, dec=dec, sender=self)
-                    self.session.hub.broadcast(message)
-                else:
-                    message = TableClickMessage(slit_or_object="slit", sender=self)
+        # Send a message to trigger zooming the image, if there is an image
+        if mos_data.find_component_id("Images") is not None:
+            message = TableClickMessage(selected_index=selected_index,
+                                        shared_image = self._shared_image,
+                                        sender=self)
+            self.session.hub.broadcast(message)
+
 
     def set_plot_axes(self, *args, **kwargs):
         return
