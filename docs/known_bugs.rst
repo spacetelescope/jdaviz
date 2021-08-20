@@ -114,4 +114,4 @@ Specviz
 Collapse Plugin spectral bounds do not match selected region
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Spectral bounds are off in the plugin compared to the spectrum viewer.
+Spectral bound values in the plugin sometimes differ slightly from the bounds shown visually in the spectrum viewer.
