@@ -127,12 +127,11 @@ class MOSVizTableViewer(TableViewer):
         selected_index = event['new']
         mos_data = self.session.data_collection['MOS Table']
 
-        for component_label in ["1D Spectra", "2D Spectra", "Images"]:
-            cid = mos_data.find_component_id(component_label)
-            comp_data = mos_data.get_component(cid).data
+        for component in mos_data.components:
+            comp_data = mos_data.get_component(component).data
             selected_data = comp_data[selected_index]
 
-            if component_label == '1D Spectra':
+            if component.label == '1D Spectra':
                 prev_data = self._selected_data.get('spectrum-viewer')
                 if prev_data != selected_data:
                     if prev_data:
@@ -146,7 +145,7 @@ class MOSVizTableViewer(TableViewer):
 
                     self._selected_data['spectrum-viewer'] = selected_data
 
-            if component_label == '2D Spectra':
+            if component.label == '2D Spectra':
                 prev_data = self._selected_data.get('spectrum-2d-viewer')
                 if prev_data != selected_data:
                     if prev_data:
@@ -160,7 +159,7 @@ class MOSVizTableViewer(TableViewer):
 
                     self._selected_data['spectrum-2d-viewer'] = selected_data
 
-            if component_label == 'Images':
+            if component.label == 'Images':
                 prev_data = self._selected_data.get('image-viewer')
                 if prev_data != selected_data:
                     if prev_data:
@@ -177,10 +176,9 @@ class MOSVizTableViewer(TableViewer):
         # Send a message to trigger zooming the image, if there is an image
         if mos_data.find_component_id("Images") is not None:
             message = TableClickMessage(selected_index=selected_index,
-                                        shared_image = self._shared_image,
+                                        shared_image=self._shared_image,
                                         sender=self)
             self.session.hub.broadcast(message)
-
 
     def set_plot_axes(self, *args, **kwargs):
         return

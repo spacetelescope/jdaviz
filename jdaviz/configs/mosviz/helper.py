@@ -12,7 +12,8 @@ from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import SnackbarMessage, TableClickMessage
 from jdaviz.configs.specviz import SpecViz
 
-from .plugins.slit_overlay import jwst_header_to_skyregion
+from .plugins import jwst_header_to_skyregion
+
 
 class MosViz(ConfigHelper):
     """MosViz Helper class"""
@@ -106,41 +107,52 @@ class MosViz(ConfigHelper):
     def _row_click_message_handler(self, msg):
 
         if msg.shared_image:
-            self._zoom_image_to_object(msg)
+            center, height = self._zoom_to_object_params(msg)
         else:
-            self._zoom_image_to_slit(msg)
+            try:
+                center, height = self._zoom_to_slit_params(msg)
+            except IndexError:
+                # If there's nothing in the spectrum2d viewer, we can't get slit info
+                return
 
-    def _zoom_image_to_object(self, msg):
+        if center is None or height is None:
+            # Can't zoom if we couldn't figure out where to zoom (e.g. if RA/Dec not in table)
+            return
+
+        imview = self.app.get_viewer("image-viewer")
+
+        image_axis_ratio = ((imview.axis_x.scale.max - imview.axis_x.scale.min) /
+                            (imview.axis_y.scale.max - imview.axis_y.scale.min))
+
+        with delay_callback(imview.state, 'x_min', 'x_max', 'y_min', 'y_max'):
+            imview.state.x_min = center[0] - image_axis_ratio*height
+            imview.state.y_min = center[1] - height
+            imview.state.x_max = center[0] + image_axis_ratio*height
+            imview.state.y_max = center[1] + height
+
+    def _zoom_to_object_params(self, msg):
 
         table_data = self.app.data_collection['MOS Table']
         imview = self.app.get_viewer("image-viewer")
         specview = self.app.get_viewer("spectrum-2d-viewer")
 
+        if ("Right Ascension" not in table_data.component_ids() or
+                "Declination" not in table_data.component_ids()):
+            return None, None
+
         ra = table_data["Right Ascension"][msg.selected_index]
         dec = table_data["Declination"][msg.selected_index]
 
-        image_axis_ratio = ((imview.axis_x.scale.max - imview.axis_x.scale.min) /
-                            (imview.axis_y.scale.max - imview.axis_y.scale.min))
-
-        height = 0.5*(specview.axis_y.scale.max - specview.axis_y.scale.min)
+        pixel_height = 0.5*(specview.axis_y.scale.max - specview.axis_y.scale.min)
         point = SkyCoord(ra*u.deg, dec*u.deg)
 
         pix = imview.layers[0].layer.coords.world_to_pixel(point)
 
-        print(height, pix, image_axis_ratio)
+        return pix, pixel_height
 
-        with delay_callback(imview.state, 'x_min', 'x_max', 'y_min', 'y_max'):
-            imview.state.x_min = pix[0] - image_axis_ratio*height
-            imview.state.y_min = pix[1] - height
-            imview.state.x_max = pix[0] + image_axis_ratio*height
-            imview.state.y_max = pix[1] + height
-
-    def _zoom_image_to_slit(self, msg):
+    def _zoom_to_slit_params(self, msg):
         imview = self.app.get_viewer("image-viewer")
         specview = self.app.get_viewer("spectrum-2d-viewer")
-
-        image_axis_ratio = ((imview.axis_x.scale.max - imview.axis_x.scale.min) /
-                            (imview.axis_y.scale.max - imview.axis_y.scale.min))
 
         sky_region = jwst_header_to_skyregion(specview.layers[0].layer.meta)
         ra = sky_region.center.ra.deg
@@ -155,15 +167,11 @@ class MosViz(ConfigHelper):
                                                              (dec + height)*u.deg))
         pixel_height = upper[1] - pix[1]
 
-        with delay_callback(imview.state, 'x_min', 'x_max', 'y_min', 'y_max'):
-             imview.state.x_min = pix[0] - image_axis_ratio*pixel_height
-             imview.state.y_min = pix[1] - pixel_height
-             imview.state.x_max = pix[0] + image_axis_ratio*pixel_height
-             imview.state.y_max = pix[1] + pixel_height
+        return pix, pixel_height
 
     def load_data(self, spectra_1d=None, spectra_2d=None, images=None,
-                   spectra_1d_label=None, spectra_2d_label=None,
-                   images_label=None, *args, **kwargs):
+                  spectra_1d_label=None, spectra_2d_label=None,
+                  images_label=None, *args, **kwargs):
         """
         Load and parse a set of MOS spectra and images
 
