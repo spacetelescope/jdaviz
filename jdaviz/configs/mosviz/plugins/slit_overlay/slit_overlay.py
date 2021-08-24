@@ -55,6 +55,8 @@ class SlitOverlay(TemplateMixin):
         table = self.app.get_viewer("table-viewer")
         table.figure_widget.observe(self.place_slit_overlay, names=['highlighted'])
 
+        self._slit_overlay_mark = None
+
     def vue_change_visible(self, *args, **kwargs):
         if self.visible:
             self.place_slit_overlay()
@@ -114,6 +116,8 @@ class SlitOverlay(TemplateMixin):
                 # Visualize slit on the figure
                 fig_image.marks = fig_image.marks + [patch2]
 
+                self._slit_overlay_mark = patch2
+
             else:
                 self.visible = False
                 snackbar_message = SnackbarMessage(
@@ -126,5 +130,7 @@ class SlitOverlay(TemplateMixin):
             self.hub.broadcast(snackbar_message)
 
     def remove_slit_overlay(self):
-        image_figure = self.app.get_viewer("image-viewer").figure
-        image_figure.marks = [image_figure.marks[0]]
+        if self._slit_overlay_mark is not None:
+            image_figure = self.app.get_viewer("image-viewer").figure
+            image_figure.marks.remove(self._slit_overlay_mark)
+            self._slit_overlay_mark = None
