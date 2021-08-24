@@ -10,7 +10,7 @@ from glue.core.message import (SubsetCreateMessage,
 from regions import RectanglePixelRegion
 from specutils import Spectrum1D, SpectralRegion
 from specutils.utils import QuantityModel
-from traitlets import Bool, Float, Int, List, Unicode, observe
+from traitlets import Any, Bool, Int, List, Unicode, observe
 from glue.core.data import Data
 
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage, SnackbarMessage
@@ -38,8 +38,8 @@ class ModelFitting(TemplateMixin):
     template = load_template("model_fitting.vue", __file__).tag(sync=True)
     dc_items = List([]).tag(sync=True)
 
-    spectral_min = Float().tag(sync=True)
-    spectral_max = Float().tag(sync=True)
+    spectral_min = Any().tag(sync=True)
+    spectral_max = Any().tag(sync=True)
     spectral_unit = Unicode().tag(sync=True)
     spectral_subset_items = List(["None"]).tag(sync=True)
     selected_subset = Unicode("None").tag(sync=True)
