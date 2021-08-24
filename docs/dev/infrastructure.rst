@@ -138,7 +138,7 @@ by users for specialized scientific workflows. Component widgets in principle ca
 developed in any framework that can be exposed as an ipywidgets_ widget, although
 currently the plan is that most will be glue-jupyter_ viewers
 (using `bqplot <https://bqplot.readthedocs.io/en/latest/>`_ backend)
-combined with ipyvuetify_ layouts (that builds on VueJS). As with the application engine,
+combined with ipyvuetify_ layouts (that builds on Vue.js). As with the application engine,
 the general goal is to push any functionality necessary for these widgets upstream
 and not confine them to Jdaviz, but with allowances that some customization may be needed
 for Jdaviz-specific elements.
