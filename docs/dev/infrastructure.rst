@@ -17,7 +17,14 @@ framework in essentially the order in which they contact users in a typical
 visualization-heavy workflow. An overview of the layers is in this diagram,
 and each is described in more details below:
 
-.. image:: jdaviz.svg
+.. figure:: jdaviz.svg
+    :alt: Jdaviz design and infrastructure chart.
+
+    This figure illustrates the basics of Jdaviz design and infrastructure.
+    The top layer contains user-facing applications and supported
+    interfaces. The middle layer encapsulates its component widgets and the
+    visualization libraries involved. The bottom layer consists of low-level
+    data analysis and I/O libraries.
 
 Jdaviz: Interfaces and Applications
 ===================================
