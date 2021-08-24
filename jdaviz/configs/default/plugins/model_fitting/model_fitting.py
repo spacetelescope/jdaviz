@@ -279,10 +279,11 @@ class ModelFitting(TemplateMixin):
         else:
             spec_sub = self._spectral_subsets[self.selected_subset]
             unit = u.Unit(self.spectral_unit)
-            self._window = SpectralRegion.from_center(spec_sub.center.x * unit,
-                                                      spec_sub.width * unit)
-            self.spectral_min = self._window.lower.value
-            self.spectral_max = self._window.upper.value
+            spreg = SpectralRegion.from_center(spec_sub.center.x * unit,
+                                               spec_sub.width * unit)
+            self._window = (spreg.lower, spreg.upper)
+            self.spectral_min = spreg.lower.value
+            self.spectral_max = spreg.upper.value
 
     def vue_model_selected(self, event):
         # Add the model selected to the list of models
