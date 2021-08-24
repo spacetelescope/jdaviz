@@ -252,12 +252,11 @@ class ModelFitting(TemplateMixin):
         self._spectrum1d = selected_spec
 
         # Also set the spectral min and max to default to the full range
-        cube = self._spectrum1d.get_object(cls=SpectralCube)
         self.selected_subset = "None"
         self._window = None
-        self.spectral_min = cube.spectral_axis[0].value
-        self.spectral_max = cube.spectral_axis[-1].value
-        self.spectral_unit = str(cube.spectral_axis.unit)
+        self.spectral_min = selected_spec.spectral_axis[0].value
+        self.spectral_max = selected_spec.spectral_axis[-1].value
+        self.spectral_unit = str(selected_spec.spectral_axis.unit)
 
     def vue_list_subsets(self, event):
         """Populate the spectral subset selection dropdown"""
