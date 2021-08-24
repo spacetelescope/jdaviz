@@ -15,6 +15,7 @@ from traitlets import Dict, Bool
 from regions import RectanglePixelRegion, PixCoord
 from specutils import Spectrum1D
 
+from glue.core.exceptions import IncompatibleAttribute
 from glue.config import data_translator
 from glue.config import settings as glue_settings
 from glue.core import BaseData, HubListener, Data, DataCollection
@@ -451,8 +452,11 @@ class Application(VuetifyTemplate, HubListener):
 
                         if cls is not None:
                             handler, _ = data_translator.get_handler_for(cls)
-                            layer_data = handler.to_object(layer_data,
-                                                           statistic=statistic)
+                            try:
+                                layer_data = handler.to_object(layer_data,
+                                                            statistic=statistic)
+                            except IncompatibleAttribute:
+                                continue
 
                         data[label] = layer_data
 

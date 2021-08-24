@@ -6,6 +6,7 @@ from glue.core import BaseData
 from glue.core.subset import Subset
 from glue.config import data_translator
 from glue_jupyter.bqplot.profile import BqplotProfileView
+from glue.core.exceptions import IncompatibleAttribute
 
 import astropy
 from astropy.utils.introspection import minversion
@@ -66,8 +67,11 @@ class SpecvizProfileView(BqplotProfileView):
 
                     if _class is not None:
                         handler, _ = data_translator.get_handler_for(_class)
-                        layer_data = handler.to_object(layer_data,
-                                                       statistic=statistic)
+                        try:
+                            layer_data = handler.to_object(layer_data,
+                                                        statistic=statistic)
+                        except IncompatibleAttribute:
+                            continue
                     data.append(layer_data)
 
         return data
