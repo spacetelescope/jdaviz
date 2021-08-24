@@ -12,6 +12,7 @@ from specutils import Spectrum1D, SpectralRegion
 from specutils.utils import QuantityModel
 from traitlets import Any, Bool, Int, List, Unicode, observe
 from glue.core.data import Data
+from glue.core.subset import Subset, RangeSubsetState
 
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage, SnackbarMessage
 from jdaviz.core.registries import tray_registry
@@ -122,7 +123,8 @@ class ModelFitting(TemplateMixin):
 
         self.dc_items = [layer_state.layer.label
                          for layer_state in viewer.state.layers
-                         if isinstance(layer_state.layer, Data)]
+                         if (not isinstance(layer_state.layer, Subset)
+                             or not isinstance(layer_state.layer.subset_state, RangeSubsetState))]
 
     def _param_units(self, param, order=0):
         """Helper function to handle units that depend on x and y"""
