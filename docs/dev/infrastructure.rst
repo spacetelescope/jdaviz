@@ -84,9 +84,9 @@ applications and individual widgets.
 
 Specific target applications include:
 
-* *Specviz*: A a view into a single astronomical spectrum. It provides a UI to
+* *Specviz*: A view into a single astronomical spectrum. It provides a UI to
   view the spectrum, as well as perform common scientific operations like marking
-  spectral regions for further analysis (e.g., in a notebook), subtracting continuua,
+  spectral regions for further analysis (e.g., in a notebook), subtracting continua,
   measuring and fitting spectral lines, etc.
 * *Mosviz*: A view into many astronomical spectra, typically the output of a
   multi-object spectrograph (e.g.,
@@ -168,7 +168,7 @@ Known component widgets for the target applications include:
   and selection of specific rows (to then be highlighted in other viewers or interacted
   with in notebook/lab).
 
-In addition to the componenent widgets above, there are also *plugins* that goes with
+In addition to the component widgets above, there are also *plugins* that go with
 them to provide the necessary user interactions. Each plugin is specialized to do one
 thing, e.g., a "model fitting" plugin to allow users to fit
 :ref:`astropy models <astropy:astropy-modeling>` to spectra.
