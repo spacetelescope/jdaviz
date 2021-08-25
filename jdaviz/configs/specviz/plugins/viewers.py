@@ -69,7 +69,7 @@ class SpecvizProfileView(BqplotProfileView):
                         handler, _ = data_translator.get_handler_for(_class)
                         try:
                             layer_data = handler.to_object(layer_data,
-                                                        statistic=statistic)
+                                                           statistic=statistic)
                         except IncompatibleAttribute:
                             continue
                     data.append(layer_data)
