@@ -146,27 +146,31 @@ class MosViz(ConfigHelper):
                 msg = "Warning: Data is not from NIRISS or Nirspec, " \
                       "data loading may not work"
                 super().load_data(directory, "mosviz-nirspec-directory-parser")
+
         elif directory is not None:
             msg = "Warning: Please provide the name of the instrument" \
                   " in the load_data method"
+
         elif spectra_1d is not None and spectra_2d is not None\
                 and images is not None:
-                # If we have a single image for multiple spectra, tell the table viewer
-                if not isinstance(images, (list, tuple)) and isinstance(spectra_1d, (list, tuple)):
-                    self._shared_image = True
-                    self.app.get_viewer('table-viewer')._shared_image = True
-                    self.load_images(images, images_label, share_image=len(spectra_1d))
-                else:
-                    self.load_images(images, images_label)
+            # If we have a single image for multiple spectra, tell the table viewer
+            if not isinstance(images, (list, tuple)) and isinstance(spectra_1d, (list, tuple)):
+                self._shared_image = True
+                self.app.get_viewer('table-viewer')._shared_image = True
+                self.load_images(images, images_label, share_image=len(spectra_1d))
+            else:
+                self.load_images(images, images_label)
 
-                if images is not None and not self._shared_image:
-                    self.load_metadata(images)
+            if images is not None and not self._shared_image:
+                self.load_metadata(images)
 
-                self.load_2d_spectra(spectra_2d, spectra_2d_label)
-                self.load_1d_spectra(spectra_1d, spectra_1d_label)
-                elif spectra_1d is not None and spectra_2d is not None:
-                    self.load_2d_spectra(spectra_2d, spectra_2d_label)
-                    self.load_1d_spectra(spectra_1d, spectra_1d_label)
+            self.load_2d_spectra(spectra_2d, spectra_2d_label)
+            self.load_1d_spectra(spectra_1d, spectra_1d_label)
+
+        elif spectra_1d is not None and spectra_2d is not None:
+            self.load_2d_spectra(spectra_2d, spectra_2d_label)
+            self.load_1d_spectra(spectra_1d, spectra_1d_label)
+
         else:
             msg = "Warning: Please set valid values for the load_data() method"
 
