@@ -199,7 +199,7 @@ to focus on to complement or extend their Jdaviz workflows.
 
 .. note::
 
-    In the diagram above, optional dependencies of Jdaviz have dashed lines.
+    In the diagram above, optional dependencies of Jdaviz have dotted lines.
     Optional dependencies mean they are only required for certain Jdaviz
     workflows and are not explicitly installed by default when you install Jdaviz.
 
