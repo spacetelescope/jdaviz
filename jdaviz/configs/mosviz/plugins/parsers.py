@@ -92,7 +92,7 @@ def _fields_from_ecsv(fname, fields, delimiter=","):
 @data_parser_registry("mosviz-link-data")
 def link_data_in_table(app, data_obj=None, data_labels=None):
     """
-    Batch links data in the mosviz table viewer
+    Batch links data in the mosviz table viewer.
 
     Parameters
     ----------
