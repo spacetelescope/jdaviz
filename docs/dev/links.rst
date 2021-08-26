@@ -87,10 +87,10 @@ Using WCSLink
 -------------
 
 A more robust approach for linking datasets by world coordinates is to use the
-``WCSLink`` class. Given two datasets, and a list of pixel component IDs to link
-in each dataset, this class will set up links between the pixel components by
-internally representing the chain of WCS transformations required. As an
-example::
+:class:`~glue.plugins.wcs_autolinker.wcs_autolinker.WCSLink` class. Given two
+datasets, and a list of pixel component IDs to link in each dataset, this class
+will set up links between the pixel components by internally representing the
+chain of WCS transformations required. As an example::
 
     from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink
 
@@ -110,9 +110,10 @@ Speeding up WCS links
 
 In some cases, doing the full WCS transformations can be slow, and may not be
 necessary if the two datasets are close to each other or overlap significantly.
-For the best performance, it is possible to approximate the WCSLink by a simple
-affine transformation between the datasets. This can be done with the
-``as_affine_link`` method::
+For the best performance, it is possible to approximate the
+:class:`~glue.plugins.wcs_autolinker.wcs_autolinker.WCSLink` by a simple affine
+transformation between the datasets. This can be done with the
+:meth:`~glue.plugins.wcs_autolinker.wcs_autolinker.WCSLink.as_affine_link` method::
 
     link = WCSLink(data1=data1, data2=data2,
                    cids1=data1.pixel_component_ids,
@@ -122,15 +123,16 @@ affine transformation between the datasets. This can be done with the
 
     data_collection.add_link(fast_link)
 
-The ``as_affine_link`` method takes a ``tolerance`` argument which defaults
-to 1 pixel - if no approximation can be found that transforms all positions in
-the image to within that tolerance, an error of type ``NoAffineApproximation``
-is returned (this exception is defined in
-``glue.plugins.wcs_autolinking.wcs_autolinking``).
+The :meth:`~glue.plugins.wcs_autolinker.wcs_autolinker.WCSLink.as_affine_link`
+method takes a ``tolerance`` argument which defaults to 1 pixel - if no
+approximation can be found that transforms all positions in the image to within
+that tolerance, an error of type ``NoAffineApproximation`` is returned (this
+exception is defined in :mod:`glue.plugins.wcs_autolinking.wcs_autolinking`).
 
-I think whenever we use WCSLink in jdaviz we should then use an affine
-approximation whenever one can be calculated, as for visualization purposes it
-should be good enough (as a side note, I think DS9 uses a similar approach).
+I think whenever we use :class:`~glue.plugins.wcs_autolinker.wcs_autolinker.WCSLink`
+in jdaviz we should then use an affine approximation whenever one can be
+calculated, as for visualization purposes it should be good enough (as a side
+note, I think DS9 uses a similar approach).
 
 Speeding up adding links to the data collection
 ===============================================
@@ -138,23 +140,42 @@ Speeding up adding links to the data collection
 Each time a link, dataset, or component/attribute is added to the data
 collection in glue, the link tree is recalculated. This can be prevented by
 using the
-`WCSLink.delay_link_manager_update <http://docs.glueviz.org/en/latest/api/glue.core.data_collection.DataCollection.html?highlight=delay#glue.core.data_collection.DataCollection.delay_link_manager_update>`_
+:meth:`~glue.core.data_collection.DataCollection.delay_link_manager_update`
 context manager. Use this around any block that adds multiple datasets to the
 data collection, components/attributes to datasets, or links to the data
 collection, e.g.::
 
     with data_collection.delay_link_manager_update():
         for i in range(10):
-            data_collection.append(Data(...)) data_collection.add_link(...)
+            data_collection.append(Data(...))
+            data_collection.add_link(...)
+
+Setting all links in one go
+===========================
+
+If you want to prepare and set all links in one go, discarding any previous links,
+you can make use of the :meth:`~glue.core.data_collection.DataCollectionn.set_links`
+method, which takes a list of links::
+
+    data_collection.set_links([link1, link2, link3])
+
+Note that for now it can still be beneficial to use this inside the
+:meth:`~glue.core.data_collection.DataCollection.delay_link_manager_update`
+context manager mentioned in the previous section.
+
+This method is ideal if you want to e.g. switch between using pixel and WCS links
+as it will discard any existing links before adding the new ones.
 
 Mixing link types
 =================
 
 Glue can handle many different link types in a same session, so for instance if
-one had three datasets, two of the datasets could be linked by a ``WCSLink``
-while two other datasets could be linked by pixel coordinates. However, the same
-two datasets should not be linked both by ``WCSLink`` and pixel coordinates at
-the same time as which link takes precedence is not defined.
+one had three datasets, two of the datasets could be linked by a
+:class:`~glue.plugins.wcs_autolinker.wcs_autolinker.WCSLink` while two other
+datasets could be linked by pixel coordinates. However, the same two datasets
+should not be linked both by :class:`~glue.plugins.wcs_autolinker.wcs_autolinker.WCSLink`
+and pixel coordinates at the same time as which link takes precedence is not
+defined.
 
 
 
