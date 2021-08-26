@@ -454,7 +454,7 @@ class Application(VuetifyTemplate, HubListener):
                             handler, _ = data_translator.get_handler_for(cls)
                             try:
                                 layer_data = handler.to_object(layer_data,
-                                                            statistic=statistic)
+                                                               statistic=statistic)
                             except IncompatibleAttribute:
                                 continue
 
