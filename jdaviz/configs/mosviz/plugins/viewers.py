@@ -118,6 +118,7 @@ class MOSVizTableViewer(TableViewer):
         self.figure_widget.observe(self._on_row_selected, names=['highlighted'])
 
         self._selected_data = {}
+        self._shared_image = False
 
     def _on_row_selected(self, event):
 
@@ -170,6 +171,11 @@ class MOSVizTableViewer(TableViewer):
                     self.session.hub.broadcast(add_data_to_viewer_message)
 
                     self._selected_data['image-viewer'] = selected_data
+
+                # TODO: If all objects share one large image, zoom to the image.
+                if self._shared_image:
+                    pass
+                    # self.zoom_to_object()
 
     def set_plot_axes(self, *args, **kwargs):
         return
