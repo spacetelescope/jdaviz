@@ -157,29 +157,31 @@ class MosViz(ConfigHelper):
             self.load_2d_spectra(spectra_2d, spectra_2d_label)
             self.load_1d_spectra(spectra_1d, spectra_1d_label)
         else:
-            msg = "Warning: Please set valid values for the load_data method"
+            msg = "Warning: Please set valid values for the load_data() method"
 
         if msg:
             print(msg)
             msg = SnackbarMessage(msg, color='warning', sender=self)
             self.app.hub.broadcast(msg)
 
-    def load_spectra(self, spectrum_1d, spectrum_2d):
+    def load_spectra(self, spectra_1d, spectra_2d):
         """
         Load 1D and 2D spectra from a directory.
 
         Parameters
         ----------
-        spectrum_1d : str
+        spectra_1d : list or str
+            A list of spectra as translatable container objects (e.g.
+            ``Spectrum1D``) that can be read by glue-jupyter. Alternatively,
+            can be a string file path.
 
-        spectrum_2d :
-
-        Returns
-        -------
-
+        spectra_2d : list or str
+            A list of spectra as translatable container objects (e.g.
+            ``Spectrum1D``) that can be read by glue-jupyter. Alternatively,
+            can be a string file path.
         """
 
-        self.load_data(spectrum_1d=spectrum_1d, spectrum_2d=spectrum_2d)
+        self.load_data(spectra_1d=spectra_1d, spectra_2d=spectra_2d)
 
     def load_spectra_from_directory(self, directory, instrument):
         """
@@ -187,10 +189,10 @@ class MosViz(ConfigHelper):
         Parameters
         ----------
         directory : str
-            The path of the directory where Mosviz data is located
+            The path of the directory where Mosviz data is located.
 
         instrument : str
-            The instrument the Mosviz data originated from
+            The instrument the Mosviz data originated from.
 
         Returns
         -------

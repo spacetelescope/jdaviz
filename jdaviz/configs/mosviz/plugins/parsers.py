@@ -1,5 +1,6 @@
-from glue.core.data import Data
+import os
 
+from glue.core.data import Data
 from jdaviz.core.registries import data_parser_registry
 from jdaviz.core.events import SnackbarMessage
 import csv
@@ -93,46 +94,41 @@ def mos_nirspec_directory_parser(app, data_obj, data_labels=None):
 
     spectra_1d = []
     spectra_2d = []
-    images = []
 
+    # Load spectra
     level3_path = Path(data_obj)
     for file_path in glob.iglob(str(level3_path / '*')):
         if 'x1d' in file_path:
             spectra_1d.append(file_path)
         elif 's2d' in file_path:
             spectra_2d.append(file_path)
-        # TODO: Where to find image files and how to tell if they correspond
-        # TODO: with the spectra?
-        # elif '.fits' in file_path:
-        #     print(file_path)
-        #     images.append(file_path)
 
-    # In order for a new column to be added to the table,
-    # it must have the same number of rows as other columns
-    if len(images) == len(spectra_1d):
-        mos_meta_parser(app, images)
-        mos_image_parser(app, images)
-    else:
-        msg = "The number of images in this directory does not match the" \
-              " number of spectra 1d and 2d files, please make the " \
-              "amounts equal or load images separately."
-        print(msg)
-        msg = SnackbarMessage(msg, color='warning', sender=app)
-        app.hub.broadcast(msg)
+    # Load images, if present
+    image_path = None
+
+    # Potential names of subdirectories where images are stored
+    for image_dir_name in ["cutouts", "mosviz_cutouts", "images"]:
+        if os.path.isdir(Path(str(level3_path / image_dir_name))):
+            image_path = Path(str(level3_path / image_dir_name))
+            break
+    if image_path is not None:
+        images = [file_path for file_path in glob.iglob(str(image_path / '*'))]
+
+        # The amount of images needs to be equal to the amount of rows
+        # of the other columns in the table
+        if len(images) == len(spectra_1d):
+            mos_meta_parser(app, images)
+            mos_image_parser(app, images)
+        else:
+            msg = "The number of images in this directory does not match the" \
+                  " number of spectra 1d and 2d files, please make the " \
+                  "amounts equal or load images separately."
+            print(msg)
+            msg = SnackbarMessage(msg, color='warning', sender=app)
+            app.hub.broadcast(msg)
 
     mos_spec1d_parser(app, spectra_1d)
     mos_spec2d_parser(app, spectra_2d)
-
-    # TODO: Once the number of images in a directory matches the number of
-    # TODO: spectra, this can be uncommented
-    # if os.path.isdir(Path(str(level3_path / 'mosviz_cutouts'))):
-    #     images_dir = Path(str(level3_path / 'mosviz_cutouts'))
-    #     images = [file_path for file_path in glob.iglob(str(images_dir / '*'))]
-    #     mos_image_parser(app, images, data_labels)
-    # elif os.path.isdir(Path(str(level3_path / 'cutouts'))):
-    #     images_dir = Path(str(level3_path / 'cutouts'))
-    #     images = [file_path for file_path in glob.iglob(str(images_dir / '*'))]
-    #     mos_image_parser(app, images, data_labels)
 
 
 @data_parser_registry("mosviz-spec1d-parser")
