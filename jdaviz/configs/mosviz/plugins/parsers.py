@@ -111,7 +111,7 @@ def link_data_in_table(app, data_obj=None, data_labels=None):
     # context manager, b) handling intra-row linkage of 1D and 2D spectra in a
     # loop, and c) handling inter-row linkage after that in one fell swoop.
     with app.data_collection.delay_link_manager_update():
-        for index in range(0, len(mos_data.get_component('1D Spectra').data)):
+        for index in range(len(mos_data.get_component('1D Spectra').data)):
             spec_1d = mos_data.get_component('1D Spectra').data[index]
             spec_2d = mos_data.get_component('2D Spectra').data[index]
             # image = mos_data.get_component('Images').data[index] # include?

@@ -149,14 +149,13 @@ class MosViz(ConfigHelper):
 
     def link_table_data(self, data_obj):
         """
-        Batch link data in the mosviz table rather than doing it on
+        Batch link data in the Mosviz table rather than doing it on
         data load.
 
         Parameters
         ----------
-        data_obj : None
-            Not used in this method, only included to be able to access the
-            mosviz data parsers.
+        data_obj : obj
+            Input for Mosviz data parsers.
         """
         super().load_data(data_obj, parser_reference="mosviz-link-data")
 
