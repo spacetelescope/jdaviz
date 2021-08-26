@@ -93,6 +93,7 @@ def mos_nirspec_directory_parser(app, data_obj, data_labels=None):
 
     spectra_1d = []
     spectra_2d = []
+    images = []
 
     level3_path = Path(data_obj)
     for file_path in glob.iglob(str(level3_path / '*')):
@@ -100,7 +101,24 @@ def mos_nirspec_directory_parser(app, data_obj, data_labels=None):
             spectra_1d.append(file_path)
         elif 's2d' in file_path:
             spectra_2d.append(file_path)
-        # TODO: check if file is an image and add to images list
+        # TODO: Where to find image files and how to tell if they correspond
+        # TODO: with the spectra?
+        # elif '.fits' in file_path:
+        #     print(file_path)
+        #     images.append(file_path)
+
+    # In order for a new column to be added to the table,
+    # it must have the same number of rows as other columns
+    if len(images) == len(spectra_1d):
+        mos_meta_parser(app, images)
+        mos_image_parser(app, images)
+    else:
+        msg = "The number of images in this directory does not match the" \
+              " number of spectra 1d and 2d files, please make the " \
+              "amounts equal or load images separately."
+        print(msg)
+        msg = SnackbarMessage(msg, color='warning', sender=app)
+        app.hub.broadcast(msg)
 
     mos_spec1d_parser(app, spectra_1d)
     mos_spec2d_parser(app, spectra_2d)

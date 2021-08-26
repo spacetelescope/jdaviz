@@ -92,20 +92,14 @@ class MosViz(ConfigHelper):
             if val != old_val:
                 setattr(scales['x'], name, val)
 
-    def load_data(self, directory=None, instrument=None, spectra_1d=None,
-                  spectra_2d=None, images=None, spectra_1d_label=None,
-                  spectra_2d_label=None, images_label=None):
+    def load_data(self, spectra_1d=None, spectra_2d=None, images=None,
+                  spectra_1d_label=None, spectra_2d_label=None,
+                  images_label=None, *args, **kwargs):
         """
         Load and parse a set of MOS spectra and images
 
         Parameters
         ----------
-        directory : str
-            The path of the directory where Mosviz data is located
-
-        instrument : str
-            The instrument the Mosviz data originated from
-
         spectra_1d : list or str
             A list of spectra as translatable container objects (e.g.
             ``Spectrum1D``) that can be read by glue-jupyter. Alternatively,
@@ -136,6 +130,9 @@ class MosViz(ConfigHelper):
             ``images``. Can be a list of strings representing data labels
             for each item in ``data_obj`` if  ``data_obj`` is a list.
         """
+
+        directory = kwargs.pop('directory', None)
+        instrument = kwargs.pop('instrument', None)
         msg = ""
 
         if directory is not None and instrument is not None:
@@ -166,6 +163,40 @@ class MosViz(ConfigHelper):
             print(msg)
             msg = SnackbarMessage(msg, color='warning', sender=self)
             self.app.hub.broadcast(msg)
+
+    def load_spectra(self, spectrum_1d, spectrum_2d):
+        """
+        Load 1D and 2D spectra from a directory.
+
+        Parameters
+        ----------
+        spectrum_1d : str
+
+        spectrum_2d :
+
+        Returns
+        -------
+
+        """
+
+        self.load_data(spectrum_1d=spectrum_1d, spectrum_2d=spectrum_2d)
+
+    def load_spectra_from_directory(self, directory, instrument):
+        """
+
+        Parameters
+        ----------
+        directory : str
+            The path of the directory where Mosviz data is located
+
+        instrument : str
+            The instrument the Mosviz data originated from
+
+        Returns
+        -------
+
+        """
+        self.load_data(directory=directory, instrument=instrument)
 
     def load_metadata(self, data_obj):
         """
