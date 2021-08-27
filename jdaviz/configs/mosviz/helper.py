@@ -151,8 +151,8 @@ class MosViz(ConfigHelper):
             msg = "Warning: Please provide the name of the instrument" \
                   " in the load_data method"
 
-        elif spectra_1d is not None and spectra_2d is not None\
-                and images is not None:
+        elif (spectra_1d is not None and spectra_2d is not None
+                and images is not None):
             # If we have a single image for multiple spectra, tell the table viewer
             if not isinstance(images, (list, tuple)) and isinstance(spectra_1d, (list, tuple)):
                 self._shared_image = True
@@ -181,7 +181,7 @@ class MosViz(ConfigHelper):
 
     def load_spectra(self, spectra_1d, spectra_2d):
         """
-        Load 1D and 2D spectra from a directory.
+        Load 1D and 2D spectra using lists or strings to represent each.
 
         Parameters
         ----------
@@ -200,6 +200,7 @@ class MosViz(ConfigHelper):
 
     def load_spectra_from_directory(self, directory, instrument):
         """
+        Load 1D and 2D spectra from a directory.
 
         Parameters
         ----------
@@ -208,10 +209,6 @@ class MosViz(ConfigHelper):
 
         instrument : str
             The instrument the Mosviz data originated from.
-
-        Returns
-        -------
-
         """
         self.load_data(directory=directory, instrument=instrument)
 
