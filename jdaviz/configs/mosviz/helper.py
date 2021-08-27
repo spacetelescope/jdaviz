@@ -131,6 +131,7 @@ class MosViz(ConfigHelper):
             ``images``. Can be a list of strings representing data labels
             for each item in ``data_obj`` if  ``data_obj`` is a list.
         """
+        self.app.auto_link = False
 
         # If we have a single image for multiple spectra, tell the table viewer
         if not isinstance(images, (list, tuple)) and isinstance(spectra_1d, (list, tuple)):
@@ -146,6 +147,8 @@ class MosViz(ConfigHelper):
         self.load_2d_spectra(spectra_2d, spectra_2d_label)
         self.load_1d_spectra(spectra_1d, spectra_1d_label)
         self.link_table_data(None)
+
+        self.app.auto_link = True
 
     def link_table_data(self, data_obj):
         """
@@ -208,8 +211,12 @@ class MosViz(ConfigHelper):
                           data_labels=data_labels)
 
     def load_niriss_data(self, data_obj, data_labels=None):
+        self.app.auto_link = False
+
         super().load_data(data_obj, parser_reference="mosviz-niriss-parser")
         self.link_table_data(data_obj)
+
+        self.app.auto_link = True
 
     def load_images(self, data_obj, data_labels=None, share_image=0):
         """
