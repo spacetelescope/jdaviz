@@ -535,7 +535,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                     else:
                         hdu.header["SRCTYPE"] = "EXTENDED"
 
-                specs = SpectrumList.read(temp)
+                specs = SpectrumList.read(temp, format="JWST x1d multi")
                 filter_name = [x
                                for x in fname.split("/")[-1].split("_")
                                if x[0] == "F" or x[0] == "f"][0]
