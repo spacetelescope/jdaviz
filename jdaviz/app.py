@@ -252,9 +252,8 @@ class Application(VuetifyTemplate, HubListener):
         # Allow for batch linking of data in the parser rather than on
         # data load
         if not self.auto_link:
-            print("auto_link false")
             return
-        print("auto_link true")
+
         new_len = len(self.data_collection)
         # Can't link if there's no world_component_ids
         wc_new = self.data_collection[new_len-1].world_component_ids

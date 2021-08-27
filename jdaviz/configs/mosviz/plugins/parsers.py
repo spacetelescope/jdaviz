@@ -90,7 +90,7 @@ def _fields_from_ecsv(fname, fields, delimiter=","):
 
 
 @data_parser_registry("mosviz-link-data")
-def link_data_in_table(app, data_obj=None, data_labels=None):
+def link_data_in_table(app, data_obj=None):
     """
     Batch links data in the mosviz table viewer.
 
@@ -101,8 +101,6 @@ def link_data_in_table(app, data_obj=None, data_labels=None):
     data_obj : None
         Passed in in order to use the data_parser_registry, otherwise
         not used.
-    data_labels : None
-        Not used.
     """
     mos_data = app.session.data_collection['MOS Table']
     wc_spec_ids = []
