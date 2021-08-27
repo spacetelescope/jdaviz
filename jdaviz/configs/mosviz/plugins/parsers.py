@@ -524,36 +524,84 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
     - *_WFSSC_*_cal.fits : 2D spectra in second orientation
     - *_WFSSR_*_x1d.fits : 1D spectra in first orientation
     - *_WFSSC_*_x1d.fits : 1D spectra in second orientation
-    The spectra from the "C" files (horizontal orientation) are showed
+    The spectra from the "C" files (horizontal orientation) are shown
     in the viewers by default.
+
+    Parameters
+    ----------
+    app : `~jdaviz.app.Application`
+        The application-level object used to reference the viewers.
+    data_dir : str
+        The path to a directory containing NIRISS data products.
+    obs_label : str
+        A OBS_ID/VISIT_ID/OBSLABEL (???) used to limit which files are included
+        in the data loading process.
     """
-
-    p = Path(data_dir)
-    if not p.is_dir():
+    path = Path(data_dir)
+    if not path.is_dir():
         raise ValueError("{} is not a valid directory path".format(data_dir))
-    source_cat = sorted(list(p.glob("{}*_direct_*_cat.ecsv".format(obs_label))))
-    direct_image = sorted(list(p.glob("{}*_direct_dit1*_i2d.fits".format(obs_label))))
-    spec2d_r = sorted(list(p.glob("{}*_WFSSR_*_cal.fits".format(obs_label))))
-    spec2d_c = sorted(list(p.glob("{}*_WFSSC_*_cal.fits".format(obs_label))))
-    spec1d_r = sorted(list(p.glob("{}*_WFSSR_*_x1d.fits".format(obs_label))))
-    spec1d_c = sorted(list(p.glob("{}*_WFSSC_*_x1d.fits".format(obs_label))))
 
-    file_lists = {
-                  "Source Catalog": source_cat,
-                  "Direct Image": direct_image,
-                  "2D Spectra C": spec2d_c,
-                  "2D Spectra R": spec2d_r,
-                  "1D Spectra C": spec1d_c,
-                  "1D Spectra R": spec1d_r
-                 }
+    file_types = ['Source Catalog', 'Direct Image', '2D Spectra C',
+                  '2D Spectra R', '1D Spectra C', '1D Spectra R']
+    file_lists = {k: [] for k in file_types}
 
-    # Convert from pathlib Paths back to strings
-    for key in file_lists:
-        file_lists[key] = [str(x) for x in file_lists[key]]
+    # use FITS header keywords to sort the directory's files
+    for filepath in path.glob('*'):
+        if filepath.is_dir():
+            continue
+
+        filestr = str(filepath)
+
+        if filepath.suffix == '.fits':
+            # eligible files will have a DATAMODL value in their primary headers
+            header = fits.getheader(filepath, ext=0)
+            datamodl = header.get('DATAMODL')
+
+            # infer the dispersion direction of 1D and 2D spectra by the last
+            # letter of their filter values (e.g., "GR150C" or "GR150R")
+            try:
+                dispersion = header.get('FILTER')[-1]
+            except TypeError:
+                dispersion = None # could be cleaner...
+
+            # distinguish image files from counts files -- only the former go
+            # through the "Assign World Coordinate System" calibration step
+            s_wcs = header.get('S_WCS')
+
+            if datamodl is None:
+                continue
+            elif datamodl == 'MultiSpecModel' and dispersion == 'C':
+                file_lists['1D Spectra C'].append(filestr)
+            elif datamodl == 'MultiSpecModel' and dispersion == 'R':
+                file_lists['1D Spectra R'].append(filestr)
+            elif datamodl == 'MultiSlitModel' and dispersion == 'C':
+                file_lists['2D Spectra C'].append(filestr)
+            elif datamodl == 'MultiSlitModel' and dispersion == 'R':
+                file_lists['2D Spectra R'].append(filestr)
+            elif datamodl == 'ImageModel' and s_wcs is not None:
+                file_lists['Direct Image'].append(filestr)
+            else:
+                # print(f"Other case: datamodl is {datamodl}; "
+                #       f"dispersion is {dispersion}")
+                pass
+
+        elif filepath.suffix == '.ecsv':
+            file_lists['Source Catalog'].append(filestr)
+
+        else:
+            continue
+
     _warn_if_not_found(app, file_lists)
 
     # Parse relevant information from source catalog
-    cat_fields = ["id", "sky_centroid.ra", "sky_centroid.dec"]
+    # TEMP NOTE: the ecsv table in the example directory has one column with
+    # sky centroid info given as an RA/Dec tuple instead of two columns with
+    # separate floats. i tried to support both schemas.
+    cat_fields = ['id', 'sky_centroid']
+    if 'sky_centroid' not in file_lists['Source Catalog'][0]:
+        cat_fields.pop()
+        cat_fields.extend(['sky_centroid.ra', 'sky_centroid.dec']) # old style
+
     source_ids = []
     ras = []
     decs = []
@@ -571,8 +619,14 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
 
         pupil_id_dict[pupil] = {}
 
-        for row in parsed_cat_fields:
-            pupil_id_dict[pupil][int(row[0])] = (row[1], row[2])
+        if len(cat_fields) == 2: # new style
+            for row in parsed_cat_fields:
+                pupil_id_dict[pupil][int(row[0])] = (row[1][0], row[1][1])
+        elif len(cat_fields) == 3: # old style
+            for row in parsed_cat_fields:
+                pupil_id_dict[pupil][int(row[0])] = (row[1], row[2])
+        else:
+            raise Exception("Unexpected cat_fields length")
 
     # Read in direct image filters
     image_dict = {}
