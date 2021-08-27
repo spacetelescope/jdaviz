@@ -6,7 +6,7 @@ from echo import delay_callback
 from glue.config import viewer_tool
 from glue_jupyter.bqplot.common.tools import Tool
 from glue.viewers.common.tool import CheckableTool
-from glue.plugins.wcs_autolinking.wcs_autolinking import wcs_autolink, WCSLink
+from glue.plugins.wcs_autolinking.wcs_autolinking import wcs_autolink, WCSLink, AffineLink
 from glue_jupyter.bqplot.common.tools import BqplotPanZoomMode
 
 __all__ = []
@@ -54,13 +54,13 @@ class BqplotMatchWCS(BqplotPanZoomMode):
         for link in wcs_links:
             exists = False
             for existing_link in self.viewer.session.data_collection.external_links:
-                if isinstance(existing_link, WCSLink):
+                if isinstance(existing_link, (AffineLink, WCSLink)):
                     if (link.data1 is existing_link.data1
                             and link.data2 is existing_link.data2):
                         exists = True
                         break
             if not exists:
-                self.viewer.session.data_collection.add_link(link)
+                self.viewer.session.data_collection.add_link(link.as_affine_link())
 
         # Set the reference data in other viewers to be the same as the current viewer.
         # If adding the data to the viewer, make sure it is not actually shown since the
