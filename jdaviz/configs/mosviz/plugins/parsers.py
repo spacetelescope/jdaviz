@@ -552,7 +552,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
 
         filestr = str(filepath)
 
-        if filepath.suffix == '.fits':
+        if filepath.suffix in ('.fits', '.fits.gz', '.fit', '.fit.gz'):
             # eligible files will have a DATAMODL value in their primary headers
             header = fits.getheader(filepath, ext=0)
             datamodl = header.get('DATAMODL')
@@ -570,7 +570,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
 
             if datamodl is None:
                 continue
-            elif datamodl == 'MultiSpecModel' and dispersion == 'C':
+            if datamodl == 'MultiSpecModel' and dispersion == 'C':
                 file_lists['1D Spectra C'].append(filestr)
             elif datamodl == 'MultiSpecModel' and dispersion == 'R':
                 file_lists['1D Spectra R'].append(filestr)
@@ -583,7 +583,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
             else:
                 # print(f"Other case: datamodl is {datamodl}; "
                 #       f"dispersion is {dispersion}")
-                pass
+                continue
 
         elif filepath.suffix == '.ecsv':
             file_lists['Source Catalog'].append(filestr)
