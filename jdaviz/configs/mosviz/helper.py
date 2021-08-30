@@ -131,6 +131,7 @@ class MosViz(ConfigHelper):
             ``images``. Can be a list of strings representing data labels
             for each item in ``data_obj`` if  ``data_obj`` is a list.
         """
+        # Link data after everything is loaded
         self.app.auto_link = False
 
         # If we have a single image for multiple spectra, tell the table viewer
@@ -148,6 +149,8 @@ class MosViz(ConfigHelper):
         self.load_1d_spectra(spectra_1d, spectra_1d_label)
         self.link_table_data(None)
 
+        # Any subsequently added data will automatically be linked
+        # with data already loaded in the app
         self.app.auto_link = True
 
     def link_table_data(self, data_obj):
