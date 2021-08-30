@@ -123,7 +123,7 @@ def mos_nirspec_directory_parser(app, data_obj, data_labels=None):
             msg = "The number of images in this directory does not match the" \
                   " number of spectra 1d and 2d files, please make the " \
                   "amounts equal or load images separately."
-            print(msg)
+            logging.warning(msg)
             msg = SnackbarMessage(msg, color='warning', sender=app)
             app.hub.broadcast(msg)
 
