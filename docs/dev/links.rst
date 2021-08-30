@@ -4,32 +4,34 @@ Linking of datasets in glue
 
 .. note:: The glue documentation includes a page about
           `linking <http://docs.glueviz.org/en/stable/developer_guide/linking.html>`_ but
-          it is somewhat out of date - the present page should be considered a
-          more up-to-date guide with a focus on links useful to jdaviz.
+          the present page should be considered a
+          more up-to-date guide with a focus on links useful to Jdaviz.
 
 The 'why' of linking
 ====================
 
-First, why is linking needed in the first place? Linking in glue is simply a way
+Why is linking needed in the first place? Linking in glue is a way
 to describe the relationship between datasets, with two main goals: to know how
 to overplot datasets, and to know how to apply a subset defined in one dataset
 (such as a spectral range) to another dataset. Having linking means being able
-to show e.g. multiple spectra in the same plot, or multiple images that are
+to show, say, multiple spectra in the same plot, or multiple images that are
 aligned in the same image viewer, or contours on top of an image.
 
 There are various ways of setting up links in glue, but the two main ways that
-have been discussed and used in jdaviz are linking by pixel coordinates, and
-linking by world coordinates.
+have been discussed and used in Jdaviz are linking by pixel coordinates, and
+linking by world coordinates (WCS).
+
+.. _link_by_pixel:
 
 Linking by pixel coordinates with an identity link
 ==================================================
 
-Linking by pixel coordinates with an identity link with a means that glue
-considers that the datasets' pixel grids are lined up at that the origins of the
+Linking by pixel coordinates with an identity link means that glue
+considers that the datasets' pixel grids are lined up at where the origins of the
 datasets overlap. This means that if one has two images, with shape (32,32) and
 (128,128), the (0,0) pixels will overlap, and the (32,32) dataset will be lined
 up with the first (32,32) pixels of the larger dataset, starting at the origin.
-This is equivalent to the **Match image** mode in DS9.
+This is equivalent to the "match image" mode in DS9.
 
 An example of setting up an identity link in pixel coordinates between two
 datasets with equal dimensionality would look like::
@@ -42,24 +44,27 @@ datasets with equal dimensionality would look like::
     for i in range(data1.ndim):
         data_collection.add_link(LinkSame(pix_ids_1[i], pix_ids_2[i]))
 
-This can also be used to link for example the two spatial dimensions of a
+This can also be used to link, for example, the two spatial dimensions of a
 collapsed cube with the original cube, as done in the `cube collapse
 functionality <https://github.com/spacetelescope/jdaviz/blob/0553aca6c2e9530d8dff74088e877fc9593c2d3c/jdaviz/configs/default/plugins/collapse/collapse.py#L146-L152>`_
-in jdaviz. This linking would then allow e.g. the collapsed dataset to be shown
+in Jdaviz. This linking would then allow the collapsed dataset to be shown
 as contours on top of the original sliced cube.
 
 This is by far the fastest way of linking, but it does rely on the datasets
 being exactly lined up pixel-wise. This approach can likely be used in specific
 parsers where it is known that the datasets are on the same grid.
 
-Linking by world coordinates
-============================
+.. _link_by_wcs:
 
-Using LinkSame
---------------
+Linking by WCS
+==============
 
-There are two main ways of linking by world coordinates. The first is to do
-something similar to how pixel coordinates are linked::
+There are two main ways of linking by world coordinates, as follow.
+
+Using LinkSame (not recommended)
+--------------------------------
+
+The first is to do something similar to how pixel coordinates are linked in :ref:`link_by_pixel`::
 
     from glue.core.link_helpers import LinkSame
 
@@ -70,21 +75,21 @@ something similar to how pixel coordinates are linked::
         data_collection.add_link(LinkSame(world_ids_1[i], world_ids_2[i]))
 
 or see the `following example <https://github.com/spacetelescope/jdaviz/blob/d296c6312b020897034e9dd1fc58c84a2559efa5/jdaviz/app.py#L241-L260>`_
-from jdaviz.
+from Jdaviz.
 
 However, this kind of linking is not generally robust because it relies on the
 world coordinates *actually* being the same between the two datasets - so it
 would fail for two images where one image was in equatorial coordinates and the
 other one was in galactic coordinates, because LinkSame would mean that RA was
 the *same* as Galactic longitude, which it is not. Likewise, this would result
-in e.g. wavelength in one dataset being equated with frequency in another. The
+in, say, wavelength in one dataset being equated wrongly with frequency in another. The
 only place this kind of linking could be used is within parsers for specific
-data where it is known with certainty that two world coordinates are the same.
-But in general, wherever possible I think we should phase out any use of
-LinkSame for world coordinates from jdaviz.
+data where it is known with certainty that two world coordinate systems are the same.
 
-Using WCSLink
--------------
+In general, one should avoid using LinkSame for world coordinates in Jdaviz.
+
+Using WCSLink (recommended)
+---------------------------
 
 A more robust approach for linking datasets by world coordinates is to use the
 :class:`~glue.plugins.wcs_autolinker.wcs_autolinker.WCSLink` class. Given two
@@ -95,15 +100,15 @@ chain of WCS transformations required. As an example::
     from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink
 
     link = WCSLink(data1=data1, data2=data2,
-                cids1=data1.pixel_component_ids, cids2=data2.pixel_component_ids)
+                   cids1=data1.pixel_component_ids, cids2=data2.pixel_component_ids)
 
     data_collection.add_link(link)
 
 will link all pixel axes between the two datasets, taking into account the WCS
 of ``data1`` and ``data2``.
 
-Note that this should work with any APE 14-compliant WCS, so could link for
-example a FITS WCS to a GWCS instance.
+Note that this should work with any `APE 14 <https://github.com/astropy/astropy-APEs/blob/main/APE14.rst>`_-compliant WCS, so it could link
+both a FITS WCS to a GWCS instance, and vice versa.
 
 Speeding up WCS links
 =====================
@@ -129,16 +134,18 @@ approximation can be found that transforms all positions in the image to within
 that tolerance, an error of type ``NoAffineApproximation`` is returned (this
 exception is defined in :mod:`glue.plugins.wcs_autolinking.wcs_autolinking`).
 
-I think whenever we use :class:`~glue.plugins.wcs_autolinker.wcs_autolinker.WCSLink`
-in jdaviz we should then use an affine approximation whenever one can be
-calculated, as for visualization purposes it should be good enough (as a side
-note, I think DS9 uses a similar approach).
+It is recommended that whenever :class:`~glue.plugins.wcs_autolinker.wcs_autolinker.WCSLink` is used
+in Jdaviz, affine approximation should be used whenever possible.
+For visualization purposes, it should be good enough for most cases.
+DS9 uses a similar approach.
+
+.. _need_for_link_speed:
 
 Speeding up adding links to the data collection
 ===============================================
 
 Each time a link, dataset, or component/attribute is added to the data
-collection in glue, the link tree is recalculated. This can be prevented by
+collection in glue, the link tree is recalculated. Unnecessary recalculations can be prevented by
 using the
 :meth:`~glue.core.data_collection.DataCollection.delay_link_manager_update`
 context manager. Use this around any block that adds multiple datasets to the
@@ -150,6 +157,8 @@ collection, e.g.::
             data_collection.append(Data(...))
             data_collection.add_link(...)
 
+See `pull request 762 <https://github.com/spacetelescope/jdaviz/pull/762>`_ for a more concrete example.
+
 Setting all links in one go
 ===========================
 
@@ -159,23 +168,26 @@ method, which takes a list of links::
 
     data_collection.set_links([link1, link2, link3])
 
-Note that for now it can still be beneficial to use this inside the
+It is recommended to use this inside the
 :meth:`~glue.core.data_collection.DataCollection.delay_link_manager_update`
-context manager mentioned in the previous section.
+context manager, as mentioned in :ref:`need_for_link_speed`.
 
-This method is ideal if you want to e.g. switch between using pixel and WCS links
+This method is ideal if you want to, say, switch between using pixel and WCS links
 as it will discard any existing links before adding the new ones.
+
+This is necessary because the same two datasets cannot have both
+pixel and WCS links, as explained in :ref:`link_mixing`.
+
+.. _link_mixing:
 
 Mixing link types
 =================
 
-Glue can handle many different link types in a same session, so for instance if
-one had three datasets, two of the datasets could be linked by a
+Glue can handle many different link types in a same session. For instance, if
+there are three datasets, two of the datasets could be linked by a
 :class:`~glue.plugins.wcs_autolinker.wcs_autolinker.WCSLink` while two other
 datasets could be linked by pixel coordinates. However, the same two datasets
 should not be linked both by :class:`~glue.plugins.wcs_autolinker.wcs_autolinker.WCSLink`
-and pixel coordinates at the same time as which link takes precedence is not
-defined.
-
-
+and pixel coordinates at the same time, as which link takes precedence is not
+defined, resulting in ambiguous behavior.
 
