@@ -594,13 +594,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
     _warn_if_not_found(app, file_lists)
 
     # Parse relevant information from source catalog
-    # TEMP NOTE: the ecsv table in the example directory has one column with
-    # sky centroid info given as an RA/Dec tuple instead of two columns with
-    # separate floats. i tried to support both schemas.
-    cat_fields = ['id', 'sky_centroid']
-    if 'sky_centroid' not in file_lists['Source Catalog'][0]:
-        cat_fields.pop()
-        cat_fields.extend(['sky_centroid.ra', 'sky_centroid.dec']) # old style
+    cat_fields = ['id', 'sky_centroid.ra', 'sky_centroid.dec']
 
     source_ids = []
     ras = []
@@ -619,14 +613,8 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
 
         pupil_id_dict[pupil] = {}
 
-        if len(cat_fields) == 2: # new style
-            for row in parsed_cat_fields:
-                pupil_id_dict[pupil][int(row[0])] = (row[1][0], row[1][1])
-        elif len(cat_fields) == 3: # old style
-            for row in parsed_cat_fields:
-                pupil_id_dict[pupil][int(row[0])] = (row[1], row[2])
-        else:
-            raise Exception("Unexpected cat_fields length")
+        for row in parsed_cat_fields:
+            pupil_id_dict[pupil][int(row[0])] = (row[1], row[2])
 
     # Read in direct image filters
     image_dict = {}
