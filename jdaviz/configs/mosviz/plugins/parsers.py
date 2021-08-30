@@ -2,6 +2,7 @@ from collections.abc import Iterable
 import csv
 import glob
 import os
+from collections import defaultdict
 from pathlib import Path
 import warnings
 
@@ -541,9 +542,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
     if not path.is_dir():
         raise ValueError("{} is not a valid directory path".format(data_dir))
 
-    file_types = ['Source Catalog', 'Direct Image', '2D Spectra C',
-                  '2D Spectra R', '1D Spectra C', '1D Spectra R']
-    file_lists = {k: [] for k in file_types}
+    file_lists = defaultdict(list)
 
     # use FITS header keywords to sort the directory's files
     for filepath in path.glob('*'):
@@ -591,6 +590,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
         else:
             continue
 
+    file_lists = dict(file_lists)
     _warn_if_not_found(app, file_lists)
 
     # Parse relevant information from source catalog
