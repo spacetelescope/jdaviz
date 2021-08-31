@@ -10,7 +10,8 @@ from astropy import units as u
 from astropy.utils.introspection import minversion
 
 from jdaviz.core.events import (AddDataToViewerMessage,
-                                RemoveDataFromViewerMessage)
+                                RemoveDataFromViewerMessage,
+                                TableClickMessage)
 from jdaviz.core.registries import viewer_registry
 
 __all__ = ['MOSVizProfileView', 'MOSVizImageView']
@@ -172,10 +173,12 @@ class MOSVizTableViewer(TableViewer):
 
                     self._selected_data['image-viewer'] = selected_data
 
-                # TODO: If all objects share one large image, zoom to the image.
-                if self._shared_image:
-                    pass
-                    # self.zoom_to_object()
+        # Send a message to trigger zooming the image, if there is an image
+        if mos_data.find_component_id("Images") is not None:
+            message = TableClickMessage(selected_index=selected_index,
+                                        shared_image=self._shared_image,
+                                        sender=self)
+            self.session.hub.broadcast(message)
 
     def set_plot_axes(self, *args, **kwargs):
         return

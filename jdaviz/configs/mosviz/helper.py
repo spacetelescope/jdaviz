@@ -3,12 +3,16 @@ import logging
 import numpy as np
 from pathlib import Path
 
-from astropy.table import QTable
 import astropy.units as u
+from astropy.table import QTable
+from astropy.coordinates import SkyCoord
+from echo import delay_callback
 
 from jdaviz.core.helpers import ConfigHelper
-from jdaviz.core.events import SnackbarMessage
+from jdaviz.core.events import SnackbarMessage, TableClickMessage
 from jdaviz.configs.specviz import SpecViz
+
+from .plugins import jwst_header_to_skyregion
 
 
 class MosViz(ConfigHelper):
@@ -24,6 +28,10 @@ class MosViz(ConfigHelper):
 
         spec2d = self.app.get_viewer("spectrum-2d-viewer")
         spec2d.scales['x'].observe(self._update_spec1d_x_axis)
+
+        # Listen for clicks on the table in case we need to zoom the image
+        self.app.hub.subscribe(self, TableClickMessage,
+                               handler=self._row_click_message_handler)
 
         self._shared_image = False
 
@@ -95,6 +103,71 @@ class MosViz(ConfigHelper):
                 self.app.hub.broadcast(msg)
             if val != old_val:
                 setattr(scales['x'], name, val)
+
+    def _row_click_message_handler(self, msg):
+
+        if msg.shared_image:
+            center, height = self._zoom_to_object_params(msg)
+        else:
+            try:
+                center, height = self._zoom_to_slit_params(msg)
+            except IndexError:
+                # If there's nothing in the spectrum2d viewer, we can't get slit info
+                return
+
+        if center is None or height is None:
+            # Can't zoom if we couldn't figure out where to zoom (e.g. if RA/Dec not in table)
+            return
+
+        imview = self.app.get_viewer("image-viewer")
+
+        image_axis_ratio = ((imview.axis_x.scale.max - imview.axis_x.scale.min) /
+                            (imview.axis_y.scale.max - imview.axis_y.scale.min))
+
+        with delay_callback(imview.state, 'x_min', 'x_max', 'y_min', 'y_max'):
+            imview.state.x_min = center[0] - image_axis_ratio*height
+            imview.state.y_min = center[1] - height
+            imview.state.x_max = center[0] + image_axis_ratio*height
+            imview.state.y_max = center[1] + height
+
+    def _zoom_to_object_params(self, msg):
+
+        table_data = self.app.data_collection['MOS Table']
+        imview = self.app.get_viewer("image-viewer")
+        specview = self.app.get_viewer("spectrum-2d-viewer")
+
+        if ("Right Ascension" not in table_data.component_ids() or
+                "Declination" not in table_data.component_ids()):
+            return None, None
+
+        ra = table_data["Right Ascension"][msg.selected_index]
+        dec = table_data["Declination"][msg.selected_index]
+
+        pixel_height = 0.5*(specview.axis_y.scale.max - specview.axis_y.scale.min)
+        point = SkyCoord(ra*u.deg, dec*u.deg)
+
+        pix = imview.layers[0].layer.coords.world_to_pixel(point)
+
+        return pix, pixel_height
+
+    def _zoom_to_slit_params(self, msg):
+        imview = self.app.get_viewer("image-viewer")
+        specview = self.app.get_viewer("spectrum-2d-viewer")
+
+        sky_region = jwst_header_to_skyregion(specview.layers[0].layer.meta)
+        ra = sky_region.center.ra.deg
+        dec = sky_region.center.dec.deg
+
+        pix = imview.layers[0].layer.coords.world_to_pixel(sky_region.center)
+
+        # Height of slit in decimal degrees
+        height = sky_region.height.deg
+
+        upper = imview.layers[0].layer.coords.world_to_pixel(SkyCoord(ra*u.deg,
+                                                             (dec + height)*u.deg))
+        pixel_height = upper[1] - pix[1]
+
+        return pix, pixel_height
 
     def load_data(self, spectra_1d=None, spectra_2d=None, images=None,
                   spectra_1d_label=None, spectra_2d_label=None,
