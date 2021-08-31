@@ -22,7 +22,7 @@
         <div>
           <v-row dense style="background-color: #205f76">
             <v-col md="auto">
-              <v-menu offset-y :close-on-content-click="false">
+              <v-menu offset-y :close-on-content-click="false" v-if="viewer.show_data_btn">
                 <template v-slot:activator="{ on, attrs }">
                     <v-btn
                       text

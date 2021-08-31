@@ -1147,7 +1147,8 @@ class Application(VuetifyTemplate, HubListener):
 
         # Create the viewer item dictionary
         new_viewer_item = self._create_viewer_item(
-            viewer=viewer, name=viewer.__class__.__name__)
+            viewer=viewer, name=viewer.__class__.__name__,
+            show_data_btn=True)
 
         new_stack_item = self._create_stack_item(
             container='gl-stack',
@@ -1220,6 +1221,8 @@ class Application(VuetifyTemplate, HubListener):
                     viewer = self._application_handler.new_data_viewer(
                         viewer_registry.members.get(view['plot'])['cls'],
                         data=None, show=False)
+
+                    viewer.show_data_btn = True
 
                     viewer_item = self._create_viewer_item(
                         name=view.get('name'),

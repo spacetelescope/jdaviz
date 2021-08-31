@@ -58,7 +58,7 @@ class ViewerRegistry(UniqueDictRegistry):
             return cls
         return decorator
 
-    def add(self, name, cls, label=None):
+    def add(self, name, cls, label=None, show_data_btn=True):
         """
         Add an item to the registry.
 
@@ -77,7 +77,8 @@ class ViewerRegistry(UniqueDictRegistry):
             raise ValueError(f"Viewer with the name {name} already exists, "
                              f"please choose a different name.")
         else:
-            self.members[name] = {'label': label, 'cls': cls}
+            self.members[name] = {'label': label, 'cls': cls,
+                                  'show_data_btn': show_data_btn}
 
 
 class TrayRegistry(UniqueDictRegistry):

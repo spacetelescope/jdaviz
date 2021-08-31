@@ -32,6 +32,7 @@ class SpecvizProfileView(BqplotProfileView):
 
         self.display_uncertainties = False
         self.display_mask = False
+        self.show_data_button = True
 
     def data(self, cls=None):
         # Grab the user's chosen statistic for collapsing data
