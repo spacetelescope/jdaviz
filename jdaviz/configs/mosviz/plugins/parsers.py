@@ -125,7 +125,7 @@ def link_data_in_table(app, data_obj=None):
 
     app.session.data_collection.add_link(wc_spec_ids)
 
-    
+
 @data_parser_registry("mosviz-nirspec-directory-parser")
 def mos_nirspec_directory_parser(app, data_obj, data_labels=None):
 

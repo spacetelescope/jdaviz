@@ -182,13 +182,13 @@ class MosViz(ConfigHelper):
             logging.warning(msg)
             msg = SnackbarMessage(msg, color='warning', sender=self)
             self.app.hub.broadcast(msg)
-            
+
         self.link_table_data(None)
 
         # Any subsequently added data will automatically be linked
         # with data already loaded in the app
         self.app.auto_link = True
-        
+
     def link_table_data(self, data_obj):
         """
         Batch link data in the Mosviz table rather than doing it on
