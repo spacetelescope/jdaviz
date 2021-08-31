@@ -146,7 +146,7 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
             ids0 = refdata.pixel_component_ids
             ids1 = data.pixel_component_ids
             try:
-                for i in data.ndim:
+                for i in range(data.ndim):
                     app.data_collection.add_link(LinkSame(ids0[i], ids1[i]))
             except Exception as e:
                 # TODO: Is it better to just throw exception and crash?
