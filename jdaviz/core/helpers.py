@@ -31,9 +31,9 @@ class ConfigHelper(HubListener):
     """
     _default_configuration = 'default'
 
-    def __init__(self, app=None, auto_link=True):
+    def __init__(self, app=None):
         if app is None:
-            self.app = Application(configuration=self._default_configuration, auto_link=auto_link)
+            self.app = Application(configuration=self._default_configuration)
         else:
             self.app = app
 
