@@ -215,6 +215,7 @@ def test_load_single_image_multi_spec(mosviz_app, image, spectrum1d, spectrum2d,
 
     mosviz_app.load_data(spectra1d, spectra2d, images=image, images_label=label)
 
+    assert mosviz_app.app.get_viewer("table-viewer").figure_widget.highlighted == 0
     assert len(mosviz_app.app.data_collection) == 8
 
     qtable = mosviz_app.to_table()
@@ -232,6 +233,8 @@ def test_load_multi_image_spec(mosviz_app, image, spectrum1d, spectrum2d, label)
     images = [image]*3
 
     mosviz_app.load_data(spectra1d, spectra2d, images=images, images_label=label)
+
+    assert mosviz_app.app.get_viewer("table-viewer").figure_widget.highlighted == 0
     assert len(mosviz_app.app.data_collection) == 10
 
     qtable = mosviz_app.to_table()

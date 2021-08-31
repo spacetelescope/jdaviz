@@ -287,6 +287,9 @@ class MosViz(ConfigHelper):
         """
         self.load_data(directory=directory, instrument=instrument)
 
+        # Load the first object into the viewers automatically
+        self.app.get_viewer("table-viewer").figure_widget.highlighted = 0
+
     def load_metadata(self, data_obj):
         """
         Load and parse a set of FITS objects to extract any relevant metadata.
@@ -337,6 +340,8 @@ class MosViz(ConfigHelper):
 
     def load_niriss_data(self, data_obj, data_labels=None):
         super().load_data(data_obj, parser_reference="mosviz-niriss-parser")
+        # Load the first object into the viewers automatically
+        self.app.get_viewer("table-viewer").figure_widget.highlighted = 0
 
     def load_images(self, data_obj, data_labels=None, share_image=0):
         """
