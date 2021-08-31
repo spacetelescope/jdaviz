@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 from pathlib import Path
 
@@ -175,7 +177,7 @@ class MosViz(ConfigHelper):
             msg = "Warning: Please set valid values for the load_data() method"
 
         if msg:
-            print(msg)
+            logging.warning(msg)
             msg = SnackbarMessage(msg, color='warning', sender=self)
             self.app.hub.broadcast(msg)
 
