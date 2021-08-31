@@ -112,12 +112,11 @@ def mos_nirspec_directory_parser(app, data_obj, data_labels=None):
             image_path = Path(str(level3_path / image_dir_name))
             break
     if image_path is not None:
-        images = [file_path for file_path in glob.iglob(str(image_path / '*'))]
+        images = sorted([file_path for file_path in glob.iglob(str(image_path / '*'))])
 
         # The amount of images needs to be equal to the amount of rows
         # of the other columns in the table
         if len(images) == len(spectra_1d):
-            images.sort()
             mos_meta_parser(app, images)
             mos_image_parser(app, images)
         else:
