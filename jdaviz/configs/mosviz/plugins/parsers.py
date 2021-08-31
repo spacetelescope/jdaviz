@@ -117,6 +117,7 @@ def mos_nirspec_directory_parser(app, data_obj, data_labels=None):
         # The amount of images needs to be equal to the amount of rows
         # of the other columns in the table
         if len(images) == len(spectra_1d):
+            images.sort()
             mos_meta_parser(app, images)
             mos_image_parser(app, images)
         else:
@@ -127,6 +128,8 @@ def mos_nirspec_directory_parser(app, data_obj, data_labels=None):
             msg = SnackbarMessage(msg, color='warning', sender=app)
             app.hub.broadcast(msg)
 
+    spectra_1d.sort()
+    spectra_2d.sort()
     mos_spec1d_parser(app, spectra_1d)
     mos_spec2d_parser(app, spectra_2d)
 
