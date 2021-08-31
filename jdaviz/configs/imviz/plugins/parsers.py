@@ -140,19 +140,30 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
         if show_in_viewer:
             app.add_data_to_viewer("viewer-1", data_label)
 
-        # Auto-link data by pixels
-        if len(app.data_collection) > 1:
-            refdata = app.data_collection[0]  # Link with first one
-            ids0 = refdata.pixel_component_ids
-            ids1 = data.pixel_component_ids
-            try:
-                for i in range(data.ndim):
-                    app.data_collection.add_link(LinkSame(ids0[i], ids1[i]))
-            except Exception as e:
-                # TODO: Is it better to just throw exception and crash?
-                app.hub.broadcast(SnackbarMessage(
-                    f"Error linking '{data_label}'' to '{refdata.label}': "
-                    f"{repr(e)}", color="info", timeout=8000, sender=app))
+    if len(app.data_collection) <= 1:  # No need to link, we are done.
+        return
+
+    # Auto-link data by pixels
+
+    links_list = []
+    refdata = app.data_collection[0]  # Link with first one
+    ids0 = refdata.pixel_component_ids
+    ndim_range = range(refdata.ndim)
+
+    for data in app.data_collection[1:]:
+        ids1 = data.pixel_component_ids
+        try:
+            new_links = [LinkSame(ids0[i], ids1[i]) for i in ndim_range]
+        except Exception as e:
+            # TODO: Is it better to just throw exception and crash?
+            app.hub.broadcast(SnackbarMessage(
+                f"Error linking '{data.label}' to '{refdata.label}': "
+                f"{repr(e)}", color="warning", timeout=8000, sender=app))
+            continue
+        links_list += new_links
+
+    with app.data_collection.delay_link_manager_update():
+        app.data_collection.set_links(links_list)
 
 
 def _info_nextensions(app, file_obj):
