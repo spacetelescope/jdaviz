@@ -98,7 +98,7 @@ def mos_nirspec_directory_parser(app, data_obj, data_labels=None):
     # Load spectra
     level3_path = Path(data_obj)
     for file_path in glob.iglob(str(level3_path / '*')):
-        if 'x1d' in file_path:
+        if 'x1d' in file_path or 'c1d' in file_path:
             spectra_1d.append(file_path)
         elif 's2d' in file_path:
             spectra_2d.append(file_path)
