@@ -124,10 +124,13 @@ def mos_spec1d_parser(app, data_obj, data_labels=None):
         data_labels = [f"{data_labels[0]} {i}" for i in range(len(data_obj))]
 
     # Handle the case where the 1d spectrum is a collection of spectra
-    for i in range(len(data_obj)):
-        app.data_collection[data_labels[i]] = data_obj[i]
 
-    _add_to_table(app, data_labels, '1D Spectra')
+    with app.data_collection.delay_link_manager_update():
+
+        for i in range(len(data_obj)):
+            app.data_collection[data_labels[i]] = data_obj[i]
+
+        _add_to_table(app, data_labels, '1D Spectra')
 
 
 @data_parser_registry("mosviz-spec2d-parser")
@@ -200,7 +203,7 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
 
             wcs = WCS(header)
 
-            meta = {'S_REGION': header['S_REGION']}
+            meta = {'S_REGION': header['S_REGION'], 'INSTRUME': 'nirspec'}
 
         return SpectralCube(new_data, wcs=wcs, meta=meta)
 
@@ -223,8 +226,13 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
     elif len(data_obj) != len(data_labels):
         data_labels = [f"{data_labels} {i}" for i in range(len(data_obj))]
 
-    for i in range(len(data_obj)):
-        app.data_collection[data_labels[i]] = data_obj[i]
+    with app.data_collection.delay_link_manager_update():
+
+        for i in range(len(data_obj)):
+            app.data_collection[data_labels[i]] = data_obj[i]
+
+        if add_to_table:
+            _add_to_table(app, data_labels, '2D Spectra')
 
     if show_in_viewer:
         if len(data_labels) > 1:
@@ -232,14 +240,11 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
                              "which to show in viewer")
         app.add_data_to_viewer("spectrum-2d-viewer", data_labels[0])
 
-    if add_to_table:
-        _add_to_table(app, data_labels, '2D Spectra')
-
 
 @data_parser_registry("mosviz-image-parser")
-def mos_image_parser(app, data_obj, data_labels=None):
+def mos_image_parser(app, data_obj, data_labels=None, share_image=0):
     """
-    Attempts to parse an image-like object.
+    Attempts to parse an image-like object or list of images.
 
     Parameters
     ----------
@@ -250,15 +255,23 @@ def mos_image_parser(app, data_obj, data_labels=None):
         the mosviz table.
     data_labels : str, optional
         The label applied to the glue data component.
+    share_image : int, optional
+        If 0, images are treated as applying to individual spectra. If non-zero,
+        a single image will be shared by multiple spectra so that clicking a
+        different row in the table does not reload the displayed image.
+        Currently, if non-zero, the provided number must match the number of
+        spectra.
     """
-    # Parse and load the 2d images. `CCData` objects require a unit be defined
-    #  in the fits header, however, if none is provided, use a fallback and
-    #  raise an error.
 
     if data_obj is None:
         return
 
     def _parse_as_image(path):
+        """
+        Parse and load a 2D image. ``CCDData`` objects require a unit be defined
+        in the fits header - if none is provided, use a fallback and
+        raise an error.
+        """
         with fits.open(path) as hdulist:
             if 'BUNIT' not in hdulist[0].header:
                 logging.warning("No 'BUNIT' defined in the header, using 'Jy'.")
@@ -287,14 +300,27 @@ def mos_image_parser(app, data_obj, data_labels=None):
                     for x in data_obj]
 
     if data_labels is None:
-        data_labels = [f"Image {i}" for i in range(len(data_obj))]
-    elif len(data_obj) != len(data_labels):
-        data_labels = [f"{data_labels} {i}" for i in range(len(data_obj))]
+        if share_image:
+            data_labels = ["Shared Image"]
+        else:
+            data_labels = [f"Image {i}" for i in range(len(data_obj))]
 
-    for i in range(len(data_obj)):
-        app.data_collection[data_labels[i]] = data_obj[i]
+    elif isinstance(data_labels, str):
+        if share_image:
+            data_labels = [data_labels]
+        else:
+            data_labels = [f"{data_labels} {i}" for i in range(len(data_obj))]
 
-    _add_to_table(app, data_labels, 'Images')
+    with app.data_collection.delay_link_manager_update():
+
+        for i in range(len(data_obj)):
+            app.data_collection[data_labels[i]] = data_obj[i]
+
+        if share_image:
+            # Associate this image with multiple spectra
+            data_labels *= share_image
+
+        _add_to_table(app, data_labels, 'Images')
 
 
 @data_parser_registry("mosviz-metadata-parser")
@@ -316,19 +342,30 @@ def mos_meta_parser(app, data_obj):
     # Coerce into list-like object
     if not hasattr(data_obj, '__len__'):
         data_obj = [data_obj]
+    elif isinstance(data_obj, str):
+        data_obj = [fits.open(data_obj)]
     else:
         data_obj = [fits.open(x) if _check_is_file(x)
                     else x for x in data_obj]
 
-    ra = [x[0].header.get("OBJ_RA", float("nan")) for x in data_obj]
-    dec = [x[0].header.get("OBJ_DEC", float("nan")) for x in data_obj]
-    names = [x[0].header.get("OBJECT", "Unspecified Target") for x in data_obj]
+    if np.all([isinstance(x, fits.HDUList) for x in data_obj]):
+        ra = [x[0].header.get("OBJ_RA", float("nan")) for x in data_obj]
+        dec = [x[0].header.get("OBJ_DEC", float("nan")) for x in data_obj]
+        names = [x[0].header.get("OBJECT", "Unspecified Target") for x in data_obj]
 
-    [x.close() for x in data_obj]
+        [x.close() for x in data_obj]
 
-    _add_to_table(app, names, "Source Names")
-    _add_to_table(app, ra, "Right Ascension")
-    _add_to_table(app, dec, "Declination")
+    else:
+        # TODO: Come up with more robust metadata parsing, perhaps from
+        # the spectra files.
+        logging.warn("Could not parse metadata from input images.")
+        return
+
+    with app.data_collection.delay_link_manager_update():
+
+        _add_to_table(app, names, "Source Names")
+        _add_to_table(app, ra, "Right Ascension")
+        _add_to_table(app, dec, "Declination")
 
 
 @data_parser_registry("mosviz-niriss-parser")
@@ -397,6 +434,9 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
     image_dict = {}
     filter_wcs = {}
 
+    # Set up a dictionary of datasets to add to glue
+    add_to_glue = {}
+
     print("Loading: Images")
 
     for image_file in file_lists["Direct Image"]:
@@ -412,7 +452,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
         with fits.open(image_file) as temp:
             filter_wcs[pupil] = temp[1].header
 
-        app.data_collection[image_label] = image_data
+        add_to_glue[image_label] = image_data
 
         image_dict[pupil] = image_label
 
@@ -464,11 +504,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
 
                         spec2d = SpectralCube(new_data, wcs=wcs, meta=meta)
 
-                        # TODO: Make slit overlay optional to avoid having to hardcode
-                        # TODO: S_REGION header
-                        spec2d.meta['S_REGION'] = 'POLYGON ICRS  5.029236065 4.992154276 ' \
-                                                  '5.029513148 4.992154276 5.029513148 ' \
-                                                  '4.992468585 5.029236065 4.992468585'
+                        spec2d.meta['INSTRUME'] = 'NIRISS'
 
                         label = "{} Source {} spec2d {}".format(filter_name,
                                                                 temp[sci].header["SOURCEID"],
@@ -482,7 +518,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                         image_add.append(image_dict[filter_name])
                         spec_labels_2d.append(label)
 
-                        app.data_collection[label] = spec2d
+                        add_to_glue[label] = spec2d
 
     spec_labels_1d = []
     for f in ["1D Spectra C", "1D Spectra R"]:
@@ -499,7 +535,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                     else:
                         hdu.header["SRCTYPE"] = "EXTENDED"
 
-                specs = SpectrumList.read(temp)
+                specs = SpectrumList.read(temp, format="JWST x1d multi")
                 filter_name = [x
                                for x in fname.split("/")[-1].split("_")
                                if x[0] == "F" or x[0] == "f"][0]
@@ -516,15 +552,26 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                                                                 orientation
                                                                 )
                         spec_labels_1d.append(label)
-                        app.data_collection[label] = spec
+                        add_to_glue[label] = spec
 
-    print("Populating table")
+    # Add the datasets to glue - we do this in one step so that we can easily
+    # optimize by avoiding recomputing the full link graph at every add
 
-    _add_to_table(app, source_ids, "Source ID")
-    _add_to_table(app, ras, "Right Ascension")
-    _add_to_table(app, decs, "Declination")
-    _add_to_table(app, image_add, "Images")
-    _add_to_table(app, spec_labels_1d, "1D Spectra")
-    _add_to_table(app, spec_labels_2d, "2D Spectra")
+    with app.data_collection.delay_link_manager_update():
+
+        for label, data in add_to_glue.items():
+            app.data_collection[label] = data
+
+        # We then populate the table inside this context manager as _add_to_table
+        # does operations that also trigger link manager updates.
+
+        print("Populating table")
+
+        _add_to_table(app, source_ids, "Source ID")
+        _add_to_table(app, ras, "Right Ascension")
+        _add_to_table(app, decs, "Declination")
+        _add_to_table(app, image_add, "Images")
+        _add_to_table(app, spec_labels_1d, "1D Spectra")
+        _add_to_table(app, spec_labels_2d, "2D Spectra")
 
     print("Done")

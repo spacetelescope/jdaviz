@@ -10,3 +10,4 @@ Here is some documentation specific for developers.
   release
   infrastructure
   ui_description
+  specviz_selection

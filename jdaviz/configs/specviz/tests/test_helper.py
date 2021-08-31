@@ -1,8 +1,10 @@
 import pytest
 from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose
-
+from glue.core.roi import XRangeROI
 from specutils import Spectrum1D
+
+from ..plugins.unit_conversion import unit_conversion as uc
 
 
 class TestSpecvizHelper:
@@ -76,3 +78,41 @@ def test_get_spectra_no_spectra_label_redshift_error(specviz_app, spectrum1d):
     label = "label"
     with pytest.raises(AttributeError):
         specviz_app.get_spectra(data_label=label, apply_slider_redshift=True)
+
+
+def test_get_spectral_regions_unit(specviz_app, spectrum1d):
+    # Ensure units we put in are the same as the units we get out
+    specviz_app.load_spectrum(spectrum1d)
+    specviz_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(1, 3.5))
+
+    subsets = specviz_app.get_spectral_regions()
+    reg = subsets.get('Subset 1')
+
+    assert spectrum1d.wavelength.unit == reg.lower.unit
+    assert spectrum1d.wavelength.unit == reg.upper.unit
+
+
+def test_get_spectral_regions_unit_conversion(specviz_app, spectrum1d):
+    # If the reference (visible) data changes via unit conversion,
+    # check that the region's units convert too
+    specviz_app.load_spectrum(spectrum1d)
+    specviz_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(1, 3.5))
+
+    # Convert the wavelength axis to microns
+    new_spectral_axis = "micron"
+    conv_func = uc.UnitConversion.process_unit_conversion
+    converted_spectrum = conv_func(specviz_app.app, spectrum=spectrum1d,
+                                   new_spectral_axis=new_spectral_axis)
+
+    # Add this new data and clear the other, making the converted spectrum our reference
+    specviz_app.app.add_data(converted_spectrum, "Converted Spectrum")
+    specviz_app.app.add_data_to_viewer("spectrum-viewer",
+                                       "Converted Spectrum",
+                                       clear_other_data=True)
+
+    # Retrieve the Subset
+    subsets = specviz_app.get_spectral_regions()
+    reg = subsets.get('Subset 1')
+
+    assert reg.lower.unit == u.Unit(new_spectral_axis)
+    assert reg.upper.unit == u.Unit(new_spectral_axis)

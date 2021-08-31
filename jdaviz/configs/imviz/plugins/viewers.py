@@ -32,6 +32,7 @@ class ImvizImageView(BqplotImageView):
                                                                     'mouseleave', 'keydown'])
 
         self.state.show_axes = False
+        self.figure.fig_margin = {'left': 0, 'bottom': 0, 'top': 0, 'right': 0}
 
     def on_mouse_or_key_event(self, data):
 

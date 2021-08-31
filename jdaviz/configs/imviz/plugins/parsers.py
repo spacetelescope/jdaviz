@@ -9,7 +9,8 @@ from astropy.nddata import NDData
 from astropy.wcs import WCS
 from glue.core.data import Component, Data
 try:
-    from jwst import datamodels
+    import gwcs  # noqa
+    from asdf.fits_embed import AsdfInFits
     HAS_JWST_ASDF = True
 except ImportError:
     HAS_JWST_ASDF = False
@@ -89,7 +90,7 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
                     _info_nextensions(app, file_obj)
 
             else:
-                raise ImportError('jwst package is missing')
+                raise ImportError('asdf or gwcs package is missing')
 
         elif ext == '*':  # Load all extensions
             data_iter = _hdus_to_glue_data(file_obj, data_label)
@@ -214,21 +215,39 @@ def _jwst2data(file_obj, ext, data_label):
     data = Data(label=new_data_label)
     unit_attr = f'bunit_{ext}'
 
-    # This is very specific to JWST pipeline image output.
-    with datamodels.open(file_obj) as dm:
-        if (unit_attr in dm.meta and
-                _validate_bunit(getattr(dm.meta, unit_attr), raise_error=False)):
-            bunit = getattr(dm.meta, unit_attr)
-        else:
-            bunit = ''
+    try:
+        # This is very specific to JWST pipeline image output.
+        with AsdfInFits.open(file_obj) as af:
+            dm = af.tree
+            dm_meta = af.tree["meta"]
 
-        # This is instance of gwcs.WCS, not astropy.wcs.WCS
-        if hasattr(dm.meta, 'wcs'):
-            data.coords = dm.meta.wcs
+            if (unit_attr in dm_meta and
+                    _validate_bunit(dm_meta[unit_attr], raise_error=False)):
+                bunit = dm_meta[unit_attr]
+            else:
+                bunit = ''
 
-        imdata = getattr(dm, ext)
-        component = Component.autotyped(imdata, units=bunit)
-        data.add_component(component=component, label=comp_label)
+            # This is instance of gwcs.WCS, not astropy.wcs.WCS
+            if 'wcs' in dm_meta:
+                data.coords = dm_meta['wcs']
+
+            imdata = dm[ext]
+            component = Component.autotyped(imdata, units=bunit)
+
+            # Might have bad GWCS. If so, we exclude it.
+            try:
+                data.add_component(component=component, label=comp_label)
+            except Exception:  # pragma: no cover
+                data.coords = None
+                data.add_component(component=component, label=comp_label)
+
+    # TODO: Do not need this when jwst.datamodels finally its own package.
+    # This might happen for grism image; fall back to FITS loader without WCS.
+    except Exception:
+        if ext == 'data':
+            ext = 'sci'
+        hdu = file_obj[ext]
+        return _hdu2data(hdu, data_label, file_obj, include_wcs=False)
 
     return data, new_data_label
 
@@ -247,7 +266,7 @@ def _hdus_to_glue_data(file_obj, data_label):
             yield data, new_data_label
 
 
-def _hdu2data(hdu, data_label, hdulist):
+def _hdu2data(hdu, data_label, hdulist, include_wcs=True):
     if 'BUNIT' in hdu.header and _validate_bunit(hdu.header['BUNIT'], raise_error=False):
         bunit = hdu.header['BUNIT']
     else:
@@ -257,7 +276,8 @@ def _hdu2data(hdu, data_label, hdulist):
     new_data_label = f'{data_label}[{comp_label}]'
 
     data = Data(label=new_data_label)
-    data.coords = WCS(hdu.header, hdulist)
+    if include_wcs:
+        data.coords = WCS(hdu.header, hdulist)
     component = Component.autotyped(hdu.data, units=bunit)
     data.add_component(component=component, label=comp_label)
 

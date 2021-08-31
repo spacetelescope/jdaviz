@@ -75,12 +75,20 @@ class SpecViz(ConfigHelper, LineListMixin):
             Mapping from the names of the subsets to the subsets expressed
             as `specutils.SpectralRegion` objects.
         """
-        regions = self.app.get_subsets_from_viewer("spectrum-viewer")
+        regions = self.app.get_subsets_from_viewer("spectrum-viewer", subset_type="spectral")
 
         spec_regs = {}
 
         for name, reg in regions.items():
-            unit = reg.meta.get("spectral_axis_unit", u.Unit("Angstrom"))
+            # Use the region's unit. If N/A, use the reference_data's
+            unit = reg.meta.get("spectral_axis_unit",
+                                self.get_spectra(
+                                    self.app.get_viewer("spectrum-viewer"
+                                                        ).state.reference_data.label,
+                                    apply_slider_redshift=False
+                                    ).spectral_axis.unit
+                                )
+
             spec_reg = SpectralRegion.from_center(reg.center.x * unit,
                                                   reg.width * unit)
 
