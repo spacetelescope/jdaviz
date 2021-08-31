@@ -8,8 +8,8 @@ from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import NDData
 from astropy.wcs import WCS
-from glue.core.component_link import ComponentLink
 from glue.core.data import Component, Data
+from glue.core.link_helpers import LinkSame
 
 from jdaviz.core.registries import data_parser_registry
 from jdaviz.core.events import SnackbarMessage
@@ -146,10 +146,8 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
             ids0 = refdata.pixel_component_ids
             ids1 = data.pixel_component_ids
             try:
-                app.data_collection.add_link(
-                    ComponentLink([refdata.id[ids0[0]]], data.id[ids1[0]]))
-                app.data_collection.add_link(
-                    ComponentLink([refdata.id[ids0[1]]], data.id[ids1[1]]))
+                for i in data.ndim:
+                    app.data_collection.add_link(LinkSame(ids0[i], ids1[i]))
             except Exception as e:
                 # TODO: Is it better to just throw exception and crash?
                 app.hub.broadcast(SnackbarMessage(
