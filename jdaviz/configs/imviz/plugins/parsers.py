@@ -129,7 +129,6 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
         raise NotImplementedError('data_label should be set by now')
 
     data_iter = get_image_data_iterator(app, file_obj, data_label, ext=ext)
-    viewer = app.get_viewer('viewer-1')
 
     for data, data_label in data_iter:
 
@@ -142,8 +141,8 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
             app.add_data_to_viewer("viewer-1", data_label)
 
         # Auto-link data by pixels
-        if viewer.state.reference_data is not None:
-            refdata = viewer.state.reference_data
+        if len(app.data_collection) > 1:
+            refdata = app.data_collection[0]  # Link with first one
             ids0 = refdata.pixel_component_ids
             ids1 = data.pixel_component_ids
             try:
@@ -154,7 +153,7 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
             except Exception as e:
                 # TODO: Is it better to just throw exception and crash?
                 app.hub.broadcast(SnackbarMessage(
-                    f"Error linking '{data_label}'' to '{viewer.state.reference_data.label}': "
+                    f"Error linking '{data_label}'' to '{refdata.label}': "
                     f"{repr(e)}", color="info", timeout=8000, sender=app))
 
 
