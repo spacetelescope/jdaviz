@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 from pathlib import Path
 
@@ -94,19 +96,20 @@ class MosViz(ConfigHelper):
             if val != old_val:
                 setattr(scales['x'], name, val)
 
-    def load_data(self, spectra_1d, spectra_2d, images=None, spectra_1d_label=None,
-                  spectra_2d_label=None, images_label=None):
+    def load_data(self, spectra_1d=None, spectra_2d=None, images=None,
+                  spectra_1d_label=None, spectra_2d_label=None,
+                  images_label=None, *args, **kwargs):
         """
         Load and parse a set of MOS spectra and images
 
         Parameters
         ----------
-        spectra_1d: list or str
+        spectra_1d : list or str
             A list of spectra as translatable container objects (e.g.
             ``Spectrum1D``) that can be read by glue-jupyter. Alternatively,
             can be a string file path.
 
-        spectra_2d: list or str
+        spectra_2d : list or str
             A list of spectra as translatable container objects (e.g.
             ``Spectrum1D``) that can be read by glue-jupyter. Alternatively,
             can be a string file path.
@@ -132,19 +135,84 @@ class MosViz(ConfigHelper):
             for each item in ``data_obj`` if  ``data_obj`` is a list.
         """
 
-        # If we have a single image for multiple spectra, tell the table viewer
-        if not isinstance(images, (list, tuple)) and isinstance(spectra_1d, (list, tuple)):
-            self._shared_image = True
-            self.app.get_viewer('table-viewer')._shared_image = True
-            self.load_images(images, images_label, share_image=len(spectra_1d))
+        directory = kwargs.pop('directory', None)
+        instrument = kwargs.pop('instrument', None)
+        msg = ""
+
+        if directory is not None and instrument is not None:
+            if instrument.lower() == "nirspec":
+                super().load_data(directory, "mosviz-nirspec-directory-parser")
+            elif instrument.lower() == "niriss":
+                self.load_niriss_data(directory)
+            else:
+                msg = "Warning: Data is not from NIRISS or Nirspec, " \
+                      "data loading may not work"
+                super().load_data(directory, "mosviz-nirspec-directory-parser")
+
+        elif directory is not None:
+            msg = "Warning: Please provide the name of the instrument" \
+                  " in the load_data method"
+
+        elif (spectra_1d is not None and spectra_2d is not None
+                and images is not None):
+            # If we have a single image for multiple spectra, tell the table viewer
+            if not isinstance(images, (list, tuple)) and isinstance(spectra_1d, (list, tuple)):
+                self._shared_image = True
+                self.app.get_viewer('table-viewer')._shared_image = True
+                self.load_images(images, images_label, share_image=len(spectra_1d))
+            else:
+                self.load_images(images, images_label)
+
+            if images is not None and not self._shared_image:
+                self.load_metadata(images)
+
+            self.load_2d_spectra(spectra_2d, spectra_2d_label)
+            self.load_1d_spectra(spectra_1d, spectra_1d_label)
+
+        elif spectra_1d is not None and spectra_2d is not None:
+            self.load_2d_spectra(spectra_2d, spectra_2d_label)
+            self.load_1d_spectra(spectra_1d, spectra_1d_label)
+
         else:
-            self.load_images(images, images_label)
+            msg = "Warning: Please set valid values for the load_data() method"
 
-        if images is not None and not self._shared_image:
-            self.load_metadata(images)
+        if msg:
+            logging.warning(msg)
+            msg = SnackbarMessage(msg, color='warning', sender=self)
+            self.app.hub.broadcast(msg)
 
-        self.load_2d_spectra(spectra_2d, spectra_2d_label)
-        self.load_1d_spectra(spectra_1d, spectra_1d_label)
+    def load_spectra(self, spectra_1d, spectra_2d):
+        """
+        Load 1D and 2D spectra using lists or strings to represent each.
+
+        Parameters
+        ----------
+        spectra_1d : list or str
+            A list of spectra as translatable container objects (e.g.
+            ``Spectrum1D``) that can be read by glue-jupyter. Alternatively,
+            can be a string file path.
+
+        spectra_2d : list or str
+            A list of spectra as translatable container objects (e.g.
+            ``Spectrum1D``) that can be read by glue-jupyter. Alternatively,
+            can be a string file path.
+        """
+
+        self.load_data(spectra_1d=spectra_1d, spectra_2d=spectra_2d)
+
+    def load_spectra_from_directory(self, directory, instrument):
+        """
+        Load 1D and 2D spectra from a directory.
+
+        Parameters
+        ----------
+        directory : str
+            The path of the directory where Mosviz data is located.
+
+        instrument : str
+            The instrument the Mosviz data originated from.
+        """
+        self.load_data(directory=directory, instrument=instrument)
 
     def load_metadata(self, data_obj):
         """

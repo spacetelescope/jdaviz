@@ -1,5 +1,6 @@
-from glue.core.data import Data
+import os
 
+from glue.core.data import Data
 from jdaviz.core.registries import data_parser_registry
 from jdaviz.core.events import SnackbarMessage
 import csv
@@ -13,6 +14,7 @@ import logging
 from astropy.wcs import WCS
 from asdf.fits_embed import AsdfInFits
 from pathlib import Path
+import glob
 
 __all__ = ['mos_spec1d_parser', 'mos_spec2d_parser', 'mos_image_parser']
 
@@ -85,6 +87,50 @@ def _fields_from_ecsv(fname, fields, delimiter=","):
                 temp_list.append(row[field])
             parsed_fields.append(temp_list)
     return parsed_fields
+
+
+@data_parser_registry("mosviz-nirspec-directory-parser")
+def mos_nirspec_directory_parser(app, data_obj, data_labels=None):
+
+    spectra_1d = []
+    spectra_2d = []
+
+    # Load spectra
+    level3_path = Path(data_obj)
+    for file_path in glob.iglob(str(level3_path / '*')):
+        if 'x1d' in file_path or 'c1d' in file_path:
+            spectra_1d.append(file_path)
+        elif 's2d' in file_path:
+            spectra_2d.append(file_path)
+
+    # Load images, if present
+    image_path = None
+
+    # Potential names of subdirectories where images are stored
+    for image_dir_name in ["cutouts", "mosviz_cutouts", "images"]:
+        if os.path.isdir(Path(str(level3_path / image_dir_name))):
+            image_path = Path(str(level3_path / image_dir_name))
+            break
+    if image_path is not None:
+        images = sorted([file_path for file_path in glob.iglob(str(image_path / '*'))])
+
+        # The amount of images needs to be equal to the amount of rows
+        # of the other columns in the table
+        if len(images) == len(spectra_1d):
+            mos_meta_parser(app, images)
+            mos_image_parser(app, images)
+        else:
+            msg = "The number of images in this directory does not match the" \
+                  " number of spectra 1d and 2d files, please make the " \
+                  "amounts equal or load images separately."
+            logging.warning(msg)
+            msg = SnackbarMessage(msg, color='warning', sender=app)
+            app.hub.broadcast(msg)
+
+    spectra_1d.sort()
+    spectra_2d.sort()
+    mos_spec1d_parser(app, spectra_1d)
+    mos_spec2d_parser(app, spectra_2d)
 
 
 @data_parser_registry("mosviz-spec1d-parser")
@@ -405,7 +451,6 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
     # Convert from pathlib Paths back to strings
     for key in file_lists:
         file_lists[key] = [str(x) for x in file_lists[key]]
-
     _warn_if_not_found(app, file_lists)
 
     # Parse relevant information from source catalog
