@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 import warnings
 from copy import deepcopy
 
@@ -10,8 +11,9 @@ from astropy.utils.introspection import minversion
 from astropy.wcs import NoConvergence
 from astropy.wcs.wcsapi import BaseHighLevelWCS
 from echo import delay_callback
+from glue.config import colormaps
 from glue.core import BaseData, Data
-from glue.core.subset import MaskSubsetState
+from glue.core.subset import Subset, MaskSubsetState
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.helpers import ConfigHelper
@@ -50,7 +52,7 @@ class Imviz(ConfigHelper):
             * ``'filename.fits[SCI,2]'`` (loads the second SCI extension)
             * ``'filename.jpg'`` (requires ``scikit-image``; grayscale only)
             * ``'filename.png'`` (requires ``scikit-image``; grayscale only)
-            * JWST ASDF-in-FITS file (requires ``jwst``; ``data`` or given
+            * JWST ASDF-in-FITS file (requires ``asdf`` and ``gwcs``; ``data`` or given
               ``ext`` + GWCS)
             * ``astropy.io.fits.HDUList`` object (first image extension found
               is loaded unless ``ext`` keyword is also given)
@@ -103,6 +105,13 @@ class Imviz(ConfigHelper):
             self.app.load_data(
                 data, parser_reference=parser_reference, **kwargs)
 
+    def save(self, filename):
+        """Save out the current image view to given PNG filename."""
+        if not filename.lower().endswith('.png'):
+            filename = filename + '.png'
+        viewer = self.app.get_viewer("viewer-1")
+        viewer.figure.save_png(filename=filename)
+
     def center_on(self, point):
         """Centers the view on a particular point.
 
@@ -119,10 +128,10 @@ class Imviz(ConfigHelper):
 
         """
         viewer = self.app.get_viewer("viewer-1")
+        i_top = get_top_layer_index(viewer)
+        image = viewer.layers[i_top].layer
 
         if isinstance(point, SkyCoord):
-            i_top = get_top_layer_index(viewer)
-            image = viewer.layers[i_top].layer
             if data_has_valid_wcs(image):
                 try:
                     pix = image.coords.world_to_pixel(point)  # 0-indexed X, Y
@@ -136,9 +145,11 @@ class Imviz(ConfigHelper):
         else:
             pix = point
 
-        # Disallow centering outside of display.
-        if (pix[0] < viewer.state.x_min or pix[0] > viewer.state.x_max
-                or pix[1] < viewer.state.y_min or pix[1] > viewer.state.y_max):  # pragma: no cover
+        # Disallow centering outside of display; image.shape is (Y, X)
+        eps = sys.float_info.epsilon
+        if (not np.all(np.isfinite(pix))
+                or pix[0] < -eps or pix[0] >= (image.shape[1] + eps)
+                or pix[1] < -eps or pix[1] >= (image.shape[0] + eps)):
             self.app.hub.broadcast(SnackbarMessage(
                 f'{pix} is out of bounds', color="warning", sender=self.app))
             return
@@ -208,6 +219,204 @@ class Imviz(ConfigHelper):
                 viewer.state.y_min += dy
                 viewer.state.x_max = viewer.state.x_min + width
                 viewer.state.y_max = viewer.state.y_min + height
+
+    @property
+    def zoom_level(self):
+        """Zoom level:
+
+        * 1 means real-pixel-size.
+        * 2 means zoomed in by a factor of 2.
+        * 0.5 means zoomed out by a factor of 2.
+        * 'fit' means zoomed to fit the whole image width into display.
+
+        """
+        viewer = self.app.get_viewer("viewer-1")
+        if viewer.shape is None:  # pragma: no cover
+            raise ValueError('Viewer is still loading, try again later')
+
+        screenx = viewer.shape[1]
+        screeny = viewer.shape[0]
+        zoom_x = screenx / (viewer.state.x_max - viewer.state.x_min)
+        zoom_y = screeny / (viewer.state.y_max - viewer.state.y_min)
+
+        return max(zoom_x, zoom_y)  # Similar to Ginga get_scale()
+
+    # Loosely based on glue/viewers/image/state.py
+    @zoom_level.setter
+    def zoom_level(self, val):
+        if ((not isinstance(val, (int, float)) and val != 'fit') or
+                (isinstance(val, (int, float)) and val <= 0)):
+            raise ValueError(f'Unsupported zoom level: {val}')
+
+        viewer = self.app.get_viewer("viewer-1")
+        image = viewer.state.reference_data
+        if (image is None or viewer.shape is None or
+                viewer.state.x_att is None or viewer.state.y_att is None):  # pragma: no cover
+            return
+
+        # Zoom on X and Y will auto-adjust.
+        if val == 'fit':
+            # Similar to ImageViewerState.reset_limits() in Glue.
+            new_x_min = 0
+            new_x_max = image.shape[viewer.state.x_att.axis]
+        else:
+            cur_xcen = (viewer.state.x_min + viewer.state.x_max) * 0.5
+            new_dx = viewer.shape[1] * 0.5 / val
+            new_x_min = cur_xcen - new_dx
+            new_x_max = cur_xcen + new_dx
+
+        with delay_callback(viewer.state, 'x_min', 'x_max'):
+            viewer.state.x_min = new_x_min - 0.5
+            viewer.state.x_max = new_x_max - 0.5
+
+        # We need to adjust the limits in here to avoid triggering all
+        # the update events then changing the limits again.
+        viewer.state._adjust_limits_aspect()
+
+    # Discussion on why we need two different ways to set zoom at
+    # https://github.com/astropy/astrowidgets/issues/144
+    def zoom(self, val):
+        """Zoom in or out by the given factor.
+
+        Parameters
+        ----------
+        val : int or float
+            The zoom level to zoom the image.
+            See `zoom_level`.
+
+        Raises
+        ------
+        ValueError
+            Invalid zoom factor.
+
+        """
+        if not isinstance(val, (int, float)):
+            raise ValueError(f"zoom only accepts int or float but got '{val}'")
+        self.zoom_level = self.zoom_level * val
+
+    @property
+    def colormap_options(self):
+        """List of colormap names."""
+        return sorted(member[1].name for member in colormaps.members)
+
+    def set_colormap(self, cmap):
+        """Set colormap to the given colormap name.
+
+        Parameters
+        ----------
+        cmap : str
+            Colormap name. Possible values can be obtained from
+            :meth:`colormap_options`.
+
+        Raises
+        ------
+        ValueError
+            Invalid colormap name.
+
+        """
+        cm = None
+        for member in colormaps.members:
+            if member[1].name == cmap:
+                cm = member[1]
+                break
+
+        if cm is None:
+            raise ValueError(f"Invalid colormap '{cmap}', must be one of {self.colormap_options}")
+
+        viewer = self.app.get_viewer("viewer-1")
+        i_top = get_top_layer_index(viewer)
+        viewer.state.layers[i_top].cmap = cm
+
+    @property
+    def stretch_options(self):
+        """List of all available options for image stretching.
+
+        Their ``astropy.visualization`` counterparts are also accepted, as follows:
+
+        * ``'arcsinh'``: ``astropy.visualization.AsinhStretch``
+        * ``'linear'``: ``astropy.visualization.LinearStretch``
+        * ``'log'``: ``astropy.visualization.LogStretch``
+        * ``'sqrt'``: ``astropy.visualization.SqrtStretch``
+
+        """
+        # TODO: Is there a better way to access this in Glue? See glue/viewers/image/state.py
+        return ['arcsinh', 'linear', 'log', 'sqrt']
+
+    @property
+    def stretch(self):
+        """The image stretching algorithm in use."""
+        viewer = self.app.get_viewer("viewer-1")
+        i_top = get_top_layer_index(viewer)
+        return viewer.state.layers[i_top].stretch
+
+    @stretch.setter
+    def stretch(self, val):
+        valid_vals = self.stretch_options
+
+        if isinstance(val, type):  # is a class
+            # Translate astropy.visualization
+            from astropy.visualization import AsinhStretch, LinearStretch, LogStretch, SqrtStretch
+            if issubclass(val, AsinhStretch):
+                val = 'arcsinh'
+            elif issubclass(val, LinearStretch):
+                val = 'linear'
+            elif issubclass(val, LogStretch):
+                val = 'log'
+            elif issubclass(val, SqrtStretch):
+                val = 'sqrt'
+            else:
+                raise ValueError(f"Invalid stretch {val}, must be one of {valid_vals}")
+        elif val not in valid_vals:
+            raise ValueError(f"Invalid stretch '{val}', must be one of {valid_vals}")
+
+        viewer = self.app.get_viewer("viewer-1")
+        i_top = get_top_layer_index(viewer)
+        viewer.state.layers[i_top].stretch = val
+
+    @property
+    def autocut_options(self):
+        """List of all available options for automatic image cut levels."""
+        # See glue-jupyter/bqplot/image/state.py#L29
+        return ['minmax', '99.5%', '99%', '95%', '90%']
+
+    @property
+    def cuts(self):
+        """Current image cut levels.
+
+        To set new cut levels, either provide a tuple of ``(low, high)`` values
+        or one of the options from `autocut_options`.
+
+        """
+        viewer = self.app.get_viewer("viewer-1")
+        i_top = get_top_layer_index(viewer)
+        return viewer.state.layers[i_top].v_min, viewer.state.layers[i_top].v_max
+
+    # TODO: Support astropy.visualization, see https://github.com/glue-viz/glue/issues/2218
+    @cuts.setter
+    def cuts(self, val):
+        viewer = self.app.get_viewer("viewer-1")
+        i_top = get_top_layer_index(viewer)
+
+        if isinstance(val, str):  # autocut
+            if val == 'minmax':
+                val = 100
+            elif val == '99.5%':
+                val = 99.5
+            elif val == '99%':
+                val = 99
+            elif val == '95%':
+                val = 95
+            elif val == '90%':
+                val = 90
+            else:
+                raise ValueError(f"Invalid autocut '{val}', must be one of {self.autocut_options}")
+            viewer.state.layers[i_top].percentile = val
+        else:  # (low, high)
+            if (not isinstance(val, (list, tuple)) or len(val) != 2
+                    or not np.all([isinstance(x, (int, float)) for x in val])):
+                raise ValueError(f"Invalid cut levels {val}, must be (low, high)")
+            viewer.state.layers[i_top].v_min = val[0]
+            viewer.state.layers[i_top].v_max = val[1]
 
     @property
     def marker(self):
@@ -431,7 +640,39 @@ class Imviz(ConfigHelper):
             ``regions`` objects.
 
         """
-        return self.app.get_subsets_from_viewer('viewer-1')
+        regions = {}
+        viewer = self.app.get_viewer("viewer-1")
+
+        for lyr in viewer.layers:
+            if (not hasattr(lyr, 'layer') or not isinstance(lyr.layer, Subset)
+                    or lyr.layer.ndim != 2):
+                continue
+
+            subset_data = lyr.layer
+            subset_label = subset_data.label
+
+            # TODO: Remove this when Imviz support round-tripping, see
+            # https://github.com/spacetelescope/jdaviz/pull/721
+            if not subset_label.startswith('Subset'):
+                continue
+
+            region = subset_data.data.get_selection_definition(
+                subset_id=subset_label, format='astropy-regions')
+            regions[subset_label] = region
+
+        return regions
+
+    # See https://github.com/glue-viz/glue-jupyter/issues/253
+    def _apply_interactive_region(self, toolname, from_pix, to_pix):
+        """Mimic interactive region drawing.
+        This is for internal testing only.
+        """
+        viewer = self.app.get_viewer("viewer-1")
+        tool = viewer.toolbar.tools[toolname]
+        tool.activate()
+        tool.interact.brushing = True
+        tool.interact.selected = [from_pix, to_pix]
+        tool.interact.brushing = False
 
 
 def split_filename_with_fits_ext(filename):

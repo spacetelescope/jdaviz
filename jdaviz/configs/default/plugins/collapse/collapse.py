@@ -49,6 +49,7 @@ class Collapse(TemplateMixin):
                            handler=self._on_data_updated)
 
         self._selected_data = None
+        self._spectral_subsets = {}
         self._label_counter = 0
 
     def _on_data_updated(self, msg):
@@ -68,6 +69,7 @@ class Collapse(TemplateMixin):
 
         # Also set the spectral min and max to default to the full range
         cube = self._selected_data.get_object(cls=SpectralCube)
+        self.selected_subset = "None"
         self.spectral_min = cube.spectral_axis[0].value
         self.spectral_max = cube.spectral_axis[-1].value
         self.spectral_unit = str(cube.spectral_axis.unit)
@@ -77,13 +79,12 @@ class Collapse(TemplateMixin):
     @observe("selected_subset")
     def _on_subset_selected(self, event):
         # If "None" selected, reset based on bounds of selected data
-        self._selected_subset = self.selected_subset
-        if self._selected_subset == "None":
+        if self.selected_subset == "None":
             cube = self._selected_data.get_object(cls=SpectralCube)
             self.spectral_min = cube.spectral_axis[0].value
             self.spectral_max = cube.spectral_axis[-1].value
         else:
-            spec_sub = self._spectral_subsets[self._selected_subset]
+            spec_sub = self._spectral_subsets[self.selected_subset]
             unit = u.Unit(self.spectral_unit)
             spec_reg = SpectralRegion.from_center(spec_sub.center.x * unit,
                                                   spec_sub.width * unit)
@@ -92,16 +93,15 @@ class Collapse(TemplateMixin):
 
     def vue_list_subsets(self, event):
         """Populate the spectral subset selection dropdown"""
-        temp_subsets = self.app.get_subsets_from_viewer("spectrum-viewer")
-        temp_list = ["None"]
+        temp_subsets = self.app.get_subsets_from_viewer("spectrum-viewer",
+                                                        subset_type="spectral")
         temp_dict = {}
         # Attempt to filter out spatial subsets
         for key, region in temp_subsets.items():
             if type(region) == RectanglePixelRegion:
                 temp_dict[key] = region
-                temp_list.append(key)
         self._spectral_subsets = temp_dict
-        self.spectral_subset_items = temp_list
+        self.spectral_subset_items = ["None"] + sorted(temp_dict.keys())
 
     def vue_collapse(self, *args, **kwargs):
         try:

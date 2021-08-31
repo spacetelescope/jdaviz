@@ -9,7 +9,7 @@ __all__ = ['BaseImviz_WCS_NoWCS']
 class BaseImviz_WCS_NoWCS:
     @pytest.fixture(autouse=True)
     def setup_class(self, imviz_app):
-        hdu = fits.ImageHDU(np.zeros((10, 10)), name='SCI')
+        hdu = fits.ImageHDU(np.arange(100).reshape((10, 10)), name='SCI')
 
         # Apply some celestial WCS from
         # https://learn.astropy.org/rst-tutorials/celestial_coords1.html
@@ -36,3 +36,7 @@ class BaseImviz_WCS_NoWCS:
         self.wcs = WCS(hdu.header)
         self.imviz = imviz_app
         self.viewer = imviz_app.app.get_viewer('viewer-1')
+
+        # Since we are not really displaying, need this to test zoom.
+        self.viewer.shape = (100, 100)
+        self.viewer.state._set_axes_aspect_ratio(1)

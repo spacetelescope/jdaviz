@@ -17,6 +17,12 @@ try:
 except ImportError:
     HAS_SKIMAGE = False
 
+try:
+    import regions  # noqa
+    HAS_REGIONS = True
+except ImportError:
+    HAS_REGIONS = False
+
 
 @pytest.mark.parametrize(
     ('filename', 'ans'),
@@ -58,7 +64,8 @@ def test_validate_bunit():
 
 class TestParseImage:
     def setup_class(self):
-        self.jwst_asdf_url_1 = 'https://data.science.stsci.edu/redirect/JWST/jwst-data_analysis_tools/stellar_photometry/jw01072001001_01101_00001_nrcb1_cal.fits'  # noqa: E501
+        self.jwst_asdf_url_1 = 'https://data.science.stsci.edu/redirect/JWST/jwst-data_analysis_tools/imviz_test_data/jw00042001001_01101_00001_nrcb5_cal.fits'  # noqa: E501
+        self.jwst_asdf_url_2 = 'https://stsci.box.com/shared/static/d5k9z5j05dgfv6ljgie483w21kmpevni.fits'  # noqa: E501
 
     def test_no_data_label(self):
         with pytest.raises(NotImplementedError, match='should be set'):
@@ -174,23 +181,25 @@ class TestParseImage:
         with pytest.raises(ValueError, match='Do not manually overwrite data_label'):
             imviz_app.load_data(flist, data_label='foo', show_in_viewer=False)
 
-    @pytest.mark.skipif(HAS_JWST_ASDF, reason='jwst is installed')
+    @pytest.mark.skipif(HAS_JWST_ASDF, reason='asdf and gwcs are installed')
     @pytest.mark.remote_data
     def test_parse_jwst_nircam_level2_no_jwst(self, imviz_app):
         filename = download_file(self.jwst_asdf_url_1, cache=True)
-        with pytest.raises(ImportError, match='jwst package is missing'):
+        with pytest.raises(ImportError, match='asdf or gwcs package is missing'):
             parse_data(imviz_app.app, filename, data_label='foo',
                        show_in_viewer=False)
 
-    @pytest.mark.skipif(not HAS_JWST_ASDF, reason='jwst not installed')
+    @pytest.mark.skipif(not HAS_JWST_ASDF or not HAS_REGIONS,
+                        reason='asdf, gwcs, or regions not installed')
     @pytest.mark.remote_data
     def test_parse_jwst_nircam_level2(self, imviz_app):
         from gwcs import WCS as GWCS
+        from regions import CirclePixelRegion
 
         filename = download_file(self.jwst_asdf_url_1, cache=True)
 
         # Default behavior: Science image
-        parse_data(imviz_app.app, filename, show_in_viewer=False)
+        parse_data(imviz_app.app, filename, show_in_viewer=True)
         data = imviz_app.app.data_collection[0]
         comp = data.get_component('DATA')
         assert data.label == 'contents[DATA]'  # download_file returns cache loc
@@ -198,6 +207,16 @@ class TestParseImage:
         assert isinstance(data.coords, GWCS)
         assert comp.units == 'MJy/sr'
         assert comp.data.shape == (2048, 2048)
+
+        # --- Since download is expensive, we attach GWCS-specific tests here. ---
+
+        # Ensure interactive region supports GWCS. Also see test_regions.py
+        imviz_app._apply_interactive_region('bqplot:circle', (0, 0), (1000, 1000))
+        subsets = imviz_app.get_interactive_regions()
+        assert list(subsets.keys()) == ['Subset 1'], subsets
+        assert isinstance(subsets['Subset 1'], CirclePixelRegion)
+
+        # --- Back to parser testing below. ---
 
         # Request specific extension (name + ver, but ver is not used), use given label
         parse_data(imviz_app.app, filename, ext=('DQ', 42),
@@ -243,9 +262,24 @@ class TestParseImage:
             assert data.labels[6].endswith('[VAR_FLAT]')
 
         # Invalid ASDF attribute (extension)
-        with pytest.raises(AttributeError, match='No attribute'):
+        with pytest.raises(KeyError, match='does_not_exist'):
             parse_data(imviz_app.app, filename, ext='DOES_NOT_EXIST',
                        data_label='foo', show_in_viewer=False)
+
+    @pytest.mark.skipif(not HAS_JWST_ASDF, reason='asdf and gwcs not installed')
+    @pytest.mark.remote_data
+    def test_parse_jwst_niriss_grism(self, imviz_app):
+        """No valid image GWCS for Imviz, will fall back to FITS loading without WCS."""
+        filename = download_file(self.jwst_asdf_url_2, cache=True)
+
+        parse_data(imviz_app.app, filename, show_in_viewer=False)
+        data = imviz_app.app.data_collection[0]
+        comp = data.get_component('SCI,1')
+        assert data.label == 'contents[SCI,1]'  # download_file returns cache loc
+        assert data.shape == (2048, 2048)
+        assert data.coords is None
+        assert comp.units == 'DN/s'
+        assert comp.data.shape == (2048, 2048)
 
     @pytest.mark.remote_data
     def test_parse_hst_drz(self, imviz_app):

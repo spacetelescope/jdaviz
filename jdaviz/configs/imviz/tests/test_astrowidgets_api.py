@@ -1,9 +1,25 @@
+import os
+
+import numpy as np
 import pytest
 from astropy import units as u
 from astropy.table import Table
+from astropy.visualization import AsinhStretch, LinearStretch, LogStretch, SqrtStretch
 from numpy.testing import assert_allclose
 
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS
+
+
+# TODO: Remove skip when https://github.com/bqplot/bqplot/issues/1393 is resolved.
+@pytest.mark.skip(reason="Cannot test due to file dialog popup")
+class TestSave(BaseImviz_WCS_NoWCS):
+
+    def test_save(self, tmpdir):
+        filename = os.path.join(tmpdir.strpath, 'myimage')
+        self.imviz.save(filename)
+
+        # This only tests that something saved, not the content.
+        assert os.path.isfile(os.path.join(tmpdir.strpath, 'myimage.png'))
 
 
 class TestCenterOffset(BaseImviz_WCS_NoWCS):
@@ -27,6 +43,20 @@ class TestCenterOffset(BaseImviz_WCS_NoWCS):
         assert_allclose(self.viewer.state.x_max, 7)
         assert_allclose(self.viewer.state.y_max, 5)
 
+        # Out-of-bounds centering should be no-op
+        self.imviz.center_on((-1, 99999))
+        assert_allclose(self.viewer.state.x_min, -3)
+        assert_allclose(self.viewer.state.y_min, -5)
+        assert_allclose(self.viewer.state.x_max, 7)
+        assert_allclose(self.viewer.state.y_max, 5)
+
+        # Sometimes invalid WCS also gives such output, should be no-op
+        self.imviz.center_on((np.array(np.nan), np.array(np.nan)))
+        assert_allclose(self.viewer.state.x_min, -3)
+        assert_allclose(self.viewer.state.y_min, -5)
+        assert_allclose(self.viewer.state.x_max, 7)
+        assert_allclose(self.viewer.state.y_max, 5)
+
     def test_center_offset_sky(self):
         # Blink to the one with WCS because the last loaded data is shown.
         self.viewer.blink_once()
@@ -39,10 +69,10 @@ class TestCenterOffset(BaseImviz_WCS_NoWCS):
         assert_allclose(self.viewer.state.y_max, 6)
 
         dsky = 0.1 * u.arcsec
-        self.imviz.offset_by(dsky, dsky)
-        assert_allclose(self.viewer.state.x_min, -5.100000000142565)
+        self.imviz.offset_by(-dsky, dsky)
+        assert_allclose(self.viewer.state.x_min, -4.9)
         assert_allclose(self.viewer.state.y_min, -3.90000000002971)
-        assert_allclose(self.viewer.state.x_max, 4.899999999857435)
+        assert_allclose(self.viewer.state.x_max, 5.1)
         assert_allclose(self.viewer.state.y_max, 6.09999999997029)
 
         # Cannot mix pixel with sky
@@ -63,6 +93,142 @@ class TestCenterOffset(BaseImviz_WCS_NoWCS):
 
         with pytest.raises(AttributeError, match='does not have a valid WCS'):
             self.imviz.offset_by(dsky, dsky)
+
+
+class TestZoom(BaseImviz_WCS_NoWCS):
+
+    @pytest.mark.parametrize('val', (0, -0.1, 'foo', [1, 2]))
+    def test_invalid_zoom_level(self, val):
+        with pytest.raises(ValueError, match='Unsupported zoom level'):
+            self.imviz.zoom_level = val
+
+    def test_invalid_zoom(self):
+        with pytest.raises(ValueError, match='zoom only accepts int or float'):
+            self.imviz.zoom('fit')
+
+    def assert_zoom_results(self, zoom_level, x_min, x_max, y_min, y_max, dpix):
+        assert_allclose(self.imviz.zoom_level, zoom_level)
+        assert_allclose((self.viewer.state.x_min, self.viewer.state.x_max,
+                         self.viewer.state.y_min, self.viewer.state.y_max),
+                        (x_min + dpix, x_max + dpix,
+                         y_min + dpix, y_max + dpix))
+
+    @pytest.mark.parametrize('is_offcenter', (False, True))
+    def test_zoom(self, is_offcenter):
+        if is_offcenter:
+            self.imviz.center_on((0, 0))
+            dpix = -4.5
+        else:
+            self.imviz.center_on((4.5, 4.5))
+            dpix = 0
+
+        self.assert_zoom_results(10, -0.5, 9.5, -0.5, 9.5, dpix)
+
+        # NOTE: Not sure why X/Y min/max not exactly the same as aspect ratio 1
+        self.imviz.zoom_level = 1
+        self.assert_zoom_results(1, -46, 54, -45.5, 54.5, dpix)
+
+        self.imviz.zoom_level = 2
+        self.assert_zoom_results(2, -21.5, 28.5, -20.5, 29.5, dpix)
+
+        self.imviz.zoom(2)
+        self.assert_zoom_results(4, -9.5, 15.5, -8.0, 17.0, dpix)
+
+        self.imviz.zoom(0.5)
+        self.assert_zoom_results(2, -22.5, 27.5, -20.5, 29.5, dpix)
+
+        self.imviz.zoom_level = 0.5
+        self.assert_zoom_results(0.5, -98, 102, -95.5, 104.5, dpix)
+
+        # This fits the whole image on screen, regardless.
+        # NOTE: But somehow Y min/max auto-adjust does not work properly
+        # in the unit test when off-center. Works in notebook though.
+        if not is_offcenter:
+            self.imviz.zoom_level = 'fit'
+            self.assert_zoom_results(10, -0.5, 9.5, -0.5, 9.5, 0)
+
+
+class TestCmapStretchCuts(BaseImviz_WCS_NoWCS):
+
+    def test_colormap_options(self):
+        assert self.imviz.colormap_options == [
+            'BuGn', 'PRGn', 'PuBu', 'PuOr', 'RdBu', 'RdPu', 'RdYlBu', 'YlGnBu', 'YlOrRd',
+            'gray', 'hot', 'inferno', 'magma', 'plasma', 'viridis']
+
+    def test_invalid_colormap(self):
+        with pytest.raises(ValueError, match='Invalid colormap'):
+            self.imviz.set_colormap('foo')
+
+    def test_stretch_options(self):
+        assert self.imviz.stretch_options == ['arcsinh', 'linear', 'log', 'sqrt']
+
+    @pytest.mark.parametrize(('vizclass', 'ans'),
+                             [(AsinhStretch, 'arcsinh'),
+                              (LinearStretch, 'linear'),
+                              (LogStretch, 'log'),
+                              (SqrtStretch, 'sqrt')])
+    def test_stretch_astropy(self, vizclass, ans):
+        self.imviz.stretch = vizclass
+        assert self.imviz.stretch == ans
+
+    def test_invalid_stretch(self):
+        class FakeStretch:
+            pass
+
+        with pytest.raises(ValueError, match='Invalid stretch'):
+            self.imviz.stretch = FakeStretch
+
+        with pytest.raises(ValueError, match='Invalid stretch'):
+            self.imviz.stretch = 'foo'
+
+    def test_autocut_options(self):
+        assert self.imviz.autocut_options == ['minmax', '99.5%', '99%', '95%', '90%']
+
+    @pytest.mark.parametrize(('auto_option', 'ans'),
+                             [('minmax', (0, 99)),
+                              ('99.5%', (0.2475, 98.7525)),
+                              ('99%', (0.495, 98.505)),
+                              ('95%', (2.475, 96.525)),
+                              ('90%', (4.95, 94.05))])
+    def test_autocut(self, auto_option, ans):
+        self.imviz.cuts = auto_option
+        assert_allclose(self.imviz.cuts, ans)
+
+    def test_invalid_autocut(self):
+        with pytest.raises(ValueError, match='Invalid autocut'):
+            self.imviz.cuts = 'foo'
+
+    @pytest.mark.parametrize('val', [99, (1, ), (1, 2, 3), (1, 'foo')])
+    def test_invalid_cuts(self, val):
+        with pytest.raises(ValueError, match='Invalid cut levels'):
+            self.imviz.cuts = val
+
+    def test_cmap_stretch_cuts(self):
+        # Change colormap, stretch, and cuts on one image
+        self.imviz.set_colormap('viridis')
+        self.imviz.stretch = 'sqrt'
+        self.imviz.cuts = '95%'
+
+        self.viewer.blink_once()
+
+        # Change colormap, stretch, and cuts on other image
+        self.imviz.set_colormap('RdYlBu')
+        self.imviz.stretch = AsinhStretch
+        self.imviz.cuts = (0, 100)
+
+        # Make sure settings stick on both images, second image displayed/changed first above.
+        assert self.viewer.state.layers[0].cmap.name == 'RdYlBu'
+        assert self.viewer.state.layers[0].stretch == 'arcsinh'
+        assert_allclose((self.viewer.state.layers[0].v_min, self.viewer.state.layers[0].v_max),
+                        (0, 100))
+
+        assert self.viewer.state.layers[1].cmap.name == 'viridis'
+        assert self.viewer.state.layers[1].stretch == 'sqrt'
+        assert_allclose((self.viewer.state.layers[1].v_min, self.viewer.state.layers[1].v_max),
+                        (2.475, 96.525))
+
+        # Go back to initial image for other tests.
+        self.viewer.blink_once()
 
 
 class TestMarkers(BaseImviz_WCS_NoWCS):

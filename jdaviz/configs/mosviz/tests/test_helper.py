@@ -75,7 +75,7 @@ SPECSYS = 'BARYCENT'           / Reference frame of spectral coordinates
 
 @pytest.fixture
 def spectrum_collection(spectrum1d):
-    sc = [spectrum1d for _ in range(5)]
+    sc = [spectrum1d]*5
 
     return SpectrumCollection.from_spectra(sc)
 
@@ -158,7 +158,7 @@ def test_load_spectrum_collection(mosviz_app, spectrum_collection):
 
 
 def test_load_list_of_spectrum1d(mosviz_app, spectrum1d):
-    spectra = [spectrum1d for _ in range(3)]
+    spectra = [spectrum1d]*3
 
     labels = [f"Test Spectrum 1D {i}" for i in range(3)]
     mosviz_app.load_1d_spectra(spectra, data_labels=labels)
@@ -206,6 +206,39 @@ def test_load_image(mosviz_app, image):
     # assert isinstance(list(data.values())[0], CCDData)
     assert list(data.values())[0].shape == (55, 55)
     assert list(data.keys())[0] == f"{label} 0"
+
+
+@pytest.mark.parametrize('label', [None, "Test Label"])
+def test_load_single_image_multi_spec(mosviz_app, image, spectrum1d, spectrum2d, label):
+    spectra1d = [spectrum1d]*3
+    spectra2d = [spectrum2d]*3
+
+    mosviz_app.load_data(spectra1d, spectra2d, images=image, images_label=label)
+
+    assert len(mosviz_app.app.data_collection) == 8
+
+    qtable = mosviz_app.to_table()
+    if label is None:
+        assert np.all(qtable["Images"] == "Shared Image")
+    else:
+        assert np.all(qtable["Images"] == "Test Label")
+    assert len(qtable) == 3
+
+
+@pytest.mark.parametrize('label', [None, "Test Label"])
+def test_load_multi_image_spec(mosviz_app, image, spectrum1d, spectrum2d, label):
+    spectra1d = [spectrum1d]*3
+    spectra2d = [spectrum2d]*3
+    images = [image]*3
+
+    mosviz_app.load_data(spectra1d, spectra2d, images=images, images_label=label)
+    assert len(mosviz_app.app.data_collection) == 10
+
+    qtable = mosviz_app.to_table()
+    if label is None:
+        assert qtable["Images"][0] == "Image 0"
+    else:
+        assert qtable["Images"][0] == "Test Label 0"
 
 
 def test_viewer_axis_link(mosviz_app, spectrum1d, spectrum2d):

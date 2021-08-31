@@ -6,7 +6,7 @@ from echo import delay_callback
 from glue.config import viewer_tool
 from glue_jupyter.bqplot.common.tools import Tool
 from glue.viewers.common.tool import CheckableTool
-from glue.plugins.wcs_autolinking.wcs_autolinking import wcs_autolink, WCSLink
+from glue.plugins.wcs_autolinking.wcs_autolinking import wcs_autolink, WCSLink, AffineLink
 from glue_jupyter.bqplot.common.tools import BqplotPanZoomMode
 
 __all__ = []
@@ -32,7 +32,7 @@ class BqplotMatchWCS(BqplotPanZoomMode):
     icon = os.path.join(ICON_DIR, 'pan_wcs.svg')
     tool_id = 'bqplot:panzoomwcs'
     action_text = 'Pan, matching WCS between viwers'
-    tool_tip = 'Pan and Zoom in this viewer to see the same regions in other viewers'
+    tool_tip = 'Pan (click-drag) and Zoom (scroll) in this viewer to see the same regions in other viewers'  # noqa
 
     def activate(self):
 
@@ -54,13 +54,13 @@ class BqplotMatchWCS(BqplotPanZoomMode):
         for link in wcs_links:
             exists = False
             for existing_link in self.viewer.session.data_collection.external_links:
-                if isinstance(existing_link, WCSLink):
+                if isinstance(existing_link, (AffineLink, WCSLink)):
                     if (link.data1 is existing_link.data1
                             and link.data2 is existing_link.data2):
                         exists = True
                         break
             if not exists:
-                self.viewer.session.data_collection.add_link(link)
+                self.viewer.session.data_collection.add_link(link.as_affine_link())
 
         # Set the reference data in other viewers to be the same as the current viewer.
         # If adding the data to the viewer, make sure it is not actually shown since the
@@ -103,7 +103,7 @@ class BqplotContrastBias(CheckableTool):
     icon = 'glue_contrast'
     tool_id = 'bqplot:contrastbias'
     action_text = 'Adjust contrast/bias'
-    tool_tip = 'Click and drag to adjust, double-click to reset'
+    tool_tip = 'Click and drag to adjust contrast and bias, double-click to reset'
 
     def __init__(self, viewer, **kwargs):
         self._time_last = 0
@@ -128,26 +128,28 @@ class BqplotContrastBias(CheckableTool):
             if (time.time() - self._time_last) <= 0.2:
                 return
 
-            event_x = data['domain']['x']
-            event_y = data['domain']['y']
+            event_x = data['pixel']['x']
+            event_y = data['pixel']['y']
+            max_x = self.viewer.shape[1]
+            max_y = self.viewer.shape[0]
 
-            if ((event_x < self.viewer.state.x_min) or
-                    (event_x >= self.viewer.state.x_max) or
-                    (event_y < self.viewer.state.y_min) or
-                    (event_y >= self.viewer.state.y_max)):
+            if ((event_x < 0) or (event_x >= max_x) or
+                    (event_y < 0) or (event_y >= max_y)):
                 return
 
-            x = event_x / (self.viewer.state.x_max - self.viewer.state.x_min)
-            y = event_y / (self.viewer.state.y_max - self.viewer.state.y_min)
+            # Normalize w.r.t. viewer display from 0 to 1
+            x = event_x / (max_x - 1)
+            y = event_y / (max_y - 1)
 
             # When blinked, first layer might not be top layer
             i_top = get_top_layer_index(self.viewer)
             state = self.viewer.layers[i_top].state
 
-            # https://github.com/glue-viz/glue/blob/master/glue/viewers/image/qt/contrast_mouse_mode.py
+            # bias range 0..1
+            # contrast range 0..4
             with delay_callback(state, 'bias', 'contrast'):
-                state.bias = -(x * 2 - 1.5)
-                state.contrast = 10. ** (y * 2 - 1)
+                state.bias = x
+                state.contrast = y * 4
 
             self._time_last = time.time()
 
