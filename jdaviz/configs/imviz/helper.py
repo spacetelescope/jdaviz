@@ -167,7 +167,7 @@ class Imviz(ConfigHelper):
             if i == iref:
                 continue
 
-            # We are not touching any existing Subset or markers. No idea what happens to those.
+            # We are not touching any existing Subsets. They keep their own links.
             if not layer_is_image_data(data):
                 continue
 
