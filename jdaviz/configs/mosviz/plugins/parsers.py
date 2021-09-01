@@ -557,11 +557,11 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
             datamodl = header.get('DATAMODL')
 
             # infer the dispersion direction of 1D and 2D spectra by the last
-            # letter of their filter values (e.g., "GR150C" or "GR150R")
+            # letter of their filter values (e.g., "C" from GR150C")
             try:
                 dispersion = header.get('FILTER')[-1]
             except TypeError:
-                dispersion = None # could be cleaner...
+                dispersion = None
 
             # distinguish image files from counts files -- only the former go
             # through the "Assign World Coordinate System" calibration step
