@@ -154,7 +154,11 @@ class MosViz(ConfigHelper):
         imview = self.app.get_viewer("image-viewer")
         specview = self.app.get_viewer("spectrum-2d-viewer")
 
-        sky_region = jwst_header_to_skyregion(specview.layers[0].layer.meta)
+        try:
+            sky_region = jwst_header_to_skyregion(specview.layers[0].layer.meta)
+        except KeyError:
+            # If the header didn't have slit params, can't zoom to it.
+            return None, None
         ra = sky_region.center.ra.deg
         dec = sky_region.center.dec.deg
 
@@ -254,6 +258,9 @@ class MosViz(ConfigHelper):
             msg = SnackbarMessage(msg, color='warning', sender=self)
             self.app.hub.broadcast(msg)
 
+        # Load the first object into the viewers automatically
+        self.app.get_viewer("table-viewer").figure_widget.highlighted = 0
+
     def load_spectra(self, spectra_1d, spectra_2d):
         """
         Load 1D and 2D spectra using lists or strings to represent each.
@@ -286,9 +293,6 @@ class MosViz(ConfigHelper):
             The instrument the Mosviz data originated from.
         """
         self.load_data(directory=directory, instrument=instrument)
-
-        # Load the first object into the viewers automatically
-        self.app.get_viewer("table-viewer").figure_widget.highlighted = 0
 
     def load_metadata(self, data_obj):
         """
@@ -340,8 +344,6 @@ class MosViz(ConfigHelper):
 
     def load_niriss_data(self, data_obj, data_labels=None):
         super().load_data(data_obj, parser_reference="mosviz-niriss-parser")
-        # Load the first object into the viewers automatically
-        self.app.get_viewer("table-viewer").figure_widget.highlighted = 0
 
     def load_images(self, data_obj, data_labels=None, share_image=0):
         """
