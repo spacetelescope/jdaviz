@@ -154,7 +154,11 @@ class MosViz(ConfigHelper):
         imview = self.app.get_viewer("image-viewer")
         specview = self.app.get_viewer("spectrum-2d-viewer")
 
-        sky_region = jwst_header_to_skyregion(specview.layers[0].layer.meta)
+        try:
+            sky_region = jwst_header_to_skyregion(specview.layers[0].layer.meta)
+        except KeyError:
+            # If the header didn't have slit params, can't zoom to it.
+            return None, None
         ra = sky_region.center.ra.deg
         dec = sky_region.center.dec.deg
 
