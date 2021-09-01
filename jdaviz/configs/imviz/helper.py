@@ -30,12 +30,19 @@ class Imviz(ConfigHelper):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._active_viewer = self.app.get_viewer("viewer-1")
 
         # Markers
         self._marktags = set()
         self._default_mark_tag_name = 'default-marker-name'
         # marker shape not settable: https://github.com/glue-viz/glue/issues/2202
         self.marker = {'color': 'red', 'alpha': 1.0, 'markersize': 5}
+
+    def set_active_viewer(self, viewer_name):
+        """Change the active viewer for viewer-specific API calls."""
+        # This name is actually viewer ID shown in UI.
+        new_viewer = self.app.get_viewer_by_id(viewer_name)
+        self._active_viewer = new_viewer
 
     def load_data(self, data, parser_reference=None, **kwargs):
         """Load data into Imviz.
@@ -109,8 +116,7 @@ class Imviz(ConfigHelper):
         """Save out the current image view to given PNG filename."""
         if not filename.lower().endswith('.png'):
             filename = filename + '.png'
-        viewer = self.app.get_viewer("viewer-1")
-        viewer.figure.save_png(filename=filename)
+        self._active_viewer.figure.save_png(filename=filename)
 
     def center_on(self, point):
         """Centers the view on a particular point.
@@ -127,7 +133,7 @@ class Imviz(ConfigHelper):
             Sky coordinates are given but image does not have a valid WCS.
 
         """
-        viewer = self.app.get_viewer("viewer-1")
+        viewer = self._active_viewer
         i_top = get_top_layer_index(viewer)
         image = viewer.layers[i_top].layer
 
@@ -185,7 +191,7 @@ class Imviz(ConfigHelper):
             Sky offset has invalid unit.
 
         """
-        viewer = self.app.get_viewer("viewer-1")
+        viewer = self._active_viewer
         width = viewer.state.x_max - viewer.state.x_min
         height = viewer.state.y_max - viewer.state.y_min
 
@@ -230,7 +236,7 @@ class Imviz(ConfigHelper):
         * 'fit' means zoomed to fit the whole image width into display.
 
         """
-        viewer = self.app.get_viewer("viewer-1")
+        viewer = self._active_viewer
         if viewer.shape is None:  # pragma: no cover
             raise ValueError('Viewer is still loading, try again later')
 
@@ -248,7 +254,7 @@ class Imviz(ConfigHelper):
                 (isinstance(val, (int, float)) and val <= 0)):
             raise ValueError(f'Unsupported zoom level: {val}')
 
-        viewer = self.app.get_viewer("viewer-1")
+        viewer = self._active_viewer
         image = viewer.state.reference_data
         if (image is None or viewer.shape is None or
                 viewer.state.x_att is None or viewer.state.y_att is None):  # pragma: no cover
@@ -323,7 +329,7 @@ class Imviz(ConfigHelper):
         if cm is None:
             raise ValueError(f"Invalid colormap '{cmap}', must be one of {self.colormap_options}")
 
-        viewer = self.app.get_viewer("viewer-1")
+        viewer = self._active_viewer
         i_top = get_top_layer_index(viewer)
         viewer.state.layers[i_top].cmap = cm
 
@@ -345,7 +351,7 @@ class Imviz(ConfigHelper):
     @property
     def stretch(self):
         """The image stretching algorithm in use."""
-        viewer = self.app.get_viewer("viewer-1")
+        viewer = self._active_viewer
         i_top = get_top_layer_index(viewer)
         return viewer.state.layers[i_top].stretch
 
@@ -369,7 +375,7 @@ class Imviz(ConfigHelper):
         elif val not in valid_vals:
             raise ValueError(f"Invalid stretch '{val}', must be one of {valid_vals}")
 
-        viewer = self.app.get_viewer("viewer-1")
+        viewer = self._active_viewer
         i_top = get_top_layer_index(viewer)
         viewer.state.layers[i_top].stretch = val
 
@@ -387,14 +393,14 @@ class Imviz(ConfigHelper):
         or one of the options from `autocut_options`.
 
         """
-        viewer = self.app.get_viewer("viewer-1")
+        viewer = self._active_viewer
         i_top = get_top_layer_index(viewer)
         return viewer.state.layers[i_top].v_min, viewer.state.layers[i_top].v_max
 
     # TODO: Support astropy.visualization, see https://github.com/glue-viz/glue/issues/2218
     @cuts.setter
     def cuts(self, val):
-        viewer = self.app.get_viewer("viewer-1")
+        viewer = self._active_viewer
         i_top = get_top_layer_index(viewer)
 
         if isinstance(val, str):  # autocut
@@ -506,7 +512,7 @@ class Imviz(ConfigHelper):
             marker_name = self._default_mark_tag_name
 
         self._validate_marker_name(marker_name)
-        viewer = self.app.get_viewer("viewer-1")
+        viewer = self._active_viewer
         jglue = self.app.session.application
 
         # TODO: How to link to invidual images separately for X/Y? add_link in loop does not work.
@@ -598,7 +604,7 @@ class Imviz(ConfigHelper):
             This is ignored if Numpy array is given.
 
         """
-        viewer = self.app.get_viewer("viewer-1")
+        viewer = self._active_viewer
         data = viewer.state.reference_data
 
         for subset_label, region in regions.items():
@@ -641,7 +647,7 @@ class Imviz(ConfigHelper):
 
         """
         regions = {}
-        viewer = self.app.get_viewer("viewer-1")
+        viewer = self._active_viewer
 
         for lyr in viewer.layers:
             if (not hasattr(lyr, 'layer') or not isinstance(lyr.layer, Subset)
@@ -667,7 +673,7 @@ class Imviz(ConfigHelper):
         """Mimic interactive region drawing.
         This is for internal testing only.
         """
-        viewer = self.app.get_viewer("viewer-1")
+        viewer = self._active_viewer
         tool = viewer.toolbar.tools[toolname]
         tool.activate()
         tool.interact.brushing = True
