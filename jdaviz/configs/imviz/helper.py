@@ -114,9 +114,9 @@ class Imviz(ConfigHelper):
 
         .. warning::
 
-            Display would reset upon running this method. Any regions (subsets) and
-            markers would be removed. You can add back the static regions and markers
-            manually using :meth:`load_static_regions` and :meth:`add_markers`, respectively.
+            Any markers added would be removed. You can add back the markers
+            manually using :meth:`add_markers`. During the markers removal,
+            pan/zoom will also reset.
 
         Parameters
         ----------
@@ -142,7 +142,7 @@ class Imviz(ConfigHelper):
         Raises
         ------
         ValueError
-            Invalid inputs.
+            Invalid inputs or reference data.
 
         """
         if len(self.app.data_collection) <= 1:  # No need to link, we are done.
@@ -154,25 +154,21 @@ class Imviz(ConfigHelper):
             raise ValueError("wcs_fallback_scheme must be None or 'pixels', "
                              f"got {wcs_fallback_scheme}")
 
-        refdata = self.app.data_collection[0]  # Link with first one
-
-        if not layer_is_image_data(refdata):
-            raise ValueError(f'Reference data is not a valid 2D image: {refdata}')
-
-        # Clear any existing markers.
+        # Clear any existing markers. Otherwise, re-linking will crash.
         self.reset_markers()
 
-        # TODO: Is this the correct way to do it?
-        # Clear any existing subsets.
-        for subset_grp in self.app.data_collection._subset_groups:
-            self.app.data_collection.remove_subset_group(subset_grp)
-
+        refdata, iref = get_reference_image_data(self.app)
         links_list = []
         ids0 = refdata.pixel_component_ids
         ndim_range = range(refdata.ndim)
 
-        for data in self.app.data_collection[1:]:
-            if not layer_is_image_data(data):  # Only try to link 2D images
+        for i, data in enumerate(self.app.data_collection):
+            # Do not link with self
+            if i == iref:
+                continue
+
+            # We are not touching any existing Subset or markers. No idea what happens to those.
+            if not layer_is_image_data(data):
                 continue
 
             ids1 = data.pixel_component_ids
@@ -845,6 +841,20 @@ def get_top_layer_index(viewer):
     """
     return [i for i, lyr in enumerate(viewer.layers)
             if lyr.visible and layer_is_image_data(lyr.layer)][-1]
+
+
+def get_reference_image_data(app):
+    """Return the first 2D image data in collection and its index to use as reference."""
+    refdata = None
+    iref = 0
+    for i, data in enumerate(app.data_collection):
+        if layer_is_image_data(data):
+            iref = i
+            refdata = data
+            break
+    if refdata is None:
+        raise ValueError(f'No valid reference data found in collection: {app.data_collection}')
+    return refdata, iref
 
 
 def _offset_is_pixel_or_sky(x):
