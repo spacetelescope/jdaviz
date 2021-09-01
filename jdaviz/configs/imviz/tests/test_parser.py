@@ -5,11 +5,11 @@ from astropy.io import fits
 from astropy.nddata import NDData, StdDevUncertainty
 from astropy.utils.data import download_file
 from astropy.wcs import WCS
+from gwcs import WCS as GWCS
 
 from jdaviz.configs.imviz.helper import split_filename_with_fits_ext
 from jdaviz.configs.imviz.plugins.parsers import (
-    HAS_JWST_ASDF, parse_data, _validate_fits_image2d, _validate_bunit,
-    _parse_image)
+    parse_data, _validate_fits_image2d, _validate_bunit, _parse_image)
 
 try:
     import skimage  # noqa
@@ -181,19 +181,9 @@ class TestParseImage:
         with pytest.raises(ValueError, match='Do not manually overwrite data_label'):
             imviz_app.load_data(flist, data_label='foo', show_in_viewer=False)
 
-    @pytest.mark.skipif(HAS_JWST_ASDF, reason='asdf and gwcs are installed')
-    @pytest.mark.remote_data
-    def test_parse_jwst_nircam_level2_no_jwst(self, imviz_app):
-        filename = download_file(self.jwst_asdf_url_1, cache=True)
-        with pytest.raises(ImportError, match='asdf or gwcs package is missing'):
-            parse_data(imviz_app.app, filename, data_label='foo',
-                       show_in_viewer=False)
-
-    @pytest.mark.skipif(not HAS_JWST_ASDF or not HAS_REGIONS,
-                        reason='asdf, gwcs, or regions not installed')
+    @pytest.mark.skipif(not HAS_REGIONS, reason='regions not installed')
     @pytest.mark.remote_data
     def test_parse_jwst_nircam_level2(self, imviz_app):
-        from gwcs import WCS as GWCS
         from regions import CirclePixelRegion
 
         filename = download_file(self.jwst_asdf_url_1, cache=True)
@@ -266,7 +256,6 @@ class TestParseImage:
             parse_data(imviz_app.app, filename, ext='DOES_NOT_EXIST',
                        data_label='foo', show_in_viewer=False)
 
-    @pytest.mark.skipif(not HAS_JWST_ASDF, reason='asdf and gwcs not installed')
     @pytest.mark.remote_data
     def test_parse_jwst_niriss_grism(self, imviz_app):
         """No valid image GWCS for Imviz, will fall back to FITS loading without WCS."""
