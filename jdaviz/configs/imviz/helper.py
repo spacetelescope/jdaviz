@@ -185,7 +185,7 @@ class Imviz(ConfigHelper):
                 if link_type == 'wcs' and wcs_fallback_scheme == 'pixels':
                     try:
                         new_links = [LinkSame(ids0[i], ids1[i]) for i in ndim_range]
-                    except Exception as e:
+                    except Exception as e:  # pragma: no cover
                         if error_on_fail:
                             raise
                         else:
