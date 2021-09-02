@@ -181,21 +181,15 @@ def mos_spec1d_parser(app, data_obj, data_labels=None):
     data_labels : str, optional
         The label applied to the glue data component.
     """
-    # If providing a file path, parse it using the specutils io tooling
-    if _check_is_file(data_obj):
-        data_obj = [Spectrum1D.read(data_obj)]
 
     if isinstance(data_labels, str):
         data_labels = [data_labels]
 
-    # Coerce into list-like object. This works because `Spectrum1D` objects
-    #  don't have a length dunder method.
-    if not hasattr(data_obj, '__len__'):
+    # Coerce into list if needed
+    if not isinstance(data_obj, (list, tuple, SpectrumCollection)):
         data_obj = [data_obj]
-    else:
-        data_obj = [Spectrum1D.read(x)
-                    if _check_is_file(x) else x
-                    for x in data_obj]
+
+    data_obj = [Spectrum1D.read(x) if _check_is_file(x) else x for x in data_obj]
 
     if data_labels is None:
         data_labels = [f"1D Spectrum {i}" for i in range(len(data_obj))]
@@ -286,19 +280,14 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
 
         return SpectralCube(new_data, wcs=wcs, meta=meta)
 
-    if _check_is_file(data_obj):
-        data_obj = [_parse_as_cube(data_obj)]
-
     if isinstance(data_labels, str):
         data_labels = [data_labels]
 
-    # Coerce into list-like object
-    if not isinstance(data_obj, (list, set)):
+    # Coerce into list if needed
+    if not isinstance(data_obj, (list, tuple, SpectrumCollection)):
         data_obj = [data_obj]
-    else:
-        data_obj = [_parse_as_cube(x)
-                    if _check_is_file(x) else x
-                    for x in data_obj]
+
+    data_obj = [_parse_as_cube(x) if _check_is_file(x) else x for x in data_obj]
 
     if data_labels is None:
         data_labels = [f"2D Spectrum {i}" for i in range(len(data_obj))]
@@ -422,14 +411,11 @@ def mos_meta_parser(app, data_obj):
     if data_obj is None:
         return
 
-    # Coerce into list-like object
-    if not hasattr(data_obj, '__len__'):
+    # Coerce into list if needed
+    if not isinstance(data_obj, (list, tuple, SpectrumCollection)):
         data_obj = [data_obj]
-    elif isinstance(data_obj, str):
-        data_obj = [fits.open(data_obj)]
-    else:
-        data_obj = [fits.open(x) if _check_is_file(x)
-                    else x for x in data_obj]
+
+    data_obj = [fits.open(x) if _check_is_file(x) else x for x in data_obj]
 
     if np.all([isinstance(x, fits.HDUList) for x in data_obj]):
         ra = [x[0].header.get("OBJ_RA", float("nan")) for x in data_obj]
