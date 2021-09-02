@@ -3,17 +3,12 @@ import os
 import uuid
 
 import numpy as np
+from asdf.fits_embed import AsdfInFits
 from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import NDData
 from astropy.wcs import WCS
 from glue.core.data import Component, Data
-try:
-    import gwcs  # noqa
-    from asdf.fits_embed import AsdfInFits
-    HAS_JWST_ASDF = True
-except ImportError:
-    HAS_JWST_ASDF = False
 
 from jdaviz.core.registries import data_parser_registry
 from jdaviz.core.events import SnackbarMessage
@@ -75,22 +70,17 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
 
     if isinstance(file_obj, fits.HDUList):
         if 'ASDF' in file_obj:  # JWST ASDF-in-FITS
-            if HAS_JWST_ASDF:
+            # Load all extensions
+            if ext == '*':
+                data_iter = _jwst_all_to_glue_data(file_obj, data_label)
 
-                # Load all extensions
-                if ext == '*':
-                    data_iter = _jwst_all_to_glue_data(file_obj, data_label)
-
-                # Load only specified extension
-                else:
-                    data_iter = _jwst_to_glue_data(file_obj, ext, data_label)
-
-                    # if more than one viewable extension is found in the file,
-                    # issue info message.
-                    _info_nextensions(app, file_obj)
-
+            # Load only specified extension
             else:
-                raise ImportError('asdf or gwcs package is missing')
+                data_iter = _jwst_to_glue_data(file_obj, ext, data_label)
+
+                # if more than one viewable extension is found in the file,
+                # issue info message.
+                _info_nextensions(app, file_obj)
 
         elif ext == '*':  # Load all extensions
             data_iter = _hdus_to_glue_data(file_obj, data_label)
