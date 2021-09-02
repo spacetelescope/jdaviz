@@ -18,8 +18,8 @@ to show, say, multiple spectra in the same plot, or multiple images that are
 aligned in the same image viewer, or contours on top of an image.
 
 There are various ways of setting up links in glue, but the two main ways that
-have been discussed and used in Jdaviz are linking by pixel coordinates, and
-linking by world coordinates (WCS).
+have been discussed and used in Jdaviz are linking by pixel coordinates and
+by world coordinates (WCS).
 
 .. _link_by_pixel:
 
@@ -59,7 +59,7 @@ parsers where it is known that the datasets are on the same grid.
 
 It is also possible to link all datasets using pixel links, but users will
 need to be aware that this then means specific features (such as stars) in
-different datasets will not line up when e.g. blinking, and making a selection
+different datasets will not line up when, e.g., blinking, and making a selection
 or region of a certain feature will not necessarily select the same feature
 in another dataset.
 
@@ -68,7 +68,29 @@ in another dataset.
 Linking by WCS
 ==============
 
-There are two main ways of linking by world coordinates, as follow.
+There are two main ways of linking by WCS, as follow.
+
+Using WCSLink (recommended)
+---------------------------
+
+The more robust approach for linking datasets by WCS is to use the
+:class:`~glue.plugins.wcs_autolinking.wcs_autolinking.WCSLink` class. Given two
+datasets, and a list of pixel component IDs to link in each dataset, this class
+will set up links between the pixel components by internally representing the
+chain of WCS transformations required. As an example::
+
+    from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink
+
+    link = WCSLink(data1=data1, data2=data2,
+                   cids1=data1.pixel_component_ids, cids2=data2.pixel_component_ids)
+
+    data_collection.add_link(link)
+
+The example above will link all pixel axes between the two datasets, taking into account the WCS
+of ``data1`` and ``data2``.
+
+Note that this should work with any `APE 14 <https://github.com/astropy/astropy-APEs/blob/main/APE14.rst>`_-compliant WCS, so it could link
+both a FITS WCS to a GWCS instance, and vice versa.
 
 Using LinkSame (not recommended)
 --------------------------------
@@ -90,37 +112,15 @@ or see the `following example <https://github.com/spacetelescope/jdaviz/blob/d29
 from Jdaviz.
 
 However, this kind of linking is not generally robust because it relies on the
-world coordinates *actually* being the same system between the two datasets - so it
+WCS *actually* being the same system between the two datasets - so it
 would fail for two images where one image was in equatorial coordinates and the
-other one was in galactic coordinates, because LinkSame would mean that RA was
+other one galactic coordinates, because LinkSame would mean that RA was
 the *same* as Galactic longitude, which it is not. Likewise, this would result
 in, say, wavelength in one dataset being equated wrongly with frequency in another. The
 only place this kind of linking could be used is within parsers for specific
 data where it is known with certainty that two world coordinate systems are the same.
 
 In general, one should avoid using LinkSame for world coordinates in Jdaviz.
-
-Using WCSLink (recommended)
----------------------------
-
-A more robust approach for linking datasets by world coordinates is to use the
-:class:`~glue.plugins.wcs_autolinking.wcs_autolinking.WCSLink` class. Given two
-datasets, and a list of pixel component IDs to link in each dataset, this class
-will set up links between the pixel components by internally representing the
-chain of WCS transformations required. As an example::
-
-    from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink
-
-    link = WCSLink(data1=data1, data2=data2,
-                   cids1=data1.pixel_component_ids, cids2=data2.pixel_component_ids)
-
-    data_collection.add_link(link)
-
-will link all pixel axes between the two datasets, taking into account the WCS
-of ``data1`` and ``data2``.
-
-Note that this should work with any `APE 14 <https://github.com/astropy/astropy-APEs/blob/main/APE14.rst>`_-compliant WCS, so it could link
-both a FITS WCS to a GWCS instance, and vice versa.
 
 Speeding up WCS links
 =====================
@@ -170,11 +170,11 @@ collection, e.g.::
 
 See `pull request 762 <https://github.com/spacetelescope/jdaviz/pull/762>`_ for a more concrete example.
 
-Setting or Resetting all links in one go
+Setting or resetting all links in one go
 ========================================
 
 If you want to prepare and set all links in one go, discarding any previous links,
-you can make use of the :meth:`~glue.core.data_collection.DataCollectionn.set_links`
+you can make use of the :meth:`~glue.core.data_collection.DataCollection.set_links`
 method, which takes a list of links::
 
     data_collection.set_links([link1, link2, link3])
