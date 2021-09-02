@@ -78,7 +78,7 @@ or see the `following example <https://github.com/spacetelescope/jdaviz/blob/d29
 from Jdaviz.
 
 However, this kind of linking is not generally robust because it relies on the
-world coordinates *actually* being the same between the two datasets - so it
+world coordinates *actually* being the same system between the two datasets - so it
 would fail for two images where one image was in equatorial coordinates and the
 other one was in galactic coordinates, because LinkSame would mean that RA was
 the *same* as Galactic longitude, which it is not. Likewise, this would result
@@ -124,7 +124,7 @@ transformation between the datasets. This can be done with the
                    cids1=data1.pixel_component_ids,
                    cids2=data2.pixel_component_ids)
 
-    fast_link = link.as_affine_transform()
+    fast_link = link.as_affine_link()
 
     data_collection.add_link(fast_link)
 
@@ -158,8 +158,8 @@ collection, e.g.::
 
 See `pull request 762 <https://github.com/spacetelescope/jdaviz/pull/762>`_ for a more concrete example.
 
-Setting all links in one go
-===========================
+Setting or Resetting all links in one go
+========================================
 
 If you want to prepare and set all links in one go, discarding any previous links,
 you can make use of the :meth:`~glue.core.data_collection.DataCollectionn.set_links`
