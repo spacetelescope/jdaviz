@@ -126,7 +126,7 @@ Speeding up WCS links
 =====================
 
 In some cases, doing the full WCS transformations can be slow, and may not be
-necessary if the two datasets are close to each other or overlap significantly.
+necessary if the two datasets are close to each other and have a similar WCS.
 For the best performance, it is possible to approximate the
 :class:`~glue.plugins.wcs_autolinking.wcs_autolinking.WCSLink` by a simple affine
 transformation between the datasets. This can be done with the
