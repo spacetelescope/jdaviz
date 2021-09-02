@@ -184,3 +184,6 @@ github_issues_url = 'https://github.com/{0}/issues/'.format(setup_cfg['github_pr
 #     dtype, target = line.split(None, 1)
 #     target = target.strip()
 #     nitpick_ignore.append((dtype, six.u(target)))
+
+intersphinx_mapping['glue'] = ('http://docs.glueviz.org/en/stable/', None)
+

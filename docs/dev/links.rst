@@ -92,7 +92,7 @@ Using WCSLink (recommended)
 ---------------------------
 
 A more robust approach for linking datasets by world coordinates is to use the
-:class:`~glue.plugins.wcs_autolinker.wcs_autolinker.WCSLink` class. Given two
+:class:`~glue.plugins.wcs_autolinking.wcs_autolinking.WCSLink` class. Given two
 datasets, and a list of pixel component IDs to link in each dataset, this class
 will set up links between the pixel components by internally representing the
 chain of WCS transformations required. As an example::
@@ -116,9 +116,9 @@ Speeding up WCS links
 In some cases, doing the full WCS transformations can be slow, and may not be
 necessary if the two datasets are close to each other or overlap significantly.
 For the best performance, it is possible to approximate the
-:class:`~glue.plugins.wcs_autolinker.wcs_autolinker.WCSLink` by a simple affine
+:class:`~glue.plugins.wcs_autolinking.wcs_autolinking.WCSLink` by a simple affine
 transformation between the datasets. This can be done with the
-:meth:`~glue.plugins.wcs_autolinker.wcs_autolinker.WCSLink.as_affine_link` method::
+:meth:`~glue.plugins.wcs_autolinking.wcs_autolinking.WCSLink.as_affine_link` method::
 
     link = WCSLink(data1=data1, data2=data2,
                    cids1=data1.pixel_component_ids,
@@ -128,13 +128,12 @@ transformation between the datasets. This can be done with the
 
     data_collection.add_link(fast_link)
 
-The :meth:`~glue.plugins.wcs_autolinker.wcs_autolinker.WCSLink.as_affine_link`
+The :meth:`~glue.plugins.wcs_autolinking.wcs_autolinking.WCSLink.as_affine_link`
 method takes a ``tolerance`` argument which defaults to 1 pixel - if no
 approximation can be found that transforms all positions in the image to within
-that tolerance, an error of type ``NoAffineApproximation`` is returned (this
-exception is defined in :mod:`glue.plugins.wcs_autolinking.wcs_autolinking`).
+that tolerance, an error of type :class:`~glue.plugins.wcs_autolinking.wcs_autolinking.NoAffineApproximation` is returned.
 
-It is recommended that whenever :class:`~glue.plugins.wcs_autolinker.wcs_autolinker.WCSLink` is used
+It is recommended that whenever :class:`~glue.plugins.wcs_autolinking.wcs_autolinking.WCSLink` is used
 in Jdaviz, affine approximation should be used whenever possible.
 For visualization purposes, it should be good enough for most cases.
 DS9 uses a similar approach.
@@ -185,9 +184,8 @@ Mixing link types
 
 Glue can handle many different link types in a same session. For instance, if
 there are three datasets, two of the datasets could be linked by a
-:class:`~glue.plugins.wcs_autolinker.wcs_autolinker.WCSLink` while two other
+:class:`~glue.plugins.wcs_autolinking.wcs_autolinking.WCSLink` while two other
 datasets could be linked by pixel coordinates. However, the same two datasets
-should not be linked both by :class:`~glue.plugins.wcs_autolinker.wcs_autolinker.WCSLink`
+should not be linked both by :class:`~glue.plugins.wcs_autolinking.wcs_autolinking.WCSLink`
 and pixel coordinates at the same time, as which link takes precedence is not
 defined, resulting in ambiguous behavior.
-
