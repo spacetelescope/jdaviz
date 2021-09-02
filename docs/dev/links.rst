@@ -54,8 +54,14 @@ in Jdaviz. This linking would then allow the collapsed dataset to be shown
 as contours on top of the original sliced cube.
 
 This is by far the fastest way of linking, but it does rely on the datasets
-being exactly lined up pixel-wise. This approach can likely be used in specific
+being lined up pixel-wise. This approach can be used in specific
 parsers where it is known that the datasets are on the same grid.
+
+It is also possible to link all datasets using pixel links, but users will
+need to be aware that this then means specific features (such as stars) in
+different datasets will not line up when e.g. blinking, and making a selection
+or region of a certain feature will not necessarily select the same feature
+in another dataset.
 
 .. _link_by_wcs:
 
