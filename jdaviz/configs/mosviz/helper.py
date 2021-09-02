@@ -265,7 +265,7 @@ class MosViz(ConfigHelper):
         # Any subsequently added data will automatically be linked
         # with data already loaded in the app
         self.app.auto_link = True
-        
+
         # Load the first object into the viewers automatically
         self.app.get_viewer("table-viewer").figure_widget.highlighted = 0
 
