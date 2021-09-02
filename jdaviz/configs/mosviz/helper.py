@@ -177,7 +177,7 @@ class MosViz(ConfigHelper):
                   spectra_1d_label=None, spectra_2d_label=None,
                   images_label=None, *args, **kwargs):
         """
-        Load and parse a set of MOS spectra and images
+        Load and parse a set of MOS spectra and images.
 
         Parameters
         ----------
@@ -211,7 +211,17 @@ class MosViz(ConfigHelper):
             ``images``. Can be a list of strings representing data labels
             for each item in ``data_obj`` if  ``data_obj`` is a list.
         """
+        try:
+            self._load_data(spectra_1d=spectra_1d, spectra_2d=spectra_2d, images=images,
+                            spectra_1d_label=spectra_1d_label, spectra_2d_label=spectra_2d_label,
+                            images_label=images_label, *args, **kwargs)
+        except Exception:  # Reset state on uncaught errors
+            self.app.data_collection.clear()
+            raise
 
+    def _load_data(self, spectra_1d=None, spectra_2d=None, images=None,
+                   spectra_1d_label=None, spectra_2d_label=None,
+                   images_label=None, *args, **kwargs):
         directory = kwargs.pop('directory', None)
         instrument = kwargs.pop('instrument', None)
         msg = ""

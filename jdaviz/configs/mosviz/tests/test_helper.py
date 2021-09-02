@@ -210,8 +210,13 @@ def test_load_image(mosviz_app, image):
 
 @pytest.mark.parametrize('label', [None, "Test Label"])
 def test_load_single_image_multi_spec(mosviz_app, image, spectrum1d, spectrum2d, label):
-    spectra1d = [spectrum1d]*3
-    spectra2d = [spectrum2d]*3
+    spectra1d = [spectrum1d] * 3
+    spectra2d = [spectrum2d] * 3
+
+    # Test that loading is still possible after previous crash:
+    # https://github.com/spacetelescope/jdaviz/issues/364
+    with pytest.raises(ValueError, match='The dimensions of component 2D Spectra are incompatible'):
+        mosviz_app.load_data(spectra1d, spectra2d, images=[])
 
     mosviz_app.load_data(spectra1d, spectra2d, images=image, images_label=label)
 
