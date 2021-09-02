@@ -1,22 +1,21 @@
+import csv
+import glob
+import logging
 import os
+from pathlib import Path
 
+import numpy as np
+from asdf.fits_embed import AsdfInFits
+from astropy.io import fits
+from astropy.wcs import WCS
 from glue.core.data import Data
+from glue.core.link_helpers import LinkSame
+from spectral_cube import SpectralCube
+from specutils import Spectrum1D, SpectrumList
+
+from jdaviz.configs.imviz.plugins.parsers import get_image_data_iterator
 from jdaviz.core.registries import data_parser_registry
 from jdaviz.core.events import SnackbarMessage
-import csv
-
-from spectral_cube import SpectralCube
-from astropy.nddata import CCDData
-from specutils import Spectrum1D, SpectrumList
-from astropy.io import fits
-import numpy as np
-import logging
-from astropy.wcs import WCS
-from asdf.fits_embed import AsdfInFits
-from pathlib import Path
-from glue.core.link_helpers import LinkSame
-
-import glob
 
 __all__ = ['mos_spec1d_parser', 'mos_spec2d_parser', 'mos_image_parser']
 
@@ -76,33 +75,6 @@ def _warn_if_not_found(app, file_lists):
         app.hub.broadcast(warn_msg)
 
     return found
-
-
-def _parse_as_image(path):
-    """
-    Parse and load a 2D image. ``CCDData`` objects require a unit be defined
-    in the fits header - if none is provided, use a fallback and
-    raise an error.
-    """
-    with fits.open(path) as hdulist:
-
-        header = hdulist[0].header.copy()
-        meta = dict(header)
-
-        wcs = WCS(header)
-
-        try:
-            image_ccd = CCDData.read(path, wcs=wcs)
-        except ValueError as e:
-            if str(e) == "a unit for CCDData must be specified.":
-                logging.warning("No 'BUNIT' defined in the header, using 'Jy'.")
-                image_ccd = CCDData.read(path, unit='Jy', wcs=wcs)
-            else:
-                raise
-
-        image_ccd.meta = meta
-
-    return image_ccd
 
 
 def _fields_from_ecsv(fname, fields, delimiter=","):
@@ -373,37 +345,51 @@ def mos_image_parser(app, data_obj, data_labels=None, share_image=0):
     if data_obj is None:
         return
 
+    # The label does not matter here. We overwrite later.
     if isinstance(data_obj, str):
-        data_obj = [_parse_as_image(data_obj)]
-
-    # Coerce into list-like object
-    if not hasattr(data_obj, '__len__'):
-        data_obj = [data_obj]
+        with fits.open(data_obj) as file_obj:
+            data_iter = get_image_data_iterator(app, file_obj, "Image", ext=None)
+            data_obj = [d[0] for d in data_iter]  # We do not use the generated labels
+    elif isinstance(data_obj, (list, tuple)) and share_image == 0:
+        temp_data = []
+        for cur_data_obj in data_obj:
+            data_iter = get_image_data_iterator(app, cur_data_obj, "Image", ext=None)
+            temp_data += [d[0] for d in data_iter]
+        data_obj = temp_data
     else:
-        data_obj = [_parse_as_image(x)
-                    if _check_is_file(x) else x
-                    for x in data_obj]
+        data_iter = get_image_data_iterator(app, data_obj, "Image", ext=None)
+        data_obj = [d[0] for d in data_iter]
+
+    n_data = len(data_obj)
+    n_data_range = range(n_data)
+
+    # TODO: Maybe should raise exception?
+    if share_image and n_data > 1:  # Just use the first one
+        data_obj = [data_obj[0]]
 
     if data_labels is None:
         if share_image:
             data_labels = ["Shared Image"]
         else:
-            data_labels = [f"Image {i}" for i in range(len(data_obj))]
+            data_labels = [f"Image {i}" for i in n_data_range]
 
     elif isinstance(data_labels, str):
         if share_image:
             data_labels = [data_labels]
         else:
-            data_labels = [f"{data_labels} {i}" for i in range(len(data_obj))]
+            data_labels = [f"{data_labels} {i}" for i in n_data_range]
 
     with app.data_collection.delay_link_manager_update():
 
-        for i in range(len(data_obj)):
+        for i in n_data_range:
+            data_obj[i].label = data_labels[i]
             app.data_collection[data_labels[i]] = data_obj[i]
 
         if share_image:
             # Associate this image with multiple spectra
             data_labels *= share_image
+            # Show it on viewer
+            app.add_data_to_viewer("image-viewer", data_labels[0])
 
         _add_to_table(app, data_labels, 'Images')
 
@@ -531,11 +517,15 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
 
         image_label = "Image {} {}".format(im_split[0], pupil)
 
-        image_data = _parse_as_image(image_file)
+        with fits.open(image_file) as file_obj:
+            data_iter = get_image_data_iterator(app, file_obj, "Image", ext=None)
+            data_obj = [d[0] for d in data_iter]  # We do not use the generated labels
+            image_data = data_obj[0]  # Grab the first one. TODO: Error if multiple found?
 
         with fits.open(image_file) as temp:
             filter_wcs[pupil] = temp[1].header
 
+        image_data.label = image_label
         add_to_glue[image_label] = image_data
 
         image_dict[pupil] = image_label
