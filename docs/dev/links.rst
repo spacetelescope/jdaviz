@@ -34,15 +34,18 @@ up with the first (32,32) pixels of the larger dataset, starting at the origin.
 This is equivalent to the "match image" mode in DS9.
 
 An example of setting up an identity link in pixel coordinates between two
-datasets with equal dimensionality would look like::
+n-dimensional datasets where n is the same for both datasets would look like::
 
     from glue.core.link_helpers import LinkSame
 
     pix_ids_1 = data1.pixel_component_ids
     pix_ids_2 = data2.pixel_component_ids
 
+    links = []
     for i in range(data1.ndim):
-        data_collection.add_link(LinkSame(pix_ids_1[i], pix_ids_2[i]))
+        links.append(LinkSame(pix_ids_1[i], pix_ids_2[i]))
+
+    data_collection.add_link(links)
 
 This can also be used to link, for example, the two spatial dimensions of a
 collapsed cube with the original cube, as done in the `cube collapse
@@ -71,8 +74,11 @@ The first is to do something similar to how pixel coordinates are linked in :ref
     world_ids_1 = data1.world_component_ids
     world_ids_2 = data2.world_component_ids
 
+    links = []
     for i in range(data1.ndim):
-        data_collection.add_link(LinkSame(world_ids_1[i], world_ids_2[i]))
+        links.append(LinkSame(world_ids_1[i], world_ids_2[i]))
+
+    data_collection.add_link(links)
 
 or see the `following example <https://github.com/spacetelescope/jdaviz/blob/d296c6312b020897034e9dd1fc58c84a2559efa5/jdaviz/app.py#L241-L260>`_
 from Jdaviz.
