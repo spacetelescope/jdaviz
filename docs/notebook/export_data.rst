@@ -1,3 +1,5 @@
+.. _export_data:
+
 ***********************************
 Export Data From Jdaviz to Notebook
 ***********************************
@@ -52,7 +54,7 @@ To extract the spectral region you want::
     myregion = regions["Subset 2"]
 
 Export Data from Image Viewer
-----------------------------------
+-----------------------------
 
 In Cubeviz, three image viewers display your data:
 
