@@ -11,3 +11,4 @@ Here is some documentation specific for developers.
   infrastructure
   ui_description
   specviz_selection
+  links
