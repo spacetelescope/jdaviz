@@ -353,8 +353,13 @@ def mos_image_parser(app, data_obj, data_labels=None, share_image=0):
     elif isinstance(data_obj, (list, tuple)) and share_image == 0:
         temp_data = []
         for cur_data_obj in data_obj:
-            data_iter = get_image_data_iterator(app, cur_data_obj, "Image", ext=None)
-            temp_data += [d[0] for d in data_iter]
+            if isinstance(cur_data_obj, str):
+                with fits.open(cur_data_obj) as file_obj:
+                    data_iter = get_image_data_iterator(app, file_obj, "Image", ext=None)
+                    temp_data += [d[0] for d in data_iter]
+            else:
+                data_iter = get_image_data_iterator(app, cur_data_obj, "Image", ext=None)
+                temp_data += [d[0] for d in data_iter]
         data_obj = temp_data
     else:
         data_iter = get_image_data_iterator(app, data_obj, "Image", ext=None)

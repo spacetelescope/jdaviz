@@ -193,8 +193,8 @@ class MosViz(ConfigHelper):
 
         images : list of obj, str, or `None`
             A list of images as translatable container objects
-            (FITS HDU, FITS HDUList, NDData, or numpy array). Alternatively,
-            can be a string file path. If `None`, no images are displayed.
+            (string file path, FITS HDU, FITS HDUList, NDData, or numpy array).
+            Alternatively, can be a string file path. If `None`, no images are displayed.
 
         spectra_1d_label : str or list
             String representing the label for the data item loaded via
