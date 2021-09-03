@@ -132,5 +132,10 @@ class SlitOverlay(TemplateMixin):
     def remove_slit_overlay(self):
         if self._slit_overlay_mark is not None:
             image_figure = self.app.get_viewer("image-viewer").figure
-            image_figure.marks.remove(self._slit_overlay_mark)
+            # We need to do the following instead of just removing directly on
+            # the marks otherwise traitlets doesn't register a change in the
+            # marks.
+            marks = image_figure.marks.copy()
+            marks.remove(self._slit_overlay_mark)
+            image_figure.marks = marks
             self._slit_overlay_mark = None
