@@ -515,7 +515,7 @@ def _get_source_identifiers_by_hdu(hdus, filepaths=None, header_keys=['SOURCEID'
 
 
 @data_parser_registry("mosviz-niriss-parser")
-def mos_niriss_parser(app, data_dir, obs_label=""):
+def mos_niriss_parser(app, data_dir):
     """
     Attempts to parse all data for a NIRISS dataset in the specified
     directory, which should include:
@@ -534,9 +534,6 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
         The application-level object used to reference the viewers.
     data_dir : str
         The path to a directory containing NIRISS data products.
-    obs_label : str
-        A OBS_ID/VISIT_ID/OBSLABEL (???) used to limit which files are included
-        in the data loading process.
     """
     path = Path(data_dir)
     if not path.is_dir():
@@ -604,8 +601,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
     pupil_id_dict = {}
 
     # Retrieve source information
-    for source_catalog_num in range(0, len(file_lists["Source Catalog"])):
-        cat_file = file_lists["Source Catalog"][source_catalog_num]
+    for cat_file in file_lists["Source Catalog"]:
         parsed_cat_fields = _fields_from_ecsv(cat_file, cat_fields, delimiter=" ")
         pupil = [x
                  for x in cat_file.split("/")[-1].split("_")
@@ -627,9 +623,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
 
     for image_file in file_lists["Direct Image"]:
         im_split = image_file.split("/")[-1].split("_")
-        pupil = [x
-                 for x in image_file.split("/")[-1].split("_")
-                 if x[0] == "F" or x[0] == "f"][0]
+        pupil = fits.getheader(image_file, ext=0).get('PUPIL')
 
         image_label = "Image {} {}".format(im_split[0], pupil)
 
@@ -655,9 +649,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
             print(f"Loading: {f} sources")
 
             orientation = f[-1]
-            filter_name = [x
-                           for x in fname.split("/")[-1].split("_")
-                           if x[0] == "F" or x[0] == "f"][0]
+            filter_name = fits.getheader(fname, ext=0).get('PUPIL')
 
             with fits.open(fname, memmap=False) as temp:
                 sci_hdus = []
@@ -720,20 +712,19 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                         hdu.header["SRCTYPE"] = "EXTENDED"
 
                 specs = SpectrumList.read(temp, format="JWST x1d multi")
-                filter_name = [x
-                               for x in fname.split("/")[-1].split("_")
-                               if x[0] == "F" or x[0] == "f"][0]
+                filter_name = fits.getheader(fname, ext=0).get('PUPIL')
 
                 # Orientation denoted by "C" or "R"
                 orientation = f[-1]
 
                 for spec in specs:
-                    # Make metadata layout conform with other viz.
-                    spec.meta = standardize_metadata(spec.meta)
-                    spec.meta['mosviz_row'] = len(spec_labels_1d)
+                    if ( spec.meta['header']['SPORDER'] == 1
+                         and spec.meta['header']['EXTNAME'] == 'EXTRACT1D'):
 
-                    if spec.meta['SPORDER'] == 1 and spec.meta['EXTNAME'] == "EXTRACT1D":
-                        label = f"{filter_name} Source {spec.meta['SOURCEID']} spec1d {orientation}"
+                        label = (f"{filter_name} Source "
+                                 f"{spec.meta['header']['SOURCEID']} spec1d "
+                                 f"orientation")
+
                         spec_labels_1d.append(label)
                         add_to_glue[label] = spec
 
