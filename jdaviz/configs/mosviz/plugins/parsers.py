@@ -320,6 +320,17 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
         app.add_data_to_viewer("spectrum-2d-viewer", data_labels[0])
 
 
+def _load_fits_image_from_filename(filename, app):
+    data_list = []
+    with fits.open(filename) as hdulist:
+        meta = dict(hdulist[0].header.copy())
+        data_iter = get_image_data_iterator(app, hdulist, "Image", ext=None)
+        for d, _ in data_iter:  # We do not use the generated labels
+            d.meta.update(meta)
+            data_list.append(d)
+    return data_list
+
+
 @data_parser_registry("mosviz-image-parser")
 def mos_image_parser(app, data_obj, data_labels=None, share_image=0):
     """
@@ -347,16 +358,12 @@ def mos_image_parser(app, data_obj, data_labels=None, share_image=0):
 
     # The label does not matter here. We overwrite later.
     if isinstance(data_obj, str):
-        with fits.open(data_obj) as file_obj:
-            data_iter = get_image_data_iterator(app, file_obj, "Image", ext=None)
-            data_obj = [d[0] for d in data_iter]  # We do not use the generated labels
+        data_obj = _load_fits_image_from_filename(data_obj, app)
     elif isinstance(data_obj, (list, tuple)) and share_image == 0:
         temp_data = []
         for cur_data_obj in data_obj:
             if isinstance(cur_data_obj, str):
-                with fits.open(cur_data_obj) as file_obj:
-                    data_iter = get_image_data_iterator(app, file_obj, "Image", ext=None)
-                    temp_data += [d[0] for d in data_iter]
+                temp_data += _load_fits_image_from_filename(cur_data_obj, app)
             else:
                 data_iter = get_image_data_iterator(app, cur_data_obj, "Image", ext=None)
                 temp_data += [d[0] for d in data_iter]
