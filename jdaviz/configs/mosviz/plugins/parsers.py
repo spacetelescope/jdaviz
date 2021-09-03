@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 
 import numpy as np
+from astropy import units as u
 from astropy.io import fits
 from astropy.io.registry import IORegistryError
 from astropy.wcs import WCS
@@ -526,27 +527,15 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
 
                         data = temp[sci].data
                         meta = temp[sci].header
-                        header = filter_wcs[filter_name]
 
-                        # Information that needs to be added to the header in order to load
-                        # WCS information into SpectralCube.
-                        # TODO: Use gwcs instead to avoid hardcoding information for 3rd wcs axis
-                        new_data = np.expand_dims(data, axis=1)
-                        header['NAXIS'] = 3
+                        wcs = WCS(naxis=1)
+                        wcs.wcs.ctype = ['WAVE']
+                        wcs.wcs.crpix = [0]
+                        wcs.wcs.crval = [0]
+                        wcs.wcs.cdelt = [1.e-6]
+                        wcs.wcs.cunit = ['m']
 
-                        header['NAXIS3'] = 1
-                        header['BUNIT'] = 'dN/s'
-                        header['CUNIT3'] = 'um'
-                        header['WCSAXES'] = 3
-                        header['CRPIX3'] = 0.0
-                        header['CDELT3'] = 1E-06
-                        header['CUNIT3'] = 'm'
-                        header['CTYPE3'] = 'WAVE'
-                        header['CRVAL3'] = 0.0
-
-                        wcs = WCS(header)
-
-                        spec2d = SpectralCube(new_data, wcs=wcs, meta=meta)
+                        spec2d = Spectrum1D(data * u.one, wcs=wcs, meta=meta)
 
                         spec2d.meta['INSTRUME'] = 'NIRISS'
 
