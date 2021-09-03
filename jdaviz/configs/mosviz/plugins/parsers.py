@@ -233,62 +233,19 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
     data_labels : str, optional
         The label applied to the glue data component.
     """
-    # In the case where the data object is a string, attempt to parse it as
-    #  a fits file.
-    # TODO: this current does not handle the case where the file in the path is
-    #  anything but a fits file whose wcs can be extracted.
-    def _parse_as_cube(path):
+    def _parse_as_spectrum1d(path):
+        # Parse as a FITS file and assume the WCS is correct
         with fits.open(path) as hdulist:
             data = hdulist[1].data
             header = hdulist[1].header
-            if header['NAXIS'] == 2:
-                new_data = np.expand_dims(data, axis=1)
-                header['NAXIS'] = 3
-
-            header['NAXIS3'] = 1
-            header['BUNIT'] = 'dN/s'
-            header['CUNIT3'] = 'um'
-            header['CTYPE3'] = 'WAVE'
-
-            # Information not present in the SCI header has to be put there
-            # so spectral_cube won't choke. We cook up a simple linear wcs
-            # with the only intention of making the code run beyond the
-            # spectral_cube processing. There is no guarantee that this will
-            # result in the correct axis label values being displayed.
-            #
-            # This is a stopgap solution that will be replaced when specutils
-            # absorbs the functionality provided by spectral_cube.
-
-            fa = AsdfInFits.open(path)
-            gwcs = fa.tree['meta']['wcs']
-
-            header['CTYPE1'] = 'RA---TAN'
-            header['CTYPE2'] = 'DEC--TAN'
-            header['CUNIT1'] = 'deg'
-            header['CUNIT2'] = 'deg'
-
-            header['CRVAL1'] = gwcs.forward_transform.lon_4.value
-            header['CRVAL2'] = gwcs.forward_transform.lat_4.value
-            header['CRPIX1'] = gwcs.forward_transform.intercept_1.value
-            header['CRPIX2'] = gwcs.forward_transform.intercept_2.value
-            header['CDELT1'] = gwcs.forward_transform.slope_1.value
-            header['CDELT2'] = gwcs.forward_transform.slope_2.value
-            header['PC1_1'] = -1.
-            header['PC1_2'] = 0.
-            header['PC2_1'] = 0.
-            header['PC2_2'] = 1.
-            header['PC3_1'] = 1.
-            header['PC3_2'] = 0.
-
             wcs = WCS(header)
-
-            meta = {'S_REGION': header['S_REGION'], 'INSTRUME': 'nirspec'}
-
-        return SpectralCube(new_data, wcs=wcs, meta=meta)
+        return Spectrum1D(data, wcs=wcs)
 
     # If we're given a string, repeat it for each object
     if isinstance(data_labels, str):
         data_labels = [f"{data_labels} {i}" for i in range(len(data_obj))]
+    elif data_labels is None:
+        data_labels = [f"2D Spectrum {i}" for i in range(len(data_obj))]
 
     # Coerce into list if needed
     if not isinstance(data_obj, (list, tuple, SpectrumCollection)):
@@ -297,49 +254,31 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
     with app.data_collection.delay_link_manager_update():
 
         for index, data in enumerate(data_obj):
-            # If we got a filepath, try to open it the ways we know how
+            # If we got a filepath, first try and parse using the Spectrum1D and
+            # SpectrumList parsers, and then fall back to parsing it as a generic
+            # FITS file.
             if _check_is_file(data):
                 try:
                     data = Spectrum1D.read(data)
                 except IORegistryError:
                     try:
-                        data = SpectrumList.read(data)
-                        return mos_spec2d_parser(app, data, data_labels, add_to_table, show_in_viewer)
+                        data = Spectrum1D.read(data)
                     except IORegistryError:
-                        data = _parse_as_cube(data)
-            # If not, let's try to load it directly and see if
-            # Glue-Astronomy has a translator for it
+                        data = _parse_as_spectrum1d(data)
 
-            # Initialize error var in case we get one so we can send it upstream
-            e = None
-            # Clear the previous label
-            label = None
             # Get the corresponding label for this data product
-            try:
-                label = data_labels[index]
-            except Exception as e:
-                if type(e) is IndexError:
-                    # If we only ever got one label, duplicate it with the index
-                    if len(data_labels) == 1:
-                        label = f"{data_labels} {index}"
-
-            if not label:
-                label = f"2D Spectrum {index}"
+            label = data_labels[index]
 
             app.data_collection[label] = data
+
+        if add_to_table:
+            _add_to_table(app, data_labels, '2D Spectra')
 
     if show_in_viewer:
         if len(data_labels) > 1:
             raise ValueError("More than one data label provided, unclear " +
                              "which to show in viewer")
         app.add_data_to_viewer("spectrum-2d-viewer", data_labels[0])
-
-    if add_to_table:
-        _add_to_table(app, data_labels, '2D Spectra')
-
-    # If we got an error, send it upstream to notify the user
-    if e:
-        return e
 
 
 def _load_fits_image_from_filename(filename, app):
