@@ -242,15 +242,21 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
             wcs = WCS(header)
         return Spectrum1D(data, wcs=wcs)
 
-    # If we're given a string, repeat it for each object
-    if isinstance(data_labels, str):
-        data_labels = [f"{data_labels} {i}" for i in range(len(data_obj))]
-    elif data_labels is None:
-        data_labels = [f"2D Spectrum {i}" for i in range(len(data_obj))]
-
-    # Coerce into list if needed
+    # Coerce into list-like object
     if not isinstance(data_obj, (list, tuple, SpectrumCollection)):
         data_obj = [data_obj]
+
+    # If we're given a string, repeat it for each object
+    if isinstance(data_labels, str):
+        if len(data_obj) > 1:
+            data_labels = [f"{data_labels} {i}" for i in range(len(data_obj))]
+        else:
+            data_labels = [data_labels]
+    elif data_labels is None:
+        if len(data_obj) > 1:
+            data_labels = [f"2D Spectrum {i}" for i in range(len(data_obj))]
+        else:
+            data_labels = ['2D Spectrum']
 
     with app.data_collection.delay_link_manager_update():
 
