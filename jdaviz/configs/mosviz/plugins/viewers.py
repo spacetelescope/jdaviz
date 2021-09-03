@@ -3,8 +3,6 @@ from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from glue_jupyter.table import TableViewer
 from specutils import Spectrum1D
-from spectral_cube import SpectralCube
-from echo import delay_callback
 import astropy
 from astropy import units as u
 from astropy.utils.introspection import minversion

@@ -5,8 +5,8 @@ import os
 from pathlib import Path
 
 import numpy as np
-from asdf.fits_embed import AsdfInFits
 from astropy.io import fits
+from astropy.io.registry import IORegistryError
 from astropy.wcs import WCS
 from glue.core.data import Data
 from glue.core.link_helpers import LinkSame
