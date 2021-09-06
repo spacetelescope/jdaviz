@@ -45,7 +45,8 @@ def _add_to_table(app, data, comp_label):
         viewer.add_data(table_data)
     else:
         mos_table = app.data_collection['MOS Table']
-        mos_table.add_component(data, comp_label)
+        if comp_label not in mos_table.component_ids():
+            mos_table.add_component(data, comp_label)
 
 
 def _check_is_file(path):
@@ -375,7 +376,7 @@ def mos_image_parser(app, data_obj, data_labels=None, share_image=0):
 
 
 @data_parser_registry("mosviz-metadata-parser")
-def mos_meta_parser(app, data_obj):
+def mos_meta_parser(app, data_obj, spectra=False):
     """
     Attempts to parse MOS FITS header metadata.
 
@@ -399,10 +400,16 @@ def mos_meta_parser(app, data_obj):
         data_obj = [fits.open(x) if _check_is_file(x)
                     else x for x in data_obj]
 
-    if np.all([isinstance(x, fits.HDUList) for x in data_obj]):
+    if not spectra and np.all([isinstance(x, fits.HDUList) for x in data_obj]):
         ra = [x[0].header.get("OBJ_RA", float("nan")) for x in data_obj]
         dec = [x[0].header.get("OBJ_DEC", float("nan")) for x in data_obj]
-        names = [x[0].header.get("OBJECT", "Unspecified Target") for x in data_obj]
+        names = [x[0].header.get("OBJECT", "Unspecified") for x in data_obj]
+
+        [x.close() for x in data_obj]
+
+    elif spectra and np.all([isinstance(x, fits.HDUList) for x in data_obj]):
+        filters = [x[0].header.get("FILTER", "Unspecified") for x in data_obj]
+        gratings = [x[0].header.get("GRATING", "Unspecified") for x in data_obj]
 
         [x.close() for x in data_obj]
 
@@ -414,9 +421,13 @@ def mos_meta_parser(app, data_obj):
 
     with app.data_collection.delay_link_manager_update():
 
-        _add_to_table(app, names, "Source Names")
-        _add_to_table(app, ra, "Right Ascension")
-        _add_to_table(app, dec, "Declination")
+        if spectra:
+            _add_to_table(app, filters, "Filter")
+            _add_to_table(app, gratings, "Grating")
+        else:
+            _add_to_table(app, names, "Source Name")
+            _add_to_table(app, ra, "R.A.")
+            _add_to_table(app, dec, "Dec.")
 
 
 @data_parser_registry("mosviz-niriss-parser")
@@ -618,8 +629,8 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
         print("Populating table")
 
         _add_to_table(app, source_ids, "Source ID")
-        _add_to_table(app, ras, "Right Ascension")
-        _add_to_table(app, decs, "Declination")
+        _add_to_table(app, ras, "R.A.")
+        _add_to_table(app, decs, "Dec.")
         _add_to_table(app, image_add, "Images")
         _add_to_table(app, spec_labels_1d, "1D Spectra")
         _add_to_table(app, spec_labels_2d, "2D Spectra")
