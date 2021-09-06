@@ -411,6 +411,8 @@ def mos_meta_parser(app, data_obj, spectra=False):
         filters = [x[0].header.get("FILTER", "Unspecified") for x in data_obj]
         gratings = [x[0].header.get("GRATING", "Unspecified") for x in data_obj]
 
+        filters_gratings = [(f+'/'+g) for f,g in zip(filters, gratings)]
+
         [x.close() for x in data_obj]
 
     else:
@@ -422,8 +424,7 @@ def mos_meta_parser(app, data_obj, spectra=False):
     with app.data_collection.delay_link_manager_update():
 
         if spectra:
-            _add_to_table(app, filters, "Filter")
-            _add_to_table(app, gratings, "Grating")
+            _add_to_table(app, filters_gratings, "Filter/Grating")
         else:
             _add_to_table(app, names, "Source Name")
             _add_to_table(app, ra, "R.A.")
