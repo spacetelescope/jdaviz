@@ -523,6 +523,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
 
     # Parse 2D spectra
     spec_labels_2d = []
+    filters = []
     for f in ["2D Spectra C", "2D Spectra R"]:
 
         for fname in file_lists[f]:
@@ -536,6 +537,10 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
             with fits.open(fname, memmap=False) as temp:
                 sci_hdus = []
                 for i in range(len(temp)):
+
+                    if i == 0:
+                        filter = temp[0].header["FILTER"]
+
                     if "EXTNAME" in temp[i].header:
                         if temp[i].header["EXTNAME"] == "SCI":
                             sci_hdus.append(i)
@@ -584,6 +589,8 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                         spec_labels_2d.append(label)
 
                         add_to_glue[label] = spec2d
+
+                        filters.append(filter)
 
     spec_labels_1d = []
     for f in ["1D Spectra C", "1D Spectra R"]:
@@ -638,6 +645,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
         _add_to_table(app, image_add, "Images")
         _add_to_table(app, spec_labels_1d, "1D Spectra")
         _add_to_table(app, spec_labels_2d, "2D Spectra")
+        _add_to_table(app, filters, "Filter")
 
     app.get_viewer('table-viewer')._shared_image = True
 
