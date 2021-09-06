@@ -159,6 +159,7 @@ def mos_nirspec_directory_parser(app, data_obj, data_labels=None):
     spectra_2d.sort()
     mos_spec1d_parser(app, spectra_1d)
     mos_spec2d_parser(app, spectra_2d)
+    mos_meta_parser(app, spectra_2d, spectra=True)
 
 
 @data_parser_registry("mosviz-spec1d-parser")
@@ -386,6 +387,8 @@ def mos_meta_parser(app, data_obj, spectra=False):
         The application-level object used to reference the viewers.
     data_obj : str or list or HDUList
         File path, list, or an HDUList to extract metadata from.
+    spectra : Boolean
+        In case the FITS objects are related to spectral data.
     """
 
     if data_obj is None:
