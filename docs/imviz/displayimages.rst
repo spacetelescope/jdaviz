@@ -11,8 +11,10 @@ Selecting Data Set
 
 .. seealso::
 
-    `Selecting data set (Cubeviz) <https://jdaviz.readthedocs.io/en/latest/cubeviz/displaycubes.html#selecting-data-set>`_
+    :ref:`Selecting Data Set<cubeviz-selecting-data>`
         Documentation on selecting data sets in the jdaviz viewers.
+
+
 
 Adding New Viewers
 ==================
@@ -29,7 +31,7 @@ Spatial regions can be created the same way as in Cubeviz.
 
 .. seealso::
 
-    `Defining Spatial Regions (Cubeviz) <https://jdaviz.readthedocs.io/en/latest/cubeviz/displayingcubes.html#spatial-regions>`_
+    :ref:`Defining Spatial Regions<spatial-regions>`
         Documentation on defining spatial regions in an image viewer.
 
 Blinking
@@ -51,7 +53,7 @@ Regular Pan/Zoom is also available and is used similarly to other jdaviz tools.
 
 .. seealso::
 
-    `Pan/Zoom (Cubeviz) <https://jdaviz.readthedocs.io/en/latest/cubeviz/displaycubes.html#pan-zoom>`_
+    :ref:`Pan/Zoom <cubeviz-pan-zoom>`
         Documentation on using Pan/Zoom in the jdaviz viewers.
 
 
@@ -60,5 +62,5 @@ Display Settings
 
 .. seealso::
 
-    `Display settings (Cubeviz) <https://jdaviz.readthedocs.io/en/latest/cubeviz/displaycubes.html#display-settings>`_
+    :ref:`Display Settings <display-settings>`
         Documentation on various display settings in the jdaviz viewers.

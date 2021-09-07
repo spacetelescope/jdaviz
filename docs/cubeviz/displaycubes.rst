@@ -102,6 +102,8 @@ are defined in Specviz.
     `Defining Spectral Regions (Specviz) <https://jdaviz.readthedocs.io/en/latest/specviz/displaying.html#spectral-regions>`_
         Documentation on defining spectral regions in a 1D spectrum viewer.
 
+.. _cubeviz-pan-zoom:
+
 Pan/Zoom
 ========
 
