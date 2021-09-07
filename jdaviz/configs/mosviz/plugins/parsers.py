@@ -414,7 +414,7 @@ def mos_meta_parser(app, data_obj, spectra=False):
         filters = [x[0].header.get("FILTER", "Unspecified") for x in data_obj]
         gratings = [x[0].header.get("GRATING", "Unspecified") for x in data_obj]
 
-        filters_gratings = [(f+'/'+g) for f,g in zip(filters, gratings)]
+        filters_gratings = [(f+'/'+g) for f, g in zip(filters, gratings)]
 
         [x.close() for x in data_obj]
 
