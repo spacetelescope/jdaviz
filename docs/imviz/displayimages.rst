@@ -18,9 +18,9 @@ Adding New Viewers
 ==================
 
 In the toolbar towards the top of the UI, there is a :guilabel:`picture with +` icon. By
-clicking this icon, you can add new viewers to the application. You can then select all the data
-that has been loaded into the application in these extra viewers and utilize some of the Imviz-specific
-features, like Linked Pan/Zoom.
+clicking this icon, you can add new viewers to the application. You can then select from the data
+that has been loaded into the application to be visualized in these extra viewers. You can then utilize some of the
+Imviz-specific features, like Linked Pan/Zoom.
 
 Defining Spatial Regions
 ========================
