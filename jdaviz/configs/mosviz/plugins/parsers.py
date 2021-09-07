@@ -111,14 +111,29 @@ def link_data_in_table(app, data_obj=None):
     # context manager, b) handling intra-row linkage of 1D and 2D spectra in a
     # loop, and c) handling inter-row linkage after that in one fell swoop.
     with app.data_collection.delay_link_manager_update():
-        for index in range(len(mos_data.get_component('1D Spectra').data)):
-            spec_1d = mos_data.get_component('1D Spectra').data[index]
-            spec_2d = mos_data.get_component('2D Spectra').data[index]
+
+        spectra_1d = mos_data.get_component('1D Spectra').data
+        spectra_2d = mos_data.get_component('2D Spectra').data
+
+        # Link each 1D spectrum with its corresponding 2D spectrum
+        for index in range(len(spectra_1d)):
+
+            spec_1d = spectra_1d[index]
+            spec_2d = spectra_2d[index]
 
             wc_spec_1d = app.session.data_collection[spec_1d].world_component_ids
             wc_spec_2d = app.session.data_collection[spec_2d].world_component_ids
 
             wc_spec_ids.append(LinkSame(wc_spec_1d[0], wc_spec_2d[1]))
+
+        # Link each 1D spectrum to all other 1D spectra
+        first_spec_1d = spectra_1d[0]
+        wc_first_spec_1d = app.session.data_collection[first_spec_1d].world_component_ids
+
+        for index in range(1, len(spectra_1d)):
+            spec_1d = spectra_1d[index]
+            wc_spec_1d = app.session.data_collection[spec_1d].world_component_ids
+            wc_spec_ids.append(LinkSame(wc_spec_1d[0], wc_first_spec_1d[0]))
 
     app.session.data_collection.add_link(wc_spec_ids)
 
