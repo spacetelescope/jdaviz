@@ -327,6 +327,9 @@ class Application(VuetifyTemplate, HubListener):
             snackbar_message = SnackbarMessage("Data successfully loaded.",
                                                sender=self)
             self.hub.broadcast(snackbar_message)
+        except Exception:  # Reset state on uncaught errors
+            self.data_collection.clear()
+            raise
         finally:
             self.loading = False
 
