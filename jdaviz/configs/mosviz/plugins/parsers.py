@@ -144,8 +144,6 @@ def link_data_in_table(app, data_obj=None):
 
             wc_spec_1d = app.session.data_collection[spec_1d].world_component_ids
             wc_spec_2d = app.session.data_collection[spec_2d].world_component_ids
-            # wc_image = app.session.data_collection[image].world_component_ids
-            # [RA, Dec] instead of [World]
 
             wc_spec_ids.append(LinkSame(wc_spec_1d[0], wc_spec_2d[0]))
 
