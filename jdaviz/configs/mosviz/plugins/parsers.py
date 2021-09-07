@@ -297,7 +297,7 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
     with app.data_collection.delay_link_manager_update():
 
         for i in range(len(data_obj)):
-            app.add_data(data_obj[i], data_labels[i], notify_data=False)
+            app.add_data(data_obj[i], data_labels[i], notify_done=False)
 
         if add_to_table:
             _add_to_table(app, data_labels, '2D Spectra')

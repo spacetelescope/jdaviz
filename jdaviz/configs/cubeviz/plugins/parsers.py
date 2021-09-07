@@ -147,5 +147,5 @@ def _parse_spectrum1d(app, file_obj):
     # TODO: glue-astronomy translators only look at the flux property of
     #  specutils Spectrum1D objects. Fix to support uncertainties and masks.
 
-    app.add_data(file_obj, data_label)
+    app.add_data(file_obj, f"{data_label}[FLUX]")
     app.add_data_to_viewer('spectrum-viewer', f"{data_label}[FLUX]")
