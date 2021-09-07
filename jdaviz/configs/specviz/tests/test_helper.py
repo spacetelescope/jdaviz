@@ -2,7 +2,7 @@ import pytest
 from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose
 from glue.core.roi import XRangeROI
-from specutils import Spectrum1D
+from specutils import Spectrum1D, SpectrumList
 
 from ..plugins.unit_conversion import unit_conversion as uc
 
@@ -12,6 +12,7 @@ class TestSpecvizHelper:
     def setup_class(self, specviz_app, spectrum1d):
         self.spec_app = specviz_app
         self.spec = spectrum1d
+        self.spec_list = SpectrumList([spectrum1d]*3)
 
         self.label = "Test 1D Spectrum"
         self.spec_app.load_spectrum(spectrum1d, data_label=self.label)
@@ -24,6 +25,22 @@ class TestSpecvizHelper:
 
         assert isinstance(list(data.values())[0], Spectrum1D)
         assert list(data.keys())[0] == self.label
+
+    def test_load_spectrum_list_no_labels(self):
+        self.spec_app.load_spectrum(self.spec_list)
+        assert len(self.spec_app.app.data_collection) == 4
+        for i in (1, 2, 3):
+            assert "specviz_data" in self.spec_app.app.data_collection[i].label
+
+    def test_load_spectrum_list_with_labels(self):
+        labels = ["List test 1", "List test 2", "List test 3"]
+        self.spec_app.load_spectrum(self.spec_list, data_label=labels)
+        assert len(self.spec_app.app.data_collection) == 4
+
+    def test_mismatched_label_length(self):
+        with pytest.raises(ValueError, match='Length'):
+            labels = ["List test 1", "List test 2"]
+            self.spec_app.load_spectrum(self.spec_list, data_label=labels)
 
     def test_get_spectra(self):
         spectra = self.spec_app.get_spectra()
