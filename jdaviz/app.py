@@ -323,10 +323,6 @@ class Application(VuetifyTemplate, HubListener):
             else:
                 self._application_handler.load_data(file_obj)
 
-            # Send out a toast message
-            snackbar_message = SnackbarMessage("Data successfully loaded.",
-                                               sender=self)
-            self.hub.broadcast(snackbar_message)
         except Exception:  # Reset state on uncaught errors
             cfg_name = self.state.settings.get('configuration', 'unknown')
             if cfg_name in ('mosviz', ):  # Add more as needed.
@@ -598,7 +594,7 @@ class Application(VuetifyTemplate, HubListener):
 
         return regions
 
-    def add_data(self, data, data_label):
+    def add_data(self, data, data_label=None, notify_done=True):
         """
         Add data to the Glue ``DataCollection``.
 
@@ -610,18 +606,25 @@ class Application(VuetifyTemplate, HubListener):
             for which there exists data translation functions in the
             glue astronomy repository.
         data_label : str, optional
-            The name associated with this data. If none is given, a generic
-            name is generated.
+            The name associated with this data. If none is given, label is pulled
+            from the input data (if `~glue.core.data.Data`) or a generic name is
+            generated.
+        notify_done: bool
+            Flag controlling whether a snackbar message is set when the data is
+            added to the app. Set to False to avoid overwhelming the user if
+            lots of data is getting loaded at once.
         """
 
-        # Include the data in the data collection
+        if not data_label and hasattr(data, "label"):
+            data_label = data.label
         data_label = data_label or "New Data"
         self.data_collection[data_label] = data
 
         # Send out a toast message
-        snackbar_message = SnackbarMessage(
-            f"Data '{data_label}' successfully added.", sender=self)
-        self.hub.broadcast(snackbar_message)
+        if notify_done:
+            snackbar_message = SnackbarMessage(
+                f"Data '{data_label}' successfully added.", sender=self)
+            self.hub.broadcast(snackbar_message)
 
     @staticmethod
     def _build_data_label(path, ext=None):

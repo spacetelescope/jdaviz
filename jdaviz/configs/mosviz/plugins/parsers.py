@@ -37,7 +37,7 @@ def _add_to_table(app, data, comp_label):
     # Add data to the mos viz table object
     if 'MOS Table' not in app.data_collection:
         table_data = Data(label='MOS Table')
-        app.data_collection.append(table_data)
+        app.add_data(table_data, notify_done=False)
 
         mos_table = app.data_collection['MOS Table']
         mos_table.add_component(data, comp_label)
@@ -201,7 +201,7 @@ def mos_spec1d_parser(app, data_obj, data_labels=None):
     with app.data_collection.delay_link_manager_update():
 
         for i in range(len(data_obj)):
-            app.data_collection[data_labels[i]] = data_obj[i]
+            app.add_data(data_obj[i], data_labels[i], notify_done=False)
 
         _add_to_table(app, data_labels, '1D Spectra')
 
@@ -297,7 +297,7 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
     with app.data_collection.delay_link_manager_update():
 
         for i in range(len(data_obj)):
-            app.data_collection[data_labels[i]] = data_obj[i]
+            app.add_data(data_obj[i], data_labels[i], notify_data=False)
 
         if add_to_table:
             _add_to_table(app, data_labels, '2D Spectra')
@@ -632,13 +632,10 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
     with app.data_collection.delay_link_manager_update():
 
         for label, data in add_to_glue.items():
-            app.data_collection[label] = data
+            app.add_data(data, label, notify_done=False)
 
         # We then populate the table inside this context manager as _add_to_table
         # does operations that also trigger link manager updates.
-
-        print("Populating table")
-
         _add_to_table(app, source_ids, "Source ID")
         _add_to_table(app, ras, "Right Ascension")
         _add_to_table(app, decs, "Declination")
@@ -647,5 +644,3 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
         _add_to_table(app, spec_labels_2d, "2D Spectra")
 
     app.get_viewer('table-viewer')._shared_image = True
-
-    print("Done")
