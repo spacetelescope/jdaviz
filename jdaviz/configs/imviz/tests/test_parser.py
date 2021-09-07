@@ -6,6 +6,7 @@ from astropy.nddata import NDData, StdDevUncertainty
 from astropy.utils.data import download_file
 from astropy.wcs import WCS
 from gwcs import WCS as GWCS
+from numpy.testing import assert_allclose
 
 from jdaviz.configs.imviz.helper import split_filename_with_fits_ext
 from jdaviz.configs.imviz.plugins.parsers import (
@@ -339,3 +340,18 @@ class TestParseImage:
         with pytest.raises(KeyError, match='not found'):
             parse_data(imviz_app.app, filename, ext='DOES_NOT_EXIST',
                        data_label='foo', show_in_viewer=False)
+
+
+def test_load_valid_not_valid(imviz_app):
+    # Load something valid.
+    arr = np.ones((5, 5))
+    imviz_app.load_data(arr, data_label='valid', show_in_viewer=False)
+
+    # Load something invalid.
+    with pytest.raises(ValueError, match='Imviz cannot load this array with ndim=1'):
+        imviz_app.load_data(np.zeros(2), show_in_viewer=False)
+
+    # Make sure valid data is still there.
+    assert (len(imviz_app.app.data_collection) == 1
+            and imviz_app.app.data_collection.labels == ['valid'])
+    assert_allclose(imviz_app.app.data_collection[0].get_component('DATA').data, 1)

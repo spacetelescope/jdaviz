@@ -328,7 +328,9 @@ class Application(VuetifyTemplate, HubListener):
                                                sender=self)
             self.hub.broadcast(snackbar_message)
         except Exception:  # Reset state on uncaught errors
-            self.data_collection.clear()
+            cfg_name = self.state.settings.get('configuration', 'unknown')
+            if cfg_name in ('mosviz', ):  # Add more as needed.
+                self.data_collection.clear()
             raise
         finally:
             self.loading = False
