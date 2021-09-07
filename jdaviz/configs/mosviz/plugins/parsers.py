@@ -141,7 +141,6 @@ def link_data_in_table(app, data_obj=None):
         for index in range(len(mos_data.get_component('1D Spectra').data)):
             spec_1d = mos_data.get_component('1D Spectra').data[index]
             spec_2d = mos_data.get_component('2D Spectra').data[index]
-            # image = mos_data.get_component('Images').data[index] # include?
 
             wc_spec_1d = app.session.data_collection[spec_1d].world_component_ids
             wc_spec_2d = app.session.data_collection[spec_2d].world_component_ids
