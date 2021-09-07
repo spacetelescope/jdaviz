@@ -21,10 +21,10 @@ and so on. (TODO: Add content.)
 Using Imviz
 -----------
 
-To run Imviz in a notebook::
+.. toctree::
+  :maxdepth: 2
 
-    from jdaviz import Imviz
-    imviz = Imviz()
-    imviz.app
-
-(TODO: Add content.)
+  import_data
+  displayimages
+  plugins
+  notebook

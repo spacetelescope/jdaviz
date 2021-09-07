@@ -53,6 +53,8 @@ A third option is to type a slice number into the :guilabel:`text box` to the ri
 and press :guilabel:`enter` on your keyboard. A fourth option is to use the :guilabel:`up/down arrows` inside
 the :guilabel:`text box` to raise/lower the slice number.
 
+.. _spatial-regions:
+
 Defining Spatial Regions
 ========================
 
