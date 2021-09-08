@@ -191,10 +191,10 @@ class MosViz(ConfigHelper):
             ``Spectrum1D``) that can be read by glue-jupyter. Alternatively,
             can be a string file path.
 
-        images : list or str
-            A list of images as translatable container objects (e.g.
-            ``CCDData``) that can be read by glue-jupyter. Alternatively,
-            can be a string file path. If None, no images are displayed.
+        images : list of obj, str, or `None`
+            A list of images as translatable container objects
+            (string file path, FITS HDU, FITS HDUList, NDData, or numpy array).
+            Alternatively, can be a string file path. If `None`, no images are displayed.
 
         spectra_1d_label : str or list
             String representing the label for the data item loaded via
@@ -374,14 +374,14 @@ class MosViz(ConfigHelper):
     def load_images(self, data_obj, data_labels=None, share_image=0):
         """
         Load and parse a set of image objects. If providing a file path, it
-        must be readable by ``CCDData`` io registries.
+        must be readable by ``astropy.io.fits``.
 
         Parameters
         ----------
-        data_obj : list or str
-            A list of spectra as translatable container objects (e.g.
-            ``CCDData``) that can be read by glue-jupyter. Alternatively,
-            can be a string file path.
+        data_obj : list of obj, str, or `None`
+            A list of images as translatable container objects
+            (FITS HDU, FITS HDUList, NDData, or numpy array). Alternatively,
+            can be a string file path. If `None`, no images are displayed.
         data_labels : str or list
             String representing the label for the data item loaded via
             ``data_obj``. Can be a list of strings representing data labels

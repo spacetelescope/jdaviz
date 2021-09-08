@@ -203,7 +203,7 @@ def test_load_image(mosviz_app, image):
 
     data = mosviz_app.app.get_data_from_viewer('image-viewer')
 
-    # assert isinstance(list(data.values())[0], CCDData)
+    assert isinstance(list(data.values())[0], CCDData)
     assert list(data.values())[0].shape == (55, 55)
     assert list(data.keys())[0] == f"{label} 0"
 
