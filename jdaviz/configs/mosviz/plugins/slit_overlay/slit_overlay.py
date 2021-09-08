@@ -13,7 +13,35 @@ from astropy.wcs import WCS
 
 import bqplot
 
-__all__ = ['SlitOverlay']
+__all__ = ['SlitOverlay', 'jwst_header_to_skyregion']
+
+
+def jwst_header_to_skyregion(header):
+    s_region = header['S_REGION']
+    footprint = s_region.split("POLYGON ICRS")[1].split()
+    ra = np.array(footprint[::2], dtype=np.float)
+    dec = np.array(footprint[1::2], dtype=np.float)
+
+    # Find center of slit
+    cra = (max(ra) + min(ra)) / 2
+    cdec = (max(dec) + min(dec)) / 2
+
+    # Find center as skycoord
+    skycoord = SkyCoord(cra, cdec,
+                        unit=(u.Unit(u.deg),
+                              u.Unit(u.deg)))
+
+    # Puts corners of slit into skycoord object
+    corners = SkyCoord(ra, dec, unit="deg")
+
+    # Compute length and width
+    length = corners[0].separation(corners[1])
+    width = corners[1].separation(corners[2])
+    length = Angle(length, u.deg)
+    width = Angle(width, u.deg)
+
+    skyregion = RectangleSkyRegion(center=skycoord, width=width, height=length)
+    return skyregion
 
 
 @tray_registry('g-slit-overlay', label="Slit Overlay")
@@ -27,32 +55,7 @@ class SlitOverlay(TemplateMixin):
         table = self.app.get_viewer("table-viewer")
         table.figure_widget.observe(self.place_slit_overlay, names=['highlighted'])
 
-    def jwst_header_to_skyregion(self, header):
-        s_region = header['S_REGION']
-        footprint = s_region.split("POLYGON ICRS")[1].split()
-        ra = np.array(footprint[::2], dtype=np.float)
-        dec = np.array(footprint[1::2], dtype=np.float)
-
-        # Find center of slit
-        cra = (max(ra) + min(ra)) / 2
-        cdec = (max(dec) + min(dec)) / 2
-
-        # Find center as skycoord
-        skycoord = SkyCoord(cra, cdec,
-                            unit=(u.Unit(u.deg),
-                                  u.Unit(u.deg)))
-
-        # Puts corners of slit into skycoord object
-        corners = SkyCoord(ra, dec, unit="deg")
-
-        # Compute length and width
-        length = corners[0].separation(corners[1])
-        width = corners[1].separation(corners[2])
-        length = Angle(length, u.deg)
-        width = Angle(width, u.deg)
-
-        skyregion = RectangleSkyRegion(center=skycoord, width=width, height=length)
-        return skyregion
+        self._slit_overlay_mark = None
 
     def vue_change_visible(self, *args, **kwargs):
         if self.visible:
@@ -85,7 +88,7 @@ class SlitOverlay(TemplateMixin):
             if (len(spec2d_data) > 0 and 'S_REGION' in spec2d_data[0].meta
                     and spec2d_data[0].meta.get('INSTRUME', '').lower() == "nirspec"):
                 header = spec2d_data[0].meta
-                sky_region = self.jwst_header_to_skyregion(header)
+                sky_region = jwst_header_to_skyregion(header)
 
                 # Use wcs of image viewer to scale slit dimensions correctly
                 wcs_image = WCS(image_data[0].meta)
@@ -113,6 +116,8 @@ class SlitOverlay(TemplateMixin):
                 # Visualize slit on the figure
                 fig_image.marks = fig_image.marks + [patch2]
 
+                self._slit_overlay_mark = patch2
+
             else:
                 self.visible = False
                 snackbar_message = SnackbarMessage(
@@ -125,5 +130,12 @@ class SlitOverlay(TemplateMixin):
             self.hub.broadcast(snackbar_message)
 
     def remove_slit_overlay(self):
-        image_figure = self.app.get_viewer("image-viewer").figure
-        image_figure.marks = [image_figure.marks[0]]
+        if self._slit_overlay_mark is not None:
+            image_figure = self.app.get_viewer("image-viewer").figure
+            # We need to do the following instead of just removing directly on
+            # the marks otherwise traitlets doesn't register a change in the
+            # marks.
+            marks = image_figure.marks.copy()
+            marks.remove(self._slit_overlay_mark)
+            image_figure.marks = marks
+            self._slit_overlay_mark = None

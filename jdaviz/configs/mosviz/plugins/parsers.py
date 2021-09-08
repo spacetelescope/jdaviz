@@ -1,5 +1,6 @@
-from glue.core.data import Data
+import os
 
+from glue.core.data import Data
 from jdaviz.core.registries import data_parser_registry
 from jdaviz.core.events import SnackbarMessage
 import csv
@@ -13,6 +14,9 @@ import logging
 from astropy.wcs import WCS
 from asdf.fits_embed import AsdfInFits
 from pathlib import Path
+from glue.core.link_helpers import LinkSame
+
+import glob
 
 __all__ = ['mos_spec1d_parser', 'mos_spec2d_parser', 'mos_image_parser']
 
@@ -74,6 +78,33 @@ def _warn_if_not_found(app, file_lists):
     return found
 
 
+def _parse_as_image(path):
+    """
+    Parse and load a 2D image. ``CCDData`` objects require a unit be defined
+    in the fits header - if none is provided, use a fallback and
+    raise an error.
+    """
+    with fits.open(path) as hdulist:
+
+        header = hdulist[0].header.copy()
+        meta = dict(header)
+
+        wcs = WCS(header)
+
+        try:
+            image_ccd = CCDData.read(path, wcs=wcs)
+        except ValueError as e:
+            if str(e) == "a unit for CCDData must be specified.":
+                logging.warning("No 'BUNIT' defined in the header, using 'Jy'.")
+                image_ccd = CCDData.read(path, unit='Jy', wcs=wcs)
+            else:
+                raise
+
+        image_ccd.meta = meta
+
+    return image_ccd
+
+
 def _fields_from_ecsv(fname, fields, delimiter=","):
     parsed_fields = []
     with open(fname, "r") as f:
@@ -85,6 +116,82 @@ def _fields_from_ecsv(fname, fields, delimiter=","):
                 temp_list.append(row[field])
             parsed_fields.append(temp_list)
     return parsed_fields
+
+
+@data_parser_registry("mosviz-link-data")
+def link_data_in_table(app, data_obj=None):
+    """
+    Batch links data in the mosviz table viewer.
+
+    Parameters
+    ----------
+    app : `~jdaviz.app.Application`
+        The application-level object used to reference the viewers.
+    data_obj : None
+        Passed in in order to use the data_parser_registry, otherwise
+        not used.
+    """
+    mos_data = app.session.data_collection['MOS Table']
+    wc_spec_ids = []
+
+    # Optimize linking speed through a) delaying link manager updates with a
+    # context manager, b) handling intra-row linkage of 1D and 2D spectra in a
+    # loop, and c) handling inter-row linkage after that in one fell swoop.
+    with app.data_collection.delay_link_manager_update():
+        for index in range(len(mos_data.get_component('1D Spectra').data)):
+            spec_1d = mos_data.get_component('1D Spectra').data[index]
+            spec_2d = mos_data.get_component('2D Spectra').data[index]
+
+            wc_spec_1d = app.session.data_collection[spec_1d].world_component_ids
+            wc_spec_2d = app.session.data_collection[spec_2d].world_component_ids
+
+            wc_spec_ids.append(LinkSame(wc_spec_1d[0], wc_spec_2d[0]))
+
+    app.session.data_collection.add_link(wc_spec_ids)
+
+
+@data_parser_registry("mosviz-nirspec-directory-parser")
+def mos_nirspec_directory_parser(app, data_obj, data_labels=None):
+
+    spectra_1d = []
+    spectra_2d = []
+
+    # Load spectra
+    level3_path = Path(data_obj)
+    for file_path in glob.iglob(str(level3_path / '*')):
+        if 'x1d' in file_path or 'c1d' in file_path:
+            spectra_1d.append(file_path)
+        elif 's2d' in file_path:
+            spectra_2d.append(file_path)
+
+    # Load images, if present
+    image_path = None
+
+    # Potential names of subdirectories where images are stored
+    for image_dir_name in ["cutouts", "mosviz_cutouts", "images"]:
+        if os.path.isdir(Path(str(level3_path / image_dir_name))):
+            image_path = Path(str(level3_path / image_dir_name))
+            break
+    if image_path is not None:
+        images = sorted([file_path for file_path in glob.iglob(str(image_path / '*'))])
+
+        # The amount of images needs to be equal to the amount of rows
+        # of the other columns in the table
+        if len(images) == len(spectra_1d):
+            mos_meta_parser(app, images)
+            mos_image_parser(app, images)
+        else:
+            msg = "The number of images in this directory does not match the" \
+                  " number of spectra 1d and 2d files, please make the " \
+                  "amounts equal or load images separately."
+            logging.warning(msg)
+            msg = SnackbarMessage(msg, color='warning', sender=app)
+            app.hub.broadcast(msg)
+
+    spectra_1d.sort()
+    spectra_2d.sort()
+    mos_spec1d_parser(app, spectra_1d)
+    mos_spec2d_parser(app, spectra_2d)
 
 
 @data_parser_registry("mosviz-spec1d-parser")
@@ -266,28 +373,6 @@ def mos_image_parser(app, data_obj, data_labels=None, share_image=0):
     if data_obj is None:
         return
 
-    def _parse_as_image(path):
-        """
-        Parse and load a 2D image. ``CCDData`` objects require a unit be defined
-        in the fits header - if none is provided, use a fallback and
-        raise an error.
-        """
-        with fits.open(path) as hdulist:
-            if 'BUNIT' not in hdulist[0].header:
-                logging.warning("No 'BUNIT' defined in the header, using 'Jy'.")
-
-            unit = hdulist[0].header.get('BUNIT', 'Jy')
-
-            header = hdulist[0].header.copy()
-            meta = dict(header)
-
-            wcs = WCS(header)
-
-            image_ccd = CCDData.read(path, unit=unit, wcs=wcs)
-            image_ccd.meta = meta
-
-        return image_ccd
-
     if isinstance(data_obj, str):
         data_obj = [_parse_as_image(data_obj)]
 
@@ -405,7 +490,6 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
     # Convert from pathlib Paths back to strings
     for key in file_lists:
         file_lists[key] = [str(x) for x in file_lists[key]]
-
     _warn_if_not_found(app, file_lists)
 
     # Parse relevant information from source catalog
@@ -447,7 +531,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
 
         image_label = "Image {} {}".format(im_split[0], pupil)
 
-        image_data = CCDData.read(image_file)
+        image_data = _parse_as_image(image_file)
 
         with fits.open(image_file) as temp:
             filter_wcs[pupil] = temp[1].header
@@ -573,5 +657,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
         _add_to_table(app, image_add, "Images")
         _add_to_table(app, spec_labels_1d, "1D Spectra")
         _add_to_table(app, spec_labels_2d, "2D Spectra")
+
+    app.get_viewer('table-viewer')._shared_image = True
 
     print("Done")
