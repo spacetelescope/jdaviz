@@ -384,7 +384,7 @@ def mos_image_parser(app, data_obj, data_labels=None, share_image=0):
 
         for i in n_data_range:
             data_obj[i].label = data_labels[i]
-            app.data_collection[data_labels[i]] = data_obj[i]
+            app.add_data(data_obj[i], data_labels[i], notify_done=False)
 
         if share_image:
             # Associate this image with multiple spectra
