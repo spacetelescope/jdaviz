@@ -2,7 +2,7 @@ import pytest
 from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose
 from glue.core.roi import XRangeROI
-from specutils import Spectrum1D, SpectrumList
+from specutils import Spectrum1D, SpectrumList, SpectrumCollection
 
 from ..plugins.unit_conversion import unit_conversion as uc
 
@@ -41,6 +41,11 @@ class TestSpecvizHelper:
         with pytest.raises(ValueError, match='Length'):
             labels = ["List test 1", "List test 2"]
             self.spec_app.load_spectrum(self.spec_list, data_label=labels)
+
+    def test_load_spectrum_collection(self):
+        with pytest.raises(TypeError):
+            collection = SpectrumCollection([1]*u.AA)
+            self.spec_app.load_spectrum(collection)
 
     def test_get_spectra(self):
         spectra = self.spec_app.get_spectra()
