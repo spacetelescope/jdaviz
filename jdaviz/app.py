@@ -327,6 +327,11 @@ class Application(VuetifyTemplate, HubListener):
             snackbar_message = SnackbarMessage("Data successfully loaded.",
                                                sender=self)
             self.hub.broadcast(snackbar_message)
+        except Exception:  # Reset state on uncaught errors
+            cfg_name = self.state.settings.get('configuration', 'unknown')
+            if cfg_name in ('mosviz', ):  # Add more as needed.
+                self.data_collection.clear()
+            raise
         finally:
             self.loading = False
 
