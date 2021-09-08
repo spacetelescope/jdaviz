@@ -77,8 +77,7 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
                                   spectral_axis=spec.spectral_axis.to(current_unit))
 
             app.add_data(spec, data_label[i])
-            if show_in_viewer:
-                app.add_data_to_viewer("spectrum-viewer", data_label[i])
 
             # Only auto-show the first spectrum in a list
-            show_in_viewer = False
+            if i == 0 and show_in_viewer:
+                app.add_data_to_viewer("spectrum-viewer", data_label[i])
