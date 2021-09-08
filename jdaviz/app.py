@@ -623,7 +623,7 @@ class Application(VuetifyTemplate, HubListener):
         # Send out a toast message
         if notify_done:
             snackbar_message = SnackbarMessage(
-                f"Data '{data_label}' successfully added.", sender=self)
+                f"Data '{data_label}' successfully added.", sender=self, color="success")
             self.hub.broadcast(snackbar_message)
 
     @staticmethod
