@@ -7,9 +7,9 @@ Jdaviz is designed to be integrated into existing `Jupyter notebooks <https://ju
     # Import Specviz
     from jdaviz import SpecViz
     # Instantiate an instance of Specviz
-    myinstance = SpecViz()
+    myviz = SpecViz()
     # Display Specviz
-    myinstance.app   #doctest: +SKIP
+    myviz.app   #doctest: +SKIP
 
 Similarly, you can open instances of :ref:`mosviz-notebook`, :ref:`cubeviz-notebook`, and Imviz.
 

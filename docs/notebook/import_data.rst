@@ -16,9 +16,10 @@ For Specviz::
 
     from jdaviz import SpecViz
     from specutils import Spectrum1D
-    myinstance = SpecViz()
+    myviz = SpecViz()
+    myviz.app
     spec1d = Spectrum1D.read("/path/to/data/file")
-    myinstance.load_data(spec1d)
+    myviz.load_data(spec1d)
 
 If you need to create your own Spectrum1D file::
 
@@ -30,15 +31,14 @@ If you need to create your own Spectrum1D file::
 For Cubeviz::
 
     from jdaviz import CubeViz
-    myinstance = CubeViz()
-    myinstance.load_data("/Users/demouser/data/cube_file.fits")
+    myviz = CubeViz()
+    myviz.app
+    myviz.load_data("/Users/demouser/data/cube_file.fits")
 
 
 For Mosviz::
 
     from jdaviz.configs.mosviz.helper import MosViz as Mosviz
-    myinstance = Mosviz()
-    myinstance .app
-    import tempfile
-    data_dir = tempfile.gettempdir()
-    mosviz.load_data(directory=data_dir, instrument="nirspec") # Or niriss
+    myviz = Mosviz()
+    myviz.app
+    mosviz.load_data(directory="/path/to/data/file", instrument="nirspec") # Or niriss
