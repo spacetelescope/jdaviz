@@ -12,7 +12,7 @@ class TestSpecvizHelper:
     def setup_class(self, specviz_app, spectrum1d):
         self.spec_app = specviz_app
         self.spec = spectrum1d
-        self.spec_list = SpectrumList([spectrum1d]*3)
+        self.spec_list = SpectrumList([spectrum1d] * 3)
 
         self.label = "Test 1D Spectrum"
         self.spec_app.load_spectrum(spectrum1d, data_label=self.label)
