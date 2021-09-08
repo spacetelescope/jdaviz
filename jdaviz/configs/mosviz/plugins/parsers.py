@@ -718,8 +718,10 @@ def mos_niriss_parser(app, data_dir):
                 orientation = f[-1]
 
                 for spec in specs:
-                    if ( spec.meta['header']['SPORDER'] == 1
-                         and spec.meta['header']['EXTNAME'] == 'EXTRACT1D'):
+                    if (
+                        spec.meta['header']['SPORDER'] == 1
+                        and spec.meta['header']['EXTNAME'] == 'EXTRACT1D'
+                    ):
 
                         label = (f"{filter_name} Source "
                                  f"{spec.meta['header']['SOURCEID']} spec1d "
