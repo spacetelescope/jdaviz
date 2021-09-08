@@ -11,7 +11,7 @@ from astropy.wcs import WCS
 from glue.core.data import Data
 from glue.core.link_helpers import LinkSame
 from spectral_cube import SpectralCube
-from specutils import Spectrum1D, SpectrumList
+from specutils import Spectrum1D, SpectrumList, SpectrumCollection
 
 from jdaviz.configs.imviz.plugins.parsers import get_image_data_iterator
 from jdaviz.core.registries import data_parser_registry
