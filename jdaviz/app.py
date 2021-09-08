@@ -15,6 +15,7 @@ from traitlets import Dict, Bool
 from regions import RectanglePixelRegion, PixCoord
 from specutils import Spectrum1D
 
+from glue.core.exceptions import IncompatibleAttribute
 from glue.config import data_translator
 from glue.config import settings as glue_settings
 from glue.core import BaseData, HubListener, Data, DataCollection
@@ -148,6 +149,10 @@ class Application(VuetifyTemplate, HubListener):
         # Parse the yaml configuration file used to compose the front-end UI
         self.load_configuration(configuration)
 
+        # If true, link data on load. If false, do not link data to speed up
+        # data loading
+        self.auto_link = kwargs.pop('auto_link', True)
+
         # Subscribe to messages indicating that a new viewer needs to be
         #  created. When received, information is passed to the application
         #  handler to generate the appropriate viewer instance.
@@ -244,6 +249,11 @@ class Application(VuetifyTemplate, HubListener):
         any components are compatible with already loaded data. If so, link
         them so that they can be displayed on the same profile1D plot.
         """
+        # Allow for batch linking of data in the parser rather than on
+        # data load
+        if not self.auto_link:
+            return
+
         new_len = len(self.data_collection)
         # Can't link if there's no world_component_ids
         wc_new = self.data_collection[new_len-1].world_component_ids
@@ -442,8 +452,11 @@ class Application(VuetifyTemplate, HubListener):
 
                         if cls is not None:
                             handler, _ = data_translator.get_handler_for(cls)
-                            layer_data = handler.to_object(layer_data,
-                                                           statistic=statistic)
+                            try:
+                                layer_data = handler.to_object(layer_data,
+                                                               statistic=statistic)
+                            except IncompatibleAttribute:
+                                continue
 
                         data[label] = layer_data
 

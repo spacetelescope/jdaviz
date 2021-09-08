@@ -14,6 +14,8 @@ import logging
 from astropy.wcs import WCS
 from asdf.fits_embed import AsdfInFits
 from pathlib import Path
+from glue.core.link_helpers import LinkSame
+
 import glob
 
 __all__ = ['mos_spec1d_parser', 'mos_spec2d_parser', 'mos_image_parser']
@@ -114,6 +116,38 @@ def _fields_from_ecsv(fname, fields, delimiter=","):
                 temp_list.append(row[field])
             parsed_fields.append(temp_list)
     return parsed_fields
+
+
+@data_parser_registry("mosviz-link-data")
+def link_data_in_table(app, data_obj=None):
+    """
+    Batch links data in the mosviz table viewer.
+
+    Parameters
+    ----------
+    app : `~jdaviz.app.Application`
+        The application-level object used to reference the viewers.
+    data_obj : None
+        Passed in in order to use the data_parser_registry, otherwise
+        not used.
+    """
+    mos_data = app.session.data_collection['MOS Table']
+    wc_spec_ids = []
+
+    # Optimize linking speed through a) delaying link manager updates with a
+    # context manager, b) handling intra-row linkage of 1D and 2D spectra in a
+    # loop, and c) handling inter-row linkage after that in one fell swoop.
+    with app.data_collection.delay_link_manager_update():
+        for index in range(len(mos_data.get_component('1D Spectra').data)):
+            spec_1d = mos_data.get_component('1D Spectra').data[index]
+            spec_2d = mos_data.get_component('2D Spectra').data[index]
+
+            wc_spec_1d = app.session.data_collection[spec_1d].world_component_ids
+            wc_spec_2d = app.session.data_collection[spec_2d].world_component_ids
+
+            wc_spec_ids.append(LinkSame(wc_spec_1d[0], wc_spec_2d[0]))
+
+    app.session.data_collection.add_link(wc_spec_ids)
 
 
 @data_parser_registry("mosviz-nirspec-directory-parser")

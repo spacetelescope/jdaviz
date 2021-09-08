@@ -20,8 +20,8 @@ class MosViz(ConfigHelper):
 
     _default_configuration = "mosviz"
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         spec1d = self.app.get_viewer("spectrum-viewer")
         spec1d.scales['x'].observe(self._update_spec2d_x_axis)
@@ -211,6 +211,8 @@ class MosViz(ConfigHelper):
             ``images``. Can be a list of strings representing data labels
             for each item in ``data_obj`` if  ``data_obj`` is a list.
         """
+        # Link data after everything is loaded
+        self.app.auto_link = False
 
         directory = kwargs.pop('directory', None)
         instrument = kwargs.pop('instrument', None)
@@ -258,8 +260,26 @@ class MosViz(ConfigHelper):
             msg = SnackbarMessage(msg, color='warning', sender=self)
             self.app.hub.broadcast(msg)
 
+        self.link_table_data(None)
+
+        # Any subsequently added data will automatically be linked
+        # with data already loaded in the app
+        self.app.auto_link = True
+
         # Load the first object into the viewers automatically
         self.app.get_viewer("table-viewer").figure_widget.highlighted = 0
+
+    def link_table_data(self, data_obj):
+        """
+        Batch link data in the Mosviz table rather than doing it on
+        data load.
+
+        Parameters
+        ----------
+        data_obj : obj
+            Input for Mosviz data parsers.
+        """
+        super().load_data(data_obj, parser_reference="mosviz-link-data")
 
     def load_spectra(self, spectra_1d, spectra_2d):
         """
@@ -343,7 +363,13 @@ class MosViz(ConfigHelper):
                           data_labels=data_labels)
 
     def load_niriss_data(self, data_obj, data_labels=None):
+        self.app.auto_link = False
+
         super().load_data(data_obj, parser_reference="mosviz-niriss-parser")
+
+        self.link_table_data(data_obj)
+
+        self.app.auto_link = True
 
     def load_images(self, data_obj, data_labels=None, share_image=0):
         """
