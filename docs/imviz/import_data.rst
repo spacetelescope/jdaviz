@@ -11,7 +11,7 @@ See :meth:`jdaviz.configs.imviz.helper.Imviz.load_data` for more information.
 Importing data through the GUI
 ------------------------------
 
-The first way that users can load their data into the Imviz application is
+The first way that you can load your data into the Imviz application is
 by clicking the :guilabel:`Import` button at the top left of the application's
 user interface. This opens a dialogue where the user can enter the path of file
 that can be parsed as a :class:`~astropy.nddata.NDData`, :class:`~astropy.io.fits.HDUList`,
@@ -25,8 +25,8 @@ tab of each viewer's options menu as described in :ref:`cubeviz-selecting-data`.
 Importing data via the API
 --------------------------
 
-Alternatively, if users are working in a coding environment like a Jupyter
-notebook, they have access to the Imviz helper class API. Using this API,
+Alternatively, if you are working in a coding environment like a Jupyter
+notebook, you have access to the Imviz helper class API. Using this API,
 users can load data into the application through code using the :meth:`~jdaviz.configs.imviz.helper.Imviz.load_data`
 method, which takes as input either the name of a local file, an
 :class:`~astropy.nddata.NDData`, :class:`~astropy.io.fits.HDUList`,

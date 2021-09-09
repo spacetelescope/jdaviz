@@ -14,9 +14,6 @@ language, and therefore can be run anywhere Python is supported
 `Glupyter <https://glue-jupyter.readthedocs.io>`_ backend, providing a visual,
 interactive interface to the analysis capabilities in that library.
 
-Imviz allows images to be easily displayed and examined. It supports WCS
-and so on. (TODO: Add content.)
-
 
 Using Imviz
 -----------
