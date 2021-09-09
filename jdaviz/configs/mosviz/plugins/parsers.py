@@ -1,20 +1,21 @@
+import csv
+import glob
+import logging
 import os
+from pathlib import Path
 
+import numpy as np
+from asdf.fits_embed import AsdfInFits
+from astropy.io import fits
+from astropy.wcs import WCS
 from glue.core.data import Data
+from glue.core.link_helpers import LinkSame
+from spectral_cube import SpectralCube
+from specutils import Spectrum1D, SpectrumList, SpectrumCollection
+
+from jdaviz.configs.imviz.plugins.parsers import get_image_data_iterator
 from jdaviz.core.registries import data_parser_registry
 from jdaviz.core.events import SnackbarMessage
-import csv
-
-from spectral_cube import SpectralCube
-from astropy.nddata import CCDData
-from specutils import Spectrum1D, SpectrumList
-from astropy.io import fits
-import numpy as np
-import logging
-from astropy.wcs import WCS
-from asdf.fits_embed import AsdfInFits
-from pathlib import Path
-import glob
 
 __all__ = ['mos_spec1d_parser', 'mos_spec2d_parser', 'mos_image_parser']
 
@@ -36,7 +37,7 @@ def _add_to_table(app, data, comp_label):
     # Add data to the mos viz table object
     if 'MOS Table' not in app.data_collection:
         table_data = Data(label='MOS Table')
-        app.data_collection.append(table_data)
+        app.add_data(table_data, notify_done=False)
 
         mos_table = app.data_collection['MOS Table']
         mos_table.add_component(data, comp_label)
@@ -77,33 +78,6 @@ def _warn_if_not_found(app, file_lists):
     return found
 
 
-def _parse_as_image(path):
-    """
-    Parse and load a 2D image. ``CCDData`` objects require a unit be defined
-    in the fits header - if none is provided, use a fallback and
-    raise an error.
-    """
-    with fits.open(path) as hdulist:
-
-        header = hdulist[0].header.copy()
-        meta = dict(header)
-
-        wcs = WCS(header)
-
-        try:
-            image_ccd = CCDData.read(path, wcs=wcs)
-        except ValueError as e:
-            if str(e) == "a unit for CCDData must be specified.":
-                logging.warning("No 'BUNIT' defined in the header, using 'Jy'.")
-                image_ccd = CCDData.read(path, unit='Jy', wcs=wcs)
-            else:
-                raise
-
-        image_ccd.meta = meta
-
-    return image_ccd
-
-
 def _fields_from_ecsv(fname, fields, delimiter=","):
     parsed_fields = []
     with open(fname, "r") as f:
@@ -115,6 +89,38 @@ def _fields_from_ecsv(fname, fields, delimiter=","):
                 temp_list.append(row[field])
             parsed_fields.append(temp_list)
     return parsed_fields
+
+
+@data_parser_registry("mosviz-link-data")
+def link_data_in_table(app, data_obj=None):
+    """
+    Batch links data in the mosviz table viewer.
+
+    Parameters
+    ----------
+    app : `~jdaviz.app.Application`
+        The application-level object used to reference the viewers.
+    data_obj : None
+        Passed in in order to use the data_parser_registry, otherwise
+        not used.
+    """
+    mos_data = app.session.data_collection['MOS Table']
+    wc_spec_ids = []
+
+    # Optimize linking speed through a) delaying link manager updates with a
+    # context manager, b) handling intra-row linkage of 1D and 2D spectra in a
+    # loop, and c) handling inter-row linkage after that in one fell swoop.
+    with app.data_collection.delay_link_manager_update():
+        for index in range(len(mos_data.get_component('1D Spectra').data)):
+            spec_1d = mos_data.get_component('1D Spectra').data[index]
+            spec_2d = mos_data.get_component('2D Spectra').data[index]
+
+            wc_spec_1d = app.session.data_collection[spec_1d].world_component_ids
+            wc_spec_2d = app.session.data_collection[spec_2d].world_component_ids
+
+            wc_spec_ids.append(LinkSame(wc_spec_1d[0], wc_spec_2d[0]))
+
+    app.session.data_collection.add_link(wc_spec_ids)
 
 
 @data_parser_registry("mosviz-nirspec-directory-parser")
@@ -177,21 +183,15 @@ def mos_spec1d_parser(app, data_obj, data_labels=None):
     data_labels : str, optional
         The label applied to the glue data component.
     """
-    # If providing a file path, parse it using the specutils io tooling
-    if _check_is_file(data_obj):
-        data_obj = [Spectrum1D.read(data_obj)]
 
     if isinstance(data_labels, str):
         data_labels = [data_labels]
 
-    # Coerce into list-like object. This works because `Spectrum1D` objects
-    #  don't have a length dunder method.
-    if not hasattr(data_obj, '__len__'):
+    # Coerce into list if needed
+    if not isinstance(data_obj, (list, tuple, SpectrumCollection)):
         data_obj = [data_obj]
-    else:
-        data_obj = [Spectrum1D.read(x)
-                    if _check_is_file(x) else x
-                    for x in data_obj]
+
+    data_obj = [Spectrum1D.read(x) if _check_is_file(x) else x for x in data_obj]
 
     if data_labels is None:
         data_labels = [f"1D Spectrum {i}" for i in range(len(data_obj))]
@@ -203,7 +203,7 @@ def mos_spec1d_parser(app, data_obj, data_labels=None):
     with app.data_collection.delay_link_manager_update():
 
         for i in range(len(data_obj)):
-            app.data_collection[data_labels[i]] = data_obj[i]
+            app.add_data(data_obj[i], data_labels[i], notify_done=False)
 
         _add_to_table(app, data_labels, '1D Spectra')
 
@@ -282,19 +282,14 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
 
         return SpectralCube(new_data, wcs=wcs, meta=meta)
 
-    if _check_is_file(data_obj):
-        data_obj = [_parse_as_cube(data_obj)]
-
     if isinstance(data_labels, str):
         data_labels = [data_labels]
 
-    # Coerce into list-like object
-    if not isinstance(data_obj, (list, set)):
+    # Coerce into list if needed
+    if not isinstance(data_obj, (list, tuple, SpectrumCollection)):
         data_obj = [data_obj]
-    else:
-        data_obj = [_parse_as_cube(x)
-                    if _check_is_file(x) else x
-                    for x in data_obj]
+
+    data_obj = [_parse_as_cube(x) if _check_is_file(x) else x for x in data_obj]
 
     if data_labels is None:
         data_labels = [f"2D Spectrum {i}" for i in range(len(data_obj))]
@@ -304,7 +299,7 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
     with app.data_collection.delay_link_manager_update():
 
         for i in range(len(data_obj)):
-            app.data_collection[data_labels[i]] = data_obj[i]
+            app.add_data(data_obj[i], data_labels[i], notify_done=False)
 
         if add_to_table:
             _add_to_table(app, data_labels, '2D Spectra')
@@ -314,6 +309,17 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
             raise ValueError("More than one data label provided, unclear " +
                              "which to show in viewer")
         app.add_data_to_viewer("spectrum-2d-viewer", data_labels[0])
+
+
+def _load_fits_image_from_filename(filename, app):
+    data_list = []
+    with fits.open(filename) as hdulist:
+        meta = dict(hdulist[0].header.copy())
+        data_iter = get_image_data_iterator(app, hdulist, "Image", ext=None)
+        for d, _ in data_iter:  # We do not use the generated labels
+            d.meta.update(meta)
+            data_list.append(d)
+    return data_list
 
 
 @data_parser_registry("mosviz-image-parser")
@@ -341,37 +347,52 @@ def mos_image_parser(app, data_obj, data_labels=None, share_image=0):
     if data_obj is None:
         return
 
+    # The label does not matter here. We overwrite later.
     if isinstance(data_obj, str):
-        data_obj = [_parse_as_image(data_obj)]
-
-    # Coerce into list-like object
-    if not hasattr(data_obj, '__len__'):
-        data_obj = [data_obj]
+        data_obj = _load_fits_image_from_filename(data_obj, app)
+    elif isinstance(data_obj, (list, tuple)) and share_image == 0:
+        temp_data = []
+        for cur_data_obj in data_obj:
+            if isinstance(cur_data_obj, str):
+                temp_data += _load_fits_image_from_filename(cur_data_obj, app)
+            else:
+                data_iter = get_image_data_iterator(app, cur_data_obj, "Image", ext=None)
+                temp_data += [d[0] for d in data_iter]
+        data_obj = temp_data
     else:
-        data_obj = [_parse_as_image(x)
-                    if _check_is_file(x) else x
-                    for x in data_obj]
+        data_iter = get_image_data_iterator(app, data_obj, "Image", ext=None)
+        data_obj = [d[0] for d in data_iter]
+
+    n_data = len(data_obj)
+    n_data_range = range(n_data)
+
+    # TODO: Maybe should raise exception?
+    if share_image and n_data > 1:  # Just use the first one
+        data_obj = [data_obj[0]]
 
     if data_labels is None:
         if share_image:
             data_labels = ["Shared Image"]
         else:
-            data_labels = [f"Image {i}" for i in range(len(data_obj))]
+            data_labels = [f"Image {i}" for i in n_data_range]
 
     elif isinstance(data_labels, str):
         if share_image:
             data_labels = [data_labels]
         else:
-            data_labels = [f"{data_labels} {i}" for i in range(len(data_obj))]
+            data_labels = [f"{data_labels} {i}" for i in n_data_range]
 
     with app.data_collection.delay_link_manager_update():
 
-        for i in range(len(data_obj)):
-            app.data_collection[data_labels[i]] = data_obj[i]
+        for i in n_data_range:
+            data_obj[i].label = data_labels[i]
+            app.add_data(data_obj[i], data_labels[i], notify_done=False)
 
         if share_image:
             # Associate this image with multiple spectra
             data_labels *= share_image
+            # Show it on viewer
+            app.add_data_to_viewer("image-viewer", data_labels[0])
 
         _add_to_table(app, data_labels, 'Images')
 
@@ -397,16 +418,13 @@ def mos_meta_parser(app, data_obj, ids=None, spectra=False):
     if data_obj is None:
         return
 
-    # Coerce into list-like object
-    if not hasattr(data_obj, '__len__'):
+    # Coerce into list if needed
+    if not isinstance(data_obj, (list, tuple, SpectrumCollection)):
         data_obj = [data_obj]
-    elif isinstance(data_obj, str):
-        data_obj = [fits.open(data_obj)]
-    else:
-        data_obj = [fits.open(x) if _check_is_file(x)
-                    else x for x in data_obj]
 
-    if not spectra and np.all([isinstance(x, fits.HDUList) for x in data_obj]):
+    data_obj = [fits.open(x) if _check_is_file(x) else x for x in data_obj]
+
+    if np.all([isinstance(x, fits.HDUList) for x in data_obj]):
         ra = [x[0].header.get("OBJ_RA", float("nan")) for x in data_obj]
         dec = [x[0].header.get("OBJ_DEC", float("nan")) for x in data_obj]
         if ids is not None:
@@ -520,11 +538,15 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
 
         image_label = "Image {} {}".format(im_split[0], pupil)
 
-        image_data = _parse_as_image(image_file)
+        with fits.open(image_file) as file_obj:
+            data_iter = get_image_data_iterator(app, file_obj, "Image", ext=None)
+            data_obj = [d[0] for d in data_iter]  # We do not use the generated labels
+            image_data = data_obj[0]  # Grab the first one. TODO: Error if multiple found?
 
         with fits.open(image_file) as temp:
             filter_wcs[pupil] = temp[1].header
 
+        image_data.label = image_label
         add_to_glue[image_label] = image_data
 
         image_dict[pupil] = image_label
@@ -640,13 +662,10 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
     with app.data_collection.delay_link_manager_update():
 
         for label, data in add_to_glue.items():
-            app.data_collection[label] = data
+            app.add_data(data, label, notify_done=False)
 
         # We then populate the table inside this context manager as _add_to_table
         # does operations that also trigger link manager updates.
-
-        print("Populating table")
-
         _add_to_table(app, source_ids, "Source ID")
         _add_to_table(app, ras, "R.A.")
         _add_to_table(app, decs, "Dec.")
@@ -656,5 +675,3 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
         _add_to_table(app, filters, "Filter")
 
     app.get_viewer('table-viewer')._shared_image = True
-
-    print("Done")
