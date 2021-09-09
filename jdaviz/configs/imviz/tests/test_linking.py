@@ -53,9 +53,9 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
         assert isinstance(links[0], OffsetLink)
 
         # Customize display on second image (last loaded).
-        self.imviz.set_colormap('viridis')
-        self.imviz.stretch = 'sqrt'
-        self.imviz.cuts = (0, 100)
+        self.viewer.set_colormap('viridis')
+        self.viewer.stretch = 'sqrt'
+        self.viewer.cuts = (0, 100)
 
         # Add subsets, both interactive and static.
         self.imviz._apply_interactive_region('bqplot:circle', (1.5, 2.5), (3.6, 4.6))
@@ -64,7 +64,7 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
 
         # Add markers.
         tbl = Table({'x': (0, 0), 'y': (0, 1)})
-        self.imviz.add_markers(tbl, marker_name='xy_markers')
+        self.viewer.add_markers(tbl, marker_name='xy_markers')
         assert 'xy_markers' in self.imviz.app.data_collection.labels
 
         # Run linking again, does not matter what kind.
@@ -83,11 +83,11 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
         # Ensure markers are deleted.
         # Zoom and pan will reset in this case, so we do not check those.
         assert 'xy_markers' not in self.imviz.app.data_collection.labels
-        assert len(self.imviz._marktags) == 0
+        assert len(self.viewer._marktags) == 0
 
         # Pan/zoom.
-        self.imviz.center_on((5, 5))
-        self.imviz.zoom_level = 0.789
+        self.viewer.center_on((5, 5))
+        self.viewer.zoom_level = 0.789
         ans = (self.viewer.state.x_min, self.viewer.state.y_min,
                self.viewer.state.x_max, self.viewer.state.y_max)
 
