@@ -20,8 +20,8 @@ Adding New Viewers
 
 In the toolbar towards the top of the UI, there is a :guilabel:`picture with +` icon. By
 clicking this icon, you can add new viewers to the application. You can then select from the data
-that has been loaded into the application to be visualized in these additional viewers. You can then utilize some of the
-Imviz-specific features, like Linked Pan/Zoom.
+that has been loaded into the application to be visualized in these additional viewers.
+You can then utilize some of the Imviz-specific features, like Linked Pan/Zoom.
 
 Defining Spatial Regions
 ========================
@@ -37,9 +37,28 @@ Blinking
 ========
 
 Blinking is an Imviz-specific functionality that allows a user to quickly switch
-between viewing two images. This can be done by selecting the :guilabel:`hammer and screwdriver` icon
-and then clicking the :guilabel:`right arrow` icon. You can also access blinking
+between viewing two images. This can be done by selecting the :guilabel:`hammer and screwdriver`
+icon and then clicking the :guilabel:`right arrow` icon. You can also access blinking
 by selecting the "b" key on your keyboard.
+
+Contrast/Bias
+=============
+
+In addition to changing contrast and bias information in the :guilabel:`layer` tab
+(see :ref:`Contrast <contrast>`), Imviz has a :guilabel:`white to black` button under the
+:guilabel:`hammer and screwdriver` menu that can also edit those options. After clicking
+that button, you can click and drag on the image viewer to change to change the contrast
+and bias. If you would like to reset to the default contrast and bias settings, you can
+double-click.
+
+Cursor Information
+==================
+
+By moving your cursor along the image viewer, you will be able to see information on the
+cursor's location in pixel space (X and Y), the RA and Dec at that point, and the value
+there. This information is located in the top bar of the UI, on the
+middle-right side.
+
 
 Pan/Zoom and Linked Pan/Zoom
 ============================

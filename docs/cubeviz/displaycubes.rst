@@ -150,6 +150,8 @@ Opacity
 
 Change the translucence of the image.
 
+.. _contrast:
+
 Contrast
 ^^^^^^^^
 
