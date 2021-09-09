@@ -46,7 +46,8 @@ def _add_to_table(app, data, comp_label):
         viewer.add_data(table_data)
     else:
         mos_table = app.data_collection['MOS Table']
-        mos_table.add_component(data, comp_label)
+        if comp_label not in mos_table.component_ids():
+            mos_table.add_component(data, comp_label)
 
 
 def _check_is_file(path):
@@ -165,7 +166,7 @@ def mos_nirspec_directory_parser(app, data_obj, data_labels=None):
         # The amount of images needs to be equal to the amount of rows
         # of the other columns in the table
         if len(images) == len(spectra_1d):
-            mos_meta_parser(app, images)
+            mos_meta_parser(app, images, ids=images)
             mos_image_parser(app, images)
         else:
             msg = "The number of images in this directory does not match the" \
@@ -179,6 +180,7 @@ def mos_nirspec_directory_parser(app, data_obj, data_labels=None):
     spectra_2d.sort()
     mos_spec1d_parser(app, spectra_1d)
     mos_spec2d_parser(app, spectra_2d)
+    mos_meta_parser(app, spectra_2d, spectra=True)
 
 
 @data_parser_registry("mosviz-spec1d-parser")
@@ -393,7 +395,7 @@ def mos_image_parser(app, data_obj, data_labels=None, share_image=0):
 
 
 @data_parser_registry("mosviz-metadata-parser")
-def mos_meta_parser(app, data_obj):
+def mos_meta_parser(app, data_obj, ids=None, spectra=False):
     """
     Attempts to parse MOS FITS header metadata.
 
@@ -403,6 +405,11 @@ def mos_meta_parser(app, data_obj):
         The application-level object used to reference the viewers.
     data_obj : str or list or HDUList
         File path, list, or an HDUList to extract metadata from.
+    ids : list of str
+        A list with identification strings toi be used to label mosviz
+        table rows. Typically, a list with file names.
+    spectra : Boolean
+        In case the FITS objects are related to spectral data.
     """
 
     if data_obj is None:
@@ -414,10 +421,23 @@ def mos_meta_parser(app, data_obj):
 
     data_obj = [fits.open(x) if _check_is_file(x) else x for x in data_obj]
 
-    if np.all([isinstance(x, fits.HDUList) for x in data_obj]):
+    if not spectra and np.all([isinstance(x, fits.HDUList) for x in data_obj]):
         ra = [x[0].header.get("OBJ_RA", float("nan")) for x in data_obj]
         dec = [x[0].header.get("OBJ_DEC", float("nan")) for x in data_obj]
-        names = [x[0].header.get("OBJECT", "Unspecified Target") for x in data_obj]
+        if ids is not None:
+            # remove leading path to file name
+            ids_short = [os.path.basename(d) for d in ids]
+            names = [x[0].header.get("OBJECT", d) for x,d in zip(data_obj, ids_short)]
+        else:
+            names = [x[0].header.get("OBJECT", "Unspecified") for x in data_obj]
+
+        [x.close() for x in data_obj]
+
+    elif spectra and np.all([isinstance(x, fits.HDUList) for x in data_obj]):
+        filters = [x[0].header.get("FILTER", "Unspecified") for x in data_obj]
+        gratings = [x[0].header.get("GRATING", "Unspecified") for x in data_obj]
+
+        filters_gratings = [(f+'/'+g) for f, g in zip(filters, gratings)]
 
         [x.close() for x in data_obj]
 
@@ -429,9 +449,12 @@ def mos_meta_parser(app, data_obj):
 
     with app.data_collection.delay_link_manager_update():
 
-        _add_to_table(app, names, "Source Names")
-        _add_to_table(app, ra, "Right Ascension")
-        _add_to_table(app, dec, "Declination")
+        if spectra:
+            _add_to_table(app, filters_gratings, "Filter/Grating")
+        else:
+            _add_to_table(app, names, "Source Name")
+            _add_to_table(app, ra, "R.A.")
+            _add_to_table(app, dec, "Dec.")
 
 
 @data_parser_registry("mosviz-niriss-parser")
@@ -527,6 +550,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
 
     # Parse 2D spectra
     spec_labels_2d = []
+    filters = []
     for f in ["2D Spectra C", "2D Spectra R"]:
 
         for fname in file_lists[f]:
@@ -541,6 +565,10 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                 sci_hdus = []
                 wav_hdus = {}
                 for i in range(len(temp)):
+
+                    if i == 0:
+                        filter = temp[0].header["FILTER"]
+
                     if "EXTNAME" in temp[i].header:
                         if temp[i].header["EXTNAME"] == "SCI":
                             sci_hdus.append(i)
@@ -576,6 +604,8 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                         spec_labels_2d.append(label)
 
                         add_to_glue[label] = spec2d
+
+                        filters.append(filter)
 
     spec_labels_1d = []
     for f in ["1D Spectra C", "1D Spectra R"]:
@@ -622,10 +652,11 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
         # We then populate the table inside this context manager as _add_to_table
         # does operations that also trigger link manager updates.
         _add_to_table(app, source_ids, "Source ID")
-        _add_to_table(app, ras, "Right Ascension")
-        _add_to_table(app, decs, "Declination")
+        _add_to_table(app, ras, "R.A.")
+        _add_to_table(app, decs, "Dec.")
         _add_to_table(app, image_add, "Images")
         _add_to_table(app, spec_labels_1d, "1D Spectra")
         _add_to_table(app, spec_labels_2d, "2D Spectra")
+        _add_to_table(app, filters, "Filter/Grating")
 
     app.get_viewer('table-viewer')._shared_image = True
