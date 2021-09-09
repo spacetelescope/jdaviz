@@ -241,7 +241,7 @@ class MosViz(ConfigHelper):
                 self.load_images(images, images_label)
 
             if images is not None and not self._shared_image:
-                self.load_metadata(images)
+                self.load_metadata(images, ids=images)
 
             self.load_2d_spectra(spectra_2d, spectra_2d_label)
             self.load_1d_spectra(spectra_1d, spectra_1d_label)
@@ -296,7 +296,7 @@ class MosViz(ConfigHelper):
         """
         self.load_data(directory=directory, instrument=instrument)
 
-    def load_metadata(self, data_obj, spectra=False):
+    def load_metadata(self, data_obj, ids=None, spectra=False):
         """
         Load and parse a set of FITS objects to extract any relevant metadata.
 
@@ -305,10 +305,13 @@ class MosViz(ConfigHelper):
         data_obj : list or str
             A list of FITS objects with parseable headers. Alternatively,
             can be a string file path.
+        ids : list of str
+            A list with identification strings to be used to label mosviz
+            table rows. Typically, a list with file names.
         spectra : Boolean
             In case the FITS objects are related to spectral data.
         """
-        self.app.load_data(data_obj, spectra=spectra, parser_reference="mosviz-metadata-parser")
+        self.app.load_data(data_obj, ids=ids, spectra=spectra, parser_reference="mosviz-metadata-parser")
 
     def load_1d_spectra(self, data_obj, data_labels=None):
         """
