@@ -40,9 +40,9 @@ Blinking
 ========
 
 Blinking is an Imviz-specific functionality that allows a user to quickly switch
-between viewing two images. This can be done by selecting the :guilabel:`hammer and screwdriver`
-icon and then clicking the :guilabel:`right arrow` icon. You can also blink
-by selecting the "b" key on your keyboard.
+between viewing two or more images, as long as they are linked. This can be done
+by selecting the :guilabel:`hammer and screwdriver` icon and then clicking the
+:guilabel:`right arrow` icon. You can also blink by selecting the "b" key on your keyboard.
 
 Contrast/Bias
 =============
