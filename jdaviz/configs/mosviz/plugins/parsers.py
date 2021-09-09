@@ -151,7 +151,7 @@ def mos_nirspec_directory_parser(app, data_obj, data_labels=None):
         # The amount of images needs to be equal to the amount of rows
         # of the other columns in the table
         if len(images) == len(spectra_1d):
-            mos_meta_parser(app, images)
+            mos_meta_parser(app, images, ids=images)
             mos_image_parser(app, images)
         else:
             msg = "The number of images in this directory does not match the" \
@@ -398,7 +398,7 @@ def mos_image_parser(app, data_obj, data_labels=None, share_image=0):
 
 
 @data_parser_registry("mosviz-metadata-parser")
-def mos_meta_parser(app, data_obj, spectra=False):
+def mos_meta_parser(app, data_obj, ids=None, spectra=False):
     """
     Attempts to parse MOS FITS header metadata.
 
@@ -408,6 +408,9 @@ def mos_meta_parser(app, data_obj, spectra=False):
         The application-level object used to reference the viewers.
     data_obj : str or list or HDUList
         File path, list, or an HDUList to extract metadata from.
+    ids : list of str
+        A list with identification strings to be used to label mosviz
+        table rows. Typically, a list with file names.
     spectra : Boolean
         In case the FITS objects are related to spectral data.
     """
@@ -424,7 +427,12 @@ def mos_meta_parser(app, data_obj, spectra=False):
     if not spectra and np.all([isinstance(x, fits.HDUList) for x in data_obj]):
         ra = [x[0].header.get("OBJ_RA", float("nan")) for x in data_obj]
         dec = [x[0].header.get("OBJ_DEC", float("nan")) for x in data_obj]
-        names = [x[0].header.get("OBJECT", "Unspecified") for x in data_obj]
+        if ids is not None:
+            # remove leading path to file name
+            ids_short = [os.path.basename(d) for d in ids]
+            names = [x[0].header.get("OBJECT", d) for x,d in zip(data_obj, ids_short)]
+        else:
+            names = [x[0].header.get("OBJECT", "Unspecified") for x in data_obj]
 
         [x.close() for x in data_obj]
 
