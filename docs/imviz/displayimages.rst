@@ -38,7 +38,7 @@ Blinking
 
 Blinking is an Imviz-specific functionality that allows a user to quickly switch
 between viewing two images. This can be done by selecting the :guilabel:`hammer and screwdriver`
-icon and then clicking the :guilabel:`right arrow` icon. You can also access blinking
+icon and then clicking the :guilabel:`right arrow` icon. You can also blink
 by selecting the "b" key on your keyboard.
 
 Contrast/Bias
@@ -56,7 +56,7 @@ Cursor Information
 
 By moving your cursor along the image viewer, you will be able to see information on the
 cursor's location in pixel space (X and Y), the RA and Dec at that point, and the value
-there. This information is located in the top bar of the UI, on the
+of the data there. This information is located in the top bar of the UI, on the
 middle-right side.
 
 
