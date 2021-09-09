@@ -108,7 +108,7 @@ def _parse_hdu(app, hdulist, file_name=None):
             logging.warn(e)
             continue
 
-        app.data_collection[data_label] = sc
+        app.add_data(sc, data_label)
 
         # If the data type is some kind of integer, assume it's the mask/dq
         if hdu.data.dtype in (np.int, np.uint, np.uint32) or \
@@ -127,7 +127,7 @@ def _parse_hdu(app, hdulist, file_name=None):
 def _parse_spectral_cube(app, file_obj, data_type='flux', data_label=None):
     data_label = data_label or f"Unknown spectral cube[{data_type.upper()}]"
 
-    app.data_collection[f"{data_label}"] = file_obj
+    app.add_data(file_obj, data_label)
 
     if data_type == 'flux':
         app.add_data_to_viewer('flux-viewer', f"{data_label}")
@@ -147,5 +147,5 @@ def _parse_spectrum1d(app, file_obj):
     # TODO: glue-astronomy translators only look at the flux property of
     #  specutils Spectrum1D objects. Fix to support uncertainties and masks.
 
-    app.data_collection[f"{data_label}[FLUX]"] = file_obj
+    app.add_data(file_obj, f"{data_label}[FLUX]")
     app.add_data_to_viewer('spectrum-viewer', f"{data_label}[FLUX]")

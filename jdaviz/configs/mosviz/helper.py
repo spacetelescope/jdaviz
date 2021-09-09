@@ -269,6 +269,10 @@ class MosViz(ConfigHelper):
         # Load the first object into the viewers automatically
         self.app.get_viewer("table-viewer").figure_widget.highlighted = 0
 
+        # Notify the user that this all loaded successfully
+        loaded_msg = SnackbarMessage("MOS data loaded successfully", color="success", sender=self)
+        self.app.hub.broadcast(loaded_msg)
+
     def link_table_data(self, data_obj):
         """
         Batch link data in the Mosviz table rather than doing it on
