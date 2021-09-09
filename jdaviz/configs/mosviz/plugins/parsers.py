@@ -425,22 +425,22 @@ def mos_meta_parser(app, data_obj, ids=None, spectra=False):
     data_obj = [fits.open(x) if _check_is_file(x) else x for x in data_obj]
 
     if np.all([isinstance(x, fits.HDUList) for x in data_obj]):
-        ra = [x[0].header.get("OBJ_RA", float("nan")) for x in data_obj]
-        dec = [x[0].header.get("OBJ_DEC", float("nan")) for x in data_obj]
-        if ids is not None:
-            # remove leading path to file name
-            ids_short = [os.path.basename(d) for d in ids]
-            names = [x[0].header.get("OBJECT", d) for x,d in zip(data_obj, ids_short)]
+        if spectra:
+            filters = [x[0].header.get("FILTER", "Unspecified") for x in data_obj]
+            gratings = [x[0].header.get("GRATING", "Unspecified") for x in data_obj]
+
+            filters_gratings = [(f+'/'+g) for f, g in zip(filters, gratings)]
+
+            [x.close() for x in data_obj]
         else:
-            names = [x[0].header.get("OBJECT", "Unspecified") for x in data_obj]
-
-        [x.close() for x in data_obj]
-
-    elif spectra and np.all([isinstance(x, fits.HDUList) for x in data_obj]):
-        filters = [x[0].header.get("FILTER", "Unspecified") for x in data_obj]
-        gratings = [x[0].header.get("GRATING", "Unspecified") for x in data_obj]
-
-        filters_gratings = [(f+'/'+g) for f, g in zip(filters, gratings)]
+            ra = [x[0].header.get("OBJ_RA", float("nan")) for x in data_obj]
+            dec = [x[0].header.get("OBJ_DEC", float("nan")) for x in data_obj]
+            if ids is not None:
+                # remove leading path to file name
+                ids_short = [os.path.basename(d) for d in ids]
+                names = [x[0].header.get("OBJECT", d) for x,d in zip(data_obj, ids_short)]
+            else:
+                names = [x[0].header.get("OBJECT", "Unspecified") for x in data_obj]
 
         [x.close() for x in data_obj]
 
