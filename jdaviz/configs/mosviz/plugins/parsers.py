@@ -438,7 +438,7 @@ def mos_meta_parser(app, data_obj, ids=None, spectra=False):
             if ids is not None:
                 # remove leading path to file name
                 ids_short = [os.path.basename(d) for d in ids]
-                names = [x[0].header.get("OBJECT", d) for x,d in zip(data_obj, ids_short)]
+                names = [x[0].header.get("OBJECT", d) for x, d in zip(data_obj, ids_short)]
             else:
                 names = [x[0].header.get("OBJECT", "Unspecified") for x in data_obj]
 
