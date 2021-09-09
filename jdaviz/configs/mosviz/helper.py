@@ -335,7 +335,8 @@ class MosViz(ConfigHelper):
         spectra : Boolean
             In case the FITS objects are related to spectral data.
         """
-        self.app.load_data(data_obj, ids=ids, spectra=spectra, parser_reference="mosviz-metadata-parser")
+        self.app.load_data(data_obj, ids=ids, spectra=spectra,
+                           parser_reference="mosviz-metadata-parser")
 
     def load_1d_spectra(self, data_obj, data_labels=None):
         """
