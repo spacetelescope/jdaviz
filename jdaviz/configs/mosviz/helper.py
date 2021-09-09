@@ -2,6 +2,7 @@ import logging
 
 import numpy as np
 from pathlib import Path
+from time import time
 
 import astropy.units as u
 from astropy.table import QTable
@@ -26,16 +27,24 @@ class Mosviz(ConfigHelper):
         super().__init__(*args, **kwargs)
 
         spec1d = self.app.get_viewer("spectrum-viewer")
-        spec1d.scales['x'].observe(self._update_spec2d_x_axis)
+        spec1d.scales['x'].observe(self._update_spec2d_x_axis, names=['min', 'max'])
 
         spec2d = self.app.get_viewer("spectrum-2d-viewer")
-        spec2d.scales['x'].observe(self._update_spec1d_x_axis)
+        spec2d.scales['x'].observe(self._update_spec1d_x_axis, names=['min', 'max'])
 
         # Listen for clicks on the table in case we need to zoom the image
         self.app.hub.subscribe(self, TableClickMessage,
                                handler=self._row_click_message_handler)
 
         self._shared_image = False
+
+        self._scales1d = spec1d.scales['x']
+        self._scales2d = spec2d.scales['x']
+
+        self._panning_warning_triggered = False
+        self._last_panning_warning = 0
+
+        self._update_in_progress = False
 
     def _extend_world(self, spec1d, ext):
         # Extend 1D spectrum world axis to enable panning (within reason) past
@@ -48,63 +57,86 @@ class Mosviz(ConfigHelper):
         world = np.hstack((prepend, world, append))
         return world
 
-    def _update_spec2d_x_axis(self, change):
+    def _update_spec2d_x_axis(self, _):
         # This assumes the two spectrum viewers have the same x-axis shape and
         # wavelength solution, which should always hold
-        if change['old'] is None:
-            pass
-        else:
-            name = change['name']
-            if name not in ['min', 'max']:
-                return
-            new_val = change['new']
-            spec1d = self.app.get_viewer('table-viewer')._selected_data["spectrum-viewer"]
-            extend_by = int(self.app.data_collection[spec1d]["World 0"].shape[0])
-            world = self._extend_world(spec1d, extend_by)
+        table_viewer = self.app.get_viewer('table-viewer')
 
-            # Warn the user if they've panned far enough away from the data
-            # that the viewers will desync
-            if new_val > world[-1] or new_val < world[0]:
-                msg = "Warning: panning too far away from the data may desync\
-                      the 1D and 2D spectrum viewers"
-                msg = SnackbarMessage(msg, color='warning', sender=self)
-                self.app.hub.broadcast(msg)
+        if self._update_in_progress or table_viewer.row_selection_in_progress:
+            return
 
-            idx = float((np.abs(world - new_val)).argmin()) - extend_by
-            scales = self.app.get_viewer('spectrum-2d-viewer').scales
-            old_idx = getattr(scales['x'], name)
-            if idx != old_idx:
-                setattr(scales['x'], name, idx)
+        min_1d = self._scales1d.min
+        max_1d = self._scales1d.max
 
-    def _update_spec1d_x_axis(self, change):
+        spec1d = table_viewer._selected_data["spectrum-viewer"]
+        extend_by = int(self.app.data_collection[spec1d]["World 0"].shape[0])
+        world = self._extend_world(spec1d, extend_by)
+
+        # Workaround for flipped data
+        min_world, max_world = world[0], world[-1]
+        if min_world > max_world:
+            min_world, max_world = max_world, min_world
+
+        # Warn the user if they've panned far enough away from the data
+        # that the viewers will desync
+        if min_1d < min_world or max_1d > max_world:
+            self._show_panning_warning()
+            return
+
+        self._panning_warning_triggered = False
+
+        idx_min = float((np.abs(world - min_1d)).argmin()) - extend_by
+        idx_max = float((np.abs(world - max_1d)).argmin()) - extend_by
+
+        self._update_in_progress = True
+        with self._scales2d.hold_sync():
+            self._scales2d.min = idx_min
+            self._scales2d.max = idx_max
+
+        self._update_in_progress = False
+
+    def _update_spec1d_x_axis(self, _):
         # This assumes the two spectrum viewers have the same x-axis shape and
         # wavelength solution, which should always hold
-        if change['old'] is None:
-            pass
-        else:
-            name = change['name']
-            if name not in ['min', 'max']:
-                return
-            new_idx = int(np.around(change['new']))
-            spec1d = self.app.get_viewer('table-viewer')._selected_data["spectrum-viewer"]
-            extend_by = int(self.app.data_collection[spec1d]["World 0"].shape[0])
-            world = self._extend_world(spec1d, extend_by)
+        table_viewer = self.app.get_viewer('table-viewer')
 
-            scales = self.app.get_viewer('spectrum-viewer').scales
-            old_val = getattr(scales['x'], name)
+        if self._update_in_progress or table_viewer.row_selection_in_progress:
+            return
 
-            # Warn the user if they've panned far enough away from the data
-            # that the viewers will desync
-            try:
-                val = world[new_idx+extend_by]
-            except IndexError:
-                val = old_val
-                msg = "Warning: panning too far away from the data may desync \
+        min_2d = self._scales2d.min
+        max_2d = self._scales2d.max
+
+        spec1d = table_viewer._selected_data["spectrum-viewer"]
+        extend_by = int(self.app.data_collection[spec1d]["World 0"].shape[0])
+        world = self._extend_world(spec1d, extend_by)
+
+        idx_min = int(np.around(min_2d)) + extend_by
+        idx_max = int(np.around(max_2d)) + extend_by
+
+        # Warn the user if they've panned far enough away from the data
+        # that the viewers will desync
+        if not (0 <= idx_min < len(world) and 0 <= idx_max < len(world)):
+            self._show_panning_warning()
+            return
+
+        self._panning_warning_triggered = False
+
+        self._update_in_progress = True
+        with self._scales1d.hold_sync():
+            self._scales1d.min = world[idx_min]
+            self._scales1d.max = world[idx_max]
+
+        self._update_in_progress = False
+
+    def _show_panning_warning(self):
+        now = time()
+        if not self._panning_warning_triggered and now > self._last_panning_warning + 5:
+            self._panning_warning_triggered = True
+            self._last_panning_warning = now
+            msg = "Warning: panning too far away from the data may desync \
                        the 1D and 2D spectrum viewers"
-                msg = SnackbarMessage(msg, color='warning', sender=self)
-                self.app.hub.broadcast(msg)
-            if val != old_val:
-                setattr(scales['x'], name, val)
+            msg = SnackbarMessage(msg, color='warning', sender=self)
+            self.app.hub.broadcast(msg)
 
     def _row_click_message_handler(self, msg):
 
