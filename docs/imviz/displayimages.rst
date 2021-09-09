@@ -18,8 +18,11 @@ Selecting Data Set
 Adding New Viewers
 ==================
 
-In the toolbar towards the top of the UI, there is a :guilabel:`picture with +` icon. By
-clicking this icon, you can add new viewers to the application. You can then select from the data
+In the toolbar towards the top of the UI, there is a :guilabel:`picture with a plus` icon
+
+.. image:: img/picture_with_plus.png
+
+that when clicked will add new viewers to the application. You can then select from the data
 that has been loaded into the application to be visualized in these additional viewers.
 You can then utilize some of the Imviz-specific features, like Linked Pan/Zoom.
 
@@ -45,10 +48,14 @@ Contrast/Bias
 =============
 
 In addition to changing contrast and bias information in the :guilabel:`layer` tab
-(see :ref:`Contrast <contrast>`), Imviz has a :guilabel:`white to black` button under the
-:guilabel:`hammer and screwdriver` menu that can also edit those options. After clicking
+(see :ref:`Contrast <contrast>`), Imviz has a :guilabel:`white to black` button
+
+.. image:: img/white_to_black.png
+
+under the :guilabel:`hammer and screwdriver` menu that can also edit those options. After clicking
 that button, you can click and drag on the image viewer to change to change the contrast
-and bias. If you would like to reset to the default contrast and bias settings, you can
+and bias. Moving along the x-axis will change the bias and moving along the y-axis will change the
+contrast. If you would like to reset to the default contrast and bias settings, you can
 double-click.
 
 Cursor Information
