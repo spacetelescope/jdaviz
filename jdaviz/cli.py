@@ -37,7 +37,13 @@ CONFIGS_DIR = os.path.join(os.path.dirname(__file__), 'configs')
               show_default=True,
               type=click.Choice(['light', 'dark']),
               help="Theme to use for application")
-def main(filename, layout='default', browser='default', theme='light'):
+@click.option('--verbosity',
+              default='info',
+              nargs=1,
+              show_default=True,
+              type=click.Choice(['debug', 'info', 'warning', 'error']),
+              help="Verbosity of the application")
+def main(filename, layout='default', browser='default', theme='light', verbosity='info'):
     """
     Start a JDAViz application instance with data loaded from FILENAME.\f
 
@@ -51,6 +57,8 @@ def main(filename, layout='default', browser='default', theme='light'):
         Path to browser executable.
     theme : {'light', 'dark'}
         Theme to use for Voila app or Jupyter Lab.
+    verbosity : {'debug', 'info', 'warning', 'error'}
+        Verbosity of the application.
     """
     # Tornado Webserver py3.8 compatibility hotfix for windows
     if sys.platform == 'win32':
@@ -73,7 +81,7 @@ def main(filename, layout='default', browser='default', theme='light'):
     nbdir = tempfile.mkdtemp()
 
     with open(os.path.join(nbdir, 'notebook.ipynb'), 'w') as nbf:
-        nbf.write(notebook_template.replace('DATA_FILENAME', filepath).strip())
+        nbf.write(notebook_template.replace('DATA_FILENAME', filepath).replace('JDAVIZ_VERBOSITY', verbosity).strip())  # noqa: E501
 
     os.chdir(nbdir)
 

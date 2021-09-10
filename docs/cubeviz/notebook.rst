@@ -1,3 +1,5 @@
+.. _cubeviz-notebook:
+
 ***********************************
 Using Cubeviz in a Jupyter Notebook
 ***********************************
