@@ -5,7 +5,7 @@ from jdaviz.core.events import SnackbarMessage
 
 
 class Specviz2d(ConfigHelper):
-    """SpecViz2D Helper class"""
+    """Specviz2D Helper class"""
 
     _default_configuration = "specviz2d"
 

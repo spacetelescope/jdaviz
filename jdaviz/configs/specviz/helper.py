@@ -7,12 +7,11 @@ from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import RedshiftMessage
 from ..default.plugins.line_lists.line_list_mixin import LineListMixin
 
+__all__ = ['Specviz', 'SpecViz']
 
-class SpecViz(ConfigHelper, LineListMixin):
-    """
-    SpecViz Helper class
 
-    """
+class Specviz(ConfigHelper, LineListMixin):
+    """Specviz Helper class."""
 
     _default_configuration = "specviz"
     _redshift = 0
@@ -229,3 +228,10 @@ class SpecViz(ConfigHelper, LineListMixin):
         '''Save new redshifts (including from the helper itself)'''
         if msg.param == "redshift":
             self._redshift = msg.value
+
+
+# For backward compatiblity only.
+# TODO: Officially deprecate this?
+class SpecViz(Specviz):
+    """This class is deprecated. Please use `Specviz` instead."""
+    pass
