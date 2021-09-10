@@ -39,7 +39,7 @@ you can load data into the application through code using the `load_data`
 method, which takes as input either the name of a local file or a 
 :class:`~spectral_cube.SpectralCube` or :class:`~specutils.Spectrum1D` object.
 
-    >>> from jdaviz import CubeViz
-    >>> cubeviz = CubeViz()
+    >>> from jdaviz import Cubeviz
+    >>> cubeviz = Cubeviz()
     >>> cubeviz.load_data("/Users/demouser/data/cube_file.fits") #doctest: +SKIP
 

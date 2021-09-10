@@ -230,8 +230,8 @@ class Specviz(ConfigHelper, LineListMixin):
             self._redshift = msg.value
 
 
+# TODO: Officially deprecate this with coordination with JDAT notebooks team.
 # For backward compatiblity only.
-# TODO: Officially deprecate this?
 class SpecViz(Specviz):
-    """This class is deprecated. Please use `Specviz` instead."""
+    """This class is pending deprecation. Please use `Specviz` instead."""
     pass
