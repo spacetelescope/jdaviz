@@ -1,7 +1,9 @@
-1.2 (unreleased)
+2.0 (unreleased)
 ----------------
 
-- No changes yet
+- New Imviz configuration for visualization of 2D images.
+- Various improvements to existing configurations, including better performance,
+  user interface, and JWST data formats support.
 
 
 1.1 (2021-03-22)
