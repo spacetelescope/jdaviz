@@ -11,7 +11,7 @@ Export Position Regions (Imviz)
 
 In `Imviz`, you can extract positional regions::
 
-    regions=myviz.get_interactive_regions()
+    regions = myviz.get_interactive_regions()
     regions
 
 Export Spectra
