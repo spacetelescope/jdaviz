@@ -1,3 +1,5 @@
+.. _specviz-plugins:
+
 *********************
 Data Analysis Plugins
 *********************
