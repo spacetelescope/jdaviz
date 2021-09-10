@@ -15,7 +15,7 @@ from glue.config import colormaps
 from glue.core import BaseData, Data
 from glue.core.link_helpers import LinkSame
 from glue.core.subset import Subset, MaskSubsetState
-from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink
+from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink, NoAffineApproximation
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.helpers import ConfigHelper
@@ -129,9 +129,11 @@ class Imviz(ConfigHelper):
             Choosing `None` may result in some Imviz functionality not working properly.
 
         wcs_use_affine : bool
-            Use affine transform to approximate the WCS alignment, ignoring distortion.
-            This is only used when ``link_type='wcs'``.
-            This is much more performant at the cost of accuracy.
+            Use an affine transform to represent the offset between images if possible
+            (requires that the approximation is accurate to within 1 pixel with the
+            full WCS transformations). If approximation fails, it will automatically
+            fall back to full WCS transformation. This is only used when ``link_type='wcs'``.
+            Affine approximation is much more performant at the cost of accuracy.
 
         error_on_fail : bool
             If `True`, any failure in linking will raise an exception.
@@ -178,7 +180,10 @@ class Imviz(ConfigHelper):
                 else:  # 'wcs'
                     wcslink = WCSLink(data1=refdata, data2=data, cids1=ids0, cids2=ids1)
                     if wcs_use_affine:
-                        new_links = [wcslink.as_affine_link()]
+                        try:
+                            new_links = [wcslink.as_affine_link()]
+                        except NoAffineApproximation:  # pragma: no cover
+                            new_links = [wcslink]
                     else:
                         new_links = [wcslink]
             except Exception as e:
