@@ -30,8 +30,8 @@ If you need to create your own Spectrum1D file::
 
 For Cubeviz::
 
-    from jdaviz import CubeViz
-    myviz = CubeViz()
+    from jdaviz import Cubeviz
+    myviz = Cubeviz()
     myviz.app
     myviz.load_data("/Users/demouser/data/cube_file.fits")
 
