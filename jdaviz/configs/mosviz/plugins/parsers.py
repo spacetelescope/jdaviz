@@ -672,6 +672,6 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
         _add_to_table(app, image_add, "Images")
         _add_to_table(app, spec_labels_1d, "1D Spectra")
         _add_to_table(app, spec_labels_2d, "2D Spectra")
-        _add_to_table(app, filters, "Filter")
+        _add_to_table(app, filters, "Filter/Grating")
 
     app.get_viewer('table-viewer')._shared_image = True
