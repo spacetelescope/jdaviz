@@ -17,9 +17,10 @@ Importing data through the GUI
 
 The first way you can load your data into the Cubeviz application is
 by clicking the :guilabel:`Import` button at the top left of the application's 
-user interface. This opens a dialogue where the user can enter the path of file 
+user interface. This opens a dialogue where the user can navigate their local
+file system (single clicks enter a new folder) and can select the path of file 
 that can be parsed as a :class:`~spectral_cube.SpectralCube`
-or :class:`~specutils.Spectrum1D` in the text field:
+or :class:`~specutils.Spectrum1D`:
 
 .. image:: img/cubeviz_import_data.png
 
