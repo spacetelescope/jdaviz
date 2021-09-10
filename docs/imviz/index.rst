@@ -14,17 +14,14 @@ language, and therefore can be run anywhere Python is supported
 `Glupyter <https://glue-jupyter.readthedocs.io>`_ backend, providing a visual,
 interactive interface to the analysis capabilities in that library.
 
-Imviz allows images to be easily displayed and examined. It supports WCS
-and so on. (TODO: Add content.)
-
 
 Using Imviz
 -----------
 
-To run Imviz in a notebook::
+.. toctree::
+  :maxdepth: 2
 
-    from jdaviz import Imviz
-    imviz = Imviz()
-    imviz.app
-
-(TODO: Add content.)
+  import_data
+  displayimages
+  plugins
+  notebook
