@@ -42,7 +42,7 @@ the tool should be flexible enough to read in data from many astronomical telesc
 
 Installing
 ----------
-For details on installing and using JDAViz, see the
+For details on installing and using Jdaviz, see the
 `Jdaviz documentation <https://jdaviz.readthedocs.io/en/latest/>`_.
 
 Help
