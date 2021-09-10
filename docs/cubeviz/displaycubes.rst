@@ -53,6 +53,8 @@ A third option is to type a slice number into the :guilabel:`text box` to the ri
 and press :guilabel:`enter` on your keyboard. A fourth option is to use the :guilabel:`up/down arrows` inside
 the :guilabel:`text box` to raise/lower the slice number.
 
+.. _spatial-regions:
+
 Defining Spatial Regions
 ========================
 
@@ -100,6 +102,8 @@ are defined in Specviz.
     `Defining Spectral Regions (Specviz) <https://jdaviz.readthedocs.io/en/latest/specviz/displaying.html#spectral-regions>`_
         Documentation on defining spectral regions in a 1D spectrum viewer.
 
+.. _cubeviz-pan-zoom:
+
 Pan/Zoom
 ========
 
@@ -145,6 +149,8 @@ Opacity
 ^^^^^^^
 
 Change the translucence of the image.
+
+.. _contrast:
 
 Contrast
 ^^^^^^^^
