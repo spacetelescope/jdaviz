@@ -65,7 +65,7 @@
           <v-text-field
             label="Upper spectral bound"
             v-model="spectral_max"
-            hint="Lower bound of spectral region"
+            hint="Upper bound of spectral region"
             persistent-hint
           >
           </v-text-field>
