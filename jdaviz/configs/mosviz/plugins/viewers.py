@@ -14,10 +14,8 @@ from jdaviz.core.events import (AddDataToViewerMessage,
                                 TableClickMessage)
 from jdaviz.core.registries import viewer_registry
 
-__all__ = ['MosvizProfileView', 'MOSVizProfileView',
-           'MosvizImageView', 'MOSVizImageView',
-           'MosvizProfile2DView', 'MOSVizProfile2DView',
-           'MosvizTableViewer', 'MOSVizTableViewer']
+__all__ = ['MosvizProfileView', 'MosvizImageView', 'MosvizProfile2DView',
+           'MosvizTableViewer']
 
 
 @viewer_registry("mosviz-profile-viewer", label="Profile 1D (Mosviz)")
@@ -185,26 +183,3 @@ class MosvizTableViewer(TableViewer):
 
     def set_plot_axes(self, *args, **kwargs):
         return
-
-
-# TODO: Officially deprecate these with coordination with JDAT notebooks team.
-# For backward compatiblity only.
-
-class MOSVizProfileView(MosvizProfileView):
-    """This class is pending deprecation. Please use `MosvizProfileView` instead."""
-    pass
-
-
-class MOSVizImageView(MosvizImageView):
-    """This class is pending deprecation. Please use `MosvizImageView` instead."""
-    pass
-
-
-class MOSVizProfile2DView(MosvizProfile2DView):
-    """This class is pending deprecation. Please use `MosvizProfile2DView` instead."""
-    pass
-
-
-class MOSVizTableViewer(MosvizTableViewer):
-    """This class is pending deprecation. Please use `MosvizTableViewer` instead."""
-    pass

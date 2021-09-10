@@ -3,7 +3,7 @@ from glue_jupyter.bqplot.image import BqplotImageView
 
 from jdaviz.core.registries import viewer_registry
 
-__all__ = ['CubevizImageView', 'CubeVizImageView']
+__all__ = ['CubevizImageView']
 
 
 @viewer_registry("cubeviz-image-viewer", label="Image 2D (Cubeviz)")
@@ -25,10 +25,3 @@ class CubevizImageView(BqplotImageView):
                 for layer_state in self.state.layers
                 if hasattr(layer_state, 'layer') and
                 isinstance(layer_state.layer, BaseData)]
-
-
-# TODO: Officially deprecate this with coordination with JDAT notebooks team.
-# For backward compatiblity only.
-class CubeVizImageView(CubevizImageView):
-    """This class is pending deprecation. Please use `CubevizImageView` instead."""
-    pass
