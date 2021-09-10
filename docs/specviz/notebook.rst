@@ -1,3 +1,5 @@
+.. _specviz-notebook:
+
 ***********************************
 Using Specviz in a Jupyter Notebook
 ***********************************
