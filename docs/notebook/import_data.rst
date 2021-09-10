@@ -14,9 +14,9 @@ method, which takes as input either the name of a local file or a
 
 For Specviz::
 
-    from jdaviz import SpecViz
+    from jdaviz import Specviz
     from specutils import Spectrum1D
-    myviz = SpecViz()
+    myviz = Specviz()
     myviz.app
     spec1d = Spectrum1D.read("/path/to/data/file")
     myviz.load_data(spec1d)
