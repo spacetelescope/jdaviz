@@ -14,11 +14,14 @@ from jdaviz.core.events import (AddDataToViewerMessage,
                                 TableClickMessage)
 from jdaviz.core.registries import viewer_registry
 
-__all__ = ['MOSVizProfileView', 'MOSVizImageView']
+__all__ = ['MosvizProfileView', 'MOSVizProfileView',
+           'MosvizImageView', 'MOSVizImageView',
+           'MosvizProfile2DView', 'MOSVizProfile2DView',
+           'MosvizTableViewer', 'MOSVizTableViewer']
 
 
-@viewer_registry("mosviz-profile-viewer", label="Profile 1D (MOSViz)")
-class MOSVizProfileView(BqplotProfileView):
+@viewer_registry("mosviz-profile-viewer", label="Profile 1D (Mosviz)")
+class MosvizProfileView(BqplotProfileView):
     default_class = Spectrum1D
 
     def data(self, cls=None):
@@ -52,8 +55,8 @@ class MOSVizProfileView(BqplotProfileView):
         self.figure.axes[1].label_offset = "-50"
 
 
-@viewer_registry("mosviz-image-viewer", label="Image 2D (MOSViz)")
-class MOSVizImageView(BqplotImageView):
+@viewer_registry("mosviz-image-viewer", label="Image 2D (Mosviz)")
+class MosvizImageView(BqplotImageView):
     default_class = None
 
     def data(self, cls=None):
@@ -73,8 +76,8 @@ class MOSVizImageView(BqplotImageView):
         self.figure.axes[1].label_offset = "-50"
 
 
-@viewer_registry("mosviz-profile-2d-viewer", label="Spectrum 2D (MOSViz)")
-class MOSVizProfile2DView(BqplotImageView):
+@viewer_registry("mosviz-profile-2d-viewer", label="Spectrum 2D (Mosviz)")
+class MosvizProfile2DView(BqplotImageView):
     # Due to limitations in CCDData and 2D data that has spectral and spatial
     #  axes, the default conversion class must handle cubes
     default_class = SpectralCube
@@ -111,8 +114,8 @@ class MOSVizProfile2DView(BqplotImageView):
         self.figure.axes[1].label_offset = "-50"
 
 
-@viewer_registry("mosviz-table-viewer", label="Table (MOSViz)")
-class MOSVizTableViewer(TableViewer):
+@viewer_registry("mosviz-table-viewer", label="Table (Mosviz)")
+class MosvizTableViewer(TableViewer):
     def __init__(self, session, *args, **kwargs):
         super().__init__(session, *args, **kwargs)
 

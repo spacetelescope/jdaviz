@@ -10,7 +10,7 @@ from astropy.nddata import StdDevUncertainty
 from astropy.wcs import WCS
 from specutils import Spectrum1D
 
-from jdaviz import __version__, Cubeviz, Imviz, MosViz, Specviz, Specviz2d
+from jdaviz import __version__, Cubeviz, Imviz, Mosviz, Specviz, Specviz2d
 
 SPECTRUM_SIZE = 10  # length of spectrum
 
@@ -27,7 +27,7 @@ def imviz_app():
 
 @pytest.fixture
 def mosviz_app():
-    return MosViz()
+    return Mosviz()
 
 
 @pytest.fixture

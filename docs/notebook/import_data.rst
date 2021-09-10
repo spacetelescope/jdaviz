@@ -38,7 +38,7 @@ For Cubeviz::
 
 For Mosviz::
 
-    from jdaviz.configs.mosviz.helper import MosViz as Mosviz
+    from jdaviz.configs.mosviz.helper import Mosviz
     myviz = Mosviz()
     myviz.app
     mosviz.load_data(directory="/path/to/data/file", instrument="nirspec") # Or niriss

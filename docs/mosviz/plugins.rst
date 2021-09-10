@@ -2,12 +2,12 @@
 Data Analysis Plugins
 *********************
 
-The MOSviz data analysis plugins include operations on both
+The Mosviz data analysis plugins include operations on both
 2D images and Spectrum1D one dimensional datasets.
 Plugins that are specific to 1D spectra are described in
 more detail under Specviz:Data Analysis Plugins.  All plugins
 are accessed via the plugin icon in the upper right corner
-of the MOSviz application.
+of the Mosviz application.
 
 Gaussian Smooth
 ===============

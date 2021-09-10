@@ -14,9 +14,11 @@ from jdaviz.configs.specviz import Specviz
 
 from .plugins import jwst_header_to_skyregion
 
+__all__ = ['Mosviz', 'MosViz']
 
-class MosViz(ConfigHelper):
-    """MosViz Helper class"""
+
+class Mosviz(ConfigHelper):
+    """Mosviz Helper class"""
 
     _default_configuration = "mosviz"
 
@@ -489,3 +491,10 @@ class MosViz(ConfigHelper):
         if not hasattr(self, '_specviz'):
             self._specviz = Specviz(app=self.app)
         return self._specviz
+
+
+# TODO: Officially deprecate this with coordination with JDAT notebooks team.
+# For backward compatiblity only.
+class MosViz(Mosviz):
+    """This class is pending deprecation. Please use `Mosviz` instead."""
+    pass

@@ -20,7 +20,7 @@ user interfaces.
 ``jdaviz`` applications currently include tools for interactive
 visualization of spectroscopic data.  Specviz is a tool for
 visualization and quick-look analysis of 1D astronomical spectra.
-MOSViz is a visualization tool for many astronomical spectra,
+Mosviz is a visualization tool for many astronomical spectra,
 typically the output of a multi-object spectrograph (e.g., JWST
 NIRSpec), and includes viewers for 1D and 2D spectra as well as
 contextual information like on-sky views of the spectrograph slit.
