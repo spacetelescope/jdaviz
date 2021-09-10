@@ -35,8 +35,7 @@ Selecting Data Set
 ==================
 
 The data to be displayed in each viewer can be selected and de-selected by 
-clicking on the :guilabel:`hammer and screwdriver` icon at the top left of each viewer. 
-Then, click the :guilabel:`gear` icon to access the :guilabel:`Data` tab. Here, 
+clicking on the :guilabel:`Data` icon at the top left of each viewer. Here, 
 you can click the checkbox next to each listed dataset to make that dataset 
 visible (checked) or invisible (unchecked).
 
