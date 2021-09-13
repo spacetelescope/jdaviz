@@ -2,11 +2,11 @@
 Package Release Instructions
 ****************************
 
-This document outlines the steps for releasing a versioned JDAViz package to
+This document outlines the steps for releasing a versioned Jdaviz package to
 PyPI. Currently, these do not cover submitting package updates to the
 ``astroconda`` channel.
 
-This process currently requires admin-level access to the JDAViz repository,
+This process currently requires admin-level access to the Jdaviz repository,
 as it relies on the ability to commit to main directly. To do this, it is
 recommended that you create a ``temp`` directory in a different directory where
 you do your development. Inside this ``temp`` directory, ``git clone`` the ``jdaviz``

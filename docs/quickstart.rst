@@ -19,7 +19,7 @@ to load, i.e.::
 
     jdaviz /path/to/data/file --layout=<configuration>
 
-For example, to load a SDSS MaNGA IFU data cube into ``CubeViz``, you would run the following from a terminal::
+For example, to load a SDSS MaNGA IFU data cube into ``Cubeviz``, you would run the following from a terminal::
 
     jdaviz /my/manga/cube/manga-8485-1901-LOGCUBE.fits.gz --layout=cubeviz
 
@@ -28,7 +28,7 @@ In a Jupyter Notebook
 
 ``jdaviz`` provides a directory of sample notebooks to test the application, located in the `notebooks` sub-directory
 of the git repository.  `Example.ipynb` is provided as an example that loads a SDSS MaNGA IFU data cube with the
-``CubeViz`` configuration.  To run the provided example, start the jupyter kernel with the notebook path::
+``Cubeviz`` configuration.  To run the provided example, start the jupyter kernel with the notebook path::
 
     jupyter notebook /path/to/jdaviz/notebooks/Example.ipynb
 

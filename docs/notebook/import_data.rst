@@ -14,9 +14,9 @@ method, which takes as input either the name of a local file or a
 
 For Specviz::
 
-    from jdaviz import SpecViz
+    from jdaviz import Specviz
     from specutils import Spectrum1D
-    myviz = SpecViz()
+    myviz = Specviz()
     myviz.app
     spec1d = Spectrum1D.read("/path/to/data/file")
     myviz.load_data(spec1d)
@@ -30,15 +30,15 @@ If you need to create your own Spectrum1D file::
 
 For Cubeviz::
 
-    from jdaviz import CubeViz
-    myviz = CubeViz()
+    from jdaviz import Cubeviz
+    myviz = Cubeviz()
     myviz.app
     myviz.load_data("/Users/demouser/data/cube_file.fits")
 
 
 For Mosviz::
 
-    from jdaviz.configs.mosviz.helper import MosViz as Mosviz
+    from jdaviz.configs.mosviz.helper import Mosviz
     myviz = Mosviz()
     myviz.app
     mosviz.load_data(directory="/path/to/data/file", instrument="nirspec") # Or niriss

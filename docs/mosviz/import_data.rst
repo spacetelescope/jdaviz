@@ -11,8 +11,8 @@ you must generate three lists containing the filenames for the 1D spectra,
 to the Mosviz `load_data` method. An example is given below, where `file_dir` is a 
 directory that contains all the files for the dataset to be loaded::
 
-    >>> from jdaviz import MosViz
-    >>> mosviz = MosViz()
+    >>> from jdaviz import Mosviz
+    >>> mosviz = Mosviz()
     >>> mosviz.app #doctest: +SKIP
     >>> spectra_1d = []
     >>> spectra_2d = []

@@ -7,8 +7,8 @@ Using Cubeviz in a Jupyter Notebook
 To initialize an instance of the Cubeviz app in a Jupyter notebook, simply run
 the following code in a cell of the notebook::
 
-    >>> from jdaviz import CubeViz
-    >>> cubeviz = CubeViz()
+    >>> from jdaviz import Cubeviz
+    >>> cubeviz = Cubeviz()
     >>> cubeviz.app #doctest: +SKIP
 
 After running the code above, you can interact with the Cubeviz application from 
@@ -17,7 +17,7 @@ for example loading data into the app as described in :ref:`cubeviz-import-data`
 
 Data can also be accessed via the lower-level application interface that
 connects to the ``glue-jupyter`` application level. This is accessed via the ``.app``
-attribute of the `~jdaviz.configs.cubeviz.helper.CubeViz` helper class. For example::
+attribute of the `~jdaviz.configs.cubeviz.helper.Cubeviz` helper class. For example::
 
      cubeviz.app.get_data_from_viewer('spectrum-viewer')
      cubeviz.app.get_data_from_viewer('flux-viewer')

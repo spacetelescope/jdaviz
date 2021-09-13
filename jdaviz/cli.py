@@ -45,12 +45,12 @@ CONFIGS_DIR = os.path.join(os.path.dirname(__file__), 'configs')
               help="Verbosity of the application")
 def main(filename, layout='default', browser='default', theme='light', verbosity='info'):
     """
-    Start a JDAViz application instance with data loaded from FILENAME.\f
+    Start a Jdaviz application instance with data loaded from FILENAME.
 
     Parameters
     ----------
     filename : str
-        The path to the file to be loaded into the JDAViz application.
+        The path to the file to be loaded into the Jdaviz application.
     layout : str, optional
         Optional specification for which configuration to use on startup.
     browser : str, optional

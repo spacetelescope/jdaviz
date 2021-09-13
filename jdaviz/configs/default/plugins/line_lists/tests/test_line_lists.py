@@ -2,12 +2,12 @@ import numpy as np
 
 import astropy.units as u
 from astropy.table import QTable
-from jdaviz import SpecViz
+from jdaviz import Specviz
 from specutils import Spectrum1D
 
 
 def test_line_lists():
-    viz = SpecViz()
+    viz = Specviz()
     spec = Spectrum1D(flux=np.random.rand(100)*u.Jy,
                       spectral_axis=np.arange(6000, 7000, 10)*u.AA)
     viz.load_spectrum(spec)

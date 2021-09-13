@@ -7,8 +7,8 @@ Using Mosviz in a Jupyter Notebook
 To initialize an instance of the Mosviz app in a Jupyter notebook, simply run
 the following code in a cell of the notebook::
 
-    >>> from jdaviz import MosViz
-    >>> mosviz = MosViz()
+    >>> from jdaviz import Mosviz
+    >>> mosviz = Mosviz()
     >>> mosviz.app #doctest: +SKIP
 
 After running the code above, you can interact with the Mosviz application from 
@@ -20,7 +20,7 @@ for example loading data into the app as described in :ref:`mosviz-import-data`.
     `Cubeviz data export <https://jdaviz.readthedocs.io/en/latest/cubeviz/notebook.html>`_
         Cubeviz documentation on data exporting.
 
-The `~jdaviz.configs.mosviz.helper.MosViz` helper class can be used similarly to how
+The `~jdaviz.configs.mosviz.helper.Mosviz` helper class can be used similarly to how
 `cubeviz` is used in the previous link.
 The viewers in `mosviz` that can be used that way are `image-viewer`, `spectrum-viewer`,
 and `spectrum-2d-viewer`.
