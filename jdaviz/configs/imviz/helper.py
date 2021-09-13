@@ -212,7 +212,7 @@ class Imviz(ConfigHelper):
             with self.app.data_collection.delay_link_manager_update():
                 self.app.data_collection.set_links(links_list)
             self.app.hub.broadcast(SnackbarMessage(
-                f'{len(links_list)} links redone', color='success', timeout=8000, sender=self.app))
+                'Images successfully relinked', color='success', timeout=8000, sender=self.app))
 
     def save(self, filename):
         """Save out the current image view to given PNG filename."""
