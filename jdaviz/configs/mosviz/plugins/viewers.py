@@ -165,12 +165,10 @@ class MosvizTableViewer(TableViewer):
 
                     self._selected_data['image-viewer'] = selected_data
 
-        # Send a message to trigger zooming the image, if there is an image
-        if mos_data.find_component_id("Images") is not None:
-            message = TableClickMessage(selected_index=selected_index,
-                                        shared_image=self._shared_image,
-                                        sender=self)
-            self.session.hub.broadcast(message)
+        message = TableClickMessage(selected_index=selected_index,
+                                    shared_image=self._shared_image,
+                                    sender=self)
+        self.session.hub.broadcast(message)
 
         self.row_selection_in_progress = False
 

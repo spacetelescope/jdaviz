@@ -73,9 +73,8 @@ class Mosviz(ConfigHelper):
         world = self._extend_world(spec1d, extend_by)
 
         # Workaround for flipped data
-        min_world, max_world = world[0], world[-1]
-        if min_world > max_world:
-            min_world, max_world = max_world, min_world
+        min_world, max_world = (world[0], world[-1]) if not self._is_world_flipped()\
+            else (world[-1], world[0])
 
         # Warn the user if they've panned far enough away from the data
         # that the viewers will desync
@@ -138,31 +137,53 @@ class Mosviz(ConfigHelper):
             msg = SnackbarMessage(msg, color='warning', sender=self)
             self.app.hub.broadcast(msg)
 
-    def _row_click_message_handler(self, msg):
+    def _is_world_flipped(self):
+        spec1d = self.app.get_viewer('table-viewer')._selected_data.get("spectrum-viewer")
+        if not spec1d:
+            return False
+        world = self.app.data_collection[spec1d]["World 0"]
+        return world[0] > world[-1]
 
-        if msg.shared_image:
-            center, height = self._zoom_to_object_params(msg)
-        else:
-            try:
-                center, height = self._zoom_to_slit_params(msg)
-            except IndexError:
-                # If there's nothing in the spectrum2d viewer, we can't get slit info
+    def _row_click_message_handler(self, msg):
+        self._handle_image_zoom(msg)
+        self._handle_flipped_data()
+
+    def _handle_image_zoom(self, msg):
+        mos_data = self.app.data_collection['MOS Table']
+
+        # trigger zooming the image, if there is an image
+        if mos_data.find_component_id("Images") is not None:
+            if msg.shared_image:
+                center, height = self._zoom_to_object_params(msg)
+            else:
+                try:
+                    center, height = self._zoom_to_slit_params(msg)
+                except IndexError:
+                    # If there's nothing in the spectrum2d viewer, we can't get slit info
+                    return
+
+            if center is None or height is None:
+                # Can't zoom if we couldn't figure out where to zoom (e.g. if RA/Dec not in table)
                 return
 
-        if center is None or height is None:
-            # Can't zoom if we couldn't figure out where to zoom (e.g. if RA/Dec not in table)
-            return
+            imview = self.app.get_viewer("image-viewer")
 
-        imview = self.app.get_viewer("image-viewer")
+            image_axis_ratio = ((imview.axis_x.scale.max - imview.axis_x.scale.min) /
+                                (imview.axis_y.scale.max - imview.axis_y.scale.min))
 
-        image_axis_ratio = ((imview.axis_x.scale.max - imview.axis_x.scale.min) /
-                            (imview.axis_y.scale.max - imview.axis_y.scale.min))
+            with delay_callback(imview.state, 'x_min', 'x_max', 'y_min', 'y_max'):
+                imview.state.x_min = center[0] - image_axis_ratio*height
+                imview.state.y_min = center[1] - height
+                imview.state.x_max = center[0] + image_axis_ratio*height
+                imview.state.y_max = center[1] + height
 
-        with delay_callback(imview.state, 'x_min', 'x_max', 'y_min', 'y_max'):
-            imview.state.x_min = center[0] - image_axis_ratio*height
-            imview.state.y_min = center[1] - height
-            imview.state.x_max = center[0] + image_axis_ratio*height
-            imview.state.y_max = center[1] + height
+    def _handle_flipped_data(self):
+        # Workaround for flipped data
+        if self._is_world_flipped():
+            min, max = self._scales2d.max, self._scales2d.min
+            with self._scales2d.hold_sync():
+                self._scales2d.min = min
+                self._scales2d.max = max
 
     def _zoom_to_object_params(self, msg):
 
