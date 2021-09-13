@@ -13,7 +13,9 @@ from astropy.wcs.wcsapi import BaseHighLevelWCS
 from echo import delay_callback
 from glue.config import colormaps
 from glue.core import BaseData, Data
+from glue.core.link_helpers import LinkSame
 from glue.core.subset import Subset, MaskSubsetState
+from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink, NoAffineApproximation
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.helpers import ConfigHelper
@@ -104,6 +106,113 @@ class Imviz(ConfigHelper):
         else:
             self.app.load_data(
                 data, parser_reference=parser_reference, **kwargs)
+
+    def link_data(self, link_type='pixels', wcs_fallback_scheme='pixels', wcs_use_affine=True,
+                  error_on_fail=False):
+        """(Re)link loaded data with the desired link type.
+        All existing links will be replaced.
+
+        .. warning::
+
+            Any markers added would be removed. You can add back the markers
+            manually using :meth:`add_markers`. During the markers removal,
+            pan/zoom will also reset.
+
+        Parameters
+        ----------
+        link_type : {'pixels', 'wcs'}
+            Choose to link by pixels or WCS.
+
+        wcs_fallback_scheme : {None, 'pixels'}
+            If WCS linking failed, choose to fall back to linking by pixels or not at all.
+            This is only used when ``link_type='wcs'``.
+            Choosing `None` may result in some Imviz functionality not working properly.
+
+        wcs_use_affine : bool
+            Use an affine transform to represent the offset between images if possible
+            (requires that the approximation is accurate to within 1 pixel with the
+            full WCS transformations). If approximation fails, it will automatically
+            fall back to full WCS transformation. This is only used when ``link_type='wcs'``.
+            Affine approximation is much more performant at the cost of accuracy.
+
+        error_on_fail : bool
+            If `True`, any failure in linking will raise an exception.
+            If `False`, warnings will be emitted as snackbar messages.
+            When only warnings are emitted and no links are assigned,
+            some Imviz functionality may not work properly.
+
+        Raises
+        ------
+        ValueError
+            Invalid inputs or reference data.
+
+        """
+        if len(self.app.data_collection) <= 1:  # No need to link, we are done.
+            return
+
+        if link_type not in ('pixels', 'wcs'):
+            raise ValueError(f"link_type must be 'pixels' or 'wcs', got {link_type}")
+        if link_type == 'wcs' and wcs_fallback_scheme not in (None, 'pixels'):
+            raise ValueError("wcs_fallback_scheme must be None or 'pixels', "
+                             f"got {wcs_fallback_scheme}")
+
+        # Clear any existing markers. Otherwise, re-linking will crash.
+        self.reset_markers()
+
+        refdata, iref = get_reference_image_data(self.app)
+        links_list = []
+        ids0 = refdata.pixel_component_ids
+        ndim_range = range(refdata.ndim)
+
+        for i, data in enumerate(self.app.data_collection):
+            # Do not link with self
+            if i == iref:
+                continue
+
+            # We are not touching any existing Subsets. They keep their own links.
+            if not layer_is_image_data(data):
+                continue
+
+            ids1 = data.pixel_component_ids
+            try:
+                if link_type == 'pixels':
+                    new_links = [LinkSame(ids0[i], ids1[i]) for i in ndim_range]
+                else:  # 'wcs'
+                    wcslink = WCSLink(data1=refdata, data2=data, cids1=ids0, cids2=ids1)
+                    if wcs_use_affine:
+                        try:
+                            new_links = [wcslink.as_affine_link()]
+                        except NoAffineApproximation:  # pragma: no cover
+                            new_links = [wcslink]
+                    else:
+                        new_links = [wcslink]
+            except Exception as e:
+                if link_type == 'wcs' and wcs_fallback_scheme == 'pixels':
+                    try:
+                        new_links = [LinkSame(ids0[i], ids1[i]) for i in ndim_range]
+                    except Exception as e:  # pragma: no cover
+                        if error_on_fail:
+                            raise
+                        else:
+                            self.app.hub.broadcast(SnackbarMessage(
+                                f"Error linking '{data.label}' to '{refdata.label}': "
+                                f"{repr(e)}", color="warning", timeout=8000, sender=self.app))
+                            continue
+                else:
+                    if error_on_fail:
+                        raise
+                    else:
+                        self.app.hub.broadcast(SnackbarMessage(
+                            f"Error linking '{data.label}' to '{refdata.label}': "
+                            f"{repr(e)}", color="warning", timeout=8000, sender=self.app))
+                        continue
+            links_list += new_links
+
+        if len(links_list) > 0:
+            with self.app.data_collection.delay_link_manager_update():
+                self.app.data_collection.set_links(links_list)
+            self.app.hub.broadcast(SnackbarMessage(
+                f'{len(links_list)} links redone', color='success', timeout=8000, sender=self.app))
 
     def save(self, filename):
         """Save out the current image view to given PNG filename."""
@@ -737,6 +846,20 @@ def get_top_layer_index(viewer):
     """
     return [i for i, lyr in enumerate(viewer.layers)
             if lyr.visible and layer_is_image_data(lyr.layer)][-1]
+
+
+def get_reference_image_data(app):
+    """Return the first 2D image data in collection and its index to use as reference."""
+    refdata = None
+    iref = 0
+    for i, data in enumerate(app.data_collection):
+        if layer_is_image_data(data):
+            iref = i
+            refdata = data
+            break
+    if refdata is None:
+        raise ValueError(f'No valid reference data found in collection: {app.data_collection}')
+    return refdata, iref
 
 
 def _offset_is_pixel_or_sky(x):

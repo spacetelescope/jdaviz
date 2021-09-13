@@ -1,0 +1,124 @@
+import pytest
+from astropy.table import Table
+from glue.core.link_helpers import LinkSame
+from glue.plugins.wcs_autolinking.wcs_autolinking import OffsetLink, WCSLink
+from numpy.testing import assert_allclose
+
+from jdaviz.configs.imviz.helper import get_reference_image_data
+from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS, BaseImviz_WCS_WCS
+
+try:
+    import regions  # noqa
+    HAS_REGIONS = True
+except ImportError:
+    HAS_REGIONS = False
+
+
+class BaseLinkHandler:
+
+    def check_all_pixel_links(self):
+        links = self.imviz.app.data_collection.external_links
+        assert len(links) == 2
+        assert all([isinstance(link, LinkSame) for link in links])
+
+    def test_pixel_linking(self):
+        self.imviz.link_data(link_type='pixels', error_on_fail=True)
+        self.check_all_pixel_links()
+
+
+class TestLink_WCS_NoWCS(BaseImviz_WCS_NoWCS, BaseLinkHandler):
+
+    def test_wcslink_fallback_pixels(self):
+        self.imviz.link_data(link_type='wcs', error_on_fail=True)
+        self.check_all_pixel_links()
+
+    def test_wcslink_nofallback_noerror(self):
+        self.imviz.link_data(link_type='wcs', wcs_fallback_scheme=None)
+        self.check_all_pixel_links()  # Keeps old links because operation failed silently
+
+    def test_wcslink_nofallback_error(self):
+        with pytest.raises(AttributeError, match='pixel_n_dim'):
+            self.imviz.link_data(link_type='wcs', wcs_fallback_scheme=None, error_on_fail=True)
+
+
+class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
+
+    @pytest.mark.skipif(not HAS_REGIONS, reason='regions is missing')
+    def test_wcslink_affine_with_extras(self):
+        from regions import PixCoord, CirclePixelRegion
+
+        self.imviz.link_data(link_type='wcs', wcs_fallback_scheme=None, error_on_fail=True)
+        links = self.imviz.app.data_collection.external_links
+        assert len(links) == 1
+        assert isinstance(links[0], OffsetLink)
+
+        # Customize display on second image (last loaded).
+        self.imviz.set_colormap('viridis')
+        self.imviz.stretch = 'sqrt'
+        self.imviz.cuts = (0, 100)
+
+        # Add subsets, both interactive and static.
+        self.imviz._apply_interactive_region('bqplot:circle', (1.5, 2.5), (3.6, 4.6))
+        self.imviz.load_static_regions({
+            'my_reg': CirclePixelRegion(center=PixCoord(x=6, y=2), radius=5)})
+
+        # Add markers.
+        tbl = Table({'x': (0, 0), 'y': (0, 1)})
+        self.imviz.add_markers(tbl, marker_name='xy_markers')
+        assert 'xy_markers' in self.imviz.app.data_collection.labels
+
+        # Run linking again, does not matter what kind.
+        self.imviz.link_data(link_type='wcs', wcs_fallback_scheme=None, error_on_fail=True)
+
+        # Ensure display is still customized.
+        assert self.viewer.state.layers[1].cmap.name == 'viridis'
+        assert self.viewer.state.layers[1].stretch == 'sqrt'
+        assert_allclose((self.viewer.state.layers[1].v_min, self.viewer.state.layers[1].v_max),
+                        (0, 100))
+
+        # Ensure subsets are still there.
+        assert 'Subset 1' in self.imviz.get_interactive_regions()
+        assert 'my_reg' in [layer.layer.label for layer in self.viewer.state.layers]
+
+        # Ensure markers are deleted.
+        # Zoom and pan will reset in this case, so we do not check those.
+        assert 'xy_markers' not in self.imviz.app.data_collection.labels
+        assert len(self.imviz._marktags) == 0
+
+        # Pan/zoom.
+        self.imviz.center_on((5, 5))
+        self.imviz.zoom_level = 0.789
+        ans = (self.viewer.state.x_min, self.viewer.state.y_min,
+               self.viewer.state.x_max, self.viewer.state.y_max)
+
+        # Run linking again, does not matter what kind.
+        self.imviz.link_data(link_type='wcs', wcs_fallback_scheme=None, error_on_fail=True)
+
+        # Ensure pan/zoom does not change when markers are not present.
+        assert_allclose((self.viewer.state.x_min, self.viewer.state.y_min,
+                        self.viewer.state.x_max, self.viewer.state.y_max), ans)
+
+    def test_wcslink_fullblown(self):
+        self.imviz.link_data(link_type='wcs', wcs_fallback_scheme=None, wcs_use_affine=False,
+                             error_on_fail=True)
+        links = self.imviz.app.data_collection.external_links
+        assert len(links) == 1
+        assert isinstance(links[0], WCSLink)
+
+    # Also test other exception handling here.
+
+    def test_invalid_inputs(self):
+        with pytest.raises(ValueError, match='link_type'):
+            self.imviz.link_data(link_type='foo')
+
+        with pytest.raises(ValueError, match='wcs_fallback_scheme'):
+            self.imviz.link_data(link_type='wcs', wcs_fallback_scheme='foo')
+
+
+def test_imviz_no_data(imviz_app):
+    with pytest.raises(ValueError, match='No valid reference data'):
+        get_reference_image_data(imviz_app.app)
+
+    imviz_app.link_data(error_on_fail=True)  # Just no-op, do not crash
+    links = imviz_app.app.data_collection.external_links
+    assert len(links) == 0
