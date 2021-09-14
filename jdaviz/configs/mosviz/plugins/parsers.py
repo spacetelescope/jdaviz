@@ -11,7 +11,6 @@ from astropy.io.registry import IORegistryError
 from astropy.wcs import WCS
 from glue.core.data import Data
 from glue.core.link_helpers import LinkSame
-from spectral_cube import SpectralCube
 from specutils import Spectrum1D, SpectrumList, SpectrumCollection
 
 from jdaviz.configs.imviz.plugins.parsers import get_image_data_iterator
@@ -284,8 +283,8 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
 
             # Copy (if present) region to top-level meta object
             if ('header' in data.meta and
-                'S_REGION' in data.meta['header'] and
-                'S_REGION' not in data.meta):
+                    'S_REGION' in data.meta['header'] and
+                    'S_REGION' not in data.meta):
                 data.meta['S_REGION'] = data.meta['header']['S_REGION']
 
             # Set the instrument
