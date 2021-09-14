@@ -68,5 +68,5 @@ The :guilabel:`Remove` button can be used to remove a slit once it has been appl
 
 In order to plot a slit onto the image viewer, we need WCS information from an image and slit position from a 2D spectrum.
 The slit position is calculated using the ``S_REGION`` header extension value, located in the
-`~spectral_cube.SpectralCube.meta` attribute of the :class:`~specutils.Spectrum1D` object
+`~specutils.Spectrum1D.meta` attribute of the :class:`~specutils.Spectrum1D` object
 that is active in the 2D spectrum viewer.
