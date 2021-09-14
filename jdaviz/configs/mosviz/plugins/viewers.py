@@ -3,8 +3,6 @@ from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from glue_jupyter.table import TableViewer
 from specutils import Spectrum1D
-from spectral_cube import SpectralCube
-from echo import delay_callback
 import astropy
 from astropy import units as u
 from astropy.utils.introspection import minversion
@@ -78,7 +76,7 @@ class MosvizImageView(BqplotImageView):
 class MosvizProfile2DView(BqplotImageView):
     # Due to limitations in CCDData and 2D data that has spectral and spatial
     #  axes, the default conversion class must handle cubes
-    default_class = SpectralCube
+    default_class = Spectrum1D
 
     tools = ['bqplot:panzoom_x']
 
@@ -86,20 +84,12 @@ class MosvizProfile2DView(BqplotImageView):
         super().__init__(*args, **kwargs)
         # Setup viewer option defaults
         self.state.aspect = 'auto'
-        self.state.add_callback('reference_data', self._update_world_axes, priority=100)
 
     def data(self, cls=None):
         return [layer_state.layer.get_object(cls=cls or self.default_class)
                 for layer_state in self.state.layers
                 if hasattr(layer_state, 'layer') and
                 isinstance(layer_state.layer, BaseData)]
-
-    def _update_world_axes(self, data):
-        if data is not None:
-            with delay_callback(self.state, 'x_att_world', 'y_att_world'):
-                if 'Wave' in data.components:
-                    self.state.x_att_world = data.id['Right Ascension']
-                    self.state.y_att_world = data.id['Wave']
 
     def set_plot_axes(self):
         self.figure.axes[0].visible = False
