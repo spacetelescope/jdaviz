@@ -50,6 +50,11 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
             except IORegistryError:
                 # Multi-extension files may throw a registry error
                 data = SpectrumList.read(str(path), format=format)
+        elif path.is_dir():
+            data = SpectrumList.read(str(path), format=format)
+            # temporary labelling, just for testing. Better labels should
+            # come from the file list
+            data_label = ["Spectrum " + str(i) for i in range(len(data))]
         else:
             raise FileNotFoundError("No such file: " + str(path))
 
