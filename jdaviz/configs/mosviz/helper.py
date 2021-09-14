@@ -138,12 +138,12 @@ class Mosviz(ConfigHelper):
         imview = self.app.get_viewer("image-viewer")
         specview = self.app.get_viewer("spectrum-2d-viewer")
 
-        if ("R.A." not in table_data.component_ids() or
-                "Dec." not in table_data.component_ids()):
+        if ("Right Ascension" not in table_data.component_ids() or
+                "Declination" not in table_data.component_ids()):
             return None, None
 
-        ra = table_data["R.A."][msg.selected_index]
-        dec = table_data["Dec."][msg.selected_index]
+        ra = table_data["Right Ascension"][msg.selected_index]
+        dec = table_data["Declination"][msg.selected_index]
 
         pixel_height = 0.5*(specview.axis_y.scale.max - specview.axis_y.scale.min)
         point = SkyCoord(ra*u.deg, dec*u.deg)
@@ -245,16 +245,14 @@ class Mosviz(ConfigHelper):
                 self.load_images(images, images_label)
 
             if images is not None and not self._shared_image:
-                self.load_metadata(images, ids=images)
+                self.load_metadata(images)
 
             self.load_2d_spectra(spectra_2d, spectra_2d_label)
             self.load_1d_spectra(spectra_1d, spectra_1d_label)
-            self.load_metadata(spectra_2d, spectra=True)
 
         elif spectra_1d is not None and spectra_2d is not None:
             self.load_2d_spectra(spectra_2d, spectra_2d_label)
             self.load_1d_spectra(spectra_1d, spectra_1d_label)
-            self.load_metadata(spectra_2d, spectra=True)
 
         else:
             msg = "Warning: Please set valid values for the load_data() method"
@@ -322,7 +320,7 @@ class Mosviz(ConfigHelper):
         """
         self.load_data(directory=directory, instrument=instrument)
 
-    def load_metadata(self, data_obj, ids=None, spectra=False):
+    def load_metadata(self, data_obj):
         """
         Load and parse a set of FITS objects to extract any relevant metadata.
 
@@ -331,13 +329,8 @@ class Mosviz(ConfigHelper):
         data_obj : list or str
             A list of FITS objects with parseable headers. Alternatively,
             can be a string file path.
-        ids : list of str
-            A list with identification strings toi be used to label mosviz
-            table rows. Typically, a list with file names.
-        spectra : Boolean
-            In case the FITS objects are related to spectral data.
         """
-        self.app.load_data(data_obj, ids=ids, spectra=spectra, parser_reference="mosviz-metadata-parser")
+        self.app.load_data(data_obj, parser_reference="mosviz-metadata-parser")
 
     def load_1d_spectra(self, data_obj, data_labels=None):
         """
