@@ -57,7 +57,7 @@ class Mosviz(ConfigHelper):
         world = np.hstack((prepend, world, append))
         return world
 
-    def _update_spec2d_x_axis(self, _):
+    def _update_spec2d_x_axis(self, change):
         # This assumes the two spectrum viewers have the same x-axis shape and
         # wavelength solution, which should always hold
         table_viewer = self.app.get_viewer('table-viewer')
@@ -73,8 +73,8 @@ class Mosviz(ConfigHelper):
         world = self._extend_world(spec1d, extend_by)
 
         # Workaround for flipped data
-        min_world, max_world = (world[0], world[-1]) if not self._is_world_flipped()\
-            else (world[-1], world[0])
+        min_world, max_world = ((world[0], world[-1]) if not self._is_world_flipped()
+                                else (world[-1], world[0]))
 
         # Warn the user if they've panned far enough away from the data
         # that the viewers will desync
@@ -94,7 +94,7 @@ class Mosviz(ConfigHelper):
 
         self._update_in_progress = False
 
-    def _update_spec1d_x_axis(self, _):
+    def _update_spec1d_x_axis(self, change):
         # This assumes the two spectrum viewers have the same x-axis shape and
         # wavelength solution, which should always hold
         table_viewer = self.app.get_viewer('table-viewer')
@@ -114,7 +114,9 @@ class Mosviz(ConfigHelper):
 
         # Warn the user if they've panned far enough away from the data
         # that the viewers will desync
-        if not (0 <= idx_min < len(world) and 0 <= idx_max < len(world)):
+        # Note: Because of the flipped data workaround, idx_min can be > idx_max
+        max_world = len(world)
+        if not (0 <= idx_min < max_world and 0 <= idx_max < max_world):
             self._show_panning_warning()
             return
 
@@ -129,11 +131,16 @@ class Mosviz(ConfigHelper):
 
     def _show_panning_warning(self):
         now = time()
-        if not self._panning_warning_triggered and now > self._last_panning_warning + 5:
+
+        # Limit the number of messages that can be send to 1 per 5 seconds
+        panning_warning_timeout = 5
+
+        if (not self._panning_warning_triggered
+                and now > self._last_panning_warning + panning_warning_timeout):
             self._panning_warning_triggered = True
             self._last_panning_warning = now
-            msg = "Warning: panning too far away from the data may desync \
-                       the 1D and 2D spectrum viewers"
+            msg = ("Warning: panning too far away from the data may desync"
+                   "the 1D and 2D spectrum viewers")
             msg = SnackbarMessage(msg, color='warning', sender=self)
             self.app.hub.broadcast(msg)
 
