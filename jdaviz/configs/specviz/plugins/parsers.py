@@ -41,10 +41,7 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
     elif isinstance(data, SpectrumList):
         pass
     elif isinstance(data, list):
-        data = SpectrumList.read(data, format=format)
-        # temporary labelling, just for testing. Better labels should
-        # come from the file list
-        data_label = ["Spectrum " + str(i) for i in range(len(data))]
+        data = SpectrumList.read(data, format=format, data_label=data_label)
     else:
         path = pathlib.Path(data)
 
@@ -54,12 +51,9 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
                 data_label = [data_label]
             except IORegistryError:
                 # Multi-extension files may throw a registry error
-                data = SpectrumList.read(str(path), format=format)
+                data = SpectrumList.read(str(path), format=format, data_label=data_label)
         elif path.is_dir():
-            data = SpectrumList.read(str(path), format=format)
-            # temporary labelling, just for testing. Better labels should
-            # come from the file list
-            data_label = ["Spectrum " + str(i) for i in range(len(data))]
+            data = SpectrumList.read(str(path), format=format, data_label=data_label)
         else:
             raise FileNotFoundError("No such file: " + str(path))
 
