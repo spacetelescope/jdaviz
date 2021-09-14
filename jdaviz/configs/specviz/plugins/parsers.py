@@ -40,6 +40,11 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
         data_label = [data_label]
     elif isinstance(data, SpectrumList):
         pass
+    elif isinstance(data, list):
+        data = SpectrumList.read(data, format=format)
+        # temporary labelling, just for testing. Better labels should
+        # come from the file list
+        data_label = ["Spectrum " + str(i) for i in range(len(data))]
     else:
         path = pathlib.Path(data)
 
