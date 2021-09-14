@@ -3,11 +3,11 @@ from glue_jupyter.bqplot.image import BqplotImageView
 
 from jdaviz.core.registries import viewer_registry
 
-__all__ = ['CubeVizImageView']
+__all__ = ['CubevizImageView']
 
 
-@viewer_registry("cubeviz-image-viewer", label="Image 2D (CubeViz)")
-class CubeVizImageView(BqplotImageView):
+@viewer_registry("cubeviz-image-viewer", label="Image 2D (Cubeviz)")
+class CubevizImageView(BqplotImageView):
     default_class = None
 
     def set_plot_axes(self):

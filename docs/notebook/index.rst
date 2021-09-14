@@ -5,9 +5,9 @@ Jupyter Notebooks
 Jdaviz is designed to be integrated into existing `Jupyter notebooks <https://jupyter.org/>`_! To do so, install Jdaviz in your notebook's Python environment and add a new cell wherever you would like to use Jdaviz.  For example::
 
     # Import Specviz
-    from jdaviz import SpecViz
+    from jdaviz import Specviz
     # Instantiate an instance of Specviz
-    myviz = SpecViz()
+    myviz = Specviz()
     # Display Specviz
     myviz.app   #doctest: +SKIP
 
