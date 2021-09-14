@@ -546,7 +546,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                             sci_hdus.append(i)
                             wav_hdus[i] = ('WAVELENGTH', temp[i].header['EXTVER'])
 
-                # Now get a SpectralCube object for each SCI HDU
+                # Now get a Spectrum1D object for each SCI HDU
                 for sci in sci_hdus:
 
                     if temp[sci].header["SPORDER"] == 1:

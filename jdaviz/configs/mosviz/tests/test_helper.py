@@ -5,7 +5,6 @@ import pytest
 from astropy.nddata import CCDData
 from astropy.wcs import WCS
 from jdaviz.configs.mosviz.helper import Mosviz
-from spectral_cube import SpectralCube
 from specutils import Spectrum1D, SpectrumCollection
 
 
