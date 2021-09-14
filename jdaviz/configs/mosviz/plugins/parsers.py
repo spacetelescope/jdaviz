@@ -28,7 +28,7 @@ def _add_to_table(app, data, comp_label):
     Parameters
     ----------
     app : `~jdaviz.app.Application`
-        The JDAViz application instance.
+        The Jdaviz application instance.
     data : array-list
         The set of data to added as a table (i.g. column) component.
     comp_label : str

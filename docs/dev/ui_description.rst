@@ -82,7 +82,7 @@ composes it. Put another way, there's no *central source of truth* for
 the state of the custom widget as each element may contain some kind of
 stateful information about itself.
 
-An alternative design, and the one used for the JDAViz tools, is to have each widget implemented as a
+An alternative design, and the one used for the Jdaviz tools, is to have each widget implemented as a
 ``VuetifyTemplate`` object. In this way, custom widgets are defined as
 ipywidget-like elements whose visual representation is described by a
 Vuetify template. The template composes the visual representation of the
@@ -229,7 +229,7 @@ UI. This system allows us to break hard dependencies between widgets in
 the UI that require passing references around and to develop widgets
 independently.
 
-The JDAViz package includes a base class that can be used for adding
+The Jdaviz package includes a base class that can be used for adding
 widgets that would need to communicate through global events. This is
 is the ``TemplateMixin`` class and allows passing glue session objects
 to widgets upon their instantiation. The glue session contains the ``Hub``
@@ -281,7 +281,7 @@ information on using glue callback properties can be be found in the
 Plugin design
 -------------
 
-As shown in the diagram above, JDAViz applications are ostensibly collections
+As shown in the diagram above, Jdaviz applications are ostensibly collections
 of widgets and viewers along with a configuration file that describes how the
 widgets and viewers ought to be rendered in the front-end. These widgets and
 viewers are defined as "Plugins", and everything in the front-end is an example

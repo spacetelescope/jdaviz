@@ -17,7 +17,7 @@ class ImvizImageView(BqplotImageView):
     # ones are added in glue-jupyter in future that we don't want here.
     inherit_tools = False
 
-    tools = ['bqplot:home', 'bqplot:panzoom', 'bqplot:panzoomwcs',
+    tools = ['bqplot:home', 'bqplot:panzoom', 'bqplot:panzoommatch',
              'bqplot:contrastbias', 'bqplot:blinkonce',
              'bqplot:rectangle', 'bqplot:circle', 'bqplot:ellipse']
     default_class = None

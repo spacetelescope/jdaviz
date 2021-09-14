@@ -10,13 +10,15 @@ from echo import delay_callback
 
 from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import SnackbarMessage, TableClickMessage
-from jdaviz.configs.specviz import SpecViz
+from jdaviz.configs.specviz import Specviz
 
 from .plugins import jwst_header_to_skyregion
 
+__all__ = ['Mosviz', 'MosViz']
 
-class MosViz(ConfigHelper):
-    """MosViz Helper class"""
+
+class Mosviz(ConfigHelper):
+    """Mosviz Helper class"""
 
     _default_configuration = "mosviz"
 
@@ -490,9 +492,16 @@ class MosViz(ConfigHelper):
     @property
     def specviz(self):
         """
-        A specviz helper (`~jdaviz.configs.specviz.SpecViz`) for the Jdaviz
+        A specviz helper (`~jdaviz.configs.specviz.Specviz`) for the Jdaviz
         application that is wrapped by mosviz
         """
         if not hasattr(self, '_specviz'):
-            self._specviz = SpecViz(app=self.app)
+            self._specviz = Specviz(app=self.app)
         return self._specviz
+
+
+# TODO: Officially deprecate this with coordination with JDAT notebooks team.
+# For backward compatiblity only.
+class MosViz(Mosviz):
+    """This class is pending deprecation. Please use `Mosviz` instead."""
+    pass
