@@ -177,12 +177,15 @@ nitpick_ignore = []
 #
 # Uncomment the following lines to enable the exceptions:
 #
-# for line in open('nitpick-exceptions'):
-#     if line.strip() == "" or line.startswith("#"):
-#         continue
-#     dtype, target = line.split(None, 1)
-#     target = target.strip()
-#     nitpick_ignore.append((dtype, target))
+for line in open('nitpick-exceptions'):
+    if line.strip() == "" or line.startswith("#"):
+        continue
+    dtype, target = line.split(None, 1)
+    target = target.strip()
+    nitpick_ignore.append((dtype, target))
 
 # Extra intersphinx in addition to what is already in sphinx-astropy
 intersphinx_mapping['glue'] = ('http://docs.glueviz.org/en/stable/', None)
+intersphinx_mapping['glue_jupyter'] = ('https://glue-jupyter.readthedocs.io/en/stable/', None)
+intersphinx_mapping['specutils'] = ('https://specutils.readthedocs.io/en/stable/', None)
+intersphinx_mapping['spectral_cube'] = ('https://spectral-cube.readthedocs.io/en/stable/', None)

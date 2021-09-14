@@ -2,7 +2,7 @@
 Loading Data into Specviz
 *************************
 
-By design, Specviz only supports data that can be parsed as :class:`~specutils.Spectrum1D` objects, as that allows the Python-level interface and parsing tools to be defined in `specutils` instead of being duplicated in `jdaviz`.  :class:`~specutils.Spectrum1D` objects are very flexible in their capabilities, however, and hence should address most astronomical spectrum use cases.
+By design, Specviz only supports data that can be parsed as :class:`~specutils.Spectrum1D` objects, as that allows the Python-level interface and parsing tools to be defined in ``specutils`` instead of being duplicated in Jdaviz.  :class:`~specutils.Spectrum1D` objects are very flexible in their capabilities, however, and hence should address most astronomical spectrum use cases.
 
 .. seealso::
 
@@ -40,16 +40,16 @@ Here, users can select the loaded data set to be visualized in the viewer.
 Loading data via the API
 ------------------------
 Alternatively, if users are working in a coding environment like a Jupyter notebook, they have access to the :class:`~jdaviz.configs.specviz.helper.Specviz` helper class API. Using this API, users can load data into the application through code.
-Below is an example of importing the :class:`~jdaviz.configs.specviz.helper.Specviz` helper class, creating a :class:`~specutils.Spectrum1D` object from a data file via the :func:`~specutils.Spectrum1D.read` method::
+Below is an example of importing the :class:`~jdaviz.configs.specviz.helper.Specviz` helper class, creating a :class:`~specutils.Spectrum1D` object from a data file via the `specutils.Spectrum1D.read` method::
 
     >>> from specutils import Spectrum1D
     >>> spec1d = Spectrum1D.read("/path/to/data/file") #doctest: +SKIP
-    >>> specviz = Specviz() #doctest: +SKIP
-    >>> specviz.load_spectrum(spec1d)  #doctest: +SKIP
+    >>> specviz = Specviz()  # doctest: +SKIP
+    >>> specviz.load_spectrum(spec1d)  # doctest: +SKIP
 
-This method works well for data files that `specutils` understands.  However, if you are using your own data file or in-memory data, you can instead create a :class:`~specutils.Spectrum1D` object directly. In this example that is done using randomly generated data, and then that :class:`~specutils.Spectrum1D` object is loaded into the Specviz application::
+This method works well for data files that ``specutils`` understands.  However, if you are using your own data file or in-memory data, you can instead create a :class:`~specutils.Spectrum1D` object directly. In this example that is done using randomly generated data, and then that :class:`~specutils.Spectrum1D` object is loaded into the Specviz application::
 
-    >>> from jdaviz.configs.specviz.helper import Specviz
+    >>> from jdaviz import Specviz
     >>> import numpy as np
     >>> import astropy.units as u
     >>> from specutils import Spectrum1D

@@ -13,9 +13,10 @@ to set an app-level redshift or radial velocity. The user can toggle between
 the two modes by clicking the dropdown menu to the left of the slider bar.
 Any redshift or radial velocity set by the slider bar is automatically applied
 to any spectral lines that have been loaded into the app (see 
-:ref:`Line Lists<line-lists>`), and are applied to spectra output using the 
-Specviz `get_spectra` helper method. Note that using the lower-level app data 
-retrieval (e.g. `specviz.app.get_data_from_viewer`) will return the data as 
+:ref:`Line Lists <line-lists>`), and are applied to spectra output using the
+:meth:`jdaviz.configs.specviz.helper.Specviz.get_spectra` helper method.
+Note that using the lower-level app data retrieval (e.g.,
+``specviz.app.get_data_from_viewer()``) will return the data as
 originally loaded, with the redshift unchanged. 
 
  .. image:: img/redshift_slider.png
@@ -34,6 +35,6 @@ From the notebook
 
 The upper and lower bounds of the slider, as well as the resolution of a single
 step in the slider, can be set from a notebook cell using the 
-`set_redshift_slider_bounds` method by specifying the `upper`, `lower` and 
-`step` keywords. The redshift on the slider can be set from the notebook using 
-the `set_redshift` method.
+:meth:`jdaviz.configs.specviz.Specviz.set_redshift_slider_bounds` method by
+specifying the ``upper``, ``lower`` and ``step`` keywords.
+The redshift on the slider can be set from the notebook using the ``set_redshift`` method.

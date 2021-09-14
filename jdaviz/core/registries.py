@@ -1,12 +1,13 @@
-from glue.config import DictRegistry
 import re
+
+from glue.config import DictRegistry
 from ipyvuetify import VuetifyTemplate
 from ipywidgets import Widget
 
 
 __all__ = ['viewer_registry', 'tray_registry', 'tool_registry',
            'data_parser_registry', 'ViewerRegistry', 'TrayRegistry',
-           'ToolRegistry', 'MenuRegistry', 'DataParserRegistry']
+           'ToolRegistry', 'MenuRegistry', 'DataParserRegistry', 'UniqueDictRegistry']
 
 
 def convert(name):
