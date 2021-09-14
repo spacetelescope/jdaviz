@@ -197,12 +197,6 @@ def mos_spec1d_parser(app, data_obj, data_labels=None):
     data_labels : str, optional
         The label applied to the glue data component.
     """
-    # If providing a file path, parse it using the specutils io tooling
-    if _check_is_file(data_obj):
-        try:
-            data_obj = [Spectrum1D.read(data_obj)]
-        except IORegistryError:
-            data_obj = SpectrumList.read(data_obj)
 
     if isinstance(data_labels, str):
         data_labels = [data_labels]
@@ -293,6 +287,10 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
                 'S_REGION' in data.meta['header'] and
                 'S_REGION' not in data.meta):
                 data.meta['S_REGION'] = data.meta['header']['S_REGION']
+
+            # Set the instrument
+            # TODO: this should not be set to nirspec for all datasets
+            data.meta['INSTRUME'] = 'nirspec'
 
             # Get the corresponding label for this data product
             label = data_labels[index]
@@ -542,10 +540,12 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
 
             with fits.open(fname, memmap=False) as temp:
                 sci_hdus = []
+                wav_hdus = {}
                 for i in range(len(temp)):
                     if "EXTNAME" in temp[i].header:
                         if temp[i].header["EXTNAME"] == "SCI":
                             sci_hdus.append(i)
+                            wav_hdus[i] = ('WAVELENGTH', temp[i].header['EXTVER'])
 
                 # Now get a SpectralCube object for each SCI HDU
                 for sci in sci_hdus:
@@ -555,14 +555,12 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                         data = temp[sci].data
                         meta = temp[sci].header
 
-                        wcs = WCS(naxis=1)
-                        wcs.wcs.ctype = ['WAVE']
-                        wcs.wcs.crpix = [0]
-                        wcs.wcs.crval = [0]
-                        wcs.wcs.cdelt = [1.e-6]
-                        wcs.wcs.cunit = ['m']
+                        # The wavelength is stored in a WAVELENGTH HDU. This is
+                        # a 2D array, but in order to be able to use Spectrum1D
+                        # we use the average wavelength for all image rows
+                        wav = temp[wav_hdus[sci]].data.mean(axis=0) * u.micron
 
-                        spec2d = Spectrum1D(data * u.one, wcs=wcs, meta=meta)
+                        spec2d = Spectrum1D(data * u.one, spectral_axis=wav, meta=meta)
 
                         spec2d.meta['INSTRUME'] = 'NIRISS'
 
