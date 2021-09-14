@@ -9,7 +9,6 @@ import numpy as np
 from regions import RectangleSkyRegion
 from astropy.coordinates import Angle, SkyCoord
 from astropy import units as u
-from astropy.wcs import WCS
 
 import bqplot
 
@@ -78,11 +77,11 @@ class SlitOverlay(TemplateMixin):
         self.remove_slit_overlay()
 
         # Get data from relevant viewers
-        image_data = self.app.get_viewer("image-viewer").data()
+        image_data = self.app.get_viewer("image-viewer").state.reference_data
         spec2d_data = self.app.get_viewer("spectrum-2d-viewer").data()
 
         # 'S_REGION' contains slit information. Bypass in case no images exist.
-        if len(image_data) > 0:
+        if image_data is not None:
             # Only use S_REGION for Nirspec data, turn the plugin off
             # if other data is loaded
             if (len(spec2d_data) > 0 and 'S_REGION' in spec2d_data[0].meta
@@ -91,8 +90,7 @@ class SlitOverlay(TemplateMixin):
                 sky_region = jwst_header_to_skyregion(header)
 
                 # Use wcs of image viewer to scale slit dimensions correctly
-                wcs_image = WCS(image_data[0].meta)
-                pixel_region = sky_region.to_pixel(wcs_image)
+                pixel_region = sky_region.to_pixel(image_data.coords)
 
                 # Create polygon region from the pixel region and set vertices
                 pix_rec = pixel_region.to_polygon()
