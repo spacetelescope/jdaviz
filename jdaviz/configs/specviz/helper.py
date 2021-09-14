@@ -229,6 +229,28 @@ class Specviz(ConfigHelper, LineListMixin):
         if msg.param == "redshift":
             self._redshift = msg.value
 
+    def activate_scientific_notation(self, activate=True, axis=None):
+        """
+        Manually activate or deactivate scientific notation in the Y-axis
+        of the profile viewer.
+
+        Parameters
+        ----------
+        activate : bool
+            Determines whether scientific notation is used.
+        axis
+            The Specutils data axis.
+
+        """
+        if axis not in [0, 1]:
+            logging.warning("Please use either 0 or 1 for the axis value")
+            return
+
+        if activate:
+            self.app.get_viewer("spectrum-viewer").figure.axes[axis].tick_format = '0.1e'
+        else:
+            self.app.get_viewer("spectrum-viewer").figure.axes[axis].tick_format = '0.2f'
+
 
 # TODO: Officially deprecate this with coordination with JDAT notebooks team.
 # For backward compatiblity only.

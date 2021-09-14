@@ -50,6 +50,9 @@ class MosvizProfileView(BqplotProfileView):
         # Make it so y axis label is not covering tick numbers.
         self.figure.axes[1].label_offset = "-50"
 
+        # Set Y-axis to scientific notation
+        self.figure.axes[1].tick_format = '0.1e'
+
 
 @viewer_registry("mosviz-image-viewer", label="Image 2D (Mosviz)")
 class MosvizImageView(BqplotImageView):

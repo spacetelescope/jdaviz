@@ -331,6 +331,10 @@ class Mosviz(ConfigHelper):
         # Load the first object into the viewers automatically
         self.app.get_viewer("table-viewer").figure_widget.highlighted = 0
 
+        # Manually set viewer options after loading first object
+        self.app.get_viewer("spectrum-viewer").figure.axes[1].tick_format = '0.1e'
+        self.app.get_viewer("image-viewer").figure.axes[1].label_offset = "-50"
+
         # Notify the user that this all loaded successfully
         loaded_msg = SnackbarMessage("MOS data loaded successfully", color="success", sender=self)
         self.app.hub.broadcast(loaded_msg)
