@@ -288,6 +288,12 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
                     except IORegistryError:
                         data = _parse_as_spectrum1d(data)
 
+            # Copy (if present) region to top-level meta object
+            if ('header' in data.meta and
+                'S_REGION' in data.meta['header'] and
+                'S_REGION' not in data.meta):
+                data.meta['S_REGION'] = data.meta['header']['S_REGION']
+
             # Get the corresponding label for this data product
             label = data_labels[index]
 
