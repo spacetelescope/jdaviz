@@ -112,6 +112,25 @@ class MosvizTableViewer(TableViewer):
         self._selected_data = {}
         self._shared_image = False
 
+    def redraw(self):
+
+        # Overload to hide components - we do this via overloading instead of
+        # checking for changes in self.figure_widget.data because some components
+        # might be added inplace to the dataset.
+
+        if self.figure_widget.data is None:
+            self.figure_widget.hidden_components = []
+        else:
+            components_str = [cid.label for cid in self.figure_widget.data.main_components]
+            hidden = []
+            print(components_str)
+            for colname in ['Images', '1D Spectra', '2D Spectra']:
+                if colname in components_str:
+                    hidden.append(self.figure_widget.data.id[colname])
+            self.figure_widget.hidden_components = hidden
+
+        super().redraw()
+
     def _on_row_selected(self, event):
 
         # Grab the index of the latest selected row
