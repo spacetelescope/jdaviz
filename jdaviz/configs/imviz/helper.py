@@ -17,8 +17,17 @@ __all__ = ['Imviz']
 
 
 class Imviz(ConfigHelper):
-    """Imviz Helper class"""
+    """Imviz Helper class."""
     _default_configuration = 'imviz'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._default_viewer = self.app.get_viewer('imviz-0')
+
+    @property
+    def default_viewer(self):
+        """Default viewer instance."""
+        return self._default_viewer
 
     def load_data(self, data, parser_reference=None, **kwargs):
         """Load data into Imviz.
@@ -95,14 +104,10 @@ class Imviz(ConfigHelper):
 
         .. warning::
 
-            Any markers added in default viewer would be removed automatically.
-            Any markers added in a manually created tiled viewer need to be
-            removed manually first using
-            :meth:`~jdaviz.core.astrowidgets_api.AstrowidgetsImageViewerMixin.reset_markers`
-            method for that viewer before calling this method.
-            You can add back the markers manually using
+            Any markers added in Imviz would be removed automatically.
+            You can add back the markers using
             :meth:`~jdaviz.core.astrowidgets_api.AstrowidgetsImageViewerMixin.add_markers`
-            for the relevant viewer. During the markers removal, pan/zoom will also reset.
+            for the relevant viewer(s). During the markers removal, pan/zoom will also reset.
 
         Parameters
         ----------
@@ -143,9 +148,10 @@ class Imviz(ConfigHelper):
                              f"got {wcs_fallback_scheme}")
 
         # Clear any existing markers. Otherwise, re-linking will crash.
-        # We can only control default viewer here, see warning in docstring.
-        viewer = self.app.get_viewer("viewer-1")
-        viewer.reset_markers()
+        # Imviz can have multiple viewers open at the same time and each
+        # tracks their own markers.
+        for viewer in self.app._viewer_store.values():
+            viewer.reset_markers()
 
         refdata, iref = get_reference_image_data(self.app)
         links_list = []
@@ -226,8 +232,7 @@ class Imviz(ConfigHelper):
 
         """
         # Subset is global, so we just use default viewer.
-        viewer = self.app.get_viewer("viewer-1")
-        data = viewer.state.reference_data
+        data = self.default_viewer.state.reference_data
 
         for subset_label, region in regions.items():
             if subset_label.startswith('Subset'):
@@ -269,10 +274,9 @@ class Imviz(ConfigHelper):
 
         """
         regions = {}
-        # Subset is global, so we just use default viewer.
-        viewer = self.app.get_viewer("viewer-1")
 
-        for lyr in viewer.layers:
+        # Subset is global, so we just use default viewer.
+        for lyr in self.default_viewer.layers:
             if (not hasattr(lyr, 'layer') or not isinstance(lyr.layer, Subset)
                     or lyr.layer.ndim != 2):
                 continue
@@ -296,8 +300,7 @@ class Imviz(ConfigHelper):
         """Mimic interactive region drawing.
         This is for internal testing only.
         """
-        viewer = self.app.get_viewer("viewer-1")
-        tool = viewer.toolbar.tools[toolname]
+        tool = self.default_viewer.toolbar.tools[toolname]
         tool.activate()
         tool.interact.brushing = True
         tool.interact.selected = [from_pix, to_pix]

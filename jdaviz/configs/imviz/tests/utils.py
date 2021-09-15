@@ -35,7 +35,7 @@ class BaseImviz_WCS_NoWCS:
 
         self.wcs = WCS(hdu.header)
         self.imviz = imviz_app
-        self.viewer = imviz_app.app.get_viewer('viewer-1')
+        self.viewer = imviz_app.default_viewer
 
         # Since we are not really displaying, need this to test zoom.
         self.viewer.shape = (100, 100)
@@ -81,7 +81,7 @@ class BaseImviz_WCS_WCS:
         self.wcs_1 = WCS(hdu1.header)
         self.wcs_2 = WCS(hdu2.header)
         self.imviz = imviz_app
-        self.viewer = imviz_app.app.get_viewer('viewer-1')
+        self.viewer = imviz_app.default_viewer
 
         # Since we are not really displaying, need this to test zoom.
         self.viewer.shape = (100, 100)

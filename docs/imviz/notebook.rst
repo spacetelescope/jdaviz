@@ -15,5 +15,5 @@ Imviz also provides programmatic access to its viewers using
 See `~jdaviz.core.astrowidgets_api.AstrowidgetsImageViewerMixin` for
 available functionality. For example::
 
-    viewer = imviz.app.get_viewer('viewer-1')
+    viewer = imviz.default_viewer
     viewer.center_on((100, 100))
