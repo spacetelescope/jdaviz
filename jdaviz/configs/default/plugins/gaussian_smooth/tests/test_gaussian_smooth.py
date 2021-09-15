@@ -4,7 +4,7 @@ from glue.core import Data
 from jdaviz import Application
 from spectral_cube import SpectralCube
 
-from ..gaussian_smooth import GaussianSmooth
+from jdaviz.configs.default.plugins.gaussian_smooth.gaussian_smooth import GaussianSmooth
 
 
 def test_linking_after_spectral_smooth(spectral_cube_wcs):

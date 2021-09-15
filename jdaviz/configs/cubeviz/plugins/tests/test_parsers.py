@@ -49,6 +49,7 @@ def image_hdu_obj():
     return fits.HDUList([fits.PrimaryHDU(), flux_hdu, mask_hdu, uncert_hdu])
 
 
+@pytest.mark.filterwarnings('ignore:.* contains multiple slashes')
 def test_fits_image_hdu_parse(image_hdu_obj, cubeviz_app):
     cubeviz_app.load_data(image_hdu_obj)
 
@@ -56,6 +57,7 @@ def test_fits_image_hdu_parse(image_hdu_obj, cubeviz_app):
     assert cubeviz_app.data_collection[0].label.endswith('[FLUX]')
 
 
+@pytest.mark.filterwarnings('ignore:.* contains multiple slashes')
 def test_spectral_cube_parse(tmpdir, image_hdu_obj, cubeviz_app):
     f = tmpdir.join("test_fits_image.fits")
     path = os.path.join(f.dirname, f.basename)

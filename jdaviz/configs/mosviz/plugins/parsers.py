@@ -424,7 +424,7 @@ def mos_meta_parser(app, data_obj):
     else:
         # TODO: Come up with more robust metadata parsing, perhaps from
         # the spectra files.
-        logging.warn("Could not parse metadata from input images.")
+        logging.warning("Could not parse metadata from input images.")
         return
 
     with app.data_collection.delay_link_manager_update():
