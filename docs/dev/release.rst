@@ -8,9 +8,41 @@ distribution outlets, such as ``astroconda``, ``conda-forge``, or Zenodo.
 
 This process currently requires you (the release manager) to have sufficient GitHub
 permissions to tag, push, and create a GitHub release on Jdaviz repository.
+
+It is recommended that you lock the ``main`` branch after the "feature freeze"
+for the release and only unlock it when release is out on PyPI. Any urgent
+pull request that needs to go in after the freeze needs your blessing.
+A lock can be as simple as bumping the "reviews required" protection rule
+for the ``main`` branch to a very high number; Any rule that will prevent
+co-maintainers from merging pull requests without your blessing would do.
+
+If you deem it necessary, you may choose to release a Release Candidate (RC)
+first before the actual release. In that case, instead of "vX.Y.Z", it would
+be "vX.YrcN" (also see `PEP 440 <https://www.python.org/dev/peps/pep-0440/>`_).
+
+.. note::
+    These instructions are adapted from the Astropy package template releasing
+    instructions. Replace "vX.Y.Z" with the actual version tag of the release you
+    are about to make.
+
+Choose your adventure:
+
+* :ref:`release-long`
+* :ref:`release-short`
+
+
+.. _release-long:
+
+The long way
+============
+
+This way is recommended if you are new to the process or wish to manually run
+some automated steps locally. It takes longer but has a smaller risk factor.
+It also gives you a chance to test things out on a machine that is different
+from the one used for deployment on GitHub Actions.
+
 It is recommended for you to have a clean checkout of the Jdaviz repository
 (not the fork), especially if you also do a lot of development work.
-
 You can create a clean checkout as follows (requires
 `SSH setup <https://docs.github.com/en/github/authenticating-to-github/connecting-to-github-with-ssh>`_)::
 
@@ -18,11 +50,6 @@ You can create a clean checkout as follows (requires
     cd jdaviz_for_release
     git clone git@github.com:spacetelescope/jdaviz.git .
     git fetch origin --tags
-
-.. note::
-    These instructions are adapted from the Astropy package template releasing
-    instructions. Replace "vX.Y.Z" with the actual version tag of the release you
-    are about to make.
 
 #. Ensure `CI on Actions for main <https://github.com/spacetelescope/jdaviz/actions/workflows/ci_workflows.yml?query=branch%3Amain>`_
    and `RTD build for latest <https://readthedocs.org/projects/jdaviz/builds/>`_
@@ -123,5 +150,75 @@ You can create a clean checkout as follows (requires
 
 #. Check `RTD builds <https://readthedocs.org/projects/jdaviz/builds/>`_ to make sure
    that documentation built successfully for both ``latest`` and the new ``vX.Y.Z`` tag.
+
+Congratulations, you have just released a new version of Jdaviz!
+
+
+.. _release-short:
+
+The short way
+=============
+
+This way is for when you are in a rush, is very familiar with the process already,
+and is deploying on a proven automated process. It is faster but also has a higher
+risk factor. If you choose this way wrongly, you will end up doing hotfix releases
+anyway, which will not save you any time in the end. Only go this way if you know
+what you are doing.
+
+You can do a release from your fork directly without a clean code check-out.
+
+#. Ensure `CI on Actions for main <https://github.com/spacetelescope/jdaviz/actions/workflows/ci_workflows.yml?query=branch%3Amain>`_
+   and `RTD build for latest <https://readthedocs.org/projects/jdaviz/builds/>`_
+   are passing.
+
+#. Create a new branch on your fork and make sure you have updated tags too::
+
+     git fetch upstream main
+     git fetch upstream --tags
+     git checkout upstream/main -b release-vX.Y.Z
+
+#. Update the ``CHANGES.rst`` file to make sure that all the user-facing changes are listed,
+   and update the release date from ``unreleased`` to current date in the ``yyyy-mm-dd`` format.
+   Do not forget to commit your changes::
+
+     git add CHANGES.rst
+     git commit -m "Preparing release vX.Y.Z"
+
+#. Push the ``release-vX.Y.Z`` branch out and create a new pull request with it.
+   Make sure the CI passes, then merge. If review is required for merge to happen,
+   ask for a review, though you can override that requirement if you have admin access.
+
+#. If any of the CI fails, especially the job that says "Release", abandon this way.
+   Stop here; do not continue! Otherwise, go to the next step.
+
+#. Go to `Releases on GitHub <https://github.com/spacetelescope/jdaviz/releases>`_
+   and `create a new GitHub release <https://docs.github.com/en/github/administering-a-repository/releasing-projects-on-github/managing-releases-in-a-repository>`_
+   by giving it a new ``vX.Y.Z`` tag (do not choose any existing tags).
+
+#. Check `Release on Actions <https://github.com/spacetelescope/jdaviz/actions/workflows/publish.yml>`_
+   to make sure that the new GitHub release triggered PyPI upload successfully.
+   Also check that `files on PyPI <https://pypi.org/project/jdaviz/#files>`_ contain
+   both the source tarball and the wheel for that release.
+
+#. Check `RTD builds <https://readthedocs.org/projects/jdaviz/builds/>`_ to make sure
+   that documentation built successfully for both ``latest`` and the new ``vX.Y.Z`` tag.
+
+#. The release is basically done, but now you have to set it up for the
+   *next* release cycle. Update ``CHANGES.rst`` directly in the ``main`` branch
+   using your admin power. If you do not have sufficient access to do that,
+   you will have to update it via a pull request from your fork.
+   Add a new section to the top of ``CHANGES.rst`` as follows, replacing ``A.B``
+   with the next non-bugfix version::
+
+     A.B (unreleased)
+     ----------------
+
+     - No changes yet
+
+#. Commit your changes of the, uh, change log with a message, "Back to development: A.B.dev"
+
+#. For your own sanity unrelated to the release, grab the new tag for your fork::
+
+     git fetch upstream --tags
 
 Congratulations, you have just released a new version of Jdaviz!
