@@ -111,9 +111,10 @@ class MosvizTableViewer(TableViewer):
 
         self._selected_data = {}
         self._shared_image = False
+        self.row_selection_in_progress = False
 
     def _on_row_selected(self, event):
-
+        self.row_selection_in_progress = True
         # Grab the index of the latest selected row
         selected_index = event['new']
         mos_data = self.session.data_collection['MOS Table']
@@ -164,12 +165,12 @@ class MosvizTableViewer(TableViewer):
 
                     self._selected_data['image-viewer'] = selected_data
 
-        # Send a message to trigger zooming the image, if there is an image
-        if mos_data.find_component_id("Images") is not None:
-            message = TableClickMessage(selected_index=selected_index,
-                                        shared_image=self._shared_image,
-                                        sender=self)
-            self.session.hub.broadcast(message)
+        message = TableClickMessage(selected_index=selected_index,
+                                    shared_image=self._shared_image,
+                                    sender=self)
+        self.session.hub.broadcast(message)
+
+        self.row_selection_in_progress = False
 
     def set_plot_axes(self, *args, **kwargs):
         return
