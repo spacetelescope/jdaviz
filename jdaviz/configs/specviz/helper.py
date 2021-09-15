@@ -231,7 +231,7 @@ class Specviz(ConfigHelper, LineListMixin):
 
 
 # TODO: Officially deprecate this with coordination with JDAT notebooks team.
-# For backward compatiblity only.
+# For backward compatibility only.
 class SpecViz(Specviz):
     """This class is pending deprecation. Please use `Specviz` instead."""
     pass

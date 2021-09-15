@@ -618,7 +618,7 @@ class Imviz(ConfigHelper):
         viewer = self.app.get_viewer("viewer-1")
         jglue = self.app.session.application
 
-        # TODO: How to link to invidual images separately for X/Y? add_link in loop does not work.
+        # TODO: How to link to individual images separately for X/Y? add_link in loop does not work.
         # Link markers to reference image data.
         image = viewer.state.reference_data
 

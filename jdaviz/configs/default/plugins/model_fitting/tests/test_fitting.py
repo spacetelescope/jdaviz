@@ -39,7 +39,7 @@ def test_fitting_backend():
     model_list = [g1f, g2f, g3f, zero_level]
     expression = "g1 + g2 + g3 + const1d"
 
-    # Returns the intial model
+    # Returns the initial model
     fm, fitted_spectrum = fb.fit_model_to_spectrum(spectrum, model_list, expression,
                                                    run_fitter=False)
 
