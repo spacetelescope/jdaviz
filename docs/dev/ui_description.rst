@@ -87,7 +87,7 @@ An alternative design, and the one used for the Jdaviz tools, is to have each wi
 ipywidget-like elements whose visual representation is described by a
 Vuetify template. The template composes the visual representation of the
 custom widget using the Vue formalism, while the state is implemented as
-`trailets <https://traitlets.readthedocs.io/en/stable/>`_ on the custom widget class. The template reads and responds to
+`traitlets <https://traitlets.readthedocs.io/en/stable/>`_ on the custom widget class. The template reads and responds to
 state and state changes on the custom widget, and the custom widget need
 not know or care about how that state is being represented (i.e. the
 only state is that of the custom widget).
@@ -174,8 +174,8 @@ on defined widget classes (e.g. ``button_names`` on the ``Toolbar``
 widget in the example above) are implemented as traitlets, which can be
 observed for changes. In order to register callbacks in response to
 changes to attributes defined on widget classes, interested parties must
-have a direct reference to the widget instance. Trailets are unique in that
-they can be referenced in the front-end Vue code, so changing a trailet-defined
+have a direct reference to the widget instance. Traitlets are unique in that
+they can be referenced in the front-end Vue code, so changing a traitlet-defined
 attribute of a class will propagate that change to any front-end code that
 references the value.
 
@@ -203,7 +203,7 @@ in the ``observe`` method of the ``Toolbar`` widget:
             # This sets up the child-to-parent behavior
             self.toolbar.observe(self.on_button_names_changed, names='button_names')
 
-            # Here we take advantage of the way trailets work
+            # Here we take advantage of the way traitlets work
 
         def on_button_names_changed(self, *args, **kwargs):
             print("The list of button names has been changed.")
@@ -268,11 +268,11 @@ implemented inside a widget:
 Glue callback properties
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-In cases where trailets are not appropriate (e.g. where some python object is
-not a strict inherited class of ``HasTrailet``), glue's ``CallbackProperty`` s
+In cases where traitlets are not appropriate (e.g. where some python object is
+not a strict inherited class of ``HasTraitlet``), glue's ``CallbackProperty`` s
 can be used in conjunction with a ``State`` class object. It should be noted,
 however, that glue callback properties do not interact with the front-end UI
-as in the case using trailets; that is, changing the value of a callback
+as in the case using traitlets; that is, changing the value of a callback
 property will not automatically propagate that change to the front-end. More
 information on using glue callback properties can be be found in the
 `glue documentation <http://docs.glueviz.org/en/stable/customizing_guide/viewer.html#viewer-state>`__.
