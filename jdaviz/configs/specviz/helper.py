@@ -237,8 +237,10 @@ class Specviz(ConfigHelper, LineListMixin):
         ----------
         fmt : str
             Format of tick marks in the spectrum viewer.
-        axis
-            The Specutils data axis.
+            For example, ``'0.1e'`` to set scientific notation or ``'0.2f'`` to turn it off.
+        axis : {0, 1}
+            The spectrum viewer data axis.
+            Axis 1 corresponds to the Y-axis and 0 to the X-axis.
 
         """
         if axis not in [0, 1]:
