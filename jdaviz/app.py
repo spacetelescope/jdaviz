@@ -197,37 +197,25 @@ class Application(VuetifyTemplate, HubListener):
     @property
     def hub(self):
         """
-        Reference to the stored application handler hub instance.
-
-        Returns
-        -------
-        `glue.core.Hub`
-            The internal ``Hub`` instance for the application.
+        Reference to the stored application handler `~glue.core.hub.Hub` instance
+        for the application.
         """
         return self._application_handler.data_collection.hub
 
     @property
     def session(self):
         """
-        Reference to the stored session instance.
-
-        Returns
-        -------
-        `glue.core.Session`
-            The ``Session`` instance maintained by Glue for this application.
+        Reference to the stored `~glue.core.session.Session` instance
+        maintained by Glue for this application.
         """
         return self._application_handler.session
 
     @property
     def data_collection(self):
         """
-        Reference to the stored data collection instance, used to maintain the
-        the data objects that been loaded into the application this session.
-
-        Returns
-        -------
-        `glue.core.DataCollection`
-            The ``DataCollection`` instance for this application session.
+        Reference to the stored `~glue.core.data_collection.DataCollection` instance,
+        used to maintain the the data objects that been loaded into the application
+        this session.
         """
         return self._application_handler.data_collection
 
@@ -305,7 +293,7 @@ class Application(VuetifyTemplate, HubListener):
     def load_data(self, file_obj, parser_reference=None, **kwargs):
         """
         Provided a path to a data file, open and parse the data into the
-        `~glue.core.DataCollection` for this session. This also attempts to
+        `~glue.core.data_collection.DataCollection` for this session. This also attempts to
         find WCS links that exist between data components. Extra key word
         arguments are passed to the parsing functions.
 
@@ -1065,7 +1053,7 @@ class Application(VuetifyTemplate, HubListener):
 
         Parameters
         ----------
-        msg : `~glue.core.DataCollectionAddMessage`
+        msg : `~glue.core.message.DataCollectionAddMessage`
             The Glue data collection add message containing information about
             the new data.
         """
@@ -1080,7 +1068,7 @@ class Application(VuetifyTemplate, HubListener):
 
         Parameters
         ----------
-        msg : `~glue.core.DataCollectionAddMessage`
+        msg : `~glue.core.message.DataCollectionAddMessage`
             The Glue data collection add message containing information about
             the new data.
         """

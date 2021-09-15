@@ -67,20 +67,21 @@ also saved to a dataset with the label specified in the :guilabel:`Model Label` 
     `Model Fitting <https://jdaviz.readthedocs.io/en/latest/specviz/plugins.html#model-fitting>`_
         Specviz documentation on fitting spectral models.
 
-As mentioned in the `specviz` documentation on model fitting, models can be accessed
-in a jupyter notebook by using the following code::
+As mentioned in the :ref:`specviz-model-fitting` section for Specviz, models can be accessed
+in a Jupyter notebook by using the following code::
 
     cubeviz.get_models(model_label="Model", x=10)
 
-Where the `model_label` parameter identifies which model should be returned and the `x` and
-`y` parameters identify specifically which spaxel fits are to be returned, for models
-applied to every spaxel using the :guilabel:`Apply to Cube` button. Leaving `x` or
-`y` as `None` will mean that the models fit to every spaxel across that axis will be
+Where the ``model_label`` keyword identifies which model should be returned and the ``x`` and
+``y`` keywords identify specifically which spaxel fits are to be returned, for models
+applied to every spaxel using the :guilabel:`Apply to Cube` button. Leaving ``x`` or
+``y`` as `None` will mean that the models fit to every spaxel across that axis will be
 returned. Model parameters can also be accessed using the following code::
 
     cubeviz.get_model_parameters(model_label="Model", y=52)
 
-With the parameters following the same pattern as the `get_models()` method.
+With the parameters following the same pattern as the
+:meth:`~jdaviz.core.helpers.ConfigHelper.get_models` method.
 
 Contours
 ========
@@ -135,7 +136,7 @@ Line Analysis
 .. _moment-maps:
 
 Moment Maps
-=============
+===========
 
 .. image:: ../img/moment1_map.png
 
@@ -147,7 +148,7 @@ a moment map. The order of the moment map (0, 1, 2, ...) indicates
 the power-law index to which the spectral axis is raised.  A 'moment 0' map
 gives the integrated flux over a spectral region. Similarly, 'moment 1'
 is the flux-weighted centroid (e.g. line center) and a 'moment 2'
-is the dispersion (e.g. wavelength or velocity dispersion)
+is the dispersion (e.g., wavelength or velocity dispersion)
 along the spectral axis.  Moments 3 and 4 are less commonly utilized,
 but correspond to the skewness and
 kurtosis of a spectral feature.
@@ -174,7 +175,7 @@ converted to velocity units before running the plugin if those units are
 desired for the output moment maps.
 
 Line or Continuum Maps
-===================================
+======================
 
 .. image:: ../img/moment0_line_map.png
 

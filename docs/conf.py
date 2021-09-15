@@ -28,7 +28,7 @@
 import os
 import sys
 import datetime
-from pkg_resources import get_distribution
+import importlib.metadata as importlib_metadata
 
 try:
     from sphinx_astropy.conf.v1 import *  # noqa
@@ -76,10 +76,8 @@ copyright = '{0}, {1}'.format(
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 
-package = get_distribution(project)
-
 # The full version, including alpha/beta/rc tags.
-release = package.version
+release = importlib_metadata.version(project)
 # The short X.Y version.
 version = '.'.join(release.split('.')[:2])
 
@@ -160,10 +158,11 @@ if setup_cfg.get('edit_on_github').lower() == 'true':
 github_issues_url = 'https://github.com/{0}/issues/'.format(setup_cfg['github_project'])
 
 # -- Turn on nitpicky mode for sphinx (to warn about references not found) ----
-#
-# nitpicky = True
-# nitpick_ignore = []
-#
+nitpicky = True
+
+# Do not populate this if you use nitpick-exceptions below.
+nitpick_ignore = []
+
 # Some warnings are impossible to suppress, and you can list specific references
 # that should be ignored in a nitpick-exceptions file which should be inside
 # the docs/ directory. The format of the file should be:
@@ -178,11 +177,15 @@ github_issues_url = 'https://github.com/{0}/issues/'.format(setup_cfg['github_pr
 #
 # Uncomment the following lines to enable the exceptions:
 #
-# for line in open('nitpick-exceptions'):
-#     if line.strip() == "" or line.startswith("#"):
-#         continue
-#     dtype, target = line.split(None, 1)
-#     target = target.strip()
-#     nitpick_ignore.append((dtype, six.u(target)))
+for line in open('nitpick-exceptions'):
+    if line.strip() == "" or line.startswith("#"):
+        continue
+    dtype, target = line.split(None, 1)
+    target = target.strip()
+    nitpick_ignore.append((dtype, target))
 
+# Extra intersphinx in addition to what is already in sphinx-astropy
 intersphinx_mapping['glue'] = ('http://docs.glueviz.org/en/stable/', None)
+intersphinx_mapping['glue_jupyter'] = ('https://glue-jupyter.readthedocs.io/en/stable/', None)
+intersphinx_mapping['specutils'] = ('https://specutils.readthedocs.io/en/stable/', None)
+intersphinx_mapping['spectral_cube'] = ('https://spectral-cube.readthedocs.io/en/stable/', None)
