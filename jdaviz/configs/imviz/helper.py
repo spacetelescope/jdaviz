@@ -147,6 +147,9 @@ class Imviz(ConfigHelper):
             raise ValueError("wcs_fallback_scheme must be None or 'pixels', "
                              f"got {wcs_fallback_scheme}")
 
+        # TODO: If different viewers have the same _marktags key, the key actually
+        #       points to the same Data table. Subsequent attempt to remove the
+        #       same key in this loop will emit warning.
         # Clear any existing markers. Otherwise, re-linking will crash.
         # Imviz can have multiple viewers open at the same time and each
         # tracks their own markers.
