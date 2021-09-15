@@ -49,7 +49,7 @@ class UnitConversion(TemplateMixin):
     def _on_viewer_data_changed(self, msg=None):
         """
         Callback method for when data is added or removed from a viewer, or
-        when a subset is created, deleted, or updated. This method receieves
+        when a subset is created, deleted, or updated. This method receives
         a glue message containing viewer information in the case of the former
         set of events, and updates the available data list displayed to the
         user.

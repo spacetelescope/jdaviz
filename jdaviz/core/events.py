@@ -51,14 +51,14 @@ class LoadDataMessage(Message):
 
 
 class DataSelectedMessage(Message):
-    def __init__(self, indicies, *args, **kwargs):
+    def __init__(self, indices, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self._indicies = indicies
+        self._indices = indices
 
     @property
-    def indicies(self):
-        return self._indicies
+    def indices(self):
+        return self._indices
 
 
 class ViewerSelectedMessage(Message):

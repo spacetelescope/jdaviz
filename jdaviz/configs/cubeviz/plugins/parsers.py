@@ -68,7 +68,7 @@ def _parse_hdu(app, hdulist, file_name=None):
     file_name = file_name or "Unknown HDU object"
 
     # WCS may only exist in a single extension (in this case, just the flux
-    #  flux extention), so first find and store then wcs information.
+    #  flux extension), so first find and store then wcs information.
     wcs = None
 
     for hdu in hdulist:

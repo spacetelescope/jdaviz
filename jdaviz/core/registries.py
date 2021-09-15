@@ -146,8 +146,8 @@ class ToolRegistry(UniqueDictRegistry):
 
 class MenuRegistry(UniqueDictRegistry):
     """
-    Registry containg referenecs to plugins that will populate the application-
-    level menu bar.
+    Registry containing references to plugins that will populate the
+    application-level menu bar.
     """
     def __call__(self, name=None):
         def decorator(cls):

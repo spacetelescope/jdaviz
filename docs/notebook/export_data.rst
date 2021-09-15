@@ -62,7 +62,7 @@ In Cubeviz, three image viewers display your data:
  |   Center: ``uncert-viewer``
  |   Top Right: ``mask-viewer``
 
-If you have modified your data cube and have new data in one of your image viewers, you can extract it.  To list the data avaialable in a particular viewer::
+If you have modified your data cube and have new data in one of your image viewers, you can extract it.  To list the data available in a particular viewer::
 
     data = myviz.app.get_data_from_viewer("uncert-viewer")
     data

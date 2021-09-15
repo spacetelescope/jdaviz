@@ -554,7 +554,7 @@ class Mosviz(ConfigHelper):
 
 
 # TODO: Officially deprecate this with coordination with JDAT notebooks team.
-# For backward compatiblity only.
+# For backward compatibility only.
 class MosViz(Mosviz):
     """This class is pending deprecation. Please use `Mosviz` instead."""
     pass

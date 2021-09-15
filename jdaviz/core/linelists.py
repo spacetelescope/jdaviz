@@ -33,7 +33,7 @@ def load_preset_linelist(name):
     # Add units
     linetable['Rest Value'].unit = units
 
-    # Add column with list name refernece
+    # Add column with list name reference
     linetable['listname'] = name
 
     # Rename remaining columns

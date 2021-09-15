@@ -132,7 +132,7 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
 
     for data, data_label in data_iter:
 
-        # avoid duplicate data labels in colection
+        # avoid duplicate data labels in collection
         if data_label in app.data_collection.labels:
             data_label = data_label + "_2"  # 0th-order solution as proposed in issue #600
 

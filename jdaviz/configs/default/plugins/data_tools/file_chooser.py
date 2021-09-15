@@ -257,7 +257,7 @@ class FileChooser(VBox, ValueWidget):
         else:
             self._dircontent.value = None
 
-        # Reenable triggers again
+        # Re-enable triggers again
         self._pathlist.observe(
             self._on_pathlist_select,
             names='value'
