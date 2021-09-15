@@ -9,10 +9,11 @@ the following code in a cell of the notebook::
 
     >>> from jdaviz import Cubeviz
     >>> cubeviz = Cubeviz()
-    >>> cubeviz.app #doctest: +SKIP
+    >>> cubeviz.app  # doctest: +SKIP
 
 After running the code above, you can interact with the Cubeviz application from 
-subsequent notebook cells via the API methods attached to the `cubeviz` object,
+subsequent notebook cells via the API methods attached to the
+`~jdaviz.configs.cubeviz.helper.Cubeviz` object,
 for example loading data into the app as described in :ref:`cubeviz-import-data`.
 
 Data can also be accessed via the lower-level application interface that
@@ -23,8 +24,8 @@ attribute of the `~jdaviz.configs.cubeviz.helper.Cubeviz` helper class. For exam
      cubeviz.app.get_data_from_viewer('flux-viewer')
 
 This code can be used to access data from the different viewers, which is returned as a dictionary.
-The viewer options in the `cubeviz` configuration are `spectrum-viewer`, `flux-viewer`,
-`uncert-viewer`, and `mask-viewer`.
+The viewer options in the Cubeviz configuration are ``spectrum-viewer``, ``flux-viewer``,
+``uncert-viewer``, and ``mask-viewer``.
 Using the appropriate data label, the data in its native type can be returned from this dictionary like
 so::
 
@@ -35,6 +36,7 @@ Data can also be accessed directly from ``data_collection`` using the following 
 
     cubeviz.app.data_collection[0]
 
-Which is returned as a `~glue.core.data.Data` object. The `data_collection` object
-can be indexed to return all available data (i.e. not just using `0` like in the
+Which is returned as a `~glue.core.data.Data` object. The
+`~glue.core.data_collection.DataCollection` object
+can be indexed to return all available data (i.e., not just using 0 like in the
 previous example).

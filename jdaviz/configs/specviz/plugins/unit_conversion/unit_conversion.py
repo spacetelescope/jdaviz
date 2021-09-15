@@ -95,11 +95,11 @@ class UnitConversion(TemplateMixin):
         Set spectrum for unit conversion.
 
         Parameters
-        spectrum : `Spectrum1D`
-            Spectrum for unit conversion.
-        label : `string`
-            Label used to represent spectrum.
         ----------
+        spectrum : `~specutils.Spectrum1D`
+            Spectrum for unit conversion.
+        label : str
+            Label used to represent spectrum.
         """
         self.spectrum = spectrum
         self.selected_data = label
@@ -130,7 +130,7 @@ class UnitConversion(TemplateMixin):
 
     def vue_unit_conversion(self, *args, **kwargs):
         """
-        Runs when the `apply` button is hit. Tries to change units if `new` units are set
+        Runs when the ``apply`` button is hit. Tries to change units if ``new`` units are set
         and are valid.
         """
 
@@ -208,16 +208,16 @@ class UnitConversion(TemplateMixin):
 
         Parameters
         ----------
-        spectrum : `Spectrum1D`
+        spectrum : `specutils.Spectrum1D`
             The spectrum that will have its units converted.
-        new_flux : ``
+        new_flux
             The flux of spectrum will be converted to these units if they are provided.
-        new_spectral_axis : ``
+        new_spectral_axis
             The spectral_axis of spectrum will be converted to these units if they are provided.
 
         Returns
         -------
-        converted_spectrum : `Spectrum1D`
+        converted_spectrum : `specutils.Spectrum1D`
             A new spectrum with converted units.
         """
         set_spectral_axis_unit = spectrum.spectral_axis
