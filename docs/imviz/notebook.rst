@@ -10,3 +10,9 @@ To run Imviz in a notebook::
     imviz = Imviz()
     imviz.app
 
+Imviz also provides programmatic access to its viewers using
+`Astrowidgets <https://astrowidgets.readthedocs.io/en/latest/>`_ API.
+For example::
+
+    viewer = imviz.app.get_viewer('viewer-1')
+    viewer.center_on((100, 100))

@@ -6,9 +6,9 @@ Data Analysis Plugins
 
 To enable quick analysis of astronomical spectra, Specviz ships with a number of
 plugins that let you do various standard spectral analysis tasks.  Note that
-these plugins all depend on `specutils` to do the actual analysis work - when
+these plugins all depend on ``specutils`` to do the actual analysis work - when
 doing these operations in the Notebook you are often better off using
-the `specutils` or `astropy` APIs directly instead of using the plugins. But
+the ``specutils`` or ``astropy`` APIs directly instead of using the plugins. But
 for quick-look or interaction heavy workflows, the plugins provide a UI-based
 alternative.
 
@@ -37,6 +37,8 @@ viewer.
 It can be selected and shown in the viewer via the
 :guilabel:`gear-->Data` tab.
 
+.. _specviz-model-fitting:
+
 Model Fitting
 =============
 
@@ -61,17 +63,19 @@ For example, add together Constant and Gaussian models with
 model IDs 'C' and 'G1' by entering the Model Equation 'C+G1'.
 
 Fitted models can be extracted from the app into notebook cells by using
-the `get_models` method of the configuration `helper` class , e.g. ::
+the :meth:`~jdaviz.core.helpers.ConfigHelper.get_models` method of the
+configuration helper class, e.g.::
 
     specviz.get_models(model_label="Model")
 
-The `get_models` method returns the fitted `astropy` model objects. If only
+The :meth:`~jdaviz.core.helpers.ConfigHelper.get_models` method returns the
+fitted ``astropy`` model objects. If only
 the parameters of the model are needed, those can be extracted using the
 following code::
 
     specviz.get_model_parameters(model_label="Model")
 
-If nothing is specified for the `model_label` parameter, information for
+If nothing is specified for the ``model_label`` keyword, information for
 all models will be returned.
 
 Unit Conversion
@@ -145,6 +149,6 @@ No continuum operations are performed as part of this plugin.  This means that
 the statistics may or may not be correct depending on how you have prepared
 your spectrum - most statistics assume a continuum-subtracted spectrum, aside
 from equivalent width which assumes continuum-normalized. If your continuum is
-not in this form initially, you may wish to either use the `specutils` API in
+not in this form initially, you may wish to either use the ``specutils`` API in
 the Notebook Interface to perform continuum subtraction/normalization, or
 make use of the model fitting plugin to do the appropriate corrections.

@@ -303,16 +303,17 @@ class SpecvizProfileView(BqplotProfileView):
 
         Parameters
         ----------
-        spectrum : :class:`glue.core.Data`
+        spectrum : :class:`glue.core.data.Data`
             Data object with the spectrum.
-        color: color specification
-            Color value for plotting
-        alpha: float
-            Alpha value for plotting
+        color : obj
+            Color value for plotting.
+        alpha : float
+            Alpha value for plotting.
 
         Returns
         -------
-        :bool: True if success, False otherwise.
+        result : bool
+            `True` if successful, `False` otherwise.
         """
         # The base class handles the plotting of the main
         # trace representing the spectrum itself.
