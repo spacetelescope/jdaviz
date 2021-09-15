@@ -13,6 +13,7 @@ from specutils.utils import QuantityModel
 from traitlets import Any, Bool, Int, List, Unicode, observe
 from glue.core.data import Data
 from glue.core.subset import Subset, RangeSubsetState
+from glue.core.link_helpers import LinkSame
 
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage, SnackbarMessage
 from jdaviz.core.registries import tray_registry
@@ -550,6 +551,13 @@ class ModelFitting(TemplateMixin):
             self.app.remove_data_from_viewer('spectrum-viewer', label)
             # Remove the actual Glue data object from the data_collection
             self.data_collection.remove(self.data_collection[label])
-        self.data_collection[label] = spectrum
+
+        self.app.add_data(spectrum, label)
+
+        # Make sure we link the result spectrum to the data we're fitting
+        data_fitted = self.app.session.data_collection[self._selected_data_label]
+        data_id = data_fitted.world_component_ids[0]
+        model_id = self.app.session.data_collection[label].world_component_ids[0]
+        self.app.session.data_collection.add_link(LinkSame(data_id, model_id))
 
         self.app.add_data_to_viewer('spectrum-viewer', label)
