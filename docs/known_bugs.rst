@@ -82,7 +82,7 @@ Collapse and Moment Maps: Spectral bounds do not match Region selection
 When trying to do a second collapse with the same spectral region, but with
 resized bounds: change to Region=None, resize the region, then reselect Region 1,
 the region bounds are correct. However, applying Collapse again, it errors out and
-the image viewer that contained the intial collapse goes blank.
+the image viewer that contained the initial collapse goes blank.
 
 
 Cube viewer contrast changes when collapsing Jupyter scroll window

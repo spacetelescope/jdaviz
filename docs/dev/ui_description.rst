@@ -175,7 +175,7 @@ widget in the example above) are implemented as traitlets, which can be
 observed for changes. In order to register callbacks in response to
 changes to attributes defined on widget classes, interested parties must
 have a direct reference to the widget instance. Trailets are unique in that
-they can be referenced in the front-end Vue code, so chaning a trailet-defined
+they can be referenced in the front-end Vue code, so changing a trailet-defined
 attribute of a class will propagate that change to any front-end code that
 references the value.
 
@@ -268,7 +268,7 @@ implemented inside a widget:
 Glue callback properties
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-In cases where trailets are not apppropriate (e.g. where some python object is
+In cases where trailets are not appropriate (e.g. where some python object is
 not a strict inherited class of ``HasTrailet``), glue's ``CallbackProperty`` s
 can be used in conjunction with a ``State`` class object. It should be noted,
 however, that glue callback properties do not interact with the front-end UI
@@ -287,7 +287,7 @@ widgets and viewers ought to be rendered in the front-end. These widgets and
 viewers are defined as "Plugins", and everything in the front-end is an example
 of using plugins in conjunction with the configuration file.
 
-The UI supports four main areas currenty: the tool bar area, the menu bar area,
+The UI supports four main areas currently: the tool bar area, the menu bar area,
 the tray bar area, and the content area. Plugins can be associated with one
 of these areas. Plugins themselves **must** by IPyWidget subclasses, below
 is an example of a plugin that adds a single button to the tool bar area.

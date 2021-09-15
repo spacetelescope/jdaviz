@@ -158,7 +158,7 @@ select the cube dataset using the :guilabel:`Data` pulldown.
 To specify the spectral feature of interest, you can either create
 and select a :guilabel:`Region` in the spectrum viewer, or enter
 the lower and upper spectral bounds manually in the plugin.
-Next, enter the :guilabel:`Moment` index to specifiy the order
+Next, enter the :guilabel:`Moment` index to specify the order
 of the moment map.   When you press :guilabel:`CALCULATE`, a 2D moment
 map is created. You can load this into any image
 viewer pane to inspect the result. You can also save the result to
