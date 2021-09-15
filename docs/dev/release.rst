@@ -16,6 +16,10 @@ A lock can be as simple as bumping the "reviews required" protection rule
 for the ``main`` branch to a very high number; Any rule that will prevent
 co-maintainers from merging pull requests without your blessing would do.
 
+If you deem it necessary, you may choose to release a Release Candidate (RC)
+first before the actual release. In that case, instead of "vX.Y.Z", it would
+be "vX.YrcN" (also see `PEP 440 <https://www.python.org/dev/peps/pep-0440/>`_).
+
 .. note::
     These instructions are adapted from the Astropy package template releasing
     instructions. Replace "vX.Y.Z" with the actual version tag of the release you
