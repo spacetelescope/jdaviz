@@ -138,7 +138,7 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
 
         app.add_data(data, data_label)
         if show_in_viewer:
-            app.add_data_to_viewer("viewer-1", data_label)
+            app.add_data_to_viewer("imviz-0", data_label)
 
     if len(app.data_collection) <= 1:  # No need to link, we are done.
         return

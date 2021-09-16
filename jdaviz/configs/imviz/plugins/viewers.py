@@ -3,6 +3,7 @@ import numpy as np
 from glue_jupyter.bqplot.image import BqplotImageView
 
 from jdaviz.configs.imviz.helper import data_has_valid_wcs, layer_is_image_data
+from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import viewer_registry
 
@@ -10,7 +11,7 @@ __all__ = ['ImvizImageView']
 
 
 @viewer_registry("imviz-image-viewer", label="Image 2D (Imviz)")
-class ImvizImageView(BqplotImageView):
+class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin):
 
     # Whether to inherit tools from glue-jupyter automatically. Set this to
     # False to have full control here over which tools are shown in case new
@@ -25,6 +26,7 @@ class ImvizImageView(BqplotImageView):
     def __init__(self, *args, **kwargs):
 
         super().__init__(*args, **kwargs)
+        self.init_astrowidgets_api()
 
         self.label_mouseover = None
 

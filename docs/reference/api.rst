@@ -17,6 +17,8 @@ Core
 .. automodapi:: jdaviz.core.template_mixin
    :no-inheritance-diagram:
 
+.. automodapi:: jdaviz.core.astrowidgets_api
+   :no-inheritance-diagram:
 
 Application
 ===========

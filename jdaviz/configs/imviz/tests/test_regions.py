@@ -117,7 +117,7 @@ class TestLoadStaticRegionsSkyNoWCS(BaseRegionHandler):
         imviz_app.load_data(np.zeros((10, 10)), data_label='no_wcs')
 
         self.imviz = imviz_app
-        self.viewer = imviz_app.app.get_viewer('viewer-1')
+        self.viewer = imviz_app.default_viewer
         self.sky = SkyCoord(ra=337.5202808, dec=-20.833333059999998, unit='deg')
 
     @pytest.mark.skipif(not HAS_REGIONS, reason='regions is missing')

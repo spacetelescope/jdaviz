@@ -18,12 +18,12 @@ def test_default_viewer_ids_cubeviz(cubeviz_app):
 
 def test_default_viewer_ids_imviz(imviz_app):
     x = imviz_app.app
-    assert x.get_viewer_reference_names() == ['viewer-1']
+    assert x.get_viewer_reference_names() == ['imviz-0']
     assert x.get_viewer_ids() == ['imviz-0']
     assert x.get_viewer_ids(prefix='imviz') == ['imviz-0']
     assert x.get_viewer_ids(prefix='specviz') == []
 
-    viewer = x.get_viewer('viewer-1')
+    viewer = x.get_viewer('imviz-0')
     assert x.get_viewer_by_id('imviz-0') is viewer
 
 
