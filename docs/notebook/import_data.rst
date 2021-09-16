@@ -5,7 +5,7 @@ Import Data From Notebook to Jdaviz
 ..
     Specific instructions on exporting data from Jdaviz to your notebook vary slightly for each instance of Jdaviz, including :ref:`specviz-import_data`, :ref:`cubeviz-import_data`, :ref:`mosviz-import_data`, and Imviz.
 
-Specific instructions on exporting data from Jdaviz to your notebook vary slightly for each instance of Jdaviz, including :ref:`api-import`, :ref:`api-import-cubeviz`, :ref:`mosviz-import-data`, and Imviz.  These instructions
+Specific instructions on exporting data from Jdaviz to your notebook vary slightly for each instance of Jdaviz, including for :ref:`Specviz <api-import>`, :ref:`Cubeviz <api-import-cubeviz>`, :ref:`Mosviz <mosviz-import-data>`, and :ref:`Imviz <imviz-import-data>`.  These instructions
 all provide the ability to import data with the GUI or the API via the Jupyter notebook.
 
 If using the Jupyter notebook, users can load data into the application through code using the ``load_data``

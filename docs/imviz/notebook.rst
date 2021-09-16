@@ -1,4 +1,4 @@
-.. _imviz_notebooks:
+.. _imviz-notebook:
 
 *********************************
 Using Imviz in a Jupyter Notebook

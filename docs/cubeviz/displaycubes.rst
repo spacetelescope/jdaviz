@@ -6,7 +6,7 @@ Displaying Cubes
 
 The Cubeviz layout includes three image viewers (at the top of the app)
 and one spectrum viewer (at the bottom of the app), which it attempts to 
-populate automatically when the first dataset is loaded. By default, cubeviz
+populate automatically when the first dataset is loaded. By default, Cubeviz
 attempts to parse and display the flux in the top left viewer, the uncertainty
 in the top middle viewer, and the mask into the top right viewer. The spectrum
 viewer is populated by default by collapsing the spatial axes using the `max`

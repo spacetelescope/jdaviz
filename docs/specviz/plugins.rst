@@ -22,6 +22,8 @@ Input/Output
 Data to be operated on are selected in each plugin via a
 :guilabel:`Data` pulldown menu.
 
+.. _gaussian-smooth:
+
 Gaussian Smooth
 ===============
 
@@ -78,6 +80,8 @@ following code::
 If nothing is specified for the ``model_label`` keyword, information for
 all models will be returned.
 
+.. _unit-conversion:
+
 Unit Conversion
 ===============
 
@@ -132,6 +136,7 @@ Similarly, all of the line lists may be shown or hidden via
 :guilabel:`Plot All` and :guilabel:`Erase All`, located at the
 bottom of the plugin.
 
+.. _line-analysis:
 
 Line Analysis
 =============

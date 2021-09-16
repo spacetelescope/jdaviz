@@ -1,8 +1,10 @@
+.. _specviz-displaying:
+
 ******************
 Displaying Spectra
 ******************
 
-Because of its use of ``glue`` as the underlying data-handling layer and its
+Because of its use of `glue <https://glueviz.org/>`_ as the underlying data-handling layer and its
 applicability in several different contexts, Specviz takes a modular approach
 to displaying data that has been loaded.  This section describes how to
 affect how your spectra are being shown.
@@ -74,13 +76,13 @@ You can use the methods :meth:`jdaviz.configs.specviz.helper.Specviz.x_limits` a
 view of Specviz. You can provide a scalar (which assumes the units of the loaded spectra),
 a `~astropy.units.Quantity`, or ``'auto'`` to automatically scale::
 
+>>> from astropy import units as u
 >>> specviz.x_limits() #doctest: +SKIP
 >>> specviz.x_limits(650*u.nm,750*u.nm) #doctest: +SKIP
 >>> specviz.y_limits('auto', 110.0) #doctest: +SKIP
 
 Additionally, you can provide the limit methods with a `~specutils.SpectralRegion`. Specviz shall set the bounds the upper and lower bounds of the SpectralRegion
 
->>> from astropy import units as u
 >>> from specutils import SpectralRegion
 >>> bounds = SpectralRegion(0.45*u.nm, 0.6*u.nm)
 >>> specviz.x_limits(bounds) #doctest: +SKIP
@@ -128,6 +130,7 @@ In a notebook cell, you can access the regions using the
 
 .. image:: img/spectral_region_5.png
 
+.. _plot-settings:
 
 Plot Settings
 =============
