@@ -127,7 +127,6 @@ class MosvizTableViewer(TableViewer):
         else:
             components_str = [cid.label for cid in self.figure_widget.data.main_components]
             hidden = []
-            print(components_str)
             for colname in ['Images', '1D Spectra', '2D Spectra']:
                 if colname in components_str:
                     hidden.append(self.figure_widget.data.id[colname])
@@ -149,9 +148,16 @@ class MosvizTableViewer(TableViewer):
                 prev_data = self._selected_data.get('spectrum-viewer')
                 if prev_data != selected_data:
                     if prev_data:
-                        remove_data_from_viewer_message = RemoveDataFromViewerMessage(
-                            'spectrum-viewer', prev_data, sender=self)
-                        self.session.hub.broadcast(remove_data_from_viewer_message)
+                        # This covers the cases where data is unit converted
+                        # and the name is modified
+                        all_prev_data = [x
+                                         for x in self.session.data_collection.labels
+                                         if prev_data in x]
+                        for modified_prev_data in all_prev_data:
+                            if modified_prev_data:
+                                remove_data_from_viewer_message = RemoveDataFromViewerMessage(
+                                    'spectrum-viewer', modified_prev_data, sender=self)
+                                self.session.hub.broadcast(remove_data_from_viewer_message)
 
                     add_data_to_viewer_message = AddDataToViewerMessage(
                         'spectrum-viewer', selected_data, sender=self)
