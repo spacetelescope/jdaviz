@@ -95,16 +95,16 @@
           dense
           floating
           absolute
-          right
           :collapse="viewer.collapse"
           elevation="1"
           :width="viewer.collapse ? '0px' : null"
+          style="right: 2px;"
         >
           <v-toolbar-items>
 
             <!-- <v-divider vertical></v-divider> -->
             <jupyter-widget :widget="viewer.tools"></jupyter-widget>
-            <v-menu offset-y :close-on-content-click="true" style="z-index: 10">
+            <v-menu offset-y left :close-on-content-click="true" style="z-index: 10">
              <template v-slot:activator="{ on }">
               <v-btn icon color="primary" v-on="on">
                <v-icon>mdi-content-save</v-icon>
