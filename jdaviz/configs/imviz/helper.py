@@ -26,7 +26,7 @@ class Imviz(ConfigHelper):
 
     @property
     def default_viewer(self):
-        """Default viewer instance."""
+        """Default viewer instance. This is typically the first viewer ("imviz-0")."""
         return self._default_viewer
 
     def load_data(self, data, parser_reference=None, **kwargs):
