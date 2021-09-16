@@ -33,7 +33,7 @@ def fit_model_to_spectrum(spectrum, component_list, expression,
     expression : str
         The arithmetic expression that combines together
         the model subcomponents. The subcomponents are
-        refered via their 'name' attribute.
+        referred via their 'name' attribute.
     run_fitter : bool
         When False (the default), the function composes the compound
         model and returns it without fitting - This is currently being
@@ -260,7 +260,7 @@ def _build_model(component_list, expression):
     expression : str
         The arithmetic expression that combines together
         the model subcomponents. The subcomponents are
-        refered via their 'name' attribute.
+        referred via their 'name' attribute.
 
     Returns
     -------

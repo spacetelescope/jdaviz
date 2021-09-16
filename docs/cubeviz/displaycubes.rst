@@ -14,11 +14,11 @@ function. The indicators that the load machinery looks for in each HDU to
 populate the viewers are below (note that in all cases, header values are
 converted to lower case):
 
-    - Flux viewer: `hdu.name` is in the set `['flux', 'sci']`
-    - Uncertainty viewer: `hdu.header.keys()` includes "errtype" or `hdu.name` 
-      is in the set `['ivar', 'err', 'var', 'uncert']`
-    - Mask viewer: `hdu.data.dtype` is `np.int`, `np.uint` or `np.uint32`, or
-      `hdu.name` is in the set `['mask', 'dq']`
+    - Flux viewer: ``hdu.name`` is in the set ``['flux', 'sci']``
+    - Uncertainty viewer: ``hdu.header.keys()`` includes "errtype" or ``hdu.name``
+      is in the set ``['ivar', 'err', 'var', 'uncert']``
+    - Mask viewer: ``hdu.data.dtype`` is `int`, `numpy.uint` or `numpy.uint32`, or
+      ``hdu.name`` is in the set ``['mask', 'dq']``
 
 If any viewer fails to populate automatically, or if displaying 
 different data is desired, the user can manually select data for each viewer
@@ -35,8 +35,7 @@ Selecting Data Set
 ==================
 
 The data to be displayed in each viewer can be selected and de-selected by 
-clicking on the :guilabel:`hammer and screwdriver` icon at the top left of each viewer. 
-Then, click the :guilabel:`gear` icon to access the :guilabel:`Data` tab. Here, 
+clicking on the :guilabel:`Data` icon at the top left of each viewer. Here, 
 you can click the checkbox next to each listed dataset to make that dataset 
 visible (checked) or invisible (unchecked).
 
@@ -73,12 +72,14 @@ and the resulting spectrum will be displayed in the 1d spectrum viewer at the bo
 There are other options available for region of interest. At the top of the User Interface,
 there is a section that says either "+ No selection (create new)" or "Subset n" where n is an integer
 that tells you which Subset is currently selected. To the right of this area, are red circles that allow
-you to change the method of region selection. The options are `replace`, `add`, `and`, `xor`, and `remove`.
-`replace` will remove the previously created selection and place the newly created subset.
-`add` allows you to create another subset that extends the existing subset.
-`and` only leaves behind the overlapping region between the existing subset and any additional subsets.
-`xor` only leaves behind the non-overlapping region between the existing subset and any additional subsets.
-`remove` will de-select any parts of the existing subset that overlaps with any additional subsets.
+you to change the method of region selection. The options are:
+
+* ``replace``: will remove the previously created selection and place the newly created subset.
+* ``add``: allows you to create another subset that extends the existing subset.
+* ``and``: only leaves behind the overlapping region between the existing subset and any additional subsets.
+* ``xor``: only leaves behind the non-overlapping region between the existing subset and any additional subsets.
+* ``remove``: will de-select any parts of the existing subset that overlaps with any additional subsets.
+
 You can use these options to further adjust the region of interest and adapt it to your use case.
 
 .. seealso::

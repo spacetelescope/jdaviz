@@ -282,7 +282,7 @@ class TestMarkers(BaseImviz_WCS_NoWCS):
         assert_allclose(data.get_component('dec').data, sky.dec.deg)
 
         # TODO: How to check imviz.app.data_collection.links is correct?
-        assert len(self.imviz.app.data_collection.links) == 12
+        assert len(self.imviz.app.data_collection.links) == 14
 
         # Remove markers with default name.
         self.imviz.remove_markers()
@@ -294,7 +294,7 @@ class TestMarkers(BaseImviz_WCS_NoWCS):
         assert self.imviz.app.data_collection.labels == [
             'has_wcs[SCI,1]', 'no_wcs[SCI,1]']
 
-        assert len(self.imviz.app.data_collection.links) == 8
+        assert len(self.imviz.app.data_collection.links) == 10
 
         # NOTE: This changes the state of self.imviz for this test class!
 

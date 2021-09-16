@@ -7,7 +7,7 @@ visualizing data within the Jupyter environment using core elements from
 the glue python package. It is distinct because unlike the more
 prominent glue package, glupyter does not leverage Qt as the front-end
 GUI library. Instead, glupyter maintains the separation between the data
-model (e.g. the core elements from glue that are not dependent on the
+model (e.g., the core elements from glue that are not dependent on the
 front-end library), and the view of the data (in this case, web-based
 tooling provided by Jupyter).
 
@@ -22,9 +22,9 @@ and interacted with in python, but rendered in a browser environment.
 There are two distinct use cases for the glupyter environment:
 
 1. As a means to procedurally interact with pieces of a user's workflow
-   *in addition* to their work in e.g. a Jupyter Notebook.
+   *in addition* to their work in e.g., a Jupyter Notebook.
 2. To provide users a web-based GUI to interact with and visualize their
-   data while hiding the Python code, e.g. a standalone web application.
+   data while hiding the Python code, e.g., a standalone web application.
 
 These two use cases describe a Python-first and GUI-first approach,
 respectively. This document will focus on detailing the design of the
@@ -69,31 +69,31 @@ up with the state of the widget. That is, we are composing the visual
 representation of the widget, defining the viewer logic, and defining
 its state all during initialization. This is both extremely verbose --
 as the nested nature of the Vuetify library means many of the
-intermediate widget classes (e.g. ``Layout``, ``Container``, ``Row``,
+intermediate widget classes (e.g., ``Layout``, ``Container``, ``Row``,
 etc) need to be defined as instance attributes -- and, perhaps more
 severe, makes it more difficult to design reactive UI behavior that
 responds to state changes in the widget classes automatically. This
 means that we must constantly interact with the UI widgets to change
 their state directly instead of simply having the UI *respond* to state
 changes in the custom widget class. Fundamentally, this approach means
-that *in addition to* the state of the custom widget (e.g. ``Toolbar``),
+that *in addition to* the state of the custom widget (e.g., ``Toolbar``),
 we must also be aware of the state of *each individual widget* that
 composes it. Put another way, there's no *central source of truth* for
 the state of the custom widget as each element may contain some kind of
 stateful information about itself.
 
-An alternative design, and the one used for the JDAViz tools, is to have each widget implemented as a
+An alternative design, and the one used for the Jdaviz tools, is to have each widget implemented as a
 ``VuetifyTemplate`` object. In this way, custom widgets are defined as
 ipywidget-like elements whose visual representation is described by a
 Vuetify template. The template composes the visual representation of the
 custom widget using the Vue formalism, while the state is implemented as
-`trailets <https://traitlets.readthedocs.io/en/stable/>`_ on the custom widget class. The template reads and responds to
+`traitlets <https://traitlets.readthedocs.io/en/stable/>`_ on the custom widget class. The template reads and responds to
 state and state changes on the custom widget, and the custom widget need
 not know or care about how that state is being represented (i.e. the
 only state is that of the custom widget).
 
 With this approach in hand, all widgets in the glupyter GUI are composed
-of two files: the python file declaring the widget class (e.g.
+of two files: the python file declaring the widget class (e.g.,
 ``Toolbar``), and the ``.vue`` file containing the template describing
 how the widget is to be rendered using components from the Vuetify
 library in the nominal Vue framework. In this way, there is a clear
@@ -170,12 +170,12 @@ Direct messaging
 ~~~~~~~~~~~~~~~~
 
 Because the software stack utilizes the ipywidgets package, attributes
-on defined widget classes (e.g. ``button_names`` on the ``Toolbar``
+on defined widget classes (e.g., ``button_names`` on the ``Toolbar``
 widget in the example above) are implemented as traitlets, which can be
 observed for changes. In order to register callbacks in response to
 changes to attributes defined on widget classes, interested parties must
-have a direct reference to the widget instance. Trailets are unique in that
-they can be referenced in the front-end Vue code, so chaning a trailet-defined
+have a direct reference to the widget instance. Traitlets are unique in that
+they can be referenced in the front-end Vue code, so changing a traitlet-defined
 attribute of a class will propagate that change to any front-end code that
 references the value.
 
@@ -203,7 +203,7 @@ in the ``observe`` method of the ``Toolbar`` widget:
             # This sets up the child-to-parent behavior
             self.toolbar.observe(self.on_button_names_changed, names='button_names')
 
-            # Here we take advantage of the way trailets work
+            # Here we take advantage of the way traitlets work
 
         def on_button_names_changed(self, *args, **kwargs):
             print("The list of button names has been changed.")
@@ -229,7 +229,7 @@ UI. This system allows us to break hard dependencies between widgets in
 the UI that require passing references around and to develop widgets
 independently.
 
-The JDAViz package includes a base class that can be used for adding
+The Jdaviz package includes a base class that can be used for adding
 widgets that would need to communicate through global events. This is
 is the ``TemplateMixin`` class and allows passing glue session objects
 to widgets upon their instantiation. The glue session contains the ``Hub``
@@ -268,11 +268,11 @@ implemented inside a widget:
 Glue callback properties
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-In cases where trailets are not apppropriate (e.g. where some python object is
-not a strict inherited class of ``HasTrailet``), glue's ``CallbackProperty`` s
+In cases where traitlets are not appropriate (e.g., where some python object is
+not a strict inherited class of ``HasTraitlet``), glue's ``CallbackProperty`` s
 can be used in conjunction with a ``State`` class object. It should be noted,
 however, that glue callback properties do not interact with the front-end UI
-as in the case using trailets; that is, changing the value of a callback
+as in the case using traitlets; that is, changing the value of a callback
 property will not automatically propagate that change to the front-end. More
 information on using glue callback properties can be be found in the
 `glue documentation <http://docs.glueviz.org/en/stable/customizing_guide/viewer.html#viewer-state>`__.
@@ -281,13 +281,13 @@ information on using glue callback properties can be be found in the
 Plugin design
 -------------
 
-As shown in the diagram above, JDAViz applications are ostensibly collections
+As shown in the diagram above, Jdaviz applications are ostensibly collections
 of widgets and viewers along with a configuration file that describes how the
 widgets and viewers ought to be rendered in the front-end. These widgets and
 viewers are defined as "Plugins", and everything in the front-end is an example
 of using plugins in conjunction with the configuration file.
 
-The UI supports four main areas currenty: the tool bar area, the menu bar area,
+The UI supports four main areas currently: the tool bar area, the menu bar area,
 the tray bar area, and the content area. Plugins can be associated with one
 of these areas. Plugins themselves **must** by IPyWidget subclasses, below
 is an example of a plugin that adds a single button to the tool bar area.

@@ -9,7 +9,7 @@ Specific instructions on exporting data from Jdaviz to your notebook vary slight
 Export Position Regions (Imviz)
 -------------------------------
 
-In `Imviz`, you can extract positional regions::
+In `~jdaviz.configs.imviz.helper.Imviz`, you can extract positional regions::
 
     regions = myviz.get_interactive_regions()
     regions
@@ -28,7 +28,7 @@ the API described in :ref:`api-import`.
 Alternatively, if you want more control over Specviz, you can access it the
 via the lower-level application interface that connects to the ``glue-jupyter``
 application level.  This is accessed via the ``.app`` attribute of the
-`~jdaviz.configs.specviz.helper.SpecViz` helper class.  For more on what you can do with this lower-level object, see the API sections
+`~jdaviz.configs.specviz.helper.Specviz` helper class.  For more on what you can do with this lower-level object, see the API sections
 and the
 `glue-jupyter documentation <https://glue-jupyter.readthedocs.io/en/latest/>`_
 
@@ -58,11 +58,11 @@ Export Data from Image Viewer
 
 In Cubeviz, three image viewers display your data:
 
- |   Top Left: `flux-viewer`
- |   Center: `uncert-viewer`
- |   Top Right: `mask-viewer`
+ |   Top Left: ``flux-viewer``
+ |   Center: ``uncert-viewer``
+ |   Top Right: ``mask-viewer``
 
-If you have modified your data cube and have new data in one of your image viewers, you can extract it.  To list the data avaialable in a particular viewer::
+If you have modified your data cube and have new data in one of your image viewers, you can extract it.  To list the data available in a particular viewer::
 
     data = myviz.app.get_data_from_viewer("uncert-viewer")
     data

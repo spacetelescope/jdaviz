@@ -1,12 +1,13 @@
-from glue.config import DictRegistry
 import re
+
+from glue.config import DictRegistry
 from ipyvuetify import VuetifyTemplate
 from ipywidgets import Widget
 
 
 __all__ = ['viewer_registry', 'tray_registry', 'tool_registry',
            'data_parser_registry', 'ViewerRegistry', 'TrayRegistry',
-           'ToolRegistry', 'MenuRegistry', 'DataParserRegistry']
+           'ToolRegistry', 'MenuRegistry', 'DataParserRegistry', 'UniqueDictRegistry']
 
 
 def convert(name):
@@ -145,8 +146,8 @@ class ToolRegistry(UniqueDictRegistry):
 
 class MenuRegistry(UniqueDictRegistry):
     """
-    Registry containg referenecs to plugins that will populate the application-
-    level menu bar.
+    Registry containing references to plugins that will populate the
+    application-level menu bar.
     """
     def __call__(self, name=None):
         def decorator(cls):

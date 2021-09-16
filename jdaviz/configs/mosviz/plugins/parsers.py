@@ -5,12 +5,12 @@ import os
 from pathlib import Path
 
 import numpy as np
-from asdf.fits_embed import AsdfInFits
+from astropy import units as u
 from astropy.io import fits
+from astropy.io.registry import IORegistryError
 from astropy.wcs import WCS
 from glue.core.data import Data
 from glue.core.link_helpers import LinkSame
-from spectral_cube import SpectralCube
 from specutils import Spectrum1D, SpectrumList, SpectrumCollection
 
 from jdaviz.configs.imviz.plugins.parsers import get_image_data_iterator
@@ -28,7 +28,7 @@ def _add_to_table(app, data, comp_label):
     Parameters
     ----------
     app : `~jdaviz.app.Application`
-        The JDAViz application instance.
+        The Jdaviz application instance.
     data : array-list
         The set of data to added as a table (i.g. column) component.
     comp_label : str
@@ -111,14 +111,29 @@ def link_data_in_table(app, data_obj=None):
     # context manager, b) handling intra-row linkage of 1D and 2D spectra in a
     # loop, and c) handling inter-row linkage after that in one fell swoop.
     with app.data_collection.delay_link_manager_update():
-        for index in range(len(mos_data.get_component('1D Spectra').data)):
-            spec_1d = mos_data.get_component('1D Spectra').data[index]
-            spec_2d = mos_data.get_component('2D Spectra').data[index]
+
+        spectra_1d = mos_data.get_component('1D Spectra').data
+        spectra_2d = mos_data.get_component('2D Spectra').data
+
+        # Link each 1D spectrum with its corresponding 2D spectrum
+        for index in range(len(spectra_1d)):
+
+            spec_1d = spectra_1d[index]
+            spec_2d = spectra_2d[index]
 
             wc_spec_1d = app.session.data_collection[spec_1d].world_component_ids
             wc_spec_2d = app.session.data_collection[spec_2d].world_component_ids
 
-            wc_spec_ids.append(LinkSame(wc_spec_1d[0], wc_spec_2d[0]))
+            wc_spec_ids.append(LinkSame(wc_spec_1d[0], wc_spec_2d[1]))
+
+        # Link each 1D spectrum to all other 1D spectra
+        first_spec_1d = spectra_1d[0]
+        wc_first_spec_1d = app.session.data_collection[first_spec_1d].world_component_ids
+
+        for index in range(1, len(spectra_1d)):
+            spec_1d = spectra_1d[index]
+            wc_spec_1d = app.session.data_collection[spec_1d].world_component_ids
+            wc_spec_ids.append(LinkSame(wc_spec_1d[0], wc_first_spec_1d[0]))
 
     app.session.data_collection.add_link(wc_spec_ids)
 
@@ -229,77 +244,59 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
     data_labels : str, optional
         The label applied to the glue data component.
     """
-    # In the case where the data object is a string, attempt to parse it as
-    #  a fits file.
-    # TODO: this current does not handle the case where the file in the path is
-    #  anything but a fits file whose wcs can be extracted.
-    def _parse_as_cube(path):
+    def _parse_as_spectrum1d(path):
+        # Parse as a FITS file and assume the WCS is correct
         with fits.open(path) as hdulist:
             data = hdulist[1].data
             header = hdulist[1].header
-            if header['NAXIS'] == 2:
-                new_data = np.expand_dims(data, axis=1)
-                header['NAXIS'] = 3
-
-            header['NAXIS3'] = 1
-            header['BUNIT'] = 'dN/s'
-            header['CUNIT3'] = 'um'
-            header['CTYPE3'] = 'WAVE'
-
-            # Information not present in the SCI header has to be put there
-            # so spectral_cube won't choke. We cook up a simple linear wcs
-            # with the only intention of making the code run beyond the
-            # spectral_cube processing. There is no guarantee that this will
-            # result in the correct axis label values being displayed.
-            #
-            # This is a stopgap solution that will be replaced when specutils
-            # absorbs the functionality provided by spectral_cube.
-
-            fa = AsdfInFits.open(path)
-            gwcs = fa.tree['meta']['wcs']
-
-            header['CTYPE1'] = 'RA---TAN'
-            header['CTYPE2'] = 'DEC--TAN'
-            header['CUNIT1'] = 'deg'
-            header['CUNIT2'] = 'deg'
-
-            header['CRVAL1'] = gwcs.forward_transform.lon_4.value
-            header['CRVAL2'] = gwcs.forward_transform.lat_4.value
-            header['CRPIX1'] = gwcs.forward_transform.intercept_1.value
-            header['CRPIX2'] = gwcs.forward_transform.intercept_2.value
-            header['CDELT1'] = gwcs.forward_transform.slope_1.value
-            header['CDELT2'] = gwcs.forward_transform.slope_2.value
-            header['PC1_1'] = -1.
-            header['PC1_2'] = 0.
-            header['PC2_1'] = 0.
-            header['PC2_2'] = 1.
-            header['PC3_1'] = 1.
-            header['PC3_2'] = 0.
-
             wcs = WCS(header)
+        return Spectrum1D(data, wcs=wcs)
 
-            meta = {'S_REGION': header['S_REGION'], 'INSTRUME': 'nirspec'}
-
-        return SpectralCube(new_data, wcs=wcs, meta=meta)
-
-    if isinstance(data_labels, str):
-        data_labels = [data_labels]
-
-    # Coerce into list if needed
+    # Coerce into list-like object
     if not isinstance(data_obj, (list, tuple, SpectrumCollection)):
         data_obj = [data_obj]
 
-    data_obj = [_parse_as_cube(x) if _check_is_file(x) else x for x in data_obj]
-
-    if data_labels is None:
-        data_labels = [f"2D Spectrum {i}" for i in range(len(data_obj))]
-    elif len(data_obj) != len(data_labels):
-        data_labels = [f"{data_labels} {i}" for i in range(len(data_obj))]
+    # If we're given a string, repeat it for each object
+    if isinstance(data_labels, str):
+        if len(data_obj) > 1:
+            data_labels = [f"{data_labels} {i}" for i in range(len(data_obj))]
+        else:
+            data_labels = [data_labels]
+    elif data_labels is None:
+        if len(data_obj) > 1:
+            data_labels = [f"2D Spectrum {i}" for i in range(len(data_obj))]
+        else:
+            data_labels = ['2D Spectrum']
 
     with app.data_collection.delay_link_manager_update():
 
-        for i in range(len(data_obj)):
-            app.add_data(data_obj[i], data_labels[i], notify_done=False)
+        for index, data in enumerate(data_obj):
+            # If we got a filepath, first try and parse using the Spectrum1D and
+            # SpectrumList parsers, and then fall back to parsing it as a generic
+            # FITS file.
+            if _check_is_file(data):
+                try:
+                    data = Spectrum1D.read(data)
+                except IORegistryError:
+                    try:
+                        data = Spectrum1D.read(data)
+                    except IORegistryError:
+                        data = _parse_as_spectrum1d(data)
+
+            # Copy (if present) region to top-level meta object
+            if ('header' in data.meta and
+                    'S_REGION' in data.meta['header'] and
+                    'S_REGION' not in data.meta):
+                data.meta['S_REGION'] = data.meta['header']['S_REGION']
+
+            # Set the instrument
+            # TODO: this should not be set to nirspec for all datasets
+            data.meta['INSTRUME'] = 'nirspec'
+
+            # Get the corresponding label for this data product
+            label = data_labels[index]
+
+            app.data_collection[label] = data
 
         if add_to_table:
             _add_to_table(app, data_labels, '2D Spectra')
@@ -566,6 +563,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
 
             with fits.open(fname, memmap=False) as temp:
                 sci_hdus = []
+                wav_hdus = {}
                 for i in range(len(temp)):
 
                     if i == 0:
@@ -574,35 +572,22 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                     if "EXTNAME" in temp[i].header:
                         if temp[i].header["EXTNAME"] == "SCI":
                             sci_hdus.append(i)
+                            wav_hdus[i] = ('WAVELENGTH', temp[i].header['EXTVER'])
 
-                # Now get a SpectralCube object for each SCI HDU
+                # Now get a Spectrum1D object for each SCI HDU
                 for sci in sci_hdus:
 
                     if temp[sci].header["SPORDER"] == 1:
 
                         data = temp[sci].data
                         meta = temp[sci].header
-                        header = filter_wcs[filter_name]
 
-                        # Information that needs to be added to the header in order to load
-                        # WCS information into SpectralCube.
-                        # TODO: Use gwcs instead to avoid hardcoding information for 3rd wcs axis
-                        new_data = np.expand_dims(data, axis=1)
-                        header['NAXIS'] = 3
+                        # The wavelength is stored in a WAVELENGTH HDU. This is
+                        # a 2D array, but in order to be able to use Spectrum1D
+                        # we use the average wavelength for all image rows
+                        wav = temp[wav_hdus[sci]].data.mean(axis=0) * u.micron
 
-                        header['NAXIS3'] = 1
-                        header['BUNIT'] = 'dN/s'
-                        header['CUNIT3'] = 'um'
-                        header['WCSAXES'] = 3
-                        header['CRPIX3'] = 0.0
-                        header['CDELT3'] = 1E-06
-                        header['CUNIT3'] = 'm'
-                        header['CTYPE3'] = 'WAVE'
-                        header['CRVAL3'] = 0.0
-
-                        wcs = WCS(header)
-
-                        spec2d = SpectralCube(new_data, wcs=wcs, meta=meta)
+                        spec2d = Spectrum1D(data * u.one, spectral_axis=wav, meta=meta)
 
                         spec2d.meta['INSTRUME'] = 'NIRISS'
 

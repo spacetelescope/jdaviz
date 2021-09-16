@@ -3,8 +3,6 @@ from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from glue_jupyter.table import TableViewer
 from specutils import Spectrum1D
-from spectral_cube import SpectralCube
-from echo import delay_callback
 import astropy
 from astropy import units as u
 from astropy.utils.introspection import minversion
@@ -14,11 +12,12 @@ from jdaviz.core.events import (AddDataToViewerMessage,
                                 TableClickMessage)
 from jdaviz.core.registries import viewer_registry
 
-__all__ = ['MOSVizProfileView', 'MOSVizImageView']
+__all__ = ['MosvizProfileView', 'MosvizImageView', 'MosvizProfile2DView',
+           'MosvizTableViewer']
 
 
-@viewer_registry("mosviz-profile-viewer", label="Profile 1D (MOSViz)")
-class MOSVizProfileView(BqplotProfileView):
+@viewer_registry("mosviz-profile-viewer", label="Profile 1D (Mosviz)")
+class MosvizProfileView(BqplotProfileView):
     default_class = Spectrum1D
 
     def data(self, cls=None):
@@ -51,9 +50,12 @@ class MOSVizProfileView(BqplotProfileView):
         # Make it so y axis label is not covering tick numbers.
         self.figure.axes[1].label_offset = "-50"
 
+        # Set Y-axis to scientific notation
+        self.figure.axes[1].tick_format = '0.1e'
 
-@viewer_registry("mosviz-image-viewer", label="Image 2D (MOSViz)")
-class MOSVizImageView(BqplotImageView):
+
+@viewer_registry("mosviz-image-viewer", label="Image 2D (Mosviz)")
+class MosvizImageView(BqplotImageView):
     default_class = None
 
     def data(self, cls=None):
@@ -73,11 +75,11 @@ class MOSVizImageView(BqplotImageView):
         self.figure.axes[1].label_offset = "-50"
 
 
-@viewer_registry("mosviz-profile-2d-viewer", label="Spectrum 2D (MOSViz)")
-class MOSVizProfile2DView(BqplotImageView):
+@viewer_registry("mosviz-profile-2d-viewer", label="Spectrum 2D (Mosviz)")
+class MosvizProfile2DView(BqplotImageView):
     # Due to limitations in CCDData and 2D data that has spectral and spatial
     #  axes, the default conversion class must handle cubes
-    default_class = SpectralCube
+    default_class = Spectrum1D
 
     tools = ['bqplot:panzoom_x']
 
@@ -85,20 +87,12 @@ class MOSVizProfile2DView(BqplotImageView):
         super().__init__(*args, **kwargs)
         # Setup viewer option defaults
         self.state.aspect = 'auto'
-        self.state.add_callback('reference_data', self._update_world_axes, priority=100)
 
     def data(self, cls=None):
         return [layer_state.layer.get_object(cls=cls or self.default_class)
                 for layer_state in self.state.layers
                 if hasattr(layer_state, 'layer') and
                 isinstance(layer_state.layer, BaseData)]
-
-    def _update_world_axes(self, data):
-        if data is not None:
-            with delay_callback(self.state, 'x_att_world', 'y_att_world'):
-                if 'Wave' in data.components:
-                    self.state.x_att_world = data.id['Right Ascension']
-                    self.state.y_att_world = data.id['Wave']
 
     def set_plot_axes(self):
         self.figure.axes[0].visible = False
@@ -111,8 +105,8 @@ class MOSVizProfile2DView(BqplotImageView):
         self.figure.axes[1].label_offset = "-50"
 
 
-@viewer_registry("mosviz-table-viewer", label="Table (MOSViz)")
-class MOSVizTableViewer(TableViewer):
+@viewer_registry("mosviz-table-viewer", label="Table (Mosviz)")
+class MosvizTableViewer(TableViewer):
     def __init__(self, session, *args, **kwargs):
         super().__init__(session, *args, **kwargs)
 
@@ -120,9 +114,29 @@ class MOSVizTableViewer(TableViewer):
 
         self._selected_data = {}
         self._shared_image = False
+        self.row_selection_in_progress = False
+
+    def redraw(self):
+
+        # Overload to hide components - we do this via overloading instead of
+        # checking for changes in self.figure_widget.data because some components
+        # might be added inplace to the dataset.
+
+        if self.figure_widget.data is None:
+            self.figure_widget.hidden_components = []
+        else:
+            components_str = [cid.label for cid in self.figure_widget.data.main_components]
+            hidden = []
+            print(components_str)
+            for colname in ['Images', '1D Spectra', '2D Spectra']:
+                if colname in components_str:
+                    hidden.append(self.figure_widget.data.id[colname])
+            self.figure_widget.hidden_components = hidden
+
+        super().redraw()
 
     def _on_row_selected(self, event):
-
+        self.row_selection_in_progress = True
         # Grab the index of the latest selected row
         selected_index = event['new']
         mos_data = self.session.data_collection['MOS Table']
@@ -173,12 +187,12 @@ class MOSVizTableViewer(TableViewer):
 
                     self._selected_data['image-viewer'] = selected_data
 
-        # Send a message to trigger zooming the image, if there is an image
-        if mos_data.find_component_id("Images") is not None:
-            message = TableClickMessage(selected_index=selected_index,
-                                        shared_image=self._shared_image,
-                                        sender=self)
-            self.session.hub.broadcast(message)
+        message = TableClickMessage(selected_index=selected_index,
+                                    shared_image=self._shared_image,
+                                    sender=self)
+        self.session.hub.broadcast(message)
+
+        self.row_selection_in_progress = False
 
     def set_plot_axes(self, *args, **kwargs):
         return

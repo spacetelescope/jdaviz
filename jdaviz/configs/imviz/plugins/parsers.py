@@ -9,6 +9,7 @@ from astropy.io import fits
 from astropy.nddata import NDData
 from astropy.wcs import WCS
 from glue.core.data import Component, Data
+from glue.core.link_helpers import LinkSame
 
 from jdaviz.core.registries import data_parser_registry
 from jdaviz.core.events import SnackbarMessage
@@ -131,13 +132,38 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
 
     for data, data_label in data_iter:
 
-        # avoid duplicate data labels in colection
+        # avoid duplicate data labels in collection
         if data_label in app.data_collection.labels:
             data_label = data_label + "_2"  # 0th-order solution as proposed in issue #600
 
         app.add_data(data, data_label)
         if show_in_viewer:
             app.add_data_to_viewer("viewer-1", data_label)
+
+    if len(app.data_collection) <= 1:  # No need to link, we are done.
+        return
+
+    # Auto-link data by pixels
+
+    links_list = []
+    refdata = app.data_collection[0]  # Link with first one
+    ids0 = refdata.pixel_component_ids
+    ndim_range = range(refdata.ndim)
+
+    for data in app.data_collection[1:]:
+        ids1 = data.pixel_component_ids
+        try:
+            new_links = [LinkSame(ids0[i], ids1[i]) for i in ndim_range]
+        except Exception as e:
+            # TODO: Is it better to just throw exception and crash?
+            app.hub.broadcast(SnackbarMessage(
+                f"Error linking '{data.label}' to '{refdata.label}': "
+                f"{repr(e)}", color="warning", timeout=8000, sender=app))
+            continue
+        links_list += new_links
+
+    with app.data_collection.delay_link_manager_update():
+        app.data_collection.set_links(links_list)
 
 
 def _info_nextensions(app, file_obj):

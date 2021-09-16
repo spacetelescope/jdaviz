@@ -7,12 +7,11 @@ from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import RedshiftMessage
 from ..default.plugins.line_lists.line_list_mixin import LineListMixin
 
+__all__ = ['Specviz', 'SpecViz']
 
-class SpecViz(ConfigHelper, LineListMixin):
-    """
-    SpecViz Helper class
 
-    """
+class Specviz(ConfigHelper, LineListMixin):
+    """Specviz Helper class."""
 
     _default_configuration = "specviz"
     _redshift = 0
@@ -229,3 +228,31 @@ class SpecViz(ConfigHelper, LineListMixin):
         '''Save new redshifts (including from the helper itself)'''
         if msg.param == "redshift":
             self._redshift = msg.value
+
+    def set_spectrum_tick_format(self, fmt, axis=None):
+        """
+        Manually set the tick format of one of the axes of the profile viewer.
+
+        Parameters
+        ----------
+        fmt : str
+            Format of tick marks in the spectrum viewer.
+            For example, ``'0.1e'`` to set scientific notation or ``'0.2f'`` to turn it off.
+        axis : {0, 1}
+            The spectrum viewer data axis.
+            Axis 1 corresponds to the Y-axis and 0 to the X-axis.
+
+        """
+        if axis not in [0, 1]:
+            logging.warning("Please use either 0 or 1 for the axis value")
+            return
+
+        # Examples of values for fmt are '0.1e' or '0.2f'
+        self.app.get_viewer("spectrum-viewer").figure.axes[axis].tick_format = fmt
+
+
+# TODO: Officially deprecate this with coordination with JDAT notebooks team.
+# For backward compatibility only.
+class SpecViz(Specviz):
+    """This class is pending deprecation. Please use `Specviz` instead."""
+    pass

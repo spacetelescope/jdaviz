@@ -17,7 +17,7 @@ class ImvizImageView(BqplotImageView):
     # ones are added in glue-jupyter in future that we don't want here.
     inherit_tools = False
 
-    tools = ['bqplot:home', 'bqplot:panzoom', 'bqplot:panzoomwcs',
+    tools = ['bqplot:home', 'bqplot:panzoom', 'bqplot:panzoommatch',
              'bqplot:contrastbias', 'bqplot:blinkonce',
              'bqplot:rectangle', 'bqplot:circle', 'bqplot:ellipse']
     default_class = None
@@ -33,6 +33,17 @@ class ImvizImageView(BqplotImageView):
 
         self.state.show_axes = False
         self.figure.fig_margin = {'left': 0, 'bottom': 0, 'top': 0, 'right': 0}
+
+        # By default, glue computes a fixed resolution buffer that matches the
+        # axes - but this means that when panning, one sees white outside of
+        # the original buffer until the buffer updates again, thus there is a
+        # lag in the image display. By increasing the external padding to 0.5
+        # the image is made larger by 50% along all four sides, helping create
+        # the illusion of smooth panning. We can increase this further to
+        # improve the panning experience, but this can cause a larger delay
+        # when the image does need to update as it will be more computationally
+        # intensive.
+        self.state.image_external_padding = 0.5
 
     def on_mouse_or_key_event(self, data):
 

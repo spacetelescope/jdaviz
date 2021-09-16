@@ -4,14 +4,13 @@ import numpy as np
 import pytest
 from astropy.nddata import CCDData
 from astropy.wcs import WCS
-from jdaviz.configs.mosviz.helper import MosViz
-from spectral_cube import SpectralCube
+from jdaviz.configs.mosviz.helper import Mosviz
 from specutils import Spectrum1D, SpectrumCollection
 
 
 @pytest.fixture
 def mosviz_app():
-    return MosViz()
+    return Mosviz()
 
 
 @pytest.fixture
@@ -27,28 +26,17 @@ def spectrum1d():
 @pytest.fixture
 def spectrum2d():
     header = """
-WCSAXES =                    3 / Number of coordinate axes
-CRPIX1  =               1024.5 / Pixel coordinate of reference point
+WCSAXES =                    2 / Number of coordinate axes
+CRPIX1  =                  0.0 / Pixel coordinate of reference point
 CRPIX2  =               1024.5 / Pixel coordinate of reference point
-CRPIX3  =                  0.0 / Pixel coordinate of reference point
-PC1_1   =                 -1.0 / Coordinate transformation matrix element
-PC3_1   =                  1.0 / Coordinate transformation matrix element
-CDELT1  =  2.8685411111111E-05 / [deg] Coordinate increment at reference point
+CDELT1  =                1E-06 / [m] Coordinate increment at reference point
 CDELT2  =  2.9256727777778E-05 / [deg] Coordinate increment at reference point
-CDELT3  =                1E-06 / [m] Coordinate increment at reference point
-CUNIT1  = 'deg'                / Units of coordinate increment and value
+CUNIT1  = 'm'                  / Units of coordinate increment and value
 CUNIT2  = 'deg'                / Units of coordinate increment and value
-CUNIT3  = 'm'                  / Units of coordinate increment and value
-CTYPE1  = 'RA---TAN'           / Right ascension, gnomonic projection
-CTYPE2  = 'DEC--TAN'           / Declination, gnomonic projection
-CTYPE3  = 'WAVE'               / Vacuum wavelength (linear)
-CRVAL1  =                  5.0 / [deg] Coordinate value at reference point
+CTYPE1  = 'WAVE'               / Vacuum wavelength (linear)
+CTYPE2  = 'OFFSET'             / Spatial offset
+CRVAL1  =                  0.0 / [m] Coordinate value at reference point
 CRVAL2  =                  5.0 / [deg] Coordinate value at reference point
-CRVAL3  =                  0.0 / [m] Coordinate value at reference point
-LONPOLE =                180.0 / [deg] Native longitude of celestial pole
-LATPOLE =                  5.0 / [deg] Native latitude of celestial pole
-MJDREFI =                  0.0 / [d] MJD of fiducial time, integer part
-MJDREFF =                  0.0 / [d] MJD of fiducial time, fractional part
 RADESYS = 'ICRS'               / Equatorial coordinate system
 SPECSYS = 'BARYCENT'           / Reference frame of spectral coordinates
 """
@@ -67,8 +55,8 @@ SPECSYS = 'BARYCENT'           / Reference frame of spectral coordinates
         new_hdr[key] = value
 
     wcs = WCS(new_hdr)
-    data = np.random.sample((15, 1, 1024))
-    spectral_cube = SpectralCube(data, wcs=wcs)
+    data = np.random.sample((1024, 15)) * u.one
+    spectral_cube = Spectrum1D(data, wcs=wcs)
 
     return spectral_cube
 
@@ -176,6 +164,7 @@ def test_load_list_of_spectrum1d(mosviz_app, spectrum1d):
 
 
 def test_load_spectrum2d(mosviz_app, spectrum2d):
+
     label = "Test 2D Spectrum"
     mosviz_app.load_2d_spectra(spectrum2d, data_labels=label)
 
@@ -187,7 +176,7 @@ def test_load_spectrum2d(mosviz_app, spectrum2d):
 
     data = mosviz_app.app.get_data_from_viewer('spectrum-2d-viewer')
 
-    assert list(data.values())[0].shape == (15, 1, 1024)
+    assert list(data.values())[0].shape == (1024, 15)
     assert list(data.keys())[0] == label
 
 

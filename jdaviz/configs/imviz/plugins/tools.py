@@ -6,7 +6,6 @@ from echo import delay_callback
 from glue.config import viewer_tool
 from glue_jupyter.bqplot.common.tools import Tool
 from glue.viewers.common.tool import CheckableTool
-from glue.plugins.wcs_autolinking.wcs_autolinking import wcs_autolink, WCSLink, AffineLink
 from glue_jupyter.bqplot.common.tools import BqplotPanZoomMode
 
 __all__ = []
@@ -27,11 +26,11 @@ class BlinkOnce(Tool):
 
 
 @viewer_tool
-class BqplotMatchWCS(BqplotPanZoomMode):
+class BqplotMatchPanZoom(BqplotPanZoomMode):
 
-    icon = os.path.join(ICON_DIR, 'pan_wcs.svg')
-    tool_id = 'bqplot:panzoomwcs'
-    action_text = 'Pan, matching WCS between viwers'
+    icon = os.path.join(ICON_DIR, 'panzoom_match.svg')
+    tool_id = 'bqplot:panzoommatch'
+    action_text = 'Pan, matching between viewers'
     tool_tip = 'Pan (click-drag) and Zoom (scroll) in this viewer to see the same regions in other viewers'  # noqa
 
     def activate(self):
@@ -42,25 +41,6 @@ class BqplotMatchWCS(BqplotPanZoomMode):
         self.viewer.state.add_callback('x_max', self.on_limits_change)
         self.viewer.state.add_callback('y_min', self.on_limits_change)
         self.viewer.state.add_callback('y_max', self.on_limits_change)
-
-        # For now clicking this will automatically set up links between datasets. We
-        # do this when activating this tool so that this ends up being 'opt-in' only
-        # when the user wants to match WCS.
-
-        # Find all possible WCS links in the data collection
-        wcs_links = wcs_autolink(self.viewer.session.data_collection)
-
-        # Add only those links that don't already exist
-        for link in wcs_links:
-            exists = False
-            for existing_link in self.viewer.session.data_collection.external_links:
-                if isinstance(existing_link, (AffineLink, WCSLink)):
-                    if (link.data1 is existing_link.data1
-                            and link.data2 is existing_link.data2):
-                        exists = True
-                        break
-            if not exists:
-                self.viewer.session.data_collection.add_link(link.as_affine_link())
 
         # Set the reference data in other viewers to be the same as the current viewer.
         # If adding the data to the viewer, make sure it is not actually shown since the
