@@ -5,7 +5,7 @@ from specutils import SpectralRegion, Spectrum1D
 
 from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import RedshiftMessage
-from ..default.plugins.line_lists.line_list_mixin import LineListMixin
+from jdaviz.configs.default.plugins.line_lists.line_list_mixin import LineListMixin
 
 __all__ = ['Specviz', 'SpecViz']
 
