@@ -9,6 +9,7 @@ more detail under Specviz:Data Analysis Plugins.  All plugins
 are accessed via the plugin icon in the upper right corner
 of the Mosviz application.
 
+
 Gaussian Smooth
 ===============
 
@@ -31,16 +32,6 @@ Specviz:Data Analysis Plugins:Model Fitting documentation.
     `Model Fitting <https://jdaviz.readthedocs.io/en/latest/specviz/plugins.html#model-fitting>`_
         Specviz documentation on fitting spectral models.
 
-
-Unit Conversion
-===============
-
-.. seealso::
-
-    `Unit Conversion <https://jdaviz.readthedocs.io/en/latest/specviz/plugins.html#unit-conversion>`_
-        Specviz documentation on unit conversion.
-
-
 Line Lists
 ==========
 
@@ -49,7 +40,6 @@ Line Lists
     `Line Lists <https://jdaviz.readthedocs.io/en/latest/specviz/plugins.html#line-lists>`_
         Specviz documentation on line lists.
 
-
 Line Analysis
 =============
 
@@ -57,8 +47,6 @@ Line Analysis
 
     `Line Analysis <https://jdaviz.readthedocs.io/en/latest/specviz/plugins.html#line-analysis>`_
         Specviz documentation on line analysis.
-
-
 
 Slit Overlay
 ============
