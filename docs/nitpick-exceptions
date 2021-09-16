@@ -1,0 +1,5 @@
+# https://github.com/mariobuikhuizen/ipyvuetify/issues/180
+py:class ipyvuetify.VuetifyTemplate.VuetifyTemplate
+
+# https://github.com/glue-viz/glue-jupyter/issues/258
+py:class glue_jupyter.table.viewer.TableViewer

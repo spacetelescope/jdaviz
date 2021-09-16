@@ -28,13 +28,13 @@ from glue_jupyter.app import JupyterApplication
 from glue_jupyter.state_traitlets_helpers import GlueState
 from ipyvuetify import VuetifyTemplate
 
-from .core.config import read_configuration, get_configuration
-from .core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
-                          SnackbarMessage, RemoveDataMessage,
-                          AddDataToViewerMessage, RemoveDataFromViewerMessage)
-from .core.registries import (tool_registry, tray_registry, viewer_registry,
-                              data_parser_registry)
-from .utils import load_template, SnackbarQueue
+from jdaviz.core.config import read_configuration, get_configuration
+from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
+                                SnackbarMessage, RemoveDataMessage,
+                                AddDataToViewerMessage, RemoveDataFromViewerMessage)
+from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registry,
+                                    data_parser_registry)
+from jdaviz.utils import load_template, SnackbarQueue
 
 __all__ = ['Application']
 
@@ -197,37 +197,25 @@ class Application(VuetifyTemplate, HubListener):
     @property
     def hub(self):
         """
-        Reference to the stored application handler hub instance.
-
-        Returns
-        -------
-        `glue.core.Hub`
-            The internal ``Hub`` instance for the application.
+        Reference to the stored application handler `~glue.core.hub.Hub` instance
+        for the application.
         """
         return self._application_handler.data_collection.hub
 
     @property
     def session(self):
         """
-        Reference to the stored session instance.
-
-        Returns
-        -------
-        `glue.core.Session`
-            The ``Session`` instance maintained by Glue for this application.
+        Reference to the stored `~glue.core.session.Session` instance
+        maintained by Glue for this application.
         """
         return self._application_handler.session
 
     @property
     def data_collection(self):
         """
-        Reference to the stored data collection instance, used to maintain the
-        the data objects that been loaded into the application this session.
-
-        Returns
-        -------
-        `glue.core.DataCollection`
-            The ``DataCollection`` instance for this application session.
+        Reference to the stored `~glue.core.data_collection.DataCollection` instance,
+        used to maintain the the data objects that been loaded into the application
+        this session.
         """
         return self._application_handler.data_collection
 
@@ -305,7 +293,7 @@ class Application(VuetifyTemplate, HubListener):
     def load_data(self, file_obj, parser_reference=None, **kwargs):
         """
         Provided a path to a data file, open and parse the data into the
-        `~glue.core.DataCollection` for this session. This also attempts to
+        `~glue.core.data_collection.DataCollection` for this session. This also attempts to
         find WCS links that exist between data components. Extra key word
         arguments are passed to the parsing functions.
 
@@ -710,6 +698,8 @@ class Application(VuetifyTemplate, HubListener):
             is required.
         """
         viewer_item = self._viewer_item_by_reference(viewer_reference)
+        if viewer_item is None:  # Maybe they mean the ID
+            viewer_item = self._viewer_item_by_id(viewer_reference)
         data_label = self._build_data_label(data_path, ext=ext)
         data_id = self._data_id_from_label(data_label)
 
@@ -1065,7 +1055,7 @@ class Application(VuetifyTemplate, HubListener):
 
         Parameters
         ----------
-        msg : `~glue.core.DataCollectionAddMessage`
+        msg : `~glue.core.message.DataCollectionAddMessage`
             The Glue data collection add message containing information about
             the new data.
         """
@@ -1080,7 +1070,7 @@ class Application(VuetifyTemplate, HubListener):
 
         Parameters
         ----------
-        msg : `~glue.core.DataCollectionAddMessage`
+        msg : `~glue.core.message.DataCollectionAddMessage`
             The Glue data collection add message containing information about
             the new data.
         """

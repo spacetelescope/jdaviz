@@ -3,6 +3,7 @@ import numpy as np
 from glue_jupyter.bqplot.image import BqplotImageView
 
 from jdaviz.configs.imviz.helper import data_has_valid_wcs, layer_is_image_data
+from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import viewer_registry
 
@@ -10,7 +11,7 @@ __all__ = ['ImvizImageView']
 
 
 @viewer_registry("imviz-image-viewer", label="Image 2D (Imviz)")
-class ImvizImageView(BqplotImageView):
+class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin):
 
     # Whether to inherit tools from glue-jupyter automatically. Set this to
     # False to have full control here over which tools are shown in case new
@@ -25,6 +26,7 @@ class ImvizImageView(BqplotImageView):
     def __init__(self, *args, **kwargs):
 
         super().__init__(*args, **kwargs)
+        self.init_astrowidgets_api()
 
         self.label_mouseover = None
 
@@ -33,6 +35,17 @@ class ImvizImageView(BqplotImageView):
 
         self.state.show_axes = False
         self.figure.fig_margin = {'left': 0, 'bottom': 0, 'top': 0, 'right': 0}
+
+        # By default, glue computes a fixed resolution buffer that matches the
+        # axes - but this means that when panning, one sees white outside of
+        # the original buffer until the buffer updates again, thus there is a
+        # lag in the image display. By increasing the external padding to 0.5
+        # the image is made larger by 50% along all four sides, helping create
+        # the illusion of smooth panning. We can increase this further to
+        # improve the panning experience, but this can cause a larger delay
+        # when the image does need to update as it will be more computationally
+        # intensive.
+        self.state.image_external_padding = 0.5
 
     def on_mouse_or_key_event(self, data):
 

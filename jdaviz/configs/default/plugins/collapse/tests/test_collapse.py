@@ -1,11 +1,13 @@
 import numpy as np
+import pytest
 
 from glue.core import Data
 from jdaviz import Application
 
-from ..collapse import Collapse
+from jdaviz.configs.default.plugins.collapse.collapse import Collapse
 
 
+@pytest.mark.filterwarnings('ignore')
 def test_linking_after_collapse(spectral_cube_wcs):
 
     app = Application()

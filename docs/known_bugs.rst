@@ -26,10 +26,10 @@ This can be fixed by reinstalling scikit-image::
     pip uninstall scikit-image
     conda install scikit-image
 
-The reason for this issue is that prebuilt binaries for `scikit-image` don't
+The reason for this issue is that prebuilt binaries for scikit-image don't
 work on Mac versions of 10.13 or older and conda installs an older
 version of scikit-image that works with those versions.
-Another way to get the up-to-date `scikit-image` version is::
+Another way to get the up-to-date scikit-image version is::
 
     pip install -U --no-binary scikit-image scikit-image.
 
@@ -39,8 +39,8 @@ first solution.
 On some platforms, install fails due to vispy
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The 0.6.4 version of `vispy` fails to build for some combinations of
-platform/OS and Python versions.  `vispy` 0.6.5 has resolved this, but a
+The 0.6.4 version of vispy fails to build for some combinations of
+platform/OS and Python versions. vispy 0.6.5 has resolved this, but a
 workaround if you have an older version of vispy is to ensure you have a
 compatible version::
 
@@ -82,7 +82,7 @@ Collapse and Moment Maps: Spectral bounds do not match Region selection
 When trying to do a second collapse with the same spectral region, but with
 resized bounds: change to Region=None, resize the region, then reselect Region 1,
 the region bounds are correct. However, applying Collapse again, it errors out and
-the image viewer that contained the intial collapse goes blank.
+the image viewer that contained the initial collapse goes blank.
 
 
 Cube viewer contrast changes when collapsing Jupyter scroll window

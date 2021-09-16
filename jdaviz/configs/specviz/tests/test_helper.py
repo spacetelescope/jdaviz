@@ -4,7 +4,7 @@ from astropy.tests.helper import assert_quantity_allclose
 from glue.core.roi import XRangeROI
 from specutils import Spectrum1D, SpectrumList, SpectrumCollection
 
-from ..plugins.unit_conversion import unit_conversion as uc
+from jdaviz.configs.specviz.plugins.unit_conversion import unit_conversion as uc
 
 
 class TestSpecvizHelper:

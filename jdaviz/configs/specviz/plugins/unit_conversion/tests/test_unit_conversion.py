@@ -4,7 +4,7 @@ from astropy import units as u
 from astropy.nddata import UnknownUncertainty
 from astropy.tests.helper import assert_quantity_allclose
 
-from .. import unit_conversion as uc
+from jdaviz.configs.specviz.plugins.unit_conversion import unit_conversion as uc
 
 RESULT_SPECTRAL_AXIS = [0.6, 0.62222222, 0.64444444, 0.66666667,
                         0.68888889, 0.71111111, 0.73333333,

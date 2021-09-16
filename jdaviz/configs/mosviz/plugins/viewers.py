@@ -50,6 +50,9 @@ class MosvizProfileView(BqplotProfileView):
         # Make it so y axis label is not covering tick numbers.
         self.figure.axes[1].label_offset = "-50"
 
+        # Set Y-axis to scientific notation
+        self.figure.axes[1].tick_format = '0.1e'
+
 
 @viewer_registry("mosviz-image-viewer", label="Image 2D (Mosviz)")
 class MosvizImageView(BqplotImageView):
@@ -111,9 +114,28 @@ class MosvizTableViewer(TableViewer):
 
         self._selected_data = {}
         self._shared_image = False
+        self.row_selection_in_progress = False
+
+    def redraw(self):
+
+        # Overload to hide components - we do this via overloading instead of
+        # checking for changes in self.figure_widget.data because some components
+        # might be added inplace to the dataset.
+
+        if self.figure_widget.data is None:
+            self.figure_widget.hidden_components = []
+        else:
+            components_str = [cid.label for cid in self.figure_widget.data.main_components]
+            hidden = []
+            for colname in ['Images', '1D Spectra', '2D Spectra']:
+                if colname in components_str:
+                    hidden.append(self.figure_widget.data.id[colname])
+            self.figure_widget.hidden_components = hidden
+
+        super().redraw()
 
     def _on_row_selected(self, event):
-
+        self.row_selection_in_progress = True
         # Grab the index of the latest selected row
         selected_index = event['new']
         mos_data = self.session.data_collection['MOS Table']
@@ -126,9 +148,16 @@ class MosvizTableViewer(TableViewer):
                 prev_data = self._selected_data.get('spectrum-viewer')
                 if prev_data != selected_data:
                     if prev_data:
-                        remove_data_from_viewer_message = RemoveDataFromViewerMessage(
-                            'spectrum-viewer', prev_data, sender=self)
-                        self.session.hub.broadcast(remove_data_from_viewer_message)
+                        # This covers the cases where data is unit converted
+                        # and the name is modified
+                        all_prev_data = [x
+                                         for x in self.session.data_collection.labels
+                                         if prev_data in x]
+                        for modified_prev_data in all_prev_data:
+                            if modified_prev_data:
+                                remove_data_from_viewer_message = RemoveDataFromViewerMessage(
+                                    'spectrum-viewer', modified_prev_data, sender=self)
+                                self.session.hub.broadcast(remove_data_from_viewer_message)
 
                     add_data_to_viewer_message = AddDataToViewerMessage(
                         'spectrum-viewer', selected_data, sender=self)
@@ -164,12 +193,12 @@ class MosvizTableViewer(TableViewer):
 
                     self._selected_data['image-viewer'] = selected_data
 
-        # Send a message to trigger zooming the image, if there is an image
-        if mos_data.find_component_id("Images") is not None:
-            message = TableClickMessage(selected_index=selected_index,
-                                        shared_image=self._shared_image,
-                                        sender=self)
-            self.session.hub.broadcast(message)
+        message = TableClickMessage(selected_index=selected_index,
+                                    shared_image=self._shared_image,
+                                    sender=self)
+        self.session.hub.broadcast(message)
+
+        self.row_selection_in_progress = False
 
     def set_plot_axes(self, *args, **kwargs):
         return

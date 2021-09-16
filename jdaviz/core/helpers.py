@@ -7,27 +7,29 @@ See also https://github.com/spacetelescope/jdaviz/issues/104 for more details
 on the motivation behind this concept.
 """
 import re
+
 import numpy as np
 import astropy.units as u
-
-from ..app import Application
 from glue.core import HubListener
+
+from jdaviz.app import Application
 
 __all__ = ['ConfigHelper']
 
 
 class ConfigHelper(HubListener):
-    """The Base Helper Class
+    """The Base Helper Class.
     Provides shared abstracted helper methods to the user.
 
-    Subclasses should set `_default_configuration` if they are meant to be
+    Subclasses should set ``_default_configuration`` if they are meant to be
     used with a specific configuration.
 
     Parameters
     ----------
-    app : jdaviz.app.Application or None
-        The application object, or if None, creates a new one based on the
+    app : `~jdaviz.app.Application` or `None`
+        The application object, or if `None`, creates a new one based on the
         default configuration for this helper.
+
     verbosity : {'debug', 'info', 'warning', 'error'}
         Verbosity of the application.
     """
@@ -67,7 +69,7 @@ class ConfigHelper(HubListener):
         models : dict
             A dict of models, with the key being the label name and the value
             being an `astropy.modeling.CompoundModel` object. Defaults to
-            `self.fitted_models` if no parameter is provided.
+            `fitted_models` if no parameter is provided.
         model_label : str
             The name of the model that will be found and returned. If it
             equals default, every model present will be returned.
@@ -78,7 +80,8 @@ class ConfigHelper(HubListener):
 
         Returns
         -------
-        :dict: dictionary of the selected models.
+        selected_models : dict
+            Dictionary of the selected models.
         """
         selected_models = {}
         # If models is not provided, use the app's fitted models

@@ -24,6 +24,7 @@ def jdaviz_app():
     return Application(configuration='cubeviz')
 
 
+@pytest.mark.filterwarnings('ignore')
 @pytest.mark.remote_data
 def test_data_retrieval(jdaviz_app):
 

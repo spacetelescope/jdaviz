@@ -68,7 +68,7 @@ def _parse_hdu(app, hdulist, file_name=None):
     file_name = file_name or "Unknown HDU object"
 
     # WCS may only exist in a single extension (in this case, just the flux
-    #  flux extention), so first find and store then wcs information.
+    #  flux extension), so first find and store then wcs information.
     wcs = None
 
     for hdu in hdulist:
@@ -102,16 +102,16 @@ def _parse_hdu(app, hdulist, file_name=None):
                 hdu.header.update(wcs.to_header())
                 sc = SpectralCube.read(hdu)
             except (ValueError, AttributeError) as e:
-                logging.warn(e)
+                logging.warning(e)
                 continue
         except FITSReadError as e:
-            logging.warn(e)
+            logging.warning(e)
             continue
 
         app.add_data(sc, data_label)
 
         # If the data type is some kind of integer, assume it's the mask/dq
-        if hdu.data.dtype in (np.int, np.uint, np.uint32) or \
+        if hdu.data.dtype in (int, np.uint, np.uint32) or \
                 any(x in hdu.name.lower() for x in EXT_TYPES['mask']):
             app.add_data_to_viewer('mask-viewer', data_label)
 

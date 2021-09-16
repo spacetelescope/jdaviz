@@ -3,7 +3,7 @@ import numpy as np
 from glue.core import Data
 
 from jdaviz import Application
-from ..moment_maps import MomentMap
+from jdaviz.configs.cubeviz.plugins.moment_maps.moment_maps import MomentMap
 
 
 def test_moment_calculation(spectral_cube_wcs):

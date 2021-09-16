@@ -141,6 +141,7 @@ class TestParseImage:
                 assert comp.units == 'MJy / sr'
         assert len(imviz_app.app.data_collection) == 3
 
+    @pytest.mark.filterwarnings('ignore:.* is a low contrast image')
     @pytest.mark.skipif(not HAS_SKIMAGE, reason='scikit-image is missing')
     @pytest.mark.parametrize('format', ('jpg', 'png'))
     def test_parse_rgba(self, imviz_app, tmp_path, format):

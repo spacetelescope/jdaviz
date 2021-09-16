@@ -2,9 +2,10 @@ import astropy.modeling.models as models
 import astropy.modeling.parameters as params
 import astropy.units as u
 import numpy as np
+import pytest
 from specutils.spectra import Spectrum1D
 
-from .. import fitting_backend as fb
+from jdaviz.configs.default.plugins.model_fitting import fitting_backend as fb
 
 
 SPECTRUM_SIZE = 200  # length of spectrum
@@ -39,7 +40,7 @@ def test_fitting_backend():
     model_list = [g1f, g2f, g3f, zero_level]
     expression = "g1 + g2 + g3 + const1d"
 
-    # Returns the intial model
+    # Returns the initial model
     fm, fitted_spectrum = fb.fit_model_to_spectrum(spectrum, model_list, expression,
                                                    run_fitter=False)
 
@@ -57,6 +58,9 @@ def test_fitting_backend():
     assert np.allclose(fm.parameters, parameters_expected, atol=1e-5)
 
 
+# When pytest turns warnings into errors, this silently fails with
+# len(fitted_parameters) == 0
+@pytest.mark.filterwarnings('ignore')
 def test_cube_fitting_backend():
     np.random.seed(42)
 

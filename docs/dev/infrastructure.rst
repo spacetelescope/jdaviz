@@ -158,7 +158,7 @@ Known component widgets for the target applications include:
   coordinates when WCS are available. Interactivity includes panning, zooming, stretch
   (contrast and scale), and cut values.
 * *Cube slicer*: A widget for displaying slices or similar aggregate operations on
-  spectroscopic data cubes. While similar to the image viewer in appearence and
+  spectroscopic data cubes. While similar to the image viewer in appearance and
   interactive capabilities, the core difference is that the main data object is
   expected to be a data cube rather than a 2D image, and this is reflected in additional
   aggregation/slicing operations.

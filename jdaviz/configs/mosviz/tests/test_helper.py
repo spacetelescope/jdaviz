@@ -163,6 +163,7 @@ def test_load_list_of_spectrum1d(mosviz_app, spectrum1d):
     assert list(data.keys())[0] == labels[0]
 
 
+@pytest.mark.filterwarnings('ignore')
 def test_load_spectrum2d(mosviz_app, spectrum2d):
 
     label = "Test 2D Spectrum"
@@ -180,6 +181,7 @@ def test_load_spectrum2d(mosviz_app, spectrum2d):
     assert list(data.keys())[0] == label
 
 
+@pytest.mark.filterwarnings('ignore')
 def test_load_image(mosviz_app, image):
     label = "Test Image"
     mosviz_app.load_images(image, data_labels=label)
@@ -197,6 +199,7 @@ def test_load_image(mosviz_app, image):
     assert list(data.keys())[0] == f"{label} 0"
 
 
+@pytest.mark.filterwarnings('ignore')
 @pytest.mark.parametrize('label', [None, "Test Label"])
 def test_load_single_image_multi_spec(mosviz_app, image, spectrum1d, spectrum2d, label):
     spectra1d = [spectrum1d] * 3
@@ -220,6 +223,7 @@ def test_load_single_image_multi_spec(mosviz_app, image, spectrum1d, spectrum2d,
     assert len(qtable) == 3
 
 
+@pytest.mark.filterwarnings('ignore')
 @pytest.mark.parametrize('label', [None, "Test Label"])
 def test_load_multi_image_spec(mosviz_app, image, spectrum1d, spectrum2d, label):
     spectra1d = [spectrum1d]*3
@@ -238,6 +242,7 @@ def test_load_multi_image_spec(mosviz_app, image, spectrum1d, spectrum2d, label)
         assert qtable["Images"][0] == "Test Label 0"
 
 
+@pytest.mark.filterwarnings('ignore')
 def test_viewer_axis_link(mosviz_app, spectrum1d, spectrum2d):
     label1d = "Test 1D Spectrum"
     mosviz_app.load_1d_spectra(spectrum1d, data_labels=label1d)
