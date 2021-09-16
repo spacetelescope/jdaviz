@@ -28,13 +28,13 @@ from glue_jupyter.app import JupyterApplication
 from glue_jupyter.state_traitlets_helpers import GlueState
 from ipyvuetify import VuetifyTemplate
 
-from .core.config import read_configuration, get_configuration
-from .core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
-                          SnackbarMessage, RemoveDataMessage,
-                          AddDataToViewerMessage, RemoveDataFromViewerMessage)
-from .core.registries import (tool_registry, tray_registry, viewer_registry,
-                              data_parser_registry)
-from .utils import load_template, SnackbarQueue
+from jdaviz.core.config import read_configuration, get_configuration
+from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
+                                SnackbarMessage, RemoveDataMessage,
+                                AddDataToViewerMessage, RemoveDataFromViewerMessage)
+from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registry,
+                                    data_parser_registry)
+from jdaviz.utils import load_template, SnackbarQueue
 
 __all__ = ['Application']
 

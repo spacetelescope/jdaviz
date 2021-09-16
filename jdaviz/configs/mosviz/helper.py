@@ -12,8 +12,7 @@ from echo import delay_callback
 from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import SnackbarMessage, TableClickMessage
 from jdaviz.configs.specviz import Specviz
-
-from .plugins import jwst_header_to_skyregion
+from jdaviz.configs.mosviz.plugins import jwst_header_to_skyregion
 
 __all__ = ['Mosviz', 'MosViz']
 

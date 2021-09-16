@@ -19,8 +19,8 @@ from jdaviz.core.events import AddDataMessage, RemoveDataMessage, SnackbarMessag
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
 from jdaviz.utils import load_template
-from .fitting_backend import fit_model_to_spectrum
-from .initializers import initialize, model_parameters
+from jdaviz.configs.default.plugins.model_fitting.fitting_backend import fit_model_to_spectrum
+from jdaviz.configs.default.plugins.model_fitting.initializers import initialize, model_parameters
 
 __all__ = ['ModelFitting']
 
