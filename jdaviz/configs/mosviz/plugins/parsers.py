@@ -19,6 +19,8 @@ from jdaviz.core.events import SnackbarMessage
 
 __all__ = ['mos_spec1d_parser', 'mos_spec2d_parser', 'mos_image_parser']
 
+FALLBACK_NAME = "Unspecified"
+
 
 def _add_to_table(app, data, comp_label):
     """
@@ -181,6 +183,7 @@ def mos_nirspec_directory_parser(app, data_obj, data_labels=None):
     mos_spec1d_parser(app, spectra_1d)
     mos_spec2d_parser(app, spectra_2d)
     mos_meta_parser(app, spectra_2d, spectra=True)
+    mos_meta_parser(app, spectra_1d, spectra=True, sp1d=True)
 
 
 @data_parser_registry("mosviz-spec1d-parser")
@@ -395,7 +398,7 @@ def mos_image_parser(app, data_obj, data_labels=None, share_image=0):
 
 
 @data_parser_registry("mosviz-metadata-parser")
-def mos_meta_parser(app, data_obj, ids=None, spectra=False):
+def mos_meta_parser(app, data_obj, ids=None, spectra=False, sp1d=False):
     """
     Attempts to parse MOS FITS header metadata.
 
@@ -422,22 +425,28 @@ def mos_meta_parser(app, data_obj, ids=None, spectra=False):
     data_obj = [fits.open(x) if _check_is_file(x) else x for x in data_obj]
 
     if np.all([isinstance(x, fits.HDUList) for x in data_obj]):
-        if spectra:
-            filters = [x[0].header.get("FILTER", "Unspecified") for x in data_obj]
-            gratings = [x[0].header.get("GRATING", "Unspecified") for x in data_obj]
+
+        # metadata taken from 2d spectra
+        if spectra and not sp1d:
+            filters = [x[0].header.get("FILTER", FALLBACK_NAME) for x in data_obj]
+            gratings = [x[0].header.get("GRATING", FALLBACK_NAME) for x in data_obj]
 
             filters_gratings = [(f+'/'+g) for f, g in zip(filters, gratings)]
 
             [x.close() for x in data_obj]
+
+        # source name can be taken from 1d spectra
+        elif spectra and sp1d:
+            # names = [x[0].header.get("OBJECT", FALLBACK_NAME) for x in data_obj]
+            # names = [x for x, n in zip(range(len(names)), names) if (n == FALLBACK_NAME) ]
+
+            names = _get_object_keyword(data_obj, ids)
+
+        # source name and coordinates are taken from image headers, if present
         else:
             ra = [x[0].header.get("OBJ_RA", float("nan")) for x in data_obj]
             dec = [x[0].header.get("OBJ_DEC", float("nan")) for x in data_obj]
-            if ids is not None:
-                # remove leading path to file name
-                ids_short = [os.path.basename(d) for d in ids]
-                names = [x[0].header.get("OBJECT", d) for x, d in zip(data_obj, ids_short)]
-            else:
-                names = [x[0].header.get("OBJECT", "Unspecified") for x in data_obj]
+            names = _get_object_keyword(data_obj, ids)
 
         [x.close() for x in data_obj]
 
@@ -449,12 +458,25 @@ def mos_meta_parser(app, data_obj, ids=None, spectra=False):
 
     with app.data_collection.delay_link_manager_update():
 
-        if spectra:
+        # this conditional must mirror the one above
+        if spectra and not sp1d:
             _add_to_table(app, filters_gratings, "Filter/Grating")
+        elif spectra and sp1d:
+            _add_to_table(app, names, "Source Name")
         else:
             _add_to_table(app, names, "Source Name")
             _add_to_table(app, ra, "R.A.")
             _add_to_table(app, dec, "Dec.")
+
+
+def _get_object_keyword(data_obj, ids):
+    if ids is not None:
+        # remove leading path to file name
+        ids_short = [os.path.basename(d) for d in ids]
+        names = [x[0].header.get("OBJECT", d) for x, d in zip(data_obj, ids_short)]
+    else:
+        names = [x[0].header.get("OBJECT", FALLBACK_NAME) for x in data_obj]
+    return names
 
 
 @data_parser_registry("mosviz-niriss-parser")

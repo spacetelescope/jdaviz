@@ -315,6 +315,7 @@ class Mosviz(ConfigHelper):
             self.load_2d_spectra(spectra_2d, spectra_2d_label)
             self.load_1d_spectra(spectra_1d, spectra_1d_label)
             self.load_metadata(spectra_2d, spectra=True)
+            self.load_metadata(spectra_1d, spectra=True, sp1d=True, ids=spectra_1d)
 
         else:
             msg = "Warning: Please set valid values for the load_data() method"
@@ -386,7 +387,7 @@ class Mosviz(ConfigHelper):
         """
         self.load_data(directory=directory, instrument=instrument)
 
-    def load_metadata(self, data_obj, ids=None, spectra=False):
+    def load_metadata(self, data_obj, ids=None, spectra=False, sp1d=False):
         """
         Load and parse a set of FITS objects to extract any relevant metadata.
 
@@ -400,8 +401,10 @@ class Mosviz(ConfigHelper):
             table rows. Typically, a list with file names.
         spectra : Boolean
             In case the FITS objects are related to spectral data.
+        sp1d : Boolean
+            In case the FITS objects are related to 1d spectral data.
         """
-        self.app.load_data(data_obj, ids=ids, spectra=spectra,
+        self.app.load_data(data_obj, ids=ids, spectra=spectra, sp1d=sp1d,
                            parser_reference="mosviz-metadata-parser")
 
     def load_1d_spectra(self, data_obj, data_labels=None):
