@@ -62,6 +62,61 @@ exclude_patterns.append('_templates')
 # This is added to the end of RST files - a good place to put substitutions to
 # be used globally.
 rst_epilog += """
+.. |icon-white-to-black| image:: /img/icons/white_to_black.png
+  :scale: 40
+  :alt: white to black icon
+
+.. |icon-plus| image:: /img/icons/picture_with_plus.png
+  :scale: 40
+  :alt: picture with a plus icon
+
+.. |icon-hammer-and-screwdriver| image:: /img/icons/hammer_and_screwdriver.png
+  :scale: 40
+  :alt: hammer and screwdriver icon
+
+.. |icon-plugins| image:: /img/icons/plugins.png
+  :scale: 40
+  :alt: plugins icon
+
+.. |icon-settings-sliders| image:: /img/icons/settings_sliders.png
+  :scale: 40
+  :alt: settings sliders icon
+
+.. |icon-zoom-pan-home| image:: /img/icons/zoom_pan_home.png
+  :scale: 40
+  :alt: reset zoom/pan icon
+
+.. |icon-zoom-pan-2d| image:: /img/icons/zoom_pan_2d.png
+  :scale: 40
+  :alt: 2D zoom/pan icon
+
+.. |icon-zoom-pan-horiz| image:: /img/icons/zoom_pan_horiz.png
+  :scale: 40
+  :alt: horizontal zoom/pan icon
+
+.. |icon-zoom-pan-vert| image:: /img/icons/zoom_pan_vert.png
+  :scale: 40
+  :alt: vertical zoom/pan icon
+
+.. |icon-region-rect| image:: /img/icons/region_rect.png
+  :scale: 40
+  :alt: rectangular region icon
+
+.. |icon-region-horiz| image:: /img/icons/region_horiz.png
+  :scale: 40
+  :alt: horizontal region icon
+
+.. |icon-region-circ| image:: /img/icons/region_circ.png
+  :scale: 40
+  :alt: circular region icon
+
+.. |icon-eye| image:: /img/icons/eye.png
+  :scale: 40
+  :alt: eye icon
+
+.. |icon-color-square| image:: /img/icons/color_square.png
+  :scale: 40
+  :alt: color square icon
 """
 
 # -- Project information ------------------------------------------------------

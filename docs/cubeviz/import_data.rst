@@ -27,7 +27,7 @@ or :class:`~specutils.Spectrum1D`:
 After clicking :guilabel:`Import`, the data file will be parsed and loaded into the 
 application. A green success message will appear if the data import 
 was successful. Afterward, the new data set can be found in the :guilabel:`Data` 
-tab of each viewer's options menu as described in :ref:`cubeviz-selecting-data`
+tab of each viewer's options menu as described in :ref:`cubeviz-selecting-data`.
 
 .. _api-import-cubeviz:
 

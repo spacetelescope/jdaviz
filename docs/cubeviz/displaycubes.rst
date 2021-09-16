@@ -6,7 +6,7 @@ Displaying Cubes
 
 The Cubeviz layout includes three image viewers (at the top of the app)
 and one spectrum viewer (at the bottom of the app), which it attempts to 
-populate automatically when the first dataset is loaded. By default, cubeviz
+populate automatically when the first dataset is loaded. By default, Cubeviz
 attempts to parse and display the flux in the top left viewer, the uncertainty
 in the top middle viewer, and the mask into the top right viewer. The spectrum
 viewer is populated by default by collapsing the spatial axes using the `max`
@@ -57,9 +57,9 @@ the :guilabel:`text box` to raise/lower the slice number.
 Defining Spatial Regions
 ========================
 
-Regions can be created by first clicking the :guilabel:`hammer and screwdriver` icon and
-selecting either the :guilabel:`rectangular region of interest` icon or the
-:guilabel:`circular region of interest` icon, then clicking and dragging (using the mouse) until the
+Regions can be created by first clicking the |icon-hammer-and-screwdriver| icon and
+selecting either the |icon-region-rect| icon (to draw a rectangular region) or the
+|icon-region-circ| icon (to draw a circular region), then clicking and dragging (using the mouse) until the
 desired region is covered by a colored shape, after which you release the mouse button.
 Once you have completed the action of clicking and dragging, there is an opportunity to reposition
 the region of interest by clicking on it and moving the region to a different location in the image viewer.
@@ -87,8 +87,8 @@ You can use these options to further adjust the region of interest and adapt it 
     `Defining subsets using Glue <http://docs.glueviz.org/en/stable/getting_started/#defining-subsets>`_
         Glueviz documentation on defining and refining subsets. Slightly different UI but same approach.
 
-There are options available in the :guilabel:`Layer` tab to make subsets visible or invisible,
-to change their color, and to change their opacity.
+There are options available in the :guilabel:`Layer` tab under the |icon-settings-sliders| icon 
+to make subsets visible or invisible, to change their color, and to change their opacity.
 
 .. image:: img/subset_layer_tab.png
 
@@ -100,7 +100,7 @@ are defined in Specviz.
 
 .. seealso::
 
-    `Defining Spectral Regions (Specviz) <https://jdaviz.readthedocs.io/en/latest/specviz/displaying.html#spectral-regions>`_
+    :ref:`Defining Spectral Regions (Specviz) <spectral-regions>`
         Documentation on defining spectral regions in a 1D spectrum viewer.
 
 .. _cubeviz-pan-zoom:
@@ -120,7 +120,7 @@ Display Settings
 ================
 
 To access all of the different display settings for an image viewer, click
-the :guilabel:`hammer and screwdriver` and go to the :guilabel:`Layer` tab.
+the |icon-settings-sliders| and go to the :guilabel:`Layer` tab.
 Changing the display settings DOES NOT change the underlying data, only the
 visualization of that data.
 
@@ -197,5 +197,5 @@ The spectrum of colors used to visualize data can be changed using this drop dow
 
 .. seealso::
 
-    `Plot Settings (Specviz) <https://jdaviz.readthedocs.io/en/latest/specviz/displaying.html#plot-settings>`_
+    :ref:`Plot Settings (Specviz) <plot-settings>`
         Plot settings for the spectrum 1D viewer.

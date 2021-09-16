@@ -3,10 +3,10 @@ Data Analysis Plugins
 *********************
 
 The Cubeviz data analysis plugins include operations on both
-Spectrum1D one dimensional datasets and SpectralCube objects.
+Spectrum1D one dimensional datasets and :class:`~spectral_cube.SpectralCube` objects.
 Plugins that are specific to 1D spectra are described in
-more detail under Specviz:Data Analysis Plugins.  All plugins
-are accessed via the plugin icon in the upper right corner
+more detail under :ref:`Specviz: Data Analysis Plugins <specviz-plugins>`.  All plugins
+are accessed via the :guilabel:`plugin` icon in the upper right corner
 of the Cubeviz application.
 
 Gaussian Smooth
@@ -14,12 +14,12 @@ Gaussian Smooth
 
 Gaussian smoothing can be applied either to the spectral
 or spatial dimensions of a cube.  Spectral smoothing is
-described in more detail under Specviz:Data Analysis
-Plugins:Gaussian Smoothing.
+described in more detail under :ref:`Specviz: Data Analysis
+Plugins: Gaussian Smoothing <gaussian-smooth>`.
 
 .. seealso::
 
-    `Gaussian Smooth <https://jdaviz.readthedocs.io/en/latest/specviz/plugins.html#gaussian-smooth>`_
+    :ref:`Gaussian Smooth <gaussian-smooth>`
         Specviz documentation on gaussian smoothing of 1D spectra.
 
 .. _collapse:
@@ -64,7 +64,7 @@ also saved to a dataset with the label specified in the :guilabel:`Model Label` 
 
 .. seealso::
 
-    `Model Fitting <https://jdaviz.readthedocs.io/en/latest/specviz/plugins.html#model-fitting>`_
+    :ref:`Model Fitting <specviz-model-fitting>`
         Specviz documentation on fitting spectral models.
 
 As mentioned in the :ref:`specviz-model-fitting` section for Specviz, models can be accessed
@@ -88,7 +88,8 @@ Contours
 .. image:: img/contours_activated.png
 
 Contours of an image can be generated and overplotted on that image.  Go
-to the :guilabel:`Layer` tab in the image viewer settings window. To activate :guilabel:`Contours`,
+to the :guilabel:`Layer` tab in the image viewer settings window under the 
+|icon-settings-sliders| icon. To activate :guilabel:`Contours`,
 click on the :guilabel:`Eye with a cross` icon and choose either the :guilabel:`Linear` icon
 for auto-contours or the :guilabel:`Custom` icon to set your own levels. The specified levels
 will appear as labeled, color-coded contours in the image viewer, on top of the image.
@@ -111,7 +112,7 @@ Unit Conversion
 
 .. seealso::
 
-    `Unit Conversion <https://jdaviz.readthedocs.io/en/latest/specviz/plugins.html#unit-conversion>`_
+    :ref:`Unit Conversion <unit-conversion>`
         Specviz documentation on unit conversion.
 
 
@@ -120,7 +121,7 @@ Line Lists
 
 .. seealso::
 
-    `Line Lists <https://jdaviz.readthedocs.io/en/latest/specviz/plugins.html#line-lists>`_
+    :ref:`Line Lists <line-lists>`
         Specviz documentation on line lists.
 
 
@@ -129,7 +130,7 @@ Line Analysis
 
 .. seealso::
 
-    `Line Analysis <https://jdaviz.readthedocs.io/en/latest/specviz/plugins.html#line-analysis>`_
+    :ref:`Line Analysis <line-analysis>`
         Specviz documentation on line analysis.
 
 
@@ -147,7 +148,7 @@ integrates the flux density along the spectral axis to compute
 a moment map. The order of the moment map (0, 1, 2, ...) indicates
 the power-law index to which the spectral axis is raised.  A 'moment 0' map
 gives the integrated flux over a spectral region. Similarly, 'moment 1'
-is the flux-weighted centroid (e.g. line center) and a 'moment 2'
+is the flux-weighted centroid (e.g., line center) and 'moment 2'
 is the dispersion (e.g., wavelength or velocity dispersion)
 along the spectral axis.  Moments 3 and 4 are less commonly utilized,
 but correspond to the skewness and
@@ -162,9 +163,9 @@ Next, enter the :guilabel:`Moment` index to specify the order
 of the moment map.   When you press :guilabel:`CALCULATE`, a 2D moment
 map is created. You can load this into any image
 viewer pane to inspect the result. You can also save the result to
-a FITS format file by pressing :guilabel:`SAVE AS FITS`
+a FITS format file by pressing :guilabel:`SAVE AS FITS`.
 
-For example, the middle image viewer in figure above shows the Moment 1 map
+For example, the middle image viewer in the screenshot above shows the Moment 1 map
 for a continuum-subtracted cube.  Note that the cube should first be
 continuum-subtracted in order to create continuum-free moment maps of an
 emission line. Moment maps of continuum emission can also be created, but
@@ -188,7 +189,7 @@ input data cube that is already continuum-subtracted.  Continuum
 maps can be created in a similar way for data that is not
 continuum-subtracted.
 
-To make a line or continuum map using the Collapse plugin, first
+To make a line or continuum map using the :ref:`Collapse Plugin <collapse>`, first
 import a data cube into Cubeviz.  Next, go to the
 Collapse plugin and select the input data using the
 :guilabel:`Data` pulldown. Then set the :guilabel:`Axis` to the
@@ -199,7 +200,7 @@ spectral bounds manually. When you :guilabel:`Apply` the Collapse, a 2D image
 of the spectral region is created. You can load this line map in any image
 viewer pane to inspect the result.
 
-A line map can also be created using the Moment Maps Plugin using a
+A line map can also be created using the :ref:`Moment Maps Plugin <moment-maps>` using a
 similar workflow. Select the (continuum-subtracted) dataset in the
 Plugin using the :guilabel:`Data` pulldown.  Then either select a
 subset in the Spectral Region pulldown or enter the lower and upper
@@ -209,7 +210,7 @@ image is the flux integral of the cube over the selected spectral
 region, and may be displayed in any image viewer, as shown in the
 middle image viewer in the figure above.
 
-The third method to create a map is via the Model Fitting plugin.
+The third method to create a map is via the :ref:`Model Fitting Plugin <model-fitting>`.
 First create and fit a model (e.g. a Gaussian plus continuum model)
 to an individual spectrum. Next, fit this model to every spaxel in
 your data cube. The resultant model parameter cube can be retrieved

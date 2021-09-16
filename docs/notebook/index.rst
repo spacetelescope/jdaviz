@@ -11,7 +11,7 @@ Jdaviz is designed to be integrated into existing `Jupyter notebooks <https://ju
     # Display Specviz
     myviz.app   #doctest: +SKIP
 
-Similarly, you can open instances of :ref:`mosviz-notebook`, :ref:`cubeviz-notebook`, and Imviz.
+Similarly, you can open instances of :ref:`mosviz-notebook`, :ref:`cubeviz-notebook`, and :ref:`imviz-notebook`.
 
 Using Jdaviz in a Jupyter Notebook
 ----------------------------------

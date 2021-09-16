@@ -7,7 +7,7 @@ with 2d spectra populating the top right viewer, and 1d spectra populating the v
 
 .. seealso::
 
-    `Display Spectra <https://jdaviz.readthedocs.io/en/latest/specviz/displaying.html#>`_
+    :ref:`Display Spectra <specviz-displaying>`
         Specviz documentation on displaying spectra.
 
 The functionality of the Specviz API can be accessed in Mosviz via
@@ -38,12 +38,12 @@ Plot settings for the 1d spectrum viewer can be found in the Specviz section.
 
 .. seealso::
 
-    `Plot Settings <https://jdaviz.readthedocs.io/en/latest/specviz/displaying.html#plot-settings>`_
+    :ref:`Plot Settings <plot-settings>`
         Specviz documentation on plot settings for a 1d spectrum viewer.
 
 Display settings for the 2d spectrum viewer can be found in the Cubeviz section.
 
 .. seealso::
 
-    `Display Settings <https://jdaviz.readthedocs.io/en/latest/cubeviz/displaycubes.html#display-settings>`_
+    :ref:`Display Settings <display-settings>`
         Cubeviz documentation on display settings for an image viewer (2d spectrum viewer in this case).

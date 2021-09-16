@@ -4,7 +4,7 @@
 Export Data From Jdaviz to Notebook
 ***********************************
 
-Specific instructions on exporting data from Jdaviz to your notebook vary slightly for each instance of Jdaviz, including :ref:`specviz-notebook`, :ref:`cubeviz-notebook`, :ref:`mosviz-notebook`, and Imviz.  In all instances, however, you can export data products from the Jdaviz into your notebook and, ultimately, save those variables locally.
+Specific instructions on exporting data from Jdaviz to your notebook vary slightly for each instance of Jdaviz, including for :ref:`Specviz <specviz-notebook>`, :ref:`Cubeviz <cubeviz-notebook>`, :ref:`Mosviz <mosviz-notebook>`, and :ref:`Imviz <imviz-notebook>`.  In all instances, however, you can export data products from the Jdaviz into your notebook and, ultimately, save those variables locally.
 
 Export Position Regions (Imviz)
 -------------------------------

@@ -18,7 +18,7 @@ described under Specviz:Data Analysis Plugins:Gaussian Smoothing.
 
 .. seealso::
 
-    `Gaussian Smooth <https://jdaviz.readthedocs.io/en/latest/specviz/plugins.html#gaussian-smooth>`_
+    :ref:`Gaussian Smooth <gaussian-smooth>`
         Specviz documentation on gaussian smoothing of 1D spectra.
 
 Model Fitting
@@ -29,7 +29,7 @@ Specviz:Data Analysis Plugins:Model Fitting documentation.
 
 .. seealso::
 
-    `Model Fitting <https://jdaviz.readthedocs.io/en/latest/specviz/plugins.html#model-fitting>`_
+    :ref:`Model Fitting <model-fitting>`
         Specviz documentation on fitting spectral models.
 
 Line Lists
@@ -37,7 +37,7 @@ Line Lists
 
 .. seealso::
 
-    `Line Lists <https://jdaviz.readthedocs.io/en/latest/specviz/plugins.html#line-lists>`_
+    :ref:`Line Lists <line-lists>`
         Specviz documentation on line lists.
 
 Line Analysis
@@ -45,7 +45,7 @@ Line Analysis
 
 .. seealso::
 
-    `Line Analysis <https://jdaviz.readthedocs.io/en/latest/specviz/plugins.html#line-analysis>`_
+    :ref:`Line Analysis <line-analysis>`
         Specviz documentation on line analysis.
 
 Slit Overlay

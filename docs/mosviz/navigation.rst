@@ -38,4 +38,4 @@ required information is present. The option to toggle whether slits are displaye
 is located in the top right tool menu under the "Slit Overlay" heading, as seen
 in the screenshot below.
 
-image:: ../img/slit_overlay.png
+.. image:: ../img/slit_overlay.png

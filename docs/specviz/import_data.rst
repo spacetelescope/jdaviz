@@ -22,12 +22,11 @@ This process is fairly straightforward, users need only click on the :guilabel:`
 
 .. image:: img/import_data_1.png
 
-and enter the path of file that can be parsed as a :class:`~specutils.Spectrum1D` in the text field:
+and choose a file that can be parsed as a :class:`~specutils.Spectrum1D` in the text field:
 
 .. image:: img/import_data_2.png
 
-After clicking :guilabel:`Import`, the data file will be parsed and loaded into the application. A notification will appear to let users know if the data import was successful. Afterward, the new data set can be found in the :guilabel:`Data` tab of each viewer's options menu.
-To access the data tab, click the :guilabel:`hammer and screwdriver` icon to open the tool menu of a viewer. Then, click the :guilabel:`gear` icon.
+After clicking :guilabel:`Import`, the data file will be parsed and loaded into the application. A notification will appear to let users know if the data import was successful. Afterward, the new data set can be found in the :guilabel:`Data` tab of each viewer's menu.
 
 .. image:: img/import_data_3.png
 

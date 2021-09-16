@@ -19,7 +19,7 @@ to load, i.e.::
 
     jdaviz /path/to/data/file --layout=<configuration>
 
-For example, to load a SDSS MaNGA IFU data cube into ``Cubeviz``, you would run the following from a terminal::
+For example, to load a `SDSS MaNGA IFU data cube <https://data.sdss.org/sas/dr14/manga/spectro/redux/v2_1_2/8485/stack/manga-8485-1901-LOGCUBE.fits.gz>`_ into ``Cubeviz``, you would run the following from a terminal::
 
     jdaviz /my/manga/cube/manga-8485-1901-LOGCUBE.fits.gz --layout=cubeviz
 
