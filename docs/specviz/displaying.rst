@@ -28,7 +28,7 @@ using the Python API.  Both are detailed further below.
 Selecting/Showing Data Sets
 ===========================
 
-Data can be selected and de-selected by clicking on the "hammer and screwdriver" icon at the top left of an image viewer. Then, click the "gear" icon to access the "Data" tab. Here, you can click a checkbox next to the listed data to make the data visible (checked) or invisible (unchecked).
+Data can be selected and de-selected under the "Data" tab. Here, you can click a checkbox next to the listed data to make the data visible (checked) or invisible (unchecked).
 
 .. image:: img/spec_viewer_with_data.png
 
@@ -44,11 +44,11 @@ interest.
 
 Interactive Pan/Zoom (Desktop or Notebook Interface)
 ----------------------------------------------------
-You can find the following Pan/Zoom tools available in the tool drawer of the viewer:
+You can find the following Pan/Zoom tools available under the |icon-hammer-and-screwdriver| icon in the viewer toolbar:
 
 2D Bidirectional Pan/Zoom
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-The :guilabel:`2D Pan/Zoom` icon allows you to zoom using the scroll wheel. The window will zoom into the area around your cursor:
+The |icon-zoom-pan-2d| icon allows you to zoom using the scroll wheel. The window will zoom into the area around your cursor:
 
 .. image:: ../img/Specviz_2D_Zoom.gif
     :alt: Zooming in Specviz with the Scroll Wheel
@@ -57,7 +57,7 @@ To pan, simply click and drag the window.
 
 Horizontal/Vertical Zoom
 ^^^^^^^^^^^^^^^^^^^^^^^^
-The :guilabel:`Horizontal` and :guilabel:`Vertical` Zoom tools allow you to zoom along each axis, while locking the other.  You can also zoom by scrolling.
+The |icon-zoom-pan-horiz| (horizontal) and |icon-zoom-pan-vert| (vertical) Zoom tools allow you to zoom along each axis, while locking the other.  You can also zoom by scrolling.
 
 API Pan/Zoom (Notebook Interface)
 ---------------------------------
@@ -104,8 +104,8 @@ To quickly flip an axis to change to and from ascending/descending, use
 Defining Spectral Regions
 =========================
 
-Spectral regions can be defined by clicking on the "hammer and screwdriver" icon at the top left of an image
-viewer. Then, click the "region" icon to set the cursor dragging function in "spectral region selection" mode.
+Spectral regions can be defined by clicking on the |icon-hammer-and-screwdriver| icon at the right of the
+viewer toolbar. Then, click the |icon-region-horiz| icon to set the cursor dragging function in "spectral region selection" mode.
 
 .. image:: img/spectral_region_1.png
 
@@ -135,14 +135,14 @@ In a notebook cell, you can access the regions using the
 Plot Settings
 =============
 
-To access plot settings for a particular viewer (including the spectrum viewer), click the :guilabel:`hammer and screwdriver` icon, followed by the :guilabel:`gear` icon, followed by the  :guilabel:`Layer` tab.
+To access plot settings for a particular viewer (including the spectrum viewer), click the |icon-settings-sliders| icon, followed by the  :guilabel:`Layer` tab.
 
 .. image:: img/specviz_plot_settings.png
 
 Layer
 -----
 
-The top section of the :guilabel:`Layer` tab contains options to change the color of the spectrum (click the :guilabel:`square` icon to see a color change menu), change visibility of the spectrum (:guilabel:`eye` icon), and a drop-down box to select which layer will have its settings changed.
+The top section of the :guilabel:`Layer` tab contains options to change the color of the spectrum (click the |icon-color-square| icon to see a color change menu), change visibility of the spectrum (|icon-eye| icon), and a drop-down box to select which layer will have its settings changed.
 
 Line Width
 ----------

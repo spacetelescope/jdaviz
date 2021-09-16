@@ -37,7 +37,7 @@ The Gaussian standard deviation in pixels must be entered into the
 A new Spectrum1D object is generated and is added to the spectrum
 viewer.
 It can be selected and shown in the viewer via the
-:guilabel:`gear-->Data` tab.
+:guilabel:`Data` icon in the viewer toolbar.
 
 .. _specviz-model-fitting:
 
@@ -87,7 +87,8 @@ Unit Conversion
 
 The spectral flux density and spectral axis units can be converted
 using the Unit Conversion plugin.  The Spectrum1D object to be
-converted is the currently selected spectrum in the spectrum viewer :guilabel:`gear-->Data` tab.
+converted is the currently selected spectrum in the spectrum viewer :guilabel:`Data`
+icon in the viewer toolbar.
 
 Select the frequency, wavelength, or energy unit in the
 :guilabel:`New Spectral Axis Unit` pulldown

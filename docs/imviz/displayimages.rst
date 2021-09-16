@@ -18,9 +18,7 @@ Selecting Data Set
 Adding New Viewers
 ==================
 
-.. image:: img/picture_with_plus.png
-
-In the toolbar towards the top of the UI, there is a :guilabel:`picture with a plus` icon
+In the toolbar towards the top of the UI, there is a |icon-plus| icon
 that when clicked will add new viewers to the application. You can then select from the data
 that has been loaded into the application to be visualized in these additional viewers.
 You can then utilize some of the Imviz-specific features, like :ref:`imviz_pan_zoom`.
@@ -41,17 +39,15 @@ Blinking
 Blinking is an Imviz-specific functionality that allows a user to quickly switch
 between viewing two or more images, as long as they are linked
 (see :ref:`imviz_pan_zoom` for more on linking behavior). This can be done
-by selecting the :guilabel:`hammer and screwdriver` icon and then clicking the
+by selecting the |icon-hammer-and-screwdriver| icon and then clicking the
 :guilabel:`right arrow` icon. You can also blink by selecting the "b" key on your keyboard.
 
 Contrast/Bias
 =============
 
-.. image:: img/white_to_black.png
-
 In addition to changing contrast and bias information in the :guilabel:`layer` tab
-(see :ref:`Contrast <contrast>`), Imviz has a :guilabel:`white to black` button
-under the :guilabel:`hammer and screwdriver` menu that can also edit those options. After clicking
+(see :ref:`Contrast <contrast>`), Imviz has a |icon-white-to-black| button
+under the |icon-hammer-and-screwdriver| menu that can also edit those options. After clicking
 that button, you can click and drag on the image viewer to change to change the contrast
 and bias. Moving along the X-axis will change the bias and moving along the Y-axis will change the
 contrast. If you would like to reset to the default contrast and bias settings, you can

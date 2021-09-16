@@ -88,7 +88,8 @@ Contours
 .. image:: img/contours_activated.png
 
 Contours of an image can be generated and overplotted on that image.  Go
-to the :guilabel:`Layer` tab in the image viewer settings window. To activate :guilabel:`Contours`,
+to the :guilabel:`Layer` tab in the image viewer settings window under the 
+|icon-settings-sliders| icon. To activate :guilabel:`Contours`,
 click on the :guilabel:`Eye with a cross` icon and choose either the :guilabel:`Linear` icon
 for auto-contours or the :guilabel:`Custom` icon to set your own levels. The specified levels
 will appear as labeled, color-coded contours in the image viewer, on top of the image.
