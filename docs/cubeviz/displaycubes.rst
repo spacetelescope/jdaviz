@@ -100,7 +100,7 @@ are defined in Specviz.
 
 .. seealso::
 
-    `Defining Spectral Regions (Specviz) <https://jdaviz.readthedocs.io/en/latest/specviz/displaying.html#spectral-regions>`_
+    :ref:`Defining Spectral Regions (Specviz) <spectral-regions>`
         Documentation on defining spectral regions in a 1D spectrum viewer.
 
 .. _cubeviz-pan-zoom:
@@ -197,5 +197,5 @@ The spectrum of colors used to visualize data can be changed using this drop dow
 
 .. seealso::
 
-    `Plot Settings (Specviz) <https://jdaviz.readthedocs.io/en/latest/specviz/displaying.html#plot-settings>`_
+    :ref:`Plot Settings (Specviz) <#plot-settings>`
         Plot settings for the spectrum 1D viewer.

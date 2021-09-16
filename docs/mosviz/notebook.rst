@@ -18,7 +18,7 @@ for example loading data into the app as described in :ref:`mosviz-import-data`.
 
 .. seealso::
 
-    `Cubeviz data export <https://jdaviz.readthedocs.io/en/latest/cubeviz/notebook.html>`_
+    :ref:`Cubeviz data export <cubeviz-notebook>`
         Cubeviz documentation on data exporting.
 
 The `~jdaviz.configs.mosviz.helper.Mosviz` helper class can be used similarly to how

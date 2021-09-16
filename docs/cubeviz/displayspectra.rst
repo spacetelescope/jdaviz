@@ -11,7 +11,7 @@ below.
 
 .. seealso::
 
-    `Displaying Spectra (Specviz) <https://jdaviz.readthedocs.io/en/latest/specviz/displaying.html>`_
+    :ref:`Displaying Spectra (Specviz) <specviz-displaying>`
         Documentation on displaying spectra in a 1D spectrum viewer.
 
 The functionality of the `~jdaviz.configs.specviz.Specviz` API can be accessed in Cubeviz via

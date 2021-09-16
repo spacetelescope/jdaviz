@@ -19,7 +19,7 @@ Plugins:Gaussian Smoothing.
 
 .. seealso::
 
-    `Gaussian Smooth <https://jdaviz.readthedocs.io/en/latest/specviz/plugins.html#gaussian-smooth>`_
+    :ref:`Gaussian Smooth <gaussian-smooth>`
         Specviz documentation on gaussian smoothing of 1D spectra.
 
 .. _collapse:
@@ -64,7 +64,7 @@ also saved to a dataset with the label specified in the :guilabel:`Model Label` 
 
 .. seealso::
 
-    `Model Fitting <https://jdaviz.readthedocs.io/en/latest/specviz/plugins.html#model-fitting>`_
+    :ref:`Model Fitting <specviz-model-fitting>`
         Specviz documentation on fitting spectral models.
 
 As mentioned in the :ref:`specviz-model-fitting` section for Specviz, models can be accessed
@@ -111,7 +111,7 @@ Unit Conversion
 
 .. seealso::
 
-    `Unit Conversion <https://jdaviz.readthedocs.io/en/latest/specviz/plugins.html#unit-conversion>`_
+    :ref:`Unit Conversion <unit-conversion>`
         Specviz documentation on unit conversion.
 
 
@@ -120,7 +120,7 @@ Line Lists
 
 .. seealso::
 
-    `Line Lists <https://jdaviz.readthedocs.io/en/latest/specviz/plugins.html#line-lists>`_
+    :ref:`Line Lists <line-lists>`
         Specviz documentation on line lists.
 
 
@@ -129,7 +129,7 @@ Line Analysis
 
 .. seealso::
 
-    `Line Analysis <https://jdaviz.readthedocs.io/en/latest/specviz/plugins.html#line-analysis>`_
+    :ref:`Line Analysis <line-analysis>`
         Specviz documentation on line analysis.
 
 
