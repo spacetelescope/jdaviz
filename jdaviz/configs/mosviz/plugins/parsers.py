@@ -437,9 +437,6 @@ def mos_meta_parser(app, data_obj, ids=None, spectra=False, sp1d=False):
 
         # source name can be taken from 1d spectra
         elif spectra and sp1d:
-            # names = [x[0].header.get("OBJECT", FALLBACK_NAME) for x in data_obj]
-            # names = [x for x, n in zip(range(len(names)), names) if (n == FALLBACK_NAME) ]
-
             names = _get_object_keyword(data_obj, ids)
 
         # source name and coordinates are taken from image headers, if present
