@@ -197,5 +197,5 @@ The spectrum of colors used to visualize data can be changed using this drop dow
 
 .. seealso::
 
-    :ref:`Plot Settings (Specviz) <#plot-settings>`
+    :ref:`Plot Settings (Specviz) <plot-settings>`
         Plot settings for the spectrum 1D viewer.
