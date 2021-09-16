@@ -1,4 +1,4 @@
-from .. import redshift_slider as rs
+from jdaviz.configs.specviz.plugins.redshift_slider import redshift_slider as rs
 
 
 def test_bounds_orderly_new_val_greater_than(specviz_app, spectrum1d):
