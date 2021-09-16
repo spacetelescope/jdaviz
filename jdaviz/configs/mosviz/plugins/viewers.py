@@ -146,11 +146,10 @@ class MosvizTableViewer(TableViewer):
 
             if component.label == '1D Spectra':
                 prev_data = self._selected_data.get('spectrum-viewer')
-
                 if prev_data != selected_data:
                     if prev_data:
-
-                        # This covers the cases where data is unit converted and the name is modified
+                        # This covers the cases where data is unit converted
+                        # and the name is modified
                         all_prev_data = [x
                                          for x in self.session.data_collection.labels
                                          if prev_data in x]
