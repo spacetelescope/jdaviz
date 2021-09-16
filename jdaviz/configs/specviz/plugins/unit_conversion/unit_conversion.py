@@ -294,6 +294,7 @@ class UnitConversion(TemplateMixin):
 
         # Create new spectrum with new units.
         converted_spectrum = spectrum._copy(flux=set_flux_unit,
+                                            wcs=None,
                                             spectral_axis=set_spectral_axis_unit,
                                             unit=set_flux_unit.unit,
                                             uncertainty=temp_uncertainty
