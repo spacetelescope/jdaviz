@@ -148,7 +148,7 @@ integrates the flux density along the spectral axis to compute
 a moment map. The order of the moment map (0, 1, 2, ...) indicates
 the power-law index to which the spectral axis is raised.  A 'moment 0' map
 gives the integrated flux over a spectral region. Similarly, 'moment 1'
-is the flux-weighted centroid (e.g. line center) and 'moment 2'
+is the flux-weighted centroid (e.g., line center) and 'moment 2'
 is the dispersion (e.g., wavelength or velocity dispersion)
 along the spectral axis.  Moments 3 and 4 are less commonly utilized,
 but correspond to the skewness and
