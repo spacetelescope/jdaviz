@@ -1,4 +1,4 @@
-2.0 (unreleased)
+2.0 (2021-09-17)
 ----------------
 
 - New Imviz configuration for visualization of 2D images.
