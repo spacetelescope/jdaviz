@@ -1,9 +1,11 @@
 2.0 (2021-09-17)
 ----------------
 
-- New Imviz configuration for visualization of 2D images.
-- Various improvements to existing configurations, including better performance,
-  user interface, and JWST data formats support.
+- Added Imviz configuration for visualization of 2D images.
+- Overhauled Mosviz to drastically increase performance, improve user interface,
+  fix buggy features.
+- Improved other configurations with bug fixes, user experience enhancements,
+  and JWST data formats support.
 
 
 1.1 (2021-03-22)
