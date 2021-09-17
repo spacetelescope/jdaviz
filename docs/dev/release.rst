@@ -4,7 +4,7 @@ Package Release Instructions
 
 This document outlines the steps for releasing a versioned Jdaviz package to
 PyPI. Currently, these do not cover submitting package updates to other
-distribution outlets, such as ``astroconda``, ``conda-forge``, or Zenodo.
+distribution outlets, such as ``astroconda`` or ``conda-forge``.
 
 This process currently requires you (the release manager) to have sufficient GitHub
 permissions to tag, push, and create a GitHub release on Jdaviz repository.
@@ -151,7 +151,8 @@ You can create a clean checkout as follows (requires
 #. Check `RTD builds <https://readthedocs.org/projects/jdaviz/builds/>`_ to make sure
    that documentation built successfully for both ``latest`` and the new ``vX.Y.Z`` tag.
 
-#. Check Zenodo page for Jdaviz. It should have picked up the GitHub Release automatically.
+#. Check `Zenodo page for Jdaviz <https://zenodo.org/badge/latestdoi/185452341>`_.
+   It should have picked up the GitHub Release automatically.
 
 Congratulations, you have just released a new version of Jdaviz!
 
@@ -205,7 +206,8 @@ You can do a release from your fork directly without a clean code check-out.
 #. Check `RTD builds <https://readthedocs.org/projects/jdaviz/builds/>`_ to make sure
    that documentation built successfully for both ``latest`` and the new ``vX.Y.Z`` tag.
 
-#. Check Zenodo page for Jdaviz. It should have picked up the GitHub Release automatically.
+#. Check `Zenodo page for Jdaviz <https://zenodo.org/badge/latestdoi/185452341>`_.
+   It should have picked up the GitHub Release automatically.
 
 #. The release is basically done, but now you have to set it up for the
    *next* release cycle. Update ``CHANGES.rst`` directly in the ``main`` branch
