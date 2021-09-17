@@ -8,16 +8,11 @@ from astropy.wcs import WCS
 from gwcs import WCS as GWCS
 from numpy.testing import assert_allclose
 from regions import CirclePixelRegion
+from skimage.io import imsave
 
 from jdaviz.configs.imviz.helper import split_filename_with_fits_ext
 from jdaviz.configs.imviz.plugins.parsers import (
     parse_data, _validate_fits_image2d, _validate_bunit, _parse_image)
-
-try:
-    import skimage  # noqa
-    HAS_SKIMAGE = True
-except ImportError:
-    HAS_SKIMAGE = False
 
 
 @pytest.mark.parametrize(
@@ -137,11 +132,8 @@ class TestParseImage:
         assert len(imviz_app.app.data_collection) == 3
 
     @pytest.mark.filterwarnings('ignore:.* is a low contrast image')
-    @pytest.mark.skipif(not HAS_SKIMAGE, reason='scikit-image is missing')
     @pytest.mark.parametrize('format', ('jpg', 'png'))
     def test_parse_rgba(self, imviz_app, tmp_path, format):
-        from skimage.io import imsave
-
         if format == 'png':  # Cross-test PNG with RGBA
             a = np.zeros((10, 10, 4), dtype='uint8')
         else:  # Cross-test JPG with RGB only
