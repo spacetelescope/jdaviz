@@ -1,5 +1,9 @@
 .. image:: docs/logos/jdaviz_1.svg
 
+.. image:: https://zenodo.org/badge/185452341.svg
+   :target: https://zenodo.org/badge/latestdoi/185452341
+   :alt: Zenodo DOI
+
 .. image:: https://github.com/spacetelescope/jdaviz/workflows/CI/badge.svg
     :target: https://github.com/spacetelescope/jdaviz/actions
     :alt: GitHub Actions CI Status
