@@ -242,5 +242,6 @@ for line in open('nitpick-exceptions'):
 # Extra intersphinx in addition to what is already in sphinx-astropy
 intersphinx_mapping['glue'] = ('http://docs.glueviz.org/en/stable/', None)
 intersphinx_mapping['glue_jupyter'] = ('https://glue-jupyter.readthedocs.io/en/stable/', None)
+intersphinx_mapping['skimage'] = ('https://scikit-image.org/docs/stable/', None)
 intersphinx_mapping['specutils'] = ('https://specutils.readthedocs.io/en/stable/', None)
 intersphinx_mapping['spectral_cube'] = ('https://spectral-cube.readthedocs.io/en/stable/', None)
