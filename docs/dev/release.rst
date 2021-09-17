@@ -140,7 +140,7 @@ You can create a clean checkout as follows (requires
      git push origin vX.Y.Z
 
 #. Go to `Releases on GitHub <https://github.com/spacetelescope/jdaviz/releases>`_
-   and `create a new GitHub release <https://docs.github.com/en/github/administering-a-repository/releasing-projects-on-github/managing-releases-in-a-repository>`_
+   and `create a new GitHub release <https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository>`_
    off the new ``vX.Y.Z`` tag.
 
 #. Check `Release on Actions <https://github.com/spacetelescope/jdaviz/actions/workflows/publish.yml>`_
@@ -194,7 +194,7 @@ You can do a release from your fork directly without a clean code check-out.
    Stop here; do not continue! Otherwise, go to the next step.
 
 #. Go to `Releases on GitHub <https://github.com/spacetelescope/jdaviz/releases>`_
-   and `create a new GitHub release <https://docs.github.com/en/github/administering-a-repository/releasing-projects-on-github/managing-releases-in-a-repository>`_
+   and `create a new GitHub release <https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository>`_
    by giving it a new ``vX.Y.Z`` tag (do not choose any existing tags).
 
 #. Check `Release on Actions <https://github.com/spacetelescope/jdaviz/actions/workflows/publish.yml>`_
