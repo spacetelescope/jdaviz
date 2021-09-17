@@ -45,23 +45,6 @@ class TestSpecvizHelper:
         self.spec_app.load_spectrum(self.spec_list, data_label=labels)
         assert len(self.spec_app.app.data_collection) == 4
 
-    @pytest.mark.remote_data
-    def test_load_spectrum_list_directory(self, tmpdir):
-        with tempfile.TemporaryDirectory() as tmpdir:
-            test_data = 'https://stsci.box.com/shared/static/l2azhcqd3tvzhybdlpx2j2qlutkaro3z.zip'
-            fn = download_file(test_data, cache=True, timeout=30)
-            with ZipFile(fn, 'r') as sample_data_zip:
-                sample_data_zip.extractall(tmpdir)
-            data_path = os.path.join(tmpdir, 'NIRISS_for_parser_p0171')
-
-            test_data = SpectrumList.read(data_path)
-
-            NSPEC = 6
-
-            # self.spec_app.load_spectrum(data_path)
-            # self.spec_app.load_spectrum(test_data, data_label=['1', '2'])
-            # assert len(self.spec_app.app.data_collection) == NSPEC
-
     def test_mismatched_label_length(self):
         with pytest.raises(ValueError, match='Length'):
             labels = ["List test 1", "List test 2"]
