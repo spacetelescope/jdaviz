@@ -1,11 +1,57 @@
 2.1 (unreleased)
-----------------
+================
 
-- No changes yet
+New Features
+------------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+API Changes
+-----------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Other Changes and Additions
+---------------------------
 
 
 2.0 (2021-09-17)
-----------------
+================
 
 - Added Imviz configuration for visualization of 2D images.
 - Overhauled Mosviz to drastically increase performance, improve user interface,
@@ -15,10 +61,10 @@
 
 
 1.1 (2021-03-22)
-----------------
+================
 
 New Features
-^^^^^^^^^^^^
+------------
 - Added methods to extract Mosviz data table to csv or astropy table. [#468]
 - Added methods to extract fitted models and model parameters to notebook. [#458]
 - Created a NIRISS dataset parser for Mosviz. [#394]
@@ -28,7 +74,7 @@ New Features
 - Added a debugging mode to show stdout and stderr on frontend. [#368]
 
 Bug Fixes
-^^^^^^^^^
+---------
 - Fixed data selection update loop in UI menu. [#427, #456]
 - Fixed a bug when using the Gaussian Smooth plugin multiple times. [#441]
 - Fixed axis autoscaling when redshift slider has been used. [#404, #413]
@@ -37,8 +83,8 @@ Bug Fixes
 - Fixed a WCS bug in Mosviz. [#377]
 - Fixed failing case of parsing cube extensions. [#374]
 
-Miscellaneous Changes and Additions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Other Changes and Additions
+---------------------------
 - Cleaned up the Model Fitting plugin UI. [#485]
 - Improved performance when loading multiple datasets. [#435]
 - Updated example notebooks. [#418]
@@ -50,7 +96,7 @@ Miscellaneous Changes and Additions
 
 
 1.0.3 (2020-10-08)
-------------------
+==================
 
 - Added documentation. [#323, #319, #315, #308, #300]
 - Bug fixes in model fitting [#325], line lists [#326], and cubeviz data labels [#313]
@@ -58,24 +104,24 @@ Miscellaneous Changes and Additions
 
 
 1.0.2 (2020-09-23)
-------------------
+==================
 
 - Incorporate latest releases of dependencies.
 
 
 1.0.1 (2020-09-18)
-------------------
+==================
 
 - Fix issue from release.
 
 
 1.0 (2020-09-18)
-----------------
+================
 
 - Official release.
 
 
 0.1 (2020-08-26)
-----------------
+================
 
 - Initial release.
