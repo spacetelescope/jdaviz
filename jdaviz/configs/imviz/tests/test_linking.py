@@ -3,15 +3,10 @@ from astropy.table import Table
 from glue.core.link_helpers import LinkSame
 from glue.plugins.wcs_autolinking.wcs_autolinking import OffsetLink, WCSLink
 from numpy.testing import assert_allclose
+from regions import PixCoord, CirclePixelRegion
 
 from jdaviz.configs.imviz.helper import get_reference_image_data
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS, BaseImviz_WCS_WCS
-
-try:
-    import regions  # noqa
-    HAS_REGIONS = True
-except ImportError:
-    HAS_REGIONS = False
 
 
 class BaseLinkHandler:
@@ -43,10 +38,7 @@ class TestLink_WCS_NoWCS(BaseImviz_WCS_NoWCS, BaseLinkHandler):
 
 class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
 
-    @pytest.mark.skipif(not HAS_REGIONS, reason='regions is missing')
     def test_wcslink_affine_with_extras(self):
-        from regions import PixCoord, CirclePixelRegion
-
         self.imviz.link_data(link_type='wcs', wcs_fallback_scheme=None, error_on_fail=True)
         links = self.imviz.app.data_collection.external_links
         assert len(links) == 1

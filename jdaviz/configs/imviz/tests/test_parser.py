@@ -7,6 +7,7 @@ from astropy.utils.data import download_file
 from astropy.wcs import WCS
 from gwcs import WCS as GWCS
 from numpy.testing import assert_allclose
+from regions import CirclePixelRegion
 
 from jdaviz.configs.imviz.helper import split_filename_with_fits_ext
 from jdaviz.configs.imviz.plugins.parsers import (
@@ -17,12 +18,6 @@ try:
     HAS_SKIMAGE = True
 except ImportError:
     HAS_SKIMAGE = False
-
-try:
-    import regions  # noqa
-    HAS_REGIONS = True
-except ImportError:
-    HAS_REGIONS = False
 
 
 @pytest.mark.parametrize(
@@ -183,11 +178,8 @@ class TestParseImage:
         with pytest.raises(ValueError, match='Do not manually overwrite data_label'):
             imviz_app.load_data(flist, data_label='foo', show_in_viewer=False)
 
-    @pytest.mark.skipif(not HAS_REGIONS, reason='regions not installed')
     @pytest.mark.remote_data
     def test_parse_jwst_nircam_level2(self, imviz_app):
-        from regions import CirclePixelRegion
-
         filename = download_file(self.jwst_asdf_url_1, cache=True)
 
         # Default behavior: Science image
