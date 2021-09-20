@@ -57,7 +57,7 @@ You can create a clean checkout as follows (requires
 
 #. Update the ``CHANGES.rst`` file to make sure that all the user-facing changes are listed,
    and update the release date from ``unreleased`` to current date in the ``yyyy-mm-dd`` format.
-   Do not forget to commit your changes::
+   Remove any empty subsections. Do not forget to commit your changes::
 
      git add CHANGES.rst
      git commit -m "Preparing release vX.Y.Z"
@@ -124,9 +124,55 @@ You can create a clean checkout as follows (requires
    replacing ``A.B`` with the next non-bugfix version::
 
      A.B (unreleased)
-     ----------------
+     ================
 
-     - No changes yet
+     New Features
+     ------------
+
+     Cubeviz
+     ^^^^^^^
+
+     Imviz
+     ^^^^^
+
+     Mosviz
+     ^^^^^^
+
+     Specviz
+     ^^^^^^^
+
+     API Changes
+     -----------
+
+     Cubeviz
+     ^^^^^^^
+
+     Imviz
+     ^^^^^
+
+     Mosviz
+     ^^^^^^
+
+     Specviz
+     ^^^^^^^
+
+     Bug Fixes
+     ---------
+
+     Cubeviz
+     ^^^^^^^
+
+     Imviz
+     ^^^^^
+
+     Mosviz
+     ^^^^^^
+
+     Specviz
+     ^^^^^^^
+
+     Other Changes and Additions
+     ---------------------------
 
 #. Commit your changes of the, uh, change log::
 
@@ -182,7 +228,7 @@ You can do a release from your fork directly without a clean code check-out.
 
 #. Update the ``CHANGES.rst`` file to make sure that all the user-facing changes are listed,
    and update the release date from ``unreleased`` to current date in the ``yyyy-mm-dd`` format.
-   Do not forget to commit your changes::
+   Remove any empty subsections. Do not forget to commit your changes::
 
      git add CHANGES.rst
      git commit -m "Preparing release vX.Y.Z"
@@ -217,9 +263,55 @@ You can do a release from your fork directly without a clean code check-out.
    with the next non-bugfix version::
 
      A.B (unreleased)
-     ----------------
+     ================
 
-     - No changes yet
+     New Features
+     ------------
+
+     Cubeviz
+     ^^^^^^^
+
+     Imviz
+     ^^^^^
+
+     Mosviz
+     ^^^^^^
+
+     Specviz
+     ^^^^^^^
+
+     API Changes
+     -----------
+
+     Cubeviz
+     ^^^^^^^
+
+     Imviz
+     ^^^^^
+
+     Mosviz
+     ^^^^^^
+
+     Specviz
+     ^^^^^^^
+
+     Bug Fixes
+     ---------
+
+     Cubeviz
+     ^^^^^^^
+
+     Imviz
+     ^^^^^
+
+     Mosviz
+     ^^^^^^
+
+     Specviz
+     ^^^^^^^
+
+     Other Changes and Additions
+     ---------------------------
 
 #. Commit your changes of the, uh, change log with a message, "Back to development: A.B.dev"
 
