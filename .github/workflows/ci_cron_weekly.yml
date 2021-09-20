@@ -3,6 +3,7 @@
 name: Cron Scheduled CI Tests
 
 on:
+  workflow_dispatch:
   schedule:
     # run at 9am UTC on Mondays
     - cron: '0 9 * * 1'
