@@ -4,18 +4,25 @@
 Import Data
 ***********
 
-Currently, data must be imported into Mosviz using the API in the Jupyter notebook. 
-After initializing the app as explained in :ref:`mosviz-notebook`, 
-you must generate three lists containing the filenames for the 1D spectra, 
-2D spectra, and images in your dataset. These three lists are taken as arguments 
-to the :meth:`~jdaviz.configs.mosviz.helper.Mosviz.load_data` method.
-An example is given below, where ``file_dir`` is a
-directory that contains all the files for the dataset to be loaded::
+Currently, data must be imported into Mosviz using the API in the Jupyter
+notebook.
+First, initialize the app as explained in :ref:`mosviz-notebook` and define
+the directory that contains your files::
 
-    >>> import glob
     >>> from jdaviz import Mosviz
     >>> mosviz = Mosviz()
-    >>> mosviz.app  # doctest: +SKIP
+    >>> mosviz.app
+    >>> file_dir = ... # "PATH/TO/YOUR/FILES"
+
+From there, you may either use the :meth:`~jdaviz.configs.mosviz.helper.Mosviz.load_data`
+method to load all files in a directory from a specific instrument::
+
+    >>> mosviz.load_data(directory=file_dir, instrument='NIRSpec')
+
+...or, you can generate three lists containing the filenames for the 1D
+spectra, 2D spectra, and images in your dataset and use those as its arguments::
+
+    >>> import glob
     >>> spectra_1d = []
     >>> spectra_2d = []
     >>> images = []
@@ -28,6 +35,6 @@ directory that contains all the files for the dataset to be loaded::
     >>>         images.append(filename)  # doctest: +SKIP
     >>>     mosviz.load_data(spectra_1d, spectra_2d, images)  # doctest: +SKIP
 
-This example assumes that all 1D spectra have "x1d" in the filename, all 2D spectra
-have "s2d" in the filename, and any other FITS files in the directory are the 
-corresponding images. 
+(This example assumes that all 1D spectra have "x1d" in the filename, all 2D spectra
+have "s2d" in the filename, and any other FITS files in the directory are the
+corresponding images.)

@@ -234,14 +234,25 @@ class Mosviz(ConfigHelper):
 
         return pix, pixel_height
 
-    def load_data(self, spectra_1d=None, spectra_2d=None, images=None,
+    def load_data(self, directory=None, instrument=None,
+                  spectra_1d=None, spectra_2d=None, images=None,
                   spectra_1d_label=None, spectra_2d_label=None,
                   images_label=None, *args, **kwargs):
         """
-        Load and parse a set of MOS spectra and images
+        Load and parse a set of MOS spectra and images, either from a directory,
+        a file path, or a list of file paths.
 
         Parameters
         ----------
+        directory : str
+            String representing the location of a directory of applicable data.
+            Meant for use with ``instrument``; supersedes all other arguments.
+
+        instrument : str
+            String representing the instrument from which the data come.
+            Current options are 'NIRSpec' and 'NIRISS' from JWST. Meant for use
+            with ``directory``.
+
         spectra_1d : list or str
             A list of spectra as translatable container objects (e.g.
             ``Spectrum1D``) that can be read by glue-jupyter. Alternatively,
@@ -259,12 +270,12 @@ class Mosviz(ConfigHelper):
 
         spectra_1d_label : str or list
             String representing the label for the data item loaded via
-            ``onedspectra``. Can be a list of strings representing data labels
+            ``spectra_1d``. Can be a list of strings representing data labels
             for each item in ``data_obj`` if  ``data_obj`` is a list.
 
         spectra_2d_label : str or list
             String representing the label for the data item loaded via
-            ``twodspectra``. Can be a list of strings representing data labels
+            ``spectra_2d``. Can be a list of strings representing data labels
             for each item in ``data_obj`` if  ``data_obj`` is a list.
 
         images_label : str or list
@@ -275,8 +286,6 @@ class Mosviz(ConfigHelper):
         # Link data after everything is loaded
         self.app.auto_link = False
 
-        directory = kwargs.pop('directory', None)
-        instrument = kwargs.pop('instrument', None)
         msg = ""
 
         if directory is not None and instrument is not None:
