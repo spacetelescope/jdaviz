@@ -1,7 +1,9 @@
 <template>
   <v-app id="web-app" class="jdaviz">
     <v-app-bar color="primary" dark :dense="state.settings.dense_toolbar" flat app absolute clipped-right>
-      <jupyter-widget :widget="item.widget" v-for="item in state.tool_items" :key="item.name"></jupyter-widget>
+      <j-tooltip :doctips="state.doctips" :doctips="state.doctips" :tipid="item.name" v-for="item in state.tool_items">
+        <jupyter-widget :widget="item.widget" :key="item.name"></jupyter-widget>
+      </j-tooltip>
       <v-toolbar-items>
         <v-btn v-if="config === 'mosviz'" icon @click="state.settings.freeze_states_on_row_change = !state.settings.freeze_states_on_row_change">
           <v-icon v-if="state.settings.freeze_states_on_row_change">mdi-lock</v-icon>
@@ -10,10 +12,18 @@
       </v-toolbar-items>
       <v-spacer></v-spacer>
       <v-toolbar-items>
-        <v-btn icon @click="state.drawer = !state.drawer">
-          <v-icon v-if="state.drawer">mdi-toy-brick-remove</v-icon>
-          <v-icon v-else>mdi-toy-brick-plus</v-icon>
-        </v-btn>
+        <j-tooltip :doctips="state.doctips" tipid="app-toolbar-doctips">
+          <v-btn icon @click="state.doctips = !state.doctips">
+            <v-icon v-if="state.doctips">mdi-help-circle</v-icon>
+            <v-icon v-else>mdi-help-circle-outline</v-icon>
+          </v-btn>  
+        </j-tooltip>
+        <j-tooltip :doctips="state.doctips" tipid="app-toolbar-plugins">
+          <v-btn icon @click="state.drawer = !state.drawer">
+            <v-icon v-if="state.drawer">mdi-toy-brick-remove</v-icon>
+            <v-icon v-else>mdi-toy-brick-plus</v-icon>
+          </v-btn>
+        </j-tooltip>
       </v-toolbar-items>
     </v-app-bar>
 
@@ -33,6 +43,7 @@
                   :stack="stack"
                   :key="index"
                   :data-items="state.data_items"
+                  :doctips="state.doctips"
                   @resize="relayout"
                   @destroy="destroy_viewer_item($event)"
                   @data-item-selected="data_item_selected($event)"
@@ -45,7 +56,11 @@
             <v-card flat tile class="overflow-y-auto fill-height" color="#f8f8f8">
               <v-expansion-panels accordion multiple focusable flat tile>
                 <v-expansion-panel v-for="(tray, index) in state.tray_items" :key="index">
-                  <v-expansion-panel-header>{{ tray.label }}</v-expansion-panel-header>
+                  <v-expansion-panel-header>
+                    <j-tooltip :doctips="state.doctips" :tipid="tray.name">
+                      {{ tray.label }}
+                    </j-tooltip>
+                  </v-expansion-panel-header>
                   <v-expansion-panel-content>
                     <jupyter-widget :widget="tray.widget"></jupyter-widget>
                   </v-expansion-panel-content>
@@ -203,4 +218,45 @@ div.output_wrapper {
   padding: 0px;
   margin: 0px;
 }
+
+
+/* vue-tippy (used in tooltip.vue) creates a div that defaults to block which 
+  screws up any toolbar alignment.  Unfortunately no class or id are provided
+  or can be passed for tooltip.vue.  However, we always set the interactive
+  attribute, so can filter on that here.
+  */
+div[interactive] {
+  display: inline-flex;
+  height: inherit;
+}
+.col > div[interactive] {
+  display: inline-block;
+}
+
+div[interactive] > div[tabindex] {
+  display: inline-flex;
+}
+
+.v-tooltip__content, .tippy-backdrop, .tippy-arrow, .tippy-tooltip {
+  background-color: white !important;
+}  
+
+.tippy-arrow {
+  border-bottom-color: white !important
+}
+
+.v-tooltip__content, .tippy-tooltip {
+  border-radius: 2px !important;
+  border: 1px #c75109 solid !important;
+}
+
+.v-tooltip__content, .tippy-content {
+  color: #00617e !important;
+}
+
+.tippy-content > a {
+  text-decoration: underline !important;
+}
+
+
 </style>

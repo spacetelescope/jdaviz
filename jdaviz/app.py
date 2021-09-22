@@ -6,6 +6,7 @@ import uuid
 from inspect import isclass
 
 import ipywidgets as w
+import ipyvue
 
 from astropy.nddata import CCDData
 from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
@@ -51,6 +52,9 @@ EXT_TYPES = dict(flux=['flux', 'sci'],
 # some glue-core versions
 glue_settings.DATA_ALPHA = 1
 
+ipyvue.register_component_from_file(None, 'j-tooltip',
+                                    os.path.join(os.path.dirname(__file__), 'tooltip.vue'))
+
 
 class ApplicationState(State):
     """
@@ -64,6 +68,9 @@ class ApplicationState(State):
     """
     drawer = CallbackProperty(
         False, docstring="State of the plugins drawer.")
+
+    doctips = CallbackProperty(
+        False, docstring="State of the extended documentation tooltips.")
 
     snackbar = DictCallbackProperty({
         'show': False,
