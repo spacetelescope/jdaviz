@@ -51,6 +51,9 @@ class TestLoadStaticRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
         self.imviz._delete_region('my_mask')
         self.verify_region_loaded('my_mask', count=0)
 
+        # Deletion of non-existent label is silent no-op.
+        self.imviz._delete_region('foo')
+
     def test_regions_pixel(self):
         # Out-of-bounds should still overlay the overlapped part.
         my_reg = CirclePixelRegion(center=PixCoord(x=6, y=2), radius=5)
