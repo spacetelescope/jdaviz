@@ -10,6 +10,9 @@ Cubeviz
 Imviz
 ^^^^^
 
+- New ``imviz.create_image_viewer()`` and ``imviz.destroy_viewer()`` methods
+  to allow users to programmatically create and destroy image viewers. [#907]
+
 Mosviz
 ^^^^^^
 
