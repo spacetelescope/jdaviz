@@ -48,6 +48,21 @@ class Imviz(ConfigHelper):
         # not update checkbox in Data menu.
         self.app.hub.broadcast(NewViewerMessage(ImvizImageView, data=None, sender=self.app))
 
+    def destroy_viewer(self, viewer_id):
+        """Destroy a viewer associated with the given ID.
+
+        Raises
+        ------
+        ValueError
+            Default viewer cannot be destroyed.
+
+        """
+        if viewer_id not in self.app._viewer_store:  # Silent no-op
+            return
+        if viewer_id == 'imviz-0':
+            raise ValueError(f"Default viewer '{viewer_id}' cannot be destroyed")
+        self.app.vue_destroy_viewer_item(viewer_id)
+
     def load_data(self, data, parser_reference=None, **kwargs):
         """Load data into Imviz.
 
