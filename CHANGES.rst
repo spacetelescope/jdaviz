@@ -40,6 +40,9 @@ Cubeviz
 Imviz
 ^^^^^
 
+- ``imviz.get_interactive_regions()`` no longer produces long traceback
+  for unsupported region shapes. [#906]
+
 Mosviz
 ^^^^^^
 
