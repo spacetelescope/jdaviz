@@ -10,7 +10,7 @@ from glue.core.link_helpers import LinkSame
 from glue.core.subset import Subset, MaskSubsetState
 from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink, NoAffineApproximation
 
-from jdaviz.core.events import SnackbarMessage
+from jdaviz.core.events import SnackbarMessage, NewViewerMessage
 from jdaviz.core.helpers import ConfigHelper
 
 __all__ = ['Imviz']
@@ -28,6 +28,25 @@ class Imviz(ConfigHelper):
     def default_viewer(self):
         """Default viewer instance. This is typically the first viewer ("imviz-0")."""
         return self._default_viewer
+
+    def create_image_viewer(self):
+        """Create a new image viewer.
+
+        To display data in this new viewer programmatically,
+        first get the new viewer ID from the small tab on the top
+        left of viewer display. Then, use
+        :meth:`~jdaviz.app.Application.add_data_to_viewer` from ``imviz.app``
+        by passing in the new viewer ID and the desired data label,
+        once per dataset you wish to display.
+
+        Alternately, you can also display data interactively via the GUI.
+
+        """
+        from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
+
+        # Cannot assign data to real Data because it loads but it will
+        # not update checkbox in Data menu.
+        self.app.hub.broadcast(NewViewerMessage(ImvizImageView, data=None, sender=self.app))
 
     def load_data(self, data, parser_reference=None, **kwargs):
         """Load data into Imviz.
