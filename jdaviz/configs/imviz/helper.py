@@ -269,6 +269,9 @@ class Imviz(ConfigHelper):
         """Return regions interactively drawn in the viewer.
         This does not return regions added via :meth:`load_static_regions`.
 
+        Unsupported region shapes will be skipped. When that happens,
+        a red snackbar message will appear on display.
+
         Returns
         -------
         regions : dict
@@ -277,6 +280,7 @@ class Imviz(ConfigHelper):
 
         """
         regions = {}
+        failed_regs = set()
 
         # Subset is global, so we just use default viewer.
         for lyr in self.default_viewer.layers:
@@ -292,9 +296,18 @@ class Imviz(ConfigHelper):
             if not subset_label.startswith('Subset'):
                 continue
 
-            region = subset_data.data.get_selection_definition(
-                subset_id=subset_label, format='astropy-regions')
-            regions[subset_label] = region
+            try:
+                region = subset_data.data.get_selection_definition(
+                    subset_id=subset_label, format='astropy-regions')
+            except NotImplementedError:
+                failed_regs.add(subset_label)
+            else:
+                regions[subset_label] = region
+
+        if len(failed_regs) > 0:
+            self.app.hub.broadcast(SnackbarMessage(
+                f"Failed to get regions: {', '.join(failed_regs)}",
+                color="error", timeout=8000, sender=self.app))
 
         return regions
 
@@ -308,6 +321,22 @@ class Imviz(ConfigHelper):
         tool.interact.brushing = True
         tool.interact.selected = [from_pix, to_pix]
         tool.interact.brushing = False
+
+    # TODO: Make this public API?
+    def _delete_region(self, subset_label):
+        """Delete region given the Subset label."""
+        all_subset_labels = [s.label for s in self.app.data_collection.subset_groups]
+        if subset_label not in all_subset_labels:
+            return
+        i = all_subset_labels.index(subset_label)
+        subset_grp = self.app.data_collection.subset_groups[i]
+        self.app.data_collection.remove_subset_group(subset_grp)
+
+    # TODO: Make this public API?
+    def _delete_all_regions(self):
+        """Delete all regions."""
+        for subset_grp in self.app.data_collection.subset_groups:  # should be a copy
+            self.app.data_collection.remove_subset_group(subset_grp)
 
 
 def split_filename_with_fits_ext(filename):
