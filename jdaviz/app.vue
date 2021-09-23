@@ -43,10 +43,10 @@
                 <g-viewer-tab
                   v-for="(stack, index) in state.stack_items"
                   :stack="stack"
-                  :key="index"
+                  :key="stack.viewers.map(v => v.id).join('-')"
                   :data-items="state.data_items"
                   @resize="relayout"
-                  @destroy="destroy_viewer_item($event)"
+                  :closefn="destroy_viewer_item"
                   @data-item-selected="data_item_selected($event)"
                   @save-figure="save_figure($event)"
                 ></g-viewer-tab>

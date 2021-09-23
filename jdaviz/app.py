@@ -948,12 +948,15 @@ class Application(VuetifyTemplate, HubListener):
                 if len(stack.get('children', [])) > 0:
                     stack['children'] = remove(stack['children'])
 
+            for empty_stack in [s for s in stack_items
+                                if not s['viewers'] and not s.get('children')]:
+                stack_items.remove(empty_stack)
+
             return stack_items
 
         remove(self.state.stack_items)
 
         # Also remove the viewer from the stored viewer instance dictionary
-        # FIXME: This is getting called twice for some reason
         if cid in self._viewer_store:
             del self._viewer_store[cid]
 
