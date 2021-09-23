@@ -5,7 +5,6 @@ import re
 import uuid
 from inspect import isclass
 
-import ipywidgets as w
 import ipyvue
 
 from astropy.nddata import CCDData
@@ -35,7 +34,7 @@ from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessag
                                 AddDataToViewerMessage, RemoveDataFromViewerMessage)
 from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registry,
                                     data_parser_registry)
-from jdaviz.utils import load_template, SnackbarQueue
+from jdaviz.utils import SnackbarQueue
 
 __all__ = ['Application']
 
@@ -64,6 +63,9 @@ ipyvue.register_component_from_file(None, 'j-external-link',
 ipyvue.register_component_from_file(None, 'j-docs-link',
                                     os.path.join(os.path.dirname(__file__),
                                                  'components/docs_link.vue'))
+# Register pure vue component. This allows us to do recursive component instantiation only in the
+# vue component file
+ipyvue.register_component_from_file('g-viewer-tab', "container.vue", __file__)
 
 
 class ApplicationState(State):
@@ -133,14 +135,7 @@ class Application(VuetifyTemplate, HubListener):
 
     state = GlueState().tag(sync=True)
 
-    template = load_template("app.vue", __file__).tag(sync=True)
-
-    # Pure vue components are added through the components attribute. This
-    #  allows us to do recursive component instantiation only in the vue
-    #  component file
-    components = Dict({"g-viewer-tab": load_template(
-        "container.vue", __file__, traitlet=False)}).tag(
-            sync=True, **w.widget_serialization)
+    template_file = __file__, "app.vue"
 
     loading = Bool(False).tag(sync=True)
     config = Unicode("").tag(sync=True)

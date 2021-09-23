@@ -6,7 +6,6 @@ from traitlets import Int, List
 
 from jdaviz.core.registries import tool_registry
 from jdaviz.core.template_mixin import TemplateMixin
-from jdaviz.utils import load_template
 
 __all__ = ['SubsetTools']
 
@@ -21,7 +20,7 @@ SUBSET_MODES = {
 
 @tool_registry('g-subset-tools')
 class SubsetTools(TemplateMixin):
-    template = load_template("subset_tools.vue", __file__).tag(sync=True)
+    template_file = __file__, "subset_tools.vue"
     select = List([]).tag(sync=True)
     subset_mode = Int(0).tag(sync=True)
 

@@ -8,7 +8,6 @@ from traitlets import List, Unicode, Any
 from jdaviz.core.events import SnackbarMessage, RemoveDataMessage, AddDataMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
-from jdaviz.utils import load_template
 
 __all__ = ['UnitConversion']
 
@@ -20,7 +19,7 @@ unit_exponents = {StdDevUncertainty: 1,
 @tray_registry('g-unit-conversion', label="Unit Conversion")
 class UnitConversion(TemplateMixin):
 
-    template = load_template("unit_conversion.vue", __file__).tag(sync=True)
+    template_file = __file__, "unit_conversion.vue"
 
     dc_items = List([]).tag(sync=True)
     selected_data = Unicode().tag(sync=True)

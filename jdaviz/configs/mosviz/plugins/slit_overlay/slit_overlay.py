@@ -1,6 +1,5 @@
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
-from jdaviz.utils import load_template
 from jdaviz.core.events import SnackbarMessage
 
 from traitlets import Bool
@@ -45,7 +44,7 @@ def jwst_header_to_skyregion(header):
 
 @tray_registry('g-slit-overlay', label="Slit Overlay")
 class SlitOverlay(TemplateMixin):
-    template = load_template("slit_overlay.vue", __file__).tag(sync=True)
+    template_file = __file__, "slit_overlay.vue"
     visible = Bool(True).tag(sync=True)
 
     def __init__(self, *args, **kwargs):

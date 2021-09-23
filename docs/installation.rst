@@ -29,4 +29,13 @@ To install ``jdaviz`` for development or from source in editable mode::
    cd jdaviz
    pip install -e .
 
+To enable the hot reloading of vue templates, install `watchdog`::
+
+   pip install watchdog
+
+And to the top of a notebook add::
+
+   import ipyvue
+   ipyvue.watch('../jdaviz')
+
 See :ref:`quickstart` to learn how to run ``jdaviz``.

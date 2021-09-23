@@ -6,7 +6,6 @@ import numpy as np
 from jdaviz.core.events import AddDataMessage, RedshiftMessage
 from jdaviz.core.registries import tool_registry
 from jdaviz.core.template_mixin import TemplateMixin
-from jdaviz.utils import load_template
 
 from glue_jupyter.bqplot.profile import BqplotProfileView
 
@@ -15,7 +14,7 @@ __all__ = ['RedshiftSlider']
 
 @tool_registry('g-redshift-slider')
 class RedshiftSlider(TemplateMixin):
-    template = load_template("redshift_slider.vue", __file__).tag(sync=True)
+    template_file = __file__, "redshift_slider.vue"
     slider = Any(0).tag(sync=True)
     slider_textbox = Any(0).tag(sync=True)
     slider_type = Any("Redshift").tag(sync=True)

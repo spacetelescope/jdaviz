@@ -11,7 +11,6 @@ from traitlets import List, Unicode, Any, Bool, observe
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
-from jdaviz.utils import load_template
 
 __all__ = ['GaussianSmooth']
 
@@ -22,7 +21,7 @@ u.add_enabled_units([spaxel])
 
 @tray_registry('g-gaussian-smooth', label="Gaussian Smooth")
 class GaussianSmooth(TemplateMixin):
-    template = load_template("gaussian_smooth.vue", __file__).tag(sync=True)
+    template_file = __file__, "gaussian_smooth.vue"
     stddev = Any().tag(sync=True)
     dc_items = List([]).tag(sync=True)
     selected_data = Unicode().tag(sync=True)
