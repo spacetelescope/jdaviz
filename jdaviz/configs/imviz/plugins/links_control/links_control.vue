@@ -20,7 +20,8 @@
                </v-radio-group>
             </v-col>
           </v-row>
-          <v-row v-if="link_type == 'WCS'">
+          <v-row v-if="false">
+
             <v-col>
               <v-switch
                 label="Fallback on Pixels"
