@@ -34,8 +34,8 @@
           <v-row v-if="link_type == 'WCS'">
             <v-col>
               <v-switch
-                label="Affine transform"
-                hint="Use affine transform for WCS, if possible."
+                label="Fast approximation"
+                hint="Use fast approximation for image alignment if possible (accurate to <1 pixel)."
                 v-model="wcs_use_affine"
                 persistent-hint
                 inset>
