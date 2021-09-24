@@ -5,39 +5,41 @@
         <v-container>
           <v-row>
             <v-col>
-              <v-select
-                :items="link_types"
-                @change="link_type_selected"
+              <v-radio-group 
                 label="Link type"
                 hint="Type of linking to be done."
+                v-model="link_type"
                 persistent-hint
-              ></v-select>
+                row>
+                <v-radio
+                  v-for="item in link_types"
+                  :key="item"
+                  :label="item"
+                  :value="item"
+                ></v-radio>
+               </v-radio-group>
             </v-col>
           </v-row>
-        </v-container>
-        <v-container>
-          <v-row>
+          <v-row v-if="link_type == 'WCS'">
             <v-col>
-              <v-select
-                :items="wcs_fallback_schemes"
-                @change="wcs_fallback_scheme_selected"
-                label="WCS fallback scheme"
-                hint="If WCS linking fails, fall back to linking by pixels or not at all."
+              <v-switch
+                label="Fallback on Pixels"
+                hint="If WCS linking fails, fallback to linking by pixels."
+                v-model="wcs_use_fallback"
                 persistent-hint
-              ></v-select>
+                inset>
+              </v-switch>
             </v-col>
           </v-row>
-        </v-container>
-        <v-container>
-          <v-row>
+          <v-row v-if="link_type == 'WCS'">
             <v-col>
-              <v-select
-                :items="wcs_use_affine_options"
-                @change="affine_option_selected"
-                label="Use affine transform"
+              <v-switch
+                label="Affine transform"
                 hint="Use affine transform for WCS, if possible."
+                v-model="wcs_use_affine"
                 persistent-hint
-              ></v-select>
+                inset>
+              </v-switch>
             </v-col>
           </v-row>
         </v-container>
