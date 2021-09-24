@@ -20,11 +20,10 @@ class LinksControl(TemplateMixin):
     wcs_use_fallback = Bool(True).tag(sync=True)
     wcs_use_affine = Bool(True).tag(sync=True)
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
     def vue_do_link(self, *args, **kwargs):
-        """Run :meth:`jdaviz.configs.imviz.helper.Imviz.link_data`
+        """Run :func:`jdaviz.configs.imviz.helper.link_image_data`
+
         with the selected parameters.
         """
         link_image_data(
