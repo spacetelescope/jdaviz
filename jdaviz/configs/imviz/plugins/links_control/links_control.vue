@@ -21,7 +21,6 @@
             </v-col>
           </v-row>
           <v-row v-if="false">
-
             <v-col>
               <v-switch
                 label="Fallback on Pixels"
@@ -59,3 +58,12 @@
     </v-card>
   </v-card>
 </template>
+
+<style>
+
+/* addresses https://github.com/pllim/jdaviz/pull/3#issuecomment-926820530 */
+div[role=radiogroup] > legend {
+  width: 100%;
+}
+
+</style>
