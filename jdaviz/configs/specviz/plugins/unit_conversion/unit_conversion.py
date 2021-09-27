@@ -74,8 +74,11 @@ class UnitConversion(TemplateMixin):
         if msg is not None and msg.viewer_id != self._viewer_id:
             return
 
-        self._viewer_data = self.app.get_data_from_viewer('spectrum-viewer',
-                                                          include_subsets=False)
+        try:
+            self._viewer_data = self.app.get_data_from_viewer('spectrum-viewer',
+                                                              include_subsets=False)
+        except Exception:  # Some data cannot be parsed as Spectrum1D
+            return
 
         self.dc_items = [data.label
                          for data in self.app.data_collection

@@ -3,7 +3,6 @@ import os
 
 import numpy as np
 from astropy.io import fits
-from spectral_cube import SpectralCube
 from specutils import Spectrum1D
 
 from astropy.wcs import WCS
@@ -51,13 +50,25 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
         file_name = os.path.basename(file_obj)
 
         with fits.open(file_obj) as hdulist:
-            _parse_hdu(app, hdulist, file_name=data_label or file_name)
+            prihdr = hdulist[0].header
+            telescop = prihdr.get('TELESCOP', '').lower()
+            filetype = prihdr.get('FILETYPE', '').lower()
+            if telescop == 'jwst' and filetype == '3d ifu cube':
+                from glue.core import Data
+                unit = u.Unit(hdulist[1].header.get('BUNIT', 'count'))
+                flux = hdulist[1].data << unit
+                wcs = WCS(hdulist[1].header, hdulist)
+                data = Data(flux=flux, coords=wcs)  # Spectrum1D too slow
+                data_label = f'{file_obj}[SCI]'
+                app.add_data(data, data_label)
+                app.add_data_to_viewer('flux-viewer', data_label)
+                app.add_data_to_viewer('spectrum-viewer', data_label)
+            else:
+                _parse_hdu(app, hdulist, file_name=data_label or file_name)
 
     # If the data types are custom data objects, use explicit parsers. Note
     #  that this relies on the glue-astronomy machinery to turn the data object
     #  into something glue can understand.
-    elif isinstance(file_obj, SpectralCube):
-        _parse_spectral_cube(app, file_obj, data_type or 'flux', data_label)
     elif isinstance(file_obj, Spectrum1D) and len(file_obj.shape) == 3:
         _parse_spectrum1d_3d(app, file_obj)
     elif isinstance(file_obj, Spectrum1D):
@@ -80,12 +91,12 @@ def _parse_hdu(app, hdulist, file_name=None):
         if hdu.data is None or not hdu.is_image or len(hdu.data.shape) != 3:
             continue
 
-        wcs = WCS(hdu.header)
+        wcs = WCS(hdu.header, hdulist)
 
         try:
             flux_unit = u.Unit(hdu.header['BUNIT'])
         except KeyError:
-            logging.warn("No flux units found in hdu, using u.count as a stand-in")
+            logging.warning("No flux units found in hdu, using u.count as a stand-in")
             flux_unit = u.count
         finally:
             flux = hdu.data * flux_unit
@@ -96,7 +107,7 @@ def _parse_hdu(app, hdulist, file_name=None):
             sc = Spectrum1D(flux=flux, wcs=wcs)
             app.data_collection[data_label] = sc
         except Exception as e:
-            logging.warn(e)
+            logging.warning(e)
             continue
 
         # If the data type is some kind of integer, assume it's the mask/dq
@@ -128,23 +139,6 @@ def _fix_axes(app):
     app.get_viewer("flux-viewer").viewer_options.y_att_world_selected = 1
     app.get_viewer("flux-viewer").viewer_options.x_att_world_selected = 0
     app.get_viewer("spectrum-viewer").viewer_options.x_att_selected = 5
-
-
-def _parse_spectral_cube(app, file_obj, data_type='flux', data_label=None):
-    data_label = data_label or f"Unknown spectral cube[{data_type.upper()}]"
-
-    app.add_data(file_obj, data_label)
-
-    if data_type == 'flux':
-        app.add_data_to_viewer('flux-viewer', f"{data_label}")
-        app.add_data_to_viewer('spectrum-viewer', f"{data_label}")
-    elif data_type == 'mask':
-        app.add_data_to_viewer('mask-viewer', f"{data_label}")
-    elif data_type == 'uncert':
-        app.add_data_to_viewer('uncert-viewer', f"{data_label}")
-
-    # TODO: SpectralCube does not store mask information
-    # TODO: SpectralCube does not store data quality information
 
 
 def _parse_spectrum1d_3d(app, file_obj):

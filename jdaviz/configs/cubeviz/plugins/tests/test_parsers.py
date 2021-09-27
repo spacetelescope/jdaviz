@@ -1,12 +1,9 @@
-import os
-
 import astropy.units as u
 import numpy as np
 import pytest
 from astropy.io import fits
 from astropy.nddata import StdDevUncertainty
 from astropy.wcs import WCS
-from spectral_cube import SpectralCube
 from specutils import Spectrum1D
 
 from jdaviz.app import Application
@@ -49,25 +46,11 @@ def image_hdu_obj():
     return fits.HDUList([fits.PrimaryHDU(), flux_hdu, mask_hdu, uncert_hdu])
 
 
-@pytest.mark.filterwarnings('ignore:.* contains multiple slashes')
+@pytest.mark.filterwarnings('ignore')
 def test_fits_image_hdu_parse(image_hdu_obj, cubeviz_app):
     cubeviz_app.load_data(image_hdu_obj)
 
     assert len(cubeviz_app.data_collection) == 3
-    assert cubeviz_app.data_collection[0].label.endswith('[FLUX]')
-
-
-@pytest.mark.filterwarnings('ignore:.* contains multiple slashes')
-def test_spectral_cube_parse(tmpdir, image_hdu_obj, cubeviz_app):
-    f = tmpdir.join("test_fits_image.fits")
-    path = os.path.join(f.dirname, f.basename)
-    image_hdu_obj.writeto(path)
-
-    sc = SpectralCube.read(path, hdu=1)
-
-    cubeviz_app.load_data(sc)
-
-    assert len(cubeviz_app.data_collection) == 1
     assert cubeviz_app.data_collection[0].label.endswith('[FLUX]')
 
 
