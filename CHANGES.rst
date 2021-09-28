@@ -62,6 +62,9 @@ Specviz
 Other Changes and Additions
 ---------------------------
 
+- ``jdaviz`` no longer uses ``spectral-cube``. Cubeviz now loads data cube
+  as ``Spectrum1D``. [#547]
+
 
 2.0 (2021-09-17)
 ================
