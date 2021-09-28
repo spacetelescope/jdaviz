@@ -5,7 +5,6 @@
       :stack="child"
       :key="index"
       :data-items="dataItems"
-      :doctips="doctips"
       @resize="$emit('resize')"
       @destroy="$emit('destroy', $event)"
       @data-item-selected="$emit('data-item-selected', $event)"
@@ -23,7 +22,7 @@
         <div>
           <v-row dense style="background-color: #205f76">
             <v-col md="auto">
-              <j-tooltip :doctips="doctips" tipid="viewer-toolbar-data">
+              <j-tooltip tipid="viewer-toolbar-data">
                 <v-menu offset-y :close-on-content-click="false">
                   <template v-slot:activator="{ on, attrs }">
                     <v-btn icon v-bind="attrs" v-on="on" color="white">
@@ -51,13 +50,13 @@
               <v-spacer></v-spacer>
                <v-col md="auto">
                
-               <j-tooltip :doctips="doctips" tipid='viewer-toolbar-figure'>
+               <j-tooltip tipid='viewer-toolbar-figure'>
                  <v-btn icon @click="viewer.collapse = !viewer.collapse" color="white">
                    <v-icon v-if="viewer.collapse">mdi-hammer-screwdriver</v-icon>
                    <v-icon v-else>mdi-close</v-icon>
                  </v-btn>
                </j-tooltip>
-               <j-tooltip :doctips="doctips" tipid='viewer-toolbar-menu'>
+               <j-tooltip tipid='viewer-toolbar-menu'>
                 <v-menu offset-y :close-on-content-click="false" style="z-index: 10">
                   <template v-slot:activator="{ on }">
                     <v-btn icon color="white" v-on="on">
@@ -67,12 +66,12 @@
 
                   <v-tabs v-model="viewer.tab" grow height="36px">
                     <v-tab key="0">
-                      <j-tooltip :doctips="doctips" tipid="viewer-toolbar-layer">
+                      <j-tooltip tipid="viewer-toolbar-layer">
                         Layer
                       </j-tooltip>
                     </v-tab>
                     <v-tab key="1">
-                      <j-tooltip :doctips="doctips" tipid="viewer-toolbar-viewer">
+                      <j-tooltip tipid="viewer-toolbar-viewer">
                         Viewer
                       </j-tooltip>
                     </v-tab>
@@ -84,22 +83,22 @@
 
                     <v-tab-item key="0" class="overflow-y-auto" style="height: 100%">
                       <v-sheet class="px-4">
+                        <j-docs-link divider>brief explanation about layer tab</j-docs-link>
                         <jupyter-widget :widget="viewer.layer_options" /> 
                       </v-sheet>
                     </v-tab-item>
 
-                      <v-tab-item key="1" eager class="overflow-y-auto" style="height: 100%">
-                        <v-sheet class="px-4">
-                          <jupyter-widget :widget="viewer.viewer_options" />
-                        </v-sheet>
-                      </v-tab-item>
-                    </v-tabs-items>
-                  </v-lazy>
-
+                    <v-tab-item key="1" eager class="overflow-y-auto" style="height: 100%">
+                      <v-sheet class="px-4">
+                        <j-docs-link divider>brief explanation about viewer tab</j-docs-link>
+                        <jupyter-widget :widget="viewer.viewer_options" />
+                      </v-sheet>
+                    </v-tab-item>
+                  </v-tabs-items>
                 </v-menu>
                </j-tooltip>
                 
-               <j-tooltip :doctips="doctips" tipid='viewer-toolbar-more'>
+               <j-tooltip tipid='viewer-toolbar-more'>
                 <v-btn icon color="white">
                   <v-icon>more_horiz</v-icon>
                 </v-btn>
@@ -127,7 +126,7 @@
             <v-menu offset-y left :close-on-content-click="true" style="z-index: 10">
              <template v-slot:activator="{ on }">
                <v-btn icon color="primary" v-on="on">
-                <j-tooltip :doctips="doctips" tipid="viewer-toolbar-figure-save" nudgebottom="14">
+                <j-tooltip tipid="viewer-toolbar-figure-save" nudgebottom="14">
                   <v-icon>mdi-content-save</v-icon>
                 </j-tooltip>
                </v-btn>
@@ -162,7 +161,7 @@
 <script>
 module.exports = {
   name: "g-viewer-tab",
-  props: ["stack", "dataItems", "doctips"],
+  props: ["stack", "dataItems"],
   created() {
     this.$parent.childMe = () => {
       return this.$children[0];

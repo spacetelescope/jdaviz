@@ -1,10 +1,16 @@
 from ipyvuetify import VuetifyTemplate
 from glue.core import HubListener
+from traitlets import Unicode
+
+from jdaviz import __version__
 
 __all__ = ['TemplateMixin']
 
 
 class TemplateMixin(VuetifyTemplate, HubListener):
+    config = Unicode("").tag(sync=True)
+    vdocs = Unicode("").tag(sync=True)
+
     def __new__(cls, *args, **kwargs):
         """
         Overload object creation so that we can inject a reference to the
@@ -15,6 +21,12 @@ class TemplateMixin(VuetifyTemplate, HubListener):
         app = kwargs.pop('app', None)
         obj = super().__new__(cls, *args, **kwargs)
         obj._app = app
+
+        # give the vue templates access to the current config/layout
+        obj.config = app.state.settings.get("configuration")
+
+        # give the vue templates access to jdaviz version
+        obj.vdocs = 'latest' if 'dev' in __version__ else 'v'+__version__
 
         return obj
 

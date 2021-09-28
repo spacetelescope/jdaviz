@@ -1,6 +1,7 @@
 <template>
   <v-card flat tile>
     <v-container>
+      <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#gaussian-smooth'">Smooth your data in xy or wavelength with a Gaussian kernel</j-docs-link>
       <v-row>
         <v-col class="py-0">
           <v-select
@@ -18,7 +19,7 @@
             :items="smooth_modes"
             v-model="selected_mode"
             label="Smoothing Type"
-            hint="Smooth data spectrally or spatially"
+            hint="Smooth data spectrally or spatially."
             persistent-hint
           ></v-select>
         </v-col>
@@ -41,16 +42,19 @@
 
     <v-card-actions>
       <div class="flex-grow-1"></div>
-      <v-btn v-if="selected_mode=='Spectral'"
-        :disabled="stddev <= 0 || selected_data == ''"
-        color="accent" text 
-        @click="spectral_smooth"
-      >Apply</v-btn>
-      <v-btn v-else
-        :disabled="stddev <= 0 || selected_data == ''"
-        color="accent" text
-        @click="spatial_convolution"
-      >Apply</v-btn>
+      <j-tooltip v-if="selected_mode=='Spectral'" tipid='plugin-gaussian-apply'>
+        <v-btn :disabled="stddev <= 0 || selected_data == ''"
+          color="accent" text 
+          @click="spectral_smooth"
+        >Apply</v-btn>
+      </j-tooltip>
+      <j-tooltip v-else tipid='plugin-gaussian-apply'>
+        <v-btn 
+          :disabled="stddev <= 0 || selected_data == ''"
+          color="accent" text
+          @click="spatial_convolution"
+        >Apply</v-btn>
+      </j-tooltip>
     </v-card-actions>
   </v-card>
 </template>

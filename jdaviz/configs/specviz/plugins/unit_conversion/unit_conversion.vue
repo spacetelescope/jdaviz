@@ -68,8 +68,10 @@
 
     <v-card-actions>
       <div class="flex-grow-1"></div>
-      <v-btn :disabled="selected_data == ''"
-      color="primary" text @click="unit_conversion">Apply</v-btn>
+      <j-tooltip tipid='plugin-unit-conversion-apply'>
+        <v-btn :disabled="selected_data == ''"
+        color="primary" text @click="unit_conversion">Apply</v-btn>
+      </j-tooltip>
     </v-card-actions>
   </v-card>
 </template>

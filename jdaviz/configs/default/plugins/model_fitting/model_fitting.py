@@ -43,8 +43,8 @@ class ModelFitting(TemplateMixin):
     spectral_min = Any().tag(sync=True)
     spectral_max = Any().tag(sync=True)
     spectral_unit = Unicode().tag(sync=True)
-    spectral_subset_items = List(["None"]).tag(sync=True)
-    selected_subset = Unicode("None").tag(sync=True)
+    spectral_subset_items = List(["Entire Spectrum"]).tag(sync=True)
+    selected_subset = Unicode("Entire Spectrum").tag(sync=True)
 
     model_label = Unicode().tag(sync=True)
     cube_fit = Bool(False).tag(sync=True)
@@ -254,7 +254,7 @@ class ModelFitting(TemplateMixin):
         self._spectrum1d = selected_spec
 
         # Also set the spectral min and max to default to the full range
-        self.selected_subset = "None"
+        self.selected_subset = "Entire Spectrum"
         self._window = None
         self.spectral_min = selected_spec.spectral_axis[0].value
         self.spectral_max = selected_spec.spectral_axis[-1].value
@@ -270,12 +270,12 @@ class ModelFitting(TemplateMixin):
             if type(region) == RectanglePixelRegion:
                 temp_dict[key] = region
         self._spectral_subsets = temp_dict
-        self.spectral_subset_items = ["None"] + sorted(temp_dict.keys())
+        self.spectral_subset_items = ["Entire Spectrum"] + sorted(temp_dict.keys())
 
     @observe("selected_subset")
     def _on_subset_selected(self, event):
         # If "None" selected, reset based on bounds of selected data
-        if self.selected_subset == "None":
+        if self.selected_subset == "Entire Spectrum":
             self._window = None
             self.spectral_min = self._spectrum1d.spectral_axis[0].value
             self.spectral_max = self._spectrum1d.spectral_axis[-1].value

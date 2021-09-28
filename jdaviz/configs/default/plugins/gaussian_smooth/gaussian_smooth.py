@@ -40,8 +40,7 @@ class GaussianSmooth(TemplateMixin):
                            handler=self._on_data_updated)
 
         self._selected_data = None
-        self._config = self.app.state.settings.get("configuration")
-        if self._config == "cubeviz":
+        if self.config == "cubeviz":
             self.show_modes = True
 
     def _on_data_updated(self, msg):

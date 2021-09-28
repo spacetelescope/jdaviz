@@ -1,6 +1,7 @@
 <template>
   <v-card flat tile>
     <v-container>
+      <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#moment-maps'">Create a 2D image from a data cube</j-docs-link>
       <v-row>
         <v-col>
           <v-select
@@ -68,7 +69,9 @@
           ></v-text-field>
         </v-col>
         <v-col>
-          <v-btn color="primary" text @click="calculate_moment">Calculate</v-btn>
+          <j-tooltip tipid='plugin-moment-maps-calculate'>
+            <v-btn color="primary" text @click="calculate_moment">Calculate</v-btn>
+          </j-tooltip>
         </v-col>
     </v-card-actions>
     <v-card-actions>
@@ -81,7 +84,9 @@
           </v-text-field>
         </v-col>
         <v-col>
-          <v-btn color="primary" text @click="save_as_fits">Save as FITS</v-btn>
+          <j-tooltip tipid='plugin-moment-save-fits'>
+            <v-btn color="primary" text @click="save_as_fits">Save as FITS</v-btn>
+          </j-tooltip>
         </v-col>
       </v-row>
     </v-card-actions>
