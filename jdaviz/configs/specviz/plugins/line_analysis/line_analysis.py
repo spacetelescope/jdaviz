@@ -123,9 +123,6 @@ class LineAnalysis(TemplateMixin):
         as such by the user, then update the displauyed parameters with fit
         values
         """
-        #def specutilsLink(function):
-    #        return 'https://specutils.readthedocs.io/en/stable/api/specutils.analysis.{}.html'.format(function.lower().replace(' ', '_'))
-        
         temp_results = []
         for function in FUNCTIONS:
             # Centroid function requires a region argument, create one to pass
