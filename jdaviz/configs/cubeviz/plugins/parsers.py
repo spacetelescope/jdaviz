@@ -49,7 +49,15 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
         file_name = os.path.basename(file_obj)
 
         with fits.open(file_obj) as hdulist:
-            _parse_hdu(app, hdulist, file_name=data_label or file_name)
+            prihdr = hdulist[0].header
+            telescop = prihdr.get('TELESCOP', '').lower()
+            filetype = prihdr.get('FILETYPE', '').lower()
+            if telescop == 'jwst' and filetype == '3d ifu cube':
+                # TODO: What about ERR, DQ, and WMAP?
+                data_label = f'{file_name}[SCI]'
+                _parse_jwst_s3d(app, hdulist, data_label)
+            else:
+                _parse_hdu(app, hdulist, file_name=data_label or file_name)
 
     # If the data types are custom data objects, use explicit parsers. Note
     #  that this relies on the glue-astronomy machinery to turn the data object
@@ -117,6 +125,18 @@ def _parse_hdu(app, hdulist, file_name=None):
         if any(x in hdu.name.lower() for x in EXT_TYPES['flux']):
             app.add_data_to_viewer('flux-viewer', data_label)
             app.add_data_to_viewer('spectrum-viewer', data_label)
+
+
+def _parse_jwst_s3d(app, hdulist, data_label):
+    from specutils import Spectrum1D
+
+    unit = u.Unit(hdulist[1].header.get('BUNIT', 'count'))
+    flux = hdulist[1].data << unit
+    wcs = WCS(hdulist[1].header, hdulist)
+    data = Spectrum1D(flux, wcs=wcs)
+    app.add_data(data, data_label)
+    app.add_data_to_viewer('flux-viewer', data_label)
+    app.add_data_to_viewer('spectrum-viewer', data_label)
 
 
 def _parse_spectrum1d_3d(app, file_obj):
