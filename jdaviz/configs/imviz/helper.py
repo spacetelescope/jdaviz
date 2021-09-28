@@ -29,7 +29,7 @@ class Imviz(ConfigHelper):
         """Default viewer instance. This is typically the first viewer ("imviz-0")."""
         return self._default_viewer
 
-    def create_image_viewer(self):
+    def create_image_viewer(self, viewer_name=None):
         """Create a new image viewer.
 
         To display data in this new viewer programmatically,
@@ -41,12 +41,24 @@ class Imviz(ConfigHelper):
 
         Alternately, you can also display data interactively via the GUI.
 
+        Parameters
+        ----------
+        viewer_name : str or `None`
+            Viewer name/ID to use. If `None`, it is auto-generated.
+
+        Returns
+        -------
+        viewer : `~jdaviz.configs.imviz.plugins.viewers.ImvizImageView`
+            Image viewer instance.
+
         """
         from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
 
         # Cannot assign data to real Data because it loads but it will
         # not update checkbox in Data menu.
-        self.app.hub.broadcast(NewViewerMessage(ImvizImageView, data=None, sender=self.app))
+        return self.app._on_new_viewer(
+            NewViewerMessage(ImvizImageView, data=None, sender=self.app),
+            vid=viewer_name, name=viewer_name)
 
     def destroy_viewer(self, viewer_id):
         """Destroy a viewer associated with the given ID.
