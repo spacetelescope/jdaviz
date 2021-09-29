@@ -1,6 +1,7 @@
 <template>
   <v-card flat tile>
     <v-card>
+      <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#line-lists'">Plot lines from preset or custom line lists</j-docs-link>
       <v-card-subtitle>Preset Line Lists</v-card-subtitle>
       <v-card-text>
         <v-container>
