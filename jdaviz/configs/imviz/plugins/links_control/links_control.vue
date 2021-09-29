@@ -26,8 +26,7 @@
                 label="Fallback on Pixels"
                 hint="If WCS linking fails, fallback to linking by pixels."
                 v-model="wcs_use_fallback"
-                persistent-hint
-                inset>
+                persistent-hint>
               </v-switch>
             </v-col>
           </v-row>
@@ -37,8 +36,7 @@
                 label="Fast approximation"
                 hint="Use fast approximation for image alignment if possible (accurate to <1 pixel)."
                 v-model="wcs_use_affine"
-                persistent-hint
-                inset>
+                persistent-hint>
               </v-switch>
             </v-col>
           </v-row>
