@@ -48,13 +48,13 @@ def spec2d_1d_parser(app, data_obj, data_label=None, show_in_viewer=True):
             flux = u.Quantity(np.sum(data, header['DISPAXIS']-1))
 
         if "WAVEND" in header and "WAVSTART" in header:
-            step = (header["WAVEND"] - header["WAVSTART"])/len(flux)
+            step = (header["WAVEND"] - header["WAVSTART"]) / flux.size
             spectral_axis = np.arange(header["WAVSTART"], header["WAVEND"],
-                                      step) * u.Unit("m")
+                                      step) * u.m
         else:
             # u.Unit("m") is used if WAVEND and WAVSTART are present so
             # we use it here as well, even though the actual unit is pixels
-            spectral_axis = np.arange(1, len(flux)+1, 1) * u.Unit("m")
+            spectral_axis = np.arange(1, flux.size + 1, 1) * u.m
 
         data_obj = Spectrum1D(flux, spectral_axis=spectral_axis)
 
