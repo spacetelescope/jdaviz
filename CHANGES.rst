@@ -64,7 +64,7 @@ Other Changes and Additions
 
 - ``jdaviz`` no longer uses ``spectral-cube``. Cubeviz now loads data cube
   as ``Spectrum1D``. [#547]
-
+- MIRI s2d files can now be loaded into Specviz2d.
 
 2.0 (2021-09-17)
 ================
