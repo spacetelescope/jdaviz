@@ -121,6 +121,9 @@ class ApplicationState(State):
     tray_items = ListCallbackProperty(
         docstring="List of plugins displayed in the sidebar tray area.")
 
+    tray_items_open = CallbackProperty(
+        [], docstring="The plugin(s) opened in sidebar tray area.")
+
     stack_items = ListCallbackProperty(
         docstring="Nested collection of viewers constructed to support the "
                   "Golden Layout viewer area.")
@@ -1183,6 +1186,7 @@ class Application(VuetifyTemplate, HubListener):
             'selected_data_items': [],
             'config': self.config,  # give viewer access to app config/layout
             'data_open': False,
+            'collapse': True,
             'reference': reference}
 
     def _on_new_viewer(self, msg, vid=None, name=None):
