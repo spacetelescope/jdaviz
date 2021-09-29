@@ -12,7 +12,7 @@
                 :items="dc_items"
                 @change="data_selected"
                 label="Data"
-                hint="Select the dataset to be fitted."
+                hint="Select the data set to be fitted."
                 persistent-hint
               ></v-select>
             </v-col>
