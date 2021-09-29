@@ -48,7 +48,7 @@ Specviz
 
 Other Changes and Additions
 ---------------------------
-
+- MIRI s2d files can now be loaded into Specviz2d.
 
 2.0 (2021-09-17)
 ================
