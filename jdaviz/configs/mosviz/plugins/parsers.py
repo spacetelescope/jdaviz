@@ -281,10 +281,7 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
                 try:
                     data = Spectrum1D.read(data)
                 except IORegistryError:
-                    try:
-                        data = Spectrum1D.read(data)
-                    except IORegistryError:
-                        data = _parse_as_spectrum1d(data)
+                    data = _parse_as_spectrum1d(data)
 
             # Copy (if present) region to top-level meta object
             if ('header' in data.meta and
