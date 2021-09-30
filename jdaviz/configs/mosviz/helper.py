@@ -31,6 +31,19 @@ class Mosviz(ConfigHelper):
         spec2d = self.app.get_viewer("spectrum-2d-viewer")
         spec2d.scales['x'].observe(self._update_spec1d_x_axis, names=['min', 'max'])
 
+        # Choose which viewers will have state frozen during a row change.
+        # This should be a list of tuples, where each entry has the state as the
+        # first item in the tuple, and a list of frozen attributes as the second.
+        self._freezable_states = [(spec1d.state, ['x_min', 'x_max']),
+                                  (spec2d.state, ['x_min', 'x_max']),
+                                  (self.app.get_viewer("image-viewer").state, []),
+                                  ]
+
+        # Add callbacks to table-viewer to enable/disable the state freeze
+        table = self.app.get_viewer("table-viewer")
+        table._on_row_selected_begin = self._on_row_selected_begin
+        table._on_row_selected_end = self._on_row_selected_end
+
         # Listen for clicks on the table in case we need to zoom the image
         self.app.hub.subscribe(self, TableClickMessage,
                                handler=self._row_click_message_handler)
@@ -44,6 +57,14 @@ class Mosviz(ConfigHelper):
         self._last_panning_warning = 0
 
         self._update_in_progress = False
+
+    def _on_row_selected_begin(self):
+        for state, attrs in self._freezable_states:
+            state._frozen_state = attrs
+
+    def _on_row_selected_end(self):
+        for state, attrs in self._freezable_states:
+            state._frozen_state = []
 
     def _extend_world(self, spec1d, ext):
         # Extend 1D spectrum world axis to enable panning (within reason) past

@@ -11,6 +11,7 @@ from jdaviz.core.events import (AddDataToViewerMessage,
                                 RemoveDataFromViewerMessage,
                                 TableClickMessage)
 from jdaviz.core.registries import viewer_registry
+from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
 
 __all__ = ['MosvizProfileView', 'MosvizImageView', 'MosvizProfile2DView',
            'MosvizTableViewer']
@@ -83,6 +84,8 @@ class MosvizProfile2DView(BqplotImageView):
 
     tools = ['bqplot:panzoom_x']
 
+    _state_cls = FreezableBqplotImageViewerState
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Setup viewer option defaults
@@ -116,6 +119,9 @@ class MosvizTableViewer(TableViewer):
         self._shared_image = False
         self.row_selection_in_progress = False
 
+        self._on_row_selected_begin = None
+        self._on_row_selected_end = None
+
     def redraw(self):
 
         # Overload to hide components - we do this via overloading instead of
@@ -135,6 +141,9 @@ class MosvizTableViewer(TableViewer):
         super().redraw()
 
     def _on_row_selected(self, event):
+        if self._on_row_selected_begin:
+            self._on_row_selected_begin()
+
         self.row_selection_in_progress = True
         # Grab the index of the latest selected row
         selected_index = event['new']
@@ -199,6 +208,9 @@ class MosvizTableViewer(TableViewer):
         self.session.hub.broadcast(message)
 
         self.row_selection_in_progress = False
+
+        if self._on_row_selected_end:
+            self._on_row_selected_end()
 
     def set_plot_axes(self, *args, **kwargs):
         return
