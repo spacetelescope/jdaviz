@@ -10,7 +10,7 @@ from glue.core.link_helpers import LinkSame
 from glue.core.subset import Subset, MaskSubsetState
 from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink, NoAffineApproximation
 
-from jdaviz.core.events import SnackbarMessage
+from jdaviz.core.events import SnackbarMessage, NewViewerMessage
 from jdaviz.core.helpers import ConfigHelper
 
 __all__ = ['Imviz']
@@ -28,6 +28,52 @@ class Imviz(ConfigHelper):
     def default_viewer(self):
         """Default viewer instance. This is typically the first viewer ("imviz-0")."""
         return self._default_viewer
+
+    def create_image_viewer(self, viewer_name=None):
+        """Create a new image viewer.
+
+        To display data in this new viewer programmatically,
+        first get the new viewer ID from the small tab on the top
+        left of viewer display. Then, use
+        :meth:`~jdaviz.app.Application.add_data_to_viewer` from ``imviz.app``
+        by passing in the new viewer ID and the desired data label,
+        once per dataset you wish to display.
+
+        Alternately, you can also display data interactively via the GUI.
+
+        Parameters
+        ----------
+        viewer_name : str or `None`
+            Viewer name/ID to use. If `None`, it is auto-generated.
+
+        Returns
+        -------
+        viewer : `~jdaviz.configs.imviz.plugins.viewers.ImvizImageView`
+            Image viewer instance.
+
+        """
+        from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
+
+        # Cannot assign data to real Data because it loads but it will
+        # not update checkbox in Data menu.
+        return self.app._on_new_viewer(
+            NewViewerMessage(ImvizImageView, data=None, sender=self.app),
+            vid=viewer_name, name=viewer_name)
+
+    def destroy_viewer(self, viewer_id):
+        """Destroy a viewer associated with the given ID.
+
+        Raises
+        ------
+        ValueError
+            Default viewer cannot be destroyed.
+
+        """
+        if viewer_id not in self.app._viewer_store:  # Silent no-op
+            return
+        if viewer_id == 'imviz-0':
+            raise ValueError(f"Default viewer '{viewer_id}' cannot be destroyed")
+        self.app.vue_destroy_viewer_item(viewer_id)
 
     def load_data(self, data, parser_reference=None, **kwargs):
         """Load data into Imviz.

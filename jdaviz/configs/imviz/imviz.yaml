@@ -22,6 +22,6 @@ viewer_area:
     children:
       - container: row
         viewers:
-          - name: Image
+          - name: imviz-0
             plot: imviz-image-viewer
             reference: imviz-0

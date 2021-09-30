@@ -1127,7 +1127,7 @@ class Application(VuetifyTemplate, HubListener):
         last_num = int(last_vid.split('-')[-1])
         return last_num + 1
 
-    def _create_viewer_item(self, viewer, name=None, reference=None):
+    def _create_viewer_item(self, viewer, vid=None, name=None, reference=None):
         """
         Convenience method for generating viewer item dictionaries.
 
@@ -1135,8 +1135,11 @@ class Application(VuetifyTemplate, HubListener):
         ----------
         viewer : `~glue_jupyter.bqplot.common.BqplotBaseView`
             The ``Bqplot`` viewer instance.
-        name : str, optional
+        vid : str or `None`, optional
+            The ID of the viewer.
+        name : str or `None`, optional
             The name shown in the GoldenLayout tab for this viewer.
+            If `None`, it is the same as viewer ID.
         reference : str, optional
             The reference associated with this viewer as defined in the yaml
             configuration file.
@@ -1150,9 +1153,10 @@ class Application(VuetifyTemplate, HubListener):
         tools.borderless = True
         tools.tile = True
 
-        pfx = self.state.settings.get('configuration', str(name))
-        n = self._next_viewer_num(pfx)
-        vid = f"{pfx}-{n}"
+        if vid is None:
+            pfx = self.state.settings.get('configuration', str(name))
+            n = self._next_viewer_num(pfx)
+            vid = f"{pfx}-{n}"
 
         return {
             'id': vid,
@@ -1165,7 +1169,7 @@ class Application(VuetifyTemplate, HubListener):
             'collapse': True,
             'reference': reference}
 
-    def _on_new_viewer(self, msg):
+    def _on_new_viewer(self, msg, vid=None, name=None):
         """
         Callback for when the `~jdaviz.core.events.NewViewerMessage` message is
         raised. This method asks the application handler to generate a new
@@ -1175,6 +1179,14 @@ class Application(VuetifyTemplate, HubListener):
         ----------
         msg : `~jdaviz.core.events.NewViewerMessage`
             The message received from the ``Hub`` broadcast.
+
+        vid : str or `None`
+            ID of the viewer. If `None`, it is auto-generated
+            from configuration settings.
+
+        name : str or `None`
+            Name of the viewer. If `None`, it is auto-generated
+            from class name.
 
         Returns
         -------
@@ -1190,8 +1202,9 @@ class Application(VuetifyTemplate, HubListener):
             viewer.state.x_att = x
 
         # Create the viewer item dictionary
-        new_viewer_item = self._create_viewer_item(
-            viewer=viewer, name=viewer.__class__.__name__)
+        if name is None:
+            name = viewer.__class__.__name__
+        new_viewer_item = self._create_viewer_item(viewer=viewer, vid=vid, name=name)
 
         new_stack_item = self._create_stack_item(
             container='gl-stack',
