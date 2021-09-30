@@ -9,8 +9,8 @@ from astropy.io import fits
 from astropy.nddata import NDData
 from astropy.wcs import WCS
 from glue.core.data import Component, Data
-from glue.core.link_helpers import LinkSame
 
+from jdaviz.configs.imviz.helper import link_image_data
 from jdaviz.core.registries import data_parser_registry
 from jdaviz.core.events import SnackbarMessage
 
@@ -143,27 +143,7 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
     if len(app.data_collection) <= 1:  # No need to link, we are done.
         return
 
-    # Auto-link data by pixels
-
-    links_list = []
-    refdata = app.data_collection[0]  # Link with first one
-    ids0 = refdata.pixel_component_ids
-    ndim_range = range(refdata.ndim)
-
-    for data in app.data_collection[1:]:
-        ids1 = data.pixel_component_ids
-        try:
-            new_links = [LinkSame(ids0[i], ids1[i]) for i in ndim_range]
-        except Exception as e:
-            # TODO: Is it better to just throw exception and crash?
-            app.hub.broadcast(SnackbarMessage(
-                f"Error linking '{data.label}' to '{refdata.label}': "
-                f"{repr(e)}", color="warning", timeout=8000, sender=app))
-            continue
-        links_list += new_links
-
-    with app.data_collection.delay_link_manager_update():
-        app.data_collection.set_links(links_list)
+    link_image_data(app, link_type='pixels', error_on_fail=False)
 
 
 def _info_nextensions(app, file_obj):

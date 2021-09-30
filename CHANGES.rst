@@ -13,6 +13,8 @@ Imviz
 - New ``imviz.create_image_viewer()`` and ``imviz.destroy_viewer()`` methods
   to allow users to programmatically create and destroy image viewers. [#907]
 
+- New plugin to control image linking via GUI. [#909]
+
 Mosviz
 ^^^^^^
 

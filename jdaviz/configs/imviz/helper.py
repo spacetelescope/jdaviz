@@ -13,7 +13,7 @@ from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink, NoAffineApprox
 from jdaviz.core.events import SnackbarMessage, NewViewerMessage
 from jdaviz.core.helpers import ConfigHelper
 
-__all__ = ['Imviz']
+__all__ = ['Imviz', 'link_image_data']
 
 
 class Imviz(ConfigHelper):
@@ -143,119 +143,14 @@ class Imviz(ConfigHelper):
             self.app.load_data(
                 data, parser_reference=parser_reference, **kwargs)
 
-    def link_data(self, link_type='pixels', wcs_fallback_scheme='pixels', wcs_use_affine=True,
-                  error_on_fail=False):
-        """(Re)link loaded data with the desired link type.
+    def link_data(self, **kwargs):
+        """(Re)link loaded data in Imviz with the desired link type.
         All existing links will be replaced.
 
-        .. warning::
-
-            Any markers added in Imviz would be removed automatically.
-            You can add back the markers using
-            :meth:`~jdaviz.core.astrowidgets_api.AstrowidgetsImageViewerMixin.add_markers`
-            for the relevant viewer(s). During the markers removal, pan/zoom will also reset.
-
-        Parameters
-        ----------
-        link_type : {'pixels', 'wcs'}
-            Choose to link by pixels or WCS.
-
-        wcs_fallback_scheme : {None, 'pixels'}
-            If WCS linking failed, choose to fall back to linking by pixels or not at all.
-            This is only used when ``link_type='wcs'``.
-            Choosing `None` may result in some Imviz functionality not working properly.
-
-        wcs_use_affine : bool
-            Use an affine transform to represent the offset between images if possible
-            (requires that the approximation is accurate to within 1 pixel with the
-            full WCS transformations). If approximation fails, it will automatically
-            fall back to full WCS transformation. This is only used when ``link_type='wcs'``.
-            Affine approximation is much more performant at the cost of accuracy.
-
-        error_on_fail : bool
-            If `True`, any failure in linking will raise an exception.
-            If `False`, warnings will be emitted as snackbar messages.
-            When only warnings are emitted and no links are assigned,
-            some Imviz functionality may not work properly.
-
-        Raises
-        ------
-        ValueError
-            Invalid inputs or reference data.
-
+        See :func:`~jdaviz.configs.imviz.helper.link_image_data`
+        for available keyword options and more details.
         """
-        if len(self.app.data_collection) <= 1:  # No need to link, we are done.
-            return
-
-        if link_type not in ('pixels', 'wcs'):
-            raise ValueError(f"link_type must be 'pixels' or 'wcs', got {link_type}")
-        if link_type == 'wcs' and wcs_fallback_scheme not in (None, 'pixels'):
-            raise ValueError("wcs_fallback_scheme must be None or 'pixels', "
-                             f"got {wcs_fallback_scheme}")
-
-        # TODO: If different viewers have the same _marktags key, the key actually
-        #       points to the same Data table. Subsequent attempt to remove the
-        #       same key in this loop will emit warning.
-        # Clear any existing markers. Otherwise, re-linking will crash.
-        # Imviz can have multiple viewers open at the same time and each
-        # tracks their own markers.
-        for viewer in self.app._viewer_store.values():
-            viewer.reset_markers()
-
-        refdata, iref = get_reference_image_data(self.app)
-        links_list = []
-        ids0 = refdata.pixel_component_ids
-        ndim_range = range(refdata.ndim)
-
-        for i, data in enumerate(self.app.data_collection):
-            # Do not link with self
-            if i == iref:
-                continue
-
-            # We are not touching any existing Subsets. They keep their own links.
-            if not layer_is_image_data(data):
-                continue
-
-            ids1 = data.pixel_component_ids
-            try:
-                if link_type == 'pixels':
-                    new_links = [LinkSame(ids0[i], ids1[i]) for i in ndim_range]
-                else:  # 'wcs'
-                    wcslink = WCSLink(data1=refdata, data2=data, cids1=ids0, cids2=ids1)
-                    if wcs_use_affine:
-                        try:
-                            new_links = [wcslink.as_affine_link()]
-                        except NoAffineApproximation:  # pragma: no cover
-                            new_links = [wcslink]
-                    else:
-                        new_links = [wcslink]
-            except Exception as e:
-                if link_type == 'wcs' and wcs_fallback_scheme == 'pixels':
-                    try:
-                        new_links = [LinkSame(ids0[i], ids1[i]) for i in ndim_range]
-                    except Exception as e:  # pragma: no cover
-                        if error_on_fail:
-                            raise
-                        else:
-                            self.app.hub.broadcast(SnackbarMessage(
-                                f"Error linking '{data.label}' to '{refdata.label}': "
-                                f"{repr(e)}", color="warning", timeout=8000, sender=self.app))
-                            continue
-                else:
-                    if error_on_fail:
-                        raise
-                    else:
-                        self.app.hub.broadcast(SnackbarMessage(
-                            f"Error linking '{data.label}' to '{refdata.label}': "
-                            f"{repr(e)}", color="warning", timeout=8000, sender=self.app))
-                        continue
-            links_list += new_links
-
-        if len(links_list) > 0:
-            with self.app.data_collection.delay_link_manager_update():
-                self.app.data_collection.set_links(links_list)
-            self.app.hub.broadcast(SnackbarMessage(
-                'Images successfully relinked', color='success', timeout=8000, sender=self.app))
+        link_image_data(self.app, **kwargs)
 
     def load_static_regions(self, regions, **kwargs):
         """Load given region(s) into the viewer.
@@ -461,3 +356,121 @@ def get_reference_image_data(app):
     if refdata is None:
         raise ValueError(f'No valid reference data found in collection: {app.data_collection}')
     return refdata, iref
+
+
+def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_use_affine=True,
+                    error_on_fail=False):
+    """(Re)link loaded data in Imviz with the desired link type.
+    All existing links will be replaced.
+
+    .. warning::
+
+        Any markers added in Imviz would be removed automatically.
+        You can add back the markers using
+        :meth:`~jdaviz.core.astrowidgets_api.AstrowidgetsImageViewerMixin.add_markers`
+        for the relevant viewer(s). During the markers removal, pan/zoom will also reset.
+
+    Parameters
+    ----------
+    app : `~jdaviz.app.Application`
+        Application associated with Imviz, e.g., ``imviz.app``.
+
+    link_type : {'pixels', 'wcs'}
+        Choose to link by pixels or WCS.
+
+    wcs_fallback_scheme : {None, 'pixels'}
+        If WCS linking failed, choose to fall back to linking by pixels or not at all.
+        This is only used when ``link_type='wcs'``.
+        Choosing `None` may result in some Imviz functionality not working properly.
+
+    wcs_use_affine : bool
+        Use an affine transform to represent the offset between images if possible
+        (requires that the approximation is accurate to within 1 pixel with the
+        full WCS transformations). If approximation fails, it will automatically
+        fall back to full WCS transformation. This is only used when ``link_type='wcs'``.
+        Affine approximation is much more performant at the cost of accuracy.
+
+    error_on_fail : bool
+        If `True`, any failure in linking will raise an exception.
+        If `False`, warnings will be emitted as snackbar messages.
+        When only warnings are emitted and no links are assigned,
+        some Imviz functionality may not work properly.
+
+    Raises
+    ------
+    ValueError
+        Invalid inputs or reference data.
+
+    """
+    if len(app.data_collection) <= 1:  # No need to link, we are done.
+        return
+
+    if link_type not in ('pixels', 'wcs'):
+        raise ValueError(f"link_type must be 'pixels' or 'wcs', got {link_type}")
+    if link_type == 'wcs' and wcs_fallback_scheme not in (None, 'pixels'):
+        raise ValueError("wcs_fallback_scheme must be None or 'pixels', "
+                         f"got {wcs_fallback_scheme}")
+
+    # TODO: If different viewers have the same _marktags key, the key actually
+    #       points to the same Data table. Subsequent attempt to remove the
+    #       same key in this loop will emit warning.
+    # Clear any existing markers. Otherwise, re-linking will crash.
+    # Imviz can have multiple viewers open at the same time and each
+    # tracks their own markers.
+    for viewer in app._viewer_store.values():
+        viewer.reset_markers()
+
+    refdata, iref = get_reference_image_data(app)
+    links_list = []
+    ids0 = refdata.pixel_component_ids
+    ndim_range = range(refdata.ndim)
+
+    for i, data in enumerate(app.data_collection):
+        # Do not link with self
+        if i == iref:
+            continue
+
+        # We are not touching any existing Subsets. They keep their own links.
+        if not layer_is_image_data(data):
+            continue
+
+        ids1 = data.pixel_component_ids
+        try:
+            if link_type == 'pixels':
+                new_links = [LinkSame(ids0[i], ids1[i]) for i in ndim_range]
+            else:  # 'wcs'
+                wcslink = WCSLink(data1=refdata, data2=data, cids1=ids0, cids2=ids1)
+                if wcs_use_affine:
+                    try:
+                        new_links = [wcslink.as_affine_link()]
+                    except NoAffineApproximation:  # pragma: no cover
+                        new_links = [wcslink]
+                else:
+                    new_links = [wcslink]
+        except Exception as e:
+            if link_type == 'wcs' and wcs_fallback_scheme == 'pixels':
+                try:
+                    new_links = [LinkSame(ids0[i], ids1[i]) for i in ndim_range]
+                except Exception as e:  # pragma: no cover
+                    if error_on_fail:
+                        raise
+                    else:
+                        app.hub.broadcast(SnackbarMessage(
+                            f"Error linking '{data.label}' to '{refdata.label}': "
+                            f"{repr(e)}", color="warning", timeout=8000, sender=app))
+                        continue
+            else:
+                if error_on_fail:
+                    raise
+                else:
+                    app.hub.broadcast(SnackbarMessage(
+                        f"Error linking '{data.label}' to '{refdata.label}': "
+                        f"{repr(e)}", color="warning", timeout=8000, sender=app))
+                    continue
+        links_list += new_links
+
+    if len(links_list) > 0:
+        with app.data_collection.delay_link_manager_update():
+            app.data_collection.set_links(links_list)
+        app.hub.broadcast(SnackbarMessage(
+            'Images successfully relinked', color='success', timeout=8000, sender=app))
