@@ -622,9 +622,8 @@ def mos_niriss_parser(app, data_dir):
     # Set up a dictionary of datasets to add to glue
     add_to_glue = {}
 
+    print("Loading: Images")
     for image_file in file_lists["Direct Image"]:
-        print("Loading: Images")
-
         im_split = image_file.split("/")[-1].split("_")
         pupil = fits.getheader(image_file, ext=0).get('PUPIL')
 
@@ -744,7 +743,7 @@ def mos_niriss_parser(app, data_dir):
 
                         label = (f"{filter_name} Source "
                                  f"{spec.meta['header']['SOURCEID']} spec1d "
-                                 f"orientation")
+                                 f"{orientation}")
 
                         spec_labels_1d.append(label)
                         add_to_glue[label] = spec

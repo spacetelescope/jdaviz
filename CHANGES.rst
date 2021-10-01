@@ -64,6 +64,7 @@ Cubeviz
 
 Mosviz
 ^^^^^^
+- NIRISS parser now sorts FITS files by header instead of file name. [#819]
 
 - Added ``--instrument`` CLI option to support NIRISS data loading in Mosviz. [#1488]
 
