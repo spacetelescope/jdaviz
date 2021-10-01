@@ -2,6 +2,7 @@ from collections.abc import Iterable
 import csv
 import glob
 import os
+import re
 from collections import defaultdict
 from pathlib import Path
 import warnings
@@ -591,21 +592,23 @@ def mos_niriss_parser(app, data_dir):
     _warn_if_not_found(app, file_lists)
 
     # Parse relevant information from source catalog
-    cat_fields = ['id', 'sky_centroid.ra', 'sky_centroid.dec']
-
-    source_ids = []
-    ras = []
-    decs = []
-    image_add = []
-
     pupil_id_dict = {}
 
     # Retrieve source information
     for cat_file in file_lists["Source Catalog"]:
-        parsed_cat_fields = _fields_from_ecsv(cat_file, cat_fields, delimiter=" ")
+        try:
+            cat_fields = ['label', 'sky_centroid.ra', 'sky_centroid.dec']
+            parsed_cat_fields = _fields_from_ecsv(cat_file, cat_fields,
+                                                  delimiter=" ")
+        except KeyError:
+            # Older pipeline builds use different colname to distinguish sources
+            cat_fields[0] = 'id'
+            parsed_cat_fields = _fields_from_ecsv(cat_file, cat_fields,
+                                                  delimiter=" ")
+
         pupil = [x
-                 for x in cat_file.split("/")[-1].split("_")
-                 if x[0] == "F" or x[0] == "f"][0]
+                 for x in re.split('_|-', cat_file.split("/")[-1])
+                 if x[0] == "F" or x[0] == "f"][0].upper()
 
         pupil_id_dict[pupil] = {}
 
@@ -619,13 +622,13 @@ def mos_niriss_parser(app, data_dir):
     # Set up a dictionary of datasets to add to glue
     add_to_glue = {}
 
-    print("Loading: Images")
-
     for image_file in file_lists["Direct Image"]:
+        print("Loading: Images")
+
         im_split = image_file.split("/")[-1].split("_")
         pupil = fits.getheader(image_file, ext=0).get('PUPIL')
 
-        image_label = "Image {} {}".format(im_split[0], pupil)
+        image_label = f"Image {im_split[0]} {pupil}"
 
         with fits.open(image_file) as file_obj:
             data_iter = get_image_data_iterator(app, file_obj, "Image", ext=None)
@@ -641,15 +644,24 @@ def mos_niriss_parser(app, data_dir):
         image_dict[pupil] = image_label
 
     # Parse 2D spectra
+    source_ids = []
+    ras = []
+    decs = []
+    image_add = []
+
+    file_labels_2d = [k for k in file_lists.keys() if k.startswith("2D")]
     spec_labels_2d = []
     filters = []
-    for f in ["2D Spectra C", "2D Spectra R"]:
+
+    for f in file_labels_2d:
 
         for fname in file_lists[f]:
             print(f"Loading: {f} sources")
 
-            orientation = f[-1]
             filter_name = fits.getheader(fname, ext=0).get('PUPIL')
+
+            # Orientation denoted by "C", "R", or "C+R" for combined spectra
+            orientation = f.split()[-1]
 
             with fits.open(fname, memmap=False) as temp:
                 sci_hdus = []
@@ -662,7 +674,8 @@ def mos_niriss_parser(app, data_dir):
                     if "EXTNAME" in temp[i].header:
                         if temp[i].header["EXTNAME"] == "SCI":
                             sci_hdus.append(i)
-                            wav_hdus[i] = ('WAVELENGTH', temp[i].header['EXTVER'])
+                            wav_hdus[i] = ('WAVELENGTH',
+                                           temp[i].header['EXTVER'])
 
                 # Now get a Spectrum1D object for each SCI HDU
                 source_ids.extend(_get_source_identifiers_by_hdu([temp[sci] for sci in sci_hdus]))
@@ -685,8 +698,13 @@ def mos_niriss_parser(app, data_dir):
                         spec2d.meta['INSTRUME'] = 'NIRISS'
                         spec2d.meta['mosviz_row'] = len(spec_labels_2d)
 
-                        label = f"{filter_name} Source {temp[sci].header['SOURCEID']} spec2d {orientation}"  # noqa
+                        label = (f"{filter_name} Source "
+                                 f"{temp[sci].header['SOURCEID']} spec2d "
+                                 f"{orientation}")  # noqa
+
                         ra, dec = pupil_id_dict[filter_name][temp[sci].header["SOURCEID"]]
+                        # source_ids.append(f"Source Catalog: {filter_name} "
+                        #                   f"Source ID: {temp[sci].header['SOURCEID']}") # still needed?
                         ras.append(ra)
                         decs.append(dec)
                         image_add.append(image_dict[filter_name])
@@ -696,8 +714,9 @@ def mos_niriss_parser(app, data_dir):
 
                         filters.append(filter)
 
+    file_labels_1d = [k for k in file_lists.keys() if k.startswith("1D")]
     spec_labels_1d = []
-    for f in ["1D Spectra C", "1D Spectra R"]:
+    for f in file_labels_1d:
 
         for fname in file_lists[f]:
             print(f"Loading: {f} sources")
@@ -714,8 +733,8 @@ def mos_niriss_parser(app, data_dir):
                 specs = SpectrumList.read(temp, format="JWST x1d multi")
                 filter_name = fits.getheader(fname, ext=0).get('PUPIL')
 
-                # Orientation denoted by "C" or "R"
-                orientation = f[-1]
+                # Orientation denoted by "C", "R", or "C+R" for combined spectra
+                orientation = f.split()[-1]
 
                 for spec in specs:
                     if (
