@@ -1264,7 +1264,7 @@ class Application(VuetifyTemplate, HubListener):
         # store the loaded config object
         self._loaded_configuration = config
         # give the vue templates access to the current config/layout
-        self.config = config['settings']['configuration']
+        self.config = config['settings'].get('configuration', 'unknown')
 
         self.state.settings.update(config.get('settings'))
 
