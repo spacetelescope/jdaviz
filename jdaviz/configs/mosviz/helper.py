@@ -66,7 +66,8 @@ class Mosviz(ConfigHelper):
         self._update_in_progress = False
 
     def _on_row_selected_begin(self):
-        # TODO: UI to toggle an option at the helper or table viewer level
+        if not self.app.state.settings.get('freeze_states_on_row_change'):
+            return
 
         for state, attrs in self._freezable_states:
             state._frozen_state = attrs
@@ -79,6 +80,9 @@ class Mosviz(ConfigHelper):
                                      if len(state.layers)]
 
     def _on_row_selected_end(self):
+        if not self.app.state.settings.get('freeze_states_on_row_change'):
+            return
+
         for state, attrs in self._freezable_states:
             state._frozen_state = []
 

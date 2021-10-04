@@ -2,6 +2,10 @@
   <v-app id="web-app" class="jdaviz">
     <v-app-bar color="primary" dark :dense="state.settings.dense_toolbar" flat app absolute clipped-right>
       <jupyter-widget :widget="item.widget" v-for="item in state.tool_items" :key="item.name"></jupyter-widget>
+      <v-btn v-if="config === 'mosviz'" icon @click="state.settings.freeze_states_on_row_change = !state.settings.freeze_states_on_row_change">
+        <v-icon v-if="state.settings.freeze_states_on_row_change">mdi-lock</v-icon>
+        <v-icon v-else>mdi-lock-open-outline</v-icon>
+      </v-btn>
       <v-spacer></v-spacer>
       <v-toolbar-items>
         <v-btn icon @click="state.drawer = !state.drawer">
