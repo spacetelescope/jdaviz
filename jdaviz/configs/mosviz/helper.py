@@ -75,7 +75,8 @@ class Mosviz(ConfigHelper):
         # technically be a NEW layer instance).  Note: this assumes that
         # layers[0] points to the data (and all other indices point to subsets)
         self._frozen_layers_cache = [{a: getattr(state.layers[0], a) for a in attrs}
-                                     for state, attrs in self._freezable_layers if len(state.layers)]
+                                     for state, attrs in self._freezable_layers
+                                     if len(state.layers)]
 
     def _on_row_selected_end(self):
         for state, attrs in self._freezable_states:
