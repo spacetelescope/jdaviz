@@ -92,6 +92,11 @@ class Mosviz(ConfigHelper):
 
         self._frozen_layers_cache = []
 
+        # Make sure world flipping has been handled correctly, as internal
+        # callbacks may have been made while limits were frozen.  This is
+        # especially important for NIRISS data.
+        self._update_spec2d_x_axis()
+
     def _extend_world(self, spec1d, ext):
         # Extend 1D spectrum world axis to enable panning (within reason) past
         # the bounds of data
@@ -103,7 +108,7 @@ class Mosviz(ConfigHelper):
         world = np.hstack((prepend, world, append))
         return world
 
-    def _update_spec2d_x_axis(self, change):
+    def _update_spec2d_x_axis(self, change=None):
         # This assumes the two spectrum viewers have the same x-axis shape and
         # wavelength solution, which should always hold
         table_viewer = self.app.get_viewer('table-viewer')
@@ -140,7 +145,7 @@ class Mosviz(ConfigHelper):
 
         self._update_in_progress = False
 
-    def _update_spec1d_x_axis(self, change):
+    def _update_spec1d_x_axis(self, change=None):
         # This assumes the two spectrum viewers have the same x-axis shape and
         # wavelength solution, which should always hold
         table_viewer = self.app.get_viewer('table-viewer')
