@@ -42,8 +42,8 @@ class Mosviz(ConfigHelper):
                                   ]
 
         self._freezable_layers = [(spec1d.state, ['linewidth']),
-                                  (spec2d.state, ['stretch', 'percentile']),
-                                  (image_viewer.state, ['stretch', 'percentile'])]
+                                  (spec2d.state, ['stretch', 'percentile', 'v_min', 'v_max']),
+                                  (image_viewer.state, ['stretch', 'percentile', 'v_min', 'v_max'])]
         self._frozen_layers_cache = []
 
         # Add callbacks to table-viewer to enable/disable the state freeze
