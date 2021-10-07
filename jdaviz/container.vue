@@ -57,7 +57,7 @@
                 <v-menu offset-y :close-on-content-click="false" style="z-index: 10">
                   <template v-slot:activator="{ on }">
                     <v-btn icon color="white" v-on="on">
-                      <v-icon >tune</v-icon>
+                      <v-icon>tune</v-icon>
                     </v-btn>
                   </template>
 
@@ -66,20 +66,24 @@
                     <v-tab key="1">Viewer</v-tab>
                   </v-tabs>
 
-                  <v-tabs-items v-model="viewer.tab" style="max-height: 500px; width: 350px;">
+                  <!-- NOTE: v-lazy needed for initial tab underline: https://github.com/vuetifyjs/vuetify/issues/1978#issuecomment-676892274 -->
+                  <v-lazy>
+                    <v-tabs-items v-model="viewer.tab" style="max-height: 500px; width: 350px;" lazy>
 
-                    <v-tab-item key="0" class="overflow-y-auto" style="height: 100%">
-                      <v-sheet class="px-4">
-                        <jupyter-widget :widget="viewer.layer_options" />
-                      </v-sheet>
-                    </v-tab-item>
+                      <v-tab-item key="0" class="overflow-y-auto" style="height: 100%">
+                        <v-sheet class="px-4">
+                          <jupyter-widget :widget="viewer.layer_options" />
+                        </v-sheet>
+                      </v-tab-item>
 
-                    <v-tab-item key="1" eager class="overflow-y-auto" style="height: 100%">
-                      <v-sheet class="px-4">
-                        <jupyter-widget :widget="viewer.viewer_options" />
-                      </v-sheet>
-                    </v-tab-item>
-                  </v-tabs-items>
+                      <v-tab-item key="1" eager class="overflow-y-auto" style="height: 100%">
+                        <v-sheet class="px-4">
+                          <jupyter-widget :widget="viewer.viewer_options" />
+                        </v-sheet>
+                      </v-tab-item>
+                    </v-tabs-items>
+                  </v-lazy>
+
                 </v-menu>
                 <v-btn icon color="white">
                   <v-icon >more_horiz</v-icon>
