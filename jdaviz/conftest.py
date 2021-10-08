@@ -50,6 +50,15 @@ def spectral_cube_wcs(request):
 
 
 @pytest.fixture
+def spectrum1d_cube_wcs(request):
+    # A simple spectrum1D WCS used by some tests
+    wcs = WCS(naxis=3)
+    wcs.wcs.ctype = 'RA---TAN', 'DEC--TAN', 'WAVE-LOG'
+    wcs.wcs.set()
+    return wcs
+
+
+@pytest.fixture
 def spectrum1d():
     np.random.seed(42)
 
@@ -60,6 +69,20 @@ def spectrum1d():
     uncertainty = StdDevUncertainty(np.abs(np.random.randn(len(spec_axis.value))) * u.Jy)
 
     return Spectrum1D(spectral_axis=spec_axis, flux=flux, uncertainty=uncertainty)
+
+
+@pytest.fixture
+def spectrum1d_cube():
+    flux = np.arange(16).reshape([2, 2, 4]) * u.Jy
+    wcs_dict = {"CTYPE1": "RA---TAN", "CTYPE2": "DEC--TAN", "CTYPE3": "WAVE-LOG",
+                "CRVAL1": 205, "CRVAL2": 27, "CRVAL3": 3.622e-7,
+                "CDELT1": -0.0001, "CDELT2": 0.0001, "CDELT3": 8e-11,
+                "CRPIX1": 0, "CRPIX2": 0, "CRPIX3": 0}
+    w = WCS(wcs_dict)
+
+    spec = Spectrum1D(flux=flux, wcs=w)
+
+    return spec
 
 
 try:
