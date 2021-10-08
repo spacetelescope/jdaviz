@@ -3,7 +3,6 @@ import glob
 import logging
 import os
 from pathlib import Path
-from glue.utils import data
 
 import numpy as np
 from astropy import units as u
