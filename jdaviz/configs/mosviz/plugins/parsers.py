@@ -3,6 +3,7 @@ import glob
 import logging
 import os
 from pathlib import Path
+from glue.utils import data
 
 import numpy as np
 from astropy import units as u
@@ -434,13 +435,13 @@ def mos_meta_parser(app, data_obj, ids=None, spectra=False, sp1d=False):
 
         # source name can be taken from 1d spectra
         elif spectra and sp1d:
-            names = _get_object_keyword(data_obj, ids)
+            names = _get_source_names([x[0] for x in data_obj], ids)
 
         # source name and coordinates are taken from image headers, if present
         else:
             ra = [x[0].header.get("OBJ_RA", float("nan")) for x in data_obj]
             dec = [x[0].header.get("OBJ_DEC", float("nan")) for x in data_obj]
-            names = _get_object_keyword(data_obj, ids)
+            names = _get_source_names([x[0] for x in data_obj], ids)
 
         [x.close() for x in data_obj]
 
@@ -463,14 +464,28 @@ def mos_meta_parser(app, data_obj, ids=None, spectra=False, sp1d=False):
             _add_to_table(app, dec, "Dec.")
 
 
-def _get_object_keyword(data_obj, ids):
-    if ids is not None:
-        # remove leading path to file name
-        ids_short = [os.path.basename(d) for d in ids]
-        names = [x[0].header.get("OBJECT", d) for x, d in zip(data_obj, ids_short)]
-    else:
-        names = [x[0].header.get("OBJECT", FALLBACK_NAME) for x in data_obj]
-    return names
+def _get_source_names(hdus, filepaths=None):
+    """
+    Attempts to extract a list of source identifiers via different header values.
+
+    Parameters
+    ----------
+    hdus : a list of HDUs (NOT an HDUList!) to check the header of. Filtering should
+        be done in advance to decide which HDUs to check against (e.g. Sci only)
+    filepaths : Optional. A list of filepaths to fallback on if no header values are
+        identified
+    """
+    # Try to extract the Source ID:
+    try:
+        src_names = ["Source ID: " + str(x.header['SOURCEID']) for x in hdus]
+    except KeyError:
+        if filepaths:
+            # remove leading path to file name
+            filenames = [os.path.basename(d) for d in filepaths]
+            src_names = [x.header.get("OBJECT", d) for x, d in zip(hdus, filenames)]
+        else:
+            src_names = [x.header.get("OBJECT", FALLBACK_NAME) for x in hdus]
+    return src_names
 
 
 @data_parser_registry("mosviz-niriss-parser")
@@ -591,6 +606,8 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                             wav_hdus[i] = ('WAVELENGTH', temp[i].header['EXTVER'])
 
                 # Now get a Spectrum1D object for each SCI HDU
+                source_ids.extend(_get_source_names([temp[sci] for sci in sci_hdus]))
+
                 for sci in sci_hdus:
 
                     if temp[sci].header["SPORDER"] == 1:
@@ -612,8 +629,6 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                                                                 orientation
                                                                 )
                         ra, dec = pupil_id_dict[filter_name][temp[sci].header["SOURCEID"]]
-                        source_ids.append("Source Catalog: {} Source ID: {}".
-                                          format(filter_name, temp[sci].header["SOURCEID"]))
                         ras.append(ra)
                         decs.append(dec)
                         image_add.append(image_dict[filter_name])
