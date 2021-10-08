@@ -11,7 +11,7 @@ from astropy.nddata import CCDData
 from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
 from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
-from traitlets import Dict, Bool
+from traitlets import Dict, Bool, Unicode
 from regions import RectanglePixelRegion, PixCoord
 from specutils import Spectrum1D
 
@@ -129,6 +129,7 @@ class Application(VuetifyTemplate, HubListener):
             sync=True, **w.widget_serialization)
 
     loading = Bool(False).tag(sync=True)
+    config = Unicode("").tag(sync=True)
 
     def __init__(self, configuration=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -1166,6 +1167,7 @@ class Application(VuetifyTemplate, HubListener):
             'layer_options': "IPY_MODEL_" + viewer.layer_options.model_id,
             'viewer_options': "IPY_MODEL_" + viewer.viewer_options.model_id,
             'selected_data_items': [],
+            'config': self.config,  # give viewer access to app config/layout
             'collapse': True,
             'reference': reference}
 
@@ -1261,6 +1263,8 @@ class Application(VuetifyTemplate, HubListener):
 
         # store the loaded config object
         self._loaded_configuration = config
+        # give the vue templates access to the current config/layout
+        self.config = config['settings'].get('configuration', 'unknown')
 
         self.state.settings.update(config.get('settings'))
 

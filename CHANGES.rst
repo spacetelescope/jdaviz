@@ -18,6 +18,9 @@ Imviz
 Mosviz
 ^^^^^^
 
+- New toggle button to lock/unlock viewer settings (x-limits in 1d and 2d spectrum viewers and 
+  stretch and percentile for 2d spectrum and image viewers). [#918]
+
 Specviz
 ^^^^^^^
 

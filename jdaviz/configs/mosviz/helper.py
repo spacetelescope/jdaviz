@@ -31,6 +31,26 @@ class Mosviz(ConfigHelper):
         spec2d = self.app.get_viewer("spectrum-2d-viewer")
         spec2d.scales['x'].observe(self._update_spec1d_x_axis, names=['min', 'max'])
 
+        image_viewer = self.app.get_viewer("image-viewer")
+
+        # Choose which viewers will have state frozen during a row change.
+        # This should be a list of tuples, where each entry has the state as the
+        # first item in the tuple, and a list of frozen attributes as the second.
+        self._freezable_states = [(spec1d.state, ['x_min', 'x_max']),
+                                  (spec2d.state, ['x_min', 'x_max']),
+                                  (image_viewer.state, []),
+                                  ]
+
+        self._freezable_layers = [(spec1d.state, ['linewidth']),
+                                  (spec2d.state, ['stretch', 'percentile', 'v_min', 'v_max']),
+                                  (image_viewer.state, ['stretch', 'percentile', 'v_min', 'v_max'])]
+        self._frozen_layers_cache = []
+
+        # Add callbacks to table-viewer to enable/disable the state freeze
+        table = self.app.get_viewer("table-viewer")
+        table._on_row_selected_begin = self._on_row_selected_begin
+        table._on_row_selected_end = self._on_row_selected_end
+
         # Listen for clicks on the table in case we need to zoom the image
         self.app.hub.subscribe(self, TableClickMessage,
                                handler=self._row_click_message_handler)
@@ -45,6 +65,38 @@ class Mosviz(ConfigHelper):
 
         self._update_in_progress = False
 
+    def _on_row_selected_begin(self):
+        if not self.app.state.settings.get('freeze_states_on_row_change'):
+            return
+
+        for state, attrs in self._freezable_states:
+            state._frozen_state = attrs
+
+        # Make a copy of layer attributes (these can't be frozen since it will
+        # technically be a NEW layer instance).  Note: this assumes that
+        # layers[0] points to the data (and all other indices point to subsets)
+        self._frozen_layers_cache = [{a: getattr(state.layers[0], a) for a in attrs}
+                                     for state, attrs in self._freezable_layers
+                                     if len(state.layers)]
+
+    def _on_row_selected_end(self):
+        if not self.app.state.settings.get('freeze_states_on_row_change'):
+            return
+
+        for state, attrs in self._freezable_states:
+            state._frozen_state = []
+
+        # Restore data-layer states from cache, then reset cache
+        for (state, attrs), cache in zip(self._freezable_layers, self._frozen_layers_cache):
+            state.layers[0].update_from_dict(cache)
+
+        self._frozen_layers_cache = []
+
+        # Make sure world flipping has been handled correctly, as internal
+        # callbacks may have been made while limits were frozen.  This is
+        # especially important for NIRISS data.
+        self._update_spec2d_x_axis()
+
     def _extend_world(self, spec1d, ext):
         # Extend 1D spectrum world axis to enable panning (within reason) past
         # the bounds of data
@@ -56,7 +108,7 @@ class Mosviz(ConfigHelper):
         world = np.hstack((prepend, world, append))
         return world
 
-    def _update_spec2d_x_axis(self, change):
+    def _update_spec2d_x_axis(self, change=None):
         # This assumes the two spectrum viewers have the same x-axis shape and
         # wavelength solution, which should always hold
         table_viewer = self.app.get_viewer('table-viewer')
@@ -93,7 +145,7 @@ class Mosviz(ConfigHelper):
 
         self._update_in_progress = False
 
-    def _update_spec1d_x_axis(self, change):
+    def _update_spec1d_x_axis(self, change=None):
         # This assumes the two spectrum viewers have the same x-axis shape and
         # wavelength solution, which should always hold
         table_viewer = self.app.get_viewer('table-viewer')
