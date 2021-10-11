@@ -37,10 +37,24 @@ class AstrowidgetsImageViewerMixin:
         self.marker = {'color': 'red', 'alpha': 1.0, 'markersize': 5}
 
     def save(self, filename):
-        """Save out the current image view to given PNG filename."""
+        """Save out the current image view to given PNG filename.
+
+        Parameters
+        ----------
+        filename : str
+            PNG filename. If the given file already exists, it will be
+            silently overwritten.
+
+        """
         if not filename.lower().endswith('.png'):
             filename = filename + '.png'
-        self.figure.save_png(filename=filename)
+
+        # https://github.com/bqplot/bqplot/pull/1397
+        def on_png_received(data):
+            with open(filename, 'bw') as f:
+                f.write(data)
+
+        self.figure.get_png_data(on_png_received)
 
     def center_on(self, point):
         """Centers the view on a particular point on the top visible layer.

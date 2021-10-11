@@ -55,6 +55,9 @@ Cubeviz
 Imviz
 ^^^^^
 
+- ``imviz.default_viewer.save()`` method no longer pops up a file dialog.
+  If the given file exists, it is silently overwritten. [#929]
+
 Mosviz
 ^^^^^^
 
