@@ -23,7 +23,7 @@ class TemplateMixin(VuetifyTemplate, HubListener):
         obj._app = app
 
         # give the vue templates access to the current config/layout
-        obj.config = app.state.settings.get("configuration", "unknown")
+        obj.config = app.state.settings.get("configuration", "default")
 
         # give the vue templates access to jdaviz version
         obj.vdocs = 'latest' if 'dev' in __version__ else 'v'+__version__
