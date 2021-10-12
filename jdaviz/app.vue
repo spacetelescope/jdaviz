@@ -5,10 +5,12 @@
         <jupyter-widget :widget="item.widget" :key="item.name"></jupyter-widget>
       </j-tooltip>
       <v-toolbar-items>
-        <v-btn v-if="config === 'mosviz'" icon @click="state.settings.freeze_states_on_row_change = !state.settings.freeze_states_on_row_change">
-          <v-icon v-if="state.settings.freeze_states_on_row_change">mdi-lock</v-icon>
-          <v-icon v-else>mdi-lock-open-outline</v-icon>
-        </v-btn>
+        <j-tooltip v-if="config === 'mosviz'" tipid="lock-row-toggle">
+          <v-btn icon @click="state.settings.freeze_states_on_row_change = !state.settings.freeze_states_on_row_change">
+            <v-icon v-if="state.settings.freeze_states_on_row_change">mdi-lock</v-icon>
+            <v-icon v-else>mdi-lock-open-outline</v-icon>
+          </v-btn>
+        </j-tooltip>
       </v-toolbar-items>
       <v-spacer></v-spacer>
       <v-toolbar-items>

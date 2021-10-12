@@ -27,9 +27,13 @@ const tooltips = {
   'g-data-tools': 
     'Import data file',
   'g-subset-tools': 
-    'Select or modify a subset',
+    'Select, create, and delete subsets',
   'g-unified-slider':
     'Grab slider to slice through cube or select slice number',
+  'g-redshift-slider':
+    'Move the slider to change the redshift of the source and line wavelengths',
+  'lock-row-toggle':
+    'Use the same display parameters for all images and spectra',
 
   // viewer toolbars
   'viewer-toolbar-data': 'Select dataset(s) to display',
