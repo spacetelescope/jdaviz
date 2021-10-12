@@ -2,16 +2,11 @@ import numpy as np
 import pytest
 from astropy import units as u
 from astropy.coordinates import SkyCoord, Angle
+from photutils import CircularAperture, SkyCircularAperture
 from regions import (PixCoord, CircleSkyRegion, RectanglePixelRegion, CirclePixelRegion,
                      EllipsePixelRegion)
 
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS
-
-try:
-    import photutils  # noqa
-    HAS_PHOTUTILS = True
-except ImportError:
-    HAS_PHOTUTILS = False
 
 
 class BaseRegionHandler:
@@ -86,19 +81,13 @@ class TestLoadStaticRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
         # Check static region
         self.verify_region_loaded('my_reg_sky_1')
 
-    @pytest.mark.skipif(not HAS_PHOTUTILS, reason='photutils is missing')
     def test_photutils_pixel(self):
-        from photutils import CircularAperture
-
         my_aper = CircularAperture((5, 5), r=2)
         self.imviz.load_static_regions({'my_aper': my_aper})
         self.verify_region_loaded('my_aper')
         assert self.imviz.get_interactive_regions() == {}
 
-    @pytest.mark.skipif(not HAS_PHOTUTILS, reason='photutils is missing')
     def test_photutils_sky_has_wcs(self):
-        from photutils import SkyCircularAperture
-
         sky = SkyCoord(ra=337.5202808, dec=-20.833333059999998, unit='deg')
         my_aper_sky = SkyCircularAperture(sky, 0.5 * u.arcsec)
         self.imviz.load_static_regions({'my_aper_sky_1': my_aper_sky})
@@ -123,10 +112,7 @@ class TestLoadStaticRegionsSkyNoWCS(BaseRegionHandler):
         self.verify_region_loaded('my_reg_sky_2', count=0)
         assert self.imviz.get_interactive_regions() == {}
 
-    @pytest.mark.skipif(not HAS_PHOTUTILS, reason='photutils is missing')
     def test_photutils_sky_no_wcs(self):
-        from photutils import SkyCircularAperture
-
         my_aper_sky = SkyCircularAperture(self.sky, 0.5 * u.arcsec)
         with pytest.warns(UserWarning, match='data has no valid WCS'):
             self.imviz.load_static_regions({'my_aper_sky_2': my_aper_sky})

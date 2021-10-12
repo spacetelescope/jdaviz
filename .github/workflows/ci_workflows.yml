@@ -37,10 +37,11 @@ jobs:
             toxenv: securityaudit
             allow_failure: false
 
-          - name: Python 3.8 with coverage checking, all deps, and remote data
+          # Add back alldeps here if we use "all" in setup.cfg again
+          - name: Python 3.8 with coverage checking and remote data
             os: ubuntu-latest
             python: 3.8
-            toxenv: py38-test-alldeps-cov
+            toxenv: py38-test-cov
             toxposargs: --remote-data
             allow_failure: false
 

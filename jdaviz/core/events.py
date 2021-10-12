@@ -1,6 +1,6 @@
 from glue.core.message import Message
 
-__all__ = ['NewViewerMessage', 'AddViewerMessage', 'LoadDataMessage',
+__all__ = ['NewViewerMessage', 'RemoveViewerMessage', 'LoadDataMessage',
            'AddDataMessage', 'SnackbarMessage', 'RemoveDataMessage',
            'AddLineListMessage', 'TableClickMessage']
 
@@ -26,15 +26,8 @@ class NewViewerMessage(Message):
         return self._x_attr
 
 
-class AddViewerMessage(Message):
-    def __init__(self, viewer, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self._viewer = viewer
-
-    @property
-    def viewer(self):
-        return self._viewer
+class RemoveViewerMessage(Message):
+    pass
 
 
 class LoadDataMessage(Message):

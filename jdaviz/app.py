@@ -30,8 +30,8 @@ from glue_jupyter.state_traitlets_helpers import GlueState
 from ipyvuetify import VuetifyTemplate
 
 from jdaviz.core.config import read_configuration, get_configuration
-from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
-                                SnackbarMessage, RemoveDataMessage,
+from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, RemoveViewerMessage,
+                                AddDataMessage, SnackbarMessage, RemoveDataMessage,
                                 AddDataToViewerMessage, RemoveDataFromViewerMessage)
 from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registry,
                                     data_parser_registry)
@@ -961,6 +961,8 @@ class Application(VuetifyTemplate, HubListener):
         # FIXME: This is getting called twice for some reason
         if cid in self._viewer_store:
             del self._viewer_store[cid]
+
+        self.hub.broadcast(RemoveViewerMessage(sender=self))
 
     def vue_data_item_selected(self, event):
         """

@@ -197,13 +197,6 @@ so the list and the diagram above do not fully cover all of Jdaviz's dependencie
 but are the primary "top-level" data analysis or I/O libraries that most users are likely
 to focus on to complement or extend their Jdaviz workflows.
 
-.. note::
-
-    In the diagram above, optional dependencies of Jdaviz have dotted lines.
-    Optional dependencies mean they are only required for certain Jdaviz
-    workflows and are not explicitly installed by default when you install Jdaviz.
-
-
 .. _ipywidgets: https://ipywidgets.readthedocs.io
 .. _ipyvuetify: https://github.com/mariobuikhuizen/ipyvuetify
 .. _ipygoldenlayout: https://github.com/nmearl/ipygoldenlayout

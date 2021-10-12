@@ -15,6 +15,8 @@ Imviz
 
 - New plugin to control image linking via GUI. [#909]
 
+- New plugin to perform simple aperture photometry. [#930]
+
 Mosviz
 ^^^^^^
 
@@ -28,6 +30,10 @@ Specviz
 
 API Changes
 -----------
+
+- Unused ``AddViewerMessage`` is removed. [#930]
+
+- Viewer destroy event now emits new ``RemoveViewerMessage``. [#930]
 
 Cubeviz
 ^^^^^^^
@@ -61,6 +67,8 @@ Specviz
 
 Other Changes and Additions
 ---------------------------
+
+- ``photutils`` is now a required dependency. [#930]
 
 
 2.0 (2021-09-17)
