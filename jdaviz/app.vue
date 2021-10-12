@@ -257,4 +257,8 @@ a:active {
   /* make the v-divider standout more */
   border-color: hsla(0,0%,100%,.35) !important;
 }
+
+.no-hint .v-text-field__details {
+  display: none !important;
+}
 </style>
