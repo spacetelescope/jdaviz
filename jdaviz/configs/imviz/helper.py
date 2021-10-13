@@ -279,6 +279,19 @@ class Imviz(ConfigHelper):
         for subset_grp in self.app.data_collection.subset_groups:  # should be a copy
             self.app.data_collection.remove_subset_group(subset_grp)
 
+    def get_aperture_photometry_results(self):
+        """Return aperture photometry results, if any.
+        Results are calculated using :ref:`aper-phot-simple` plugin.
+
+        Returns
+        -------
+        results : `~astropy.table.QTable` or `None`
+            Output of :func:`photutils.aperture.aperture_photometry` if available
+            or `None` otherwise.
+
+        """
+        return getattr(self.app, '_aper_phot_results', None)
+
 
 def split_filename_with_fits_ext(filename):
     """Split a ``filename[ext]`` input into filename and FITS extension.

@@ -6,6 +6,7 @@
           <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#aper-phot-simple'">
             Perform aperture photometry for a single region. See the <j-external-link link="https://photutils.readthedocs.io/en/stable/aperture.html" linktext="photutils docs"/> for more details.
           </j-docs-link>
+          <!--
           <v-row>
             <v-col>
               <v-select
@@ -17,6 +18,7 @@
               ></v-select>
             </v-col>
           </v-row>
+          -->
           <v-row>
             <v-col>
               <v-select
@@ -39,8 +41,31 @@
               ></v-select>
             </v-col>
           </v-row>
+          <v-row>
+            <v-col>
+              <v-text-field
+                label="Background value"
+                v-model="background_value"
+                hint="Background to subtract, same unit as data"
+                persistent-hint
+              >
+              </v-text-field>
+            </v-col>
+          </v-row>
         </v-container>
       </v-card-text>
+      <v-divider></v-divider>
+
+      <v-card-actions>
+        <div class="flex-grow-1"></div>
+        <v-row
+          justify="left"
+          align="center"
+          no-gutters
+        >
+          <v-btn color="primary" text @click="do_aper_phot">Go</v-btn>
+        </v-row>
+      </v-card-actions>
       <v-divider></v-divider>
 
       <v-card-text v-if="result_available">
@@ -60,17 +85,6 @@
         </v-container>
       </v-card-text>
       <v-divider></v-divider>
-
-      <v-card-actions>
-        <div class="flex-grow-1"></div>
-        <v-row
-          justify="left"
-          align="center"
-          no-gutters
-        >
-          <v-btn color="primary" text @click="do_aper_phot">Go</v-btn>
-        </v-row>
-      </v-card-actions>
     </v-card>
   </v-card>
 </template>
