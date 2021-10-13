@@ -25,8 +25,8 @@
               <j-tooltip tipid="viewer-toolbar-data">
                 <v-menu offset-y :close-on-content-click="false">
                   <template v-slot:activator="{ on, attrs }">
-                    <v-btn icon v-bind="attrs" v-on="on" color="white">
-                      <v-icon>mdi-table-eye</vicon>
+                    <v-btn text elevation="3" v-bind="attrs" v-on="on" color="white">
+                      Data
                     </v-btn>
                   </template>
 
