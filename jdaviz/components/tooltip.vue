@@ -2,7 +2,7 @@
   <v-tooltip v-if="getTooltipHtml()" bottom :open-delay="getOpenDelay()"
       :nudge-bottom="getNudgeBottom()">
     <template v-slot:activator="{ on, attrs }">
-      <span v-bind="attrs" v-on="on" style="height: inherit">
+      <span v-bind="attrs" v-on="on" style="height: inherit; display: inherit">
         <slot></slot>
       </span>
     </template>

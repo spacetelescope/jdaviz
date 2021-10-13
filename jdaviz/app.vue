@@ -6,21 +6,22 @@
       </j-tooltip>
       <v-toolbar-items>
         <j-tooltip v-if="config === 'mosviz'" tipid="lock-row-toggle">
-          <v-btn icon @click="state.settings.freeze_states_on_row_change = !state.settings.freeze_states_on_row_change">
-            <v-icon v-if="state.settings.freeze_states_on_row_change">mdi-lock</v-icon>
-            <v-icon v-else>mdi-lock-open-outline</v-icon>
+          <v-btn 
+            icon
+            @click="state.settings.freeze_states_on_row_change = !state.settings.freeze_states_on_row_change"
+            :class="{active: state.settings.freeze_states_on_row_change}">
+            <v-icon>mdi-vector-link</v-icon>
           </v-btn>
         </j-tooltip>
       </v-toolbar-items>
       <v-spacer></v-spacer>
-      <v-toolbar-items>
         <j-tooltip tipid="app-toolbar-plugins">
-          <v-btn icon @click="state.drawer = !state.drawer">
-            <v-icon v-if="state.drawer">mdi-toy-brick-remove</v-icon>
-            <v-icon v-else>mdi-toy-brick-plus</v-icon>
+          <v-toolbar-items>
+          <v-btn icon @click="state.drawer = !state.drawer" :class="{active : state.drawer}">
+            <v-icon>mdi-menu</v-icon>
           </v-btn>
+        </v-toolbar-items>
         </j-tooltip>
-      </v-toolbar-items>
     </v-app-bar>
 
     <v-content
@@ -214,6 +215,14 @@ div.output_wrapper {
   margin: 0px;
 }
 
+.vuetify-styles .v-toolbar__items>span>.v-btn {
+  /* allow voolbar-items styling to pass through tooltip wrapping span */
+  /* css is copied from .vuetify-styles .v-toolbar__items>.v-btn */
+  border-radius: 0;
+  height: 100%!important;
+  max-height: none;
+}
+
 .v-tooltip__content {
   background-color: white !important;
   border-radius: 2px !important;
@@ -235,6 +244,10 @@ a:hover {
 
 a:active {
   text-decoration: none;
+}
+
+.active {
+  background-color: #c75109 !important;
 }
 
 </style>
