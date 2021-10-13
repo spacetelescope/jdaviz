@@ -70,7 +70,7 @@ class SimpleAperturePhotometry(TemplateMixin):
     #    self._selected_viewer_id = event
 
     def vue_data_selected(self, event):
-        self._selected_data = self.app.data_collection[self.app.data_collection.index(event)]
+        self._selected_data = self.app.data_collection[self.app.data_collection.labels.index(event)]
 
     def vue_subset_selected(self, event):
         self._selected_subset = None
@@ -97,6 +97,11 @@ class SimpleAperturePhotometry(TemplateMixin):
         else:
             img = comp_no_bg
         mask = np.isnan(img)
+        if not np.any(mask):
+            mask = None
+
+        # TODO: Blocked by https://github.com/astropy/photutils/issues/1261
+        #    ***or***      https://github.com/glue-viz/glue-astronomy/issues/51
         result = aperture_photometry(img, self._selected_subset, error=None, mask=mask,
                                      method='exact', subpixels=5, wcs=data.coords)
 
