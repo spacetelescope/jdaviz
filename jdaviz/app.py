@@ -1007,6 +1007,12 @@ class Application(VuetifyTemplate, HubListener):
         """
         self.state.snackbar_queue.close_current_message(self.state)
 
+    def vue_call_viewer_method(self, event):
+        viewer_id, method = event['id'], event['method']
+        args = event.get('args', [])
+        kwargs = event.get('kwargs', {})
+        return getattr(self._viewer_store[viewer_id], method)(*args, **kwargs)
+
     def _update_selected_data_items(self, viewer_id, selected_items):
         # Find the active viewer
         viewer_item = self._viewer_item_by_id(viewer_id)
