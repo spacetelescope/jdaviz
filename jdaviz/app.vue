@@ -1,19 +1,25 @@
 <template>
   <v-app id="web-app" class="jdaviz">
     <v-app-bar color="primary" dark :dense="state.settings.dense_toolbar" flat app absolute clipped-right>
-      <jupyter-widget :widget="item.widget" v-for="item in state.tool_items" :key="item.name"></jupyter-widget>
+      <j-tooltip :tipid="item.name" v-for="item in state.tool_items">
+        <jupyter-widget :widget="item.widget" :key="item.name"></jupyter-widget>
+      </j-tooltip>
       <v-toolbar-items>
-        <v-btn v-if="config === 'mosviz'" icon @click="state.settings.freeze_states_on_row_change = !state.settings.freeze_states_on_row_change">
-          <v-icon v-if="state.settings.freeze_states_on_row_change">mdi-lock</v-icon>
-          <v-icon v-else>mdi-lock-open-outline</v-icon>
-        </v-btn>
+        <j-tooltip v-if="config === 'mosviz'" tipid="lock-row-toggle">
+          <v-btn icon @click="state.settings.freeze_states_on_row_change = !state.settings.freeze_states_on_row_change">
+            <v-icon v-if="state.settings.freeze_states_on_row_change">mdi-lock</v-icon>
+            <v-icon v-else>mdi-lock-open-outline</v-icon>
+          </v-btn>
+        </j-tooltip>
       </v-toolbar-items>
       <v-spacer></v-spacer>
       <v-toolbar-items>
-        <v-btn icon @click="state.drawer = !state.drawer">
-          <v-icon v-if="state.drawer">mdi-toy-brick-remove</v-icon>
-          <v-icon v-else>mdi-toy-brick-plus</v-icon>
-        </v-btn>
+        <j-tooltip tipid="app-toolbar-plugins">
+          <v-btn icon @click="state.drawer = !state.drawer">
+            <v-icon v-if="state.drawer">mdi-toy-brick-remove</v-icon>
+            <v-icon v-else>mdi-toy-brick-plus</v-icon>
+          </v-btn>
+        </j-tooltip>
       </v-toolbar-items>
     </v-app-bar>
 
@@ -45,7 +51,11 @@
             <v-card flat tile class="overflow-y-auto fill-height" color="#f8f8f8">
               <v-expansion-panels accordion multiple focusable flat tile>
                 <v-expansion-panel v-for="(tray, index) in state.tray_items" :key="index">
-                  <v-expansion-panel-header>{{ tray.label }}</v-expansion-panel-header>
+                  <v-expansion-panel-header>
+                    <j-tooltip :tipid="tray.name">
+                      {{ tray.label }}
+                    </j-tooltip>
+                  </v-expansion-panel-header>
                   <v-expansion-panel-content>
                     <jupyter-widget :widget="tray.widget"></jupyter-widget>
                   </v-expansion-panel-content>
@@ -203,4 +213,28 @@ div.output_wrapper {
   padding: 0px;
   margin: 0px;
 }
+
+.v-tooltip__content {
+  background-color: white !important;
+  border-radius: 2px !important;
+  border: 1px #003B4D solid !important;
+  color: black !important;
+}
+
+a:link {
+  text-decoration: none;
+}
+
+a:visited {
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: none;
+}
+
+a:active {
+  text-decoration: none;
+}
+
 </style>

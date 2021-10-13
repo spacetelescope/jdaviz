@@ -6,6 +6,7 @@ import uuid
 from inspect import isclass
 
 import ipywidgets as w
+import ipyvue
 
 from astropy.nddata import CCDData
 from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
@@ -50,6 +51,19 @@ EXT_TYPES = dict(flux=['flux', 'sci'],
 # Set default opacity for data layers to 1 instead of 0.8 in
 # some glue-core versions
 glue_settings.DATA_ALPHA = 1
+
+ipyvue.register_component_from_file(None, 'j-tooltip',
+                                    os.path.join(os.path.dirname(__file__),
+                                                 'components/tooltip.vue'))
+
+
+ipyvue.register_component_from_file(None, 'j-external-link',
+                                    os.path.join(os.path.dirname(__file__),
+                                                 'components/external_link.vue'))
+
+ipyvue.register_component_from_file(None, 'j-docs-link',
+                                    os.path.join(os.path.dirname(__file__),
+                                                 'components/docs_link.vue'))
 
 
 class ApplicationState(State):
