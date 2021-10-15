@@ -139,7 +139,5 @@ class LineAnalysis(TemplateMixin):
                 temp_result = FUNCTIONS[function](self._spectrum1d)
 
             temp_results.append({'function': function, 'result': str(temp_result)})
-            self.result_available = True
-
-            self.results = []
-            self.results = temp_results
+        self.result_available = True
+        self.results = temp_results
