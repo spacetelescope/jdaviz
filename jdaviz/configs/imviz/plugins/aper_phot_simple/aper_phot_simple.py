@@ -125,8 +125,10 @@ class SimpleAperturePhotometry(TemplateMixin):
                 self.app._aper_phot_results = _qtable_from_dict(d)
             else:
                 try:
+                    d['id'] = self.app._aper_phot_results['id'].max() + 1
                     self.app._aper_phot_results.add_row(d.values())
                 except Exception:  # Discard incompatible QTable
+                    d['id'] = 1
                     self.app._aper_phot_results = _qtable_from_dict(d)
 
         except Exception as e:
