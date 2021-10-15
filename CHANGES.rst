@@ -15,6 +15,8 @@ Imviz
 
 - New plugin to control image linking via GUI. [#909]
 
+- New plugin to perform simple aperture photometry. [#938]
+
 Mosviz
 ^^^^^^
 
