@@ -29,6 +29,8 @@ Specviz
 API Changes
 -----------
 
+- Removed unused ``jdaviz.core.events.AddViewerMessage``. [#939]
+
 Cubeviz
 ^^^^^^^
 
