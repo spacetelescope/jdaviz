@@ -23,7 +23,7 @@
           <v-row dense style="background-color: #205f76">
             <v-col md="auto">
               <j-tooltip tipid="viewer-toolbar-data">
-                <v-menu offset-y :close-on-content-click="false">
+                <v-menu offset-y :close-on-content-click="false" v-model="viewer.data_open">
                   <template v-slot:activator="{ on, attrs }">
                     <v-btn 
                       text 
@@ -31,7 +31,6 @@
                       v-bind="attrs" 
                       v-on="on" 
                       color="white"
-                      @click="viewer.data_open = !viewer.data_open"
                       :class="{active: viewer.data_open}">
                       Data
                     </v-btn>
@@ -62,9 +61,9 @@
                  </v-btn>
                </j-tooltip>
                <j-tooltip tipid='viewer-toolbar-menu'>
-                <v-menu offset-y :close-on-content-click="false" style="z-index: 10">
+                <v-menu offset-y :close-on-content-click="false" style="z-index: 10" v-model="viewer.layer_viewer_open">
                   <template v-slot:activator="{ on }">
-                    <v-btn icon v-on="on" @click="viewer.layer_viewer_open = !viewer.layer_viewer_open" :class="{active : viewer.layer_viewer_open}" color="white">
+                    <v-btn icon v-on="on" :class="{active : viewer.layer_viewer_open}" color="white">
                       <v-icon>tune</v-icon>
                     </v-btn>
                   </template>
