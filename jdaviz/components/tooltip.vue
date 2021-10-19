@@ -8,7 +8,7 @@
     </template>
     <span v-html="getTooltipHtml()"></span>
   </v-tooltip>
-  <span v-else style="height: inherit">
+  <span v-else style="height: inherit; display: inherit">
     <!-- in the case where there is no tooltip, just pass through the wrapped element -->
     <slot></slot>
   </span>
@@ -34,6 +34,8 @@ const tooltips = {
     'Move the slider to change the redshift of the source and line wavelengths',
   'lock-row-toggle':
     'Use the same display parameters for all images and spectra',
+  'create-image-viewer':
+    'Create new image viewer',
 
   // viewer toolbars
   'viewer-toolbar-data': 'Select dataset(s) to display',
