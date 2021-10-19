@@ -21,6 +21,7 @@ model_parameters = {"Gaussian1D": ["amplitude", "stddev", "mean"],
                     "PowerLaw1D": ["amplitude", "x_0", "alpha"],
                     "Lorentz1D": ["amplitude", "x_0", "fwhm"],
                     "Voigt1D": ["x_0", "amplitude_L", "fwhm_L", "fwhm_G"],
+                    "BlackBody": ["temperature", "scale"],
                     }
 
 
@@ -224,10 +225,7 @@ def _setattr(instance, mname, pname, value):
     value: any
         The value to assign.
     """
-    # this has to handle both Quantities and plain floats
     try:
-        setattr(instance, _p_names[mname][pname], value.value)
-    except AttributeError:
         setattr(instance, _p_names[mname][pname], value)
     except KeyError:
         pass

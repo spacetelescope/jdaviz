@@ -17,6 +17,7 @@ from glue.core.link_helpers import LinkSame
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage, SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
+from jdaviz.models import BlackBody
 from jdaviz.configs.default.plugins.model_fitting.fitting_backend import fit_model_to_spectrum
 from jdaviz.configs.default.plugins.model_fitting.initializers import initialize, model_parameters
 
@@ -28,9 +29,9 @@ MODELS = {
      'Polynomial1D': models.Polynomial1D,
      'Gaussian1D': models.Gaussian1D,
      'Voigt1D': models.Voigt1D,
-     'Lorentz1D': models.Lorentz1D
+     'Lorentz1D': models.Lorentz1D,
+     'BlackBody': BlackBody
      }
-
 
 @tray_registry('g-model-fitting', label="Model Fitting")
 class ModelFitting(TemplateMixin):
@@ -127,14 +128,16 @@ class ModelFitting(TemplateMixin):
                              or not isinstance(layer_state.layer.subset_state,
                                                (RangeSubsetState, OrState, AndState)))]
 
-    def _param_units(self, param, order=0):
+    def _param_units(self, param, order=0, model_type=None):
         """Helper function to handle units that depend on x and y"""
-        y_params = ["amplitude", "amplitude_L", "intercept"]
+        y_params = ["amplitude", "amplitude_L", "intercept", "scale"]
 
         if param == "slope":
             return str(u.Unit(self._units["y"]) / u.Unit(self._units["x"]))
         elif param == "poly":
             return str(u.Unit(self._units["y"]) / u.Unit(self._units["x"])**order)
+        elif param == "temperature":
+            return str(u.K)
 
         return self._units["y"] if param in y_params else self._units["x"]
 
@@ -142,10 +145,13 @@ class ModelFitting(TemplateMixin):
         """Insert the results of the model fit into the component_models"""
         for m in self.component_models:
             name = m["id"]
-            if len(self.component_models) > 1:
+            if hasattr(self._fitted_model, name):
                 m_fit = self._fitted_model[name]
-            else:
+            elif self._fitted_model.name == name:
                 m_fit = self._fitted_model
+            else:
+                # then the component was not in the fitted model
+                continue
             temp_params = []
             for i in range(0, len(m_fit.parameters)):
                 temp_param = [x for x in m["parameters"] if x["name"] ==
@@ -326,18 +332,21 @@ class ModelFitting(TemplateMixin):
         temp_models = []
         for m in self.component_models:
             fixed = {}
+
+            # Now we can set the parameter values
+            initial_values = {p["name"]: u.Quantity(p["value"], p["unit"]) for p in m["parameters"]}
+
             for p in m["parameters"]:
                 fixed[p["name"]] = p["fixed"]
             # Have to initialize with fixed dictionary
             if m["model_type"] == "Polynomial1D":
                 temp_model = MODELS[m["model_type"]](name=m["id"],
                                                      degree=m["order"],
-                                                     fixed=fixed)
+                                                     fixed=fixed,
+                                                     **initial_values)
             else:
-                temp_model = MODELS[m["model_type"]](name=m["id"], fixed=fixed)
-            # Now we can set the parameter values
-            for p in m["parameters"]:
-                setattr(temp_model, p["name"], p["value"])
+                temp_model = MODELS[m["model_type"]](name=m["id"], fixed=fixed, **initial_values)
+
             temp_models.append(temp_model)
 
         return temp_models
@@ -351,26 +360,41 @@ class ModelFitting(TemplateMixin):
         if self.temp_model == "Polynomial1D":
             new_model = self._initialize_polynomial(new_model)
         else:
-            # Have a separate private dict with the initialized models, since
-            # they don't play well with JSON for widget interaction
+            model_kwargs = {}   # TODO: remove or merge with _initialize_polynomial
+            initial_values = {}
+            for param in model_parameters[new_model["model_type"]]:
+                # access the default value from the model class itself
+                default_param = getattr(MODELS[self.temp_model], param)
+                default_units = self._param_units(param,
+                                                  model_type=new_model["model_type"])
+
+                if default_param.unit is None:
+                    # then the model parameter accepts unitless, but we want
+                    # to pass with appropriate default units
+                    initial_val = u.Quantity(default_param.value, default_units)
+                else:
+                    # then the model parameter has default units.  We want to pass
+                    # with jdaviz default units (based on x/y units) but need to
+                    # convert the default parameter unit to these units
+                    initial_val = default_param.quantity.to(default_units)
+
+                initial_values[param] = initial_val
+                new_model["parameters"].append({"name": param,
+                                                "value": initial_val.value,
+                                                "unit": default_units,
+                                                "fixed": False})
+
             initialized_model = initialize(
-                MODELS[self.temp_model](name=self.temp_name),
+                MODELS[self.temp_model](name=self.temp_name,
+                                        **initial_values,
+                                        **model_kwargs),
                 self._spectrum1d.spectral_axis,
                 self._spectrum1d.flux)
 
             self._initialized_models[self.temp_name] = initialized_model
 
-            for param in model_parameters[new_model["model_type"]]:
-                initial_val = getattr(initialized_model, param).value
-                new_model["parameters"].append({"name": param,
-                                                "value": initial_val,
-                                                "unit": self._param_units(param),
-                                                "fixed": False})
-
         new_model["Initialized"] = True
         self.component_models = self.component_models + [new_model]
-
-        self._update_initialized_parameters()
 
     def vue_remove_model(self, event):
         self.component_models = [x for x in self.component_models
