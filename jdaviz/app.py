@@ -1178,11 +1178,13 @@ class Application(VuetifyTemplate, HubListener):
             'name': name or vid,
             'widget': "IPY_MODEL_" + viewer.figure_widget.model_id,
             'tools': "IPY_MODEL_" + viewer.toolbar_selection_tools.model_id,
+            'tools_open': False,
             'layer_options': "IPY_MODEL_" + viewer.layer_options.model_id,
             'viewer_options': "IPY_MODEL_" + viewer.viewer_options.model_id,
+            'layer_viewer_open': False,
             'selected_data_items': [],
             'config': self.config,  # give viewer access to app config/layout
-            'collapse': True,
+            'data_open': False,
             'reference': reference}
 
     def _on_new_viewer(self, msg, vid=None, name=None):

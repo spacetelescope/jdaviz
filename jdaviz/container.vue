@@ -25,7 +25,14 @@
               <j-tooltip tipid="viewer-toolbar-data">
                 <v-menu offset-y :close-on-content-click="false">
                   <template v-slot:activator="{ on, attrs }">
-                    <v-btn text elevation="3" v-bind="attrs" v-on="on" color="white">
+                    <v-btn 
+                      text 
+                      elevation="3" 
+                      v-bind="attrs" 
+                      v-on="on" 
+                      color="white"
+                      @click="viewer.data_open = !viewer.data_open"
+                      :class="{active: viewer.data_open}">
                       Data
                     </v-btn>
                   </template>
@@ -48,18 +55,16 @@
 
               </v-col>
               <v-spacer></v-spacer>
-               <v-col md="auto">
-               
+               <v-toolbar-items>
                <j-tooltip tipid='viewer-toolbar-figure'>
-                 <v-btn icon @click="viewer.collapse = !viewer.collapse" color="white">
-                   <v-icon v-if="viewer.collapse">mdi-hammer-screwdriver</v-icon>
-                   <v-icon v-else>mdi-close</v-icon>
+                 <v-btn icon @click="viewer.tools_open = !viewer.tools_open" :class="{active: viewer.tools_open}" color="white">
+                   <v-icon>mdi-hammer-screwdriver</v-icon>
                  </v-btn>
                </j-tooltip>
                <j-tooltip tipid='viewer-toolbar-menu'>
                 <v-menu offset-y :close-on-content-click="false" style="z-index: 10">
                   <template v-slot:activator="{ on }">
-                    <v-btn icon color="white" v-on="on">
+                    <v-btn icon v-on="on" @click="viewer.layer_viewer_open = !viewer.layer_viewer_open" :class="{active : viewer.layer_viewer_open}" color="white">
                       <v-icon>tune</v-icon>
                     </v-btn>
                   </template>
@@ -92,7 +97,7 @@
                   <v-icon>more_horiz</v-icon>
                 </v-btn>
                </j-tooltip>
-              </v-col>
+             </v-toolbar-items>
           </v-row>
 
         </div>
@@ -103,9 +108,9 @@
           dense
           floating
           absolute
-          :collapse="viewer.collapse"
+          :tools_open="viewer.tools_open"
           elevation="1"
-          :width="viewer.collapse ? '0px' : null"
+          :width="viewer.tools_open ? null : '0px'"
           style="right: 2px;"
         >
           <v-toolbar-items>
