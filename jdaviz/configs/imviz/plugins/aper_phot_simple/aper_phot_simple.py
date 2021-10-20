@@ -97,13 +97,14 @@ class SimpleAperturePhotometry(TemplateMixin):
 
     def vue_subset_selected(self, event):
         subset = None
-        viewer = self.app.get_viewer_by_id(self._selected_viewer_id)
-        for lyr in viewer.state.layers:
-            if lyr.layer.label == event:
-                subset = lyr.layer
-                break
         try:
-            # TODO: Is this accurate for dithered images linked by WCS?
+            viewer = self.app.get_viewer_by_id(self._selected_viewer_id)
+            for lyr in viewer.layers:
+                if lyr.layer.label == event and lyr.layer.data.label == self._selected_data.label:
+                    subset = lyr.layer
+                    break
+
+            # TODO: https://github.com/glue-viz/glue-astronomy/issues/52
             self._selected_subset = subset.data.get_selection_definition(
                 subset_id=event, format='astropy-regions')
             self._selected_subset.meta['label'] = subset.label
