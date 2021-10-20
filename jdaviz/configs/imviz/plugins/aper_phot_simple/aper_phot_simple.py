@@ -58,6 +58,38 @@ class SimpleAperturePhotometry(TemplateMixin):
         try:
             self._selected_data = self.app.data_collection[
                 self.app.data_collection.labels.index(event)]
+            self.counts_factor = 0
+            self.pixel_scale = 0
+
+            # Extract telescope specific unit conversion factors, if applicable.
+            meta = self._selected_data.meta
+            telescope = meta.get('TELESCOP', '').lower()
+            comp = self._selected_data.get_component(self._selected_data.main_components[0])
+            if telescope == 'jwst':
+                if 'PIXAR_A2' in meta:
+                    self.pixel_scale = meta['PIXAR_A2']
+                if (comp.units and u.sr in comp.units.bases and 'photometry' in meta and
+                        'conversion_megajanskys' in meta['photometry']):
+                    self.counts_factor = meta['photometry']['conversion_megajanskys']
+            elif telescope == 'hst':
+                # TODO: Add more HST support, as needed.
+                # HST pixel scales are from instrument handbooks.
+                # This is really not used because HST data does not have sr in unit.
+                # This is only for completeness.
+                # For counts conversion, PHOTFLAM is used to convert "counts" to flux manually,
+                # which is the opposite of JWST, so we just do not do it here.
+                instrument = meta.get('INSTRUME', '').lower()
+                detector = meta.get('DETECTOR', '').lower()
+                if instrument == 'acs':
+                    if detector == 'wfc':
+                        self.pixel_scale = 0.05 * 0.05
+                    elif detector == 'hrc':
+                        self.pixel_scale = 0.028 * 0.025
+                    elif detector == 'sbc':
+                        self.pixel_scale = 0.034 * 0.03
+                elif instrument == 'wfc3' and detector == 'uvis':
+                    self.pixel_scale = 0.04 * 0.04
+
         except Exception as e:
             self._selected_data = None
             self.hub.broadcast(SnackbarMessage(
@@ -104,7 +136,6 @@ class SimpleAperturePhotometry(TemplateMixin):
             img_stat = aper_mask_stat.get_values(comp_no_bg, mask=None)
             pixscale_fac = 1.0
             include_pixscale_fac = False
-            counts_fac = 1.0
             include_counts_fac = False
             if comp.units:
                 img_unit = u.Unit(comp.units)
@@ -119,17 +150,21 @@ class SimpleAperturePhotometry(TemplateMixin):
                 if img_unit != u.count:
                     ctfac = float(self.counts_factor)
                     if not np.allclose(ctfac, 0):
-                        counts_fac = ctfac * (u.count / img_unit)
                         include_counts_fac = True
             apersum = np.nansum(img) * pixscale_fac
             d = {'id': 1,
                  'xcenter': reg.center.x * u.pix,
-                 'ycenter': reg.center.y * u.pix,
-                 'aperture_sum': apersum,
-                 'background': bg,
-                 'npix': npix}
+                 'ycenter': reg.center.y * u.pix}
+            if data.coords is not None:
+                d['sky_center'] = data.coords.pixel_to_world(reg.center.x, reg.center.y)
+            else:
+                d['sky_center'] = None
+            d.update({'background': bg,
+                      'npix': npix,
+                      'aperture_sum': apersum})
             if include_counts_fac:
-                d.update({'aperture_sum_counts': apersum * counts_fac,
+                counts_fac = ctfac * (apersum.unit / (u.count / u.s))
+                d.update({'aperture_sum_counts': apersum / counts_fac,
                           'counts_fac': counts_fac})
             else:
                 d.update({'aperture_sum_counts': None,
@@ -138,10 +173,6 @@ class SimpleAperturePhotometry(TemplateMixin):
                 d['pixscale_fac'] = pixscale_fac
             else:
                 d['pixscale_fac'] = None
-            if data.coords is not None:
-                d['sky_center'] = data.coords.pixel_to_world(reg.center.x, reg.center.y)
-            else:
-                d['sky_center'] = None
 
             # Extra stats beyond photutils.
             d.update({'mean': np.nanmean(img_stat),

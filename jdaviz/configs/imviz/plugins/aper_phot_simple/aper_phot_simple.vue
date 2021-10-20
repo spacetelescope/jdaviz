@@ -44,7 +44,7 @@
               <v-text-field
                 label="Pixel scale"
                 v-model="pixel_scale"
-                hint="Pixel scale in arcsec squared, only used if sr in unit"
+                hint="Pixel scale in arcsec squared, only used if sr in data unit"
                 persistent-hint
               >
               </v-text-field>
@@ -55,7 +55,7 @@
               <v-text-field
                 label="Counts conversion factor"
                 v-model="counts_factor"
-                hint="Factor to convert flux unit to counts"
+                hint="Factor to convert data unit to counts/s (cps), in unit of flux/cps"
                 persistent-hint
               >
               </v-text-field>

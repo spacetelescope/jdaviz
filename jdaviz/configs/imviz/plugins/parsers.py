@@ -171,15 +171,20 @@ def _validate_fits_image2d(hdu, raise_error=True):
 
 
 def _validate_bunit(bunit, raise_error=True):
-    # TODO: Do we want to handle weird FITS BUNIT values here?
-    try:
-        u.Unit(bunit)
-    except Exception:
-        if raise_error:
-            raise
-        valid = False
+    # TODO: Handle weird FITS BUNIT values here, as needed.
+    if bunit == 'ELECTRONS/S':
+        valid = 'electron/s'
+    elif bunit == 'ELECTRONS':
+        valid = 'electron'
     else:
-        valid = True
+        try:
+            u.Unit(bunit)
+        except Exception:
+            if raise_error:
+                raise
+            valid = ''
+        else:
+            valid = bunit
     return valid
 
 
@@ -225,10 +230,10 @@ def _jwst2data(file_obj, ext, data_label):
         with AsdfInFits.open(file_obj) as af:
             dm = af.tree
             dm_meta = af.tree["meta"]
+            data.meta.update(dm_meta)
 
-            if (unit_attr in dm_meta and
-                    _validate_bunit(dm_meta[unit_attr], raise_error=False)):
-                bunit = dm_meta[unit_attr]
+            if unit_attr in dm_meta:
+                bunit = _validate_bunit(dm_meta[unit_attr], raise_error=False)
             else:
                 bunit = ''
 
@@ -272,8 +277,8 @@ def _hdus_to_glue_data(file_obj, data_label):
 
 
 def _hdu2data(hdu, data_label, hdulist, include_wcs=True):
-    if 'BUNIT' in hdu.header and _validate_bunit(hdu.header['BUNIT'], raise_error=False):
-        bunit = hdu.header['BUNIT']
+    if 'BUNIT' in hdu.header:
+        bunit = _validate_bunit(hdu.header['BUNIT'], raise_error=False)
     else:
         bunit = ''
 
@@ -281,6 +286,9 @@ def _hdu2data(hdu, data_label, hdulist, include_wcs=True):
     new_data_label = f'{data_label}[{comp_label}]'
 
     data = Data(label=new_data_label)
+    if hdulist is not None and hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
+        data.meta.update(dict(hdulist['PRIMARY'].header))
+    data.meta.update(dict(hdu.header))
     if include_wcs:
         data.coords = WCS(hdu.header, hdulist)
     component = Component.autotyped(hdu.data, units=bunit)
@@ -302,6 +310,7 @@ def _nddata_to_glue_data(ndd, data_label):
         comp_label = attrib.upper()
         cur_label = f'{data_label}[{comp_label}]'
         cur_data = Data(label=cur_label)
+        cur_data.meta.update(ndd.meta)
         if ndd.wcs is not None:
             cur_data.coords = ndd.wcs
         raw_arr = arr

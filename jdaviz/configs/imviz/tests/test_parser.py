@@ -50,7 +50,9 @@ def test_validate_bunit():
         _validate_bunit('NOT_A_UNIT')
 
     assert not _validate_bunit('Mjy-sr', raise_error=False)  # Close but not quite
-    assert _validate_bunit('MJy/sr')
+    assert _validate_bunit('MJy/sr') == 'MJy/sr'
+    assert _validate_bunit('ELECTRONS/S') == 'electron/s'
+    assert _validate_bunit('ELECTRONS') == 'electron'
 
 
 class TestParseImage:
@@ -116,13 +118,14 @@ class TestParseImage:
     def test_parse_nddata_with_everything(self, imviz_app):
         ndd = NDData([[1, 2], [3, 4]], mask=[[True, False], [False, False]],
                      uncertainty=StdDevUncertainty([[0.1, 0.2], [0.3, 0.4]]),
-                     unit=u.MJy/u.sr, wcs=WCS(naxis=2))
+                     unit=u.MJy/u.sr, wcs=WCS(naxis=2), meta={'name': 'my_ndd'})
         parse_data(imviz_app.app, ndd, data_label='some_data', show_in_viewer=False)
         for i, attrib in enumerate(['DATA', 'MASK', 'UNCERTAINTY']):
             data = imviz_app.app.data_collection[i]
             comp = data.get_component(attrib)
             assert data.label == f'some_data[{attrib}]'
             assert data.shape == (2, 2)
+            assert data.meta['name'] == 'my_ndd'
             assert isinstance(data.coords, WCS)
             assert comp.data.shape == (2, 2)
             if attrib == 'MASK':
@@ -155,6 +158,7 @@ class TestParseImage:
             fpath = tmp_path / f'myfits_{i}.fits'
             flist.append(str(fpath))
             hdu = fits.PrimaryHDU(np.zeros((2, 2)) + i)
+            hdu.header['foo'] = 'bar'
             hdu.writeto(fpath, overwrite=True)
 
         flist = ','.join(flist)
@@ -165,6 +169,7 @@ class TestParseImage:
             comp = data.get_component('PRIMARY,1')
             assert data.label == f'myfits_{i}[PRIMARY,1]'
             assert data.shape == (2, 2)
+            assert data.meta['FOO'] == 'bar'
             np.testing.assert_allclose(comp.data.mean(), i)
 
         with pytest.raises(ValueError, match='Do not manually overwrite data_label'):
@@ -180,6 +185,8 @@ class TestParseImage:
         comp = data.get_component('DATA')
         assert data.label == 'contents[DATA]'  # download_file returns cache loc
         assert data.shape == (2048, 2048)
+        # NOTE: jwst.datamodels.find_fits_keyword("PHOTMJSR")
+        assert_allclose(data.meta['photometry']['conversion_megajanskys'], 0.6250675320625305)
         assert isinstance(data.coords, GWCS)
         assert comp.units == 'MJy/sr'
         assert comp.data.shape == (2048, 2048)
@@ -201,6 +208,7 @@ class TestParseImage:
         data = imviz_app.app.data_collection[1]
         comp = data.get_component('DQ')
         assert data.label == 'jw01072001001_01101_00001_nrcb1_cal[DQ]'
+        assert data.meta['aperture']['name'] == 'NRCB5_FULL'
         assert comp.units == ''
 
         # Pass in HDUList directly + ext (name only), use given label
@@ -253,6 +261,7 @@ class TestParseImage:
         assert data.label == 'contents[SCI,1]'  # download_file returns cache loc
         assert data.shape == (2048, 2048)
         assert data.coords is None
+        assert data.meta['RADESYS'] == 'ICRS'
         assert comp.units == 'DN/s'
         assert comp.data.shape == (2048, 2048)
 
@@ -267,8 +276,9 @@ class TestParseImage:
         comp = data.get_component('SCI,1')
         assert data.label == 'contents[SCI,1]'  # download_file returns cache loc
         assert data.shape == (4300, 4219)
+        assert_allclose(data.meta['PHOTFLAM'], 7.8711728E-20)
         assert isinstance(data.coords, WCS)
-        assert comp.units == ''  # "ELECTRONS/S" is not valid
+        assert comp.units == 'electron/s'
         assert comp.data.shape == (4300, 4219)
 
         # Request specific extension (name only), use given label
@@ -277,6 +287,7 @@ class TestParseImage:
         data = imviz_app.app.data_collection[1]
         comp = data.get_component('CTX,1')
         assert data.label == 'jclj01010_drz[CTX,1]'
+        assert data.meta['EXTNAME'] == 'CTX'
         assert comp.units == ''  # BUNIT is not set
 
         # Request specific extension (name + ver), use given label
@@ -285,6 +296,7 @@ class TestParseImage:
         data = imviz_app.app.data_collection[2]
         comp = data.get_component('WHT,1')
         assert data.label == 'jclj01010_drz[WHT,1]'
+        assert data.meta['EXTNAME'] == 'WHT'
         assert comp.units == ''  # BUNIT is not set
 
         # Pass in file obj directly
@@ -293,18 +305,21 @@ class TestParseImage:
             parse_data(imviz_app.app, pf, show_in_viewer=False)
             data = imviz_app.app.data_collection[3]
             assert data.label.startswith('imviz_data|') and data.label.endswith('[SCI,1]')
+            assert_allclose(data.meta['PHOTFLAM'], 7.8711728E-20)
             assert 'SCI,1' in data.components
 
             # Request specific extension (name only), use given label
             parse_data(imviz_app.app, pf, ext='CTX', show_in_viewer=False)
             data = imviz_app.app.data_collection[4]
             assert data.label.startswith('imviz_data|') and data.label.endswith('[CTX,1]')
+            assert data.meta['EXTNAME'] == 'CTX'
             assert 'CTX,1' in data.components
 
             # Pass in HDU directly, use given label
             parse_data(imviz_app.app, pf[2], data_label='foo', show_in_viewer=False)
             data = imviz_app.app.data_collection[5]
             assert data.label == 'foo[WHT,1]'
+            assert data.meta['EXTNAME'] == 'WHT'
             assert 'WHT,1' in data.components
 
             # Load all extensions
