@@ -50,6 +50,17 @@
               </v-text-field>
             </v-col>
           </v-row>
+          <v-row>
+            <v-col>
+              <v-text-field
+                label="Counts conversion factor"
+                v-model="counts_factor"
+                hint="Factor to convert flux unit to counts"
+                persistent-hint
+              >
+              </v-text-field>
+            </v-col>
+          </v-row>
         </v-container>
       </v-card-text>
       <v-divider></v-divider>

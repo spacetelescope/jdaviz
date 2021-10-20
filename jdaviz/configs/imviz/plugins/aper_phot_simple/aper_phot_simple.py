@@ -21,6 +21,7 @@ class SimpleAperturePhotometry(TemplateMixin):
     subset_items = List([]).tag(sync=True)
     background_value = Any(0).tag(sync=True)
     pixel_scale = Any(0).tag(sync=True)
+    counts_factor = Any(0).tag(sync=True)
     result_available = Bool(False).tag(sync=True)
     results = List().tag(sync=True)
 
@@ -102,6 +103,9 @@ class SimpleAperturePhotometry(TemplateMixin):
             aper_mask_stat = reg.to_mask(mode='center')
             img_stat = aper_mask_stat.get_values(comp_no_bg, mask=None)
             pixscale_fac = 1.0
+            include_pixscale_fac = False
+            counts_fac = 1.0
+            include_counts_fac = False
             if comp.units:
                 img_unit = u.Unit(comp.units)
                 img = img * img_unit
@@ -111,20 +115,36 @@ class SimpleAperturePhotometry(TemplateMixin):
                     pixscale = float(self.pixel_scale) * (u.arcsec * u.arcsec / u.pix)
                     if not np.allclose(pixscale, 0):
                         pixscale_fac = npix * pixscale.to(u.sr / u.pix)
+                        include_pixscale_fac = True
+                if img_unit != u.count:
+                    ctfac = float(self.counts_factor)
+                    if not np.allclose(ctfac, 0):
+                        counts_fac = ctfac * (u.count / img_unit)
+                        include_counts_fac = True
+            apersum = np.nansum(img) * pixscale_fac
             d = {'id': 1,
                  'xcenter': reg.center.x * u.pix,
                  'ycenter': reg.center.y * u.pix,
-                 'aperture_sum': np.nansum(img) * pixscale_fac}
+                 'aperture_sum': apersum,
+                 'background': bg,
+                 'npix': npix}
+            if include_counts_fac:
+                d.update({'aperture_sum_counts': apersum * counts_fac,
+                          'counts_fac': counts_fac})
+            else:
+                d.update({'aperture_sum_counts': None,
+                          'counts_fac': None})
+            if include_pixscale_fac:
+                d['pixscale_fac'] = pixscale_fac
+            else:
+                d['pixscale_fac'] = None
             if data.coords is not None:
                 d['sky_center'] = data.coords.pixel_to_world(reg.center.x, reg.center.y)
             else:
                 d['sky_center'] = None
 
             # Extra stats beyond photutils.
-            d.update({'background': bg,
-                      'npix': npix,
-                      'pixscale_fac': pixscale_fac,
-                      'mean': np.nanmean(img_stat),
+            d.update({'mean': np.nanmean(img_stat),
                       'stddev': np.nanstd(img_stat),
                       'median': np.nanmedian(img_stat),
                       'min': np.nanmin(img_stat),
@@ -154,9 +174,11 @@ class SimpleAperturePhotometry(TemplateMixin):
             # Parse results for GUI.
             tmp = []
             for key, x in d.items():
-                if key in ('id', 'data_label', 'subset_label', 'background', 'pixscale_fac'):
+                if key in ('id', 'data_label', 'subset_label', 'background', 'pixscale_fac',
+                           'counts_fac'):
                     continue
-                if isinstance(x, (int, float, u.Quantity)) and key not in ('xcenter', 'ycenter', 'npix'):
+                if (isinstance(x, (int, float, u.Quantity)) and
+                        key not in ('xcenter', 'ycenter', 'npix')):
                     x = f'{x:.4e}'
                 elif key == 'npix':
                     x = f'{x:.1f}'
