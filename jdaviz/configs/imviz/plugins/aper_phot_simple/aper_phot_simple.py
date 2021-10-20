@@ -96,9 +96,12 @@ class SimpleAperturePhotometry(TemplateMixin):
             # TODO: Use photutils when it supports astropy regions.
             aper_mask = reg.to_mask(mode='exact')
             img = aper_mask.get_values(comp_no_bg, mask=None)
+            aper_mask_stat = reg.to_mask(mode='center')
+            img_stat = aper_mask_stat.get_values(comp_no_bg, mask=None)
             if comp.units:
                 img_unit = u.Unit(comp.units)
                 img = img * img_unit
+                img_stat = img_stat * img_unit
                 bg = bg * img_unit
             d = {'id': 1,
                  'xcenter': reg.center.x * u.pix,
@@ -111,11 +114,11 @@ class SimpleAperturePhotometry(TemplateMixin):
 
             # Extra stats beyond photutils.
             d.update({'background': bg,
-                      'mean': np.nanmean(img),
-                      'stddev': np.nanstd(img),
-                      'median': np.nanmedian(img),
-                      'min': np.nanmin(img),
-                      'max': np.nanmax(img),
+                      'mean': np.nanmean(img_stat),
+                      'stddev': np.nanstd(img_stat),
+                      'median': np.nanmedian(img_stat),
+                      'min': np.nanmin(img_stat),
+                      'max': np.nanmax(img_stat),
                       'data_label': data.label,
                       'subset_label': reg.meta.get('label', '')})
 
