@@ -63,15 +63,18 @@ class SimpleAperturePhotometry(TemplateMixin):
 
             # Extract telescope specific unit conversion factors, if applicable.
             meta = self._selected_data.meta
-            telescope = meta.get('TELESCOP', '').lower()
+            if 'telescope' in meta:
+                telescope = meta['telescope']
+            else:
+                telescope = meta.get('TELESCOP', '')
             comp = self._selected_data.get_component(self._selected_data.main_components[0])
-            if telescope == 'jwst':
-                if 'PIXAR_A2' in meta:
-                    self.pixel_scale = meta['PIXAR_A2']
-                if (comp.units and u.sr in comp.units.bases and 'photometry' in meta and
+            if telescope == 'JWST':
+                if 'photometry' in meta and 'pixelarea_arcsecsq' in meta['photometry']:
+                    self.pixel_scale = meta['photometry']['pixelarea_arcsecsq']
+                if (comp.units and 'sr' in comp.units and 'photometry' in meta and
                         'conversion_megajanskys' in meta['photometry']):
                     self.counts_factor = meta['photometry']['conversion_megajanskys']
-            elif telescope == 'hst':
+            elif telescope == 'HST':
                 # TODO: Add more HST support, as needed.
                 # HST pixel scales are from instrument handbooks.
                 # This is really not used because HST data does not have sr in unit.
