@@ -1,7 +1,6 @@
 import pathlib
 import re
 
-import numpy as np
 from astropy import units as u
 from astropy.nddata import CCDData
 from glue.core.message import (DataCollectionAddMessage,

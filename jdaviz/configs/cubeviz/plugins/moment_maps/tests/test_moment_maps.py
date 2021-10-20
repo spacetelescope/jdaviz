@@ -1,8 +1,4 @@
-import numpy as np
-
-from glue.core import Data
 from specutils import Spectrum1D
-from astropy import units as u
 
 from jdaviz import Application
 from jdaviz.configs.cubeviz.plugins.moment_maps.moment_maps import MomentMap
