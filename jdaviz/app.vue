@@ -1,12 +1,15 @@
 <template>
   <v-app id="web-app" class="jdaviz">
     <v-app-bar color="primary" dark :dense="state.settings.dense_toolbar" flat app absolute clipped-right>
-      <j-tooltip :tipid="item.name" v-for="item in state.tool_items">
+      <v-toolbar-items v-for="item in state.tool_items">
         <v-divider v-if="['g-data-tools', 'g-subset-tools'].indexOf(item.name) === -1" vertical style="margin: 0px 10px"></v-divider>
         <v-divider v-else-if="item.name === 'g-subset-tools'" vertical style="margin: 0px 10px; border-width: 0"></v-divider>
-        <jupyter-widget :widget="item.widget" :key="item.name"></jupyter-widget>
-      </j-tooltip>
+        <j-tooltip :tipid="item.name">
+          <jupyter-widget :widget="item.widget" :key="item.name"></jupyter-widget>
+        </j-tooltip>
+      </v-toolbar-items>
       <v-toolbar-items>
+        <v-divider v-if="config === 'mosviz'" vertical style="margin: 0px 10px"></v-divider>
         <j-tooltip v-if="config === 'mosviz'" tipid="lock-row-toggle">
           <v-btn 
             icon
