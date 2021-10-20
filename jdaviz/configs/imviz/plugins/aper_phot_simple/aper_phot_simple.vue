@@ -39,6 +39,17 @@
               </v-text-field>
             </v-col>
           </v-row>
+          <v-row>
+            <v-col>
+              <v-text-field
+                label="Pixel scale"
+                v-model="pixel_scale"
+                hint="Pixel scale in arcsec squared, only used if sr in unit"
+                persistent-hint
+              >
+              </v-text-field>
+            </v-col>
+          </v-row>
         </v-container>
       </v-card-text>
       <v-divider></v-divider>

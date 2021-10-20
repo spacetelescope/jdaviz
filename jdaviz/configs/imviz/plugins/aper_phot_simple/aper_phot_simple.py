@@ -20,6 +20,7 @@ class SimpleAperturePhotometry(TemplateMixin):
     dc_items = List([]).tag(sync=True)
     subset_items = List([]).tag(sync=True)
     background_value = Any(0).tag(sync=True)
+    pixel_scale = Any(0).tag(sync=True)
     result_available = Bool(False).tag(sync=True)
     results = List().tag(sync=True)
 
@@ -69,6 +70,7 @@ class SimpleAperturePhotometry(TemplateMixin):
                 subset = lyr.layer
                 break
         try:
+            # TODO: Is this accurate for dithered images linked by WCS?
             self._selected_subset = subset.data.get_selection_definition(
                 subset_id=event, format='astropy-regions')
             self._selected_subset.meta['label'] = subset.label
@@ -95,18 +97,24 @@ class SimpleAperturePhotometry(TemplateMixin):
 
             # TODO: Use photutils when it supports astropy regions.
             aper_mask = reg.to_mask(mode='exact')
+            npix = np.sum(aper_mask) * u.pix
             img = aper_mask.get_values(comp_no_bg, mask=None)
             aper_mask_stat = reg.to_mask(mode='center')
             img_stat = aper_mask_stat.get_values(comp_no_bg, mask=None)
+            pixscale_fac = 1.0
             if comp.units:
                 img_unit = u.Unit(comp.units)
                 img = img * img_unit
                 img_stat = img_stat * img_unit
                 bg = bg * img_unit
+                if u.sr in img_unit.bases:  # TODO: Better way to do this?
+                    pixscale = float(self.pixel_scale) * (u.arcsec * u.arcsec / u.pix)
+                    if not np.allclose(pixscale, 0):
+                        pixscale_fac = npix * pixscale.to(u.sr / u.pix)
             d = {'id': 1,
                  'xcenter': reg.center.x * u.pix,
                  'ycenter': reg.center.y * u.pix,
-                 'aperture_sum': np.nansum(img)}
+                 'aperture_sum': np.nansum(img) * pixscale_fac}
             if data.coords is not None:
                 d['sky_center'] = data.coords.pixel_to_world(reg.center.x, reg.center.y)
             else:
@@ -114,6 +122,8 @@ class SimpleAperturePhotometry(TemplateMixin):
 
             # Extra stats beyond photutils.
             d.update({'background': bg,
+                      'npix': npix,
+                      'pixscale_fac': pixscale_fac,
                       'mean': np.nanmean(img_stat),
                       'stddev': np.nanstd(img_stat),
                       'median': np.nanmedian(img_stat),
@@ -144,10 +154,12 @@ class SimpleAperturePhotometry(TemplateMixin):
             # Parse results for GUI.
             tmp = []
             for key, x in d.items():
-                if key in ('id', 'data_label', 'subset_label', 'background'):
+                if key in ('id', 'data_label', 'subset_label', 'background', 'pixscale_fac'):
                     continue
-                if isinstance(x, (int, float, u.Quantity)) and key not in ('xcenter', 'ycenter'):
+                if isinstance(x, (int, float, u.Quantity)) and key not in ('xcenter', 'ycenter', 'npix'):
                     x = f'{x:.4e}'
+                elif key == 'npix':
+                    x = f'{x:.1f}'
                 elif not isinstance(x, str):
                     x = str(x)
                 tmp.append({'function': key, 'result': x})
