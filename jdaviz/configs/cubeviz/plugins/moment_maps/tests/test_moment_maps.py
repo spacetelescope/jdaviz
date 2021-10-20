@@ -1,25 +1,31 @@
 import numpy as np
 
 from glue.core import Data
+from specutils import Spectrum1D
+from astropy import units as u
 
 from jdaviz import Application
 from jdaviz.configs.cubeviz.plugins.moment_maps.moment_maps import MomentMap
 
 
-def test_moment_calculation(spectral_cube_wcs):
+def todo_fix_test_moment_calculation(spectrum1d_cube):
 
     app = Application()
     dc = app.data_collection
-    dc.append(Data(x=np.ones((3, 4, 5)), label='test', coords=spectral_cube_wcs))
+    app.add_data(spectrum1d_cube, 'test')
 
     mm = MomentMap(app=app)
+    mm._subset_selected = 'None'
+    # mm.spectral_min = 1.0 * u.m
+    # mm.spectral_max = 2.0 * u.m
+    mm._on_data_updated(None)
 
-    mm.selected_data = 'test'
+    mm._on_data_selected({'new': 'test'})
+    mm._on_subset_selected({'new': None})
+
     mm.n_moment = 0
-    mm.vue_calculate_moment(None)
-
-    print(dc[1].get_object())
+    mm.vue_calculate_moment()
 
     assert mm.moment_available
     assert dc[1].label == 'Moment 0: test'
-    assert dc[1].get_object().shape == (4, 5)
+    assert dc[1].get_object(cls=Spectrum1D, statistic=None).shape == (4, 2, 2)

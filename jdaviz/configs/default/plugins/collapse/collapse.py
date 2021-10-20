@@ -123,10 +123,6 @@ class Collapse(TemplateMixin):
             spec_max = float(self.spectral_max) * u.Unit(self.spectral_unit)
             spec = spec.spectral_slab(spec_min, spec_max)
 
-            # Code to work with Spectrum1D
-            # spec = manipulation.spectral_slab(spec, spec_min, spec)
-            # spec = spec.spectral_slab(spec_min, spec_max)
-
         collapsed_spec = getattr(spec, self.selected_func.lower())(
             axis=self.selected_axis)
 
