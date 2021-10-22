@@ -1,0 +1,71 @@
+<template>
+  <v-toolbar-items :class="{active: activeInterval}">
+    <j-tooltip tipid='table-play-pause-toggle'>
+      <v-btn icon @click="togglePlayPause" color="white">
+        <v-icon>mdi-play-pause</v-icon>
+      </v-btn>
+    </j-tooltip>
+    <j-tooltip tipid='table-play-pause-delay'>
+      <v-text-field
+        v-model="delaySeconds"
+        type="number"
+        @change="changeDelay"
+        class="mt-0 pt-0 theme--dark"
+        style="width: 50px"
+        hide-details
+        single-line
+        filled
+        dense
+      />
+    </j-tooltip>
+  </v-toolbar-items>
+</template>
+
+<script>
+
+//var activeInterval = null;
+
+module.exports = {
+  data: function () {
+    return {
+      activeInterval: null,
+      delaySeconds: 2
+    }
+  },
+  props: [],
+  methods: {
+    eachIteration() {
+      this.$emit('event')
+    },
+    clearActiveInterval() {
+      if (this.activeInterval) {
+        clearInterval(this.activeInterval)
+      }
+      this.activeInterval = null
+    },
+    createNewInterval() {
+      this.activeInterval = setInterval(() => this.eachIteration(), this.delaySeconds*1000)
+    },
+    changeDelay(event) {
+      console.log("changeDelay "+this.delaySeconds+" "+event)
+      if (this.activeInterval !== null) {
+        // then we want to clear the current interval and immediately create a new one,
+        // while leaving it in the play state
+        console.log("updating interval to "+this.delaySeconds)
+        this.clearActiveInterval()
+        this.createNewInterval()     
+      }
+    },
+    togglePlayPause() {
+      if (this.activeInterval === null) {
+        // make sure to call IMMEDIATELY for feedback that something is happening
+        this.eachIteration()
+        this.createNewInterval()
+      } else {
+        this.clearActiveInterval()
+      }
+
+    },
+  }
+};
+</script>

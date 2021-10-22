@@ -65,6 +65,9 @@ ipyvue.register_component_from_file(None, 'j-docs-link',
                                     os.path.join(os.path.dirname(__file__),
                                                  'components/docs_link.vue'))
 
+ipyvue.register_component_from_file(None, 'j-play-pause-widget',
+                                    os.path.join(os.path.dirname(__file__),
+                                                 'components/play_pause_widget.vue'))
 
 class ApplicationState(State):
     """
