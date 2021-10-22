@@ -22,6 +22,7 @@ class SimpleAperturePhotometry(TemplateMixin):
     background_value = Any(0).tag(sync=True)
     pixel_scale = Any(0).tag(sync=True)
     counts_factor = Any(0).tag(sync=True)
+    magnitude_zeropoint = Any(0).tag(sync=True)
     result_available = Bool(False).tag(sync=True)
     results = List().tag(sync=True)
 
@@ -60,6 +61,7 @@ class SimpleAperturePhotometry(TemplateMixin):
                 self.app.data_collection.labels.index(event)]
             self.counts_factor = 0
             self.pixel_scale = 0
+            self.magnitude_zeropoint = 0
 
             # Extract telescope specific unit conversion factors, if applicable.
             meta = self._selected_data.meta
@@ -141,6 +143,7 @@ class SimpleAperturePhotometry(TemplateMixin):
             pixscale_fac = 1.0
             include_pixscale_fac = False
             include_counts_fac = False
+            include_mag_zpt = False
             if comp.units:
                 img_unit = u.Unit(comp.units)
                 img = img * img_unit
@@ -155,6 +158,9 @@ class SimpleAperturePhotometry(TemplateMixin):
                     ctfac = float(self.counts_factor)
                     if not np.allclose(ctfac, 0):
                         include_counts_fac = True
+                mag_zpt = float(self.magnitude_zeropoint)
+                if not np.allclose(mag_zpt, 0):
+                    include_mag_zpt = True
             apersum = np.nansum(img) * pixscale_fac
             d = {'id': 1,
                  'xcenter': reg.center.x * u.pix,
@@ -173,6 +179,13 @@ class SimpleAperturePhotometry(TemplateMixin):
             else:
                 d.update({'aperture_sum_counts': None,
                           'counts_fac': None})
+            if include_mag_zpt:
+                mag_zpt = mag_zpt * apersum.unit
+                d.update({'aperture_sum_mag': -2.5 * np.log10(apersum / mag_zpt) * u.mag,
+                          'mag_zpt': mag_zpt})
+            else:
+                d.update({'aperture_sum_mag': None,
+                          'mag_zpt': None})
             if include_pixscale_fac:
                 d['pixscale_fac'] = pixscale_fac
             else:
@@ -210,7 +223,7 @@ class SimpleAperturePhotometry(TemplateMixin):
             tmp = []
             for key, x in d.items():
                 if key in ('id', 'data_label', 'subset_label', 'background', 'pixscale_fac',
-                           'counts_fac'):
+                           'counts_fac', 'mag_zpt'):
                     continue
                 if (isinstance(x, (int, float, u.Quantity)) and
                         key not in ('xcenter', 'ycenter', 'npix')):

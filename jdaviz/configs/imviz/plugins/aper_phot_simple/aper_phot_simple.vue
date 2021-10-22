@@ -61,6 +61,17 @@
               </v-text-field>
             </v-col>
           </v-row>
+          <v-row>
+            <v-col>
+              <v-text-field
+                label="Magnitude zeropoint"
+                v-model="magnitude_zeropoint"
+                hint="Same unit as data, used in -2.5 * log(flux / zeropoint)"
+                persistent-hint
+              >
+              </v-text-field>
+            </v-col>
+          </v-row>
         </v-container>
       </v-card-text>
       <v-divider></v-divider>
