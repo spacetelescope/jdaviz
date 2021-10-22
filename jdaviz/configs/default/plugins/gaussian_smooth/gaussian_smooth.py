@@ -110,7 +110,7 @@ class GaussianSmooth(TemplateMixin):
 
         # Extend the 2D kernel to have a length 1 spectral dimension, so that
         # we can do "3d" convolution to the whole cube
-        kernel = np.expand_dims(Gaussian2DKernel(size), 0)
+        kernel = np.expand_dims(Gaussian2DKernel(size), 2)
 
         # TODO: in vuetify >2.3, timeout should be set to -1 to keep open
         #  indefinitely
