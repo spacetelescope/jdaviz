@@ -1,3 +1,7 @@
+from astropy import units as u
+from astropy.tests.helper import assert_quantity_allclose
+from numpy.testing import assert_allclose, assert_array_equal
+
 from jdaviz.configs.imviz.plugins.aper_phot_simple.aper_phot_simple import SimpleAperturePhotometry
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS
 
@@ -9,7 +13,64 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
 
         phot_plugin = SimpleAperturePhotometry(app=self.imviz.app)
 
-        # Populate plugin menu items
+        # Populate plugin menu items.
         phot_plugin._on_viewer_data_changed()
 
-        # UNTIL HERE
+        # Make sure invalid Data/Subset selection does not crash plugin.
+        phot_plugin.vue_data_selected('no_such_data')
+        assert phot_plugin._selected_data is None
+        phot_plugin.vue_subset_selected('no_such_subset')
+        assert phot_plugin._selected_subset is None
+        phot_plugin.vue_do_aper_phot()
+        assert not phot_plugin.result_available
+        assert len(phot_plugin.results) == 0
+        assert self.imviz.get_aperture_photometry_results() is None
+
+        # Perform photometry on both images using same Subset.
+        phot_plugin.vue_data_selected('has_wcs_1[SCI,1]')
+        phot_plugin.vue_subset_selected('Subset 1')
+        phot_plugin.vue_do_aper_phot()
+        phot_plugin.vue_data_selected('has_wcs_2[SCI,1]')
+        phot_plugin.vue_do_aper_phot()
+        assert_allclose(phot_plugin.background_value, 0)
+        assert_allclose(phot_plugin.counts_factor, 0)
+        assert_allclose(phot_plugin.pixel_scale, 0)
+        assert_allclose(phot_plugin.magnitude_zeropoint, 0)
+
+        # Check photometry results.
+        tbl = self.imviz.get_aperture_photometry_results()
+        assert len(tbl) == 2
+        assert tbl.colnames == [
+            'id', 'xcenter', 'ycenter', 'sky_center', 'background', 'npix', 'aperture_sum',
+            'aperture_sum_counts', 'counts_fac', 'aperture_sum_mag', 'mag_zpt', 'pixscale_fac',
+            'mean', 'stddev', 'median', 'min', 'max', 'data_label', 'subset_label']
+        assert_array_equal(tbl['id'], [1, 2])
+        assert_allclose(tbl['background'], 0)
+        assert_quantity_allclose(tbl['npix'], 63.617251 * u.pix)
+        #'aperture_sum'
+        #'aperture_sum_counts'
+        #'counts_fac'
+        #'aperture_sum_mag'
+        assert_allclose(tbl['mag_zpt'], 0)  # None?
+        assert_allclose(tbl['pixscale_fac'], 0)  # None?
+        assert_allclose(tbl['mean'], 1)
+        assert_allclose(tbl['stddev'], 0)
+        assert_allclose(tbl['median'], 1)
+        assert_allclose(tbl['min'], 1)
+        assert_allclose(tbl['max'], 1)
+        assert tbl['data_label'] == ['has_wcs_1[SCI,1]', 'has_wcs_2[SCI,1]']
+        assert tbl['subset_label'] == ['Subset 1', 'Subset 1']
+
+        # BUG: https://github.com/glue-viz/glue-astronomy/issues/52
+        # Sky should have been the same and the pix different, but not until bug is fixed.
+        assert_quantity_allclose(tbl['xcenter'], 4.5 * u.pix)
+        assert_quantity_allclose(tbl['ycenter'], 4.5 * u.pix)
+        sky = tbl['sky_center']
+        assert_allclose(sky.ra.deg, [337.518943, 337.519241])
+        assert_allclose(sky.dec.deg, [-20.832083, -20.832083])
+
+        # TODO: Ellipse
+        #self.imviz.app._aper_phot_results = None
+
+        # TODO: Rectangle
+        #self.imviz.app._aper_phot_results = None

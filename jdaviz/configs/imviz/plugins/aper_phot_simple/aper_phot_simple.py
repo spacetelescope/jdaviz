@@ -88,11 +88,11 @@ class SimpleAperturePhotometry(TemplateMixin):
                 if instrument == 'acs':
                     if detector == 'wfc':
                         self.pixel_scale = 0.05 * 0.05
-                    elif detector == 'hrc':
+                    elif detector == 'hrc':  # pragma: no cover
                         self.pixel_scale = 0.028 * 0.025
-                    elif detector == 'sbc':
+                    elif detector == 'sbc':  # pragma: no cover
                         self.pixel_scale = 0.034 * 0.03
-                elif instrument == 'wfc3' and detector == 'uvis':
+                elif instrument == 'wfc3' and detector == 'uvis':  # pragma: no cover
                     self.pixel_scale = 0.04 * 0.04
 
         except Exception as e:
