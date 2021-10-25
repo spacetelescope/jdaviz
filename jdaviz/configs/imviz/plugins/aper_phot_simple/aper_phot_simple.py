@@ -1,6 +1,9 @@
+from datetime import datetime
+
 import numpy as np
 from astropy import units as u
 from astropy.table import QTable
+from astropy.time import Time
 from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage, SubsetUpdateMessage
 from glue.core.subset import Subset
 from traitlets import Any, Bool, List
@@ -20,9 +23,9 @@ class SimpleAperturePhotometry(TemplateMixin):
     dc_items = List([]).tag(sync=True)
     subset_items = List([]).tag(sync=True)
     background_value = Any(0).tag(sync=True)
-    pixel_scale = Any(0).tag(sync=True)
+    pixel_area = Any(0).tag(sync=True)
     counts_factor = Any(0).tag(sync=True)
-    magnitude_zeropoint = Any(0).tag(sync=True)
+    flux_scaling = Any(0).tag(sync=True)
     result_available = Bool(False).tag(sync=True)
     results = List().tag(sync=True)
 
@@ -60,8 +63,8 @@ class SimpleAperturePhotometry(TemplateMixin):
             self._selected_data = self.app.data_collection[
                 self.app.data_collection.labels.index(event)]
             self.counts_factor = 0
-            self.pixel_scale = 0
-            self.magnitude_zeropoint = 0
+            self.pixel_area = 0
+            self.flux_scaling = 0
 
             # Extract telescope specific unit conversion factors, if applicable.
             meta = self._selected_data.meta
@@ -72,7 +75,7 @@ class SimpleAperturePhotometry(TemplateMixin):
             comp = self._selected_data.get_component(self._selected_data.main_components[0])
             if telescope == 'JWST':
                 if 'photometry' in meta and 'pixelarea_arcsecsq' in meta['photometry']:
-                    self.pixel_scale = meta['photometry']['pixelarea_arcsecsq']
+                    self.pixel_area = meta['photometry']['pixelarea_arcsecsq']
                 if (comp.units and 'sr' in comp.units and 'photometry' in meta and
                         'conversion_megajanskys' in meta['photometry']):
                     self.counts_factor = meta['photometry']['conversion_megajanskys']
@@ -87,13 +90,13 @@ class SimpleAperturePhotometry(TemplateMixin):
                 detector = meta.get('DETECTOR', '').lower()
                 if instrument == 'acs':
                     if detector == 'wfc':
-                        self.pixel_scale = 0.05 * 0.05
+                        self.pixel_area = 0.05 * 0.05
                     elif detector == 'hrc':  # pragma: no cover
-                        self.pixel_scale = 0.028 * 0.025
+                        self.pixel_area = 0.028 * 0.025
                     elif detector == 'sbc':  # pragma: no cover
-                        self.pixel_scale = 0.034 * 0.03
+                        self.pixel_area = 0.034 * 0.03
                 elif instrument == 'wfc3' and detector == 'uvis':  # pragma: no cover
-                    self.pixel_scale = 0.04 * 0.04
+                    self.pixel_area = 0.04 * 0.04
 
         except Exception as e:
             self._selected_data = None
@@ -140,28 +143,28 @@ class SimpleAperturePhotometry(TemplateMixin):
             img = aper_mask.get_values(comp_no_bg, mask=None)
             aper_mask_stat = reg.to_mask(mode='center')
             img_stat = aper_mask_stat.get_values(comp_no_bg, mask=None)
-            pixscale_fac = 1.0
-            include_pixscale_fac = False
+            pixarea_fac = 1.0
+            include_pixarea_fac = False
             include_counts_fac = False
-            include_mag_zpt = False
+            include_flux_scale = False
             if comp.units:
                 img_unit = u.Unit(comp.units)
                 img = img * img_unit
                 img_stat = img_stat * img_unit
                 bg = bg * img_unit
                 if u.sr in img_unit.bases:  # TODO: Better way to do this?
-                    pixscale = float(self.pixel_scale) * (u.arcsec * u.arcsec / u.pix)
-                    if not np.allclose(pixscale, 0):
-                        pixscale_fac = npix * pixscale.to(u.sr / u.pix)
-                        include_pixscale_fac = True
+                    pixarea = float(self.pixel_area) * (u.arcsec * u.arcsec / u.pix)
+                    if not np.allclose(pixarea, 0):
+                        pixarea_fac = npix * pixarea.to(u.sr / u.pix)
+                        include_pixarea_fac = True
                 if img_unit != u.count:
                     ctfac = float(self.counts_factor)
                     if not np.allclose(ctfac, 0):
                         include_counts_fac = True
-                mag_zpt = float(self.magnitude_zeropoint)
-                if not np.allclose(mag_zpt, 0):
-                    include_mag_zpt = True
-            apersum = np.nansum(img) * pixscale_fac
+                flux_scale = float(self.flux_scaling)
+                if not np.allclose(flux_scale, 0):
+                    include_flux_scale = True
+            apersum = np.nansum(img) * pixarea_fac
             d = {'id': 1,
                  'xcenter': reg.center.x * u.pix,
                  'ycenter': reg.center.y * u.pix}
@@ -179,17 +182,17 @@ class SimpleAperturePhotometry(TemplateMixin):
             else:
                 d.update({'aperture_sum_counts': None,
                           'counts_fac': None})
-            if include_mag_zpt:
-                mag_zpt = mag_zpt * apersum.unit
-                d.update({'aperture_sum_mag': -2.5 * np.log10(apersum / mag_zpt) * u.mag,
-                          'mag_zpt': mag_zpt})
+            if include_flux_scale:
+                flux_scale = flux_scale * apersum.unit
+                d.update({'aperture_sum_mag': -2.5 * np.log10(apersum / flux_scale) * u.mag,
+                          'flux_scaling': flux_scale})
             else:
                 d.update({'aperture_sum_mag': None,
-                          'mag_zpt': None})
-            if include_pixscale_fac:
-                d['pixscale_fac'] = pixscale_fac
+                          'flux_scaling': None})
+            if include_pixarea_fac:
+                d['pixarea_tot'] = pixarea_fac
             else:
-                d['pixscale_fac'] = None
+                d['pixarea_tot'] = None
 
             # Extra stats beyond photutils.
             d.update({'mean': np.nanmean(img_stat),
@@ -198,7 +201,8 @@ class SimpleAperturePhotometry(TemplateMixin):
                       'min': np.nanmin(img_stat),
                       'max': np.nanmax(img_stat),
                       'data_label': data.label,
-                      'subset_label': reg.meta.get('label', '')})
+                      'subset_label': reg.meta.get('label', ''),
+                      'timestamp': Time(datetime.utcnow())})
 
             # Attach to app for Python extraction.
             if (not hasattr(self.app, '_aper_phot_results') or
@@ -222,8 +226,8 @@ class SimpleAperturePhotometry(TemplateMixin):
             # Parse results for GUI.
             tmp = []
             for key, x in d.items():
-                if key in ('id', 'data_label', 'subset_label', 'background', 'pixscale_fac',
-                           'counts_fac', 'mag_zpt'):
+                if key in ('id', 'data_label', 'subset_label', 'background', 'pixarea_tot',
+                           'counts_fac', 'flux_scaling', 'timestamp'):
                     continue
                 if (isinstance(x, (int, float, u.Quantity)) and
                         key not in ('xcenter', 'ycenter', 'npix')):

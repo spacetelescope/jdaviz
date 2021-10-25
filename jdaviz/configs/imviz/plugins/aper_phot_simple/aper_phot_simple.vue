@@ -42,9 +42,9 @@
           <v-row>
             <v-col>
               <v-text-field
-                label="Pixel scale"
-                v-model="pixel_scale"
-                hint="Pixel scale in arcsec squared, only used if sr in data unit"
+                label="Pixel area"
+                v-model="pixel_area"
+                hint="Pixel area in arcsec squared, only used if sr in data unit"
                 persistent-hint
               >
               </v-text-field>
@@ -64,9 +64,9 @@
           <v-row>
             <v-col>
               <v-text-field
-                label="Magnitude zeropoint"
-                v-model="magnitude_zeropoint"
-                hint="Same unit as data, used in -2.5 * log(flux / zeropoint)"
+                label="Flux scaling"
+                v-model="flux_scaling"
+                hint="Same unit as data, used in -2.5 * log(flux / flux_scaling)"
                 persistent-hint
               >
               </v-text-field>
