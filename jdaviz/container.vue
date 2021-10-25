@@ -66,7 +66,7 @@
                   </v-btn>
                 </j-tooltip>
               </v-toolbar-items>
-              <j-play-pause-widget v-if="viewer.reference == 'table-viewer'" @event="$emit('call-viewer-method', {'id': viewer.id, 'method': 'next_row'})"/>
+              <j-play-pause-widget v-if="viewer.reference == 'table-viewer'" @event="$emit('call-viewer-method', {'id': viewer.id, 'method': 'next_row'})"></j-play-pause-widget>
               <v-spacer></v-spacer>
                <v-toolbar-items>
                <j-tooltip tipid='viewer-toolbar-figure'>
