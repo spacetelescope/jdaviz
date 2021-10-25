@@ -9,9 +9,11 @@
       <v-text-field
         v-model="delaySeconds"
         type="number"
+        min="1"
+        max="60"
         @change="changeDelay"
         class="mt-0 pt-0 theme--dark"
-        style="width: 50px"
+        style="width: 60px"
         hide-details
         single-line
         filled
@@ -47,11 +49,13 @@ module.exports = {
       this.activeInterval = setInterval(() => this.eachIteration(), this.delaySeconds*1000)
     },
     changeDelay(event) {
-      console.log("changeDelay "+this.delaySeconds+" "+event)
+      if (this.delaySeconds <= 0) {
+        // reject zero and negative values
+        this.delaySeconds = 1
+      }
       if (this.activeInterval !== null) {
         // then we want to clear the current interval and immediately create a new one,
         // while leaving it in the play state
-        console.log("updating interval to "+this.delaySeconds)
         this.clearActiveInterval()
         this.createNewInterval()     
       }
