@@ -6,6 +6,7 @@ from astropy.table import QTable
 from astropy.time import Time
 from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage, SubsetUpdateMessage
 from glue.core.subset import Subset
+from regions.shapes.rectangle import RectanglePixelRegion
 from traitlets import Any, Bool, List
 
 from jdaviz.configs.imviz.helper import layer_is_image_data
@@ -138,7 +139,11 @@ class SimpleAperturePhotometry(TemplateMixin):
             comp_no_bg = comp.data - bg
 
             # TODO: Use photutils when it supports astropy regions.
-            aper_mask = reg.to_mask(mode='exact')
+            if not isinstance(reg, RectanglePixelRegion):
+                aper_mask = reg.to_mask(mode='exact')
+            else:
+                # TODO: https://github.com/astropy/regions/issues/404 (moot if we use photutils?)
+                aper_mask = reg.to_mask(mode='subpixels', subpixels=32)
             npix = np.sum(aper_mask) * u.pix
             img = aper_mask.get_values(comp_no_bg, mask=None)
             aper_mask_stat = reg.to_mask(mode='center')

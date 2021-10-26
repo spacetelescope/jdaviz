@@ -3,6 +3,7 @@ import pytest
 from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import NDData, StdDevUncertainty
+from astropy.tests.helper import assert_quantity_allclose
 from astropy.utils.data import download_file
 from astropy.wcs import WCS
 from gwcs import WCS as GWCS
@@ -11,6 +12,7 @@ from regions import CirclePixelRegion
 from skimage.io import imsave
 
 from jdaviz.configs.imviz.helper import split_filename_with_fits_ext
+from jdaviz.configs.imviz.plugins.aper_phot_simple.aper_phot_simple import SimpleAperturePhotometry
 from jdaviz.configs.imviz.plugins.parsers import (
     parse_data, _validate_fits_image2d, _validate_bunit, _parse_image)
 
@@ -194,10 +196,38 @@ class TestParseImage:
         # --- Since download is expensive, we attach GWCS-specific tests here. ---
 
         # Ensure interactive region supports GWCS. Also see test_regions.py
-        imviz_app._apply_interactive_region('bqplot:circle', (0, 0), (1000, 1000))
+        imviz_app._apply_interactive_region('bqplot:circle', (965, 1122), (976.9, 1110.1))  # Star
         subsets = imviz_app.get_interactive_regions()
         assert list(subsets.keys()) == ['Subset 1'], subsets
         assert isinstance(subsets['Subset 1'], CirclePixelRegion)
+
+        # Test simple aperture photometry plugin.
+        phot_plugin = SimpleAperturePhotometry(app=imviz_app.app)
+        phot_plugin._on_viewer_data_changed()
+        phot_plugin.vue_data_selected('contents[DATA]')
+        phot_plugin.vue_subset_selected('Subset 1')
+        phot_plugin.background_value = 0.22  # Median on whole array
+        phot_plugin.flux_scaling = 1  # Simple mag, no zeropoint
+        phot_plugin.vue_do_aper_phot()
+        tbl = imviz_app.get_aperture_photometry_results()
+        assert_quantity_allclose(tbl['xcenter'], 970.95 * u.pix)
+        assert_quantity_allclose(tbl['ycenter'], 1116.05 * u.pix)
+        sky = tbl['sky_center']
+        assert_allclose(sky.ra.deg, 80.48419863)
+        assert_allclose(sky.dec.deg, -69.49460838)
+        assert_quantity_allclose(tbl['background'], 0.22 * (u.MJy / u.sr))
+        assert_quantity_allclose(tbl['npix'], 111.22023392 * u.pix)
+        assert_quantity_allclose(tbl['aperture_sum'], 4.93689560e-09 * u.MJy)
+        assert_quantity_allclose(tbl['aperture_sum_counts'], 7.89817955e-09 * (u.count / u.s))
+        assert_quantity_allclose(tbl['counts_fac'], 0.62506753 * (u.MJy * u.s / u.ct))
+        assert_quantity_allclose(tbl['aperture_sum_mag'], 20.76636514207734 * u.mag)
+        assert_quantity_allclose(tbl['flux_scaling'], 1 * u.MJy)
+        assert_quantity_allclose(tbl['pixarea_tot'], 1.03843779e-11 * u.sr)
+        assert_quantity_allclose(tbl['mean'], 4.34584047 * (u.MJy / u.sr))
+        assert_quantity_allclose(tbl['stddev'], 15.61862628 * (u.MJy / u.sr))
+        assert_quantity_allclose(tbl['median'], 0.43709442 * (u.MJy / u.sr))
+        assert_quantity_allclose(tbl['min'], -0.00485992 * (u.MJy / u.sr))
+        assert_quantity_allclose(tbl['max'], 138.87786865 * (u.MJy / u.sr))
 
         # --- Back to parser testing below. ---
 
@@ -280,6 +310,10 @@ class TestParseImage:
         assert isinstance(data.coords, WCS)
         assert comp.units == 'electron/s'
         assert comp.data.shape == (4300, 4219)
+
+        # --- Since download is expensive, we attach FITS WCS-specific tests here. ---
+
+        # TODO: Test simple aperture photometry plugin.
 
         # Request specific extension (name only), use given label
         parse_data(imviz_app.app, filename, ext='CTX',

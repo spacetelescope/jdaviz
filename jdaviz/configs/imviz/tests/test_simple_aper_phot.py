@@ -42,17 +42,16 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert len(tbl) == 2
         assert tbl.colnames == [
             'id', 'xcenter', 'ycenter', 'sky_center', 'background', 'npix', 'aperture_sum',
-            'aperture_sum_counts', 'counts_fac', 'aperture_sum_mag', 'mag_zpt', 'pixscale_fac',
-            'mean', 'stddev', 'median', 'min', 'max', 'data_label', 'subset_label']
+            'aperture_sum_counts', 'counts_fac', 'aperture_sum_mag', 'flux_scaling', 'pixarea_tot',
+            'mean', 'stddev', 'median', 'min', 'max', 'data_label', 'subset_label', 'timestamp']
         assert_array_equal(tbl['id'], [1, 2])
         assert_allclose(tbl['background'], 0)
-        assert_quantity_allclose(tbl['npix'], 63.617251 * u.pix)
-        #'aperture_sum'
-        #'aperture_sum_counts'
-        #'counts_fac'
-        #'aperture_sum_mag'
-        assert_allclose(tbl['mag_zpt'], 0)  # None?
-        assert_allclose(tbl['pixscale_fac'], 0)  # None?
+        assert_quantity_allclose(tbl['npix'], 63.617251235193315 * u.pix)
+        assert_array_equal(tbl['aperture_sum_counts'], None)
+        assert_array_equal(tbl['counts_fac'], None)
+        assert_array_equal(tbl['aperture_sum_mag'], None)
+        assert_array_equal(tbl['flux_scaling'], None)
+        assert_array_equal(tbl['pixarea_tot'], None)
         assert_allclose(tbl['mean'], 1)
         assert_allclose(tbl['stddev'], 0)
         assert_allclose(tbl['median'], 1)
@@ -60,17 +59,54 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert_allclose(tbl['max'], 1)
         assert tbl['data_label'] == ['has_wcs_1[SCI,1]', 'has_wcs_2[SCI,1]']
         assert tbl['subset_label'] == ['Subset 1', 'Subset 1']
+        assert tbl['timestamp'].scale == 'utc'
 
         # BUG: https://github.com/glue-viz/glue-astronomy/issues/52
         # Sky should have been the same and the pix different, but not until bug is fixed.
+        # The aperture sum might be different too if mask is off limit in second image.
         assert_quantity_allclose(tbl['xcenter'], 4.5 * u.pix)
         assert_quantity_allclose(tbl['ycenter'], 4.5 * u.pix)
         sky = tbl['sky_center']
         assert_allclose(sky.ra.deg, [337.518943, 337.519241])
         assert_allclose(sky.dec.deg, [-20.832083, -20.832083])
+        assert_allclose(tbl['aperture_sum'], 63.61725123519332)
 
-        # TODO: Ellipse
-        #self.imviz.app._aper_phot_results = None
+        # Make sure it also works on an ellipse subset.
+        self.imviz._apply_interactive_region('bqplot:ellipse', (0, 0), (9, 4))
+        phot_plugin._on_viewer_data_changed()
+        phot_plugin.vue_data_selected('has_wcs_1[SCI,1]')
+        phot_plugin.vue_subset_selected('Subset 2')
+        phot_plugin.vue_do_aper_phot()
+        tbl = self.imviz.get_aperture_photometry_results()
+        assert len(tbl) == 3  # New result is appended
+        assert tbl[-1]['id'] == 3
+        assert_quantity_allclose(tbl[-1]['xcenter'], 4.5 * u.pix)
+        assert_quantity_allclose(tbl[-1]['ycenter'], 2 * u.pix)
+        sky = tbl[-1]['sky_center']
+        assert_allclose(sky.ra.deg, 337.51894336144454)
+        assert_allclose(sky.dec.deg, -20.832777499255897)
+        assert_quantity_allclose(tbl[-1]['npix'], 7.068583470577035 * u.pix)
+        assert_allclose(tbl[-1]['aperture_sum'], 7.068583470577034)
+        assert_allclose(tbl[-1]['mean'], 1)
+        assert tbl[-1]['data_label'] == 'has_wcs_1[SCI,1]'
+        assert tbl[-1]['subset_label'] == 'Subset 2'
 
-        # TODO: Rectangle
-        #self.imviz.app._aper_phot_results = None
+        # Make sure it also works on a rectangle subset.
+        self.imviz._apply_interactive_region('bqplot:rectangle', (0, 0), (9, 9))
+        phot_plugin._on_viewer_data_changed()
+        phot_plugin.vue_data_selected('has_wcs_1[SCI,1]')
+        phot_plugin.vue_subset_selected('Subset 3')
+        phot_plugin.vue_do_aper_phot()
+        tbl = self.imviz.get_aperture_photometry_results()
+        assert len(tbl) == 4  # New result is appended
+        assert tbl[-1]['id'] == 4
+        assert_quantity_allclose(tbl[-1]['xcenter'], 4.5 * u.pix)
+        assert_quantity_allclose(tbl[-1]['ycenter'], 4.5 * u.pix)
+        sky = tbl[-1]['sky_center']
+        assert_allclose(sky.ra.deg, 337.518943)
+        assert_allclose(sky.dec.deg, -20.832083)
+        assert_quantity_allclose(tbl[-1]['npix'], 81 * u.pix)
+        assert_allclose(tbl[-1]['aperture_sum'], 81)
+        assert_allclose(tbl[-1]['mean'], 1)
+        assert tbl[-1]['data_label'] == 'has_wcs_1[SCI,1]'
+        assert tbl[-1]['subset_label'] == 'Subset 3'
