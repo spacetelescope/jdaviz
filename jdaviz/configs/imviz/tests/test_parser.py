@@ -210,25 +210,25 @@ class TestParseImage:
         phot_plugin.flux_scaling = 1  # Simple mag, no zeropoint
         phot_plugin.vue_do_aper_phot()
         tbl = imviz_app.get_aperture_photometry_results()
-        assert_quantity_allclose(tbl['xcenter'], 970.95 * u.pix)
-        assert_quantity_allclose(tbl['ycenter'], 1116.05 * u.pix)
-        sky = tbl['sky_center']
+        assert_quantity_allclose(tbl[0]['xcenter'], 970.95 * u.pix)
+        assert_quantity_allclose(tbl[0]['ycenter'], 1116.05 * u.pix)
+        sky = tbl[0]['sky_center']
         assert_allclose(sky.ra.deg, 80.48419863)
         assert_allclose(sky.dec.deg, -69.49460838)
         data_unit = u.MJy / u.sr
-        assert_quantity_allclose(tbl['background'], 0.22 * data_unit)
-        assert_quantity_allclose(tbl['npix'], 111.22023392 * u.pix)
-        assert_quantity_allclose(tbl['aperture_sum'], 4.93689560e-09 * u.MJy)
-        assert_quantity_allclose(tbl['pixarea_tot'], 1.0384377922763469e-11 * u.sr)
-        assert_quantity_allclose(tbl['aperture_sum_counts'], 760.5828303030021 * (u.count / u.s))
-        assert_quantity_allclose(tbl['counts_fac'], 0.62506753 * (data_unit / (u.ct / u.s)))
-        assert_quantity_allclose(tbl['aperture_sum_mag'], -6.692683645358997 * u.mag)
-        assert_quantity_allclose(tbl['flux_scaling'], 1 * data_unit)
-        assert_quantity_allclose(tbl['mean'], 4.34584047 * data_unit)
-        assert_quantity_allclose(tbl['stddev'], 15.61862628 * data_unit)
-        assert_quantity_allclose(tbl['median'], 0.43709442 * data_unit)
-        assert_quantity_allclose(tbl['min'], -0.00485992 * data_unit)
-        assert_quantity_allclose(tbl['max'], 138.87786865 * data_unit)
+        assert_quantity_allclose(tbl[0]['background'], 0.22 * data_unit)
+        assert_quantity_allclose(tbl[0]['npix'], 111.22023392 * u.pix)
+        assert_quantity_allclose(tbl[0]['aperture_sum'], 4.93689560e-09 * u.MJy)
+        assert_quantity_allclose(tbl[0]['pixarea_tot'], 1.0384377922763469e-11 * u.sr)
+        assert_quantity_allclose(tbl[0]['aperture_sum_counts'], 760.5828303030021 * (u.count / u.s))
+        assert_quantity_allclose(tbl[0]['counts_fac'], 0.62506753 * (data_unit / (u.ct / u.s)))
+        assert_quantity_allclose(tbl[0]['aperture_sum_mag'], -6.692683645358997 * u.mag)
+        assert_quantity_allclose(tbl[0]['flux_scaling'], 1 * data_unit)
+        assert_quantity_allclose(tbl[0]['mean'], 4.34584047 * data_unit)
+        assert_quantity_allclose(tbl[0]['stddev'], 15.61862628 * data_unit)
+        assert_quantity_allclose(tbl[0]['median'], 0.43709442 * data_unit)
+        assert_quantity_allclose(tbl[0]['min'], -0.00485992 * data_unit)
+        assert_quantity_allclose(tbl[0]['max'], 138.87786865 * data_unit)
 
         # --- Back to parser testing below. ---
 
@@ -324,25 +324,25 @@ class TestParseImage:
         assert_allclose(phot_plugin.pixel_area, 0.0025)  # Not used but still auto-populated
         phot_plugin.vue_do_aper_phot()
         tbl = imviz_app.get_aperture_photometry_results()
-        assert_quantity_allclose(tbl['xcenter'], 1488.5 * u.pix)
-        assert_quantity_allclose(tbl['ycenter'], 2576 * u.pix)
-        sky = tbl['sky_center']
+        assert_quantity_allclose(tbl[0]['xcenter'], 1488.5 * u.pix)
+        assert_quantity_allclose(tbl[0]['ycenter'], 2576 * u.pix)
+        sky = tbl[0]['sky_center']
         assert_allclose(sky.ra.deg, 3.6840882015888323)
         assert_allclose(sky.dec.deg, 10.802065746813046)
         data_unit = u.electron / u.s
-        assert_quantity_allclose(tbl['background'], 0.0014 * data_unit)
-        assert_quantity_allclose(tbl['npix'], 645.98998939 * u.pix)
-        assert_quantity_allclose(tbl['aperture_sum'], 81.01186025 * data_unit)
-        assert_array_equal(tbl['pixarea_tot'], None)
-        assert_array_equal(tbl['aperture_sum_counts'], None)
-        assert_array_equal(tbl['counts_fac'], None)
-        assert_array_equal(tbl['aperture_sum_mag'], None)
-        assert_array_equal(tbl['flux_scaling'], None)
-        assert_quantity_allclose(tbl['mean'], 0.12466364 * data_unit)
-        assert_quantity_allclose(tbl['stddev'], 0.1784373 * data_unit)
-        assert_quantity_allclose(tbl['median'], 0.06988327 * data_unit)
-        assert_quantity_allclose(tbl['min'], 0.0013524 * data_unit)
-        assert_quantity_allclose(tbl['max'], 1.5221194 * data_unit)
+        assert_quantity_allclose(tbl[0]['background'], 0.0014 * data_unit)
+        assert_quantity_allclose(tbl[0]['npix'], 645.98998939 * u.pix)
+        assert_quantity_allclose(tbl[0]['aperture_sum'], 81.01186025 * data_unit)
+        assert_array_equal(tbl[0]['pixarea_tot'], None)
+        assert_array_equal(tbl[0]['aperture_sum_counts'], None)
+        assert_array_equal(tbl[0]['counts_fac'], None)
+        assert_array_equal(tbl[0]['aperture_sum_mag'], None)
+        assert_array_equal(tbl[0]['flux_scaling'], None)
+        assert_quantity_allclose(tbl[0]['mean'], 0.12466364 * data_unit)
+        assert_quantity_allclose(tbl[0]['stddev'], 0.1784373 * data_unit)
+        assert_quantity_allclose(tbl[0]['median'], 0.06988327 * data_unit)
+        assert_quantity_allclose(tbl[0]['min'], 0.0013524 * data_unit)
+        assert_quantity_allclose(tbl[0]['max'], 1.5221194 * data_unit)
 
         # Request specific extension (name only), use given label
         parse_data(imviz_app.app, filename, ext='CTX',
