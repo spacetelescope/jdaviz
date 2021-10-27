@@ -3,7 +3,7 @@ from astropy.tests.helper import assert_quantity_allclose
 from numpy.testing import assert_allclose, assert_array_equal
 
 from jdaviz.configs.imviz.plugins.aper_phot_simple.aper_phot_simple import SimpleAperturePhotometry
-from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS
+from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS, BaseImviz_WCS_NoWCS
 
 
 class TestSimpleAperPhot(BaseImviz_WCS_WCS):
@@ -34,31 +34,31 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         phot_plugin.vue_do_aper_phot()
         assert_allclose(phot_plugin.background_value, 0)
         assert_allclose(phot_plugin.counts_factor, 0)
-        assert_allclose(phot_plugin.pixel_scale, 0)
-        assert_allclose(phot_plugin.magnitude_zeropoint, 0)
+        assert_allclose(phot_plugin.pixel_area, 0)
+        assert_allclose(phot_plugin.flux_scaling, 0)
 
         # Check photometry results.
         tbl = self.imviz.get_aperture_photometry_results()
         assert len(tbl) == 2
         assert tbl.colnames == [
             'id', 'xcenter', 'ycenter', 'sky_center', 'background', 'npix', 'aperture_sum',
-            'aperture_sum_counts', 'counts_fac', 'aperture_sum_mag', 'flux_scaling', 'pixarea_tot',
+            'pixarea_tot', 'aperture_sum_counts', 'counts_fac', 'aperture_sum_mag', 'flux_scaling',
             'mean', 'stddev', 'median', 'min', 'max', 'data_label', 'subset_label', 'timestamp']
         assert_array_equal(tbl['id'], [1, 2])
         assert_allclose(tbl['background'], 0)
         assert_quantity_allclose(tbl['npix'], 63.617251235193315 * u.pix)
+        assert_array_equal(tbl['pixarea_tot'], None)
         assert_array_equal(tbl['aperture_sum_counts'], None)
         assert_array_equal(tbl['counts_fac'], None)
         assert_array_equal(tbl['aperture_sum_mag'], None)
         assert_array_equal(tbl['flux_scaling'], None)
-        assert_array_equal(tbl['pixarea_tot'], None)
         assert_allclose(tbl['mean'], 1)
         assert_allclose(tbl['stddev'], 0)
         assert_allclose(tbl['median'], 1)
         assert_allclose(tbl['min'], 1)
         assert_allclose(tbl['max'], 1)
-        assert tbl['data_label'] == ['has_wcs_1[SCI,1]', 'has_wcs_2[SCI,1]']
-        assert tbl['subset_label'] == ['Subset 1', 'Subset 1']
+        assert_array_equal(tbl['data_label'], ['has_wcs_1[SCI,1]', 'has_wcs_2[SCI,1]'])
+        assert_array_equal(tbl['subset_label'], ['Subset 1', 'Subset 1'])
         assert tbl['timestamp'].scale == 'utc'
 
         # BUG: https://github.com/glue-viz/glue-astronomy/issues/52
@@ -110,3 +110,23 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert_allclose(tbl[-1]['mean'], 1)
         assert tbl[-1]['data_label'] == 'has_wcs_1[SCI,1]'
         assert tbl[-1]['subset_label'] == 'Subset 3'
+
+
+class TestSimpleAperPhot_NoWCS(BaseImviz_WCS_NoWCS):
+    def test_plugin_no_wcs(self):
+        # Most things already tested above, so not re-tested here.
+        self.imviz._apply_interactive_region('bqplot:circle', (0, 0), (9, 9))  # Draw a circle
+        phot_plugin = SimpleAperturePhotometry(app=self.imviz.app)
+        phot_plugin._on_viewer_data_changed()
+
+        phot_plugin.vue_data_selected('has_wcs[SCI,1]')
+        phot_plugin.vue_subset_selected('Subset 1')
+        phot_plugin.vue_do_aper_phot()
+        tbl = self.imviz.get_aperture_photometry_results()
+        assert len(tbl) == 1
+
+        phot_plugin.vue_data_selected('no_wcs[SCI,1]')
+        phot_plugin.vue_do_aper_phot()
+        tbl = self.imviz.get_aperture_photometry_results()
+        assert len(tbl) == 1  # Old table discarded due to incompatible column
+        assert_array_equal(tbl['sky_center'], None)

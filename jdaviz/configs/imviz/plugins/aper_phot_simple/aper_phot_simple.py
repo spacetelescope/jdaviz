@@ -148,7 +148,6 @@ class SimpleAperturePhotometry(TemplateMixin):
             img = aper_mask.get_values(comp_no_bg, mask=None)
             aper_mask_stat = reg.to_mask(mode='center')
             img_stat = aper_mask_stat.get_values(comp_no_bg, mask=None)
-            pixarea_fac = 1.0
             include_pixarea_fac = False
             include_counts_fac = False
             include_flux_scale = False
@@ -157,10 +156,9 @@ class SimpleAperturePhotometry(TemplateMixin):
                 img = img * img_unit
                 img_stat = img_stat * img_unit
                 bg = bg * img_unit
-                if u.sr in img_unit.bases:  # TODO: Better way to do this?
-                    pixarea = float(self.pixel_area) * (u.arcsec * u.arcsec / u.pix)
+                if u.sr in img_unit.bases:  # TODO: Better way to detect surface brightness unit?
+                    pixarea = float(self.pixel_area)
                     if not np.allclose(pixarea, 0):
-                        pixarea_fac = npix * pixarea.to(u.sr / u.pix)
                         include_pixarea_fac = True
                 if img_unit != u.count:
                     ctfac = float(self.counts_factor)
@@ -169,7 +167,7 @@ class SimpleAperturePhotometry(TemplateMixin):
                 flux_scale = float(self.flux_scaling)
                 if not np.allclose(flux_scale, 0):
                     include_flux_scale = True
-            apersum = np.nansum(img) * pixarea_fac
+            rawsum = np.nansum(img)
             d = {'id': 1,
                  'xcenter': reg.center.x * u.pix,
                  'ycenter': reg.center.y * u.pix}
@@ -178,26 +176,29 @@ class SimpleAperturePhotometry(TemplateMixin):
             else:
                 d['sky_center'] = None
             d.update({'background': bg,
-                      'npix': npix,
-                      'aperture_sum': apersum})
+                      'npix': npix})
+            if include_pixarea_fac:
+                pixarea = pixarea * (u.arcsec * u.arcsec / u.pix)
+                pixarea_fac = npix * pixarea.to(u.sr / u.pix)
+                d.update({'aperture_sum': rawsum * pixarea_fac,
+                          'pixarea_tot': pixarea_fac})
+            else:
+                d.update({'aperture_sum': rawsum,
+                          'pixarea_tot': None})
             if include_counts_fac:
-                counts_fac = ctfac * (apersum.unit / (u.count / u.s))
-                d.update({'aperture_sum_counts': apersum / counts_fac,
-                          'counts_fac': counts_fac})
+                ctfac = ctfac * (rawsum.unit / (u.count / u.s))
+                d.update({'aperture_sum_counts': rawsum / ctfac,
+                          'counts_fac': ctfac})
             else:
                 d.update({'aperture_sum_counts': None,
                           'counts_fac': None})
             if include_flux_scale:
-                flux_scale = flux_scale * apersum.unit
-                d.update({'aperture_sum_mag': -2.5 * np.log10(apersum / flux_scale) * u.mag,
+                flux_scale = flux_scale * rawsum.unit
+                d.update({'aperture_sum_mag': -2.5 * np.log10(rawsum / flux_scale) * u.mag,
                           'flux_scaling': flux_scale})
             else:
                 d.update({'aperture_sum_mag': None,
                           'flux_scaling': None})
-            if include_pixarea_fac:
-                d['pixarea_tot'] = pixarea_fac
-            else:
-                d['pixarea_tot'] = None
 
             # Extra stats beyond photutils.
             d.update({'mean': np.nanmean(img_stat),
@@ -221,7 +222,7 @@ class SimpleAperturePhotometry(TemplateMixin):
                     d['id'] = 1
                     self.app._aper_phot_results = _qtable_from_dict(d)
 
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             self.result_available = False
             self.results = []
             self.hub.broadcast(SnackbarMessage(
