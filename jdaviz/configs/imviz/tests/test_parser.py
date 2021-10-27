@@ -227,8 +227,8 @@ class TestParseImage:
         assert_quantity_allclose(tbl[0]['mean'], 4.34584047 * data_unit)
         assert_quantity_allclose(tbl[0]['stddev'], 15.61862628 * data_unit)
         assert_quantity_allclose(tbl[0]['median'], 0.43709442 * data_unit)
-        assert_quantity_allclose(tbl[0]['min'], -0.00485992 * data_unit)
-        assert_quantity_allclose(tbl[0]['max'], 138.87786865 * data_unit)
+        assert_quantity_allclose(tbl[0]['min'], -0.00485992 * data_unit, rtol=1e-5)
+        assert_quantity_allclose(tbl[0]['max'], 138.87786865 * data_unit, rtol=1e-5)
 
         # --- Back to parser testing below. ---
 
@@ -341,8 +341,8 @@ class TestParseImage:
         assert_quantity_allclose(tbl[0]['mean'], 0.12466364 * data_unit)
         assert_quantity_allclose(tbl[0]['stddev'], 0.1784373 * data_unit)
         assert_quantity_allclose(tbl[0]['median'], 0.06988327 * data_unit)
-        assert_quantity_allclose(tbl[0]['min'], 0.0013524 * data_unit)
-        assert_quantity_allclose(tbl[0]['max'], 1.5221194 * data_unit)
+        assert_quantity_allclose(tbl[0]['min'], 0.0013524 * data_unit, rtol=1e-5)
+        assert_quantity_allclose(tbl[0]['max'], 1.5221194 * data_unit, rtol=1e-5)
 
         # Request specific extension (name only), use given label
         parse_data(imviz_app.app, filename, ext='CTX',
