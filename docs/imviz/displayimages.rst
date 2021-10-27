@@ -14,7 +14,6 @@ Selecting Data Set
     :ref:`Selecting Data Set<cubeviz-selecting-data>`
         Documentation on selecting data sets in the Jdaviz viewers.
 
-
 Adding New Viewers
 ==================
 
@@ -22,6 +21,8 @@ In the toolbar towards the top of the UI, there is a |icon-plus| icon
 that when clicked will add new viewers to the application. You can then select from the data
 that has been loaded into the application to be visualized in these additional viewers.
 You can then utilize some of the Imviz-specific features, like :ref:`imviz_pan_zoom`.
+
+.. _imviz_defining_spatial_regions:
 
 Defining Spatial Regions
 ========================
