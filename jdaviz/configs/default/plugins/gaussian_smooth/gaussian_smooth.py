@@ -6,7 +6,6 @@ from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
 from specutils import Spectrum1D
 from specutils.manipulation import gaussian_smooth
-from spectral_cube import SpectralCube
 from traitlets import List, Unicode, Any, Bool, observe
 
 from jdaviz.core.events import SnackbarMessage
@@ -60,7 +59,7 @@ class GaussianSmooth(TemplateMixin):
         size = float(self.stddev)
 
         try:
-            spec = self._selected_data.get_object(cls=Spectrum1D)
+            spec = self._selected_data.get_object(cls=Spectrum1D, statistic=None)
         except TypeError:
             snackbar_message = SnackbarMessage(
                 "Unable to perform smoothing over selected data.",
@@ -100,10 +99,18 @@ class GaussianSmooth(TemplateMixin):
         """
 
         size = float(self.stddev)
-        cube = self._selected_data.get_object(cls=SpectralCube)
+
+        # Get information from the flux component
+        attribute = self._selected_data.main_components[0]
+
+        cube = self._selected_data.get_object(cls=Spectrum1D,
+                                              attribute=attribute,
+                                              statistic=None)
+        flux_unit = cube.flux.unit
+
         # Extend the 2D kernel to have a length 1 spectral dimension, so that
         # we can do "3d" convolution to the whole cube
-        kernel = np.expand_dims(Gaussian2DKernel(size), 0)
+        kernel = np.expand_dims(Gaussian2DKernel(size), 2)
 
         # TODO: in vuetify >2.3, timeout should be set to -1 to keep open
         #  indefinitely
@@ -112,13 +119,11 @@ class GaussianSmooth(TemplateMixin):
             loading=True, timeout=0, sender=self)
         self.hub.broadcast(snackbar_message)
 
-        convolved_data = convolve(cube.hdu.data, kernel)
+        convolved_data = convolve(cube, kernel)
+
         # Create a new cube with the old metadata. Note that astropy
-        # convolution generates values for masked (NaN) data, but we keep the
-        # original mask here.
-        newcube = SpectralCube(data=convolved_data, wcs=cube.wcs,
-                               mask=cube.mask, meta=cube.meta,
-                               fill_value=cube.fill_value)
+        # convolution generates values for masked (NaN) data.
+        newcube = Spectrum1D(flux=convolved_data * flux_unit, wcs=cube.wcs)
 
         label = f"Smoothed {self._selected_data.label} spatial stddev {size}"
 

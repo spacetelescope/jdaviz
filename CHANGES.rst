@@ -64,6 +64,7 @@ Specviz
 Other Changes and Additions
 ---------------------------
 
+- Cubeviz now loads data cube as ``Spectrum1D``. [#547]
 
 2.0 (2021-09-17)
 ================

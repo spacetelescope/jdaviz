@@ -4,6 +4,7 @@ from glue.core.message import (DataCollectionAddMessage,
 from glue.core import Data
 from glue.core.link_helpers import LinkSame
 from spectral_cube import SpectralCube
+from specutils import Spectrum1D
 from specutils import SpectralRegion
 from traitlets import List, Unicode, Int, Any, observe
 from regions import RectanglePixelRegion
@@ -80,7 +81,7 @@ class Collapse(TemplateMixin):
     def _on_subset_selected(self, event):
         # If "None" selected, reset based on bounds of selected data
         if self.selected_subset == "None":
-            cube = self._selected_data.get_object(cls=SpectralCube)
+            cube = self._selected_data.get_object(cls=Spectrum1D)
             self.spectral_min = cube.spectral_axis[0].value
             self.spectral_max = cube.spectral_axis[-1].value
         else:
