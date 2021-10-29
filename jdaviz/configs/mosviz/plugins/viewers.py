@@ -82,7 +82,14 @@ class MosvizProfile2DView(BqplotImageView):
     #  axes, the default conversion class must handle cubes
     default_class = Spectrum1D
 
-    tools = ['bqplot:panzoom_x']
+    # replace the default tools (which include rect and circle region)
+    # with only the tools we want (likely the same as in SpecvizProfileView)
+    inherit_tools = False
+    tools = ['bqplot:home',
+             'bqplot:panzoom',
+             'bqplot:panzoom_x',
+             'bqplot:panzoom_y',
+             'bqplot:xrange']
 
     _state_cls = FreezableBqplotImageViewerState
 
