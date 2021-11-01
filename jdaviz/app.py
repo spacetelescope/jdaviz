@@ -14,7 +14,8 @@ from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
 from traitlets import Dict, Bool, Unicode
 from regions import RectanglePixelRegion, PixCoord
-from specutils import Spectrum1D
+from specutils import Spectrum1D, SpectralRegion
+import numpy as np
 
 from glue.core.exceptions import IncompatibleAttribute
 from glue.config import data_translator
@@ -542,6 +543,47 @@ class Application(VuetifyTemplate, HubListener):
                                          cls=None)
         regions = {}
 
+        def _get_all_subregions(mask, spec_axis_data):
+            """
+            Return all subregions within a subset.
+
+            Parameters
+            ----------
+            mask : list
+                List of indices in spec_axis_data that are part of the subset.
+            spec_axis_data : list
+                List of spectral axis values.
+            Returns
+            -------
+            combined_spec_region : `~specutils.SpectralRegion`
+                SpectralRegion object containing all subregions of the subset.
+            """
+            current_edge = 0
+            combined_spec_region = None
+            for index in range(1, len(mask)):
+                # Find spot where mask == True is for a different region of the subset
+                if mask[index] != mask[index - 1] + 1:
+                    subset_region = spec_axis_data[mask[current_edge]: mask[index - 1]]
+                    if not combined_spec_region:
+                        combined_spec_region = SpectralRegion(min(subset_region),
+                                                              max(subset_region))
+                    else:
+                        combined_spec_region += SpectralRegion(min(subset_region),
+                                                               max(subset_region))
+                    current_edge = index
+
+            # Get last region within the subset
+            if current_edge != index:
+                subset_region = spec_axis_data[mask[current_edge]: mask[index]]
+                if not combined_spec_region:
+                    combined_spec_region = SpectralRegion(min(subset_region),
+                                                          max(subset_region))
+                else:
+                    combined_spec_region += SpectralRegion(min(subset_region),
+                                                           max(subset_region))
+
+            return combined_spec_region
+
         if data_label is not None:
             data = {data_label: data}
 
@@ -571,13 +613,22 @@ class Application(VuetifyTemplate, HubListener):
                     # TODO: this needs to be much simpler; i.e. data units in
                     #  the glue component objects
                     unit = value.data.coords.spectral_axis.unit
-                    hi, lo = value.subset_state.hi, value.subset_state.lo
-                    xcen = 0.5 * (lo + hi)
-                    width = hi - lo
-                    region = RectanglePixelRegion(
-                        PixCoord(xcen, 0), width, 0,
-                        meta={'spectral_axis_unit': unit})
-                    regions[key] = region
+                    # Cases where there is a single subset
+                    if hasattr(value.subset_state, 'hi'):
+                        hi, lo = value.subset_state.hi, value.subset_state.lo
+                        xcen = 0.5 * (lo + hi)
+                        width = hi - lo
+                        region = RectanglePixelRegion(
+                            PixCoord(xcen, 0), width, 0,
+                            meta={'spectral_axis_unit': unit})
+                        regions[key] = region
+                    # This handles the case of multiple subregions in one subset
+                    else:
+                        subregions_in_subset = _get_all_subregions(
+                            np.where(value.to_mask() == True)[0], # noqa
+                            value.data.coords.spectral_axis)
+
+                        regions[key] = subregions_in_subset
                     continue
 
                 # Get the pixel coordinate [z] of the 3D data, repeating the

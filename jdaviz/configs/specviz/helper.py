@@ -79,6 +79,11 @@ class Specviz(ConfigHelper, LineListMixin):
         spec_regs = {}
 
         for name, reg in regions.items():
+            # If region has subregions, it is already a SpectralRegion object
+            if hasattr(reg, "subregions"):
+                spec_regs[name] = reg
+                continue
+
             # Use the region's unit. If N/A, use the reference_data's
             unit = reg.meta.get("spectral_axis_unit",
                                 self.get_spectra(
