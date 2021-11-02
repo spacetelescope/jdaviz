@@ -1,6 +1,8 @@
 2.1 (unreleased)
 ================
 
+- Support for units and BlackBody in modeling plugin. [#953]
+
 New Features
 ------------
 
