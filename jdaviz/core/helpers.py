@@ -16,6 +16,8 @@ from glue.core.message import SubsetCreateMessage
 from jdaviz.app import Application
 from jdaviz.core.events import AddDataMessage
 
+from IPython.display import display
+
 __all__ = ['ConfigHelper']
 
 
@@ -265,3 +267,34 @@ class ConfigHelper(HubListener):
                     param_units[key].get(param_name, None))
 
         return parameters_cube
+
+
+    def show_in_sidecar(self, **kwargs):
+        """
+        If ``title`` is not in a keyword argument, auto-generate from viz name
+        """
+        try:
+            from sidecar import Sidecar
+        except ImportError as e:
+            e.args[0] = (e.args[0] + ' You need to install jupyterlab-sidecar '
+                                     'to use `show_in_sidecar.  Try `pip '
+                                     'install sidecar`.')
+            raise e
+
+        if 'title' not in kwargs:
+            kwargs['title'] = self.app.config
+
+        scar = Sidecar(**kwargs)
+        with scar:
+            display(self.app)
+
+        return scar
+
+
+    def show_in_new_tab(self, **kwargs):
+        if 'anchor' in kwargs:
+            if 'tab' not in kwargs['anchor']:
+                raise ValueError('show_in_new_tab cannot have a non-tab anchor')
+        else:
+            kwargs['anchor'] = 'tab-after'
+        return self.show_in_sidecar(**kwargs)
