@@ -269,17 +269,62 @@ class ConfigHelper(HubListener):
         return parameters_cube
 
 
+    def show_inline(self):
+        """
+        Display the jdaviz application inline in a notebook.  Note this is
+        functionally equivalent to displaying the cell ``self.app`` in the
+        notebook.
+
+        See Also
+        --------
+        show_in_sidecar
+        show_in_new_tab
+        """
+        display(self.app)
+
+
     def show_in_sidecar(self, **kwargs):
         """
-        If ``title`` is not in a keyword argument, auto-generate from viz name
+        Display the jdaviz application in a "sidecar", which by default is a tab
+        on the right side of the jupyterlab  interface.
+
+        Parameters
+        ----------
+        title : str, optional
+            The title of the sidecar tab.  Defaults to the name of the
+            application - e.g. "specviz".
+        anchor : str
+            Where the tab should appear, by default on the right.  To see all
+            options see the ``sidecar.Sidecar`` documentation.
+
+        additional keywords are passed into the ``sidecar.Sidecar`` constructor.
+        See the ``jupyterlab-sidecar`` docs for the most up-to-date options.
+
+        Returns
+        -------
+        sidecar
+            The ``sidecar.Sidecar`` object used to create the tab.
+
+        Notes
+        -----
+        The ``jupyterlab-sidecar`` module needs to be installed for this method
+        to work.  ``pip install sidecar`` should suffice for most use cases.
+
+        If this method is called in the "classic" Jupyter notebook, the app will
+        appear inline, as only lab has a mechanism to have multiple tabs.
+
+        See Also
+        --------
+        show_in_new_tab
+        show_inline
         """
         try:
             from sidecar import Sidecar
-        except ImportError as e:
-            e.args[0] = (e.args[0] + ' You need to install jupyterlab-sidecar '
-                                     'to use `show_in_sidecar.  Try `pip '
-                                     'install sidecar`.')
-            raise e
+        except ModuleNotFoundError as e:
+            raise ModuleNotFoundError('You need to install jupyterlab-sidecar '
+                                      'to use `show_in_sidecar`.  Try `pip '
+                                      'install sidecar` and re-start your '
+                                      'Jupyter server.') from e
 
         if 'title' not in kwargs:
             kwargs['title'] = self.app.config
@@ -292,6 +337,36 @@ class ConfigHelper(HubListener):
 
 
     def show_in_new_tab(self, **kwargs):
+        """
+        Display the jdaviz application in a new tab in Jupyterlab.
+
+        Parameters
+        ----------
+        title : str, optional
+            The title of the sidecar tab.  Defaults to the name of the
+            application - e.g. "specviz".
+
+        Additional keywords are passed into the ``sidecar.Sidecar`` constructor.
+        See the ``jupyterlab-sidecar`` docs for the most up-to-date options.
+
+        Returns
+        -------
+        sidecar
+            The ``sidecar.Sidecar`` object used to create the tab.
+
+        Notes
+        -----
+        The ``jupyterlab-sidecar`` module needs to be installed for this method
+        to work.  ``pip install sidecar`` should suffice for most use cases.
+
+        If this method is called in the "classic" Jupyter notebook, the app will
+        appear inline, as only lab has a mechanism to have multiple tabs.
+
+        See Also
+        --------
+        show_in_sidecar
+        show_inline
+        """
         if 'anchor' in kwargs:
             if 'tab' not in kwargs['anchor']:
                 raise ValueError('show_in_new_tab cannot have a non-tab anchor')
