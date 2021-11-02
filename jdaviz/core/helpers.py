@@ -295,10 +295,10 @@ class ConfigHelper(HubListener):
             application - e.g. "specviz".
         anchor : str
             Where the tab should appear, by default on the right.  To see all
-            options see the ``sidecar.Sidecar`` documentation.
+            options see the ``sidecar.Sidecar.anchor.values``.
 
         additional keywords are passed into the ``sidecar.Sidecar`` constructor.
-        See the ``jupyterlab-sidecar`` docs for the most up-to-date options.
+        See ``jupyterlab-sidecar`` for the most up-to-date options.
 
         Returns
         -------
@@ -347,7 +347,7 @@ class ConfigHelper(HubListener):
             application - e.g. "specviz".
 
         Additional keywords are passed into the ``sidecar.Sidecar`` constructor.
-        See the ``jupyterlab-sidecar`` docs for the most up-to-date options.
+        See ``jupyterlab-sidecar`` for the most up-to-date options.
 
         Returns
         -------
