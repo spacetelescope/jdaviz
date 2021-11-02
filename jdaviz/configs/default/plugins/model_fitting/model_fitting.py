@@ -19,7 +19,9 @@ from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
 from jdaviz.models import BlackBody
 from jdaviz.configs.default.plugins.model_fitting.fitting_backend import fit_model_to_spectrum
-from jdaviz.configs.default.plugins.model_fitting.initializers import MODELS, initialize, get_model_parameters
+from jdaviz.configs.default.plugins.model_fitting.initializers import (MODELS,
+                                                                       initialize,
+                                                                       get_model_parameters)
 
 __all__ = ['ModelFitting']
 
@@ -339,8 +341,6 @@ class ModelFitting(TemplateMixin):
             # the new model component.  We need to store that with the
             # model itself as the value could change for another component.
             new_model["model_kwargs"] = {"degree": self.poly_order}
-            #new_model["order"] = self.poly_order
-
 
         initial_values = {}
         for param_name in get_model_parameters(model_cls, new_model["model_kwargs"]):

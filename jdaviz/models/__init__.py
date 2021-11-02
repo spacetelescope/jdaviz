@@ -1,1 +1,1 @@
-from .physical_models import BlackBody
+from .physical_models import BlackBody # noqa
