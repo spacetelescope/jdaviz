@@ -7,22 +7,39 @@ first guesses by the fitting algorithms.
 """
 import numpy as np
 
+import astropy.modeling.models as models
+from jdaviz.models import BlackBody
+
 __all__ = [
-    'initialize'
+    'initialize',
+    'get_model_parameters'
 ]
 
 AMPLITUDE = 'amplitude'
 POSITION = 'position'
 WIDTH = 'width'
 
-model_parameters = {"Gaussian1D": ["amplitude", "stddev", "mean"],
-                    "Const1D": ["amplitude"],
-                    "Linear1D": ["slope", "intercept"],
-                    "PowerLaw1D": ["amplitude", "x_0", "alpha"],
-                    "Lorentz1D": ["amplitude", "x_0", "fwhm"],
-                    "Voigt1D": ["x_0", "amplitude_L", "fwhm_L", "fwhm_G"],
-                    "BlackBody": ["temperature", "scale"],
-                    }
+MODELS = {
+     'Const1D': models.Const1D,
+     'Linear1D': models.Linear1D,
+     'Polynomial1D': models.Polynomial1D,
+     'Gaussian1D': models.Gaussian1D,
+     'Voigt1D': models.Voigt1D,
+     'Lorentz1D': models.Lorentz1D,
+     'BlackBody': BlackBody
+     }
+
+
+def get_model_parameters(model_cls, model_kwargs={}):
+    if isinstance(model_cls, str):
+        model_cls = MODELS.get(model_cls)
+
+    if model_cls.__name__ == 'Polynomial1D':
+        # then the parameters are not stored, as they depend on the polynomial order
+        degree = model_kwargs.get('degree', 1)
+        return ['c{}'.format(n) for n in range(degree + 1)]
+
+    return model_cls.param_names
 
 
 def _get_model_name(model):
