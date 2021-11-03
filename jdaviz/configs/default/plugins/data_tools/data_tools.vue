@@ -2,7 +2,7 @@
   <v-toolbar-items>
     <v-dialog v-model="dialog" height="400" width="600">
       <template v-slot:activator="{ on }">
-        <v-btn tile depressed v-on="on" color="accent">
+        <v-btn tile depressed v-on="on" color="turquoise">
           Import
           <v-icon right>mdi-plus</v-icon>
         </v-btn>
