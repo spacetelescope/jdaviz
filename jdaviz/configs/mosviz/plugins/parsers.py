@@ -3,6 +3,7 @@ import glob
 import logging
 import os
 from pathlib import Path
+import warnings
 
 import numpy as np
 from astropy import units as u
@@ -474,16 +475,19 @@ def _get_source_names(hdus, filepaths=None):
     filepaths : Optional. A list of filepaths to fallback on if no header values are
         identified
     """
-    # Try to extract the Source ID:
+    src_names = list()
+    for indx, hdu in enumerate(hdus):
     try:
-        src_names = ["Source ID: " + str(x.header['SOURCEID']) for x in hdus]
-    except KeyError:
-        if filepaths:
-            # remove leading path to file name
-            filenames = [os.path.basename(d) for d in filepaths]
-            src_names = [x.header.get("OBJECT", d) for x, d in zip(hdus, filenames)]
-        else:
-            src_names = [x.header.get("OBJECT", FALLBACK_NAME) for x in hdus]
+            src_names.append(str(
+                hdu.header.get('SOURCEID',
+                    hdu.header.get('OBJECT', # noqa
+                        os.path.basename(filepaths) if type(filepaths) is str # noqa
+                            else os.path.basename(filepaths[indx]) if type(filepaths) is list # noqa
+                                else FALLBACK_NAME)))) # noqa
+        except:
+            warnings.warn("Source name lookup failed for Target " + str(indx) +
+                          ". Using fallback ID", RuntimeWarning)
+            src_names.append(FALLBACK_NAME)
     return src_names
 
 
