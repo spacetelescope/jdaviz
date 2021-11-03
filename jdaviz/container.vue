@@ -56,14 +56,21 @@
               <v-spacer></v-spacer>
                <v-toolbar-items>
                <j-tooltip tipid='viewer-toolbar-figure'>
+                 <!-- NOTE: since this is just a btn, not a toggle or menu, we cannot use v-model
+                      but instead will use @click to toggle the state AND close any other active
+                      toolbar menus (that won't already by close-on-content-click)-->
                  <v-btn icon @click="viewer.tools_open = !viewer.tools_open" :class="{active: viewer.tools_open}" color="white">
                    <v-icon>mdi-hammer-screwdriver</v-icon>
                  </v-btn>
                </j-tooltip>
                <j-tooltip tipid='viewer-toolbar-menu'>
+                 <!-- NOTE: this case uses v-menu, so we'll control the active state with v-model
+                      on that component, but close any other active toolbar menus (that won't already
+                      with close-on-content-click with the @click on the underlying button component  
+                  -->
                 <v-menu offset-y :close-on-content-click="false" style="z-index: 10" v-model="viewer.layer_viewer_open">
                   <template v-slot:activator="{ on }">
-                    <v-btn icon v-on="on" :class="{active : viewer.layer_viewer_open}" color="white">
+                    <v-btn icon v-on="on" :class="{active : viewer.layer_viewer_open}" color="white" @click="viewer.tools_open=false">
                       <v-icon>tune</v-icon>
                     </v-btn>
                   </template>
