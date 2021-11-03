@@ -477,7 +477,7 @@ def _get_source_names(hdus, filepaths=None):
     """
     src_names = list()
     for indx, hdu in enumerate(hdus):
-    try:
+        try:
             src_names.append(str(
                 hdu.header.get('SOURCEID',
                     hdu.header.get('OBJECT', # noqa
