@@ -558,12 +558,19 @@ class Application(VuetifyTemplate, HubListener):
             combined_spec_region : `~specutils.SpectralRegion`
                 SpectralRegion object containing all subregions of the subset.
             """
+            if len(mask) == 0:
+                # Mask should only be 0 if ApplyROI is used to incorrectly
+                # create subsets via the API
+                raise ValueError
+
             current_edge = 0
             combined_spec_region = None
             for index in range(1, len(mask)):
                 # Find spot where mask == True is for a different region of the subset
+                # i.e. mask = [0, 1, 4, 5]
+                # mask[2] != mask[1] + 1
                 if mask[index] != mask[index - 1] + 1:
-                    subset_region = spec_axis_data[mask[current_edge]: mask[index - 1]]
+                    subset_region = spec_axis_data[mask[current_edge]: mask[index] - 1]
                     if not combined_spec_region:
                         combined_spec_region = SpectralRegion(min(subset_region),
                                                               max(subset_region))
@@ -575,12 +582,9 @@ class Application(VuetifyTemplate, HubListener):
             # Get last region within the subset
             if current_edge != index:
                 subset_region = spec_axis_data[mask[current_edge]: mask[index]]
-                if not combined_spec_region:
-                    combined_spec_region = SpectralRegion(min(subset_region),
-                                                          max(subset_region))
-                else:
-                    combined_spec_region += SpectralRegion(min(subset_region),
-                                                           max(subset_region))
+                # No if check here because len(mask) must be greater than 1
+                # so combined_spec_region will have been instantiated in the for loop
+                combined_spec_region += SpectralRegion(min(subset_region), max(subset_region))
 
             return combined_spec_region
 
