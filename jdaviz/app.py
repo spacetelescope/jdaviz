@@ -570,7 +570,7 @@ class Application(VuetifyTemplate, HubListener):
                 # i.e. mask = [0, 1, 4, 5]
                 # mask[2] != mask[1] + 1
                 if mask[index] != mask[index - 1] + 1:
-                    subset_region = spec_axis_data[mask[current_edge]: mask[index] - 1]
+                    subset_region = spec_axis_data[mask[current_edge]: mask[index - 1] + 1]
                     if not combined_spec_region:
                         combined_spec_region = SpectralRegion(min(subset_region),
                                                               max(subset_region))
