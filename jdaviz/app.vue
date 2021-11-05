@@ -134,6 +134,10 @@ export default {
 </script>
 
 <style id="web-app">
+* {
+  /* otherwise, voila will override box-sizing to unset which screws up layouts */
+  box-sizing: border-box !important;
+}
 
 /* fix for loading overlay z-index */
 div.output_wrapper {
