@@ -464,7 +464,7 @@ def mos_meta_parser(app, data_obj, ids=None, spectra=False, sp1d=False):
             _add_to_table(app, dec, "Dec.")
 
 
-def _get_source_names(hdus, filepaths=None):
+def _get_source_names(hdus, filepaths=None, header_keys=['SOURCEID','OBJECT']):
     """
     Attempts to extract a list of source identifiers via different header values.
 
@@ -476,15 +476,30 @@ def _get_source_names(hdus, filepaths=None):
         identified
     """
     src_names = list()
+    # If the user only provided one key to search, put it in a list for the upcoming for loop
+    if type(header_keys) != list:
+        header_keys = list(header_keys)
     for indx, hdu in enumerate(hdus):
         try:
-            src_names.append(str(
-                hdu.header.get('SOURCEID',
-                    hdu.header.get('OBJECT', # noqa
-                        os.path.basename(filepaths) if type(filepaths) is str # noqa
-                            else os.path.basename(filepaths[indx]) if type(filepaths) is list # noqa
-                                else FALLBACK_NAME)))) # noqa
-        except:
+            src_name = None
+            # Search all given keys to see if they exist. Return the first hit
+            for key in header_keys:
+                if key in hdu.header:
+                    src_name = hdu.header.get(key)
+                    break
+            # If none exist, default to fallback
+            if not src_name:
+                src_name =
+                    # Fallback: filepath if only one is given
+                    os.path.basename(filepaths) if type(filepaths) is str # noqa
+                    # Fallback: filepath at indx, if list of files given
+                    else os.path.basename(filepaths[indx]) if type(filepaths) is list # noqa
+                    # Fallback: If nothing else, just our fallback value
+                    else FALLBACK_NAME
+            src_names.append(src_name)
+        except Exception:
+            # Source ID lookup shouldn't ever prevent target from loading. Downgrade all errors to
+            # warnings and use fallback
             warnings.warn("Source name lookup failed for Target " + str(indx) +
                           ". Using fallback ID", RuntimeWarning)
             src_names.append(FALLBACK_NAME)
