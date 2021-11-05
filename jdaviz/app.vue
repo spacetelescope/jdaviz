@@ -220,11 +220,11 @@ div.output_wrapper {
   margin: 0px;
 }
 
-.vuetify-styles .v-toolbar__items>span>.v-btn {
+.v-toolbar__items > span > .v-btn {
   /* allow voolbar-items styling to pass through tooltip wrapping span */
   /* css is copied from .vuetify-styles .v-toolbar__items>.v-btn */
   border-radius: 0;
-  height: 100%!important;
+  height: 100% !important;
   max-height: none;
 }
 
