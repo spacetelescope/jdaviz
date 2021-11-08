@@ -470,10 +470,11 @@ def _get_source_names_by_hdu(hdus, filepaths=None, header_keys=['SOURCEID', 'OBJ
 
     Parameters
     ----------
-    hdus : a list of HDUs (NOT an HDUList!) to check the header of. Filtering should
-        be done in advance to decide which HDUs to check against (e.g. Sci only)
-    filepaths : Optional. A list of filepaths to fallback on if no header values are
-        identified
+    hdus : list of HDU
+        A list of HDUs (NOT an HDUList!) to check the header of. Filtering should
+        be done in advance to decide which HDUs to check against (e.g., SCI only).
+    filepaths : list of str, optional
+        A list of filepaths to fallback on if no header values are identified.
     """
     src_names = list()
     # If the user only provided one key to search, put it in a list for the upcoming for loop
