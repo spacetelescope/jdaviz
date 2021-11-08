@@ -475,7 +475,7 @@ def _get_source_names_by_hdu(hdus, filepaths=None, header_keys=['SOURCEID', 'OBJ
         be done in advance to decide which HDUs to check against (e.g., SCI only).
     filepaths : list of str, optional
         A list of filepaths to fallback on if no header values are identified.
-    header_keys: str or list of str
+    header_keys: str or list of str, optional
         The header value (or values) to search an HDU for to extract the source id.
         List order is assumed to be priority order (i.e. will return first successful
         lookup)
