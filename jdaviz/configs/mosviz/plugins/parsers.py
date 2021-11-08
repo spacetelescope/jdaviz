@@ -464,7 +464,7 @@ def mos_meta_parser(app, data_obj, ids=None, spectra=False, sp1d=False):
             _add_to_table(app, dec, "Dec.")
 
 
-def _get_source_names(hdus, filepaths=None, header_keys=['SOURCEID','OBJECT']):
+def _get_source_names_by_hdu(hdus, filepaths=None, header_keys=['SOURCEID', 'OBJECT']):
     """
     Attempts to extract a list of source identifiers via different header values.
 
