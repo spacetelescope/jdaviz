@@ -435,13 +435,13 @@ def mos_meta_parser(app, data_obj, ids=None, spectra=False, sp1d=False):
 
         # source name can be taken from 1d spectra
         elif spectra and sp1d:
-            names = _get_source_names([x[0] for x in data_obj], ids)
+            names = _get_source_names_by_hdu([x[0] for x in data_obj], ids)
 
         # source name and coordinates are taken from image headers, if present
         else:
             ra = [x[0].header.get("OBJ_RA", float("nan")) for x in data_obj]
             dec = [x[0].header.get("OBJ_DEC", float("nan")) for x in data_obj]
-            names = _get_source_names([x[0] for x in data_obj], ids)
+            names = _get_source_names_by_hdu([x[0] for x in data_obj], ids)
 
         [x.close() for x in data_obj]
 
@@ -624,7 +624,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                             wav_hdus[i] = ('WAVELENGTH', temp[i].header['EXTVER'])
 
                 # Now get a Spectrum1D object for each SCI HDU
-                source_ids.extend(_get_source_names([temp[sci] for sci in sci_hdus]))
+                source_ids.extend(_get_source_names_by_hdu([temp[sci] for sci in sci_hdus]))
 
                 for sci in sci_hdus:
 
@@ -700,7 +700,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
 
         # We then populate the table inside this context manager as _add_to_table
         # does operations that also trigger link manager updates.
-        _add_to_table(app, source_ids, "Source ID")
+        _add_to_table(app, source_ids, "Source Name")
         _add_to_table(app, ras, "R.A.")
         _add_to_table(app, decs, "Dec.")
         _add_to_table(app, image_add, "Images")
