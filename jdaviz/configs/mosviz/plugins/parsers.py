@@ -489,12 +489,12 @@ def _get_source_names_by_hdu(hdus, filepaths=None, header_keys=['SOURCEID', 'OBJ
                     break
             # If none exist, default to fallback
             if not src_name:
-                src_name =
-                    # Fallback: filepath if only one is given
-                    os.path.basename(filepaths) if type(filepaths) is str # noqa
-                    # Fallback: filepath at indx, if list of files given
-                    else os.path.basename(filepaths[indx]) if type(filepaths) is list # noqa
-                    # Fallback: If nothing else, just our fallback value
+                # Fallback 1: filepath if only one is given
+                # Fallback 2: filepath at indx, if list of files given
+                # Fallback 3: If nothing else, just our fallback value
+                src_name = \
+                    os.path.basename(filepaths) if type(filepaths) is str \
+                    else os.path.basename(filepaths[indx]) if type(filepaths) is list \
                     else FALLBACK_NAME
             src_names.append(src_name)
         except Exception:
