@@ -528,19 +528,64 @@ class Mosviz(ConfigHelper):
         super().load_data(data_obj, parser_reference="mosviz-image-parser",
                           data_labels=data_labels, share_image=share_image)
 
-    def add_column(self, data, column_name=None):
+    def get_column(self, column_name):
         """
-        Add a new data column to the table.
+        Get the data from a column in the table.
+        
+        Parameters
+        ----------
+        column_name: str
+            Header string of an existing column in the table.
+
+        Returns
+        -------
+        array
+            copy of the data array.
+        """
+        return np.asarray(self.app.data_collection['MOS Table'].get_component(column_name).data)
+
+    def add_redshift_column(self, data=None):
+        """
+        Add a redshift column to the table labeled "Redshift".
+
+        Parameters
+        ----------
+        data: array-like or None
+            Array-like set of data values for redshifts.  If None or not provided,
+            will default to a list of Nones.  Otherwise must be the same length as
+            there are rows in the table.
+        """
+        return self.add_column(data, column_name='Redshift')
+
+    def add_column(self, data, column_name):
+        """
+        Add a new data column to the table or update the data in an existing column.
 
         Parameters
         ----------
         data : array-like
             Array-like set of data values, e.g. redshifts, RA, DEC, etc.
         column_name : str
-            Header string to be shown in the table.
+            Header string to be shown in the table.  If already exists as a column in
+            the table, the data for that column will be updated.
+
+        Returns
+        -------
+        array
+            copy of the data in the added or edited column.
         """
         table_data = self.app.data_collection['MOS Table']
-        table_data.add_component(data, column_name)
+        if data is None:
+            data = [None]*table_data.size
+        if not isinstance(data, (list, tuple, np.ndarray)):
+            raise TypeError("data must be array-like")
+        if len(data) != table_data.size:
+            raise ValueError(f"data must have length {table_data.size} (rows in table)")
+        if column_name in [comp.label for comp in table_data.components]:
+            table_data.update_components({table_data.get_component(column_name): data})
+        else:
+            table_data.add_component(data, column_name)
+        return self.get_column(column_name)
 
     def to_table(self):
         """
