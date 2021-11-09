@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 import csv
 import glob
 import logging
@@ -482,7 +483,7 @@ def _get_source_names_by_hdu(hdus, filepaths=None, header_keys=['SOURCEID', 'OBJ
     """
     src_names = list()
     # If the user only provided one key to search, put it in a list for the upcoming for loop
-    if type(header_keys) != list:
+    if isinstance(header_keys, Iterable) and not isinstance(header_keys, (str, dict)):
         header_keys = list(header_keys)
     for indx, hdu in enumerate(hdus):
         try:
