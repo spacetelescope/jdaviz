@@ -64,6 +64,9 @@ class ConfigHelper(HubListener):
             if hasattr(viewer, method):
                 getattr(viewer, method)(msg)
 
+    def show(self):
+        return self.app
+
     def load_data(self, data, parser_reference=None, **kwargs):
         self.app.load_data(data, parser_reference=parser_reference, **kwargs)
 
