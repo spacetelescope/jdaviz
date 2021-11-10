@@ -15,7 +15,7 @@ The power of Jdaviz is that it can integrated into your Jupyter notebook workflo
     from jdaviz import Imviz
 
     imviz = Imviz()
-    imviz.app
+    imviz.show()
     imviz.load_data('filename.fits', data_label='MyData')
 
 Jdaviz also provides a directory of :ref:`sample notebooks <sample_notebook>`
