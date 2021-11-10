@@ -282,3 +282,23 @@ def test_to_csv(tmp_path, mosviz_app, spectrum_collection):
 
     assert found_index_label
     assert found_rows == 5
+
+
+@pytest.mark.filterwarnings('ignore')
+def test_table_scrolling(mosviz_app, image, spectrum1d, spectrum2d):
+    spectra1d = [spectrum1d] * 2
+    spectra2d = [spectrum2d] * 2
+
+    mosviz_app.load_data(spectra1d, spectra2d, images=image)
+
+    table = mosviz_app.app.get_viewer('table-viewer')
+    # first row is automatically selected in the UI
+    # (otherwise it would be None which is a case not handled)
+    table.widget_table.highlighted = 0
+    table.next_row()
+    assert(table.widget_table.highlighted == 1)
+    table.next_row()
+    # with only 2 rows, this should wrap back to 0
+    assert(table.widget_table.highlighted == 0)
+    table.prev_row()
+    assert(table.widget_table.highlighted == 1)

@@ -56,7 +56,6 @@ ipyvue.register_component_from_file(None, 'j-tooltip',
                                     os.path.join(os.path.dirname(__file__),
                                                  'components/tooltip.vue'))
 
-
 ipyvue.register_component_from_file(None, 'j-external-link',
                                     os.path.join(os.path.dirname(__file__),
                                                  'components/external_link.vue'))
@@ -64,6 +63,10 @@ ipyvue.register_component_from_file(None, 'j-external-link',
 ipyvue.register_component_from_file(None, 'j-docs-link',
                                     os.path.join(os.path.dirname(__file__),
                                                  'components/docs_link.vue'))
+
+ipyvue.register_component_from_file(None, 'j-play-pause-widget',
+                                    os.path.join(os.path.dirname(__file__),
+                                                 'components/play_pause_widget.vue'))
 
 
 class ApplicationState(State):
@@ -1006,6 +1009,12 @@ class Application(VuetifyTemplate, HubListener):
         button is clicked.
         """
         self.state.snackbar_queue.close_current_message(self.state)
+
+    def vue_call_viewer_method(self, event):
+        viewer_id, method = event['id'], event['method']
+        args = event.get('args', [])
+        kwargs = event.get('kwargs', {})
+        return getattr(self._viewer_store[viewer_id], method)(*args, **kwargs)
 
     def _update_selected_data_items(self, viewer_id, selected_items):
         # Find the active viewer

@@ -140,6 +140,34 @@ class MosvizTableViewer(TableViewer):
 
         super().redraw()
 
+    @property
+    def nrows(self):
+        return self.widget_table.get_state()['total_length']
+
+    def select_row(self, n):
+        if n < 0 or n >= self.nrows:
+            raise ValueError("n must be between 0 and {}".format(self.nrows-1))
+
+        # compute and set the appropriate page
+        # NOTE: traitlets won't detect internal changes to a dict
+        options = self.widget_table.get_state()['options']
+        page = int(n / options['itemsPerPage']) + 1
+        if options['page'] != page:
+            self.widget_table.set_state({'options': {**options, 'page': page}})
+            self.widget_table.send_state()
+        # select and highlight the row
+        self.widget_table.highlighted = n
+
+    def next_row(self):
+        current_row = self.widget_table.highlighted
+        new_row = 0 if current_row == self.nrows - 1 else current_row + 1
+        self.select_row(new_row)
+
+    def prev_row(self):
+        current_row = self.widget_table.highlighted
+        new_row = self.nrows - 1 if current_row == 0 else current_row - 1
+        self.select_row(new_row)
+
     def _on_row_selected(self, event):
         if self._on_row_selected_begin:
             self._on_row_selected_begin()

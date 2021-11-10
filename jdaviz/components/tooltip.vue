@@ -43,6 +43,11 @@ const tooltips = {
   'viewer-toolbar-figure-save': 'Save figure',
   'viewer-toolbar-menu': 'Adjust display: contrast, bias, stretch',
   'viewer-toolbar-more': 'More options...',
+
+  'table-prev': 'Select previous row in table',
+  'table-next': 'Select next row in table',
+  'table-play-pause-toggle': 'Toggle cycling through rows of table',
+  'table-play-pause-delay': 'Set delay before cycling to next entry',
   
   'plugin-gaussian-apply': 'Apply to smooth your data',
   'plugin-collapse-apply': 'Apply to collapse your data set',

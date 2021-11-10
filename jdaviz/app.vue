@@ -49,6 +49,7 @@
                   @destroy="destroy_viewer_item($event)"
                   @data-item-selected="data_item_selected($event)"
                   @save-figure="save_figure($event)"
+                  @call-viewer-method="call_viewer_method($event)"
                 ></g-viewer-tab>
               </gl-row>
             </golden-layout>

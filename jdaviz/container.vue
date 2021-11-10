@@ -9,6 +9,7 @@
       @destroy="$emit('destroy', $event)"
       @data-item-selected="$emit('data-item-selected', $event)"
       @save-figure="$emit('save-figure', $event)"
+      @call-viewer-method="$emit('call-viewer-method', $event)"
     ></g-viewer-tab>
     <gl-component
       v-for="(viewer, index) in stack.viewers"
@@ -53,6 +54,19 @@
 
 
               </v-col>
+              <v-toolbar-items v-if="viewer.reference === 'table-viewer'">
+                <j-tooltip tipid='table-prev'>
+                  <v-btn icon @click="$emit('call-viewer-method', {'id': viewer.id, 'method': 'prev_row'})" color="white">
+                    <v-icon>mdi-arrow-up-bold</v-icon>
+                  </v-btn>
+                </j-tooltip>
+                <j-tooltip tipid='table-next'>
+                  <v-btn icon @click="$emit('call-viewer-method', {'id': viewer.id, 'method': 'next_row'})" color="white">
+                    <v-icon>mdi-arrow-down-bold</v-icon>
+                  </v-btn>
+                </j-tooltip>
+              </v-toolbar-items>
+              <j-play-pause-widget v-if="viewer.reference == 'table-viewer'" @event="$emit('call-viewer-method', {'id': viewer.id, 'method': 'next_row'})"></j-play-pause-widget>
               <v-spacer></v-spacer>
                <v-toolbar-items>
                <j-tooltip tipid='viewer-toolbar-figure'>
