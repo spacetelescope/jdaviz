@@ -12,6 +12,7 @@
         min="1"
         max="60"
         @change="changeDelay"
+        @mousedown="changeDelay"
         class="mt-0 pt-0 theme--dark"
         style="width: 60px"
         hide-details
