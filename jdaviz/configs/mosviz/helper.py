@@ -587,6 +587,26 @@ class Mosviz(ConfigHelper):
             table_data.add_component(data, column_name)
         return self.get_column(column_name)
 
+    def update_column(self, data, column_name, row=None):
+        """
+        """
+        table_data = self.app.data_collection['MOS Table']
+
+        if column_name not in [comp.label for comp in table_data.components]:
+            raise ValueError(f"{column_name} is not an existing column label")
+
+        if row is not None:
+            replace_value = data
+            data = self.get_column(column_name)
+            if not isinstance(row, int):
+                raise TypeError("row must be an integer or None")
+            if row < 0 or row >= len(data):
+                raise ValueError("row out of range of table")
+
+            data[row] = replace_value
+
+        return self.add_column(data, column_name)
+
     def to_table(self):
         """
         Creates an astropy `~astropy.table.QTable` object from the MOS table
