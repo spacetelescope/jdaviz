@@ -135,7 +135,10 @@ class SimpleAperturePhotometry(TemplateMixin):
 
         try:
             comp = data.get_component(data.main_components[0])
-            bg = float(self.background_value)
+            try:
+                bg = float(self.background_value)
+            except ValueError:  # Clearer error message
+                raise ValueError('Missing or invalid background value')
             comp_no_bg = comp.data - bg
 
             # TODO: Use photutils when it supports astropy regions.
@@ -157,14 +160,23 @@ class SimpleAperturePhotometry(TemplateMixin):
                 img_stat = img_stat * img_unit
                 bg = bg * img_unit
                 if u.sr in img_unit.bases:  # TODO: Better way to detect surface brightness unit?
-                    pixarea = float(self.pixel_area)
+                    try:
+                        pixarea = float(self.pixel_area)
+                    except ValueError:  # Clearer error message
+                        raise ValueError('Missing or invalid pixel area')
                     if not np.allclose(pixarea, 0):
                         include_pixarea_fac = True
                 if img_unit != u.count:
-                    ctfac = float(self.counts_factor)
+                    try:
+                        ctfac = float(self.counts_factor)
+                    except ValueError:  # Clearer error message
+                        raise ValueError('Missing or invalid counts conversion factor')
                     if not np.allclose(ctfac, 0):
                         include_counts_fac = True
-                flux_scale = float(self.flux_scaling)
+                try:
+                    flux_scale = float(self.flux_scaling)
+                except ValueError:  # Clearer error message
+                    raise ValueError('Missing or invalid flux scaling')
                 if not np.allclose(flux_scale, 0):
                     include_flux_scale = True
             rawsum = np.nansum(img)
