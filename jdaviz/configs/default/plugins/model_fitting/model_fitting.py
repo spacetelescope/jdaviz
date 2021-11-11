@@ -7,10 +7,9 @@ from astropy.wcs import WCSSUB_SPECTRAL
 from glue.core.message import (SubsetCreateMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
-from regions import RectanglePixelRegion
-from specutils import Spectrum1D, SpectralRegion
+from specutils import Spectrum1D
 from specutils.utils import QuantityModel
-from traitlets import Any, Bool, Int, List, Unicode, observe
+from traitlets import Any, Bool, Int, List, Unicode
 from glue.core.data import Data
 from glue.core.subset import Subset, RangeSubsetState, OrState, AndState
 from glue.core.link_helpers import LinkSame
@@ -264,7 +263,7 @@ class ModelFitting(TemplateMixin):
     def vue_list_subsets(self, event):
         """Populate the spectral subset selection dropdown"""
         self._spectral_subsets = self.app.get_subsets_from_viewer("spectrum-viewer",
-                                                        subset_type="spectral")
+                                                                  subset_type="spectral")
         self.spectral_subset_items = ["Entire Spectrum"] + sorted(self._spectral_subsets.keys())
 
     '''
