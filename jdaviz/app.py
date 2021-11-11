@@ -587,7 +587,10 @@ class Application(VuetifyTemplate, HubListener):
                 subset_region = spec_axis_data[mask[current_edge]: mask[index]]
                 # No if check here because len(mask) must be greater than 1
                 # so combined_spec_region will have been instantiated in the for loop
-                combined_spec_region += SpectralRegion(min(subset_region), max(subset_region))
+                if combined_spec_region is None:
+                    combined_spec_region = SpectralRegion(min(subset_region), max(subset_region))
+                else:
+                    combined_spec_region += SpectralRegion(min(subset_region), max(subset_region))
 
             return combined_spec_region
 
@@ -597,9 +600,14 @@ class Application(VuetifyTemplate, HubListener):
         for key, value in data.items():
             if isinstance(value, Subset):
                 # Skip spatial or spectral subsets if only the other is wanted
-                if subset_type == "spectral" and isinstance(value.subset_state, RoiSubsetState):
+                if hasattr(value.subset_state, "state1"):
+                    this_type = type(value.subset_state.state1)
+                else:
+                    this_type = type(value.subset_state)
+
+                if subset_type == "spectral" and isinstance(this_type, RoiSubsetState):
                     continue
-                elif subset_type == "spatial" and isinstance(value.subset_state, RangeSubsetState):
+                elif subset_type == "spatial" and isinstance(this_type, RangeSubsetState):
                     continue
 
                 # Range selection on a profile is currently not supported in

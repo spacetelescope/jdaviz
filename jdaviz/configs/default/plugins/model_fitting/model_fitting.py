@@ -12,7 +12,7 @@ from specutils import Spectrum1D, SpectralRegion
 from specutils.utils import QuantityModel
 from traitlets import Any, Bool, Int, List, Unicode, observe
 from glue.core.data import Data
-from glue.core.subset import Subset, RangeSubsetState
+from glue.core.subset import Subset, RangeSubsetState, OrState, AndState
 from glue.core.link_helpers import LinkSame
 
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage, SnackbarMessage
@@ -125,7 +125,8 @@ class ModelFitting(TemplateMixin):
         self.dc_items = [layer_state.layer.label
                          for layer_state in viewer.state.layers
                          if (not isinstance(layer_state.layer, Subset)
-                             or not isinstance(layer_state.layer.subset_state, RangeSubsetState))]
+                             or not isinstance(layer_state.layer.subset_state,
+                                               (RangeSubsetState, OrState, AndState)))]
 
     def _param_units(self, param, order=0):
         """Helper function to handle units that depend on x and y"""
@@ -266,11 +267,13 @@ class ModelFitting(TemplateMixin):
                                                         subset_type="spectral")
         temp_dict = {}
         # Attempt to filter out spatial subsets
-        for key, region in temp_subsets.items():
-            if type(region) == RectanglePixelRegion:
-                temp_dict[key] = region
-        self._spectral_subsets = temp_dict
-        self.spectral_subset_items = ["Entire Spectrum"] + sorted(temp_dict.keys())
+        #for key, region in temp_subsets.items():
+        #    if type(region) == RectanglePixelRegion:
+        #        temp_dict[key] = region
+        #self._spectral_subsets = temp_dict
+        #self.spectral_subset_items = ["Entire Spectrum"] + sorted(temp_dict.keys())
+        self._spectral_subsets = temp_subsets
+        self.spectral_subset_items = ["Entire Spectrum"] + sorted(temp_subsets.keys())
 
     @observe("selected_subset")
     def _on_subset_selected(self, event):
