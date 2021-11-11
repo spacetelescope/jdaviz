@@ -55,7 +55,7 @@
               <v-text-field
                 label="Counts conversion factor"
                 v-model="counts_factor"
-                hint="Factor to convert data unit to counts/s (cps), in unit of flux/cps"
+                hint="Factor to convert data unit to counts, in unit of flux/counts"
                 persistent-hint
               >
               </v-text-field>

@@ -51,13 +51,12 @@ an interactively selected region. A typical workflow is as follows:
    in display data unit. Otherwise, it is only informational.
    If this field is not applicable for you, leave it at 0.
    **This field resets every time Data selection changes if auto-population not possible.**
-7. For some JWST images, a counts conversion factor is also automatically
-   populated in the :guilabel:`Counts conversion factor` field from image metadata.
-   If it does not auto-populate for you, you can manually enter a value but it must
-   be in the unit of display data unit per counts/s. This is used to convert linear
-   flux unit (e.g., MJy/sr) to counts/s. If this field is not applicable for you,
+7. If you also want photometry result in the unit of counts, you can enter a
+   conversion factor in the :guilabel:`Counts conversion factor` field. The value
+   must be in the unit of display data unit per counts. This is used to convert linear
+   flux unit (e.g., MJy/sr) to counts. If this field is not applicable for you,
    leave it at 0.
-   **This field resets every time Data selection changes if auto-population not possible.**
+   **This field resets every time Data selection changes.**
 8. If you also want photometry result in magnitude unit, you can enter a flux
    scaling factor in the :guilabel:`Flux scaling` field. The value must be in the
    same unit as display data unit. A magnitude is then calculated using
@@ -111,7 +110,7 @@ The columns are as follow:
 * ``pixarea_tot``: If per steradian is in input data unit and pixel area is
   provided, this contains the total pixel area covered by the aperture in
   steradian. Otherwise, it is `None`.
-* ``aperture_sum_counts``: This is the aperture sum converted to counts/s,
+* ``aperture_sum_counts``: This is the aperture sum converted to counts,
   if :guilabel:`Counts conversion factor` was set. Otherwise, it is `None`.
   This calculation is done without taking account of ``pixarea_tot``, even
   when it is available.

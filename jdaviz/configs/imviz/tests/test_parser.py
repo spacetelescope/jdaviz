@@ -187,8 +187,6 @@ class TestParseImage:
         comp = data.get_component('DATA')
         assert data.label == 'contents[DATA]'  # download_file returns cache loc
         assert data.shape == (2048, 2048)
-        # NOTE: jwst.datamodels.find_fits_keyword("PHOTMJSR")
-        assert_allclose(data.meta['photometry']['conversion_megajanskys'], 0.6250675320625305)
         assert isinstance(data.coords, GWCS)
         assert comp.units == 'MJy/sr'
         assert comp.data.shape == (2048, 2048)
@@ -207,6 +205,10 @@ class TestParseImage:
         phot_plugin.vue_data_selected('contents[DATA]')
         phot_plugin.vue_subset_selected('Subset 1')
         phot_plugin.background_value = 0.22  # Median on whole array
+        # NOTE: jwst.datamodels.find_fits_keyword("PHOTMJSR")
+        phot_plugin.counts_factor = (data.meta['photometry']['conversion_megajanskys'] /
+                                     data.meta['exposure']['exposure_time'])
+        assert_allclose(phot_plugin.counts_factor, 0.0036385915646798953)
         phot_plugin.flux_scaling = 1  # Simple mag, no zeropoint
         phot_plugin.vue_do_aper_phot()
         tbl = imviz_app.get_aperture_photometry_results()
@@ -220,8 +222,8 @@ class TestParseImage:
         assert_quantity_allclose(tbl[0]['npix'], 111.22023392 * u.pix)
         assert_quantity_allclose(tbl[0]['aperture_sum'], 4.93689560e-09 * u.MJy)
         assert_quantity_allclose(tbl[0]['pixarea_tot'], 1.0384377922763469e-11 * u.sr)
-        assert_quantity_allclose(tbl[0]['aperture_sum_counts'], 760.5828303030021 * (u.count / u.s))
-        assert_quantity_allclose(tbl[0]['counts_fac'], 0.62506753 * (data_unit / (u.ct / u.s)))
+        assert_quantity_allclose(tbl[0]['aperture_sum_counts'], 130659.2466386 * u.count)
+        assert_quantity_allclose(tbl[0]['counts_fac'], 0.0036385915646798953 * (data_unit / u.ct))
         assert_quantity_allclose(tbl[0]['aperture_sum_mag'], -6.692683645358997 * u.mag)
         assert_quantity_allclose(tbl[0]['flux_scaling'], 1 * data_unit)
         assert_quantity_allclose(tbl[0]['mean'], 4.34584047 * data_unit)

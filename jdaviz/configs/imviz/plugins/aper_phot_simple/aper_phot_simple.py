@@ -77,9 +77,6 @@ class SimpleAperturePhotometry(TemplateMixin):
             if telescope == 'JWST':
                 if 'photometry' in meta and 'pixelarea_arcsecsq' in meta['photometry']:
                     self.pixel_area = meta['photometry']['pixelarea_arcsecsq']
-                if (comp.units and 'sr' in comp.units and 'photometry' in meta and
-                        'conversion_megajanskys' in meta['photometry']):
-                    self.counts_factor = meta['photometry']['conversion_megajanskys']
             elif telescope == 'HST':
                 # TODO: Add more HST support, as needed.
                 # HST pixel scales are from instrument handbooks.
@@ -198,7 +195,7 @@ class SimpleAperturePhotometry(TemplateMixin):
                 d.update({'aperture_sum': rawsum,
                           'pixarea_tot': None})
             if include_counts_fac:
-                ctfac = ctfac * (rawsum.unit / (u.count / u.s))
+                ctfac = ctfac * (rawsum.unit / u.count)
                 d.update({'aperture_sum_counts': rawsum / ctfac,
                           'counts_fac': ctfac})
             else:
