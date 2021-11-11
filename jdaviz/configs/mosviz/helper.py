@@ -8,6 +8,7 @@ import astropy.units as u
 from astropy.table import QTable
 from astropy.coordinates import SkyCoord
 from echo import delay_callback
+from copy import deepcopy
 
 from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import SnackbarMessage, TableClickMessage
@@ -528,21 +529,11 @@ class Mosviz(ConfigHelper):
         super().load_data(data_obj, parser_reference="mosviz-image-parser",
                           data_labels=data_labels, share_image=share_image)
 
-    def get_column(self, column_name):
-        """
-        Get the data from a column in the table.
-        
-        Parameters
-        ----------
-        column_name: str
-            Header string of an existing column in the table.
 
-        Returns
-        -------
-        array
-            copy of the data array.
+    def get_redshift_column(self):
         """
-        return np.asarray(self.app.data_collection['MOS Table'].get_component(column_name).data)
+        """
+        return self.get_column(column_name='Redshift')
 
     def add_redshift_column(self, data=None):
         """
@@ -557,9 +548,34 @@ class Mosviz(ConfigHelper):
         """
         return self.add_column(data, column_name='Redshift')
 
+    def update_redshift_column(self, data, row=None):
+        """
+        """
+        return self.update_column(data, column_name='Redshift', row=row)
+
+    def get_column(self, column_name):
+        """
+        Get the data from a column in the table.
+        
+        Parameters
+        ----------
+        column_name: str
+            Header string of an existing column in the table.
+
+        Returns
+        -------
+        array
+            copy of the data array.
+        """
+        return np.asarray(deepcopy(self.app.data_collection['MOS Table'].get_component(column_name).data)) # noqa
+
+
     def add_column(self, data, column_name):
         """
         Add a new data column to the table or update the data in an existing column.
+        
+        If ``column_name`` is 'Redshift', the column will be synced with the redshift
+        in the respective spectrum objects.
 
         Parameters
         ----------
@@ -575,12 +591,33 @@ class Mosviz(ConfigHelper):
             copy of the data in the added or edited column.
         """
         table_data = self.app.data_collection['MOS Table']
+
         if data is None:
             data = [None]*table_data.size
         if not isinstance(data, (list, tuple, np.ndarray)):
             raise TypeError("data must be array-like")
         if len(data) != table_data.size:
             raise ValueError(f"data must have length {table_data.size} (rows in table)")
+
+        if column_name == 'Redshift':
+            # Then any non-provided values should default to those in the
+            # underlying Spectrum1D objects.  And any provided values should
+            # be pushed to the Spectrum1D and Spectrum 2D objects.
+            for row, d in enumerate(data):
+                sp1_name = table_data['1D Spectra'][row]
+                sp1 = self.app.data_collection[sp1_name].get_object()
+                sp2_name = table_data['2D Spectra'][row]
+                sp2 = self.app.data_collection[sp2_name].get_object()
+
+                if d is not None:
+                    # then push to the spectrum1D/2D
+                    sp1.redshift = d
+                    sp2.redshift = d
+                else:
+                    # then pull from the spectrum1D
+                    # TODO: should we check for consistency with the Spectrum2D?
+                    data[row] = sp1.redshift
+
         if column_name in [comp.label for comp in table_data.components]:
             table_data.update_components({table_data.get_component(column_name): data})
         else:
