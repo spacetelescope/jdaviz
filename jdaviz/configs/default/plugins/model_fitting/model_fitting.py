@@ -263,18 +263,11 @@ class ModelFitting(TemplateMixin):
 
     def vue_list_subsets(self, event):
         """Populate the spectral subset selection dropdown"""
-        temp_subsets = self.app.get_subsets_from_viewer("spectrum-viewer",
+        self._spectral_subsets = self.app.get_subsets_from_viewer("spectrum-viewer",
                                                         subset_type="spectral")
-        temp_dict = {}
-        # Attempt to filter out spatial subsets
-        #for key, region in temp_subsets.items():
-        #    if type(region) == RectanglePixelRegion:
-        #        temp_dict[key] = region
-        #self._spectral_subsets = temp_dict
-        #self.spectral_subset_items = ["Entire Spectrum"] + sorted(temp_dict.keys())
-        self._spectral_subsets = temp_subsets
-        self.spectral_subset_items = ["Entire Spectrum"] + sorted(temp_subsets.keys())
+        self.spectral_subset_items = ["Entire Spectrum"] + sorted(self._spectral_subsets.keys())
 
+    '''
     @observe("selected_subset")
     def _on_subset_selected(self, event):
         # If "None" selected, reset based on bounds of selected data
@@ -290,6 +283,7 @@ class ModelFitting(TemplateMixin):
             self._window = (spreg.lower, spreg.upper)
             self.spectral_min = spreg.lower.value
             self.spectral_max = spreg.upper.value
+    '''
 
     def vue_model_selected(self, event):
         # Add the model selected to the list of models

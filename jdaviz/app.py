@@ -564,7 +564,7 @@ class Application(VuetifyTemplate, HubListener):
             if len(mask) == 0:
                 # Mask should only be 0 if ApplyROI is used to incorrectly
                 # create subsets via the API
-                raise ValueError
+                raise ValueError("Mask has length 0, ApplyROI may have been used incorrectly")
 
             current_edge = 0
             combined_spec_region = None
