@@ -73,7 +73,6 @@ class SimpleAperturePhotometry(TemplateMixin):
                 telescope = meta['telescope']
             else:
                 telescope = meta.get('TELESCOP', '')
-            comp = self._selected_data.get_component(self._selected_data.main_components[0])
             if telescope == 'JWST':
                 if 'photometry' in meta and 'pixelarea_arcsecsq' in meta['photometry']:
                     self.pixel_area = meta['photometry']['pixelarea_arcsecsq']
@@ -196,10 +195,13 @@ class SimpleAperturePhotometry(TemplateMixin):
                           'pixarea_tot': None})
             if include_counts_fac:
                 ctfac = ctfac * (rawsum.unit / u.count)
-                d.update({'aperture_sum_counts': rawsum / ctfac,
+                sum_ct = rawsum / ctfac
+                d.update({'aperture_sum_counts': sum_ct,
+                          'aperture_sum_counts_err': np.sqrt(sum_ct.value) * sum_ct.unit,
                           'counts_fac': ctfac})
             else:
                 d.update({'aperture_sum_counts': None,
+                          'aperture_sum_counts_err': None,
                           'counts_fac': None})
             if include_flux_scale:
                 flux_scale = flux_scale * rawsum.unit
@@ -242,13 +244,15 @@ class SimpleAperturePhotometry(TemplateMixin):
             tmp = []
             for key, x in d.items():
                 if key in ('id', 'data_label', 'subset_label', 'background', 'pixarea_tot',
-                           'counts_fac', 'flux_scaling', 'timestamp'):
+                           'counts_fac', 'aperture_sum_counts_err', 'flux_scaling', 'timestamp'):
                     continue
                 if (isinstance(x, (int, float, u.Quantity)) and
-                        key not in ('xcenter', 'ycenter', 'npix')):
+                        key not in ('xcenter', 'ycenter', 'npix', 'aperture_sum_counts')):
                     x = f'{x:.4e}'
                 elif key == 'npix':
                     x = f'{x:.1f}'
+                elif key == 'aperture_sum_counts' and x is not None:
+                    x = f'{x:.4e} ({d["aperture_sum_counts_err"]:.4e})'
                 elif not isinstance(x, str):
                     x = str(x)
                 tmp.append({'function': key, 'result': x})

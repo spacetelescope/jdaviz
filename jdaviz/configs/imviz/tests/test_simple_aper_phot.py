@@ -42,13 +42,15 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert len(tbl) == 2
         assert tbl.colnames == [
             'id', 'xcenter', 'ycenter', 'sky_center', 'background', 'npix', 'aperture_sum',
-            'pixarea_tot', 'aperture_sum_counts', 'counts_fac', 'aperture_sum_mag', 'flux_scaling',
-            'mean', 'stddev', 'median', 'min', 'max', 'data_label', 'subset_label', 'timestamp']
+            'pixarea_tot', 'aperture_sum_counts', 'aperture_sum_counts_err', 'counts_fac',
+            'aperture_sum_mag', 'flux_scaling', 'mean', 'stddev', 'median', 'min', 'max',
+            'data_label', 'subset_label', 'timestamp']
         assert_array_equal(tbl['id'], [1, 2])
         assert_allclose(tbl['background'], 0)
         assert_quantity_allclose(tbl['npix'], 63.617251235193315 * u.pix)
         assert_array_equal(tbl['pixarea_tot'], None)
         assert_array_equal(tbl['aperture_sum_counts'], None)
+        assert_array_equal(tbl['aperture_sum_counts_err'], None)
         assert_array_equal(tbl['counts_fac'], None)
         assert_array_equal(tbl['aperture_sum_mag'], None)
         assert_array_equal(tbl['flux_scaling'], None)
