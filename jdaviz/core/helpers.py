@@ -7,6 +7,7 @@ See also https://github.com/spacetelescope/jdaviz/issues/104 for more details
 on the motivation behind this concept.
 """
 import re
+import warnings
 
 import numpy as np
 import astropy.units as u
@@ -65,7 +66,17 @@ class ConfigHelper(HubListener):
                 getattr(viewer, method)(msg)
 
     def show(self):
-        return self.app
+        try:
+            # If we're in a Jupyter Notebook interface, Jupyter knows what to do.
+            # Just return the app and Jupyter will render it
+            if get_ipython().__class__.__name__ != "ZMQInteractiveShell":
+                raise RuntimeError("Unsupported Kernel")
+        except Exception:
+            warnings.warn("Unable to detect Jupyter interface. \
+                          Visualization may not display properly",
+                          RuntimeWarning)
+        finally:
+            return self.app
 
     def load_data(self, data, parser_reference=None, **kwargs):
         self.app.load_data(data, parser_reference=parser_reference, **kwargs)
