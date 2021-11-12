@@ -7,9 +7,9 @@ from astropy.wcs import WCSSUB_SPECTRAL
 from glue.core.message import (SubsetCreateMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
-from specutils import Spectrum1D
+from specutils import Spectrum1D, SpectralRegion
 from specutils.utils import QuantityModel
-from traitlets import Any, Bool, Int, List, Unicode
+from traitlets import Any, Bool, Int, List, Unicode, observe
 from glue.core.data import Data
 from glue.core.subset import Subset, RangeSubsetState, OrState, AndState
 from glue.core.link_helpers import LinkSame
@@ -272,7 +272,6 @@ class ModelFitting(TemplateMixin):
                                                                   subset_type="spectral")
         self.spectral_subset_items = ["Entire Spectrum"] + sorted(self._spectral_subsets.keys())
 
-    '''
     @observe("selected_subset")
     def _on_subset_selected(self, event):
         # If "None" selected, reset based on bounds of selected data
@@ -288,7 +287,6 @@ class ModelFitting(TemplateMixin):
             self._window = (spreg.lower, spreg.upper)
             self.spectral_min = spreg.lower.value
             self.spectral_max = spreg.upper.value
-    '''
 
     def vue_model_selected(self, event):
         # Add the model selected to the list of models
