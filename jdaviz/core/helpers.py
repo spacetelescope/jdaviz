@@ -69,7 +69,7 @@ class ConfigHelper(HubListener):
         try:
             # If we're in a Jupyter Notebook interface, Jupyter knows what to do.
             # Just return the app and Jupyter will render it
-            if get_ipython().__class__.__name__ != "ZMQInteractiveShell":
+            if get_ipython().__class__.__name__ != "ZMQInteractiveShell": # noqa
                 raise RuntimeError("Unsupported Kernel")
         except Exception:
             warnings.warn("Unable to detect Jupyter interface. \
