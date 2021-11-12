@@ -605,9 +605,9 @@ class Application(VuetifyTemplate, HubListener):
                     this_type = type(value.subset_state)
 
                 # Skip spatial or spectral subsets if only the other is wanted
-                if subset_type == "spectral" and isinstance(this_type, RoiSubsetState):
+                if subset_type == "spectral" and this_type == RoiSubsetState:
                     continue
-                elif subset_type == "spatial" and isinstance(this_type, RangeSubsetState):
+                elif subset_type == "spatial" and this_type == RangeSubsetState:
                     continue
 
                 # Range selection on a profile is currently not supported in
