@@ -13,7 +13,6 @@ from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
 from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
 from traitlets import Dict, Bool, Unicode
-from regions import RectanglePixelRegion, PixCoord
 from specutils import Spectrum1D, SpectralRegion
 import numpy as np
 
@@ -628,7 +627,6 @@ class Application(VuetifyTemplate, HubListener):
                     # Grab the data units from the glue-astronomy spectral axis
                     # TODO: this needs to be much simpler; i.e. data units in
                     #  the glue component objects
-                    unit = value.data.coords.spectral_axis.unit
                     # Cases where there is a single subset
                     subregions_in_subset = _get_all_subregions(
                             np.where(value.to_mask() == True)[0], # noqa
