@@ -599,12 +599,13 @@ class Application(VuetifyTemplate, HubListener):
 
         for key, value in data.items():
             if isinstance(value, Subset):
-                # Skip spatial or spectral subsets if only the other is wanted
+                # Get the component type in a compound subset
                 if hasattr(value.subset_state, "state1"):
                     this_type = type(value.subset_state.state1)
                 else:
                     this_type = type(value.subset_state)
 
+                # Skip spatial or spectral subsets if only the other is wanted
                 if subset_type == "spectral" and isinstance(this_type, RoiSubsetState):
                     continue
                 elif subset_type == "spatial" and isinstance(this_type, RangeSubsetState):
@@ -629,21 +630,11 @@ class Application(VuetifyTemplate, HubListener):
                     #  the glue component objects
                     unit = value.data.coords.spectral_axis.unit
                     # Cases where there is a single subset
-                    if hasattr(value.subset_state, 'hi'):
-                        hi, lo = value.subset_state.hi, value.subset_state.lo
-                        xcen = 0.5 * (lo + hi)
-                        width = hi - lo
-                        region = RectanglePixelRegion(
-                            PixCoord(xcen, 0), width, 0,
-                            meta={'spectral_axis_unit': unit})
-                        regions[key] = region
-                    # This handles the case of multiple subregions in one subset
-                    else:
-                        subregions_in_subset = _get_all_subregions(
+                    subregions_in_subset = _get_all_subregions(
                             np.where(value.to_mask() == True)[0], # noqa
                             value.data.coords.spectral_axis)
 
-                        regions[key] = subregions_in_subset
+                    regions[key] = subregions_in_subset
                     continue
 
                 # Get the pixel coordinate [z] of the 3D data, repeating the
