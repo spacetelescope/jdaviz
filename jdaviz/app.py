@@ -619,6 +619,7 @@ class Application(VuetifyTemplate, HubListener):
                         subset_id=key, format='astropy-regions')
                     regions[key] = region
                     continue
+
                 # There is a special case for 1d data (which is also not
                 #  supported currently). We now eschew the use of the
                 #  translation machinery entirely and construct the astropy

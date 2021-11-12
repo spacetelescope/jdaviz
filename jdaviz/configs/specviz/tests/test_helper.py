@@ -166,7 +166,7 @@ def test_get_spectra_no_spectra_label_redshift_error(specviz_app, spectrum1d):
 def test_get_spectral_regions_unit(specviz_app, spectrum1d):
     # Ensure units we put in are the same as the units we get out
     specviz_app.load_spectrum(spectrum1d)
-    specviz_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(1, 3.5))
+    specviz_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(6200, 7000))
 
     subsets = specviz_app.get_spectral_regions()
     reg = subsets.get('Subset 1')
@@ -179,7 +179,8 @@ def test_get_spectral_regions_unit_conversion(specviz_app, spectrum1d):
     # If the reference (visible) data changes via unit conversion,
     # check that the region's units convert too
     specviz_app.load_spectrum(spectrum1d)
-    specviz_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(1, 3.5))
+    print(spectrum1d)
+    specviz_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(6200, 7000))
 
     # Convert the wavelength axis to microns
     new_spectral_axis = "micron"
