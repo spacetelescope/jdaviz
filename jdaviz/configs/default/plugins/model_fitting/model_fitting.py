@@ -73,6 +73,7 @@ class ModelFitting(TemplateMixin):
         self._selected_data_label = None
         self._spectral_subsets = {}
         self._window = None
+        self._original_mask = None
         if self.app.state.settings.get("configuration") == "cubeviz":
             self.cube_fit = True
 
@@ -243,6 +244,9 @@ class ModelFitting(TemplateMixin):
         # (won't affect calculations because these locations are masked)
         selected_spec.flux[np.isnan(selected_spec.flux)] = 0.0
 
+        # Save original mask so we can reset after applying a subset mask
+        self._original_mask = selected_spec.mask
+
         self._selected_data_label = event
 
         if self._units == {}:
@@ -255,6 +259,8 @@ class ModelFitting(TemplateMixin):
 
         # Also set the spectral min and max to default to the full range
         self.selected_subset = "Entire Spectrum"
+        # This is no longer needed for 1D but is preserved for now pending
+        # fixes to Cubeviz for multi-subregion subsets
         self._window = None
         self.spectral_min = selected_spec.spectral_axis[0].value
         self.spectral_max = selected_spec.spectral_axis[-1].value
@@ -388,13 +394,21 @@ class ModelFitting(TemplateMixin):
             return
         models_to_fit = self._reinitialize_with_fixed()
 
+        # Apply mask from selected subset
+        if self.selected_subset != "Entire Spectrum":
+            subset_mask = self.app.get_data_from_viewer("spectrum-viewer",
+                                        data_label = self.selected_subset).mask # noqa
+            if self._spectrum1d.mask is None:
+                self._spectrum1d.mask = subset_mask
+            else:
+                self._spectrum1d.mask += subset_mask
+
         try:
             fitted_model, fitted_spectrum = fit_model_to_spectrum(
                 self._spectrum1d,
                 models_to_fit,
                 self.model_equation,
-                run_fitter=True,
-                window=self._window)
+                run_fitter=True)
         except AttributeError:
             msg = SnackbarMessage("Unable to fit: model equation may be invalid",
                                   color="error", sender=self)
@@ -415,6 +429,9 @@ class ModelFitting(TemplateMixin):
         # Also update the _initialized_models so we can use these values
         # as the starting point for cube fitting
         self._update_initialized_parameters()
+
+        # Reset the data mask in case we use a different subset next time
+        self._spectrum1d.mask = self._original_mask
 
     def vue_fit_model_to_cube(self, *args, **kwargs):
 
