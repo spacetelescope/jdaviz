@@ -179,8 +179,6 @@ def test_get_spectral_regions_unit_conversion(specviz_app, spectrum1d):
     # If the reference (visible) data changes via unit conversion,
     # check that the region's units convert too
     specviz_app.load_spectrum(spectrum1d)
-    print(spectrum1d)
-    specviz_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(6200, 7000))
 
     # Convert the wavelength axis to microns
     new_spectral_axis = "micron"
@@ -193,6 +191,8 @@ def test_get_spectral_regions_unit_conversion(specviz_app, spectrum1d):
     specviz_app.app.add_data_to_viewer("spectrum-viewer",
                                        "Converted Spectrum",
                                        clear_other_data=True)
+
+    specviz_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(0.6, 0.7))
 
     # Retrieve the Subset
     subsets = specviz_app.get_spectral_regions()
