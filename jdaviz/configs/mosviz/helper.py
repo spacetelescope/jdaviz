@@ -669,7 +669,7 @@ class Mosviz(ConfigHelper):
         """
         return np.asarray(deepcopy(self.app.data_collection['MOS Table'].get_component(column_name).data)) # noqa
 
-    def add_column(self, column_name, data, show=True):
+    def add_column(self, column_name, data=None, show=True):
         """
         Add a new data column to the table or update the data in an existing column.
 
@@ -685,7 +685,7 @@ class Mosviz(ConfigHelper):
             Array-like set of data values, e.g. redshifts, RA, DEC, etc.
         show: bool or None
             Whether to show the column in the table (defaults to True).  If None, will
-            leave at current state.
+            show if the column is new, otherwise will leave at current state.
 
         Returns
         -------
