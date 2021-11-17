@@ -46,7 +46,7 @@ CONFIGS_DIR = os.path.join(os.path.dirname(__file__), 'configs')
 @click.option('--hotreload/--no-hotreload',
               default=False,
               help="Whether to enable hot-reloading of the UI (for development)")
-def main(filename, layout='default', browser='default', theme='light', verbosity='info', 
+def main(filename, layout='default', browser='default', theme='light', verbosity='info',
          hotreload=False):
     """
     Start a Jdaviz application instance with data loaded from FILENAME.
