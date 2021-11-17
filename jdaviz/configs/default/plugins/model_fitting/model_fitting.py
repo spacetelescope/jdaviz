@@ -7,12 +7,11 @@ from astropy.wcs import WCSSUB_SPECTRAL
 from glue.core.message import (SubsetCreateMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
-from regions import RectanglePixelRegion
 from specutils import Spectrum1D, SpectralRegion
 from specutils.utils import QuantityModel
 from traitlets import Any, Bool, Int, List, Unicode, observe
 from glue.core.data import Data
-from glue.core.subset import Subset, RangeSubsetState
+from glue.core.subset import Subset, RangeSubsetState, OrState, AndState
 from glue.core.link_helpers import LinkSame
 
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage, SnackbarMessage
@@ -74,6 +73,7 @@ class ModelFitting(TemplateMixin):
         self._selected_data_label = None
         self._spectral_subsets = {}
         self._window = None
+        self._original_mask = None
         if self.app.state.settings.get("configuration") == "cubeviz":
             self.cube_fit = True
 
@@ -125,7 +125,8 @@ class ModelFitting(TemplateMixin):
         self.dc_items = [layer_state.layer.label
                          for layer_state in viewer.state.layers
                          if (not isinstance(layer_state.layer, Subset)
-                             or not isinstance(layer_state.layer.subset_state, RangeSubsetState))]
+                             or not isinstance(layer_state.layer.subset_state,
+                                               (RangeSubsetState, OrState, AndState)))]
 
     def _param_units(self, param, order=0):
         """Helper function to handle units that depend on x and y"""
@@ -243,6 +244,9 @@ class ModelFitting(TemplateMixin):
         # (won't affect calculations because these locations are masked)
         selected_spec.flux[np.isnan(selected_spec.flux)] = 0.0
 
+        # Save original mask so we can reset after applying a subset mask
+        self._original_mask = selected_spec.mask
+
         self._selected_data_label = event
 
         if self._units == {}:
@@ -255,6 +259,8 @@ class ModelFitting(TemplateMixin):
 
         # Also set the spectral min and max to default to the full range
         self.selected_subset = "Entire Spectrum"
+        # This is no longer needed for 1D but is preserved for now pending
+        # fixes to Cubeviz for multi-subregion subsets
         self._window = None
         self.spectral_min = selected_spec.spectral_axis[0].value
         self.spectral_max = selected_spec.spectral_axis[-1].value
@@ -262,15 +268,9 @@ class ModelFitting(TemplateMixin):
 
     def vue_list_subsets(self, event):
         """Populate the spectral subset selection dropdown"""
-        temp_subsets = self.app.get_subsets_from_viewer("spectrum-viewer",
-                                                        subset_type="spectral")
-        temp_dict = {}
-        # Attempt to filter out spatial subsets
-        for key, region in temp_subsets.items():
-            if type(region) == RectanglePixelRegion:
-                temp_dict[key] = region
-        self._spectral_subsets = temp_dict
-        self.spectral_subset_items = ["Entire Spectrum"] + sorted(temp_dict.keys())
+        self._spectral_subsets = self.app.get_subsets_from_viewer("spectrum-viewer",
+                                                                  subset_type="spectral")
+        self.spectral_subset_items = ["Entire Spectrum"] + sorted(self._spectral_subsets.keys())
 
     @observe("selected_subset")
     def _on_subset_selected(self, event):
@@ -392,13 +392,21 @@ class ModelFitting(TemplateMixin):
             return
         models_to_fit = self._reinitialize_with_fixed()
 
+        # Apply mask from selected subset
+        if self.selected_subset != "Entire Spectrum":
+            subset_mask = self.app.get_data_from_viewer("spectrum-viewer",
+                                        data_label = self.selected_subset).mask # noqa
+            if self._spectrum1d.mask is None:
+                self._spectrum1d.mask = subset_mask
+            else:
+                self._spectrum1d.mask += subset_mask
+
         try:
             fitted_model, fitted_spectrum = fit_model_to_spectrum(
                 self._spectrum1d,
                 models_to_fit,
                 self.model_equation,
-                run_fitter=True,
-                window=self._window)
+                run_fitter=True)
         except AttributeError:
             msg = SnackbarMessage("Unable to fit: model equation may be invalid",
                                   color="error", sender=self)
@@ -419,6 +427,9 @@ class ModelFitting(TemplateMixin):
         # Also update the _initialized_models so we can use these values
         # as the starting point for cube fitting
         self._update_initialized_parameters()
+
+        # Reset the data mask in case we use a different subset next time
+        self._spectrum1d.mask = self._original_mask
 
     def vue_fit_model_to_cube(self, *args, **kwargs):
 

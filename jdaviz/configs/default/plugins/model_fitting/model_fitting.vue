@@ -29,34 +29,6 @@
               ></v-select>
             </v-col>
           </v-row>
-          <v-row>
-            <v-col>
-              <v-text-field
-                label="Lower spectral bound"
-                v-model="spectral_min"
-                hint="Lower bound of spectral region."
-                persistent-hint
-              >
-              </v-text-field>
-            </v-col>
-            <v-col cols = 2>
-              <span>{{ spectral_unit }}</span>
-            </v-col>
-          </v-row>
-          <v-row>
-            <v-col>
-              <v-text-field
-                label="Upper spectral bound"
-                v-model="spectral_max"
-                hint="Lower bound of spectral region."
-                persistent-hint
-              >
-              </v-text-field>
-            </v-col>
-            <v-col cols = 2>
-              <span>{{ spectral_unit }}</span>
-            </v-col>
-          </v-row>
         </v-container>
       </v-card-text>
       <v-divider></v-divider>
