@@ -1,6 +1,8 @@
 import time
 import threading
 from collections import deque
+import os
+from ipyvue import watch
 
 
 __all__ = []
@@ -70,3 +72,12 @@ class SnackbarQueue:
                              args=(timeout,),
                              daemon=True)
         x.start()
+
+
+def enable_hot_reloading():
+    try:
+        watch(os.path.dirname(__file__))
+    except ModuleNotFoundError:
+        print((
+            'Watchdog module, needed for hot reloading, not found.'
+            ' Please install with `pip install watchdog`'))

@@ -35,7 +35,7 @@ To enable the hot reloading of vue templates, install `watchdog`::
 
 And to the top of a notebook add::
 
-   import ipyvue
-   ipyvue.watch('../jdaviz')
+   from jdaviz import enable_hot_reloading
+   enable_hot_reloading()
 
 See :ref:`quickstart` to learn how to run ``jdaviz``.
