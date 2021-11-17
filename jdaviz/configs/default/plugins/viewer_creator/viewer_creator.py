@@ -3,14 +3,13 @@ from traitlets import List
 from jdaviz.core.events import NewViewerMessage
 from jdaviz.core.registries import tool_registry, viewer_registry
 from jdaviz.core.template_mixin import TemplateMixin
-from jdaviz.utils import load_template
 
 __all__ = ['ViewerCreator']
 
 
 @tool_registry('g-viewer-creator')
 class ViewerCreator(TemplateMixin):
-    template = load_template("viewer_creator.vue", __file__).tag(sync=True)
+    template_file = __file__, "viewer_creator.vue"
     viewer_types = List([]).tag(sync=True)
 
     def __init__(self, *args, **kwargs):

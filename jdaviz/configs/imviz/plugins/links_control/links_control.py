@@ -3,14 +3,13 @@ from traitlets import List, Unicode, Bool
 from jdaviz.configs.imviz.helper import link_image_data
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
-from jdaviz.utils import load_template
 
 __all__ = ['LinksControl']
 
 
 @tray_registry('imviz-links-control', label="Imviz Links Control")
 class LinksControl(TemplateMixin):
-    template = load_template("links_control.vue", __file__).tag(sync=True)
+    template_file = __file__, "links_control.vue"
 
     link_types = List(['Pixels', 'WCS']).tag(sync=True)
 

@@ -6,18 +6,18 @@
       :key="index"
       :data-items="dataItems"
       @resize="$emit('resize')"
-      @destroy="$emit('destroy', $event)"
+      :closefn="closefn"
       @data-item-selected="$emit('data-item-selected', $event)"
       @save-figure="$emit('save-figure', $event)"
       @call-viewer-method="$emit('call-viewer-method', $event)"
     ></g-viewer-tab>
     <gl-component
       v-for="(viewer, index) in stack.viewers"
-      :key="index"
+      :key="viewer.id"
       :title="viewer.id"
       :tab-id="viewer.id"
       @resize="$emit('resize')"
-      @destroy="$emit('destroy', viewer.id)"
+      @destroy="destroy($event, viewer.id)"
       style="display: flex; flex-flow: column; overflow: hidden"
     >
         <div>
@@ -175,7 +175,7 @@
 <script>
 module.exports = {
   name: "g-viewer-tab",
-  props: ["stack", "dataItems"],
+  props: ["stack", "dataItems", "closefn"],
   created() {
     this.$parent.childMe = () => {
       return this.$children[0];
@@ -184,6 +184,12 @@ module.exports = {
   methods: {
     computeChildrenPath() {
       return this.$parent.computeChildrenPath();
+    },
+    destroy(source, viewerId) {
+      /* There seems to be no close event provided by vue-golden-layout, so we can't distinguish
+       * between a user closing a tab or a re-render. However, when the user closes a tab, the
+       * source of the event is a vue component. We can use that distinction as a close signal. */
+      source.$root && this.closefn(viewerId);
     }
   },
   computed: {

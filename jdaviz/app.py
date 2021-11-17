@@ -5,7 +5,6 @@ import re
 import uuid
 from inspect import isclass
 
-import ipywidgets as w
 import ipyvue
 
 from astropy.nddata import CCDData
@@ -35,7 +34,7 @@ from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessag
                                 AddDataToViewerMessage, RemoveDataFromViewerMessage)
 from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registry,
                                     data_parser_registry)
-from jdaviz.utils import load_template, SnackbarQueue
+from jdaviz.utils import SnackbarQueue
 
 __all__ = ['Application']
 
@@ -63,6 +62,9 @@ ipyvue.register_component_from_file(None, 'j-external-link',
 ipyvue.register_component_from_file(None, 'j-docs-link',
                                     os.path.join(os.path.dirname(__file__),
                                                  'components/docs_link.vue'))
+# Register pure vue component. This allows us to do recursive component instantiation only in the
+# vue component file
+ipyvue.register_component_from_file('g-viewer-tab', "container.vue", __file__)
 
 ipyvue.register_component_from_file(None, 'j-play-pause-widget',
                                     os.path.join(os.path.dirname(__file__),
@@ -122,6 +124,9 @@ class ApplicationState(State):
     tray_items = ListCallbackProperty(
         docstring="List of plugins displayed in the sidebar tray area.")
 
+    tray_items_open = CallbackProperty(
+        [], docstring="The plugin(s) opened in sidebar tray area.")
+
     stack_items = ListCallbackProperty(
         docstring="Nested collection of viewers constructed to support the "
                   "Golden Layout viewer area.")
@@ -136,14 +141,7 @@ class Application(VuetifyTemplate, HubListener):
 
     state = GlueState().tag(sync=True)
 
-    template = load_template("app.vue", __file__).tag(sync=True)
-
-    # Pure vue components are added through the components attribute. This
-    #  allows us to do recursive component instantiation only in the vue
-    #  component file
-    components = Dict({"g-viewer-tab": load_template(
-        "container.vue", __file__, traitlet=False)}).tag(
-            sync=True, **w.widget_serialization)
+    template_file = __file__, "app.vue"
 
     loading = Bool(False).tag(sync=True)
     config = Unicode("").tag(sync=True)
@@ -1009,12 +1007,15 @@ class Application(VuetifyTemplate, HubListener):
                 if len(stack.get('children', [])) > 0:
                     stack['children'] = remove(stack['children'])
 
+            for empty_stack in [s for s in stack_items
+                                if not s['viewers'] and not s.get('children')]:
+                stack_items.remove(empty_stack)
+
             return stack_items
 
         remove(self.state.stack_items)
 
         # Also remove the viewer from the stored viewer instance dictionary
-        # FIXME: This is getting called twice for some reason
         if cid in self._viewer_store:
             del self._viewer_store[cid]
 
@@ -1247,6 +1248,7 @@ class Application(VuetifyTemplate, HubListener):
             'selected_data_items': [],
             'config': self.config,  # give viewer access to app config/layout
             'data_open': False,
+            'collapse': True,
             'reference': reference}
 
     def _on_new_viewer(self, msg, vid=None, name=None):

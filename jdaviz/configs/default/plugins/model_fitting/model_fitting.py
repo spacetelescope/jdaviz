@@ -17,7 +17,6 @@ from glue.core.link_helpers import LinkSame
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage, SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
-from jdaviz.utils import load_template
 from jdaviz.configs.default.plugins.model_fitting.fitting_backend import fit_model_to_spectrum
 from jdaviz.configs.default.plugins.model_fitting.initializers import initialize, model_parameters
 
@@ -36,7 +35,7 @@ MODELS = {
 @tray_registry('g-model-fitting', label="Model Fitting")
 class ModelFitting(TemplateMixin):
     dialog = Bool(False).tag(sync=True)
-    template = load_template("model_fitting.vue", __file__).tag(sync=True)
+    template_file = __file__, "model_fitting.vue"
     dc_items = List([]).tag(sync=True)
 
     spectral_min = Any().tag(sync=True)

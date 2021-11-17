@@ -12,7 +12,6 @@ from regions import RectanglePixelRegion
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
-from jdaviz.utils import load_template
 
 __all__ = ['MomentMap']
 
@@ -23,7 +22,7 @@ u.add_enabled_units([spaxel])
 
 @tray_registry('cubeviz-moment-maps', label="Moment Maps")
 class MomentMap(TemplateMixin):
-    template = load_template("moment_maps.vue", __file__).tag(sync=True)
+    template_file = __file__, "moment_maps.vue"
     n_moment = Any().tag(sync=True)
     dc_items = List([]).tag(sync=True)
     selected_data = Unicode().tag(sync=True)

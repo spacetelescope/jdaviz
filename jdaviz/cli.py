@@ -43,7 +43,11 @@ CONFIGS_DIR = os.path.join(os.path.dirname(__file__), 'configs')
               show_default=True,
               type=click.Choice(['debug', 'info', 'warning', 'error']),
               help="Verbosity of the application")
-def main(filename, layout='default', browser='default', theme='light', verbosity='info'):
+@click.option('--hotreload/--no-hotreload',
+              default=False,
+              help="Whether to enable hot-reloading of the UI (for development)")
+def main(filename, layout='default', browser='default', theme='light', verbosity='info',
+         hotreload=False):
     """
     Start a Jdaviz application instance with data loaded from FILENAME.
 
@@ -59,6 +63,8 @@ def main(filename, layout='default', browser='default', theme='light', verbosity
         Theme to use for Voila app or Jupyter Lab.
     verbosity : {'debug', 'info', 'warning', 'error'}
         Verbosity of the application.
+    hotreload: bool
+        Whether to enable hot-reloading of the UI (for development)
     """
     # Tornado Webserver py3.8 compatibility hotfix for windows
     if sys.platform == 'win32':
@@ -79,6 +85,9 @@ def main(filename, layout='default', browser='default', theme='light', verbosity
     os.environ['JDAVIZ_START_DIR'] = start_dir
 
     nbdir = tempfile.mkdtemp()
+
+    if hotreload:
+        notebook_template = notebook_template.replace("# PREFIX", "from jdaviz import enable_hot_reloading; enable_hot_reloading()")  # noqa: E501
 
     with open(os.path.join(nbdir, 'notebook.ipynb'), 'w') as nbf:
         nbf.write(notebook_template.replace('DATA_FILENAME', filepath).replace('JDAVIZ_VERBOSITY', verbosity).strip())  # noqa: E501
