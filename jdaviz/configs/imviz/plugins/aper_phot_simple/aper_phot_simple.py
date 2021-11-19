@@ -13,14 +13,13 @@ from jdaviz.configs.imviz.helper import layer_is_image_data
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage, SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
-from jdaviz.utils import load_template
 
 __all__ = ['SimpleAperturePhotometry']
 
 
 @tray_registry('imviz-aper-phot-simple', label="Imviz Simple Aperture Photometry")
 class SimpleAperturePhotometry(TemplateMixin):
-    template = load_template("aper_phot_simple.vue", __file__).tag(sync=True)
+    template_file = __file__, "aper_phot_simple.vue"
     dc_items = List([]).tag(sync=True)
     subset_items = List([]).tag(sync=True)
     background_value = Any(0).tag(sync=True)
