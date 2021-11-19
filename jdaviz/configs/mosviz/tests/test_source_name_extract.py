@@ -66,6 +66,7 @@ def test_filename_fallback():
                                     ["/path/to/test_file1.fits", "/path/to/test_file2.fits"]
                                     ) == ['test_file1.fits', 'test_file2.fits']
 
+
 def test_custom_header():
     hdu = PrimaryHDU()
     hdu.header['CUSTOM'] = "Target 1 Custom"
