@@ -70,3 +70,17 @@ def test_custom_header():
     hdu = PrimaryHDU()
     hdu.header['CUSTOM'] = "Target 1 Custom"
     assert _get_source_names_by_hdu([hdu], header_keys='CUSTOM') == ["Target 1 Custom"]
+
+
+def test_custom_header_priority_mixed():
+    hdu = PrimaryHDU()
+    hdu.header['CUSTOM'] = "Target 1 CUSTOM"
+    assert _get_source_names_by_hdu([hdu],
+                                    header_keys=['CUSTOM', 'CUSTOM2']
+                                    ) == ["Target 1 CUSTOM"]
+
+    hdu2 = PrimaryHDU()
+    hdu2.header['CUSTOM2'] = "Target 2 CUSTOM2"
+    assert _get_source_names_by_hdu([hdu, hdu2],
+                                    header_keys=['CUSTOM', 'CUSTOM2']
+                                    ) == ["Target 1 CUSTOM", "Target 2 CUSTOM2"]
