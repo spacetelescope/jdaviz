@@ -482,7 +482,8 @@ def _get_source_names_by_hdu(hdus, filepaths=None, header_keys=['SOURCEID', 'OBJ
         lookup)
     """
     src_names = list()
-    # If the user only provided one key to search, put it in a list for the upcoming for loop
+    # If the user only provided a key that's not already in a container or list, put it in
+    # one for the upcoming loop
     if not(isinstance(header_keys, Iterable) and not isinstance(header_keys, (str, dict))):
         header_keys = [header_keys]
     for indx, hdu in enumerate(hdus):
