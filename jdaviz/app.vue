@@ -135,6 +135,10 @@ export default {
 </script>
 
 <style id="web-app">
+* {
+  /* otherwise, voila will override box-sizing to unset which screws up layouts */
+  box-sizing: border-box !important;
+}
 
 /* fix for loading overlay z-index */
 div.output_wrapper {
@@ -202,7 +206,7 @@ div.output_wrapper {
   margin-top: 0px;
 }
 
-.vuetify-styles .lm_header ul {
+.lm_header ul {
   padding-left: 0;
 }
 
@@ -216,16 +220,16 @@ div.output_wrapper {
   margin: 0px;
 }
 
-.vuetify-styles .v-expansion-panel-content__wrap {
+.v-expansion-panel-content__wrap {
   padding: 0px;
   margin: 0px;
 }
 
-.vuetify-styles .v-toolbar__items>span>.v-btn {
+.v-toolbar__items > span > .v-btn {
   /* allow voolbar-items styling to pass through tooltip wrapping span */
-  /* css is copied from .vuetify-styles .v-toolbar__items>.v-btn */
+  /* css is copied from .v-toolbar__items>.v-btn */
   border-radius: 0;
-  height: 100%!important;
+  height: 100% !important;
   max-height: none;
 }
 
