@@ -15,6 +15,8 @@ Imviz
 
 - New plugin to control image linking via GUI. [#909]
 
+- New plugin to perform simple aperture photometry. [#938]
+
 Mosviz
 ^^^^^^
 
@@ -55,6 +57,9 @@ Imviz
 
 - ``imviz.get_interactive_regions()`` no longer produces long traceback
   for unsupported region shapes. [#906]
+
+- Imviz now parses some image metadata into ``glue`` and understands
+  ELECTRONS and ELECTRONS/S defined in FITS BUNIT header keyword. [#938]
 
 Mosviz
 ^^^^^^

@@ -31,3 +31,10 @@ users can load data into the application through code using the :meth:`~jdaviz.c
 method, which takes as input either the name of a local file, an
 :class:`~astropy.nddata.NDData`, :class:`~astropy.io.fits.HDUList`,
 or :class:`~astropy.io.fits.ImageHDU` object.
+
+The example below loads the first science extension of the given FITS file into Imviz::
+
+    from jdaviz import Imviz
+    imviz = Imviz()
+    imviz.app
+    imviz.load_data("/path/to/data/image.fits")

@@ -3,14 +3,16 @@ import pytest
 from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import NDData, StdDevUncertainty
+from astropy.tests.helper import assert_quantity_allclose
 from astropy.utils.data import download_file
 from astropy.wcs import WCS
 from gwcs import WCS as GWCS
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_array_equal
 from regions import CirclePixelRegion
 from skimage.io import imsave
 
 from jdaviz.configs.imviz.helper import split_filename_with_fits_ext
+from jdaviz.configs.imviz.plugins.aper_phot_simple.aper_phot_simple import SimpleAperturePhotometry
 from jdaviz.configs.imviz.plugins.parsers import (
     parse_data, _validate_fits_image2d, _validate_bunit, _parse_image)
 
@@ -50,7 +52,9 @@ def test_validate_bunit():
         _validate_bunit('NOT_A_UNIT')
 
     assert not _validate_bunit('Mjy-sr', raise_error=False)  # Close but not quite
-    assert _validate_bunit('MJy/sr')
+    assert _validate_bunit('MJy/sr') == 'MJy/sr'
+    assert _validate_bunit('ELECTRONS/S') == 'electron/s'
+    assert _validate_bunit('ELECTRONS') == 'electron'
 
 
 class TestParseImage:
@@ -116,13 +120,14 @@ class TestParseImage:
     def test_parse_nddata_with_everything(self, imviz_app):
         ndd = NDData([[1, 2], [3, 4]], mask=[[True, False], [False, False]],
                      uncertainty=StdDevUncertainty([[0.1, 0.2], [0.3, 0.4]]),
-                     unit=u.MJy/u.sr, wcs=WCS(naxis=2))
+                     unit=u.MJy/u.sr, wcs=WCS(naxis=2), meta={'name': 'my_ndd'})
         parse_data(imviz_app.app, ndd, data_label='some_data', show_in_viewer=False)
         for i, attrib in enumerate(['DATA', 'MASK', 'UNCERTAINTY']):
             data = imviz_app.app.data_collection[i]
             comp = data.get_component(attrib)
             assert data.label == f'some_data[{attrib}]'
             assert data.shape == (2, 2)
+            assert data.meta['name'] == 'my_ndd'
             assert isinstance(data.coords, WCS)
             assert comp.data.shape == (2, 2)
             if attrib == 'MASK':
@@ -155,6 +160,7 @@ class TestParseImage:
             fpath = tmp_path / f'myfits_{i}.fits'
             flist.append(str(fpath))
             hdu = fits.PrimaryHDU(np.zeros((2, 2)) + i)
+            hdu.header['foo'] = 'bar'
             hdu.writeto(fpath, overwrite=True)
 
         flist = ','.join(flist)
@@ -165,6 +171,7 @@ class TestParseImage:
             comp = data.get_component('PRIMARY,1')
             assert data.label == f'myfits_{i}[PRIMARY,1]'
             assert data.shape == (2, 2)
+            assert data.meta['FOO'] == 'bar'
             np.testing.assert_allclose(comp.data.mean(), i)
 
         with pytest.raises(ValueError, match='Do not manually overwrite data_label'):
@@ -187,10 +194,44 @@ class TestParseImage:
         # --- Since download is expensive, we attach GWCS-specific tests here. ---
 
         # Ensure interactive region supports GWCS. Also see test_regions.py
-        imviz_app._apply_interactive_region('bqplot:circle', (0, 0), (1000, 1000))
+        imviz_app._apply_interactive_region('bqplot:circle', (965, 1122), (976.9, 1110.1))  # Star
         subsets = imviz_app.get_interactive_regions()
         assert list(subsets.keys()) == ['Subset 1'], subsets
         assert isinstance(subsets['Subset 1'], CirclePixelRegion)
+
+        # Test simple aperture photometry plugin.
+        phot_plugin = SimpleAperturePhotometry(app=imviz_app.app)
+        phot_plugin._on_viewer_data_changed()
+        phot_plugin.vue_data_selected('contents[DATA]')
+        phot_plugin.vue_subset_selected('Subset 1')
+        phot_plugin.background_value = 0.22  # Median on whole array
+        # NOTE: jwst.datamodels.find_fits_keyword("PHOTMJSR")
+        phot_plugin.counts_factor = (data.meta['photometry']['conversion_megajanskys'] /
+                                     data.meta['exposure']['exposure_time'])
+        assert_allclose(phot_plugin.counts_factor, 0.0036385915646798953)
+        phot_plugin.flux_scaling = 1  # Simple mag, no zeropoint
+        phot_plugin.vue_do_aper_phot()
+        tbl = imviz_app.get_aperture_photometry_results()
+        assert_quantity_allclose(tbl[0]['xcenter'], 970.95 * u.pix)
+        assert_quantity_allclose(tbl[0]['ycenter'], 1116.05 * u.pix)
+        sky = tbl[0]['sky_center']
+        assert_allclose(sky.ra.deg, 80.48419863)
+        assert_allclose(sky.dec.deg, -69.49460838)
+        data_unit = u.MJy / u.sr
+        assert_quantity_allclose(tbl[0]['background'], 0.22 * data_unit)
+        assert_quantity_allclose(tbl[0]['npix'], 111.22023392 * u.pix)
+        assert_quantity_allclose(tbl[0]['aperture_sum'], 4.93689560e-09 * u.MJy)
+        assert_quantity_allclose(tbl[0]['pixarea_tot'], 1.0384377922763469e-11 * u.sr)
+        assert_quantity_allclose(tbl[0]['aperture_sum_counts'], 130659.2466386 * u.count)
+        assert_quantity_allclose(tbl[0]['aperture_sum_counts_err'], 361.46818205562715 * u.count)
+        assert_quantity_allclose(tbl[0]['counts_fac'], 0.0036385915646798953 * (data_unit / u.ct))
+        assert_quantity_allclose(tbl[0]['aperture_sum_mag'], -6.692683645358997 * u.mag)
+        assert_quantity_allclose(tbl[0]['flux_scaling'], 1 * data_unit)
+        assert_quantity_allclose(tbl[0]['mean'], 4.34584047 * data_unit)
+        assert_quantity_allclose(tbl[0]['stddev'], 15.61862628 * data_unit)
+        assert_quantity_allclose(tbl[0]['median'], 0.43709442 * data_unit)
+        assert_quantity_allclose(tbl[0]['min'], -0.00485992 * data_unit, rtol=1e-5)
+        assert_quantity_allclose(tbl[0]['max'], 138.87786865 * data_unit, rtol=1e-5)
 
         # --- Back to parser testing below. ---
 
@@ -201,6 +242,7 @@ class TestParseImage:
         data = imviz_app.app.data_collection[1]
         comp = data.get_component('DQ')
         assert data.label == 'jw01072001001_01101_00001_nrcb1_cal[DQ]'
+        assert data.meta['aperture']['name'] == 'NRCB5_FULL'
         assert comp.units == ''
 
         # Pass in HDUList directly + ext (name only), use given label
@@ -253,6 +295,7 @@ class TestParseImage:
         assert data.label == 'contents[SCI,1]'  # download_file returns cache loc
         assert data.shape == (2048, 2048)
         assert data.coords is None
+        assert data.meta['RADESYS'] == 'ICRS'
         assert comp.units == 'DN/s'
         assert comp.data.shape == (2048, 2048)
 
@@ -262,14 +305,48 @@ class TestParseImage:
         filename = download_file(url, cache=True)
 
         # Default behavior: Load first image
-        parse_data(imviz_app.app, filename, show_in_viewer=False)
+        parse_data(imviz_app.app, filename, show_in_viewer=True)
         data = imviz_app.app.data_collection[0]
         comp = data.get_component('SCI,1')
         assert data.label == 'contents[SCI,1]'  # download_file returns cache loc
         assert data.shape == (4300, 4219)
+        assert_allclose(data.meta['PHOTFLAM'], 7.8711728E-20)
         assert isinstance(data.coords, WCS)
-        assert comp.units == ''  # "ELECTRONS/S" is not valid
+        assert comp.units == 'electron/s'
         assert comp.data.shape == (4300, 4219)
+
+        # --- Since download is expensive, we attach FITS WCS-specific tests here. ---
+
+        # Test simple aperture photometry plugin.
+        imviz_app._apply_interactive_region('bqplot:ellipse', (1465, 2541), (1512, 2611))  # Galaxy
+        phot_plugin = SimpleAperturePhotometry(app=imviz_app.app)
+        phot_plugin._on_viewer_data_changed()
+        phot_plugin.vue_data_selected('contents[SCI,1]')
+        phot_plugin.vue_subset_selected('Subset 1')
+        phot_plugin.background_value = 0.0014  # Median on whole array
+        assert_allclose(phot_plugin.pixel_area, 0.0025)  # Not used but still auto-populated
+        phot_plugin.vue_do_aper_phot()
+        tbl = imviz_app.get_aperture_photometry_results()
+        assert_quantity_allclose(tbl[0]['xcenter'], 1488.5 * u.pix)
+        assert_quantity_allclose(tbl[0]['ycenter'], 2576 * u.pix)
+        sky = tbl[0]['sky_center']
+        assert_allclose(sky.ra.deg, 3.6840882015888323)
+        assert_allclose(sky.dec.deg, 10.802065746813046)
+        data_unit = u.electron / u.s
+        assert_quantity_allclose(tbl[0]['background'], 0.0014 * data_unit)
+        assert_quantity_allclose(tbl[0]['npix'], 645.98998939 * u.pix)
+        assert_quantity_allclose(tbl[0]['aperture_sum'], 81.01186025 * data_unit)
+        assert_array_equal(tbl[0]['pixarea_tot'], None)
+        assert_array_equal(tbl[0]['aperture_sum_counts'], None)
+        assert_array_equal(tbl[0]['aperture_sum_counts_err'], None)
+        assert_array_equal(tbl[0]['counts_fac'], None)
+        assert_array_equal(tbl[0]['aperture_sum_mag'], None)
+        assert_array_equal(tbl[0]['flux_scaling'], None)
+        assert_quantity_allclose(tbl[0]['mean'], 0.12466364 * data_unit)
+        assert_quantity_allclose(tbl[0]['stddev'], 0.1784373 * data_unit)
+        assert_quantity_allclose(tbl[0]['median'], 0.06988327 * data_unit)
+        assert_quantity_allclose(tbl[0]['min'], 0.0013524 * data_unit, rtol=1e-5)
+        assert_quantity_allclose(tbl[0]['max'], 1.5221194 * data_unit, rtol=1e-5)
 
         # Request specific extension (name only), use given label
         parse_data(imviz_app.app, filename, ext='CTX',
@@ -277,6 +354,7 @@ class TestParseImage:
         data = imviz_app.app.data_collection[1]
         comp = data.get_component('CTX,1')
         assert data.label == 'jclj01010_drz[CTX,1]'
+        assert data.meta['EXTNAME'] == 'CTX'
         assert comp.units == ''  # BUNIT is not set
 
         # Request specific extension (name + ver), use given label
@@ -285,6 +363,7 @@ class TestParseImage:
         data = imviz_app.app.data_collection[2]
         comp = data.get_component('WHT,1')
         assert data.label == 'jclj01010_drz[WHT,1]'
+        assert data.meta['EXTNAME'] == 'WHT'
         assert comp.units == ''  # BUNIT is not set
 
         # Pass in file obj directly
@@ -293,18 +372,21 @@ class TestParseImage:
             parse_data(imviz_app.app, pf, show_in_viewer=False)
             data = imviz_app.app.data_collection[3]
             assert data.label.startswith('imviz_data|') and data.label.endswith('[SCI,1]')
+            assert_allclose(data.meta['PHOTFLAM'], 7.8711728E-20)
             assert 'SCI,1' in data.components
 
             # Request specific extension (name only), use given label
             parse_data(imviz_app.app, pf, ext='CTX', show_in_viewer=False)
             data = imviz_app.app.data_collection[4]
             assert data.label.startswith('imviz_data|') and data.label.endswith('[CTX,1]')
+            assert data.meta['EXTNAME'] == 'CTX'
             assert 'CTX,1' in data.components
 
             # Pass in HDU directly, use given label
             parse_data(imviz_app.app, pf[2], data_label='foo', show_in_viewer=False)
             data = imviz_app.app.data_collection[5]
             assert data.label == 'foo[WHT,1]'
+            assert data.meta['EXTNAME'] == 'WHT'
             assert 'WHT,1' in data.components
 
             # Load all extensions

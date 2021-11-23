@@ -19,6 +19,7 @@ toolbar:
   - g-coords-info
 tray:
   - imviz-links-control
+  - imviz-aper-phot-simple
 viewer_area:
   - container: col
     children:
