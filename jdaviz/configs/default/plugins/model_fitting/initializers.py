@@ -9,6 +9,7 @@ import numpy as np
 
 import astropy.modeling.models as models
 from astropy import units as u
+
 from jdaviz.models import BlackBody
 
 __all__ = [
@@ -38,7 +39,7 @@ def get_model_parameters(model_cls, model_kwargs={}):
     if model_cls.__name__ == 'Polynomial1D':
         # then the parameters are not stored, as they depend on the polynomial order
         degree = model_kwargs.get('degree', 1)
-        return ['c{}'.format(n) for n in range(degree + 1)]
+        return [f'c{n}' for n in range(degree + 1)]
 
     return model_cls.param_names
 
@@ -222,7 +223,7 @@ class _Sigma_LineProfile1DInitializer(_LineProfile1DInitializer):
         _setattr(instance, name, WIDTH, fwhm / 2.355)
 
 
-class _BlackBodyInitializer(object):
+class _BlackBodyInitializer:
     """
     Initialization that is specific to the BlackBody model.
 
