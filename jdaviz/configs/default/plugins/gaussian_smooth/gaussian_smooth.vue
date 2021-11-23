@@ -37,6 +37,26 @@
           ></v-text-field>
         </v-col>
       </v-row>
+      <v-row v-if="selected_data">
+        <v-select v-if="selected_mode=='Spatial'"
+          :items="viewers"
+          v-model="selected_viewer"
+          label='Replace data in viewer'
+          hint='Replace contents in the specified viewer with results from this plugin.  Results will be available in the data dropdown in all image viewers.'
+          persistent-hint></v-select>
+        <v-switch v-else-if="selected_data_is_1d"
+          label="Add to viewer"
+          hint="Show results immediately by adding to the spectral viewer.  Smoothed data will be available in the data menu of each viewer."
+          v-model="add_replace_results"
+          persistent-hint>
+        </v-switch>
+        <v-switch v-else
+          label="Replace data in viewer"
+          hint="Show results immediately by replacing the displayed data in the respective image viewer.  Smoothed data will be available in the data menu of each viewer."
+          v-model="add_replace_results"
+          persistent-hint>
+        </v-switch>
+      </v-row>
     </v-container>
     <!-- <v-divider></v-divider> -->
 

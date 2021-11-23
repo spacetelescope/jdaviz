@@ -75,6 +75,23 @@
           <span>{{ spectral_unit }}</span>
         </v-col>
       </v-row>
+      <v-row>
+        <v-select
+          :items="viewers"
+          v-model="selected_viewer"
+          label='Results in Viewer'
+          hint='Replace contents in the specified viewer with results from this plugin.  Results will be available in the data dropdown in all image viewers.'
+          persistent-hint
+        ></v-select>
+      </v-row>
+    </v-container>
+    <v-container v-else>
+      <v-switch
+        label="Add to viewer"
+        hint="Show results immediately by adding to the spectral viewer.  New model will be available in the data menu of each spectral viewer."
+        v-model="add_replace_results"
+        persistent-hint>
+      </v-switch>
     </v-container>
     <!-- <v-divider></v-divider> -->
 

@@ -36,6 +36,12 @@ class MomentMap(TemplateMixin):
     spectral_subset_items = List(["None"]).tag(sync=True)
     selected_subset = Unicode("None").tag(sync=True)
 
+    # NOTE: this is currently cubeviz-specific so will need to be updated
+    # to be config-specific if using within other viewer configurations.
+    viewer_to_id = {'Left': 'cubeviz-0', 'Center': 'cubeviz-1', 'Right': 'cubeviz-2'}
+    viewers = List(['None', 'Left', 'Center', 'Right']).tag(sync=True)
+    selected_viewer = Unicode('None').tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -145,6 +151,11 @@ class MomentMap(TemplateMixin):
         msg = SnackbarMessage("{} added to data collection".format(label),
                               sender=self, color="success")
         self.hub.broadcast(msg)
+
+        if self.selected_viewer != 'None':
+            # replace the contents in the selected viewer with the results from this plugin
+            self.app.add_data_to_viewer(self.viewer_to_id.get(self.selected_viewer),
+                                        label, clear_other_data=True)
 
     def vue_save_as_fits(self, event):
         self.moment.write(self._filename)
