@@ -77,6 +77,7 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin):
             if x is None or y is None:  # Out of bounds
                 self.label_mouseover.pixel = ""
                 self.label_mouseover.world = ""
+                self.label_mouseover.world_deg = ""
                 self.label_mouseover.value = ""
                 return
 
@@ -91,14 +92,18 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin):
                 # we aren't actually guaranteed to get a SkyCoord out, just for images
                 # with valid celestial WCS
                 try:
-                    celestial_coordinates = (image.coords.pixel_to_world(x, y).icrs
-                                             .to_string('hmsdms', precision=4, pad=True))
+                    coo = image.coords.pixel_to_world(x, y).icrs
+                    celestial_coordinates = coo.to_string('hmsdms', precision=4, pad=True)
+                    celestial_coordinates_deg = coo.to_string('decimal', precision=12, pad=True)
                 except Exception:
                     self.label_mouseover.world = ''
+                    self.label_mouseover.world_deg = ''
                 else:
                     self.label_mouseover.world = f'{celestial_coordinates:32s} (ICRS)'
+                    self.label_mouseover.world_deg = f'{celestial_coordinates_deg} (deg)'
             else:
                 self.label_mouseover.world = ''
+                self.label_mouseover.world_deg = ''
 
             # Extract data values at this position.
             # TODO: for now we just use the first visible layer but we should think
@@ -117,6 +122,7 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin):
 
             self.label_mouseover.pixel = ""
             self.label_mouseover.world = ""
+            self.label_mouseover.world_deg = ""
             self.label_mouseover.value = ""
 
         elif data['event'] == 'keydown' and data['key'] == 'b':

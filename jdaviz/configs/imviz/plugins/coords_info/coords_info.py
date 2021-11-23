@@ -11,4 +11,5 @@ class CoordsInfo(TemplateMixin):
     template_file = __file__, "coords_info.vue"
     pixel = Unicode("").tag(sync=True)
     world = Unicode("").tag(sync=True)
+    world_deg = Unicode("").tag(sync=True)
     value = Unicode("").tag(sync=True)
