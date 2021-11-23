@@ -264,9 +264,12 @@ class BlackBody(Fittable1DModel):
     @output_units.setter
     def output_units(self, unit):
         """ Ensure `output_units` is valid."""
-        if isinstance(unit, str) and unit in ['SNU', 'SLAM', 'FNU', 'FLAM']:
-            # let's provide some convenience for passing these as strings
-            unit = self._native_output_units.get(unit)
+        if isinstance(unit, str):
+            if unit in ['SNU', 'SLAM', 'FNU', 'FLAM']:
+                # let's provide some convenience for passing these as strings
+                unit = self._native_output_units.get(unit)
+            else:
+                unit = u.Unit(unit)
 
         if unit is None:
             pass

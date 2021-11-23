@@ -8,6 +8,7 @@ first guesses by the fitting algorithms.
 import numpy as np
 
 import astropy.modeling.models as models
+from astropy import units as u
 from jdaviz.models import BlackBody
 
 __all__ = [
@@ -221,6 +222,51 @@ class _Sigma_LineProfile1DInitializer(_LineProfile1DInitializer):
         _setattr(instance, name, WIDTH, fwhm / 2.355)
 
 
+class _BlackBodyInitializer(object):
+    """
+    Initialization that is specific to the BlackBody model.
+
+    Notes
+    -----
+    The fit is sensitive to the scale parameter as if it ever tries
+    to go below zero, the fit will get stuck at 0 (without imposed
+    parameter limits)
+    """
+    def initialize(self, instance, x, y):
+        """
+        Initialize the model
+
+        Parameters
+        ----------
+        instance: `~astropy.modeling.models`
+            The model to initialize.
+
+        x, y: numpy.ndarray
+            The data to use to initialize from.
+
+        Returns
+        -------
+        instance: `~astropy.modeling.models`
+            The initialized model.
+        """
+        y_mean = np.nanmean(y)
+
+        # The y-unit could contain a scale factor (like 1e-7 * FLAM).  We
+        # need to account for this in our dimensionless scale factor guess.
+        # We could make this smarter if we also made a guess for the temperature
+        # based on the peak wavelength/frequency and then estimated the amplitude,
+        # but just getting within an order of magnitude should help significantly
+        y_unit_scaled = y.unit
+        for native_output_unit in instance._native_output_units.values():
+            if y_unit_scaled.is_equivalent(native_output_unit):
+                y_mean = y_mean.to(native_output_unit)
+                break
+
+        instance.scale = y_mean.value * u.dimensionless_unscaled
+
+        return instance
+
+
 def _setattr(instance, mname, pname, value):
     """
     Sets parameter value by mapping parameter name to model type.
@@ -266,6 +312,7 @@ _initializers = {
     'MexicanHat1D':                _Sigma_LineProfile1DInitializer,  # noqa
     'Trapezoid1D':                 _Width_LineProfile1DInitializer,  # noqa
     'Linear1D':                    _Linear1DInitializer,  # noqa
+    'BlackBody':                   _BlackBodyInitializer,  # noqa
     # 'Spline1D':                   spline.Spline1DInitializer
 }
 

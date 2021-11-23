@@ -140,6 +140,8 @@ class ModelFitting(TemplateMixin):
             return str(u.Unit(self._units["y"]) / u.Unit(self._units["x"])**order)
         elif param == "temperature":
             return str(u.K)
+        elif param == "scale" and model_type == "BlackBody":
+            return str("")
 
         return self._units["y"] if param in y_params else self._units["x"]
 
@@ -340,6 +342,9 @@ class ModelFitting(TemplateMixin):
             # the new model component.  We need to store that with the
             # model itself as the value could change for another component.
             new_model["model_kwargs"] = {"degree": self.poly_order}
+        elif self.temp_model == "BlackBody":
+            new_model["model_kwargs"] = {"output_units": self._units["y"],
+                                         "bounds": {"scale": (0.0, None)}}
 
         initial_values = {}
         for param_name in get_model_parameters(model_cls, new_model["model_kwargs"]):
@@ -359,10 +364,6 @@ class ModelFitting(TemplateMixin):
                 initial_val = default_param.quantity.to(default_units)
 
             initial_values[param_name] = initial_val
-            new_model["parameters"].append({"name": param_name,
-                                            "value": initial_val.value,
-                                            "unit": default_units,
-                                            "fixed": False})
 
         initialized_model = initialize(
             MODELS[self.temp_model](name=self.temp_name,
@@ -370,6 +371,15 @@ class ModelFitting(TemplateMixin):
                                     **new_model.get("model_kwargs", {})),
             self._spectrum1d.spectral_axis,
             self._spectrum1d.flux)
+
+        # need to loop over parameters again as the initializer may have overriden
+        # the original default value
+        for param_name in get_model_parameters(model_cls, new_model["model_kwargs"]):
+            param_quant = getattr(initialized_model, param_name)
+            new_model["parameters"].append({"name": param_name,
+                                            "value": param_quant.value,
+                                            "unit": str(param_quant.unit),
+                                            "fixed": False})
 
         self._initialized_models[self.temp_name] = initialized_model
 
