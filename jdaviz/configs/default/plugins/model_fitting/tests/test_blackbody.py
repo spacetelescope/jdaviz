@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+# copied and modified from astropy: https://github.com/astropy/astropy/pull/12304
 """Tests for physical functions."""
 # pylint: disable=no-member, invalid-name
 import pytest

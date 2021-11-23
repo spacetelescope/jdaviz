@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+# copied and modified from astropy: https://github.com/astropy/astropy/pull/12304
 """
 Models that have physical origins.
 """
@@ -269,7 +270,11 @@ class BlackBody(Fittable1DModel):
                 # let's provide some convenience for passing these as strings
                 unit = self._native_output_units.get(unit)
             else:
-                unit = u.Unit(unit)
+                try:
+                    unit = u.Unit(unit)
+                except ValueError:
+                    # then the string wasn't a valid unit, we'll allow the error below to be raised
+                    pass
 
         if unit is None:
             pass
