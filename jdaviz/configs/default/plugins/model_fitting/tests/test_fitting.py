@@ -6,6 +6,7 @@ import pytest
 from specutils.spectra import Spectrum1D
 
 from jdaviz.configs.default.plugins.model_fitting import fitting_backend as fb
+from jdaviz.configs.default.plugins.model_fitting import initializers
 
 
 SPECTRUM_SIZE = 200  # length of spectrum
@@ -23,6 +24,22 @@ def build_spectrum(sigma=0.1):
     noise = np.random.normal(4., sigma, x.shape)
 
     return x, y + noise
+
+
+def test_model_params():
+    # expected model parameters:
+    model_parameters = {"Gaussian1D": ["amplitude", "stddev", "mean"],
+                        "Const1D": ["amplitude"],
+                        "Linear1D": ["slope", "intercept"],
+                        "PowerLaw1D": ["amplitude", "x_0", "alpha"],
+                        "Lorentz1D": ["amplitude", "x_0", "fwhm"],
+                        "Voigt1D": ["x_0", "amplitude_L", "fwhm_L", "fwhm_G"],
+                        }
+
+    for model_name, expected_params in model_parameters.items():
+        params = initializers.get_model_parameters(model_name)
+        assert len(params) == len(expected_params)
+        assert np.all([p in expected_params for p in params])
 
 
 def test_fitting_backend():

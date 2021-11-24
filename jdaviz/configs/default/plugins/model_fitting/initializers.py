@@ -28,6 +28,7 @@ MODELS = {
      'Gaussian1D': models.Gaussian1D,
      'Voigt1D': models.Voigt1D,
      'Lorentz1D': models.Lorentz1D,
+     'PowerLaw1D': models.PowerLaw1D,
      'BlackBody': BlackBody
      }
 
