@@ -145,15 +145,15 @@ def test_blackbody_exceptions_and_warnings():
     # test that passing flux units to scale both converts to native units AND
     # divides internal scale by pi (since units include steradians)
     bb = BlackBody(5000 * u.K, scale=1.0 * u.Jy)
-    assert(bb.scale == 1.0*u.Jy.to(u.erg / (u.cm ** 2 * u.s * u.Hz))/np.pi)
-    assert(bb.output_units == u.Jy)
+    assert bb.scale == 1.0*u.Jy.to(u.erg / (u.cm ** 2 * u.s * u.Hz))/np.pi
+    assert bb.output_units == u.Jy
     # ... but surface brightness is not divided by pi (and in this case have
     # native units passed)
     bb = BlackBody(5000 * u.K, scale=1.0 * u.erg / (u.cm ** 2 * u.s * u.AA * u.sr))
-    assert(bb.scale == 1.0)
+    assert bb.scale == 1.0
     # or when passing in output_units instead of scale
     bb = BlackBody(5000 * u.K, scale=1.0, output_units=u.Jy)
-    assert(bb.scale == 1.0)
+    assert bb.scale == 1.0
 
 
 def test_blackbody_array_temperature():
