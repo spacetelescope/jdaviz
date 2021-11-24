@@ -296,12 +296,12 @@ def test_table_scrolling(mosviz_app, image, spectrum1d, spectrum2d):
     # (otherwise it would be None which is a case not handled)
     table.widget_table.highlighted = 0
     table.next_row()
-    assert(table.widget_table.highlighted == 1)
+    assert table.widget_table.highlighted == 1
     table.next_row()
     # with only 2 rows, this should wrap back to 0
-    assert(table.widget_table.highlighted == 0)
+    assert table.widget_table.highlighted == 0
     table.prev_row()
-    assert(table.widget_table.highlighted == 1)
+    assert table.widget_table.highlighted == 1
 
 
 @pytest.mark.filterwarnings('ignore')
@@ -316,15 +316,15 @@ def test_column_visibility(mosviz_app, image, spectrum1d, spectrum2d):
                 match="visible must be one of None, True, or False."):
         mosviz_app.get_column_names(visible='string')
 
-    assert('Redshift' not in mosviz_app.get_column_names(True))
-    assert('Redshift' in mosviz_app.get_column_names(False))
-    assert('Redshift' in mosviz_app.get_column_names())
+    assert 'Redshift' not in mosviz_app.get_column_names(True)
+    assert 'Redshift' in mosviz_app.get_column_names(False)
+    assert 'Redshift' in mosviz_app.get_column_names()
 
     mosviz_app.show_column('Redshift')
-    assert('Redshift' in mosviz_app.get_column_names(True))
+    assert 'Redshift' in mosviz_app.get_column_names(True)
 
     mosviz_app.hide_column('Redshift')
-    assert('Redshift' not in mosviz_app.get_column_names(True))
+    assert 'Redshift' not in mosviz_app.get_column_names(True)
 
 
 @pytest.mark.filterwarnings('ignore')
@@ -335,11 +335,11 @@ def test_custom_columns(mosviz_app, image, spectrum1d, spectrum2d):
     mosviz_app.load_data(spectra1d, spectra2d, images=image)
 
     mosviz_app.add_column('custom_name')
-    assert('custom_name' in mosviz_app.get_column_names(True))
-    assert(len(mosviz_app.get_column('custom_name')) == 2)
+    assert 'custom_name' in mosviz_app.get_column_names(True)
+    assert len(mosviz_app.get_column('custom_name')) == 2
 
     mosviz_app.update_column('custom_name', 0.1, row=1)
-    assert(mosviz_app.get_column('custom_name')[1] == 0.1)
+    assert mosviz_app.get_column('custom_name')[1] == 0.1
 
     with pytest.raises(
                 ValueError,
