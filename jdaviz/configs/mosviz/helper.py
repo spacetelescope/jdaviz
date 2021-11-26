@@ -642,7 +642,7 @@ class Mosviz(ConfigHelper):
         if column_name not in column_names:
             raise ValueError(f"{column_name} not in available columns ({column_names})")
         new_column_names = [cn for cn in self.get_column_names(True)
-                                if cn not in column_name]
+                            if cn not in column_name]
         return self.set_visible_columns(new_column_names)
 
     def show_column(self, column_name):
