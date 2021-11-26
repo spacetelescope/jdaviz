@@ -70,6 +70,8 @@ class Mosviz(ConfigHelper):
 
         self._update_in_progress = False
 
+        self._default_visible_columns = []
+
     def _on_row_selected_begin(self):
         if not self.app.state.settings.get('freeze_states_on_row_change'):
             return
@@ -444,6 +446,8 @@ class Mosviz(ConfigHelper):
         loaded_msg = SnackbarMessage("MOS data loaded successfully", color="success", sender=self)
         self.app.hub.broadcast(loaded_msg)
 
+        self._default_visible_columns = self.get_column_names(True)
+
     def link_table_data(self, data_obj):
         """
         Batch link data in the Mosviz table rather than doing it on
@@ -599,15 +603,18 @@ class Mosviz(ConfigHelper):
         else:
             raise ValueError("visible must be one of None, True, or False.")
 
-    def set_visible_columns(self, column_names):
+    def set_visible_columns(self, column_names=None):
         """
         Set the columns to be visible in the table.
 
         Parameters
         ----------
-        column_names: list
-            list of columns to be visible in the table.
+        column_names: list or None
+            list of columns to be visible in the table.  If None, will default to original
+            visible columns.
         """
+        if column_names is None:
+            column_names = self._default_visible_columns
         if not isinstance(column_names, list):
             raise TypeError("column_names must be of type list")
         avail_names = self.get_column_names()

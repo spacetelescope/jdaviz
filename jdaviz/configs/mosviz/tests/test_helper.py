@@ -350,3 +350,8 @@ def test_custom_columns(mosviz_app, image, spectrum1d, spectrum2d):
                 ValueError,
                 match="data must have length 2 \\(rows in table\\)"):
         mosviz_app.add_column('custom_name_2', [0.1])
+
+    mosviz_app.show_column("Redshift")
+    assert "Redshift" in mosviz_app.get_column_names(True)
+    mosviz_app.set_visible_columns()
+    assert "Redshift" not in mosviz_app.get_column_names(True)
