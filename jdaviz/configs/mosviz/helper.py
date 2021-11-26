@@ -673,29 +673,10 @@ class Mosviz(ConfigHelper):
         """
         return np.asarray(deepcopy(self.app.data_collection['MOS Table'].get_component(column_name).data)) # noqa
 
-    def add_column(self, column_name, data=None, show=True):
-        """
-        Add a new data column to the table or update the data in an existing column.
+    def _add_or_update_column(self, column_name, data=None, show=True):
+        if not isinstance(column_name, str):
+            raise TypeError("column_name must be of type str")
 
-        If ``column_name`` is 'Redshift', the column will be synced with the redshift
-        in the respective spectrum objects.
-
-        Parameters
-        ----------
-        column_name : str
-            Header string to be shown in the table.  If already exists as a column in
-            the table, the data for that column will be updated.
-        data : array-like
-            Array-like set of data values, e.g. redshifts, RA, DEC, etc.
-        show: bool or None
-            Whether to show the column in the table (defaults to True).  If None, will
-            show if the column is new, otherwise will leave at current state.
-
-        Returns
-        -------
-        array
-            copy of the data in the added or edited column.
-        """
         table_data = self.app.data_collection['MOS Table']
 
         if data is None:
@@ -719,6 +700,34 @@ class Mosviz(ConfigHelper):
             self._apply_redshift_from_table()
 
         return self.get_column(column_name)
+
+    def add_column(self, column_name, data=None, show=True):
+        """
+        Add a new data column to the table.
+
+        If ``column_name`` is 'Redshift', the column will be synced with the redshift
+        in the respective spectrum objects.
+
+        Parameters
+        ----------
+        column_name : str
+            Header string to be shown in the table.  If already exists as a column in
+            the table, the data for that column will be updated.
+        data : array-like
+            Array-like set of data values, e.g. redshifts, RA, DEC, etc.
+        show: bool or None
+            Whether to show the column in the table (defaults to True).  If None, will
+            show if the column is new, otherwise will leave at current state.
+
+        Returns
+        -------
+        array
+            copy of the data in the added or edited column.
+        """
+        if column_name in self.get_column_names():
+            raise ValueError(f"{column_name} already exists.  Use update_column to update contents")
+
+        return self._add_or_update_column(column_name, data, show=show)
 
     def update_column(self, column_name, data, row=None):
         """
@@ -756,7 +765,7 @@ class Mosviz(ConfigHelper):
 
             data[row] = replace_value
 
-        return self.add_column(column_name, data, show=None)
+        return self._add_or_update_column(column_name, data, show=None)
 
     def to_table(self):
         """
