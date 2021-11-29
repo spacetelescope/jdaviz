@@ -657,12 +657,13 @@ class Mosviz(ConfigHelper):
         if not isinstance(column_name, str):
             raise TypeError("column_name must be of type str")
 
-        column_names = self.get_column_names(True)
-        if column_name not in column_names:
-            if column_name in self.get_column_names():
-                return self.set_visible_columns(column_names+[column_name])
+        vis_column_names = self.get_column_names(True)
+        if column_name not in vis_column_names:
+            all_column_names = self.get_column_names()
+            if column_name in all_column_names:
+                return self.set_visible_columns(vis_column_names+[column_name])
             else:
-                raise ValueError(f"{column_name} not in available columns ({column_names})")
+                raise ValueError(f"{column_name} not in available columns ({all_column_names})")
 
     def get_column(self, column_name):
         """
