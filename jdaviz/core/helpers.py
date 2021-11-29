@@ -238,10 +238,7 @@ class ConfigHelper(HubListener):
                 for name in param_dict[model_name]:
                     param = getattr(models[label], name)
                     parameters_cube[model_name][name] = param.value
-                    if "amplitude" in name:
-                        param_units[model_name][name] = models[model_name].return_units
-                    elif "mean" in name or "stddev" in name:
-                        param_units[model_name][name] = models[model_name].input_units
+                    param_units[model_name][name] = param.unit
 
         # Convert values of parameters_cube[key][param_name] into u.Quantity
         # objects that contain the appropriate unit set in
