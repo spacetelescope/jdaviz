@@ -47,6 +47,7 @@ Specviz
 
 Bug Fixes
 ---------
+
 - ``vue_destroy_viewer_item`` called twice on destroy event. [#676, #913]
 
 Cubeviz
@@ -66,6 +67,9 @@ Mosviz
 
 Specviz
 ^^^^^^^
+
+- Fixed a bug where ``specviz.get_model_parameters()`` crashes after fitting
+  a Gaussian model in the Model Fitting plugin. [#976]
 
 Other Changes and Additions
 ---------------------------
