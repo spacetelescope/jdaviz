@@ -1,7 +1,7 @@
 <template>
   <j-tray-plugin>
     <v-row>
-      <div style="width: calc(100% - 32px)">
+      <div style="width: calc(100% - 64px)">
         <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#plot-options'">Viewer and data/layer options.</j-docs-link>
       </div>
       <div style="width: 32px">
@@ -14,6 +14,9 @@
             <img :src="multiselect ? icon_checktoradial : icon_radialtocheck" width="24" class="invert-if-dark"/>
           </v-btn>
         </j-tooltip>
+      </div>
+      <div style="width: 32px">
+        <j-plugin-popout :popout_button="popout_button"></j-plugin-popout>
       </div>
     </v-row>
 

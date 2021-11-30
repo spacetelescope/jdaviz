@@ -1,7 +1,12 @@
 <template>
   <j-tray-plugin :disabled_msg="disabled_msg">
     <v-row>
-      <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#line-lists'">Plot lines from preset or custom line lists.</j-docs-link>
+      <div style="width: calc(100% - 32px)">
+        <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#line-lists'">Plot lines from preset or custom line lists.</j-docs-link>
+      </div>
+      <div style="width: 32px">
+        <j-plugin-popout :popout_button="popout_button"></j-plugin-popout>
+      </div>
     </v-row>
 
     <j-plugin-section-header>Identified Line</j-plugin-section-header>

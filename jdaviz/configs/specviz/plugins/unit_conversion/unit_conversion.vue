@@ -1,7 +1,12 @@
 <template>
   <j-tray-plugin :disabled_msg="disabled_msg">
     <v-row>
-      <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#unit-conversion'">Convert the spectral flux density and spectral axis units.</j-docs-link>
+      <div style="width: calc(100% - 32px)">
+        <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#unit-conversion'">Convert the spectral flux density and spectral axis units.</j-docs-link>
+      </div>
+      <div style="width: 32px">
+        <j-plugin-popout :popout_button="popout_button"></j-plugin-popout>
+      </div>
     </v-row>
 
     <!-- for mosviz, the entries change on row change, so we want to always show the dropdown

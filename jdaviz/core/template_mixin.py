@@ -15,6 +15,9 @@ from glue_jupyter.widgets.linked_dropdown import get_choices as _get_glue_choice
 from specutils import Spectrum1D
 from traitlets import Any, Bool, HasTraits, List, Unicode, observe
 
+from ipywidgets import widget_serialization
+from ipypopout import PopoutButton
+
 from jdaviz import __version__
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage)
@@ -32,6 +35,7 @@ __all__ = ['TemplateMixin', 'PluginTemplateMixin',
 class TemplateMixin(VuetifyTemplate, HubListener):
     config = Unicode("").tag(sync=True)
     vdocs = Unicode("").tag(sync=True)
+    popout_button = Any().tag(sync=True, **widget_serialization)
 
     def __new__(cls, *args, **kwargs):
         """
@@ -54,6 +58,10 @@ class TemplateMixin(VuetifyTemplate, HubListener):
         obj.bqplot_figs_resize = []
 
         return obj
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.popout_button = PopoutButton(self, window_features='popup,width=400,height=600')
 
     @property
     def app(self):
