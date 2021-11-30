@@ -8,17 +8,6 @@
           <jupyter-widget :widget="item.widget" :key="item.name"></jupyter-widget>
         </j-tooltip>
       </v-toolbar-items>
-      <v-toolbar-items>
-        <v-divider v-if="config === 'mosviz'" vertical style="margin: 0px 10px"></v-divider>
-        <j-tooltip v-if="config === 'mosviz'" tipid="lock-row-toggle">
-          <v-btn 
-            icon
-            @click="state.settings.freeze_states_on_row_change = !state.settings.freeze_states_on_row_change"
-            :class="{active: state.settings.freeze_states_on_row_change}">
-            <v-icon>mdi-vector-link</v-icon>
-          </v-btn>
-        </j-tooltip>
-      </v-toolbar-items>
       <v-spacer></v-spacer>
         <j-tooltip tipid="app-toolbar-plugins">
           <v-toolbar-items>
@@ -225,7 +214,7 @@ div.output_wrapper {
   margin: 0px;
 }
 
-.v-toolbar__items > span > .v-btn {
+.v-toolbar__items .v-btn {
   /* allow voolbar-items styling to pass through tooltip wrapping span */
   /* css is copied from .v-toolbar__items>.v-btn */
   border-radius: 0;
