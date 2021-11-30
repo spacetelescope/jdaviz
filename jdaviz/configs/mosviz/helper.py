@@ -694,6 +694,14 @@ class Mosviz(ConfigHelper):
         if len(data) != table_data.size:
             raise ValueError(f"data must have length {table_data.size} (rows in table)")
 
+        if column_name == 'Redshift':
+            # then we should raise errors in advance if the values would fail
+            # when applied to the spectra
+            try:
+                _ = u.Quantity(data)
+            except TypeError:
+                raise TypeError("Redshift values must be floats or quantity objects")
+
         if column_name in self.get_column_names():
             table_data.update_components({table_data.get_component(column_name): data})
         else:
