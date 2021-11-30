@@ -205,6 +205,11 @@
         </j-tooltip>
         </v-row>
       </v-card-actions>
+      <v-card-actions>
+        <span class="vuetify-styles v-messages">
+            If fit is not sufficiently converged, try clicking fitting again to complete additional iterations.
+        </span>
+      </v-card-actions>
     </v-card>
   </v-card>
 </template>

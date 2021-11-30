@@ -4,6 +4,8 @@
 New Features
 ------------
 
+- Support for units and BlackBody in modeling plugin. [#953]
+
 Cubeviz
 ^^^^^^^
 
