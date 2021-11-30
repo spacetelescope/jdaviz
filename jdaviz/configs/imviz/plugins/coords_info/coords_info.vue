@@ -1,5 +1,5 @@
 <template>
-  <div v-if="pixel" style="white-space: nowrap;">
+  <div v-if="pixel" style="white-space: nowrap; line-height: 14pt; margin: 0; position: absolute; top: 50%; transform: translateY(-50%); -ms-transform: translateY(-50%);">
     <table>
       <tr>
         <td colspan="4">
