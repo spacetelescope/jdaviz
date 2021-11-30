@@ -23,6 +23,8 @@ Mosviz
 - New toggle button to lock/unlock viewer settings (x-limits in 1d and 2d spectrum viewers and 
   stretch and percentile for 2d spectrum and image viewers). [#918]
 
+- Ability to add custom columns and change visibility of columns in the table. [#961]
+
 Specviz
 ^^^^^^^
 
