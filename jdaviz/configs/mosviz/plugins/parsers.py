@@ -458,9 +458,9 @@ def mos_meta_parser(app, data_obj, ids=None, spectra=False, sp1d=False):
         if spectra and not sp1d:
             _add_to_table(app, filters_gratings, "Filter/Grating")
         elif spectra and sp1d:
-            _add_to_table(app, names, "Source Name")
+            _add_to_table(app, names, "Identifier")
         else:
-            _add_to_table(app, names, "Source Name")
+            _add_to_table(app, names, "Identifier")
             _add_to_table(app, ra, "R.A.")
             _add_to_table(app, dec, "Dec.")
 
@@ -707,7 +707,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
 
         # We then populate the table inside this context manager as _add_to_table
         # does operations that also trigger link manager updates.
-        _add_to_table(app, source_ids, "Source Name")
+        _add_to_table(app, source_ids, "Identifier")
         _add_to_table(app, ras, "R.A.")
         _add_to_table(app, decs, "Dec.")
         _add_to_table(app, image_add, "Images")
