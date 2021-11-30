@@ -6,6 +6,10 @@
 from ._astropy_init import *   # noqa
 # ----------------------------------------------------------------------------
 
+# Apply this patch before any widgets are created. Why this patch is needed
+# See: https://github.com/jupyter-widgets/ipywidgets/issues/3111
+import ipypopout.sync_patch  # noqa
+
 # top-level API as exposed to users
 from jdaviz.app import *  # noqa
 from jdaviz.configs.specviz import Specviz, SpecViz  # noqa

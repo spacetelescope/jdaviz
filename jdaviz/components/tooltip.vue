@@ -25,6 +25,7 @@ const tooltips = {
   'app-help': 'Open docs in new tab',
   'app-snackbar-history': 'Toggle logger overlay',
   'app-toolbar-plugins': 'Data analysis plug-ins',
+  'app-toolbar-popout': 'Display in a new window',
 
   'g-data-tools': 
     'Load data from file',

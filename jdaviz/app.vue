@@ -44,6 +44,9 @@
       </v-toolbar-items>
       <v-spacer></v-spacer>
       <v-toolbar-items>
+        <j-tooltip tipid="app-toolbar-popout">
+          <jupyter-widget :widget="popout_button" ></jupyter-widget>
+        </j-tooltip>
         <j-tooltip tipid="app-help">
           <v-btn icon :href="getReadTheDocsLink()" target="_blank">
             <v-icon medium>mdi-help-box</v-icon>
@@ -366,6 +369,10 @@ a:active {
 
 .v-overlay__content {
   position: unset !important;
+
+#popout-widget-container .v-content {
+  min-height: 100vh;
+  max-height: 100vh;
 }
 
 </style>
