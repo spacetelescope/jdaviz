@@ -11,12 +11,18 @@ class CoordsInfo(TemplateMixin):
     template_file = __file__, "coords_info.vue"
     pixel = Unicode("").tag(sync=True)
     value = Unicode("").tag(sync=True)
+    world_label_prefix = Unicode("\u00A0").tag(sync=True)
+    world_label_icrs = Unicode("\u00A0").tag(sync=True)
+    world_label_deg = Unicode("\u00A0").tag(sync=True)
     world_ra = Unicode("").tag(sync=True)
     world_dec = Unicode("").tag(sync=True)
     world_ra_deg = Unicode("").tag(sync=True)
     world_dec_deg = Unicode("").tag(sync=True)
 
     def reset_coords_display(self):
+        self.world_label_prefix = '\u00A0'
+        self.world_label_icrs = '\u00A0'
+        self.world_label_deg = '\u00A0'
         self.world_ra = ''
         self.world_dec = ''
         self.world_ra_deg = ''
@@ -33,6 +39,9 @@ class CoordsInfo(TemplateMixin):
         if "nan" in (world_ra, world_dec, world_ra_deg, world_dec_deg):
             self.reset_coords_display()
         else:
+            self.world_label_prefix = 'World'
+            self.world_label_icrs = '(ICRS)'
+            self.world_label_deg = '(deg)'
             self.world_ra = world_ra
             self.world_dec = world_dec
             self.world_ra_deg = world_ra_deg
