@@ -19,6 +19,8 @@ Imviz
 
 - New plugin to perform simple aperture photometry. [#938]
 
+- Coordinates display now also shows Right Ascension and Declination in degrees. [#971]
+
 Mosviz
 ^^^^^^
 
