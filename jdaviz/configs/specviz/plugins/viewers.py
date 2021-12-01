@@ -19,6 +19,7 @@ from astropy import units as u
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.spectral_line import SpectralLine
 from jdaviz.core.linelists import load_preset_linelist, get_available_linelists
+from jdaviz.core.freezable_state import FreezableProfileViewerState
 
 __all__ = ['SpecvizProfileView']
 
@@ -27,6 +28,7 @@ __all__ = ['SpecvizProfileView']
 class SpecvizProfileView(BqplotProfileView):
     default_class = Spectrum1D
     spectral_lines = None
+    _state_cls = FreezableProfileViewerState
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

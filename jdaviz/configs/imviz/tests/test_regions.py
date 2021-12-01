@@ -47,6 +47,13 @@ class TestLoadStaticRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
         self.verify_region_loaded('my_mask')
         assert self.imviz.get_interactive_regions() == {}
 
+        # Also test deletion by label here.
+        self.imviz._delete_region('my_mask')
+        self.verify_region_loaded('my_mask', count=0)
+
+        # Deletion of non-existent label is silent no-op.
+        self.imviz._delete_region('foo')
+
     def test_regions_pixel(self):
         # Out-of-bounds should still overlay the overlapped part.
         my_reg = CirclePixelRegion(center=PixCoord(x=6, y=2), radius=5)
@@ -125,3 +132,30 @@ class TestLoadStaticRegionsSkyNoWCS(BaseRegionHandler):
             self.imviz.load_static_regions({'my_aper_sky_2': my_aper_sky})
         self.verify_region_loaded('my_aper_sky_2', count=0)
         assert self.imviz.get_interactive_regions() == {}
+
+
+class TestGetInteractiveRegions(BaseImviz_WCS_NoWCS):
+    def test_annulus(self):
+        # Outer circle
+        self.imviz._apply_interactive_region('bqplot:circle', (0, 0), (9, 9))
+        # Inner circle
+        self.imviz._apply_interactive_region('bqplot:circle', (2, 2), (7, 7))
+
+        # At this point, there should be two normal circles.
+        subsets = self.imviz.get_interactive_regions()
+        assert list(subsets.keys()) == ['Subset 1', 'Subset 2'], subsets
+        assert isinstance(subsets['Subset 1'], CirclePixelRegion)
+        assert isinstance(subsets['Subset 2'], CirclePixelRegion)
+
+        # Turn the inner circle (Subset 2) into annulus.
+        subset_groups = self.imviz.app.data_collection.subset_groups
+        new_subset = subset_groups[0].subset_state & ~subset_groups[1].subset_state
+        self.viewer.apply_subset_state(new_subset)
+
+        # Annulus is no longer accessible by API but also should not crash Imviz.
+        subsets = self.imviz.get_interactive_regions()
+        assert list(subsets.keys()) == ['Subset 1'], subsets
+        assert isinstance(subsets['Subset 1'], CirclePixelRegion)
+
+        # Clear the regions for next test.
+        self.imviz._delete_all_regions()

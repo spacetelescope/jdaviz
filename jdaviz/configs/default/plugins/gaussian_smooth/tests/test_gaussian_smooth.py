@@ -1,17 +1,15 @@
-import numpy as np
-
-from glue.core import Data
+import pytest
 from jdaviz import Application
-from spectral_cube import SpectralCube
+from specutils import Spectrum1D
 
 from jdaviz.configs.default.plugins.gaussian_smooth.gaussian_smooth import GaussianSmooth
 
 
-def test_linking_after_spectral_smooth(spectral_cube_wcs):
+def test_linking_after_spectral_smooth(spectrum1d_cube):
 
     app = Application(configuration="cubeviz")
     dc = app.data_collection
-    dc.append(Data(x=np.ones((3, 4, 5)), label='test', coords=spectral_cube_wcs))
+    app.add_data(spectrum1d_cube, 'test')
 
     gs = GaussianSmooth(app=app)
 
@@ -27,11 +25,12 @@ def test_linking_after_spectral_smooth(spectral_cube_wcs):
     assert dc.external_links[0].cids2[0] is dc[1].world_component_ids[0]
 
 
-def test_spatial_convolution(spectral_cube_wcs):
+@pytest.mark.filterwarnings("ignore::UserWarning")
+def test_spatial_convolution(spectrum1d_cube):
 
-    app = Application()
+    app = Application(configuration="cubeviz")
     dc = app.data_collection
-    dc.append(Data(x=np.ones((3, 4, 5)), label='test', coords=spectral_cube_wcs))
+    app.add_data(spectrum1d_cube, 'test')
 
     gs = GaussianSmooth(app=app)
     gs._on_data_selected({'new': 'test'})
@@ -40,4 +39,5 @@ def test_spatial_convolution(spectral_cube_wcs):
 
     assert len(dc) == 2
     assert dc[1].label == "Smoothed test spatial stddev 3.0"
-    assert dc["Smoothed test spatial stddev 3.0"].get_object(cls=SpectralCube).shape == (3, 4, 5)
+    assert (dc["Smoothed test spatial stddev 3.0"].get_object(cls=Spectrum1D, statistic=None).shape
+            == (4, 2, 2))

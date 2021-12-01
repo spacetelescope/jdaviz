@@ -17,11 +17,14 @@ toolbar:
   - g-subset-tools
   - g-image-viewer-creator
   - g-coords-info
+tray:
+  - imviz-links-control
+  - imviz-aper-phot-simple
 viewer_area:
   - container: col
     children:
       - container: row
         viewers:
-          - name: Image
+          - name: imviz-0
             plot: imviz-image-viewer
             reference: imviz-0

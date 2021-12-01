@@ -65,8 +65,8 @@ class Specviz(ConfigHelper, LineListMixin):
 
     def get_spectral_regions(self):
         """
-        Retrieves glue subset objects from the spectrum viewer and converts
-        them to `~specutils.SpectralRegion` objects.
+        A simple wrapper around the app-level call to retrieve only spectral
+        subsets, which are now returned as SpectralRegions by default.
 
         Returns
         -------
@@ -74,26 +74,7 @@ class Specviz(ConfigHelper, LineListMixin):
             Mapping from the names of the subsets to the subsets expressed
             as `specutils.SpectralRegion` objects.
         """
-        regions = self.app.get_subsets_from_viewer("spectrum-viewer", subset_type="spectral")
-
-        spec_regs = {}
-
-        for name, reg in regions.items():
-            # Use the region's unit. If N/A, use the reference_data's
-            unit = reg.meta.get("spectral_axis_unit",
-                                self.get_spectra(
-                                    self.app.get_viewer("spectrum-viewer"
-                                                        ).state.reference_data.label,
-                                    apply_slider_redshift=False
-                                    ).spectral_axis.unit
-                                )
-
-            spec_reg = SpectralRegion.from_center(reg.center.x * unit,
-                                                  reg.width * unit)
-
-            spec_regs[name] = spec_reg
-
-        return spec_regs
+        return self.app.get_subsets_from_viewer("spectrum-viewer", subset_type="spectral")
 
     def x_limits(self, x_min=None, x_max=None):
         """Sets the limits of the x-axis

@@ -4,6 +4,7 @@ from glue.core.message import (DataCollectionAddMessage,
 from glue.core import Data
 from glue.core.link_helpers import LinkSame
 from spectral_cube import SpectralCube
+from specutils import Spectrum1D
 from specutils import SpectralRegion
 from traitlets import List, Unicode, Int, Any, observe
 from regions import RectanglePixelRegion
@@ -11,7 +12,6 @@ from regions import RectanglePixelRegion
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
-from jdaviz.utils import load_template
 
 __all__ = ['Collapse']
 
@@ -26,7 +26,7 @@ AXES_MAPPING = [((1, 2), (0, 1)), ((0, 2), (0, 1)), ((0, 1), (0, 1))]
 
 @tray_registry('g-collapse', label="Collapse")
 class Collapse(TemplateMixin):
-    template = load_template("collapse.vue", __file__).tag(sync=True)
+    template_file = __file__, "collapse.vue"
     data_items = List([]).tag(sync=True)
     selected_data_item = Unicode().tag(sync=True)
     axes = List([]).tag(sync=True)
@@ -80,7 +80,7 @@ class Collapse(TemplateMixin):
     def _on_subset_selected(self, event):
         # If "None" selected, reset based on bounds of selected data
         if self.selected_subset == "None":
-            cube = self._selected_data.get_object(cls=SpectralCube)
+            cube = self._selected_data.get_object(cls=Spectrum1D)
             self.spectral_min = cube.spectral_axis[0].value
             self.spectral_max = cube.spectral_axis[-1].value
         else:

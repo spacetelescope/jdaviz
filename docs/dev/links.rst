@@ -1,3 +1,5 @@
+.. _dev_glue_linking:
+
 ***************************
 Linking of datasets in glue
 ***************************

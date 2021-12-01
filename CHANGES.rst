@@ -4,20 +4,38 @@
 New Features
 ------------
 
+- Support for units and BlackBody in modeling plugin. [#953]
+
 Cubeviz
 ^^^^^^^
 
 Imviz
 ^^^^^
 
+- New ``imviz.create_image_viewer()`` and ``imviz.destroy_viewer()`` methods
+  to allow users to programmatically create and destroy image viewers. [#907]
+
+- New plugin to control image linking via GUI. [#909]
+
+- New plugin to perform simple aperture photometry. [#938]
+
 Mosviz
 ^^^^^^
+
+- New toggle button to lock/unlock viewer settings (x-limits in 1d and 2d spectrum viewers and 
+  stretch and percentile for 2d spectrum and image viewers). [#918]
+
+- Ability to add custom columns and change visibility of columns in the table. [#961]
 
 Specviz
 ^^^^^^^
 
+- MIRI s2d files can now be loaded into Specviz2d. [#915]
+
 API Changes
 -----------
+
+- Removed unused ``jdaviz.core.events.AddViewerMessage``. [#939]
 
 Cubeviz
 ^^^^^^^
@@ -34,11 +52,19 @@ Specviz
 Bug Fixes
 ---------
 
+- ``vue_destroy_viewer_item`` called twice on destroy event. [#676, #913]
+
 Cubeviz
 ^^^^^^^
 
 Imviz
 ^^^^^
+
+- ``imviz.get_interactive_regions()`` no longer produces long traceback
+  for unsupported region shapes. [#906]
+
+- Imviz now parses some image metadata into ``glue`` and understands
+  ELECTRONS and ELECTRONS/S defined in FITS BUNIT header keyword. [#938]
 
 Mosviz
 ^^^^^^
@@ -46,9 +72,14 @@ Mosviz
 Specviz
 ^^^^^^^
 
+- Fixed a bug where ``specviz.get_model_parameters()`` crashes after fitting
+  a Gaussian model in the Model Fitting plugin. [#976]
+
 Other Changes and Additions
 ---------------------------
 
+- Cubeviz now loads data cube as ``Spectrum1D``. [#547]
+- The new template load system in ``ipyvue`` is used, which enables hot reload. [#913]
 
 2.0 (2021-09-17)
 ================

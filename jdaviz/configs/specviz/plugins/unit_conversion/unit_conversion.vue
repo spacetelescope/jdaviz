@@ -1,6 +1,7 @@
 <template>
   <v-card flat tile>
     <v-container>
+      <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#unit-conversion'">Convert the spectral flux density and spectral axis units</j-docs-link>
       <v-row>
         <v-col class="py-0">
           <v-text-field
@@ -68,8 +69,10 @@
 
     <v-card-actions>
       <div class="flex-grow-1"></div>
-      <v-btn :disabled="selected_data == ''"
-      color="primary" text @click="unit_conversion">Apply</v-btn>
+      <j-tooltip tipid='plugin-unit-conversion-apply'>
+        <v-btn :disabled="selected_data == ''"
+        color="primary" text @click="unit_conversion">Apply</v-btn>
+      </j-tooltip>
     </v-card-actions>
   </v-card>
 </template>

@@ -8,9 +8,10 @@ import astropy.units as u
 from astropy.table import QTable
 from astropy.coordinates import SkyCoord
 from echo import delay_callback
+from copy import deepcopy
 
 from jdaviz.core.helpers import ConfigHelper
-from jdaviz.core.events import SnackbarMessage, TableClickMessage
+from jdaviz.core.events import SnackbarMessage, TableClickMessage, RedshiftMessage
 from jdaviz.configs.specviz import Specviz
 from jdaviz.configs.mosviz.plugins import jwst_header_to_skyregion
 
@@ -31,9 +32,33 @@ class Mosviz(ConfigHelper):
         spec2d = self.app.get_viewer("spectrum-2d-viewer")
         spec2d.scales['x'].observe(self._update_spec1d_x_axis, names=['min', 'max'])
 
+        image_viewer = self.app.get_viewer("image-viewer")
+
+        # Choose which viewers will have state frozen during a row change.
+        # This should be a list of tuples, where each entry has the state as the
+        # first item in the tuple, and a list of frozen attributes as the second.
+        self._freezable_states = [(spec1d.state, ['x_min', 'x_max']),
+                                  (spec2d.state, ['x_min', 'x_max']),
+                                  (image_viewer.state, []),
+                                  ]
+
+        self._freezable_layers = [(spec1d.state, ['linewidth']),
+                                  (spec2d.state, ['stretch', 'percentile', 'v_min', 'v_max']),
+                                  (image_viewer.state, ['stretch', 'percentile', 'v_min', 'v_max'])]
+        self._frozen_layers_cache = []
+
+        # Add callbacks to table-viewer to enable/disable the state freeze
+        table = self.app.get_viewer("table-viewer")
+        table._on_row_selected_begin = self._on_row_selected_begin
+        table._on_row_selected_end = self._on_row_selected_end
+
         # Listen for clicks on the table in case we need to zoom the image
         self.app.hub.subscribe(self, TableClickMessage,
                                handler=self._row_click_message_handler)
+
+        # Listen for new redshifts from the redshift slider (NOT YET IMPLEMENTED)
+        self.app.hub.subscribe(self, RedshiftMessage,
+                               handler=self._redshift_listener)
 
         self._shared_image = False
 
@@ -44,6 +69,42 @@ class Mosviz(ConfigHelper):
         self._last_panning_warning = 0
 
         self._update_in_progress = False
+
+        self._default_visible_columns = []
+
+    def _on_row_selected_begin(self):
+        if not self.app.state.settings.get('freeze_states_on_row_change'):
+            return
+
+        for state, attrs in self._freezable_states:
+            state._frozen_state = attrs
+
+        # Make a copy of layer attributes (these can't be frozen since it will
+        # technically be a NEW layer instance).  Note: this assumes that
+        # layers[0] points to the data (and all other indices point to subsets)
+        self._frozen_layers_cache = [{a: getattr(state.layers[0], a) for a in attrs}
+                                     for state, attrs in self._freezable_layers
+                                     if len(state.layers)]
+
+    def _on_row_selected_end(self):
+        if not self.app.state.settings.get('freeze_states_on_row_change'):
+            return
+
+        for state, attrs in self._freezable_states:
+            state._frozen_state = []
+
+        # Restore data-layer states from cache, then reset cache
+        for (state, attrs), cache in zip(self._freezable_layers, self._frozen_layers_cache):
+            state.layers[0].update_from_dict(cache)
+
+        self._frozen_layers_cache = []
+
+        # Make sure world flipping has been handled correctly, as internal
+        # callbacks may have been made while limits were frozen.  This is
+        # especially important for NIRISS data.
+        self._update_spec2d_x_axis()
+
+        self._apply_redshift_from_table()
 
     def _extend_world(self, spec1d, ext):
         # Extend 1D spectrum world axis to enable panning (within reason) past
@@ -56,7 +117,7 @@ class Mosviz(ConfigHelper):
         world = np.hstack((prepend, world, append))
         return world
 
-    def _update_spec2d_x_axis(self, change):
+    def _update_spec2d_x_axis(self, change=None):
         # This assumes the two spectrum viewers have the same x-axis shape and
         # wavelength solution, which should always hold
         table_viewer = self.app.get_viewer('table-viewer')
@@ -93,7 +154,7 @@ class Mosviz(ConfigHelper):
 
         self._update_in_progress = False
 
-    def _update_spec1d_x_axis(self, change):
+    def _update_spec1d_x_axis(self, change=None):
         # This assumes the two spectrum viewers have the same x-axis shape and
         # wavelength solution, which should always hold
         table_viewer = self.app.get_viewer('table-viewer')
@@ -127,6 +188,23 @@ class Mosviz(ConfigHelper):
             self._scales1d.max = world[idx_max]
 
         self._update_in_progress = False
+
+    def _redshift_listener(self, msg):
+        '''Save new redshifts (including from the helper itself)'''
+        if msg.param == "redshift":
+            row = self.app.get_viewer('table-viewer').widget_table.highlighted
+            # NOTE: this updates the value in the table for the current row.  This
+            # in turn will feedback to call _apply_redshift_from_table and set
+            # the internal value.  When implementing the slider itself, this logic
+            # may need to be changed slightly to avoid a race condition.
+            self.update_column('Redshift', msg.value, row=row)
+
+    def _apply_redshift_from_table(self):
+        # NOTE: this only applies to mosviz.specviz.get_spectra(...)
+        # not mosviz.app.get_data_from_viewer(...).  This should be
+        # cleaned up when the slider is implemented in mosviz.
+        row = self.app.get_viewer('table-viewer').widget_table.highlighted
+        self.specviz._redshift = self.get_column('Redshift')[row]
 
     def _show_panning_warning(self):
         now = time()
@@ -326,6 +404,33 @@ class Mosviz(ConfigHelper):
 
         self.link_table_data(None)
 
+        # Parse any information from the files into columns in the table
+        def _get_sp_attribute(table_data, row, attr, fill=None):
+            sp1_name = table_data['1D Spectra'][row]
+            sp1 = self.app.data_collection[sp1_name].get_object()
+            sp1_val = getattr(sp1, attr, None)
+
+            sp2_name = table_data['2D Spectra'][row]
+            sp2 = self.app.data_collection[sp2_name].get_object()
+            sp2_val = getattr(sp2, attr, sp1_val)
+
+            if sp1_val is not None and sp1_val != sp2_val:
+                # then there was a conflict
+                msg = f"Warning: value for {attr} in row {row} in disagreement between Spectrum1D and Spectrum2D" # noqa
+                logging.warning(msg)
+                msg = SnackbarMessage(msg, color='warning', sender=self)
+                self.app.hub.broadcast(msg)
+
+            if sp2_val is None:
+                return fill
+
+            return sp2_val
+
+        table_data = self.app.data_collection['MOS Table']
+        redshifts = np.asarray([_get_sp_attribute(table_data, row, 'redshift', 0)
+                                for row in range(table_data.size)])
+        self.add_column(column_name='Redshift', data=redshifts, show=np.any(redshifts != 0))
+
         # Any subsequently added data will automatically be linked
         # with data already loaded in the app
         self.app.auto_link = True
@@ -340,6 +445,8 @@ class Mosviz(ConfigHelper):
         # Notify the user that this all loaded successfully
         loaded_msg = SnackbarMessage("MOS data loaded successfully", color="success", sender=self)
         self.app.hub.broadcast(loaded_msg)
+
+        self._default_visible_columns = self.get_column_names(True)
 
     def link_table_data(self, data_obj):
         """
@@ -476,19 +583,205 @@ class Mosviz(ConfigHelper):
         super().load_data(data_obj, parser_reference="mosviz-image-parser",
                           data_labels=data_labels, share_image=share_image)
 
-    def add_column(self, data, column_name=None):
+    def get_column_names(self, visible=None):
         """
-        Add a new data column to the table.
+        List the names of the columns in the table.
 
         Parameters
         ----------
+        visible: bool or None
+            If None (default): will show all available column names.
+            If True: will only show columns names currently shown in the table.
+            If False: will only show column names currently not shown in the table.
+        """
+        if visible is None:
+            return [c.label for c in self.app.data_collection['MOS Table'].components]
+        elif visible is True:
+            return [h['value'] for h in self.app.get_viewer('table-viewer').widget_table.headers]
+        elif visible is False:
+            return [cn for cn in self.get_column_names() if cn not in self.get_column_names(True)]
+        else:
+            raise ValueError("visible must be one of None, True, or False.")
+
+    def set_visible_columns(self, column_names=None):
+        """
+        Set the columns to be visible in the table.
+
+        Parameters
+        ----------
+        column_names: list or None
+            list of columns to be visible in the table.  If None, will default to original
+            visible columns.
+        """
+        if column_names is None:
+            column_names = self._default_visible_columns
+        if not isinstance(column_names, list):
+            raise TypeError("column_names must be of type list")
+        avail_names = self.get_column_names()
+        if not np.all([c in avail_names for c in column_names]):
+            raise ValueError("not all entries of column_names are valid")
+        is_sortable = ['Redshift']
+        headers = [{'text': cn, 'value': cn, 'sortable': cn in is_sortable} for cn in column_names]
+        wt = self.app.get_viewer('table-viewer').widget_table
+        wt.set_state({'headers': headers})
+        wt.send_state()
+
+    def hide_column(self, column_name):
+        """
+        Hide a single column in the table.
+
+        Parameters
+        ----------
+        column_name: str
+            Name of the column to hide
+        """
+        if not isinstance(column_name, str):
+            raise TypeError("column_name must be of type str")
+
+        column_names = self.get_column_names()
+        if column_name not in column_names:
+            raise ValueError(f"{column_name} not in available columns ({column_names})")
+        new_column_names = [cn for cn in self.get_column_names(True)
+                            if cn not in column_name]
+        return self.set_visible_columns(new_column_names)
+
+    def show_column(self, column_name):
+        """
+        Show a hidden column in the table.
+
+        Parameters
+        ----------
+        column_name: str
+            Name of the column to show
+        """
+        if not isinstance(column_name, str):
+            raise TypeError("column_name must be of type str")
+
+        vis_column_names = self.get_column_names(True)
+        if column_name not in vis_column_names:
+            all_column_names = self.get_column_names()
+            if column_name in all_column_names:
+                return self.set_visible_columns(vis_column_names+[column_name])
+            else:
+                raise ValueError(f"{column_name} not in available columns ({all_column_names})")
+
+    def get_column(self, column_name):
+        """
+        Get the data from a column in the table.
+
+        Parameters
+        ----------
+        column_name: str
+            Header string of an existing column in the table.
+
+        Returns
+        -------
+        array
+            copy of the data array.
+        """
+        return np.asarray(deepcopy(self.app.data_collection['MOS Table'].get_component(column_name).data)) # noqa
+
+    def _add_or_update_column(self, column_name, data=None, show=True):
+        if not isinstance(column_name, str):
+            raise TypeError("column_name must be of type str")
+
+        table_data = self.app.data_collection['MOS Table']
+
+        if data is None:
+            data = [None]*table_data.size
+        if not isinstance(data, (list, tuple, np.ndarray)):
+            raise TypeError("data must be array-like")
+        if len(data) != table_data.size:
+            raise ValueError(f"data must have length {table_data.size} (rows in table)")
+
+        if column_name == 'Redshift':
+            # then we should raise errors in advance if the values would fail
+            # when applied to the spectra
+            try:
+                _ = u.Quantity(data)
+            except TypeError:
+                raise TypeError("Redshift values must be floats or quantity objects")
+
+        if column_name in self.get_column_names():
+            table_data.update_components({table_data.get_component(column_name): data})
+        else:
+            table_data.add_component(data, column_name)
+        if show is True:
+            self.show_column(column_name)
+        elif not show and show is not None:
+            self.hide_column(column_name)
+
+        if column_name == 'Redshift':
+            # apply the value in the current row to the specviz object
+            self._apply_redshift_from_table()
+
+        return self.get_column(column_name)
+
+    def add_column(self, column_name, data=None, show=True):
+        """
+        Add a new data column to the table.
+
+        If ``column_name`` is 'Redshift', the column will be synced with the redshift
+        in the respective spectrum objects.
+
+        Parameters
+        ----------
+        column_name : str
+            Header string to be shown in the table.  If already exists as a column in
+            the table, the data for that column will be updated.
         data : array-like
             Array-like set of data values, e.g. redshifts, RA, DEC, etc.
-        column_name : str
-            Header string to be shown in the table.
+        show: bool or None
+            Whether to show the column in the table (defaults to True).  If None, will
+            show if the column is new, otherwise will leave at current state.
+
+        Returns
+        -------
+        array
+            copy of the data in the added or edited column.
         """
-        table_data = self.app.data_collection['MOS Table']
-        table_data.add_component(data, column_name)
+        if column_name in self.get_column_names():
+            raise ValueError(f"{column_name} already exists.  Use update_column to update contents")
+
+        return self._add_or_update_column(column_name, data, show=show)
+
+    def update_column(self, column_name, data, row=None):
+        """
+        Update the data in an existing column.
+
+        If ``column_name`` is 'Redshift', the column will be synced with the redshift
+        in the respective spectrum objects.
+
+        Parameters
+        ----------
+        column_name: str
+            Name of the existing column to update
+        data: array-like or float/int/string
+            Array-like set of data values or value at a single index (in which
+            case ``row`` must be provided)
+        row: None or int
+            Index of the row to replace.  If None, will replace entire column
+            and ``data`` must be array-like with the appropriate length.
+
+        Returns
+        -------
+        array
+            copy of the data in the edited column
+        """
+        if column_name not in self.get_column_names():
+            raise ValueError(f"{column_name} is not an existing column label")
+
+        if row is not None:
+            replace_value = data
+            data = self.get_column(column_name)
+            if not isinstance(row, int):
+                raise TypeError("row must be an integer or None")
+            if row < 0 or row >= len(data):
+                raise ValueError("row out of range of table")
+
+            data[row] = replace_value
+
+        return self._add_or_update_column(column_name, data, show=None)
 
     def to_table(self):
         """
