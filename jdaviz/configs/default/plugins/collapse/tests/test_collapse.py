@@ -19,6 +19,7 @@ def test_linking_after_collapse(spectral_cube_wcs):
     coll.selected_data_item = 'test'
 
     coll.selected_axis = 0
+    coll.add_replace_results = False
     coll.vue_collapse()
 
     assert len(dc) == 2
