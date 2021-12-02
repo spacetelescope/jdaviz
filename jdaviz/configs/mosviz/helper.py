@@ -7,6 +7,7 @@ from time import time
 import astropy.units as u
 from astropy.table import QTable
 from astropy.coordinates import SkyCoord
+from glue.core.exceptions import IncompatibleAttribute
 from echo import delay_callback
 from copy import deepcopy
 
@@ -333,6 +334,43 @@ class Mosviz(ConfigHelper):
 
         return pix, pixel_height
 
+    def _add_redshift_column(self):
+        # Parse any information from the files into columns in the table
+        def _get_sp_attribute(table_data, row, attr, fill=None):
+            try:
+                sp1_name = table_data['1D Spectra'][row]
+            except IncompatibleAttribute:
+                sp1_val = None
+            else:
+                sp1 = self.app.data_collection[sp1_name].get_object()
+                sp1_val = getattr(sp1, attr, None)
+
+            try:
+                sp2_name = table_data['2D Spectra'][row]
+            except IncompatibleAttribute:
+                sp2_val = None
+            else:
+                sp2 = self.app.data_collection[sp2_name].get_object()
+                sp2_val = getattr(sp2, attr, sp1_val)
+
+            if sp1_val is not None and sp1_val != sp2_val:
+                # then there was a conflict
+                msg = f"Warning: value for {attr} in row {row} in disagreement between Spectrum1D and Spectrum2D" # noqa
+                logging.warning(msg)
+                msg = SnackbarMessage(msg, color='warning', sender=self)
+                self.app.hub.broadcast(msg)
+
+            if sp2_val is None:
+                return fill
+
+            return sp2_val
+
+        table_data = self.app.data_collection['MOS Table']
+        redshifts = np.asarray([_get_sp_attribute(table_data, row, 'redshift', 0)
+                                for row in range(table_data.size)])
+        self._add_or_update_column(column_name='Redshift', data=redshifts,
+                                   show=np.any(redshifts != 0))
+
     def load_data(self, spectra_1d=None, spectra_2d=None, images=None,
                   spectra_1d_label=None, spectra_2d_label=None,
                   images_label=None, *args, **kwargs):
@@ -425,32 +463,7 @@ class Mosviz(ConfigHelper):
 
         self.link_table_data(None)
 
-        # Parse any information from the files into columns in the table
-        def _get_sp_attribute(table_data, row, attr, fill=None):
-            sp1_name = table_data['1D Spectra'][row]
-            sp1 = self.app.data_collection[sp1_name].get_object()
-            sp1_val = getattr(sp1, attr, None)
-
-            sp2_name = table_data['2D Spectra'][row]
-            sp2 = self.app.data_collection[sp2_name].get_object()
-            sp2_val = getattr(sp2, attr, sp1_val)
-
-            if sp1_val is not None and sp1_val != sp2_val:
-                # then there was a conflict
-                msg = f"Warning: value for {attr} in row {row} in disagreement between Spectrum1D and Spectrum2D" # noqa
-                logging.warning(msg)
-                msg = SnackbarMessage(msg, color='warning', sender=self)
-                self.app.hub.broadcast(msg)
-
-            if sp2_val is None:
-                return fill
-
-            return sp2_val
-
-        table_data = self.app.data_collection['MOS Table']
-        redshifts = np.asarray([_get_sp_attribute(table_data, row, 'redshift', 0)
-                                for row in range(table_data.size)])
-        self.add_column(column_name='Redshift', data=redshifts, show=np.any(redshifts != 0))
+        self._add_redshift_column()
 
         # Any subsequently added data will automatically be linked
         # with data already loaded in the app
@@ -551,6 +564,7 @@ class Mosviz(ConfigHelper):
         """
         super().load_data(data_obj, parser_reference="mosviz-spec1d-parser",
                           data_labels=data_labels)
+        self._add_redshift_column()
 
     def load_2d_spectra(self, data_obj, data_labels=None):
         """
@@ -569,6 +583,7 @@ class Mosviz(ConfigHelper):
         """
         super().load_data(data_obj, parser_reference="mosviz-spec2d-parser",
                           data_labels=data_labels)
+        self._add_redshift_column()
 
     def load_niriss_data(self, data_obj, data_labels=None):
         self.app.auto_link = False
@@ -576,6 +591,7 @@ class Mosviz(ConfigHelper):
         super().load_data(data_obj, parser_reference="mosviz-niriss-parser")
 
         self.link_table_data(data_obj)
+        self._add_redshift_column()
 
         self.app.auto_link = True
 
@@ -603,6 +619,7 @@ class Mosviz(ConfigHelper):
         """
         super().load_data(data_obj, parser_reference="mosviz-image-parser",
                           data_labels=data_labels, share_image=share_image)
+        self._add_redshift_column()
 
     def get_column_names(self, visible=None):
         """
