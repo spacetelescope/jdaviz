@@ -436,13 +436,13 @@ def mos_meta_parser(app, data_obj, ids=None, spectra=False, sp1d=False):
 
         # source name can be taken from 1d spectra
         elif spectra and sp1d:
-            names = _get_source_names_by_hdu([x[0] for x in data_obj], ids)
+            names = _get_source_identifiers_by_hdu([x[0] for x in data_obj], ids)
 
         # source name and coordinates are taken from image headers, if present
         else:
             ra = [x[0].header.get("OBJ_RA", float("nan")) for x in data_obj]
             dec = [x[0].header.get("OBJ_DEC", float("nan")) for x in data_obj]
-            names = _get_source_names_by_hdu([x[0] for x in data_obj], ids)
+            names = _get_source_identifiers_by_hdu([x[0] for x in data_obj], ids)
 
         [x.close() for x in data_obj]
 
@@ -465,7 +465,7 @@ def mos_meta_parser(app, data_obj, ids=None, spectra=False, sp1d=False):
             _add_to_table(app, dec, "Dec.")
 
 
-def _get_source_names_by_hdu(hdus, filepaths=None, header_keys=['SOURCEID', 'OBJECT']):
+def _get_source_identifiers_by_hdu(hdus, filepaths=None, header_keys=['SOURCEID', 'OBJECT']):
     """
     Attempts to extract a list of source identifiers via different header values.
 
@@ -631,7 +631,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                             wav_hdus[i] = ('WAVELENGTH', temp[i].header['EXTVER'])
 
                 # Now get a Spectrum1D object for each SCI HDU
-                source_ids.extend(_get_source_names_by_hdu([temp[sci] for sci in sci_hdus]))
+                source_ids.extend(_get_source_identifiers_by_hdu([temp[sci] for sci in sci_hdus]))
 
                 for sci in sci_hdus:
 
