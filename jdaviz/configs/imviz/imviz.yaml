@@ -20,6 +20,7 @@ toolbar:
 tray:
   - g-metadata-viewer
   - imviz-links-control
+  - imviz-compass
   - imviz-aper-phot-simple
 viewer_area:
   - container: col

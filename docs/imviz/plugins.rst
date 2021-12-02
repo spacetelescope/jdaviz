@@ -34,6 +34,15 @@ falls back to full transformation.
 
 For more details on linking, see :ref:`dev_glue_linking`.
 
+.. _imviz-compass:
+
+Compass
+=======
+
+For an image with a valid WCS, the compass would show directions to North (N)
+and East (E) for ICRS sky coordinates. It also shows X and Y directions and
+the zoom box, if applicable.
+
 .. _aper-phot-simple:
 
 Simple Aperture Photometry

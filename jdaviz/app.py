@@ -813,11 +813,6 @@ class Application(VuetifyTemplate, HubListener):
                 "of:\n\t" + "\n\t".join([
                     data_item['name'] for data_item in self.state.data_items]))
 
-        # TODO: We can display the active data label in GUI here.
-        # For now, we will print to debug Output widget.
-        with self._application_handler.output:
-            print(f'Visible layer changed to: {data_label}')
-
     def _set_plot_axes_labels(self, viewer_id):
         """
         Sets the plot axes labels to be the units of the data to be loaded.
@@ -1003,6 +998,42 @@ class Application(VuetifyTemplate, HubListener):
         viewer_item = find_viewer_item(self.state.stack_items)
 
         return viewer_item
+
+    def get_tray_item_from_name(self, name):
+        """Return the instance of a tray item for a given name.
+        This is useful for direct programmatic access to Jdaviz plugins
+        registered under tray items.
+
+        Parameters
+        ----------
+        name : str
+            The name used when the plugin was registered to
+            `~jdaviz.core.registries.tray_registry`.
+
+        Returns
+        -------
+        tray_item : obj
+            The instance of the plugin registered to tray items.
+
+        Raises
+        ------
+        KeyError
+            Name not found.
+
+        """
+        from ipywidgets.widgets import widget_serialization
+
+        tray_item = None
+        for item in self.state.tray_items:
+            if item['name'] == name:
+                ipy_model_id = item['widget']
+                tray_item = widget_serialization['from_json'](ipy_model_id, None)
+                break
+
+        if tray_item is None:
+            raise KeyError(f'{name} not found in app.state.tray_items')
+
+        return tray_item
 
     def vue_relayout(self, *args, **kwargs):
         """
@@ -1317,7 +1348,6 @@ class Application(VuetifyTemplate, HubListener):
         viewer : `~glue_jupyter.bqplot.common.BqplotBaseView`
             The new viewer instance.
         """
-
         viewer = self._application_handler.new_data_viewer(
             msg.cls, data=msg.data, show=False)
 
