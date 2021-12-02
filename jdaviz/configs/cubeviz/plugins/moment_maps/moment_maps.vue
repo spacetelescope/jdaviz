@@ -57,8 +57,8 @@
         <v-select
           :items="viewers"
           v-model="selected_viewer"
-          label='Results in Viewer'
-          hint='Replace contents in the specified viewer with results from this plugin.  Results will be available in the data dropdown in all image viewers.'
+          label='Plot in Viewer'
+          hint='Moment map will replace plot in the specified viewer.  Will also be available in the data dropdown in all image viewers.'
           persistent-hint
         ></v-select>
       </v-row>
