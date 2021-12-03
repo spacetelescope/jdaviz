@@ -120,6 +120,10 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin):
         elif data['event'] == 'keydown' and data['key'] == 'b':
             self.blink_once()
 
+            # Also update the coordinates display.
+            data['event'] = 'mousemove'
+            self.on_mouse_or_key_event(data)
+
     def blink_once(self):
         # Simple blinking of images - this will make it so that only one
         # layer is visible at a time and cycles through the layers.
