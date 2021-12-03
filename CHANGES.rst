@@ -68,6 +68,8 @@ Imviz
 - Imviz now parses some image metadata into ``glue`` and understands
   ELECTRONS and ELECTRONS/S defined in FITS BUNIT header keyword. [#938]
 
+- Imviz now updates pixel value correctly during blinking. [#985]
+
 Mosviz
 ^^^^^^
 
