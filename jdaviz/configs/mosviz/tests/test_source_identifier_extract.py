@@ -55,16 +55,16 @@ def test_single_filename_fallback():
     hdu = PrimaryHDU()
     assert _get_source_identifiers_by_hdu([hdu], "/path/to/test_file.fits") == ['test_file.fits']
     assert _get_source_identifiers_by_hdu([hdu, hdu],
-                                    "/path/to/test_file.fits"
-                                    ) == ['test_file.fits', 'test_file.fits']
+                                          "/path/to/test_file.fits"
+                                          ) == ['test_file.fits', 'test_file.fits']
 
 
 def test_filename_fallback():
     hdu = PrimaryHDU()
     assert _get_source_identifiers_by_hdu([hdu], ["/path/to/test_file.fits"]) == ['test_file.fits']
     assert _get_source_identifiers_by_hdu([hdu, hdu],
-                                    ["/path/to/test_file1.fits", "/path/to/test_file2.fits"]
-                                    ) == ['test_file1.fits', 'test_file2.fits']
+                                          ["/path/to/test_file1.fits", "/path/to/test_file2.fits"]
+                                          ) == ['test_file1.fits', 'test_file2.fits']
 
 
 def test_custom_header():
@@ -77,11 +77,11 @@ def test_custom_header_priority_mixed():
     hdu = PrimaryHDU()
     hdu.header['CUSTOM'] = "Target 1 CUSTOM"
     assert _get_source_identifiers_by_hdu([hdu],
-                                    header_keys=['CUSTOM', 'CUSTOM2']
-                                    ) == ["Target 1 CUSTOM"]
+                                          header_keys=['CUSTOM', 'CUSTOM2']
+                                          ) == ["Target 1 CUSTOM"]
 
     hdu2 = PrimaryHDU()
     hdu2.header['CUSTOM2'] = "Target 2 CUSTOM2"
     assert _get_source_identifiers_by_hdu([hdu, hdu2],
-                                    header_keys=['CUSTOM', 'CUSTOM2']
-                                    ) == ["Target 1 CUSTOM", "Target 2 CUSTOM2"]
+                                          header_keys=['CUSTOM', 'CUSTOM2']
+                                          ) == ["Target 1 CUSTOM", "Target 2 CUSTOM2"]
