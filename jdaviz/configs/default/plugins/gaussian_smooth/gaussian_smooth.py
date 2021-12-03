@@ -98,9 +98,14 @@ class GaussianSmooth(TemplateMixin):
         # add data to the collection
         self.app.add_data(spec_smoothed, label)
         if self.add_replace_results:
-            viewer = "spectrum-viewer" if self.selected_data_is_1d else "spectrum-2d-viewer"
+            viewer = "spectrum-viewer" if self.selected_data_is_1d or self.app.config == 'cubeviz' else "spectrum-2d-viewer" # noqa
             self.app.add_data_to_viewer(viewer, label,
-                                        clear_other_data=not self.selected_data_is_1d)
+                                        clear_other_data=viewer != "spectrum-viewer")
+
+        if not self.selected_data_is_1d and self.selected_viewer != 'None':
+            # replace the contents in the selected viewer with the smoothed cube
+            self.app.add_data_to_viewer(self.viewer_to_id.get(self.selected_viewer),
+                                        label, clear_other_data=True)
 
         snackbar_message = SnackbarMessage(
             f"Data set '{self._selected_data.label}' smoothed successfully.",
