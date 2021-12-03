@@ -211,7 +211,7 @@ class Specviz(ConfigHelper, LineListMixin):
         the value shown in the slider.
         '''
         if new_redshift == self._redshift:
-            # avoid sending messages that can result in race conditions`
+            # avoid sending messages that can result in race conditions
             return
         msg = RedshiftMessage("redshift", new_redshift, sender=self)
         self.app.hub.broadcast(msg)
