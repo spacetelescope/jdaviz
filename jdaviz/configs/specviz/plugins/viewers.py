@@ -348,14 +348,6 @@ class SpecvizProfileView(BqplotProfileView):
 
         self._plot_mask()
 
-        # https://sashamaps.net/docs/resources/20-colors/
-        color_cycle = ["#595959", "#e6194B", "#3cb44b", "#4363d8", "#f58231",
-                       "#911eb4", "#42d4f4", "#f032e6", "#bfef45"]
-
-        # we want to edit the color of the LATEST NON-SUBSET entry in layers
-        datalayers = [layer for layer in self.state.layers if isinstance(layer.layer, BaseData)]
-        datalayers[-1].color = color_cycle[(len(datalayers) - 1) % len(color_cycle)]
-
         return result
 
     def _plot_mask(self):
