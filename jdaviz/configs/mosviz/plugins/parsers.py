@@ -1,8 +1,10 @@
+from collections.abc import Iterable
 import csv
 import glob
 import logging
 import os
 from pathlib import Path
+import warnings
 
 import numpy as np
 from astropy import units as u
@@ -434,13 +436,13 @@ def mos_meta_parser(app, data_obj, ids=None, spectra=False, sp1d=False):
 
         # source name can be taken from 1d spectra
         elif spectra and sp1d:
-            names = _get_object_keyword(data_obj, ids)
+            names = _get_source_identifiers_by_hdu([x[0] for x in data_obj], ids)
 
         # source name and coordinates are taken from image headers, if present
         else:
             ra = [x[0].header.get("OBJ_RA", float("nan")) for x in data_obj]
             dec = [x[0].header.get("OBJ_DEC", float("nan")) for x in data_obj]
-            names = _get_object_keyword(data_obj, ids)
+            names = _get_source_identifiers_by_hdu([x[0] for x in data_obj], ids)
 
         [x.close() for x in data_obj]
 
@@ -456,21 +458,59 @@ def mos_meta_parser(app, data_obj, ids=None, spectra=False, sp1d=False):
         if spectra and not sp1d:
             _add_to_table(app, filters_gratings, "Filter/Grating")
         elif spectra and sp1d:
-            _add_to_table(app, names, "Source Name")
+            _add_to_table(app, names, "Identifier")
         else:
-            _add_to_table(app, names, "Source Name")
+            _add_to_table(app, names, "Identifier")
             _add_to_table(app, ra, "R.A.")
             _add_to_table(app, dec, "Dec.")
 
 
-def _get_object_keyword(data_obj, ids):
-    if ids is not None:
-        # remove leading path to file name
-        ids_short = [os.path.basename(d) for d in ids]
-        names = [x[0].header.get("OBJECT", d) for x, d in zip(data_obj, ids_short)]
-    else:
-        names = [x[0].header.get("OBJECT", FALLBACK_NAME) for x in data_obj]
-    return names
+def _get_source_identifiers_by_hdu(hdus, filepaths=None, header_keys=['SOURCEID', 'OBJECT']):
+    """
+    Attempts to extract a list of source identifiers via different header values.
+
+    Parameters
+    ----------
+    hdus : list of HDU
+        A list of HDUs (NOT an HDUList!) to check the header of. Filtering should
+        be done in advance to decide which HDUs to check against (e.g., SCI only).
+    filepaths : list of str, optional
+        A list of filepaths to fallback on if no header values are identified.
+    header_keys: str or list of str, optional
+        The header value (or values) to search an HDU for to extract the source id.
+        List order is assumed to be priority order (i.e. will return first successful
+        lookup)
+    """
+    src_names = list()
+    # If the user only provided a key that's not already in a container or list, put it in
+    # one for the upcoming loop
+    if not(isinstance(header_keys, Iterable) and not isinstance(header_keys, (str, dict))):
+        header_keys = [header_keys]
+    for indx, hdu in enumerate(hdus):
+        try:
+            src_name = None
+            # Search all given keys to see if they exist. Return the first hit
+            for key in header_keys:
+                if key in hdu.header:
+                    src_name = hdu.header.get(key)
+                    break
+            # If none exist, default to fallback
+            if not src_name:
+                # Fallback 1: filepath if only one is given
+                # Fallback 2: filepath at indx, if list of files given
+                # Fallback 3: If nothing else, just our fallback value
+                src_name = \
+                    os.path.basename(filepaths) if type(filepaths) is str \
+                    else os.path.basename(filepaths[indx]) if type(filepaths) is list \
+                    else FALLBACK_NAME
+            src_names.append(src_name)
+        except Exception:
+            # Source ID lookup shouldn't ever prevent target from loading. Downgrade all errors to
+            # warnings and use fallback
+            warnings.warn("Source name lookup failed for Target " + str(indx) +
+                          ". Using fallback ID", RuntimeWarning)
+            src_names.append(FALLBACK_NAME)
+    return src_names
 
 
 @data_parser_registry("mosviz-niriss-parser")
@@ -591,6 +631,8 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                             wav_hdus[i] = ('WAVELENGTH', temp[i].header['EXTVER'])
 
                 # Now get a Spectrum1D object for each SCI HDU
+                source_ids.extend(_get_source_identifiers_by_hdu([temp[sci] for sci in sci_hdus]))
+
                 for sci in sci_hdus:
 
                     if temp[sci].header["SPORDER"] == 1:
@@ -612,8 +654,6 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                                                                 orientation
                                                                 )
                         ra, dec = pupil_id_dict[filter_name][temp[sci].header["SOURCEID"]]
-                        source_ids.append("Source Catalog: {} Source ID: {}".
-                                          format(filter_name, temp[sci].header["SOURCEID"]))
                         ras.append(ra)
                         decs.append(dec)
                         image_add.append(image_dict[filter_name])
@@ -667,7 +707,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
 
         # We then populate the table inside this context manager as _add_to_table
         # does operations that also trigger link manager updates.
-        _add_to_table(app, source_ids, "Source ID")
+        _add_to_table(app, source_ids, "Identifier")
         _add_to_table(app, ras, "R.A.")
         _add_to_table(app, decs, "Dec.")
         _add_to_table(app, image_add, "Images")
