@@ -1,5 +1,6 @@
 import numpy as np
 
+from glue.core.link_helpers import LinkSame
 from glue_jupyter.bqplot.image import BqplotImageView
 
 from jdaviz.configs.imviz.helper import data_has_valid_wcs, layer_is_image_data
@@ -81,21 +82,27 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin):
                 return
 
             maxsize = int(np.ceil(np.log10(np.max(image.shape)))) + 3
-
             fmt = 'x={0:0' + str(maxsize) + '.1f} y={1:0' + str(maxsize) + '.1f}'
-
-            self.label_mouseover.pixel = (fmt.format(x, y))
 
             if data_has_valid_wcs(image):
                 # Convert these to a SkyCoord via WCS - note that for other datasets
                 # we aren't actually guaranteed to get a SkyCoord out, just for images
                 # with valid celestial WCS
                 try:
+                    # Convert X,Y from reference data to the one we are actually seeing.
+                    # world_to_pixel return scalar ndarray that we need to convert to float.
+                    if self.get_link_type(image.label) == 'wcs':
+                        x, y = list(map(float, image.coords.world_to_pixel(
+                            self.state.reference_data.coords.pixel_to_world(x, y))))
+
+                    self.label_mouseover.pixel = (fmt.format(x, y))
                     coo = image.coords.pixel_to_world(x, y).icrs
                     self.label_mouseover.set_coords(coo)
                 except Exception:
+                    self.label_mouseover.pixel = (fmt.format(x, y))
                     self.label_mouseover.reset_coords_display()
             else:
+                self.label_mouseover.pixel = (fmt.format(x, y))
                 self.label_mouseover.reset_coords_display()
 
             # Extract data values at this position.
@@ -153,6 +160,13 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin):
             elif n_visible > 0:
                 next_layer = valid[(valid.index(visible[-1]) + 1) % n_layers]
                 self.state.layers[next_layer].visible = True
+
+                # TODO: We can display the active data label in GUI here.
+                # For now, we will print to debug Output widget.
+                data_label = self.state.layers[next_layer].layer.label
+                with self.session.application.output:
+                    print(f'Visible layer changed to: {data_label}')
+
                 for ilayer in (set(valid) - set([next_layer])):
                     self.state.layers[ilayer].visible = False
 
@@ -171,3 +185,46 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin):
                 for layer_state in self.state.layers
                 if hasattr(layer_state, 'layer') and
                 layer_is_image_data(layer_state.layer)]
+
+    def get_link_type(self, data_label):
+        """Find the type of ``glue`` linking between the given
+        data label with the reference data in viewer.
+
+        Parameters
+        ----------
+        data_label : str
+            Data label to look up.
+
+        Returns
+        -------
+        link_type : {'pixels', 'wcs', 'self'}
+            One of the link types accepted by :func:`~jdaviz.configs.imviz.helper.link_image_data`
+            or ``'self'`` if the data label belongs to the reference data itself.
+
+        Raises
+        ------
+        ValueError
+            Link look-up failed.
+
+        """
+        if self.state.reference_data is None:
+            raise ValueError('No reference data for link look-up')
+
+        ref_label = self.state.reference_data.label
+        if data_label == ref_label:
+            return 'self'
+
+        link_type = None
+        for elink in self.session.application.data_collection.external_links:
+            elink_labels = (elink.data1.label, elink.data2.label)
+            if data_label in elink_labels and ref_label in elink_labels:
+                if isinstance(elink, LinkSame):  # Assumes WCS link never uses LinkSame
+                    link_type = 'pixels'
+                else:  # If not pixels, must be WCS
+                    link_type = 'wcs'
+                break  # Might have duplicate, just grab first match
+
+        if link_type is None:
+            raise ValueError(f'{data_label} not found in data collection external links')
+
+        return link_type
