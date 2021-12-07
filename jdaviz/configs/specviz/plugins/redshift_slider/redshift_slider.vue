@@ -15,6 +15,7 @@
     <template v-slot:prepend>
       <v-select
         class="pl-md-4 no-hint"
+        style="width: 125px"
         :items="['Redshift', 'RV (km/s)']"
         v-model="slider_type"
         dense>
