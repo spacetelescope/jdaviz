@@ -25,7 +25,12 @@ const tooltips = {
   'app-help': 'Open docs in new tab',
   'app-snackbar-history': 'Toggle logger overlay',
   'app-toolbar-plugins': 'Data analysis plug-ins',
-  'app-toolbar-popout': 'Display in a new window',
+  'app-toolbar-popout': `Display in a new window<br /><br />
+    <div style="width: 200px; border: 1px solid gray;" class="pa-2">
+      <strong>Note:</strong>
+      some add blockers or browser settings may block popup windows,
+      causing this feature not to work.
+    </div>`,
 
   'g-data-tools': 
     'Load data from file',
