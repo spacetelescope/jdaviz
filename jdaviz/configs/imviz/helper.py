@@ -112,7 +112,7 @@ class Imviz(ConfigHelper):
         -----
         When loading image formats that support RGB color like JPG or PNG, the
         files are converted to greyscale. This is done following the algorithm
-        of :func:`skimage.color.rgb2grey`, which involves weighting the channels as
+        of :func:`skimage.color.rgb2gray`, which involves weighting the channels as
         ``0.2125 R + 0.7154 G + 0.0721 B``. If you prefer a different weighting,
         you can use :func:`skimage.io.imread` to produce your own greyscale
         image as Numpy array and load the latter instead.

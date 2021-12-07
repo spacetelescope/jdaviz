@@ -11,7 +11,7 @@ from echo import delay_callback
 from copy import deepcopy
 
 from jdaviz.core.helpers import ConfigHelper
-from jdaviz.core.events import SnackbarMessage, TableClickMessage, RedshiftMessage
+from jdaviz.core.events import SnackbarMessage, TableClickMessage, RedshiftMessage, RowLockMessage
 from jdaviz.configs.specviz import Specviz
 from jdaviz.configs.mosviz.plugins import jwst_header_to_skyregion
 
@@ -46,6 +46,7 @@ class Mosviz(ConfigHelper):
                                   (spec2d.state, ['stretch', 'percentile', 'v_min', 'v_max']),
                                   (image_viewer.state, ['stretch', 'percentile', 'v_min', 'v_max'])]
         self._frozen_layers_cache = []
+        self._freeze_states_on_row_change = False
 
         # Add callbacks to table-viewer to enable/disable the state freeze
         table = self.app.get_viewer("table-viewer")
@@ -55,6 +56,9 @@ class Mosviz(ConfigHelper):
         # Listen for clicks on the table in case we need to zoom the image
         self.app.hub.subscribe(self, TableClickMessage,
                                handler=self._row_click_message_handler)
+
+        self.app.hub.subscribe(self, RowLockMessage,
+                               handler=self._row_lock_changed)
 
         # Listen for new redshifts from the redshift slider (NOT YET IMPLEMENTED)
         self.app.hub.subscribe(self, RedshiftMessage,
@@ -72,8 +76,11 @@ class Mosviz(ConfigHelper):
 
         self._default_visible_columns = []
 
+    def _row_lock_changed(self, msg):
+        self._freeze_states_on_row_change = msg.is_locked
+
     def _on_row_selected_begin(self):
-        if not self.app.state.settings.get('freeze_states_on_row_change'):
+        if not self._freeze_states_on_row_change:
             return
 
         for state, attrs in self._freezable_states:
@@ -87,7 +94,7 @@ class Mosviz(ConfigHelper):
                                      if len(state.layers)]
 
     def _on_row_selected_end(self):
-        if not self.app.state.settings.get('freeze_states_on_row_change'):
+        if not self._freeze_states_on_row_change:
             return
 
         for state, attrs in self._freezable_states:

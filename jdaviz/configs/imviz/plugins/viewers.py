@@ -76,7 +76,7 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin):
 
             if x is None or y is None:  # Out of bounds
                 self.label_mouseover.pixel = ""
-                self.label_mouseover.world = ""
+                self.label_mouseover.reset_coords_display()
                 self.label_mouseover.value = ""
                 return
 
@@ -91,14 +91,12 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin):
                 # we aren't actually guaranteed to get a SkyCoord out, just for images
                 # with valid celestial WCS
                 try:
-                    celestial_coordinates = (image.coords.pixel_to_world(x, y).icrs
-                                             .to_string('hmsdms', precision=4, pad=True))
+                    coo = image.coords.pixel_to_world(x, y).icrs
+                    self.label_mouseover.set_coords(coo)
                 except Exception:
-                    self.label_mouseover.world = ''
-                else:
-                    self.label_mouseover.world = f'{celestial_coordinates:32s} (ICRS)'
+                    self.label_mouseover.reset_coords_display()
             else:
-                self.label_mouseover.world = ''
+                self.label_mouseover.reset_coords_display()
 
             # Extract data values at this position.
             # TODO: for now we just use the first visible layer but we should think
@@ -116,11 +114,15 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin):
         elif data['event'] == 'mouseleave' or data['event'] == 'mouseenter':
 
             self.label_mouseover.pixel = ""
-            self.label_mouseover.world = ""
+            self.label_mouseover.reset_coords_display()
             self.label_mouseover.value = ""
 
         elif data['event'] == 'keydown' and data['key'] == 'b':
             self.blink_once()
+
+            # Also update the coordinates display.
+            data['event'] = 'mousemove'
+            self.on_mouse_or_key_event(data)
 
     def blink_once(self):
         # Simple blinking of images - this will make it so that only one

@@ -8,10 +8,10 @@ settings:
   context:
     notebook:
       max_height: 860px
-  freeze_states_on_row_change: False
 toolbar:
   - g-data-tools
   - g-subset-tools
+  - g-row-lock
 tray:
   - g-gaussian-smooth
   - g-slit-overlay
