@@ -70,6 +70,9 @@ Imviz
 
 - Imviz now updates pixel value correctly during blinking. [#985]
 
+- Imviz now displays the correct pixel and sky coordinates for dithered
+  images linked by WCS. [#992]
+
 Mosviz
 ^^^^^^
 
