@@ -24,6 +24,7 @@
     <template v-slot:append>
         <v-text-field
           v-model="slider_textbox"
+          @change="parseTextInput"
           class="mt-0 pt-0"
           style="min-width: 80px"
           hide-details
@@ -41,8 +42,14 @@
   module.exports = {
     created() {
       this.throttledSetValue = _.throttle(
-        (v) => { this.slider = v; },
+        (v) => { 
+          this.slider = v
+        },
         this.wait);
+      this.parseTextInput = (v) => {
+        // strip non-numeric entries and convert to valid float
+        this.slider_textbox = parseFloat(String(v).replace(/[^\d.-]/g, ''));
+      }
     },
   }
 </script>
