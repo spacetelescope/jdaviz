@@ -769,6 +769,8 @@ class Application(VuetifyTemplate, HubListener):
         viewer_item = self._viewer_item_by_reference(viewer_reference)
         if viewer_item is None:  # Maybe they mean the ID
             viewer_item = self._viewer_item_by_id(viewer_reference)
+        if viewer_item is None:
+            raise ValueError(f"Could not identify viewer with reference {viewer_reference}")
         data_label = self._build_data_label(data_path, ext=ext)
         data_id = self._data_id_from_label(data_label)
 

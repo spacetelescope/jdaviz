@@ -84,6 +84,7 @@ Other Changes and Additions
 
 - Cubeviz now loads data cube as ``Spectrum1D``. [#547]
 - The new template load system in ``ipyvue`` is used, which enables hot reload. [#913]
+- Plugins now provide options for immediately showing results in applicable viewers. [#974]
 
 2.0 (2021-09-17)
 ================

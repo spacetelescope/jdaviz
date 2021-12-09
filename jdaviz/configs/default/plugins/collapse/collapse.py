@@ -6,7 +6,7 @@ from glue.core.link_helpers import LinkSame
 from spectral_cube import SpectralCube
 from specutils import Spectrum1D
 from specutils import SpectralRegion
-from traitlets import List, Unicode, Int, Any, observe
+from traitlets import List, Unicode, Int, Any, Bool, observe
 from regions import RectanglePixelRegion
 
 from jdaviz.core.events import SnackbarMessage
@@ -33,6 +33,16 @@ class Collapse(TemplateMixin):
     selected_axis = Int(0).tag(sync=True)
     funcs = List(['Mean', 'Median', 'Min', 'Max', 'Sum']).tag(sync=True)
     selected_func = Unicode('Mean').tag(sync=True)
+
+    # add/replace results for selected_axis != 0
+    add_replace_results = Bool(True).tag(sync=True)
+
+    # selected_viewer for selected_axis == 0
+    # NOTE: this is currently cubeviz-specific so will need to be updated
+    # to be config-specific if using within other viewer configurations.
+    viewer_to_id = {'Left': 'cubeviz-0', 'Center': 'cubeviz-1', 'Right': 'cubeviz-2'}
+    viewers = List(['None', 'Left', 'Center', 'Right']).tag(sync=True)
+    selected_viewer = Unicode('None').tag(sync=True)
 
     spectral_min = Any().tag(sync=True)
     spectral_max = Any().tag(sync=True)
@@ -155,3 +165,11 @@ class Collapse(TemplateMixin):
             color="success",
             sender=self)
         self.hub.broadcast(snackbar_message)
+
+        if self.selected_axis == 0 and self.selected_viewer != 'None':
+            # replace the contents in the selected viewer with the results from this plugin
+            self.app.add_data_to_viewer(self.viewer_to_id.get(self.selected_viewer),
+                                        label, clear_other_data=True)
+
+        if self.selected_axis != 0 and self.add_replace_results:
+            self.app.add_data_to_viewer('spectrum-viewer', label)

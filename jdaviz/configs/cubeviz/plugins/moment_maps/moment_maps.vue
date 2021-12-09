@@ -53,6 +53,15 @@
           <span>{{ spectral_unit }}</span>
         </v-col>
       </v-row>
+      <v-row>
+        <v-select
+          :items="viewers"
+          v-model="selected_viewer"
+          label='Plot in Viewer'
+          hint='Moment map will replace plot in the specified viewer.  Will also be available in the data dropdown in all image viewers.'
+          persistent-hint
+        ></v-select>
+      </v-row>
     </v-container>
     <!-- <v-divider></v-divider> -->
 
