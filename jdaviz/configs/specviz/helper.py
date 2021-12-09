@@ -3,6 +3,8 @@ import logging
 import astropy.units as u
 from specutils import SpectralRegion, Spectrum1D
 
+from glue.core.message import SubsetMessage, SubsetCreateMessage, SubsetUpdateMessage
+
 from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import RedshiftMessage
 from jdaviz.configs.default.plugins.line_lists.line_list_mixin import LineListMixin
@@ -22,6 +24,18 @@ class Specviz(ConfigHelper, LineListMixin):
         # Listen for new redshifts from the redshift slider
         self.app.hub.subscribe(self, RedshiftMessage,
                                handler=self._redshift_listener)
+
+        self.app.session.hub.subscribe(self, SubsetMessage,
+                              handler=self._on_subset_msg)
+
+        self.app.session.hub.subscribe(self, SubsetCreateMessage,
+                              handler=self._on_subset_msg)
+
+        self.app.session.hub.subscribe(self, SubsetUpdateMessage,
+                              handler=self._on_subset_msg)
+
+    def _on_subset_msg(self, msg):
+        print("*** _on_subset_msg", msg)
 
     def load_spectrum(self, data, data_label=None, format=None, show_in_viewer=True):
         super().load_data(data,
