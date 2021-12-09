@@ -58,10 +58,11 @@ Jdaviz comes with curated line lists built by the scientific community. If you c
     from astropy.table import QTable
     from astropy import units as u
 
-    lt = QTable()
-    lt['linename'] = ['Hbeta','Halpha']
-    lt['rest'] = [4851.3, 6563]*u.AA
-    lt['redshift'] = u.Quantity(0.046) # Optional
+    my_line_list = QTable()
+    my_line_list['linename'] = ['Hbeta','Halpha']
+    my_line_list['rest'] = [4851.3, 6563]*u.AA
+    my_line_list['redshift'] = u.Quantity(0.046) # Optional
 
-    viz.load_line_list(lt)
+    viz.load_line_list(my_line_list)
+    # Show all imported line lists
     viz.spectral_lines
