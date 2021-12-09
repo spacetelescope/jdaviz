@@ -785,6 +785,11 @@ class Application(VuetifyTemplate, HubListener):
                 "of:\n\t" + "\n\t".join([
                     data_item['name'] for data_item in self.state.data_items]))
 
+        # TODO: We can display the active data label in GUI here.
+        # For now, we will print to debug Output widget.
+        with self._application_handler.output:
+            print(f'Visible layer changed to: {data_label}')
+
     def _set_plot_axes_labels(self, viewer_id):
         """
         Sets the plot axes labels to be the units of the data to be loaded.
@@ -1122,9 +1127,8 @@ class Application(VuetifyTemplate, HubListener):
         # active data.
         if len(active_data_labels) > 0:
             active_data = self.data_collection[active_data_labels[0]]
-            if hasattr(active_data, "_preferred_translation") \
-                    and active_data._preferred_translation is not None:
-                pass
+            if (hasattr(active_data, "_preferred_translation")
+                    and active_data._preferred_translation is not None):
                 self._set_plot_axes_labels(viewer_id)
 
     def _on_data_added(self, msg):

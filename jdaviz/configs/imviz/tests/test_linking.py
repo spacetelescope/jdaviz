@@ -27,6 +27,28 @@ class TestLink_WCS_NoWCS(BaseImviz_WCS_NoWCS, BaseLinkHandler):
         self.imviz.link_data(link_type='wcs', error_on_fail=True)
         self.check_all_pixel_links()
 
+        assert self.viewer.get_link_type('has_wcs[SCI,1]') == 'self'
+        assert self.viewer.get_link_type('no_wcs[SCI,1]') == 'pixels'
+
+        # Also check the coordinates display
+
+        self.viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
+        assert self.viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
+        assert self.viewer.label_mouseover.value == '+0.00000e+00 '
+        assert self.viewer.label_mouseover.world_ra_deg == '337.5202808000'
+        assert self.viewer.label_mouseover.world_dec_deg == '-20.8333330600'
+
+        # Not sure why but need one extra blink to work properly.
+        # This does not happen when we load real data from files.
+        self.viewer.blink_once()
+
+        self.viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'b',
+                                           'domain': {'x': 0, 'y': 0}})
+        assert self.viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
+        assert self.viewer.label_mouseover.value == '+0.00000e+00 '
+        assert self.viewer.label_mouseover.world_ra_deg == ''
+        assert self.viewer.label_mouseover.world_dec_deg == ''
+
     def test_wcslink_nofallback_noerror(self):
         self.imviz.link_data(link_type='wcs', wcs_fallback_scheme=None)
         self.check_all_pixel_links()  # Keeps old links because operation failed silently
@@ -43,6 +65,8 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
         links = self.imviz.app.data_collection.external_links
         assert len(links) == 1
         assert isinstance(links[0], OffsetLink)
+
+        assert self.viewer.get_link_type('has_wcs_2[SCI,1]') == 'wcs'
 
         # Customize display on second image (last loaded).
         self.viewer.set_colormap('viridis')
@@ -90,12 +114,33 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
         assert_allclose((self.viewer.state.x_min, self.viewer.state.y_min,
                         self.viewer.state.x_max, self.viewer.state.y_max), ans)
 
+        # Also check the coordinates display
+
+        self.viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
+        assert self.viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
+        assert self.viewer.label_mouseover.value == '+1.00000e+00 '
+        assert self.viewer.label_mouseover.world_ra_deg == '337.5202808000'
+        assert self.viewer.label_mouseover.world_dec_deg == '-20.8333330600'
+
+        # Not sure why but need one extra blink to work properly.
+        # This does not happen when we load real data from files.
+        self.viewer.blink_once()
+
+        self.viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'b',
+                                           'domain': {'x': 0, 'y': 0}})
+        assert self.viewer.label_mouseover.pixel == 'x=01.0 y=-0.0'
+        assert self.viewer.label_mouseover.value == '+1.00000e+00 '
+        assert self.viewer.label_mouseover.world_ra_deg == '337.5202808000'
+        assert self.viewer.label_mouseover.world_dec_deg == '-20.8333330600'
+
     def test_wcslink_fullblown(self):
         self.imviz.link_data(link_type='wcs', wcs_fallback_scheme=None, wcs_use_affine=False,
                              error_on_fail=True)
         links = self.imviz.app.data_collection.external_links
         assert len(links) == 1
         assert isinstance(links[0], WCSLink)
+        assert self.viewer.get_link_type('has_wcs_1[SCI,1]') == 'self'
+        assert self.viewer.get_link_type('has_wcs_2[SCI,1]') == 'wcs'
 
     # Also test other exception handling here.
 
@@ -106,6 +151,9 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
         with pytest.raises(ValueError, match='wcs_fallback_scheme'):
             self.imviz.link_data(link_type='wcs', wcs_fallback_scheme='foo')
 
+        with pytest.raises(ValueError, match='not found in data collection external links'):
+            self.viewer.get_link_type('foo')
+
 
 def test_imviz_no_data(imviz_app):
     with pytest.raises(ValueError, match='No valid reference data'):
@@ -114,3 +162,6 @@ def test_imviz_no_data(imviz_app):
     imviz_app.link_data(error_on_fail=True)  # Just no-op, do not crash
     links = imviz_app.app.data_collection.external_links
     assert len(links) == 0
+
+    with pytest.raises(ValueError, match='No reference data for link look-up'):
+        imviz_app.default_viewer.get_link_type('foo')
