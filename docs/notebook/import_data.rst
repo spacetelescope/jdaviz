@@ -48,3 +48,19 @@ For Imviz::
     imviz = Imviz()
     imviz.app
     imviz.load_data("/path/to/data/image.fits")
+
+
+Importing Custom Line Lists
+---------------------------
+Jdaviz comes with curated line lists built from the scientific community. If you can't find the lines you need, you can add your own!
+
+    from astropy.table import QTable
+    import astropy.units as u
+
+    lt = QTable()
+    lt['linename'] = ['Hbeta','Halpha']
+    lt['rest'] = [4851.3, 6563]*u.AA
+    lt['redshift'] = u.Quantity(0.046) # Optional
+
+    viz.load_line_list(lt)
+    viz.spectral_lines
