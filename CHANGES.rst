@@ -34,6 +34,8 @@ Specviz
 
 - MIRI s2d files can now be loaded into Specviz2d. [#915]
 
+- Default subset/region thickness is 3px when created through the xrange tool. [#994]
+
 API Changes
 -----------
 
