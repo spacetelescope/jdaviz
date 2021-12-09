@@ -51,8 +51,9 @@ For Imviz::
 
 
 Importing Custom Line Lists
----------------------------
-Jdaviz comes with curated line lists built from the scientific community. If you can't find the lines you need, you can add your own!::
+===========================
+
+Jdaviz comes with curated line lists built by the scientific community. If you cannot find the lines you need, you can add your own, as follows::
 
     from astropy.table import QTable
     import astropy.units as u
