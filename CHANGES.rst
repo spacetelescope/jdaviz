@@ -1,13 +1,10 @@
-2.1 (unreleased)
+2.1 (2021-12-10)
 ================
 
 New Features
 ------------
 
-- Support for units and BlackBody in modeling plugin. [#953]
-
-Cubeviz
-^^^^^^^
+- Support for units in astropy models and BlackBody in modeling plugin. [#953]
 
 Imviz
 ^^^^^
@@ -44,25 +41,10 @@ API Changes
 
 - Removed unused ``jdaviz.core.events.AddViewerMessage``. [#939]
 
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
 Bug Fixes
 ---------
 
-- ``vue_destroy_viewer_item`` called twice on destroy event. [#676, #913]
-
-Cubeviz
-^^^^^^^
+- ``vue_destroy_viewer_item`` no longer called twice on destroy event. [#676, #913]
 
 Imviz
 ^^^^^
@@ -77,9 +59,6 @@ Imviz
 
 - Imviz now displays the correct pixel and sky coordinates for dithered
   images linked by WCS. [#992]
-
-Mosviz
-^^^^^^
 
 Specviz
 ^^^^^^^
