@@ -66,5 +66,3 @@ Jdaviz comes with curated line lists built by the scientific community. If you c
     viz.load_line_list(my_line_list)
     # Show all imported line lists
     viz.spectral_lines
-
-For large tables, :ref:`<astropy:astropy-table-performance>` may be of use for users facing performance issues
