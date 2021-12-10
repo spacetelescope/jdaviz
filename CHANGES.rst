@@ -34,6 +34,8 @@ Specviz
 
 - MIRI s2d files can now be loaded into Specviz2d. [#915]
 
+- Default new subset/region thickness is set to 3px. [#994]
+
 API Changes
 -----------
 
