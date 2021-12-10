@@ -53,7 +53,7 @@ For Imviz::
 Importing Custom Line Lists
 ===========================
 
-Jdaviz comes with curated line lists built by the scientific community. If you cannot find the lines you need, you can add your own, as follows::
+Jdaviz comes with curated line lists built by the scientific community. If you cannot find the lines you need, you can add your own by constructing an :ref:`astropy table <astropy:construct_table>`! For example::
 
     from astropy.table import QTable
     from astropy import units as u
@@ -66,3 +66,5 @@ Jdaviz comes with curated line lists built by the scientific community. If you c
     viz.load_line_list(my_line_list)
     # Show all imported line lists
     viz.spectral_lines
+
+For large tables, :ref:`<astropy:astropy-table-performance>` may be of use for users facing performance issues
