@@ -2,9 +2,11 @@ import astropy.units as u
 import csv
 import numpy as np
 import pytest
+from numpy.testing import assert_allclose
 from astropy.nddata import CCDData
 from astropy.wcs import WCS
 from jdaviz.configs.mosviz.helper import Mosviz
+from jdaviz.configs.specviz2d.helper import Specviz2d
 from specutils import Spectrum1D, SpectrumCollection
 
 
@@ -365,8 +367,8 @@ def test_redshift_column(mosviz_app, image, spectrum1d, spectrum2d):
     mosviz_app.load_data(spectra1d, spectra2d, images=image)
 
     mosviz_app.update_column("Redshift", 0.1, row=0)
-    assert list(mosviz_app.specviz.get_spectra().values())[0].redshift.value == pytest.approx(0.1)
-    assert mosviz_app.specviz2d.__class__.__name__ == 'Specviz2d'
-    assert mosviz_app.get_spectrum_1d().redshift.value == pytest.approx(0.1)
-    assert mosviz_app.get_spectrum_2d().redshift.value == pytest.approx(0.1)
-    assert mosviz_app.get_spectrum_1d(row=1).redshift.value == 0.0
+    assert_allclose(list(mosviz_app.specviz.get_spectra().values())[0].redshift.value, 0.1)
+    assert isinstance(mosviz_app.specviz2d, Specviz2d)
+    assert_allclose(mosviz_app.get_spectrum_1d().redshift.value, 0.1)
+    assert_allclose(mosviz_app.get_spectrum_2d().redshift.value, 0.1)
+    assert_allclose(mosviz_app.get_spectrum_1d(row=1).redshift.value, 0.0)
