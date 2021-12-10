@@ -14,6 +14,7 @@ from glue.core import HubListener
 from glue.core.message import SubsetCreateMessage
 
 from jdaviz.app import Application
+from jdaviz.core.events import AddDataMessage
 
 __all__ = ['ConfigHelper']
 
@@ -44,15 +45,17 @@ class ConfigHelper(HubListener):
         self.app.verbosity = verbosity
 
         self.app.hub.subscribe(self, SubsetCreateMessage,
-                               handler=self._on_subset_create)
+                               handler=lambda msg: self._propagate_callback_to_viewers('_on_subset_create', msg)) # noqa
+        self.app.hub.subscribe(self, AddDataMessage,
+                               handler=lambda msg: self._propagate_callback_to_viewers('_on_add_data', msg)) # noqa
 
-    def _on_subset_create(self, msg):
+    def _propagate_callback_to_viewers(self, method, msg):
         # viewers don't have access to the app/hub to subscribe to messages, so we'll
         # catch all messages here and pass them on to each of the viewers that
-        # have an _on_subset_create implemented.
+        # have the applicable method implemented.
         for viewer in self.app._viewer_store.values():
-            if hasattr(viewer, '_on_subset_create'):
-                viewer._on_subset_create(msg)
+            if hasattr(viewer, method):
+                getattr(viewer, method)(msg)
 
     def load_data(self, data, parser_reference=None, **kwargs):
         self.app.load_data(data, parser_reference=parser_reference, **kwargs)

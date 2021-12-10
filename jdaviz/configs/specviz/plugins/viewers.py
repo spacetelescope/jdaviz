@@ -41,6 +41,12 @@ class SpecvizProfileView(BqplotProfileView):
             if layer.layer.label == msg.subset.label:
                 layer.linewidth = 3
 
+    def _on_add_data(self, msg):
+        data_label = msg.data.label
+        for layer in self.state.layers:
+            if "Subset" in layer.layer.label and layer.layer.data.label == data_label:
+                layer.linewidth = 3
+
     def data(self, cls=None):
         # Grab the user's chosen statistic for collapsing data
         if hasattr(self.state, 'function'):
