@@ -72,9 +72,15 @@ class RedshiftSlider(TemplateMixin):
         elif param == "slider_step":
             self.slider_step = val
         elif param == "redshift":
+            if self.slider_type == "RV (km/s)":
+                # then the input value is redshift, but we need to translate
+                # to RV before setting the slider value
+                val = self._redshift_to_velocity(val).to('km/s').value
             if val > self.max_value or val < self.min_value:
                 self._update_bounds[self.slider_type](val)
             self.slider = val
+        else:
+            raise NotImplementedError(f"RedshiftMessage with param {param} not implemented.")
 
     def _velocity_to_redshift(self, velocity):
         """

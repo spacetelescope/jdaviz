@@ -29,6 +29,9 @@ Mosviz
 
 - Ability to add custom columns and change visibility of columns in the table. [#961]
 
+- Support for redshift slider and new ``mosviz.get_spectrum_1d`` and ``mosviz.get_spectrum_2d``
+  helper methods. [#982]
+
 Specviz
 ^^^^^^^
 

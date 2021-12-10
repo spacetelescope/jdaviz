@@ -1,3 +1,5 @@
+.. _specviz-redshift:
+
 *******************
 Setting Redshift/RV
 *******************

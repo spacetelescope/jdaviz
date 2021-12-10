@@ -7,12 +7,15 @@ from time import time
 import astropy.units as u
 from astropy.table import QTable
 from astropy.coordinates import SkyCoord
+from glue.core.exceptions import IncompatibleAttribute
 from echo import delay_callback
 from copy import deepcopy
 
 from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import SnackbarMessage, TableClickMessage, RedshiftMessage, RowLockMessage
 from jdaviz.configs.specviz import Specviz
+from jdaviz.configs.specviz.helper import _apply_redshift_to_spectra
+from jdaviz.configs.specviz2d import Specviz2d
 from jdaviz.configs.mosviz.plugins import jwst_header_to_skyregion
 
 __all__ = ['Mosviz', 'MosViz']
@@ -79,7 +82,9 @@ class Mosviz(ConfigHelper):
     def _row_lock_changed(self, msg):
         self._freeze_states_on_row_change = msg.is_locked
 
-    def _on_row_selected_begin(self):
+    def _on_row_selected_begin(self, event):
+        self._redshift_cache = self.get_column("Redshift")[event['new']]
+
         if not self._freeze_states_on_row_change:
             return
 
@@ -93,7 +98,9 @@ class Mosviz(ConfigHelper):
                                      for state, attrs in self._freezable_layers
                                      if len(state.layers)]
 
-    def _on_row_selected_end(self):
+    def _on_row_selected_end(self, event):
+        self._apply_redshift_from_table(value=self._redshift_cache, row=None)
+
         if not self._freeze_states_on_row_change:
             return
 
@@ -110,8 +117,6 @@ class Mosviz(ConfigHelper):
         # callbacks may have been made while limits were frozen.  This is
         # especially important for NIRISS data.
         self._update_spec2d_x_axis()
-
-        self._apply_redshift_from_table()
 
     def _extend_world(self, spec1d, ext):
         # Extend 1D spectrum world axis to enable panning (within reason) past
@@ -198,20 +203,30 @@ class Mosviz(ConfigHelper):
 
     def _redshift_listener(self, msg):
         '''Save new redshifts (including from the helper itself)'''
+        if self._update_in_progress:
+            # then ignore messages for now, the final redshift will be set once the
+            # data is loaded and the row change is complete.
+            return
+
         if msg.param == "redshift":
-            row = self.app.get_viewer('table-viewer').widget_table.highlighted
+            row = self.app.get_viewer('table-viewer').current_row
             # NOTE: this updates the value in the table for the current row.  This
             # in turn will feedback to call _apply_redshift_from_table and set
-            # the internal value.  When implementing the slider itself, this logic
-            # may need to be changed slightly to avoid a race condition.
+            # the internal value.
+            if msg.value == self.get_column("Redshift")[row]:
+                # avoid race condition
+                return
             self.update_column('Redshift', msg.value, row=row)
 
-    def _apply_redshift_from_table(self):
-        # NOTE: this only applies to mosviz.specviz.get_spectra(...)
-        # not mosviz.app.get_data_from_viewer(...).  This should be
-        # cleaned up when the slider is implemented in mosviz.
-        row = self.app.get_viewer('table-viewer').widget_table.highlighted
-        self.specviz._redshift = self.get_column('Redshift')[row]
+    def _apply_redshift_from_table(self, row, value=None):
+        # apply redshift from a specific row in the table (current row)
+        # to the underlying spectrum viewers (and therefore both the
+        # redshift slider as well as exposing when accessing specviz.get_spectra(...))
+        if value is None and row is not None:
+            value = self.get_column('Redshift')[row]
+
+        if value is not None:
+            self.specviz.set_redshift(value)
 
     def _show_panning_warning(self):
         now = time()
@@ -319,6 +334,43 @@ class Mosviz(ConfigHelper):
 
         return pix, pixel_height
 
+    def _add_redshift_column(self):
+        # Parse any information from the files into columns in the table
+        def _get_sp_attribute(table_data, row, attr, fill=None):
+            try:
+                sp1_name = table_data['1D Spectra'][row]
+            except IncompatibleAttribute:
+                sp1_val = None
+            else:
+                sp1 = self.app.data_collection[sp1_name].get_object()
+                sp1_val = getattr(sp1, attr, None)
+
+            try:
+                sp2_name = table_data['2D Spectra'][row]
+            except IncompatibleAttribute:
+                sp2_val = None
+            else:
+                sp2 = self.app.data_collection[sp2_name].get_object()
+                sp2_val = getattr(sp2, attr, sp1_val)
+
+            if sp1_val is not None and sp1_val != sp2_val:
+                # then there was a conflict
+                msg = f"Warning: value for {attr} in row {row} in disagreement between Spectrum1D and Spectrum2D" # noqa
+                logging.warning(msg)
+                msg = SnackbarMessage(msg, color='warning', sender=self)
+                self.app.hub.broadcast(msg)
+
+            if sp2_val is None:
+                return fill
+
+            return sp2_val
+
+        table_data = self.app.data_collection['MOS Table']
+        redshifts = np.asarray([_get_sp_attribute(table_data, row, 'redshift', 0)
+                                for row in range(table_data.size)])
+        self._add_or_update_column(column_name='Redshift', data=redshifts,
+                                   show=np.any(redshifts != 0))
+
     def load_data(self, spectra_1d=None, spectra_2d=None, images=None,
                   spectra_1d_label=None, spectra_2d_label=None,
                   images_label=None, *args, **kwargs):
@@ -411,32 +463,7 @@ class Mosviz(ConfigHelper):
 
         self.link_table_data(None)
 
-        # Parse any information from the files into columns in the table
-        def _get_sp_attribute(table_data, row, attr, fill=None):
-            sp1_name = table_data['1D Spectra'][row]
-            sp1 = self.app.data_collection[sp1_name].get_object()
-            sp1_val = getattr(sp1, attr, None)
-
-            sp2_name = table_data['2D Spectra'][row]
-            sp2 = self.app.data_collection[sp2_name].get_object()
-            sp2_val = getattr(sp2, attr, sp1_val)
-
-            if sp1_val is not None and sp1_val != sp2_val:
-                # then there was a conflict
-                msg = f"Warning: value for {attr} in row {row} in disagreement between Spectrum1D and Spectrum2D" # noqa
-                logging.warning(msg)
-                msg = SnackbarMessage(msg, color='warning', sender=self)
-                self.app.hub.broadcast(msg)
-
-            if sp2_val is None:
-                return fill
-
-            return sp2_val
-
-        table_data = self.app.data_collection['MOS Table']
-        redshifts = np.asarray([_get_sp_attribute(table_data, row, 'redshift', 0)
-                                for row in range(table_data.size)])
-        self.add_column(column_name='Redshift', data=redshifts, show=np.any(redshifts != 0))
+        self._add_redshift_column()
 
         # Any subsequently added data will automatically be linked
         # with data already loaded in the app
@@ -537,6 +564,7 @@ class Mosviz(ConfigHelper):
         """
         super().load_data(data_obj, parser_reference="mosviz-spec1d-parser",
                           data_labels=data_labels)
+        self._add_redshift_column()
 
     def load_2d_spectra(self, data_obj, data_labels=None):
         """
@@ -555,6 +583,7 @@ class Mosviz(ConfigHelper):
         """
         super().load_data(data_obj, parser_reference="mosviz-spec2d-parser",
                           data_labels=data_labels)
+        self._add_redshift_column()
 
     def load_niriss_data(self, data_obj, data_labels=None):
         self.app.auto_link = False
@@ -562,6 +591,7 @@ class Mosviz(ConfigHelper):
         super().load_data(data_obj, parser_reference="mosviz-niriss-parser")
 
         self.link_table_data(data_obj)
+        self._add_redshift_column()
 
         self.app.auto_link = True
 
@@ -589,6 +619,7 @@ class Mosviz(ConfigHelper):
         """
         super().load_data(data_obj, parser_reference="mosviz-image-parser",
                           data_labels=data_labels, share_image=share_image)
+        self._add_redshift_column()
 
     def get_column_names(self, visible=None):
         """
@@ -720,7 +751,9 @@ class Mosviz(ConfigHelper):
 
         if column_name == 'Redshift':
             # apply the value in the current row to the specviz object
-            self._apply_redshift_from_table()
+            row = self.app.get_viewer('table-viewer').current_row
+            if row is not None:
+                self._apply_redshift_from_table(value=data[row], row=row)
 
         return self.get_column(column_name)
 
@@ -865,6 +898,80 @@ class Mosviz(ConfigHelper):
         if not hasattr(self, '_specviz'):
             self._specviz = Specviz(app=self.app)
         return self._specviz
+
+    @property
+    def specviz2d(self):
+        """
+        A specviz2d helper (`~jdaviz.configs.specviz2d.Specviz2d`) for the Jdaviz
+        application that is wrapped by mosviz
+        """
+        if not hasattr(self, '_specviz2d'):
+            self._specviz2d = Specviz2d(app=self.app)
+        return self._specviz2d
+
+    def _get_spectrum(self, column, row=None, apply_slider_redshift="Warn"):
+        if row is None:
+            row = self.app.get_viewer('table-viewer').current_row
+        if not isinstance(row, int):
+            raise TypeError("row not of type int")
+
+        data_labels = self.get_column(column)
+        if row < 0 or row >= len(data_labels):
+            raise ValueError(f"row must be between 0 and {len(data_labels)-1}")
+
+        data_label = data_labels[row]
+        spectra = self.app.data_collection[data_label].get_object()
+        if not apply_slider_redshift:
+            return spectra
+        else:
+            redshift = self.get_column("Redshift")[row]
+            if apply_slider_redshift == "Warn":
+                logging.warning("Warning: Applying the value from the redshift "
+                                "slider to the output spectra. To avoid seeing this "
+                                "warning, explicitly set the apply_slider_redshift "
+                                "argument to True or False.")
+
+            return _apply_redshift_to_spectra(spectra, redshift)
+
+    def get_spectrum_1d(self, row=None, apply_slider_redshift="Warn"):
+        """
+        Access a 1D spectrum for any row in the Table.
+
+        Parameters
+        ----------
+        row: int or None
+            Row index in the Table. If not provided or None, will access
+            from the currently selected row.
+        apply_slider_redshift: bool or "Warn"
+            Whether to apply the redshift in the Table to the returned
+            Spectrum.  If not provided or "Warn", will apply the redshift
+            but raise a warning.
+
+        Returns
+        -------
+        `~specutils.Spectrum1D`
+        """
+        return self._get_spectrum('1D Spectra', row, apply_slider_redshift)
+
+    def get_spectrum_2d(self, row=None, apply_slider_redshift="Warn"):
+        """
+        Access a 2D spectrum for any row in the Table.
+
+        Parameters
+        ----------
+        row: int or None
+            Row index in the Table. If not provided or None, will access
+            from the currently selected row.
+        apply_slider_redshift: bool or "Warn"
+            Whether to apply the redshift in the Table to the returned
+            Spectrum.  If not provided or "Warn", will apply the redshift
+            but raise a warning.
+
+        Returns
+        -------
+        `~specutils.Spectrum1D`
+        """
+        return self._get_spectrum('2D Spectra', row, apply_slider_redshift)
 
 
 # TODO: Officially deprecate this with coordination with JDAT notebooks team.
