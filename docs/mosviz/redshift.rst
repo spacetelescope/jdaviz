@@ -15,7 +15,7 @@ or radial velocity.  In Mosviz, this is applied to the current row in the table
 and is stored (and shown) in a column of the table.
 
 From the notebook
------------------
+=================
 
 In the notebook, the value of the Redshift column can be changed for all rows or a single row
 using :meth:`~jdaviz.configs.mosviz.helper.Mosviz.update_column`.
