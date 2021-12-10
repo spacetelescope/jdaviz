@@ -36,20 +36,10 @@ class SpecvizProfileView(BqplotProfileView):
         self.display_uncertainties = False
         self.display_mask = False
 
-        self.toolbar.tools['bqplot:xrange'].interact.observe(self._on_brushing, "brushing")
-        # cache the list of processed subset layers with default style overriden so that
-        # we don't change any user settings when editing that subset layer
-        self._brushing_processed_subset_layers = []
-
-    def _on_brushing(self, msg):
-        if msg.get('old', False):
-            # then the brushing has finished, so we should check to see if a NEW subset
-            # has been added, and if so, override the default styling
-            for layer in self.state.layers:
-                label = layer.layer.label
-                if "Subset" in label and label not in self._brushing_processed_subset_layers:
-                    layer.linewidth = 3
-                    self._brushing_processed_subset_layers.append(label)
+    def _on_subset_create(self, msg):
+        for layer in self.state.layers:
+            if layer.layer.label == msg.subset.label:
+                layer.linewidth = 3
 
     def data(self, cls=None):
         # Grab the user's chosen statistic for collapsing data
