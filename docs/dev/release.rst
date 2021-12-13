@@ -200,6 +200,8 @@ You can create a clean checkout as follows (requires
 #. Check `Zenodo page for Jdaviz <https://zenodo.org/badge/latestdoi/185452341>`_.
    It should have picked up the GitHub Release automatically.
 
+#. Follow procedures for :ref:`release-milestones`.
+
 Congratulations, you have just released a new version of Jdaviz!
 
 
@@ -315,8 +317,28 @@ You can do a release from your fork directly without a clean code check-out.
 
 #. Commit your changes of the, uh, change log with a message, "Back to development: A.B.dev"
 
+#. Follow procedures for :ref:`release-milestones`.
+
 #. For your own sanity unrelated to the release, grab the new tag for your fork::
 
      git fetch upstream --tags
 
 Congratulations, you have just released a new version of Jdaviz!
+
+.. _release-milestones:
+
+Milestones bookkeeping
+======================
+
+#. Go to `Milestones <https://github.com/spacetelescope/jdaviz/milestones>`_.
+
+#. Create a new milestone for the next release.
+
+#. For the milestone of this release, if there are any open issues or pull requests
+   still milestoned to it, move their milestones to the next release.
+
+#. Make sure the milestone of this release ends up with "0 open" and then close it.
+
+#. Remind the other devs of the open pull requests with milestone moved that they
+   will need to move their change log entries to the new release section that you
+   have created in ``CHANGES.rst`` during the release process.
