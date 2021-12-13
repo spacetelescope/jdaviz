@@ -13,9 +13,9 @@
       :step="slider_step"
     >
     <template v-slot:prepend>
-      <v-divider vertical></v-divider>
       <v-select
-        class="pl-md-4"
+        class="pl-md-4 no-hint"
+        style="min-width: 125px"
         :items="['Redshift', 'RV (km/s)']"
         v-model="slider_type"
         dense>
@@ -24,7 +24,9 @@
     <template v-slot:append>
         <v-text-field
           v-model="slider_textbox"
+          @change="parseTextInput"
           class="mt-0 pt-0"
+          style="min-width: 80px"
           hide-details
           single-line
           filled
@@ -40,8 +42,14 @@
   module.exports = {
     created() {
       this.throttledSetValue = _.throttle(
-        (v) => { this.slider = v; },
+        (v) => { 
+          this.slider = v
+        },
         this.wait);
+      this.parseTextInput = (v) => {
+        // strip non-numeric entries and convert to valid float
+        this.slider_textbox = parseFloat(String(v).replace(/[^\d.-]/g, ''));
+      }
     },
   }
 </script>

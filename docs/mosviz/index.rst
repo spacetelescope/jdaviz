@@ -22,4 +22,5 @@ Using Mosviz
   navigation
   displayspectra
   plugins
+  redshift
   notebook

@@ -1,3 +1,5 @@
+.. _dev_glue_linking:
+
 ***************************
 Linking of datasets in glue
 ***************************
@@ -49,8 +51,18 @@ n-dimensional datasets where n is the same for both datasets would look like::
 
 This can also be used to link, for example, the two spatial dimensions of a
 collapsed cube with the original cube, as done in the `cube collapse
-functionality <https://github.com/spacetelescope/jdaviz/blob/0553aca6c2e9530d8dff74088e877fc9593c2d3c/jdaviz/configs/default/plugins/collapse/collapse.py#L146-L152>`_
-in Jdaviz. This linking would then allow the collapsed dataset to be shown
+functionality <https://github.com/spacetelescope/jdaviz/blob/0553aca6c2e9530d8dff74088e877fc9593c2d3c/jdaviz/configs/default/plugins/collapse/collapse.py>`_
+in Jdaviz::
+
+    pix_id_1 = self._selected_data.pixel_component_ids[i1]
+    pix_id_1c = self.data_collection[label].pixel_component_ids[i1c]
+    pix_id_2 = self._selected_data.pixel_component_ids[i2]
+    pix_id_2c = self.data_collection[label].pixel_component_ids[i2c]
+
+    self.data_collection.add_link(LinkSame(pix_id_1, pix_id_1c))
+    self.data_collection.add_link(LinkSame(pix_id_2, pix_id_2c))
+
+This linking would then allow the collapsed dataset to be shown
 as contours on top of the original sliced cube.
 
 This is by far the fastest way of linking, but it does rely on the datasets
@@ -108,8 +120,29 @@ The first is to do something similar to how pixel coordinates are linked in :ref
 
     data_collection.add_link(links)
 
-or see the `following example <https://github.com/spacetelescope/jdaviz/blob/d296c6312b020897034e9dd1fc58c84a2559efa5/jdaviz/app.py#L241-L260>`_
-from Jdaviz.
+or see the `following example in app.py <https://github.com/spacetelescope/jdaviz/blob/d296c6312b020897034e9dd1fc58c84a2559efa5/jdaviz/app.py>`_
+from Jdaviz::
+
+    def _link_new_data(self):
+        """
+        When additional data is loaded, check to see if the spectral axis of
+        any components are compatible with already loaded data. If so, link
+        them so that they can be displayed on the same profile1D plot.
+        """
+        new_len = len(self.data_collection)
+        # Can't link if there's no world_component_ids
+        wc_new = self.data_collection[new_len-1].world_component_ids
+        if wc_new == []:
+            return
+
+        # Link to the first dataset with compatible coordinates
+        for i in range(0, new_len-1):
+            wc_old = self.data_collection[i].world_component_ids
+            if wc_old == []:
+                continue
+            else:
+                self.data_collection.add_link(LinkSame(wc_old[0], wc_new[0]))
+                break
 
 However, this kind of linking is not generally robust because it relies on the
 WCS *actually* being the same system between the two datasets - so it

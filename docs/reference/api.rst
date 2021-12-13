@@ -40,7 +40,10 @@ Configurations
 .. automodapi:: jdaviz.configs.cubeviz
    :no-inheritance-diagram:
 
-.. automodapi:: jdaviz.configs.imviz
+.. automodapi:: jdaviz.configs.imviz.helper
+   :no-inheritance-diagram:
+
+.. automodapi:: jdaviz.configs.imviz.plugins
    :no-inheritance-diagram:
 
 .. automodapi:: jdaviz.configs.mosviz

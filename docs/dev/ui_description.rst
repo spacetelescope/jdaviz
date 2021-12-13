@@ -33,7 +33,7 @@ GUI-first approach, depicted in the following diagram.
 .. note::
     The ``.xml`` file in the ``img`` directory can be used to edit the
     diagram using applications like, e.g.,
-    `draw.io <https://draw.io>`_.
+    `draw.io <https://app.diagrams.net/>`_.
 
 .. image:: ../img/glue-jupyter_diagram.png
 

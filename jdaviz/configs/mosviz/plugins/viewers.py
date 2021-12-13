@@ -11,6 +11,7 @@ from jdaviz.core.events import (AddDataToViewerMessage,
                                 RemoveDataFromViewerMessage,
                                 TableClickMessage)
 from jdaviz.core.registries import viewer_registry
+from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
 
 __all__ = ['MosvizProfileView', 'MosvizImageView', 'MosvizProfile2DView',
            'MosvizTableViewer']
@@ -81,7 +82,16 @@ class MosvizProfile2DView(BqplotImageView):
     #  axes, the default conversion class must handle cubes
     default_class = Spectrum1D
 
-    tools = ['bqplot:panzoom_x']
+    # replace the default tools (which include rect and circle region)
+    # with only the tools we want (likely the same as in SpecvizProfileView)
+    inherit_tools = False
+    tools = ['bqplot:home',
+             'bqplot:panzoom',
+             'bqplot:panzoom_x',
+             'bqplot:panzoom_y',
+             'bqplot:xrange']
+
+    _state_cls = FreezableBqplotImageViewerState
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -116,6 +126,9 @@ class MosvizTableViewer(TableViewer):
         self._shared_image = False
         self.row_selection_in_progress = False
 
+        self._on_row_selected_begin = None
+        self._on_row_selected_end = None
+
     def redraw(self):
 
         # Overload to hide components - we do this via overloading instead of
@@ -134,7 +147,42 @@ class MosvizTableViewer(TableViewer):
 
         super().redraw()
 
+    @property
+    def nrows(self):
+        return self.widget_table.get_state()['total_length']
+
+    @property
+    def current_row(self):
+        return self.widget_table.highlighted
+
+    def select_row(self, n):
+        if n < 0 or n >= self.nrows:
+            raise ValueError("n must be between 0 and {}".format(self.nrows-1))
+
+        # compute and set the appropriate page
+        # NOTE: traitlets won't detect internal changes to a dict
+        options = self.widget_table.get_state()['options']
+        page = int(n / options['itemsPerPage']) + 1
+        if options['page'] != page:
+            self.widget_table.set_state({'options': {**options, 'page': page}})
+            self.widget_table.send_state()
+        # select and highlight the row
+        self.widget_table.highlighted = n
+
+    def next_row(self):
+        current_row = self.current_row
+        new_row = 0 if current_row == self.nrows - 1 else current_row + 1
+        self.select_row(new_row)
+
+    def prev_row(self):
+        current_row = self.current_row
+        new_row = self.nrows - 1 if current_row == 0 else current_row - 1
+        self.select_row(new_row)
+
     def _on_row_selected(self, event):
+        if self._on_row_selected_begin:
+            self._on_row_selected_begin(event)
+
         self.row_selection_in_progress = True
         # Grab the index of the latest selected row
         selected_index = event['new']
@@ -199,6 +247,9 @@ class MosvizTableViewer(TableViewer):
         self.session.hub.broadcast(message)
 
         self.row_selection_in_progress = False
+
+        if self._on_row_selected_end:
+            self._on_row_selected_end(event)
 
     def set_plot_axes(self, *args, **kwargs):
         return

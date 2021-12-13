@@ -10,6 +10,21 @@ from jdaviz.configs.default.plugins.line_lists.line_list_mixin import LineListMi
 __all__ = ['Specviz', 'SpecViz']
 
 
+def _apply_redshift_to_spectra(spectra, redshift):
+
+    flux = spectra.flux
+    # This is a hack around inability to input separate redshift with
+    # a SpectralAxis instance in Spectrum1D
+    spaxis = spectra.spectral_axis.value * spectra.spectral_axis.unit
+    mask = spectra.mask
+    uncertainty = spectra.uncertainty
+    output_spectra = Spectrum1D(flux, spectral_axis=spaxis,
+                                redshift=redshift, mask=mask,
+                                uncertainty=uncertainty)
+
+    return output_spectra
+
+
 class Specviz(ConfigHelper, LineListMixin):
     """Specviz Helper class."""
 
@@ -43,15 +58,8 @@ class Specviz(ConfigHelper, LineListMixin):
             if data_label is not None:
                 spectra = {data_label: spectra}
             for key in spectra.keys():
-                flux = spectra[key].flux
-                # This is a hack around inability to input separate redshift with
-                # a SpectralAxis instance in Spectrum1D
-                spaxis = spectra[key].spectral_axis.value * spectra[key].spectral_axis.unit
-                mask = spectra[key].mask
-                uncertainty = spectra[key].uncertainty
-                output_spectra[key] = Spectrum1D(flux, spectral_axis=spaxis,
-                                                 redshift=self._redshift, mask=mask,
-                                                 uncertainty=uncertainty)
+                output_spectra[key] = _apply_redshift_to_spectra(spectra[key], self._redshift)
+
             if apply_slider_redshift == "Warn":
                 logging.warning("Warning: Applying the value from the redshift "
                                 "slider to the output spectra. To avoid seeing this "
@@ -65,8 +73,8 @@ class Specviz(ConfigHelper, LineListMixin):
 
     def get_spectral_regions(self):
         """
-        Retrieves glue subset objects from the spectrum viewer and converts
-        them to `~specutils.SpectralRegion` objects.
+        A simple wrapper around the app-level call to retrieve only spectral
+        subsets, which are now returned as SpectralRegions by default.
 
         Returns
         -------
@@ -74,26 +82,7 @@ class Specviz(ConfigHelper, LineListMixin):
             Mapping from the names of the subsets to the subsets expressed
             as `specutils.SpectralRegion` objects.
         """
-        regions = self.app.get_subsets_from_viewer("spectrum-viewer", subset_type="spectral")
-
-        spec_regs = {}
-
-        for name, reg in regions.items():
-            # Use the region's unit. If N/A, use the reference_data's
-            unit = reg.meta.get("spectral_axis_unit",
-                                self.get_spectra(
-                                    self.app.get_viewer("spectrum-viewer"
-                                                        ).state.reference_data.label,
-                                    apply_slider_redshift=False
-                                    ).spectral_axis.unit
-                                )
-
-            spec_reg = SpectralRegion.from_center(reg.center.x * unit,
-                                                  reg.width * unit)
-
-            spec_regs[name] = spec_reg
-
-        return spec_regs
+        return self.app.get_subsets_from_viewer("spectrum-viewer", subset_type="spectral")
 
     def x_limits(self, x_min=None, x_max=None):
         """Sets the limits of the x-axis
@@ -221,6 +210,9 @@ class Specviz(ConfigHelper, LineListMixin):
         Apply a redshift to any loaded spectral lines and data. Also updates
         the value shown in the slider.
         '''
+        if new_redshift == self._redshift:
+            # avoid sending messages that can result in race conditions
+            return
         msg = RedshiftMessage("redshift", new_redshift, sender=self)
         self.app.hub.broadcast(msg)
 

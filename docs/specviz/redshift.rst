@@ -1,3 +1,5 @@
+.. _specviz-redshift:
+
 *******************
 Setting Redshift/RV
 *******************
@@ -31,7 +33,7 @@ The slider value is also automatically updated if a spectrum is loaded that
 already has a redshift set.
 
 From the notebook
------------------
+=================
 
 The upper and lower bounds of the slider, as well as the resolution of a single
 step in the slider, can be set from a notebook cell using the 

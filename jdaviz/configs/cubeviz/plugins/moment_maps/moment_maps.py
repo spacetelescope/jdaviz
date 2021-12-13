@@ -6,14 +6,12 @@ from astropy.nddata import CCDData
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
 from traitlets import List, Unicode, Any, Bool, observe
-from spectral_cube import SpectralCube
-from specutils import SpectralRegion
+from specutils import Spectrum1D, manipulation, SpectralRegion, analysis
 from regions import RectanglePixelRegion
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
-from jdaviz.utils import load_template
 
 __all__ = ['MomentMap']
 
@@ -24,7 +22,7 @@ u.add_enabled_units([spaxel])
 
 @tray_registry('cubeviz-moment-maps', label="Moment Maps")
 class MomentMap(TemplateMixin):
-    template = load_template("moment_maps.vue", __file__).tag(sync=True)
+    template_file = __file__, "moment_maps.vue"
     n_moment = Any().tag(sync=True)
     dc_items = List([]).tag(sync=True)
     selected_data = Unicode().tag(sync=True)
@@ -37,6 +35,12 @@ class MomentMap(TemplateMixin):
     spectral_unit = Unicode().tag(sync=True)
     spectral_subset_items = List(["None"]).tag(sync=True)
     selected_subset = Unicode("None").tag(sync=True)
+
+    # NOTE: this is currently cubeviz-specific so will need to be updated
+    # to be config-specific if using within other viewer configurations.
+    viewer_to_id = {'Left': 'cubeviz-0', 'Center': 'cubeviz-1', 'Right': 'cubeviz-2'}
+    viewers = List(['None', 'Left', 'Center', 'Right']).tag(sync=True)
+    selected_viewer = Unicode('None').tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -63,12 +67,12 @@ class MomentMap(TemplateMixin):
                 # Also set the spectral min and max to default to the full range
                 try:
                     self.selected_data = self.dc_items[i]
-                    cube = self._selected_data.get_object(cls=SpectralCube)
+                    cube = self._selected_data.get_object(cls=Spectrum1D, statistic=None)
                     self.spectral_min = cube.spectral_axis[0].value
                     self.spectral_max = cube.spectral_axis[-1].value
                     self.spectral_unit = str(cube.spectral_axis.unit)
                     break
-                # Skip data that can't be returned as a SpectralCube
+                # Skip data that can't be returned as a Spectrum1D
                 except (ValueError, TypeError):
                     continue
 
@@ -80,7 +84,7 @@ class MomentMap(TemplateMixin):
     def _on_data_selected(self, event):
         self._selected_data = next((x for x in self.data_collection
                                     if x.label == event['new']))
-        cube = self._selected_data.get_object(cls=SpectralCube)
+        cube = self._selected_data.get_object(cls=Spectrum1D, statistic=None)
         # Update spectral bounds and unit if we've switched to another unit
         if str(cube.spectral_axis.unit) != self.spectral_unit:
             self.spectral_min = cube.spectral_axis[0].value
@@ -92,7 +96,7 @@ class MomentMap(TemplateMixin):
         # If "None" selected, reset based on bounds of selected data
         self._selected_subset = self.selected_subset
         if self._selected_subset == "None":
-            cube = self._selected_data.get_object(cls=SpectralCube)
+            cube = self._selected_data.get_object(cls=Spectrum1D, statistic=None)
             self.spectral_min = cube.spectral_axis[0].value
             self.spectral_max = cube.spectral_axis[-1].value
         else:
@@ -120,12 +124,12 @@ class MomentMap(TemplateMixin):
         self._spectral_subsets = temp_dict
         self.spectral_subset_items = temp_list
 
-    def vue_calculate_moment(self, event):
+    def vue_calculate_moment(self, *args):
         # Retrieve the data cube and slice out desired region, if specified
-        cube = self._selected_data.get_object(cls=SpectralCube)
+        cube = self._selected_data.get_object(cls=Spectrum1D, statistic=None)
         spec_min = float(self.spectral_min) * u.Unit(self.spectral_unit)
         spec_max = float(self.spectral_max) * u.Unit(self.spectral_unit)
-        slab = cube.spectral_slab(spec_min, spec_max)
+        slab = manipulation.spectral_slab(cube, spec_min, spec_max)
 
         # Calculate the moment and convert to CCDData to add to the viewers
         try:
@@ -134,10 +138,9 @@ class MomentMap(TemplateMixin):
                 raise ValueError("Moment must be a positive integer")
         except ValueError:
             raise ValueError("Moment must be a positive integer")
-        self.moment = slab.moment(n_moment)
+        self.moment = analysis.moment(slab, order=n_moment)
 
-        moment_ccd = CCDData(self.moment.array, wcs=self.moment.wcs,
-                             unit=self.moment.unit)
+        moment_ccd = CCDData(self.moment, unit=self.moment.unit)
 
         label = "Moment {}: {}".format(n_moment, self._selected_data.label)
         fname_label = self._selected_data.label.replace("[", "_").replace("]", "_")
@@ -148,6 +151,11 @@ class MomentMap(TemplateMixin):
         msg = SnackbarMessage("{} added to data collection".format(label),
                               sender=self, color="success")
         self.hub.broadcast(msg)
+
+        if self.selected_viewer != 'None':
+            # replace the contents in the selected viewer with the results from this plugin
+            self.app.add_data_to_viewer(self.viewer_to_id.get(self.selected_viewer),
+                                        label, clear_other_data=True)
 
     def vue_save_as_fits(self, event):
         self.moment.write(self._filename)

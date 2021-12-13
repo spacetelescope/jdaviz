@@ -4,14 +4,14 @@ from glue.core.message import (DataCollectionAddMessage,
 from glue.core import Data
 from glue.core.link_helpers import LinkSame
 from spectral_cube import SpectralCube
+from specutils import Spectrum1D
 from specutils import SpectralRegion
-from traitlets import List, Unicode, Int, Any, observe
+from traitlets import List, Unicode, Int, Any, Bool, observe
 from regions import RectanglePixelRegion
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
-from jdaviz.utils import load_template
 
 __all__ = ['Collapse']
 
@@ -26,13 +26,23 @@ AXES_MAPPING = [((1, 2), (0, 1)), ((0, 2), (0, 1)), ((0, 1), (0, 1))]
 
 @tray_registry('g-collapse', label="Collapse")
 class Collapse(TemplateMixin):
-    template = load_template("collapse.vue", __file__).tag(sync=True)
+    template_file = __file__, "collapse.vue"
     data_items = List([]).tag(sync=True)
     selected_data_item = Unicode().tag(sync=True)
     axes = List([]).tag(sync=True)
     selected_axis = Int(0).tag(sync=True)
     funcs = List(['Mean', 'Median', 'Min', 'Max', 'Sum']).tag(sync=True)
     selected_func = Unicode('Mean').tag(sync=True)
+
+    # add/replace results for selected_axis != 0
+    add_replace_results = Bool(True).tag(sync=True)
+
+    # selected_viewer for selected_axis == 0
+    # NOTE: this is currently cubeviz-specific so will need to be updated
+    # to be config-specific if using within other viewer configurations.
+    viewer_to_id = {'Left': 'cubeviz-0', 'Center': 'cubeviz-1', 'Right': 'cubeviz-2'}
+    viewers = List(['None', 'Left', 'Center', 'Right']).tag(sync=True)
+    selected_viewer = Unicode('None').tag(sync=True)
 
     spectral_min = Any().tag(sync=True)
     spectral_max = Any().tag(sync=True)
@@ -80,7 +90,7 @@ class Collapse(TemplateMixin):
     def _on_subset_selected(self, event):
         # If "None" selected, reset based on bounds of selected data
         if self.selected_subset == "None":
-            cube = self._selected_data.get_object(cls=SpectralCube)
+            cube = self._selected_data.get_object(cls=Spectrum1D)
             self.spectral_min = cube.spectral_axis[0].value
             self.spectral_max = cube.spectral_axis[-1].value
         else:
@@ -155,3 +165,11 @@ class Collapse(TemplateMixin):
             color="success",
             sender=self)
         self.hub.broadcast(snackbar_message)
+
+        if self.selected_axis == 0 and self.selected_viewer != 'None':
+            # replace the contents in the selected viewer with the results from this plugin
+            self.app.add_data_to_viewer(self.viewer_to_id.get(self.selected_viewer),
+                                        label, clear_other_data=True)
+
+        if self.selected_axis != 0 and self.add_replace_results:
+            self.app.add_data_to_viewer('spectrum-viewer', label)

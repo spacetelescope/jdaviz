@@ -1,8 +1,8 @@
 from glue.core.message import Message
 
-__all__ = ['NewViewerMessage', 'AddViewerMessage', 'LoadDataMessage',
+__all__ = ['NewViewerMessage', 'LoadDataMessage',
            'AddDataMessage', 'SnackbarMessage', 'RemoveDataMessage',
-           'AddLineListMessage', 'TableClickMessage']
+           'AddLineListMessage', 'RowLockMessage', 'TableClickMessage']
 
 
 class NewViewerMessage(Message):
@@ -24,17 +24,6 @@ class NewViewerMessage(Message):
     @property
     def x_attr(self):
         return self._x_attr
-
-
-class AddViewerMessage(Message):
-    def __init__(self, viewer, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self._viewer = viewer
-
-    @property
-    def viewer(self):
-        return self._viewer
 
 
 class LoadDataMessage(Message):
@@ -185,6 +174,16 @@ class RedshiftMessage(Message):
     @property
     def value(self):
         return self._value
+
+
+class RowLockMessage(Message):
+    def __init__(self, is_locked, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._is_locked = is_locked
+
+    @property
+    def is_locked(self):
+        return self._is_locked
 
 
 class TableClickMessage(Message):

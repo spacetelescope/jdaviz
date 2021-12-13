@@ -8,7 +8,6 @@ from specutils import analysis, SpectralRegion
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
-from jdaviz.utils import load_template
 
 __all__ = ['LineAnalysis']
 
@@ -22,7 +21,7 @@ FUNCTIONS = {"Line Flux": analysis.line_flux,
 @tray_registry('specviz-line-analysis', label="Line Analysis")
 class LineAnalysis(TemplateMixin):
     dialog = Bool(False).tag(sync=True)
-    template = load_template("line_analysis.vue", __file__).tag(sync=True)
+    template_file = __file__, "line_analysis.vue"
     dc_items = List([]).tag(sync=True)
     temp_function = Unicode().tag(sync=True)
     available_functions = List(list(FUNCTIONS.keys())).tag(sync=True)
@@ -139,7 +138,5 @@ class LineAnalysis(TemplateMixin):
                 temp_result = FUNCTIONS[function](self._spectrum1d)
 
             temp_results.append({'function': function, 'result': str(temp_result)})
-            self.result_available = True
-
-            self.results = []
-            self.results = temp_results
+        self.result_available = True
+        self.results = temp_results

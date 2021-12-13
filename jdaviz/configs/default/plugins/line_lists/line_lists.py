@@ -14,7 +14,6 @@ from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
 from jdaviz.core.linelists import load_preset_linelist
 from jdaviz.core.spectral_line import SpectralLine
-from jdaviz.utils import load_template
 
 __all__ = ['LineListTool']
 
@@ -22,7 +21,7 @@ __all__ = ['LineListTool']
 @tray_registry('g-line-list', label="Line Lists")
 class LineListTool(TemplateMixin):
     dialog = Bool(False).tag(sync=True)
-    template = load_template("line_lists.vue", __file__).tag(sync=True)
+    template_file = __file__, "line_lists.vue"
     dc_items = List([]).tag(sync=True)
     available_lists = List([]).tag(sync=True)
     loaded_lists = List([]).tag(sync=True)

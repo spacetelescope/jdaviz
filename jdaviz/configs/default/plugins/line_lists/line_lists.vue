@@ -1,6 +1,7 @@
 <template>
   <v-card flat tile>
     <v-card>
+      <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#line-lists'">Plot lines from preset or custom line lists</j-docs-link>
       <v-card-subtitle>Preset Line Lists</v-card-subtitle>
       <v-card-text>
         <v-container>
@@ -20,7 +21,9 @@
           <v-row
             justify="end"
           >
-            <v-btn color="primary" text @click="load_list">Load List</v-btn>
+            <j-tooltip tipid='plugin-line-lists-load'>
+              <v-btn color="primary" text @click="load_list">Load List</v-btn>
+            </j-tooltip>
           </v-row>
         </v-container>
       </v-card-text>
@@ -54,18 +57,22 @@
                 justify="center"
               >
                 <v-col>
-                  <v-text-field
-                    label="Line Name"
-                    v-model="custom_name"
-                  >
-                  </v-text-field>
+                  <j-tooltip tipid='plugin-line-lists-line-name'>
+                    <v-text-field
+                      label="Line Name"
+                      v-model="custom_name"
+                    >
+                    </v-text-field>
+                  </j-tooltip>
                 </v-col>
                 <v-col>
-                  <v-text-field
-                    label="Rest Value"
-                    v-model="custom_rest"
-                  >
-                  </v-text-field>
+                  <j-tooltip tipid='plugin-line-lists-custom-rest'>
+                    <v-text-field
+                      label="Rest Value"
+                      v-model="custom_rest"
+                    >
+                    </v-text-field>
+                  </j-tooltip>
                 </v-col>
                 <v-col>
                   <v-text-field
@@ -75,7 +82,9 @@
                   </v-text-field>
                 </v-col>
                 <v-col>
-                  <v-btn color="primary" text @click="add_custom_line">Add Line</v-btn>
+                  <j-tooltip tipid='plugin-line-lists-add-custom-line'>
+                    <v-btn color="primary" text @click="add_custom_line">Add Line</v-btn>
+                  </j-tooltip>
                 </v-col>
               </v-row>
               <v-row justify="space-around">
@@ -89,12 +98,16 @@
                 align="center"
                 justify="center"
               >
-                <v-btn 
-                 color="primary" 
-                 text @click="show_all_in_list(item)">Show All</v-btn>
-                <v-btn 
-                 color="primary" 
-                 text @click="hide_all_in_list(item)">Hide All</v-btn>
+                <j-tooltip tipid='plugin-line-lists-plot-all-in-list'>
+                  <v-btn 
+                   color="primary" 
+                   text @click="show_all_in_list(item)">Plot All</v-btn>
+                </j-tooltip>
+                <j-tooltip tipid='plugin-line-lists-erase-all-in-list'>
+                  <v-btn 
+                   color="primary" 
+                   text @click="hide_all_in_list(item)">Erase All</v-btn>
+                </j-tooltip>
               <v-row>
               </v-row>
               <v-row
@@ -113,7 +126,9 @@
                   <p class="font-weight-bold">Unit</p>
                 </v-col>
                 <v-col cols=2>
-                  <p class="font-weight-bold">Visible</p>
+                  <j-tooltip tipid='plugin-line-lists-line-visible'>
+                    <p class="font-weight-bold">Visible</p>
+                  </j-tooltip>
                 </v-col>
               </v-row>
               <v-row
@@ -133,8 +148,10 @@
                   {{ line.unit }}
                 </v-col>
                 <v-col cols=2>
-                  <v-checkbox v-model="line.show" @change="change_visible(line)">
-                  </v-checkbox>
+                  <j-tooltip tipid='plugin-line-lists-line-visible'>
+                    <v-checkbox v-model="line.show" @change="change_visible(line)">
+                    </v-checkbox>
+                  </j-tooltip>
                 </v-col>
               </v-row>
             </v-expansion-panel-content>
@@ -149,8 +166,12 @@
             justify="left"
             align="center"
             no-gutters>
-            <v-btn color="primary" text @click="plot_all_lines">Plot All</v-btn>
-            <v-btn color="primary" text @click="erase_all_lines">Erase All</v-btn>
+            <j-tooltip tipid='plugin-line-lists-plot-all'>
+              <v-btn color="primary" text @click="plot_all_lines">Plot All</v-btn>
+            </j-tooltip>
+            <j-tooltip tipid='plugin-line-lists-erase-all'>
+              <v-btn color="primary" text @click="erase_all_lines">Erase All</v-btn>
+            </j-tooltip>
           </v-row>
         </v-container>
       </v-card-text>

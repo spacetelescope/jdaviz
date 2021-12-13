@@ -6,7 +6,6 @@ import numpy as np
 from jdaviz.core.events import AddDataMessage, RedshiftMessage
 from jdaviz.core.registries import tool_registry
 from jdaviz.core.template_mixin import TemplateMixin
-from jdaviz.utils import load_template
 
 from glue_jupyter.bqplot.profile import BqplotProfileView
 
@@ -15,7 +14,7 @@ __all__ = ['RedshiftSlider']
 
 @tool_registry('g-redshift-slider')
 class RedshiftSlider(TemplateMixin):
-    template = load_template("redshift_slider.vue", __file__).tag(sync=True)
+    template_file = __file__, "redshift_slider.vue"
     slider = Any(0).tag(sync=True)
     slider_textbox = Any(0).tag(sync=True)
     slider_type = Any("Redshift").tag(sync=True)
@@ -73,9 +72,15 @@ class RedshiftSlider(TemplateMixin):
         elif param == "slider_step":
             self.slider_step = val
         elif param == "redshift":
+            if self.slider_type == "RV (km/s)":
+                # then the input value is redshift, but we need to translate
+                # to RV before setting the slider value
+                val = self._redshift_to_velocity(val).to('km/s').value
             if val > self.max_value or val < self.min_value:
                 self._update_bounds[self.slider_type](val)
             self.slider = val
+        else:
+            raise NotImplementedError(f"RedshiftMessage with param {param} not implemented.")
 
     def _velocity_to_redshift(self, velocity):
         """

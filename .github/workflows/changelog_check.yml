@@ -1,0 +1,16 @@
+name: Check PR change log
+
+on:
+  pull_request:
+    types: [opened, synchronize, labeled, unlabeled]
+
+jobs:
+  changelog_checker:
+    name: Check if change log entry is correct
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check change log entry
+      uses: pllim/action-check_astropy_changelog@main
+      env:
+        CHANGELOG_FILENAME: CHANGES.rst
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

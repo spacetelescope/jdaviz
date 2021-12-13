@@ -3,7 +3,6 @@ from traitlets import Bool, Float, observe, Any, Int
 from jdaviz.core.events import AddDataMessage
 from jdaviz.core.registries import tool_registry
 from jdaviz.core.template_mixin import TemplateMixin
-from jdaviz.utils import load_template
 
 from glue_jupyter.bqplot.image import BqplotImageView
 
@@ -12,7 +11,7 @@ __all__ = ['UnifiedSlider']
 
 @tool_registry('g-unified-slider')
 class UnifiedSlider(TemplateMixin):
-    template = load_template("unified_slider.vue", __file__).tag(sync=True)
+    template_file = __file__, "unified_slider.vue"
     slider = Any(0).tag(sync=True)
     min_value = Float(0).tag(sync=True)
     max_value = Float(100).tag(sync=True)

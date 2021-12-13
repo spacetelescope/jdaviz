@@ -7,44 +7,43 @@ from astropy.wcs import WCSSUB_SPECTRAL
 from glue.core.message import (SubsetCreateMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
-from regions import RectanglePixelRegion
 from specutils import Spectrum1D, SpectralRegion
 from specutils.utils import QuantityModel
 from traitlets import Any, Bool, Int, List, Unicode, observe
 from glue.core.data import Data
-from glue.core.subset import Subset, RangeSubsetState
+from glue.core.subset import Subset, RangeSubsetState, OrState, AndState
 from glue.core.link_helpers import LinkSame
 
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage, SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
-from jdaviz.utils import load_template
 from jdaviz.configs.default.plugins.model_fitting.fitting_backend import fit_model_to_spectrum
-from jdaviz.configs.default.plugins.model_fitting.initializers import initialize, model_parameters
+from jdaviz.configs.default.plugins.model_fitting.initializers import (MODELS,
+                                                                       initialize,
+                                                                       get_model_parameters)
 
 __all__ = ['ModelFitting']
 
-MODELS = {
-     'Const1D': models.Const1D,
-     'Linear1D': models.Linear1D,
-     'Polynomial1D': models.Polynomial1D,
-     'Gaussian1D': models.Gaussian1D,
-     'Voigt1D': models.Voigt1D,
-     'Lorentz1D': models.Lorentz1D
-     }
+
+class _EmptyParam:
+    def __init__(self, value, unit=None):
+        self.value = value
+        self.unit = unit
+        self.quantity = u.Quantity(self.value,
+                                   self.unit if self.unit is not None else u.dimensionless_unscaled)
 
 
 @tray_registry('g-model-fitting', label="Model Fitting")
 class ModelFitting(TemplateMixin):
     dialog = Bool(False).tag(sync=True)
-    template = load_template("model_fitting.vue", __file__).tag(sync=True)
+    template_file = __file__, "model_fitting.vue"
     dc_items = List([]).tag(sync=True)
 
     spectral_min = Any().tag(sync=True)
     spectral_max = Any().tag(sync=True)
     spectral_unit = Unicode().tag(sync=True)
-    spectral_subset_items = List(["None"]).tag(sync=True)
-    selected_subset = Unicode("None").tag(sync=True)
+    spectral_subset_items = List(["Entire Spectrum"]).tag(sync=True)
+    selected_subset = Unicode("Entire Spectrum").tag(sync=True)
 
     model_label = Unicode().tag(sync=True)
     cube_fit = Bool(False).tag(sync=True)
@@ -55,6 +54,16 @@ class ModelFitting(TemplateMixin):
     component_models = List([]).tag(sync=True)
     display_order = Bool(False).tag(sync=True)
     poly_order = Int(0).tag(sync=True)
+
+    # add/replace results for "fit"
+    add_replace_results = Bool(True).tag(sync=True)
+
+    # selected_viewer for "apply to cube"
+    # NOTE: this is currently cubeviz-specific so will need to be updated
+    # to be config-specific if using within other viewer configurations.
+    viewer_to_id = {'Left': 'cubeviz-0', 'Center': 'cubeviz-1', 'Right': 'cubeviz-2'}
+    viewers = List(['None', 'Left', 'Center', 'Right']).tag(sync=True)
+    selected_viewer = Unicode('None').tag(sync=True)
 
     available_models = List(list(MODELS.keys())).tag(sync=True)
 
@@ -74,6 +83,7 @@ class ModelFitting(TemplateMixin):
         self._selected_data_label = None
         self._spectral_subsets = {}
         self._window = None
+        self._original_mask = None
         if self.app.state.settings.get("configuration") == "cubeviz":
             self.cube_fit = True
 
@@ -125,16 +135,23 @@ class ModelFitting(TemplateMixin):
         self.dc_items = [layer_state.layer.label
                          for layer_state in viewer.state.layers
                          if (not isinstance(layer_state.layer, Subset)
-                             or not isinstance(layer_state.layer.subset_state, RangeSubsetState))]
+                             or not isinstance(layer_state.layer.subset_state,
+                                               (RangeSubsetState, OrState, AndState)))]
 
-    def _param_units(self, param, order=0):
+    def _param_units(self, param, model_type=None):
         """Helper function to handle units that depend on x and y"""
-        y_params = ["amplitude", "amplitude_L", "intercept"]
+        y_params = ["amplitude", "amplitude_L", "intercept", "scale"]
 
         if param == "slope":
             return str(u.Unit(self._units["y"]) / u.Unit(self._units["x"]))
-        elif param == "poly":
+        elif model_type == 'Polynomial1D':
+            # param names are all named cN, where N is the order
+            order = int(float(param[1:]))
             return str(u.Unit(self._units["y"]) / u.Unit(self._units["x"])**order)
+        elif param == "temperature":
+            return str(u.K)
+        elif param == "scale" and model_type == "BlackBody":
+            return str("")
 
         return self._units["y"] if param in y_params else self._units["x"]
 
@@ -142,10 +159,13 @@ class ModelFitting(TemplateMixin):
         """Insert the results of the model fit into the component_models"""
         for m in self.component_models:
             name = m["id"]
-            if len(self.component_models) > 1:
+            if hasattr(self._fitted_model, name):
                 m_fit = self._fitted_model[name]
-            else:
+            elif self._fitted_model.name == name:
                 m_fit = self._fitted_model
+            else:
+                # then the component was not in the fitted model
+                continue
             temp_params = []
             for i in range(0, len(m_fit.parameters)):
                 temp_param = [x for x in m["parameters"] if x["name"] ==
@@ -243,6 +263,9 @@ class ModelFitting(TemplateMixin):
         # (won't affect calculations because these locations are masked)
         selected_spec.flux[np.isnan(selected_spec.flux)] = 0.0
 
+        # Save original mask so we can reset after applying a subset mask
+        self._original_mask = selected_spec.mask
+
         self._selected_data_label = event
 
         if self._units == {}:
@@ -254,7 +277,9 @@ class ModelFitting(TemplateMixin):
         self._spectrum1d = selected_spec
 
         # Also set the spectral min and max to default to the full range
-        self.selected_subset = "None"
+        self.selected_subset = "Entire Spectrum"
+        # This is no longer needed for 1D but is preserved for now pending
+        # fixes to Cubeviz for multi-subregion subsets
         self._window = None
         self.spectral_min = selected_spec.spectral_axis[0].value
         self.spectral_max = selected_spec.spectral_axis[-1].value
@@ -262,31 +287,26 @@ class ModelFitting(TemplateMixin):
 
     def vue_list_subsets(self, event):
         """Populate the spectral subset selection dropdown"""
-        temp_subsets = self.app.get_subsets_from_viewer("spectrum-viewer",
-                                                        subset_type="spectral")
-        temp_dict = {}
-        # Attempt to filter out spatial subsets
-        for key, region in temp_subsets.items():
-            if type(region) == RectanglePixelRegion:
-                temp_dict[key] = region
-        self._spectral_subsets = temp_dict
-        self.spectral_subset_items = ["None"] + sorted(temp_dict.keys())
+        self._spectral_subsets = self.app.get_subsets_from_viewer("spectrum-viewer",
+                                                                  subset_type="spectral")
+        self.spectral_subset_items = ["Entire Spectrum"] + sorted(self._spectral_subsets.keys())
 
     @observe("selected_subset")
     def _on_subset_selected(self, event):
         # If "None" selected, reset based on bounds of selected data
-        if self.selected_subset == "None":
+        if self.selected_subset == "Entire Spectrum":
             self._window = None
             self.spectral_min = self._spectrum1d.spectral_axis[0].value
             self.spectral_max = self._spectrum1d.spectral_axis[-1].value
         else:
             spec_sub = self._spectral_subsets[self.selected_subset]
             unit = u.Unit(self.spectral_unit)
-            spreg = SpectralRegion.from_center(spec_sub.center.x * unit,
-                                               spec_sub.width * unit)
-            self._window = (spreg.lower, spreg.upper)
-            self.spectral_min = spreg.lower.value
-            self.spectral_max = spreg.upper.value
+            if hasattr(spec_sub, "center"):
+                spreg = SpectralRegion.from_center(spec_sub.center.x * unit,
+                                                   spec_sub.width * unit)
+                self._window = (spreg.lower, spreg.upper)
+                self.spectral_min = spreg.lower.value
+                self.spectral_max = spreg.upper.value
 
     def vue_model_selected(self, event):
         # Add the model selected to the list of models
@@ -295,27 +315,6 @@ class ModelFitting(TemplateMixin):
             self.display_order = True
         else:
             self.display_order = False
-
-    def _initialize_polynomial(self, new_model):
-        initialized_model = initialize(
-            MODELS[self.temp_model](name=self.temp_name, degree=self.poly_order),
-            self._spectrum1d.spectral_axis,
-            self._spectrum1d.flux)
-
-        self._initialized_models[self.temp_name] = initialized_model
-        new_model["order"] = self.poly_order
-
-        for i in range(self.poly_order + 1):
-            param = "c{}".format(i)
-            initial_val = getattr(initialized_model, param).value
-            new_model["parameters"].append({"name": param,
-                                            "value": initial_val,
-                                            "unit": self._param_units("poly", i),
-                                            "fixed": False})
-
-        self._update_initialized_parameters()
-
-        return new_model
 
     def _reinitialize_with_fixed(self):
         """
@@ -326,18 +325,18 @@ class ModelFitting(TemplateMixin):
         temp_models = []
         for m in self.component_models:
             fixed = {}
+
+            # Set the initial values as quantities to make sure model units
+            # are set correctly.
+            initial_values = {p["name"]: u.Quantity(p["value"], p["unit"]) for p in m["parameters"]}
+
             for p in m["parameters"]:
                 fixed[p["name"]] = p["fixed"]
+
             # Have to initialize with fixed dictionary
-            if m["model_type"] == "Polynomial1D":
-                temp_model = MODELS[m["model_type"]](name=m["id"],
-                                                     degree=m["order"],
-                                                     fixed=fixed)
-            else:
-                temp_model = MODELS[m["model_type"]](name=m["id"], fixed=fixed)
-            # Now we can set the parameter values
-            for p in m["parameters"]:
-                setattr(temp_model, p["name"], p["value"])
+            temp_model = MODELS[m["model_type"]](name=m["id"], fixed=fixed,
+                                                 **initial_values, **m.get("model_kwargs", {}))
+
             temp_models.append(temp_model)
 
         return temp_models
@@ -345,32 +344,57 @@ class ModelFitting(TemplateMixin):
     def vue_add_model(self, event):
         """Add the selected model and input string ID to the list of models"""
         new_model = {"id": self.temp_name, "model_type": self.temp_model,
-                     "parameters": []}
+                     "parameters": [], "model_kwargs": {}}
+        model_cls = MODELS[self.temp_model]
 
-        # Need to do things differently for polynomials, since the order varies
         if self.temp_model == "Polynomial1D":
-            new_model = self._initialize_polynomial(new_model)
-        else:
-            # Have a separate private dict with the initialized models, since
-            # they don't play well with JSON for widget interaction
-            initialized_model = initialize(
-                MODELS[self.temp_model](name=self.temp_name),
-                self._spectrum1d.spectral_axis,
-                self._spectrum1d.flux)
+            # self.poly_order is the value in the widget for creating
+            # the new model component.  We need to store that with the
+            # model itself as the value could change for another component.
+            new_model["model_kwargs"] = {"degree": self.poly_order}
+        elif self.temp_model == "BlackBody":
+            new_model["model_kwargs"] = {"output_units": self._units["y"],
+                                         "bounds": {"scale": (0.0, None)}}
 
-            self._initialized_models[self.temp_name] = initialized_model
+        initial_values = {}
+        for param_name in get_model_parameters(model_cls, new_model["model_kwargs"]):
+            # access the default value from the model class itself
+            default_param = getattr(model_cls, param_name, _EmptyParam(0))
+            default_units = self._param_units(param_name,
+                                              model_type=new_model["model_type"])
 
-            for param in model_parameters[new_model["model_type"]]:
-                initial_val = getattr(initialized_model, param).value
-                new_model["parameters"].append({"name": param,
-                                                "value": initial_val,
-                                                "unit": self._param_units(param),
-                                                "fixed": False})
+            if default_param.unit is None:
+                # then the model parameter accepts unitless, but we want
+                # to pass with appropriate default units
+                initial_val = u.Quantity(default_param.value, default_units)
+            else:
+                # then the model parameter has default units.  We want to pass
+                # with jdaviz default units (based on x/y units) but need to
+                # convert the default parameter unit to these units
+                initial_val = default_param.quantity.to(default_units)
+
+            initial_values[param_name] = initial_val
+
+        initialized_model = initialize(
+            MODELS[self.temp_model](name=self.temp_name,
+                                    **initial_values,
+                                    **new_model.get("model_kwargs", {})),
+            self._spectrum1d.spectral_axis,
+            self._spectrum1d.flux)
+
+        # need to loop over parameters again as the initializer may have overriden
+        # the original default value
+        for param_name in get_model_parameters(model_cls, new_model["model_kwargs"]):
+            param_quant = getattr(initialized_model, param_name)
+            new_model["parameters"].append({"name": param_name,
+                                            "value": param_quant.value,
+                                            "unit": str(param_quant.unit),
+                                            "fixed": False})
+
+        self._initialized_models[self.temp_name] = initialized_model
 
         new_model["Initialized"] = True
         self.component_models = self.component_models + [new_model]
-
-        self._update_initialized_parameters()
 
     def vue_remove_model(self, event):
         self.component_models = [x for x in self.component_models
@@ -392,13 +416,21 @@ class ModelFitting(TemplateMixin):
             return
         models_to_fit = self._reinitialize_with_fixed()
 
+        # Apply mask from selected subset
+        if self.selected_subset != "Entire Spectrum":
+            subset_mask = self.app.get_data_from_viewer("spectrum-viewer",
+                                        data_label = self.selected_subset).mask # noqa
+            if self._spectrum1d.mask is None:
+                self._spectrum1d.mask = subset_mask
+            else:
+                self._spectrum1d.mask += subset_mask
+
         try:
             fitted_model, fitted_spectrum = fit_model_to_spectrum(
                 self._spectrum1d,
                 models_to_fit,
                 self.model_equation,
-                run_fitter=True,
-                window=self._window)
+                run_fitter=True)
         except AttributeError:
             msg = SnackbarMessage("Unable to fit: model equation may be invalid",
                                   color="error", sender=self)
@@ -419,6 +451,9 @@ class ModelFitting(TemplateMixin):
         # Also update the _initialized_models so we can use these values
         # as the starting point for cube fitting
         self._update_initialized_parameters()
+
+        # Reset the data mask in case we use a different subset next time
+        self._spectrum1d.mask = self._original_mask
 
     def vue_fit_model_to_cube(self, *args, **kwargs):
 
@@ -518,7 +553,11 @@ class ModelFitting(TemplateMixin):
             fitted_spectrum.flux.unit.to_string()
 
         # Add to data collection
-        self.app.data_collection.append(output_cube)
+        self.app.add_data(output_cube, label)
+        if self.selected_viewer != 'None':
+            # replace the contents in the selected viewer with the results from this plugin
+            self.app.add_data_to_viewer(self.viewer_to_id.get(self.selected_viewer),
+                                        label, clear_other_data=True)
 
         snackbar_message = SnackbarMessage(
             "Finished cube fitting",
@@ -560,4 +599,5 @@ class ModelFitting(TemplateMixin):
         model_id = self.app.session.data_collection[label].world_component_ids[0]
         self.app.session.data_collection.add_link(LinkSame(data_id, model_id))
 
-        self.app.add_data_to_viewer('spectrum-viewer', label)
+        if self.add_replace_results:
+            self.app.add_data_to_viewer('spectrum-viewer', label)

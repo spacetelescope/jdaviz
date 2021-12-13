@@ -1,14 +1,21 @@
 <template>
   <v-app id="web-app" class="jdaviz">
     <v-app-bar color="primary" dark :dense="state.settings.dense_toolbar" flat app absolute clipped-right>
-      <jupyter-widget :widget="item.widget" v-for="item in state.tool_items" :key="item.name"></jupyter-widget>
-      <v-spacer></v-spacer>
-      <v-toolbar-items>
-        <v-btn icon @click="state.drawer = !state.drawer">
-          <v-icon v-if="state.drawer">mdi-toy-brick-remove</v-icon>
-          <v-icon v-else>mdi-toy-brick-plus</v-icon>
-        </v-btn>
+      <v-toolbar-items v-for="item in state.tool_items">
+        <v-divider v-if="['g-data-tools', 'g-subset-tools'].indexOf(item.name) === -1" vertical style="margin: 0px 10px"></v-divider>
+        <v-divider v-else-if="item.name === 'g-subset-tools'" vertical style="margin: 0px 10px; border-width: 0"></v-divider>
+        <j-tooltip :tipid="item.name">
+          <jupyter-widget :widget="item.widget" :key="item.name"></jupyter-widget>
+        </j-tooltip>
       </v-toolbar-items>
+      <v-spacer></v-spacer>
+        <j-tooltip tipid="app-toolbar-plugins">
+          <v-toolbar-items>
+          <v-btn icon @click="state.drawer = !state.drawer" :class="{active : state.drawer}">
+            <v-icon>mdi-menu</v-icon>
+          </v-btn>
+        </v-toolbar-items>
+        </j-tooltip>
     </v-app-bar>
 
     <v-content
@@ -25,21 +32,26 @@
                 <g-viewer-tab
                   v-for="(stack, index) in state.stack_items"
                   :stack="stack"
-                  :key="index"
+                  :key="stack.viewers.map(v => v.id).join('-')"
                   :data-items="state.data_items"
                   @resize="relayout"
-                  @destroy="destroy_viewer_item($event)"
+                  :closefn="destroy_viewer_item"
                   @data-item-selected="data_item_selected($event)"
                   @save-figure="save_figure($event)"
+                  @call-viewer-method="call_viewer_method($event)"
                 ></g-viewer-tab>
               </gl-row>
             </golden-layout>
           </pane>
           <pane size="25" v-if="state.drawer" style="background-color: #fafbfc;">
             <v-card flat tile class="overflow-y-auto fill-height" color="#f8f8f8">
-              <v-expansion-panels accordion multiple focusable flat tile>
+              <v-expansion-panels accordion multiple focusable flat tile v-model="state.tray_items_open">
                 <v-expansion-panel v-for="(tray, index) in state.tray_items" :key="index">
-                  <v-expansion-panel-header>{{ tray.label }}</v-expansion-panel-header>
+                  <v-expansion-panel-header>
+                    <j-tooltip :tipid="tray.name">
+                      {{ tray.label }}
+                    </j-tooltip>
+                  </v-expansion-panel-header>
                   <v-expansion-panel-content>
                     <jupyter-widget :widget="tray.widget"></jupyter-widget>
                   </v-expansion-panel-content>
@@ -112,6 +124,10 @@ export default {
 </script>
 
 <style id="web-app">
+* {
+  /* otherwise, voila will override box-sizing to unset which screws up layouts */
+  box-sizing: border-box !important;
+}
 
 /* fix for loading overlay z-index */
 div.output_wrapper {
@@ -179,7 +195,7 @@ div.output_wrapper {
   margin-top: 0px;
 }
 
-.vuetify-styles .lm_header ul {
+.lm_header ul {
   padding-left: 0;
 }
 
@@ -193,8 +209,53 @@ div.output_wrapper {
   margin: 0px;
 }
 
-.vuetify-styles .v-expansion-panel-content__wrap {
+.v-expansion-panel-content__wrap {
   padding: 0px;
   margin: 0px;
+}
+
+.v-toolbar__items .v-btn {
+  /* allow voolbar-items styling to pass through tooltip wrapping span */
+  /* css is copied from .v-toolbar__items>.v-btn */
+  border-radius: 0;
+  height: 100% !important;
+  max-height: none;
+}
+
+.v-tooltip__content {
+  background-color: white !important;
+  border-radius: 2px !important;
+  border: 1px #003B4D solid !important;
+  color: black !important;
+}
+
+a:link {
+  text-decoration: none;
+}
+
+a:visited {
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: none;
+}
+
+a:active {
+  text-decoration: none;
+}
+
+.active {
+  background-color: #c75109 !important;
+}
+
+
+.v-divider.theme--dark {
+  /* make the v-divider standout more */
+  border-color: hsla(0,0%,100%,.35) !important;
+}
+
+.no-hint .v-text-field__details {
+  display: none !important;
 }
 </style>

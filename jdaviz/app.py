@@ -5,15 +5,15 @@ import re
 import uuid
 from inspect import isclass
 
-import ipywidgets as w
+import ipyvue
 
 from astropy.nddata import CCDData
 from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
 from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
-from traitlets import Dict, Bool
-from regions import RectanglePixelRegion, PixCoord
-from specutils import Spectrum1D
+from traitlets import Dict, Bool, Unicode
+from specutils import Spectrum1D, SpectralRegion
+import numpy as np
 
 from glue.core.exceptions import IncompatibleAttribute
 from glue.config import data_translator
@@ -34,7 +34,7 @@ from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessag
                                 AddDataToViewerMessage, RemoveDataFromViewerMessage)
 from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registry,
                                     data_parser_registry)
-from jdaviz.utils import load_template, SnackbarQueue
+from jdaviz.utils import SnackbarQueue
 
 __all__ = ['Application']
 
@@ -50,6 +50,25 @@ EXT_TYPES = dict(flux=['flux', 'sci'],
 # Set default opacity for data layers to 1 instead of 0.8 in
 # some glue-core versions
 glue_settings.DATA_ALPHA = 1
+
+ipyvue.register_component_from_file(None, 'j-tooltip',
+                                    os.path.join(os.path.dirname(__file__),
+                                                 'components/tooltip.vue'))
+
+ipyvue.register_component_from_file(None, 'j-external-link',
+                                    os.path.join(os.path.dirname(__file__),
+                                                 'components/external_link.vue'))
+
+ipyvue.register_component_from_file(None, 'j-docs-link',
+                                    os.path.join(os.path.dirname(__file__),
+                                                 'components/docs_link.vue'))
+# Register pure vue component. This allows us to do recursive component instantiation only in the
+# vue component file
+ipyvue.register_component_from_file('g-viewer-tab', "container.vue", __file__)
+
+ipyvue.register_component_from_file(None, 'j-play-pause-widget',
+                                    os.path.join(os.path.dirname(__file__),
+                                                 'components/play_pause_widget.vue'))
 
 
 class ApplicationState(State):
@@ -105,6 +124,9 @@ class ApplicationState(State):
     tray_items = ListCallbackProperty(
         docstring="List of plugins displayed in the sidebar tray area.")
 
+    tray_items_open = CallbackProperty(
+        [], docstring="The plugin(s) opened in sidebar tray area.")
+
     stack_items = ListCallbackProperty(
         docstring="Nested collection of viewers constructed to support the "
                   "Golden Layout viewer area.")
@@ -119,16 +141,10 @@ class Application(VuetifyTemplate, HubListener):
 
     state = GlueState().tag(sync=True)
 
-    template = load_template("app.vue", __file__).tag(sync=True)
-
-    # Pure vue components are added through the components attribute. This
-    #  allows us to do recursive component instantiation only in the vue
-    #  component file
-    components = Dict({"g-viewer-tab": load_template(
-        "container.vue", __file__, traitlet=False)}).tag(
-            sync=True, **w.widget_serialization)
+    template_file = __file__, "app.vue"
 
     loading = Bool(False).tag(sync=True)
+    config = Unicode("").tag(sync=True)
 
     def __init__(self, configuration=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -527,15 +543,69 @@ class Application(VuetifyTemplate, HubListener):
                                          cls=None)
         regions = {}
 
+        def _get_all_subregions(mask, spec_axis_data):
+            """
+            Return all subregions within a subset.
+
+            Parameters
+            ----------
+            mask : list
+                List of indices in spec_axis_data that are part of the subset.
+            spec_axis_data : list
+                List of spectral axis values.
+            Returns
+            -------
+            combined_spec_region : `~specutils.SpectralRegion`
+                SpectralRegion object containing all subregions of the subset.
+            """
+            if len(mask) == 0:
+                # Mask should only be 0 if ApplyROI is used to incorrectly
+                # create subsets via the API
+                raise ValueError("Mask has length 0, ApplyROI may have been used incorrectly")
+
+            current_edge = 0
+            combined_spec_region = None
+            for index in range(1, len(mask)):
+                # Find spot where mask == True is for a different region of the subset
+                # i.e. mask = [0, 1, 4, 5]
+                # mask[2] != mask[1] + 1
+                if mask[index] != mask[index - 1] + 1:
+                    subset_region = spec_axis_data[mask[current_edge]: mask[index - 1] + 1]
+                    if not combined_spec_region:
+                        combined_spec_region = SpectralRegion(min(subset_region),
+                                                              max(subset_region))
+                    else:
+                        combined_spec_region += SpectralRegion(min(subset_region),
+                                                               max(subset_region))
+                    current_edge = index
+
+            # Get last region within the subset
+            if current_edge != index:
+                subset_region = spec_axis_data[mask[current_edge]: mask[index]]
+                # No if check here because len(mask) must be greater than 1
+                # so combined_spec_region will have been instantiated in the for loop
+                if combined_spec_region is None:
+                    combined_spec_region = SpectralRegion(min(subset_region), max(subset_region))
+                else:
+                    combined_spec_region += SpectralRegion(min(subset_region), max(subset_region))
+
+            return combined_spec_region
+
         if data_label is not None:
             data = {data_label: data}
 
         for key, value in data.items():
             if isinstance(value, Subset):
+                # Get the component type in a compound subset
+                if hasattr(value.subset_state, "state1"):
+                    this_type = type(value.subset_state.state1)
+                else:
+                    this_type = type(value.subset_state)
+
                 # Skip spatial or spectral subsets if only the other is wanted
-                if subset_type == "spectral" and isinstance(value.subset_state, RoiSubsetState):
+                if subset_type == "spectral" and this_type == RoiSubsetState:
                     continue
-                elif subset_type == "spatial" and isinstance(value.subset_state, RangeSubsetState):
+                elif subset_type == "spatial" and this_type == RangeSubsetState:
                     continue
 
                 # Range selection on a profile is currently not supported in
@@ -547,6 +617,7 @@ class Application(VuetifyTemplate, HubListener):
                         subset_id=key, format='astropy-regions')
                     regions[key] = region
                     continue
+
                 # There is a special case for 1d data (which is also not
                 #  supported currently). We now eschew the use of the
                 #  translation machinery entirely and construct the astropy
@@ -555,14 +626,12 @@ class Application(VuetifyTemplate, HubListener):
                     # Grab the data units from the glue-astronomy spectral axis
                     # TODO: this needs to be much simpler; i.e. data units in
                     #  the glue component objects
-                    unit = value.data.coords.spectral_axis.unit
-                    hi, lo = value.subset_state.hi, value.subset_state.lo
-                    xcen = 0.5 * (lo + hi)
-                    width = hi - lo
-                    region = RectanglePixelRegion(
-                        PixCoord(xcen, 0), width, 0,
-                        meta={'spectral_axis_unit': unit})
-                    regions[key] = region
+                    # Cases where there is a single subset
+                    subregions_in_subset = _get_all_subregions(
+                            np.where(value.to_mask() == True)[0], # noqa
+                            value.data.coords.spectral_axis)
+
+                    regions[key] = subregions_in_subset
                     continue
 
                 # Get the pixel coordinate [z] of the 3D data, repeating the
@@ -700,6 +769,8 @@ class Application(VuetifyTemplate, HubListener):
         viewer_item = self._viewer_item_by_reference(viewer_reference)
         if viewer_item is None:  # Maybe they mean the ID
             viewer_item = self._viewer_item_by_id(viewer_reference)
+        if viewer_item is None:
+            raise ValueError(f"Could not identify viewer with reference {viewer_reference}")
         data_label = self._build_data_label(data_path, ext=ext)
         data_id = self._data_id_from_label(data_label)
 
@@ -713,6 +784,11 @@ class Application(VuetifyTemplate, HubListener):
                 f"No data item found with label '{data_label}'. Label must be one "
                 "of:\n\t" + "\n\t".join([
                     data_item['name'] for data_item in self.state.data_items]))
+
+        # TODO: We can display the active data label in GUI here.
+        # For now, we will print to debug Output widget.
+        with self._application_handler.output:
+            print(f'Visible layer changed to: {data_label}')
 
     def _set_plot_axes_labels(self, viewer_id):
         """
@@ -938,12 +1014,15 @@ class Application(VuetifyTemplate, HubListener):
                 if len(stack.get('children', [])) > 0:
                     stack['children'] = remove(stack['children'])
 
+            for empty_stack in [s for s in stack_items
+                                if not s['viewers'] and not s.get('children')]:
+                stack_items.remove(empty_stack)
+
             return stack_items
 
         remove(self.state.stack_items)
 
         # Also remove the viewer from the stored viewer instance dictionary
-        # FIXME: This is getting called twice for some reason
         if cid in self._viewer_store:
             del self._viewer_store[cid]
 
@@ -991,6 +1070,12 @@ class Application(VuetifyTemplate, HubListener):
         button is clicked.
         """
         self.state.snackbar_queue.close_current_message(self.state)
+
+    def vue_call_viewer_method(self, event):
+        viewer_id, method = event['id'], event['method']
+        args = event.get('args', [])
+        kwargs = event.get('kwargs', {})
+        return getattr(self._viewer_store[viewer_id], method)(*args, **kwargs)
 
     def _update_selected_data_items(self, viewer_id, selected_items):
         # Find the active viewer
@@ -1042,9 +1127,8 @@ class Application(VuetifyTemplate, HubListener):
         # active data.
         if len(active_data_labels) > 0:
             active_data = self.data_collection[active_data_labels[0]]
-            if hasattr(active_data, "_preferred_translation") \
-                    and active_data._preferred_translation is not None:
-                pass
+            if (hasattr(active_data, "_preferred_translation")
+                    and active_data._preferred_translation is not None):
                 self._set_plot_axes_labels(viewer_id)
 
     def _on_data_added(self, msg):
@@ -1127,7 +1211,7 @@ class Application(VuetifyTemplate, HubListener):
         last_num = int(last_vid.split('-')[-1])
         return last_num + 1
 
-    def _create_viewer_item(self, viewer, name=None, reference=None):
+    def _create_viewer_item(self, viewer, vid=None, name=None, reference=None):
         """
         Convenience method for generating viewer item dictionaries.
 
@@ -1135,8 +1219,11 @@ class Application(VuetifyTemplate, HubListener):
         ----------
         viewer : `~glue_jupyter.bqplot.common.BqplotBaseView`
             The ``Bqplot`` viewer instance.
-        name : str, optional
+        vid : str or `None`, optional
+            The ID of the viewer.
+        name : str or `None`, optional
             The name shown in the GoldenLayout tab for this viewer.
+            If `None`, it is the same as viewer ID.
         reference : str, optional
             The reference associated with this viewer as defined in the yaml
             configuration file.
@@ -1150,22 +1237,27 @@ class Application(VuetifyTemplate, HubListener):
         tools.borderless = True
         tools.tile = True
 
-        pfx = self.state.settings.get('configuration', str(name))
-        n = self._next_viewer_num(pfx)
-        vid = f"{pfx}-{n}"
+        if vid is None:
+            pfx = self.state.settings.get('configuration', str(name))
+            n = self._next_viewer_num(pfx)
+            vid = f"{pfx}-{n}"
 
         return {
             'id': vid,
             'name': name or vid,
             'widget': "IPY_MODEL_" + viewer.figure_widget.model_id,
             'tools': "IPY_MODEL_" + viewer.toolbar_selection_tools.model_id,
+            'tools_open': False,
             'layer_options': "IPY_MODEL_" + viewer.layer_options.model_id,
             'viewer_options': "IPY_MODEL_" + viewer.viewer_options.model_id,
+            'layer_viewer_open': False,
             'selected_data_items': [],
+            'config': self.config,  # give viewer access to app config/layout
+            'data_open': False,
             'collapse': True,
             'reference': reference}
 
-    def _on_new_viewer(self, msg):
+    def _on_new_viewer(self, msg, vid=None, name=None):
         """
         Callback for when the `~jdaviz.core.events.NewViewerMessage` message is
         raised. This method asks the application handler to generate a new
@@ -1175,6 +1267,14 @@ class Application(VuetifyTemplate, HubListener):
         ----------
         msg : `~jdaviz.core.events.NewViewerMessage`
             The message received from the ``Hub`` broadcast.
+
+        vid : str or `None`
+            ID of the viewer. If `None`, it is auto-generated
+            from configuration settings.
+
+        name : str or `None`
+            Name of the viewer. If `None`, it is auto-generated
+            from class name.
 
         Returns
         -------
@@ -1190,8 +1290,9 @@ class Application(VuetifyTemplate, HubListener):
             viewer.state.x_att = x
 
         # Create the viewer item dictionary
-        new_viewer_item = self._create_viewer_item(
-            viewer=viewer, name=viewer.__class__.__name__)
+        if name is None:
+            name = viewer.__class__.__name__
+        new_viewer_item = self._create_viewer_item(viewer=viewer, vid=vid, name=name)
 
         new_stack_item = self._create_stack_item(
             container='gl-stack',
@@ -1248,6 +1349,8 @@ class Application(VuetifyTemplate, HubListener):
 
         # store the loaded config object
         self._loaded_configuration = config
+        # give the vue templates access to the current config/layout
+        self.config = config['settings'].get('configuration', 'unknown')
 
         self.state.settings.update(config.get('settings'))
 

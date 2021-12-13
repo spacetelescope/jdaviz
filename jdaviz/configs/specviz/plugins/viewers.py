@@ -19,6 +19,7 @@ from astropy import units as u
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.spectral_line import SpectralLine
 from jdaviz.core.linelists import load_preset_linelist, get_available_linelists
+from jdaviz.core.freezable_state import FreezableProfileViewerState
 
 __all__ = ['SpecvizProfileView']
 
@@ -27,12 +28,24 @@ __all__ = ['SpecvizProfileView']
 class SpecvizProfileView(BqplotProfileView):
     default_class = Spectrum1D
     spectral_lines = None
+    _state_cls = FreezableProfileViewerState
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.display_uncertainties = False
         self.display_mask = False
+
+    def _on_subset_create(self, msg):
+        for layer in self.state.layers:
+            if layer.layer.label == msg.subset.label:
+                layer.linewidth = 3
+
+    def _on_add_data(self, msg):
+        data_label = msg.data.label
+        for layer in self.state.layers:
+            if "Subset" in layer.layer.label and layer.layer.data.label == data_label:
+                layer.linewidth = 3
 
     def data(self, cls=None):
         # Grab the user's chosen statistic for collapsing data

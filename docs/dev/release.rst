@@ -4,7 +4,7 @@ Package Release Instructions
 
 This document outlines the steps for releasing a versioned Jdaviz package to
 PyPI. Currently, these do not cover submitting package updates to other
-distribution outlets, such as ``astroconda``, ``conda-forge``, or Zenodo.
+distribution outlets, such as ``astroconda`` or ``conda-forge``.
 
 This process currently requires you (the release manager) to have sufficient GitHub
 permissions to tag, push, and create a GitHub release on Jdaviz repository.
@@ -57,7 +57,7 @@ You can create a clean checkout as follows (requires
 
 #. Update the ``CHANGES.rst`` file to make sure that all the user-facing changes are listed,
    and update the release date from ``unreleased`` to current date in the ``yyyy-mm-dd`` format.
-   Do not forget to commit your changes::
+   Remove any empty subsections. Do not forget to commit your changes::
 
      git add CHANGES.rst
      git commit -m "Preparing release vX.Y.Z"
@@ -124,9 +124,55 @@ You can create a clean checkout as follows (requires
    replacing ``A.B`` with the next non-bugfix version::
 
      A.B (unreleased)
-     ----------------
+     ================
 
-     - No changes yet
+     New Features
+     ------------
+
+     Cubeviz
+     ^^^^^^^
+
+     Imviz
+     ^^^^^
+
+     Mosviz
+     ^^^^^^
+
+     Specviz
+     ^^^^^^^
+
+     API Changes
+     -----------
+
+     Cubeviz
+     ^^^^^^^
+
+     Imviz
+     ^^^^^
+
+     Mosviz
+     ^^^^^^
+
+     Specviz
+     ^^^^^^^
+
+     Bug Fixes
+     ---------
+
+     Cubeviz
+     ^^^^^^^
+
+     Imviz
+     ^^^^^
+
+     Mosviz
+     ^^^^^^
+
+     Specviz
+     ^^^^^^^
+
+     Other Changes and Additions
+     ---------------------------
 
 #. Commit your changes of the, uh, change log::
 
@@ -140,7 +186,7 @@ You can create a clean checkout as follows (requires
      git push origin vX.Y.Z
 
 #. Go to `Releases on GitHub <https://github.com/spacetelescope/jdaviz/releases>`_
-   and `create a new GitHub release <https://docs.github.com/en/github/administering-a-repository/releasing-projects-on-github/managing-releases-in-a-repository>`_
+   and `create a new GitHub release <https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository>`_
    off the new ``vX.Y.Z`` tag.
 
 #. Check `Release on Actions <https://github.com/spacetelescope/jdaviz/actions/workflows/publish.yml>`_
@@ -151,7 +197,10 @@ You can create a clean checkout as follows (requires
 #. Check `RTD builds <https://readthedocs.org/projects/jdaviz/builds/>`_ to make sure
    that documentation built successfully for both ``latest`` and the new ``vX.Y.Z`` tag.
 
-#. Check Zenodo page for Jdaviz. It should have picked up the GitHub Release automatically.
+#. Check `Zenodo page for Jdaviz <https://zenodo.org/badge/latestdoi/185452341>`_.
+   It should have picked up the GitHub Release automatically.
+
+#. Follow procedures for :ref:`release-milestones`.
 
 Congratulations, you have just released a new version of Jdaviz!
 
@@ -181,7 +230,7 @@ You can do a release from your fork directly without a clean code check-out.
 
 #. Update the ``CHANGES.rst`` file to make sure that all the user-facing changes are listed,
    and update the release date from ``unreleased`` to current date in the ``yyyy-mm-dd`` format.
-   Do not forget to commit your changes::
+   Remove any empty subsections. Do not forget to commit your changes::
 
      git add CHANGES.rst
      git commit -m "Preparing release vX.Y.Z"
@@ -194,7 +243,7 @@ You can do a release from your fork directly without a clean code check-out.
    Stop here; do not continue! Otherwise, go to the next step.
 
 #. Go to `Releases on GitHub <https://github.com/spacetelescope/jdaviz/releases>`_
-   and `create a new GitHub release <https://docs.github.com/en/github/administering-a-repository/releasing-projects-on-github/managing-releases-in-a-repository>`_
+   and `create a new GitHub release <https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository>`_
    by giving it a new ``vX.Y.Z`` tag (do not choose any existing tags).
 
 #. Check `Release on Actions <https://github.com/spacetelescope/jdaviz/actions/workflows/publish.yml>`_
@@ -205,7 +254,8 @@ You can do a release from your fork directly without a clean code check-out.
 #. Check `RTD builds <https://readthedocs.org/projects/jdaviz/builds/>`_ to make sure
    that documentation built successfully for both ``latest`` and the new ``vX.Y.Z`` tag.
 
-#. Check Zenodo page for Jdaviz. It should have picked up the GitHub Release automatically.
+#. Check `Zenodo page for Jdaviz <https://zenodo.org/badge/latestdoi/185452341>`_.
+   It should have picked up the GitHub Release automatically.
 
 #. The release is basically done, but now you have to set it up for the
    *next* release cycle. Update ``CHANGES.rst`` directly in the ``main`` branch
@@ -215,14 +265,80 @@ You can do a release from your fork directly without a clean code check-out.
    with the next non-bugfix version::
 
      A.B (unreleased)
-     ----------------
+     ================
 
-     - No changes yet
+     New Features
+     ------------
+
+     Cubeviz
+     ^^^^^^^
+
+     Imviz
+     ^^^^^
+
+     Mosviz
+     ^^^^^^
+
+     Specviz
+     ^^^^^^^
+
+     API Changes
+     -----------
+
+     Cubeviz
+     ^^^^^^^
+
+     Imviz
+     ^^^^^
+
+     Mosviz
+     ^^^^^^
+
+     Specviz
+     ^^^^^^^
+
+     Bug Fixes
+     ---------
+
+     Cubeviz
+     ^^^^^^^
+
+     Imviz
+     ^^^^^
+
+     Mosviz
+     ^^^^^^
+
+     Specviz
+     ^^^^^^^
+
+     Other Changes and Additions
+     ---------------------------
 
 #. Commit your changes of the, uh, change log with a message, "Back to development: A.B.dev"
+
+#. Follow procedures for :ref:`release-milestones`.
 
 #. For your own sanity unrelated to the release, grab the new tag for your fork::
 
      git fetch upstream --tags
 
 Congratulations, you have just released a new version of Jdaviz!
+
+.. _release-milestones:
+
+Milestones bookkeeping
+======================
+
+#. Go to `Milestones <https://github.com/spacetelescope/jdaviz/milestones>`_.
+
+#. Create a new milestone for the next release.
+
+#. For the milestone of this release, if there are any open issues or pull requests
+   still milestoned to it, move their milestones to the next release.
+
+#. Make sure the milestone of this release ends up with "0 open" and then close it.
+
+#. Remind the other devs of the open pull requests with milestone moved that they
+   will need to move their change log entries to the new release section that you
+   have created in ``CHANGES.rst`` during the release process.
