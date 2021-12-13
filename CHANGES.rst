@@ -1,13 +1,50 @@
-2.1 (unreleased)
+2.2 (unreleased)
 ================
 
 New Features
 ------------
 
-- Support for units and BlackBody in modeling plugin. [#953]
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+API Changes
+-----------
+
+Bug Fixes
+---------
 
 Cubeviz
 ^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Other Changes and Additions
+---------------------------
+
+
+2.1 (2021-12-10)
+================
+
+New Features
+------------
+
+- Support for units in astropy models and BlackBody in modeling plugin. [#953]
 
 Imviz
 ^^^^^
@@ -29,35 +66,25 @@ Mosviz
 
 - Ability to add custom columns and change visibility of columns in the table. [#961]
 
+- Support for redshift slider and new ``mosviz.get_spectrum_1d`` and ``mosviz.get_spectrum_2d``
+  helper methods. [#982]
+
 Specviz
 ^^^^^^^
 
 - MIRI s2d files can now be loaded into Specviz2d. [#915]
+
+- Default new subset/region thickness is set to 3px. [#994]
 
 API Changes
 -----------
 
 - Removed unused ``jdaviz.core.events.AddViewerMessage``. [#939]
 
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
 Bug Fixes
 ---------
 
-- ``vue_destroy_viewer_item`` called twice on destroy event. [#676, #913]
-
-Cubeviz
-^^^^^^^
+- ``vue_destroy_viewer_item`` no longer called twice on destroy event. [#676, #913]
 
 Imviz
 ^^^^^
@@ -70,8 +97,8 @@ Imviz
 
 - Imviz now updates pixel value correctly during blinking. [#985]
 
-Mosviz
-^^^^^^
+- Imviz now displays the correct pixel and sky coordinates for dithered
+  images linked by WCS. [#992]
 
 Specviz
 ^^^^^^^
@@ -84,6 +111,7 @@ Other Changes and Additions
 
 - Cubeviz now loads data cube as ``Spectrum1D``. [#547]
 - The new template load system in ``ipyvue`` is used, which enables hot reload. [#913]
+- Plugins now provide options for immediately showing results in applicable viewers. [#974]
 
 2.0 (2021-09-17)
 ================

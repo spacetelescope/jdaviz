@@ -12,6 +12,7 @@ toolbar:
   - g-data-tools
   - g-subset-tools
   - g-row-lock
+  - g-redshift-slider
 tray:
   - g-gaussian-smooth
   - g-slit-overlay

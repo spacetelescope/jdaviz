@@ -185,10 +185,19 @@
         <v-text-field
           v-model="model_label"
           label="Model Label"
-          hint="Label for the resulting modeled spectrum."
+          hint="Label for the resulting modeled spectrum/cube."
           persistent-hint
         >
         </v-text-field>
+      </v-card-actions>
+      <v-divider></v-divider>
+      <v-card-actions>
+        <v-switch
+          label="Plot Results"
+          hint="Model will immediately be plotted in the spectral viewer.  Will also be available in the data menu of each spectral viewer."
+          v-model="add_replace_results"
+          persistent-hint>
+        </v-switch>
       </v-card-actions>
       <v-card-actions>
         <div class="flex-grow-1"></div>
@@ -197,12 +206,32 @@
           align="center"
           no-gutters
         >
-        <j-tooltip tipid='plugin-model-fitting-fit'>
-          <v-btn color="primary" text @click="model_fitting">Fit</v-btn>
-        </j-tooltip>
-        <j-tooltip tipid='plugin-model-fitting-apply'>
-          <v-btn v-if="cube_fit" color="primary" text @click="fit_model_to_cube">Apply to Cube</v-btn>
-        </j-tooltip>
+          <j-tooltip tipid='plugin-model-fitting-fit'>
+            <v-btn color="primary" text @click="model_fitting">Fit</v-btn>
+          </j-tooltip>
+        </v-row>
+      </v-card-actions>
+      
+      <v-divider v-if="cube_fit"></v-divider>
+      <v-card-actions v-if="cube_fit">
+        <v-select
+          :items="viewers"
+          v-model="selected_viewer"
+          label='Plot Cube Results in Viewer'
+          hint='Cube results will replace plot in the specified viewer. Will also be available in the data dropdown in all image viewers.'
+          persistent-hint
+        ></v-select>
+      </v-card-actions>
+      <v-card-actions v-if="cube_fit">
+        <div class="flex-grow-1"></div>
+        <v-row
+          justify="left"
+          align="center"
+          no-gutters
+        >
+          <j-tooltip tipid='plugin-model-fitting-apply'>
+            <v-btn color="primary" text @click="fit_model_to_cube">Apply to Cube</v-btn>
+          </j-tooltip>
         </v-row>
       </v-card-actions>
       <v-card-actions>

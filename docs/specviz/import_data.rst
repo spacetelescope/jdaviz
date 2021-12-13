@@ -56,7 +56,7 @@ This method works well for data files that ``specutils`` understands.  However, 
     >>> wavelength = np.arange(5100, 5300)*u.AA
     >>> spec1d = Spectrum1D(spectral_axis=wavelength, flux=flux)
     >>> specviz = Specviz()
-    >>> specviz.load_spectrum(spec1d)
+    >>> specviz.load_spectrum(spec1d)  # doctest: +IGNORE_OUTPUT
 
 For more information about using the Specutils package, please see the
 `Specutils documentation <https://specutils.readthedocs.io>`_.

@@ -55,6 +55,16 @@ class ModelFitting(TemplateMixin):
     display_order = Bool(False).tag(sync=True)
     poly_order = Int(0).tag(sync=True)
 
+    # add/replace results for "fit"
+    add_replace_results = Bool(True).tag(sync=True)
+
+    # selected_viewer for "apply to cube"
+    # NOTE: this is currently cubeviz-specific so will need to be updated
+    # to be config-specific if using within other viewer configurations.
+    viewer_to_id = {'Left': 'cubeviz-0', 'Center': 'cubeviz-1', 'Right': 'cubeviz-2'}
+    viewers = List(['None', 'Left', 'Center', 'Right']).tag(sync=True)
+    selected_viewer = Unicode('None').tag(sync=True)
+
     available_models = List(list(MODELS.keys())).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
@@ -543,7 +553,11 @@ class ModelFitting(TemplateMixin):
             fitted_spectrum.flux.unit.to_string()
 
         # Add to data collection
-        self.app.data_collection.append(output_cube)
+        self.app.add_data(output_cube, label)
+        if self.selected_viewer != 'None':
+            # replace the contents in the selected viewer with the results from this plugin
+            self.app.add_data_to_viewer(self.viewer_to_id.get(self.selected_viewer),
+                                        label, clear_other_data=True)
 
         snackbar_message = SnackbarMessage(
             "Finished cube fitting",
@@ -585,4 +599,5 @@ class ModelFitting(TemplateMixin):
         model_id = self.app.session.data_collection[label].world_component_ids[0]
         self.app.session.data_collection.add_link(LinkSame(data_id, model_id))
 
-        self.app.add_data_to_viewer('spectrum-viewer', label)
+        if self.add_replace_results:
+            self.app.add_data_to_viewer('spectrum-viewer', label)

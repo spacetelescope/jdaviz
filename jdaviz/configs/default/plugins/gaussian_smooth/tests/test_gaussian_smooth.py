@@ -15,6 +15,7 @@ def test_linking_after_spectral_smooth(spectrum1d_cube):
 
     gs._on_data_selected({'new': 'test'})
     gs.stddev = '3.2'
+    gs.add_replace_results = False
     gs.vue_spectral_smooth()
 
     assert len(dc) == 2

@@ -75,6 +75,23 @@
           <span>{{ spectral_unit }}</span>
         </v-col>
       </v-row>
+      <v-row>
+        <v-select
+          :items="viewers"
+          v-model="selected_viewer"
+          label='Plot in Viewer'
+          hint='Collapsed cube will replace plot in the specified viewer.  Will also be available in the data dropdown in all image viewers.'
+          persistent-hint
+        ></v-select>
+      </v-row>
+    </v-container>
+    <v-container v-else>
+      <v-switch
+        label="Plot Results"
+        hint="Collapsed spectrum will immediately plot in the spectral viewer.  Will also be available in the data menu of each spectral viewer."
+        v-model="add_replace_results"
+        persistent-hint>
+      </v-switch>
     </v-container>
     <!-- <v-divider></v-divider> -->
 

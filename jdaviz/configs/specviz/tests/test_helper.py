@@ -200,3 +200,16 @@ def test_get_spectral_regions_unit_conversion(specviz_app, spectrum1d):
 
     assert reg.lower.unit == u.Unit(new_spectral_axis)
     assert reg.upper.unit == u.Unit(new_spectral_axis)
+
+
+def test_subset_default_thickness(specviz_app, spectrum1d):
+    specviz_app.load_spectrum(spectrum1d)
+
+    sv = specviz_app.app.get_viewer('spectrum-viewer')
+    tool = sv.toolbar.tools['bqplot:xrange']
+    tool.activate()
+    tool.interact.brushing = True
+    tool.interact.selected = [2.5, 3.5]
+    tool.interact.brushing = False
+
+    assert sv.state.layers[-1].linewidth == 3

@@ -769,6 +769,8 @@ class Application(VuetifyTemplate, HubListener):
         viewer_item = self._viewer_item_by_reference(viewer_reference)
         if viewer_item is None:  # Maybe they mean the ID
             viewer_item = self._viewer_item_by_id(viewer_reference)
+        if viewer_item is None:
+            raise ValueError(f"Could not identify viewer with reference {viewer_reference}")
         data_label = self._build_data_label(data_path, ext=ext)
         data_id = self._data_id_from_label(data_label)
 
@@ -782,6 +784,11 @@ class Application(VuetifyTemplate, HubListener):
                 f"No data item found with label '{data_label}'. Label must be one "
                 "of:\n\t" + "\n\t".join([
                     data_item['name'] for data_item in self.state.data_items]))
+
+        # TODO: We can display the active data label in GUI here.
+        # For now, we will print to debug Output widget.
+        with self._application_handler.output:
+            print(f'Visible layer changed to: {data_label}')
 
     def _set_plot_axes_labels(self, viewer_id):
         """
@@ -1120,9 +1127,8 @@ class Application(VuetifyTemplate, HubListener):
         # active data.
         if len(active_data_labels) > 0:
             active_data = self.data_collection[active_data_labels[0]]
-            if hasattr(active_data, "_preferred_translation") \
-                    and active_data._preferred_translation is not None:
-                pass
+            if (hasattr(active_data, "_preferred_translation")
+                    and active_data._preferred_translation is not None):
                 self._set_plot_axes_labels(viewer_id)
 
     def _on_data_added(self, msg):
