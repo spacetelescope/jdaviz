@@ -16,16 +16,6 @@
 
     <v-row>
       <v-select
-        :items="axes"
-        v-model="selected_axis"
-        label="Axis"
-        hint="Select the axis along which the data will be collapsed."
-        persistent-hint
-      ></v-select>
-    </v-row>
-
-    <v-row>
-      <v-select
         :items="funcs"
         v-model="selected_func"
         label="Method"
@@ -34,7 +24,7 @@
       ></v-select>
     </v-row>
 
-    <div v-if="selected_axis==0">
+    <div>
       <v-row>
         <v-select
           :items="spectral_subset_items"
@@ -86,16 +76,6 @@
         ></v-select>
       </v-row>
 
-    </div>
-    <div v-else>
-      <v-row>
-        <v-switch
-          label="Plot Results"
-          hint="Collapsed spectrum will immediately plot in the spectral viewer.  Will also be available in the data menu of each spectral viewer."
-          v-model="add_replace_results"
-          persistent-hint>
-        </v-switch>
-      </v-row>
     </div>
 
     <v-row justify="end">

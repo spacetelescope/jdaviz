@@ -6,11 +6,9 @@ Import Data
 
 There are two primary ways in which you can load your data into the Cubeviz
 application. Cubeviz supports loading FITS files that can be parsed as 
-:class:`~spectral_cube.SpectralCube` objects, in which case the application will
+:class:`~specutils.Spectrum1D` objects, in which case the application will
 attempt to automatically parse the data into the viewers as described in 
-:ref:`cubeviz-display-cubes`. Cubeviz also supports loading FITS files that can
-be parsed as :class:`~specutils.Spectrum1D`, which will be loaded into the 
-1D spectrum viewer.
+:ref:`cubeviz-display-cubes`, including the 1D spectrum viewer.
 
 Importing data through the GUI
 ------------------------------
@@ -19,8 +17,7 @@ The first way you can load your data into the Cubeviz application is
 by clicking the :guilabel:`Import` button at the top left of the application's 
 user interface. This opens a dialogue where you can navigate your local
 file system (single click to enter a folder) and select the path of a file 
-that can be parsed as a :class:`~spectral_cube.SpectralCube`
-or :class:`~specutils.Spectrum1D`:
+that can be parsed as a :class:`~specutils.Spectrum1D`:
 
 .. image:: img/cubeviz_import_data.png
 
@@ -39,7 +36,7 @@ notebook, you have access to the Cubeviz helper class API. Using this API,
 you can load data into the application through code using the
 :meth:`~jdaviz.core.helpers.ConfigHelper.load_data`
 method, which takes as input either the name of a local file or a 
-:class:`~spectral_cube.SpectralCube` or :class:`~specutils.Spectrum1D` object.
+:class:`~specutils.Spectrum1D` object.
 
     >>> from jdaviz import Cubeviz
     >>> cubeviz = Cubeviz()

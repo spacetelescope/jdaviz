@@ -119,11 +119,6 @@ calculate them on dithered images linked by WCS *unless* you are on the referenc
 Specviz
 -------
 
-Collapse Plugin spectral bounds do not match selected region
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Spectral bound values in the plugin sometimes differ slightly from the bounds shown visually in the spectrum viewer.
-
 Line List Plugin redshift and radial velocity do not roundtrip to full precision
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
