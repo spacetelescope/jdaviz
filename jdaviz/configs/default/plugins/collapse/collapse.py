@@ -3,9 +3,9 @@ from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
 from glue.core import Data
 from glue.core.link_helpers import LinkSame
-from spectral_cube import SpectralCube
 from specutils import Spectrum1D
 from specutils import SpectralRegion
+from specutils.manipulation import spectral_slab
 from traitlets import List, Unicode, Int, Any, Bool, observe
 from regions import RectanglePixelRegion
 
@@ -78,19 +78,21 @@ class Collapse(TemplateMixin):
                                     if x.label == event['new']))
 
         # Also set the spectral min and max to default to the full range
-        cube = self._selected_data.get_object(cls=SpectralCube)
+        cube = self._selected_data.get_object(cls=Spectrum1D, statistic=None)
         self.selected_subset = "None"
         self.spectral_min = cube.spectral_axis[0].value
         self.spectral_max = cube.spectral_axis[-1].value
         self.spectral_unit = str(cube.spectral_axis.unit)
 
-        self.axes = list(range(len(self._selected_data.shape)))
+        # FIXME: Re-enable spatial-spectral collapse
+        #self.axes = list(range(len(self._selected_data.shape)))
+        self.axes = [0]
 
     @observe("selected_subset")
     def _on_subset_selected(self, event):
         # If "None" selected, reset based on bounds of selected data
         if self.selected_subset == "None":
-            cube = self._selected_data.get_object(cls=Spectrum1D)
+            cube = self._selected_data.get_object(cls=Spectrum1D, statistic=None)
             self.spectral_min = cube.spectral_axis[0].value
             self.spectral_max = cube.spectral_axis[-1].value
         else:
@@ -115,7 +117,7 @@ class Collapse(TemplateMixin):
 
     def vue_collapse(self, *args, **kwargs):
         try:
-            spec = self._selected_data.get_object(cls=SpectralCube)
+            spec = self._selected_data.get_object(cls=Spectrum1D, statistic=None)
         except AttributeError:
             snackbar_message = SnackbarMessage(
                 "Unable to perform collapse over selected data.",
@@ -130,35 +132,44 @@ class Collapse(TemplateMixin):
         if self.selected_axis == 0:
             spec_min = float(self.spectral_min) * u.Unit(self.spectral_unit)
             spec_max = float(self.spectral_max) * u.Unit(self.spectral_unit)
-            spec = spec.spectral_slab(spec_min, spec_max)
+            spec = spectral_slab(spec, spec_min, spec_max)
 
-        collapsed_spec = getattr(spec, self.selected_func.lower())(
-            axis=self.selected_axis)
+        # FIXME: Does not work.
+        # collapsed_spec = spec.collapse(self.selected_func.lower(), axis=self.selected_axis)
+        # data = Data(coords=collapsed_spec.wcs)
+        # data['flux'] = collapsed_spec.filled_data[...]
+        # data.get_component('flux').units = str(collapsed_spec.unit)
+        # data.meta.update(collapsed_spec.meta)
 
-        data = Data(coords=collapsed_spec.wcs)
-        data['flux'] = collapsed_spec.filled_data[...]
+        # FIXME: Spatial-spatial image only.
+        collapsed_spec = spec.collapse(self.selected_func.lower(), axis=-1)  # Quantity
+        data = Data()
+        data['flux'] = collapsed_spec.value
         data.get_component('flux').units = str(collapsed_spec.unit)
-        data.meta.update(collapsed_spec.meta)
 
         self._label_counter += 1
         label = f"Collapsed {self._label_counter} {self._selected_data.label}"
 
         self.data_collection[label] = data
 
+        # FIXME: Does not work.
         # Link the new dataset pixel-wise to the original dataset. In general
         # direct pixel to pixel links are the most efficient and should be
         # used in cases like this where we know there is a 1-to-1 mapping of
         # pixel coordinates. Here which axes are linked to which depends on
         # the selected axis.
-        (i1, i2), (i1c, i2c) = AXES_MAPPING[self.selected_axis]
+        # (i1, i2), (i1c, i2c) = AXES_MAPPING[self.selected_axis]
+
+        # FIXME: Spatial-spatial image only.
+        (i1, i2), (i1c, i2c) = AXES_MAPPING[-1]
 
         pix_id_1 = self._selected_data.pixel_component_ids[i1]
         pix_id_1c = self.data_collection[label].pixel_component_ids[i1c]
         pix_id_2 = self._selected_data.pixel_component_ids[i2]
         pix_id_2c = self.data_collection[label].pixel_component_ids[i2c]
 
-        self.data_collection.add_link(LinkSame(pix_id_1, pix_id_1c))
-        self.data_collection.add_link(LinkSame(pix_id_2, pix_id_2c))
+        self.data_collection.add_link([LinkSame(pix_id_1, pix_id_1c),
+                                       LinkSame(pix_id_2, pix_id_2c)])
 
         snackbar_message = SnackbarMessage(
             f"Data set '{self._selected_data.label}' collapsed successfully.",
@@ -171,5 +182,5 @@ class Collapse(TemplateMixin):
             self.app.add_data_to_viewer(self.viewer_to_id.get(self.selected_viewer),
                                         label, clear_other_data=True)
 
-        if self.selected_axis != 0 and self.add_replace_results:
+        elif self.selected_axis != 0 and self.add_replace_results:
             self.app.add_data_to_viewer('spectrum-viewer', label)

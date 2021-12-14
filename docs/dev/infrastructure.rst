@@ -189,7 +189,6 @@ Some common libraries include (this list is not exhaustive):
 
 * astropy_ (general astronomy-related functionality)
 * `specutils <https://specutils.readthedocs.io>`_ (spectral analysis)
-* `spectral-cube <https://spectral-cube.readthedocs.io>`_ (spectral cube analysis)
 * `photutils <https://photutils.readthedocs.io>`_ (imaging photometry)
 
 Note that those libraries themselves depend on the wider scientific Python ecosystem,

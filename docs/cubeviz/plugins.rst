@@ -2,8 +2,8 @@
 Data Analysis Plugins
 *********************
 
-The Cubeviz data analysis plugins include operations on both
-Spectrum1D one dimensional datasets and :class:`~spectral_cube.SpectralCube` objects.
+The Cubeviz data analysis plugins include operations on
+`~specutils.Spectrum1D` one dimensional datasets.
 Plugins that are specific to 1D spectra are described in
 more detail under :ref:`Specviz: Data Analysis Plugins <specviz-plugins>`.  All plugins
 are accessed via the :guilabel:`plugin` icon in the upper right corner

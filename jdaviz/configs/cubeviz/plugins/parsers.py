@@ -54,8 +54,7 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
             filetype = prihdr.get('FILETYPE', '').lower()
             if telescop == 'jwst' and filetype == '3d ifu cube':
                 # TODO: What about ERR, DQ, and WMAP?
-                data_label = f'{file_name}[SCI]'
-                _parse_jwst_s3d(app, hdulist, data_label)
+                _parse_jwst_s3d(app, hdulist, file_name)
             else:
                 _parse_hdu(app, hdulist, file_name=data_label or file_name)
 
@@ -128,20 +127,14 @@ def _parse_hdu(app, hdulist, file_name=None):
 
 
 def _parse_jwst_s3d(app, hdulist, data_label):
-    from specutils import Spectrum1D
+    from jdaviz.configs.imviz.plugins.parsers import _jwst2data
 
-    unit = u.Unit(hdulist[1].header.get('BUNIT', 'count'))
-    flux = hdulist[1].data << unit
-    wcs = WCS(hdulist[1].header, hdulist)
-    data = Spectrum1D(flux, wcs=wcs)
-
-    # NOTE: Tried to only pass in sliced WCS but got error in Glue.
-    # sliced_wcs = wcs[:, 0, 0]  # Only want wavelengths
-    # data = Spectrum1D(flux, wcs=sliced_wcs)
-
+    data, data_label = _jwst2data(hdulist, 'data', data_label)
     app.add_data(data, data_label)
     app.add_data_to_viewer('flux-viewer', data_label)
-    app.add_data_to_viewer('spectrum-viewer', data_label)
+    # FIXME: Does not work with GWCS.
+    # https://github.com/glue-viz/glue-astronomy/issues/59
+    # app.add_data_to_viewer('spectrum-viewer', data_label)
 
 
 def _parse_spectrum1d_3d(app, file_obj):

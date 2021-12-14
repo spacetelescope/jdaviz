@@ -25,7 +25,7 @@ def image_hdu_obj():
         'CTYPE1': 'RA---TAN', 'CTYPE2': 'DEC--TAN', 'CTYPE3': 'WAVE-LOG',
         'CRVAL1': 205.4384, 'CRVAL2': 27.004754, 'CRVAL3': 3.62159598486E-07,
         'LONPOLE': 180.0, 'LATPOLE': 27.004754, 'MJDREFI': 0.0,
-        'MJDREFF': 0.0, 'DATE-OBS': '2014-03-30', 'MJD-OBS': 56746.0,
+        'MJDREFF': 0.0, 'DATE-OBS': '2014-03-30',
         'RADESYS': 'FK5', 'EQUINOX': 2000.0
     })
 
