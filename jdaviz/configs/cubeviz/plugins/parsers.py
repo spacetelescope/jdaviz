@@ -134,7 +134,7 @@ def _parse_jwst_s3d(app, hdulist, data_label, ext=1):
     # https://github.com/spacetelescope/jdaviz/issues/690 and
     # https://github.com/glue-viz/glue-astronomy/issues/59
     if 'MJD-OBS' not in hdulist[ext].header:
-        for key in ('MJD-BEG', 'DATE-OBS', 'DATE-BEG'):  # Possible alternatives
+        for key in ('MJD-BEG', 'DATE-OBS'):  # Possible alternatives
             if key in hdulist[ext].header:
                 if key.startswith('MJD'):
                     hdulist[ext].header['MJD-OBS'] = hdulist[ext].header[key]
