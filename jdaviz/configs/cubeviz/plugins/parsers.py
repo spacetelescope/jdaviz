@@ -127,12 +127,27 @@ def _parse_hdu(app, hdulist, file_name=None):
             app.add_data_to_viewer('spectrum-viewer', data_label)
 
 
-def _parse_jwst_s3d(app, hdulist, data_label):
+def _parse_jwst_s3d(app, hdulist, data_label, ext=1):
     from specutils import Spectrum1D
 
-    unit = u.Unit(hdulist[1].header.get('BUNIT', 'count'))
-    flux = hdulist[1].data << unit
-    wcs = WCS(hdulist[1].header, hdulist)
+    # Manually inject MJD-OBS until we can support GWCS, see
+    # https://github.com/spacetelescope/jdaviz/issues/690 and
+    # https://github.com/glue-viz/glue-astronomy/issues/59
+    if 'MJD-OBS' not in hdulist[ext].header:
+        for key in ('MJD-BEG', 'DATE-OBS', 'DATE-BEG'):  # Possible alternatives
+            if key in hdulist[ext].header:
+                if key.startswith('MJD'):
+                    hdulist[ext].header['MJD-OBS'] = hdulist[ext].header[key]
+                    break
+                else:
+                    from astropy.time import Time
+                    t = Time(hdulist[ext].header[key])
+                    hdulist[ext].header['MJD-OBS'] = t.mjd
+                    break
+
+    unit = u.Unit(hdulist[ext].header.get('BUNIT', 'count'))
+    flux = hdulist[ext].data << unit
+    wcs = WCS(hdulist[ext].header, hdulist)
     data = Spectrum1D(flux, wcs=wcs)
 
     # NOTE: Tried to only pass in sliced WCS but got error in Glue.
