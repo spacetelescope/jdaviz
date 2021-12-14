@@ -85,7 +85,7 @@ class Collapse(TemplateMixin):
         self.spectral_unit = str(cube.spectral_axis.unit)
 
         # FIXME: Re-enable spatial-spectral collapse
-        #self.axes = list(range(len(self._selected_data.shape)))
+        # self.axes = list(range(len(self._selected_data.shape)))
         self.axes = [0]
 
     @observe("selected_subset")
