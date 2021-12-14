@@ -1,6 +1,9 @@
+import sys
 import base64
 import pathlib
 import uuid
+
+import numpy as np
 
 from astropy.io.registry import IORegistryError
 from specutils import Spectrum1D, SpectrumList, SpectrumCollection
@@ -74,6 +77,14 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
         spec_key = list(current_spec.keys())[0]
         current_unit = current_spec[spec_key].spectral_axis.unit
     with app.data_collection.delay_link_manager_update():
+
+        # these are used to reset the display range
+        # when SpectrumList objects are displayed.
+        x_min = sys.float_info.max
+        x_max = -sys.float_info.max
+        y_min = sys.float_info.max
+        y_max = -sys.float_info.max
+
         for i in range(len(data)):
             spec = data[i]
             if current_unit is not None and spec.spectral_axis.unit != current_unit:
@@ -86,7 +97,23 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
             if show_in_viewer:
                 if isinstance(data, SpectrumList):
                     app.add_data_to_viewer("spectrum-viewer", data_label[i])
+
+                    x_min = min(x_min, np.min(spec.spectral_axis.value))
+                    x_max = max(x_max, np.max(spec.spectral_axis.value))
+
+                    y_min = min(y_min, np.min(spec.flux.value))
+                    y_max = max(y_max, np.max(spec.flux.value))
+
                 elif i == 0:
                     app.add_data_to_viewer("spectrum-viewer", data_label[i])
 
+        # reset display ranges for SpectrumList
+        if isinstance(data, SpectrumList):
 
+            scale = app.get_viewer("spectrum-viewer").scale_x
+            scale.min = float(x_min)
+            scale.max = float(x_max)
+
+            scale = app.get_viewer("spectrum-viewer").scale_y
+            scale.min = float(y_min)
+            scale.max = float(y_max)
