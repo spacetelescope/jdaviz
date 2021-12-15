@@ -17,6 +17,7 @@
     </v-row>
 
     <div v-if="result_available">
+      <j-plugin-section-header>Results</j-plugin-section-header>
       <v-row>
         <v-col cols=6><U>Function</U></v-col>
         <v-col cols=6><U>Result</U></v-col>

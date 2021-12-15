@@ -25,7 +25,7 @@
       ></v-select>
     </v-row>
 
-    <v-card-subtitle>Model Components</v-card-subtitle>
+    <j-plugin-section-header>Model Components</j-plugin-section-header>
     <v-row>
       <v-select
         :items="available_models"
@@ -64,90 +64,92 @@
       </j-tooltip>
     </v-row>
 
-    <v-card-subtitle>Model Parameters</v-card-subtitle>
-    <v-row>
-      <v-expansion-panels>
-        <v-expansion-panel
-          v-for="item in component_models" :key="item.id"
-        >
-          <v-expansion-panel-header v-slot="{ open }">
-            <v-row no-gutters>
-              <v-col cols=1>
-                <v-btn @click.native.stop="remove_model(item.id)" icon>
-                  <v-icon>mdi-close-circle</v-icon>
-                </v-btn>
-              </v-col>
-              <v-col cols="3">{{ item.id }} ({{ item.model_type }})</v-col>
-              <v-col cols="8" class="text--secondary">
-                <v-fade-transition leave-absolute>
-                  <span v-if="open">Enter parameters for model initialization</span>
-                  <v-row
-                    v-else
-                    no-gutters
-                    style="width: 100%"
+    <div v-if="component_models.length">
+      <j-plugin-section-header>Model Parameters</j-plugin-section-header>
+      <v-row>
+        <v-expansion-panels>
+          <v-expansion-panel
+            v-for="item in component_models" :key="item.id"
+          >
+            <v-expansion-panel-header v-slot="{ open }">
+              <v-row no-gutters>
+                <v-col cols="1">
+                  <v-btn @click.native.stop="remove_model(item.id)" icon>
+                    <v-icon>mdi-close-circle</v-icon>
+                  </v-btn>
+                </v-col>
+                <v-col cols="3">{{ item.id }} ({{ item.model_type }})</v-col>
+                <v-col cols="8" class="text--secondary">
+                  <v-fade-transition leave-absolute>
+                    <span v-if="open">Enter parameters for model initialization</span>
+                    <v-row
+                      v-else
+                      no-gutters
+                      style="width: 100%"
+                    >
+                      <v-col cols="4" v-for="param in item.parameters">
+                      {{ param.name }} : {{ param.value }}
+                      </v-col>
+                    </v-row>
+                  </v-fade-transition>
+                </v-col>
+              </v-row>
+            </v-expansion-panel-header>
+            <v-expansion-panel-content>
+              <v-row
+                justify="left"
+                align="center"
+                no-gutters
+              >
+                <v-col cols=2>
+                  <p class="font-weight-bold">Parameter</p>
+                </v-col>
+                <v-col cols=3>
+                  <p class="font-weight-bold">Value</p>
+                </v-col>
+                <v-col cols=4>
+                  <p class="font-weight-bold">Unit</p>
+                </v-col>
+                <v-col cols=2>
+                  <j-tooltip tipid='plugin-model-fitting-param-fixed'>
+                    <p class="font-weight-bold">Fixed?</p>
+                  </j-tooltip>
+                </v-col>
+              </v-row>
+              <v-row
+                justify="left"
+                align="center"
+                no-gutters
+                v-for="param in item.parameters"
+              >
+                <v-col cols = 2>
+                  {{ param.name }}
+                </v-col>
+                <v-col cols = 2>
+                  <v-text-field
+                    v-model="param.value"
                   >
-                    <v-col cols="4" v-for="param in item.parameters">
-                    {{ param.name }} : {{ param.value }}
-                    </v-col>
-                  </v-row>
-                </v-fade-transition>
-              </v-col>
-            </v-row>
-          </v-expansion-panel-header>
-          <v-expansion-panel-content>
-            <v-row
-              justify="left"
-              align="center"
-              no-gutters
-            >
-              <v-col cols=2>
-                <p class="font-weight-bold">Parameter</p>
-              </v-col>
-              <v-col cols=3>
-                <p class="font-weight-bold">Value</p>
-              </v-col>
-              <v-col cols=4>
-                <p class="font-weight-bold">Unit</p>
-              </v-col>
-              <v-col cols=2>
-                <j-tooltip tipid='plugin-model-fitting-param-fixed'>
-                  <p class="font-weight-bold">Fixed?</p>
-                </j-tooltip>
-              </v-col>
-            </v-row>
-            <v-row
-              justify="left"
-              align="center"
-              no-gutters
-              v-for="param in item.parameters"
-            >
-              <v-col cols = 2>
-                {{ param.name }}
-              </v-col>
-              <v-col cols = 2>
-                <v-text-field
-                  v-model="param.value"
-                >
-                </v-text-field>
-              </v-col>
-              <v-col cols=1></v-col>
-              <v-col cols=3>
-                {{ param.unit }}
-              </v-col>
-              <v-col cols=1></v-col>
-              <v-col cols=2>
-                <j-tooltip tipid='plugin-model-fitting-param-fixed'>
-                  <v-checkbox v-model="param.fixed">
-                  </v-checkbox>
-                </j-tooltip>
-              </v-col>
-            </v-row>
-          </v-expansion-panel-content>
-        </v-expansion-panel>
-      </v-expansion-panels>
-    </v-row>
+                  </v-text-field>
+                </v-col>
+                <v-col cols=1></v-col>
+                <v-col cols=3>
+                  {{ param.unit }}
+                </v-col>
+                <v-col cols=1></v-col>
+                <v-col cols=2>
+                  <j-tooltip tipid='plugin-model-fitting-param-fixed'>
+                    <v-checkbox v-model="param.fixed">
+                    </v-checkbox>
+                  </j-tooltip>
+                </v-col>
+              </v-row>
+            </v-expansion-panel-content>
+          </v-expansion-panel>
+        </v-expansion-panels>
+      </v-row>
+    </div>
 
-    <v-card-subtitle>Model Equation Editor</v-card-subtitle>
+    <j-plugin-section-header>Equation Editor</j-plugin-section-header>
     <v-row>
       <v-text-field
         v-model="model_equation"
@@ -160,6 +162,7 @@
       </v-text-field>
     </v-row>
 
+    <j-plugin-section-header>Fit Model</j-plugin-section-header>
     <v-row>
       <v-text-field
         v-model="model_label"
@@ -186,13 +189,13 @@
     </v-row>
 
     <v-row>
-      <span class="vuetify-styles v-messages">
+      <span class="vuetify-styles v-messages" style="color: rgba(0, 0, 0, 0.6)">
           If fit is not sufficiently converged, try clicking fitting again to complete additional iterations.
       </span>
     </v-row>
 
     <div v-if="cube_fit">
-      <v-card-subtitle>Cube Fit</v-card-subtitle>
+      <j-plugin-section-header>Cube Fit</j-plugin-section-header>
       <v-row>
         <v-select
           :items="viewers"

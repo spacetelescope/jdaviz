@@ -36,7 +36,7 @@
         ></v-text-field>
       </v-row>
 
-      <v-row v-if="selected_data">
+      <v-row v-if="selected_data && stddev > 0">
         <v-select v-if="config=='cubeviz'"
           :items="viewers"
           v-model="selected_viewer"

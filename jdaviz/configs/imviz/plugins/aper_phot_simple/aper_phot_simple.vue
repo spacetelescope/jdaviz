@@ -72,7 +72,7 @@
 
 
     <div v-if="result_available">
-      <v-divider></v-divider>
+      <j-plugin-section-header>Results</j-plugin-section-header>
       <v-row>
         <v-col cols=6><U>Result</U></v-col>
         <v-col cols=6><U>Value</U></v-col>

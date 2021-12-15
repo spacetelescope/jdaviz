@@ -2,7 +2,7 @@
   <v-container>
     <v-row>
       <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#moment-maps'">Create a 2D image from a data cube</j-docs-link>
-    <v-row>
+    </v-row>
 
     <v-row>
       <v-select
@@ -83,19 +83,20 @@
       </v-col>
     </v-row>
 
-    <v-row v-if="moment_available">
-      <v-col>
-        <v-text-field
-         v-model="filename"
-         label="Filename"
-         :rules="[() => !!filename || 'This field is required']">
-        </v-text-field>
-      </v-col>
-      <v-col>
+    <div v-if="moment_available">
+      <j-plugin-section-header>Results</j-plugin-section-header>
+      <v-row>
+          <v-text-field
+           v-model="filename"
+           label="Filename"
+           :rules="[() => !!filename || 'This field is required']">
+          </v-text-field>
+      </v-row>
+      <v-row justify="end">
         <j-tooltip tipid='plugin-moment-save-fits'>
           <v-btn color="primary" text @click="save_as_fits">Save as FITS</v-btn>
         </j-tooltip>
-      </v-col>
-    </v-row>
+      </v-row>
+    </div>
   </v-container>
 </template>
