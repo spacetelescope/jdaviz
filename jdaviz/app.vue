@@ -1,6 +1,6 @@
 <template>
   <v-app id="web-app" class="jdaviz">
-    <v-app-bar color="primary" dark :dense="state.settings.dense_toolbar" flat app absolute clipped-right>
+    <v-app-bar color="toolbar" dark :dense="state.settings.dense_toolbar" flat app absolute clipped-right>
       <v-toolbar-items v-for="item in state.tool_items">
         <v-divider v-if="['g-data-tools', 'g-subset-tools'].indexOf(item.name) === -1" vertical style="margin: 0px 10px"></v-divider>
         <v-divider v-else-if="item.name === 'g-subset-tools'" vertical style="margin: 0px 10px; border-width: 0"></v-divider>
@@ -102,18 +102,22 @@ export default {
   },
   created() {
     this.$vuetify.theme.themes.light = {
+      toolbar: "#153A4B",
       primary: "#00617E",
       secondary: "#007DA4",
       accent: "#C75109",
+      turquoise: "#007BA1",
       error: '#FF5252',
       info: '#2196F3',
       success: '#4CAF50',
       warning: '#FFC107',
     };
     this.$vuetify.theme.themes.dark = {
+      toolbar: "#153A4B",
       primary: "#00617E",
       secondary: "#007DA4",
       accent: "#C75109",
+      turquoise: "#007BA1",
       error: '#FF5252',
       info: '#2196F3',
       success: '#4CAF50',
