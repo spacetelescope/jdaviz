@@ -189,7 +189,7 @@
     </v-row>
 
     <v-row>
-      <span class="vuetify-styles v-messages" style="color: rgba(0, 0, 0, 0.6)">
+      <span class="vuetify-styles v-messages v-messages__message" style="color: rgba(0, 0, 0, 0.6)">
           If fit is not sufficiently converged, try clicking fitting again to complete additional iterations.
       </span>
     </v-row>
