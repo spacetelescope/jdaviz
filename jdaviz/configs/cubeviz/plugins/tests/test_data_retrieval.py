@@ -7,9 +7,9 @@ from jdaviz.app import Application
 
 # This file is originally from
 # https://data.sdss.org/sas/dr14/manga/spectro/redux/v2_1_2/7495/stack/manga-7495-12704-LOGCUBE.fits.gz
-# URL = 'https://stsci.box.com/shared/static/28a88k1qfipo4yxc4p4d40v4axtlal8y.fits'
+URL = 'https://stsci.box.com/shared/static/28a88k1qfipo4yxc4p4d40v4axtlal8y.fits'
 
-URL = 'file:/Users/busko/Downloads/jw00626-o064_t007_nirspec_g235h-f170lp_s3d.fits'
+# URL = 'file:/Users/busko/Downloads/jw00626-o064_t007_nirspec_g235h-f170lp_s3d.fits'
 
 """ The purpose of this test is to check that both methods:
 
