@@ -76,6 +76,8 @@ Specviz
 
 - Default new subset/region thickness is set to 3px. [#994]
 
+- Loads a spectrum list directly from a directory. [#891]
+
 API Changes
 -----------
 
