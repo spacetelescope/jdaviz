@@ -218,10 +218,6 @@ div.output_wrapper {
   margin: 0px;
 }
 
-.v-expansion-panel-content .row {
-  margin-bottom: 16px !important;
-}
-
 .v-toolbar__items .v-btn {
   /* allow voolbar-items styling to pass through tooltip wrapping span */
   /* css is copied from .v-toolbar__items>.v-btn */

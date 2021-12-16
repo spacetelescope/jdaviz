@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <j-tray-plugin>
     <v-row>
       <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#unit-conversion'">Convert the spectral flux density and spectral axis units.</j-docs-link>
     </v-row>
@@ -68,5 +68,5 @@
       </j-tooltip>
     </v-row>
 
-  </v-container>
+  </j-tray-plugin>
 </template>

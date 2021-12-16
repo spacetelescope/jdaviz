@@ -1,5 +1,5 @@
 <template>
-    <v-container>
+    <j-tray-plugin>
       <v-row>
         <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#gaussian-smooth'">Smooth your data in xy or wavelength with a Gaussian kernel</j-docs-link>
       </v-row>
@@ -66,5 +66,5 @@
           >Apply</v-btn>
         </j-tooltip>
       </v-row>
-    </v-container>
+    </j-tray-plugin>
 </template>

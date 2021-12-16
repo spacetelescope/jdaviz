@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <j-tray-plugin>
     <v-row>
       <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#link-control'">Re-link images by WCS or pixels.</j-docs-link>
     </v-row>
@@ -43,7 +43,7 @@
         <v-btn color="accent" text @click="do_link">Link</v-btn>
       </j-tooltip>
     </v-row>
-  </v-container>
+  </j-tray-plugin>
 </template>
 
 <style>

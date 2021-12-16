@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <j-tray-plugin>
     <v-row>
       <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#line-analysis'">
         Return statistics for a single spectral line.  The results are meaningful only when the continuum is properly normalized or subtracted, depending on the function you are interested in. See the <j-external-link link="https://specutils.readthedocs.io/en/stable/analysis.html" linktext="specutils docs"/> for more details.
@@ -38,5 +38,5 @@
         <v-col cols=6>{{ item.result }}</v-col>
       </v-row>
     </div>
-  </v-container>
+  </j-tray-plugin>
 </template>

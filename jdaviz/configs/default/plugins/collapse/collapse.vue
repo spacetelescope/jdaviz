@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <j-tray-plugin>
     <v-row>
       <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#collapse'">Collapse a spectral cube along one axis.</j-docs-link>
     </v-row>
@@ -46,7 +46,7 @@
         ></v-select>
       </v-row>
 
-      <v-row>
+      <v-row class="row-no-outside-padding">
         <v-col>
           <v-text-field
             label="Lower spectral bound"
@@ -61,7 +61,7 @@
         </v-col>
       </v-row>
 
-      <v-row>
+      <v-row class="row-no-outside-padding">
         <v-col>
           <v-text-field
             label="Upper spectral bound"
@@ -103,5 +103,5 @@
         <v-btn color="accent" text @click="collapse">Apply</v-btn>
       </j-tooltip>
     </v-row>
-  </v-container>
+  </j-tray-plugin>
 </template>

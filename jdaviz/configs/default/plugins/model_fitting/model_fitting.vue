@@ -1,7 +1,7 @@
 <template>
-  <v-container>
+  <j-tray-plugin>
     <v-row>
-    <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#model-fitting'">Fit an analytic model to data or a subset.</j-docs-link>
+      <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#model-fitting'">Fit an analytic model to data or a subset.</j-docs-link>
     </v-row>
 
     <v-row>
@@ -67,7 +67,7 @@
     <div v-if="component_models.length">
       <j-plugin-section-header>Model Parameters</j-plugin-section-header>
       <v-row>
-        <v-expansion-panels>
+        <v-expansion-panels accordion>
           <v-expansion-panel
             v-for="item in component_models" :key="item.id"
           >
@@ -99,48 +99,40 @@
               <v-row
                 justify="left"
                 align="center"
-                no-gutters
+                class="row-no-outside-padding"
               >
-                <v-col cols=2>
-                  <p class="font-weight-bold">Parameter</p>
-                </v-col>
-                <v-col cols=3>
-                  <p class="font-weight-bold">Value</p>
-                </v-col>
                 <v-col cols=4>
-                  <p class="font-weight-bold">Unit</p>
+                  <p class="font-weight-bold">Param</p>
                 </v-col>
-                <v-col cols=2>
-                  <j-tooltip tipid='plugin-model-fitting-param-fixed'>
-                    <p class="font-weight-bold">Fixed?</p>
-                  </j-tooltip>
+                <v-col cols=8> <!-- covers value and unit in rows -->
+                  <p class="font-weight-bold">Value</p>
                 </v-col>
               </v-row>
               <v-row
                 justify="left"
                 align="center"
-                no-gutters
+                class="row-no-outside-padding"
                 v-for="param in item.parameters"
               >
-                <v-col cols = 2>
-                  {{ param.name }}
+                <v-col cols=4>
+                  <j-tooltip tipid='plugin-model-fitting-param-fixed'>
+                    <v-checkbox v-model="param.fixed">
+                      <template v-slot:label>
+                        <span style="overflow-wrap: anywhere; color: black; font-size: 10pt">
+                          {{param.name}}
+                        </span>
+                      </template>
+                    </v-checkbox>
+                  </j-tooltip>
                 </v-col>
-                <v-col cols = 2>
+                <v-col cols=4>
                   <v-text-field
                     v-model="param.value"
                   >
                   </v-text-field>
                 </v-col>
-                <v-col cols=1></v-col>
-                <v-col cols=3>
+                <v-col cols=4 style="font-size: 8pt">
                   {{ param.unit }}
-                </v-col>
-                <v-col cols=1></v-col>
-                <v-col cols=2>
-                  <j-tooltip tipid='plugin-model-fitting-param-fixed'>
-                    <v-checkbox v-model="param.fixed">
-                    </v-checkbox>
-                  </j-tooltip>
                 </v-col>
               </v-row>
             </v-expansion-panel-content>
@@ -149,18 +141,20 @@
       </v-row>
     </div>
 
-    <j-plugin-section-header>Equation Editor</j-plugin-section-header>
-    <v-row>
-      <v-text-field
-        v-model="model_equation"
-        hint="Enter an equation specifying how to combine the component models, using their model IDs and basic arithmetic operators (ex. component1+component2)."
-        persistent-hint
-        :rules="[() => !!model_equation || 'This field is required']"
-        @change="equation_changed"
-        :error="eq_error"
-      >
-      </v-text-field>
-    </v-row>
+    <div v-if="component_models.length">
+      <j-plugin-section-header>Equation Editor</j-plugin-section-header>
+      <v-row>
+        <v-text-field
+          v-model="model_equation"
+          hint="Enter an equation specifying how to combine the component models, using their model IDs and basic arithmetic operators (ex. component1+component2)."
+          persistent-hint
+          :rules="[() => !!model_equation || 'This field is required']"
+          @change="equation_changed"
+          :error="eq_error"
+        >
+        </v-text-field>
+      </v-row>
+    </div>
 
     <j-plugin-section-header>Fit Model</j-plugin-section-header>
     <v-row>
@@ -213,5 +207,5 @@
       </v-row>
     </div>
 
-  </v-container>
+  </j-tray-plugin>
 </template>

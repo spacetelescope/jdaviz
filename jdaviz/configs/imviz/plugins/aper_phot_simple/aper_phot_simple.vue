@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <j-tray-plugin>
     <v-row>
       <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#aper-phot-simple'">
         Perform aperture photometry for a single region.
@@ -86,5 +86,5 @@
         <v-col cols=6>{{ item.result }}</v-col>
       </v-row>
     </div>
-  </v-container>
+  </j-tray-plugin>
 </template>

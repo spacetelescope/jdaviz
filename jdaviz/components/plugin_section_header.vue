@@ -7,7 +7,7 @@
 </template>
 
 
-<style>
+<style scoped>
 .strike {
     display: block;
     text-align: center;

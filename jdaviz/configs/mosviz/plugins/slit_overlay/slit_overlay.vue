@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <j-tray-plugin>
     <v-row>
       <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#slit-overlay'">Add a slit to the image viewer</j-docs-link>
     </v-row>
@@ -13,5 +13,5 @@
         persistent-hint>
       </v-switch>
     </v-row>
-  </v-container>
+  </j-tray-plugin>
 </template>

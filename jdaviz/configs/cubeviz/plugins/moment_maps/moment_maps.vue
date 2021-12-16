@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <j-tray-plugin>
     <v-row>
       <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#moment-maps'">Create a 2D image from a data cube</j-docs-link>
     </v-row>
@@ -25,7 +25,7 @@
       ></v-select>
     </v-row>
 
-    <v-row>
+    <v-row class="row-no-outside-padding">
       <v-col>
         <v-text-field
           label="Lower spectral bound"
@@ -40,7 +40,7 @@
       </v-col>
     </v-row>
 
-    <v-row>
+    <v-row class="row-no-outside-padding">
       <v-col>
         <v-text-field
           label="Upper spectral bound"
@@ -65,7 +65,7 @@
       ></v-select>
     </v-row>
 
-    <v-row>
+    <v-row class="row-no-outside-padding">
       <v-col>
         <v-text-field
           ref="n_moment"
@@ -98,5 +98,5 @@
         </j-tooltip>
       </v-row>
     </div>
-  </v-container>
+  </j-tray-plugin>
 </template>
