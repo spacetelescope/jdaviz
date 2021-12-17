@@ -203,21 +203,6 @@ div.output_wrapper {
   padding-left: 0;
 }
 
-.v-expansion-panel-content__wrap {
-  padding: 0px;
-  margin: 0px;
-}
-
-.v-expansion-panel__header {
-  padding: 0px;
-  margin: 0px;
-}
-
-.v-expansion-panel-content__wrap {
-  padding: 0px;
-  margin: 0px;
-}
-
 .v-toolbar__items .v-btn {
   /* allow voolbar-items styling to pass through tooltip wrapping span */
   /* css is copied from .v-toolbar__items>.v-btn */
