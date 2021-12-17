@@ -344,13 +344,22 @@ class SpecvizProfileView(BqplotProfileView):
 
         # Color and opacity are taken from the already plotted trace,
         # in case they are not set explicitly by the caller.
-        self._color = self.figure.marks[self.data_trace_pointer].colors[0]
         if color:
             self._color = color
+        else:
+            try:
+                self._color = self.figure.marks[self.data_trace_pointer].colors[0]
+            except IndexError:  # Just grab from bqplot default
+                from bqplot.colorschemes import CATEGORY10
+                self._color = CATEGORY10[0]  # Should be #1f77b4 (bluish)
 
-        self._alpha = self.figure.marks[self.data_trace_pointer].opacities[0]
         if alpha:
             self._alpha = alpha
+        else:
+            try:
+                self._alpha = self.figure.marks[self.data_trace_pointer].opacities[0]
+            except IndexError:  # Just use bqplot default
+                self._alpha = 1
 
         # An opacity defined specifically for the shaded areas.
         self._alpha_shade = self._alpha / 3
