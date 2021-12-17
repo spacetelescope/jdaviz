@@ -53,9 +53,11 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
             telescop = prihdr.get('TELESCOP', '').lower()
             filetype = prihdr.get('FILETYPE', '').lower()
             if telescop == 'jwst' and filetype == '3d ifu cube':
-                # TODO: What about ERR, DQ, and WMAP?
-                data_label = f'{file_name}[SCI]'
-                _parse_jwst_s3d(app, hdulist, data_label)
+                for ext, viewer_name in (('SCI', 'flux-viewer'),
+                                         ('ERR', 'uncert-viewer'),
+                                         ('DQ', 'mask-viewer')):
+                    data_label = f'{file_name}[{ext}]'
+                    _parse_jwst_s3d(app, hdulist, data_label, ext=ext, viewer_name=viewer_name)
             else:
                 _parse_hdu(app, hdulist, file_name=data_label or file_name)
 
@@ -127,12 +129,30 @@ def _parse_hdu(app, hdulist, file_name=None):
             app.add_data_to_viewer('spectrum-viewer', data_label)
 
 
-def _parse_jwst_s3d(app, hdulist, data_label):
+def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI', viewer_name='flux-viewer'):
     from specutils import Spectrum1D
 
-    unit = u.Unit(hdulist[1].header.get('BUNIT', 'count'))
-    flux = hdulist[1].data << unit
-    wcs = WCS(hdulist[1].header, hdulist)
+    # Manually inject MJD-OBS until we can support GWCS, see
+    # https://github.com/spacetelescope/jdaviz/issues/690 and
+    # https://github.com/glue-viz/glue-astronomy/issues/59
+    if ext == 'SCI' and 'MJD-OBS' not in hdulist[ext].header:
+        for key in ('MJD-BEG', 'DATE-OBS'):  # Possible alternatives
+            if key in hdulist[ext].header:
+                if key.startswith('MJD'):
+                    hdulist[ext].header['MJD-OBS'] = hdulist[ext].header[key]
+                    break
+                else:
+                    from astropy.time import Time
+                    t = Time(hdulist[ext].header[key])
+                    hdulist[ext].header['MJD-OBS'] = t.mjd
+                    break
+
+    if ext == 'DQ':  # DQ flags have no unit
+        flux = hdulist[ext].data << u.dimensionless_unscaled
+    else:
+        unit = u.Unit(hdulist[ext].header.get('BUNIT', 'count'))
+        flux = hdulist[ext].data << unit
+    wcs = WCS(hdulist['SCI'].header, hdulist)  # Everything uses SCI WCS
     data = Spectrum1D(flux, wcs=wcs)
 
     # NOTE: Tried to only pass in sliced WCS but got error in Glue.
@@ -140,8 +160,9 @@ def _parse_jwst_s3d(app, hdulist, data_label):
     # data = Spectrum1D(flux, wcs=sliced_wcs)
 
     app.add_data(data, data_label)
-    app.add_data_to_viewer('flux-viewer', data_label)
-    app.add_data_to_viewer('spectrum-viewer', data_label)
+    app.add_data_to_viewer(viewer_name, data_label)
+    if viewer_name == 'flux-viewer':
+        app.add_data_to_viewer('spectrum-viewer', data_label)
 
 
 def _parse_spectrum1d_3d(app, file_obj):

@@ -25,6 +25,9 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- Missing MJD-OBS in JWST data will no longer crash Cubeviz as long as
+  it has MJD-BEG or DATE-OBS. [#1004]
+
 Imviz
 ^^^^^
 
