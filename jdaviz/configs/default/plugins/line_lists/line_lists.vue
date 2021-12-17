@@ -147,8 +147,8 @@
                 <v-col cols=4 style="font-size: 10pt">
                   {{ line.rest }}
                 </v-col>
-                <v-col cols=3 style="font-size: 8pt">
-                  {{ line.unit }}
+                <v-col cols=3 style="font-size: 10pt">
+                  {{ line.unit.replace("Angstrom", "&#8491;") }}
                 </v-col>
               </v-row>
             </div>

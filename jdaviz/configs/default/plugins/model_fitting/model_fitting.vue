@@ -72,26 +72,22 @@
             v-for="item in component_models" :key="item.id"
           >
             <v-expansion-panel-header v-slot="{ open }">
-              <v-row no-gutters>
-                <v-col cols="1">
+              <v-row no-gutters align="center">
+                <v-col cols=1>
                   <v-btn @click.native.stop="remove_model(item.id)" icon>
                     <v-icon>mdi-close-circle</v-icon>
                   </v-btn>
                 </v-col>
-                <v-col cols="3">{{ item.id }} ({{ item.model_type }})</v-col>
-                <v-col cols="8" class="text--secondary">
-                  <v-fade-transition leave-absolute>
-                    <span v-if="open">Enter parameters for model initialization</span>
-                    <v-row
-                      v-else
-                      no-gutters
-                      style="width: 100%"
-                    >
-                      <v-col cols="4" v-for="param in item.parameters">
-                      {{ param.name }} : {{ param.value }}
-                      </v-col>
-                    </v-row>
-                  </v-fade-transition>
+                <v-col cols=2></v-col>
+                <v-col cols=8 class="text--secondary">
+                  <v-row>
+                    {{ item.id }} ({{ item.model_type }})
+                  </v-row>
+                  <v-row v-for="param in item.parameters">
+                    <span style="white-space: nowrap; overflow-x: hidden; width: calc(100% - 24px); margin-right: -48px">
+                      {{ param.name }} = {{ param.value }}                      
+                    </span>
+                  </v-row>
                 </v-col>
               </v-row>
             </v-expansion-panel-header>
@@ -131,8 +127,8 @@
                   >
                   </v-text-field>
                 </v-col>
-                <v-col cols=4 style="font-size: 8pt">
-                  {{ param.unit }}
+                <v-col cols=4 style="font-size: 10pt">
+                  {{ param.unit.replace("Angstrom", "&#8491;") }}
                 </v-col>
               </v-row>
             </v-expansion-panel-content>
