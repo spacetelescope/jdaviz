@@ -127,6 +127,7 @@ class MomentMap(TemplateMixin):
     def vue_calculate_moment(self, *args):
         # Retrieve the data cube and slice out desired region, if specified
         cube = self._selected_data.get_object(cls=Spectrum1D, statistic=None)
+        cube.wcs.wcs.obsgeo = [None] * 6  # Skip observer/target calculations in astropy SpectralCoords
         spec_min = float(self.spectral_min) * u.Unit(self.spectral_unit)
         spec_max = float(self.spectral_max) * u.Unit(self.spectral_unit)
         slab = manipulation.spectral_slab(cube, spec_min, spec_max)
