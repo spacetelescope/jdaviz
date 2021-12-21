@@ -44,7 +44,7 @@
             </golden-layout>
           </pane>
           <pane size="25" min-size="25" v-if="state.drawer" style="background-color: #fafbfc;">
-            <v-card flat tile class="overflow-y-auto fill-height" color="#f8f8f8">
+            <v-card flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="#f8f8f8">
               <v-expansion-panels accordion multiple focusable flat tile v-model="state.tray_items_open">
                 <v-expansion-panel v-for="(tray, index) in state.tray_items" :key="index">
                   <v-expansion-panel-header>
