@@ -13,6 +13,8 @@ try to adhere to the following principles:
   ``j-tray-plugin`` stylesheet (``jdaviz/components/tray_plugin.vue``).
 * Each item should be wrapped in a ``v-row``, but avoid any unnecessary additional wrapping-components
   (``v-card-*``, ``v-container``, etc).
+* The first entry should be a ``j-docs-link`` component which provides a quick overview of the 
+  plugin functionality and a link to the relevant content in the online docs.
 * Only use ``v-col`` components (within the ``<v-row class="row-no-outside-padding">``) if multiple 
   components are necessary in a single row.  Always emphasize readability at the default/minimum
   width of the plugin tray, rather than using columns that result in a ton of text overflow.
@@ -29,7 +31,7 @@ try to adhere to the following principles:
     <template>
       <j-tray-plugin>
         <v-row>
-          <j-docs-link> ... </j-docs-link>
+          <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#plugin-name'">Quick overview of plugin functionality.</j-docs-link>
         </v-row>
 
         <v-row>
