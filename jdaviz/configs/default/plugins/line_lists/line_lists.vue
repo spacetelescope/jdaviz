@@ -98,19 +98,23 @@
               </v-row>
             </div>
 
-            <v-row justify="end" style="margin-bottom: 0px !important">
-              <j-tooltip tipid='plugin-line-lists-plot-all-in-list'>
-                <v-btn 
-                 color="accent" 
-                 text @click="show_all_in_list(item)">Plot All</v-btn>
-              </j-tooltip>
-            </v-row>
-            <v-row justify="end">
-              <j-tooltip tipid='plugin-line-lists-erase-all-in-list'>
-                <v-btn 
-                 color="accent" 
-                 text @click="hide_all_in_list(item)">Erase All</v-btn>
-              </j-tooltip>
+            <v-row class="row-no-padding">
+              <v-col cols=6>
+                <j-tooltip tipid='plugin-line-lists-erase-all-in-list'>
+                  <v-btn 
+                   color="accent" 
+                   style="padding-left: 8px; padding-right: 8px;"
+                   text @click="hide_all_in_list(item)">Erase All</v-btn>
+                </j-tooltip>
+              </v-col>
+              <v-col cols=6 style="text-align: right">
+                <j-tooltip tipid='plugin-line-lists-plot-all-in-list'>
+                  <v-btn 
+                   color="accent"
+                   style="padding-left: 8px; padding-right: 8px;"
+                   text @click="show_all_in_list(item)">Plot All</v-btn>
+                </j-tooltip>
+              </v-col>
             </v-row>
 
             <div 
@@ -159,15 +163,24 @@
       </v-expansion-panels>
     </v-row>
 
-    <v-row justify="end" style="margin-bottom: 0px !important">
-      <j-tooltip tipid='plugin-line-lists-plot-all'>
-        <v-btn color="accent" text @click="plot_all_lines">Plot All</v-btn>
-      </j-tooltip>
-    </v-row>
-    <v-row justify="end">
-      <j-tooltip tipid='plugin-line-lists-erase-all'>
-        <v-btn color="accent" text @click="erase_all_lines">Erase All</v-btn>
-      </j-tooltip>
+    <v-row class="row-no-padding">
+      <v-col cols=6>
+        <j-tooltip tipid='plugin-line-lists-erase-all'>
+          <v-btn 
+            color="accent"
+            style="padding-left: 8px; padding-right: 8px;"
+            text @click="erase_all_lines">Erase All</v-btn>
+        </j-tooltip>
+      </v-col>
+      <v-col cols=6 style="text-align: right">
+        <j-tooltip tipid='plugin-line-lists-plot-all'>
+          <v-btn 
+            color="accent"
+            style="padding-left: 8px; padding-right: 8px;"
+            text @click="plot_all_lines">Plot All</v-btn>
+        </j-tooltip>
+      </v-col>
+
     </v-row>
 
   </j-tray-plugin>

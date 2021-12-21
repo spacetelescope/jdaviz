@@ -22,11 +22,16 @@ module.exports = {
     margin-bottom: 4px !important;
   }
 
-  .row-no-outside-padding :first-child {
+  .row-no-outside-padding .col:first-of-type {
     padding-left: 0px !important;
   }
 
-  .row-no-outside-padding :last-child {
+  .row-no-outside-padding .col:last-of-type {
+    padding-right: 0px !important;
+  }
+
+  .row-no-padding > .col {
+    padding-left: 0px !important;
     padding-right: 0px !important;
   }
 
