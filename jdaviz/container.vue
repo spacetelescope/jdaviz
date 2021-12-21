@@ -133,7 +133,7 @@
           :width="viewer.tools_open ? null : '0px'"
           style="right: 2px;"
         >
-          <v-toolbar-items>
+          <v-toolbar-items class="toolbar-jdaviz-style">
 
             <!-- <v-divider vertical></v-divider> -->
             <jupyter-widget :widget="viewer.tools"></jupyter-widget>
