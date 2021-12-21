@@ -2,7 +2,7 @@
   <div class="v-messages">
     <div class="v-messages__wrapper" style="margin-top: 2px; margin-bottom: 2px">
       <div class="v-messages__message">
-        <p style="margin-bottom: 8px">
+        <p style="margin-bottom: 8px; color: rgba(0, 0, 0, 0.6)">
           <slot></slot>
         </p>
         <div v-if="link">

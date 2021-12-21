@@ -43,7 +43,7 @@
               </gl-row>
             </golden-layout>
           </pane>
-          <pane size="25" v-if="state.drawer" style="background-color: #fafbfc;">
+          <pane size="25" min-size="25" v-if="state.drawer" style="background-color: #fafbfc;">
             <v-card flat tile class="overflow-y-auto fill-height" color="#f8f8f8">
               <v-expansion-panels accordion multiple focusable flat tile v-model="state.tray_items_open">
                 <v-expansion-panel v-for="(tray, index) in state.tray_items" :key="index">
@@ -52,7 +52,7 @@
                       {{ tray.label }}
                     </j-tooltip>
                   </v-expansion-panel-header>
-                  <v-expansion-panel-content>
+                  <v-expansion-panel-content style="margin-left: -12px; margin-right: -12px">
                     <jupyter-widget :widget="tray.widget"></jupyter-widget>
                   </v-expansion-panel-content>
                 </v-expansion-panel>
@@ -201,21 +201,6 @@ div.output_wrapper {
 
 .lm_header ul {
   padding-left: 0;
-}
-
-.v-expansion-panel-content__wrap {
-  padding: 0px;
-  margin: 0px;
-}
-
-.v-expansion-panel__header {
-  padding: 0px;
-  margin: 0px;
-}
-
-.v-expansion-panel-content__wrap {
-  padding: 0px;
-  margin: 0px;
 }
 
 .v-toolbar__items .v-btn {
