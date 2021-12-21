@@ -1,5 +1,5 @@
 <template>
-  <div class="strike">
+  <div class="strike text--secondary">
      <span>
        <slot></slot>
      </span>
@@ -17,7 +17,6 @@
     margin-right: -12px;
     margin-top: 40px;
     margin-bottom: 8px;
-    color: rgba(0, 0, 0, 0.6) !important;
 }
 
 .strike > span {
