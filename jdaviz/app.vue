@@ -52,7 +52,7 @@
                       {{ tray.label }}
                     </j-tooltip>
                   </v-expansion-panel-header>
-                  <v-expansion-panel-content>
+                  <v-expansion-panel-content style="margin-left: -12px; margin-right: -12px">
                     <jupyter-widget :widget="tray.widget"></jupyter-widget>
                   </v-expansion-panel-content>
                 </v-expansion-panel>

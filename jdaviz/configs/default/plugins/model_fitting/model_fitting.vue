@@ -73,15 +73,14 @@
           >
             <v-expansion-panel-header v-slot="{ open }">
               <v-row no-gutters align="center">
-                <v-col cols=1>
-                  <v-btn @click.native.stop="remove_model(item.id)" icon>
+                <v-col cols=3>
+                  <v-btn @click.native.stop="remove_model(item.id)" icon style="width: 60%">
                     <v-icon>mdi-close-circle</v-icon>
                   </v-btn>
                 </v-col>
-                <v-col cols=2></v-col>
-                <v-col cols=8 class="text--secondary">
+                <v-col cols=9 class="text--secondary">
                   <v-row>
-                    {{ item.id }} ({{ item.model_type }})
+                    <b>{{ item.id }}</b>&nbsp;({{ item.model_type }})
                   </v-row>
                   <v-row v-for="param in item.parameters">
                     <span style="white-space: nowrap; overflow-x: hidden; width: calc(100% - 24px); margin-right: -48px">

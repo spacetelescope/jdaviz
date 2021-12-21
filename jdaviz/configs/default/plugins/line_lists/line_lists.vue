@@ -28,18 +28,20 @@
         <v-expansion-panel v-for="item in loaded_lists" key=":item">
           <v-expansion-panel-header v-slot="{ open }">
             <v-row no-gutters align="center">
-              <v-col cols=1>
+              <v-col cols=3>
                 <v-btn 
                   v-if="item != 'Custom'" 
                   @click.native.stop="remove_list(item)" 
                   icon
+                  style="width: 60%"
                 >
                   <v-icon>mdi-close-circle</v-icon>
                 </v-btn>
               </v-col>
-              <v-col cols=2></v-col>
-              <v-col cols=8 class="text--secondary">
-                <span>{{ item }}</span>
+              <v-col cols=9 class="text--secondary">
+                <v-row>
+                  <span>{{ item }}</span>
+                </v-row>
               </v-col>
             </v-row>
           </v-expansion-panel-header>
@@ -49,7 +51,7 @@
               <v-color-picker
                 hide-inputs
                 mode="hexa"
-                width="175px"
+                width="200px"
                 flat
                 @update:color="set_color({listname:item, color: $event.hexa})">
               </v-color-picker>
