@@ -83,7 +83,7 @@
                     <b>{{ item.id }}</b>&nbsp;({{ item.model_type }})
                   </v-row>
                   <v-row v-for="param in item.parameters">
-                    <span style="white-space: nowrap; overflow-x: hidden; width: calc(100% - 24px); margin-right: -48px">
+                    <span style="white-space: nowrap; overflow-x: clip; width: calc(100% - 24px); margin-right: -48px">
                       {{ param.name }} = {{ param.value }}                      
                     </span>
                   </v-row>
