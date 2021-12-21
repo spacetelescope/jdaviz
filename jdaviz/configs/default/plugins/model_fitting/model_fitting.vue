@@ -173,12 +173,12 @@
 
     <v-row justify="end">
       <j-tooltip tipid='plugin-model-fitting-fit'>
-        <v-btn color="accent" text @click="model_fitting">Fit</v-btn>
+        <v-btn color="accent" text @click="model_fitting">Fit Model</v-btn>
       </j-tooltip>
     </v-row>
 
     <v-row>
-      <span class="vuetify-styles v-messages v-messages__message text--secondary">
+      <span class="v-messages v-messages__message text--secondary">
           If fit is not sufficiently converged, try clicking fitting again to complete additional iterations.
       </span>
     </v-row>
