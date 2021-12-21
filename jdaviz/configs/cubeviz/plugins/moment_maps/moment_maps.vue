@@ -35,7 +35,7 @@
         >
         </v-text-field>
       </v-col>
-      <v-col cols = 2>
+      <v-col cols=2 style="padding-top: 32px">
         <span>{{ spectral_unit }}</span>
       </v-col>
     </v-row>
@@ -50,7 +50,7 @@
         >
         </v-text-field>
       </v-col>
-      <v-col cols = 2>
+      <v-col cols=2 style="padding-top: 32px">
         <span>{{ spectral_unit }}</span>
       </v-col>
     </v-row>
@@ -65,22 +65,21 @@
       ></v-select>
     </v-row>
 
-    <v-row class="row-no-outside-padding">
-      <v-col>
-        <v-text-field
-          ref="n_moment"
-          label="Moment"
-          v-model="n_moment"
-          hint="The desired moment."
-          persistent-hint
-          :rules="[() => !!n_moment || 'This field is required']"
-        ></v-text-field>
-      </v-col>
-      <v-col>
-        <j-tooltip tipid='plugin-moment-maps-calculate'>
-          <v-btn color="primary" text @click="calculate_moment">Calculate</v-btn>
-        </j-tooltip>
-      </v-col>
+    <v-row>
+      <v-text-field
+        ref="n_moment"
+        label="Moment"
+        v-model="n_moment"
+        hint="The desired moment."
+        persistent-hint
+        :rules="[() => !!n_moment || 'This field is required']"
+      ></v-text-field>
+    </v-row>
+
+    <v-row justify="end">
+      <j-tooltip tipid='plugin-moment-maps-calculate'>
+        <v-btn color="primary" text @click="calculate_moment">Calculate</v-btn>
+      </j-tooltip>
     </v-row>
 
     <div v-if="moment_available">
