@@ -56,7 +56,7 @@ const tooltips = {
   'plugin-model-fitting-fit': 'Fit the model to the data',
   'plugin-model-fitting-apply': 'Fit the model to every spaxel in the cube',
   'plugin-unit-conversion-apply': 'Apply unit conversion',
-  'plugin-line-lists-load': 'Load list into tool',
+  'plugin-line-lists-load': 'Load list into "Loaded Lines" section of plugin',
   'plugin-line-lists-plot-all-in-list': 'Plot all lines in this list',
   'plugin-line-lists-erase-all-in-list': 'Hide all lines in this list',
   'plugin-line-lists-plot-all': 'Plot all lines from every loaded list',
@@ -67,6 +67,7 @@ const tooltips = {
   'plugin-line-lists-line-visible': 'Check to plot the line in the spectrum viewer',
   'plugin-moment-maps-calculate': 'Calculate moment map',
   'plugin-moment-save-fits': 'Save moment map as FITS file',
+  'plugin-link-apply': 'Apply linking to data',
 }
 
 

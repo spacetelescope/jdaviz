@@ -62,6 +62,15 @@ ipyvue.register_component_from_file(None, 'j-external-link',
 ipyvue.register_component_from_file(None, 'j-docs-link',
                                     os.path.join(os.path.dirname(__file__),
                                                  'components/docs_link.vue'))
+
+ipyvue.register_component_from_file(None, 'j-tray-plugin',
+                                    os.path.join(os.path.dirname(__file__),
+                                                 'components/tray_plugin.vue'))
+
+ipyvue.register_component_from_file(None, 'j-plugin-section-header',
+                                    os.path.join(os.path.dirname(__file__),
+                                                 'components/plugin_section_header.vue'))
+
 # Register pure vue component. This allows us to do recursive component instantiation only in the
 # vue component file
 ipyvue.register_component_from_file('g-viewer-tab', "container.vue", __file__)
