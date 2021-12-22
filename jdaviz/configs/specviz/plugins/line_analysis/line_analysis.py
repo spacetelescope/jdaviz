@@ -22,9 +22,9 @@ class LineAnalysis(TemplateMixin):
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "line_analysis.vue"
     dc_items = List([]).tag(sync=True)
-    spectral_subset_items = List(["None"]).tag(sync=True)
+    spectral_subset_items = List(["Entire Spectrum"]).tag(sync=True)
     selected_spectrum = Unicode("").tag(sync=True)
-    selected_subset = Unicode("None").tag(sync=True)
+    selected_subset = Unicode("Entire Spectrum").tag(sync=True)
     result_available = Bool(False).tag(sync=True)
     results = List().tag(sync=True)
 
@@ -71,10 +71,14 @@ class LineAnalysis(TemplateMixin):
 
         self._spectral_subsets = self.app.get_subsets_from_viewer("spectrum-viewer",
                                                                   subset_type="spectral")
-        self.spectral_subset_items = ["None"] + sorted(self._spectral_subsets.keys())
+        self.spectral_subset_items = ["Entire Spectrum"] + sorted(self._spectral_subsets.keys())
 
         self.dc_items = [layer_state.layer.label for layer_state in viewer.state.layers
                          if layer_state.layer.label not in self.spectral_subset_items]
+
+        if len(self.dc_items) == 0:
+            self.selected_spectrum = ""
+            self.result_available = False
 
     @observe("selected_subset", "selected_spectrum")
     def _run_functions(self, *args, **kwargs):
@@ -84,12 +88,13 @@ class LineAnalysis(TemplateMixin):
         values
         """
         if self.selected_spectrum == "":
+            self.result_available = False
             return
 
         self._spectrum1d = self.app.get_data_from_viewer("spectrum-viewer",
                                                          data_label=self.selected_spectrum)
 
-        if self.selected_subset != "None":
+        if self.selected_subset != "Entire Spectrum":
             mask = self.app.get_data_from_viewer("spectrum-viewer",
                                                  data_label=self.selected_subset).mask
             self._spectrum1d.mask = mask
