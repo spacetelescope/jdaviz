@@ -107,3 +107,33 @@ class SpectralLine(BaseSpectrumVerticalLine):
         # re-compute self.x from current redshift (instead of converting that as well)
         self.redshift = self._redshift
         self._x_unit = new_unit
+
+
+
+class SliceIndicator(Lines):
+    """
+    Subclass on bqplot Lines to handle slice/wavelength indicator
+    """
+    def __init__(self, x_all, scales, slice=0, **kwargs):
+        self.update_data(x_all)
+        x_coord = self.slice_to_x(slice)
+        y_coords = [scales['y'].min, scales['y'].max]
+        super().__init__(x=[x_coord, x_coord], y=y_coords, scales=scales,
+                         stroke_width=2, opacities=[0.6],
+                         fill='none', close_path=False, **kwargs)
+
+    def update_data(self, x_all):
+        self._x_all = x_all
+
+    def slice_to_x(self, slice=0):
+        return self._x_all[slice]
+
+    def update_slice(self, slice):
+        x_coord = self.slice_to_x(slice)
+        self.x = [x_coord, x_coord]
+
+#    def show(self):
+#        self.visible = True
+
+#    def hide(self):
+#        self.visible = False

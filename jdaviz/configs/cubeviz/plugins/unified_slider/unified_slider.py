@@ -5,6 +5,7 @@ from jdaviz.core.registries import tool_registry
 from jdaviz.core.template_mixin import TemplateMixin
 
 from glue_jupyter.bqplot.image import BqplotImageView
+from glue_jupyter.bqplot.profile import BqplotProfileView
 
 __all__ = ['UnifiedSlider']
 
@@ -22,6 +23,7 @@ class UnifiedSlider(TemplateMixin):
         super().__init__(*args, **kwargs)
 
         self._watched_viewers = []
+        self._indicator_viewers = []
 
         # Listen for add data events. **Note** this should only be used in
         #  cases where there is a specific type of data expected and arbitrary
@@ -52,6 +54,10 @@ class UnifiedSlider(TemplateMixin):
                 msg.viewer.state.add_callback('slices',
                                               self._slider_value_updated)
 
+        elif isinstance(msg.viewer, BqplotProfileView):
+            if msg.viewer not in self._indicator_viewers:
+                self._indicator_viewers.append(msg.viewer)
+
     def _slider_value_updated(self, value):
         if len(value) > 0:
             self.slider = float(value[0])
@@ -66,3 +72,5 @@ class UnifiedSlider(TemplateMixin):
         if self.linked:
             for viewer in self._watched_viewers:
                 viewer.state.slices = (value, 0, 0)
+            for viewer in self._indicator_viewers:
+                viewer.update_slice_indicator(value)
