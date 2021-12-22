@@ -6,6 +6,9 @@ New Features
 
 - Box and xrange zoom tools for all applicable viewers. [#997]
 
+- Data and Subset selection are now separate in the Line Analysis plugin, to
+  handle the case of multiple datasets affected by a subset. [#1012]
+
 Cubeviz
 ^^^^^^^
 
