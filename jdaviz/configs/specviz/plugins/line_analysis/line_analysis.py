@@ -69,8 +69,12 @@ class LineAnalysis(TemplateMixin):
         """
         viewer = self.app.get_viewer('spectrum-viewer')
 
-        self._spectral_subsets = self.app.get_subsets_from_viewer("spectrum-viewer",
-                                                                  subset_type="spectral")
+        try:
+            self._spectral_subsets = self.app.get_subsets_from_viewer("spectrum-viewer",
+                                                                      subset_type="spectral")
+        except ValueError:
+            pass
+
         self.spectral_subset_items = ["Entire Spectrum"] + sorted(self._spectral_subsets.keys())
 
         self.dc_items = [layer_state.layer.label for layer_state in viewer.state.layers
