@@ -6,16 +6,32 @@ from echo import delay_callback
 from glue.config import viewer_tool
 from glue_jupyter.bqplot.common.tools import Tool
 from glue.viewers.common.tool import CheckableTool
-from glue_jupyter.bqplot.common.tools import BqplotPanZoomMode
+from glue_jupyter.bqplot.common.tools import (HomeTool, BqplotPanZoomMode,
+                                              BqplotPanZoomXMode, BqplotPanZoomYMode,
+                                              BqplotRectangleMode, BqplotCircleMode,
+                                              BqplotEllipseMode, BqplotXRangeMode,
+                                              BqplotYRangeMode)
 
 __all__ = []
 
 ICON_DIR = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'icons')
 
 
+# Override icons for built-in tools from glue-jupyter
+HomeTool.icon = os.path.join(ICON_DIR, 'home.svg')
+BqplotPanZoomMode.icon = os.path.join(ICON_DIR, 'pan.svg')
+BqplotPanZoomXMode.icon = os.path.join(ICON_DIR, 'pan_x.svg')
+BqplotPanZoomYMode.icon = os.path.join(ICON_DIR, 'pan_y.svg')
+BqplotRectangleMode.icon = os.path.join(ICON_DIR, 'select_xy.svg')
+BqplotCircleMode.icon = os.path.join(ICON_DIR, 'select_circle.svg')
+BqplotEllipseMode.icon = os.path.join(ICON_DIR, 'select_ellipse.svg')
+BqplotXRangeMode.icon = os.path.join(ICON_DIR, 'select_x.svg')
+BqplotYRangeMode.icon = os.path.join(ICON_DIR, 'select_y.svg')
+
+
 @viewer_tool
 class BlinkOnce(Tool):
-    icon = 'glue_forward'
+    icon = os.path.join(ICON_DIR, 'blink.svg')
     tool_id = 'bqplot:blinkonce'
     action_text = 'Go to next image'
     tool_tip = ('Click on this button to display the next image, '
@@ -80,7 +96,7 @@ class BqplotMatchPanZoom(BqplotPanZoomMode):
 @viewer_tool
 class BqplotContrastBias(CheckableTool):
 
-    icon = 'glue_contrast'
+    icon = os.path.join(ICON_DIR, 'contrast.svg')
     tool_id = 'bqplot:contrastbias'
     action_text = 'Adjust contrast/bias'
     tool_tip = 'Click and drag to adjust contrast and bias, double-click to reset'

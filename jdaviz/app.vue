@@ -234,10 +234,33 @@ a:active {
   text-decoration: none;
 }
 
-.active {
+.active, .toolbar-jdaviz-style .v-btn--active, .toolbar-jdaviz-style .v-btn:focus {
   background-color: #c75109 !important;
 }
 
+.toolbar-jdaviz-style .v-btn--active, .toolbar-jdaviz-style .v-btn:focus {
+  /* remove the semi-transparent overlay */
+  color: transparent !important;
+}
+
+.toolbar-jdaviz-style .v-btn--active img, .toolbar-jdaviz-style .v-btn:focus i {
+  filter: invert(100%) brightness(100%); 
+}
+
+.toolbar-jdaviz-style .theme--light .v-icon {
+  /* non-active color (in light theme) for any v-icon (currently save button) */
+  color: #4e4c4d !important;
+}
+
+.toolbar-jdaviz-style .theme--dark .v-icon  {
+  /* non-active color (in dark theme) for any v-icon (currently save button) */
+  color: #b8bbba !important;
+}
+
+.toolbar-jdaviz-style .theme--dark .v-btn img, .toolbar-jdaviz-style .theme--dark .v-btn i {
+  /* dark theme: invert custom icons */
+  filter: invert(100%) brightness(100%);
+}
 
 .v-divider.theme--dark {
   /* make the v-divider standout more */
