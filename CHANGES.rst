@@ -11,6 +11,8 @@ New Features
 - The line analysis plugin now includes logic to account for the background
   continuum. [#1060]
 
+- Specviz can load a ``SpectrumList`` and combine all its elements into a single spectrum. [#1014]
+
 Cubeviz
 ^^^^^^^
 
