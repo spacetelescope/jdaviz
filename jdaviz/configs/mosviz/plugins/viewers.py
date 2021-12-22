@@ -95,10 +95,10 @@ class MosvizProfile2DView(BqplotImageView):
     # with only the tools we want (likely the same as in SpecvizProfileView)
     inherit_tools = False
     tools = ['bqplot:home',
+             'jdaviz:boxzoom',
              'jdaviz:xrangezoom',
              'bqplot:panzoom',
              'bqplot:panzoom_x',
-             'bqplot:panzoom_y',
              'bqplot:xrange']
 
     _state_cls = FreezableBqplotImageViewerState
