@@ -1,6 +1,5 @@
 import numpy as np
-from glue.core.message import (SubsetCreateMessage,
-                               SubsetDeleteMessage,
+from glue.core.message import (SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from traitlets import Bool, List, Unicode, observe
 from specutils import analysis, SpectralRegion
@@ -44,11 +43,6 @@ class LineAnalysis(TemplateMixin):
         self.hub.subscribe(self, RemoveDataMessage,
                            handler=self._on_viewer_data_changed)
 
-        # It seems like SubsetUpdate always gets called after SubsetCreate, so
-        # we wait until after creation is complete to handle it on SubsetUpdate.
-        #self.hub.subscribe(self, SubsetCreateMessage,
-        #                   handler=self._on_viewer_data_changed)
-
         self.hub.subscribe(self, SubsetDeleteMessage,
                            handler=self._on_viewer_data_changed)
 
@@ -76,12 +70,11 @@ class LineAnalysis(TemplateMixin):
         viewer = self.app.get_viewer('spectrum-viewer')
 
         self._spectral_subsets = self.app.get_subsets_from_viewer("spectrum-viewer",
-                                                                   subset_type="spectral")
+                                                                  subset_type="spectral")
         self.spectral_subset_items = ["None"] + sorted(self._spectral_subsets.keys())
 
         self.dc_items = [layer_state.layer.label for layer_state in viewer.state.layers
                          if layer_state.layer.label not in self.spectral_subset_items]
-
 
     @observe("selected_subset", "selected_spectrum")
     def _run_functions(self, *args, **kwargs):
@@ -92,10 +85,11 @@ class LineAnalysis(TemplateMixin):
         """
         if self.selected_spectrum == "":
             return
+
         self._spectrum1d = self.app.get_data_from_viewer("spectrum-viewer",
                                                          data_label=self.selected_spectrum)
 
-        if self.selected_subset is not "None":
+        if self.selected_subset != "None":
             mask = self.app.get_data_from_viewer("spectrum-viewer",
                                                  data_label=self.selected_subset).mask
             self._spectrum1d.mask = mask
