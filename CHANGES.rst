@@ -4,6 +4,8 @@
 New Features
 ------------
 
+- Box and xrange zoom tools for all applicable viewers. [#997]
+
 Cubeviz
 ^^^^^^^
 

@@ -26,6 +26,15 @@ __all__ = ['SpecvizProfileView']
 
 @viewer_registry("specviz-profile-viewer", label="Profile 1D (Specviz)")
 class SpecvizProfileView(BqplotProfileView):
+    # Whether to inherit tools from glue-jupyter automatically. Set this to
+    # False to have full control here over which tools are shown in case new
+    # ones are added in glue-jupyter in future that we don't want here.
+    inherit_tools = False
+
+    tools = ['bqplot:home', 'jdaviz:boxzoom',
+             'bqplot:panzoom', 'bqplot:panzoom_x',
+             'bqplot:panzoom_y', 'bqplot:xrange']
+
     default_class = Spectrum1D
     spectral_lines = None
     _state_cls = FreezableProfileViewerState
