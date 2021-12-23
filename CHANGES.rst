@@ -1,4 +1,4 @@
-2.2 (unreleased)
+2.2 (2021-12-23)
 ================
 
 New Features
@@ -9,21 +9,6 @@ New Features
 - Data and Subset selection are now separate in the Line Analysis plugin, to
   handle the case of multiple datasets affected by a subset. [#1012]
 
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-API Changes
------------
-
 Bug Fixes
 ---------
 
@@ -32,18 +17,6 @@ Cubeviz
 
 - Missing MJD-OBS in JWST data will no longer crash Cubeviz as long as
   it has MJD-BEG or DATE-OBS. [#1004]
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Other Changes and Additions
----------------------------
 
 
 2.1 (2021-12-10)
