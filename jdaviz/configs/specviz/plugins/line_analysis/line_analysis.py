@@ -82,14 +82,14 @@ class LineAnalysis(TemplateMixin):
 
         if len(self.dc_items) == 0:
             self.selected_spectrum = ""
+            self.selected_subset = "Entire Spectrum"
             self.result_available = False
 
     @observe("selected_subset", "selected_spectrum")
-    def _run_functions(self, *args, **kwargs):
+    def _calculate_statistics(self, *args, **kwargs):
         """
-        Run fitting on the initialized models, fixing any parameters marked
-        as such by the user, then update the displauyed parameters with fit
-        values
+        Run the line analysis functions on the selected data/subset and
+        display the results.
         """
         if self.selected_spectrum == "":
             self.result_available = False
@@ -119,5 +119,6 @@ class LineAnalysis(TemplateMixin):
                 temp_result = FUNCTIONS[function](self._spectrum1d)
 
             temp_results.append({'function': function, 'result': str(temp_result)})
-        self.result_available = True
+
         self.results = temp_results
+        self.result_available = True
