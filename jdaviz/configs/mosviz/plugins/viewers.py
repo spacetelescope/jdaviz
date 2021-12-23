@@ -57,6 +57,15 @@ class MosvizProfileView(BqplotProfileView):
 
 @viewer_registry("mosviz-image-viewer", label="Image 2D (Mosviz)")
 class MosvizImageView(BqplotImageView):
+    # Whether to inherit tools from glue-jupyter automatically. Set this to
+    # False to have full control here over which tools are shown in case new
+    # ones are added in glue-jupyter in future that we don't want here.
+    inherit_tools = False
+
+    tools = ['bqplot:home', 'jdaviz:boxzoom',
+             'bqplot:panzoom', 'bqplot:rectangle',
+             'bqplot:circle']
+
     default_class = None
 
     def data(self, cls=None):
@@ -86,9 +95,10 @@ class MosvizProfile2DView(BqplotImageView):
     # with only the tools we want (likely the same as in SpecvizProfileView)
     inherit_tools = False
     tools = ['bqplot:home',
+             'jdaviz:boxzoom',
+             'jdaviz:xrangezoom',
              'bqplot:panzoom',
              'bqplot:panzoom_x',
-             'bqplot:panzoom_y',
              'bqplot:xrange']
 
     _state_cls = FreezableBqplotImageViewerState
