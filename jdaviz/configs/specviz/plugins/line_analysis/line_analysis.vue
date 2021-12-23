@@ -9,9 +9,19 @@
     <v-row>
       <v-select
         :items="dc_items"
-        @change="data_selected"
+        v-model="selected_spectrum"
         label="Data"
         hint="Select the data set to be fitted."
+        persistent-hint
+      ></v-select>
+    </v-row>
+
+    <v-row>
+      <v-select
+        :items="spectral_subset_items"
+        v-model="selected_subset"
+        label="Spectral Region"
+        hint="Select spectral region to apply the collapse."
         persistent-hint
       ></v-select>
     </v-row>

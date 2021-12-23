@@ -1,8 +1,7 @@
 import numpy as np
-from glue.core.message import (SubsetCreateMessage,
-                               SubsetDeleteMessage,
+from glue.core.message import (SubsetDeleteMessage,
                                SubsetUpdateMessage)
-from traitlets import Bool, List, Unicode
+from traitlets import Bool, List, Unicode, observe
 from specutils import analysis, SpectralRegion
 
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage
@@ -23,8 +22,9 @@ class LineAnalysis(TemplateMixin):
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "line_analysis.vue"
     dc_items = List([]).tag(sync=True)
-    temp_function = Unicode().tag(sync=True)
-    available_functions = List(list(FUNCTIONS.keys())).tag(sync=True)
+    spectral_subset_items = List(["Entire Spectrum"]).tag(sync=True)
+    selected_spectrum = Unicode("").tag(sync=True)
+    selected_subset = Unicode("Entire Spectrum").tag(sync=True)
     result_available = Bool(False).tag(sync=True)
     results = List().tag(sync=True)
 
@@ -33,6 +33,7 @@ class LineAnalysis(TemplateMixin):
 
         self._viewer_spectra = None
         self._spectrum1d = None
+        self._viewer_id = self.app._viewer_item_by_reference('spectrum-viewer').get('id')
         self._units = {}
         self.result_available = False
 
@@ -42,14 +43,11 @@ class LineAnalysis(TemplateMixin):
         self.hub.subscribe(self, RemoveDataMessage,
                            handler=self._on_viewer_data_changed)
 
-        self.hub.subscribe(self, SubsetCreateMessage,
-                           handler=lambda x: self._on_viewer_data_changed())
-
         self.hub.subscribe(self, SubsetDeleteMessage,
-                           handler=lambda x: self._on_viewer_data_changed())
+                           handler=self._on_viewer_data_changed)
 
         self.hub.subscribe(self, SubsetUpdateMessage,
-                           handler=lambda x: self._on_viewer_data_changed())
+                           handler=self._on_viewer_data_changed)
 
     def _on_viewer_data_changed(self, msg=None):
         """
@@ -69,59 +67,42 @@ class LineAnalysis(TemplateMixin):
         msg : `glue.core.Message`
             The glue message passed to this callback method.
         """
-        self._viewer_id = self.app._viewer_item_by_reference(
-            'spectrum-viewer').get('id')
-
-        # Subsets are global and are not linked to specific viewer instances,
-        # so it's not required that we match any specific ids for that case.
-        # However, if the msg is not none, check to make sure that it's the
-        # viewer we care about.
-        if msg is not None and msg.viewer_id != self._viewer_id:
-            return
-
         viewer = self.app.get_viewer('spectrum-viewer')
 
-        self.dc_items = [layer_state.layer.label
-                         for layer_state in viewer.state.layers]
+        try:
+            self._spectral_subsets = self.app.get_subsets_from_viewer("spectrum-viewer",
+                                                                      subset_type="spectral")
+        except ValueError:
+            pass
 
-    def vue_data_selected(self, event):
+        self.spectral_subset_items = ["Entire Spectrum"] + sorted(self._spectral_subsets.keys())
+
+        self.dc_items = [layer_state.layer.label for layer_state in viewer.state.layers
+                         if layer_state.layer.label not in self.spectral_subset_items]
+
+        if len(self.dc_items) == 0:
+            self.selected_spectrum = ""
+            self.selected_subset = "Entire Spectrum"
+            self.result_available = False
+
+    @observe("selected_subset", "selected_spectrum")
+    def _calculate_statistics(self, *args, **kwargs):
         """
-        Callback method for when the user has selected data from the drop down
-        in the front-end. It is here that we actually parse and create a new
-        data object from the selected data. From this data object, unit
-        information is scraped, and the selected spectrum is stored for later
-        use in fitting.
-
-        Parameters
-        ----------
-        event : str
-            IPyWidget callback event object. In this case, represents the data
-            label of the data collection object selected by the user.
+        Run the line analysis functions on the selected data/subset and
+        display the results.
         """
-        selected_spec = self.app.get_data_from_viewer("spectrum-viewer",
-                                                      data_label=event)
+        if self.selected_spectrum == "":
+            self.result_available = False
+            return
 
-        if self._units == {}:
-            self._units["x"] = str(
-                selected_spec.spectral_axis.unit)
-            self._units["y"] = str(
-                selected_spec.flux.unit)
+        self._spectrum1d = self.app.get_data_from_viewer("spectrum-viewer",
+                                                         data_label=self.selected_spectrum)
 
-        for label in self.dc_items:
-            if label in self.data_collection:
-                self._label_to_link = label
-                break
+        if self.selected_subset != "Entire Spectrum":
+            mask = self.app.get_data_from_viewer("spectrum-viewer",
+                                                 data_label=self.selected_subset).mask
+            self._spectrum1d.mask = mask
 
-        self._spectrum1d = selected_spec
-
-        self._run_functions()
-
-    def _run_functions(self, *args, **kwargs):
-        """
-        Run fitting on the initialized models, fixing any parameters marked
-        as such by the user, then update the displauyed parameters with fit
-        values
-        """
         temp_results = []
         for function in FUNCTIONS:
             # Centroid function requires a region argument, create one to pass
@@ -138,5 +119,6 @@ class LineAnalysis(TemplateMixin):
                 temp_result = FUNCTIONS[function](self._spectrum1d)
 
             temp_results.append({'function': function, 'result': str(temp_result)})
-        self.result_available = True
+
         self.results = temp_results
+        self.result_available = True
