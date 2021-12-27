@@ -1,19 +1,22 @@
+import numpy as np
+import re
 from traitlets import Bool, Float, observe, Any, Int
 
 from jdaviz.core.events import AddDataMessage
-from jdaviz.core.registries import tool_registry
+from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
 
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.bqplot.profile import BqplotProfileView
 
-__all__ = ['UnifiedSlider']
+__all__ = ['Slice']
 
 
-@tool_registry('g-unified-slider')
-class UnifiedSlider(TemplateMixin):
-    template_file = __file__, "unified_slider.vue"
+@tray_registry('cubeviz-slice', label="Slice")
+class Slice(TemplateMixin):
+    template_file = __file__, "slice.vue"
     slider = Any(0).tag(sync=True)
+    wavelength = Any(0).tag(sync=True)
     min_value = Float(0).tag(sync=True)
     max_value = Float(100).tag(sync=True)
     linked = Bool(True).tag(sync=True)
@@ -24,6 +27,7 @@ class UnifiedSlider(TemplateMixin):
 
         self._watched_viewers = []
         self._indicator_viewers = []
+        self._x_all = None
 
         # Listen for add data events. **Note** this should only be used in
         #  cases where there is a specific type of data expected and arbitrary
@@ -57,10 +61,24 @@ class UnifiedSlider(TemplateMixin):
         elif isinstance(msg.viewer, BqplotProfileView):
             if msg.viewer not in self._indicator_viewers:
                 self._indicator_viewers.append(msg.viewer)
+                # cache wavelengths so that wavelength <> slice conversion can be done efficiently
+                # TODO: can this ever be updated?  Possibly with a unit conversion?
+                self._x_all = msg.viewer.data()[0].spectral_axis.value
+                if self.wavelength == 0.0:
+                    self.wavelength = self._x_all[0]
+                    self.wavelength_step = self._x_all[1] - self._x_all[0]
 
     def _slider_value_updated(self, value):
         if len(value) > 0:
             self.slider = float(value[0])
+
+    def vue_change_wavelength(self, event):
+        # convert to float after stripping any invalid characters
+        value = float(re.sub(r'[^-+eE\d.]', '', event))
+
+        # NOTE: by setting the index, this should recursively update the
+        # wavelength to the nearest applicable value in _on_slider_updated
+        self.slider = int(np.argmin(abs(value - self._x_all)))
 
     @observe('slider')
     def _on_slider_updated(self, event):
@@ -68,6 +86,8 @@ class UnifiedSlider(TemplateMixin):
             value = 0
         else:
             value = int(event['new'])
+
+        self.wavelength = self._x_all[value]
 
         if self.linked:
             for viewer in self._watched_viewers:

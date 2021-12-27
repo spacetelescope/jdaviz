@@ -14,8 +14,8 @@ settings:
 toolbar:
   - g-data-tools
   - g-subset-tools
-  - g-unified-slider
 tray:
+  - cubeviz-slice
   - g-gaussian-smooth
   - g-collapse
   - g-model-fitting

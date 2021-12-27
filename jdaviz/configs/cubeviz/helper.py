@@ -31,7 +31,7 @@ class Cubeviz(ConfigHelper, LineListMixin):
         if slice < 0:
             raise ValueError("slice must be positive")
         # we only need to change the slices trait on one of the viewers and then the
-        # unified_slider plugin will observe the change and sync across the slider
+        # slice plugin will observe the change and sync across the slider
         # and all other viewers
         self.app.get_viewer_by_id('cubeviz-0').state.slices = (slice, 0, 0)
 
