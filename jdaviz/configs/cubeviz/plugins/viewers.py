@@ -41,6 +41,17 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
 
 @viewer_registry("cubeviz-profile-viewer", label="Profile 1D (Specviz)")
 class CubevizProfileView(SpecvizProfileView):
+    # Whether to inherit tools from glue-jupyter automatically. Set this to
+    # False to have full control here over which tools are shown in case new
+    # ones are added in glue-jupyter in future that we don't want here.
+    inherit_tools = False
+
+    tools = ['bqplot:home',
+             'jdaviz:boxzoom', 'jdaviz:xrangezoom',
+             'bqplot:panzoom', 'bqplot:panzoom_x',
+             'bqplot:panzoom_y', 'bqplot:xrange',
+             'jdaviz:selectslice']
+
     @property
     def slice_indicator(self):
         for mark in self.figure.marks:
