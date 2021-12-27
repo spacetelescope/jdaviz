@@ -54,5 +54,5 @@ class CubevizProfileView(SpecvizProfileView):
         self.figure.marks = self.figure.marks + [slice_indicator]
         return slice_indicator
 
-    def update_slice_indicator(self, slice):
+    def _update_slice_indicator(self, slice):
         self.slice_indicator.update_slice(slice)

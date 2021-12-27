@@ -1,3 +1,4 @@
+from .tools import *  # noqa
 from .viewers import *  # noqa
 from .unified_slider.unified_slider import *  # noqa
 from .parsers import *  # noqa

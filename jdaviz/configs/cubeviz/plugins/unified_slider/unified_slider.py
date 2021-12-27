@@ -73,4 +73,4 @@ class UnifiedSlider(TemplateMixin):
             for viewer in self._watched_viewers:
                 viewer.state.slices = (value, 0, 0)
             for viewer in self._indicator_viewers:
-                viewer.update_slice_indicator(value)
+                viewer._update_slice_indicator(value)
