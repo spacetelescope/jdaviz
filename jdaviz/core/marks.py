@@ -114,10 +114,14 @@ class SliceIndicator(Lines):
     """
     Subclass on bqplot Lines to handle slice/wavelength indicator
     """
-    def __init__(self, x_all, scales, slice=0, **kwargs):
+    def __init__(self, viewer, x_all, slice=0, **kwargs):
         self.update_data(x_all)
         x_coord = self.slice_to_x(slice)
+        scales = viewer.scales
         y_coords = [scales['y'].min, scales['y'].max]
+        # keep the y values at the y-limits of the plot
+        viewer.state.add_callback("y_min", lambda y_min: self._update_ys(y_min, self.y[1]))
+        viewer.state.add_callback("y_max", lambda y_max: self._update_ys(self.y[0], y_max))
         super().__init__(x=[x_coord, x_coord], y=y_coords, scales=scales,
                          stroke_width=2, opacities=[0.6],
                          fill='none', close_path=False, **kwargs)
@@ -125,15 +129,14 @@ class SliceIndicator(Lines):
     def update_data(self, x_all):
         self._x_all = x_all
 
+    def _update_ys(self, y_min, y_max):
+        self.y = [y_min, y_max]
+
     def slice_to_x(self, slice=0):
+        if not isinstance(slice, int):
+            raise TypeError(f"slice must be of type int, not {type(slice)}")
         return self._x_all[slice]
 
     def update_slice(self, slice):
         x_coord = self.slice_to_x(slice)
         self.x = [x_coord, x_coord]
-
-#    def show(self):
-#        self.visible = True
-
-#    def hide(self):
-#        self.visible = False

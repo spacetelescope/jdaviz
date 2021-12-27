@@ -59,9 +59,8 @@ class CubevizProfileView(SpecvizProfileView):
                 return mark
 
         # SliceIndicator does not yet exist
-        # TODO: can we do this better, do we need to convert to displayed units??
         x_all = self.data()[0].spectral_axis.value
-        slice_indicator = SliceIndicator(x_all, self.scales)
+        slice_indicator = SliceIndicator(self, x_all)
         self.figure.marks = self.figure.marks + [slice_indicator]
         return slice_indicator
 
