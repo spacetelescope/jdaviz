@@ -9,7 +9,7 @@ class FreezableState():
         if k[0] == '_' or k not in self._frozen_state:
             super().__setattr__(k, v)
         elif getattr(self, k) is None:
-            # still allow Nones to be updated to intial values
+            # still allow Nones to be updated to initial values
             super().__setattr__(k, v)
 
 
