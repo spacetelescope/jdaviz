@@ -35,14 +35,14 @@ Hα,6564.61,Emission,8.,8.
 N II,6585.27,Emission,3.,0.
 S II,6718.29,Emission,3.,0.
 S II,6732.67,Emission,3.,0.
-K,3934.77,Absorptio,-1.,0.
-H,3969.58,Absorptio,-1.,0.
-G,4305.61,Absorptio,-1.,0.
-Mg,5176.7,Absorptio,-1.,0.
-Na,5895.6,Absorptio,-1.,0.
-CaII,8500.36,Absorptio,-1.,0.
-CaII,8544.44,Absorptio,-1.,0.
-CaII,8664.52,Absorptio,-1.,0.
+K,3934.77,Absorption,-1.,0.
+H,3969.58,Absorption,-1.,0.
+G,4305.61,Absorption,-1.,0.
+Mg,5176.7,Absorption,-1.,0.
+Na,5895.6,Absorption,-1.,0.
+CaII,8500.36,Absorption,-1.,0.
+CaII,8544.44,Absorption,-1.,0.
+CaII,8664.52,Absorption,-1.,0.
 Sky,5578.5,Sky,0.,0.
 Sky,5894.6,Sky,0.,0.
 Sky,6301.7,Sky,0.,0.
