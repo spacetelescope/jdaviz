@@ -77,7 +77,7 @@ class MomentMap(TemplateMixin):
                     continue
 
     def _on_subset_created(self, msg):
-        """Currently unimplemented due to problems with the SubsetCreateMessafe"""
+        """Currently unimplemented due to problems with the SubsetCreateMessage"""
         raise ValueError(msg)
 
     @observe("selected_data")
