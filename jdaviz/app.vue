@@ -204,7 +204,7 @@ div.output_wrapper {
 }
 
 .v-toolbar__items .v-btn {
-  /* allow toolbar-items styling to pass through tooltip wrapping span */
+  /* allow v-toolbar-items styling to pass through tooltip wrapping span */
   /* css is copied from .v-toolbar__items>.v-btn */
   border-radius: 0;
   height: 100% !important;
