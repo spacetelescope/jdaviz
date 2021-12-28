@@ -9,6 +9,23 @@ more detail under :ref:`Specviz: Data Analysis Plugins <specviz-plugins>`.  All 
 are accessed via the :guilabel:`plugin` icon in the upper right corner
 of the Cubeviz application.
 
+Slice
+===============
+
+The slice plugin provides that ability to select the slice
+of the cube currently visible in the image viewers, with the
+corresponding wavelength highlighted in the spectrum viewer.
+
+.. image:: img/slice_plugin.png
+
+The slider can be grabbed to scrub through the cube.  To choose
+a specific slice, enter a slice number (integer) or an approximate
+wavelength (in which case the nearest slice will be selected and 
+the wavelength entry will update to the exact value of that slice).
+
+The spectrum viewer also contains a tool to allow clicking and 
+dragging in the spectrum plot to choose the currently selected slice.
+
 Gaussian Smooth
 ===============
 
