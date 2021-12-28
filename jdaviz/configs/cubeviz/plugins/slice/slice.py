@@ -62,11 +62,19 @@ class Slice(TemplateMixin):
             if msg.viewer not in self._indicator_viewers:
                 self._indicator_viewers.append(msg.viewer)
                 # cache wavelengths so that wavelength <> slice conversion can be done efficiently
-                # TODO: can this ever be updated?  Possibly with a unit conversion?
                 self._x_all = msg.viewer.data()[0].spectral_axis.value
+                # but if the units (or data) change, we need to update internally
+                msg.viewer.state.add_callback("reference_data",
+                                              lambda reference_data: self._update_data(reference_data.get_object().spectral_axis.value)) # noqa
+
                 if self.wavelength == 0.0:
                     self.wavelength = self._x_all[0]
                     self.wavelength_step = self._x_all[1] - self._x_all[0]
+
+    def _update_data(self, x_all):
+        self._x_all = x_all
+        # force wavelength to update from the current slider value
+        self._on_slider_updated({'new': self.slider})
 
     def _slider_value_updated(self, value):
         if len(value) > 0:

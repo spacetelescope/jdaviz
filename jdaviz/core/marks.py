@@ -114,29 +114,49 @@ class SliceIndicator(Lines):
     """
     Subclass on bqplot Lines to handle slice/wavelength indicator
     """
-    def __init__(self, viewer, x_all, slice=0, **kwargs):
-        self.update_data(x_all)
-        x_coord = self.slice_to_x(slice)
+    def __init__(self, viewer, slice=0, **kwargs):
+        self._slice = slice
+
+        x_all = viewer.data()[0].spectral_axis.value
+        self._x_all = x_all
+
+        # the location of the marker will need to update automatically if the underlying data
+        # changes (through a unit conversion, for example)
+        viewer.state.add_callback("reference_data",
+                                  lambda reference_data: self._update_data(reference_data.get_object().spectral_axis.value)) # noqa
+
+        x_coord = self._slice_to_x(slice)
         scales = viewer.scales
         y_coords = [scales['y'].min, scales['y'].max]
+
         # keep the y values at the y-limits of the plot
-        viewer.state.add_callback("y_min", lambda y_min: self._update_ys(y_min, self.y[1]))
-        viewer.state.add_callback("y_max", lambda y_max: self._update_ys(self.y[0], y_max))
+        viewer.state.add_callback("y_min", lambda y_min: self._update_ys(y_min=y_min))
+        viewer.state.add_callback("y_max", lambda y_max: self._update_ys(y_max=y_max))
+
         super().__init__(x=[x_coord, x_coord], y=y_coords, scales=scales,
                          stroke_width=2, opacities=[0.6],
                          fill='none', close_path=False, **kwargs)
 
-    def update_data(self, x_all):
-        self._x_all = x_all
-
-    def _update_ys(self, y_min, y_max):
-        self.y = [y_min, y_max]
-
-    def slice_to_x(self, slice=0):
+    def _slice_to_x(self, slice=0):
         if not isinstance(slice, int):
             raise TypeError(f"slice must be of type int, not {type(slice)}")
         return self._x_all[slice]
 
-    def update_slice(self, slice):
-        x_coord = self.slice_to_x(slice)
+    @property
+    def slice(self):
+        return self._slice
+
+    @slice.setter
+    def slice(self, slice):
+        x_coord = self._slice_to_x(slice)
+        self._slice = slice
         self.x = [x_coord, x_coord]
+
+    def _update_data(self, x_all):
+        self._x_all = x_all
+        x_coord = self._slice_to_x(self.slice)
+        self.x = [x_coord, x_coord]
+
+    def _update_ys(self, y_min=None, y_max=None):
+        self.y = [y_min if y_min is not None else self.y[0],
+                  y_max if y_max is not None else self.y[1]]

@@ -59,10 +59,9 @@ class CubevizProfileView(SpecvizProfileView):
                 return mark
 
         # SliceIndicator does not yet exist
-        x_all = self.data()[0].spectral_axis.value
-        slice_indicator = SliceIndicator(self, x_all)
+        slice_indicator = SliceIndicator(self)
         self.figure.marks = self.figure.marks + [slice_indicator]
         return slice_indicator
 
     def _update_slice_indicator(self, slice):
-        self.slice_indicator.update_slice(slice)
+        self.slice_indicator.slice = slice
