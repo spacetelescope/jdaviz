@@ -393,7 +393,7 @@ class ModelFitting(TemplateMixin):
             self._spectrum1d.spectral_axis,
             self._spectrum1d.flux)
 
-        # need to loop over parameters again as the initializer may have overriden
+        # need to loop over parameters again as the initializer may have overridden
         # the original default value
         for param_name in get_model_parameters(model_cls, new_model["model_kwargs"]):
             param_quant = getattr(initialized_model, param_name)
