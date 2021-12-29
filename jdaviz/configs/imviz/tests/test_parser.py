@@ -330,23 +330,23 @@ class TestParseImage:
         assert_quantity_allclose(tbl[0]['xcenter'], 1488.5 * u.pix)
         assert_quantity_allclose(tbl[0]['ycenter'], 2576 * u.pix)
         sky = tbl[0]['sky_center']
-        assert_allclose(sky.ra.deg, 3.6840882015888323)
-        assert_allclose(sky.dec.deg, 10.802065746813046)
+        assert_allclose(sky.ra.deg, 3.6840882015888323, rtol=1e-5)
+        assert_allclose(sky.dec.deg, 10.802065746813046, rtol=1e-5)
         data_unit = u.electron / u.s
         assert_quantity_allclose(tbl[0]['background'], 0.0014 * data_unit)
         assert_quantity_allclose(tbl[0]['npix'], 645.98998939 * u.pix)
-        assert_quantity_allclose(tbl[0]['aperture_sum'], 81.01186025 * data_unit)
+        assert_quantity_allclose(tbl[0]['aperture_sum'], 78.352207 * data_unit)
         assert_array_equal(tbl[0]['pixarea_tot'], None)
         assert_array_equal(tbl[0]['aperture_sum_counts'], None)
         assert_array_equal(tbl[0]['aperture_sum_counts_err'], None)
         assert_array_equal(tbl[0]['counts_fac'], None)
         assert_array_equal(tbl[0]['aperture_sum_mag'], None)
         assert_array_equal(tbl[0]['flux_scaling'], None)
-        assert_quantity_allclose(tbl[0]['mean'], 0.12466364 * data_unit)
-        assert_quantity_allclose(tbl[0]['stddev'], 0.1784373 * data_unit)
-        assert_quantity_allclose(tbl[0]['median'], 0.06988327 * data_unit)
-        assert_quantity_allclose(tbl[0]['min'], 0.0013524 * data_unit, rtol=1e-5)
-        assert_quantity_allclose(tbl[0]['max'], 1.5221194 * data_unit, rtol=1e-5)
+        assert_quantity_allclose(tbl[0]['mean'], 0.120531 * data_unit, rtol=1e-5)
+        assert_quantity_allclose(tbl[0]['stddev'], 0.174565 * data_unit, rtol=1e-5)
+        assert_quantity_allclose(tbl[0]['median'], 0.068294 * data_unit, rtol=1e-5)
+        assert_quantity_allclose(tbl[0]['min'], -0.004208 * data_unit, rtol=1e-3)
+        assert_quantity_allclose(tbl[0]['max'], 1.625122 * data_unit, rtol=1e-5)
 
         # Request specific extension (name only), use given label
         parse_data(imviz_app.app, filename, ext='CTX',
