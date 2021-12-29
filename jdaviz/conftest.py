@@ -118,10 +118,3 @@ def pytest_configure(config):
     PYTEST_HEADER_MODULES['asdf'] = 'asdf'
 
     TESTED_VERSIONS['jdaviz'] = __version__
-
-# TODO: Need to handle warnings properly first before we can enable this. See
-# https://github.com/spacetelescope/jdaviz/issues/478
-# Uncomment the last two lines in this block to treat all DeprecationWarnings as
-# exceptions.
-# from astropy.tests.helper import enable_deprecations_as_exceptions  # noqa
-# enable_deprecations_as_exceptions()
