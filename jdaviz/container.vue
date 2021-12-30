@@ -89,18 +89,18 @@
                     </v-btn>
                   </template>
 
-                  <v-tabs v-model="viewer.tab" grow height="36px">
+                  <v-tabs v-model="viewer.tab" grow height="36px" ref="layer_viewer_tabs">
                     <v-tab key="0">Layer</v-tab>
                     <v-tab key="1">Viewer</v-tab>
                   </v-tabs>
 
                   <!-- NOTE: v-lazy needed for initial tab underline: https://github.com/vuetifyjs/vuetify/issues/1978#issuecomment-676892274 -->
-                  <v-lazy>
+                  <v-lazy @mousedown="layer_viewer_mouse_down" @mouseup="layer_viewer_mouse_up" ref="layer_viewer_contents">
                     <v-tabs-items v-model="viewer.tab" style="max-height: 500px; width: 350px;" lazy>
 
                     <v-tab-item key="0" class="overflow-y-auto" style="height: 100%">
                       <v-sheet class="px-4">
-                        <jupyter-widget :widget="viewer.layer_options" /> 
+                        <jupyter-widget :widget="viewer.layer_options"/> 
                       </v-sheet>
                     </v-tab-item>
 
@@ -177,9 +177,21 @@ module.exports = {
   name: "g-viewer-tab",
   props: ["stack", "dataItems", "closefn"],
   created() {
+    this.layer_viewer_class = ""
     this.$parent.childMe = () => {
       return this.$children[0];
     };
+    this.layer_viewer_mouse_down = (e) => {
+      if (e.target.className.indexOf("v-slider__thumb") !== -1) {
+        // then clicked on a slider, so we want to set transparency
+        this.$refs.layer_viewer_contents[0].$el.style.opacity = 0.2
+        this.$refs.layer_viewer_tabs[0].$el.style.opacity = 0.2
+      }
+    }
+    this.layer_viewer_mouse_up = (e) => {
+      this.$refs.layer_viewer_contents[0].$el.style.opacity = 1.0
+      this.$refs.layer_viewer_tabs[0].$el.style.opacity = 1.0
+    }
   },
   methods: {
     computeChildrenPath() {
