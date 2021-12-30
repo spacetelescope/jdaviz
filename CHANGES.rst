@@ -22,6 +22,8 @@ API Changes
 Bug Fixes
 ---------
 
+- Model plugin now validates component names to avoid equation failing. [#1020]
+
 Cubeviz
 ^^^^^^^
 

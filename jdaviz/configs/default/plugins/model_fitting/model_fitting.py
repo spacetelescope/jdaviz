@@ -343,6 +343,11 @@ class ModelFitting(TemplateMixin):
 
     def vue_add_model(self, event):
         """Add the selected model and input string ID to the list of models"""
+        # validate provided label (only allow "word characters").   These should already be
+        # stripped by JS in the UI element, but we'll confirm here (especially if this is ever
+        # extended to have better API-support)
+        if re.search(r'\W+', self.temp_name):
+            raise ValueError(f"invalid model component label {self.temp_name}")
         new_model = {"id": self.temp_name, "model_type": self.temp_model,
                      "parameters": [], "model_kwargs": {}}
         model_cls = MODELS[self.temp_model]
