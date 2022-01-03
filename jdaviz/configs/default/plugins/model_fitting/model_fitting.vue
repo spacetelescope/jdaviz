@@ -43,7 +43,8 @@
         @change="sanitizeModelId"
         hint="A unique string label for this component model."
         persistent-hint
-        :rules="[() => !!temp_name || 'This field is required']"
+        :rules="[() => !!temp_name || 'This field is required',
+                 () => component_models.map((item) => item.id).indexOf(temp_name) === -1 || 'ID already in use']"
       >
       </v-text-field>
     </v-row>
