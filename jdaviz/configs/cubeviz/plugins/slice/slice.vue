@@ -15,24 +15,34 @@
       />
     </v-row>
 
-    <v-row>
-      <v-text-field
-        v-model="slider"
-        class="mt-0 pt-0"
-        type="number"
-        label="Slice"
-        hint="Slice number"
-      ></v-text-field>
+    <v-row class="row-no-outside-padding">
+      <v-col>
+        <v-text-field
+          v-model="slider"
+          class="mt-0 pt-0"
+          type="number"
+          label="Slice"
+          hint="Slice number"
+        ></v-text-field>
+      </v-col>
+      <v-col cols=3>
+        <span> / {{ max_value }}</span>
+      </v-col>
     </v-row>
 
-    <v-row>
-      <v-text-field
-        v-model="wavelength"
-        class="mt-0 pt-0"
-        @change="change_wavelength"
-        label="Wavelength"
-        hint="Wavelength corresponding to slice, in units of spectrum"
-      ></v-text-field>
+    <v-row class="row-no-outside-padding">
+      <v-col>
+        <v-text-field
+          v-model="wavelength"
+          class="mt-0 pt-0"
+          @change="change_wavelength"
+          label="Wavelength"
+          hint="Wavelength corresponding to slice, in units of spectrum"
+        ></v-text-field>
+      </v-col>
+      <v-col cols=3>
+        <span>{{ wavelength_unit }}</span>
+      </v-col>
     </v-row>
   </j-tray-plugin>
 </template>
