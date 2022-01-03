@@ -5,8 +5,12 @@ import numpy as np
 import pytest
 from specutils.spectra import Spectrum1D
 
+from glue.core import Data
+
+from jdaviz import Application
 from jdaviz.configs.default.plugins.model_fitting import fitting_backend as fb
 from jdaviz.configs.default.plugins.model_fitting import initializers
+from jdaviz.configs.default.plugins.model_fitting.model_fitting import ModelFitting
 
 
 SPECTRUM_SIZE = 200  # length of spectrum
@@ -48,6 +52,31 @@ def test_model_params():
         params = initializers.get_model_parameters(model_name)
         assert len(params) == len(expected_params)
         assert np.all([p in expected_params for p in params])
+
+
+@pytest.mark.filterwarnings('ignore')
+def test_model_ids(spectral_cube_wcs):
+    app = Application()
+    dc = app.data_collection
+    dc.append(Data(x=np.ones((3, 4, 5)), label='test', coords=spectral_cube_wcs))
+
+    plugin = ModelFitting(app=app)
+
+    plugin.data_selected = 'test'
+    plugin.component_models = [{'id': 'valid_string_already_exists'}]
+    plugin.temp_model = 'Linear1D'
+
+    with pytest.raises(
+            ValueError,
+            match="model component ID valid_string_already_exists already in use"):
+        plugin.temp_name = 'valid_string_already_exists'
+        plugin.vue_add_model({})
+
+    with pytest.raises(
+            ValueError,
+            match="invalid model component ID invalid-string"):
+        plugin.temp_name = 'invalid-string'
+        plugin.vue_add_model({})
 
 
 def test_fitting_backend():

@@ -40,9 +40,11 @@
       <v-text-field
         label="Model ID"
         v-model="temp_name"
+        @change="sanitizeModelId"
         hint="A unique string label for this component model."
         persistent-hint
-        :rules="[() => !!temp_name || 'This field is required']"
+        :rules="[() => !!temp_name || 'This field is required',
+                 () => component_models.map((item) => item.id).indexOf(temp_name) === -1 || 'ID already in use']"
       >
       </v-text-field>
     </v-row>
@@ -204,3 +206,14 @@
 
   </j-tray-plugin>
 </template>
+
+<script>
+  module.exports = {
+    created() {
+      this.sanitizeModelId = (v) => {
+        // strip non-word character entries
+        this.temp_name = v.replace(/[\W]+/g, '');
+      }
+    },
+  }
+</script>
