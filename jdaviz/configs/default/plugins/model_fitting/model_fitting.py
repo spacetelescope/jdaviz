@@ -159,8 +159,11 @@ class ModelFitting(TemplateMixin):
         """Insert the results of the model fit into the component_models"""
         for m in self.component_models:
             name = m["id"]
-            if hasattr(self._fitted_model, name):
-                m_fit = self._fitted_model[name]
+            if hasattr(self._fitted_model, "submodel_names"):
+                if name in self._fitted_model.submodel_names:
+                    m_fit = self._fitted_model[name]
+                else:
+                    continue
             elif self._fitted_model.name == name:
                 m_fit = self._fitted_model
             else:
