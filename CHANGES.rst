@@ -24,6 +24,8 @@ Bug Fixes
 
 - Model plugin now validates component names to avoid equation failing. [#1020]
 - Model plugin properly updates parameters after fit for compound models. [#1023]
+- Model plugin now respects fixed parameters when applying model to cube, and retains
+  parameter units in that case. [#1026]
 
 Cubeviz
 ^^^^^^^

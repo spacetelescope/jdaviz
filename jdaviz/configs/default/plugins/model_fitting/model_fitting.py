@@ -1,7 +1,6 @@
 import re
 import numpy as np
 
-import astropy.modeling.models as models
 import astropy.units as u
 from astropy.wcs import WCSSUB_SPECTRAL
 from glue.core.message import (SubsetCreateMessage,
