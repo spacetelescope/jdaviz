@@ -3,6 +3,9 @@ from bqplot.marks import Lines
 from glue.core import HubListener
 from specutils import Spectrum1D
 
+from glue.core import HubListener
+from jdaviz.core.events import SliceToolActiveMessage
+
 
 class BaseSpectrumVerticalLine(Lines, HubListener):
     def __init__(self, viewer, x, **kwargs):
@@ -110,7 +113,7 @@ class SpectralLine(BaseSpectrumVerticalLine):
 
 
 
-class SliceIndicator(Lines):
+class SliceIndicator(Lines, HubListener):
     """
     Subclass on bqplot Lines to handle slice/wavelength indicator
     """
@@ -133,14 +136,31 @@ class SliceIndicator(Lines):
         viewer.state.add_callback("y_min", lambda y_min: self._update_ys(y_min=y_min))
         viewer.state.add_callback("y_max", lambda y_max: self._update_ys(y_max=y_max))
 
+        viewer.session.hub.subscribe(self, SliceToolActiveMessage,
+                                     handler=self._on_change_active)
+
         super().__init__(x=[x_coord, x_coord], y=y_coords, scales=scales,
-                         stroke_width=2, opacities=[0.6],
-                         fill='none', close_path=False, **kwargs)
+                         stroke_width=2,
+                         marker='diamond',
+                         fill='none', close_path=False,
+                         labels=['slice'], labels_visibility='label', **kwargs)
+
+        self._on_change_active(False)
 
     def _slice_to_x(self, slice=0):
         if not isinstance(slice, int):
             raise TypeError(f"slice must be of type int, not {type(slice)}")
         return self._x_all[slice]
+
+    def _on_change_active(self, msg):
+        if isinstance(msg, bool):
+            active = msg
+        else:
+            active = msg.active
+
+        self.opacities = [1.0 if active else 0.9]
+        # orange (accent) if active, viewer toolbar (primary) otherwise (see css in app.vue)
+        self.colors = ["#c75109" if active else "#00617E"]
 
     @property
     def slice(self):
@@ -151,6 +171,7 @@ class SliceIndicator(Lines):
         x_coord = self._slice_to_x(slice)
         self._slice = slice
         self.x = [x_coord, x_coord]
+        self.labels = [f'slice: {x_coord:0.4e}']
 
     def _update_data(self, x_all):
         self._x_all = x_all

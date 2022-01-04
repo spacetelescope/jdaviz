@@ -6,7 +6,7 @@ from glue.config import viewer_tool
 from glue.viewers.common.tool import CheckableTool
 # from bqplot.interacts import IndexSelector
 
-from jdaviz.core.events import SliceWavelengthMessage
+from jdaviz.core.events import SliceWavelengthMessage, SliceToolActiveMessage
 
 __all__ = []
 
@@ -28,9 +28,13 @@ class SelectSlice(CheckableTool):
         self.viewer.add_event_callback(self.on_mouse_event,
                                        events=['dragstart', 'dragmove',
                                                'dragend', 'dblclick'])
+        msg = SliceToolActiveMessage(True, sender=self)
+        self.viewer.session.hub.broadcast(msg)
 
     def deactivate(self):
         self.viewer.remove_event_callback(self.on_mouse_event)
+        msg = SliceToolActiveMessage(False, sender=self)
+        self.viewer.session.hub.broadcast(msg)
 
     def on_mouse_event(self, data):
         if (time.time() - self._time_last) <= 0.2:
