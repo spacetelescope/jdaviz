@@ -471,6 +471,7 @@ class ModelFitting(TemplateMixin):
 
         if self._warn_if_no_equation():
             return
+
         if self._selected_data_label in self.app.data_collection.labels:
             data = self.app.data_collection[self._selected_data_label]
         else:  # User selected some subset from spectrum viewer, just use original cube
@@ -507,27 +508,7 @@ class ModelFitting(TemplateMixin):
         self.hub.broadcast(snackbar_message)
 
         # Retrieve copy of the models with proper "fixed" dictionaries
-        # TODO: figure out why this was causing the parallel fitting to fail
-        # models_to_fit = self._reinitialize_with_fixed()
-        models_to_fit = list(self._initialized_models.values())
-
-        # Remove units to work around current specutils/astropy modeling limitations
-        # TODO: Keep units once astropy/specutils can handle them for all models
-        removed_units = {}
-        unitless_models = []
-
-        for m in models_to_fit:
-            removed_units[m.name] = {}
-            if type(m) == models.Polynomial1D:
-                temp_model = m.__class__(name=m.name, degree=m.degree)
-            else:
-                temp_model = m.__class__(name=m.name)
-            for pname in m.param_names:
-                p = getattr(m, pname)
-                removed_units[m.name][pname] = p.unit
-                setattr(temp_model, pname, p.value)
-            unitless_models.append(temp_model)
-        models_to_fit = unitless_models
+        models_to_fit = self._reinitialize_with_fixed()
 
         try:
             fitted_model, fitted_spectrum = fit_model_to_spectrum(
