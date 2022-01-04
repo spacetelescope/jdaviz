@@ -16,7 +16,7 @@ __all__ = ['Slice']
 class Slice(TemplateMixin):
     template_file = __file__, "slice.vue"
     slider = Any(0).tag(sync=True)
-    wavelength = Any(0).tag(sync=True)
+    wavelength = Any(-1).tag(sync=True)
     wavelength_unit = Any("").tag(sync=True)
     min_value = Float(0).tag(sync=True)
     max_value = Float(100).tag(sync=True)
@@ -70,8 +70,9 @@ class Slice(TemplateMixin):
                 msg.viewer.state.add_callback("reference_data",
                                               lambda reference_data: self._update_data(reference_data.get_object().spectral_axis)) # noqa
 
-                if self.wavelength == 0.0:
-                    self.wavelength = self._x_all[0]
+                if self.wavelength == -1:
+                    # initialize at middle of cube
+                    self.slider = int(len(x_all)/2)
 
     def _update_data(self, x_all):
         if hasattr(x_all, 'unit'):
