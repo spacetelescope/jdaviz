@@ -160,7 +160,11 @@ class ModelFitting(TemplateMixin):
         for m in self.component_models:
             name = m["id"]
             if hasattr(self._fitted_model, "submodel_names"):
-                m_fit = self._fitted_model[name]
+                try:
+                    m_fit = self._fitted_model[name]
+                except IndexError:
+                    # This component model wasn't actually used in the model equation
+                    continue
             elif self._fitted_model.name == name:
                 m_fit = self._fitted_model
             else:
