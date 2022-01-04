@@ -4,7 +4,7 @@ from glue.core import HubListener
 from specutils import Spectrum1D
 
 from glue.core import HubListener
-from jdaviz.core.events import SliceToolActiveMessage
+from jdaviz.core.events import SliceToolStateMessage
 
 
 class BaseSpectrumVerticalLine(Lines, HubListener):
@@ -119,6 +119,8 @@ class SliceIndicator(Lines, HubListener):
     """
     def __init__(self, viewer, slice=0, **kwargs):
         self._slice = slice
+        self._active = False
+        self._show_if_inactive = True
 
         x_all = viewer.data()[0].spectral_axis.value
         self._x_all = x_all
@@ -136,8 +138,8 @@ class SliceIndicator(Lines, HubListener):
         viewer.state.add_callback("y_min", lambda y_min: self._update_ys(y_min=y_min))
         viewer.state.add_callback("y_max", lambda y_max: self._update_ys(y_max=y_max))
 
-        viewer.session.hub.subscribe(self, SliceToolActiveMessage,
-                                     handler=self._on_change_active)
+        viewer.session.hub.subscribe(self, SliceToolStateMessage,
+                                     handler=self._on_change_state)
 
         super().__init__(x=[x_coord, x_coord], y=y_coords, scales=scales,
                          stroke_width=2,
@@ -145,22 +147,38 @@ class SliceIndicator(Lines, HubListener):
                          fill='none', close_path=False,
                          labels=['slice'], labels_visibility='label', **kwargs)
 
-        self._on_change_active(False)
+        self._on_change_state({'active': False})
 
     def _slice_to_x(self, slice=0):
         if not isinstance(slice, int):
             raise TypeError(f"slice must be of type int, not {type(slice)}")
         return self._x_all[slice]
 
-    def _on_change_active(self, msg):
-        if isinstance(msg, bool):
-            active = msg
-        else:
-            active = msg.active
-
-        self.opacities = [1.0 if active else 0.9]
+    def _update_colors_opacities(self):
         # orange (accent) if active, viewer toolbar (primary) otherwise (see css in app.vue)
-        self.colors = ["#c75109" if active else "#00617E"]
+        if not self._show_if_inactive and not self._active:
+            self.visible = False
+            return
+
+        self.visible = True
+        self.colors = ["#c75109" if self._active else "#00617E"]
+        self.opacities = [1.0 if self._active else 0.9]
+
+    def _on_change_state(self, msg):
+        if isinstance(msg, dict):
+            changes = msg
+        else:
+            changes = msg.change
+
+        for k, v in changes.items():
+            if k == 'active':
+                self._active = v
+            elif k == 'setting_show_indicator':
+                self._show_if_inactive = v
+            elif k == 'setting_show_wavelength':
+                self.labels_visibility = 'label' if v else 'none'
+
+        self._update_colors_opacities()
 
     @property
     def slice(self):

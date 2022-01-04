@@ -2,7 +2,7 @@ import numpy as np
 import re
 from traitlets import Bool, Float, observe, Any, Int
 
-from jdaviz.core.events import AddDataMessage
+from jdaviz.core.events import AddDataMessage, SliceToolStateMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
 
@@ -21,7 +21,10 @@ class Slice(TemplateMixin):
     min_value = Float(0).tag(sync=True)
     max_value = Float(100).tag(sync=True)
     linked = Bool(True).tag(sync=True)
-    wait = Int(100).tag(sync=True)
+    wait = Int(200).tag(sync=True)
+
+    setting_show_indicator = Bool(True).tag(sync=True)
+    setting_show_wavelength = Bool(True).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -94,6 +97,11 @@ class Slice(TemplateMixin):
         # NOTE: by setting the index, this should recursively update the
         # wavelength to the nearest applicable value in _on_slider_updated
         self.slider = int(np.argmin(abs(value - self._x_all)))
+
+    @observe('setting_show_indicator', 'setting_show_wavelength')
+    def _on_setting_changed(self, event):
+        msg = SliceToolStateMessage({event['name']: event['new']}, sender=self)
+        self.session.hub.broadcast(msg)
 
     @observe('slider')
     def _on_slider_updated(self, event):

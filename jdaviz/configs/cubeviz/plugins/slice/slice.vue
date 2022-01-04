@@ -3,7 +3,35 @@
     <v-row>
       <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#slice'">Select slice (or wavelength) of the cube to show in the image viewers and highlighted in the spectrum viewer.  The slice can also be changed interactively in the spectrum viewer by activating the slice tool.</j-docs-link>
     </v-row>
-    
+
+    <v-row>
+      <v-expansion-panels popout>
+        <v-expansion-panel>
+          <v-expansion-panel-header v-slot="{ open }">
+            <span style="padding: 6px">Indicator Settings</span>
+          </v-expansion-panel-header>
+          <v-expansion-panel-content>
+            <v-row>
+              <v-switch
+                label="Show Indicator"
+                hint="Show indicator in spectral viewer even when slice tool is inactive."
+                v-model="setting_show_indicator"
+                persistent-hint>
+              </v-switch>
+            </v-row>
+            <v-row>
+              <v-switch
+                label="Show Wavelength"
+                hint="Show slice wavelength in label to right of indicator."
+                v-model="setting_show_wavelength"
+                persistent-hint>
+              </v-switch>
+            </v-row>
+          </v-expansion-panel-content>
+        </v-expansion-panel>
+      </v-expansion-panels>
+    </v-row>
+
     <v-row>
       <v-slider
         :value="slider"
@@ -15,7 +43,7 @@
       />
     </v-row>
 
-    <v-row class="row-no-outside-padding">
+    <v-row class="row-no-outside-padding row-min-bottom-padding">
       <v-col>
         <v-text-field
           v-model="slider"
