@@ -115,7 +115,7 @@
                   <j-tooltip tipid='plugin-model-fitting-param-fixed'>
                     <v-checkbox v-model="param.fixed">
                       <template v-slot:label>
-                        <span style="overflow-wrap: anywhere; color: black; font-size: 10pt">
+                        <span class="text--primary" style="overflow-wrap: anywhere; font-size: 10pt">
                           {{param.name}}
                         </span>
                       </template>
