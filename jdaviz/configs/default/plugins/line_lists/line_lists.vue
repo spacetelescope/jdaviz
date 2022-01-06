@@ -8,22 +8,28 @@
     <v-row>
       <j-docs-link>Shift spectral lines according to a specific redshift. Only enabled if at least one line is plotted.</j-docs-link>
     </v-row>
-    <v-row>
+    <v-row style='margin-bottom: 0px'>
       <!-- colors are app.vue primary and toolbar colors -->
       <v-slider
         :value="rs_slider"
         @input="throttledSlider"
         @end="slider_reset"
         class="align-center"
-        :max="rs_slider_range/2"
-        :min="-rs_slider_range/2"
+        :max="rs_slider_half_range"
+        :min="-rs_slider_half_range"
         :step="rs_slider_step"
         color="#00617E"
         track-color="#00617E"
         thumb-color="#153A4B"
         hide-details
         :disabled="!rs_enabled"
-      />
+      >
+      </v-slider>
+    </v-row>
+    <v-row style='margin-top: -24px'>
+      <span class='text--secondary' style='max-width: 30%; white-space: nowrap;'>-{{rs_slider_half_range}}</span>
+      <v-spacer/>
+      <span class='text--secondary' style='max-width: 30%; white-space: nowrap;'>+{{rs_slider_half_range}}</span>
     </v-row>
 
     <v-row class="row-no-outside-padding row-min-bottom-padding">

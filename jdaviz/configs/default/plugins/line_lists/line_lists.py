@@ -28,7 +28,7 @@ class LineListTool(TemplateMixin):
     rs_enabled = Bool(False).tag(sync=True)  # disabled until lines are plotted
     rs_slider = Float(0).tag(sync=True)  # TODO: dlambda
     rs_slider_range_auto = Bool(True).tag(sync=True)
-    rs_slider_range = Float(0.1).tag(sync=True)
+    rs_slider_half_range = Float(0.1).tag(sync=True)
     rs_slider_step_auto = Bool(True).tag(sync=True)
     rs_slider_step = Float(0.01).tag(sync=True)
     rs_redshift = Any(0).tag(sync=True)  # must be Any for user input, converted to float in python
@@ -149,7 +149,7 @@ class LineListTool(TemplateMixin):
                 self.rs_slider_range_auto = True
             else:
                 self.rs_slider_range_auto = False
-                self.rs_slider_range = float(msg.value)
+                self.rs_slider_half_range = float(msg.value)/2
         elif param == "rs_slider_step":
             if msg.value == 'auto':
                 # observer will handle setting rs_slider_step
@@ -243,20 +243,26 @@ class LineListTool(TemplateMixin):
         x_mid = abs(x_max + x_min) / 2
         # we'll *estimate* the redshift range to shift from middle of viewer to the edge,
         # by taking abs, this will work for wavelength or frequency units.
-        # Changing this will trigger self._on_rs_slider_step_auto_updated
-        self.rs_slider_range = abs(x_max - x_min) / x_mid
+        half_range = abs(x_max - x_min) / x_mid / 2
+        ndec = -np.log10(half_range)
+        if ndec > 0:
+            # round to at least 2 digits, or the first significant digit
+            ndec = np.max([2, int(np.ceil(ndec))])
+            half_range = np.round(half_range, ndec)
+        # this will trigger self._on_rs_slider_step_auto_updated
+        self.rs_slider_half_range = half_range
 
     @observe('rs_slider_range_auto')
     def _on_rs_slider_range_auto_updated(self, event):
         if event['new']:
             self._auto_slider_range()
 
-    @observe('rs_slider_range')
+    @observe('rs_slider_half_range')
     def _auto_slider_step(self, event=None):
         if not self.rs_slider_step_auto:
             return
         # if set to auto, default to 100 steps in the range
-        self.rs_slider_step = self.rs_slider_range / 100
+        self.rs_slider_step = self.rs_slider_half_range * 2 / 100
 
     @observe('rs_slider_step_auto')
     def _on_rs_slider_step_auto_updated(self, event):
