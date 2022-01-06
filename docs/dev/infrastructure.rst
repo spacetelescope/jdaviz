@@ -63,8 +63,8 @@ The target interfaces are:
   maximum flexibility in embedding.
 
 Each of these interfaces uses a common set of applications implemented in Python
-and leverging ipywidgets_ as the communication layer between Python and the
-JavaScript-level layout, rendering, and iteractivity libraries. Hence the following
+and leveraging ipywidgets_ as the communication layer between Python and the
+JavaScript-level layout, rendering, and interactivity libraries. Hence the following
 layers are primarily implemented in Python, but utilize tools like ipyvuetify_ and
 ipygoldenlayout_ to allow the Python code to interact with the JavaScript
 implementations at the interface level.
@@ -164,7 +164,7 @@ Known component widgets for the target applications include:
   aggregation/slicing operations.
 * *Table viewer*: A widget to show tabular datasets like `astropy.table.Table` objects.
   Primarily meant to be combined with other viewers to examine the complete set of
-  properties from a selection made in another viewer. Interactivty focuses on sorting
+  properties from a selection made in another viewer. Interactivity focuses on sorting
   and selection of specific rows (to then be highlighted in other viewers or interacted
   with in notebook/lab).
 

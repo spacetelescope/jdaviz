@@ -103,7 +103,7 @@ class _WideBand1DInitializer(object):
     Parameters
     ----------
     factor: float
-        The scale factor to apply to the amplitutde
+        The scale factor to apply to the amplitude
     """
     def __init__(self, factor=1.0):
         self._factor = factor
@@ -148,7 +148,7 @@ class _LineProfile1DInitializer(object):
     Parameters
     ----------
     factor: float
-        The scale factor to apply to the amplitutde
+        The scale factor to apply to the amplitude
     """
     def __init__(self, factor=1.0):
         self._factor = factor

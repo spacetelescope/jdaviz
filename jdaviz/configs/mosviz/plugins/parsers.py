@@ -522,8 +522,8 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
     - *_direct_*_cat.ecsv : Source catalog
     - *_WFSSR_*_cal.fits : 2D spectra in first orientation
     - *_WFSSC_*_cal.fits : 2D spectra in second orientation
-    - *_WFSSR_*_x1d.fits : 1D spectra in first orientatiom
-    - *_WFSSC_*_x1d.fits : 1D spectra in second orientatiom
+    - *_WFSSR_*_x1d.fits : 1D spectra in first orientation
+    - *_WFSSC_*_x1d.fits : 1D spectra in second orientation
     The spectra from the "C" files (horizontal orientation) are showed
     in the viewers by default.
     """

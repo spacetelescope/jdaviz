@@ -2,7 +2,7 @@
   "Common Stellar": {
     "units": "Angstrom",
     "filename_base": "Common_stellar",
-    "Citations/Notes": " Common stellar lines.\n\n Copyrigtht (C) 1999-2004 by Christian Buil\n http://www.astrosurf.com/buil/us/spe2/hresol5.htm"
+    "Citations/Notes": " Common stellar lines.\n\n Copyright (C) 1999-2004 by Christian Buil\n http://www.astrosurf.com/buil/us/spe2/hresol5.htm"
   },
   "Common Nebular": {
     "units": "Angstrom",

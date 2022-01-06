@@ -144,7 +144,7 @@ class Specviz(ConfigHelper, LineListMixin):
             elif isinstance(min_val, u.Quantity):
                 # Convert user's value to axis' units
                 min_val = min_val.to(axis.unit).value
-            # If auto, set to min_valimum wavelength value
+            # If auto, set to min axis wavelength value
             elif min_val == "auto":
                 min_val = min(axis).value
 
@@ -154,7 +154,7 @@ class Specviz(ConfigHelper, LineListMixin):
             if isinstance(max_val, u.Quantity):
                 # Convert user's value to axis' units
                 max_val = max_val.to(axis.unit).value
-            # If auto, set to max_valimum wavelength value
+            # If auto, set to max axis wavelength value
             elif max_val == "auto":
                 max_val = max(axis).value
 
