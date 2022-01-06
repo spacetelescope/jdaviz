@@ -70,16 +70,18 @@
       <v-btn color="primary" text @click="do_aper_phot">Calculate</v-btn>
     </v-row>
 
+    <img v-if="radial_plot" :src="`data:image/png;base64,${radial_plot}`" border="0"/>
 
     <div v-if="result_available">
       <j-plugin-section-header>Results</j-plugin-section-header>
-      <v-row>
+      <v-row no-gutters>
         <v-col cols=6><U>Result</U></v-col>
         <v-col cols=6><U>Value</U></v-col>
       </v-row>
       <v-row
         v-for="item in results"
-        :key="item.function">
+        :key="item.function"
+        no-gutters>
         <v-col cols=6>
           {{  item.function  }}
         </v-col>

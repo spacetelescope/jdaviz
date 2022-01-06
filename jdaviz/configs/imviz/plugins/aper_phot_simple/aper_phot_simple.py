@@ -7,7 +7,7 @@ from astropy.time import Time
 from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage, SubsetUpdateMessage
 from glue.core.subset import Subset
 from regions.shapes.rectangle import RectanglePixelRegion
-from traitlets import Any, Bool, List
+from traitlets import Any, Bool, List, Unicode
 
 from jdaviz.configs.imviz.helper import layer_is_image_data
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage, SnackbarMessage
@@ -28,6 +28,7 @@ class SimpleAperturePhotometry(TemplateMixin):
     flux_scaling = Any(0).tag(sync=True)
     result_available = Bool(False).tag(sync=True)
     results = List().tag(sync=True)
+    radial_plot = Unicode("").tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -118,6 +119,15 @@ class SimpleAperturePhotometry(TemplateMixin):
                 f"Failed to extract {event}: {repr(e)}", color='error', sender=self))
 
     def vue_do_aper_phot(self, *args, **kwargs):
+        try:
+            import matplotlib.pyplot as plt
+            from astropy.visualization import quantity_support
+            # stdlib but only import if matplotlib imported
+            import base64
+            from io import BytesIO
+        except ImportError:
+            plt = None
+
         if self._selected_data is None or self._selected_subset is None:
             self.result_available = False
             self.results = []
@@ -145,6 +155,7 @@ class SimpleAperturePhotometry(TemplateMixin):
             npix = np.sum(aper_mask) * u.pix
             img = aper_mask.get_values(comp_no_bg, mask=None)
             aper_mask_stat = reg.to_mask(mode='center')
+            comp_no_bg_cutout = aper_mask_stat.cutout(comp_no_bg)
             img_stat = aper_mask_stat.get_values(comp_no_bg, mask=None)
             include_pixarea_fac = False
             include_counts_fac = False
@@ -154,6 +165,7 @@ class SimpleAperturePhotometry(TemplateMixin):
                 img = img * img_unit
                 img_stat = img_stat * img_unit
                 bg = bg * img_unit
+                comp_no_bg_cutout = comp_no_bg_cutout * img_unit
                 if u.sr in img_unit.bases:  # TODO: Better way to detect surface brightness unit?
                     try:
                         pixarea = float(self.pixel_area)
@@ -232,9 +244,30 @@ class SimpleAperturePhotometry(TemplateMixin):
                     d['id'] = 1
                     self.app._aper_phot_results = _qtable_from_dict(d)
 
+            # Radial profile
+            if plt is None:
+                self.radial_plot = 'radial plot N/A: install matplotlib'
+            else:
+                reg_bb = reg.bounding_box
+                reg_ogrid = np.ogrid[reg_bb.iymin:reg_bb.iymax, reg_bb.ixmin:reg_bb.ixmax]
+                radial_dx = reg_ogrid[1] - reg.center.x
+                radial_dy = reg_ogrid[0] - reg.center.y
+                radial_r = np.hypot(radial_dx, radial_dy).ravel() * u.pix
+                radial_img = comp_no_bg_cutout.ravel()
+                with quantity_support():
+                    fig, ax = plt.subplots()
+                    ax.plot(radial_r, radial_img, 'k.')
+                    ax.set_title('Radial profile from Subset center', y=-0.25)
+                    plt.tight_layout()
+                    buff = BytesIO()
+                    plt.savefig(buff)
+                    plt.close()
+                    self.radial_plot = base64.b64encode(buff.getvalue()).decode('utf-8')
+
         except Exception as e:  # pragma: no cover
             self.result_available = False
             self.results = []
+            self.radial_plot = ''
             self.hub.broadcast(SnackbarMessage(
                 f"Aperture photometry failed: {repr(e)}", color='error', sender=self))
 
@@ -246,15 +279,22 @@ class SimpleAperturePhotometry(TemplateMixin):
                            'counts_fac', 'aperture_sum_counts_err', 'flux_scaling', 'timestamp'):
                     continue
                 if (isinstance(x, (int, float, u.Quantity)) and
-                        key not in ('xcenter', 'ycenter', 'npix', 'aperture_sum_counts')):
+                        key not in ('xcenter', 'ycenter', 'sky_center', 'npix',
+                                    'aperture_sum_counts')):
                     x = f'{x:.4e}'
+                    tmp.append({'function': key, 'result': x})
+                elif key == 'sky_center' and x is not None:
+                    tmp.append({'function': 'RA center', 'result': f'{x.ra.deg:.4f} deg'})
+                    tmp.append({'function': 'Dec center', 'result': f'{x.dec.deg:.4f} deg'})
                 elif key == 'npix':
                     x = f'{x:.1f}'
+                    tmp.append({'function': key, 'result': x})
                 elif key == 'aperture_sum_counts' and x is not None:
                     x = f'{x:.4e} ({d["aperture_sum_counts_err"]:.4e})'
+                    tmp.append({'function': key, 'result': x})
                 elif not isinstance(x, str):
                     x = str(x)
-                tmp.append({'function': key, 'result': x})
+                    tmp.append({'function': key, 'result': x})
             self.results = tmp
             self.result_available = True
 

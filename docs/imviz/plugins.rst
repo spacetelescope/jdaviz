@@ -78,7 +78,8 @@ an interactively selected region. A typical workflow is as follows:
     Masking and weights by uncertainty are currently not supported.
     However, if NaN exists in data, it will be treated as 0.
 
-When calculation is complete, the results are displayed under the
+When calculation is complete, a plot would show the radial profile
+and the results are displayed under the
 :guilabel:`CALCULATE` button. You can also retrieve the results as
 `~astropy.table.QTable` as follows, assuming ``imviz`` is the instance
 of your Imviz application::

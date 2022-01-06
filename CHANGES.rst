@@ -5,7 +5,7 @@ New Features
 ------------
 
 - There are now ``show_in_sidecar`` and ``show_in_new_tab`` methods on all the
-  helpers that display the viewers in separate JupyterLab windows from the 
+  helpers that display the viewers in separate JupyterLab windows from the
   notebook. [#952]
 
 Cubeviz
@@ -15,6 +15,8 @@ Imviz
 ^^^^^
 
 - New metadata viewer plugin. [#1035]
+
+- New radial profile plot in the simple aperture photometry plugin. [#1030]
 
 Mosviz
 ^^^^^^

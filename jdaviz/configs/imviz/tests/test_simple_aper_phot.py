@@ -25,6 +25,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert not phot_plugin.result_available
         assert len(phot_plugin.results) == 0
         assert self.imviz.get_aperture_photometry_results() is None
+        assert phot_plugin.radial_plot == ''
 
         # Perform photometry on both images using same Subset.
         phot_plugin.vue_data_selected('has_wcs_1[SCI,1]')
@@ -36,6 +37,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert_allclose(phot_plugin.counts_factor, 0)
         assert_allclose(phot_plugin.pixel_area, 0)
         assert_allclose(phot_plugin.flux_scaling, 0)
+        assert phot_plugin.radial_plot != ''  # Does not check content
 
         # Check photometry results.
         tbl = self.imviz.get_aperture_photometry_results()
