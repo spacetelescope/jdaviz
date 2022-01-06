@@ -27,6 +27,10 @@ class LineListTool(TemplateMixin):
 
     rs_enabled = Bool(False).tag(sync=True)  # disabled until lines are plotted
     rs_slider = Float(0).tag(sync=True)  # TODO: dlambda
+    rs_slider_range_auto = Bool(True).tag(sync=True)
+    rs_slider_range = Float(0.1).tag(sync=True)
+    rs_slider_step_auto = Bool(True).tag(sync=True)
+    rs_slider_step = Float(0.01).tag(sync=True)
     rs_redshift = Any(0).tag(sync=True)  # must be Any for user input, converted to float in python
     rs_rv = Any(0).tag(sync=True)  # must be Any for user input, converted to float in python
     wait = Int(100).tag(sync=True)
@@ -54,8 +58,6 @@ class LineListTool(TemplateMixin):
         self._global_redshift = 0
         self._rs_disable_observe = False
 
-        self._watched_viewers = []
-
         # Watch for messages from Specviz helper redshift functions
         self.hub.subscribe(self, RedshiftMessage,
                            handler=self._parse_redshift_msg)
@@ -77,6 +79,9 @@ class LineListTool(TemplateMixin):
 
         self.hub.subscribe(self, AddLineListMessage,
                            handler=self._list_from_notebook)
+
+        # if set to auto (default), update the slider range when zooming on the spectrum viewer
+        self._viewer.scales['x'].observe(self._auto_slider_range, names=['min', 'max'])
 
     def _on_viewer_data_changed(self, msg=None):
         """
@@ -126,6 +131,7 @@ class LineListTool(TemplateMixin):
 
         # set redshift slider to redshift stored in Spectrum1D object
         self.rs_slider = viewer_data.redshift.value
+        self._auto_slider_range()  # will also trigger _auto_slider_step
 
     def _parse_redshift_msg(self, msg):
         '''
@@ -136,22 +142,29 @@ class LineListTool(TemplateMixin):
             return
 
         param = msg.param
-        val = float(msg.value)
 
-        if param == "slider_min":
-            pass
-        elif param == "slider_max":
-            pass
-        elif param == "slider_step":
-            pass
+        if param == "rs_slider_range":
+            if msg.value == 'auto':
+                # observer will handle setting rs_slider_range
+                self.rs_slider_range_auto = True
+            else:
+                self.rs_slider_range_auto = False
+                self.rs_slider_range = float(msg.value)
+        elif param == "rs_slider_step":
+            if msg.value == 'auto':
+                # observer will handle setting rs_slider_step
+                self.rs_slider_step_auto = True
+            else:
+                self.rs_slider_step_auto = False
+                self.rs_slider_step = float(msg.value)
         elif param == "redshift":
             # NOTE: this should trigger the observe to update rs_rv, line positions, and
             # update self._global_redshift
-            self.rs_redshift = val
+            self.rs_redshift = float(msg.value)
         elif param == 'rv':
             # NOTE: this should trigger the observe to update rs_redshift, line positions, and
             # update self._global_redshift
-            self.rs_rv = val
+            self.rs_rv = float(msg.value)
         else:
             raise NotImplementedError(f"RedshiftMessage with param {param} not implemented.")
 
@@ -200,7 +213,8 @@ class LineListTool(TemplateMixin):
             # Replot with the new redshift
             line_list = self.app.get_viewer('spectrum-viewer').plot_spectral_lines()
 
-        # Send the redshift back to the Specviz helper (and also trigger self._update_global_redshift)
+        # Send the redshift back to the Specviz helper (and also trigger
+        # self._update_global_redshift)
         msg = RedshiftMessage("redshift", z.value, sender=self)
         self.app.hub.broadcast(msg)
 
@@ -219,6 +233,35 @@ class LineListTool(TemplateMixin):
         self._rs_disable_observe = True
         self.rs_slider = 0.0
         self._rs_disable_observe = False
+
+    def _auto_slider_range(self, event=None):
+        if not self.rs_slider_range_auto:
+            return
+        # if set to auto, default the range based on the limits of the spectrum plot
+        sv = self.app.get_viewer('spectrum-viewer')
+        x_min, x_max = sv.state.x_min, sv.state.x_max
+        x_mid = abs(x_max + x_min) / 2
+        # we'll *estimate* the redshift range to shift from middle of viewer to the edge,
+        # by taking abs, this will work for wavelength or frequency units.
+        # Changing this will trigger self._on_rs_slider_step_auto_updated
+        self.rs_slider_range = abs(x_max - x_min) / x_mid
+
+    @observe('rs_slider_range_auto')
+    def _on_rs_slider_range_auto_updated(self, event):
+        if event['new']:
+            self._auto_slider_range()
+
+    @observe('rs_slider_range')
+    def _auto_slider_step(self, event=None):
+        if not self.rs_slider_step_auto:
+            return
+        # if set to auto, default to 100 steps in the range
+        self.rs_slider_step = self.rs_slider_range / 100
+
+    @observe('rs_slider_step_auto')
+    def _on_rs_slider_step_auto_updated(self, event):
+        if event['new']:
+            self._auto_slider_step()
 
     def _update_global_redshift(self, msg):
         '''Handle updates to the Specviz redshift slider, to apply to lines'''
