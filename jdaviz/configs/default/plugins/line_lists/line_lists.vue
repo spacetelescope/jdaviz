@@ -3,6 +3,62 @@
     <v-row>
       <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#line-lists'">Plot lines from preset or custom line lists.</j-docs-link>
     </v-row>
+
+    <j-plugin-section-header>Redshift</j-plugin-section-header>
+    <v-row>
+      <j-docs-link>Shift spectral lines according to a specific redshift. Only enabled if at least one line is plotted.</j-docs-link>
+    </v-row>
+    <v-row>
+      <!-- colors are app.vue primary and toolbar colors -->
+      <v-slider
+        :value="rs_slider"
+        @input="throttledSlider"
+        @end="slider_reset"
+        class="align-center"
+        :max="0.3"
+        :min="-0.3"
+        :step="0.01"
+        color="#00617E"
+        track-color="#00617E"
+        thumb-color="#153A4B"
+        hide-details
+        :disabled="!rs_enabled"
+      />
+    </v-row>
+
+    <v-row class="row-no-outside-padding row-min-bottom-padding">
+      <v-col>
+        <v-text-field
+          v-model="rs_redshift"
+          step="0.1"
+          class="mt-0 pt-0"
+          type="number"
+          label="Redshift"
+          hint="Redshift"
+          :disabled="!rs_enabled"
+        ></v-text-field>
+      </v-col>
+      <v-col cols=3>
+        <span></span>
+      </v-col>
+    </v-row>
+
+    <v-row class="row-no-outside-padding">
+      <v-col>
+        <v-text-field
+          v-model="rs_rv"
+          step="0.1"
+          class="mt-0 pt-0"
+          type="number"
+          label="RV"
+          hint="Redshift in RV (km/s)"
+          :disabled="!rs_enabled"
+        ></v-text-field>
+      </v-col>
+      <v-col cols=3>
+        <span :class="[rs_enabled ? 'text--primary' : 'text--secondary']">km/s</span>
+      </v-col>
+    </v-row>
   
     <j-plugin-section-header>Preset Line Lists</j-plugin-section-header>
     <v-row>
@@ -185,3 +241,13 @@
 
   </j-tray-plugin>
 </template>
+
+<script>
+  module.exports = {
+    created() {
+      this.throttledSlider = _.throttle(
+        (v) => { this.rs_slider = v; },
+        this.wait);
+    },
+  }
+</script>

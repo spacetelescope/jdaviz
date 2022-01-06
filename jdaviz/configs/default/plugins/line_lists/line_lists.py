@@ -1,9 +1,11 @@
+import numpy as np
 import astropy.units as u
+from astropy.constants import c
 from astropy.table import QTable
 from glue.core.message import (SubsetCreateMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
-from traitlets import Bool, List, Unicode, Dict
+from traitlets import Any, Bool, Float, Int, List, Unicode, Dict, observe
 
 from jdaviz.core.events import (AddDataMessage,
                                 RemoveDataMessage,
@@ -22,6 +24,13 @@ __all__ = ['LineListTool']
 class LineListTool(TemplateMixin):
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "line_lists.vue"
+
+    rs_enabled = Bool(False).tag(sync=True)  # disabled until lines are plotted
+    rs_slider = Float(0).tag(sync=True)  # TODO: dlambda
+    rs_redshift = Any(0).tag(sync=True)  # must be Any for user input, converted to float in python
+    rs_rv = Any(0).tag(sync=True)  # must be Any for user input, converted to float in python
+    wait = Int(100).tag(sync=True)
+
     dc_items = List([]).tag(sync=True)
     available_lists = List([]).tag(sync=True)
     loaded_lists = List([]).tag(sync=True)
@@ -34,7 +43,6 @@ class LineListTool(TemplateMixin):
         super().__init__(*args, **kwargs)
 
         self._viewer = self.app.get_viewer("spectrum-viewer")
-        self._viewer_spectrum = None
         self._spectrum1d = None
         self.available_lists = self._viewer.available_linelists()
         self.list_to_load = None
@@ -44,6 +52,13 @@ class LineListTool(TemplateMixin):
         self._units = {}
         self._bounds = {}
         self._global_redshift = 0
+        self._rs_disable_observe = False
+
+        self._watched_viewers = []
+
+        # Watch for messages from Specviz helper redshift functions
+        self.hub.subscribe(self, RedshiftMessage,
+                           handler=self._parse_redshift_msg)
 
         self.hub.subscribe(self, AddDataMessage,
                            handler=self._on_viewer_data_changed)
@@ -62,8 +77,6 @@ class LineListTool(TemplateMixin):
 
         self.hub.subscribe(self, AddLineListMessage,
                            handler=self._list_from_notebook)
-        self.hub.subscribe(self, RedshiftMessage,
-                           handler=self._update_global_redshift)
 
     def _on_viewer_data_changed(self, msg=None):
         """
@@ -92,8 +105,9 @@ class LineListTool(TemplateMixin):
         if msg is not None and msg.viewer_id != self._viewer_id:
             return
 
+        label = msg.data.label
         try:
-            viewer_data = self.app.get_viewer('spectrum-viewer').data()
+            viewer_data = self.app.get_data_from_viewer('spectrum-viewer').get(label)
         except TypeError:
             warn_message = SnackbarMessage("Line list plugin could not retrieve data from viewer",
                                            sender=self, color="error")
@@ -101,16 +115,110 @@ class LineListTool(TemplateMixin):
             return
 
         # If no data is currently plotted, don't attempt to update
-        if viewer_data is None or len(viewer_data) == 0:
+        if viewer_data is None:
             return
 
-        self._viewer_spectrum = viewer_data[0]
+        self._units["x"] = str(viewer_data.spectral_axis.unit)
+        self._units["y"] = str(viewer_data.flux.unit)
 
-        self._units["x"] = str(self._viewer_spectrum.spectral_axis.unit)
-        self._units["y"] = str(self._viewer_spectrum.flux.unit)
+        self._bounds["min"] = viewer_data.spectral_axis[0]
+        self._bounds["max"] = viewer_data.spectral_axis[-1]
 
-        self._bounds["min"] = self._viewer_spectrum.spectral_axis[0]
-        self._bounds["max"] = self._viewer_spectrum.spectral_axis[-1]
+        # set redshift slider to redshift stored in Spectrum1D object
+        self.rs_slider = viewer_data.redshift.value
+
+    def _parse_redshift_msg(self, msg):
+        '''
+        Handle incoming redshift messages from the app hub. Generally these
+        will be created by Specviz helper methods.
+        '''
+        if msg.sender == self:
+            return
+
+        param = msg.param
+        val = float(msg.value)
+
+        if param == "slider_min":
+            pass
+        elif param == "slider_max":
+            pass
+        elif param == "slider_step":
+            pass
+        elif param == "redshift":
+            # NOTE: this should trigger the observe to update rs_rv, line positions, and
+            # update self._global_redshift
+            self.rs_redshift = val
+        elif param == 'rv':
+            # NOTE: this should trigger the observe to update rs_redshift, line positions, and
+            # update self._global_redshift
+            self.rs_rv = val
+        else:
+            raise NotImplementedError(f"RedshiftMessage with param {param} not implemented.")
+
+    def _velocity_to_redshift(self, velocity):
+        """
+        Convert a velocity to a relativistic redshift.
+        """
+        beta = velocity / c
+        return np.sqrt((1 + beta) / (1 - beta)) - 1
+
+    def _redshift_to_velocity(self, redshift):
+        """
+        Convert a relativistic redshift to a velocity.
+        """
+        zponesq = (1 + redshift) ** 2
+        return c * (zponesq - 1) / (zponesq + 1)
+
+    @observe('rs_slider')
+    def _on_slider_updated(self, event):
+        if self._rs_disable_observe:
+            return
+
+        if not event['new']:
+            value = 0
+        else:
+            value = float(event['new'])
+
+        # TODO: value from d_rs to d_lambda
+        # NOTE: _on_rs_redshift_updated will handle updating rs_rv
+        # NOTE: rs_redshift could be a string if entered by the user, so we cast old value to float
+        self.rs_redshift = float(self.rs_redshift) + event['new'] - event['old']
+
+    @observe('rs_redshift')
+    def _on_rs_redshift_updated(self, event):
+        if not self._rs_disable_observe:
+            value = float(event['new'])
+            self._rs_disable_observe = True
+            self.rs_rv = self._redshift_to_velocity(value).to('km/s').value
+            self._rs_disable_observe = False
+
+        # update all lines, self._global_redshift, and emit message back to Specviz helper
+        z = u.Quantity(self.rs_redshift)
+        line_list = self.app.get_viewer('spectrum-viewer').spectral_lines
+        if line_list is not None:
+            line_list["redshift"] = z
+            # Replot with the new redshift
+            line_list = self.app.get_viewer('spectrum-viewer').plot_spectral_lines()
+
+        # Send the redshift back to the Specviz helper (and also trigger self._update_global_redshift)
+        msg = RedshiftMessage("redshift", z.value, sender=self)
+        self.app.hub.broadcast(msg)
+
+    @observe('rs_rv')
+    def _on_rs_rv_updated(self, event):
+        if self._rs_disable_observe:
+            return
+
+        value = float(event['new'])
+        redshift = self._velocity_to_redshift(value*u.km/u.s).value
+        self._rs_disable_observe = True
+        self.rs_redshift = redshift
+        self._rs_disable_observe = False
+
+    def vue_slider_reset(self, event):
+        self._rs_disable_observe = True
+        self.rs_slider = 0.0
+        self._rs_disable_observe = False
 
     def _update_global_redshift(self, msg):
         '''Handle updates to the Specviz redshift slider, to apply to lines'''
@@ -165,6 +273,9 @@ class LineListTool(TemplateMixin):
         for m in self._viewer.figure.marks:
             if type(m) == SpectralLine:
                 self.line_mark_dict[m.table_index] = m
+
+        # redshift controls are enabled if any lines are currently plotted
+        self.rs_enabled = len(self.line_mark_dict) > 0
 
     def vue_list_selected(self, event):
         """
@@ -330,6 +441,7 @@ class LineListTool(TemplateMixin):
         self.list_contents = lc
 
         self._viewer.erase_spectral_lines()
+        self.update_line_mark_dict()
 
     def vue_change_visible(self, line):
         """
@@ -338,9 +450,9 @@ class LineListTool(TemplateMixin):
         name_rest = line["name_rest"]
         if line["show"]:
             self._viewer.plot_spectral_line(name_rest)
-            self.update_line_mark_dict()
         else:
             self._viewer.erase_spectral_lines(name_rest=name_rest)
+        self.update_line_mark_dict()
 
     def vue_set_color(self, data):
         """
