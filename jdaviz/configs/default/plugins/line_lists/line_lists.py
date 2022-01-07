@@ -187,11 +187,6 @@ class LineListTool(TemplateMixin):
         if self._rs_disable_observe:
             return
 
-        if not event['new']:
-            value = 0
-        else:
-            value = float(event['new'])
-
         # TODO: value from d_rs to d_lambda
         # NOTE: _on_rs_redshift_updated will handle updating rs_rv
         # NOTE: rs_redshift could be a string if entered by the user, so we cast old value to float
