@@ -137,8 +137,6 @@ Similarly, all of the line lists may be shown or hidden via
 :guilabel:`Plot All` and :guilabel:`Erase All`, located at the
 bottom of the plugin.
 
-.. _line-lists-redshift
-
 Redshift Slider
 ---------------
 
