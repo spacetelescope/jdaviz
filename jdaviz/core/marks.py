@@ -122,13 +122,14 @@ class SliceIndicator(Lines, HubListener):
         self._active = False
         self._show_if_inactive = True
 
-        x_all = viewer.data()[0].spectral_axis.value
-        self._x_all = x_all
+        x_all = viewer.data()[0].spectral_axis
+        self._x_all = x_all.value
+        self._x_unit = str(x_all.unit)
 
         # the location of the marker will need to update automatically if the underlying data
         # changes (through a unit conversion, for example)
         viewer.state.add_callback("reference_data",
-                                  lambda reference_data: self._update_data(reference_data.get_object().spectral_axis.value)) # noqa
+                                  lambda reference_data: self._update_data(reference_data.get_object().spectral_axis)) # noqa
 
         x_coord = self._slice_to_x(slice)
         scales = viewer.scales
@@ -184,17 +185,24 @@ class SliceIndicator(Lines, HubListener):
     def slice(self):
         return self._slice
 
+    def _update_label(self):
+        self.labels = [f'\u00A0{self.x[0]:0.4e} {self._x_unit}']
+
     @slice.setter
     def slice(self, slice):
         x_coord = self._slice_to_x(slice)
         self._slice = slice
         self.x = [x_coord, x_coord]
-        self.labels = [f'slice: {x_coord:0.4e}']
+        self._update_label()
 
     def _update_data(self, x_all):
-        self._x_all = x_all
+        self._x_all = x_all.value
+        self._x_unit = str(x_all.unit)
         x_coord = self._slice_to_x(self.slice)
         self.x = [x_coord, x_coord]
+        if self.labels_visibility == 'label':
+            # update label with new value/unit
+            self._update_label()
 
     def _update_ys(self, y_min=None, y_max=None):
         self.y = [y_min if y_min is not None else self.y[0],

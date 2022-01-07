@@ -85,6 +85,8 @@
   }
 </script>
 
-<style lang="sass">
-  $slider-transition: none !important
+<style>
+  .v-slider {
+    margin: 0px !important;
+  }
 </style>
