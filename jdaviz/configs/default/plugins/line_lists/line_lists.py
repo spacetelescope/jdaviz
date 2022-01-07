@@ -1,6 +1,6 @@
 import numpy as np
 import astropy.units as u
-from astropy.constants import c
+from astropy import constants as const
 from astropy.table import QTable
 from glue.core.message import (SubsetCreateMessage,
                                SubsetDeleteMessage,
@@ -172,7 +172,7 @@ class LineListTool(TemplateMixin):
         """
         Convert a velocity to a relativistic redshift.
         """
-        beta = velocity / c
+        beta = velocity / const.c
         return np.sqrt((1 + beta) / (1 - beta)) - 1
 
     def _redshift_to_velocity(self, redshift):
@@ -180,7 +180,7 @@ class LineListTool(TemplateMixin):
         Convert a relativistic redshift to a velocity.
         """
         zponesq = (1 + redshift) ** 2
-        return c * (zponesq - 1) / (zponesq + 1)
+        return const.c * (zponesq - 1) / (zponesq + 1)
 
     @observe('rs_slider')
     def _on_slider_updated(self, event):
