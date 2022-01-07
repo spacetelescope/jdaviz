@@ -26,7 +26,7 @@ class LineListTool(TemplateMixin):
     template_file = __file__, "line_lists.vue"
 
     rs_enabled = Bool(False).tag(sync=True)  # disabled until lines are plotted
-    rs_slider = Float(0).tag(sync=True)  # TODO: dlambda
+    rs_slider = Float(0).tag(sync=True)  # in units of delta-redshift
     rs_slider_range_auto = Bool(True).tag(sync=True)
     rs_slider_half_range = Float(0.1).tag(sync=True)
     rs_slider_step_auto = Bool(True).tag(sync=True)
@@ -130,7 +130,7 @@ class LineListTool(TemplateMixin):
         self._bounds["max"] = viewer_data.spectral_axis[-1]
 
         # set redshift slider to redshift stored in Spectrum1D object
-        self.rs_slider = viewer_data.redshift.value
+        self.rs_redshift = viewer_data.redshift.value
         self._auto_slider_range()  # will also trigger _auto_slider_step
 
     def _parse_redshift_msg(self, msg):
@@ -187,7 +187,6 @@ class LineListTool(TemplateMixin):
         if self._rs_disable_observe:
             return
 
-        # TODO: value from d_rs to d_lambda
         # NOTE: _on_rs_redshift_updated will handle updating rs_rv
         # NOTE: rs_redshift could be a string if entered by the user, so we cast old value to float
         self.rs_redshift = float(self.rs_redshift) + event['new'] - event['old']

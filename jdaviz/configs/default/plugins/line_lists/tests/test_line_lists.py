@@ -3,6 +3,7 @@ import numpy as np
 import astropy.units as u
 from astropy.table import QTable
 from jdaviz import Specviz
+from jdaviz.configs.default.plugins.line_lists import line_lists
 from specutils import Spectrum1D
 
 
@@ -30,3 +31,20 @@ def test_line_lists():
     viz.plot_spectral_line("O III 5007.0")
 
     assert np.all(viz.spectral_lines["show"])
+
+
+def test_redshift(specviz_app, spectrum1d):
+    label = "Test 1D Spectrum"
+    specviz_app.load_spectrum(spectrum1d, data_label=label)
+
+    # test that helper functions run, we'll test functionality at the plugin level
+    specviz_app.set_redshift(0.1)
+    specviz_app.set_redshift_slider_bounds(range=0.5, step=0.01)
+    specviz_app.set_redshift_slider_bounds(range='auto', step='auto')
+
+    ll_plugin = line_lists.LineListTool(app=specviz_app.app)
+    ll_plugin.rs_redshift = 0.1
+    assert ll_plugin.rs_rv == 28487.06614479641
+
+    ll_plugin.rs_rv = 30000
+    assert ll_plugin.rs_redshift == 0.10561890816244568
