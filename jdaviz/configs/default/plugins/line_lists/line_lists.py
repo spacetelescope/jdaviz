@@ -106,8 +106,8 @@ class LineListTool(TemplateMixin):
         # Subsets are global and are not linked to specific viewer instances,
         # so it's not required that we match any specific ids for that case.
         # However, if the msg is not none, check to make sure that it's the
-        # viewer we care about.
-        if msg is not None and msg.viewer_id != self._viewer_id:
+        # viewer we care about and that the message contains the data label.
+        if msg is None or msg.viewer_id != self._viewer_id or msg.data is None:
             return
 
         label = msg.data.label
