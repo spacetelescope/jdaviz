@@ -229,7 +229,7 @@ class LineListTool(TemplateMixin):
             return
 
         value = float(event['new'])
-        redshift = self._velocity_to_redshift(value*u.km/u.s).value
+        redshift = self._velocity_to_redshift(value * (u.km/u.s)).value
         self._rs_disable_observe = True
         self.rs_redshift = redshift
         self._rs_disable_observe = False
