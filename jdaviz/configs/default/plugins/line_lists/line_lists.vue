@@ -257,3 +257,9 @@
     },
   }
 </script>
+
+<style>
+  .v-slider {
+    margin: 0px !important;
+  }
+</style>
