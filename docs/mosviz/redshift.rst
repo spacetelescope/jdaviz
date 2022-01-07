@@ -4,15 +4,8 @@
 Setting Redshift/RV
 *******************
 
-.. warning::
-    Using the redshift slider with many active spectral lines can be slow, as
-    every line gets replotted at each slider position. We recommended using 
-    the slider with no more than around a dozen lines plotted. You can deselect
-    lines using, e.g., the "Hide All" button in the line lists UI.
-
-As in :ref:`Specviz <specviz-redshift>`, the toolbar includes a slider to adjust the redshift
-or radial velocity.  In Mosviz, this is applied to the current row in the table
-and is stored (and shown) in a column of the table.
+The :ref:`Line Lists Plugin <mosviz-line-lists>` contains a redshift slider as well as the ability to 
+view and set the redshift and/or radial velocity.
 
 From the notebook
 =================

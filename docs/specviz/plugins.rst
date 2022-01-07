@@ -137,6 +137,29 @@ Similarly, all of the line lists may be shown or hidden via
 :guilabel:`Plot All` and :guilabel:`Erase All`, located at the
 bottom of the plugin.
 
+.. _line-lists-redshift
+
+Redshift Slider
+---------------
+
+.. warning::
+    Using the redshift slider with many active spectral lines can be slow, as
+    every line gets replotted at each slider position. We recommended using 
+    the slider with no more than around a dozen lines plotted. You can deselect
+    lines using e.g. the "Hide All" button in the line lists UI.
+
+The plugin also contains a redshift slider which shifts all of the plotted
+lines according to the provided redshift/RV.  The slider applies a delta-redshift,
+snaps back to the center when releasing, and has limits that default based
+on the x-limits of the spectrum viewer.  This provides a convenient method
+to fine-tune the position of the redshifted lines to the observed lines in 
+the spectrum.
+
+.. seealso::
+
+    :ref:`Setting Redshift/RV <specviz-redshift>`
+        Setting Redshift/RV from the Notebook.
+
 .. _line-analysis:
 
 Line Analysis
