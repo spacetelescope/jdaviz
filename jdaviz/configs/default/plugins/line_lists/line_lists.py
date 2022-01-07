@@ -195,6 +195,11 @@ class LineListTool(TemplateMixin):
     @observe('rs_redshift')
     def _on_rs_redshift_updated(self, event):
         if not self._rs_disable_observe:
+            if isinstance(event['new'], str) and not len(event['new']):
+                # empty string, we don't want to revert yet because then
+                # the user can never delete the entry and type something new
+                # so we'll just leave empty
+                return
             value = float(event['new'])
             self._rs_disable_observe = True
             self.rs_rv = self._redshift_to_velocity(value).to('km/s').value
@@ -216,6 +221,12 @@ class LineListTool(TemplateMixin):
     @observe('rs_rv')
     def _on_rs_rv_updated(self, event):
         if self._rs_disable_observe:
+            return
+
+        if isinstance(event['new'], str) and not len(event['new']):
+            # empty string, we don't want to revert yet because then
+            # the user can never delete the entry and type something new
+            # so we'll just leave empty
             return
 
         value = float(event['new'])
