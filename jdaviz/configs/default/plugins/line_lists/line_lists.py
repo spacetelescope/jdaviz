@@ -194,8 +194,10 @@ class LineListTool(TemplateMixin):
             return
 
         # NOTE: _on_rs_redshift_updated will handle updating rs_rv
-        # NOTE: rs_redshift could be a string if entered by the user, so we cast old value to float
-        self.rs_redshift = float(self.rs_redshift) + event['new'] - event['old']
+        # NOTE: the input has a custom @input method in line_lists.vue to cast
+        # to float so that we can assume its a float here to minimize lag
+        # when interacting with the slider.
+        self.rs_redshift = self.rs_redshift + event['new'] - event['old']
 
     @observe('rs_redshift')
     def _on_rs_redshift_updated(self, event):

@@ -35,7 +35,8 @@
     <v-row class="row-no-outside-padding row-min-bottom-padding">
       <v-col>
         <v-text-field
-          v-model="rs_redshift"
+          :value='rs_redshift'
+          @input='setRedshiftFloat'
           step="0.1"
           class="mt-0 pt-0"
           type="number"
@@ -254,6 +255,9 @@
       this.throttledSlider = _.throttle(
         (v) => { this.rs_slider = v; },
         this.rs_slider_throttle);
+      this.setRedshiftFloat = (v) => {
+        this.rs_redshift = parseFloat(v)
+      }
     },
   }
 </script>
