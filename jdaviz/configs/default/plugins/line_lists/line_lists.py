@@ -343,8 +343,20 @@ class LineListTool(TemplateMixin):
             if isinstance(m, SpectralLine):
                 self.line_mark_dict[m.table_index] = m
 
+        n_lines_shown = len(self.line_mark_dict)
+
         # redshift controls are enabled if any lines are currently plotted
-        self.rs_enabled = len(self.line_mark_dict) > 0
+        self.rs_enabled = n_lines_shown > 0
+
+        if n_lines_shown > 0:
+            # with a lot of lines, a quick slider move will lag.  Let's scale the
+            # timeout based on the number of lines, roughtly between 50-500 ms
+            throttle = n_lines_shown * 5
+            if throttle < 50:
+                throttle = 50
+            if throttle > 500:
+                throttle = 500
+            self.rs_slider_throttle = throttle
 
     def vue_list_selected(self, event):
         """
