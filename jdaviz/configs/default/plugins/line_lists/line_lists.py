@@ -208,6 +208,8 @@ class LineListTool(TemplateMixin):
                 # so we'll just leave empty
                 return
             value = float(event['new'])
+            # update _global_redshift so new lines, etc, will adopt this latest value
+            self._global_redshift = value
             self._rs_disable_observe = True
             self.rs_rv = self._redshift_to_velocity(value)
             self._rs_disable_observe = False
