@@ -33,7 +33,7 @@ class LineListTool(TemplateMixin):
     rs_slider_step = Float(0.01).tag(sync=True)
     rs_redshift = Any(0).tag(sync=True)  # must be Any for user input, converted to float in python
     rs_rv = Any(0).tag(sync=True)  # must be Any for user input, converted to float in python
-    wait = Int(100).tag(sync=True)
+    rs_slider_throttle = Int(100).tag(sync=True)
 
     dc_items = List([]).tag(sync=True)
     available_lists = List([]).tag(sync=True)
@@ -170,17 +170,23 @@ class LineListTool(TemplateMixin):
 
     def _velocity_to_redshift(self, velocity):
         """
-        Convert a velocity to a relativistic redshift.
+        Convert a velocity to a relativistic redshift.  Assumes km/s (float)
+        as input and returns float.
         """
-        beta = velocity / const.c
+        # NOTE: if supporting non-km/s units in the future, try to leave
+        # the default case to avoid quantity math as below for efficiency
+        beta = velocity * 1000 / const.c.value
         return np.sqrt((1 + beta) / (1 - beta)) - 1
 
     def _redshift_to_velocity(self, redshift):
         """
-        Convert a relativistic redshift to a velocity.
+        Convert a relativistic redshift to a velocity.  Returns
+        in km/s (float)
         """
         zponesq = (1 + redshift) ** 2
-        return const.c * (zponesq - 1) / (zponesq + 1)
+        # NOTE: if supporting non-km/s units in the future, try to leave
+        # the default case to avoid quantity math as below for efficiency
+        return const.c.value * (zponesq - 1) / (zponesq + 1) / 1000  # km/s
 
     @observe('rs_slider')
     def _on_slider_updated(self, event):
@@ -201,7 +207,7 @@ class LineListTool(TemplateMixin):
                 return
             value = float(event['new'])
             self._rs_disable_observe = True
-            self.rs_rv = self._redshift_to_velocity(value).to('km/s').value
+            self.rs_rv = self._redshift_to_velocity(value)
             self._rs_disable_observe = False
 
         # update all lines, self._global_redshift, and emit message back to Specviz helper
@@ -229,7 +235,7 @@ class LineListTool(TemplateMixin):
             return
 
         value = float(event['new'])
-        redshift = self._velocity_to_redshift(value * (u.km/u.s)).value
+        redshift = self._velocity_to_redshift(value)
         self._rs_disable_observe = True
         self.rs_redshift = redshift
         self._rs_disable_observe = False

@@ -253,7 +253,7 @@
     created() {
       this.throttledSlider = _.throttle(
         (v) => { this.rs_slider = v; },
-        this.wait);
+        this.rs_slider_throttle);
     },
   }
 </script>
