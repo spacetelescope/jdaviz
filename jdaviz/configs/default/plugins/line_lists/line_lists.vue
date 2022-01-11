@@ -206,7 +206,7 @@
                   <j-tooltip tipid='plugin-line-lists-line-visible'>
                     <v-checkbox v-model="line.show" @change="change_visible(line)">
                       <template v-slot:label>
-                        <span style="overflow-wrap: anywhere; color: rgba(0, 0, 0, 0.87); font-size: 10pt">
+                        <span class='text--primary' style="overflow-wrap: anywhere; font-size: 10pt">
                           {{line.linename}}
                         </span>
                       </template>
