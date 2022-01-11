@@ -32,6 +32,8 @@ Specviz:Data Analysis Plugins:Model Fitting documentation.
     :ref:`Model Fitting <model-fitting>`
         Specviz documentation on fitting spectral models.
 
+.. _mosviz-line-lists:
+
 Line Lists
 ==========
 
@@ -39,6 +41,25 @@ Line Lists
 
     :ref:`Line Lists <line-lists>`
         Specviz documentation on line lists.
+
+
+Redshift Slider
+---------------
+
+.. warning::
+    Using the redshift slider with many active spectral lines can be slow, as
+    every line gets replotted at each slider position. We recommended using 
+    the slider with no more than around a dozen lines plotted. You can deselect
+    lines using, e.g., the "Hide All" button in the line lists UI.
+
+As in :ref:`Specviz <line-lists>`, the Line Lists Plugin includes a slider to adjust the redshift
+or radial velocity.  In Mosviz, this is applied to the current row in the table
+and is stored (and shown) in a column of the table.
+
+.. seealso::
+
+    :ref:`Setting Redshift/RV <mosviz-redshift>`
+        Setting Redshift/RV from the Notebook in Mosviz.
 
 Line Analysis
 =============
