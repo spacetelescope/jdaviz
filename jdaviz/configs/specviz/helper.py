@@ -196,13 +196,17 @@ class Specviz(ConfigHelper, LineListMixin):
 
         Parameters
         ----------
-        range
+        range : float or `None` or 'auto'
             Specifies the difference between the upper and lower bounds of the slider.
             Note that the slider specifies redshift delta from the current value, so a
             range of 0.1 would allow the user to change the current redshift by +/- 0.05.
-        step
+            If `None` or not passed, will leave at the current value. If 'auto',
+            will sync the range based on the limits of the spectrum plot.
+        step : float or `None` or 'auto'
             Specifies step size of the slider. Smaller step sizes will allow finer
-            adjustments/smoother behavior at a potential cost to performance.
+            adjustments/smoother behavior at a potential cost to performance. If `None`
+            or not passed, will leave at the current value. If 'auto', will sync
+            the step size to 100 steps within the current range.
         '''
         if range is not None:
             msg = RedshiftMessage("rs_slider_range", range, sender=self)
