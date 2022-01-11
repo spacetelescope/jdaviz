@@ -18,14 +18,16 @@ or as embedded windows within a website -- all with nearly-identical
 user interfaces.
 
 ``jdaviz`` applications currently include tools for interactive
-visualization of spectroscopic data.  Specviz is a tool for
-visualization and quick-look analysis of 1D astronomical spectra.
-Mosviz is a visualization tool for many astronomical spectra,
-typically the output of a multi-object spectrograph (e.g., JWST
-NIRSpec), and includes viewers for 1D and 2D spectra as well as
-contextual information like on-sky views of the spectrograph slit.
-Cubeviz provides a view of spectroscopic data cubes (like those to be
-produced by JWST MIRI), along with 1D spectra extracted from the cube.
+visualization of spectroscopic and imaging data. Specviz is a tool
+for visualization and quick-look analysis of 1D astronomical spectra.
+Mosviz is a visualization tool for many astronomical spectra, typically
+the output of a multi-object spectrograph (e.g., JWST NIRSpec), and
+includes viewers for 1D and 2D spectra as well as contextual information
+like on-sky views of the spectrograph slit. Cubeviz provides a view
+of spectroscopic data cubes (like those to be produced by JWST MIRI),
+along with 1D spectra extracted from the cube. Imviz is a tool for
+visualization and quick-look analysis for 2D astronomical images.
+
 
 .. _jdaviz_instrument_table:
 
