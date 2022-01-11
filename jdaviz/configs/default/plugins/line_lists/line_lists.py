@@ -156,7 +156,10 @@ class LineListTool(TemplateMixin):
                 self.rs_slider_step_auto = True
             else:
                 self.rs_slider_step_auto = False
-                self.rs_slider_step = float(msg.value)
+                slider_step = float(msg.value)
+                if slider_step > self.rs_slider_half_range:
+                    raise ValueError("step must be smaller than range/2")
+                self.rs_slider_step = slider_step
         elif param == "redshift":
             # NOTE: this should trigger the observe to update rs_rv, line positions, and
             # update self._global_redshift
