@@ -335,7 +335,7 @@ class LineListTool(TemplateMixin):
     def update_line_mark_dict(self):
         self.line_mark_dict = {}
         for m in self._viewer.figure.marks:
-            if type(m) == SpectralLine:
+            if isinstance(m, SpectralLine):
                 self.line_mark_dict[m.table_index] = m
 
         # redshift controls are enabled if any lines are currently plotted

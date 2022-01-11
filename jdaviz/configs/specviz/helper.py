@@ -193,6 +193,16 @@ class Specviz(ConfigHelper, LineListMixin):
         '''
         Set the range and/or step of the redshift slider. Set either/both to 'auto'
         to default based on the limits of the spectrum plot.
+
+        Parameters
+        ----------
+        range
+            Specifies the difference between the upper and lower bounds of the slider.
+            Note that the slider specifies redshift delta from the current value, so a
+            range of 0.1 would allow the user to change the current redshift by +/- 0.05.
+        step
+            Specifies step size of the slider. Smaller step sizes will allow finer
+            adjustments/smoother behavior at a potential cost to performance.
         '''
         if range is not None:
             msg = RedshiftMessage("rs_slider_range", range, sender=self)

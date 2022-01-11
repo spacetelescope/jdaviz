@@ -101,12 +101,12 @@ class SpecvizProfileView(BqplotProfileView):
     def load_line_list(self, line_table, replace=False, return_table=False, show=True):
         # If string, load the named preset list and don't show by default
         # since there might be too many lines
-        if type(line_table) == str:
+        if isinstance(line_table, str):
             self.load_line_list(load_preset_linelist(line_table),
                                 replace=replace, return_table=return_table,
                                 show=False)
             return
-        elif type(line_table) != table.QTable:
+        elif not isinstance(line_table, table.QTable):
             raise TypeError("Line list must be an astropy QTable with\
                             (minimally) 'linename' and 'rest' columns")
         if "linename" not in line_table.columns:
@@ -188,7 +188,7 @@ class SpecvizProfileView(BqplotProfileView):
         """
         fig = self.figure
         if name is None and name_rest is None:
-            fig.marks = [x for x in fig.marks if type(x) != SpectralLine]
+            fig.marks = [x for x in fig.marks if not isinstance(x, SpectralLine)]
             if show_none:
                 self.spectral_lines["show"] = False
         else:
@@ -196,23 +196,23 @@ class SpecvizProfileView(BqplotProfileView):
             # Toggle "show" value in main astropy table. The astropy table
             # machinery only allows updating a single row at a time.
             if name_rest is not None:
-                if type(name_rest) == str:
+                if isinstance(name_rest, str):
                     self.spectral_lines.loc[name_rest]["show"] = False
-                elif type(name_rest) == list:
+                elif isinstance(name_rest, list):
                     for nr in name_rest:
                         self.spectral_lines.loc[nr]["show"] = False
             # Get rid of the marks we no longer want
             for x in fig.marks:
-                if type(x) == SpectralLine:
+                if isinstance(x, SpectralLine):
                     if name is not None:
                         self.spectral_lines.loc[name]["show"] = False
                         if x.name == name:
                             continue
                     else:
-                        if type(name_rest) == str:
+                        if isinstance(name_rest, str):
                             if x.table_index == name_rest:
                                 continue
-                        elif type(name_rest) == list:
+                        elif isinstance(name_rest, list):
                             if x.table_index in name_rest:
                                 continue
                 temp_marks.append(x)
@@ -227,7 +227,7 @@ class SpecvizProfileView(BqplotProfileView):
         return {'x': fig.interaction.x_scale, 'y': fig.interaction.y_scale}
 
     def plot_spectral_line(self, line, scales=None, plot_units=None, **kwargs):
-        if type(line) == str:
+        if isinstance(line, str):
             # Try the full index first (for backend calls), otherwise name only
             try:
                 line = self.spectral_lines.loc[line]
