@@ -115,3 +115,10 @@ Collapse Plugin spectral bounds do not match selected region
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Spectral bound values in the plugin sometimes differ slightly from the bounds shown visually in the spectrum viewer.
+
+Line List Plugin redshift and radial velocity do not roundtrip to full precision
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Giving a redshift value will report a converted radial velocity, which if entered manually will not 
+convert to the exact same redshift value.  Note that the redshift value is always treated as the
+true value and used when plotting lines, etc.

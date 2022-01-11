@@ -189,20 +189,30 @@ class Specviz(ConfigHelper, LineListMixin):
     def show(self):
         self.app
 
-    def set_redshift_slider_bounds(self, lower=None, upper=None, step=None):
+    def set_redshift_slider_bounds(self, range=None, step=None):
         '''
-        Set the upper, lower, or both bounds of the redshift slider. Note
-        that this does not do any sanity checks on the numbers provided based
-        on whether the slider is set to Redshift or Radial Velocity.
+        Set the range and/or step of the redshift slider. Set either/both to 'auto'
+        to default based on the limits of the spectrum plot.
+
+        Parameters
+        ----------
+        range : float or `None` or 'auto'
+            Specifies the difference between the upper and lower bounds of the slider.
+            Note that the slider specifies redshift delta from the current value, so a
+            range of 0.1 would allow the user to change the current redshift by +/- 0.05.
+            If `None` or not passed, will leave at the current value. If 'auto',
+            will sync the range based on the limits of the spectrum plot.
+        step : float or `None` or 'auto'
+            Specifies step size of the slider. Smaller step sizes will allow finer
+            adjustments/smoother behavior at a potential cost to performance. If `None`
+            or not passed, will leave at the current value. If 'auto', will sync
+            the step size to 100 steps within the current range.
         '''
-        if lower is not None:
-            msg = RedshiftMessage("slider_min", lower, sender=self)
-            self.app.hub.broadcast(msg)
-        if upper is not None:
-            msg = RedshiftMessage("slider_max", upper, sender=self)
+        if range is not None:
+            msg = RedshiftMessage("rs_slider_range", range, sender=self)
             self.app.hub.broadcast(msg)
         if step is not None:
-            msg = RedshiftMessage("slider_step", step, sender=self)
+            msg = RedshiftMessage("rs_slider_step", step, sender=self)
             self.app.hub.broadcast(msg)
 
     def set_redshift(self, new_redshift):

@@ -3,6 +3,69 @@
     <v-row>
       <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#line-lists'">Plot lines from preset or custom line lists.</j-docs-link>
     </v-row>
+
+    <j-plugin-section-header>Redshift</j-plugin-section-header>
+    <v-row>
+      <j-docs-link>Shift spectral lines according to a specific redshift. Only enabled if at least one line is plotted.</j-docs-link>
+    </v-row>
+    <v-row style='margin-bottom: 0px'>
+      <!-- colors are app.vue primary and toolbar colors -->
+      <v-slider
+        :value="rs_slider"
+        @input="throttledSlider"
+        @end="slider_reset"
+        class="align-center"
+        :max="rs_slider_half_range"
+        :min="-rs_slider_half_range"
+        :step="rs_slider_step"
+        color="#00617E"
+        track-color="#00617E"
+        thumb-color="#153A4B"
+        hide-details
+        :disabled="!rs_enabled"
+      >
+      </v-slider>
+    </v-row>
+    <v-row style='margin-top: -24px'>
+      <span class='text--secondary' style='max-width: 30%; white-space: nowrap;'>-{{rs_slider_half_range}}</span>
+      <v-spacer/>
+      <span class='text--secondary' style='max-width: 30%; white-space: nowrap;'>+{{rs_slider_half_range}}</span>
+    </v-row>
+
+    <v-row class="row-no-outside-padding row-min-bottom-padding">
+      <v-col>
+        <v-text-field
+          :value='rs_redshift'
+          @input='setRedshiftFloat'
+          step="0.1"
+          class="mt-0 pt-0"
+          type="number"
+          label="Redshift"
+          hint="Redshift"
+          :disabled="!rs_enabled"
+        ></v-text-field>
+      </v-col>
+      <v-col cols=3>
+        <span></span>
+      </v-col>
+    </v-row>
+
+    <v-row class="row-no-outside-padding">
+      <v-col>
+        <v-text-field
+          v-model="rs_rv"
+          step="0.1"
+          class="mt-0 pt-0"
+          type="number"
+          label="RV"
+          hint="Redshift in RV (km/s)"
+          :disabled="!rs_enabled"
+        ></v-text-field>
+      </v-col>
+      <v-col cols=3>
+        <span :class="[rs_enabled ? 'text--primary' : 'text--secondary']">km/s</span>
+      </v-col>
+    </v-row>
   
     <j-plugin-section-header>Preset Line Lists</j-plugin-section-header>
     <v-row>
@@ -143,7 +206,7 @@
                   <j-tooltip tipid='plugin-line-lists-line-visible'>
                     <v-checkbox v-model="line.show" @change="change_visible(line)">
                       <template v-slot:label>
-                        <span style="overflow-wrap: anywhere; color: rgba(0, 0, 0, 0.87); font-size: 10pt">
+                        <span class='text--primary' style="overflow-wrap: anywhere; font-size: 10pt">
                           {{line.linename}}
                         </span>
                       </template>
@@ -185,3 +248,22 @@
 
   </j-tray-plugin>
 </template>
+
+<script>
+  module.exports = {
+    created() {
+      this.throttledSlider = _.throttle(
+        (v) => { this.rs_slider = v; },
+        this.rs_slider_throttle);
+      this.setRedshiftFloat = (v) => {
+        this.rs_redshift = parseFloat(v)
+      }
+    },
+  }
+</script>
+
+<style>
+  .v-slider {
+    margin: 0px !important;
+  }
+</style>

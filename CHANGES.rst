@@ -42,6 +42,9 @@ Specviz
 Other Changes and Additions
 ---------------------------
 
+- Redshift slider and options are moved from the toolbar to the Line List 
+  plugin in the plugin tray. [#1031]
+
 2.2 (2021-12-23)
 ================
 
