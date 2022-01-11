@@ -562,13 +562,14 @@ class LineListTool(TemplateMixin):
         """
         Method to remove line list from available expansion panels when the x
         on the panel header is clicked. Also removes line marks from plot and
-        updates the "show" value in the astropy table to False..
+        updates the "show" value in the astropy table to False.
         """
         lc = self.list_contents[listname]
         name_rests = []
         for line in lc["lines"]:
             name_rests.append(self.vue_remove_line(line, erase=False))
         self._viewer.erase_spectral_lines(name_rest=name_rests)
+        self.update_line_mark_dict()
 
         self.loaded_lists = [x for x in self.loaded_lists if x != listname]
         del(self.list_contents[listname])
