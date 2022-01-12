@@ -210,6 +210,9 @@ class LineListTool(TemplateMixin):
                 # the user can never delete the entry and type something new
                 # so we'll just leave empty
                 return
+            if event['new'] is None:
+                # definitely can't convert to float!
+                return
             value = float(event['new'])
             # update _global_redshift so new lines, etc, will adopt this latest value
             self._global_redshift = value
