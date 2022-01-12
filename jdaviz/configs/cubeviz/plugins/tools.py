@@ -15,7 +15,7 @@ ICON_DIR = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'ic
 
 @viewer_tool
 class SelectSlice(CheckableTool):
-    icon = os.path.join(ICON_DIR, 'blink.svg')
+    icon = os.path.join(ICON_DIR, 'slice.svg')
     tool_id = 'jdaviz:selectslice'
     action_text = 'Select cube slice (wavelength)'
     tool_tip = 'Select cube slice (wavelength)'
