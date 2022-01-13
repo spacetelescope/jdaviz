@@ -2,7 +2,7 @@ import numpy as np
 import re
 from traitlets import Bool, Float, observe, Any, Int
 
-from jdaviz.core.events import AddDataMessage, SliceToolStateMessage
+from jdaviz.core.events import AddDataMessage, SliceToolStateMessage, SliceSelectSliceMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
 
@@ -33,6 +33,10 @@ class Slice(TemplateMixin):
         self._indicator_viewers = []
         self._x_all = None
 
+        # Subscribe to requests from the helper to change the slice across all viewers
+        self.session.hub.subscribe(self, SliceSelectSliceMessage,
+                                   handler=self._on_select_slice_message)
+
         # Listen for add data events. **Note** this should only be used in
         #  cases where there is a specific type of data expected and arbitrary
         #  viewers are not expected to be created. That is, the expected data
@@ -46,10 +50,10 @@ class Slice(TemplateMixin):
 
             if not event['new']:
                 viewer.state.remove_callback('slices',
-                                             self._slider_value_updated)
+                                             self._viewer_slices_changed)
             else:
                 viewer.state.add_callback('slices',
-                                          self._slider_value_updated)
+                                          self._viewer_slices_changed)
 
     def _on_data_added(self, msg):
         if len(msg.data.shape) == 3 and \
@@ -60,7 +64,7 @@ class Slice(TemplateMixin):
                 self._watched_viewers.append(msg.viewer)
 
                 msg.viewer.state.add_callback('slices',
-                                              self._slider_value_updated)
+                                              self._viewer_slices_changed)
 
         elif isinstance(msg.viewer, BqplotProfileView):
             if msg.viewer not in self._indicator_viewers:
@@ -86,9 +90,18 @@ class Slice(TemplateMixin):
         # force wavelength to update from the current slider value
         self._on_slider_updated({'new': self.slider})
 
-    def _slider_value_updated(self, value):
-        if len(value) > 0:
+    def _viewer_slices_changed(self, value):
+        # the slices attribute on the viewer state was changed,
+        # so we'll update the slider to match which will trigger
+        # the slider observer (_on_slider_updated) and sync across
+        # any other applicable viewers
+        if len(value):
             self.slider = float(value[0])
+
+    def _on_select_slice_message(self, msg):
+        # NOTE: by setting the slice index, the observer (_on_slider_updated)
+        # will sync across all viewers and update the wavelength
+        self.slider = msg.slice
 
     def vue_change_wavelength(self, event):
         # convert to float after stripping any invalid characters

@@ -3,7 +3,7 @@ import numpy as np
 from jdaviz.core.helpers import ConfigHelper
 from jdaviz.configs.default.plugins.line_lists.line_list_mixin import LineListMixin
 from jdaviz.configs.specviz import Specviz
-from jdaviz.core.events import SliceWavelengthMessage
+from jdaviz.core.events import SliceSelectWavelengthMessage, SliceSelectSliceMessage
 
 __all__ = ['Cubeviz', 'CubeViz']
 
@@ -14,7 +14,7 @@ class Cubeviz(ConfigHelper, LineListMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.app.hub.subscribe(self, SliceWavelengthMessage,
+        self.app.hub.subscribe(self, SliceSelectWavelengthMessage,
                                handler=self.select_wavelength)
 
     def select_slice(self, slice):
@@ -30,10 +30,8 @@ class Cubeviz(ConfigHelper, LineListMixin):
             raise TypeError("slice must be an integer")
         if slice < 0:
             raise ValueError("slice must be positive")
-        # we only need to change the slices trait on one of the viewers and then the
-        # slice plugin will observe the change and sync across the slider
-        # and all other viewers
-        self.app.get_viewer_by_id('cubeviz-0').state.slices = (slice, 0, 0)
+        msg = SliceSelectSliceMessage(slice=slice, sender=self)
+        self.app.hub.broadcast(msg)
 
     def select_wavelength(self, wavelength):
         """
@@ -45,8 +43,8 @@ class Cubeviz(ConfigHelper, LineListMixin):
             Wavelength to select in units of the x-axis of the spectrum.  The nearest slice will
             be selected.
         """
-        if isinstance(wavelength, SliceWavelengthMessage):
-            # SliceWavelengthMessage is broadcasted by the spectrum-viewer slice selection tool
+        if isinstance(wavelength, SliceSelectWavelengthMessage):
+            # SliceSelectWavelengthMessage is broadcasted by the spectrum-viewer slice tool
             wavelength = float(wavelength.wavelength)
         if not (isinstance(wavelength, float) or isinstance(wavelength, int)):
             raise TypeError("wavelength must be a float or int")

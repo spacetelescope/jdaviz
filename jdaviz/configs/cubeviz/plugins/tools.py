@@ -6,7 +6,7 @@ from glue.config import viewer_tool
 from glue.viewers.common.tool import CheckableTool
 # from bqplot.interacts import IndexSelector
 
-from jdaviz.core.events import SliceWavelengthMessage, SliceToolStateMessage
+from jdaviz.core.events import SliceSelectWavelengthMessage, SliceToolStateMessage
 
 __all__ = []
 
@@ -41,7 +41,7 @@ class SelectSlice(CheckableTool):
             # throttle to 200ms
             return
 
-        msg = SliceWavelengthMessage(data['domain']['x'], sender=self)
+        msg = SliceSelectWavelengthMessage(wavelength=data['domain']['x'], sender=self)
         self.viewer.session.hub.broadcast(msg)
 
         self._time_last = time.time()
