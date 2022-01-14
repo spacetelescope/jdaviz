@@ -4,6 +4,7 @@ import numpy as np
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from traitlets import Bool, Float, observe, Any, Int
+from specutils.spectra.spectrum1d import Spectrum1D
 
 from jdaviz.core.events import AddDataMessage, SliceToolStateMessage, SliceSelectSliceMessage
 from jdaviz.core.registries import tray_registry
@@ -74,11 +75,16 @@ class Slice(TemplateMixin):
                 self.wavelength_unit = str(x_all.unit)
                 # but if the units (or data) change, we need to update internally
                 msg.viewer.state.add_callback("reference_data",
-                                              lambda reference_data: self._update_data(reference_data.get_object().spectral_axis)) # noqa
+                                              self._update_reference_data)
 
                 if self.wavelength == -1:
                     # initialize at middle of cube
                     self.slider = int(len(x_all)/2)
+
+    def _update_reference_data(self, reference_data):
+        if reference_data is None:
+            return
+        self._update_data(reference_data.get_object(cls=Spectrum1D).spectral_axis)
 
     def _update_data(self, x_all):
         if hasattr(x_all, 'unit'):
