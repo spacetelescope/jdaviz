@@ -22,11 +22,11 @@ class Imviz(ConfigHelper):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._default_viewer = self.app.get_viewer('imviz-0')
+        self._default_viewer = self.app.get_viewer_by_id(f'{self.app.config}-0')
 
     @property
     def default_viewer(self):
-        """Default viewer instance. This is typically the first viewer ("imviz-0")."""
+        """Default viewer instance. This is typically the first viewer (e.g., "imviz-0")."""
         return self._default_viewer
 
     def create_image_viewer(self, viewer_name=None):
@@ -71,7 +71,7 @@ class Imviz(ConfigHelper):
         """
         if viewer_id not in self.app._viewer_store:  # Silent no-op
             return
-        if viewer_id == 'imviz-0':
+        if viewer_id == f'{self.app.config}-0':
             raise ValueError(f"Default viewer '{viewer_id}' cannot be destroyed")
         self.app.vue_destroy_viewer_item(viewer_id)
 

@@ -43,7 +43,7 @@ class SimpleAperturePhotometry(TemplateMixin):
 
         # TODO: Allow switching viewer in the future. Need new "messages" to subscribe
         #       to in viewer create/destroy events.
-        self._selected_viewer_id = 'imviz-0'
+        self._selected_viewer_id = f'{self.app.config}-0'
 
         self._selected_data = None
         self._selected_subset = None
