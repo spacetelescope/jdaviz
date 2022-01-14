@@ -17,11 +17,12 @@ from jdaviz.configs.specviz import Specviz
 from jdaviz.configs.specviz.helper import _apply_redshift_to_spectra
 from jdaviz.configs.specviz2d import Specviz2d
 from jdaviz.configs.mosviz.plugins import jwst_header_to_skyregion
+from jdaviz.configs.default.plugins.line_lists.line_list_mixin import LineListMixin
 
 __all__ = ['Mosviz', 'MosViz']
 
 
-class Mosviz(ConfigHelper):
+class Mosviz(ConfigHelper, LineListMixin):
     """Mosviz Helper class"""
 
     _default_configuration = "mosviz"

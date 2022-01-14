@@ -2,9 +2,10 @@ import numpy as np
 
 from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import SnackbarMessage
+from jdaviz.configs.default.plugins.line_lists.line_list_mixin import LineListMixin
 
 
-class Specviz2d(ConfigHelper):
+class Specviz2d(ConfigHelper, LineListMixin):
     """Specviz2D Helper class"""
 
     _default_configuration = "specviz2d"
