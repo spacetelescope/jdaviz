@@ -17,7 +17,7 @@ from astropy import units as u
 
 
 from jdaviz.core.registries import viewer_registry
-from jdaviz.core.spectral_line import SpectralLine
+from jdaviz.core.marks import SpectralLine
 from jdaviz.core.linelists import load_preset_linelist, get_available_linelists
 from jdaviz.core.freezable_state import FreezableProfileViewerState
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
@@ -227,8 +227,8 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
             self.toolbar.active_tool = None
         return {'x': fig.interaction.x_scale, 'y': fig.interaction.y_scale}
 
-    def plot_spectral_line(self, line, scales=None, plot_units=None, **kwargs):
-        if isinstance(line, str):
+    def plot_spectral_line(self, line, plot_units=None, **kwargs):
+        if type(line) == str:
             # Try the full index first (for backend calls), otherwise name only
             try:
                 line = self.spectral_lines.loc[line]
@@ -236,12 +236,11 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
                 line = self.spectral_lines.loc["linename", line]
         if plot_units is None:
             plot_units = self.data()[0].spectral_axis.unit
-        if scales is None:
-            scales = self.get_scales()
-        # Calculate observed wavelength based on redshift
-        line_val = line["rest"].to(plot_units).value * (1+line['redshift'])
 
-        line_mark = SpectralLine(line_val, scales, name=line["linename"],
+        line_mark = SpectralLine(self,
+                                 line['rest'].to(plot_units).value,
+                                 line['redshift'],
+                                 name=line["linename"],
                                  table_index=line["name_rest"],
                                  colors=[line["colors"]], **kwargs)
 
@@ -258,8 +257,6 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
         fig = self.figure
         self.erase_spectral_lines(show_none=False)
 
-        scales = self.get_scales()
-
         # Check to see if colors were defined for each line
         if "colors" in self.spectral_lines.columns:
             colors = self.spectral_lines["colors"]
@@ -275,14 +272,18 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
         lines = self.spectral_lines
         plot_units = self.data()[0].spectral_axis.unit
 
-        for i in range(len(lines)):
-            if not lines[i]["show"]:
+        marks = []
+        for line, redshift, color in zip(lines, redshifts, colors):
+            if not line["show"]:
                 continue
-            line_val = lines[i]["rest"].to(plot_units).value * (1+redshifts[i])
-            line = SpectralLine(line_val, scales, name=lines[i]["linename"],
-                                table_index=lines[i]["name_rest"],
-                                colors=[colors[i]], **kwargs)
-            fig.marks = fig.marks + [line]
+            line = SpectralLine(self,
+                                line['rest'].to(plot_units).value,
+                                redshift=redshift,
+                                name=line["linename"],
+                                table_index=line["name_rest"],
+                                colors=[color], **kwargs)
+            marks.append(line)
+        fig.marks = fig.marks + marks
 
     def available_linelists(self):
         return get_available_linelists()

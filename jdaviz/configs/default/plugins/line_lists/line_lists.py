@@ -15,7 +15,7 @@ from jdaviz.core.events import (AddDataMessage,
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
 from jdaviz.core.linelists import load_preset_linelist
-from jdaviz.core.spectral_line import SpectralLine
+from jdaviz.core.marks import SpectralLine
 
 __all__ = ['LineListTool']
 
@@ -219,11 +219,13 @@ class LineListTool(TemplateMixin):
 
         # update all lines, self._global_redshift, and emit message back to Specviz helper
         z = u.Quantity(self.rs_redshift)
-        line_list = self.app.get_viewer('spectrum-viewer').spectral_lines
-        if line_list is not None:
-            line_list["redshift"] = z
-            # Replot with the new redshift
-            line_list = self.app.get_viewer('spectrum-viewer').plot_spectral_lines()
+
+        for mark in self.app.get_viewer('spectrum-viewer').figure.marks:
+            # update ALL to this redshift, if adding support for per-line redshift
+            # this logic will need to change to not affect ALL lines
+            if not isinstance(mark, SpectralLine):
+                continue
+            mark.redshift = z
 
         # Send the redshift back to the Specviz helper (and also trigger
         # self._update_global_redshift)
