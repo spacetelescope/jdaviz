@@ -39,7 +39,7 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
                 isinstance(layer_state.layer, BaseData)]
 
 
-@viewer_registry("cubeviz-profile-viewer", label="Profile 1D (Specviz)")
+@viewer_registry("cubeviz-profile-viewer", label="Profile 1D (Cubeviz)")
 class CubevizProfileView(SpecvizProfileView):
     # Whether to inherit tools from glue-jupyter automatically. Set this to
     # False to have full control here over which tools are shown in case new

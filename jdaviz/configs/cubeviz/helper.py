@@ -46,7 +46,7 @@ class Cubeviz(ConfigHelper, LineListMixin):
         if isinstance(wavelength, SliceSelectWavelengthMessage):
             # SliceSelectWavelengthMessage is broadcasted by the spectrum-viewer slice tool
             wavelength = float(wavelength.wavelength)
-        if not (isinstance(wavelength, float) or isinstance(wavelength, int)):
+        if not isinstance(wavelength, (int, float)):
             raise TypeError("wavelength must be a float or int")
         x_all = self.app.get_viewer('spectrum-viewer').data()[0].spectral_axis.value
         index = np.argmin(abs(x_all - wavelength))

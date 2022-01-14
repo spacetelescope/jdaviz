@@ -1,13 +1,13 @@
-import numpy as np
 import re
+
+import numpy as np
+from glue_jupyter.bqplot.image import BqplotImageView
+from glue_jupyter.bqplot.profile import BqplotProfileView
 from traitlets import Bool, Float, observe, Any, Int
 
 from jdaviz.core.events import AddDataMessage, SliceToolStateMessage, SliceSelectSliceMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
-
-from glue_jupyter.bqplot.image import BqplotImageView
-from glue_jupyter.bqplot.profile import BqplotProfileView
 
 __all__ = ['Slice']
 
@@ -56,8 +56,7 @@ class Slice(TemplateMixin):
                                           self._viewer_slices_changed)
 
     def _on_data_added(self, msg):
-        if len(msg.data.shape) == 3 and \
-                isinstance(msg.viewer, BqplotImageView):
+        if len(msg.data.shape) == 3 and isinstance(msg.viewer, BqplotImageView):
             self.max_value = msg.data.shape[0] - 1
 
             if msg.viewer not in self._watched_viewers:

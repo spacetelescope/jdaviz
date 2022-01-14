@@ -10,7 +10,7 @@ are accessed via the :guilabel:`plugin` icon in the upper right corner
 of the Cubeviz application.
 
 Slice
-===============
+=====
 
 The slice plugin provides that ability to select the slice
 of the cube currently visible in the image viewers, with the
