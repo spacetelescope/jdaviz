@@ -41,10 +41,11 @@ def test_mastviz_config():
     cc = get_configuration('imviz')
     cc['settings']['viewer_spec'] = cc['settings'].get('configuration', 'default')
     cc['settings']['configuration'] = 'mastviz'
-    cc['settings']['visible'] = {'menu_bar': False, 'toolbar': False, 'tray': False, 'tab_headers': False}
+    cc['settings']['visible'] = {'menu_bar': False, 'toolbar': False, 'tray': False,
+                                 'tab_headers': False}
     cc['toolbar'].remove('g-data-tools') if cc['toolbar'].count('g-data-tools') else None
     cc['toolbar'].remove('g-viewer-creator') if cc['toolbar'].count('g-viewer-creator') else None
-    cc['toolbar'].remove('g-image-viewer-creator') if cc['toolbar'].count('g-image-viewer-creator') else None
+    cc['toolbar'].remove('g-image-viewer-creator') if cc['toolbar'].count('g-image-viewer-creator') else None  # noqa
 
     app = Application(cc)
     im = Imviz(app)
