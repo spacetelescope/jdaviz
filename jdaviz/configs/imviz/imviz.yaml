@@ -18,6 +18,7 @@ toolbar:
   - g-image-viewer-creator
   - g-coords-info
 tray:
+  - g-metadata-viewer
   - imviz-links-control
   - imviz-aper-phot-simple
 viewer_area:

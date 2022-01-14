@@ -6,3 +6,4 @@ from .subset_tools.subset_tools import *  # noqa
 from .model_fitting.model_fitting import *  # noqa
 from .collapse.collapse import *  # noqa
 from .line_lists.line_lists import *  # noqa
+from .metadata_viewer.metadata_viewer import *  # noqa
