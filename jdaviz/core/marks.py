@@ -112,37 +112,24 @@ class SpectralLine(BaseSpectrumVerticalLine):
         self._x_unit = new_unit
 
 
-
-class SliceIndicator(Lines, HubListener):
+class SliceIndicator(BaseSpectrumVerticalLine, HubListener):
     """
     Subclass on bqplot Lines to handle slice/wavelength indicator
     """
     def __init__(self, viewer, slice=0, **kwargs):
-        self._slice = slice
         self._active = False
         self._show_if_inactive = True
 
+        self.slice = slice
         x_all = viewer.data()[0].spectral_axis
-        self._x_all = x_all.value
-        self._x_unit = str(x_all.unit)
-
-        # the location of the marker will need to update automatically if the underlying data
-        # changes (through a unit conversion, for example)
-        viewer.state.add_callback("reference_data",
-                                  lambda reference_data: self._update_data(reference_data.get_object().spectral_axis)) # noqa
-
-        x_coord = self._slice_to_x(slice)
-        scales = viewer.scales
-        y_coords = [scales['y'].min, scales['y'].max]
-
-        # keep the y values at the y-limits of the plot
-        viewer.state.add_callback("y_min", lambda y_min: self._update_ys(y_min=y_min))
-        viewer.state.add_callback("y_max", lambda y_max: self._update_ys(y_max=y_max))
+        # _update_data will set self._x_all, self._x_unit, self.x
+        self._update_data(x_all)
 
         viewer.session.hub.subscribe(self, SliceToolStateMessage,
                                      handler=self._on_change_state)
 
-        super().__init__(x=[x_coord, x_coord], y=y_coords, scales=scales,
+        super().__init__(viewer=viewer,
+                         x=self.x[0],
                          stroke_width=2,
                          marker='diamond',
                          fill='none', close_path=False,
@@ -181,21 +168,27 @@ class SliceIndicator(Lines, HubListener):
 
         self._update_colors_opacities()
 
+    def _update_label(self):
+        self.labels = [f'\u00A0{self.x[0]:0.4e} {self._x_unit}']
+
     @property
     def slice(self):
         return self._slice
 
-    def _update_label(self):
-        self.labels = [f'\u00A0{self.x[0]:0.4e} {self._x_unit}']
-
     @slice.setter
     def slice(self, slice):
-        x_coord = self._slice_to_x(slice)
         self._slice = slice
-        self.x = [x_coord, x_coord]
-        self._update_label()
+        # if this is within the init, the data may not have been set yet,
+        # in which case we'll just set self._slice for the first time, but
+        # do not need to update self.x or label (yet)
+        if hasattr(self, '_x_all'):
+            x_coord = self._slice_to_x(slice)
+            self.x = [x_coord, x_coord]
+            self._update_label()
 
     def _update_data(self, x_all):
+        # we want to preserve slice number, so we'll do a bit more than the
+        # default unit-conversion in the base class
         self._x_all = x_all.value
         self._x_unit = str(x_all.unit)
         x_coord = self._slice_to_x(self.slice)
@@ -203,7 +196,3 @@ class SliceIndicator(Lines, HubListener):
         if self.labels_visibility == 'label':
             # update label with new value/unit
             self._update_label()
-
-    def _update_ys(self, y_min=None, y_max=None):
-        self.y = [y_min if y_min is not None else self.y[0],
-                  y_max if y_max is not None else self.y[1]]
