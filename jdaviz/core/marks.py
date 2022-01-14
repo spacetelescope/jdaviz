@@ -73,5 +73,15 @@ class SpectralLine(BaseSpectrumVerticalLine):
 
     @redshift.setter
     def redshift(self, redshift):
+        self._redshift = redshift
         obs_value = self._rest_value*(1+redshift)
         self.x = [obs_value, obs_value]
+
+    def _update_data(self, x_all):
+        new_unit = x_all.unit
+        if new_unit == self._x_unit:
+            return
+        self._rest_value = (self._rest_value * self._x_unit).to(new_unit).value
+        # re-compute self.x from current redshift (instead of converting that as well)
+        self.redshift = self._redshift
+        self._x_unit = new_unit

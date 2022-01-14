@@ -228,6 +228,7 @@ class LineListTool(TemplateMixin):
             # this logic will need to change to not affect ALL lines
             if not isinstance(mark, SpectralLine):
                 continue
+
             mark.redshift = z
 
         # Send the redshift back to the Specviz helper (and also trigger
