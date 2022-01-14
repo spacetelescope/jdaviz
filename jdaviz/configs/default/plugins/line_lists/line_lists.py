@@ -131,7 +131,7 @@ class LineListTool(TemplateMixin):
 
         # set redshift slider to redshift stored in Spectrum1D object
         self.rs_redshift = (viewer_data.redshift.value
-                            if hasattr(viewer_data.redshift, 'value') 
+                            if hasattr(viewer_data.redshift, 'value')
                             else viewer_data.redshift)
         self._auto_slider_range()  # will also trigger _auto_slider_step
 

@@ -1,4 +1,5 @@
 from bqplot.marks import Lines
+from specutils.spectra.spectrum1d import Spectrum1D
 
 from glue.core import HubListener
 
@@ -12,7 +13,7 @@ class BaseSpectrumVerticalLine(Lines, HubListener):
         # the location of the marker will need to update automatically if the
         # underlying data changes (through a unit conversion, for example)
         viewer.state.add_callback("reference_data",
-                                  lambda reference_data: self._update_data(reference_data.get_object().spectral_axis)) # noqa
+                                  self._update_reference_data)
 
         # keep the y values at the y-limits of the plot
         viewer.state.add_callback("y_min", lambda y_min: self._update_ys(y_min=y_min))
@@ -28,6 +29,11 @@ class BaseSpectrumVerticalLine(Lines, HubListener):
     def _update_ys(self, y_min=None, y_max=None):
         self.y = [y_min if y_min is not None else self.y[0],
                   y_max if y_max is not None else self.y[1]]
+
+    def _update_reference_data(self, reference_data):
+        if reference_data is None:
+            return
+        self._update_data(reference_data.get_object(cls=Spectrum1D).spectral_axis)
 
     def _update_data(self, x_all):
         # the x-units may have changed.  We want to convert the internal self.x
