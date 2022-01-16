@@ -41,9 +41,47 @@ class MetadataViewer(TemplateMixin):
             self.has_metadata = False
             self.metadata = []
         else:
-            d = deepcopy(data.meta)
+            d = flatten_nested_dict(data.meta)
             for badkey in ('COMMENT', 'HISTORY', ''):
                 if badkey in d:
                     del d[badkey]  # ipykernel cannot clean for JSON
-            self.metadata = list(zip(d.keys(), map(str, d.values())))
+            # TODO: Option to not sort?
+            self.metadata = sorted(zip(d.keys(), map(str, d.values())))
             self.has_metadata = True
+
+
+def _flatten_nested_dict_worker(d, parent_d=None, pfx=None):
+    """ASDF metadata is nested dict.
+    We have to flatten it so it displays nicely.
+    Input is modified in-place.
+    """
+    for key in list(d.keys()):
+        if isinstance(d[key], dict):
+            out = _flatten_nested_dict_worker(d[key], d, key)
+            if out is not None:
+                new_key, val = out
+                d[new_key] = val
+            if len(d[key]) == 0:
+                d.pop(key)
+        elif pfx is not None and parent_d is not None:
+            val = d.pop(key)
+            return f'{pfx}.{key}', val
+
+
+def flatten_nested_dict(orig_meta):
+    """Return a copy of metadata that is flattened if the
+    input is a nested dictionary.
+
+    Example: ``meta = {'a': {'b': 1}}`` will become ``meta = {'a.b': 1}``.
+
+    """
+    meta = deepcopy(orig_meta)
+    not_done = True
+    while not_done:
+        not_done = False
+        _flatten_nested_dict_worker(meta)
+        for key in list(meta.keys()):
+            if isinstance(meta[key], dict):
+                not_done = True
+                break
+    return meta
