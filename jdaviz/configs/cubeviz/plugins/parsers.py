@@ -111,7 +111,7 @@ def _parse_hdulist(app, hdulist, base_data_label):
         data_label = f"{base_data_label}[{hdu.name.upper()}]"
         try:
             data_type = _parse_hdu(app, hdu, data_label, hdulist=hdulist, show_in_viewer=False)
-        except Exception:
+        except Exception:  # nosec
             continue
         if data_type and data_type not in viewer_cache:
             _show_data_in_cubeviz_viewer(app, data_label, data_type)
