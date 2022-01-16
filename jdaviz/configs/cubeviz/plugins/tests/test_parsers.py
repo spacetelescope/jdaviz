@@ -8,16 +8,16 @@ from specutils import Spectrum1D
 
 @pytest.fixture
 def image_hdu_obj():
-    flux_hdu = fits.ImageHDU(np.ones((10, 10, 10)))
+    flux_hdu = fits.ImageHDU(np.ones((10, 10, 10), dtype=np.float32))
     flux_hdu.name = 'FLUX'
 
-    mask_hdu = fits.ImageHDU(np.zeros((10, 10, 10)))
-    mask_hdu.name = 'MASK'
-
-    uncert_hdu = fits.ImageHDU(np.ones((10, 10, 10)))
+    uncert_hdu = fits.ImageHDU(np.ones((10, 10, 10), dtype=np.float32))
     uncert_hdu.name = 'ERR'
 
-    wcs = WCS(header={
+    mask_hdu = fits.ImageHDU(np.zeros((10, 10, 10), dtype=np.int32))
+    mask_hdu.name = 'MASK'
+
+    wcs_header = {
         'WCSAXES': 3, 'CRPIX1': 38.0, 'CRPIX2': 38.0, 'CRPIX3': 1.0,
         'PC1_1 ': -0.000138889, 'PC2_2 ': 0.000138889,
         'PC3_3 ': 8.33903304339E-11, 'CDELT1': 1.0, 'CDELT2': 1.0,
@@ -26,16 +26,12 @@ def image_hdu_obj():
         'CRVAL1': 205.4384, 'CRVAL2': 27.004754, 'CRVAL3': 3.62159598486E-07,
         'LONPOLE': 180.0, 'LATPOLE': 27.004754, 'MJDREFI': 0.0,
         'MJDREFF': 0.0, 'DATE-OBS': '2014-03-30',
-        'RADESYS': 'FK5', 'EQUINOX': 2000.0
-    })
+        'RADESYS': 'FK5', 'EQUINOX': 2000.0}
 
-    flux_hdu.header.update(wcs.to_header())
+    flux_hdu.header.update(wcs_header)
     flux_hdu.header['BUNIT'] = '1E-17 erg*s^-1*cm^-2*Angstrom^-1*pix^-1'
 
-    mask_hdu.header.update(wcs.to_header())
-    uncert_hdu.header.update(wcs.to_header())
-
-    return fits.HDUList([fits.PrimaryHDU(), flux_hdu, mask_hdu, uncert_hdu])
+    return fits.HDUList([fits.PrimaryHDU(), flux_hdu, uncert_hdu, mask_hdu])
 
 
 @pytest.mark.filterwarnings('ignore')

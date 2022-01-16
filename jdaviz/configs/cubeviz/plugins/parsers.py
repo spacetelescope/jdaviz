@@ -63,8 +63,8 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
 
     elif isinstance(file_obj, HDUList):
         if data_label is None:
-            if hasattr(hdulist, 'file_name'):
-                data_label = hdulist.file_name
+            if hasattr(file_obj, 'file_name'):
+                data_label = file_obj.file_name
             else:
                 data_label = f'HDUList|{str(base64.b85encode(uuid.uuid4().bytes), "utf-8")}'
 
@@ -109,7 +109,10 @@ def _parse_hdulist(app, hdulist, base_data_label):
     # all valid extensions.
     for hdu in hdulist:
         data_label = f"{base_data_label}[{hdu.name.upper()}]"
-        data_type = _parse_hdu(app, hdu, data_label, hdulist=hdulist, show_in_viewer=False)
+        try:
+            data_type = _parse_hdu(app, hdu, data_label, hdulist=hdulist, show_in_viewer=False)
+        except Exception:
+            continue
         if data_type and data_type not in viewer_cache:
             _show_data_in_cubeviz_viewer(app, data_label, data_type)
             viewer_cache[data_type] = data_label
@@ -146,19 +149,41 @@ def _get_flux_unit_from_hdu_header(app, hdr, data_label, strict=False):
     return flux_unit
 
 
+def generate_dummy_fits_wcs_3d():
+    """Generate a dummy 3D FITS WCS for Cubeviz."""
+    dummy_wcs = WCS(naxis=3)
+    dummy_wcs.wcs.ctype[2] = 'WAVE'
+    dummy_wcs.wcs.cunit[2] = u.m
+    dummy_wcs.wcs.crval[2] = 0
+    dummy_wcs.wcs.cdelt[2] = 1
+    return dummy_wcs
+
+
 def _get_wcs_from_hdu_header(app, hdr, data_label, hdulist=None):
+    is_bad = ''
+
     try:
         wcs = WCS(hdr, hdulist)
     except Exception as e:
+        is_bad = repr(e)
+    else:
+        if all([x is None for x in wcs.world_axis_physical_types]):
+            is_bad = 'All WCS axis is None'
+
+    if is_bad:
         app.hub.broadcast(SnackbarMessage(
-            f"Invalid WCS for {data_label}: {repr(e)}",
+            f"Invalid WCS for {data_label}: {is_bad}",
             color="warning", timeout=8000, sender=app))
-        wcs = None
+        wcs = generate_dummy_fits_wcs_3d()
+
     return wcs
 
 
 def _get_sci_hdr_from_hdulist(hdulist):
     """Guess and grab SCI header from a given HDUList."""
+    if hdulist is None:
+        return
+
     hdr = None
     for hdu_name in ('flux', 'sci', 'primary'):  # In order of search priority.
         if hdu_name in hdulist:
@@ -301,6 +326,7 @@ def _parse_ndarray_3d(app, file_obj, data_label, data_type):
     """Load 3D ndarray into Cubeviz."""
     data_label = f"{data_label}[{data_type.upper()}]"
     flux = file_obj << u.count
-    sc = Spectrum1D(flux, wcs=None)
+    fake_wcs = generate_dummy_fits_wcs_3d()
+    sc = Spectrum1D(flux, wcs=fake_wcs)
     app.add_data(sc, data_label)
     _show_data_in_cubeviz_viewer(app, data_label, data_type)
