@@ -1,141 +1,252 @@
-import logging
+import base64
 import os
+import uuid
 
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
+from astropy.io.fits import HDUList, ImageHDU, PrimaryHDU
 from astropy.wcs import WCS
 from specutils import Spectrum1D
 
+from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import data_parser_registry
 
 __all__ = ['parse_data']
 
-EXT_TYPES = dict(flux=['flux', 'sci'],
-                 uncert=['ivar', 'err', 'var', 'uncert'],
-                 mask=['mask', 'dq'])
-
 
 @data_parser_registry("cubeviz-data-parser")
 def parse_data(app, file_obj, data_type=None, data_label=None):
-    """
-    Attempts to parse a data file and auto-populate available viewers in
-    cubeviz.
+    """Parse the given data into Cubeviz.
 
     Parameters
     ----------
     app : `~jdaviz.app.Application`
         The application-level object used to reference the viewers.
-    file_path : str
-        The path to a cube-like data file.
-    data_type : str, {'flux', 'mask', 'uncert'}
+    file_obj : str, `~fits.hdu.hdulist.ImageHDU`, `~fits.hdu.hdulist.PrimaryHDU`, `~fits.hdu.hdulist.HDUList`, `~specutils.Spectrum1D`, or ndarray
+        The path to a cube-like data FITS file or the data object to be loaded.
+    data_type : {'flux', 'uncert', 'mask', `None`}
         The data type used to explicitly differentiate parsed data.
-    data_label : str, optional
+        This is only used for ndarray.
+        If `None` is given, it tries to parse according to software default.
+    data_label : str or `None`
         The label to be applied to the Glue data component.
-    """
-    if data_type is not None and data_type.lower() not in ['flux', 'mask', 'uncert']:
-        msg = "Data type must be one of 'flux', 'mask', or 'uncertainty'."
-        logging.error(msg)
-        return msg
+        If `None` is given, it is automatically generated.
 
-    # If the file object is an hdulist or a string, use the generic parser for
-    #  fits files.
-    # TODO: this currently only supports fits files. We will want to make this
-    #  generic enough to work with other file types (e.g. ASDF). For now, this
-    #  supports MaNGA and JWST data.
-    if isinstance(file_obj, fits.hdu.hdulist.HDUList):
-        _parse_hdu(app, file_obj, file_name=data_label)
-    elif isinstance(file_obj, str) and os.path.exists(file_obj):
+    Raises
+    ------
+    ValueError
+        Parsing failed.
+
+    NotImplementedError
+        Unsupported data format.
+
+    """  # noqa: E501
+    valid_data_types = ('flux', 'mask', 'uncert')
+    if data_type is not None:
+        data_type = data_type.lower()
+        if data_type not in valid_data_types:
+            raise ValueError(f"data_type must be one of: {valid_data_types}")
+
+    if isinstance(file_obj, str):  # Assume FITS file
         file_name = os.path.basename(file_obj)
+        if data_label is None:
+            data_label = file_name
 
         with fits.open(file_obj) as hdulist:
             prihdr = hdulist[0].header
             telescop = prihdr.get('TELESCOP', '').lower()
             filetype = prihdr.get('FILETYPE', '').lower()
             if telescop == 'jwst' and filetype == '3d ifu cube':
-                for ext, viewer_name in (('SCI', 'flux-viewer'),
-                                         ('ERR', 'uncert-viewer'),
-                                         ('DQ', 'mask-viewer')):
-                    data_label = f'{file_name}[{ext}]'
-                    _parse_jwst_s3d(app, hdulist, data_label, ext=ext, viewer_name=viewer_name)
-            else:
-                _parse_hdu(app, hdulist, file_name=data_label or file_name)
+                _fix_jwst_s3d_sci_header(hdulist)
+            _parse_hdulist(app, hdulist, data_label)
 
-    # If the data types are custom data objects, use explicit parsers. Note
-    #  that this relies on the glue-astronomy machinery to turn the data object
-    #  into something glue can understand.
+    elif isinstance(file_obj, HDUList):
+        if data_label is None:
+            if hasattr(hdulist, 'file_name'):
+                data_label = hdulist.file_name
+            else:
+                data_label = f'HDUList|{str(base64.b85encode(uuid.uuid4().bytes), "utf-8")}'
+
+        _parse_hdulist(app, file_obj, data_label)
+
+    elif isinstance(file_obj, (ImageHDU, PrimaryHDU)):
+        if data_label is None:
+            data_label = f'{file_obj.__class__.__name__}|{str(base64.b85encode(uuid.uuid4().bytes), "utf-8")}'  # noqa: E501
+        _parse_hdu(app, file_obj, data_label)
+
+    # This relies on the glue-astronomy machinery to turn the data object
+    # into something glue can understand.
     elif isinstance(file_obj, Spectrum1D):
+        if data_label is None:
+            data_label = f'Spectrum1D|{str(base64.b85encode(uuid.uuid4().bytes), "utf-8")}'
+
         if file_obj.flux.ndim == 3:
-            _parse_spectrum1d_3d(app, file_obj)
+            _parse_spectrum1d_3d(app, file_obj, data_label)
+        elif file_obj.flux.ndim == 1:
+            _parse_spectrum1d(app, file_obj, data_label)
         else:
-            _parse_spectrum1d(app, file_obj)
+            raise NotImplementedError(f'Unsupported data format: {file_obj}')
+
+    elif isinstance(file_obj, np.ndarray):
+        if data_label is None:
+            data_label = f'ndarray|{str(base64.b85encode(uuid.uuid4().bytes), "utf-8")}'
+
+        if file_obj.ndim == 3:
+            _parse_ndarray_3d(app, file_obj, data_label, data_type)
+        else:
+            raise NotImplementedError(f'Unsupported data format: {file_obj}')
+
     else:
         raise NotImplementedError(f'Unsupported data format: {file_obj}')
 
 
-def _parse_hdu(app, hdulist, file_name=None):
-    if file_name is None:
-        if hasattr(hdulist, 'file_name'):
-            file_name = hdulist.file_name
+def _parse_hdulist(app, hdulist, base_data_label):
+    viewer_cache = {}
 
-    file_name = file_name or "Unknown HDU object"
-
-    # Now loop through and attempt to parse the fits extensions as spectral
-    #  cube object. If the wcs fails to parse in any case, use the wcs
-    #  information we scraped above.
+    # Now loop through and attempt to parse the FITS extensions as Spectrum1D.
+    # Only show first matching extension to each viewer, but attempts to load
+    # all valid extensions.
     for hdu in hdulist:
-        data_label = f"{file_name}[{hdu.name}]"
+        data_label = f"{base_data_label}[{hdu.name.upper()}]"
+        data_type = _parse_hdu(app, hdu, data_label, hdulist=hdulist, show_in_viewer=False)
+        if data_type and data_type not in viewer_cache:
+            _show_data_in_cubeviz_viewer(app, data_label, data_type)
+            viewer_cache[data_type] = data_label
 
-        if hdu.data is None or not hdu.is_image or hdu.data.ndim != 3:
-            continue
 
+def _parse_hdu(app, hdu, data_label, hdulist=None, show_in_viewer=True):
+    """Load HDU into Cubeviz and return data type."""
+    data_type, sc = _hdu_to_sc(app, hdu, data_label, hdulist=hdulist)
+    app.add_data(sc, data_label)
+    if show_in_viewer:
+        _show_data_in_cubeviz_viewer(app, data_label, data_type)
+    return data_type
+
+
+def _get_flux_unit_from_hdu_header(app, hdr, data_label, strict=False):
+    if 'BUNIT' in hdr:
         try:
-            wcs = WCS(hdu.header, hdulist)
-        except Exception as e:  # TODO: Do we just want to fail here?
-            logging.warning(f"Invalid WCS: {repr(e)}")
-            wcs = None
-
-        if 'BUNIT' in hdu.header:
-            try:
-                flux_unit = u.Unit(hdu.header['BUNIT'])
-            except Exception:
-                logging.warning("Invalid BUNIT, using count as data unit")
+            flux_unit = u.Unit(hdr['BUNIT'])
+        except Exception:
+            if strict:
+                raise
+            else:
+                app.hub.broadcast(SnackbarMessage(
+                    f"Invalid BUNIT={hdr['BUNIT']} for {data_label}, assume count",
+                    color="warning", timeout=8000, sender=app))
                 flux_unit = u.count
-        else:
-            logging.warning("Missing BUNIT, using count as data unit")
-            flux_unit = u.count
+    elif strict:
+        raise KeyError(f'Missing BUNIT for {data_label}')
+    else:
+        app.hub.broadcast(SnackbarMessage(
+            f"Missing BUNIT for {data_label}, assume count",
+            color="warning", timeout=8000, sender=app))
+        flux_unit = u.count
+    return flux_unit
 
-        flux = hdu.data << flux_unit
 
+def _get_wcs_from_hdu_header(app, hdr, data_label, hdulist=None):
+    try:
+        wcs = WCS(hdr, hdulist)
+    except Exception as e:
+        app.hub.broadcast(SnackbarMessage(
+            f"Invalid WCS for {data_label}: {repr(e)}",
+            color="warning", timeout=8000, sender=app))
+        wcs = None
+    return wcs
+
+
+def _get_sci_hdr_from_hdulist(hdulist):
+    """Guess and grab SCI header from a given HDUList."""
+    hdr = None
+    for hdu_name in ('flux', 'sci', 'primary'):  # In order of search priority.
+        if hdu_name in hdulist:
+            hdr = hdulist[hdu_name].header
+            break
+    return hdr
+
+
+def _hdu_to_sc(app, hdu, data_label, hdulist=None):
+    """Return HDU as (data type, Spectrum1D) tuple or throw exception."""
+    if hdu.data is None or not hdu.is_image or hdu.data.ndim != 3:
+        raise ValueError(f'HDU is not supported as data cube: {hdu}')
+
+    hdu_name = hdu.name.lower()
+    hdr = hdu.header
+    if hdu_name in ('flux', 'sci', 'primary'):
+        data_type = 'flux'
+        flux_unit = _get_flux_unit_from_hdu_header(app, hdr, data_label)
+        wcs = _get_wcs_from_hdu_header(app, hdr, data_label, hdulist=hdulist)
+    elif hdu_name in ('ivar', 'err', 'var', 'uncert') or 'errtype' in hdr:
+        data_type = 'uncert'
+        sci_hdr = _get_sci_hdr_from_hdulist(hdulist)
         try:
-            sc = Spectrum1D(flux=flux, wcs=wcs)
-        except Exception as e:
-            logging.warning(e)
-            continue
+            flux_unit = _get_flux_unit_from_hdu_header(app, hdr, data_label, strict=True)
+        except Exception:
+            if sci_hdr:  # Inherit from SCI
+                flux_unit = _get_flux_unit_from_hdu_header(app, sci_hdr, data_label)
+            else:
+                flux_unit = _get_flux_unit_from_hdu_header(app, hdr, data_label)
+        if sci_hdr:  # Inherit from SCI
+            wcs = _get_wcs_from_hdu_header(app, sci_hdr, data_label, hdulist=hdulist)
+        else:
+            wcs = _get_wcs_from_hdu_header(app, hdr, data_label, hdulist=hdulist)
+    # If the data type is some kind of integer, assume it's the mask/DQ
+    elif hdu_name in ('mask', 'dq') or hdu.data.dtype in (int, np.uint, np.uint32):
+        data_type = 'mask'
+        sci_hdr = _get_sci_hdr_from_hdulist(hdulist)
+        flux_unit = u.dimensionless_unscaled
+        if sci_hdr:  # Inherit from SCI
+            wcs = _get_wcs_from_hdu_header(app, sci_hdr, data_label, hdulist=hdulist)
+        else:
+            wcs = _get_wcs_from_hdu_header(app, hdr, data_label, hdulist=hdulist)
+    else:
+        raise ValueError(f'Unsupported extname={hdu.name} and/or dtype={hdu.data.dtype}')
 
-        app.add_data(sc, data_label)
-
-        # If the data type is some kind of integer, assume it's the mask/dq
-        if hdu.data.dtype in (int, np.uint, np.uint32) or \
-                any(x in hdu.name.lower() for x in EXT_TYPES['mask']):
-            app.add_data_to_viewer('mask-viewer', data_label)
-
-        if 'errtype' in [x.lower() for x in hdu.header.keys()] or \
-                any(x in hdu.name.lower() for x in EXT_TYPES['uncert']):
-            app.add_data_to_viewer('uncert-viewer', data_label)
-
-        if any(x in hdu.name.lower() for x in EXT_TYPES['flux']):
-            app.add_data_to_viewer('flux-viewer', data_label)
-            app.add_data_to_viewer('spectrum-viewer', data_label)
+    flux = hdu.data << flux_unit
+    return data_type, Spectrum1D(flux=flux, wcs=wcs)
 
 
-def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI', viewer_name='flux-viewer'):
-    from specutils import Spectrum1D
+def _show_data_in_cubeviz_viewer(app, data_label, data_type):
+    """Display data to Cubeviz viewer depending on given data type.
 
-    # Manually inject MJD-OBS until we can support GWCS, see
-    # https://github.com/spacetelescope/jdaviz/issues/690 and
-    # https://github.com/glue-viz/glue-astronomy/issues/59
-    if ext == 'SCI' and 'MJD-OBS' not in hdulist[ext].header:
+    Parameters
+    ----------
+    app : `~jdaviz.app.Application`
+        The application-level object used to reference the viewers.
+
+    data_label : str
+        The data label associated with ``sc``.
+
+    data_type : {'flux', 'uncert', 'mask'}
+        If ``'flux'`` is given, it also adds a collapsed cube as spectrum
+        to the spectrum viewer.
+
+    Raises
+    ------
+    ValueError
+        Invalid ``data_type``.
+
+    """
+    if data_type == 'flux':
+        app.add_data_to_viewer(f'{data_type}-viewer', data_label)
+        app.add_data_to_viewer('spectrum-viewer', data_label)
+    elif data_type in ('uncert', 'mask'):
+        app.add_data_to_viewer(f'{data_type}-viewer', data_label)
+    else:
+        raise ValueError(f"Cannot add {data_label} to {data_type} viewer, must be one of: "
+                         "flux, uncert, mask")
+
+
+def _fix_jwst_s3d_sci_header(hdulist):
+    """Manually inject MJD-OBS until we can support GWCS.
+    ``hdulist`` is modified in-place.
+    Also see https://github.com/spacetelescope/jdaviz/issues/690 and
+    https://github.com/glue-viz/glue-astronomy/issues/59
+    """
+    ext = 'SCI'
+    if 'MJD-OBS' not in hdulist[ext].header:
         for key in ('MJD-BEG', 'DATE-OBS'):  # Possible alternatives
             if key in hdulist[ext].header:
                 if key.startswith('MJD'):
@@ -147,26 +258,9 @@ def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI', viewer_name='flux-viewe
                     hdulist[ext].header['MJD-OBS'] = t.mjd
                     break
 
-    if ext == 'DQ':  # DQ flags have no unit
-        flux = hdulist[ext].data << u.dimensionless_unscaled
-    else:
-        unit = u.Unit(hdulist[ext].header.get('BUNIT', 'count'))
-        flux = hdulist[ext].data << unit
-    wcs = WCS(hdulist['SCI'].header, hdulist)  # Everything uses SCI WCS
-    data = Spectrum1D(flux, wcs=wcs)
 
-    # NOTE: Tried to only pass in sliced WCS but got error in Glue.
-    # sliced_wcs = wcs[:, 0, 0]  # Only want wavelengths
-    # data = Spectrum1D(flux, wcs=sliced_wcs)
-
-    app.add_data(data, data_label)
-    app.add_data_to_viewer(viewer_name, data_label)
-    if viewer_name == 'flux-viewer':
-        app.add_data_to_viewer('spectrum-viewer', data_label)
-
-
-def _parse_spectrum1d_3d(app, file_obj):
-    # Load spectrum1d as a cube
+def _parse_spectrum1d_3d(app, file_obj, base_data_label):
+    """Load Spectrum1D as a cube."""
 
     for attr in ["flux", "mask", "uncertainty"]:
         val = getattr(file_obj, attr)
@@ -174,36 +268,39 @@ def _parse_spectrum1d_3d(app, file_obj):
             continue
 
         if attr == "mask":
+            data_type = 'mask'
             flux = val << file_obj.flux.unit
         elif attr == "uncertainty":
+            data_type = 'uncert'
             if hasattr(val, "array"):
                 flux = u.Quantity(val.array, file_obj.flux.unit)
             else:
                 continue
         else:
+            data_type = 'flux'
             flux = val
 
         flux = np.moveaxis(flux, 1, 0)
 
         s1d = Spectrum1D(flux=flux, wcs=file_obj.wcs)
 
-        data_label = f"Unknown spectrum object[{attr.upper()}]"
+        data_label = f"{base_data_label}[{attr.upper()}]"
         app.add_data(s1d, data_label)
-
-        if attr == 'flux':
-            app.add_data_to_viewer('flux-viewer', data_label)
-            app.add_data_to_viewer('spectrum-viewer', data_label)
-        elif attr == 'mask':
-            app.add_data_to_viewer('mask-viewer', data_label)
-        else:  # 'uncertainty'
-            app.add_data_to_viewer('uncert-viewer', data_label)
+        _show_data_in_cubeviz_viewer(app, data_label, data_type)
 
 
-def _parse_spectrum1d(app, file_obj):
-    data_label = "Unknown spectrum object"
-
+def _parse_spectrum1d(app, file_obj, data_label, data_type='flux'):
     # TODO: glue-astronomy translators only look at the flux property of
-    #  specutils Spectrum1D objects. Fix to support uncertainties and masks.
+    # specutils Spectrum1D objects. Fix to support uncertainties and masks.
+    data_label = f"{data_label}[{data_type.upper()}]"
+    app.add_data(file_obj, data_label)
+    app.add_data_to_viewer('spectrum-viewer', data_label)
 
-    app.add_data(file_obj, f"{data_label}[FLUX]")
-    app.add_data_to_viewer('spectrum-viewer', f"{data_label}[FLUX]")
+
+def _parse_ndarray_3d(app, file_obj, data_label, data_type):
+    """Load 3D ndarray into Cubeviz."""
+    data_label = f"{data_label}[{data_type.upper()}]"
+    flux = file_obj << u.count
+    sc = Spectrum1D(flux, wcs=None)
+    app.add_data(sc, data_label)
+    _show_data_in_cubeviz_viewer(app, data_label, data_type)
