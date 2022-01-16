@@ -72,5 +72,6 @@ def test_spectrum1d_parse(spectrum1d, cubeviz_helper):
 
 
 def test_numpy_cube(cubeviz_helper):
-    with pytest.raises(NotImplementedError, match='Unsupported data format'):
-        cubeviz_helper.load_data(np.ones(27).reshape((3, 3, 3)))
+    cubeviz_helper.load_data(np.ones(27).reshape((3, 3, 3)))
+    assert len(cubeviz_helper.app.data_collection) == 1
+    assert cubeviz_helper.app.data_collection[0].label.endswith('[FLUX]')

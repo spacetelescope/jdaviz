@@ -91,6 +91,8 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
     elif isinstance(file_obj, np.ndarray):
         if data_label is None:
             data_label = f'ndarray|{str(base64.b85encode(uuid.uuid4().bytes), "utf-8")}'
+        if data_type is None:
+            data_type = 'flux'
 
         if file_obj.ndim == 3:
             _parse_ndarray_3d(app, file_obj, data_label, data_type)
