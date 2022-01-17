@@ -196,14 +196,14 @@
                   <p class="font-weight-bold">Name</p>
                 </v-col>
                 <v-col cols=7> <!-- covers rest value and unit cols below -->
-                  <p class="font-weight-bold">Rest Value</p>
+                  <p class="font-weight-bold">Rest/Obs</p>
                 </v-col>
               </v-row>
               <v-row
                 justify="center"
                 align="center"
                 class="row-no-outside-padding"
-                v-for="line in list_contents[item].lines"
+                v-for="(line, line_ind) in list_contents[item].lines"
               >
                 <v-col cols=5>
                   <j-tooltip tipid='plugin-line-lists-line-visible'>
@@ -216,8 +216,19 @@
                     </v-checkbox>
                   </j-tooltip>
                 </v-col>
-                <v-col cols=4 style="font-size: 10pt">
+                <v-col cols=2 style="font-size: 10pt">
                   {{ line.rest }}
+                </v-col>
+                <v-col cols=2 style="font-size: 10pt">
+                  <v-text-field
+                    v-model="line.obs"
+                    @input="(e) => change_line_obs({list_name: item, line_ind: line_ind, obs_new: parseFloat(e), avoid_feedback: true})"
+                    @blur="(e) => change_line_obs({list_name: item, line_ind: line_ind, obs_new: parseFloat(e), avoid_feedback: false})"
+                    step="0.1"
+                    class="mt-0 pt-0"
+                    type="number"
+                    style="min-width: 100px"
+                  ></v-text-field>
                 </v-col>
                 <v-col cols=3 style="font-size: 10pt">
                   {{ line.unit.replace("Angstrom", "&#8491;") }}

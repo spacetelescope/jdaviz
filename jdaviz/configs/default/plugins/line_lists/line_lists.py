@@ -63,6 +63,9 @@ class LineListTool(PluginTemplateMixin):
         self._global_redshift = 0
         self._rs_disable_observe = False
         self._rs_pause_tables = False
+        # track which line was recently changed to avoid recursive updates due to imprecise
+        # roundtripping
+        self._rs_line_obs_change = (None, None)
 
         # Watch for messages from Specviz helper redshift functions
         self.hub.subscribe(self, RedshiftMessage,
@@ -231,6 +234,12 @@ class LineListTool(PluginTemplateMixin):
         self.rs_redshift = np.round(self.rs_redshift + event['new'] - event['old'],
                                     self.rs_slider_ndigits)
 
+    def _rest_to_obs(self, rest, redshift=None):
+        if redshift is None:
+            redshift = float(self.rs_redshift)
+
+        return rest * (1+redshift)
+
     @observe('rs_redshift')
     def _on_rs_redshift_updated(self, event):
         if self._rs_disable_observe:
@@ -241,6 +250,32 @@ class LineListTool(PluginTemplateMixin):
             return
 
         value = event['new']
+        # update _global_redshift so new lines, etc, will adopt this latest value
+        self._global_redshift = value
+        self._rs_disable_observe = True
+        self.rs_rv = self._redshift_to_velocity(value)
+        self._rs_disable_observe = False
+
+        # TODO: try to avoid the second loop from below, careful to minimize updates to vue, maybe pause traitlets?
+        new_list_contents = {}
+        for list_name, line_list in self.list_contents.items():
+            for i, line in enumerate(line_list['lines']):
+                if self._rs_line_obs_change[0] == list_name and self._rs_line_obs_change[1] == i:
+                    # this trigger is coming from a manual change to the observed
+                    # wavelength and would result in a small change to the value before the 
+                    # user can finish typing.  So we'll just keep the old value until the 
+                    # widget is blurred (loses focus)
+                    line_list['lines'][i]['obs'] = self._rs_line_obs_change[2]
+                else:
+                    line_list['lines'][i]['obs'] = self._rest_to_obs(float(line['rest']))
+
+
+            new_list_contents[list_name] = line_list
+        self.list_contents = {}  # TODO: fix with dict magic thing
+        self.list_contents = new_list_contents
+
+
+        value = float(event['new'])
         # update _global_redshift so new lines, etc, will adopt this latest value
         self._global_redshift = value
         self._rs_disable_observe = True
@@ -260,6 +295,32 @@ class LineListTool(PluginTemplateMixin):
         self._rs_pause_tables = False
         self._rs_disable_observe = False
         self._on_rs_redshift_updated({'new': self.rs_redshift})
+
+    def vue_change_line_obs(self, kwargs):
+        # NOTE: we can only pass one argument from vue (it seems), so we'll pass as
+        # a dictionary (kwargs) instead of positional or keyword arguments (**kwargs)
+        line_obs = kwargs.get('obs_new')
+        if isinstance(line_obs, str) and not len(line_obs):
+            # empty string, we don't want to revert yet because then
+            # the user can never delete the entry and type something new
+            # so we'll just leave empty
+            return
+        list_name = kwargs.get('list_name')
+        line_ind = kwargs.get('line_ind')
+        line = self.list_contents[list_name]['lines'][line_ind]
+        line_rest = float(line['rest'])
+        if line_obs is None:
+            # then coming from the blur, we'll keep the latest update from the @change
+            line_obs = float(line['obs'])
+
+        # we don't want this call to recursively update THIS obs wavelength, but DO want it to
+        # update the RV and all other obs wavelengths.  Once tabbing or losing focus, vue will
+        # send another event with avoid_feedback=False so that the wavelength updates to
+        # exactly match the redshift (so that can be considered the ground truth value consistently)
+        if kwargs.get('avoid_feedback', False):
+            self._rs_line_obs_change = (list_name, line_ind, line_obs)
+        self.rs_redshift = (line_obs - line_rest) / line_rest
+        self._rs_line_obs_change = (None, None)
 
     @observe('rs_rv')
     def _on_rs_rv_updated(self, event):
@@ -374,6 +435,7 @@ class LineListTool(PluginTemplateMixin):
 
             temp_dict = {"linename": row["linename"],
                          "rest": row["rest"].value,
+                         "obs": self._rest_to_obs(row["rest"].value),
                          "unit": str(row["rest"].unit),
                          "colors": row["colors"] if "colors" in row else "#FF0000FF",
                          "show": row["show"],
@@ -449,6 +511,7 @@ class LineListTool(PluginTemplateMixin):
         for row in temp_table:
             temp_dict = {"linename": row["linename"],
                          "rest": row["rest"].value,
+                         "obs": self._rest_to_obs(row["rest"].value),
                          "unit": str(row["rest"].unit),
                          "colors": row["colors"],
                          "show": False,
@@ -482,6 +545,7 @@ class LineListTool(PluginTemplateMixin):
         list_contents = self.list_contents
         temp_dict = {"linename": self.custom_name,
                      "rest": float(self.custom_rest),
+                     "obs": self._rest_to_obs(float(self.custom_rest)),
                      "unit": self.custom_unit,
                      "colors": list_contents["Custom"]["color"],
                      "show": True
