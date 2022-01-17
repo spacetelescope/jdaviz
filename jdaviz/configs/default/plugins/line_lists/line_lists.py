@@ -255,46 +255,32 @@ class LineListTool(PluginTemplateMixin):
         self._rs_disable_observe = True
         self.rs_rv = self._redshift_to_velocity(value)
         self._rs_disable_observe = False
-
-        # TODO: try to avoid the second loop from below, careful to minimize updates to vue, maybe pause traitlets?
-        new_list_contents = {}
-        for list_name, line_list in self.list_contents.items():
-            for i, line in enumerate(line_list['lines']):
-                if self._rs_line_obs_change[0] == list_name and self._rs_line_obs_change[1] == i:
-                    # this trigger is coming from a manual change to the observed
-                    # wavelength and would result in a small change to the value before the 
-                    # user can finish typing.  So we'll just keep the old value until the 
-                    # widget is blurred (loses focus)
-                    line_list['lines'][i]['obs'] = self._rs_line_obs_change[2]
-                else:
-                    line_list['lines'][i]['obs'] = self._rest_to_obs(float(line['rest']))
-
-
-            new_list_contents[list_name] = line_list
-        self.list_contents = {}  # TODO: fix with dict magic thing
-        self.list_contents = new_list_contents
-
-
-        value = float(event['new'])
-        # update _global_redshift so new lines, etc, will adopt this latest value
-        self._global_redshift = value
-        self._rs_disable_observe = True
-        self.rs_rv = self._redshift_to_velocity(value)
-        self._rs_disable_observe = False
-
         self._update_line_positions()
 
         if not self._rs_pause_tables:
+            # TODO: try to avoid essentially repeating the loop from above, careful to minimize 
+            # updates to vue, maybe pause traitlets?
+            new_list_contents = {}
+            for list_name, line_list in self.list_contents.items():
+                for i, line in enumerate(line_list['lines']):
+                    if self._rs_line_obs_change[0] == list_name and self._rs_line_obs_change[1] == i:
+                        # this trigger is coming from a manual change to the observed
+                        # wavelength and would result in a small change to the value before the
+                        # user can finish typing.  So we'll just keep the old value until the
+                        # widget is blurred (loses focus)
+                        line_list['lines'][i]['obs'] = self._rs_line_obs_change[2]
+                    else:
+                        line_list['lines'][i]['obs'] = self._rest_to_obs(float(line['rest']))
+
+                new_list_contents[list_name] = line_list
+
+            self.list_contents = {}  # TODO: fix with dict magic thing
+            self.list_contents = new_list_contents
+
             # Send the redshift back to the Specviz helper (and also trigger
             # self._update_global_redshift)
-            msg = RedshiftMessage("redshift", self.rs_redshift, sender=self)
+            msg = RedshiftMessage("redshift", value, sender=self)
             self.app.hub.broadcast(msg)
-
-    def vue_unpause_tables(self, event=None):
-        # after losing focus, update any elements that were paused during changes
-        self._rs_pause_tables = False
-        self._rs_disable_observe = False
-        self._on_rs_redshift_updated({'new': self.rs_redshift})
 
     def vue_change_line_obs(self, kwargs):
         # NOTE: we can only pass one argument from vue (it seems), so we'll pass as
@@ -319,8 +305,16 @@ class LineListTool(PluginTemplateMixin):
         # exactly match the redshift (so that can be considered the ground truth value consistently)
         if kwargs.get('avoid_feedback', False):
             self._rs_line_obs_change = (list_name, line_ind, line_obs)
+        # ensure tables will update when rs_redshift change is observed
+        self._rs_pause_tables = kwargs.get('avoid_feedback', False)
         self.rs_redshift = (line_obs - line_rest) / line_rest
         self._rs_line_obs_change = (None, None)
+
+    def vue_unpause_tables(self, event=None):
+        # after losing focus, update any elements that were paused during changes
+        self._rs_pause_tables = False
+        self._rs_disable_observe = False
+        self._on_rs_redshift_updated({'new': self.rs_redshift})
 
     @observe('rs_rv')
     def _on_rs_rv_updated(self, event):
@@ -336,7 +330,7 @@ class LineListTool(PluginTemplateMixin):
         # prevent update the redshift from propagating back to an update in the rv
         self._rs_disable_observe = True
         # we'll wait until the blur event (which will call vue_unpause_tables)
-        # to update the value in the MOS table
+        # to update the value in the MOS table and observed wavelengths
         self._rs_pause_tables = True
         self.rs_redshift = redshift
         # but we do want to update the plotted lines
@@ -349,7 +343,8 @@ class LineListTool(PluginTemplateMixin):
         self.rs_slider = 0.0
         self._rs_disable_observe = False
         self._rs_pause_tables = False
-        # the redshift value in the MOS table wasn't updating during slide, so update them now
+        # the redshift value in the MOS table and observed wavelengths weren't
+        # updating during slide, so update them now
         self.vue_unpause_tables()
 
     def _auto_slider_range(self, event=None):

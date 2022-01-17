@@ -222,7 +222,7 @@
                     <v-text-field
                       v-model="line.obs"
                       @input="(e) => change_line_obs({list_name: item, line_ind: line_ind, obs_new: parseFloat(e), avoid_feedback: true})"
-                      @blur="(e) => change_line_obs({list_name: item, line_ind: line_ind, obs_new: parseFloat(e), avoid_feedback: false})"
+                      @blur="unpause_tables"
                       step="0.1"
                       class="mt-0 pt-0"
                       type="number"
