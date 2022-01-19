@@ -10,6 +10,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- New metadata viewer plugin. [#1035]
+
 Mosviz
 ^^^^^^
 
