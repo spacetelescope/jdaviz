@@ -16,13 +16,14 @@
 
     <div v-if="has_metadata">
       <j-plugin-section-header>Metadata</j-plugin-section-header>
-      <v-row>
+      <v-row no-gutters>
         <v-col cols=6><U>Key</U></v-col>
         <v-col cols=6><U>Value</U></v-col>
       </v-row>
       <v-row
         v-for="item in metadata"
-        :key="item[0]">
+        :key="item[0]"
+        no-gutters>
         <v-col cols=6>{{ item[0] }}</v-col>
         <v-col cols=6>{{ item[1] }}</v-col>
       </v-row>

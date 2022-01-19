@@ -1,5 +1,3 @@
-from copy import deepcopy
-
 from traitlets import Bool, List, Unicode, observe
 
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage
@@ -50,38 +48,55 @@ class MetadataViewer(TemplateMixin):
             self.has_metadata = True
 
 
-def _flatten_nested_dict_worker(d, parent_d=None, pfx=None):
-    """ASDF metadata is nested dict.
-    We have to flatten it so it displays nicely.
-    Input is modified in-place.
+# TODO: If this is natively supported by asdf in the future, replace with native function.
+# This code below is taken code from stdatamodels/model_base.py, and the method to_flat_dict()
+def flatten_nested_dict(asdfnode, include_arrays=True):
     """
-    for key in list(d.keys()):
-        if isinstance(d[key], dict):
-            out = _flatten_nested_dict_worker(d[key], d, key)
-            if out is not None:
-                new_key, val = out
-                d[new_key] = val
-            if len(d[key]) == 0:
-                d.pop(key)
-        elif pfx is not None and parent_d is not None:
-            val = d.pop(key)
-            return f'{pfx}.{key}', val
+    Returns a dictionary of all of the schema items as a flat dictionary.
+    Each dictionary key is a dot-separated name.  For example, the
+    schema element ``meta.observation.date`` at the root node
+    will end up in the dictionary as::
 
-
-def flatten_nested_dict(orig_meta):
-    """Return a copy of metadata that is flattened if the
-    input is a nested dictionary.
-
-    Example: ``meta = {'a': {'b': 1}}`` will become ``meta = {'a.b': 1}``.
+        { "meta.observation.date": "2012-04-22T03:22:05.432" }
 
     """
-    meta = deepcopy(orig_meta)
-    not_done = True
-    while not_done:
-        not_done = False
-        _flatten_nested_dict_worker(meta)
-        for key in list(meta.keys()):
-            if isinstance(meta[key], dict):
-                not_done = True
-                break
-    return meta
+    import datetime
+    import numpy as np
+    from astropy.time import Time
+
+    def convert_val(val):
+        if isinstance(val, datetime.datetime):
+            return val.isoformat()
+        elif isinstance(val, Time):
+            return str(val)
+        return val
+
+    if include_arrays:
+        return dict((key, convert_val(val)) for (key, val) in _iteritems(asdfnode))
+    else:
+        return dict((key, convert_val(val)) for (key, val) in _iteritems(asdfnode)
+                    if not isinstance(val, np.ndarray))
+
+
+def _iteritems(asdfnode):
+    """
+    Iterates over all of the schema items in a flat way.
+    Each element is a pair (`key`, `value`).  Each `key` is a
+    dot-separated name.  For example, the schema element
+    `meta.observation.date` will end up in the result as::
+        ("meta.observation.date": "2012-04-22T03:22:05.432")
+    """
+    def recurse(asdfnode, path=[]):
+        if isinstance(asdfnode, dict):
+            for key, val in asdfnode.items():
+                for x in recurse(val, path + [key]):
+                    yield x
+        elif isinstance(asdfnode, (list, tuple)):
+            for i, val in enumerate(asdfnode):
+                for x in recurse(val, path + [i]):
+                    yield x
+        elif asdfnode is not None:
+            yield ('.'.join(str(x) for x in path), asdfnode)
+
+    for x in recurse(asdfnode):
+        yield x
