@@ -1,8 +1,10 @@
+import astropy.units as u
 import numpy as np
 import pytest
 from glue.core import Data
 from glue.core.roi import RectangularROI, XRangeROI
 from numpy.testing import assert_allclose
+from specutils import SpectralRegion
 from regions import RectanglePixelRegion
 
 from jdaviz.app import Application
@@ -67,12 +69,12 @@ def test_region_from_subset_profile(jdaviz_app, spectral_cube_wcs):
     reg = subsets.get('Subset 1')
 
     assert len(subsets) == 1
-    assert isinstance(reg, RectanglePixelRegion)
+    assert isinstance(reg, SpectralRegion)
 
-    assert_allclose(reg.center.x, 2.25)
-    assert_allclose(reg.center.y, 128)
-    assert_allclose(reg.width, 2.5)
-    assert_allclose(reg.height, 256)
+    print(reg)
+
+    assert reg.lower == 4.0*u.Hz
+    assert reg.upper == 255.0 * u.Hz
 
 
 def test_region_spectral_spatial(jdaviz_app, spectral_cube_wcs):
@@ -93,12 +95,10 @@ def test_region_spectral_spatial(jdaviz_app, spectral_cube_wcs):
     reg = subsets.get('Subset 1')
 
     assert len(subsets) == 1
-    assert isinstance(reg, RectanglePixelRegion)
+    assert isinstance(reg, SpectralRegion)
 
-    assert_allclose(reg.center.x, 2.25)
-    assert_allclose(reg.center.y, 128)
-    assert_allclose(reg.width, 2.5)
-    assert_allclose(reg.height, 256)
+    assert reg.lower == 4.0*u.Hz
+    assert reg.upper == 255*u.Hz
 
     subsets = jdaviz_app.get_subsets_from_viewer('flux-viewer', subset_type='spatial')
     reg = subsets.get('Subset 2')

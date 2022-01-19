@@ -617,10 +617,12 @@ class Application(VuetifyTemplate, HubListener):
                     this_type = type(value.subset_state)
 
                 # Skip spatial or spectral subsets if only the other is wanted
-                if subset_type == "spectral" and this_type == RoiSubsetState:
-                    continue
-                elif subset_type == "spatial" and this_type == RangeSubsetState:
-                    continue
+                if subset_type == "spectral" or viewer_reference == "spectrum-viewer":
+                    if this_type == RoiSubsetState:
+                        continue
+                elif subset_type == "spatial" or viewer_reference != "spectrum-viewer":
+                    if this_type == RangeSubsetState:
+                        continue
 
                 # Range selection on a profile is currently not supported in
                 #  the glue translation machinery for astropy regions, so we
@@ -645,6 +647,14 @@ class Application(VuetifyTemplate, HubListener):
                             np.where(value.to_mask() == True)[0], # noqa
                             value.data.coords.spectral_axis)
 
+                    regions[key] = subregions_in_subset
+                    continue
+
+                temp_data = self.get_data_from_viewer(viewer_reference, value.label)
+                if isinstance(temp_data, Spectrum1D):
+                    subregions_in_subset = _get_all_subregions(
+                             np.where(temp_data.mask == True)[0], # noqa
+                             temp_data.spectral_axis)
                     regions[key] = subregions_in_subset
                     continue
 
