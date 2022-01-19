@@ -8,7 +8,7 @@ from glue.core.message import (SubsetCreateMessage,
                                SubsetUpdateMessage)
 from specutils import Spectrum1D, SpectralRegion
 from specutils.utils import QuantityModel
-from traitlets import Any, Bool, Int, List, Unicode, observe
+from traitlets import Any, Bool, List, Unicode, observe
 from glue.core.data import Data
 from glue.core.subset import Subset, RangeSubsetState, OrState, AndState
 from glue.core.link_helpers import LinkSame
@@ -16,29 +16,13 @@ from glue.core.link_helpers import LinkSame
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage, SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
+from jdaviz.core.custom_traitlets import IntHandleEmpty
 from jdaviz.configs.default.plugins.model_fitting.fitting_backend import fit_model_to_spectrum
 from jdaviz.configs.default.plugins.model_fitting.initializers import (MODELS,
                                                                        initialize,
                                                                        get_model_parameters)
 
 __all__ = ['ModelFitting']
-
-
-class IntHandleEmpty(Int):
-    def __init__(self, *args, **kwargs):
-        self._empty_to_default = kwargs.pop('replace_with_default', False)
-        super().__init__(*args, **kwargs)
-
-    def validate(self, obj, value):
-        if isinstance(value, str) and not len(value):
-            if self._empty_to_default:
-                # if the field is emptied, it will override with the default value
-                return self.default_value
-            # the value will remain as the empty string, likely will need to either
-            # couple this with form validation or handle the case where the value
-            # is an empty string once retrieved.
-            return value
-        return super().validate(obj, value)
 
 
 class _EmptyParam:
