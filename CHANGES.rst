@@ -33,6 +33,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Imviz no longer crashes when configuration is overwritten by MAST. [#1038]
+
 Mosviz
 ^^^^^^
 
