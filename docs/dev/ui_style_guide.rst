@@ -25,6 +25,18 @@ try to adhere to the following principles:
 * Use ``<v-row justify="end">`` to align content to the right (such as action buttons).
 * Use new ``<j-plugin-section-header>Header Text</j-plugin-section-header>`` to separate content 
   within a plugin (instead of nested cards, ``v-card-subtitle``, etc).
+* Number entries should use a ``<v-text-field type="number" v-model="traitlet_name">`` component 
+  *unless* requiring support for scientific notation (in which case 
+  ``<v-text-field @change="python_method">`` can be used with stripping invalid characters and
+  type-casting in python).  To handle emptying the input component without raising a traceback,
+  use an ``IntHandleEmpty`` traitlet instead, along with form-validation (see below) and/or
+  checks on the python-side to handle the case of an empty string.
+* Use form validation wherever possible, and disable action buttons if the relevant validation
+  does not pass.  This is preferred to raising errors through snackbars after pressing an action
+  button.  To do this, wrap the relevant section in a ``<v-form v-model="form_valid_section_name">``,
+  create a ``form_valid_section_name = Bool(False).tag(sync=True)`` in the python class for the 
+  plugin, add rules to any relevant inputs, and set ``:disabled="!form_valid_section_name"`` to any
+  action buttons.
 
 .. code::
 
@@ -37,5 +49,29 @@ try to adhere to the following principles:
         <v-row>
           ....
         </v-row>
+
+        <v-form v-model="form_valid">
+          <v-row>
+            <v-text-field
+              label="Label"
+              type="number"
+              v-model.number="int_handle_empty_traitlet"
+              :rules="[() => int_handle_empty_traitlet!=='' || 'This field is required']"
+              hint="Hint text."
+              persistent-hint
+            >
+            </v-text-field>
+          </v-row>
+
+          <v-row jutify="end">
+            <v-btn 
+              color="primary" 
+              text 
+              :disabled="!form_valid"
+              @click="(e) => {add_model(e); validate()}"
+              >Action Text
+            </v-btn>
+          </v-row>
+        </v-form>
       </j-tray-plugin>
     </template>

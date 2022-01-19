@@ -4,67 +4,80 @@
       <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#model-fitting'">Fit an analytic model to data or a subset.</j-docs-link>
     </v-row>
 
-    <v-row>
-      <v-select
-        :items="dc_items"
-        @change="data_selected"
-        label="Data"
-        hint="Select the data set to be fitted."
-        persistent-hint
-      ></v-select>
-    </v-row>
+    <v-form v-model="form_valid_data_selection">
+      <v-row>
+        <v-select
+          :items="dc_items"
+          v-model="selected_data"
+          label="Data"
+          hint="Select the data set to be fitted."
+          :rules="[() => !!selected_data || 'This field is required']"
+          persistent-hint
+        ></v-select>
+      </v-row>
 
-    <v-row>
-      <v-select
-        :items="spectral_subset_items"
-        v-model="selected_subset"
-        label="Spectral Region"
-        hint="Select spectral region to fit."
-        persistent-hint
-        @click="list_subsets"
-      ></v-select>
-    </v-row>
+      <v-row>
+        <v-select
+          :items="spectral_subset_items"
+          v-model="selected_subset"
+          label="Spectral Region"
+          hint="Select spectral region to fit."
+          persistent-hint
+          @click="list_subsets"
+        ></v-select>
+      </v-row>
+    </v-form>
 
     <j-plugin-section-header>Model Components</j-plugin-section-header>
-    <v-row>
-      <v-select
-        :items="available_models"
-        @change="model_selected"
-        label="Model"
-        hint="Select a model to fit."
-        persistent-hint
-      ></v-select>
-    </v-row>
+    <v-form v-model="form_valid_model_component">
+      <v-row>
+        <v-select
+          :items="available_models"
+          @change="model_selected"
+          label="Model"
+          hint="Select a model to fit."
+          persistent-hint
+          :rules="[() => model_selected!=='' || 'This field is required']"
+        ></v-select>
+      </v-row>
 
-    <v-row>
-      <v-text-field
-        label="Model ID"
-        v-model="temp_name"
-        @change="sanitizeModelId"
-        hint="A unique string label for this component model."
-        persistent-hint
-        :rules="[() => !!temp_name || 'This field is required',
-                 () => component_models.map((item) => item.id).indexOf(temp_name) === -1 || 'ID already in use']"
-      >
-      </v-text-field>
-    </v-row>
+      <v-row>
+        <v-text-field
+          label="Model ID"
+          v-model="temp_name"
+          @change="sanitizeModelId"
+          hint="A unique string label for this component model."
+          persistent-hint
+          :rules="[() => temp_name!=='' || 'This field is required',
+                   () => component_models.map((item) => item.id).indexOf(temp_name) === -1 || 'ID already in use']"
+        >
+        </v-text-field>
+      </v-row>
 
-    <v-row v-if="display_order">
-      <v-text-field
-        label="Order"
-        type="number"
-        v-model.number="poly_order"
-        hint="Order of polynomial to fit."
-        persistent-hint
-      >
-      </v-text-field>
-    </v-row>
+      <v-row v-if="display_order">
+        <v-text-field
+          label="Order"
+          type="number"
+          v-model.number="poly_order"
+          :rules="[() => poly_order!=='' || 'This field is required']"
+          hint="Order of polynomial to fit."
+          persistent-hint
+        >
+        </v-text-field>
+      </v-row>
 
-    <v-row justify="end">
-      <j-tooltip tipid='plugin-model-fitting-add-model'>
-        <v-btn color="primary" text @click="add_model">Add Component</v-btn>
-      </j-tooltip>
-    </v-row>
+      <v-row justify="end">
+        <j-tooltip tipid='plugin-model-fitting-add-model'>
+          <v-btn 
+            color="primary" 
+            text 
+            :disabled="!form_valid_model_component || !form_valid_data_selection"
+            @click="add_model"
+            >Add Component
+          </v-btn>
+        </j-tooltip>
+      </v-row>
+    </v-form>
 
     <div v-if="component_models.length">
       <j-plugin-section-header>Model Parameters</j-plugin-section-header>
