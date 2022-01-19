@@ -24,8 +24,13 @@ attribute of the `~jdaviz.configs.cubeviz.helper.Cubeviz` helper class. For exam
      cubeviz.app.get_data_from_viewer('flux-viewer')
 
 This code can be used to access data from the different viewers, which is returned as a dictionary.
-The viewer options in the Cubeviz configuration are ``spectrum-viewer``, ``flux-viewer``,
-``uncert-viewer``, and ``mask-viewer``.
+The viewer options in the Cubeviz configuration are:
+
+* ``flux-viewer`` (top left)
+* ``uncert-viewer`` (top center)
+* ``mask-viewer`` (top right)
+* ``spectrum-viewer`` (bottom)
+
 Using the appropriate data label, the data in its native type can be returned from this dictionary like
 so::
 

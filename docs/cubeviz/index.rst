@@ -40,12 +40,11 @@ Future functionality will include the ability to:
 
 * save and restore a session,
 
-
 * create RGB images from regions collapsed in wavelength space (i.e., linemaps),
 
-* output python scripts for making figures,
+* output Python scripts for making figures,
 
-* output astropy commands,
+* output ``astropy`` commands,
 
 * match spatial resolution among selected data cubes,
 

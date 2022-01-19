@@ -27,17 +27,10 @@ In a Jupyter Notebook
 ---------------------
 
 ``jdaviz`` provides a directory of sample notebooks to test the application, located in the ``notebooks`` sub-directory
-of the git repository.  ``Example.ipynb`` is provided as an example that loads a SDSS MaNGA IFU data cube with the
-``Cubeviz`` configuration.  To run the provided example, start the jupyter kernel with the notebook path::
+of the Git repository.  For instance, the following example loads a SDSS MaNGA IFU data cube with the
+Cubeviz configuration.  To run it, start the Jupyter kernel with the notebook path::
 
-    jupyter notebook /path/to/jdaviz/notebooks/Example.ipynb
+    jupyter notebook /path/to/jdaviz/notebooks/CubevizExample.ipynb
 
-or simply start a new Jupyter notebook and run the following in a cell::
-
-    from jdaviz import Application
-
-    app = Application()
-    app
-
-To learn more about the various ``jdaviz`` application configurations and loading data, see the :ref:`cubeviz`,
-:ref:`specviz`, :ref:`mosviz`, or :ref:`imviz` tools.
+To learn more about the various ``jdaviz`` application configurations and loading data, see
+:ref:`notebook_import_data`, :ref:`cubeviz`, :ref:`specviz`, :ref:`mosviz`, or :ref:`imviz`.

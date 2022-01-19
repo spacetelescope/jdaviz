@@ -1,3 +1,5 @@
+.. _notebook_import_data:
+
 ***********************************
 Import Data From Notebook to Jdaviz
 ***********************************
