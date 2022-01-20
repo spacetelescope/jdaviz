@@ -140,6 +140,9 @@ class Mosviz(ConfigHelper):
         min_1d = self._scales1d.min
         max_1d = self._scales1d.max
 
+        if "spectrum-viewer" not in table_viewer._selected_data:  # Partial loading state
+            return
+
         spec1d = table_viewer._selected_data["spectrum-viewer"]
         extend_by = int(self.app.data_collection[spec1d]["World 0"].shape[0])
         world = self._extend_world(spec1d, extend_by)
@@ -176,6 +179,9 @@ class Mosviz(ConfigHelper):
 
         min_2d = self._scales2d.min
         max_2d = self._scales2d.max
+
+        if "spectrum-viewer" not in table_viewer._selected_data:  # Partial loading state
+            return
 
         spec1d = table_viewer._selected_data["spectrum-viewer"]
         extend_by = int(self.app.data_collection[spec1d]["World 0"].shape[0])
@@ -448,8 +454,8 @@ class Mosviz(ConfigHelper):
             self.load_metadata(spectra_2d, spectra=True)
 
         elif spectra_1d is not None and spectra_2d is not None:
-            self.load_2d_spectra(spectra_2d, spectra_2d_label)
-            self.load_1d_spectra(spectra_1d, spectra_1d_label)
+            self.load_2d_spectra(spectra_2d, spectra_2d_label, show_in_viewer=True)
+            self.load_1d_spectra(spectra_1d, spectra_1d_label, show_in_viewer=True)
             self.load_metadata(spectra_2d, spectra=True)
             self.load_metadata(spectra_1d, spectra=True, sp1d=True, ids=spectra_1d)
 
@@ -547,7 +553,7 @@ class Mosviz(ConfigHelper):
         self.app.load_data(data_obj, ids=ids, spectra=spectra, sp1d=sp1d,
                            parser_reference="mosviz-metadata-parser")
 
-    def load_1d_spectra(self, data_obj, data_labels=None):
+    def load_1d_spectra(self, data_obj, data_labels=None, show_in_viewer=False):
         """
         Load and parse a set of 1D spectra objects.
 
@@ -561,12 +567,14 @@ class Mosviz(ConfigHelper):
             String representing the label for the data item loaded via
             ``data_obj``. Can be a list of strings representing data labels
             for each item in ``data_obj`` if  ``data_obj`` is a list.
+        show_in_viewer : bool
+            Show the first spectrum in viewer.
         """
         super().load_data(data_obj, parser_reference="mosviz-spec1d-parser",
-                          data_labels=data_labels)
+                          data_labels=data_labels, show_in_viewer=show_in_viewer)
         self._add_redshift_column()
 
-    def load_2d_spectra(self, data_obj, data_labels=None):
+    def load_2d_spectra(self, data_obj, data_labels=None, show_in_viewer=False):
         """
         Load and parse a set of 2D spectra objects.
 
@@ -580,9 +588,11 @@ class Mosviz(ConfigHelper):
             String representing the label for the data item loaded via
             ``data_obj``. Can be a list of strings representing data labels
             for each item in ``data_obj`` if  ``data_obj`` is a list.
+        show_in_viewer : bool
+            Show the data in viewer.
         """
         super().load_data(data_obj, parser_reference="mosviz-spec2d-parser",
-                          data_labels=data_labels)
+                          data_labels=data_labels, show_in_viewer=show_in_viewer)
         self._add_redshift_column()
 
     def load_niriss_data(self, data_obj, data_labels=None):
@@ -920,7 +930,11 @@ class Mosviz(ConfigHelper):
             raise ValueError(f"row must be between 0 and {len(data_labels)-1}")
 
         data_label = data_labels[row]
-        spectra = self.app.data_collection[data_label].get_object()
+        if column == '2D Spectra':
+            kwargs = {'statistic': None}
+        else:
+            kwargs = {}
+        spectra = self.app.data_collection[data_label].get_object(**kwargs)
         if not apply_slider_redshift:
             return spectra
         else:

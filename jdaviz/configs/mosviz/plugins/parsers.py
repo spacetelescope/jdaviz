@@ -128,7 +128,7 @@ def link_data_in_table(app, data_obj=None):
             wc_spec_1d = app.session.data_collection[spec_1d].world_component_ids
             wc_spec_2d = app.session.data_collection[spec_2d].world_component_ids
 
-            wc_spec_ids.append(LinkSame(wc_spec_1d[0], wc_spec_2d[1]))
+            wc_spec_ids.append(LinkSame(wc_spec_1d[0], wc_spec_2d[-1]))
 
         # Link each 1D spectrum to all other 1D spectra
         first_spec_1d = spectra_1d[0]
@@ -189,7 +189,7 @@ def mos_nirspec_directory_parser(app, data_obj, data_labels=None):
 
 
 @data_parser_registry("mosviz-spec1d-parser")
-def mos_spec1d_parser(app, data_obj, data_labels=None):
+def mos_spec1d_parser(app, data_obj, data_labels=None, show_in_viewer=False):
     """
     Attempts to parse a 1D spectrum object.
 
@@ -202,6 +202,8 @@ def mos_spec1d_parser(app, data_obj, data_labels=None):
         the mosviz table.
     data_labels : str, optional
         The label applied to the glue data component.
+    show_in_viewer : bool
+        Show the first spectrum in viewer.
     """
 
     if isinstance(data_labels, str):
@@ -227,6 +229,10 @@ def mos_spec1d_parser(app, data_obj, data_labels=None):
 
         _add_to_table(app, data_labels, '1D Spectra')
 
+    if show_in_viewer:
+        # Just show the first one.
+        app.add_data_to_viewer("spectrum-viewer", data_labels[0])
+
 
 @data_parser_registry("mosviz-spec2d-parser")
 def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
@@ -248,6 +254,8 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
         the mosviz table.
     data_labels : str, optional
         The label applied to the glue data component.
+    show_in_viewer : bool
+        Show the data in viewer.
     """
     def _parse_as_spectrum1d(path):
         # Parse as a FITS file and assume the WCS is correct
