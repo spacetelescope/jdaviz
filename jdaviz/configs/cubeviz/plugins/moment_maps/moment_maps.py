@@ -6,8 +6,7 @@ from astropy.nddata import CCDData
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
 from traitlets import List, Unicode, Any, Bool, observe
-from specutils import Spectrum1D, manipulation, SpectralRegion, analysis
-from regions import RectanglePixelRegion
+from specutils import Spectrum1D, manipulation, analysis
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
