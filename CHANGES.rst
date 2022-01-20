@@ -41,6 +41,8 @@ Mosviz
 Specviz
 ^^^^^^^
 
+- Fix corrupted voila launch notebook. [#1044]
+
 Other Changes and Additions
 ---------------------------
 
