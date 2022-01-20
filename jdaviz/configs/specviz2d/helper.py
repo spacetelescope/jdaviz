@@ -106,13 +106,11 @@ class Specviz2d(ConfigHelper):
 
         spectrum_1d_label : str
             String representing the label for the data item loaded via
-            ``onedspectra``. Can be a list of strings representing data labels
-            for each item in ``data_obj`` if  ``data_obj`` is a list.
+            ``spectrum_1d``.
 
         spectrum_2d_label : str
             String representing the label for the data item loaded via
-            ``twodspectra``. Can be a list of strings representing data labels
-            for each item in ``data_obj`` if  ``data_obj`` is a list.
+            ``spectrum_2d``.
 
         """
         if spectrum_2d_label is None:
