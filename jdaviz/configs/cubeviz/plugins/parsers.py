@@ -23,7 +23,7 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
     ----------
     app : `~jdaviz.app.Application`
         The application-level object used to reference the viewers.
-    file_obj : str, `~fits.hdu.hdulist.ImageHDU`, `~fits.hdu.hdulist.PrimaryHDU`, `~fits.hdu.hdulist.HDUList`, `~specutils.Spectrum1D`, or ndarray
+    file_obj : str, `~astropy.io.fits.ImageHDU`, `~astropy.io.fits.PrimaryHDU`, `~astropy.io.fits.HDUList`, `~specutils.Spectrum1D`, or ndarray
         The path to a cube-like data FITS file or the data object to be loaded.
     data_type : {'flux', 'uncert', 'mask', `None`}
         The data type used to explicitly differentiate parsed data.
