@@ -189,7 +189,7 @@ def mos_nirspec_directory_parser(app, data_obj, data_labels=None):
 
 
 @data_parser_registry("mosviz-spec1d-parser")
-def mos_spec1d_parser(app, data_obj, data_labels=None, show_in_viewer=False):
+def mos_spec1d_parser(app, data_obj, data_labels=None, show_in_viewer=False, format=None):
     """
     Attempts to parse a 1D spectrum object.
 
@@ -204,6 +204,8 @@ def mos_spec1d_parser(app, data_obj, data_labels=None, show_in_viewer=False):
         The label applied to the glue data component.
     show_in_viewer : bool
         Show the first spectrum in viewer.
+    format : str or `None`
+        Format for ``specutils`` loader if filename is provided.
     """
 
     if isinstance(data_labels, str):
@@ -213,7 +215,7 @@ def mos_spec1d_parser(app, data_obj, data_labels=None, show_in_viewer=False):
     if not isinstance(data_obj, (list, tuple, SpectrumCollection)):
         data_obj = [data_obj]
 
-    data_obj = [Spectrum1D.read(x) if _check_is_file(x) else x for x in data_obj]
+    data_obj = [Spectrum1D.read(x, format=format) if _check_is_file(x) else x for x in data_obj]
 
     if data_labels is None:
         data_labels = [f"1D Spectrum {i}" for i in range(len(data_obj))]
@@ -236,7 +238,7 @@ def mos_spec1d_parser(app, data_obj, data_labels=None, show_in_viewer=False):
 
 @data_parser_registry("mosviz-spec2d-parser")
 def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
-                      show_in_viewer=False):
+                      show_in_viewer=False, format=None):
     """
     Attempts to parse a 2D spectrum object.
 
@@ -256,6 +258,8 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
         The label applied to the glue data component.
     show_in_viewer : bool
         Show the data in viewer.
+    format : str or `None`
+        Format for ``specutils`` loader if filename is provided.
     """
     def _parse_as_spectrum1d(path):
         # Parse as a FITS file and assume the WCS is correct
@@ -289,7 +293,7 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
             # FITS file.
             if _check_is_file(data):
                 try:
-                    data = Spectrum1D.read(data)
+                    data = Spectrum1D.read(data, format=format)
                 except IORegistryError:
                     data = _parse_as_spectrum1d(data)
 
@@ -312,9 +316,7 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
             _add_to_table(app, data_labels, '2D Spectra')
 
     if show_in_viewer:
-        if len(data_labels) > 1:
-            raise ValueError("More than one data label provided, unclear " +
-                             "which to show in viewer")
+        # Just show the first one
         app.add_data_to_viewer("spectrum-2d-viewer", data_labels[0])
 
 

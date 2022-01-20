@@ -379,7 +379,7 @@ class Mosviz(ConfigHelper):
 
     def load_data(self, spectra_1d=None, spectra_2d=None, images=None,
                   spectra_1d_label=None, spectra_2d_label=None,
-                  images_label=None, *args, **kwargs):
+                  images_label=None, format_1d=None, format_2d=None, *args, **kwargs):
         """
         Load and parse a set of MOS spectra and images
 
@@ -414,6 +414,9 @@ class Mosviz(ConfigHelper):
             String representing the label for the data item loaded via
             ``images``. Can be a list of strings representing data labels
             for each item in ``images`` if  ``images`` is a list.
+
+        format_1d, format_2d : str or `None`
+            Format for ``specutils`` data loader, if it cannot guess automatically.
         """
         # Link data after everything is loaded
         self.app.auto_link = False
@@ -454,8 +457,8 @@ class Mosviz(ConfigHelper):
             self.load_metadata(spectra_2d, spectra=True)
 
         elif spectra_1d is not None and spectra_2d is not None:
-            self.load_2d_spectra(spectra_2d, spectra_2d_label, show_in_viewer=True)
-            self.load_1d_spectra(spectra_1d, spectra_1d_label, show_in_viewer=True)
+            self.load_2d_spectra(spectra_2d, spectra_2d_label, format=format_2d, show_in_viewer=True)
+            self.load_1d_spectra(spectra_1d, spectra_1d_label, format=format_1d, show_in_viewer=True)
             self.load_metadata(spectra_2d, spectra=True)
             self.load_metadata(spectra_1d, spectra=True, sp1d=True, ids=spectra_1d)
 
@@ -553,7 +556,7 @@ class Mosviz(ConfigHelper):
         self.app.load_data(data_obj, ids=ids, spectra=spectra, sp1d=sp1d,
                            parser_reference="mosviz-metadata-parser")
 
-    def load_1d_spectra(self, data_obj, data_labels=None, show_in_viewer=False):
+    def load_1d_spectra(self, data_obj, data_labels=None, show_in_viewer=False, format=None):
         """
         Load and parse a set of 1D spectra objects.
 
@@ -571,10 +574,10 @@ class Mosviz(ConfigHelper):
             Show the first spectrum in viewer.
         """
         super().load_data(data_obj, parser_reference="mosviz-spec1d-parser",
-                          data_labels=data_labels, show_in_viewer=show_in_viewer)
+                          data_labels=data_labels, show_in_viewer=show_in_viewer, format=format)
         self._add_redshift_column()
 
-    def load_2d_spectra(self, data_obj, data_labels=None, show_in_viewer=False):
+    def load_2d_spectra(self, data_obj, data_labels=None, show_in_viewer=False, format=None):
         """
         Load and parse a set of 2D spectra objects.
 
@@ -592,7 +595,7 @@ class Mosviz(ConfigHelper):
             Show the data in viewer.
         """
         super().load_data(data_obj, parser_reference="mosviz-spec2d-parser",
-                          data_labels=data_labels, show_in_viewer=show_in_viewer)
+                          data_labels=data_labels, show_in_viewer=show_in_viewer, format=format)
         self._add_redshift_column()
 
     def load_niriss_data(self, data_obj, data_labels=None):
