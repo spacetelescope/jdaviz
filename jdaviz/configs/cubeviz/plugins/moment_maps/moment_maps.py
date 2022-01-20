@@ -33,8 +33,8 @@ class MomentMap(TemplateMixin):
     spectral_min = Any().tag(sync=True)
     spectral_max = Any().tag(sync=True)
     spectral_unit = Unicode().tag(sync=True)
-    spectral_subset_items = List(["None"]).tag(sync=True)
-    selected_subset = Unicode("None").tag(sync=True)
+    spectral_subset_items = List(["Entire Spectrum"]).tag(sync=True)
+    selected_subset = Unicode("Entire Spectrum").tag(sync=True)
 
     # NOTE: this is currently cubeviz-specific so will need to be updated
     # to be config-specific if using within other viewer configurations.
@@ -95,17 +95,14 @@ class MomentMap(TemplateMixin):
     def _on_subset_selected(self, event):
         # If "None" selected, reset based on bounds of selected data
         self._selected_subset = self.selected_subset
-        if self._selected_subset == "None":
+        if self._selected_subset == "Entire Spectrum":
             cube = self._selected_data.get_object(cls=Spectrum1D, statistic=None)
             self.spectral_min = cube.spectral_axis[0].value
             self.spectral_max = cube.spectral_axis[-1].value
         else:
             spec_sub = self._spectral_subsets[self._selected_subset]
-            unit = u.Unit(self.spectral_unit)
-            spec_reg = SpectralRegion.from_center(spec_sub.center.x * unit,
-                                                  spec_sub.width * unit)
-            self.spectral_min = spec_reg.lower.value
-            self.spectral_max = spec_reg.upper.value
+            self.spectral_min = spec_sub.lower.value
+            self.spectral_max = spec_sub.upper.value
 
     @observe("filename")
     def _on_filename_changed(self, event):
@@ -113,16 +110,8 @@ class MomentMap(TemplateMixin):
 
     def vue_list_subsets(self, event):
         """Populate the spectral subset selection dropdown"""
-        temp_subsets = self.app.get_subsets_from_viewer("spectrum-viewer")
-        temp_list = ["None"]
-        temp_dict = {}
-        # Attempt to filter out spatial subsets
-        for key, region in temp_subsets.items():
-            if type(region) == RectanglePixelRegion:
-                temp_dict[key] = region
-                temp_list.append(key)
-        self._spectral_subsets = temp_dict
-        self.spectral_subset_items = temp_list
+        self._spectral_subsets = self.app.get_subsets_from_viewer("spectrum-viewer")
+        self.spectral_subset_items = ["Entire Spectrum"] + list(self._spectral_subsets.keys())
 
     def vue_calculate_moment(self, *args):
         # Retrieve the data cube and slice out desired region, if specified
