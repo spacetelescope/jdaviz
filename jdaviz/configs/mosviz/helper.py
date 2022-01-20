@@ -396,18 +396,18 @@ class Mosviz(ConfigHelper):
 
         spectra_1d_label : str or list
             String representing the label for the data item loaded via
-            ``onedspectra``. Can be a list of strings representing data labels
-            for each item in ``data_obj`` if  ``data_obj`` is a list.
+            ``spectra_1d``. Can be a list of strings representing data labels
+            for each item in ``spectra_1d`` if  ``spectra_1d`` is a list.
 
         spectra_2d_label : str or list
             String representing the label for the data item loaded via
-            ``twodspectra``. Can be a list of strings representing data labels
-            for each item in ``data_obj`` if  ``data_obj`` is a list.
+            ``spectra_2d``. Can be a list of strings representing data labels
+            for each item in ``spectra_2d`` if  ``spectra_2d`` is a list.
 
         images_label : str or list
             String representing the label for the data item loaded via
             ``images``. Can be a list of strings representing data labels
-            for each item in ``data_obj`` if  ``data_obj`` is a list.
+            for each item in ``images`` if  ``images`` is a list.
         """
         # Link data after everything is loaded
         self.app.auto_link = False
