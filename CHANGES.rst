@@ -34,6 +34,9 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- Subsets from the spectrum viewer are now returned as SpectralRegion objects, and
+  properly handle the case of multiple subregions. [#1046]
+
 Imviz
 ^^^^^
 
