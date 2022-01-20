@@ -42,7 +42,7 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
         Unsupported data format.
 
     """  # noqa: E501
-    valid_data_types = ('flux', 'mask', 'uncert')
+    valid_data_types = ('flux', 'uncert', 'mask')
     if data_type is not None:
         data_type = data_type.lower()
         if data_type not in valid_data_types:
@@ -57,12 +57,12 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
             prihdr = hdulist[0].header
             telescop = prihdr.get('TELESCOP', '').lower()
             filetype = prihdr.get('FILETYPE', '').lower()
-            if telescop == 'jwst' and filetype == '3d ifu cube':
+            if telescop == 'jwst' and filetype == '3d ifu cube':  # pragma: no cover
                 _fix_jwst_s3d_sci_header(hdulist)
             _parse_hdulist(app, hdulist, data_label)
 
     elif isinstance(file_obj, HDUList):
-        if data_label is None:
+        if data_label is None:  # pragma: no cover
             if hasattr(file_obj, 'file_name'):
                 data_label = file_obj.file_name
             else:
@@ -71,7 +71,7 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
         _parse_hdulist(app, file_obj, data_label)
 
     elif isinstance(file_obj, (ImageHDU, PrimaryHDU)):
-        if data_label is None:
+        if data_label is None:  # pragma: no cover
             data_label = f'{file_obj.__class__.__name__}|{str(base64.b85encode(uuid.uuid4().bytes), "utf-8")}'  # noqa: E501
         _parse_hdu(app, file_obj, data_label)
 
@@ -261,7 +261,7 @@ def _show_data_in_cubeviz_viewer(app, data_label, data_type):
         app.add_data_to_viewer('spectrum-viewer', data_label)
     elif data_type in ('uncert', 'mask'):
         app.add_data_to_viewer(f'{data_type}-viewer', data_label)
-    else:
+    else:  # pragma: no cover
         raise ValueError(f"Cannot add {data_label} to {data_type} viewer, must be one of: "
                          "flux, uncert, mask")
 
@@ -289,25 +289,22 @@ def _fix_jwst_s3d_sci_header(hdulist):
 def _parse_spectrum1d_3d(app, file_obj, base_data_label):
     """Load Spectrum1D as a cube."""
 
-    for attr in ["flux", "mask", "uncertainty"]:
+    for attr in ("flux", "uncertainty", "mask"):
         val = getattr(file_obj, attr)
-        if val is None:
+        if val is None:  # pragma: no cover
             continue
 
-        if attr == "mask":
-            data_type = 'mask'
-            flux = val << file_obj.flux.unit
-        elif attr == "uncertainty":
-            data_type = 'uncert'
-            if hasattr(val, "array"):
-                flux = u.Quantity(val.array, file_obj.flux.unit)
-            else:
-                continue
-        else:
+        if attr == "flux":
             data_type = 'flux'
             flux = val
-
-        flux = np.moveaxis(flux, 1, 0)
+        elif attr == "uncertainty" and hasattr(val, "array"):
+            data_type = 'uncert'
+            flux = val.array << file_obj.flux.unit
+        elif attr == "mask":
+            data_type = 'mask'
+            flux = val << u.dimensionless_unscaled
+        else:  # pragma: no cover
+            continue
 
         s1d = Spectrum1D(flux=flux, wcs=file_obj.wcs)
 
@@ -327,7 +324,11 @@ def _parse_spectrum1d(app, file_obj, data_label, data_type='flux'):
 def _parse_ndarray_3d(app, file_obj, data_label, data_type):
     """Load 3D ndarray into Cubeviz."""
     data_label = f"{data_label}[{data_type.upper()}]"
-    flux = file_obj << u.count
+    if data_type == 'mask':
+        flux_unit = u.dimensionless_unscaled
+    else:
+        flux_unit = u.count
+    flux = file_obj << flux_unit
     fake_wcs = generate_dummy_fits_wcs_3d()
     sc = Spectrum1D(flux, wcs=fake_wcs)
     app.add_data(sc, data_label)

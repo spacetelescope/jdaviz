@@ -51,11 +51,10 @@ def spectral_cube_wcs(request):
 
 @pytest.fixture
 def spectrum1d_cube_wcs(request):
-    # A simple spectrum1D WCS used by some tests
-    wcs = WCS(naxis=3)
-    wcs.wcs.ctype = 'RA---TAN', 'DEC--TAN', 'WAVE-LOG'
-    wcs.wcs.set()
-    return wcs
+    return WCS({"CTYPE1": "RA---TAN", "CTYPE2": "DEC--TAN", "CTYPE3": "WAVE-LOG",
+                "CRVAL1": 205, "CRVAL2": 27, "CRVAL3": 4.622e-7,
+                "CDELT1": -0.0001, "CDELT2": 0.0001, "CDELT3": 8e-11,
+                "CRPIX1": 0, "CRPIX2": 0, "CRPIX3": 0})
 
 
 @pytest.fixture
@@ -72,17 +71,12 @@ def spectrum1d():
 
 
 @pytest.fixture
-def spectrum1d_cube():
+def spectrum1d_cube(spectrum1d_cube_wcs):
     flux = np.arange(16).reshape((2, 2, 4)) * u.Jy
-    wcs_dict = {"CTYPE1": "RA---TAN", "CTYPE2": "DEC--TAN", "CTYPE3": "WAVE-LOG",
-                "CRVAL1": 205, "CRVAL2": 27, "CRVAL3": 4.622e-7,
-                "CDELT1": -0.0001, "CDELT2": 0.0001, "CDELT3": 8e-11,
-                "CRPIX1": 0, "CRPIX2": 0, "CRPIX3": 0}
-    w = WCS(wcs_dict)
-
-    spec = Spectrum1D(flux=flux, wcs=w)
-
-    return spec
+    uncert = StdDevUncertainty()
+    uncert.array = np.ones(flux.shape, dtype=np.float32)
+    mask = np.zeros(flux.shape, dtype=np.int16)
+    return Spectrum1D(flux=flux, uncertainty=uncert, mask=mask, wcs=spectrum1d_cube_wcs)
 
 
 try:
