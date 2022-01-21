@@ -457,8 +457,11 @@ class Mosviz(ConfigHelper):
             self.load_metadata(spectra_2d, spectra=True)
 
         elif spectra_1d is not None and spectra_2d is not None:
-            self.load_2d_spectra(spectra_2d, spectra_2d_label, format=format_2d, show_in_viewer=True)
-            self.load_1d_spectra(spectra_1d, spectra_1d_label, format=format_1d, show_in_viewer=True)
+            # we'll delay showing the data until setting the first (0) row to be highlighted
+            self.load_2d_spectra(spectra_2d, spectra_2d_label,
+                                 format=format_2d, show_in_viewer=False)
+            self.load_1d_spectra(spectra_1d, spectra_1d_label,
+                                 format=format_1d, show_in_viewer=False)
             self.load_metadata(spectra_2d, spectra=True)
             self.load_metadata(spectra_1d, spectra=True, sp1d=True, ids=spectra_1d)
 
