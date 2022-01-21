@@ -53,10 +53,9 @@ Redshift Slider
 ---------------
 
 .. warning::
-    Using the redshift slider with many active spectral lines can be slow, as
-    every line gets replotted at each slider position. We recommended using 
-    the slider with no more than around a dozen lines plotted. You can deselect
-    lines using, e.g., the "Hide All" button in the line lists UI.
+    Using the redshift slider with many active spectral lines cause performance issues.
+    If reactions to the redshift slider are laggy, try plotting less lines. You can deselect
+    lines using, e.g., the "Erase All" button in the line lists UI.
 
 As in :ref:`Specviz <line-lists>`, the Line Lists Plugin includes a slider to adjust the redshift
 or radial velocity.  In Mosviz, this is applied to the current row in the table
