@@ -268,7 +268,6 @@ class ConfigHelper(HubListener):
 
         return parameters_cube
 
-
     def show_inline(self):
         """
         Display the jdaviz application inline in a notebook.  Note this is
@@ -281,7 +280,6 @@ class ConfigHelper(HubListener):
         show_in_new_tab
         """
         display(self.app)
-
 
     def show_in_sidecar(self, **kwargs):
         """
@@ -334,7 +332,6 @@ class ConfigHelper(HubListener):
             display(self.app)
 
         return scar
-
 
     def show_in_new_tab(self, **kwargs):
         """
