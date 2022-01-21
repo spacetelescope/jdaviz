@@ -65,15 +65,15 @@ def flatten_nested_dict(asdfnode, include_arrays=True):
     from astropy.time import Time
 
     def convert_val(val):
-        if isinstance(val, datetime.datetime):
+        if isinstance(val, datetime.datetime):  # pragma: no cover
             return val.isoformat()
-        elif isinstance(val, Time):
+        elif isinstance(val, Time):  # pragma: no cover
             return str(val)
         return val
 
     if include_arrays:
         return dict((key, convert_val(val)) for (key, val) in _iteritems(asdfnode))
-    else:
+    else:  # pragma: no cover
         return dict((key, convert_val(val)) for (key, val) in _iteritems(asdfnode)
                     if not isinstance(val, np.ndarray))
 

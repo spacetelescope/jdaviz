@@ -8,6 +8,13 @@ The Imviz data analysis plugins are meant to aid quick-look analysis
 of 2D image data. All plugins are accessed via the :guilabel:`plugin`
 icon in the upper right corner of the Imviz application.
 
+.. _metadata-viewer:
+
+Metadata Viewer
+===============
+
+This plugin allows viewing of any metadata associated with the selected data.
+
 .. _imviz-link-control:
 
 Link Control
@@ -26,7 +33,6 @@ for most cases. If approximation fails, WCS linking still automatically
 falls back to full transformation.
 
 For more details on linking, see :ref:`dev_glue_linking`.
-
 
 .. _aper-phot-simple:
 
