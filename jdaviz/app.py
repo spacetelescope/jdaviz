@@ -652,8 +652,10 @@ class Application(VuetifyTemplate, HubListener):
 
                 temp_data = self.get_data_from_viewer(viewer_reference, value.label)
                 if isinstance(temp_data, Spectrum1D):
+                    # Note that we look for mask == False here, rather than True above,
+                    # because specutils masks are the reverse of Glue (of course)
                     subregions_in_subset = _get_all_subregions(
-                             np.where(temp_data.mask == True)[0], # noqa
+                             np.where(temp_data.mask == False)[0], # noqa
                              temp_data.spectral_axis)
                     regions[key] = subregions_in_subset
                     continue
