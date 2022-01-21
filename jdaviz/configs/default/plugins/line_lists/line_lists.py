@@ -31,6 +31,7 @@ class LineListTool(TemplateMixin):
     rs_slider_half_range = Float(0.1).tag(sync=True)
     rs_slider_step_auto = Bool(True).tag(sync=True)
     rs_slider_step = Float(0.01).tag(sync=True)
+    rs_redshift_step = Float(1).tag(sync=True)
     rs_redshift = Any(0).tag(sync=True)  # must be Any for user input, converted to float in python
     rs_rv = Any(0).tag(sync=True)  # must be Any for user input, converted to float in python
     rs_slider_throttle = Int(100).tag(sync=True)
@@ -163,6 +164,7 @@ class LineListTool(TemplateMixin):
                 if slider_step > self.rs_slider_half_range:
                     raise ValueError("step must be smaller than range/2")
                 self.rs_slider_step = slider_step
+                self.rs_redshift_step = self._redshift_to_velocity(slider_step)
         elif param == "redshift":
             # NOTE: this should trigger the observe to update rs_rv, line positions, and
             # update self._global_redshift
@@ -284,16 +286,21 @@ class LineListTool(TemplateMixin):
         # if set to auto, default the range based on the limits of the spectrum plot
         sv = self.app.get_viewer('spectrum-viewer')
         x_min, x_max = sv.state.x_min, sv.state.x_max
-        x_mid = abs(x_max + x_min) / 2
-        # we'll *estimate* the redshift range to shift from middle of viewer to the edge,
+        x_mid = abs(x_max + x_min) / 2.
+        # we'll *estimate* the redshift range to shift the range of the viewer
+        # (for a line with a rest wavelength in the center of the viewer),
         # by taking abs, this will work for wavelength or frequency units.
-        half_range = abs(x_max - x_min) / x_mid / 2
+        half_range = abs(x_max - x_min) / x_mid
         ndec = -np.log10(half_range)
         if ndec > 0:
             # round to at least 2 digits, or the first significant digit
             ndec = np.max([2, int(np.ceil(ndec))])
-            half_range = np.round(half_range, ndec)
-        # this will trigger self._on_rs_slider_step_auto_updated
+        else:
+            ndec = 1
+        half_range = np.round(half_range, ndec)
+
+        # this will trigger self._auto_slider_step to set self.rs_slider_step and
+        # self.rs_redshift_step, if applicable
         self.rs_slider_half_range = half_range
 
     @observe('rs_slider_range_auto')
@@ -307,6 +314,7 @@ class LineListTool(TemplateMixin):
             return
         # if set to auto, default to 500 steps in the range
         self.rs_slider_step = self.rs_slider_half_range * 2 / 500
+        self.rs_redshift_step = abs(self._redshift_to_velocity(self._global_redshift+self.rs_slider_step) - self.rs_rv) # noqa
 
     @observe('rs_slider_step_auto')
     def _on_rs_slider_step_auto_updated(self, event):

@@ -38,7 +38,7 @@
           :value='rs_redshift'
           @input='setRedshiftFloat'
           @blur="unpause_tables"
-          step="0.1"
+          :step="rs_slider_step"
           class="mt-0 pt-0"
           type="number"
           label="Redshift"
@@ -56,7 +56,7 @@
         <v-text-field
           v-model="rs_rv"
           @blur="unpause_tables"
-          step="0.1"
+          :step="rs_redshift_step"
           class="mt-0 pt-0"
           type="number"
           label="RV"
