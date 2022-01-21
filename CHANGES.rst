@@ -4,6 +4,10 @@
 New Features
 ------------
 
+- There are now `show_in_sidecar ` and `show_in_new_tab` methdos on all the
+  helpers that display the viewers in separate jupyterlab windows from the 
+  notebook. [#952]
+
 Cubeviz
 ^^^^^^^
 
