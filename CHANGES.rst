@@ -38,6 +38,9 @@ Imviz
 Mosviz
 ^^^^^^
 
+- Mosviz no longer crashes when loading 1D and 2D spectra (without images)
+  directly. [#1045]
+
 Specviz
 ^^^^^^^
 
