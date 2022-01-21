@@ -18,7 +18,7 @@ def test_inthandleempty():
     assert foo.int_handle_empty == ''
     with pytest.raises(
             TraitError,
-            match="The 'int_handle_empty' trait of a Foo instance expected an int, not the str 'blah'."):  # noqa
+            match=r"The 'int_handle_empty' trait of a Foo instance expected an int, not the str 'blah'\."):  # noqa
         foo.int_handle_empty = 'blah'
 
     foo.int_handle_empty_replace = 1
