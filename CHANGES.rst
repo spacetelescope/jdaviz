@@ -26,6 +26,7 @@ Bug Fixes
 - Model plugin properly updates parameters after fit for compound models. [#1023]
 - Model plugin now respects fixed parameters when applying model to cube, and retains
   parameter units in that case. [#1026]
+- Model plugin polynomial order now avoids traceback when clearing input. [#1041]
 
 Cubeviz
 ^^^^^^^

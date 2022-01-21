@@ -8,7 +8,7 @@ from glue.core.message import (SubsetCreateMessage,
                                SubsetUpdateMessage)
 from specutils import Spectrum1D, SpectralRegion
 from specutils.utils import QuantityModel
-from traitlets import Any, Bool, Int, List, Unicode, observe
+from traitlets import Any, Bool, List, Unicode, observe
 from glue.core.data import Data
 from glue.core.subset import Subset, RangeSubsetState, OrState, AndState
 from glue.core.link_helpers import LinkSame
@@ -16,6 +16,7 @@ from glue.core.link_helpers import LinkSame
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage, SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
+from jdaviz.core.custom_traitlets import IntHandleEmpty
 from jdaviz.configs.default.plugins.model_fitting.fitting_backend import fit_model_to_spectrum
 from jdaviz.configs.default.plugins.model_fitting.initializers import (MODELS,
                                                                        initialize,
@@ -37,7 +38,10 @@ class ModelFitting(TemplateMixin):
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "model_fitting.vue"
     dc_items = List([]).tag(sync=True)
+    form_valid_data_selection = Bool(False).tag(sync=True)
+    form_valid_model_component = Bool(False).tag(sync=True)
 
+    selected_data = Unicode("").tag(sync=True)
     spectral_min = Any().tag(sync=True)
     spectral_max = Any().tag(sync=True)
     spectral_unit = Unicode().tag(sync=True)
@@ -52,7 +56,7 @@ class ModelFitting(TemplateMixin):
     eq_error = Bool(False).tag(sync=True)
     component_models = List([]).tag(sync=True)
     display_order = Bool(False).tag(sync=True)
-    poly_order = Int(0).tag(sync=True)
+    poly_order = IntHandleEmpty(0).tag(sync=True)
 
     # add/replace results for "fit"
     add_replace_results = Bool(True).tag(sync=True)
@@ -79,7 +83,6 @@ class ModelFitting(TemplateMixin):
         self._initialized_models = {}
         self._display_order = False
         self.model_label = "Model"
-        self._selected_data_label = None
         self._spectral_subsets = {}
         self._window = None
         self._original_mask = None
@@ -245,7 +248,8 @@ class ModelFitting(TemplateMixin):
         else:
             return False
 
-    def vue_data_selected(self, event):
+    @observe("selected_data")
+    def _selected_data_changed(self, event):
         """
         Callback method for when the user has selected data from the drop down
         in the front-end. It is here that we actually parse and create a new
@@ -260,15 +264,13 @@ class ModelFitting(TemplateMixin):
             label of the data collection object selected by the user.
         """
         selected_spec = self.app.get_data_from_viewer("spectrum-viewer",
-                                                      data_label=event)
+                                                      data_label=event['new'])
         # Replace NaNs from collapsed SpectralCube in Cubeviz
         # (won't affect calculations because these locations are masked)
         selected_spec.flux[np.isnan(selected_spec.flux)] = 0.0
 
         # Save original mask so we can reset after applying a subset mask
         self._original_mask = selected_spec.mask
-
-        self._selected_data_label = event
 
         if self._units == {}:
             self._units["x"] = str(
@@ -471,8 +473,8 @@ class ModelFitting(TemplateMixin):
         if self._warn_if_no_equation():
             return
 
-        if self._selected_data_label in self.app.data_collection.labels:
-            data = self.app.data_collection[self._selected_data_label]
+        if self.selected_data in self.app.data_collection.labels:
+            data = self.app.data_collection[self.selected_data]
         else:  # User selected some subset from spectrum viewer, just use original cube
             data = self.app.data_collection[0]
 
@@ -480,7 +482,7 @@ class ModelFitting(TemplateMixin):
         # that the user has selected a pre-existing 1d data object.
         if data.ndim != 3:
             snackbar_message = SnackbarMessage(
-                f"Selected data {self._selected_data_label} is not cube-like",
+                f"Selected data {self.selected_data} is not cube-like",
                 color='error',
                 sender=self)
             self.hub.broadcast(snackbar_message)
@@ -586,7 +588,7 @@ class ModelFitting(TemplateMixin):
         self.app.add_data(spectrum, label)
 
         # Make sure we link the result spectrum to the data we're fitting
-        data_fitted = self.app.session.data_collection[self._selected_data_label]
+        data_fitted = self.app.session.data_collection[self.selected_data]
         data_id = data_fitted.world_component_ids[0]
         model_id = self.app.session.data_collection[label].world_component_ids[0]
         self.app.session.data_collection.add_link(LinkSame(data_id, model_id))
