@@ -30,7 +30,7 @@ class MetadataViewer(TemplateMixin):
     def _show_metadata(self, event):
         try:
             data = self.app.data_collection[self.app.data_collection.labels.index(event['new'])]
-        except IndexError:
+        except ValueError:
             self.has_metadata = False
             self.metadata = []
             return
@@ -95,7 +95,7 @@ def _iteritems(asdfnode):
             for i, val in enumerate(asdfnode):
                 for x in recurse(val, path + [i]):
                     yield x
-        elif asdfnode is not None:
+        else:
             yield ('.'.join(str(x) for x in path), asdfnode)
 
     for x in recurse(asdfnode):
