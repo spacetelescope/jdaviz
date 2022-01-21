@@ -196,6 +196,18 @@ class LineListTool(TemplateMixin):
         # the default case to avoid quantity math as below for efficiency
         return const.c.value * (zponesq - 1) / (zponesq + 1) / 1000  # km/s
 
+    def _update_line_positions(self):
+        # update all lines, self._global_redshift, and emit message back to Specviz helper
+        z = u.Quantity(self.rs_redshift)
+
+        for mark in self.app.get_viewer('spectrum-viewer').figure.marks:
+            # update ALL to this redshift, if adding support for per-line redshift
+            # this logic will need to change to not affect ALL lines
+            if not isinstance(mark, SpectralLine):
+                continue
+
+            mark.redshift = z
+
     @observe('rs_slider')
     def _on_slider_updated(self, event):
         if self._rs_disable_observe:
@@ -230,26 +242,18 @@ class LineListTool(TemplateMixin):
         self.rs_rv = self._redshift_to_velocity(value)
         self._rs_disable_observe = False
 
-        # update all lines, self._global_redshift, and emit message back to Specviz helper
-        z = u.Quantity(self.rs_redshift)
-
-        for mark in self.app.get_viewer('spectrum-viewer').figure.marks:
-            # update ALL to this redshift, if adding support for per-line redshift
-            # this logic will need to change to not affect ALL lines
-            if not isinstance(mark, SpectralLine):
-                continue
-
-            mark.redshift = z
+        self._update_line_positions()
 
         if not self._rs_pause_tables:
             # Send the redshift back to the Specviz helper (and also trigger
             # self._update_global_redshift)
-            msg = RedshiftMessage("redshift", z.value, sender=self)
+            msg = RedshiftMessage("redshift", self.rs_redshift, sender=self)
             self.app.hub.broadcast(msg)
 
     def vue_unpause_tables(self, event=None):
         # after losing focus, update any elements that were paused during changes
         self._rs_pause_tables = False
+        self._rs_disable_observe = False
         self._on_rs_redshift_updated({'new': self.rs_redshift})
 
     @observe('rs_rv')
@@ -265,11 +269,15 @@ class LineListTool(TemplateMixin):
 
         value = float(event['new'])
         redshift = self._velocity_to_redshift(value)
+        # prevent update the redshift from propagating back to an update in the rv
         self._rs_disable_observe = True
-        # we'll wait until the blur event (which will call vue_unpause_tables) 
-        # to update mos and observed wavelengths
+        # we'll wait until the blur event (which will call vue_unpause_tables)
+        # to update the value in the MOS table
         self._rs_pause_tables = True
         self.rs_redshift = redshift
+        # but we do want to update the plotted lines
+        self._update_line_positions()
+
         self._rs_disable_observe = False
 
     def vue_slider_reset(self, event):
@@ -277,7 +285,7 @@ class LineListTool(TemplateMixin):
         self.rs_slider = 0.0
         self._rs_disable_observe = False
         self._rs_pause_tables = False
-        # tables (MOS or observed wavelengths) weren't updating during slide, so update them now
+        # the redshift value in the MOS table wasn't updating during slide, so update them now
         self.vue_unpause_tables()
 
     def _auto_slider_range(self, event=None):
