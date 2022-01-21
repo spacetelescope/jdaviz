@@ -354,6 +354,8 @@ class LineListTool(TemplateMixin):
         self.loaded_lists = loaded_lists
         self.list_contents = {}
         self.list_contents = list_contents
+        # lines were added and immediately shown, so make sure the slider is enabled
+        self.rs_enabled = True
 
         msg_text = ("Spectral lines loaded from notebook. Lines can be hidden"
                     "/shown in the Line Lists plugin")
