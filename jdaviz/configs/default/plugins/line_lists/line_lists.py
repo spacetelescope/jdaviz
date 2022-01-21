@@ -57,6 +57,7 @@ class LineListTool(TemplateMixin):
         self._bounds = {}
         self._global_redshift = 0
         self._rs_disable_observe = False
+        self._rs_pause_tables = False
 
         # Watch for messages from Specviz helper redshift functions
         self.hub.subscribe(self, RedshiftMessage,
@@ -198,6 +199,8 @@ class LineListTool(TemplateMixin):
         if self._rs_disable_observe:
             return
 
+        self._rs_pause_tables = True
+
         # NOTE: _on_rs_redshift_updated will handle updating rs_rv
         # NOTE: the input has a custom @input method in line_lists.vue to cast
         # to float so that we can assume its a float here to minimize lag
@@ -206,21 +209,24 @@ class LineListTool(TemplateMixin):
 
     @observe('rs_redshift')
     def _on_rs_redshift_updated(self, event):
-        if not self._rs_disable_observe:
-            if isinstance(event['new'], str) and not len(event['new']):
-                # empty string, we don't want to revert yet because then
-                # the user can never delete the entry and type something new
-                # so we'll just leave empty
-                return
-            if event['new'] is None:
-                # definitely can't convert to float!
-                return
-            value = float(event['new'])
-            # update _global_redshift so new lines, etc, will adopt this latest value
-            self._global_redshift = value
-            self._rs_disable_observe = True
-            self.rs_rv = self._redshift_to_velocity(value)
-            self._rs_disable_observe = False
+        if self._rs_disable_observe:
+            return
+
+        if isinstance(event['new'], str) and not len(event['new']):
+            # empty string, we don't want to revert yet because then
+            # the user can never delete the entry and type something new
+            # so we'll just leave empty
+            return
+        if event['new'] is None:
+            # definitely can't convert to float!
+            return
+
+        value = float(event['new'])
+        # update _global_redshift so new lines, etc, will adopt this latest value
+        self._global_redshift = value
+        self._rs_disable_observe = True
+        self.rs_rv = self._redshift_to_velocity(value)
+        self._rs_disable_observe = False
 
         # update all lines, self._global_redshift, and emit message back to Specviz helper
         z = u.Quantity(self.rs_redshift)
@@ -233,10 +239,16 @@ class LineListTool(TemplateMixin):
 
             mark.redshift = z
 
-        # Send the redshift back to the Specviz helper (and also trigger
-        # self._update_global_redshift)
-        msg = RedshiftMessage("redshift", z.value, sender=self)
-        self.app.hub.broadcast(msg)
+        if not self._rs_pause_tables:
+            # Send the redshift back to the Specviz helper (and also trigger
+            # self._update_global_redshift)
+            msg = RedshiftMessage("redshift", z.value, sender=self)
+            self.app.hub.broadcast(msg)
+
+    def vue_unpause_tables(self, event=None):
+        # after losing focus, update any elements that were paused during changes
+        self._rs_pause_tables = False
+        self._on_rs_redshift_updated({'new': self.rs_redshift})
 
     @observe('rs_rv')
     def _on_rs_rv_updated(self, event):
@@ -252,6 +264,9 @@ class LineListTool(TemplateMixin):
         value = float(event['new'])
         redshift = self._velocity_to_redshift(value)
         self._rs_disable_observe = True
+        # we'll wait until the blur event (which will call vue_unpause_tables) 
+        # to update mos and observed wavelengths
+        self._rs_pause_tables = True
         self.rs_redshift = redshift
         self._rs_disable_observe = False
 
@@ -259,6 +274,9 @@ class LineListTool(TemplateMixin):
         self._rs_disable_observe = True
         self.rs_slider = 0.0
         self._rs_disable_observe = False
+        self._rs_pause_tables = False
+        # tables (MOS or observed wavelengths) weren't updating during slide, so update them now
+        self.vue_unpause_tables()
 
     def _auto_slider_range(self, event=None):
         if not self.rs_slider_range_auto:
