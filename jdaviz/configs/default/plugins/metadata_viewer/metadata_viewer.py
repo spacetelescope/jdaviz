@@ -1,3 +1,4 @@
+from astropy.io.fits import Header
 from traitlets import Bool, List, Unicode, observe
 
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage
@@ -39,7 +40,15 @@ class MetadataViewer(TemplateMixin):
             self.has_metadata = False
             self.metadata = []
         else:
-            d = flatten_nested_dict(data.meta)
+            if 'header' in data.meta and isinstance(data.meta['header'], (dict, Header)):
+                if isinstance(data.meta['header'], Header):  # Specviz
+                    meta = dict(data.meta['header'])
+                else:
+                    meta = data.meta['header']
+            else:
+                meta = data.meta
+
+            d = flatten_nested_dict(meta)
             for badkey in ('COMMENT', 'HISTORY', ''):
                 if badkey in d:
                     del d[badkey]  # ipykernel cannot clean for JSON
