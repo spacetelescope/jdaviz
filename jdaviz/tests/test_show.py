@@ -1,4 +1,4 @@
-from jdaviz.app import Specviz
+from jdaviz import Specviz
 import sidecar
 
 
