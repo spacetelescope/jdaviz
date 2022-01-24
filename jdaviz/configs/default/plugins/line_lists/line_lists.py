@@ -32,6 +32,7 @@ class LineListTool(TemplateMixin):
     rs_slider_step_auto = Bool(True).tag(sync=True)
     rs_slider_step = Float(0.01).tag(sync=True)
     rs_redshift_step = Float(1).tag(sync=True)
+    rs_slider_ndigits = Int(1).tag(sync=True)
     rs_redshift = Any(0).tag(sync=True)  # must be Any for user input, converted to float in python
     rs_rv = Any(0).tag(sync=True)  # must be Any for user input, converted to float in python
     rs_slider_throttle = Int(100).tag(sync=True)
@@ -219,7 +220,9 @@ class LineListTool(TemplateMixin):
         # NOTE: the input has a custom @input method in line_lists.vue to cast
         # to float so that we can assume its a float here to minimize lag
         # when interacting with the slider.
-        self.rs_redshift = self.rs_redshift + event['new'] - event['old']
+
+        self.rs_redshift = np.round(self.rs_redshift + event['new'] - event['old'],
+                                    self.rs_slider_ndigits)
 
     @observe('rs_redshift')
     def _on_rs_redshift_updated(self, event):
@@ -323,6 +326,20 @@ class LineListTool(TemplateMixin):
         # if set to auto, default to 1000 steps in the range
         self.rs_slider_step = self.rs_slider_half_range * 2 / 1000
         self.rs_redshift_step = abs(self._redshift_to_velocity(self._global_redshift+self.rs_slider_step) - self.rs_rv) # noqa
+
+    @observe('rs_slider_step')
+    def _on_rs_slider_step_updated(self, event):
+        # When using the slider, we'll "round" redshift to the digits in the
+        # slider step to avoid extra digits due to rounding errors
+        ndec = -np.log10(event['new'])
+        if ndec > 0:
+            # round to at least 2 digits, or one past the first significant digit
+            # note: the UI will not show trailing zeros, we just want to avoid
+            # and 1 at floating point precision if not significant
+            ndec = np.max([2, np.ceil(ndec)+1])
+        else:
+            ndec = 1
+        self.rs_slider_ndigits = int(ndec)
 
     @observe('rs_slider_step_auto')
     def _on_rs_slider_step_auto_updated(self, event):
