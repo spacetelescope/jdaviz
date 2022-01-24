@@ -26,6 +26,7 @@ from glue.core.state_objects import State
 from glue.core.subset import Subset, RangeSubsetState, RoiSubsetState
 from glue_jupyter.app import JupyterApplication
 from glue_jupyter.state_traitlets_helpers import GlueState
+from glue_jupyter.bqplot.profile import BqplotProfileView
 from ipyvuetify import VuetifyTemplate
 
 from jdaviz.core.config import read_configuration, get_configuration
@@ -617,10 +618,10 @@ class Application(VuetifyTemplate, HubListener):
                     this_type = type(value.subset_state)
 
                 # Skip spatial or spectral subsets if only the other is wanted
-                if subset_type == "spectral" or viewer_reference == "spectrum-viewer":
+                if subset_type == "spectral" or isinstance(viewer, BqplotProfileView):
                     if this_type == RoiSubsetState:
                         continue
-                elif subset_type == "spatial" or viewer_reference != "spectrum-viewer":
+                elif subset_type == "spatial" or not isinstance(viewer, BqplotProfileView):
                     if this_type == RangeSubsetState:
                         continue
 
