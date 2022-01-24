@@ -320,8 +320,8 @@ class LineListTool(TemplateMixin):
     def _auto_slider_step(self, event=None):
         if not self.rs_slider_step_auto:
             return
-        # if set to auto, default to 500 steps in the range
-        self.rs_slider_step = self.rs_slider_half_range * 2 / 500
+        # if set to auto, default to 1000 steps in the range
+        self.rs_slider_step = self.rs_slider_half_range * 2 / 1000
         self.rs_redshift_step = abs(self._redshift_to_velocity(self._global_redshift+self.rs_slider_step) - self.rs_rv) # noqa
 
     @observe('rs_slider_step_auto')

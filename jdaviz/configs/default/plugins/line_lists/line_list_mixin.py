@@ -77,7 +77,7 @@ class LineListMixin:
             an estimated step for RV). Smaller step sizes will allow finer
             adjustments/smoother behavior at a potential cost to performance. If `None`
             or not passed, will leave at the current value. If 'auto', will sync
-            the step size to 500 steps within the current range.
+            the step size to 1000 steps within the current range.
         '''
         if range is not None:
             msg = RedshiftMessage("rs_slider_range", range, sender=self)
