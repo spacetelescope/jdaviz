@@ -135,7 +135,9 @@ class SliceIndicator(BaseSpectrumVerticalLine, HubListener):
                          fill='none', close_path=False,
                          labels=['slice'], labels_visibility='label', **kwargs)
 
-        self._on_change_state({'active': False})
+        # default to the initial state of the tool since we can't control if this will
+        # happen before or after the initialization of the tool
+        self._on_change_state({'active': True})
 
     def _slice_to_x(self, slice=0):
         if not isinstance(slice, int):
