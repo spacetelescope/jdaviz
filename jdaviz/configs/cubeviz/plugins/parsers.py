@@ -329,7 +329,8 @@ def _parse_ndarray_3d(app, file_obj, data_label, data_type):
     else:
         flux_unit = u.count
     flux = file_obj << flux_unit
-    fake_wcs = generate_dummy_fits_wcs_3d()
-    sc = Spectrum1D(flux, wcs=fake_wcs)
+    # fake_wcs = generate_dummy_fits_wcs_3d()
+    idx = np.arange(flux.shape[-1]) * u.pix
+    sc = Spectrum1D(spectral_axis=idx, flux=flux)
     app.add_data(sc, data_label)
     _show_data_in_cubeviz_viewer(app, data_label, data_type)
