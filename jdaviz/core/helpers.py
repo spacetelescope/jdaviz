@@ -324,7 +324,8 @@ class ConfigHelper(HubListener):
             display(self.app)
 
         return scar
-    show_in_sidecar.__doc__ = show_in_sidecar.__doc__.format(sidecar_anchor_values=repr(Sidecar.anchor.values)[1:-1])
+    show_in_sidecar.__doc__ = show_in_sidecar.__doc__.format(
+        sidecar_anchor_values=repr(Sidecar.anchor.values)[1:-1])
 
     def show_in_new_tab(self, **kwargs):
         """
