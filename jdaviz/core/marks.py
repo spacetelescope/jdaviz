@@ -3,7 +3,6 @@ from bqplot.marks import Lines
 from glue.core import HubListener
 from specutils import Spectrum1D
 
-from glue.core import HubListener
 from jdaviz.core.events import SliceToolStateMessage
 
 
