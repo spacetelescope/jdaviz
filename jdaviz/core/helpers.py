@@ -288,6 +288,11 @@ class ConfigHelper(HubListener):
         Display the Jdaviz application in a "sidecar", which by default is a tab
         on the right side of the JupyterLab  interface.
 
+        Additional keywords not listed here are passed into the
+        ``sidecar.Sidecar`` constructor. See
+        `jupyterlab-sidecar <https://github.com/jupyter-widgets/jupyterlab-sidecar>`_
+        for the most up-to-date options.
+
         Parameters
         ----------
         title : str, optional
@@ -296,9 +301,6 @@ class ConfigHelper(HubListener):
         anchor : str
             Where the tab should appear, by default on the right. Options are:
             {sidecar_anchor_values}.
-
-        additional keywords are passed into the ``sidecar.Sidecar`` constructor.
-        See ``jupyterlab-sidecar`` for the most up-to-date options.
 
         Returns
         -------
@@ -328,14 +330,16 @@ class ConfigHelper(HubListener):
         """
         Display the Jdaviz application in a new tab in JupyterLab.
 
+        Additional keywords not listed here are passed into the
+        ``sidecar.Sidecar`` constructor. See
+        `jupyterlab-sidecar <https://github.com/jupyter-widgets/jupyterlab-sidecar>`_
+        for the most up-to-date options.
+
         Parameters
         ----------
         title : str, optional
             The title of the sidecar tab.  Defaults to the name of the
             application; e.g., "specviz".
-
-        Additional keywords are passed into the ``sidecar.Sidecar`` constructor.
-        See ``jupyterlab-sidecar`` for the most up-to-date options.
 
         Returns
         -------
