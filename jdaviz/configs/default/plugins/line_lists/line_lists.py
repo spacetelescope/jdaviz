@@ -362,10 +362,9 @@ class LineListTool(TemplateMixin):
             The glue message passed to this callback method. Includes the line
             data added in msg.table.
         """
-        # list_contents = self.list_contents
-        # loaded_lists = self.loaded_lists
-        loaded_lists = ["Custom"]
-        list_contents = {"Custom": {"lines": [], "color": "#FF0000FF"}}
+        loaded_lists = self.loaded_lists
+        list_contents = self.list_contents
+        tmp_names_rest = []
         for row in msg.table:
             if row["listname"] not in loaded_lists:
                 loaded_lists.append(row["listname"])
@@ -382,13 +381,15 @@ class LineListTool(TemplateMixin):
                          "redshift": row["redshift"] if "redshift" in row else
                          self._global_redshift}
             list_contents[row["listname"]]["lines"].append(temp_dict)
+            tmp_names_rest.append(row["name_rest"])
 
         self.loaded_lists = []
         self.loaded_lists = loaded_lists
         self.list_contents = {}
         self.list_contents = list_contents
-        # lines were added and immediately shown, so make sure the slider is enabled
-        self.rs_enabled = True
+
+        self._viewer.plot_spectral_lines(tmp_names_rest)
+        self.update_line_mark_dict()
 
         msg_text = ("Spectral lines loaded from notebook. Lines can be hidden"
                     "/shown in the Line Lists plugin")
