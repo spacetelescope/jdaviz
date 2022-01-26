@@ -632,7 +632,11 @@ class LineListTool(TemplateMixin):
         self.update_line_mark_dict()
 
         self.loaded_lists = [x for x in self.loaded_lists if x != listname]
-        del(self.list_contents[listname])
+        self.list_contents = {k: v for k, v in self.list_contents.items() if k != listname}
+        row_inds = [i for i, ln in
+                    enumerate(self._viewer.spectral_lines['listname'])
+                    if ln == listname]
+        self._viewer.spectral_lines.remove_rows(row_inds)
 
     def vue_remove_line(self, line, erase=True):
         """
