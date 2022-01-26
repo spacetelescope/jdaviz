@@ -1,5 +1,6 @@
 from bqplot.marks import Lines
 from specutils.spectra.spectrum1d import Spectrum1D
+import astropy.units as u
 
 from glue.core import HubListener
 
@@ -41,7 +42,8 @@ class BaseSpectrumVerticalLine(Lines, HubListener):
         new_unit = x_all.unit
         if new_unit == self._x_unit:
             return
-        x = (self.x[0] * self._x_unit).to(x_all.unit).value
+        old_quant = self.x[0]*self._x_unit
+        x = old_quant.to(x_all.unit, equivalencies=u.spectral()).value
         self.x = [x, x]
         self._x_unit = new_unit
 
@@ -59,7 +61,10 @@ class SpectralLine(BaseSpectrumVerticalLine):
         # TODO: do we need table_index anymore?
         self.table_index = kwargs.pop("table_index", None)
 
-        # setting redshift will set self.x and enable the obs_value property
+        # setting redshift will set self.x and enable the obs_value property,
+        # but to do that we need x_unit set first (would normally be assigned
+        # in the super init)
+        self._x_unit = viewer.state.reference_data.get_object().spectral_axis.unit
         self.redshift = redshift
 
         super().__init__(viewer=viewer, x=self.obs_value, stroke_width=1,
@@ -80,14 +85,20 @@ class SpectralLine(BaseSpectrumVerticalLine):
     @redshift.setter
     def redshift(self, redshift):
         self._redshift = redshift
-        obs_value = self._rest_value*(1+redshift)
+        if str(self._x_unit.physical_type) == 'length':
+            obs_value = self._rest_value*(1+redshift)
+        else:
+            # frequency
+            obs_value = self._rest_value/(1+redshift)
         self.x = [obs_value, obs_value]
 
     def _update_data(self, x_all):
         new_unit = x_all.unit
         if new_unit == self._x_unit:
             return
-        self._rest_value = (self._rest_value * self._x_unit).to(new_unit).value
+
+        old_quant = self._rest_value*self._x_unit
+        self._rest_value = old_quant.to(new_unit, equivalencies=u.spectral()).value
         # re-compute self.x from current redshift (instead of converting that as well)
         self.redshift = self._redshift
         self._x_unit = new_unit
