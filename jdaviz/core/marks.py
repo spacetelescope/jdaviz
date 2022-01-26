@@ -1,8 +1,7 @@
+from astropy import units as u
 from bqplot.marks import Lines
-from specutils.spectra.spectrum1d import Spectrum1D
-import astropy.units as u
-
 from glue.core import HubListener
+from specutils import Spectrum1D
 
 
 class BaseSpectrumVerticalLine(Lines, HubListener):
@@ -43,7 +42,7 @@ class BaseSpectrumVerticalLine(Lines, HubListener):
         if new_unit == self._x_unit:
             return
         old_quant = self.x[0]*self._x_unit
-        x = old_quant.to(x_all.unit, equivalencies=u.spectral()).value
+        x = old_quant.to_value(x_all.unit, equivalencies=u.spectral())
         self.x = [x, x]
         self._x_unit = new_unit
 
@@ -98,7 +97,7 @@ class SpectralLine(BaseSpectrumVerticalLine):
             return
 
         old_quant = self._rest_value*self._x_unit
-        self._rest_value = old_quant.to(new_unit, equivalencies=u.spectral()).value
+        self._rest_value = old_quant.to_value(new_unit, equivalencies=u.spectral())
         # re-compute self.x from current redshift (instead of converting that as well)
         self.redshift = self._redshift
         self._x_unit = new_unit

@@ -149,9 +149,9 @@ Redshift Slider
 ---------------
 
 .. warning::
-    Using the redshift slider with many active spectral lines cause performance issues.
-    If reactions to the redshift slider are laggy, try plotting less lines. You can deselect
-    lines using, e.g., the "Erase All" button in the line lists UI.
+    Using the redshift slider with many active spectral lines causes performance issues.
+    If the shifting of spectral lines lag behind the slider, try plotting less lines.
+    You can deselect lines using, e.g., the "Erase All" button in the line lists UI.
 
 The plugin also contains a redshift slider which shifts all of the plotted
 lines according to the provided redshift/RV.  The slider applies a delta-redshift,

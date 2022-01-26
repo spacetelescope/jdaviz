@@ -229,7 +229,7 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
         return {'x': fig.interaction.x_scale, 'y': fig.interaction.y_scale}
 
     def plot_spectral_line(self, line, plot_units=None, **kwargs):
-        if type(line) == str:
+        if isinstance(line, str):
             # Try the full index first (for backend calls), otherwise name only
             try:
                 line = self.spectral_lines.loc[line]

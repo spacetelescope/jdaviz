@@ -62,13 +62,13 @@ class LineListMixin:
     def set_redshift_slider_bounds(self, range=None, step=None):
         '''
         Set the range and/or step of the redshift slider. Set either/both to 'auto'
-        to default based on the limits of the spectrum plot.
+        for default values based on the limits of the spectrum plot.
 
         Parameters
         ----------
         range : float or `None` or 'auto'
             Specifies the difference between the upper and lower bounds of the slider.
-            Note that the slider specifies redshift delta from the current value, so a
+            Note that the slider specifies delta redshift from the current value, so a
             range of 0.1 would allow the user to change the current redshift by +/- 0.05.
             If `None` or not passed, will leave at the current value. If 'auto',
             will sync the range based on the limits of the spectrum plot.

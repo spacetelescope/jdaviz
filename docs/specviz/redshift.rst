@@ -13,8 +13,8 @@ From the notebook
 
 The range of the slider, as well as the resolution of a single
 step in the slider, can be set from a notebook cell using the 
-:meth:`jdaviz.configs.default.plugins.line_lists.line_list_mixin.LineListMixin.set_redshift_slider_bounds`
-method by specifying the ``range`` and/or ``step`` keywords.  By setting either or both
+:meth:`~jdaviz.configs.default.plugins.line_lists.line_list_mixin.LineListMixin.set_redshift_slider_bounds`
+method in ``specviz`` by specifying the ``range`` and/or ``step`` keywords.  By setting either or both
 of these to 'auto', they will default based on the x-limits of the spectrum plot.
 
 The redshift itself can be set from the notebook using the ``set_redshift`` method.
