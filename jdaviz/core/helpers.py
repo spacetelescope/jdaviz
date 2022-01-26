@@ -18,6 +18,8 @@ from jdaviz.core.events import AddDataMessage
 
 from IPython.display import display
 
+from sidecar import Sidecar
+
 __all__ = ['ConfigHelper']
 
 
@@ -292,8 +294,8 @@ class ConfigHelper(HubListener):
             The title of the sidecar tab.  Defaults to the name of the
             application; e.g., "specviz".
         anchor : str
-            Where the tab should appear, by default on the right.  To see all
-            options see the ``sidecar.Sidecar.anchor.values``.
+            Where the tab should appear, by default on the right. Options are:
+            {sidecar_anchor_values}.
 
         additional keywords are passed into the ``sidecar.Sidecar`` constructor.
         See ``jupyterlab-sidecar`` for the most up-to-date options.
@@ -312,8 +314,6 @@ class ConfigHelper(HubListener):
         show_in_new_tab
         show_inline
         """
-        from sidecar import Sidecar
-
         if 'title' not in kwargs:
             kwargs['title'] = self.app.config
 
@@ -322,6 +322,7 @@ class ConfigHelper(HubListener):
             display(self.app)
 
         return scar
+    show_in_sidecar.__doc__ = show_in_sidecar.__doc__.format(sidecar_anchor_values=repr(Sidecar.anchor.values)[1:-1])
 
     def show_in_new_tab(self, **kwargs):
         """
