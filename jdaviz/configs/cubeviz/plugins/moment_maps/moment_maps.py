@@ -110,7 +110,7 @@ class MomentMap(TemplateMixin):
     def vue_list_subsets(self, event):
         """Populate the spectral subset selection dropdown"""
         self._spectral_subsets = self.app.get_subsets_from_viewer("spectrum-viewer")
-        self.spectral_subset_items = ["Entire Spectrum"] + list(self._spectral_subsets.keys())
+        self.spectral_subset_items = ["Entire Spectrum"] + sorted(self._spectral_subsets.keys())
 
     def vue_calculate_moment(self, *args):
         # Retrieve the data cube and slice out desired region, if specified

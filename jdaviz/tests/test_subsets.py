@@ -71,10 +71,9 @@ def test_region_from_subset_profile(jdaviz_app, spectral_cube_wcs):
     assert len(subsets) == 1
     assert isinstance(reg, SpectralRegion)
 
-    print(reg)
 
-    assert reg.lower == 4.0*u.Hz
-    assert reg.upper == 255.0 * u.Hz
+    assert_quantity_allclose(reg.lower, 4.0 * u.Hz)
+    assert_quantity_allclose(reg.upper, 255.0 * u.Hz)
 
 
 def test_region_spectral_spatial(jdaviz_app, spectral_cube_wcs):
@@ -97,8 +96,8 @@ def test_region_spectral_spatial(jdaviz_app, spectral_cube_wcs):
     assert len(subsets) == 1
     assert isinstance(reg, SpectralRegion)
 
-    assert reg.lower == 4.0*u.Hz
-    assert reg.upper == 255*u.Hz
+    assert_quantity_allclose(reg.lower, 4.0 * u.Hz)
+    assert_quantity_allclose(reg.upper, 255 * u.Hz)
 
     subsets = jdaviz_app.get_subsets_from_viewer('flux-viewer', subset_type='spatial')
     reg = subsets.get('Subset 2')
