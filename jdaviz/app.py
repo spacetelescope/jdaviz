@@ -168,6 +168,11 @@ class Application(VuetifyTemplate, HubListener):
         self._application_handler = JupyterApplication(
             settings={'new_subset_on_selection_tool_change': True})
 
+        # Add a reference to this application to the Glue session object. This
+        # allows the jdaviz Application object to then be accessed via e.g.
+        # viewer.session.jdaviz_app
+        self._application_handler.session.jdaviz_app = self
+
         # Create a dictionary for holding non-ipywidget viewer objects so we
         #  can reference their state easily since glue does not store viewers
         self._viewer_store = {}
