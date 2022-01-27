@@ -19,6 +19,9 @@ Specviz
 API Changes
 -----------
 
+- Viewers now can access the calling Jdaviz application using
+  ``viewer.session.jdaviz_app``. [#1051]
+
 Bug Fixes
 ---------
 

@@ -1,6 +1,12 @@
 from jdaviz import Application
 
 
+# This applies to all viz but testing with Imviz should be enough.
+def test_viewer_calling_app(imviz_app):
+    viewer = imviz_app.default_viewer
+    assert viewer.session.jdaviz_app is imviz_app.app
+
+
 def test_default_viewer_ids_default():
     app = Application(configuration='default')
     assert app.get_viewer_reference_names() == []
