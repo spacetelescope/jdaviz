@@ -86,9 +86,15 @@ class SpectralLine(BaseSpectrumVerticalLine):
         self._redshift = redshift
         if str(self._x_unit.physical_type) == 'length':
             obs_value = self._rest_value*(1+redshift)
-        else:
-            # frequency
+        elif str(self._x_unit.physical_type) == 'frequency':
             obs_value = self._rest_value/(1+redshift)
+        else:
+            # catch all for anything else (wavenumber, energy, etc)
+            rest_angstrom = (self._rest_value*self._x_unit).to_value(u.Angstrom,
+                                                                     equivalencies=u.spectral())
+            obs_angstrom = rest_angstrom*(1+redshift)
+            obs_value = (obs_angstrom*u.Angstrom).to_value(self._x_unit,
+                                                           equivalencies=u.spectral())
         self.x = [obs_value, obs_value]
 
     def _update_data(self, x_all):
