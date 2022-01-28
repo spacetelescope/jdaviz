@@ -100,6 +100,10 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
 
         return data
 
+    @property
+    def redshift(self):
+        return self.jdaviz_helper._redshift
+
     def load_line_list(self, line_table, replace=False, return_table=False, show=True):
         # If string, load the named preset list and don't show by default
         # since there might be too many lines
@@ -240,7 +244,7 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
 
         line_mark = SpectralLine(self,
                                  line['rest'].to(plot_units).value,
-                                 line['redshift'],
+                                 self.redshift,
                                  name=line["linename"],
                                  table_index=line["name_rest"],
                                  colors=[line["colors"]], **kwargs)
@@ -264,22 +268,16 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
         elif len(colors) != len(self.spectral_lines):
             colors = colors*len(self.spectral_lines)
 
-        # Retrieve redshift from table or plotted spectrum
-        if "redshift" in self.spectral_lines.columns:
-            redshifts = self.spectral_lines["redshift"]
-        else:
-            redshifts = [self.data()[0].redshift]*len(self.spectral_lines)
-
         lines = self.spectral_lines
         plot_units = self.data()[0].spectral_axis.unit
 
         marks = []
-        for line, redshift, color in zip(lines, redshifts, colors):
+        for line, color in zip(lines, colors):
             if not line["show"]:
                 continue
             line = SpectralLine(self,
                                 line['rest'].to(plot_units).value,
-                                redshift=redshift,
+                                redshift=self.redshift,
                                 name=line["linename"],
                                 table_index=line["name_rest"],
                                 colors=[color], **kwargs)
