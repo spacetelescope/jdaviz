@@ -7,12 +7,13 @@ from jdaviz.configs.imviz.helper import data_has_valid_wcs, layer_is_image_data
 from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import viewer_registry
+from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
 
 __all__ = ['ImvizImageView']
 
 
 @viewer_registry("imviz-image-viewer", label="Image 2D (Imviz)")
-class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin):
+class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewerMixin):
 
     # Whether to inherit tools from glue-jupyter automatically. Set this to
     # False to have full control here over which tools are shown in case new

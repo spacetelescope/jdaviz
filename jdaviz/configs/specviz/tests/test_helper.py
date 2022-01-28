@@ -5,7 +5,9 @@ from glue.core.roi import XRangeROI
 from glue.core.edit_subset_mode import OrMode
 from specutils import Spectrum1D, SpectrumList, SpectrumCollection
 
+from jdaviz.app import Application
 from jdaviz.configs.specviz.plugins.unit_conversion import unit_conversion as uc
+from jdaviz.configs.specviz.helper import Specviz
 
 
 class TestSpecvizHelper:
@@ -213,3 +215,9 @@ def test_subset_default_thickness(specviz_app, spectrum1d):
     tool.interact.brushing = False
 
     assert sv.state.layers[-1].linewidth == 3
+
+
+def test_app_links(specviz_app, spectrum1d):
+    sv = specviz_app.app.get_viewer('spectrum-viewer')
+    assert isinstance(sv._jdaviz_app, Application)
+    assert isinstance(sv._jdaviz_helper, Specviz)
