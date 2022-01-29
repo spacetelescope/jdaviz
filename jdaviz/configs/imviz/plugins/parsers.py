@@ -10,7 +10,6 @@ from astropy.nddata import NDData
 from astropy.wcs import WCS
 from glue.core.data import Component, Data
 
-from jdaviz.configs.imviz.helper import link_image_data
 from jdaviz.core.registries import data_parser_registry
 from jdaviz.core.events import SnackbarMessage
 
@@ -143,7 +142,7 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
     if len(app.data_collection) <= 1:  # No need to link, we are done.
         return
 
-    link_image_data(app, link_type='pixels', error_on_fail=False)
+    # Do not run link_image_data here. We do it at the end in Imviz.load_data()
 
 
 def _info_nextensions(app, file_obj):

@@ -76,7 +76,7 @@ class TestParseImage:
         with pytest.raises(NotImplementedError, match='Imviz does not support'):
             parse_data(imviz_helper.app, some_obj, show_in_viewer=False)
 
-    def test_parse_numpy_array(self, imviz_helper):
+    def test_parse_numpy_array_1d_2d(self, imviz_helper):
         with pytest.raises(ValueError, match='Imviz cannot load this array with ndim=1'):
             parse_data(imviz_helper.app, np.zeros(2), show_in_viewer=False)
 
@@ -87,6 +87,23 @@ class TestParseImage:
         assert data.label == 'some_array'
         assert data.shape == (2, 2)
         assert comp.data.shape == (2, 2)
+
+    def test_parse_numpy_array_3d(self, imviz_helper):
+        # This data has values in axis=0 that correspond to axis num.
+        n_slices = 5
+        slice_shape = (2, 3)
+        arr = np.stack([np.zeros(slice_shape) + i for i in range(n_slices)])
+
+        # We use higher level load_data() here to make sure linking does not crash.
+        imviz_helper.load_data(arr, data_label='my_slices')
+        assert len(imviz_helper.app.data_collection) == n_slices
+
+        for i in range(n_slices):
+            data = imviz_helper.app.data_collection[i]
+            comp = data.get_component('DATA')
+            assert data.label == f'my_slices_{i}'
+            assert data.shape == slice_shape
+            assert_array_equal(comp.data, i)
 
     def test_parse_nddata_simple(self, imviz_helper):
         with pytest.raises(ValueError, match='Imviz cannot load this NDData with ndim=1'):

@@ -22,6 +22,11 @@ Imviz
 - New radial profile plot in the simple aperture photometry plugin. [#1030]
 
 - New plugin to display compass for image with WCS and also zoom box. [#983]
+- Imviz now loads 3D Numpy array as individual slices at ``axis=0``. [#1056]
+
+- New ``do_link`` keyword for ``Imviz.load_data()``. Set it to ``False``
+  when loading multiple dataset in a loop but ``Imviz.link_data()`` must be
+  run at the end manually afterwards. [#1056]
 
 - New ``imviz.load_static_regions_from_file()`` method to load region file
   via API. [#1066]
