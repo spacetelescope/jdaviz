@@ -128,6 +128,11 @@ export default {
 </script>
 
 <style id="web-app">
+/* This makes the viz tools scrollable when the window is too small.  In principle this should be fixed in ipywidgets 8, but that's not out yet... (see https://github.com/spacetelescope/jdaviz/pull/952#issuecomment-1021183846) */
+.jupyterlab-sidecar .jp-OutputArea-output {
+  overflow: auto;
+}
+
 * {
   /* otherwise, voila will override box-sizing to unset which screws up layouts */
   box-sizing: border-box !important;
