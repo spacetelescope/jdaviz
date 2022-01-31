@@ -37,13 +37,11 @@ jobs:
             toxenv: securityaudit
             allow_failure: false
 
-          # One test times out with coverage, see
-          # https://github.com/spacetelescope/jdaviz/pull/1052
           - name: Python 3.9 with coverage checking, all deps, and remote data
             os: ubuntu-latest
             python: 3.9
             toxenv: py39-test-alldeps-cov
-            toxposargs: --remote-data -k 'not test_cube_fitting_backend'
+            toxposargs: --remote-data
             allow_failure: false
 
           - name: OS X - Python 3.7
