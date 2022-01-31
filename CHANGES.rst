@@ -10,11 +10,17 @@ Cubeviz
 Imviz
 ^^^^^
 
+- New metadata viewer plugin. [#1035]
+
 Mosviz
 ^^^^^^
 
+- New metadata viewer plugin. [#1035]
+
 Specviz
 ^^^^^^^
+
+- New metadata viewer plugin. [#1035]
 
 API Changes
 -----------

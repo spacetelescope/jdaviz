@@ -19,8 +19,16 @@ selected datasets.
 
 Input/Output
 ============
+
 Data to be operated on are selected in each plugin via a
 :guilabel:`Data` pulldown menu.
+
+.. _specviz-metadata-viewer:
+
+Metadata Viewer
+===============
+
+This plugin allows viewing of any metadata associated with the selected data.
 
 .. _gaussian-smooth:
 

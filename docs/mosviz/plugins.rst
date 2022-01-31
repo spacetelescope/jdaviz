@@ -9,6 +9,12 @@ more detail under Specviz:Data Analysis Plugins.  All plugins
 are accessed via the plugin icon in the upper right corner
 of the Mosviz application.
 
+.. _mosviz-metadata-viewer:
+
+Metadata Viewer
+===============
+
+This plugin allows viewing of any metadata associated with the selected data.
 
 Gaussian Smooth
 ===============

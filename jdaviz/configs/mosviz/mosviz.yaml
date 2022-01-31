@@ -13,6 +13,7 @@ toolbar:
   - g-subset-tools
   - g-row-lock
 tray:
+  - g-metadata-viewer
   - g-gaussian-smooth
   - g-slit-overlay
   - g-model-fitting
