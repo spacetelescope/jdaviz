@@ -88,15 +88,23 @@ class TestParseImage:
         assert data.shape == (2, 2)
         assert comp.data.shape == (2, 2)
 
-    def test_parse_numpy_array_3d(self, imviz_helper):
+    @pytest.mark.parametrize('manual_loop', [False, True])
+    def test_parse_numpy_array_3d(self, imviz_helper, manual_loop):
         # This data has values in axis=0 that correspond to axis num.
         n_slices = 5
         slice_shape = (2, 3)
         arr = np.stack([np.zeros(slice_shape) + i for i in range(n_slices)])
 
-        # We use higher level load_data() here to make sure linking does not crash.
-        imviz_helper.load_data(arr, data_label='my_slices')
+        if not manual_loop:
+            # We use higher level load_data() here to make sure linking does not crash.
+            imviz_helper.load_data(arr, data_label='my_slices')
+        else:
+            for i in range(n_slices):
+                imviz_helper.load_data(arr[i, :, :], data_label=f'my_slices_{i}', do_link=False)
+            imviz_helper.link_data(error_on_fail=True)
+
         assert len(imviz_helper.app.data_collection) == n_slices
+        assert len(imviz_helper.app.data_collection.links) == 8
 
         for i in range(n_slices):
             data = imviz_helper.app.data_collection[i]
