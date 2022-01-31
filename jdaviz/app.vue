@@ -107,6 +107,7 @@ export default {
       secondary: "#007DA4",
       accent: "#C75109",
       turquoise: "#007BA1",
+      tableheader: '#000000',
       error: '#FF5252',
       info: '#2196F3',
       success: '#4CAF50',
@@ -118,6 +119,7 @@ export default {
       secondary: "#007DA4",
       accent: "#C75109",
       turquoise: "#007BA1",
+      tableheader: '#KKKKKK',
       error: '#FF5252',
       info: '#2196F3',
       success: '#4CAF50',
@@ -270,4 +272,29 @@ a:active {
 .no-hint .v-text-field__details {
   display: none !important;
 }
+
+/* MOSViz table scrollable with sticky header */
+.v-data-table__wrapper {
+  overflow-y: auto !important;
+  max-height: 310px;
+}
+
+th { 
+  position: sticky;
+  top: 0;
+}
+
+thead > tr {
+  position: sticky;
+  top: 0;
+}
+
+.theme--light thead > tr {
+  background-color: white;
+}
+
+ .theme--dark thead > tr {
+  background-color: black;
+}
+
 </style>

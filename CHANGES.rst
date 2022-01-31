@@ -16,6 +16,7 @@ Mosviz
 ^^^^^^
 
 - New metadata viewer plugin. [#1035]
+- Support for table scrolling. [#1068]
 
 Specviz
 ^^^^^^^
