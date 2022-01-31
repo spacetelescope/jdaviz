@@ -37,10 +37,10 @@ jobs:
             toxenv: securityaudit
             allow_failure: false
 
-          - name: Python 3.8 with coverage checking, all deps, and remote data
+          - name: Python 3.9 with coverage checking, all deps, and remote data
             os: ubuntu-latest
-            python: 3.8
-            toxenv: py38-test-alldeps-cov
+            python: 3.9
+            toxenv: py39-test-alldeps-cov
             toxposargs: --remote-data
             allow_failure: false
 
@@ -58,10 +58,10 @@ jobs:
 
           # This also runs on cron but we want to make sure new changes
           # won't break this job at the PR stage.
-          - name: Python 3.9 with latest dev versions of key dependencies
+          - name: Python 3.10 with latest dev versions of key dependencies
             os: ubuntu-latest
-            python: 3.9
-            toxenv: py39-test-devdeps
+            python: '3.10'
+            toxenv: py310-test-devdeps
             allow_failure: true
 
     steps:
