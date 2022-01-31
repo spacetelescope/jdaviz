@@ -22,6 +22,11 @@ API Changes
 - Viewers now can access the calling Jdaviz application using
   ``viewer.session.jdaviz_app``. [#1051]
 
+Cubeviz
+^^^^^^^
+
+- Subsets from the spectrum viewer are now returned as SpectralRegion objects. [#1046]
+
 Bug Fixes
 ---------
 
@@ -33,6 +38,8 @@ Bug Fixes
 
 Cubeviz
 ^^^^^^^
+
+- Spectral region retrieval now properly handles the case of multiple subregions. [#1046]
 
 Imviz
 ^^^^^
