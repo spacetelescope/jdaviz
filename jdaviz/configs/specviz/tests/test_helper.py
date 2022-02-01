@@ -219,5 +219,5 @@ def test_subset_default_thickness(specviz_app, spectrum1d):
 
 def test_app_links(specviz_app, spectrum1d):
     sv = specviz_app.app.get_viewer('spectrum-viewer')
-    assert isinstance(sv._jdaviz_app, Application)
-    assert isinstance(sv._jdaviz_helper, Specviz)
+    assert isinstance(sv.jdaviz_app, Application)
+    assert isinstance(sv.jdaviz_helper, Specviz)
