@@ -30,7 +30,7 @@ API Changes
 -----------
 
 - Viewers now can access the calling Jdaviz application using ``viewer.jdaviz_app`` and
-  the helper via ``viewer.jdaviz_helper``. [#1051] [#1054]
+  the helper via ``viewer.jdaviz_helper``. [#1051, #1054]
 
 Cubeviz
 ^^^^^^^

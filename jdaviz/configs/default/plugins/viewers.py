@@ -14,14 +14,10 @@ viewer_registry.add("g-table-viewer", label="Table", cls=TableViewer)
 class JdavizViewerMixin:
     @property
     def jdaviz_app(self):
-        """
-        Access to the jdaviz app object
-        """
+        """The Jdaviz application tied to the viewer."""
         return self.session.jdaviz_app
 
     @property
     def jdaviz_helper(self):
-        """
-        Access to the jdaviz config helper object
-        """
+        """The Jdaviz configuration helper tied to the viewer."""
         return self.jdaviz_app._jdaviz_helper
