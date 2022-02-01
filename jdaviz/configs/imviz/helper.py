@@ -145,7 +145,12 @@ class Imviz(ConfigHelper):
                 self.app.load_data(
                     filepath, parser_reference=parser_reference, **kw)
 
-        elif isinstance(data, np.ndarray) and data.ndim == 3:
+        elif isinstance(data, np.ndarray) and data.ndim >= 3:
+            if data.ndim > 3:
+                data = data.squeeze()
+                if data.ndim != 3:
+                    raise ValueError(f'Imviz cannot load this array with ndim={data.ndim}')
+
             for i in range(data.shape[0]):
                 kw = deepcopy(kwargs)
 

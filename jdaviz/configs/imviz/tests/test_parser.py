@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from asdf.fits_embed import AsdfInFits
 from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import NDData, StdDevUncertainty
@@ -113,6 +114,16 @@ class TestParseImage:
             assert data.shape == slice_shape
             assert_array_equal(comp.data, i)
 
+    def test_parse_numpy_array_4d(self, imviz_helper):
+        # Check logic is in higher level method.
+        imviz_helper.load_data(np.ones((1, 2, 5, 5)))
+        assert len(imviz_helper.app.data_collection) == 2
+        assert imviz_helper.app.data_collection[0].shape == (5, 5)
+        assert imviz_helper.app.data_collection[1].shape == (5, 5)
+
+        with pytest.raises(ValueError, match='cannot load this array with ndim'):
+            imviz_helper.load_data(np.ones((2, 2, 5, 5)))
+
     def test_parse_nddata_simple(self, imviz_helper):
         with pytest.raises(ValueError, match='Imviz cannot load this NDData with ndim=1'):
             parse_data(imviz_helper.app, NDData([1, 2, 3, 4]), show_in_viewer=False)
@@ -201,6 +212,18 @@ class TestParseImage:
 
         with pytest.raises(ValueError, match='Do not manually overwrite data_label'):
             imviz_helper.load_data(flist, data_label='foo', show_in_viewer=False)
+
+    def test_parse_asdf_in_fits_4d(self, imviz_helper, tmpdir):
+        hdulist = fits.HDUList([
+            fits.PrimaryHDU(),
+            fits.ImageHDU(np.zeros((1, 2, 5, 5)), name='SCI')])
+        tree = {'data': {'data': hdulist['SCI'].data}}
+        filename = str(tmpdir.join('myasdf.fits'))
+        ff = AsdfInFits(hdulist, tree)
+        ff.write_to(filename, overwrite=True)
+
+        with pytest.raises(ValueError, match='Imviz cannot load this HDU'):
+            parse_data(imviz_helper.app, filename)
 
     @pytest.mark.remote_data
     def test_parse_jwst_nircam_level2(self, imviz_helper):

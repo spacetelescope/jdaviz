@@ -162,10 +162,14 @@ def _count_image2d_extensions(file_obj):
 def _validate_fits_image2d(hdu, raise_error=True):
     valid = hdu.data is not None and hdu.is_image and hdu.data.ndim == 2
     if not valid and raise_error:
+        if hdu.data is not None and hdu.is_image:
+            ndim = hdu.data.ndim
+        else:
+            ndim = None
         raise ValueError(
             f'Imviz cannot load this HDU ({hdu}): '
             f'has_data={hdu.data is not None}, is_image={hdu.is_image}, '
-            f'name={hdu.name}, ver={hdu.ver}')
+            f'name={hdu.name}, ver={hdu.ver}, ndim={ndim}')
     return valid
 
 
@@ -206,13 +210,18 @@ def _jwst_to_glue_data(file_obj, ext, data_label):
     # Translate FITS extension into JWST ASDF convention.
     if ext is None:
         ext = 'data'
+        fits_ext = 'sci'
     else:
         if isinstance(ext, tuple):
             ext = ext[0]  # EXTVER means nothing in ASDF
         ext = ext.lower()
         if ext in ('sci', 'asdf'):
             ext = 'data'
+            fits_ext = 'sci'
+        else:
+            fits_ext = ext
 
+    _validate_fits_image2d(file_obj[fits_ext])
     data, new_data_label = _jwst2data(file_obj, ext, data_label)
 
     yield data, new_data_label
