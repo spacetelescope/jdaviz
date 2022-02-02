@@ -255,7 +255,7 @@ class SimpleAperturePhotometry(TemplateMixin):
                 y_label = 'Value'
             fig = bqplt.figure(1, title='Radial profile from Subset center',
                                title_style={'font-size': '12px'})  # TODO: Jenn wants title at bottom. # noqa
-            bqplt.plot(radial_r, y_data, 'ko', figure=fig, default_size=1)
+            bqplt.plot(radial_r, y_data, 'go', figure=fig, default_size=1)
             bqplt.xlabel(label='pix', mark=fig.marks[-1], figure=fig)
             bqplt.ylabel(label=y_label, mark=fig.marks[-1], figure=fig)
 
