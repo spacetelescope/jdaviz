@@ -253,7 +253,9 @@ class SimpleAperturePhotometry(TemplateMixin):
             else:
                 y_data = radial_img
                 y_label = 'Value'
+            # NOTE: default margin in bqplot is 60 in all directions
             fig = bqplt.figure(1, title='Radial profile from Subset center',
+                               fig_margin={'top': 60, 'bottom': 60, 'left': 40, 'right': 10},
                                title_style={'font-size': '12px'})  # TODO: Jenn wants title at bottom. # noqa
             bqplt.plot(radial_r, y_data, 'go', figure=fig, default_size=1)
             bqplt.xlabel(label='pix', mark=fig.marks[-1], figure=fig)
@@ -294,7 +296,7 @@ class SimpleAperturePhotometry(TemplateMixin):
             self.results = tmp
             self.result_available = True
             self.radial_plot = fig
-            self.bqplot_figs_resize.append(fig)
+            self.bqplot_figs_resize = [fig]
             self.plot_available = True
 
 
