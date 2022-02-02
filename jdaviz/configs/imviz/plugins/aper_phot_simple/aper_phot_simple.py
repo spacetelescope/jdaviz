@@ -4,10 +4,12 @@ import numpy as np
 from astropy import units as u
 from astropy.table import QTable
 from astropy.time import Time
+from bqplot import pyplot as bqplt
 from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage, SubsetUpdateMessage
 from glue.core.subset import Subset
+from ipywidgets import widget_serialization
 from regions.shapes.rectangle import RectanglePixelRegion
-from traitlets import Any, Bool, List, Unicode
+from traitlets import Any, Bool, List
 
 from jdaviz.configs.imviz.helper import layer_is_image_data
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage, SnackbarMessage
@@ -28,7 +30,8 @@ class SimpleAperturePhotometry(TemplateMixin):
     flux_scaling = Any(0).tag(sync=True)
     result_available = Bool(False).tag(sync=True)
     results = List().tag(sync=True)
-    radial_plot = Unicode("").tag(sync=True)
+    plot_available = Bool(False).tag(sync=True)
+    radial_plot = Any('').tag(sync=True, **widget_serialization)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -119,18 +122,11 @@ class SimpleAperturePhotometry(TemplateMixin):
                 f"Failed to extract {event}: {repr(e)}", color='error', sender=self))
 
     def vue_do_aper_phot(self, *args, **kwargs):
-        try:
-            import matplotlib.pyplot as plt
-            from astropy.visualization import quantity_support
-            # stdlib but only import if matplotlib imported
-            import base64
-            from io import BytesIO
-        except ImportError:
-            plt = None
-
         if self._selected_data is None or self._selected_subset is None:
             self.result_available = False
             self.results = []
+            self.plot_available = False
+            self.radial_plot = ''
             self.hub.broadcast(SnackbarMessage(
                 "No data for aperture photometry", color='error', sender=self))
             return
@@ -245,28 +241,28 @@ class SimpleAperturePhotometry(TemplateMixin):
                     self.app._aper_phot_results = _qtable_from_dict(d)
 
             # Radial profile
-            if plt is None:
-                self.radial_plot = 'radial plot N/A: install matplotlib'
+            reg_bb = reg.bounding_box
+            reg_ogrid = np.ogrid[reg_bb.iymin:reg_bb.iymax, reg_bb.ixmin:reg_bb.ixmax]
+            radial_dx = reg_ogrid[1] - reg.center.x
+            radial_dy = reg_ogrid[0] - reg.center.y
+            radial_r = np.hypot(radial_dx, radial_dy).ravel()  # pix
+            radial_img = comp_no_bg_cutout.ravel()
+            if comp.units:
+                y_data = radial_img.value
+                y_label = radial_img.unit.to_string()
             else:
-                reg_bb = reg.bounding_box
-                reg_ogrid = np.ogrid[reg_bb.iymin:reg_bb.iymax, reg_bb.ixmin:reg_bb.ixmax]
-                radial_dx = reg_ogrid[1] - reg.center.x
-                radial_dy = reg_ogrid[0] - reg.center.y
-                radial_r = np.hypot(radial_dx, radial_dy).ravel() * u.pix
-                radial_img = comp_no_bg_cutout.ravel()
-                with quantity_support():
-                    fig, ax = plt.subplots()
-                    ax.plot(radial_r, radial_img, 'k.')
-                    ax.set_title('Radial profile from Subset center', y=-0.25)
-                    plt.tight_layout()
-                    buff = BytesIO()
-                    plt.savefig(buff)
-                    plt.close()
-                    self.radial_plot = base64.b64encode(buff.getvalue()).decode('utf-8')
+                y_data = radial_img
+                y_label = 'Value'
+            fig = bqplt.figure(1, title='Radial profile from Subset center',
+                               title_style={'font-size': '12px'})  # TODO: Jenn wants title at bottom. # noqa
+            bqplt.plot(radial_r, y_data, 'ko', figure=fig, default_size=1)
+            bqplt.xlabel(label='pix', mark=fig.marks[-1], figure=fig)
+            bqplt.ylabel(label=y_label, mark=fig.marks[-1], figure=fig)
 
         except Exception as e:  # pragma: no cover
             self.result_available = False
             self.results = []
+            self.plot_available = False
             self.radial_plot = ''
             self.hub.broadcast(SnackbarMessage(
                 f"Aperture photometry failed: {repr(e)}", color='error', sender=self))
@@ -297,6 +293,8 @@ class SimpleAperturePhotometry(TemplateMixin):
                     tmp.append({'function': key, 'result': x})
             self.results = tmp
             self.result_available = True
+            self.radial_plot = fig
+            self.plot_available = True
 
 
 def _qtable_from_dict(d):

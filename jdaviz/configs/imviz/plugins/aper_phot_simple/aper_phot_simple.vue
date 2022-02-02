@@ -70,7 +70,7 @@
       <v-btn color="primary" text @click="do_aper_phot">Calculate</v-btn>
     </v-row>
 
-    <img v-if="radial_plot" :src="`data:image/png;base64,${radial_plot}`" border="0"/>
+    <jupyter-widget v-if="plot_available" :widget="radial_plot" style="width: 100%" />
 
     <div v-if="result_available">
       <j-plugin-section-header>Results</j-plugin-section-header>
