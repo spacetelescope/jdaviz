@@ -1008,7 +1008,7 @@ class Application(VuetifyTemplate, HubListener):
         ----------
         name : str
             The name used when the plugin was registered to
-            `~jdaviz.core.registries.tray_registry`.
+            an internal `~jdaviz.core.registries.TrayRegistry`.
 
         Returns
         -------

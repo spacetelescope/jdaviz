@@ -186,7 +186,7 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
         """Update the Compass plugin with info from the given image Data object."""
         if self.compass is None:
             try:
-                self.compass = self.session.jdaviz_app.get_tray_item_from_name('imviz-compass')
+                self.compass = self.jdaviz_app.get_tray_item_from_name('imviz-compass')
             except Exception as e:
                 self.session.hub.broadcast(SnackbarMessage(
                     f'Compass failed to load: {repr(e)}', color='error', sender=self))
