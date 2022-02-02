@@ -286,7 +286,7 @@ class ConfigHelper(HubListener):
 
             "inline": Display the Jdaviz application inline in a notebook.
             Note this is functionally equivalent to displaying the cell
-            ``self.app``in the notebook.
+            ``self.app`` in the notebook.
 
             "sidecar": Display the Jdaviz application in a "sidecar", which
             by default is a tab on the right side of the JupyterLab  interface.
