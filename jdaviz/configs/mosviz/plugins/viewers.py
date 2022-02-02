@@ -12,13 +12,14 @@ from jdaviz.core.events import (AddDataToViewerMessage,
                                 TableClickMessage)
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
+from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
 
 __all__ = ['MosvizProfileView', 'MosvizImageView', 'MosvizProfile2DView',
            'MosvizTableViewer']
 
 
 @viewer_registry("mosviz-profile-viewer", label="Profile 1D (Mosviz)")
-class MosvizProfileView(BqplotProfileView):
+class MosvizProfileView(BqplotProfileView, JdavizViewerMixin):
     default_class = Spectrum1D
 
     def data(self, cls=None):
@@ -56,7 +57,7 @@ class MosvizProfileView(BqplotProfileView):
 
 
 @viewer_registry("mosviz-image-viewer", label="Image 2D (Mosviz)")
-class MosvizImageView(BqplotImageView):
+class MosvizImageView(BqplotImageView, JdavizViewerMixin):
     # Whether to inherit tools from glue-jupyter automatically. Set this to
     # False to have full control here over which tools are shown in case new
     # ones are added in glue-jupyter in future that we don't want here.
@@ -86,7 +87,7 @@ class MosvizImageView(BqplotImageView):
 
 
 @viewer_registry("mosviz-profile-2d-viewer", label="Spectrum 2D (Mosviz)")
-class MosvizProfile2DView(BqplotImageView):
+class MosvizProfile2DView(BqplotImageView, JdavizViewerMixin):
     # Due to limitations in CCDData and 2D data that has spectral and spatial
     #  axes, the default conversion class must handle cubes
     default_class = Spectrum1D
@@ -126,7 +127,7 @@ class MosvizProfile2DView(BqplotImageView):
 
 
 @viewer_registry("mosviz-table-viewer", label="Table (Mosviz)")
-class MosvizTableViewer(TableViewer):
+class MosvizTableViewer(TableViewer, JdavizViewerMixin):
     def __init__(self, session, *args, **kwargs):
         super().__init__(session, *args, **kwargs)
 

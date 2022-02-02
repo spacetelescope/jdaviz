@@ -29,8 +29,8 @@ Specviz
 API Changes
 -----------
 
-- Viewers now can access the calling Jdaviz application using
-  ``viewer.session.jdaviz_app``. [#1051]
+- Viewers now can access the Jdaviz application using ``viewer.jdaviz_app`` and
+  the helper via ``viewer.jdaviz_helper``. [#1051, #1054]
 
 Cubeviz
 ^^^^^^^

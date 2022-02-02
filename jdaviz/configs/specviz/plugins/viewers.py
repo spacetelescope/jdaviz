@@ -20,12 +20,13 @@ from jdaviz.core.registries import viewer_registry
 from jdaviz.core.spectral_line import SpectralLine
 from jdaviz.core.linelists import load_preset_linelist, get_available_linelists
 from jdaviz.core.freezable_state import FreezableProfileViewerState
+from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
 
 __all__ = ['SpecvizProfileView']
 
 
 @viewer_registry("specviz-profile-viewer", label="Profile 1D (Specviz)")
-class SpecvizProfileView(BqplotProfileView):
+class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
     # Whether to inherit tools from glue-jupyter automatically. Set this to
     # False to have full control here over which tools are shown in case new
     # ones are added in glue-jupyter in future that we don't want here.

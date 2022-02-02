@@ -48,6 +48,10 @@ class ConfigHelper(HubListener):
             self.app = app
         self.app.verbosity = verbosity
 
+        # give a reference from the app back to this config helper.  These can be accessed from a
+        # viewer via viewer.jdaviz_app and viewer.jdaviz_helper
+        self.app._jdaviz_helper = self
+
         self.app.hub.subscribe(self, SubsetCreateMessage,
                                handler=lambda msg: self._propagate_callback_to_viewers('_on_subset_create', msg)) # noqa
         self.app.hub.subscribe(self, AddDataMessage,
