@@ -294,6 +294,7 @@ class SimpleAperturePhotometry(TemplateMixin):
             self.results = tmp
             self.result_available = True
             self.radial_plot = fig
+            self.bqplot_figs_resize.append(fig)
             self.plot_available = True
 
 
