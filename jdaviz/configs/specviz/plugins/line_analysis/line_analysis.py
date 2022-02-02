@@ -5,7 +5,7 @@ from traitlets import Bool, List, Unicode, observe
 from specutils import analysis
 from specutils.manipulation import extract_region
 
-from jdaviz.core.custom_traitlets import IntHandleEmpty
+from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
@@ -29,7 +29,7 @@ class LineAnalysis(TemplateMixin):
     selected_subset = Unicode("Entire Spectrum").tag(sync=True)
     continuum_subset_items = List(["Surrounding"]).tag(sync=True)
     selected_continuum = Unicode("Surrounding").tag(sync=True)
-    width_points = IntHandleEmpty(5).tag(sync=True)
+    width = FloatHandleEmpty(1).tag(sync=True)
     results_computing = Bool(False).tag(sync=True)
     results = List().tag(sync=True)
 
@@ -103,7 +103,7 @@ class LineAnalysis(TemplateMixin):
             self.results = results
         self.results_computing = False
 
-    @observe("selected_subset", "selected_spectrum", "selected_continuum", "width_points")
+    @observe("selected_subset", "selected_spectrum", "selected_continuum", "width")
     def _calculate_statistics(self, *args, **kwargs):
         """
         Run the line analysis functions on the selected data/subset and
@@ -112,7 +112,7 @@ class LineAnalysis(TemplateMixin):
         # show spinner, disable, whatever
         self.results_computing = True
 
-        if self.selected_spectrum == "" or self.width_points == "":
+        if self.selected_spectrum == "" or self.width == "":
             self.update_results(None)
             return
 
@@ -125,40 +125,44 @@ class LineAnalysis(TemplateMixin):
             self.update_results(None)
             return
         elif self.selected_subset == "Entire Spectrum":
-            inds_bounds = [0, len(spectral_axis)]
             spectrum = self._spectrum1d
         else:
-
             sr = self.app.get_subsets_from_viewer("spectrum-viewer",
                                                   subset_type="spectral").get(self.selected_subset) # noqa
             spectrum = extract_region(self._spectrum1d, sr, return_single_spectrum=True)
 
-            inds_within_region, = np.where((sr.lower <= spectral_axis) & (spectral_axis <= sr.upper)) # noqa
-            inds_bounds = inds_within_region[0], inds_within_region[-1]
-
         # compute continuum
-        if self.selected_continuum == "Surrounding":
-            if self.width_points > 50 or self.width_points <= 0:
-                # if changing this max-value, also change the value in the
-                # rules in line_analysis.vue.  Could make the rule to be
-                # dynamic based on the length of the spectrum, but that is
-                # likely overkill
+        if self.selected_continuum == "Surrounding" and self.selected_subset == "Entire Spectrum":
+            # we know we'll just use the endpoints, so let's be efficient and not event
+            # try extracting from the region
+            continuum_mask = np.array([0, len(spectral_axis)-1])
+
+        elif self.selected_continuum == "Surrounding":
+            if self.width > 2 or self.width < 0:
+                # DEV NOTE: if changing the limits, make sure to also update the form validation
+                # rules in line_analysis.vue
                 self.update_results(None)
                 return
 
-            if inds_bounds[0] < self.width_points:
-                # then we need to extend into the line region itself
-                left = np.arange(0, self.width_points)
-            else:
-                left = np.arange(inds_bounds[0]-self.width_points, inds_bounds[0])
+            spectral_region_width = sr.upper - sr.lower
+            left, = np.where((spectral_axis < sr.lower) &
+                             (spectral_axis >= sr.lower - spectral_region_width*self.width))
 
-            if inds_bounds[1] > len(spectral_axis)-self.width_points:
-                # then we need to extend into the line region itself
-                right = np.arange(len(spectral_axis)-self.width_points, len(spectral_axis))
-            else:
-                right = np.arange(inds_bounds[1]+1, inds_bounds[1]+1+self.width_points)
+            if not len(left):
+                # then no points matching the width are available outside the line region,
+                # so we'll default to the left-most point of the line region.
+                left = np.where(spectral_axis <= sr.lower)[0][:1]
+
+            right, = np.where((spectral_axis > sr.upper) &
+                              (spectral_axis <= sr.upper + spectral_region_width*self.width))
+
+            if not len(right):
+                # then no points matching the width are available outside the line region,
+                # so we'll default to the right-most point of the line region.
+                right = np.where(spectral_axis >= sr.upper)[0][-1:]
 
             continuum_mask = np.concatenate((left, right))
+
         else:
             continuum_mask = self.app.get_data_from_viewer("spectrum-viewer",
                                                            data_label=self.selected_continuum).mask # noqa

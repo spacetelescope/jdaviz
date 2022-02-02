@@ -33,7 +33,7 @@
 
     <j-plugin-section-header>Continuum</j-plugin-section-header>
     <v-row>
-      <j-docs-link>Choose a region to fit a linear line as the underlying continuum.  If "surrounding", choose a width in number of data points to consider on each side of the line region defined above.</j-docs-link>
+      <j-docs-link>Choose a region to fit a linear line as the underlying continuum.  If "surrounding" and a region is selected for the line, choose a width in number of data points to consider on each side of the line region defined above.</j-docs-link>
     </v-row>
 
     <v-row>
@@ -41,22 +41,24 @@
         :items="continuum_subset_items"
         v-model="selected_continuum"
         label="Spectral Region"
-        :rules="[() => selected_continuum!==selected_subset || 'Must not match line selection']"
+        :rules="[() => selected_continuum!==selected_subset || 'Must not match line selection.']"
         hint="Select spectral region to fit linear line to represent the continuum."
         persistent-hint
       ></v-select>
     </v-row>
 
-    <v-row v-if="selected_continuum=='Surrounding'">
-      <!-- NOTE: the rules below should also be handled within line_analysis.py to clear the existing results -->
+    <v-row v-if="selected_continuum=='Surrounding' && selected_subset!='Entire Spectrum'">
+      <!-- DEV NOTE: if changing the validation rules below, also update the logic to clear the results
+           in line_analysis.py  -->
       <v-text-field
         label="Width"
         type="number"
-        v-model.number="width_points"
-        :rules="[() => width_points!=='' || 'This field is required',
-                 () => width_points<=50 || 'Width must be <= 50',
-                 () => width_points>0 || 'Width must be >0']"
-        hint="Number of data points surrounding the spectral region to fit a linear continuum."
+        v-model.number="width"
+        step="0.1"
+        :rules="[() => width!=='' || 'This field is required.',
+                 () => width<=2 || 'Width must be <= 2.',
+                 () => width>=0 || 'Width must be >= 0.']"
+        hint="Width, relative to the overall line spectral region, to use on each side of the line to fit a linear continuum.  If 0, will use endpoints within line region."
         persistent-hint
       >
       </v-text-field>
