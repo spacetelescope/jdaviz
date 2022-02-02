@@ -168,12 +168,13 @@ class LineAnalysis(TemplateMixin):
                                                            data_label=self.selected_continuum).mask # noqa
 
         continuum_x = spectral_axis[continuum_mask].value
+        min_x = min(spectral_axis.value)
         continuum_y = self._spectrum1d.flux[continuum_mask].value
         # DEV NOTE: could replace this with internal calls to the model fitting infrastructure
         # to enable other model-types and to give visual feedback (by labeling the model
         # as line_analysis:continuum, for example)
-        slope, intercept = np.polyfit(continuum_x, continuum_y, deg=1)
-        continuum = slope * spectrum.spectral_axis.value + intercept
+        slope, intercept = np.polyfit(continuum_x-min_x, continuum_y, deg=1)
+        continuum = slope * (spectrum.spectral_axis.value-min_x) + intercept
 
         temp_results = []
         for function in FUNCTIONS:
