@@ -180,7 +180,10 @@ class LineAnalysis(TemplateMixin):
             # TODO: update specutils to allow ALL analysis to take regions and continuum so we
             # don't need these if statements
             if function == "Equivalent Width":
-                temp_result = FUNCTIONS[function](spectrum/continuum)
+                if np.any(continuum <= 0):
+                    temp_result = 'N/A (continuum <= 0)'
+                else:
+                    temp_result = FUNCTIONS[function](spectrum/continuum)
             elif function == "Centroid":
                 # TODO: update specutils to be consistent with region vs regions and default to
                 # regions=None so this elif can be removed
