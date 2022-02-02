@@ -65,19 +65,6 @@ class ConfigHelper(HubListener):
             if hasattr(viewer, method):
                 getattr(viewer, method)(msg)
 
-    def show(self):
-        try:
-            # If we're in a Jupyter Notebook interface, Jupyter knows what to do.
-            # Just return the app and Jupyter will render it
-            if get_ipython().__class__.__name__ != "ZMQInteractiveShell": # noqa
-                raise RuntimeError("Unsupported Kernel")
-        except Exception:
-            warnings.warn("Unable to detect Jupyter interface. \
-                          Visualization may not display properly",
-                          RuntimeWarning)
-        finally:
-            return self.app
-
     def load_data(self, data, parser_reference=None, **kwargs):
         self.app.load_data(data, parser_reference=parser_reference, **kwargs)
 
@@ -287,96 +274,90 @@ class ConfigHelper(HubListener):
 
         return parameters_cube
 
-    def show_inline(self):
+    def show(self, mode="inline", **kwargs):
         """
-        Display the Jdaviz application inline in a notebook.  Note this is
-        functionally equivalent to displaying the cell ``self.app`` in the
-        notebook.
-
-        See Also
-        --------
-        show_in_sidecar
-        show_in_new_tab
-        """
-        display(self.app)
-
-    def show_in_sidecar(self, **kwargs):
-        """
-        Display the Jdaviz application in a "sidecar", which by default is a tab
-        on the right side of the JupyterLab  interface.
-
-        Additional keywords not listed here are passed into the
-        ``sidecar.Sidecar`` constructor. See
-        `jupyterlab-sidecar <https://github.com/jupyter-widgets/jupyterlab-sidecar>`_
-        for the most up-to-date options.
+        Display the Jdaviz application
 
         Parameters
         ----------
+        mode : str
+            The display mode determines how to present the viz app.
+            Supported modes:
+
+            "inline": Display the Jdaviz application inline in a notebook.
+            Note this is functionally equivalent to displaying the cell
+            ``self.app``in the notebook.
+
+            "sidecar": Display the Jdaviz application in a "sidecar", which
+            by default is a tab on the right side of the JupyterLab  interface.
+
+                Additional keywords not listed here are passed into the
+                ``sidecar.Sidecar`` constructor. See
+                `jupyterlab-sidecar <https://github.com/jupyter-widgets/jupyterlab-sidecar>`_
+                for the most up-to-date options.
+
+            "new jupyter tab": Display the Jdaviz application in a new tab in JupyterLab.
+
+                Additional keywords not listed here are passed into the
+                ``sidecar.Sidecar`` constructor. See
+                `jupyterlab-sidecar <https://github.com/jupyter-widgets/jupyterlab-sidecar>`_
+                for the most up-to-date options.
+
         title : str, optional
+            Only applicable to "sidecar"/"new jupyter tab" modes.
             The title of the sidecar tab.  Defaults to the name of the
             application; e.g., "specviz".
         anchor : str
+            Only applicable to "sidecar" mode.
             Where the tab should appear, by default on the right. Options are:
             {sidecar_anchor_values}.
 
         Returns
         -------
-        sidecar
-            The ``sidecar.Sidecar`` object used to create the tab.
+        sidecar or app
+            If a sidecar was used to create the tab: ``sidecar.Sidecar`` object
+            Otherwise, ``Jdaviz.Application`` object
 
         Notes
         -----
-        If this method is called in the "classic" Jupyter notebook, the app will
-        appear inline, as only lab has a mechanism to have multiple tabs.
-        See Also
-        --------
-        show_in_new_tab
-        show_inline
+        If "sidecar" or "new jupyter tab" modes are called in the "classic"
+        Jupyter notebook, the app will appear inline, as only lab has a mechanism
+        to have multiple tabs.
         """
-        if 'title' not in kwargs:
-            kwargs['title'] = self.app.config
+        try:
+            if mode == "sidecar":
+                if 'title' not in kwargs:
+                    kwargs['title'] = self.app.config
 
-        scar = Sidecar(**kwargs)
-        with scar:
-            display(self.app)
+                scar = Sidecar(**kwargs)
+                with scar:
+                    display(self.app)
 
-        return scar
-    show_in_sidecar.__doc__ = show_in_sidecar.__doc__.format(
-        sidecar_anchor_values=repr(Sidecar.anchor.values)[1:-1])
+                return scar
 
-    def show_in_new_tab(self, **kwargs):
-        """
-        Display the Jdaviz application in a new tab in JupyterLab.
+            elif mode == "new jupyter tab":
+                if 'anchor' in kwargs:
+                    if 'tab' not in kwargs['anchor']:
+                        raise ValueError('show_in_new_tab cannot have a non-tab anchor')
+                else:
+                    kwargs['anchor'] = 'tab-after'
+                return self.show(mode="sidecar", **kwargs)
 
-        Additional keywords not listed here are passed into the
-        ``sidecar.Sidecar`` constructor. See
-        `jupyterlab-sidecar <https://github.com/jupyter-widgets/jupyterlab-sidecar>`_
-        for the most up-to-date options.
+            elif mode == "new browser tab":
+                raise NotImplementedError
 
-        Parameters
-        ----------
-        title : str, optional
-            The title of the sidecar tab.  Defaults to the name of the
-            application; e.g., "specviz".
+            elif mode == "popout":
+                raise NotImplementedError
 
-        Returns
-        -------
-        sidecar
-            The ``sidecar.Sidecar`` object used to create the tab.
+            elif mode == "inline":
+                display(self.app)
+                return self.app
 
-        Notes
-        -----
-        If this method is called in the "classic" Jupyter notebook, the app will
-        appear inline, as only lab has a mechanism to have multiple tabs.
+            else:
+                raise ValueError("Invalid display mode: " + str(mode))
 
-        See Also
-        --------
-        show_in_sidecar
-        show_inline
-        """
-        if 'anchor' in kwargs:
-            if 'tab' not in kwargs['anchor']:
-                raise ValueError('show_in_new_tab cannot have a non-tab anchor')
-        else:
-            kwargs['anchor'] = 'tab-after'
-        return self.show_in_sidecar(**kwargs)
+        except Exception:
+            warnings.warn("Unable to detect Jupyter interface. \
+                          Visualization may not display properly",
+                          RuntimeWarning)
+            return self.app
