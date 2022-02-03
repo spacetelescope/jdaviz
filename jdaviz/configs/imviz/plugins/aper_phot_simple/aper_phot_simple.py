@@ -38,12 +38,9 @@ class SimpleAperturePhotometry(TemplateMixin):
 
         self.hub.subscribe(self, AddDataMessage, handler=self._on_viewer_data_changed)
         self.hub.subscribe(self, RemoveDataMessage, handler=self._on_viewer_data_changed)
-        self.hub.subscribe(self, SubsetCreateMessage,
-                           handler=lambda x: self._on_viewer_data_changed())
-        self.hub.subscribe(self, SubsetDeleteMessage,
-                           handler=lambda x: self._on_viewer_data_changed())
-        self.hub.subscribe(self, SubsetUpdateMessage,
-                           handler=lambda x: self._on_viewer_data_changed())
+        self.hub.subscribe(self, SubsetCreateMessage, handler=self._on_viewer_data_changed)
+        self.hub.subscribe(self, SubsetDeleteMessage, handler=self._on_viewer_data_changed)
+        self.hub.subscribe(self, SubsetUpdateMessage, handler=self._on_viewer_data_changed)
 
         # TODO: Allow switching viewer in the future. Need new "messages" to subscribe
         #       to in viewer create/destroy events.
