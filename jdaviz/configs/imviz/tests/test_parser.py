@@ -194,7 +194,9 @@ class TestParseImage:
         # --- Since download is expensive, we attach GWCS-specific tests here. ---
 
         # Ensure interactive region supports GWCS. Also see test_regions.py
-        imviz_helper._apply_interactive_region('bqplot:circle', (965, 1122), (976.9, 1110.1))  # Star
+        imviz_helper._apply_interactive_region('bqplot:circle',
+                                               (965, 1122),
+                                               (976.9, 1110.1))  # Star
         subsets = imviz_helper.get_interactive_regions()
         assert list(subsets.keys()) == ['Subset 1'], subsets
         assert isinstance(subsets['Subset 1'], CirclePixelRegion)
@@ -318,7 +320,9 @@ class TestParseImage:
         # --- Since download is expensive, we attach FITS WCS-specific tests here. ---
 
         # Test simple aperture photometry plugin.
-        imviz_helper._apply_interactive_region('bqplot:ellipse', (1465, 2541), (1512, 2611))  # Galaxy
+        imviz_helper._apply_interactive_region('bqplot:ellipse',
+                                               (1465, 2541),
+                                               (1512, 2611))  # Galaxy
         phot_plugin = SimpleAperturePhotometry(app=imviz_helper.app)
         phot_plugin._on_viewer_data_changed()
         phot_plugin.vue_data_selected('contents[SCI,1]')

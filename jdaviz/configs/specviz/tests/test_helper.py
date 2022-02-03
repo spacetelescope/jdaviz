@@ -191,8 +191,8 @@ def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
     # Add this new data and clear the other, making the converted spectrum our reference
     specviz_helper.app.add_data(converted_spectrum, "Converted Spectrum")
     specviz_helper.app.add_data_to_viewer("spectrum-viewer",
-                                       "Converted Spectrum",
-                                       clear_other_data=True)
+                                          "Converted Spectrum",
+                                          clear_other_data=True)
 
     specviz_helper.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(0.6, 0.7))
 
