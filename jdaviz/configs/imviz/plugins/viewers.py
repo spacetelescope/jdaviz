@@ -179,18 +179,15 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
         try:
             i = get_top_layer_index(self)
         except IndexError:
+            if self.compass is not None:
+                self.compass.clear_compass()
             return
         self.set_compass(self.state.layers[i].layer)
 
     def set_compass(self, image):
         """Update the Compass plugin with info from the given image Data object."""
-        if self.compass is None:
-            try:
-                self.compass = self.jdaviz_app.get_tray_item_from_name('imviz-compass')
-            except Exception as e:
-                self.session.hub.broadcast(SnackbarMessage(
-                    f'Compass failed to load: {repr(e)}', color='error', sender=self))
-                return
+        if self.compass is None:  # Maybe another viewer has it
+            return
 
         zoom_limits = (self.state.x_min, self.state.y_min, self.state.x_max, self.state.y_max)
         if data_has_valid_wcs(image):

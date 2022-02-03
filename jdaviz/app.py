@@ -32,7 +32,8 @@ from ipyvuetify import VuetifyTemplate
 from jdaviz.core.config import read_configuration, get_configuration
 from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
                                 SnackbarMessage, RemoveDataMessage,
-                                AddDataToViewerMessage, RemoveDataFromViewerMessage)
+                                AddDataToViewerMessage, RemoveDataFromViewerMessage,
+                                ViewerAddedMessage, ViewerRemovedMessage)
 from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registry,
                                     data_parser_registry)
 from jdaviz.utils import SnackbarQueue
@@ -999,42 +1000,6 @@ class Application(VuetifyTemplate, HubListener):
 
         return viewer_item
 
-    def get_tray_item_from_name(self, name):
-        """Return the instance of a tray item for a given name.
-        This is useful for direct programmatic access to Jdaviz plugins
-        registered under tray items.
-
-        Parameters
-        ----------
-        name : str
-            The name used when the plugin was registered to
-            an internal `~jdaviz.core.registries.TrayRegistry`.
-
-        Returns
-        -------
-        tray_item : obj
-            The instance of the plugin registered to tray items.
-
-        Raises
-        ------
-        KeyError
-            Name not found.
-
-        """
-        from ipywidgets.widgets import widget_serialization
-
-        tray_item = None
-        for item in self.state.tray_items:
-            if item['name'] == name:
-                ipy_model_id = item['widget']
-                tray_item = widget_serialization['from_json'](ipy_model_id, None)
-                break
-
-        if tray_item is None:
-            raise KeyError(f'{name} not found in app.state.tray_items')
-
-        return tray_item
-
     def vue_relayout(self, *args, **kwargs):
         """
         Forces any rendered ``Bqplot`` instances to resize themselves.
@@ -1070,7 +1035,7 @@ class Application(VuetifyTemplate, HubListener):
         Parameters
         ----------
         cid : str
-            The UUID associated with the viewer item dictionary.
+            The viewer ID associated with the viewer item dictionary.
         """
         def remove(stack_items):
             for stack in stack_items:
@@ -1092,6 +1057,8 @@ class Application(VuetifyTemplate, HubListener):
         # Also remove the viewer from the stored viewer instance dictionary
         if cid in self._viewer_store:
             del self._viewer_store[cid]
+
+        self.hub.broadcast(ViewerRemovedMessage(cid, sender=self))
 
     def vue_data_item_selected(self, event):
         """
@@ -1366,17 +1333,16 @@ class Application(VuetifyTemplate, HubListener):
 
         # Store the glupyter viewer object so we can access the add and remove
         #  data methods in the future
-        self._viewer_store[new_viewer_item['id']] = viewer
+        vid = new_viewer_item['id']
+        self._viewer_store[vid] = viewer
 
         # Add viewer locally
         self.state.stack_items.append(new_stack_item)
 
-        # Send out a toast message
-        snackbar_message = SnackbarMessage("New viewer successfully created.",
-                                           sender=self)
-        self.hub.broadcast(snackbar_message)
-
         self.session.application.viewers.append(viewer)
+
+        # Send out a toast message
+        self.hub.broadcast(ViewerAddedMessage(vid, sender=self))
 
         return viewer
 

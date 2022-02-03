@@ -164,7 +164,7 @@ def get_compass_info(image_wcs, image_shape, r_fac=0.4):
     return x, y, xn, yn, xe, ye, degn, dege, xflip
 
 
-def draw_compass_mpl(image, wcs=None, theme='light', show=True, zoom_limits=None, **kwargs):
+def draw_compass_mpl(image, wcs=None, show=True, zoom_limits=None, **kwargs):
     """Visualize the compass using Matplotlib.
 
     Parameters
@@ -175,9 +175,6 @@ def draw_compass_mpl(image, wcs=None, theme='light', show=True, zoom_limits=None
     wcs : obj or `None`
         Associated image WCS that is compatible with APE 14.
         If `None` given, compass is not drawn.
-
-    theme : {'light', 'dark'}
-        Use background appropriate for light or dark theme.
 
     show : bool
         Display the plot.
@@ -197,14 +194,6 @@ def draw_compass_mpl(image, wcs=None, theme='light', show=True, zoom_limits=None
     """
     if not show:
         plt.ioff()
-
-    if theme == 'dark':
-        # FIXME: This also changes the size of the figure that conflicts with
-        # "%matplotlib inline" setting in notebook.
-        # TODO: If we can programmatically detect if Lab is in dark theme,
-        # then this will make Compass pretty in dark theme.
-        # https://github.com/jupyterlab/jupyterlab/pull/5078
-        plt.style.use('dark_background')
 
     fig, ax = plt.subplots()
     ax.imshow(image, origin='lower', cmap='gray', **kwargs)
