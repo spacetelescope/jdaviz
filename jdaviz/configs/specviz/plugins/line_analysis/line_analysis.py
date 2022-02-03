@@ -220,12 +220,14 @@ class LineAnalysis(TemplateMixin):
                       'right': np.array([sr.upper.value, spectral_axis.value[continuum_mask[-1]]])}
 
         else:
-            continuum_mask = self.app.get_data_from_viewer("spectrum-viewer",
-                                                           data_label=self.selected_continuum).mask # noqa
+            continuum_mask = ~self.app.get_data_from_viewer("spectrum-viewer",
+                                                            data_label=self.selected_continuum).mask # noqa
             # TODO: update this and test
-            mark_x = {'left': np.array([]),
-                      'center': np.array([]),
-                      'right': np.array([])}
+            spectral_axis_nanmasked = spectral_axis.value.copy()
+            spectral_axis_nanmasked[~continuum_mask] = np.nan
+            mark_x = {'left': spectral_axis_nanmasked[spectral_axis.value < sr.lower.value],
+                      'center': np.array([sr.lower.value, sr.upper.value]),
+                      'right': spectral_axis_nanmasked[spectral_axis.value > sr.upper.value]}
 
         continuum_x = spectral_axis[continuum_mask].value
         min_x = min(spectral_axis.value)
