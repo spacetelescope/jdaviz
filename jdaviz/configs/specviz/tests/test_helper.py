@@ -12,8 +12,8 @@ from jdaviz.configs.specviz.helper import Specviz
 
 class TestSpecvizHelper:
     @pytest.fixture(autouse=True)
-    def setup_class(self, specviz_app, spectrum1d):
-        self.spec_app = specviz_app
+    def setup_class(self, specviz_helper, spectrum1d):
+        self.spec_app = specviz_helper
         self.spec = spectrum1d
         self.spec_list = SpectrumList([spectrum1d] * 3)
 
@@ -141,73 +141,73 @@ class TestSpecvizHelper:
             self.spec_app.get_spectral_regions()
 
 
-def test_get_spectra_no_spectra(specviz_app, spectrum1d):
-    spectra = specviz_app.get_spectra()
+def test_get_spectra_no_spectra(specviz_helper, spectrum1d):
+    spectra = specviz_helper.get_spectra()
 
     assert spectra == {}
 
 
-def test_get_spectra_no_spectra_redshift_error(specviz_app, spectrum1d):
-    spectra = specviz_app.get_spectra(apply_slider_redshift=True)
+def test_get_spectra_no_spectra_redshift_error(specviz_helper, spectrum1d):
+    spectra = specviz_helper.get_spectra(apply_slider_redshift=True)
 
     assert spectra == {}
 
 
-def test_get_spectra_no_spectra_label(specviz_app, spectrum1d):
+def test_get_spectra_no_spectra_label(specviz_helper, spectrum1d):
     label = "label"
     with pytest.raises(AttributeError):
-        specviz_app.get_spectra(data_label=label)
+        specviz_helper.get_spectra(data_label=label)
 
 
-def test_get_spectra_no_spectra_label_redshift_error(specviz_app, spectrum1d):
+def test_get_spectra_no_spectra_label_redshift_error(specviz_helper, spectrum1d):
     label = "label"
     with pytest.raises(AttributeError):
-        specviz_app.get_spectra(data_label=label, apply_slider_redshift=True)
+        specviz_helper.get_spectra(data_label=label, apply_slider_redshift=True)
 
 
-def test_get_spectral_regions_unit(specviz_app, spectrum1d):
+def test_get_spectral_regions_unit(specviz_helper, spectrum1d):
     # Ensure units we put in are the same as the units we get out
-    specviz_app.load_spectrum(spectrum1d)
-    specviz_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(6200, 7000))
+    specviz_helper.load_spectrum(spectrum1d)
+    specviz_helper.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(6200, 7000))
 
-    subsets = specviz_app.get_spectral_regions()
+    subsets = specviz_helper.get_spectral_regions()
     reg = subsets.get('Subset 1')
 
     assert spectrum1d.wavelength.unit == reg.lower.unit
     assert spectrum1d.wavelength.unit == reg.upper.unit
 
 
-def test_get_spectral_regions_unit_conversion(specviz_app, spectrum1d):
+def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
     # If the reference (visible) data changes via unit conversion,
     # check that the region's units convert too
-    specviz_app.load_spectrum(spectrum1d)
+    specviz_helper.load_spectrum(spectrum1d)
 
     # Convert the wavelength axis to microns
     new_spectral_axis = "micron"
     conv_func = uc.UnitConversion.process_unit_conversion
-    converted_spectrum = conv_func(specviz_app.app, spectrum=spectrum1d,
+    converted_spectrum = conv_func(specviz_helper.app, spectrum=spectrum1d,
                                    new_spectral_axis=new_spectral_axis)
 
     # Add this new data and clear the other, making the converted spectrum our reference
-    specviz_app.app.add_data(converted_spectrum, "Converted Spectrum")
-    specviz_app.app.add_data_to_viewer("spectrum-viewer",
+    specviz_helper.app.add_data(converted_spectrum, "Converted Spectrum")
+    specviz_helper.app.add_data_to_viewer("spectrum-viewer",
                                        "Converted Spectrum",
                                        clear_other_data=True)
 
-    specviz_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(0.6, 0.7))
+    specviz_helper.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(0.6, 0.7))
 
     # Retrieve the Subset
-    subsets = specviz_app.get_spectral_regions()
+    subsets = specviz_helper.get_spectral_regions()
     reg = subsets.get('Subset 1')
 
     assert reg.lower.unit == u.Unit(new_spectral_axis)
     assert reg.upper.unit == u.Unit(new_spectral_axis)
 
 
-def test_subset_default_thickness(specviz_app, spectrum1d):
-    specviz_app.load_spectrum(spectrum1d)
+def test_subset_default_thickness(specviz_helper, spectrum1d):
+    specviz_helper.load_spectrum(spectrum1d)
 
-    sv = specviz_app.app.get_viewer('spectrum-viewer')
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
     tool = sv.toolbar.tools['bqplot:xrange']
     tool.activate()
     tool.interact.brushing = True
@@ -217,7 +217,7 @@ def test_subset_default_thickness(specviz_app, spectrum1d):
     assert sv.state.layers[-1].linewidth == 3
 
 
-def test_app_links(specviz_app, spectrum1d):
-    sv = specviz_app.app.get_viewer('spectrum-viewer')
+def test_app_links(specviz_helper, spectrum1d):
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
     assert isinstance(sv.jdaviz_app, Application)
     assert isinstance(sv.jdaviz_helper, Specviz)

@@ -40,8 +40,8 @@ def test_default_viewer_ids_mosviz(mosviz_app):
     assert x.get_viewer_ids() == ['mosviz-0', 'mosviz-1', 'mosviz-2', 'mosviz-3']
 
 
-def test_default_viewer_ids_specviz(specviz_app):
-    x = specviz_app.app
+def test_default_viewer_ids_specviz(specviz_helper):
+    x = specviz_helper.app
     assert x.get_viewer_reference_names() == ['spectrum-viewer']
     assert x.get_viewer_ids() == ['specviz-0']
 

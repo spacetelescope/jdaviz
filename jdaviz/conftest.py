@@ -31,7 +31,7 @@ def mosviz_app():
 
 
 @pytest.fixture
-def specviz_app():
+def specviz_helper():
     return Specviz()
 
 

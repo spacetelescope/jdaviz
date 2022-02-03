@@ -33,16 +33,16 @@ def test_line_lists():
     assert np.all(viz.spectral_lines["show"])
 
 
-def test_redshift(specviz_app, spectrum1d):
+def test_redshift(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    specviz_app.load_spectrum(spectrum1d, data_label=label)
+    specviz_helper.load_spectrum(spectrum1d, data_label=label)
 
     # test that helper functions run, we'll test functionality at the plugin level
-    specviz_app.set_redshift(0.1)
-    specviz_app.set_redshift_slider_bounds(range=0.5, step=0.01)
-    specviz_app.set_redshift_slider_bounds(range='auto', step='auto')
+    specviz_helper.set_redshift(0.1)
+    specviz_helper.set_redshift_slider_bounds(range=0.5, step=0.01)
+    specviz_helper.set_redshift_slider_bounds(range='auto', step='auto')
 
-    ll_plugin = line_lists.LineListTool(app=specviz_app.app)
+    ll_plugin = line_lists.LineListTool(app=specviz_helper.app)
     ll_plugin.rs_redshift = 0.1
     assert ll_plugin.rs_rv == 28487.06614479641
 
