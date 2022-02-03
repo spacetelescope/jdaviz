@@ -56,9 +56,9 @@
         v-model.number="width"
         step="0.1"
         :rules="[() => width!=='' || 'This field is required.',
-                 () => width<=2 || 'Width must be <= 2.',
-                 () => width>=0 || 'Width must be >= 0.']"
-        hint="Width, relative to the overall line spectral region, to use on each side of the line to fit a linear continuum.  If 0, will use endpoints within line region."
+                 () => width<=10 || 'Width must be <= 10.',
+                 () => width>=1 || 'Width must be >= 1.']"
+        hint="Width, relative to the overall line spectral region, to fit the linear continuum (excluding the region containing the line).  If 1, will use endpoints within line region only."
         persistent-hint
       >
       </v-text-field>

@@ -33,7 +33,7 @@ class LineAnalysis(TemplateMixin):
     selected_subset = Unicode("Entire Spectrum").tag(sync=True)
     continuum_subset_items = List(["Surrounding"]).tag(sync=True)
     selected_continuum = Unicode("Surrounding").tag(sync=True)
-    width = FloatHandleEmpty(1).tag(sync=True)
+    width = FloatHandleEmpty(3).tag(sync=True)
     results_computing = Bool(False).tag(sync=True)
     results = List().tag(sync=True)
 
@@ -189,15 +189,17 @@ class LineAnalysis(TemplateMixin):
                       'right': np.array([])}
 
         elif self.selected_continuum == "Surrounding":
-            if self.width > 2 or self.width < 0:
+            if self.width > 10 or self.width < 1:
                 # DEV NOTE: if changing the limits, make sure to also update the form validation
                 # rules in line_analysis.vue
                 self.update_results(None)
                 return
 
             spectral_region_width = sr.upper - sr.lower
+            # convert width from total relative width, to width per "side"
+            width = (self.width - 1) / 2
             left, = np.where((spectral_axis < sr.lower) &
-                             (spectral_axis >= sr.lower - spectral_region_width*self.width))
+                             (spectral_axis >= sr.lower - spectral_region_width*width))
 
             if not len(left):
                 # then no points matching the width are available outside the line region,
@@ -205,7 +207,7 @@ class LineAnalysis(TemplateMixin):
                 left, = np.where(spectral_axis == spectrum.spectral_axis[:1])
 
             right, = np.where((spectral_axis > sr.upper) &
-                              (spectral_axis <= sr.upper + spectral_region_width*self.width))
+                              (spectral_axis <= sr.upper + spectral_region_width*width))
 
             if not len(right):
                 # then no points matching the width are available outside the line region,
