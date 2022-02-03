@@ -139,7 +139,8 @@ class LineAnalysis(TemplateMixin):
             marks = {'left': LineAnalysisContinuumLeft(viewer, visible=self._is_opened),
                      'center': LineAnalysisContinuumCenter(viewer, visible=self._is_opened),
                      'right': LineAnalysisContinuumRight(viewer, visible=self._is_opened)}
-            viewer.figure.marks += marks.values()
+            # NOTE: += won't trigger the figure to notice new marks
+            viewer.figure.marks = viewer.figure.marks + list(marks.values())
 
         return marks
 
