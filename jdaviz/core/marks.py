@@ -197,3 +197,32 @@ class SliceIndicator(BaseSpectrumVerticalLine, HubListener):
         if self.labels_visibility == 'label':
             # update label with new value/unit
             self._update_label()
+
+
+class LineAnalysisContinuum(Lines, HubListener):
+    def __init__(self, viewer, x=[], y=[], **kwargs):
+        # we'll store the current units so that we can automatically update the
+        # positioning on a change to the x-units
+        self._x_unit = viewer.state.reference_data.get_object().spectral_axis.unit
+
+        super().__init__(x=x, y=y, scales=viewer.scales, **kwargs)
+
+    def update_xy(self, x, y):
+        self.x = x
+        self.y = y
+
+
+class LineAnalysisContinuumCenter(LineAnalysisContinuum):
+    def __init__(self, viewer, x=[], y=[], **kwargs):
+        super().__init__(viewer, x, y, **kwargs)
+        self.stroke_width = 1
+
+
+class LineAnalysisContinuumLeft(LineAnalysisContinuum):
+    def __init__(self, viewer, x=[], y=[], **kwargs):
+        super().__init__(viewer, x, y, **kwargs)
+        self.stroke_width = 5
+
+
+class LineAnalysisContinuumRight(LineAnalysisContinuumLeft):
+    pass

@@ -7,6 +7,10 @@ from specutils.manipulation import extract_region
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage
+from jdaviz.core.marks import (LineAnalysisContinuum,
+                               LineAnalysisContinuumCenter,
+                               LineAnalysisContinuumLeft,
+                               LineAnalysisContinuumRight)
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
 
@@ -40,6 +44,7 @@ class LineAnalysis(TemplateMixin):
         self._spectrum1d = None
         self._viewer_id = self.app._viewer_item_by_reference('spectrum-viewer').get('id')
         self._units = {}
+        self._is_opened = False
         self.update_results(None)
 
         self.hub.subscribe(self, AddDataMessage,
@@ -53,6 +58,9 @@ class LineAnalysis(TemplateMixin):
 
         self.hub.subscribe(self, SubsetUpdateMessage,
                            handler=self._on_viewer_data_changed)
+
+        self.app.state.add_callback('tray_items_open', self._on_plugin_opened_changed)
+        self.app.state.add_callback('drawer', self._on_plugin_opened_changed)
 
     def _on_viewer_data_changed(self, msg=None):
         """
@@ -96,11 +104,51 @@ class LineAnalysis(TemplateMixin):
             self.selected_continuum = "Surrounding"
             self.update_results(None)
 
-    def update_results(self, results=None):
+    def _on_plugin_opened_changed(self, new_value):
+        # toggle continuum lines in spectrum viewer based on whether this plugin
+        # is currently open in the tray
+        app_state = self.app.state
+        tray_names_open = [app_state.tray_items[i]['name'] for i in app_state.tray_items_open]
+        self._is_opened = app_state.drawer and 'specviz-line-analysis' in tray_names_open
+        for pos, mark in self.marks.items():
+            mark.visible = self._is_opened
+
+    @property
+    def marks(self):
+        marks = {}
+        viewer = self.app.get_viewer('spectrum-viewer')
+        for mark in viewer.figure.marks:
+            if isinstance(mark, LineAnalysisContinuum):
+                # NOTE: we don't use isinstance anymore because of nested inheritance
+                if mark.__class__.__name__ == 'LineAnalysisContinuumLeft':
+                    marks['left'] = mark
+                elif mark.__class__.__name__ == 'LineAnalysisContinuumCenter':
+                    marks['center'] = mark
+                elif mark.__class__.__name__ == 'LineAnalysisContinuumRight':
+                    marks['right'] = mark
+
+        if not len(marks):
+            if not viewer.state.reference_data:
+                # we don't have data yet for scales, defer initializing
+                return {}
+            # then haven't been initialized yet, so initialize with empty
+            # marks that will be populated once the first analysis is done.
+            marks = {'left': LineAnalysisContinuumLeft(viewer, visible=self._is_opened),
+                     'center': LineAnalysisContinuumCenter(viewer, visible=self._is_opened),
+                     'right': LineAnalysisContinuumRight(viewer, visible=self._is_opened)}
+            viewer.figure.marks += marks.values()
+
+        return marks
+
+    def update_results(self, results=None, mark_x={}, mark_y={}):
+        for pos, mark in self.marks.items():
+            mark.update_xy(mark_x.get(pos, []), mark_y.get(pos, []))
+
         if results is None:
             self.results = [{'function': function, 'result': ''} for function in FUNCTIONS]
         else:
             self.results = results
+
         self.results_computing = False
 
     @observe("selected_subset", "selected_spectrum", "selected_continuum", "width")
@@ -133,9 +181,12 @@ class LineAnalysis(TemplateMixin):
 
         # compute continuum
         if self.selected_continuum == "Surrounding" and self.selected_subset == "Entire Spectrum":
-            # we know we'll just use the endpoints, so let's be efficient and not event
+            # we know we'll just use the endpoints, so let's be efficient and not even
             # try extracting from the region
             continuum_mask = np.array([0, len(spectral_axis)-1])
+            mark_x = {'left': np.array([]),
+                      'center': np.array([spectral_axis.value[0], spectral_axis.value[-1]]),
+                      'right': np.array([])}
 
         elif self.selected_continuum == "Surrounding":
             if self.width > 2 or self.width < 0:
@@ -151,7 +202,7 @@ class LineAnalysis(TemplateMixin):
             if not len(left):
                 # then no points matching the width are available outside the line region,
                 # so we'll default to the left-most point of the line region.
-                left = np.where(spectral_axis <= sr.lower)[0][:1]
+                left, = np.where(spectral_axis == spectrum.spectral_axis[:1])
 
             right, = np.where((spectral_axis > sr.upper) &
                               (spectral_axis <= sr.upper + spectral_region_width*self.width))
@@ -159,13 +210,20 @@ class LineAnalysis(TemplateMixin):
             if not len(right):
                 # then no points matching the width are available outside the line region,
                 # so we'll default to the right-most point of the line region.
-                right = np.where(spectral_axis >= sr.upper)[0][-1:]
+                right, = np.where(spectral_axis == spectrum.spectral_axis[-1:])
 
             continuum_mask = np.concatenate((left, right))
+            mark_x = {'left': np.array([spectral_axis.value[continuum_mask[0]], sr.lower.value]),
+                      'center': np.array([sr.lower.value, sr.upper.value]),
+                      'right': np.array([sr.upper.value, spectral_axis.value[continuum_mask[-1]]])}
 
         else:
             continuum_mask = self.app.get_data_from_viewer("spectrum-viewer",
                                                            data_label=self.selected_continuum).mask # noqa
+            # TODO: update this and test
+            mark_x = {'left': np.array([]),
+                      'center': np.array([]),
+                      'right': np.array([])}
 
         continuum_x = spectral_axis[continuum_mask].value
         min_x = min(spectral_axis.value)
@@ -175,6 +233,7 @@ class LineAnalysis(TemplateMixin):
         # as line_analysis:continuum, for example)
         slope, intercept = np.polyfit(continuum_x-min_x, continuum_y, deg=1)
         continuum = slope * (spectrum.spectral_axis.value-min_x) + intercept
+        mark_y = {k: slope * (v-min_x) + intercept for k, v in mark_x.items()}
 
         temp_results = []
         for function in FUNCTIONS:
@@ -194,4 +253,4 @@ class LineAnalysis(TemplateMixin):
 
             temp_results.append({'function': function, 'result': str(temp_result)})
 
-        self.update_results(temp_results)
+        self.update_results(temp_results, mark_x, mark_y)
