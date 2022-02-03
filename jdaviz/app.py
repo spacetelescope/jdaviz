@@ -301,19 +301,20 @@ class Application(VuetifyTemplate, HubListener):
         any components are compatible with already loaded data. If so, link
         them so that they can be displayed on the same profile1D plot.
         """
+        new_len = len(self.data_collection)
+
         # Allow for batch linking of data in the parser rather than on
         # data load
-        if not self.auto_link:
+        if not self.auto_link or new_len < 2:
             return
 
-        new_len = len(self.data_collection)
         # Can't link if there's no world_component_ids
-        wc_new = self.data_collection[new_len-1].world_component_ids
+        wc_new = self.data_collection[-1].world_component_ids
         if wc_new == []:
             return
 
         # Link to the first dataset with compatible coordinates
-        for i in range(0, new_len-1):
+        for i in range(new_len - 1):
             wc_old = self.data_collection[i].world_component_ids
             if wc_old == []:
                 continue
