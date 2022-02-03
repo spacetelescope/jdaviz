@@ -307,6 +307,7 @@ class ConfigHelper(HubListener):
             Only applicable to "sidecar"/"new jupyter tab" modes.
             The title of the sidecar tab.  Defaults to the name of the
             application; e.g., "specviz".
+
         anchor : str
             Only applicable to "sidecar" mode.
             Where the tab should appear, by default on the right. Options are:
@@ -314,9 +315,8 @@ class ConfigHelper(HubListener):
 
         Returns
         -------
-        sidecar or app
+        sidecar or Nothing
             If a sidecar was used to create the tab: ``sidecar.Sidecar`` object
-            Otherwise, ``Jdaviz.Application`` object
 
         Notes
         -----
@@ -338,7 +338,7 @@ class ConfigHelper(HubListener):
             elif mode == "new jupyter tab":
                 if 'anchor' in kwargs:
                     if 'tab' not in kwargs['anchor']:
-                        raise ValueError('show_in_new_tab cannot have a non-tab anchor')
+                        raise ValueError('new jupyter lab cannot have a non-tab anchor')
                 else:
                     kwargs['anchor'] = 'tab-after'
                 return self.show(mode="sidecar", **kwargs)
@@ -351,13 +351,12 @@ class ConfigHelper(HubListener):
 
             elif mode == "inline":
                 display(self.app)
-                return self.app
 
             else:
-                raise ValueError("Invalid display mode: " + str(mode))
+                raise ValueError("Unrecognized display mode: " + str(mode))
 
         except Exception:
-            warnings.warn("Unable to detect Jupyter interface. \
-                          Visualization may not display properly",
+            warnings.warn("Error detected in display. Falling back to IPython display",
                           RuntimeWarning)
-            return self.app
+            display(self.app)
+            raise
