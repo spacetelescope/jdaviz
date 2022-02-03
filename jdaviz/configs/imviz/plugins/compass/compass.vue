@@ -22,7 +22,7 @@
       >{{ data_label }}</v-chip>
     </v-row>
 
-    <img v-if="img_data" :src="`data:image/png;base64,${img_data}`" />
+    <img v-if="img_data" :src="`data:image/png;base64,${img_data}`" style="width: 100%; max-width: 400px" />
 
   </j-tray-plugin>
 </template>
