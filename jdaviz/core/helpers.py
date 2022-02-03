@@ -355,8 +355,7 @@ class ConfigHelper(HubListener):
             else:
                 raise ValueError("Unrecognized display mode: " + str(mode))
 
-        except Exception:
-            warnings.warn("Error detected in display. Falling back to IPython display",
+        except Exception as e:
+            warnings.warn(f'Error detected in display: {repr(e)}. Falling back to IPython display',
                           RuntimeWarning)
             display(self.app)
-            raise
