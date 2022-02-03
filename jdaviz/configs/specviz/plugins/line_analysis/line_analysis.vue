@@ -33,7 +33,11 @@
 
     <j-plugin-section-header>Continuum</j-plugin-section-header>
     <v-row>
-      <j-docs-link>Choose a region to fit a linear line as the underlying continuum.  If "surrounding" and a region is selected for the line, choose a width in number of data points to consider on each side of the line region defined above.</j-docs-link>
+      <j-docs-link>
+        {{selected_subset=='Entire Spectrum' ? "Since using the entire spectrum, the end points will be used to fit a linear continuum." : "Choose a region to fit a linear line as the underlying continuum."}}  
+        {{selected_continuum=='Surrounding' && selected_subset!='Entire Spectrum' ? "Choose a width in number of data points to consider on each side of the line region defined above." : null}}
+        When this plugin is opened, a visual indicator will show on the spectrum plot showing the continuum fitted as a thick line, and interpolated into the line region as a thin line.
+      </j-docs-link>
     </v-row>
 
     <v-row>
