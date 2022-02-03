@@ -16,7 +16,7 @@ SPECTRUM_SIZE = 10  # length of spectrum
 
 
 @pytest.fixture
-def cubeviz_app():
+def cubeviz_helper():
     return Cubeviz()
 
 

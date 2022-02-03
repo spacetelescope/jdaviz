@@ -39,42 +39,42 @@ def image_hdu_obj():
 
 
 @pytest.mark.filterwarnings('ignore')
-def test_fits_image_hdu_parse(image_hdu_obj, cubeviz_app):
-    cubeviz_app.load_data(image_hdu_obj)
+def test_fits_image_hdu_parse(image_hdu_obj, cubeviz_helper):
+    cubeviz_helper.load_data(image_hdu_obj)
 
-    assert len(cubeviz_app.app.data_collection) == 3
-    assert cubeviz_app.app.data_collection[0].label.endswith('[FLUX]')
+    assert len(cubeviz_helper.app.data_collection) == 3
+    assert cubeviz_helper.app.data_collection[0].label.endswith('[FLUX]')
 
 
 @pytest.mark.filterwarnings('ignore')
-def test_fits_image_hdu_parse_from_file(tmpdir, image_hdu_obj, cubeviz_app):
+def test_fits_image_hdu_parse_from_file(tmpdir, image_hdu_obj, cubeviz_helper):
     f = tmpdir.join("test_fits_image.fits")
     path = f.strpath
     image_hdu_obj.writeto(path, overwrite=True)
-    cubeviz_app.load_data(path)
+    cubeviz_helper.load_data(path)
 
-    assert len(cubeviz_app.app.data_collection) == 3
-    assert cubeviz_app.app.data_collection[0].label.endswith('[FLUX]')
+    assert len(cubeviz_helper.app.data_collection) == 3
+    assert cubeviz_helper.app.data_collection[0].label.endswith('[FLUX]')
 
 
 @pytest.mark.filterwarnings('ignore')
-def test_spectrum3d_parse(image_hdu_obj, cubeviz_app):
+def test_spectrum3d_parse(image_hdu_obj, cubeviz_helper):
     flux = image_hdu_obj[1].data << u.Unit(image_hdu_obj[1].header['BUNIT'])
     wcs = WCS(image_hdu_obj[1].header, image_hdu_obj)
     sc = Spectrum1D(flux=flux, wcs=wcs)
-    cubeviz_app.load_data(sc)
+    cubeviz_helper.load_data(sc)
 
-    assert len(cubeviz_app.app.data_collection) == 1
-    assert cubeviz_app.app.data_collection[0].label.endswith('[FLUX]')
-
-
-def test_spectrum1d_parse(spectrum1d, cubeviz_app):
-    cubeviz_app.load_data(spectrum1d)
-
-    assert len(cubeviz_app.app.data_collection) == 1
-    assert cubeviz_app.app.data_collection[0].label.endswith('[FLUX]')
+    assert len(cubeviz_helper.app.data_collection) == 1
+    assert cubeviz_helper.app.data_collection[0].label.endswith('[FLUX]')
 
 
-def test_numpy_cube(cubeviz_app):
+def test_spectrum1d_parse(spectrum1d, cubeviz_helper):
+    cubeviz_helper.load_data(spectrum1d)
+
+    assert len(cubeviz_helper.app.data_collection) == 1
+    assert cubeviz_helper.app.data_collection[0].label.endswith('[FLUX]')
+
+
+def test_numpy_cube(cubeviz_helper):
     with pytest.raises(NotImplementedError, match='Unsupported data format'):
-        cubeviz_app.load_data(np.ones(27).reshape((3, 3, 3)))
+        cubeviz_helper.load_data(np.ones(27).reshape((3, 3, 3)))
