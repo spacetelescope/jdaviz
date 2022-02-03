@@ -22,7 +22,13 @@
       >{{ data_label }}</v-chip>
     </v-row>
 
-    <img v-if="img_data" :src="`data:image/png;base64,${img_data}`" style="width: 100%; max-width: 400px" />
+    <img class='invert-in-dark' v-if="img_data" :src="`data:image/png;base64,${img_data}`" style="width: 100%; max-width: 400px" />
 
   </j-tray-plugin>
 </template>
+
+<style>
+.theme--dark .invert-in-dark {
+  filter: brightness(0.88) invert(1);
+}
+</style>
