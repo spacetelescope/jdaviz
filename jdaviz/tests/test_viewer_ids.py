@@ -2,9 +2,9 @@ from jdaviz import Application
 
 
 # This applies to all viz but testing with Imviz should be enough.
-def test_viewer_calling_app(imviz_app):
-    viewer = imviz_app.default_viewer
-    assert viewer.session.jdaviz_app is imviz_app.app
+def test_viewer_calling_app(imviz_helper):
+    viewer = imviz_helper.default_viewer
+    assert viewer.session.jdaviz_app is imviz_helper.app
 
 
 def test_default_viewer_ids_default():
@@ -22,8 +22,8 @@ def test_default_viewer_ids_cubeviz(cubeviz_helper):
     assert x.get_viewer_ids() == ['cubeviz-0', 'cubeviz-1', 'cubeviz-2', 'cubeviz-3']
 
 
-def test_default_viewer_ids_imviz(imviz_app):
-    x = imviz_app.app
+def test_default_viewer_ids_imviz(imviz_helper):
+    x = imviz_helper.app
     assert x.get_viewer_reference_names() == ['imviz-0']
     assert x.get_viewer_ids() == ['imviz-0']
     assert x.get_viewer_ids(prefix='imviz') == ['imviz-0']

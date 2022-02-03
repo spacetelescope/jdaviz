@@ -108,12 +108,12 @@ class TestLoadStaticRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
 
 class TestLoadStaticRegionsSkyNoWCS(BaseRegionHandler):
     @pytest.fixture(autouse=True)
-    def setup_class(self, imviz_app):
+    def setup_class(self, imviz_helper):
         # Data without WCS
-        imviz_app.load_data(np.zeros((10, 10)), data_label='no_wcs')
+        imviz_helper.load_data(np.zeros((10, 10)), data_label='no_wcs')
 
-        self.imviz = imviz_app
-        self.viewer = imviz_app.default_viewer
+        self.imviz = imviz_helper
+        self.viewer = imviz_helper.default_viewer
         self.sky = SkyCoord(ra=337.5202808, dec=-20.833333059999998, unit='deg')
 
     def test_regions_sky_no_wcs(self):

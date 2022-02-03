@@ -21,7 +21,7 @@ def cubeviz_helper():
 
 
 @pytest.fixture
-def imviz_app():
+def imviz_helper():
     return Imviz()
 
 
