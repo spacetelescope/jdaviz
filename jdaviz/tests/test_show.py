@@ -3,8 +3,7 @@ import sidecar
 
 def test_show_inline(specviz_helper):
     res = specviz_helper.show(mode='inline')
-
-    assert res is specviz_helper.app
+    assert res is None
 
 
 def test_show_sidecar(specviz_helper):
