@@ -103,6 +103,9 @@ class LineAnalysis(TemplateMixin):
             self.selected_subset = "Entire Spectrum"
             self.selected_continuum = "Surrounding"
             self.update_results(None)
+        elif isinstance(msg, SubsetUpdateMessage):
+            if msg.subset.label in [self.selected_subset, self.selected_continuum]:
+                self._calculate_statistics()
 
     def _on_plugin_opened_changed(self, new_value):
         # toggle continuum lines in spectrum viewer based on whether this plugin
@@ -222,7 +225,6 @@ class LineAnalysis(TemplateMixin):
         else:
             continuum_mask = ~self.app.get_data_from_viewer("spectrum-viewer",
                                                             data_label=self.selected_continuum).mask # noqa
-            # TODO: update this and test
             spectral_axis_nanmasked = spectral_axis.value.copy()
             spectral_axis_nanmasked[~continuum_mask] = np.nan
             mark_x = {'left': spectral_axis_nanmasked[spectral_axis.value < sr.lower.value],
