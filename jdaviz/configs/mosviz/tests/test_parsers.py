@@ -6,7 +6,7 @@ from astropy.utils.data import download_file
 
 
 @pytest.mark.remote_data
-def test_niriss_parser(mosviz_app, tmpdir):
+def test_niriss_parser(mosviz_helper, tmpdir):
 
     test_data = 'https://stsci.box.com/shared/static/l2azhcqd3tvzhybdlpx2j2qlutkaro3z.zip'
     fn = download_file(test_data, cache=True, timeout=30)
@@ -17,8 +17,8 @@ def test_niriss_parser(mosviz_app, tmpdir):
 
     data_dir = level3_path
 
-    mosviz_app.load_niriss_data(data_dir)
+    mosviz_helper.load_niriss_data(data_dir)
 
-    assert len(mosviz_app.app.data_collection) == 80
-    assert mosviz_app.app.data_collection[0].label == "Image canucs F150W"
-    assert mosviz_app.app.data_collection[-1].label == "MOS Table"
+    assert len(mosviz_helper.app.data_collection) == 80
+    assert mosviz_helper.app.data_collection[0].label == "Image canucs F150W"
+    assert mosviz_helper.app.data_collection[-1].label == "MOS Table"

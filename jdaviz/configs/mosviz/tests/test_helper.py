@@ -11,7 +11,7 @@ from specutils import Spectrum1D, SpectrumCollection
 
 
 @pytest.fixture
-def mosviz_app():
+def mosviz_helper():
     return Mosviz()
 
 
@@ -112,89 +112,89 @@ RADESYS = 'ICRS'               / Equatorial coordinate system
     return ccd_data
 
 
-def test_load_spectrum1d(mosviz_app, spectrum1d):
+def test_load_spectrum1d(mosviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    mosviz_app.load_1d_spectra(spectrum1d, data_labels=label)
+    mosviz_helper.load_1d_spectra(spectrum1d, data_labels=label)
 
-    assert len(mosviz_app.app.data_collection) == 2
-    assert mosviz_app.app.data_collection[0].label == label
+    assert len(mosviz_helper.app.data_collection) == 2
+    assert mosviz_helper.app.data_collection[0].label == label
 
-    table = mosviz_app.app.get_viewer('table-viewer')
+    table = mosviz_helper.app.get_viewer('table-viewer')
     table.widget_table.vue_on_row_clicked(0)
 
-    data = mosviz_app.app.get_data_from_viewer('spectrum-viewer')
+    data = mosviz_helper.app.get_data_from_viewer('spectrum-viewer')
 
     assert isinstance(list(data.values())[0], Spectrum1D)
     assert list(data.keys())[0] == label
 
     with pytest.raises(TypeError):
-        mosviz_app.load_1d_spectra([1, 2, 3])
+        mosviz_helper.load_1d_spectra([1, 2, 3])
 
 
-def test_load_spectrum_collection(mosviz_app, spectrum_collection):
+def test_load_spectrum_collection(mosviz_helper, spectrum_collection):
     labels = [f"Test Spectrum Collection {i}" for i in range(5)]
-    mosviz_app.load_1d_spectra(spectrum_collection, data_labels=labels)
+    mosviz_helper.load_1d_spectra(spectrum_collection, data_labels=labels)
 
-    assert len(mosviz_app.app.data_collection) == 6
-    assert mosviz_app.app.data_collection[0].label == labels[0]
+    assert len(mosviz_helper.app.data_collection) == 6
+    assert mosviz_helper.app.data_collection[0].label == labels[0]
 
-    table = mosviz_app.app.get_viewer('table-viewer')
+    table = mosviz_helper.app.get_viewer('table-viewer')
     table.widget_table.vue_on_row_clicked(0)
 
-    data = mosviz_app.app.get_data_from_viewer('spectrum-viewer')
+    data = mosviz_helper.app.get_data_from_viewer('spectrum-viewer')
 
     assert isinstance(list(data.values())[0], Spectrum1D)
     assert list(data.keys())[0] == labels[0]
 
 
-def test_load_list_of_spectrum1d(mosviz_app, spectrum1d):
+def test_load_list_of_spectrum1d(mosviz_helper, spectrum1d):
     spectra = [spectrum1d]*3
 
     labels = [f"Test Spectrum 1D {i}" for i in range(3)]
-    mosviz_app.load_1d_spectra(spectra, data_labels=labels)
+    mosviz_helper.load_1d_spectra(spectra, data_labels=labels)
 
-    assert len(mosviz_app.app.data_collection) == 4
-    assert mosviz_app.app.data_collection[0].label == labels[0]
+    assert len(mosviz_helper.app.data_collection) == 4
+    assert mosviz_helper.app.data_collection[0].label == labels[0]
 
-    table = mosviz_app.app.get_viewer('table-viewer')
+    table = mosviz_helper.app.get_viewer('table-viewer')
     table.widget_table.vue_on_row_clicked(0)
 
-    data = mosviz_app.app.get_data_from_viewer('spectrum-viewer')
+    data = mosviz_helper.app.get_data_from_viewer('spectrum-viewer')
 
     assert isinstance(list(data.values())[0], Spectrum1D)
     assert list(data.keys())[0] == labels[0]
 
 
 @pytest.mark.filterwarnings('ignore')
-def test_load_spectrum2d(mosviz_app, spectrum2d):
+def test_load_spectrum2d(mosviz_helper, spectrum2d):
 
     label = "Test 2D Spectrum"
-    mosviz_app.load_2d_spectra(spectrum2d, data_labels=label)
+    mosviz_helper.load_2d_spectra(spectrum2d, data_labels=label)
 
-    assert len(mosviz_app.app.data_collection) == 2
-    assert mosviz_app.app.data_collection[0].label == label
+    assert len(mosviz_helper.app.data_collection) == 2
+    assert mosviz_helper.app.data_collection[0].label == label
 
-    table = mosviz_app.app.get_viewer('table-viewer')
+    table = mosviz_helper.app.get_viewer('table-viewer')
     table.widget_table.vue_on_row_clicked(0)
 
-    data = mosviz_app.app.get_data_from_viewer('spectrum-2d-viewer')
+    data = mosviz_helper.app.get_data_from_viewer('spectrum-2d-viewer')
 
     assert list(data.values())[0].shape == (1024, 15)
     assert list(data.keys())[0] == label
 
 
 @pytest.mark.filterwarnings('ignore')
-def test_load_image(mosviz_app, image):
+def test_load_image(mosviz_helper, image):
     label = "Test Image"
-    mosviz_app.load_images(image, data_labels=label)
+    mosviz_helper.load_images(image, data_labels=label)
 
-    assert len(mosviz_app.app.data_collection) == 2
-    assert mosviz_app.app.data_collection[0].label == f"{label} 0"
+    assert len(mosviz_helper.app.data_collection) == 2
+    assert mosviz_helper.app.data_collection[0].label == f"{label} 0"
 
-    table = mosviz_app.app.get_viewer('table-viewer')
+    table = mosviz_helper.app.get_viewer('table-viewer')
     table.widget_table.vue_on_row_clicked(0)
 
-    data = mosviz_app.app.get_data_from_viewer('image-viewer')
+    data = mosviz_helper.app.get_data_from_viewer('image-viewer')
 
     assert isinstance(list(data.values())[0], CCDData)
     assert list(data.values())[0].shape == (55, 55)
@@ -203,21 +203,21 @@ def test_load_image(mosviz_app, image):
 
 @pytest.mark.filterwarnings('ignore')
 @pytest.mark.parametrize('label', [None, "Test Label"])
-def test_load_single_image_multi_spec(mosviz_app, image, spectrum1d, spectrum2d, label):
+def test_load_single_image_multi_spec(mosviz_helper, image, spectrum1d, spectrum2d, label):
     spectra1d = [spectrum1d] * 3
     spectra2d = [spectrum2d] * 3
 
     # Test that loading is still possible after previous crash:
     # https://github.com/spacetelescope/jdaviz/issues/364
     with pytest.raises(ValueError, match='The dimensions of component 2D Spectra are incompatible'):
-        mosviz_app.load_data(spectra1d, spectra2d, images=[])
+        mosviz_helper.load_data(spectra1d, spectra2d, images=[])
 
-    mosviz_app.load_data(spectra1d, spectra2d, images=image, images_label=label)
+    mosviz_helper.load_data(spectra1d, spectra2d, images=image, images_label=label)
 
-    assert mosviz_app.app.get_viewer("table-viewer").figure_widget.highlighted == 0
-    assert len(mosviz_app.app.data_collection) == 8
+    assert mosviz_helper.app.get_viewer("table-viewer").figure_widget.highlighted == 0
+    assert len(mosviz_helper.app.data_collection) == 8
 
-    qtable = mosviz_app.to_table()
+    qtable = mosviz_helper.to_table()
     if label is None:
         assert np.all(qtable["Images"] == "Shared Image")
     else:
@@ -227,17 +227,17 @@ def test_load_single_image_multi_spec(mosviz_app, image, spectrum1d, spectrum2d,
 
 @pytest.mark.filterwarnings('ignore')
 @pytest.mark.parametrize('label', [None, "Test Label"])
-def test_load_multi_image_spec(mosviz_app, image, spectrum1d, spectrum2d, label):
+def test_load_multi_image_spec(mosviz_helper, image, spectrum1d, spectrum2d, label):
     spectra1d = [spectrum1d]*3
     spectra2d = [spectrum2d]*3
     images = [image]*3
 
-    mosviz_app.load_data(spectra1d, spectra2d, images=images, images_label=label)
+    mosviz_helper.load_data(spectra1d, spectra2d, images=images, images_label=label)
 
-    assert mosviz_app.app.get_viewer("table-viewer").figure_widget.highlighted == 0
-    assert len(mosviz_app.app.data_collection) == 10
+    assert mosviz_helper.app.get_viewer("table-viewer").figure_widget.highlighted == 0
+    assert len(mosviz_helper.app.data_collection) == 10
 
-    qtable = mosviz_app.to_table()
+    qtable = mosviz_helper.to_table()
     if label is None:
         assert qtable["Images"][0] == "Image 0"
     else:
@@ -245,18 +245,18 @@ def test_load_multi_image_spec(mosviz_app, image, spectrum1d, spectrum2d, label)
 
 
 @pytest.mark.filterwarnings('ignore')
-def test_viewer_axis_link(mosviz_app, spectrum1d, spectrum2d):
+def test_viewer_axis_link(mosviz_helper, spectrum1d, spectrum2d):
     label1d = "Test 1D Spectrum"
-    mosviz_app.load_1d_spectra(spectrum1d, data_labels=label1d)
+    mosviz_helper.load_1d_spectra(spectrum1d, data_labels=label1d)
 
     label2d = "Test 2D Spectrum"
-    mosviz_app.load_2d_spectra(spectrum2d, data_labels=label2d)
+    mosviz_helper.load_2d_spectra(spectrum2d, data_labels=label2d)
 
-    table = mosviz_app.app.get_viewer('table-viewer')
+    table = mosviz_helper.app.get_viewer('table-viewer')
     table.widget_table.vue_on_row_clicked(0)
 
-    scale_2d = mosviz_app.app.get_viewer('spectrum-2d-viewer').scales['x']
-    scale_1d = mosviz_app.app.get_viewer('spectrum-viewer').scales['x']
+    scale_2d = mosviz_helper.app.get_viewer('spectrum-2d-viewer').scales['x']
+    scale_1d = mosviz_helper.app.get_viewer('spectrum-viewer').scales['x']
 
     scale_2d.min = 200.0
     assert scale_1d.min == spectrum1d.spectral_axis.value[200]
@@ -265,11 +265,11 @@ def test_viewer_axis_link(mosviz_app, spectrum1d, spectrum2d):
     assert scale_2d.max == 800.0
 
 
-def test_to_csv(tmp_path, mosviz_app, spectrum_collection):
+def test_to_csv(tmp_path, mosviz_helper, spectrum_collection):
     labels = [f"Test Spectrum Collection {i}" for i in range(5)]
-    mosviz_app.load_1d_spectra(spectrum_collection, data_labels=labels)
+    mosviz_helper.load_1d_spectra(spectrum_collection, data_labels=labels)
 
-    mosviz_app.to_csv(filename=str(tmp_path / "MOS_data.csv"))
+    mosviz_helper.to_csv(filename=str(tmp_path / "MOS_data.csv"))
 
     found_rows = 0
     found_index_label = False
@@ -287,13 +287,13 @@ def test_to_csv(tmp_path, mosviz_app, spectrum_collection):
 
 
 @pytest.mark.filterwarnings('ignore')
-def test_table_scrolling(mosviz_app, image, spectrum1d, spectrum2d):
+def test_table_scrolling(mosviz_helper, image, spectrum1d, spectrum2d):
     spectra1d = [spectrum1d] * 2
     spectra2d = [spectrum2d] * 2
 
-    mosviz_app.load_data(spectra1d, spectra2d, images=image)
+    mosviz_helper.load_data(spectra1d, spectra2d, images=image)
 
-    table = mosviz_app.app.get_viewer('table-viewer')
+    table = mosviz_helper.app.get_viewer('table-viewer')
     # first row is automatically selected in the UI
     # (otherwise it would be None which is a case not handled)
     table.widget_table.highlighted = 0
@@ -307,68 +307,68 @@ def test_table_scrolling(mosviz_app, image, spectrum1d, spectrum2d):
 
 
 @pytest.mark.filterwarnings('ignore')
-def test_column_visibility(mosviz_app, image, spectrum1d, spectrum2d):
+def test_column_visibility(mosviz_helper, image, spectrum1d, spectrum2d):
     spectra1d = [spectrum1d] * 2
     spectra2d = [spectrum2d] * 2
 
-    mosviz_app.load_data(spectra1d, spectra2d, images=image)
+    mosviz_helper.load_data(spectra1d, spectra2d, images=image)
 
     with pytest.raises(
                 ValueError,
                 match="visible must be one of None, True, or False."):
-        mosviz_app.get_column_names(visible='string')
+        mosviz_helper.get_column_names(visible='string')
 
-    assert 'Redshift' not in mosviz_app.get_column_names(True)
-    assert 'Redshift' in mosviz_app.get_column_names(False)
-    assert 'Redshift' in mosviz_app.get_column_names()
+    assert 'Redshift' not in mosviz_helper.get_column_names(True)
+    assert 'Redshift' in mosviz_helper.get_column_names(False)
+    assert 'Redshift' in mosviz_helper.get_column_names()
 
-    mosviz_app.show_column('Redshift')
-    assert 'Redshift' in mosviz_app.get_column_names(True)
+    mosviz_helper.show_column('Redshift')
+    assert 'Redshift' in mosviz_helper.get_column_names(True)
 
-    mosviz_app.hide_column('Redshift')
-    assert 'Redshift' not in mosviz_app.get_column_names(True)
+    mosviz_helper.hide_column('Redshift')
+    assert 'Redshift' not in mosviz_helper.get_column_names(True)
 
 
 @pytest.mark.filterwarnings('ignore')
-def test_custom_columns(mosviz_app, image, spectrum1d, spectrum2d):
+def test_custom_columns(mosviz_helper, image, spectrum1d, spectrum2d):
     spectra1d = [spectrum1d] * 2
     spectra2d = [spectrum2d] * 2
 
-    mosviz_app.load_data(spectra1d, spectra2d, images=image)
+    mosviz_helper.load_data(spectra1d, spectra2d, images=image)
 
-    mosviz_app.add_column('custom_name')
-    assert 'custom_name' in mosviz_app.get_column_names(True)
-    assert len(mosviz_app.get_column('custom_name')) == 2
+    mosviz_helper.add_column('custom_name')
+    assert 'custom_name' in mosviz_helper.get_column_names(True)
+    assert len(mosviz_helper.get_column('custom_name')) == 2
 
-    mosviz_app.update_column('custom_name', 0.1, row=1)
-    assert mosviz_app.get_column('custom_name')[1] == 0.1
+    mosviz_helper.update_column('custom_name', 0.1, row=1)
+    assert mosviz_helper.get_column('custom_name')[1] == 0.1
 
     with pytest.raises(
                 ValueError,
                 match="row out of range of table"):
-        mosviz_app.update_column('custom_name', 0.3, row=3)
+        mosviz_helper.update_column('custom_name', 0.3, row=3)
 
     with pytest.raises(
                 ValueError,
                 match="data must have length 2 \\(rows in table\\)"):
-        mosviz_app.add_column('custom_name_2', [0.1])
+        mosviz_helper.add_column('custom_name_2', [0.1])
 
-    mosviz_app.show_column("Redshift")
-    assert "Redshift" in mosviz_app.get_column_names(True)
-    mosviz_app.set_visible_columns()
-    assert "Redshift" not in mosviz_app.get_column_names(True)
+    mosviz_helper.show_column("Redshift")
+    assert "Redshift" in mosviz_helper.get_column_names(True)
+    mosviz_helper.set_visible_columns()
+    assert "Redshift" not in mosviz_helper.get_column_names(True)
 
 
 @pytest.mark.filterwarnings('ignore')
-def test_redshift_column(mosviz_app, image, spectrum1d, spectrum2d):
+def test_redshift_column(mosviz_helper, image, spectrum1d, spectrum2d):
     spectra1d = [spectrum1d] * 2
     spectra2d = [spectrum2d] * 2
 
-    mosviz_app.load_data(spectra1d, spectra2d, images=image)
+    mosviz_helper.load_data(spectra1d, spectra2d, images=image)
 
-    mosviz_app.update_column("Redshift", 0.1, row=0)
-    assert_allclose(list(mosviz_app.specviz.get_spectra().values())[0].redshift.value, 0.1)
-    assert isinstance(mosviz_app.specviz2d, Specviz2d)
-    assert_allclose(mosviz_app.get_spectrum_1d().redshift.value, 0.1)
-    assert_allclose(mosviz_app.get_spectrum_2d().redshift.value, 0.1)
-    assert_allclose(mosviz_app.get_spectrum_1d(row=1).redshift.value, 0.0)
+    mosviz_helper.update_column("Redshift", 0.1, row=0)
+    assert_allclose(list(mosviz_helper.specviz.get_spectra().values())[0].redshift.value, 0.1)
+    assert isinstance(mosviz_helper.specviz2d, Specviz2d)
+    assert_allclose(mosviz_helper.get_spectrum_1d().redshift.value, 0.1)
+    assert_allclose(mosviz_helper.get_spectrum_2d().redshift.value, 0.1)
+    assert_allclose(mosviz_helper.get_spectrum_1d(row=1).redshift.value, 0.0)

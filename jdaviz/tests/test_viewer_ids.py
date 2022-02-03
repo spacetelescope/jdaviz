@@ -33,8 +33,8 @@ def test_default_viewer_ids_imviz(imviz_app):
     assert x.get_viewer_by_id('imviz-0') is viewer
 
 
-def test_default_viewer_ids_mosviz(mosviz_app):
-    x = mosviz_app.app
+def test_default_viewer_ids_mosviz(mosviz_helper):
+    x = mosviz_helper.app
     assert x.get_viewer_reference_names() == ['image-viewer', 'spectrum-2d-viewer',
                                               'spectrum-viewer', 'table-viewer']
     assert x.get_viewer_ids() == ['mosviz-0', 'mosviz-1', 'mosviz-2', 'mosviz-3']

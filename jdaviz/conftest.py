@@ -26,7 +26,7 @@ def imviz_app():
 
 
 @pytest.fixture
-def mosviz_app():
+def mosviz_helper():
     return Mosviz()
 
 
