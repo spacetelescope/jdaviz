@@ -1,4 +1,3 @@
-from multiprocessing.sharedctypes import Value
 import sidecar
 from pytest import raises
 
