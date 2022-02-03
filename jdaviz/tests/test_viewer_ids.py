@@ -2,9 +2,9 @@ from jdaviz import Application
 
 
 # This applies to all viz but testing with Imviz should be enough.
-def test_viewer_calling_app(imviz_app):
-    viewer = imviz_app.default_viewer
-    assert viewer.session.jdaviz_app is imviz_app.app
+def test_viewer_calling_app(imviz_helper):
+    viewer = imviz_helper.default_viewer
+    assert viewer.session.jdaviz_app is imviz_helper.app
 
 
 def test_default_viewer_ids_default():
@@ -15,15 +15,15 @@ def test_default_viewer_ids_default():
 
 # NOTE: Unable to parametrize fixture as input.
 
-def test_default_viewer_ids_cubeviz(cubeviz_app):
-    x = cubeviz_app.app
+def test_default_viewer_ids_cubeviz(cubeviz_helper):
+    x = cubeviz_helper.app
     assert x.get_viewer_reference_names() == ['flux-viewer', 'uncert-viewer', 'mask-viewer',
                                               'spectrum-viewer']
     assert x.get_viewer_ids() == ['cubeviz-0', 'cubeviz-1', 'cubeviz-2', 'cubeviz-3']
 
 
-def test_default_viewer_ids_imviz(imviz_app):
-    x = imviz_app.app
+def test_default_viewer_ids_imviz(imviz_helper):
+    x = imviz_helper.app
     assert x.get_viewer_reference_names() == ['imviz-0']
     assert x.get_viewer_ids() == ['imviz-0']
     assert x.get_viewer_ids(prefix='imviz') == ['imviz-0']
@@ -33,20 +33,20 @@ def test_default_viewer_ids_imviz(imviz_app):
     assert x.get_viewer_by_id('imviz-0') is viewer
 
 
-def test_default_viewer_ids_mosviz(mosviz_app):
-    x = mosviz_app.app
+def test_default_viewer_ids_mosviz(mosviz_helper):
+    x = mosviz_helper.app
     assert x.get_viewer_reference_names() == ['image-viewer', 'spectrum-2d-viewer',
                                               'spectrum-viewer', 'table-viewer']
     assert x.get_viewer_ids() == ['mosviz-0', 'mosviz-1', 'mosviz-2', 'mosviz-3']
 
 
-def test_default_viewer_ids_specviz(specviz_app):
-    x = specviz_app.app
+def test_default_viewer_ids_specviz(specviz_helper):
+    x = specviz_helper.app
     assert x.get_viewer_reference_names() == ['spectrum-viewer']
     assert x.get_viewer_ids() == ['specviz-0']
 
 
-def test_default_viewer_ids_specviz2d(specviz2d_app):
-    x = specviz2d_app.app
+def test_default_viewer_ids_specviz2d(specviz2d_helper):
+    x = specviz2d_helper.app
     assert x.get_viewer_reference_names() == ['spectrum-2d-viewer', 'spectrum-viewer']
     assert x.get_viewer_ids() == ['specviz2d-0', 'specviz2d-1']

@@ -5,8 +5,8 @@ from jdaviz.configs.cubeviz.plugins.moment_maps.moment_maps import MomentMap
 
 
 @pytest.mark.filterwarnings('ignore:No observer defined on WCS')
-def test_moment_calculation(cubeviz_app, spectrum1d_cube):
-    app = cubeviz_app.app
+def test_moment_calculation(cubeviz_helper, spectrum1d_cube):
+    app = cubeviz_helper.app
     dc = app.data_collection
     app.add_data(spectrum1d_cube, 'test')
 

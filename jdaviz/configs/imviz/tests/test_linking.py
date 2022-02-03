@@ -155,13 +155,13 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
             self.viewer.get_link_type('foo')
 
 
-def test_imviz_no_data(imviz_app):
+def test_imviz_no_data(imviz_helper):
     with pytest.raises(ValueError, match='No valid reference data'):
-        get_reference_image_data(imviz_app.app)
+        get_reference_image_data(imviz_helper.app)
 
-    imviz_app.link_data(error_on_fail=True)  # Just no-op, do not crash
-    links = imviz_app.app.data_collection.external_links
+    imviz_helper.link_data(error_on_fail=True)  # Just no-op, do not crash
+    links = imviz_helper.app.data_collection.external_links
     assert len(links) == 0
 
     with pytest.raises(ValueError, match='No reference data for link look-up'):
-        imviz_app.default_viewer.get_link_type('foo')
+        imviz_helper.default_viewer.get_link_type('foo')

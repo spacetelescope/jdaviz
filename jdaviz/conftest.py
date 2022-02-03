@@ -16,27 +16,27 @@ SPECTRUM_SIZE = 10  # length of spectrum
 
 
 @pytest.fixture
-def cubeviz_app():
+def cubeviz_helper():
     return Cubeviz()
 
 
 @pytest.fixture
-def imviz_app():
+def imviz_helper():
     return Imviz()
 
 
 @pytest.fixture
-def mosviz_app():
+def mosviz_helper():
     return Mosviz()
 
 
 @pytest.fixture
-def specviz_app():
+def specviz_helper():
     return Specviz()
 
 
 @pytest.fixture
-def specviz2d_app():
+def specviz2d_helper():
     return Specviz2d()
 
 
