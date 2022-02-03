@@ -46,7 +46,7 @@ def test_default_viewer_ids_specviz(specviz_helper):
     assert x.get_viewer_ids() == ['specviz-0']
 
 
-def test_default_viewer_ids_specviz2d(specviz2d_app):
-    x = specviz2d_app.app
+def test_default_viewer_ids_specviz2d(specviz2d_helper):
+    x = specviz2d_helper.app
     assert x.get_viewer_reference_names() == ['spectrum-2d-viewer', 'spectrum-viewer']
     assert x.get_viewer_ids() == ['specviz2d-0', 'specviz2d-1']

@@ -36,7 +36,7 @@ def specviz_helper():
 
 
 @pytest.fixture
-def specviz2d_app():
+def specviz2d_helper():
     return Specviz2d()
 
 
