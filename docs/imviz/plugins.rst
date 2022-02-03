@@ -79,7 +79,7 @@ an interactively selected region. A typical workflow is as follows:
     However, if NaN exists in data, it will be treated as 0.
 
 When calculation is complete, a plot would show the radial profile
-and the results are displayed under the
+of the background subtracted data and the photometry results are displayed under the
 :guilabel:`CALCULATE` button. You can also retrieve the results as
 `~astropy.table.QTable` as follows, assuming ``imviz`` is the instance
 of your Imviz application::
