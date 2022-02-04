@@ -10,7 +10,8 @@ from jdaviz.core.events import AddDataMessage, RemoveDataMessage
 from jdaviz.core.marks import (LineAnalysisContinuum,
                                LineAnalysisContinuumCenter,
                                LineAnalysisContinuumLeft,
-                               LineAnalysisContinuumRight)
+                               LineAnalysisContinuumRight,
+                               Shadow)
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
 
@@ -139,8 +140,9 @@ class LineAnalysis(TemplateMixin):
             marks = {'left': LineAnalysisContinuumLeft(viewer, visible=self._is_opened),
                      'center': LineAnalysisContinuumCenter(viewer, visible=self._is_opened),
                      'right': LineAnalysisContinuumRight(viewer, visible=self._is_opened)}
+            shadows = [Shadow(mark, shadow_width=2) for mark in marks.values()]
             # NOTE: += won't trigger the figure to notice new marks
-            viewer.figure.marks = viewer.figure.marks + list(marks.values())
+            viewer.figure.marks = viewer.figure.marks + shadows + list(marks.values())
 
         return marks
 
