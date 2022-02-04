@@ -176,11 +176,16 @@ class LineAnalysis(TemplateMixin):
             # already raised a validation error in the UI
             self.update_results(None)
             return
-        elif self.selected_subset == "Entire Spectrum":
-            spectrum = self._spectrum1d
-        else:
+
+        if self.selected_subset != "Surrounding":
             sr = self.app.get_subsets_from_viewer("spectrum-viewer",
                                                   subset_type="spectral").get(self.selected_subset) # noqa
+        else:
+            sr = None
+
+        if self.selected_subset == "Entire Spectrum":
+            spectrum = self._spectrum1d
+        else:
             spectrum = extract_region(self._spectrum1d, sr, return_single_spectrum=True)
 
         # compute continuum
@@ -193,6 +198,7 @@ class LineAnalysis(TemplateMixin):
                       'right': np.array([])}
 
         elif self.selected_continuum == "Surrounding":
+            # self.selected_subset != "Entire Spectrum"
             if self.width > 10 or self.width < 1:
                 # DEV NOTE: if changing the limits, make sure to also update the form validation
                 # rules in line_analysis.vue
@@ -228,9 +234,14 @@ class LineAnalysis(TemplateMixin):
                                                             data_label=self.selected_continuum).mask # noqa
             spectral_axis_nanmasked = spectral_axis.value.copy()
             spectral_axis_nanmasked[~continuum_mask] = np.nan
-            mark_x = {'left': spectral_axis_nanmasked[spectral_axis.value < sr.lower.value],
-                      'center': np.array([sr.lower.value, sr.upper.value]),
-                      'right': spectral_axis_nanmasked[spectral_axis.value > sr.upper.value]}
+            if self.selected_subset == "Entire Spectrum":
+                mark_x = {'left': spectral_axis_nanmasked,
+                          'center': spectral_axis.value,
+                          'right': []}
+            else:
+                mark_x = {'left': spectral_axis_nanmasked[spectral_axis.value < sr.lower.value],
+                          'center': np.array([sr.lower.value, sr.upper.value]),
+                          'right': spectral_axis_nanmasked[spectral_axis.value > sr.upper.value]}
 
         continuum_x = spectral_axis[continuum_mask].value
         min_x = min(spectral_axis.value)
