@@ -205,7 +205,8 @@ class LineAnalysisContinuum(Lines, HubListener):
         # positioning on a change to the x-units
         self._x_unit = viewer.state.reference_data.get_object().spectral_axis.unit
 
-        super().__init__(x=x, y=y, scales=viewer.scales, **kwargs)
+        # color is same blue as import button
+        super().__init__(x=x, y=y, colors=["#007BA1"], scales=viewer.scales, **kwargs)
 
     def update_xy(self, x, y):
         self.x = x
