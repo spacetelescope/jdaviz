@@ -95,16 +95,15 @@ class LineAnalysis(TemplateMixin):
         self.dc_items = [layer_state.layer.label for layer_state in viewer.state.layers
                          if layer_state.layer.label not in self.spectral_subset_items]
 
-        if self.selected_spectrum == "":
-            # default to first entry in list instead of leaving empty
-            self.selected_spectrum = self.dc_items[0]
-
         if len(self.dc_items) == 0:
             self.selected_spectrum = ""
             self.selected_subset = "Entire Spectrum"
             self.selected_continuum = "Surrounding"
             self.update_results(None)
-        elif isinstance(msg, SubsetUpdateMessage):
+            return
+
+        if isinstance(msg, SubsetUpdateMessage):
+            # update the statistics if any of the referenced regions have changed
             if msg.subset.label in [self.selected_subset, self.selected_continuum]:
                 self._calculate_statistics()
 
@@ -116,6 +115,10 @@ class LineAnalysis(TemplateMixin):
         self._is_opened = app_state.drawer and 'specviz-line-analysis' in tray_names_open
         for pos, mark in self.marks.items():
             mark.visible = self._is_opened
+        if self._is_opened and self.selected_spectrum == "":
+            # default to first entry in list instead of leaving empty
+            # by placing this logic here, we avoid running on app/data load
+            self.selected_spectrum = self.dc_items[0]
 
     @property
     def marks(self):
