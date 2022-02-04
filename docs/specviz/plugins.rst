@@ -176,13 +176,12 @@ the spectrum viewer to select a spectral subset. Note that you can have
 multiple subsets in Specviz, but the plugin will only show statistics for the
 selected subset.
 
+A linear continuum is fitted and subtracted (divided for the case of equivalenth width) before
+computing the line statistics.  By default, the continuum is fitted to a region surrounding 
+the select line.  The width of this region can be adjusted, with a visual indicator shown
+in the spectrum plot while the plugin is open.  The thick line shows the linear fit which
+is then interpolated into the line region as shown by a thin line.  Alternatively, a custom
+secondary region can be created and selected as the region to fit the linear continuum.
+
 The statistics returned include the line centroid, gaussian sigma width, gaussian FWHM,
 total flux, and equivalent width.
-
-No continuum operations are performed as part of this plugin.  This means that
-the statistics may or may not be correct depending on how you have prepared
-your spectrum - most statistics assume a continuum-subtracted spectrum, aside
-from equivalent width which assumes continuum-normalized. If your continuum is
-not in this form initially, you may wish to either use the ``specutils`` API in
-the Notebook Interface to perform continuum subtraction/normalization, or
-make use of the model fitting plugin to do the appropriate corrections.
