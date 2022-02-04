@@ -144,13 +144,13 @@ class SliceIndicator(BaseSpectrumVerticalLine, HubListener):
         return self._x_all[slice]
 
     def _update_colors_opacities(self):
-        # orange (accent) if active, viewer toolbar (primary) otherwise (see css in app.vue)
+        # orange (accent) if active, import button blue otherwise (see css in app.vue)
         if not self._show_if_inactive and not self._active:
             self.visible = False
             return
 
         self.visible = True
-        self.colors = ["#c75109" if self._active else "#00617E"]
+        self.colors = ["#c75109" if self._active else "#007BA1"]
         self.opacities = [1.0 if self._active else 0.9]
 
     def _on_change_state(self, msg):
