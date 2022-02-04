@@ -97,10 +97,14 @@ class LineAnalysis(TemplateMixin):
 
         if len(self.dc_items) == 0:
             self.selected_spectrum = ""
-            self.selected_subset = "Entire Spectrum"
-            self.selected_continuum = "Surrounding"
             self.update_results(None)
             return
+
+        if self._is_opened and self.selected_spectrum not in self.dc_items:
+            # default to first entry.  This can be triggered (besides the first opening)
+            # during a row change in Mosviz or an x-unit change through the unit conversion
+            # plugin, for example
+            self.selected_spectrum = self.dc_items[0]
 
         if isinstance(msg, SubsetUpdateMessage):
             # update the statistics if any of the referenced regions have changed
@@ -175,6 +179,12 @@ class LineAnalysis(TemplateMixin):
 
         self._spectrum1d = self.app.get_data_from_viewer("spectrum-viewer",
                                                          data_label=self.selected_spectrum)
+
+        if self._spectrum1d is None:
+            # this can happen DURING a unit conversion change
+            self.update_results(None)
+            return
+
         spectral_axis = self._spectrum1d.spectral_axis
 
         if self.selected_continuum == self.selected_subset:

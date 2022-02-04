@@ -231,9 +231,9 @@ class Shadow(Lines, HubListener):
 
 class LineAnalysisContinuum(Lines, HubListener):
     def __init__(self, viewer, x=[], y=[], **kwargs):
-        # we'll store the current units so that we can automatically update the
-        # positioning on a change to the x-units
-        self._x_unit = viewer.state.reference_data.get_object().spectral_axis.unit
+        # we do not need to worry about the x-units changing since the stats
+        # need to be re-computed on unit conversion anyways (which will
+        # trigger updates to x and y from the line analysis plugin)
 
         # color is same blue as import button
         super().__init__(x=x, y=y, colors=["#007BA1"], scales=viewer.scales, **kwargs)
