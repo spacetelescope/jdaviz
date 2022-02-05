@@ -23,6 +23,9 @@ Imviz
 
 - New plugin to display compass for image with WCS and also zoom box. [#983]
 
+- New ``imviz.load_static_regions_from_file()`` method to load region file
+  via API. [#1066]
+
 Mosviz
 ^^^^^^
 

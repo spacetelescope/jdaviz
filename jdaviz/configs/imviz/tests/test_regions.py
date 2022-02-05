@@ -2,8 +2,9 @@ import numpy as np
 import pytest
 from astropy import units as u
 from astropy.coordinates import SkyCoord, Angle
+from astropy.utils.data import get_pkg_data_filename
 from regions import (PixCoord, CircleSkyRegion, RectanglePixelRegion, CirclePixelRegion,
-                     EllipsePixelRegion)
+                     EllipsePixelRegion, Regions)
 
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS
 
@@ -104,6 +105,21 @@ class TestLoadStaticRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
         self.imviz.load_static_regions({'my_aper_sky_1': my_aper_sky})
         self.verify_region_loaded('my_aper_sky_1')
         assert self.imviz.get_interactive_regions() == {}
+
+
+class TestLoadStaticRegionsFromFile(BaseRegionHandler):
+
+    def test_ds9(self, imviz_helper):
+        self.viewer = imviz_helper.default_viewer
+
+        region_file = get_pkg_data_filename('data/ds9.fits.reg', package='regions.io.ds9.tests')
+        raw_regs = Regions.read(region_file, format='ds9')
+        assert len(raw_regs) == 9
+
+        imviz_helper.load_data(np.ones((1024, 1024)), data_label='my_image')
+        imviz_helper.load_static_regions_from_file(region_file)
+        for i in range(6):  # Only first 6 are supported
+            self.verify_region_loaded(f'region_{i}', count=1)
 
 
 class TestLoadStaticRegionsSkyNoWCS(BaseRegionHandler):
