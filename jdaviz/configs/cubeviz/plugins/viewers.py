@@ -67,16 +67,6 @@ class CubevizProfileView(SpecvizProfileView):
             # slice select slider tool
             self.toolbar.active_tool_id = 'jdaviz:selectslice'
 
-    def add_event_callback(self, *args, **kwargs):
-        # TODO: REMOVE - this is just for debugging dragging callbacks
-        print("*** add_event_callback", args, kwargs)
-        super().add_event_callback(*args, **kwargs)
-
-    def remove_event_callback(self, *args, **kwargs):
-        # TODO: REMOVE - this is just for debugging dragging callbacks
-        print("*** remove_event_callback", args, kwargs)
-        super().remove_event_callback(*args, **kwargs)
-
     @property
     def slice_indicator(self):
         for mark in self.figure.marks:
