@@ -162,7 +162,7 @@ class TestLoadStaticRegionsFromFile(BaseRegionHandler):
         for i in range(2):
             self.verify_region_loaded(f'good_{i}', count=1)
 
-    def test_ds9_load_two_bad(self, imviz_helper):
+    def test_ds9_load_one_bad(self, imviz_helper):
         self.viewer = imviz_helper.default_viewer
         imviz_helper.load_data(self.arr, data_label='my_image')
         with pytest.warns(UserWarning, match='failed to load, skipping'):
