@@ -14,7 +14,7 @@ of the Cubeviz application.
 Slice
 =====
 
-The slice plugin provides that ability to select the slice
+The slice plugin provides the ability to select the slice
 of the cube currently visible in the image viewers, with the
 corresponding wavelength highlighted in the spectrum viewer.
 
