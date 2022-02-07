@@ -101,7 +101,7 @@
                   background-color: rgb(0 0 0 / 20%)">
         <v-progress-circular
           indeterminate
-          color="default"
+          color="spinner"
           size="50"
           width="6"
         ></v-progress-circular>
