@@ -120,8 +120,8 @@ class LineAnalysis(TemplateMixin):
         for pos, mark in self.marks.items():
             mark.visible = self._is_opened
         if self._is_opened and self.selected_spectrum == "":
-            # default to first entry in list instead of leaving empty
-            # by placing this logic here, we avoid running on app/data load
+            # default to first entry in list instead of leaving empty.
+            # by placing this logic here, we avoid running on app/data load.
             self.selected_spectrum = self.dc_items[0]
 
     @property
@@ -170,7 +170,7 @@ class LineAnalysis(TemplateMixin):
         Run the line analysis functions on the selected data/subset and
         display the results.
         """
-        # show spinner, disable, whatever
+        # show spinner with overlay
         self.results_computing = True
 
         if self.selected_spectrum == "" or self.width == "":
