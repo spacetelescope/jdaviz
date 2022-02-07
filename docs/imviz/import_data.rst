@@ -46,9 +46,10 @@ Importing regions via the API
 
 If you have a region file supported by :ref:`regions:regions_io`, you
 can load the regions into Imviz as follows. Any unsupported region will
-be silently skipped::
+be skipped with warning and a dictionary of regions that failed to load
+will be returned, if any::
 
-    imviz.load_static_regions_from_file("/path/to/data/myregions.reg")
+    bad_regions = imviz.load_static_regions_from_file("/path/to/data/myregions.reg")
 
 For more details on the API, please see
 :meth:`~jdaviz.configs.imviz.helper.Imviz.load_static_regions_from_file`

@@ -50,6 +50,12 @@ Cubeviz
 - Collapse plugin only collapses into spatial-spatial image now. Default collapse
   function is now sum, not mean. [#1006]
 
+Imviz
+^^^^^
+
+- ``imviz.load_static_regions()`` now returns a dictionary of regions that failed
+  to load with warnings. It also shows a snackbar message. [#1066]
+
 Bug Fixes
 ---------
 
