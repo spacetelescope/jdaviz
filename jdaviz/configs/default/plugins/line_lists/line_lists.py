@@ -5,8 +5,9 @@ from astropy.table import QTable
 from glue.core.message import (SubsetCreateMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
-from traitlets import Any, Bool, Float, Int, List, Unicode, Dict, observe
+from traitlets import Bool, Float, Int, List, Unicode, Dict, observe
 
+from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (AddDataMessage,
                                 RemoveDataMessage,
                                 AddLineListMessage,
@@ -33,8 +34,8 @@ class LineListTool(TemplateMixin):
     rs_slider_step = Float(0.01).tag(sync=True)
     rs_redshift_step = Float(1).tag(sync=True)
     rs_slider_ndigits = Int(1).tag(sync=True)
-    rs_redshift = Any(0).tag(sync=True)  # must be Any for user input, converted to float in python
-    rs_rv = Any(0).tag(sync=True)  # must be Any for user input, converted to float in python
+    rs_redshift = FloatHandleEmpty(0).tag(sync=True)
+    rs_rv = FloatHandleEmpty(0).tag(sync=True)
     rs_slider_throttle = Int(100).tag(sync=True)
 
     dc_items = List([]).tag(sync=True)
@@ -229,16 +230,11 @@ class LineListTool(TemplateMixin):
         if self._rs_disable_observe:
             return
 
-        if isinstance(event['new'], str) and not len(event['new']):
-            # empty string, we don't want to revert yet because then
-            # the user can never delete the entry and type something new
-            # so we'll just leave empty
-            return
-        if event['new'] is None:
-            # definitely can't convert to float!
+        if not isinstance(event['new'], float):
+            # then blank or None or '.'
             return
 
-        value = float(event['new'])
+        value = event['new']
         # update _global_redshift so new lines, etc, will adopt this latest value
         self._global_redshift = value
         self._rs_disable_observe = True
@@ -264,13 +260,11 @@ class LineListTool(TemplateMixin):
         if self._rs_disable_observe:
             return
 
-        if isinstance(event['new'], str) and not len(event['new']):
-            # empty string, we don't want to revert yet because then
-            # the user can never delete the entry and type something new
-            # so we'll just leave empty
+        if not isinstance(event['new'], float):
+            # then blank or None or '.'
             return
 
-        value = float(event['new'])
+        value = event['new']
         redshift = self._velocity_to_redshift(value)
         # prevent update the redshift from propagating back to an update in the rv
         self._rs_disable_observe = True
