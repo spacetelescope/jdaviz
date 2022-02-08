@@ -256,7 +256,7 @@ class LineAnalysis(TemplateMixin):
                           'right': []}
             else:
                 mark_x = {'left': spectral_axis_nanmasked[spectral_axis.value < sr.lower.value],
-                          'center': np.array([sr.lower.value, sr.upper.value]),
+                          'center': spectral_axis_nanmasked[continuum_mask],
                           'right': spectral_axis_nanmasked[spectral_axis.value > sr.upper.value]}
 
         continuum_x = spectral_axis[continuum_mask].value
