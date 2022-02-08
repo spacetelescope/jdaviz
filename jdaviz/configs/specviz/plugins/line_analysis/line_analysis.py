@@ -1,4 +1,5 @@
 import numpy as np
+from copy import deepcopy
 from glue.core.message import (SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from traitlets import Bool, List, Unicode, observe
@@ -270,19 +271,25 @@ class LineAnalysis(TemplateMixin):
 
         temp_results = []
         for function in FUNCTIONS:
+            # TODO: update to spectrum/continuum and spectrum-continuum in-line below (if faster)
+            # once supported by specutils
+            spec_normalized = deepcopy(spectrum)
+            spec_normalized._flux = spectrum.flux / continuum
+            spec_subtracted = deepcopy(spectrum)
+            spec_subtracted._flux = spectrum.flux - continuum*spectrum.flux.unit
             # TODO: update specutils to allow ALL analysis to take regions and continuum so we
             # don't need these if statements
             if function == "Equivalent Width":
                 if np.any(continuum <= 0):
                     temp_result = 'N/A (continuum <= 0)'
                 else:
-                    temp_result = FUNCTIONS[function](spectrum/continuum)
+                    temp_result = FUNCTIONS[function](spec_normalized)
             elif function == "Centroid":
                 # TODO: update specutils to be consistent with region vs regions and default to
                 # regions=None so this elif can be removed
-                temp_result = FUNCTIONS[function](spectrum-continuum, region=None)
+                temp_result = FUNCTIONS[function](spec_subtracted, region=None)
             else:
-                temp_result = FUNCTIONS[function](spectrum-continuum)
+                temp_result = FUNCTIONS[function](spec_subtracted)
 
             temp_results.append({'function': function, 'result': str(temp_result)})
 
