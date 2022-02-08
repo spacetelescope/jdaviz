@@ -296,7 +296,7 @@ thead > tr {
   top: 0;
 }
 
-.jdaviz-viewer .theme--light.v-data-table thead tr {
+.jdaviz-viewer .theme--light.v-data-table thead > tr {
   background-color: white;
 }
 
