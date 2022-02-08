@@ -66,6 +66,8 @@ const tooltips = {
   'plugin-line-lists-add-custom-line': 'Add line to the custom list',
   'plugin-line-lists-line-visible': 'Toggle showing the line in the spectrum viewer',
   'plugin-line-lists-line-identify': 'Highlight this line in the spectrum viewer for easy identification',
+  'plugin-line-analysis-identify': 'Identify the selected line in the spectrum viewer',
+  'plugin-line-analysis-assign': 'Assign the centroid wavelength and update the redshift',
   'plugin-moment-maps-calculate': 'Calculate moment map',
   'plugin-moment-save-fits': 'Save moment map as FITS file',
   'plugin-link-apply': 'Apply linking to data',

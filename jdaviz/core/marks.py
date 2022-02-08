@@ -76,6 +76,10 @@ class SpectralLine(BaseSpectrumVerticalLine):
                          fill='none', close_path=False, **kwargs)
 
     @property
+    def name_rest(self):
+        return self.table_index
+
+    @property
     def rest_value(self):
         return self._rest_value
 

@@ -91,6 +91,9 @@ class LineListTool(PluginTemplateMixin):
         self.hub.subscribe(self, AddLineListMessage,
                            handler=self._list_from_notebook)
 
+        self.hub.subscribe(self, LineIdentifyMessage,
+                           handler=self._process_identify_change)
+
         # if set to auto (default), update the slider range when zooming on the spectrum viewer
         self._viewer.scales['x'].observe(self._auto_slider_range, names=['min', 'max'])
 
@@ -665,26 +668,44 @@ class LineListTool(PluginTemplateMixin):
 
         self.update_line_mark_dict()
 
-    def vue_set_identify(self, data):
-        """
-        """
-        listname, line, line_ind = data
+    def _update_identify_to_line(self, name_rest, listname=None, identify=True):
         list_contents = self.list_contents
-        identify = not line.get('identify', False)
-        if identify and not line['show']:
-            # first show the line
-            self.vue_change_visible(data)
-        for listname, this_list in list_contents.items():
-            for i in range(len(this_list['lines'])):
-                if listname == listname and line_ind == i:
-                    list_contents[listname]['lines'][i]['identify'] = identify
+        for this_listname, this_list in list_contents.items():
+            for i, line in enumerate(this_list['lines']):
+                if (this_listname == listname or listname is None) and \
+                            line['name_rest'] == name_rest:
+                    list_contents[this_listname]['lines'][i]['identify'] = identify
                 else:
-                    list_contents[listname]['lines'][i]['identify'] = False
+                    list_contents[this_listname]['lines'][i]['identify'] = False
 
         self.list_contents = {}
         self.list_contents = list_contents
 
-        msg = LineIdentifyMessage(name_rest=line['name_rest'] if identify else None, sender=self)
+    def _process_identify_change(self, msg):
+        if msg.sender == self:
+            return
+        # event from some other plugin (LineAnalysis, for example) requesting a change
+        # in the identified line
+        self._update_identify_to_line(msg.name_rest)
+        # then line mark themselves will also respond to the same event, so there is 
+        # no need to broadcast another
+
+    def vue_set_identify(self, data):
+        """
+        """
+        listname, line, line_ind = data
+        identify = not line.get('identify', False)
+        if identify and not line['show']:
+            # first show the line
+            self.vue_change_visible(data)
+
+        self._update_identify_to_line(name_rest=line['name_rest'],
+                                      listname=listname,
+                                      identify=identify)
+
+        # broadcast and event to update the marks
+        msg = LineIdentifyMessage(name_rest=line['name_rest'] if identify else '',
+                                  sender=self)
         self.hub.broadcast(msg)
 
     def vue_set_color(self, data):

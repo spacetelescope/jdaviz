@@ -200,6 +200,20 @@ class LineIdentifyMessage(Message):
         return self._name_rest
 
 
+class SpectralMarksChangedMessage(Message):
+    def __init__(self, marks, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._marks = marks
+
+    @property
+    def names_rest(self):
+        return [m.name_rest for m in self.marks]
+
+    @property
+    def marks(self):
+        return self._marks
+
+
 class RedshiftMessage(Message):
     '''Messages related to Specviz redshift slider'''
     def __init__(self, param, value, *args, **kwargs):

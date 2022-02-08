@@ -2,11 +2,16 @@ import numpy as np
 from glue.core.message import (SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from traitlets import Bool, List, Unicode, observe
+from astropy import units as u
 from specutils import analysis
 from specutils.manipulation import extract_region
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
-from jdaviz.core.events import AddDataMessage, RemoveDataMessage
+from jdaviz.core.events import (AddDataMessage,
+                                RemoveDataMessage,
+                                SpectralMarksChangedMessage,
+                                LineIdentifyMessage,
+                                RedshiftMessage)
 from jdaviz.core.marks import (LineAnalysisContinuum,
                                LineAnalysisContinuumCenter,
                                LineAnalysisContinuumLeft,
@@ -40,6 +45,9 @@ class LineAnalysis(PluginTemplateMixin):
     width = FloatHandleEmpty(3).tag(sync=True)
     results_computing = Bool(False).tag(sync=True)
     results = List().tag(sync=True)
+    line_items = List([]).tag(sync=True)
+    identified_line = Unicode("").tag(sync=True)
+    selected_line = Unicode("").tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -48,6 +56,7 @@ class LineAnalysis(PluginTemplateMixin):
         self._spectrum1d = None
         self._viewer_id = self.app._viewer_item_by_reference('spectrum-viewer').get('id')
         self._units = {}
+        self.results_centroid = None
         self.update_results(None)
 
         self.spectral_subset = SpectralSubsetSelect(self,
@@ -65,6 +74,12 @@ class LineAnalysis(PluginTemplateMixin):
                            handler=self._on_viewer_data_changed)
         self.hub.subscribe(self, SubsetUpdateMessage,
                            handler=self._on_viewer_data_changed)
+
+        self.hub.subscribe(self, SpectralMarksChangedMessage,
+                           handler=self._on_plotted_lines_changed)
+
+        self.hub.subscribe(self, LineIdentifyMessage,
+                           handler=self._on_identified_line_changed)
 
     def _on_viewer_data_changed(self, msg=None):
         """
@@ -161,6 +176,21 @@ class LineAnalysis(PluginTemplateMixin):
             self.results = results
 
         self.results_computing = False
+
+    def _on_plotted_lines_changed(self, msg):
+        self.line_marks = msg.marks
+        self.line_items = msg.names_rest
+        if self.selected_line not in self.line_items:
+            # default to identified line if available
+            self.selected_line = self.identified_line
+
+    def _on_identified_line_changed(self, msg):
+        self.identified_line = msg.name_rest
+        if not self.selected_line:
+            # nothing has been selected, so default to the identified line.
+            # if results aren't available yet, then we'll wait until they are
+            # in which case we'll default to the identified line
+            self.selected_line = self.identified_line
 
     @observe("spectral_subset_selected", "selected_spectrum", "continuum_selected", "width")
     def _calculate_statistics(self, *args, **kwargs):
@@ -285,9 +315,27 @@ class LineAnalysis(PluginTemplateMixin):
                 # TODO: update specutils to be consistent with region vs regions and default to
                 # regions=None so this elif can be removed
                 temp_result = FUNCTIONS[function](spec_subtracted, region=None)
+                self.results_centroid = temp_result
             else:
                 temp_result = FUNCTIONS[function](spec_subtracted)
 
             temp_results.append({'function': function, 'result': str(temp_result)})
 
         self.update_results(temp_results, mark_x, mark_y)
+
+        if not self.selected_line and self.identified_line:
+            # default to the identified line
+            self.selected_line = self.identified_line
+
+    def vue_line_identify(self, msg=None):
+        msg = LineIdentifyMessage(self.selected_line, sender=self)
+        self.hub.broadcast(msg)
+
+    def vue_line_assign(self, msg=None):
+        index = self.line_items.index(self.selected_line)
+        line_mark = self.line_marks[index]
+        rest_value = (line_mark.rest_value * line_mark._x_unit).to_value(self.results_centroid.unit,
+                                                                         equivalencies=u.spectral())
+        z = (self.results_centroid.value - rest_value) / rest_value
+        msg = RedshiftMessage('redshift', z, sender=self)
+        self.hub.broadcast(msg)
