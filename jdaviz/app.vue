@@ -274,9 +274,16 @@ a:active {
 }
 
 /* MOSViz table scrollable with sticky header */
-.v-data-table__wrapper {
-  overflow-y: auto !important;
-  max-height: 310px;
+.jdaviz-viewer .v-data-table__wrapper {
+  overflow-y: auto;
+  height: calc(100% - 59px);
+}
+
+/* prevent vertical scrollbars in jupyter lab. The original margin of 2px
+ * together with 100% height makes the bqplot widget overflow its parent.
+ * In the classic notebook widgets don't have this 2px margin. */
+.jdaviz-viewer .jupyter-widgets {
+  margin: 0;
 }
 
 th { 
@@ -289,11 +296,11 @@ thead > tr {
   top: 0;
 }
 
-.theme--light thead > tr {
+.jdaviz-viewer .theme--light.v-data-table thead tr {
   background-color: white;
 }
 
- .theme--dark thead > tr {
+.jdaviz-viewer .theme--dark.v-data-table thead > tr {
   background-color: black;
 }
 
