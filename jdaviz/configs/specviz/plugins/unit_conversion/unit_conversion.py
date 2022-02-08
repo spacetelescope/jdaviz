@@ -5,9 +5,10 @@ import numpy as np
 from specutils import Spectrum1D
 from traitlets import List, Unicode, Any
 
-from jdaviz.core.events import SnackbarMessage, RemoveDataMessage, AddDataMessage
+from jdaviz.core.events import SnackbarMessage, RemoveDataMessage, AddDataMessage, RedshiftMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
+from jdaviz.configs.specviz.helper import _apply_redshift_to_spectra
 
 __all__ = ['UnitConversion']
 
@@ -44,6 +45,10 @@ class UnitConversion(TemplateMixin):
 
         self.hub.subscribe(self, RemoveDataMessage,
                            handler=self._on_viewer_data_changed)
+
+        self._redshift = None
+        self.app.hub.subscribe(self, RedshiftMessage,
+                               handler=self._redshift_listener)
 
     def _on_viewer_data_changed(self, msg=None):
         """
@@ -89,6 +94,11 @@ class UnitConversion(TemplateMixin):
 
         self.update_ui()
 
+    def _redshift_listener(self, msg):
+        '''Save new redshifts (including from the helper itself)'''
+        if msg.param == "redshift":
+            self._redshift = msg.value
+
     def set_spectrum(self, spectrum, label):
         """
         Set spectrum for unit conversion.
@@ -132,8 +142,13 @@ class UnitConversion(TemplateMixin):
         Runs when the ``apply`` button is hit. Tries to change units if ``new`` units are set
         and are valid.
         """
+        if self._redshift is not None:
+            # apply the global redshift to the new spectrum
+            spectrum = _apply_redshift_to_spectra(self.spectrum, self._redshift)
+        else:
+            spectrum = self.spectrum
 
-        converted_spec = self.process_unit_conversion(self.spectrum,
+        converted_spec = self.process_unit_conversion(spectrum,
                                                       self.new_flux_unit,
                                                       self.new_spectral_axis_unit)
 
@@ -298,6 +313,8 @@ class UnitConversion(TemplateMixin):
                                             unit=set_flux_unit.unit,
                                             uncertainty=temp_uncertainty
                                             )
+
+        converted_spectrum.redshift = spectrum.redshift
         return converted_spectrum
 
     def create_spectral_equivalencies_list(self):

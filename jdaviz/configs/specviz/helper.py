@@ -29,7 +29,6 @@ class Specviz(ConfigHelper, LineListMixin):
     """Specviz Helper class."""
 
     _default_configuration = "specviz"
-    _redshift = 0
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -188,48 +187,6 @@ class Specviz(ConfigHelper, LineListMixin):
 
     def show(self):
         self.app
-
-    def set_redshift_slider_bounds(self, range=None, step=None):
-        '''
-        Set the range and/or step of the redshift slider. Set either/both to 'auto'
-        to default based on the limits of the spectrum plot.
-
-        Parameters
-        ----------
-        range : float or `None` or 'auto'
-            Specifies the difference between the upper and lower bounds of the slider.
-            Note that the slider specifies redshift delta from the current value, so a
-            range of 0.1 would allow the user to change the current redshift by +/- 0.05.
-            If `None` or not passed, will leave at the current value. If 'auto',
-            will sync the range based on the limits of the spectrum plot.
-        step : float or `None` or 'auto'
-            Specifies step size of the slider. Smaller step sizes will allow finer
-            adjustments/smoother behavior at a potential cost to performance. If `None`
-            or not passed, will leave at the current value. If 'auto', will sync
-            the step size to 100 steps within the current range.
-        '''
-        if range is not None:
-            msg = RedshiftMessage("rs_slider_range", range, sender=self)
-            self.app.hub.broadcast(msg)
-        if step is not None:
-            msg = RedshiftMessage("rs_slider_step", step, sender=self)
-            self.app.hub.broadcast(msg)
-
-    def set_redshift(self, new_redshift):
-        '''
-        Apply a redshift to any loaded spectral lines and data. Also updates
-        the value shown in the slider.
-        '''
-        if new_redshift == self._redshift:
-            # avoid sending messages that can result in race conditions
-            return
-        msg = RedshiftMessage("redshift", new_redshift, sender=self)
-        self.app.hub.broadcast(msg)
-
-    def _redshift_listener(self, msg):
-        '''Save new redshifts (including from the helper itself)'''
-        if msg.param == "redshift":
-            self._redshift = msg.value
 
     def set_spectrum_tick_format(self, fmt, axis=None):
         """

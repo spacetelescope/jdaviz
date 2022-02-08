@@ -37,7 +37,8 @@
         <v-text-field
           :value='rs_redshift'
           @input='setRedshiftFloat'
-          step="0.1"
+          @blur="unpause_tables"
+          :step="rs_slider_step"
           class="mt-0 pt-0"
           type="number"
           label="Redshift"
@@ -54,7 +55,8 @@
       <v-col>
         <v-text-field
           v-model="rs_rv"
-          step="0.1"
+          @blur="unpause_tables"
+          :step="rs_redshift_step"
           class="mt-0 pt-0"
           type="number"
           label="RV"
@@ -252,13 +254,27 @@
 <script>
   module.exports = {
     created() {
-      this.throttledSlider = _.throttle(
-        (v) => { this.rs_slider = v; },
-        this.rs_slider_throttle);
+      this.throttledSlider = (v) => {
+        // we want the throttle wait to be dynamic (as set by line_lists.py based
+        // on the number of currently plotted lines)
+        if (this.rs_slider_throttle !== this.throttledSliderCurrWait) {
+          // create a new throttle function with the current wait
+          if (this.throttledSliderCurr) {
+            // console.log("canceling old throttle")
+            this.throttledSliderCurr.cancel()
+          }
+          // console.log("creating new throttle with wait: ", this.rs_slider_throttle)
+          this.throttledSliderCurr = _.throttle(
+            (v) => { this.rs_slider = v; },
+            this.rs_slider_throttle);
+          this.throttledSliderCurrWait = this.rs_slider_throttle        
+        }
+        return this.throttledSliderCurr(v)
+      },
       this.setRedshiftFloat = (v) => {
         this.rs_redshift = parseFloat(v)
       }
-    },
+    }
   }
 </script>
 

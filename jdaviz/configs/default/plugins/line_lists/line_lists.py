@@ -5,8 +5,9 @@ from astropy.table import QTable
 from glue.core.message import (SubsetCreateMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
-from traitlets import Any, Bool, Float, Int, List, Unicode, Dict, observe
+from traitlets import Bool, Float, Int, List, Unicode, Dict, observe
 
+from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (AddDataMessage,
                                 RemoveDataMessage,
                                 AddLineListMessage,
@@ -15,7 +16,7 @@ from jdaviz.core.events import (AddDataMessage,
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
 from jdaviz.core.linelists import load_preset_linelist
-from jdaviz.core.spectral_line import SpectralLine
+from jdaviz.core.marks import SpectralLine
 
 __all__ = ['LineListTool']
 
@@ -31,8 +32,10 @@ class LineListTool(TemplateMixin):
     rs_slider_half_range = Float(0.1).tag(sync=True)
     rs_slider_step_auto = Bool(True).tag(sync=True)
     rs_slider_step = Float(0.01).tag(sync=True)
-    rs_redshift = Any(0).tag(sync=True)  # must be Any for user input, converted to float in python
-    rs_rv = Any(0).tag(sync=True)  # must be Any for user input, converted to float in python
+    rs_redshift_step = Float(1).tag(sync=True)
+    rs_slider_ndigits = Int(1).tag(sync=True)
+    rs_redshift = FloatHandleEmpty(0).tag(sync=True)
+    rs_rv = FloatHandleEmpty(0).tag(sync=True)
     rs_slider_throttle = Int(100).tag(sync=True)
 
     dc_items = List([]).tag(sync=True)
@@ -57,6 +60,7 @@ class LineListTool(TemplateMixin):
         self._bounds = {}
         self._global_redshift = 0
         self._rs_disable_observe = False
+        self._rs_pause_tables = False
 
         # Watch for messages from Specviz helper redshift functions
         self.hub.subscribe(self, RedshiftMessage,
@@ -130,7 +134,9 @@ class LineListTool(TemplateMixin):
         self._bounds["max"] = viewer_data.spectral_axis[-1]
 
         # set redshift slider to redshift stored in Spectrum1D object
-        self.rs_redshift = viewer_data.redshift.value
+        self.rs_redshift = (viewer_data.redshift.value
+                            if hasattr(viewer_data.redshift, 'value')
+                            else viewer_data.redshift)
         self._auto_slider_range()  # will also trigger _auto_slider_step
 
     def _parse_redshift_msg(self, msg):
@@ -160,6 +166,7 @@ class LineListTool(TemplateMixin):
                 if slider_step > self.rs_slider_half_range:
                     raise ValueError("step must be smaller than range/2")
                 self.rs_slider_step = slider_step
+                self.rs_redshift_step = self._redshift_to_velocity(slider_step)
         elif param == "redshift":
             # NOTE: this should trigger the observe to update rs_rv, line positions, and
             # update self._global_redshift
@@ -191,66 +198,92 @@ class LineListTool(TemplateMixin):
         # the default case to avoid quantity math as below for efficiency
         return const.c.value * (zponesq - 1) / (zponesq + 1) / 1000  # km/s
 
+    def _update_line_positions(self):
+        # update all lines, self._global_redshift, and emit message back to Specviz helper
+        z = u.Quantity(self.rs_redshift)
+
+        for mark in self.app.get_viewer('spectrum-viewer').figure.marks:
+            # update ALL to this redshift, if adding support for per-line redshift
+            # this logic will need to change to not affect ALL lines
+            if not isinstance(mark, SpectralLine):
+                continue
+
+            mark.redshift = z
+
     @observe('rs_slider')
     def _on_slider_updated(self, event):
         if self._rs_disable_observe:
             return
 
+        self._rs_pause_tables = True
+
         # NOTE: _on_rs_redshift_updated will handle updating rs_rv
         # NOTE: the input has a custom @input method in line_lists.vue to cast
         # to float so that we can assume its a float here to minimize lag
         # when interacting with the slider.
-        self.rs_redshift = self.rs_redshift + event['new'] - event['old']
+
+        self.rs_redshift = np.round(self.rs_redshift + event['new'] - event['old'],
+                                    self.rs_slider_ndigits)
 
     @observe('rs_redshift')
     def _on_rs_redshift_updated(self, event):
-        if not self._rs_disable_observe:
-            if isinstance(event['new'], str) and not len(event['new']):
-                # empty string, we don't want to revert yet because then
-                # the user can never delete the entry and type something new
-                # so we'll just leave empty
-                return
-            value = float(event['new'])
-            # update _global_redshift so new lines, etc, will adopt this latest value
-            self._global_redshift = value
-            self._rs_disable_observe = True
-            self.rs_rv = self._redshift_to_velocity(value)
-            self._rs_disable_observe = False
+        if self._rs_disable_observe:
+            return
 
-        # update all lines, self._global_redshift, and emit message back to Specviz helper
-        z = u.Quantity(self.rs_redshift)
-        line_list = self.app.get_viewer('spectrum-viewer').spectral_lines
-        if line_list is not None:
-            line_list["redshift"] = z
-            # Replot with the new redshift
-            line_list = self.app.get_viewer('spectrum-viewer').plot_spectral_lines()
+        if not isinstance(event['new'], float):
+            # then blank or None or '.'
+            return
 
-        # Send the redshift back to the Specviz helper (and also trigger
-        # self._update_global_redshift)
-        msg = RedshiftMessage("redshift", z.value, sender=self)
-        self.app.hub.broadcast(msg)
+        value = event['new']
+        # update _global_redshift so new lines, etc, will adopt this latest value
+        self._global_redshift = value
+        self._rs_disable_observe = True
+        self.rs_rv = self._redshift_to_velocity(value)
+        self._rs_disable_observe = False
+
+        self._update_line_positions()
+
+        if not self._rs_pause_tables:
+            # Send the redshift back to the Specviz helper (and also trigger
+            # self._update_global_redshift)
+            msg = RedshiftMessage("redshift", self.rs_redshift, sender=self)
+            self.app.hub.broadcast(msg)
+
+    def vue_unpause_tables(self, event=None):
+        # after losing focus, update any elements that were paused during changes
+        self._rs_pause_tables = False
+        self._rs_disable_observe = False
+        self._on_rs_redshift_updated({'new': self.rs_redshift})
 
     @observe('rs_rv')
     def _on_rs_rv_updated(self, event):
         if self._rs_disable_observe:
             return
 
-        if isinstance(event['new'], str) and not len(event['new']):
-            # empty string, we don't want to revert yet because then
-            # the user can never delete the entry and type something new
-            # so we'll just leave empty
+        if not isinstance(event['new'], float):
+            # then blank or None or '.'
             return
 
-        value = float(event['new'])
+        value = event['new']
         redshift = self._velocity_to_redshift(value)
+        # prevent update the redshift from propagating back to an update in the rv
         self._rs_disable_observe = True
+        # we'll wait until the blur event (which will call vue_unpause_tables)
+        # to update the value in the MOS table
+        self._rs_pause_tables = True
         self.rs_redshift = redshift
+        # but we do want to update the plotted lines
+        self._update_line_positions()
+
         self._rs_disable_observe = False
 
     def vue_slider_reset(self, event):
         self._rs_disable_observe = True
         self.rs_slider = 0.0
         self._rs_disable_observe = False
+        self._rs_pause_tables = False
+        # the redshift value in the MOS table wasn't updating during slide, so update them now
+        self.vue_unpause_tables()
 
     def _auto_slider_range(self, event=None):
         if not self.rs_slider_range_auto:
@@ -258,16 +291,21 @@ class LineListTool(TemplateMixin):
         # if set to auto, default the range based on the limits of the spectrum plot
         sv = self.app.get_viewer('spectrum-viewer')
         x_min, x_max = sv.state.x_min, sv.state.x_max
-        x_mid = abs(x_max + x_min) / 2
-        # we'll *estimate* the redshift range to shift from middle of viewer to the edge,
+        x_mid = abs(x_max + x_min) / 2.
+        # we'll *estimate* the redshift range to shift the range of the viewer
+        # (for a line with a rest wavelength in the center of the viewer),
         # by taking abs, this will work for wavelength or frequency units.
-        half_range = abs(x_max - x_min) / x_mid / 2
+        half_range = abs(x_max - x_min) / x_mid
         ndec = -np.log10(half_range)
         if ndec > 0:
             # round to at least 2 digits, or the first significant digit
             ndec = np.max([2, int(np.ceil(ndec))])
-            half_range = np.round(half_range, ndec)
-        # this will trigger self._on_rs_slider_step_auto_updated
+        else:
+            ndec = 1
+        half_range = np.round(half_range, ndec)
+
+        # this will trigger self._auto_slider_step to set self.rs_slider_step and
+        # self.rs_redshift_step, if applicable
         self.rs_slider_half_range = half_range
 
     @observe('rs_slider_range_auto')
@@ -279,8 +317,23 @@ class LineListTool(TemplateMixin):
     def _auto_slider_step(self, event=None):
         if not self.rs_slider_step_auto:
             return
-        # if set to auto, default to 100 steps in the range
-        self.rs_slider_step = self.rs_slider_half_range * 2 / 100
+        # if set to auto, default to 1000 steps in the range
+        self.rs_slider_step = self.rs_slider_half_range * 2 / 1000
+        self.rs_redshift_step = abs(self._redshift_to_velocity(self._global_redshift+self.rs_slider_step) - self.rs_rv) # noqa
+
+    @observe('rs_slider_step')
+    def _on_rs_slider_step_updated(self, event):
+        # When using the slider, we'll "round" redshift to the digits in the
+        # slider step to avoid extra digits due to rounding errors
+        ndec = -np.log10(event['new'])
+        if ndec > 0:
+            # round to at least 2 digits, or one past the first significant digit
+            # note: the UI will not show trailing zeros, we just want to avoid
+            # and 1 at floating point precision if not significant
+            ndec = np.max([2, np.ceil(ndec)+1])
+        else:
+            ndec = 1
+        self.rs_slider_ndigits = int(ndec)
 
     @observe('rs_slider_step_auto')
     def _on_rs_slider_step_auto_updated(self, event):
@@ -303,10 +356,9 @@ class LineListTool(TemplateMixin):
             The glue message passed to this callback method. Includes the line
             data added in msg.table.
         """
-        # list_contents = self.list_contents
-        # loaded_lists = self.loaded_lists
-        loaded_lists = ["Custom"]
-        list_contents = {"Custom": {"lines": [], "color": "#FF0000FF"}}
+        loaded_lists = self.loaded_lists
+        list_contents = self.list_contents
+        tmp_names_rest = []
         for row in msg.table:
             if row["listname"] not in loaded_lists:
                 loaded_lists.append(row["listname"])
@@ -323,11 +375,15 @@ class LineListTool(TemplateMixin):
                          "redshift": row["redshift"] if "redshift" in row else
                          self._global_redshift}
             list_contents[row["listname"]]["lines"].append(temp_dict)
+            tmp_names_rest.append(row["name_rest"])
 
         self.loaded_lists = []
         self.loaded_lists = loaded_lists
         self.list_contents = {}
         self.list_contents = list_contents
+
+        self._viewer.plot_spectral_lines(tmp_names_rest)
+        self.update_line_mark_dict()
 
         msg_text = ("Spectral lines loaded from notebook. Lines can be hidden"
                     "/shown in the Line Lists plugin")
@@ -341,8 +397,20 @@ class LineListTool(TemplateMixin):
             if isinstance(m, SpectralLine):
                 self.line_mark_dict[m.table_index] = m
 
+        n_lines_shown = len(self.line_mark_dict)
+
         # redshift controls are enabled if any lines are currently plotted
-        self.rs_enabled = len(self.line_mark_dict) > 0
+        self.rs_enabled = n_lines_shown > 0
+
+        if n_lines_shown > 0:
+            # with a lot of lines, a quick slider move will lag.  Let's scale the
+            # timeout based on the number of lines, roughtly between 50-500 ms
+            throttle = n_lines_shown * 5
+            if throttle < 50:
+                throttle = 50
+            if throttle > 500:
+                throttle = 500
+            self.rs_slider_throttle = throttle
 
     def vue_list_selected(self, event):
         """
@@ -548,16 +616,21 @@ class LineListTool(TemplateMixin):
         """
         Method to remove line list from available expansion panels when the x
         on the panel header is clicked. Also removes line marks from plot and
-        updates the "show" value in the astropy table to False..
+        updates the "show" value in the astropy table to False.
         """
         lc = self.list_contents[listname]
         name_rests = []
         for line in lc["lines"]:
             name_rests.append(self.vue_remove_line(line, erase=False))
         self._viewer.erase_spectral_lines(name_rest=name_rests)
+        self.update_line_mark_dict()
 
         self.loaded_lists = [x for x in self.loaded_lists if x != listname]
-        del(self.list_contents[listname])
+        self.list_contents = {k: v for k, v in self.list_contents.items() if k != listname}
+        row_inds = [i for i, ln in
+                    enumerate(self._viewer.spectral_lines['listname'])
+                    if ln == listname]
+        self._viewer.spectral_lines.remove_rows(row_inds)
 
     def vue_remove_line(self, line, erase=True):
         """
