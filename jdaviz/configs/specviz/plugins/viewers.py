@@ -15,7 +15,7 @@ from specutils import Spectrum1D
 from matplotlib.colors import cnames
 from astropy import units as u
 
-
+from jdaviz.core.events import WavClickMessage
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.marks import SpectralLine
 from jdaviz.core.linelists import load_preset_linelist, get_available_linelists
@@ -44,8 +44,18 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.add_event_callback(self.on_mouse_or_key_event, events=['dblclick'])
+
         self.display_uncertainties = False
         self.display_mask = False
+
+    def on_mouse_or_key_event(self, data):
+        if data['event'] == 'dblclick':
+            wav = data['domain']['x']
+            spec = self.data(include_subsets=False)[0]  # Assume first one is definitive
+            w_arr = spec.spectral_axis.value  # Assume same unit as event data
+            islice = np.abs(w_arr - wav).argmin()
+            self.session.hub.broadcast(WavClickMessage(wav, islice, sender=self))
 
     def _on_subset_create(self, msg):
         for layer in self.state.layers:
@@ -58,7 +68,7 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
             if "Subset" in layer.layer.label and layer.layer.data.label == data_label:
                 layer.linewidth = 3
 
-    def data(self, cls=None):
+    def data(self, cls=None, include_subsets=True):
         # Grab the user's chosen statistic for collapsing data
         if hasattr(self.state, 'function'):
             statistic = self.state.function
@@ -86,7 +96,7 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
 
                 # For subsets, make sure to apply the subset mask to the
                 #  layer data first
-                elif isinstance(layer_state.layer, Subset):
+                elif isinstance(layer_state.layer, Subset) and include_subsets:
                     layer_data = layer_state.layer
 
                     if _class is not None:

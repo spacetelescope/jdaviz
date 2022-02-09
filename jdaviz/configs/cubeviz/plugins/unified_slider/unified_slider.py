@@ -1,6 +1,6 @@
 from traitlets import Bool, Float, observe, Any, Int
 
-from jdaviz.core.events import AddDataMessage
+from jdaviz.core.events import AddDataMessage, WavClickMessage
 from jdaviz.core.registries import tool_registry
 from jdaviz.core.template_mixin import TemplateMixin
 
@@ -27,30 +27,28 @@ class UnifiedSlider(TemplateMixin):
         #  cases where there is a specific type of data expected and arbitrary
         #  viewers are not expected to be created. That is, the expected data
         #  in _all_ viewers should be uniform.
-        self.session.hub.subscribe(self, AddDataMessage,
-                                   handler=self._on_data_added)
+        self.session.hub.subscribe(self, AddDataMessage, handler=self._on_data_added)
+        self.session.hub.subscribe(self, WavClickMessage, handler=self._on_wav_click)
 
     @observe("linked")
     def _on_linked_changed(self, event):
         for viewer in self._watched_viewers:
 
             if not event['new']:
-                viewer.state.remove_callback('slices',
-                                             self._slider_value_updated)
+                viewer.state.remove_callback('slices', self._slider_value_updated)
             else:
-                viewer.state.add_callback('slices',
-                                          self._slider_value_updated)
+                viewer.state.add_callback('slices', self._slider_value_updated)
 
     def _on_data_added(self, msg):
-        if len(msg.data.shape) == 3 and \
-                isinstance(msg.viewer, BqplotImageView):
+        if len(msg.data.shape) == 3 and isinstance(msg.viewer, BqplotImageView):
             self.max_value = msg.data.shape[0] - 1
 
             if msg.viewer not in self._watched_viewers:
                 self._watched_viewers.append(msg.viewer)
+                msg.viewer.state.add_callback('slices', self._slider_value_updated)
 
-                msg.viewer.state.add_callback('slices',
-                                              self._slider_value_updated)
+    def _on_wav_click(self, msg):
+        self.slider = msg.slice_index
 
     def _slider_value_updated(self, value):
         if len(value) > 0:
