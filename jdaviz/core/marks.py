@@ -10,7 +10,7 @@ class BaseSpectrumVerticalLine(Lines, HubListener):
     def __init__(self, viewer, x, **kwargs):
         # we'll store the current units so that we can automatically update the
         # positioning on a change to the x-units
-        self._x_unit = viewer.state.reference_data.get_object().spectral_axis.unit
+        self._x_unit = viewer.state.reference_data.get_object(cls=Spectrum1D).spectral_axis.unit
 
         # the location of the marker will need to update automatically if the
         # underlying data changes (through a unit conversion, for example)
@@ -65,7 +65,7 @@ class SpectralLine(BaseSpectrumVerticalLine):
         # setting redshift will set self.x and enable the obs_value property,
         # but to do that we need x_unit set first (would normally be assigned
         # in the super init)
-        self._x_unit = viewer.state.reference_data.get_object().spectral_axis.unit
+        self._x_unit = viewer.state.reference_data.get_object(cls=Spectrum1D).spectral_axis.unit
         self.redshift = redshift
 
         super().__init__(viewer=viewer, x=self.obs_value, stroke_width=1,
