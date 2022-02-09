@@ -32,7 +32,8 @@ from ipyvuetify import VuetifyTemplate
 from jdaviz.core.config import read_configuration, get_configuration
 from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
                                 SnackbarMessage, RemoveDataMessage,
-                                AddDataToViewerMessage, RemoveDataFromViewerMessage)
+                                AddDataToViewerMessage, RemoveDataFromViewerMessage,
+                                ViewerAddedMessage, ViewerRemovedMessage)
 from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registry,
                                     data_parser_registry)
 from jdaviz.utils import SnackbarQueue
@@ -813,11 +814,6 @@ class Application(VuetifyTemplate, HubListener):
                 "of:\n\t" + "\n\t".join([
                     data_item['name'] for data_item in self.state.data_items]))
 
-        # TODO: We can display the active data label in GUI here.
-        # For now, we will print to debug Output widget.
-        with self._application_handler.output:
-            print(f'Visible layer changed to: {data_label}')
-
     def _set_plot_axes_labels(self, viewer_id):
         """
         Sets the plot axes labels to be the units of the data to be loaded.
@@ -1039,7 +1035,7 @@ class Application(VuetifyTemplate, HubListener):
         Parameters
         ----------
         cid : str
-            The UUID associated with the viewer item dictionary.
+            The viewer ID associated with the viewer item dictionary.
         """
         def remove(stack_items):
             for stack in stack_items:
@@ -1061,6 +1057,8 @@ class Application(VuetifyTemplate, HubListener):
         # Also remove the viewer from the stored viewer instance dictionary
         if cid in self._viewer_store:
             del self._viewer_store[cid]
+
+        self.hub.broadcast(ViewerRemovedMessage(cid, sender=self))
 
     def vue_data_item_selected(self, event):
         """
@@ -1317,7 +1315,6 @@ class Application(VuetifyTemplate, HubListener):
         viewer : `~glue_jupyter.bqplot.common.BqplotBaseView`
             The new viewer instance.
         """
-
         viewer = self._application_handler.new_data_viewer(
             msg.cls, data=msg.data, show=False)
 
@@ -1336,17 +1333,16 @@ class Application(VuetifyTemplate, HubListener):
 
         # Store the glupyter viewer object so we can access the add and remove
         #  data methods in the future
-        self._viewer_store[new_viewer_item['id']] = viewer
+        vid = new_viewer_item['id']
+        self._viewer_store[vid] = viewer
 
         # Add viewer locally
         self.state.stack_items.append(new_stack_item)
 
-        # Send out a toast message
-        snackbar_message = SnackbarMessage("New viewer successfully created.",
-                                           sender=self)
-        self.hub.broadcast(snackbar_message)
-
         self.session.application.viewers.append(viewer)
+
+        # Send out a toast message
+        self.hub.broadcast(ViewerAddedMessage(vid, sender=self))
 
         return viewer
 

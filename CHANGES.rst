@@ -18,6 +18,8 @@ Imviz
 
 - New radial profile plot in the simple aperture photometry plugin. [#1030]
 
+- New plugin to display compass for image with WCS and also zoom box. [#983]
+
 Mosviz
 ^^^^^^
 

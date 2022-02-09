@@ -1,9 +1,11 @@
 import numpy as np
 
+from astropy.visualization import ImageNormalize, LinearStretch, PercentileInterval
 from glue.core.link_helpers import LinkSame
 from glue_jupyter.bqplot.image import BqplotImageView
 
-from jdaviz.configs.imviz.helper import data_has_valid_wcs, layer_is_image_data
+from jdaviz.configs.imviz import wcs_utils
+from jdaviz.configs.imviz.helper import data_has_valid_wcs, layer_is_image_data, get_top_layer_index
 from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import viewer_registry
@@ -27,14 +29,18 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
     default_class = None
 
     def __init__(self, *args, **kwargs):
-
         super().__init__(*args, **kwargs)
         self.init_astrowidgets_api()
 
         self.label_mouseover = None
+        self.compass = None
 
         self.add_event_callback(self.on_mouse_or_key_event, events=['mousemove', 'mouseenter',
                                                                     'mouseleave', 'keydown'])
+        self.state.add_callback('x_min', self.on_limits_change)
+        self.state.add_callback('x_max', self.on_limits_change)
+        self.state.add_callback('y_min', self.on_limits_change)
+        self.state.add_callback('y_max', self.on_limits_change)
 
         self.state.show_axes = False
         self.figure.fig_margin = {'left': 0, 'bottom': 0, 'top': 0, 'right': 0}
@@ -163,14 +169,43 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
                 next_layer = valid[(valid.index(visible[-1]) + 1) % n_layers]
                 self.state.layers[next_layer].visible = True
 
-                # TODO: We can display the active data label in GUI here.
-                # For now, we will print to debug Output widget.
-                data_label = self.state.layers[next_layer].layer.label
-                with self.session.application.output:
-                    print(f'Visible layer changed to: {data_label}')
-
                 for ilayer in (set(valid) - set([next_layer])):
                     self.state.layers[ilayer].visible = False
+
+                # We can display the active data label in Compass plugin.
+                self.set_compass(self.state.layers[next_layer].layer)
+
+    def on_limits_change(self, *args):
+        try:
+            i = get_top_layer_index(self)
+        except IndexError:
+            if self.compass is not None:
+                self.compass.clear_compass()
+            return
+        self.set_compass(self.state.layers[i].layer)
+
+    def set_compass(self, image):
+        """Update the Compass plugin with info from the given image Data object."""
+        if self.compass is None:  # Maybe another viewer has it
+            return
+
+        zoom_limits = (self.state.x_min, self.state.y_min, self.state.x_max, self.state.y_max)
+        if data_has_valid_wcs(image):
+            wcs = image.coords
+
+            # Convert X,Y from reference data to the one we are actually seeing.
+            if self.get_link_type(image.label) == 'wcs':
+                x = wcs.world_to_pixel(self.state.reference_data.coords.pixel_to_world(
+                        (self.state.x_min, self.state.x_max), (self.state.y_min, self.state.y_max)))
+                zoom_limits = (x[0][0], x[1][0], x[0][1], x[1][1])
+        else:
+            wcs = None
+
+        arr = image[image.main_components[0]]
+        vmin, vmax = PercentileInterval(95).get_limits(arr)
+        norm = ImageNormalize(vmin=vmin, vmax=vmax, stretch=LinearStretch())
+        self.compass.draw_compass(image.label, wcs_utils.draw_compass_mpl(
+            arr, wcs, show=False, zoom_limits=zoom_limits, norm=norm))
 
     def set_plot_axes(self):
         self.figure.axes[1].tick_format = None

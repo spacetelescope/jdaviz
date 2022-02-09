@@ -1,11 +1,12 @@
 from glue.core.message import Message
 
-__all__ = ['NewViewerMessage', 'LoadDataMessage',
+__all__ = ['NewViewerMessage', 'ViewerAddedMessage', 'ViewerRemovedMessage', 'LoadDataMessage',
            'AddDataMessage', 'SnackbarMessage', 'RemoveDataMessage',
            'AddLineListMessage', 'RowLockMessage', 'TableClickMessage']
 
 
 class NewViewerMessage(Message):
+    """Message to trigger viewer creation in the application."""
     def __init__(self, cls, data, x_attr=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -24,6 +25,32 @@ class NewViewerMessage(Message):
     @property
     def x_attr(self):
         return self._x_attr
+
+
+class ViewerAddedMessage(Message):
+    """Unlike `NewViewerMessage`, this should be emitted after a viewer is created."""
+    def __init__(self, viewer_id, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # NOT viewer reference, which is not unique and can be None
+        self._viewer_id = viewer_id
+
+    @property
+    def viewer_id(self):
+        return self._viewer_id
+
+
+class ViewerRemovedMessage(Message):
+    """Message emitted after a viewer is destroyed by the application."""
+    def __init__(self, viewer_id, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # NOT viewer reference, which is not unique and can be None
+        self._viewer_id = viewer_id
+
+    @property
+    def viewer_id(self):
+        return self._viewer_id
 
 
 class LoadDataMessage(Message):
