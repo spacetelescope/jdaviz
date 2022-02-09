@@ -4,8 +4,10 @@ import numpy as np
 from astropy import units as u
 from astropy.table import QTable
 from astropy.time import Time
+from bqplot import pyplot as bqplt
 from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage, SubsetUpdateMessage
 from glue.core.subset import Subset
+from ipywidgets import widget_serialization
 from regions.shapes.rectangle import RectanglePixelRegion
 from traitlets import Any, Bool, List
 
@@ -28,18 +30,17 @@ class SimpleAperturePhotometry(TemplateMixin):
     flux_scaling = Any(0).tag(sync=True)
     result_available = Bool(False).tag(sync=True)
     results = List().tag(sync=True)
+    plot_available = Bool(False).tag(sync=True)
+    radial_plot = Any('').tag(sync=True, **widget_serialization)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.hub.subscribe(self, AddDataMessage, handler=self._on_viewer_data_changed)
         self.hub.subscribe(self, RemoveDataMessage, handler=self._on_viewer_data_changed)
-        self.hub.subscribe(self, SubsetCreateMessage,
-                           handler=lambda x: self._on_viewer_data_changed())
-        self.hub.subscribe(self, SubsetDeleteMessage,
-                           handler=lambda x: self._on_viewer_data_changed())
-        self.hub.subscribe(self, SubsetUpdateMessage,
-                           handler=lambda x: self._on_viewer_data_changed())
+        self.hub.subscribe(self, SubsetCreateMessage, handler=self._on_viewer_data_changed)
+        self.hub.subscribe(self, SubsetDeleteMessage, handler=self._on_viewer_data_changed)
+        self.hub.subscribe(self, SubsetUpdateMessage, handler=self._on_viewer_data_changed)
 
         # TODO: Allow switching viewer in the future. Need new "messages" to subscribe
         #       to in viewer create/destroy events.
@@ -121,6 +122,8 @@ class SimpleAperturePhotometry(TemplateMixin):
         if self._selected_data is None or self._selected_subset is None:
             self.result_available = False
             self.results = []
+            self.plot_available = False
+            self.radial_plot = ''
             self.hub.broadcast(SnackbarMessage(
                 "No data for aperture photometry", color='error', sender=self))
             return
@@ -145,6 +148,7 @@ class SimpleAperturePhotometry(TemplateMixin):
             npix = np.sum(aper_mask) * u.pix
             img = aper_mask.get_values(comp_no_bg, mask=None)
             aper_mask_stat = reg.to_mask(mode='center')
+            comp_no_bg_cutout = aper_mask_stat.cutout(comp_no_bg)
             img_stat = aper_mask_stat.get_values(comp_no_bg, mask=None)
             include_pixarea_fac = False
             include_counts_fac = False
@@ -154,6 +158,7 @@ class SimpleAperturePhotometry(TemplateMixin):
                 img = img * img_unit
                 img_stat = img_stat * img_unit
                 bg = bg * img_unit
+                comp_no_bg_cutout = comp_no_bg_cutout * img_unit
                 if u.sr in img_unit.bases:  # TODO: Better way to detect surface brightness unit?
                     try:
                         pixarea = float(self.pixel_area)
@@ -232,9 +237,33 @@ class SimpleAperturePhotometry(TemplateMixin):
                     d['id'] = 1
                     self.app._aper_phot_results = _qtable_from_dict(d)
 
+            # Radial profile
+            reg_bb = reg.bounding_box
+            reg_ogrid = np.ogrid[reg_bb.iymin:reg_bb.iymax, reg_bb.ixmin:reg_bb.ixmax]
+            radial_dx = reg_ogrid[1] - reg.center.x
+            radial_dy = reg_ogrid[0] - reg.center.y
+            radial_r = np.hypot(radial_dx, radial_dy).ravel()  # pix
+            radial_img = comp_no_bg_cutout.ravel()
+            if comp.units:
+                y_data = radial_img.value
+                y_label = radial_img.unit.to_string()
+            else:
+                y_data = radial_img
+                y_label = 'Value'
+            bqplt.clear()
+            # NOTE: default margin in bqplot is 60 in all directions
+            fig = bqplt.figure(1, title='Radial profile from Subset center',
+                               fig_margin={'top': 60, 'bottom': 60, 'left': 40, 'right': 10},
+                               title_style={'font-size': '12px'})  # TODO: Jenn wants title at bottom. # noqa
+            bqplt.plot(radial_r, y_data, 'go', figure=fig, default_size=1)
+            bqplt.xlabel(label='pix', mark=fig.marks[-1], figure=fig)
+            bqplt.ylabel(label=y_label, mark=fig.marks[-1], figure=fig)
+
         except Exception as e:  # pragma: no cover
             self.result_available = False
             self.results = []
+            self.plot_available = False
+            self.radial_plot = ''
             self.hub.broadcast(SnackbarMessage(
                 f"Aperture photometry failed: {repr(e)}", color='error', sender=self))
 
@@ -246,17 +275,27 @@ class SimpleAperturePhotometry(TemplateMixin):
                            'counts_fac', 'aperture_sum_counts_err', 'flux_scaling', 'timestamp'):
                     continue
                 if (isinstance(x, (int, float, u.Quantity)) and
-                        key not in ('xcenter', 'ycenter', 'npix', 'aperture_sum_counts')):
+                        key not in ('xcenter', 'ycenter', 'sky_center', 'npix',
+                                    'aperture_sum_counts')):
                     x = f'{x:.4e}'
+                    tmp.append({'function': key, 'result': x})
+                elif key == 'sky_center' and x is not None:
+                    tmp.append({'function': 'RA center', 'result': f'{x.ra.deg:.4f} deg'})
+                    tmp.append({'function': 'Dec center', 'result': f'{x.dec.deg:.4f} deg'})
                 elif key == 'npix':
                     x = f'{x:.1f}'
+                    tmp.append({'function': key, 'result': x})
                 elif key == 'aperture_sum_counts' and x is not None:
                     x = f'{x:.4e} ({d["aperture_sum_counts_err"]:.4e})'
+                    tmp.append({'function': key, 'result': x})
                 elif not isinstance(x, str):
                     x = str(x)
-                tmp.append({'function': key, 'result': x})
+                    tmp.append({'function': key, 'result': x})
             self.results = tmp
             self.result_available = True
+            self.radial_plot = fig
+            self.bqplot_figs_resize = [fig]
+            self.plot_available = True
 
 
 def _qtable_from_dict(d):

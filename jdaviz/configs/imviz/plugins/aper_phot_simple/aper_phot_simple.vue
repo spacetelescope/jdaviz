@@ -70,16 +70,23 @@
       <v-btn color="primary" text @click="do_aper_phot">Calculate</v-btn>
     </v-row>
 
+    <v-row>
+      <!-- NOTE: the internal bqplot widget defaults to 480 pixels, so if choosing something else,
+           we will likely need to override that with custom CSS rules in order to avoid the initial
+           rendering of the plot from overlapping with content below -->
+      <jupyter-widget v-if="plot_available" :widget="radial_plot" style="width: 100%; height: 480px" />
+    </v-row>
 
     <div v-if="result_available">
       <j-plugin-section-header>Results</j-plugin-section-header>
-      <v-row>
+      <v-row no-gutters>
         <v-col cols=6><U>Result</U></v-col>
         <v-col cols=6><U>Value</U></v-col>
       </v-row>
       <v-row
         v-for="item in results"
-        :key="item.function">
+        :key="item.function"
+        no-gutters>
         <v-col cols=6>
           {{  item.function  }}
         </v-col>

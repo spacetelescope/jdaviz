@@ -1022,6 +1022,14 @@ class Application(VuetifyTemplate, HubListener):
 
         resize(self.state.stack_items)
 
+        # resize tray items
+        for tray_item in self.state.tray_items:
+            # access the actual plugin object (there is no store for plugins)
+            tray_obj = self.widgets.get(tray_item['widget'].split('IPY_MODEL_')[1])
+            for bqplot_fig in tray_obj.bqplot_figs_resize:
+                bqplot_fig.layout.height = '99.9%'
+                bqplot_fig.layout.height = '100%'
+
     def vue_destroy_viewer_item(self, cid):
         """
         Callback for when viewer area tabs are destroyed. Finds the viewer item
