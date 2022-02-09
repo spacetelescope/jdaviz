@@ -15,9 +15,6 @@ def test_linking_after_collapse(cubeviz_helper, spectral_cube_wcs):
 
     coll.selected_data_item = 'Unknown spectrum object[FLUX]'
 
-    # This is automatically called in notebook but not in this test.
-    coll._on_subset_selected('None')
-
     coll.add_replace_results = False
     coll.vue_collapse()
 

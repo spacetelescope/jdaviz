@@ -35,7 +35,7 @@ class Collapse(TemplateMixin):
     spectral_max = Any().tag(sync=True)
     spectral_unit = Unicode().tag(sync=True)
     spectral_subset_items = List(["None"]).tag(sync=True)
-    selected_subset = Unicode("None").tag(sync=True)
+    selected_subset = Unicode("").tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
