@@ -1028,7 +1028,7 @@ class Application(VuetifyTemplate, HubListener):
             tray_obj = self.widgets.get(tray_item['widget'].split('IPY_MODEL_')[1])
             for bqplot_fig in tray_obj.bqplot_figs_resize:
                 bqplot_fig.layout.height = '99.9%'
-                bqplot_fig.layout.height = '100&'
+                bqplot_fig.layout.height = '100%'
 
     def vue_destroy_viewer_item(self, cid):
         """
