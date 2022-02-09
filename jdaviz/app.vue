@@ -275,4 +275,9 @@ a:active {
 .no-hint .v-text-field__details {
   display: none !important;
 }
+
+/* Can be removed when https://github.com/bqplot/bqplot/pull/1465 is released */
+.bqplot .curve_label {
+  fill: var(--bq-content-font-color);
+}
 </style>
