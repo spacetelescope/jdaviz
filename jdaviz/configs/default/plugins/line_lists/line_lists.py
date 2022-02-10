@@ -17,6 +17,7 @@ from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
 from jdaviz.core.linelists import load_preset_linelist
 from jdaviz.core.marks import SpectralLine
+from jdaviz.core.validunits import create_spectral_equivalencies_list
 
 __all__ = ['LineListTool']
 
@@ -44,6 +45,7 @@ class LineListTool(TemplateMixin):
     list_contents = Dict({}).tag(sync=True)
     custom_name = Unicode().tag(sync=True)
     custom_rest = Unicode().tag(sync=True)
+    custom_unit_choices = List([]).tag(sync=True)
     custom_unit = Unicode().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
@@ -138,6 +140,10 @@ class LineListTool(TemplateMixin):
                             if hasattr(viewer_data.redshift, 'value')
                             else viewer_data.redshift)
         self._auto_slider_range()  # will also trigger _auto_slider_step
+
+        # set the choices (and default) for the units for new custom lines
+        self.custom_unit_choices = create_spectral_equivalencies_list(viewer_data)
+        self.custom_unit = str(viewer_data.spectral_axis.unit)
 
     def _parse_redshift_msg(self, msg):
         '''

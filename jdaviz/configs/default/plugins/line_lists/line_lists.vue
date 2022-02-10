@@ -147,12 +147,12 @@
 
               <v-row class="row-min-bottom-padding" style="display: block">
                 <j-tooltip tipid='plugin-line-lists-custom-unit'>
-                  <v-text-field
-                    label="Unit"
-                    v-model="custom_unit"
-                    dense
-                  >
-                  </v-text-field>
+                    <v-select
+                      :items="custom_unit_choices"
+                      v-model="custom_unit"
+                      label="Unit"
+                      dense
+                    ></v-select>
                 </j-tooltip>
               </v-row>
 
