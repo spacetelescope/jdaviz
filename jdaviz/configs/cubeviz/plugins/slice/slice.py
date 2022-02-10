@@ -1,5 +1,3 @@
-import re
-
 import numpy as np
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.bqplot.profile import BqplotProfileView
@@ -111,7 +109,7 @@ class Slice(TemplateMixin):
     def vue_change_wavelength(self, event):
         # convert to float after stripping any invalid characters
         try:
-            value = float(re.sub(r'[^-+eE\d.]', '', event))
+            value = float(event)
         except ValueError:
             # do not accept changes, we'll revert via the slider
             # since this @change event doesn't have access to
@@ -131,10 +129,7 @@ class Slice(TemplateMixin):
 
     @observe('slider')
     def _on_slider_updated(self, event):
-        if not event['new']:
-            value = 0
-        else:
-            value = int(event['new'])
+        value = int(event.get('new', 0))
 
         self.wavelength = self._x_all[value]
 
