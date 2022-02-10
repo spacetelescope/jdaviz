@@ -2,8 +2,8 @@
 Data Analysis Plugins
 *********************
 
-The Cubeviz data analysis plugins include operations on both
-Spectrum1D one dimensional datasets and :class:`~spectral_cube.SpectralCube` objects.
+The Cubeviz data analysis plugins include operations on
+`~specutils.Spectrum1D` one dimensional datasets.
 Plugins that are specific to 1D spectra are described in
 more detail under :ref:`Specviz: Data Analysis Plugins <specviz-plugins>`.  All plugins
 are accessed via the :guilabel:`plugin` icon in the upper right corner
@@ -30,7 +30,7 @@ Collapse
 .. image:: ../img/collapse_plugin.png
 
 The Collapse plugin collapses a spectral cube along
-any one axis (x, y , or wavelength) to create a 2D image.
+the wavelength axis to create a 2D spatial image.
 For spatial axes, the full extent of the selected dimension
 is included in the collapse. For the spectral axis, a wavelength
 range for collapse can be specified using a spectral subset or
@@ -38,8 +38,7 @@ by entering the wavelength range manually.
 
 To make a 2D image, first go to the Collapse plugin and
 select the cube dataset using the
-:guilabel:`Data` pulldown. Then set the :guilabel:`Axis` to the
-dimension to be collapsed (0, 1, or 2). Next, select the method
+:guilabel:`Data` pulldown. Next, select the method
 for collapse (Mean, Median, Min, Max, or Sum) in the
 :guilabel:`Method` pulldown. To collapse a limited spectral subregion,
 you can either create and select a

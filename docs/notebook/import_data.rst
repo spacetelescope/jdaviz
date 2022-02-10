@@ -10,7 +10,7 @@ all provide the ability to import data with the GUI or the API via the Jupyter n
 
 If using the Jupyter notebook, users can load data into the application through code using the ``load_data``
 method, which takes as input either the name of a local file or a
-:class:`~spectral_cube.SpectralCube` or :class:`~specutils.Spectrum1D` object.
+:class:`~specutils.Spectrum1D` object.
 
 For Specviz::
 

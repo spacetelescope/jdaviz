@@ -70,8 +70,6 @@ def test_region_from_subset_profile(jdaviz_app, spectral_cube_wcs):
     subsets = jdaviz_app.get_subsets_from_viewer('spectrum-viewer', subset_type='spectral')
     reg = subsets.get('Subset 1')
 
-    print(reg)
-
     assert len(subsets) == 1
     assert isinstance(reg, SpectralRegion)
 

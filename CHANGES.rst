@@ -41,6 +41,9 @@ Cubeviz
 
 - Subsets from the spectrum viewer are now returned as SpectralRegion objects. [#1046]
 
+- Collapse plugin only collapses into spatial-spatial image now. Default collapse
+  function is now sum, not mean. [#1006]
+
 Bug Fixes
 ---------
 
@@ -75,6 +78,9 @@ Other Changes and Additions
   plugin in the plugin tray. [#1031]
 
 - Spectral lines and redshift are refactored to improve performance. [#1036]
+
+- Jdaviz no longer depends on ``spectral-cube``. [#1006]
+
 
 2.2 (2021-12-23)
 ================
