@@ -12,9 +12,9 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
     app.add_data_to_viewer("flux-viewer", "test")
 
     # sample cube only has 2 slices with wavelengths [4.62280007e-07 4.62360028e-07] m
-    assert(sl.slider == 1)
+    assert sl.slider == 1
     cubeviz_helper.select_slice(0)
-    assert(sl.slider == 0)
+    assert sl.slider == 0
 
     with pytest.raises(
             TypeError,
@@ -27,4 +27,4 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
         cubeviz_helper.select_slice(-5)
 
     cubeviz_helper.select_wavelength(4.62360028e-07)
-    assert(sl.slider == 1)
+    assert sl.slider == 1

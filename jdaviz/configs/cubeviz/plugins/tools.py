@@ -2,9 +2,7 @@ import time
 import os
 
 from glue.config import viewer_tool
-# from glue_jupyter.bqplot.common.tools import Tool
 from glue.viewers.common.tool import CheckableTool
-# from bqplot.interacts import IndexSelector
 
 from jdaviz.core.events import SliceSelectWavelengthMessage, SliceToolStateMessage
 
@@ -17,8 +15,8 @@ ICON_DIR = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'ic
 class SelectSlice(CheckableTool):
     icon = os.path.join(ICON_DIR, 'slice.svg')
     tool_id = 'jdaviz:selectslice'
-    action_text = 'Select cube slice (wavelength)'
-    tool_tip = 'Select cube slice (wavelength)'
+    action_text = 'Select cube slice (spectral axis)'
+    tool_tip = 'Select cube slice (spectral axis)'
 
     def __init__(self, viewer, **kwargs):
         self._time_last = 0
