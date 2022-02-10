@@ -110,7 +110,15 @@ class Slice(TemplateMixin):
 
     def vue_change_wavelength(self, event):
         # convert to float after stripping any invalid characters
-        value = float(re.sub(r'[^-+eE\d.]', '', event))
+        try:
+            value = float(re.sub(r'[^-+eE\d.]', '', event))
+        except ValueError:
+            # do not accept changes, we'll revert via the slider
+            # since this @change event doesn't have access to
+            # the old value, and self.wavelength already updated
+            # via the v-model
+            self._on_slider_updated({'new': self.slider})
+            return
 
         # NOTE: by setting the index, this should recursively update the
         # wavelength to the nearest applicable value in _on_slider_updated
