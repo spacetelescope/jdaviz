@@ -11,6 +11,9 @@ New Features
 Cubeviz
 ^^^^^^^
 
+- Move slice slider to the plugin tray and add capability for selecting by wavelength as well as
+  through a tool in the spectrum viewer. [#1013]
+
 Imviz
 ^^^^^
 
