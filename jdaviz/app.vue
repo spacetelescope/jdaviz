@@ -1,5 +1,5 @@
 <template>
-  <v-app id="web-app" class="jdaviz">
+  <v-app id="web-app" class="jdaviz" ref="mainapp">
     <v-app-bar color="toolbar" dark :dense="state.settings.dense_toolbar" flat app absolute clipped-right>
       <v-toolbar-items v-for="item in state.tool_items">
         <v-divider v-if="['g-data-tools', 'g-subset-tools'].indexOf(item.name) === -1" vertical style="margin: 0px 10px"></v-divider>
@@ -123,16 +123,16 @@ export default {
       success: '#4CAF50',
       warning: '#FFC107',
     };
+  },
+  mounted() {
+    /* Workaround for https://github.com/jupyter-widgets/ipywidgets/issues/2499, can be removed when ipywidgets 8 is
+     * released */
+    this.$refs.mainapp.$el.closest('.jp-OutputArea-output').classList.remove('jupyter-widgets');
   }
 };
 </script>
 
 <style id="web-app">
-/* This makes the viz tools scrollable when the window is too small.  In principle this should be fixed in ipywidgets 8, but that's not out yet... (see https://github.com/spacetelescope/jdaviz/pull/952#issuecomment-1021183846) */
-.jupyterlab-sidecar .jp-OutputArea-output {
-  overflow: auto;
-}
-
 * {
   /* otherwise, voila will override box-sizing to unset which screws up layouts */
   box-sizing: border-box !important;
