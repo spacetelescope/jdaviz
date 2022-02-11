@@ -315,7 +315,7 @@ class ConfigHelper(HubListener):
 
         Returns
         -------
-        sidecar or Nothing
+        sidecar or None
             If a sidecar was used to create the tab: ``sidecar.Sidecar`` object
 
         Notes
