@@ -92,7 +92,7 @@ class MomentMap(TemplateMixin):
 
     @observe("selected_subset")
     def _on_subset_selected(self, event):
-        # If "None" selected, reset based on bounds of selected data
+        # If "Entire Spectrum" selected, reset based on bounds of selected data
         self._selected_subset = self.selected_subset
         if self._selected_subset == "Entire Spectrum":
             cube = self._selected_data.get_object(cls=Spectrum1D, statistic=None)
