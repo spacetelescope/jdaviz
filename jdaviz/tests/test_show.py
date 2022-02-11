@@ -18,7 +18,7 @@ def test_show_new_jupyter_tab(specviz_helper):
 
 
 def test_show_new_browser_tab(specviz_helper):
-    with warns(RuntimeWarning):
+    with warns(RuntimeWarning, match='Error detected in display'):
         specviz_helper.show(mode="new browser tab")
 
 
