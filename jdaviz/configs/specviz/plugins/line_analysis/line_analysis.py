@@ -46,6 +46,7 @@ class LineAnalysis(PluginTemplateMixin):
     results_computing = Bool(False).tag(sync=True)
     results = List().tag(sync=True)
     line_items = List([]).tag(sync=True)
+    sync_identify = Bool(False).tag(sync=True)
     identified_line = Unicode("").tag(sync=True)
     selected_line = Unicode("").tag(sync=True)
 
@@ -186,8 +187,9 @@ class LineAnalysis(PluginTemplateMixin):
 
     def _on_identified_line_changed(self, msg):
         self.identified_line = msg.name_rest
-        if not self.selected_line:
-            # nothing has been selected, so default to the identified line.
+        if self.sync_identify or not self.selected_line:
+            # then we should follow the identified line, either because of sync
+            # or because nothing has been selected yet.
             # if results aren't available yet, then we'll wait until they are
             # in which case we'll default to the identified line
             self.selected_line = self.identified_line
@@ -327,9 +329,25 @@ class LineAnalysis(PluginTemplateMixin):
             # default to the identified line
             self.selected_line = self.identified_line
 
-    def vue_line_identify(self, msg=None):
-        msg = LineIdentifyMessage(self.selected_line, sender=self)
-        self.hub.broadcast(msg)
+    def vue_toggle_sync_identify(self, msg=None):
+        self.sync_identify = not self.sync_identify
+        if not self.sync_identify:
+            return
+
+        if not self.identified_line and self.selected_line:
+            # then we just enabled the sync, but no line is currently
+            # identified, so we'll identify the current selection
+            msg = LineIdentifyMessage(self.selected_line, sender=self)
+            self.hub.broadcast(msg)
+        elif self.identified_line:
+            # then update the selection the the identified line
+            self.selected_line = self.identified_line
+
+    @observe('selected_line')
+    def _selected_line_changed(self, event):
+        if self.sync_identify:
+            msg = LineIdentifyMessage(self.selected_line, sender=self)
+            self.hub.broadcast(msg)
 
     def vue_line_assign(self, msg=None):
         index = self.line_items.index(self.selected_line)

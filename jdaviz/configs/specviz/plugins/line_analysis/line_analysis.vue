@@ -103,41 +103,36 @@
       <v-row>
         <j-docs-link>Assign the centroid reported above to the observed wavelength of a given line and set the resulting redshift.  Lines must be loaded and plotted through the Line Lists plugin first.</j-docs-link>
       </v-row>
-      <v-row>
-        <v-select
-          :items="line_items"
-          v-model="selected_line"
-          label="Line"
-          hint="Assign computed centroid to line."
-          persistent-hint
-        ></v-select>
+      <v-row class="row-no-outside-padding">
+        <v-col cols=2>
+          <j-tooltip tipid='plugin-line-analysis-sync-identify'>
+            <v-btn :color="sync_identify ? 'accent' : 'default'" icon @click="toggle_sync_identify" style="margin-top: 14px">
+              <v-icon>{{sync_identify ? "mdi-crosshairs-gps" : "mdi-crosshairs"}}</v-icon>
+            </v-btn>
+          </j-tooltip>
+        </v-col>
+        <v-col cols=10>
+          <v-select
+            :items="line_items"
+            v-model="selected_line"
+            label="Line"
+            hint="Assign computed centroid to line."
+            persistent-hint
+          ></v-select>
+        </v-col>
       </v-row>
 
-      <v-row class="row-no-padding">
-        <v-col cols=6>
-          <j-tooltip tipid='plugin-line-analysis-identify'>
-            <v-btn 
-             color="primary" 
-             style="padding-left: 8px; padding-right: 8px;"
-             text
-             @click="line_identify"
-             :disabled="!selected_line">
-              Identify
-            </v-btn>
-          </j-tooltip>
-        </v-col>
-        <v-col cols=6 style="text-align: right">
-          <j-tooltip tipid='plugin-line-analysis-assign'>
-            <v-btn 
-             color="accent"
-             style="padding-left: 8px; padding-right: 8px;"
-             text
-             :disabled="!selected_line"
-             @click="line_assign">
-              Assign
-            </v-btn>
-          </j-tooltip>
-        </v-col>
+      <v-row justify="end">
+        <j-tooltip tipid='plugin-line-analysis-assign'>
+          <v-btn 
+           color="accent"
+           style="padding-left: 8px; padding-right: 8px;"
+           text
+           :disabled="!selected_line"
+           @click="line_assign">
+            Assign
+          </v-btn>
+        </j-tooltip>
       </v-row>
     </div>  
   </j-tray-plugin>
