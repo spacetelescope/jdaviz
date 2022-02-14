@@ -38,3 +38,20 @@ The example below loads the first science extension of the given FITS file into 
     imviz = Imviz()
     imviz.app
     imviz.load_data("/path/to/data/image.fits")
+
+.. _imviz-import-regions-api:
+
+Importing regions via the API
+-----------------------------
+
+If you have a region file supported by :ref:`regions:regions_io`, you
+can load the regions into Imviz as follows. Any unsupported region will
+be skipped with warning and a dictionary of regions that failed to load
+will be returned, if any::
+
+    bad_regions = imviz.load_static_regions_from_file("/path/to/data/myregions.reg")
+
+For more details on the API, please see
+:meth:`~jdaviz.configs.imviz.helper.Imviz.load_static_regions_from_file`
+and :meth:`~jdaviz.configs.imviz.helper.Imviz.load_static_regions` methods
+in Imviz.

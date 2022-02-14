@@ -23,6 +23,9 @@ Imviz
 
 - New plugin to display compass for image with WCS and also zoom box. [#983]
 
+- New ``imviz.load_static_regions_from_file()`` method to load region file
+  via API. [#1066]
+
 Mosviz
 ^^^^^^
 
@@ -46,6 +49,12 @@ Cubeviz
 
 - Collapse plugin only collapses into spatial-spatial image now. Default collapse
   function is now sum, not mean. [#1006]
+
+Imviz
+^^^^^
+
+- ``imviz.load_static_regions()`` now returns a dictionary of regions that failed
+  to load with warnings. It also shows a snackbar message. [#1066]
 
 Bug Fixes
 ---------

@@ -2,8 +2,9 @@ import numpy as np
 import pytest
 from astropy import units as u
 from astropy.coordinates import SkyCoord, Angle
+from astropy.utils.data import get_pkg_data_filename
 from regions import (PixCoord, CircleSkyRegion, RectanglePixelRegion, CirclePixelRegion,
-                     EllipsePixelRegion)
+                     EllipsePixelRegion, PointPixelRegion, PointSkyRegion, Regions)
 
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS
 
@@ -29,21 +30,31 @@ class BaseRegionHandler:
 
 class TestLoadStaticRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
 
-    def test_regions_invalid(self):
+    @pytest.mark.parametrize(('subset_label', 'warn_msg'),
+                             [('reg', 'Unsupported region type'),
+                              ('Subset 1', 'is not allowed, skipping')])
+    def test_regions_invalid(self, subset_label, warn_msg):
         # Does not matter if region is invalid here, it is skipped.
-        with pytest.warns(UserWarning, match='Unsupported region type'):
-            self.imviz.load_static_regions({'reg': self.imviz})
-        with pytest.warns(UserWarning, match='is not allowed, skipping'):
-            self.imviz.load_static_regions({'Subset 1': self.imviz})
+        with pytest.warns(UserWarning, match=warn_msg):
+            bad_regions = self.imviz.load_static_regions({subset_label: self.imviz})
+        assert len(bad_regions) == 1
+        self.verify_region_loaded(subset_label, count=0)
+        assert self.imviz.get_interactive_regions() == {}  # Subset case should not confused it
 
-        self.verify_region_loaded('reg', count=0)
-        self.verify_region_loaded('Subset 1', count=0)
-        assert self.imviz.get_interactive_regions() == {}
+    def test_regions_fully_out_of_bounds(self):
+        my_reg = CirclePixelRegion(center=PixCoord(x=100, y=100), radius=5)
+        with pytest.warns(UserWarning, match='failed to load, skipping'):
+            bad_regions = self.imviz.load_static_regions({'my_oob_reg': my_reg})
+        assert len(bad_regions) == 1
+
+        # BUG: https://github.com/glue-viz/glue/issues/2275
+        self.verify_region_loaded('my_oob_reg', count=1)  # Should be: count=0
 
     def test_regions_mask(self):
         mask = np.zeros((10, 10), dtype=np.bool_)
         mask[0, 0] = True
-        self.imviz.load_static_regions({'my_mask': mask})
+        bad_regions = self.imviz.load_static_regions({'my_mask': mask})
+        assert len(bad_regions) == 0
         self.verify_region_loaded('my_mask')
         assert self.imviz.get_interactive_regions() == {}
 
@@ -55,10 +66,19 @@ class TestLoadStaticRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
         self.imviz._delete_region('foo')
 
     def test_regions_pixel(self):
-        # Out-of-bounds should still overlay the overlapped part.
+        # A little out-of-bounds should still overlay the overlapped part.
         my_reg = CirclePixelRegion(center=PixCoord(x=6, y=2), radius=5)
-        self.imviz.load_static_regions({'my_reg': my_reg})
+        bad_regions = self.imviz.load_static_regions({'my_reg': my_reg})
+        assert len(bad_regions) == 0
         self.verify_region_loaded('my_reg')
+
+        # Unsupported shape but a valid region
+        my_pt_reg = PointPixelRegion(center=PixCoord(x=1, y=1))
+        with pytest.warns(UserWarning, match='failed to load, skipping'):
+            bad_regions = self.imviz.load_static_regions({'my_pt_reg': my_pt_reg})
+        assert len(bad_regions) == 1
+        self.verify_region_loaded('my_pt_reg', count=0)
+
         assert self.imviz.get_interactive_regions() == {}
 
     # We attach a basic get_interactive_regions test here too.
@@ -68,7 +88,14 @@ class TestLoadStaticRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
 
         sky = SkyCoord(ra=337.5202808, dec=-20.833333059999998, unit='deg')
         my_reg_sky = CircleSkyRegion(sky, Angle(0.5, u.arcsec))
-        self.imviz.load_static_regions({'my_reg_sky_1': my_reg_sky})
+        bad_regions = self.imviz.load_static_regions({'my_reg_sky_1': my_reg_sky})
+        assert len(bad_regions) == 0
+
+        # Unsupported shape but a valid region
+        my_pt_reg_sky = PointSkyRegion(center=sky)
+        with pytest.warns(UserWarning, match='failed to load, skipping'):
+            bad_regions = self.imviz.load_static_regions({'my_pt_reg_sky_1': my_pt_reg_sky})
+        assert len(bad_regions) == 1
 
         # Mimic interactive regions (after)
         self.imviz._apply_interactive_region('bqplot:ellipse', (-2, 0), (5, 4.5))
@@ -85,13 +112,15 @@ class TestLoadStaticRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
 
         # Check static region
         self.verify_region_loaded('my_reg_sky_1')
+        self.verify_region_loaded('my_pt_reg_sky_1', count=0)
 
     @pytest.mark.skipif(not HAS_PHOTUTILS, reason='photutils is missing')
     def test_photutils_pixel(self):
         from photutils import CircularAperture
 
         my_aper = CircularAperture((5, 5), r=2)
-        self.imviz.load_static_regions({'my_aper': my_aper})
+        bad_regions = self.imviz.load_static_regions({'my_aper': my_aper})
+        assert len(bad_regions) == 0
         self.verify_region_loaded('my_aper')
         assert self.imviz.get_interactive_regions() == {}
 
@@ -101,9 +130,56 @@ class TestLoadStaticRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
 
         sky = SkyCoord(ra=337.5202808, dec=-20.833333059999998, unit='deg')
         my_aper_sky = SkyCircularAperture(sky, 0.5 * u.arcsec)
-        self.imviz.load_static_regions({'my_aper_sky_1': my_aper_sky})
+        bad_regions = self.imviz.load_static_regions({'my_aper_sky_1': my_aper_sky})
+        assert len(bad_regions) == 0
         self.verify_region_loaded('my_aper_sky_1')
         assert self.imviz.get_interactive_regions() == {}
+
+
+class TestLoadStaticRegionsFromFile(BaseRegionHandler):
+
+    def setup_class(self):
+        self.region_file = get_pkg_data_filename(
+            'data/ds9.fits.reg', package='regions.io.ds9.tests')
+        self.arr = np.ones((1024, 1024))
+        self.raw_regions = Regions.read(self.region_file, format='ds9')
+
+    def test_ds9_load_all(self, imviz_helper):
+        self.viewer = imviz_helper.default_viewer
+        imviz_helper.load_data(self.arr, data_label='my_image')
+        with pytest.warns(UserWarning):
+            bad_regions = imviz_helper.load_static_regions_from_file(self.region_file)
+        assert len(bad_regions) == 1
+        for i in (0, 1, 2, 3, 4, 5, 7, 8):  # Only these will successfully load
+            self.verify_region_loaded(f'region_{i}', count=1)
+
+    def test_ds9_load_two_good(self, imviz_helper):
+        self.viewer = imviz_helper.default_viewer
+        imviz_helper.load_data(self.arr, data_label='my_image')
+        bad_regions = imviz_helper.load_static_regions_from_file(
+            self.region_file, prefix='good', max_num_regions=2)
+        assert len(bad_regions) == 0
+        for i in range(2):
+            self.verify_region_loaded(f'good_{i}', count=1)
+
+    def test_ds9_load_one_bad(self, imviz_helper):
+        self.viewer = imviz_helper.default_viewer
+        imviz_helper.load_data(self.arr, data_label='my_image')
+        with pytest.warns(UserWarning, match='failed to load, skipping'):
+            bad_regions = imviz_helper.load_static_regions({'bad_0': self.raw_regions[6]})
+        assert len(bad_regions) == 1
+        self.verify_region_loaded('bad_0', count=0)
+
+    def test_ds9_load_one_good_one_bad(self, imviz_helper):
+        self.viewer = imviz_helper.default_viewer
+        imviz_helper.load_data(self.arr, data_label='my_image')
+        with pytest.warns(UserWarning, match='failed to load, skipping'):
+            bad_regions = imviz_helper.load_static_regions({
+                'good_0': self.raw_regions[3],
+                'bad_0': self.raw_regions[6]})
+        assert len(bad_regions) == 1
+        self.verify_region_loaded('good_0', count=1)
+        self.verify_region_loaded('bad_0', count=0)
 
 
 class TestLoadStaticRegionsSkyNoWCS(BaseRegionHandler):
@@ -119,7 +195,8 @@ class TestLoadStaticRegionsSkyNoWCS(BaseRegionHandler):
     def test_regions_sky_no_wcs(self):
         my_reg_sky = CircleSkyRegion(self.sky, Angle(0.5, u.arcsec))
         with pytest.warns(UserWarning, match='data has no valid WCS'):
-            self.imviz.load_static_regions({'my_reg_sky_2': my_reg_sky})
+            bad_regions = self.imviz.load_static_regions({'my_reg_sky_2': my_reg_sky})
+        assert len(bad_regions) == 1
         self.verify_region_loaded('my_reg_sky_2', count=0)
         assert self.imviz.get_interactive_regions() == {}
 
@@ -129,7 +206,8 @@ class TestLoadStaticRegionsSkyNoWCS(BaseRegionHandler):
 
         my_aper_sky = SkyCircularAperture(self.sky, 0.5 * u.arcsec)
         with pytest.warns(UserWarning, match='data has no valid WCS'):
-            self.imviz.load_static_regions({'my_aper_sky_2': my_aper_sky})
+            bad_regions = self.imviz.load_static_regions({'my_aper_sky_2': my_aper_sky})
+        assert len(bad_regions) == 1
         self.verify_region_loaded('my_aper_sky_2', count=0)
         assert self.imviz.get_interactive_regions() == {}
 
