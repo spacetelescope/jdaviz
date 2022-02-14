@@ -83,6 +83,8 @@ Specviz
 
 - Fix corrupted voila launch notebook. [#1044]
 
+- Entering line list in units that require spectral equivalencies no longer crashes Line Lists plugin. [#1079]
+
 Other Changes and Additions
 ---------------------------
 

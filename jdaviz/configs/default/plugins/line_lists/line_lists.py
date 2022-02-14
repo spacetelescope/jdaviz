@@ -492,21 +492,23 @@ class LineListTool(TemplateMixin):
                      }
 
         # Add to viewer astropy table
-        temp_table = QTable()
-        temp_table["linename"] = [temp_dict["linename"]]
-        temp_table["rest"] = [temp_dict["rest"]*u.Unit(temp_dict["unit"])]
-        temp_table["colors"] = [temp_dict["colors"]]
-        temp_table["redshift"] = [temp_dict["redshift"]]
-        temp_table = self._viewer.load_line_list(temp_table, return_table=True)
 
-        # Add line to Custom lines in local list
-        temp_dict["name_rest"] = str(temp_table[0]["name_rest"])
-        list_contents["Custom"]["lines"].append(temp_dict)
-        self.list_contents = {}
-        self.list_contents = list_contents
+        with u.set_enabled_equivalencies(u.spectral()):
+            temp_table = QTable()
+            temp_table["linename"] = [temp_dict["linename"]]
+            temp_table["rest"] = [temp_dict["rest"]*u.Unit(temp_dict["unit"])]
+            temp_table["colors"] = [temp_dict["colors"]]
+            temp_table["redshift"] = [temp_dict["redshift"]]
+            temp_table = self._viewer.load_line_list(temp_table, return_table=True)
 
-        self._viewer.plot_spectral_line(temp_dict["name_rest"])
-        self.update_line_mark_dict()
+            # Add line to Custom lines in local list
+            temp_dict["name_rest"] = str(temp_table[0]["name_rest"])
+            list_contents["Custom"]["lines"].append(temp_dict)
+            self.list_contents = {}
+            self.list_contents = list_contents
+
+            self._viewer.plot_spectral_line(temp_dict["name_rest"])
+            self.update_line_mark_dict()
 
         lines_loaded_message = SnackbarMessage("Custom spectral line loaded",
                                                sender=self, color="success")
