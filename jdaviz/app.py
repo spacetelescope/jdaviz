@@ -1449,9 +1449,9 @@ class Application(VuetifyTemplate, HubListener):
         self._application_handler._tools = {}
 
     def get_configuration(self, path=None, section=None):
-        """ Returns a copy of the application configuration
+        """Returns a copy of the application configuration.
 
-        Returns a copy of the configuration specification.  If path
+        Returns a copy of the configuration specification. If path
         is not specified, returns the currently loaded configuration.
 
         Parameters
@@ -1459,11 +1459,12 @@ class Application(VuetifyTemplate, HubListener):
         path : str, optional
             path to the configuration file to be retrieved.
         section : str, optional
-            A section of the configuration to retrieve
+            A section of the configuration to retrieve.
 
         Returns
         -------
-        A configuration specification dictionary
+        cfg : dict
+            A configuration specification dictionary.
 
         """
 
@@ -1473,3 +1474,38 @@ class Application(VuetifyTemplate, HubListener):
 
         cfg = get_configuration(path=path, section=section, config=config)
         return cfg
+
+    def get_tray_item_from_name(self, name):
+        """Return the instance of a tray item for a given name.
+        This is useful for direct programmatic access to Jdaviz plugins
+        registered under tray items.
+
+        Parameters
+        ----------
+        name : str
+            The name used when the plugin was registered to
+            an internal `~jdaviz.core.registries.TrayRegistry`.
+
+        Returns
+        -------
+        tray_item : obj
+            The instance of the plugin registered to tray items.
+
+        Raises
+        ------
+        KeyError
+            Name not found.
+        """
+        from ipywidgets.widgets import widget_serialization
+
+        tray_item = None
+        for item in self.state.tray_items:
+            if item['name'] == name:
+                ipy_model_id = item['widget']
+                tray_item = widget_serialization['from_json'](ipy_model_id, None)
+                break
+
+        if tray_item is None:
+            raise KeyError(f'{name} not found in app.state.tray_items')
+
+        return tray_item
