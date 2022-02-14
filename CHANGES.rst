@@ -74,6 +74,8 @@ Specviz
 
 - Fix corrupted voila launch notebook. [#1044]
 
+- Entering line list in Hz will no longer crash Line Lists plugin. [#1079]
+
 Other Changes and Additions
 ---------------------------
 
