@@ -34,7 +34,7 @@ class Collapse(TemplateMixin):
     spectral_min = Any().tag(sync=True)
     spectral_max = Any().tag(sync=True)
     spectral_unit = Unicode().tag(sync=True)
-    spectral_subset_items = List(["None"]).tag(sync=True)
+    spectral_subset_items = List(["Entire Spectrum"]).tag(sync=True)
     selected_subset = Unicode("").tag(sync=True)
 
     def __init__(self, *args, **kwargs):
@@ -70,15 +70,15 @@ class Collapse(TemplateMixin):
         self.spectral_unit = self._selected_cube.spectral_axis.unit.to_string()
 
         # Also set the spectral min and max to default to the full range
-        self.selected_subset = "None"  # This calls self._on_subset_selected()
+        self.selected_subset = "Entire Spectrum"  # This calls self._on_subset_selected()
 
     @observe("selected_subset")
     def _on_subset_selected(self, event):
         if self._selected_data is None:
             return
 
-        # If "None" selected, reset based on bounds of selected data
-        if self.selected_subset == "None":
+        # If "Entire Spectrum" selected, reset based on bounds of selected data
+        if self.selected_subset == "Entire Spectrum":
             self.spectral_min = self._selected_cube.spectral_axis[0].value
             self.spectral_max = self._selected_cube.spectral_axis[-1].value
 
@@ -97,7 +97,7 @@ class Collapse(TemplateMixin):
             if type(region) == SpectralRegion:
                 temp_dict[key] = region
         self._spectral_subsets = temp_dict
-        self.spectral_subset_items = ["None"] + sorted(temp_dict.keys())
+        self.spectral_subset_items = ["Entire Spectrum"] + sorted(temp_dict.keys())
 
     def vue_collapse(self, *args, **kwargs):
         # Collapsing over the spectral axis. Cut out the desired spectral

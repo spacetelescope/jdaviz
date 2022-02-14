@@ -297,7 +297,7 @@ class ModelFitting(TemplateMixin):
 
     @observe("selected_subset")
     def _on_subset_selected(self, event):
-        # If "None" selected, reset based on bounds of selected data
+        # If "Entire Spectrum" selected, reset based on bounds of selected data
         if self.selected_subset == "Entire Spectrum":
             self._window = None
             self.spectral_min = self._spectrum1d.spectral_axis[0].value
