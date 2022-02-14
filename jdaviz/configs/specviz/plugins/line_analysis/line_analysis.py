@@ -255,8 +255,12 @@ class LineAnalysis(TemplateMixin):
                           'right': []}
             else:
                 mark_x = {'left': spectral_axis_nanmasked[spectral_axis.value < sr.lower.value],
-                          'center': spectral_axis_nanmasked[continuum_mask],
                           'right': spectral_axis_nanmasked[spectral_axis.value > sr.upper.value]}
+                # center should extend (at least) across the line region between the full
+                # range defined by the continuum subset(s)
+                left_min = np.nanmin([np.nanmin(mark_x['left']), sr.lower.value])
+                right_max = np.nanmax([np.nanmax(mark_x['right']), sr.upper.value])
+                mark_x['center'] = np.array([left_min, right_max])
 
         continuum_x = spectral_axis[continuum_mask].value
         min_x = min(spectral_axis.value)
