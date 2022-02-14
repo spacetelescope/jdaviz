@@ -169,4 +169,5 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
             # needs perhaps a better way to label the combined spectrum
             label = "Combined " + data_label[0]
             app.add_data(spec, label)
-            app.add_data_to_viewer("spectrum-viewer", label)
+            if show_in_viewer:
+                app.add_data_to_viewer("spectrum-viewer", label)
