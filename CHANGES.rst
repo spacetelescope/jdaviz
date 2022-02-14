@@ -84,6 +84,8 @@ Other Changes and Additions
 
 - Jdaviz no longer depends on ``spectral-cube``. [#1006]
 
+- Line list plugin now includes a dropdown for valid units for custom lines. [#1073]
+
 
 2.2 (2021-12-23)
 ================
