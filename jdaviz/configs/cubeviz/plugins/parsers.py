@@ -151,16 +151,6 @@ def _get_flux_unit_from_hdu_header(app, hdr, data_label, strict=False):
     return flux_unit
 
 
-def generate_dummy_fits_wcs_3d():
-    """Generate a dummy 3D FITS WCS for Cubeviz."""
-    dummy_wcs = WCS(naxis=3)
-    dummy_wcs.wcs.ctype[2] = 'WAVE'
-    dummy_wcs.wcs.cunit[2] = u.m
-    dummy_wcs.wcs.crval[2] = 0
-    dummy_wcs.wcs.cdelt[2] = 1
-    return dummy_wcs
-
-
 def _get_wcs_from_hdu_header(app, hdr, data_label, hdulist=None):
     is_bad = ''
 
@@ -176,7 +166,7 @@ def _get_wcs_from_hdu_header(app, hdr, data_label, hdulist=None):
         app.hub.broadcast(SnackbarMessage(
             f"Invalid WCS for {data_label}: {is_bad}",
             color="warning", timeout=8000, sender=app))
-        wcs = generate_dummy_fits_wcs_3d()
+        wcs = None
 
     return wcs
 
@@ -329,8 +319,6 @@ def _parse_ndarray_3d(app, file_obj, data_label, data_type):
     else:
         flux_unit = u.count
     flux = file_obj << flux_unit
-    # fake_wcs = generate_dummy_fits_wcs_3d()
-    idx = np.arange(flux.shape[-1]) * u.pix
-    sc = Spectrum1D(spectral_axis=idx, flux=flux)
+    sc = Spectrum1D(flux=flux)
     app.add_data(sc, data_label)
     _show_data_in_cubeviz_viewer(app, data_label, data_type)
