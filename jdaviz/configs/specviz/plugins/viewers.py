@@ -5,7 +5,7 @@ from bqplot.marks import Lines, Scatter
 from glue.core import BaseData
 from glue.core.subset import Subset
 from glue.config import data_translator
-from glue_jupyter.bqplot.profile import BqplotProfileView
+from glue_jupyter.bqplot.histogram import BqplotHistogramView
 from glue.core.exceptions import IncompatibleAttribute
 
 import astropy
@@ -19,14 +19,14 @@ from astropy import units as u
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.marks import SpectralLine
 from jdaviz.core.linelists import load_preset_linelist, get_available_linelists
-from jdaviz.core.freezable_state import FreezableProfileViewerState
+from jdaviz.core.freezable_state import FreezableHistogramViewerState
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
 
 __all__ = ['SpecvizProfileView']
 
 
 @viewer_registry("specviz-profile-viewer", label="Profile 1D (Specviz)")
-class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
+class SpecvizProfileView(BqplotHistogramView, JdavizViewerMixin):
     # Whether to inherit tools from glue-jupyter automatically. Set this to
     # False to have full control here over which tools are shown in case new
     # ones are added in glue-jupyter in future that we don't want here.
@@ -39,7 +39,7 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
 
     default_class = Spectrum1D
     spectral_lines = None
-    _state_cls = FreezableProfileViewerState
+    _state_cls = FreezableHistogramViewerState
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
