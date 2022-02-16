@@ -1,8 +1,8 @@
-import logging
 import os
 import pathlib
 import re
 import uuid
+import warnings
 from inspect import isclass
 
 import ipyvue
@@ -1128,8 +1128,8 @@ class Application(VuetifyTemplate, HubListener):
                           if x['id'] == data_id), None)
 
             if label is None:
-                logging.warning(f"No data item with id '{data_id}' found in "
-                                f"viewer '{viewer_id}'.")
+                warnings.warn(f"No data item with id '{data_id}' found in "
+                              f"viewer '{viewer_id}'.")
                 continue
 
             active_data_labels.append(label)

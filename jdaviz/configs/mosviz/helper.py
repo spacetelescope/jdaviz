@@ -1,15 +1,14 @@
-import logging
-
-import numpy as np
+import warnings
+from copy import deepcopy
 from pathlib import Path
 from time import time
 
-import astropy.units as u
-from astropy.table import QTable
+import numpy as np
+from astropy import units as u
 from astropy.coordinates import SkyCoord
-from glue.core.exceptions import IncompatibleAttribute
+from astropy.table import QTable
 from echo import delay_callback
-from copy import deepcopy
+from glue.core.exceptions import IncompatibleAttribute
 
 from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import SnackbarMessage, TableClickMessage, RedshiftMessage, RowLockMessage
@@ -357,7 +356,6 @@ class Mosviz(ConfigHelper, LineListMixin):
             if sp1_val is not None and sp1_val != sp2_val:
                 # then there was a conflict
                 msg = f"Warning: value for {attr} in row {row} in disagreement between Spectrum1D and Spectrum2D" # noqa
-                logging.warning(msg)
                 msg = SnackbarMessage(msg, color='warning', sender=self)
                 self.app.hub.broadcast(msg)
 
@@ -458,7 +456,6 @@ class Mosviz(ConfigHelper, LineListMixin):
             msg = "Warning: Please set valid values for the load_data() method"
 
         if msg:
-            logging.warning(msg)
             msg = SnackbarMessage(msg, color='warning', sender=self)
             self.app.hub.broadcast(msg)
 
@@ -927,10 +924,10 @@ class Mosviz(ConfigHelper, LineListMixin):
         else:
             redshift = self.get_column("Redshift")[row]
             if apply_slider_redshift == "Warn":
-                logging.warning("Warning: Applying the value from the redshift "
-                                "slider to the output spectra. To avoid seeing this "
-                                "warning, explicitly set the apply_slider_redshift "
-                                "argument to True or False.")
+                warnings.warn("Warning: Applying the value from the redshift "
+                              "slider to the output spectra. To avoid seeing this "
+                              "warning, explicitly set the apply_slider_redshift "
+                              "argument to True or False.")
 
             return _apply_redshift_to_spectra(spectra, redshift)
 

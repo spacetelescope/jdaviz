@@ -1,8 +1,7 @@
 # Command-line interface for jdaviz
 
-import logging
-import pathlib
 import os
+import pathlib
 import sys
 import tempfile
 
@@ -66,6 +65,8 @@ def main(filename, layout='default', browser='default', theme='light', verbosity
     hotreload: bool
         Whether to enable hot-reloading of the UI (for development)
     """
+    import logging  # Local import to avoid possibly messing with JWST pipeline logger.
+
     # Tornado Webserver py3.8 compatibility hotfix for windows
     if sys.platform == 'win32':
         import asyncio
