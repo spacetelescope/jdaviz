@@ -122,6 +122,18 @@
         </v-col>
       </v-row>
 
+      <v-row v-if="selected_line">
+        <v-text-field
+          :value='selected_line_redshift'
+          class="mt-0 pt-0"
+          type="number"
+          label="Redshift"
+          hint="Redshift that will be applied by assigning centroid."
+          persistent-hint
+          disabled
+        ></v-text-field>
+      </v-row>
+
       <v-row justify="end">
         <j-tooltip tipid='plugin-line-analysis-assign'>
           <v-btn 

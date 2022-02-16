@@ -1,7 +1,7 @@
 import numpy as np
 from glue.core.message import (SubsetDeleteMessage,
                                SubsetUpdateMessage)
-from traitlets import Bool, List, Unicode, observe
+from traitlets import Bool, List, Float, Unicode, observe
 from astropy import units as u
 from specutils import analysis
 from specutils.manipulation import extract_region
@@ -49,6 +49,7 @@ class LineAnalysis(PluginTemplateMixin):
     sync_identify = Bool(True).tag(sync=True)
     identified_line = Unicode("").tag(sync=True)
     selected_line = Unicode("").tag(sync=True)
+    selected_line_redshift = Float(0).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -343,17 +344,23 @@ class LineAnalysis(PluginTemplateMixin):
             # then update the selection the the identified line
             self.selected_line = self.identified_line
 
+    def _compute_redshift_for_selected_line(self):
+        index = self.line_items.index(self.selected_line)
+        line_mark = self.line_marks[index]
+        rest_value = (line_mark.rest_value * line_mark._x_unit).to_value(self.results_centroid.unit,
+                                                                         equivalencies=u.spectral())
+        return (self.results_centroid.value - rest_value) / rest_value
+
     @observe('selected_line')
     def _selected_line_changed(self, event):
         if self.sync_identify:
             msg = LineIdentifyMessage(self.selected_line, sender=self)
             self.hub.broadcast(msg)
+        if self.results_centroid is not None:
+            # compute redshift that WILL be applied if clicking assign
+            self.selected_line_redshift = self._compute_redshift_for_selected_line()
 
     def vue_line_assign(self, msg=None):
-        index = self.line_items.index(self.selected_line)
-        line_mark = self.line_marks[index]
-        rest_value = (line_mark.rest_value * line_mark._x_unit).to_value(self.results_centroid.unit,
-                                                                         equivalencies=u.spectral())
-        z = (self.results_centroid.value - rest_value) / rest_value
+        z = self._compute_redshift_for_selected_line()
         msg = RedshiftMessage('redshift', z, sender=self)
         self.hub.broadcast(msg)
