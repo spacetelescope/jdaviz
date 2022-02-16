@@ -41,7 +41,7 @@ const tooltips = {
   'viewer-toolbar-data': 'Select dataset(s) to display',
   'viewer-toolbar-figure': 'Tools: pan, zoom, select region, save',
   'viewer-toolbar-figure-save': 'Save figure',
-  'viewer-toolbar-menu': 'Adjust display: contrast, bias, stretch',
+  'viewer-toolbar-menu': 'Open viewer display options in sidebar',
   'viewer-toolbar-more': 'More options...',
 
   'table-prev': 'Select previous row in table',

@@ -5,7 +5,7 @@ __all__ = ['NewViewerMessage', 'ViewerAddedMessage', 'ViewerRemovedMessage', 'Lo
            'AddLineListMessage', 'RowLockMessage',
            'SliceSelectWavelengthMessage', 'SliceSelectSliceMessage',
            'SliceToolStateMessage',
-           'TableClickMessage']
+           'TableClickMessage', 'PlotOptionsSelectViewerMessage']
 
 
 class NewViewerMessage(Message):
@@ -264,3 +264,13 @@ class SliceToolStateMessage(Message):
     @property
     def change(self):
         return self._change
+
+
+class PlotOptionsSelectViewerMessage(Message):
+    def __init__(self, viewer, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._viewer = viewer
+
+    @property
+    def viewer(self):
+        return self._viewer
