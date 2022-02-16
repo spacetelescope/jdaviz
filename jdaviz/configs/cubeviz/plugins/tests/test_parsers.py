@@ -4,6 +4,7 @@ from astropy import units as u
 from astropy.io import fits
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.wcs import WCS
+from glue_astronomy.translators.spectrum1d import PaddedSpectrumWCS
 from numpy.testing import assert_array_equal, assert_allclose
 from specutils import Spectrum1D
 
@@ -59,6 +60,8 @@ def test_fits_image_hdulist_parse(image_hdu_obj, cubeviz_helper):
     assert_array_equal(flux.data, 1)
     assert flux.units == data_unit
 
+    # NOTE: ERR and MASK inherit WCS from FLUX when all passed in as HDUList.
+
     data = cubeviz_helper.app.data_collection[1]
     flux = data.get_component('flux')
     assert data.label == 'my_hdu[ERR]'
@@ -86,8 +89,15 @@ def test_fits_image_hdulist_parse(image_hdu_obj, cubeviz_helper):
 @pytest.mark.filterwarnings('ignore')
 def test_fits_image_hdu_parse(image_hdu_obj, cubeviz_helper):
     cubeviz_helper.load_data(image_hdu_obj['FLUX'], data_label='myhdu[left]')
+
+    # NOTE: Transpose needed for ERR and MASK because they don't inherit WCS
+    # from FLUX when passed in separately. Without WCS, specutils will look
+    # for spectral axis in the opposite direction.
+    image_hdu_obj['ERR'].data = image_hdu_obj['ERR'].data.T
     cubeviz_helper.load_data(image_hdu_obj['ERR'], data_label='myhdu[center]')
+    image_hdu_obj['MASK'].data = image_hdu_obj['MASK'].data.T
     cubeviz_helper.load_data(image_hdu_obj['MASK'], data_label='myhdu[right]')
+
     assert len(cubeviz_helper.app.data_collection) == 3
 
     data = cubeviz_helper.app.data_collection[0]
@@ -103,8 +113,7 @@ def test_fits_image_hdu_parse(image_hdu_obj, cubeviz_helper):
     flux = data.get_component('flux')
     assert data.label == 'myhdu[center]'
     assert data.shape == (5, 8, 10)
-    assert isinstance(data.coords, WCS)
-    assert list(data.coords.wcs.ctype) == ['', '', 'WAVE']  # Dummy
+    assert isinstance(data.coords, PaddedSpectrumWCS)
     assert_array_equal(flux.data, 1)
     assert flux.units == 'ct'  # Fallback unit
 
@@ -112,8 +121,7 @@ def test_fits_image_hdu_parse(image_hdu_obj, cubeviz_helper):
     flux = data.get_component('flux')
     assert data.label == 'myhdu[right]'
     assert data.shape == (5, 8, 10)
-    assert isinstance(data.coords, WCS)
-    assert list(data.coords.wcs.ctype) == ['', '', 'WAVE']  # Dummy
+    assert isinstance(data.coords, PaddedSpectrumWCS)
     assert_array_equal(flux.data, 0)
     assert flux.units == ''  # Mask should be unitless
 
@@ -179,14 +187,15 @@ def test_spectrum1d_parse(spectrum1d, cubeviz_helper):
                           ('uncert', '[UNCERT]', 'ct'),
                           ('mask', '[MASK]', '')])
 def test_numpy_cube(cubeviz_helper, data_type, label_suffix, flux_unit):
-    cubeviz_helper.load_data(np.ones(24).reshape((2, 3, 4)), data_type=data_type)
+    # NOTE: Without WCS, spectral axis should be at the end of the shape (the only with length 2)
+    cubeviz_helper.load_data(np.ones(24).reshape((4, 3, 2)), data_type=data_type)
     assert len(cubeviz_helper.app.data_collection) == 1
 
     data = cubeviz_helper.app.data_collection[0]
     flux = data.get_component('flux')
     assert data.label.endswith(label_suffix)
-    assert data.shape == (2, 3, 4)
-    assert list(data.coords.wcs.ctype) == ['', '', 'WAVE']  # Dummy
+    assert data.shape == (2, 3, 4)  # glue-astronomy(?) re-ordered it
+    assert isinstance(data.coords, PaddedSpectrumWCS)
     assert flux.units == flux_unit
 
 

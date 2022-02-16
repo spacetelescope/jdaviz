@@ -8,7 +8,8 @@ from jdaviz.configs.default.plugins.collapse.collapse import Collapse
 
 @pytest.mark.filterwarnings('ignore')
 def test_linking_after_collapse(cubeviz_helper, spectral_cube_wcs):
-    cubeviz_helper.load_data(Spectrum1D(flux=np.ones((3, 4, 5)) * u.nJy, wcs=spectral_cube_wcs))
+    cubeviz_helper.load_data(Spectrum1D(flux=np.ones((3, 4, 5)) * u.nJy, wcs=spectral_cube_wcs),
+                             data_label='Unknown spectrum object')
     dc = cubeviz_helper.app.data_collection
 
     coll = Collapse(app=cubeviz_helper.app)
