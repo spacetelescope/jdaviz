@@ -46,7 +46,7 @@ class LineAnalysis(PluginTemplateMixin):
     results_computing = Bool(False).tag(sync=True)
     results = List().tag(sync=True)
     line_items = List([]).tag(sync=True)
-    sync_identify = Bool(False).tag(sync=True)
+    sync_identify = Bool(True).tag(sync=True)
     identified_line = Unicode("").tag(sync=True)
     selected_line = Unicode("").tag(sync=True)
 
