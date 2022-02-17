@@ -87,7 +87,10 @@ Cubeviz
 - Move slice slider to the plugin tray and add capability for selecting by wavelength as well as
   through a tool in the spectrum viewer. [#1013]
 
-- Cubeviz can now load 3D ndarray. [#1040]
+- Cubeviz can now load 3D ndarray (or equivalent) and data without WCS. However,
+  when WCS is not present, not all plugins will work as intended. [#1040]
+
+- New metadata viewer plugin. [#1040]
 
 Imviz
 ^^^^^

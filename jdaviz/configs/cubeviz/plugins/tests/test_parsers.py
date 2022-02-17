@@ -1,3 +1,4 @@
+import gwcs
 import numpy as np
 import pytest
 from astropy import units as u
@@ -89,13 +90,7 @@ def test_fits_image_hdulist_parse(image_hdu_obj, cubeviz_helper):
 @pytest.mark.filterwarnings('ignore')
 def test_fits_image_hdu_parse(image_hdu_obj, cubeviz_helper):
     cubeviz_helper.load_data(image_hdu_obj['FLUX'], data_label='myhdu[left]')
-
-    # NOTE: Transpose needed for ERR and MASK because they don't inherit WCS
-    # from FLUX when passed in separately. Without WCS, specutils will look
-    # for spectral axis in the opposite direction.
-    image_hdu_obj['ERR'].data = image_hdu_obj['ERR'].data.T
     cubeviz_helper.load_data(image_hdu_obj['ERR'], data_label='myhdu[center]')
-    image_hdu_obj['MASK'].data = image_hdu_obj['MASK'].data.T
     cubeviz_helper.load_data(image_hdu_obj['MASK'], data_label='myhdu[right]')
 
     assert len(cubeviz_helper.app.data_collection) == 3
@@ -131,6 +126,21 @@ def test_fits_image_hdu_parse(image_hdu_obj, cubeviz_helper):
     assert_quantity_allclose(spec.spectral_axis.redshift, 0)
     assert_quantity_allclose(spec.spectral_axis.si, [3.62159598e-07, 3.62242998e-07, 3.62326418e-07,
                                                      3.62409856e-07, 3.62493313e-07] * u.m)
+
+
+def test_fits_image_hdu_parse_4d(cubeviz_helper):
+    cubeviz_helper.load_data(fits.ImageHDU(np.ones(24).reshape((1, 2, 3, 4)), name='SCI'))
+
+    assert len(cubeviz_helper.app.data_collection) == 1
+    data = cubeviz_helper.app.data_collection[0]
+    flux = data.get_component('flux')
+    assert data.shape == (2, 3, 4)
+    assert isinstance(data.coords, PaddedSpectrumWCS)
+    assert_array_equal(flux.data, 1)
+    assert flux.units == 'ct'
+
+    with pytest.raises(NotImplementedError, match='Unsupported data format'):
+        cubeviz_helper.load_data(fits.ImageHDU(np.ones(48).reshape((2, 2, 3, 4)), name='SCI'))
 
 
 @pytest.mark.filterwarnings('ignore')
@@ -176,6 +186,20 @@ def test_spectrum3d_parse(spectrum1d_cube, cubeviz_helper):
     assert flux.units == ''  # Mask should be unitless
 
 
+def test_spectrum3d_no_wcs_parse(cubeviz_helper):
+    sc = Spectrum1D(flux=np.ones(24).reshape((2, 3, 4)) * u.nJy)
+    cubeviz_helper.load_data(sc)
+    assert len(cubeviz_helper.app.data_collection) == 1
+    assert sc.spectral_axis.unit == u.pix
+
+    data = cubeviz_helper.app.data_collection[0]
+    flux = data.get_component('flux')
+    assert data.label.endswith('[FLUX]')
+    assert data.shape == (2, 3, 4)
+    assert isinstance(data.coords, gwcs.WCS)
+    assert_quantity_allclose(flux, 1 * u.nJy)
+
+
 def test_spectrum1d_parse(spectrum1d, cubeviz_helper):
     cubeviz_helper.load_data(spectrum1d)
     assert len(cubeviz_helper.app.data_collection) == 1
@@ -187,16 +211,31 @@ def test_spectrum1d_parse(spectrum1d, cubeviz_helper):
                           ('uncert', '[UNCERT]', 'ct'),
                           ('mask', '[MASK]', '')])
 def test_numpy_cube(cubeviz_helper, data_type, label_suffix, flux_unit):
-    # NOTE: Without WCS, spectral axis should be at the end of the shape (the only with length 2)
-    cubeviz_helper.load_data(np.ones(24).reshape((4, 3, 2)), data_type=data_type)
+    # spectral axis has length 2
+    cubeviz_helper.load_data(np.ones(24).reshape((2, 3, 4)), data_type=data_type)
     assert len(cubeviz_helper.app.data_collection) == 1
 
     data = cubeviz_helper.app.data_collection[0]
     flux = data.get_component('flux')
     assert data.label.endswith(label_suffix)
-    assert data.shape == (2, 3, 4)  # glue-astronomy(?) re-ordered it
+    assert data.shape == (2, 3, 4)
     assert isinstance(data.coords, PaddedSpectrumWCS)
     assert flux.units == flux_unit
+
+
+def test_numpy_cube_4d(cubeviz_helper):
+    cubeviz_helper.load_data(np.ones(24).reshape((1, 2, 3, 4)))
+    assert len(cubeviz_helper.app.data_collection) == 1
+
+    data = cubeviz_helper.app.data_collection[0]
+    flux = data.get_component('flux')
+    assert data.label.endswith('[FLUX]')
+    assert data.shape == (2, 3, 4)
+    assert isinstance(data.coords, PaddedSpectrumWCS)
+    assert flux.units == 'ct'
+
+    with pytest.raises(NotImplementedError, match='Unsupported data format'):
+        cubeviz_helper.load_data(np.ones(48).reshape((2, 2, 3, 4)))
 
 
 def test_invalid_data_types(cubeviz_helper):

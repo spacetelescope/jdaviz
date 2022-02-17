@@ -94,8 +94,11 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
         if data_type is None:
             data_type = 'flux'
 
-        if file_obj.ndim == 3:
-            _parse_ndarray_3d(app, file_obj, data_label, data_type)
+        if file_obj.ndim >= 3:
+            arr = file_obj.squeeze()
+            if arr.ndim != 3:
+                raise NotImplementedError(f'Unsupported data format: {file_obj}')
+            _parse_ndarray_3d(app, arr, data_label, data_type)
         else:
             raise NotImplementedError(f'Unsupported data format: {file_obj}')
 
@@ -186,8 +189,15 @@ def _get_sci_hdr_from_hdulist(hdulist):
 
 def _hdu_to_sc(app, hdu, data_label, hdulist=None):
     """Return HDU as (data type, Spectrum1D) tuple or throw exception."""
-    if hdu.data is None or not hdu.is_image or hdu.data.ndim != 3:
+    if hdu.data is None or not hdu.is_image or hdu.data.ndim < 3:
         raise ValueError(f'HDU is not supported as data cube: {hdu}')
+
+    if hdu.data.ndim > 3:
+        hdu_data = hdu.data.squeeze()
+        if hdu_data.ndim != 3:
+            raise ValueError(f'HDU is not supported as data cube: {hdu}')
+    else:
+        hdu_data = hdu.data
 
     hdu_name = hdu.name.lower()
     hdr = hdu.header
@@ -210,7 +220,7 @@ def _hdu_to_sc(app, hdu, data_label, hdulist=None):
         else:
             wcs = _get_wcs_from_hdu_header(app, hdr, data_label, hdulist=hdulist)
     # If the data type is some kind of integer, assume it's the mask/DQ
-    elif hdu_name in ('mask', 'dq') or hdu.data.dtype in (int, np.uint, np.uint32):
+    elif hdu_name in ('mask', 'dq') or hdu_data.dtype in (int, np.uint, np.uint32):
         data_type = 'mask'
         sci_hdr = _get_sci_hdr_from_hdulist(hdulist)
         flux_unit = u.dimensionless_unscaled
@@ -219,10 +229,14 @@ def _hdu_to_sc(app, hdu, data_label, hdulist=None):
         else:
             wcs = _get_wcs_from_hdu_header(app, hdr, data_label, hdulist=hdulist)
     else:
-        raise ValueError(f'Unsupported extname={hdu.name} and/or dtype={hdu.data.dtype}')
+        raise ValueError(f'Unsupported extname={hdu.name} and/or dtype={hdu_data.dtype}')
 
-    flux = hdu.data << flux_unit
-    return data_type, Spectrum1D(flux=flux, wcs=wcs)
+    # NOTE: Transpose here because specutils will not reorder the axes when there is no WCS.
+    if wcs is None:
+        hdu_data = hdu_data.T
+
+    flux = hdu_data << flux_unit
+    return data_type, Spectrum1D(flux=flux, wcs=wcs, meta=hdr)
 
 
 def _show_data_in_cubeviz_viewer(app, data_label, data_type):
@@ -296,7 +310,11 @@ def _parse_spectrum1d_3d(app, file_obj, base_data_label):
         else:  # pragma: no cover
             continue
 
-        s1d = Spectrum1D(flux=flux, wcs=file_obj.wcs)
+        # NOTE: Transpose here because specutils will not reorder the axes when there is no WCS.
+        if file_obj.spectral_axis.unit == u.pix:
+            flux = flux.T
+
+        s1d = Spectrum1D(flux=flux, wcs=file_obj.wcs, meta=file_obj.meta)
 
         data_label = f"{base_data_label}[{attr.upper()}]"
         app.add_data(s1d, data_label)
@@ -318,7 +336,10 @@ def _parse_ndarray_3d(app, file_obj, data_label, data_type):
         flux_unit = u.dimensionless_unscaled
     else:
         flux_unit = u.count
-    flux = file_obj << flux_unit
+
+    # NOTE: Transpose here because specutils will not reorder the axes when there is no WCS.
+    flux = file_obj.T << flux_unit
+
     sc = Spectrum1D(flux=flux)
     app.add_data(sc, data_label)
     _show_data_in_cubeviz_viewer(app, data_label, data_type)
