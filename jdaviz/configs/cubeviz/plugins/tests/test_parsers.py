@@ -1,4 +1,3 @@
-import gwcs
 import numpy as np
 import pytest
 from astropy import units as u
@@ -139,7 +138,7 @@ def test_fits_image_hdu_parse_4d(cubeviz_helper):
     assert_array_equal(flux.data, 1)
     assert flux.units == 'ct'
 
-    with pytest.raises(NotImplementedError, match='Unsupported data format'):
+    with pytest.raises(ValueError, match='HDU is not supported as data cube'):
         cubeviz_helper.load_data(fits.ImageHDU(np.ones(48).reshape((2, 2, 3, 4)), name='SCI'))
 
 
@@ -196,8 +195,9 @@ def test_spectrum3d_no_wcs_parse(cubeviz_helper):
     flux = data.get_component('flux')
     assert data.label.endswith('[FLUX]')
     assert data.shape == (2, 3, 4)
-    assert isinstance(data.coords, gwcs.WCS)
-    assert_quantity_allclose(flux, 1 * u.nJy)
+    assert isinstance(data.coords, PaddedSpectrumWCS)
+    assert_array_equal(flux.data, 1)
+    assert flux.units == 'nJy'
 
 
 def test_spectrum1d_parse(spectrum1d, cubeviz_helper):
