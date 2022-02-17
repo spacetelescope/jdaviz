@@ -78,39 +78,9 @@
                  </v-btn>
                </j-tooltip>
                <j-tooltip tipid='viewer-toolbar-menu'>
-                 <!-- NOTE: this case uses v-menu, so we'll control the active state with v-model
-                      on that component, but close any other active toolbar menus (that won't already
-                      with close-on-content-click with the @click on the underlying button component  
-                  -->
-                <v-menu offset-y :close-on-content-click="false" style="z-index: 10" v-model="viewer.layer_viewer_open">
-                  <template v-slot:activator="{ on }">
-                    <v-btn icon v-on="on" :class="{active : viewer.layer_viewer_open}" color="white" @click="viewer.tools_open=false">
-                      <v-icon>tune</v-icon>
-                    </v-btn>
-                  </template>
-
-                  <v-tabs v-model="viewer.tab" grow height="36px">
-                    <v-tab key="0">Layer</v-tab>
-                    <v-tab key="1">Viewer</v-tab>
-                  </v-tabs>
-
-                  <!-- NOTE: v-lazy needed for initial tab underline: https://github.com/vuetifyjs/vuetify/issues/1978#issuecomment-676892274 -->
-                  <v-lazy>
-                    <v-tabs-items v-model="viewer.tab" style="max-height: 500px; width: 350px;" lazy>
-
-                    <v-tab-item key="0" class="overflow-y-auto" style="height: 100%">
-                      <v-sheet class="px-4">
-                        <jupyter-widget :widget="viewer.layer_options" /> 
-                      </v-sheet>
-                    </v-tab-item>
-
-                    <v-tab-item key="1" eager class="overflow-y-auto" style="height: 100%">
-                      <v-sheet class="px-4">
-                        <jupyter-widget :widget="viewer.viewer_options" />
-                      </v-sheet>
-                    </v-tab-item>
-                  </v-tabs-items>
-                </v-menu>
+                  <v-btn icon color="white" @click="$emit('call-viewer-method', {'id': viewer.id, 'method': 'open_plot_options'})">
+                    <v-icon>tune</v-icon>
+                  </v-btn>
                </j-tooltip>
                <j-tooltip tipid='viewer-toolbar-more'>
                 <v-btn icon color="white">

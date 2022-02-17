@@ -4,7 +4,8 @@ from ipywidgets.widgets import widget_serialization
 from glue.core.message import (SubsetCreateMessage, SubsetUpdateMessage, SubsetDeleteMessage)
 
 from jdaviz.core.events import (ViewerAddedMessage, ViewerRemovedMessage,
-                                AddDataMessage, RemoveDataMessage)
+                                AddDataMessage, RemoveDataMessage,
+                                PlotOptionsSelectViewerMessage)
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
 
@@ -48,6 +49,8 @@ class PlotOptions(TemplateMixin):
                            handler=lambda _: self._update_layer_items())
         self.hub.subscribe(self, SubsetDeleteMessage,
                            handler=lambda _: self._update_layer_items())
+        self.hub.subscribe(self, PlotOptionsSelectViewerMessage,
+                           handler=self._on_select_viewer_message)
 
         # initialize viewer_items from original viewers
         self._on_viewers_changed()
@@ -58,6 +61,9 @@ class PlotOptions(TemplateMixin):
             # default to first entry, will trigger _on_viewer_select to set layer defaults
             self.selected_viewer = self.viewer_items[0] if len(self.viewer_items) else ""
 
+    def _on_select_viewer_message(self, msg):
+        # message from elsewhere requesting to change the selected viewer
+        self.selected_viewer = msg.viewer
 
     @observe("selected_viewer")
     def _update_layer_items(self, event={}):
