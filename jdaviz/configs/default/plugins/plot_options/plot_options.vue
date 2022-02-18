@@ -16,10 +16,20 @@
 
     <div v-if="selected_viewer">
       <j-plugin-section-header>Viewer Options</j-plugin-section-header>
-      <v-row class="row-no-outside-padding">
-        <jupyter-widget v-if="selected_viewer" :widget="viewer_widget"></jupyter-widget>
+
+      <v-row v-if="viewer_state_items.indexOf('show_axes') !== -1">
+        <v-switch
+          v-model="show_axes"
+          label="Show axes"/>
       </v-row>
-      
+
+      <v-row v-if="viewer_state_items.indexOf('function') !== -1">
+        <v-select
+          :items="function_items"
+          v-model="function_selected"
+          label="Function"/>
+      </v-row>
+
       <j-plugin-section-header>Layer Options</j-plugin-section-header>
       <v-row>
         <v-select
@@ -30,10 +40,7 @@
           persistent-hint
         ></v-select>
       </v-row>
-      
-      <v-row class="row-no-outside-padding">
-        <jupyter-widget v-if="selected_layer" :widget="layer_widget"></jupyter-widget>
-      </v-row>
+
     </div>
 
   </j-tray-plugin>

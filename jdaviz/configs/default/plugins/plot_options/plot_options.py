@@ -1,7 +1,7 @@
-from traitlets import Any, List, Unicode, observe
-from ipywidgets.widgets import widget_serialization
+from traitlets import Any, Bool, Dict, Int, List, Unicode, observe
 
 from glue.core.message import (SubsetCreateMessage, SubsetUpdateMessage, SubsetDeleteMessage)
+from glue_jupyter.vuetify_helpers import link_glue, link_glue_choices
 
 from jdaviz.core.events import (ViewerAddedMessage, ViewerRemovedMessage,
                                 AddDataMessage, RemoveDataMessage,
@@ -29,8 +29,18 @@ class PlotOptions(TemplateMixin):
     layer_items = List([]).tag(sync=True)
     selected_layer = Unicode("").tag(sync=True)
 
-    viewer_widget = Any().tag(sync=True, **widget_serialization)
-    layer_widget = Any().tag(sync=True, **widget_serialization)
+    # store a list of which widgets we want to show (based on the viewer type)
+    # this gets populated automatically when the viewer selection changes, as do
+    # the hooks between the glue-state and the traitlet items defined below
+    # we'll need to do similar logic for layer_state_items
+    viewer_state_items = List().tag(sync=True)
+
+    # example of viewer bool state
+    show_axes = Bool().tag(sync=True)
+
+    # example of viewer choice state
+    function_items = List().tag(sync=True)
+    function_selected = Int(allow_none=True).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -67,8 +77,27 @@ class PlotOptions(TemplateMixin):
 
     @observe("selected_viewer")
     def _update_layer_items(self, event={}):
+        def clear_glue_links(state_item):
+            for handler in self._trait_notifiers.get(state_item, {}).get('change', []):
+                if handler.__name__ == 'to_glue_state':
+                    self.unobserve(handler, state_item)
+
         viewer = self.app.get_viewer(event.get('new', self.selected_viewer))
-        self.viewer_widget = viewer.viewer_options
+        self.viewer_state = viewer.state
+        viewer_state_items = []
+        for bool_state_item in ['show_axes']:
+            clear_glue_links(bool_state_item)
+            if hasattr(viewer.state, bool_state_item):
+                viewer_state_items.append(bool_state_item)
+                link_glue(self, bool_state_item, viewer.state)
+        for choice_state_item in ['function']:
+            clear_glue_links(choice_state_item)
+            if hasattr(viewer.state, choice_state_item):
+                viewer_state_items.append(choice_state_item)
+                # NOTE: different arg order than link_glue...
+                link_glue_choices(self, viewer.state, choice_state_item)
+        self.viewer_state_items = viewer_state_items
+
         self.layer_items = [layer.layer.label for layer in viewer.layers]
         if self.selected_layer not in self.layer_items:
             self.selected_layer = self.layer_items[0] if len(self.layer_items) else ""
@@ -78,4 +107,6 @@ class PlotOptions(TemplateMixin):
         viewer = self.app.get_viewer(self.selected_viewer)
         layer_label = event.get('new', self.selected_layer)
         layer_artist = [layer for layer in viewer.layers if layer.layer.label == layer_label][0]
-        self.layer_widget = make_layer_panel(viewer, layer_artist)
+
+        # here we would do similar and loop through the items we want to provide for layers
+        # populate layer_state_items and handling unlinking/linking to the glue state
