@@ -55,6 +55,7 @@
       <v-col>
         <v-text-field
           v-model="rs_rv"
+          @input='setRVFloat'
           @blur="unpause_tables"
           :step="rs_redshift_step"
           class="mt-0 pt-0"
@@ -273,6 +274,9 @@
       },
       this.setRedshiftFloat = (v) => {
         this.rs_redshift = parseFloat(v)
+      }
+      this.setRVFloat = (v) => {
+        this.rs_rv = parseFloat(v)
       }
     }
   }
