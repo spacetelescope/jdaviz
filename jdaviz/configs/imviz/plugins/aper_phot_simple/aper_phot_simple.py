@@ -282,7 +282,7 @@ class SimpleAperturePhotometry(TemplateMixin):
                 elif key == 'sky_center' and x is not None:
                     tmp.append({'function': 'RA center', 'result': f'{x.ra.deg:.4f} deg'})
                     tmp.append({'function': 'Dec center', 'result': f'{x.dec.deg:.4f} deg'})
-                elif key == 'npix':
+                elif key in ('xcenter', 'ycenter', 'npix'):
                     x = f'{x:.1f}'
                     tmp.append({'function': key, 'result': x})
                 elif key == 'aperture_sum_counts' and x is not None:
