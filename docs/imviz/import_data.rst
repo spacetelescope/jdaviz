@@ -8,6 +8,12 @@ Imviz can load data in the form of a filename (FITS, JPEG, or PNG),
 an `~astropy.nddata.NDData` object, or a NumPy array if the data is 2D.
 See :meth:`jdaviz.configs.imviz.helper.Imviz.load_data` for more information.
 
+.. note::
+
+    Loading too many datasets will cause performance problem due to
+    the number of links necessary; see :ref:`glue:linking-framework`
+    for more information.
+
 Importing data through the GUI
 ------------------------------
 
