@@ -11,7 +11,7 @@
       <j-docs-link>Choose a region that defines the spectral line.</j-docs-link>
     </v-row>
 
-    <v-row>
+    <v-row v-if="dc_items.length > 1">
       <v-select
         :items="dc_items"
         v-model="selected_spectrum"
