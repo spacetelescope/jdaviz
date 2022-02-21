@@ -98,14 +98,15 @@ class Imviz(ConfigHelper):
             * `~astropy.nddata.NDData` object (2D only but may have unit,
               mask, or uncertainty attached)
             * Numpy array (2D or 3D); if 3D, it will treat each slice at
-              ``axis=0`` as a separate image.
+              ``axis=0`` as a separate image, however loading too many slices
+              will cause performance issue, so consider using Cubeviz instead.
 
         parser_reference
             This is used internally by the app.
 
         do_link : bool
             Link the data after parsing. Set this to `False` if you want to
-            load a lot of data back-to-back but you must remember to run
+            load multiple data back-to-back but you must remember to run
             :meth:`link_data` manually at the end.
 
         kwargs : dict
