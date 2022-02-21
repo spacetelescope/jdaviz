@@ -23,6 +23,13 @@ Imviz
 
 - New plugin to display compass for image with WCS and also zoom box. [#983]
 
+- Imviz now loads 3D Numpy array as individual slices at ``axis=0``.
+  Also supports higher dimension as long as the array can be squeezed into 3D. [#1056]
+
+- New ``do_link`` keyword for ``Imviz.load_data()``. Set it to ``False``
+  when loading multiple dataset in a loop but ``Imviz.link_data()`` must be
+  run at the end manually afterwards. [#1056]
+
 - New ``imviz.load_static_regions_from_file()`` method to load region file
   via API. [#1066]
 
@@ -74,6 +81,8 @@ Imviz
 ^^^^^
 
 - Imviz no longer crashes when configuration is overwritten by MAST. [#1038]
+
+- Imviz no longer loads incompatible data from ASDF-in-FITS file. [#1056]
 
 Mosviz
 ^^^^^^

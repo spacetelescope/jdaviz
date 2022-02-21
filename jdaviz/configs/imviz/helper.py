@@ -75,7 +75,7 @@ class Imviz(ConfigHelper):
             raise ValueError(f"Default viewer '{viewer_id}' cannot be destroyed")
         self.app.vue_destroy_viewer_item(viewer_id)
 
-    def load_data(self, data, parser_reference=None, **kwargs):
+    def load_data(self, data, parser_reference=None, do_link=True, **kwargs):
         """Load data into Imviz.
 
         Parameters
@@ -97,10 +97,16 @@ class Imviz(ConfigHelper):
             * `~astropy.io.fits.ImageHDU` object
             * `~astropy.nddata.NDData` object (2D only but may have unit,
               mask, or uncertainty attached)
-            * Numpy array (2D only)
+            * Numpy array (2D or 3D); if 3D, it will treat each slice at
+              ``axis=0`` as a separate image.
 
         parser_reference
             This is used internally by the app.
+
+        do_link : bool
+            Link the data after parsing. Set this to `False` if you want to
+            load a lot of data back-to-back but you must remember to run
+            :meth:`link_data` manually at the end.
 
         kwargs : dict
             Extra keywords to be passed into app-level parser.
@@ -139,9 +145,27 @@ class Imviz(ConfigHelper):
                 self.app.load_data(
                     filepath, parser_reference=parser_reference, **kw)
 
+        elif isinstance(data, np.ndarray) and data.ndim >= 3:
+            if data.ndim > 3:
+                data = data.squeeze()
+                if data.ndim != 3:
+                    raise ValueError(f'Imviz cannot load this array with ndim={data.ndim}')
+
+            for i in range(data.shape[0]):
+                kw = deepcopy(kwargs)
+
+                # This will only append index to data label if provided.
+                if 'data_label' in kw:
+                    kw['data_label'] = f'{kwargs["data_label"]}_{i}'
+
+                self.app.load_data(data[i, :, :], parser_reference=parser_reference, **kw)
+
         else:
             self.app.load_data(
                 data, parser_reference=parser_reference, **kwargs)
+
+        if do_link:
+            self.link_data(link_type='pixels', error_on_fail=False)
 
     def link_data(self, **kwargs):
         """(Re)link loaded data in Imviz with the desired link type.

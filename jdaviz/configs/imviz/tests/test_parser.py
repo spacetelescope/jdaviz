@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from asdf.fits_embed import AsdfInFits
 from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import NDData, StdDevUncertainty
@@ -76,7 +77,7 @@ class TestParseImage:
         with pytest.raises(NotImplementedError, match='Imviz does not support'):
             parse_data(imviz_helper.app, some_obj, show_in_viewer=False)
 
-    def test_parse_numpy_array(self, imviz_helper):
+    def test_parse_numpy_array_1d_2d(self, imviz_helper):
         with pytest.raises(ValueError, match='Imviz cannot load this array with ndim=1'):
             parse_data(imviz_helper.app, np.zeros(2), show_in_viewer=False)
 
@@ -87,6 +88,41 @@ class TestParseImage:
         assert data.label == 'some_array'
         assert data.shape == (2, 2)
         assert comp.data.shape == (2, 2)
+
+    @pytest.mark.parametrize('manual_loop', [False, True])
+    def test_parse_numpy_array_3d(self, imviz_helper, manual_loop):
+        # This data has values in axis=0 that correspond to axis num.
+        n_slices = 5
+        slice_shape = (2, 3)
+        arr = np.stack([np.zeros(slice_shape) + i for i in range(n_slices)])
+
+        if not manual_loop:
+            # We use higher level load_data() here to make sure linking does not crash.
+            imviz_helper.load_data(arr, data_label='my_slices')
+        else:
+            for i in range(n_slices):
+                imviz_helper.load_data(arr[i, :, :], data_label=f'my_slices_{i}', do_link=False)
+            imviz_helper.link_data(error_on_fail=True)
+
+        assert len(imviz_helper.app.data_collection) == n_slices
+        assert len(imviz_helper.app.data_collection.links) == 8
+
+        for i in range(n_slices):
+            data = imviz_helper.app.data_collection[i]
+            comp = data.get_component('DATA')
+            assert data.label == f'my_slices_{i}'
+            assert data.shape == slice_shape
+            assert_array_equal(comp.data, i)
+
+    def test_parse_numpy_array_4d(self, imviz_helper):
+        # Check logic is in higher level method.
+        imviz_helper.load_data(np.ones((1, 2, 5, 5)))
+        assert len(imviz_helper.app.data_collection) == 2
+        assert imviz_helper.app.data_collection[0].shape == (5, 5)
+        assert imviz_helper.app.data_collection[1].shape == (5, 5)
+
+        with pytest.raises(ValueError, match='cannot load this array with ndim'):
+            imviz_helper.load_data(np.ones((2, 2, 5, 5)))
 
     def test_parse_nddata_simple(self, imviz_helper):
         with pytest.raises(ValueError, match='Imviz cannot load this NDData with ndim=1'):
@@ -176,6 +212,18 @@ class TestParseImage:
 
         with pytest.raises(ValueError, match='Do not manually overwrite data_label'):
             imviz_helper.load_data(flist, data_label='foo', show_in_viewer=False)
+
+    def test_parse_asdf_in_fits_4d(self, imviz_helper, tmpdir):
+        hdulist = fits.HDUList([
+            fits.PrimaryHDU(),
+            fits.ImageHDU(np.zeros((1, 2, 5, 5)), name='SCI')])
+        tree = {'data': {'data': hdulist['SCI'].data}}
+        filename = str(tmpdir.join('myasdf.fits'))
+        ff = AsdfInFits(hdulist, tree)
+        ff.write_to(filename, overwrite=True)
+
+        with pytest.raises(ValueError, match='Imviz cannot load this HDU'):
+            parse_data(imviz_helper.app, filename)
 
     @pytest.mark.remote_data
     def test_parse_jwst_nircam_level2(self, imviz_helper):
