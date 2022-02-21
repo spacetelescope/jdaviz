@@ -23,6 +23,7 @@ class SimpleAperturePhotometry(TemplateMixin):
     template_file = __file__, "aper_phot_simple.vue"
     dc_items = List([]).tag(sync=True)
     subset_items = List([]).tag(sync=True)
+    plot_types = List([]).tag(sync=True)
     background_value = Any(0).tag(sync=True)
     pixel_area = Any(0).tag(sync=True)
     counts_factor = Any(0).tag(sync=True)
@@ -43,6 +44,8 @@ class SimpleAperturePhotometry(TemplateMixin):
 
         self._selected_data = None
         self._selected_subset = None
+        self.plot_types = ["Radial Profile", "Radial Profile (Raw)"]
+        self.current_plot_type = self.plot_types[0]
 
     def reset_results(self):
         self.result_available = False
@@ -125,7 +128,11 @@ class SimpleAperturePhotometry(TemplateMixin):
             self.hub.broadcast(SnackbarMessage(
                 f"Failed to extract {event}: {repr(e)}", color='error', sender=self))
 
+    def vue_change_plot_type(self, event):
+        self.current_plot_type = event
+
     def vue_do_aper_phot(self, *args, **kwargs):
+        bqplt.clear()
         if self._selected_data is None or self._selected_subset is None:
             self.reset_results()
             self.hub.broadcast(SnackbarMessage(
@@ -241,26 +248,46 @@ class SimpleAperturePhotometry(TemplateMixin):
                     d['id'] = 1
                     self.app._aper_phot_results = _qtable_from_dict(d)
 
-            # Radial profile
             reg_bb = reg.bounding_box
             reg_ogrid = np.ogrid[reg_bb.iymin:reg_bb.iymax, reg_bb.ixmin:reg_bb.ixmax]
             radial_dx = reg_ogrid[1] - reg.center.x
             radial_dy = reg_ogrid[0] - reg.center.y
             radial_r = np.hypot(radial_dx, radial_dy).ravel()  # pix
             radial_img = comp_no_bg_cutout.ravel()
-            if comp.units:
-                y_data = radial_img.value
-                y_label = radial_img.unit.to_string()
-            else:
-                y_data = radial_img
-                y_label = 'Value'
+
+            # Radial profile (Raw)
+            if self.current_plot_type == "Radial Profile (Raw)":
+
+                if comp.units:
+                    y_data = radial_img.value
+                    y_label = radial_img.unit.to_string()
+                else:
+                    y_data = radial_img
+                    y_label = 'Value'
+                x_data = radial_r
+                x_label = "pix"
+
+            # Radial Profile
+            elif self.current_plot_type == "Radial Profile":
+                # This algorithm is from the imexam package,
+                # see licenses/IMEXAM_LICENSE.txt for more details
+                flux = np.bincount(list(radial_r), radial_img)
+                radbc = np.bincount(list(radial_r))
+                flux = flux / radbc
+                radius = np.arange(len(flux))
+
+                x_data = radius
+                x_label = "radius"
+                y_data = flux
+                y_label = "flux"
+
             bqplt.clear()
             # NOTE: default margin in bqplot is 60 in all directions
             fig = bqplt.figure(1, title='Radial profile from Subset center',
                                fig_margin={'top': 60, 'bottom': 60, 'left': 40, 'right': 10},
                                title_style={'font-size': '12px'})  # TODO: Jenn wants title at bottom. # noqa
-            bqplt.plot(radial_r, y_data, 'go', figure=fig, default_size=1)
-            bqplt.xlabel(label='pix', mark=fig.marks[-1], figure=fig)
+            bqplt.plot(x_data, y_data, 'go', figure=fig, default_size=1)
+            bqplt.xlabel(label=x_label, mark=fig.marks[-1], figure=fig)
             bqplt.ylabel(label=y_label, mark=fig.marks[-1], figure=fig)
 
         except Exception as e:  # pragma: no cover

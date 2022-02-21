@@ -66,6 +66,16 @@
       </v-text-field>
     </v-row>
 
+    <v-row>
+      <v-select
+        :items="plot_types"
+        @change="change_plot_type"
+        label="Plot Type"
+        hint="Aperture photometry plot type."
+        persistent-hint
+      ></v-select>
+    </v-row>
+
     <v-row justify="end">
       <v-btn color="primary" text @click="do_aper_phot">Calculate</v-btn>
     </v-row>

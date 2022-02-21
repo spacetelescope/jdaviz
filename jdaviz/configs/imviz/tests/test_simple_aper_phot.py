@@ -21,18 +21,21 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert phot_plugin._selected_data is None
         phot_plugin.vue_subset_selected('no_such_subset')
         assert phot_plugin._selected_subset is None
+        phot_plugin.vue_change_plot_type('Radial Profile (Raw)')
         phot_plugin.vue_do_aper_phot()
         assert not phot_plugin.result_available
         assert len(phot_plugin.results) == 0
         assert self.imviz.get_aperture_photometry_results() is None
         assert not phot_plugin.plot_available
         assert phot_plugin.radial_plot == ''
+        assert phot_plugin.current_plot_type == 'Radial Profile (Raw)'
 
         # Perform photometry on both images using same Subset.
         phot_plugin.vue_data_selected('has_wcs_1[SCI,1]')
         phot_plugin.vue_subset_selected('Subset 1')
         phot_plugin.vue_do_aper_phot()
         phot_plugin.vue_data_selected('has_wcs_2[SCI,1]')
+        phot_plugin.vue_change_plot_type('Radial Profile')
         phot_plugin.vue_do_aper_phot()
         assert_allclose(phot_plugin.background_value, 0)
         assert_allclose(phot_plugin.counts_factor, 0)
@@ -40,6 +43,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert_allclose(phot_plugin.flux_scaling, 0)
         assert phot_plugin.plot_available
         assert phot_plugin.radial_plot != ''  # Does not check content
+        assert phot_plugin.current_plot_type == 'Radial Profile'
 
         # Check photometry results.
         tbl = self.imviz.get_aperture_photometry_results()
