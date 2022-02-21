@@ -1,3 +1,4 @@
+import warnings
 import astropy.units as u
 import csv
 import numpy as np
@@ -67,7 +68,10 @@ SPECSYS = 'BARYCENT'           / Reference frame of spectral coordinates
 def spectrum_collection(spectrum1d):
     sc = [spectrum1d]*5
 
-    return SpectrumCollection.from_spectra(sc)
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        result = SpectrumCollection.from_spectra(sc)
+    return result
 
 
 @pytest.fixture
