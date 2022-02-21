@@ -77,6 +77,8 @@ Cubeviz
 
 - Spectral region retrieval now properly handles the case of multiple subregions. [#1046]
 
+- Moment Map plugin no longer crashes when writing out to FITS file. [#1099]
+
 Imviz
 ^^^^^
 
