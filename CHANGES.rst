@@ -84,6 +84,9 @@ Imviz
 
 - Imviz no longer loads incompatible data from ASDF-in-FITS file. [#1056]
 
+- Simple Aperture Photometry plugin now shows the entire data collection
+  for the application, not just selected data/subset for the default viewer. [#1096]
+
 Mosviz
 ^^^^^^
 
