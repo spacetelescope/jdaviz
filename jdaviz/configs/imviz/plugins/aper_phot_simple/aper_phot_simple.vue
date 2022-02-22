@@ -69,9 +69,9 @@
     <v-row>
       <v-select
         :items="plot_types"
-        @change="change_plot_type"
+        v-model="current_plot_type"
         label="Plot Type"
-        hint="Aperture photometry plot type."
+        hint="Aperture photometry plot type"
         persistent-hint
       ></v-select>
     </v-row>

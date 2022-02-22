@@ -84,7 +84,7 @@ an interactively selected region. A typical workflow is as follows:
    **This field resets every time Data selection changes.**
 9. Select the desired plot type using the :guilabel:`Plot Type` drop-down menu.
 10. Once all inputs are populated correctly, click on the :guilabel:`CALCULATE`
-   button to perform simple aperture photometry.
+    button to perform simple aperture photometry.
 
 .. note::
 
