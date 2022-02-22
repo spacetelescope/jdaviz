@@ -6,7 +6,6 @@ from astropy.table import QTable
 from astropy.time import Time
 from bqplot import pyplot as bqplt
 from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage, SubsetUpdateMessage
-from glue.core.subset import Subset
 from ipywidgets import widget_serialization
 from regions.shapes.rectangle import RectanglePixelRegion
 from traitlets import Any, Bool, List
@@ -42,22 +41,22 @@ class SimpleAperturePhotometry(TemplateMixin):
         self.hub.subscribe(self, SubsetDeleteMessage, handler=self._on_viewer_data_changed)
         self.hub.subscribe(self, SubsetUpdateMessage, handler=self._on_viewer_data_changed)
 
-        # TODO: Allow switching viewer in the future. Need new "messages" to subscribe
-        #       to in viewer create/destroy events.
-        self._selected_viewer_id = f'{self.app.config}-0'
-
         self._selected_data = None
         self._selected_subset = None
 
+    def reset_results(self):
+        self.result_available = False
+        self.results = []
+        self.plot_available = False
+        self.radial_plot = ''
+
     def _on_viewer_data_changed(self, msg=None):
-        # NOTE: Unlike other plugins, this does not check viewer ID because
-        # Imviz allows photometry from any number of open image viewers.
-        viewer = self.app.get_viewer_by_id(self._selected_viewer_id)
-        self.dc_items = [lyr.layer.label for lyr in viewer.state.layers
-                         if layer_is_image_data(lyr.layer)]
-        self.subset_items = [lyr.layer.label for lyr in viewer.state.layers
-                             if (lyr.layer.label.startswith('Subset') and
-                                 isinstance(lyr.layer, Subset) and lyr.layer.ndim == 2)]
+        # To support multiple viewers, we allow the entire data collection.
+        self.dc_items = [lyr.label for lyr in self.app.data_collection
+                         if layer_is_image_data(lyr)]
+
+        self.subset_items = [lyr.label for lyr in self.app.data_collection.subset_groups
+                             if lyr.label.startswith('Subset')]
 
     def vue_data_selected(self, event):
         try:
@@ -96,17 +95,24 @@ class SimpleAperturePhotometry(TemplateMixin):
                     self.pixel_area = 0.04 * 0.04
 
         except Exception as e:
+            self.reset_results()
             self._selected_data = None
             self.hub.broadcast(SnackbarMessage(
                 f"Failed to extract {event}: {repr(e)}", color='error', sender=self))
 
     def vue_subset_selected(self, event):
+        if self._selected_data is None:
+            self.reset_results()
+            return
+
         subset = None
         try:
-            viewer = self.app.get_viewer_by_id(self._selected_viewer_id)
-            for lyr in viewer.layers:
-                if lyr.layer.label == event and lyr.layer.data.label == self._selected_data.label:
-                    subset = lyr.layer
+            for subset_grp in self.app.data_collection.subset_groups:
+                if subset_grp.label == event:
+                    for sbst in subset_grp.subsets:
+                        if sbst.data.label == self._selected_data.label:
+                            subset = sbst
+                            break
                     break
 
             # TODO: https://github.com/glue-viz/glue-astronomy/issues/52
@@ -115,15 +121,13 @@ class SimpleAperturePhotometry(TemplateMixin):
             self._selected_subset.meta['label'] = subset.label
         except Exception as e:
             self._selected_subset = None
+            self.reset_results()
             self.hub.broadcast(SnackbarMessage(
                 f"Failed to extract {event}: {repr(e)}", color='error', sender=self))
 
     def vue_do_aper_phot(self, *args, **kwargs):
         if self._selected_data is None or self._selected_subset is None:
-            self.result_available = False
-            self.results = []
-            self.plot_available = False
-            self.radial_plot = ''
+            self.reset_results()
             self.hub.broadcast(SnackbarMessage(
                 "No data for aperture photometry", color='error', sender=self))
             return
@@ -260,10 +264,7 @@ class SimpleAperturePhotometry(TemplateMixin):
             bqplt.ylabel(label=y_label, mark=fig.marks[-1], figure=fig)
 
         except Exception as e:  # pragma: no cover
-            self.result_available = False
-            self.results = []
-            self.plot_available = False
-            self.radial_plot = ''
+            self.reset_results()
             self.hub.broadcast(SnackbarMessage(
                 f"Aperture photometry failed: {repr(e)}", color='error', sender=self))
 
