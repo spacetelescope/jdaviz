@@ -25,6 +25,9 @@ Cubeviz
 Imviz
 ^^^^^
 
+- ``viewer.marker`` dictionary now accepts ``fill`` as an option, settable to
+  ``True`` (default) or ``False``; the latter draws unfilled circle. [#1101]
+
 Mosviz
 ^^^^^^
 
