@@ -1,5 +1,4 @@
-import pathlib
-import re
+import os
 
 from astropy import units as u
 from astropy.nddata import CCDData
@@ -53,7 +52,6 @@ class MomentMap(TemplateMixin):
         self._selected_data = None
         self.n_moment = 0
         self.moment = None
-        self._filename = None
         self.spectral_min = 0.0
         self.spectral_max = 0.0
         self._spectral_subsets = {}
@@ -103,10 +101,6 @@ class MomentMap(TemplateMixin):
             self.spectral_min = spec_sub.lower.value
             self.spectral_max = spec_sub.upper.value
 
-    @observe("filename")
-    def _on_filename_changed(self, event):
-        self._filename = self.filename
-
     def vue_list_subsets(self, event):
         """Populate the spectral subset selection dropdown"""
         self._spectral_subsets = self.app.get_subsets_from_viewer("spectrum-viewer")
@@ -126,14 +120,12 @@ class MomentMap(TemplateMixin):
                 raise ValueError("Moment must be a positive integer")
         except ValueError:
             raise ValueError("Moment must be a positive integer")
-        self.moment = analysis.moment(slab, order=n_moment)
-
-        moment_ccd = CCDData(self.moment, unit=self.moment.unit)
+        self.moment = CCDData(analysis.moment(slab, order=n_moment))
 
         label = "Moment {}: {}".format(n_moment, self._selected_data.label)
-        fname_label = self._selected_data.label.replace("[", "_").replace("]", "_")
+        fname_label = self._selected_data.label.replace("[", "_").replace("]", "")
         self.filename = "moment{}_{}.fits".format(n_moment, fname_label)
-        self.data_collection[label] = moment_ccd
+        self.data_collection[label] = self.moment
         self.moment_available = True
 
         msg = SnackbarMessage("{} added to data collection".format(label),
@@ -145,15 +137,11 @@ class MomentMap(TemplateMixin):
             self.app.add_data_to_viewer(self.viewer_to_id.get(self.selected_viewer),
                                         label, clear_other_data=True)
 
-    def vue_save_as_fits(self, event):
-        self.moment.write(self._filename)
-        # Let the user know where we saved the file (don't need path if user
-        # specified a full filepath
-        if re.search("/", self._filename) is None:
-            wd = pathlib.Path.cwd()
-            full_path = wd / pathlib.Path(self._filename)
-        else:
-            full_path = self._filename
-        msg = SnackbarMessage("Moment map saved to {}".format(str(full_path)),
-                              sender=self, color="success")
-        self.hub.broadcast(msg)
+    def vue_save_as_fits(self, *args):
+        if self.moment is None or not self.filename:  # pragma: no cover
+            return
+
+        self.moment.write(self.filename)
+        # Let the user know where we saved the file.
+        self.hub.broadcast(SnackbarMessage(
+            f"Moment map saved to {os.path.abspath(self.filename)}", sender=self, color="success"))
