@@ -27,12 +27,14 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert self.imviz.get_aperture_photometry_results() is None
         assert not phot_plugin.plot_available
         assert phot_plugin.radial_plot == ''
+        assert phot_plugin.current_plot_type == 'Radial Profile'  # Software default
 
         # Perform photometry on both images using same Subset.
         phot_plugin.vue_data_selected('has_wcs_1[SCI,1]')
         phot_plugin.vue_subset_selected('Subset 1')
         phot_plugin.vue_do_aper_phot()
         phot_plugin.vue_data_selected('has_wcs_2[SCI,1]')
+        phot_plugin.current_plot_type = 'Radial Profile (Raw)'
         phot_plugin.vue_do_aper_phot()
         assert_allclose(phot_plugin.background_value, 0)
         assert_allclose(phot_plugin.counts_factor, 0)
@@ -82,6 +84,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         phot_plugin._on_viewer_data_changed()
         phot_plugin.vue_data_selected('has_wcs_1[SCI,1]')
         phot_plugin.vue_subset_selected('Subset 2')
+        phot_plugin.current_plot_type = 'Radial Profile'
         phot_plugin.vue_do_aper_phot()
         tbl = self.imviz.get_aperture_photometry_results()
         assert len(tbl) == 3  # New result is appended

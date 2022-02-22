@@ -56,8 +56,8 @@ an interactively selected region. A typical workflow is as follows:
 
 1. Load image(s) in Imviz (see :ref:`imviz-import-data`).
 2. Draw a region over the object of interest (see :ref:`imviz_defining_spatial_regions`).
-3. Select the desired image using :guilabel:`Data` drop-down menu.
-4. Select the desired region using :guilabel:`Subset` drop-down menu.
+3. Select the desired image using the :guilabel:`Data` drop-down menu.
+4. Select the desired region using the :guilabel:`Subset` drop-down menu.
 5. If you want to subtract background before performing photometry, enter
    the background value in the :guilabel:`Background value` field. This value
    must be in the same unit as display data, if applicable.
@@ -82,8 +82,9 @@ an interactively selected region. A typical workflow is as follows:
    display data unit is already in linear flux unit. Setting this to 1 is equivalent
    to not applying any scaling. If this field is not applicable for you, leave it at 0.
    **This field resets every time Data selection changes.**
-9. Once all inputs are populated correctly, click on the :guilabel:`CALCULATE`
-   button to perform simple aperture photometry.
+9. Select the desired plot type using the :guilabel:`Plot Type` drop-down menu.
+10. Once all inputs are populated correctly, click on the :guilabel:`CALCULATE`
+    button to perform simple aperture photometry.
 
 .. note::
 
