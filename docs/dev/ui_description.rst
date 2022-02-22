@@ -274,8 +274,8 @@ can be used in conjunction with a ``State`` class object. It should be noted,
 however, that glue callback properties do not interact with the front-end UI
 as in the case using traitlets; that is, changing the value of a callback
 property will not automatically propagate that change to the front-end. More
-information on using glue callback properties can be be found in the
-`glue documentation <http://docs.glueviz.org/en/stable/customizing_guide/viewer.html#viewer-state>`__.
+information on using glue callback properties can be be found in
+:ref:`glue:state-viewer`.
 
 
 Plugin design
