@@ -120,7 +120,8 @@ class MomentMap(TemplateMixin):
                 raise ValueError("Moment must be a positive integer")
         except ValueError:
             raise ValueError("Moment must be a positive integer")
-        self.moment = CCDData(analysis.moment(slab, order=n_moment))
+        # Need transpose to align JWST mirror shape. Not sure why.
+        self.moment = CCDData(analysis.moment(slab, order=n_moment).T)
 
         label = "Moment {}: {}".format(n_moment, self._selected_data.label)
         fname_label = self._selected_data.label.replace("[", "_").replace("]", "")

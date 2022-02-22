@@ -26,7 +26,7 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
     assert dc[1].label == 'Moment 0: test[FLUX]'
 
     result = dc[1].get_object(cls=CCDData)
-    assert result.shape == (4, 2)
+    assert result.shape == (2, 4)  # Cube shape is (2, 2, 4)
 
     # FIXME: Need spatial WCS, see https://github.com/spacetelescope/jdaviz/issues/1025
     assert dc[1].coords is None

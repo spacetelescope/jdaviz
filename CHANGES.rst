@@ -79,6 +79,8 @@ Cubeviz
 
 - Moment Map plugin no longer crashes when writing out to FITS file. [#1099]
 
+- Moment Maps result is no longer rotated w.r.t. original data. [#1104]
+
 Imviz
 ^^^^^
 
