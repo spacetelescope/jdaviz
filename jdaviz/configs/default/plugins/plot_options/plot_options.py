@@ -40,15 +40,15 @@ class PlotOptions(TemplateMixin):
         self.hub.subscribe(self, ViewerRemovedMessage,
                            handler=lambda _: self._on_viewers_changed())
         self.hub.subscribe(self, AddDataMessage,
-                           handler=lambda _: self._update_layer_items())
+                           handler=lambda _: self._selected_viewer_changed())
         self.hub.subscribe(self, RemoveDataMessage,
-                           handler=lambda _: self._update_layer_items())
+                           handler=lambda _: self._selected_viewer_changed())
         self.hub.subscribe(self, SubsetCreateMessage,
-                           handler=lambda _: self._update_layer_items())
+                           handler=lambda _: self._selected_viewer_changed())
         self.hub.subscribe(self, SubsetUpdateMessage,
-                           handler=lambda _: self._update_layer_items())
+                           handler=lambda _: self._selected_viewer_changed())
         self.hub.subscribe(self, SubsetDeleteMessage,
-                           handler=lambda _: self._update_layer_items())
+                           handler=lambda _: self._selected_viewer_changed())
         self.hub.subscribe(self, PlotOptionsSelectViewerMessage,
                            handler=self._on_select_viewer_message)
 
@@ -66,15 +66,18 @@ class PlotOptions(TemplateMixin):
         self.selected_viewer = msg.viewer
 
     @observe("selected_viewer")
-    def _update_layer_items(self, event={}):
+    def _selected_viewer_changed(self, event={}):
         viewer = self.app.get_viewer(event.get('new', self.selected_viewer))
         self.viewer_widget = viewer.viewer_options
         self.layer_items = [layer.layer.label for layer in viewer.layers]
         if self.selected_layer not in self.layer_items:
             self.selected_layer = self.layer_items[0] if len(self.layer_items) else ""
+        else:
+            # we still need to force a refresh of the layer widget
+            self._selected_layer_changed()
 
     @observe("selected_layer")
-    def _update_layer_widget(self, event={}):
+    def _selected_layer_changed(self, event={}):
         viewer = self.app.get_viewer(self.selected_viewer)
         layer_label = event.get('new', self.selected_layer)
         layer_artist = [layer for layer in viewer.layers if layer.layer.label == layer_label][0]
