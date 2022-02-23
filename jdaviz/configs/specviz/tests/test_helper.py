@@ -1,4 +1,3 @@
-import os
 from zipfile import ZipFile
 
 import pytest
@@ -231,17 +230,16 @@ def test_app_links(specviz_helper, spectrum1d):
 
 
 @pytest.mark.remote_data
-@pytest.fixture
 def test_load_spectrum_list_directory(tmpdir, specviz_helper):
-    with tmpdir.TemporaryDirectory() as tmpdir:
-        test_data = 'https://stsci.box.com/shared/static/l2azhcqd3tvzhybdlpx2j2qlutkaro3z.zip'
-        fn = download_file(test_data, cache=True, timeout=30)
-        with ZipFile(fn, 'r') as sample_data_zip:
-            sample_data_zip.extractall(tmpdir)
-        data_path = os.path.join(tmpdir, 'NIRISS_for_parser_p0171')
+    test_data = 'https://stsci.box.com/shared/static/l2azhcqd3tvzhybdlpx2j2qlutkaro3z.zip'
+    fn = download_file(test_data, cache=True, timeout=30)
+    with ZipFile(fn, 'r') as sample_data_zip:
+        sample_data_zip.extractall(tmpdir.strpath)
+    data_path = str(tmpdir.join('NIRISS_for_parser_p0171'))
 
+    with pytest.warns(UserWarning, match='SRCTYPE is missing or UNKNOWN in JWST x1d loader'):
         specviz_helper.load_spectrum(data_path)
-        assert len(specviz_helper.app.data_collection) == 3
-        for element in specviz_helper.app.data_collection:
-            assert element.data.main_components[0] in ['flux']
-            assert element.data.main_components[1] in ['uncertainty']
+    assert len(specviz_helper.app.data_collection) == 3
+    for element in specviz_helper.app.data_collection:
+        assert element.data.main_components[0] in ['flux']
+        assert element.data.main_components[1] in ['uncertainty']
