@@ -79,24 +79,6 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
         current_unit = current_spec[spec_key].spectral_axis.unit
     with app.data_collection.delay_link_manager_update():
 
-        # the code below is split in two alternative modes; one of them is
-        # commented out. The first mode displays all spectra in the input
-        # SpectrumList list, adjusting the viewer plot ranges to fit all data.
-        # The second mode builds a combined spectrum from all elements in the
-        # SpectrumList, and displays just that combined spectrum. In that case,
-        # plot ranges are adjusted transparently.
-        #
-        # Note that in this second case, one extra data element, for the combined
-        # spectrum, is added to the data collection. This required that some unit
-        # tests be changed.
-
-        # these are used to reset the display range
-        # when SpectrumList objects are displayed.
-        # x_min = sys.float_info.max
-        # x_max = -sys.float_info.max
-        # y_min = sys.float_info.max
-        # y_max = -sys.float_info.max
-
         # these are used to build a combined spectrum with all
         # input spectra included (taken from https://github.com/spacetelescope/
         # dat_pyinthesky/blob/main/jdat_notebooks/MRS_Mstar_analysis/
@@ -121,16 +103,6 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
             if show_in_viewer:
                 if isinstance(data, SpectrumList):
 
-                    # add current spectrum to viewer
-                    # app.add_data_to_viewer("spectrum-viewer", data_label[i])
-
-                    # update plot limits
-                    # x_min = min(x_min, np.min(spec.spectral_axis.value))
-                    # x_max = max(x_max, np.max(spec.spectral_axis.value))
-                    #
-                    # y_min = min(y_min, np.min(spec.flux.value))
-                    # y_max = max(y_max, np.max(spec.flux.value))
-
                     # add spectrum to combined result
                     for wlind in range(len(spec.spectral_axis)):
                         wlallorig.append(spec.spectral_axis[wlind].value)
@@ -142,15 +114,6 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
 
         # reset display ranges, or build combined spectrum, when input is a SpectrumList instance
         if isinstance(data, SpectrumList):
-
-            # adjust plot limits
-            # scale = app.get_viewer("spectrum-viewer").scale_x
-            # scale.min = float(x_min)
-            # scale.max = float(x_max)
-
-            # scale = app.get_viewer("spectrum-viewer").scale_y
-            # scale.min = float(y_min)
-            # scale.max = float(y_max)
 
             # build combined spectrum
             wlallarr = np.array(wlallorig)
