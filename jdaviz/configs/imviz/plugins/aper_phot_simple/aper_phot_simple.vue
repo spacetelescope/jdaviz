@@ -27,6 +27,16 @@
     </v-row>
 
     <v-row>
+      <v-select
+        :items="bg_subset_items"
+        @change="bg_subset_selected"
+        label="Subset (background)"
+        hint="Select subset region for background calculation."
+        persistent-hint
+      ></v-select>
+    </v-row>
+
+    <v-row>
       <v-text-field
         label="Background value"
         v-model="background_value"

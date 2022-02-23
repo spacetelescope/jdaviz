@@ -23,6 +23,7 @@ class SimpleAperturePhotometry(TemplateMixin):
     template_file = __file__, "aper_phot_simple.vue"
     dc_items = List([]).tag(sync=True)
     subset_items = List([]).tag(sync=True)
+    bg_subset_items = List(['Manual']).tag(sync=True)
     background_value = Any(0).tag(sync=True)
     pixel_area = Any(0).tag(sync=True)
     counts_factor = Any(0).tag(sync=True)
@@ -45,6 +46,7 @@ class SimpleAperturePhotometry(TemplateMixin):
 
         self._selected_data = None
         self._selected_subset = None
+        self._selected_bg_label = 'Manual'
         self.plot_types = ["Radial Profile", "Radial Profile (Raw)"]
         self.current_plot_type = self.plot_types[0]
 
@@ -62,6 +64,7 @@ class SimpleAperturePhotometry(TemplateMixin):
 
         self.subset_items = [lyr.label for lyr in self.app.data_collection.subset_groups
                              if lyr.label.startswith('Subset')]
+        self.bg_subset_items = ['Manual'] + self.subset_items
 
     def vue_data_selected(self, event):
         try:
@@ -105,28 +108,63 @@ class SimpleAperturePhotometry(TemplateMixin):
             self.hub.broadcast(SnackbarMessage(
                 f"Failed to extract {event}: {repr(e)}", color='error', sender=self))
 
+        # Auto-populate background, if applicable
+        self.vue_bg_subset_selected(self._selected_bg_label)
+
+    def _get_subset_region_from_event(self, event):
+        subset = None
+        for subset_grp in self.app.data_collection.subset_groups:
+            if subset_grp.label == event:
+                for sbst in subset_grp.subsets:
+                    if sbst.data.label == self._selected_data.label:
+                        subset = sbst
+                        break
+                break
+        if subset is None:
+            raise ValueError(f'Subset "{event}" not found')
+
+        # TODO: https://github.com/glue-viz/glue-astronomy/issues/52
+        return subset.data.get_selection_definition(
+                subset_id=event, format='astropy-regions')
+
     def vue_subset_selected(self, event):
         if self._selected_data is None:
             self.reset_results()
             return
 
-        subset = None
         try:
-            for subset_grp in self.app.data_collection.subset_groups:
-                if subset_grp.label == event:
-                    for sbst in subset_grp.subsets:
-                        if sbst.data.label == self._selected_data.label:
-                            subset = sbst
-                            break
-                    break
-
-            # TODO: https://github.com/glue-viz/glue-astronomy/issues/52
-            self._selected_subset = subset.data.get_selection_definition(
-                subset_id=event, format='astropy-regions')
-            self._selected_subset.meta['label'] = subset.label
+            self._selected_subset = self._get_subset_region_from_event(event)
+            self._selected_subset.meta['label'] = event
         except Exception as e:
             self._selected_subset = None
             self.reset_results()
+            self.hub.broadcast(SnackbarMessage(
+                f"Failed to extract {event}: {repr(e)}", color='error', sender=self))
+
+    def vue_bg_subset_selected(self, event):
+        if self._selected_data is None:
+            self.reset_results()
+            return
+
+        self._selected_bg_label = event
+        if event == 'Manual':
+            self.background_value = 0
+            return
+
+        try:
+            # Basically same way image stats are calculated in vue_do_aper_phot()
+            # except here we only care about one stat for the background.
+            data = self._selected_data
+            reg = self._get_subset_region_from_event(event)
+            comp = data.get_component(data.main_components[0])
+            aper_mask_stat = reg.to_mask(mode='center')
+            img_stat = aper_mask_stat.get_values(comp.data, mask=None)
+
+            # photutils/background/_utils.py --> nanmedian()
+            self.background_value = np.nanmedian(img_stat)  # Naturally in data unit
+
+        except Exception as e:
+            self.background_value = 0
             self.hub.broadcast(SnackbarMessage(
                 f"Failed to extract {event}: {repr(e)}", color='error', sender=self))
 
