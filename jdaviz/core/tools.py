@@ -72,6 +72,11 @@ class BoxZoom(_BaseSelectZoom):
                              color=INTERACT_COLOR)
 
     def on_update_zoom(self):
+        if self.interact.selected_x is None or self.interact.selected_y is None:
+            # a valid box was not drawn, perhaps just a click with no drag!
+            # let's ignore and reset the tool
+            return
+
         self.viewer.state.x_min, self.viewer.state.x_max = self.interact.selected_x
         self.viewer.state.y_min, self.viewer.state.y_max = self.interact.selected_y
 
@@ -88,4 +93,9 @@ class XRangeZoom(_BaseSelectZoom):
                                      color=INTERACT_COLOR)
 
     def on_update_zoom(self):
+        if self.interact.selected is None:
+            # a valid region was not drawn, perhaps just a click with no drag!
+            # let's ignore and reset the tool
+            return
+
         self.viewer.state.x_min, self.viewer.state.x_max = self.interact.selected
