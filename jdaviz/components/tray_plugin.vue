@@ -1,15 +1,24 @@
 <template>
   <v-container>
-    <slot>
+    <v-row v-if="isDisabled()">
+      <span> {{ getDisabledMsg() }}</span>
+    </v-row>
+    <slot v-else>
     </slot>
   </v-container>
 </template>
 
 <script>
 module.exports = {
-  props: {docslink: String, 
-          docstext: String
-        },
+  props: ['disabled_msg'],
+  methods: {
+    isDisabled() {
+      return this.getDisabledMsg().length > 0
+    },
+    getDisabledMsg() {
+      return this.disabled_msg || ''
+    },
+  }
 };
 </script>
 
