@@ -71,6 +71,7 @@ Bug Fixes
 - Model plugin now respects fixed parameters when applying model to cube, and retains
   parameter units in that case. [#1026]
 - Model plugin polynomial order now avoids traceback when clearing input. [#1041]
+- Box zoom silently ignores click without drag events. [#1105]
 
 Cubeviz
 ^^^^^^^
