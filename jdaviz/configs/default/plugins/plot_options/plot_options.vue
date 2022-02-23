@@ -20,19 +20,9 @@
         <jupyter-widget v-if="selected_viewer" :widget="viewer_widget"></jupyter-widget>
       </v-row>
       
-      <j-plugin-section-header>Layer Options</j-plugin-section-header>
-      <v-row>
-        <v-select
-          :items="layer_items"
-          v-model="selected_layer"
-          label="Layer"
-          hint="Select the data or subset to set options."
-          persistent-hint
-        ></v-select>
-      </v-row>
-      
+      <j-plugin-section-header>Layer Options</j-plugin-section-header>      
       <v-row class="row-no-outside-padding">
-        <jupyter-widget v-if="selected_layer" :widget="layer_widget"></jupyter-widget>
+        <jupyter-widget v-if="selected_viewer" :widget="layer_widget"></jupyter-widget>
       </v-row>
     </div>
 
