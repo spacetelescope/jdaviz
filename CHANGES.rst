@@ -117,6 +117,8 @@ Other Changes and Additions
 
 - Line list plugin now includes a dropdown for valid units for custom lines. [#1073]
 
+- Viewer and layer options are moved from a dropdown window to the sidebar. [#1108]
+
 
 2.2 (2021-12-23)
 ================
