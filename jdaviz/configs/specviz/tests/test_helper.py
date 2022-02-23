@@ -51,7 +51,8 @@ class TestSpecvizHelper:
             self.spec_app.load_spectrum(collection)
 
     def test_get_spectra(self):
-        spectra = self.spec_app.get_spectra()
+        with pytest.warns(UserWarning, match='Applying the value from the redshift slider'):
+            spectra = self.spec_app.get_spectra()
 
         assert_quantity_allclose(spectra[self.label].flux,
                                  self.spec.flux, atol=1e-5*u.Unit(self.spec.flux.unit))
@@ -75,7 +76,8 @@ class TestSpecvizHelper:
                                  self.spec.flux, atol=1e-5*u.Unit(self.spec.flux.unit))
 
     def test_get_spectra_label_redshift_warn(self):
-        spectra = self.spec_app.get_spectra(data_label=self.label, apply_slider_redshift="Warn")
+        with pytest.warns(UserWarning, match='Applying the value from the redshift slider'):
+            spectra = self.spec_app.get_spectra(data_label=self.label, apply_slider_redshift="Warn")
 
         assert_quantity_allclose(spectra.flux,
                                  self.spec.flux, atol=1e-5*u.Unit(self.spec.flux.unit))
@@ -142,7 +144,8 @@ class TestSpecvizHelper:
 
 
 def test_get_spectra_no_spectra(specviz_helper, spectrum1d):
-    spectra = specviz_helper.get_spectra()
+    with pytest.warns(UserWarning, match='Applying the value from the redshift slider'):
+        spectra = specviz_helper.get_spectra()
 
     assert spectra == {}
 

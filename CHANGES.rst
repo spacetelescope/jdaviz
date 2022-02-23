@@ -49,6 +49,9 @@ API Changes
 - Viewers now can access the Jdaviz application using ``viewer.jdaviz_app`` and
   the helper via ``viewer.jdaviz_helper``. [#1051, #1054]
 
+- Jdaviz no longer uses Python logging to issue warning. Warning is now issued by
+  Python's ``warnings`` module. [#1085]
+
 Cubeviz
 ^^^^^^^
 

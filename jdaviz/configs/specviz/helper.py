@@ -1,6 +1,6 @@
-import logging
+import warnings
 
-import astropy.units as u
+from astropy import units as u
 from specutils import SpectralRegion, Spectrum1D
 
 from jdaviz.core.helpers import ConfigHelper
@@ -60,10 +60,10 @@ class Specviz(ConfigHelper, LineListMixin):
                 output_spectra[key] = _apply_redshift_to_spectra(spectra[key], self._redshift)
 
             if apply_slider_redshift == "Warn":
-                logging.warning("Warning: Applying the value from the redshift "
-                                "slider to the output spectra. To avoid seeing this "
-                                "warning, explicitly set the apply_slider_redshift "
-                                "argument to True or False.")
+                warnings.warn("Applying the value from the redshift "
+                              "slider to the output spectra. To avoid seeing this "
+                              "warning, explicitly set the apply_slider_redshift "
+                              "argument to True or False.")
 
             if data_label is not None:
                 output_spectra = output_spectra[data_label]
@@ -203,7 +203,7 @@ class Specviz(ConfigHelper, LineListMixin):
 
         """
         if axis not in [0, 1]:
-            logging.warning("Please use either 0 or 1 for the axis value")
+            warnings.warn("Please use either 0 or 1 for the axis value")
             return
 
         # Examples of values for fmt are '0.1e' or '0.2f'

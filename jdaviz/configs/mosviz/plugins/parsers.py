@@ -1,7 +1,6 @@
 from collections.abc import Iterable
 import csv
 import glob
-import logging
 import os
 from pathlib import Path
 import warnings
@@ -173,10 +172,9 @@ def mos_nirspec_directory_parser(app, data_obj, data_labels=None):
             mos_meta_parser(app, images, ids=images)
             mos_image_parser(app, images)
         else:
-            msg = "The number of images in this directory does not match the" \
-                  " number of spectra 1d and 2d files, please make the " \
-                  "amounts equal or load images separately."
-            logging.warning(msg)
+            msg = ("The number of images in this directory does not match the"
+                   " number of spectra 1d and 2d files, please make the "
+                   "amounts equal or load images separately.")
             msg = SnackbarMessage(msg, color='warning', sender=app)
             app.hub.broadcast(msg)
 
@@ -449,7 +447,7 @@ def mos_meta_parser(app, data_obj, ids=None, spectra=False, sp1d=False):
     else:
         # TODO: Come up with more robust metadata parsing, perhaps from
         # the spectra files.
-        logging.warning("Could not parse metadata from input images.")
+        warnings.warn("Could not parse metadata from input images.")
         return
 
     with app.data_collection.delay_link_manager_update():
