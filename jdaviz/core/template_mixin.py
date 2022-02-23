@@ -4,7 +4,7 @@ from traitlets import Unicode
 
 from jdaviz import __version__
 
-__all__ = ['TemplateMixin']
+__all__ = ['TemplateMixin', 'PluginTemplateMixin']
 
 
 class TemplateMixin(VuetifyTemplate, HubListener):
@@ -53,3 +53,7 @@ class TemplateMixin(VuetifyTemplate, HubListener):
     @property
     def data_collection(self):
         return self._app.session.data_collection
+
+
+class PluginTemplateMixin(TemplateMixin):
+    disabled_msg = Unicode("").tag(sync=True)
