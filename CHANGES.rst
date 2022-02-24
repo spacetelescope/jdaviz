@@ -134,6 +134,7 @@ Bug Fixes
 - Box zoom silently ignores click without drag events. [#1105]
 - Fixes index error when plotting new data/model. [#1120]
 - API calls to subset now return full region. [#1125]
+- Support for table scrolling. [#1116]
 
 Cubeviz
 ^^^^^^^
