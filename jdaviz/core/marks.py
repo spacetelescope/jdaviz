@@ -3,7 +3,7 @@ from bqplot.marks import Lines
 from glue.core import HubListener
 from specutils import Spectrum1D
 
-from jdaviz.core.events import SliceToolStateMessage
+from jdaviz.core.events import (SliceToolStateMessage, LineIdentifyMessage)
 
 
 class BaseSpectrumVerticalLine(Lines, HubListener):
@@ -57,9 +57,10 @@ class SpectralLine(BaseSpectrumVerticalLine):
     """
     def __init__(self, viewer, rest_value, redshift=0, name=None, **kwargs):
         self._rest_value = rest_value
+        self._identify = False
         self.name = name
 
-        # TODO: do we need table_index anymore?
+        # table_index is same as name_rest elsewhere
         self.table_index = kwargs.pop("table_index", None)
 
         # setting redshift will set self.x and enable the obs_value property,
@@ -67,6 +68,9 @@ class SpectralLine(BaseSpectrumVerticalLine):
         # in the super init)
         self._x_unit = viewer.state.reference_data.get_object(cls=Spectrum1D).spectral_axis.unit
         self.redshift = redshift
+
+        viewer.session.hub.subscribe(self, LineIdentifyMessage,
+                                     handler=self._process_identify_change)
 
         super().__init__(viewer=viewer, x=self.obs_value, stroke_width=1,
                          fill='none', close_path=False, **kwargs)
@@ -98,6 +102,30 @@ class SpectralLine(BaseSpectrumVerticalLine):
             obs_value = (obs_angstrom*u.Angstrom).to_value(self._x_unit,
                                                            equivalencies=u.spectral())
         self.x = [obs_value, obs_value]
+        if self.identify:
+            self._update_label()
+
+    def _update_label(self):
+        self.labels = [f'\u00A0\u000A{self.name}: {self.x[0]:0.4e} ({self._rest_value:0.4e}) {self._x_unit}']
+
+    @property
+    def identify(self):
+        return self._identify
+
+    @identify.setter
+    def identify(self, identify):
+        if not isinstance(identify, bool):
+            raise TypeError("identify must be of type bool")
+
+        self._identify = identify
+        self.stroke_width = 3 if identify else 1
+        # self.marker = 'square' if identify else None
+        # TODO: enable label on identify by fixing vertical padding
+        # self.labels_visibility = 'label' if identify else 'none'
+        self._update_label()
+
+    def _process_identify_change(self, msg):
+        self.identify = msg.name_rest == self.table_index
 
     def _update_data(self, x_all):
         new_unit = x_all.unit
@@ -109,6 +137,8 @@ class SpectralLine(BaseSpectrumVerticalLine):
         # re-compute self.x from current redshift (instead of converting that as well)
         self.redshift = self._redshift
         self._x_unit = new_unit
+        if self.identify:
+            self._update_label()
 
 
 class SliceIndicator(BaseSpectrumVerticalLine, HubListener):

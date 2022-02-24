@@ -187,14 +187,18 @@
               <v-row v-for="(line, line_ind) in list_contents[item].lines">
                 <v-row class="row-min-bottom-padding" style="margin: 0px">
                   <j-tooltip tipid='plugin-line-lists-line-visible'>
-                    <v-checkbox v-model="line.show" @change="change_visible(line)" hide-details single-line>
-                      <template v-slot:label>
-                        <span class='text--primary' style="overflow-wrap: anywhere; font-size: 10pt">
-                          {{line.linename}}
-                        </span>
-                      </template>
-                    </v-checkbox>
+                    <v-btn :color="line.show ? 'accent' : 'default'" icon @click="change_visible([item, line, line_ind])">
+                      <v-icon>{{line.show ? "mdi-eye" : "mdi-eye-off"}}</v-icon>
+                    </v-btn>
                   </j-tooltip>
+                  <j-tooltip tipid='plugin-line-lists-line-identify'>
+                    <v-btn :color="line.identify ? 'accent' : 'default'" icon @click="set_identify([item, line, line_ind])">
+                      <v-icon>{{line.identify ? "mdi-crosshairs-gps" : "mdi-crosshairs"}}</v-icon>
+                    </v-btn>
+                  </j-tooltip>
+                  <span class='text--primary' style="overflow-wrap: anywhere; font-size: 12pt; padding-top: 6px; padding-left: 6px">
+                    {{line.linename}}
+                  </span>
                 </v-row>
                 <v-row class="row-min-bottom-padding">
                   <v-col cols=3>

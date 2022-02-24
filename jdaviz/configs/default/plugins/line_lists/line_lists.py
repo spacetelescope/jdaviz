@@ -11,6 +11,7 @@ from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (AddDataMessage,
                                 RemoveDataMessage,
                                 AddLineListMessage,
+                                LineIdentifyMessage,
                                 SnackbarMessage,
                                 RedshiftMessage)
 from jdaviz.core.registries import tray_registry
@@ -34,6 +35,7 @@ class LineListTool(PluginTemplateMixin):
     rs_slider_step_auto = Bool(True).tag(sync=True)
     rs_slider_step = Float(0.01).tag(sync=True)
     rs_redshift_step = Float(1).tag(sync=True)
+    # TODO: rs_wavelength_step (although could be across various units and wavelength/freqeuncy...)
     rs_slider_ndigits = Int(1).tag(sync=True)
     rs_redshift = FloatHandleEmpty(0).tag(sync=True)
     rs_rv = FloatHandleEmpty(0).tag(sync=True)
@@ -640,16 +642,50 @@ class LineListTool(PluginTemplateMixin):
         self._viewer.erase_spectral_lines()
         self.update_line_mark_dict()
 
-    def vue_change_visible(self, line):
+    def vue_change_visible(self, data):
         """
         Plot or erase a single line as needed when "Visible" checkbox is changed
         """
+        listname, line, line_ind = data
         name_rest = line["name_rest"]
-        if line["show"]:
+        show = not line['show']
+
+        list_contents = self.list_contents
+        list_contents[listname]['lines'][line_ind]['show'] = show
+        if not show:
+            # then make sure to also disable the identify flag
+            list_contents[listname]['lines'][line_ind]['identify'] = False
+        self.list_contents = {}
+        self.list_contents = list_contents
+
+        if show:
             self._viewer.plot_spectral_line(name_rest)
         else:
             self._viewer.erase_spectral_lines(name_rest=name_rest)
+
         self.update_line_mark_dict()
+
+    def vue_set_identify(self, data):
+        """
+        """
+        listname, line, line_ind = data
+        list_contents = self.list_contents
+        identify = not line.get('identify', False)
+        if identify and not line['show']:
+            # first show the line
+            self.vue_change_visible(data)
+        for listname, this_list in list_contents.items():
+            for i in range(len(this_list['lines'])):
+                if listname == listname and line_ind == i:
+                    list_contents[listname]['lines'][i]['identify'] = identify
+                else:
+                    list_contents[listname]['lines'][i]['identify'] = False
+
+        self.list_contents = {}
+        self.list_contents = list_contents
+
+        msg = LineIdentifyMessage(name_rest=line['name_rest'] if identify else None, sender=self)
+        self.hub.broadcast(msg)
 
     def vue_set_color(self, data):
         """
