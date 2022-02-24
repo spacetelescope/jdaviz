@@ -9,7 +9,7 @@ from astropy.utils.data import download_file
 from astropy.wcs import WCS
 from gwcs import WCS as GWCS
 from numpy.testing import assert_allclose, assert_array_equal
-from regions import CirclePixelRegion
+from regions import CirclePixelRegion, RectanglePixelRegion
 from skimage.io import imsave
 
 from jdaviz.configs.imviz.helper import split_filename_with_fits_ext
@@ -245,16 +245,22 @@ class TestParseImage:
         imviz_helper._apply_interactive_region('bqplot:circle',
                                                (965, 1122),
                                                (976.9, 1110.1))  # Star
+        imviz_helper._apply_interactive_region('bqplot:rectangle',
+                                               (982, 1088),
+                                               (1008, 1077))  # Background
         subsets = imviz_helper.get_interactive_regions()
-        assert list(subsets.keys()) == ['Subset 1'], subsets
+        assert list(subsets.keys()) == ['Subset 1', 'Subset 2'], subsets
         assert isinstance(subsets['Subset 1'], CirclePixelRegion)
+        assert isinstance(subsets['Subset 2'], RectanglePixelRegion)
 
         # Test simple aperture photometry plugin.
         phot_plugin = SimpleAperturePhotometry(app=imviz_helper.app)
         phot_plugin._on_viewer_data_changed()
         phot_plugin.vue_data_selected('contents[DATA]')
         phot_plugin.vue_subset_selected('Subset 1')
-        phot_plugin.background_value = 0.22  # Median on whole array
+        assert_allclose(phot_plugin.background_value, 0)
+        phot_plugin.vue_bg_subset_selected('Subset 2')
+        assert_allclose(phot_plugin.background_value, 0.1741226315498352)  # Subset 2 median
         # NOTE: jwst.datamodels.find_fits_keyword("PHOTMJSR")
         phot_plugin.counts_factor = (data.meta['photometry']['conversion_megajanskys'] /
                                      data.meta['exposure']['exposure_time'])
@@ -268,20 +274,20 @@ class TestParseImage:
         assert_allclose(sky.ra.deg, 80.48419863)
         assert_allclose(sky.dec.deg, -69.49460838)
         data_unit = u.MJy / u.sr
-        assert_quantity_allclose(tbl[0]['background'], 0.22 * data_unit)
+        assert_quantity_allclose(tbl[0]['background'], 0.1741226315498352 * data_unit)
         assert_quantity_allclose(tbl[0]['npix'], 111.22023392 * u.pix)
-        assert_quantity_allclose(tbl[0]['aperture_sum'], 4.93689560e-09 * u.MJy)
+        assert_quantity_allclose(tbl[0]['aperture_sum'], 4.989882e-09 * u.MJy)
         assert_quantity_allclose(tbl[0]['pixarea_tot'], 1.0384377922763469e-11 * u.sr)
-        assert_quantity_allclose(tbl[0]['aperture_sum_counts'], 130659.2466386 * u.count)
-        assert_quantity_allclose(tbl[0]['aperture_sum_counts_err'], 361.46818205562715 * u.count)
+        assert_quantity_allclose(tbl[0]['aperture_sum_counts'], 132061.576643 * u.count)
+        assert_quantity_allclose(tbl[0]['aperture_sum_counts_err'], 363.402775 * u.count)
         assert_quantity_allclose(tbl[0]['counts_fac'], 0.0036385915646798953 * (data_unit / u.ct))
-        assert_quantity_allclose(tbl[0]['aperture_sum_mag'], -6.692683645358997 * u.mag)
+        assert_quantity_allclose(tbl[0]['aperture_sum_mag'], -6.704274 * u.mag)
         assert_quantity_allclose(tbl[0]['flux_scaling'], 1 * data_unit)
-        assert_quantity_allclose(tbl[0]['mean'], 4.34584047 * data_unit)
-        assert_quantity_allclose(tbl[0]['stddev'], 15.61862628 * data_unit)
-        assert_quantity_allclose(tbl[0]['median'], 0.43709442 * data_unit)
-        assert_quantity_allclose(tbl[0]['min'], -0.00485992 * data_unit, rtol=1e-5)
-        assert_quantity_allclose(tbl[0]['max'], 138.87786865 * data_unit, rtol=1e-5)
+        assert_quantity_allclose(tbl[0]['mean'], 4.391718 * data_unit)
+        assert_quantity_allclose(tbl[0]['stddev'], 15.618626488031158 * data_unit)
+        assert_quantity_allclose(tbl[0]['median'], 0.482972 * data_unit, rtol=1e-5)
+        assert_quantity_allclose(tbl[0]['min'], 0.041017 * data_unit, atol=1e-5 * data_unit)
+        assert_quantity_allclose(tbl[0]['max'], 138.923752 * data_unit, rtol=1e-5)
 
         # --- Back to parser testing below. ---
 
@@ -375,7 +381,7 @@ class TestParseImage:
         phot_plugin._on_viewer_data_changed()
         phot_plugin.vue_data_selected('contents[SCI,1]')
         phot_plugin.vue_subset_selected('Subset 1')
-        phot_plugin.background_value = 0.0014  # Median on whole array
+        phot_plugin.background_value = 0.0014  # Manual entry: Median on whole array
         assert_allclose(phot_plugin.pixel_area, 0.0025)  # Not used but still auto-populated
         phot_plugin.vue_do_aper_phot()
         tbl = imviz_helper.get_aperture_photometry_results()

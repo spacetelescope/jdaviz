@@ -1,3 +1,4 @@
+import numpy as np
 from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose
 from numpy.testing import assert_allclose, assert_array_equal
@@ -21,6 +22,8 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert phot_plugin._selected_data is None
         phot_plugin.vue_subset_selected('no_such_subset')
         assert phot_plugin._selected_subset is None
+        phot_plugin.vue_bg_subset_selected('no_such_subset')
+        assert_allclose(phot_plugin.background_value, 0)
         phot_plugin.vue_do_aper_phot()
         assert not phot_plugin.result_available
         assert len(phot_plugin.results) == 0
@@ -29,13 +32,19 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert phot_plugin.radial_plot == ''
         assert phot_plugin.current_plot_type == 'Radial Profile'  # Software default
 
-        # Perform photometry on both images using same Subset.
         phot_plugin.vue_data_selected('has_wcs_1[SCI,1]')
+        phot_plugin.vue_subset_selected('no_such_subset')
+        assert phot_plugin._selected_subset is None
+        phot_plugin.vue_bg_subset_selected('no_such_subset')
+        assert_allclose(phot_plugin.background_value, 0)
+
+        # Perform photometry on both images using same Subset.
         phot_plugin.vue_subset_selected('Subset 1')
         phot_plugin.vue_do_aper_phot()
         phot_plugin.vue_data_selected('has_wcs_2[SCI,1]')
         phot_plugin.current_plot_type = 'Radial Profile (Raw)'
         phot_plugin.vue_do_aper_phot()
+        assert phot_plugin.bg_subset_items == ['Manual', 'Subset 1']
         assert_allclose(phot_plugin.background_value, 0)
         assert_allclose(phot_plugin.counts_factor, 0)
         assert_allclose(phot_plugin.pixel_area, 0)
@@ -101,10 +110,13 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert tbl[-1]['subset_label'] == 'Subset 2'
 
         # Make sure it also works on a rectangle subset.
+        # We also subtract off background from itself here.
         self.imviz._apply_interactive_region('bqplot:rectangle', (0, 0), (9, 9))
         phot_plugin._on_viewer_data_changed()
         phot_plugin.vue_data_selected('has_wcs_1[SCI,1]')
         phot_plugin.vue_subset_selected('Subset 3')
+        phot_plugin.vue_bg_subset_selected('Subset 3')
+        assert_allclose(phot_plugin.background_value, 1)
         phot_plugin.vue_do_aper_phot()
         tbl = self.imviz.get_aperture_photometry_results()
         assert len(tbl) == 4  # New result is appended
@@ -115,10 +127,20 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert_allclose(sky.ra.deg, 337.518943)
         assert_allclose(sky.dec.deg, -20.832083)
         assert_quantity_allclose(tbl[-1]['npix'], 81 * u.pix)
-        assert_allclose(tbl[-1]['aperture_sum'], 81)
-        assert_allclose(tbl[-1]['mean'], 1)
+        assert_allclose(tbl[-1]['aperture_sum'], 0)
+        assert_allclose(tbl[-1]['mean'], 0)
         assert tbl[-1]['data_label'] == 'has_wcs_1[SCI,1]'
         assert tbl[-1]['subset_label'] == 'Subset 3'
+
+        # Make sure background auto-updates.
+        phot_plugin.vue_bg_subset_selected('Manual')
+        assert_allclose(phot_plugin.background_value, 0)
+        phot_plugin.vue_bg_subset_selected('Subset 1')
+        assert_allclose(phot_plugin.background_value, 1)
+        self.imviz.load_data(np.ones((10, 10)) + 1, data_label='twos')
+        phot_plugin._on_viewer_data_changed()
+        phot_plugin.vue_data_selected('twos')
+        assert_allclose(phot_plugin.background_value, 2)
 
 
 class TestSimpleAperPhot_NoWCS(BaseImviz_WCS_NoWCS):
