@@ -197,3 +197,63 @@ class SliceIndicator(BaseSpectrumVerticalLine, HubListener):
         if self.labels_visibility == 'label':
             # update label with new value/unit
             self._update_label()
+
+
+class Shadow(Lines, HubListener):
+    _sync_traits = ['scales', 'x', 'y', 'visible', 'line_style', 'marker']
+
+    def __init__(self, shadowing, shadow_width=1, **kwargs):
+        self._shadow_width = shadow_width
+        super().__init__(scales=shadowing.scales,
+                         stroke_width=shadowing.stroke_width+shadow_width if shadowing.stroke_width else 0, # noqa
+                         marker_size=shadowing.marker_size+shadow_width if shadowing.marker_size else 0, # noqa
+                         colors=[kwargs.pop('color', 'white')],
+                         **kwargs)
+
+        # sync initial values
+        for attr in self._sync_traits:
+            setattr(self, attr, getattr(shadowing, attr))
+
+        # keep values synced when traits on shadowing object change
+        shadowing.observe(self._on_shadowing_changed)
+
+    def _on_shadowing_changed(self, change):
+        attr = change['name']
+        if attr[0] in ['stroke_width', 'marker_size']:
+            value = change['new'] + self._shadow_width if change['new'] else 0
+        elif attr not in self._sync_traits:
+            return
+        else:
+            value = change['new']
+
+        setattr(self, attr, value)
+
+
+class LineAnalysisContinuum(Lines, HubListener):
+    def __init__(self, viewer, x=[], y=[], **kwargs):
+        # we do not need to worry about the x-units changing since the stats
+        # need to be re-computed on unit conversion anyways (which will
+        # trigger updates to x and y from the line analysis plugin)
+
+        # color is same blue as import button
+        super().__init__(x=x, y=y, colors=["#007BA1"], scales=viewer.scales, **kwargs)
+
+    def update_xy(self, x, y):
+        self.x = x
+        self.y = y
+
+
+class LineAnalysisContinuumCenter(LineAnalysisContinuum):
+    def __init__(self, viewer, x=[], y=[], **kwargs):
+        super().__init__(viewer, x, y, **kwargs)
+        self.stroke_width = 1
+
+
+class LineAnalysisContinuumLeft(LineAnalysisContinuum):
+    def __init__(self, viewer, x=[], y=[], **kwargs):
+        super().__init__(viewer, x, y, **kwargs)
+        self.stroke_width = 5
+
+
+class LineAnalysisContinuumRight(LineAnalysisContinuumLeft):
+    pass

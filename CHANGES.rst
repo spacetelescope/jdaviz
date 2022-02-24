@@ -8,6 +8,9 @@ New Features
   helpers that display the viewers in separate JupyterLab windows from the
   notebook. [#952]
 
+- The line analysis plugin now includes logic to account for the background
+  continuum. [#1060]
+
 Cubeviz
 ^^^^^^^
 
