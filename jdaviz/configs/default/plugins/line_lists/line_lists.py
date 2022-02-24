@@ -263,12 +263,12 @@ class LineListTool(PluginTemplateMixin):
         self._update_line_positions()
 
         if not self._rs_pause_tables:
-            # TODO: try to avoid essentially repeating the loop from above, careful to minimize 
+            # TODO: try to avoid essentially repeating the loop from above, careful to minimize
             # updates to vue, maybe pause traitlets?
             new_list_contents = {}
             for list_name, line_list in self.list_contents.items():
                 for i, line in enumerate(line_list['lines']):
-                    if self._rs_line_obs_change[0] == list_name and self._rs_line_obs_change[1] == i:
+                    if self._rs_line_obs_change[0] == list_name and self._rs_line_obs_change[1] == i:  # noqa
                         # this trigger is coming from a manual change to the observed
                         # wavelength and would result in a small change to the value before the
                         # user can finish typing.  So we'll just keep the old value until the
@@ -687,7 +687,7 @@ class LineListTool(PluginTemplateMixin):
         # event from some other plugin (LineAnalysis, for example) requesting a change
         # in the identified line
         self._update_identify_to_line(msg.name_rest)
-        # then line mark themselves will also respond to the same event, so there is 
+        # then line mark themselves will also respond to the same event, so there is
         # no need to broadcast another
 
     def vue_set_identify(self, data):

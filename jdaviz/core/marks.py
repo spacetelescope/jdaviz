@@ -110,7 +110,7 @@ class SpectralLine(BaseSpectrumVerticalLine):
             self._update_label()
 
     def _update_label(self):
-        self.labels = [f'\u00A0\u000A{self.name}: {self.x[0]:0.4e} ({self._rest_value:0.4e}) {self._x_unit}']
+        self.labels = [f'\u00A0\u000A{self.name}: {self.x[0]:0.4e} ({self._rest_value:0.4e}) {self._x_unit}']  # noqa
 
     @property
     def identify(self):
