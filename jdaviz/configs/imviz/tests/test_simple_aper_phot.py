@@ -18,11 +18,11 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         phot_plugin._on_viewer_data_changed()
 
         # Make sure invalid Data/Subset selection does not crash plugin.
-        phot_plugin.vue_data_selected('no_such_data')
+        phot_plugin.data_selected = 'no_such_data'
         assert phot_plugin._selected_data is None
-        phot_plugin.vue_subset_selected('no_such_subset')
+        phot_plugin.subset_selected = 'no_such_subset'
         assert phot_plugin._selected_subset is None
-        phot_plugin.vue_bg_subset_selected('no_such_subset')
+        phot_plugin.bg_subset_selected = 'no_such_subset'
         assert_allclose(phot_plugin.background_value, 0)
         phot_plugin.vue_do_aper_phot()
         assert not phot_plugin.result_available
@@ -32,16 +32,16 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert phot_plugin.radial_plot == ''
         assert phot_plugin.current_plot_type == 'Radial Profile'  # Software default
 
-        phot_plugin.vue_data_selected('has_wcs_1[SCI,1]')
-        phot_plugin.vue_subset_selected('no_such_subset')
+        phot_plugin.data_selected = 'has_wcs_1[SCI,1]'
+        phot_plugin.subset_selected = 'no_such_subset'
         assert phot_plugin._selected_subset is None
-        phot_plugin.vue_bg_subset_selected('no_such_subset')
+        phot_plugin.bg_subset_selected = 'no_such_subset'
         assert_allclose(phot_plugin.background_value, 0)
 
         # Perform photometry on both images using same Subset.
-        phot_plugin.vue_subset_selected('Subset 1')
+        phot_plugin.subset_selected = 'Subset 1'
         phot_plugin.vue_do_aper_phot()
-        phot_plugin.vue_data_selected('has_wcs_2[SCI,1]')
+        phot_plugin.data_selected = 'has_wcs_2[SCI,1]'
         phot_plugin.current_plot_type = 'Radial Profile (Raw)'
         phot_plugin.vue_do_aper_phot()
         assert phot_plugin.bg_subset_items == ['Manual', 'Subset 1']
@@ -91,8 +91,8 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         # Make sure it also works on an ellipse subset.
         self.imviz._apply_interactive_region('bqplot:ellipse', (0, 0), (9, 4))
         phot_plugin._on_viewer_data_changed()
-        phot_plugin.vue_data_selected('has_wcs_1[SCI,1]')
-        phot_plugin.vue_subset_selected('Subset 2')
+        phot_plugin.data_selected = 'has_wcs_1[SCI,1]'
+        phot_plugin.subset_selected = 'Subset 2'
         phot_plugin.current_plot_type = 'Radial Profile'
         phot_plugin.vue_do_aper_phot()
         tbl = self.imviz.get_aperture_photometry_results()
@@ -113,9 +113,9 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         # We also subtract off background from itself here.
         self.imviz._apply_interactive_region('bqplot:rectangle', (0, 0), (9, 9))
         phot_plugin._on_viewer_data_changed()
-        phot_plugin.vue_data_selected('has_wcs_1[SCI,1]')
-        phot_plugin.vue_subset_selected('Subset 3')
-        phot_plugin.vue_bg_subset_selected('Subset 3')
+        phot_plugin.data_selected = 'has_wcs_1[SCI,1]'
+        phot_plugin.subset_selected = 'Subset 3'
+        phot_plugin.bg_subset_selected = 'Subset 3'
         assert_allclose(phot_plugin.background_value, 1)
         phot_plugin.vue_do_aper_phot()
         tbl = self.imviz.get_aperture_photometry_results()
@@ -133,14 +133,14 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert tbl[-1]['subset_label'] == 'Subset 3'
 
         # Make sure background auto-updates.
-        phot_plugin.vue_bg_subset_selected('Manual')
-        assert_allclose(phot_plugin.background_value, 0)
-        phot_plugin.vue_bg_subset_selected('Subset 1')
+        phot_plugin.bg_subset_selected = 'Manual'
+        assert_allclose(phot_plugin.background_value, 1)  # Keeps last value
+        phot_plugin.bg_subset_selected = 'Subset 1'
         assert_allclose(phot_plugin.background_value, 1)
         self.imviz.load_data(np.ones((10, 10)) + 1, data_label='twos')
         phot_plugin._on_viewer_data_changed()
-        phot_plugin.vue_data_selected('twos')
-        assert_allclose(phot_plugin.background_value, 2)
+        phot_plugin.data_selected = 'twos'
+        assert_allclose(phot_plugin.background_value, 2)  # Recalculate based on new Data
 
 
 class TestSimpleAperPhot_NoWCS(BaseImviz_WCS_NoWCS):
@@ -150,13 +150,13 @@ class TestSimpleAperPhot_NoWCS(BaseImviz_WCS_NoWCS):
         phot_plugin = SimpleAperturePhotometry(app=self.imviz.app)
         phot_plugin._on_viewer_data_changed()
 
-        phot_plugin.vue_data_selected('has_wcs[SCI,1]')
-        phot_plugin.vue_subset_selected('Subset 1')
+        phot_plugin.data_selected = 'has_wcs[SCI,1]'
+        phot_plugin.subset_selected = 'Subset 1'
         phot_plugin.vue_do_aper_phot()
         tbl = self.imviz.get_aperture_photometry_results()
         assert len(tbl) == 1
 
-        phot_plugin.vue_data_selected('no_wcs[SCI,1]')
+        phot_plugin.data_selected = 'no_wcs[SCI,1]'
         phot_plugin.vue_do_aper_phot()
         tbl = self.imviz.get_aperture_photometry_results()
         assert len(tbl) == 1  # Old table discarded due to incompatible column

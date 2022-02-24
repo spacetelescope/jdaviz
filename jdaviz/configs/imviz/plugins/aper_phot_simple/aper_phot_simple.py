@@ -148,23 +148,23 @@ class SimpleAperturePhotometry(TemplateMixin):
         if bg_subset_selected == 'Manual':
             # we'll later access the user's self.background_value directly
             return
-        else:
-            try:
-                # Basically same way image stats are calculated in vue_do_aper_phot()
-                # except here we only care about one stat for the background.
-                data = self._selected_data
-                reg = self._get_region_from_subset(bg_subset_selected)
-                comp = data.get_component(data.main_components[0])
-                aper_mask_stat = reg.to_mask(mode='center')
-                img_stat = aper_mask_stat.get_values(comp.data, mask=None)
 
-                # photutils/background/_utils.py --> nanmedian()
-                self.background_value = np.nanmedian(img_stat)  # Naturally in data unit
+        try:
+            # Basically same way image stats are calculated in vue_do_aper_phot()
+            # except here we only care about one stat for the background.
+            data = self._selected_data
+            reg = self._get_region_from_subset(bg_subset_selected)
+            comp = data.get_component(data.main_components[0])
+            aper_mask_stat = reg.to_mask(mode='center')
+            img_stat = aper_mask_stat.get_values(comp.data, mask=None)
 
-            except Exception as e:
-                self.background_value = 0
-                self.hub.broadcast(SnackbarMessage(
-                    f"Failed to extract {bg_subset_selected}: {repr(e)}", color='error', sender=self))
+            # photutils/background/_utils.py --> nanmedian()
+            self.background_value = np.nanmedian(img_stat)  # Naturally in data unit
+
+        except Exception as e:
+            self.background_value = 0
+            self.hub.broadcast(SnackbarMessage(
+                f"Failed to extract {bg_subset_selected}: {repr(e)}", color='error', sender=self))
 
     def vue_do_aper_phot(self, *args, **kwargs):
         if self._selected_data is None or self._selected_subset is None:
