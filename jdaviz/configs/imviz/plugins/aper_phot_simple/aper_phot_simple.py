@@ -8,7 +8,7 @@ from bqplot import pyplot as bqplt
 from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage, SubsetUpdateMessage
 from ipywidgets import widget_serialization
 from regions.shapes.rectangle import RectanglePixelRegion
-from traitlets import Any, Bool, List, Unicode
+from traitlets import Any, Bool, List, Unicode, observe
 
 from jdaviz.configs.imviz.helper import layer_is_image_data
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage, SnackbarMessage
@@ -22,8 +22,11 @@ __all__ = ['SimpleAperturePhotometry']
 class SimpleAperturePhotometry(TemplateMixin):
     template_file = __file__, "aper_phot_simple.vue"
     dc_items = List([]).tag(sync=True)
+    data_selected = Unicode("").tag(sync=True)
     subset_items = List([]).tag(sync=True)
+    subset_selected = Unicode("").tag(sync=True)
     bg_subset_items = List(['Manual']).tag(sync=True)
+    bg_subset_selected = Unicode("Manual").tag(sync=True)
     background_value = Any(0).tag(sync=True)
     pixel_area = Any(0).tag(sync=True)
     counts_factor = Any(0).tag(sync=True)
@@ -46,7 +49,6 @@ class SimpleAperturePhotometry(TemplateMixin):
 
         self._selected_data = None
         self._selected_subset = None
-        self._selected_bg_label = 'Manual'
         self.plot_types = ["Radial Profile", "Radial Profile (Raw)"]
         self.current_plot_type = self.plot_types[0]
 
@@ -66,10 +68,12 @@ class SimpleAperturePhotometry(TemplateMixin):
                              if lyr.label.startswith('Subset')]
         self.bg_subset_items = ['Manual'] + self.subset_items
 
-    def vue_data_selected(self, event):
+    @observe('data_selected')
+    def _data_selected_changed(self, event={}):
+        data_selected = event.get('new', self.data_selected)
         try:
             self._selected_data = self.app.data_collection[
-                self.app.data_collection.labels.index(event)]
+                self.app.data_collection.labels.index(data_selected)]
             self.counts_factor = 0
             self.pixel_area = 0
             self.flux_scaling = 0
@@ -106,67 +110,61 @@ class SimpleAperturePhotometry(TemplateMixin):
             self.reset_results()
             self._selected_data = None
             self.hub.broadcast(SnackbarMessage(
-                f"Failed to extract {event}: {repr(e)}", color='error', sender=self))
+                f"Failed to extract {data_selected}: {repr(e)}", color='error', sender=self))
 
         # Auto-populate background, if applicable
-        self.vue_bg_subset_selected(self._selected_bg_label)
+        self._bg_subset_selected_changed()
 
-    def _get_subset_region_from_event(self, event):
-        subset = None
+    def _get_region_from_subset(self, subset):
         for subset_grp in self.app.data_collection.subset_groups:
-            if subset_grp.label == event:
+            if subset_grp.label == subset:
                 for sbst in subset_grp.subsets:
-                    if sbst.data.label == self._selected_data.label:
-                        subset = sbst
-                        break
-                break
-        if subset is None:
-            raise ValueError(f'Subset "{event}" not found')
+                    if sbst.data.label == self.data_selected:
+                        # TODO: https://github.com/glue-viz/glue-astronomy/issues/52
+                        return sbst.data.get_selection_definition(
+                                subset_id=subset, format='astropy-regions')
+        else:
+            raise ValueError(f'Subset "{subset}" not found')
 
-        # TODO: https://github.com/glue-viz/glue-astronomy/issues/52
-        return subset.data.get_selection_definition(
-                subset_id=event, format='astropy-regions')
-
-    def vue_subset_selected(self, event):
+    @observe('subset_selected')
+    def _subset_selected_changed(self, event={}):
+        subset_selected = event.get('new', self.subset_selected)
         if self._selected_data is None:
             self.reset_results()
             return
 
         try:
-            self._selected_subset = self._get_subset_region_from_event(event)
-            self._selected_subset.meta['label'] = event
+            self._selected_subset = self._get_region_from_subset(subset_selected)
+            self._selected_subset.meta['label'] = subset_selected
         except Exception as e:
             self._selected_subset = None
             self.reset_results()
             self.hub.broadcast(SnackbarMessage(
-                f"Failed to extract {event}: {repr(e)}", color='error', sender=self))
+                f"Failed to extract {subset_selected}: {repr(e)}", color='error', sender=self))
 
-    def vue_bg_subset_selected(self, event):
-        if self._selected_data is None:
-            self.reset_results()
+    @observe('bg_subset_selected')
+    def _bg_subset_selected_changed(self, event={}):
+        bg_subset_selected = event.get('new', self.bg_subset_selected)
+        if bg_subset_selected == 'Manual':
+            # we'll later access the user's self.background_value directly
             return
+        else:
+            try:
+                # Basically same way image stats are calculated in vue_do_aper_phot()
+                # except here we only care about one stat for the background.
+                data = self._selected_data
+                reg = self._get_region_from_subset(bg_subset_selected)
+                comp = data.get_component(data.main_components[0])
+                aper_mask_stat = reg.to_mask(mode='center')
+                img_stat = aper_mask_stat.get_values(comp.data, mask=None)
 
-        self._selected_bg_label = event
-        if event == 'Manual':
-            self.background_value = 0
-            return
+                # photutils/background/_utils.py --> nanmedian()
+                self.background_value = np.nanmedian(img_stat)  # Naturally in data unit
 
-        try:
-            # Basically same way image stats are calculated in vue_do_aper_phot()
-            # except here we only care about one stat for the background.
-            data = self._selected_data
-            reg = self._get_subset_region_from_event(event)
-            comp = data.get_component(data.main_components[0])
-            aper_mask_stat = reg.to_mask(mode='center')
-            img_stat = aper_mask_stat.get_values(comp.data, mask=None)
-
-            # photutils/background/_utils.py --> nanmedian()
-            self.background_value = np.nanmedian(img_stat)  # Naturally in data unit
-
-        except Exception as e:
-            self.background_value = 0
-            self.hub.broadcast(SnackbarMessage(
-                f"Failed to extract {event}: {repr(e)}", color='error', sender=self))
+            except Exception as e:
+                self.background_value = 0
+                self.hub.broadcast(SnackbarMessage(
+                    f"Failed to extract {bg_subset_selected}: {repr(e)}", color='error', sender=self))
 
     def vue_do_aper_phot(self, *args, **kwargs):
         if self._selected_data is None or self._selected_subset is None:
