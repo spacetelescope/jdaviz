@@ -209,7 +209,7 @@ class LineAnalysis(TemplateMixin):
             # try extracting from the region
             continuum_mask = np.array([0, len(spectral_axis)-1])
             mark_x = {'left': np.array([]),
-                      'center': np.array([spectral_axis.value[0], spectral_axis.value[-1]]),
+                      'center': np.array([min(spectral_axis.value), max(spectral_axis.value)]),
                       'right': np.array([])}
 
         elif self.selected_continuum == "Surrounding":
@@ -229,7 +229,7 @@ class LineAnalysis(TemplateMixin):
             if not len(left):
                 # then no points matching the width are available outside the line region,
                 # so we'll default to the left-most point of the line region.
-                left, = np.where(spectral_axis == spectrum.spectral_axis[0])
+                left, = np.where(spectral_axis == min(spectrum.spectral_axis))
 
             right, = np.where((spectral_axis > sr.upper) &
                               (spectral_axis < sr.upper + spectral_region_width*width))
@@ -237,12 +237,12 @@ class LineAnalysis(TemplateMixin):
             if not len(right):
                 # then no points matching the width are available outside the line region,
                 # so we'll default to the right-most point of the line region.
-                right, = np.where(spectral_axis == spectrum.spectral_axis[1])
+                right, = np.where(spectral_axis == max(spectrum.spectral_axis))
 
             continuum_mask = np.concatenate((left, right))
-            mark_x = {'left': np.array([spectral_axis.value[continuum_mask[0]], sr.lower.value]),
+            mark_x = {'left': np.array([min(spectral_axis.value[continuum_mask]), sr.lower.value]),
                       'center': np.array([sr.lower.value, sr.upper.value]),
-                      'right': np.array([sr.upper.value, spectral_axis.value[continuum_mask[-1]]])}
+                      'right': np.array([sr.upper.value, max(spectral_axis.value[continuum_mask])])}
 
         else:
             continuum_mask = ~self.app.get_data_from_viewer("spectrum-viewer",
