@@ -106,11 +106,6 @@ class SpectralLine(BaseSpectrumVerticalLine):
             obs_value = (obs_angstrom*u.Angstrom).to_value(self._x_unit,
                                                            equivalencies=u.spectral())
         self.x = [obs_value, obs_value]
-        if self.identify:
-            self._update_label()
-
-    def _update_label(self):
-        self.labels = [f'\u00A0\u000A{self.name}: {self.x[0]:0.4e} ({self._rest_value:0.4e}) {self._x_unit}']  # noqa
 
     @property
     def identify(self):
@@ -123,10 +118,6 @@ class SpectralLine(BaseSpectrumVerticalLine):
 
         self._identify = identify
         self.stroke_width = 3 if identify else 1
-        # self.marker = 'square' if identify else None
-        # TODO: enable label on identify by fixing vertical padding
-        # self.labels_visibility = 'label' if identify else 'none'
-        self._update_label()
 
     def _process_identify_change(self, msg):
         self.identify = msg.name_rest == self.table_index
@@ -141,8 +132,6 @@ class SpectralLine(BaseSpectrumVerticalLine):
         # re-compute self.x from current redshift (instead of converting that as well)
         self.redshift = self._redshift
         self._x_unit = new_unit
-        if self.identify:
-            self._update_label()
 
 
 class SliceIndicator(BaseSpectrumVerticalLine, HubListener):
