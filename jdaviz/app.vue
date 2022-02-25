@@ -277,9 +277,5 @@ a:active {
 .no-hint .v-text-field__details {
   display: none !important;
 }
-.jdaviz-viewer .v-data-table__wrapper {
-  overflow-y: auto;
-  height: calc(100% - 59px);
-}
 
 </style>

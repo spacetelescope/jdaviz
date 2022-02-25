@@ -122,7 +122,7 @@
 
         </div>
 
-        <v-card tile flat class="jdaviz-viewer" style="flex: 1; margin-top: -2px; overflow-y: auto;">
+        <v-card tile flat style="flex: 1; margin-top: -2px; overflow-y: auto;">
 
           <div style="height: 100%; display: flex; flex-direction: column; overflow-y: auto">
             <v-toolbar
