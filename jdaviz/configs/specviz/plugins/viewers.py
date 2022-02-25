@@ -350,7 +350,7 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
             if mark.__class__.__name__ == 'Lines':
                 self.data_trace_pointer = ind
                 break
-        else:
+        else:  # pragma: no cover
             raise ValueError("could not find mark for added data")
 
         self.error_trace_pointer = None
