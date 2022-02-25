@@ -598,7 +598,7 @@ class Application(VuetifyTemplate, HubListener):
 
             # Get last region within the subset
             if current_edge != index:
-                subset_region = spec_axis_data[mask[current_edge]: mask[index]]
+                subset_region = spec_axis_data[mask[current_edge]: mask[index] + 1]
                 # No if check here because len(mask) must be greater than 1
                 # so combined_spec_region will have been instantiated in the for loop
                 if combined_spec_region is None:
