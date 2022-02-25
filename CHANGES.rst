@@ -22,7 +22,8 @@ Imviz
 
 - New metadata viewer plugin. [#1035]
 
-- New radial profile plot in the simple aperture photometry plugin. [#1030]
+- New radial profile plot and background auto-population in the
+  simple aperture photometry plugin. [#1030, #1109]
 
 - New plugin to display compass for image with WCS and also zoom box. [#983]
 
