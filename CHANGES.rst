@@ -79,6 +79,7 @@ Bug Fixes
   parameter units in that case. [#1026]
 - Model plugin polynomial order now avoids traceback when clearing input. [#1041]
 - Box zoom silently ignores click without drag events. [#1105]
+- Fixes index error when plotting new data/model. [#1120]
 
 Cubeviz
 ^^^^^^^
