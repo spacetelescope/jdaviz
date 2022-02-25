@@ -342,12 +342,16 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
         # trace representing the spectrum itself.
         result = super().add_data(data, color, alpha, **layer_state)
 
-        # Index of spectrum trace plotted by the super class. It is
-        # for now, always the last in the array of marks. This will
-        # have to be reworked once multiple spectra can be over-plotted.
-        # The uncert and mask trace pointers are meant to facilitate this
-        # eventual upgrade.
-        self.data_trace_pointer = len(self.figure.marks) - 1
+        # Index of spectrum trace plotted by the super class. It is the
+        # **latest** item in figure.marks that is a Line instance
+        for ind, mark in reversed(list(enumerate(self.figure.marks))):
+            # we'll use __class__.__name__ since other entries (spectral lines,
+            # etc) defined in jdaviz.core.marks inherit from Lines
+            if mark.__class__.__name__ == 'Lines':
+                self.data_trace_pointer = ind
+                break
+        else:
+            raise ValueError("could not find mark for added data")
 
         self.error_trace_pointer = None
         self.mask_trace_pointer = None
