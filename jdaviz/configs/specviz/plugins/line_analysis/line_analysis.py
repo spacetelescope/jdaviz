@@ -354,7 +354,7 @@ class LineAnalysis(PluginTemplateMixin):
     @observe('selected_line')
     def _selected_line_changed(self, event):
         if self.sync_identify:
-            msg = LineIdentifyMessage(self.selected_line, sender=self)
+            msg = LineIdentifyMessage(event.get('new', self.selected_line), sender=self)
             self.hub.broadcast(msg)
         if self.results_centroid is not None:
             # compute redshift that WILL be applied if clicking assign

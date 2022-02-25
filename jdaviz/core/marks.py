@@ -113,7 +113,7 @@ class SpectralLine(BaseSpectrumVerticalLine):
 
     @identify.setter
     def identify(self, identify):
-        if not isinstance(identify, bool):
+        if not isinstance(identify, bool):  # pragma: no cover
             raise TypeError("identify must be of type bool")
 
         self._identify = identify
