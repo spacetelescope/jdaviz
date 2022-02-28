@@ -72,9 +72,8 @@ def test_region_from_subset_profile(jdaviz_app, spectral_cube_wcs):
 
     assert len(subsets) == 1
     assert isinstance(reg, SpectralRegion)
-
     assert_quantity_allclose(reg.lower, 5.0 * u.Hz)
-    assert_quantity_allclose(reg.upper, 14.0 * u.Hz)
+    assert_quantity_allclose(reg.upper, 15.0 * u.Hz)
 
 
 def test_region_spectral_spatial(jdaviz_app, spectral_cube_wcs):
@@ -94,13 +93,11 @@ def test_region_spectral_spatial(jdaviz_app, spectral_cube_wcs):
     subsets = jdaviz_app.get_subsets_from_viewer('spectrum-viewer', subset_type='spectral')
     reg = subsets.get('Subset 1')
 
-    print(reg)
-
     assert len(subsets) == 1
     assert isinstance(reg, SpectralRegion)
 
     assert_quantity_allclose(reg.lower, 5.0 * u.Hz)
-    assert_quantity_allclose(reg.upper, 14 * u.Hz)
+    assert_quantity_allclose(reg.upper, 15 * u.Hz)
 
     subsets = jdaviz_app.get_subsets_from_viewer('flux-viewer', subset_type='spatial')
     reg = subsets.get('Subset 2')
@@ -136,4 +133,4 @@ def test_disjoint_spectral_subset(jdaviz_app, spectral_cube_wcs):
     assert_quantity_allclose(reg[0].lower, 5.0*u.Hz)
     assert_quantity_allclose(reg[0].upper, 15.0*u.Hz)
     assert_quantity_allclose(reg[1].lower, 30.0*u.Hz)
-    assert_quantity_allclose(reg[1].upper, 34.0*u.Hz)
+    assert_quantity_allclose(reg[1].upper, 35.0*u.Hz)

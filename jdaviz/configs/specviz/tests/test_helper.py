@@ -129,7 +129,7 @@ class TestSpecvizHelper:
         assert_quantity_allclose(spec_region['Subset 1'].subregions[2][0].value,
                                  7333.33333333, atol=1e-5)
         assert_quantity_allclose(spec_region['Subset 1'].subregions[2][1].value,
-                                 7555.55555556, atol=1e-5)
+                                 7777.77777778, atol=1e-5)
 
     def test_get_spectral_regions_raise_value_error(self):
         with pytest.raises(ValueError):
