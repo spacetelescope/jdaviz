@@ -139,9 +139,6 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
         if show_in_viewer:
             app.add_data_to_viewer(f"{app.config}-0", data_label)
 
-    if len(app.data_collection) <= 1:  # No need to link, we are done.
-        return
-
     # Do not run link_image_data here. We do it at the end in Imviz.load_data()
 
 
