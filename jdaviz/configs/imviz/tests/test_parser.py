@@ -114,6 +114,14 @@ class TestParseImage:
             assert data.shape == slice_shape
             assert_array_equal(comp.data, i)
 
+    def test_parse_numpy_array_3d_too_many(self, imviz_helper):
+        with pytest.warns(UserWarning, match='16 or more 3D slices found'):
+            imviz_helper.load_data(np.ones((17, 5, 5)))
+
+        assert len(imviz_helper.app.data_collection) == 16
+        assert imviz_helper.app.data_collection[0].shape == (5, 5)
+        assert imviz_helper.app.data_collection[15].shape == (5, 5)
+
     def test_parse_numpy_array_4d(self, imviz_helper):
         # Check logic is in higher level method.
         imviz_helper.load_data(np.ones((1, 2, 5, 5)))

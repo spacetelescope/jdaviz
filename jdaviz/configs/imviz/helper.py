@@ -98,8 +98,9 @@ class Imviz(ConfigHelper):
             * `~astropy.nddata.NDData` object (2D only but may have unit,
               mask, or uncertainty attached)
             * Numpy array (2D or 3D); if 3D, it will treat each slice at
-              ``axis=0`` as a separate image, however loading too many slices
-              will cause performance issue, so consider using Cubeviz instead.
+              ``axis=0`` as a separate image (limit is 16 slices), however
+              loading too many slices will cause performance issue,
+              so consider using Cubeviz instead.
 
         parser_reference
             This is used internally by the app.
@@ -152,7 +153,13 @@ class Imviz(ConfigHelper):
                 if data.ndim != 3:
                     raise ValueError(f'Imviz cannot load this array with ndim={data.ndim}')
 
+            max_n_slice = 16  # Arbitrary limit for performance reasons
             for i in range(data.shape[0]):
+                if i == max_n_slice:
+                    warnings.warn(f'{max_n_slice} or more 3D slices found, stopping; '
+                                  'please use Cubeviz')
+                    break
+
                 kw = deepcopy(kwargs)
 
                 # This will only append index to data label if provided.
