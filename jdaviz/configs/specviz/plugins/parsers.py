@@ -42,6 +42,7 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
     elif isinstance(data, Spectrum1D):
         data = [data]
         data_label = [data_label]
+    # No special processing is needed in this case, but we include it for completeness
     elif isinstance(data, SpectrumList):
         pass
     elif isinstance(data, list):
@@ -58,6 +59,9 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
                 data = SpectrumList.read(str(path), format=format)
         elif path.is_dir():
             data = SpectrumList.read(str(path), format=format)
+            if data == []:
+                raise ValueError(f"`specutils.SpectrumList.read('{str(path)}')` "
+                                 "returned an empty list")
         else:
             raise FileNotFoundError("No such file: " + str(path))
 
