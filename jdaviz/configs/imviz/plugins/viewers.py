@@ -46,6 +46,7 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
 
         self.label_mouseover = None
         self.compass = None
+        self.line_profile_xy = None
 
         self.add_event_callback(self.on_mouse_or_key_event, events=['mousemove', 'mouseenter',
                                                                     'mouseleave', 'keydown'])
@@ -80,6 +81,13 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
             if 'g-coords-info' in self.session.application._tools:
                 self.label_mouseover = self.session.application._tools['g-coords-info']
             else:
+                return
+
+        if self.line_profile_xy is None:
+            try:
+                self.line_profile_xy = self.session.jdaviz_app.get_tray_item_from_name(
+                    'imviz-line-profile-xy')
+            except KeyError:
                 return
 
         if data['event'] == 'mousemove':
@@ -144,12 +152,21 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
             self.label_mouseover.reset_coords_display()
             self.label_mouseover.value = ""
 
-        elif data['event'] == 'keydown' and data['key'] == 'b':
-            self.blink_once()
+        elif data['event'] == 'keydown':
+            key_pressed = data['key']
 
-            # Also update the coordinates display.
-            data['event'] = 'mousemove'
-            self.on_mouse_or_key_event(data)
+            if key_pressed == 'b':
+                self.blink_once()
+
+                # Also update the coordinates display.
+                data['event'] = 'mousemove'
+                self.on_mouse_or_key_event(data)
+
+            elif key_pressed == 'l':
+                # Same data as mousemove above.
+                ix = int(round(data['domain']['x']))
+                iy = int(round(data['domain']['y']))
+                self.line_profile_xy.plot_lines(visible_layers[0].layer, ix, iy)
 
     def blink_once(self):
         # Simple blinking of images - this will make it so that only one

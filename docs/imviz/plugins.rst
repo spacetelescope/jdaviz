@@ -60,6 +60,15 @@ data label, the X and Y directions, and the zoom box.
 When you have multiple viewers created in Imviz, use the Viewer dropdown menu
 to change the active viewer that it tracks.
 
+.. _line-profile-xy:
+
+Line Profiles
+=============
+
+This plugin plots line profiles across X and Y for the pixel under cursor
+when "l" is pressed on the image viewer. The top visible image, the same
+one displayed under :ref:`imviz-compass`, will be used for these plots.
+
 .. _aper-phot-simple:
 
 Simple Aperture Photometry
