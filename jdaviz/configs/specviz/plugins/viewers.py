@@ -8,8 +8,6 @@ from glue.config import data_translator
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from glue.core.exceptions import IncompatibleAttribute
 
-import astropy
-from astropy.utils.introspection import minversion
 from astropy import table
 from specutils import Spectrum1D
 from matplotlib.colors import cnames
@@ -460,12 +458,7 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
         data = self.data()[0]
 
         # Set axes labels for the spectrum viewer
-
-        if not minversion(astropy, '4.3'):
-            spectral_axis_unit_type = data.spectral_axis.unit.physical_type.title()
-        else:
-            # physical_type changed from str to class in astropy 4.3
-            spectral_axis_unit_type = str(data.spectral_axis.unit.physical_type).title()
+        spectral_axis_unit_type = str(data.spectral_axis.unit.physical_type).title()
         # flux_unit_type = data.flux.unit.physical_type.title()
         flux_unit_type = "Flux density"
 
