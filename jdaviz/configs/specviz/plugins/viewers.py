@@ -476,8 +476,13 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
         elif data.spectral_axis.unit.is_equivalent(u.pixel):
             spectral_axis_unit_type = "pixel"
 
-        label_0 = f"{spectral_axis_unit_type} [{data.spectral_axis.unit.to_string()}]"
-        self.figure.axes[0].label = label_0
+        if spectral_axis_unit_type == "pixel" and self.session.jdaviz_app.config == 'cubeviz':
+            self.figure.axes[0].label = "Slice"
+            self.figure.axes[0].tick_values = data.spectral_axis.value
+        else:
+            label_0 = f"{spectral_axis_unit_type} [{data.spectral_axis.unit.to_string()}]"
+            self.figure.axes[0].label = label_0
+
         self.figure.axes[1].label = f"{flux_unit_type} [{data.flux.unit.to_string()}]"
 
         # Make it so y axis label is not covering tick numbers.
