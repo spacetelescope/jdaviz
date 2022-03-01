@@ -304,9 +304,9 @@ class SimpleAperturePhotometry(TemplateMixin):
                 radial_r = list(radial_r)
                 y_data = np.bincount(radial_r, y_data) / np.bincount(radial_r)
                 radial_r = np.arange(len(y_data))
-                markerstyle = 'g--o'
+                markerstyle = 'm--o'
             else:
-                markerstyle = 'go'
+                markerstyle = 'mo'
 
             bqplt.clear()
             # NOTE: default margin in bqplot is 60 in all directions
