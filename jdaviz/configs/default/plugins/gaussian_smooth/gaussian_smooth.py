@@ -4,6 +4,7 @@ from astropy import units as u
 from astropy.convolution import convolve, Gaussian2DKernel
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
+from glue_astronomy.translators.spectrum1d import PaddedSpectrumWCS
 from specutils import Spectrum1D
 from specutils.manipulation import gaussian_smooth
 from traitlets import List, Unicode, Any, Bool, observe
@@ -40,6 +41,9 @@ class GaussianSmooth(TemplateMixin):
     viewers = List(['None', 'Left', 'Center', 'Right']).tag(sync=True)
     selected_viewer = Unicode('None').tag(sync=True)
 
+    # Disable for data without proper spectral WCS but still want the Data dropdown.
+    disabled = Bool(False).tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -60,6 +64,11 @@ class GaussianSmooth(TemplateMixin):
         self._selected_data = next((x for x in self.data_collection
                                     if x.label == event['new']))
         self.selected_data_is_1d = len(self._selected_data.data.shape) == 1
+
+        if isinstance(self._selected_data.coords, PaddedSpectrumWCS):
+            self.disabled = True
+        else:
+            self.disabled = False
 
     def vue_spectral_smooth(self, *args, **kwargs):
         # Testing inputs to make sure putting smoothed spectrum into

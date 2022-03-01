@@ -36,7 +36,7 @@
       ></v-text-field>
     </v-row>
 
-    <v-row>
+    <v-row v-if="spectral_axis_unit_equivalencies.length > 0">
       <v-combobox
         label="New Spectral Axis Unit"
         :items="spectral_axis_unit_equivalencies"
@@ -49,7 +49,7 @@
       ></v-text-field>
     </v-row>
 
-    <v-row>
+    <v-row v-if="flux_unit_equivalencies.length > 0">
       <v-combobox
         label="New Flux Unit"
         :items="flux_unit_equivalencies"
@@ -61,7 +61,7 @@
       ></v-text-field>
     </v-row>
 
-    <v-row justify="end">
+    <v-row justify="end" v-if="spectral_axis_unit_equivalencies.length > 0 || flux_unit_equivalencies.length > 0">
       <j-tooltip tipid='plugin-unit-conversion-apply'>
         <v-btn :disabled="selected_data == ''"
         color="accent" text @click="unit_conversion">Apply</v-btn>

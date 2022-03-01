@@ -129,6 +129,11 @@ class LineListTool(PluginTemplateMixin):
         if viewer_data is None:
             return
 
+        if viewer_data.spectral_axis.unit.is_equivalent(u.pixel):
+            self.disabled_msg = 'Data does not have spectral WCS'
+        else:
+            self.disabled_msg = ''
+
         self._units["x"] = str(viewer_data.spectral_axis.unit)
         self._units["y"] = str(viewer_data.flux.unit)
 

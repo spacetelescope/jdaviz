@@ -14,7 +14,9 @@
         ></v-select>
       </v-row>
 
-      <v-row v-if="show_modes">
+      <div v-if="disabled">The selected data does not have spectral WCS</div>
+
+      <v-row v-if="!disabled && show_modes">
         <v-select
           :items="smooth_modes"
           v-model="selected_mode"
@@ -24,7 +26,7 @@
         ></v-select>
       </v-row>
 
-      <v-row>
+      <v-row v-if="!disabled">
         <v-text-field
           ref="stddev"
           label="Standard deviation"
@@ -36,7 +38,7 @@
         ></v-text-field>
       </v-row>
 
-      <v-row v-if="selected_data && stddev > 0">
+      <v-row v-if="!disabled && selected_data && stddev > 0">
         <v-select v-if="config=='cubeviz'"
           :items="viewers"
           v-model="selected_viewer"
@@ -51,7 +53,7 @@
         </v-switch>
       </v-row>
 
-      <v-row justify="end">
+      <v-row justify="end" v-if="!disabled">
         <j-tooltip v-if="selected_mode=='Spectral'" tipid='plugin-gaussian-apply'>
           <v-btn :disabled="stddev <= 0 || selected_data == ''"
             color="accent" text 
