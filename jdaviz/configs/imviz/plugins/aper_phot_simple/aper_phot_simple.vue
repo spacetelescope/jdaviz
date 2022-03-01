@@ -1,7 +1,7 @@
 <template>
   <j-tray-plugin>
     <v-row>
-      <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#aper-phot-simple'">
+      <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#simple-aperture-photometry'">
         Perform aperture photometry for a single region.
       </j-docs-link>
     </v-row>
