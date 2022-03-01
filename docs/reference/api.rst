@@ -20,6 +20,10 @@ Core
 .. automodapi:: jdaviz.core.astrowidgets_api
    :no-inheritance-diagram:
 
+.. automodapi:: jdaviz.core.region_translators
+   :no-inheritance-diagram:
+
+
 Application
 ===========
 

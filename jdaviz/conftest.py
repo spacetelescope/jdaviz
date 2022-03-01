@@ -41,6 +41,14 @@ def specviz2d_helper():
 
 
 @pytest.fixture
+def image_2d_wcs(request):
+    return WCS({'CTYPE1': 'RA---TAN', 'CUNIT1': 'deg', 'CDELT1': -0.0002777777778,
+                'CRPIX1': 1, 'CRVAL1': 337.5202808,
+                'CTYPE2': 'DEC--TAN', 'CUNIT2': 'deg', 'CDELT2': 0.0002777777778,
+                'CRPIX2': 1, 'CRVAL2': -20.833333059999998})
+
+
+@pytest.fixture
 def spectral_cube_wcs(request):
     # A simple spectral cube WCS used by some tests
     wcs = WCS(naxis=3)
