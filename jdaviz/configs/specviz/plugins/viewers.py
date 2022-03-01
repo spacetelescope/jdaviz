@@ -1,4 +1,5 @@
 import numpy as np
+import warnings
 
 from bqplot.marks import Lines, Scatter
 
@@ -129,10 +130,8 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
             raise ValueError("Line table must have a 'rest' column'")
 
         # Use the redshift of the displayed spectrum if no redshifts are specified
-        if "redshift" not in line_table.colnames:
-            line_table["redshift"] = self.data()[0].spectral_axis.redshift
-        # Make sure the redshift column is a quantity
-        line_table["redshift"] = u.Quantity(line_table["redshift"])
+        if "redshift" in line_table.colnames:
+            warnings.warn("per line/list redshifts not supported, use viz.set_redshift")
 
         # Set whether to show all of the lines on the plot by default on load
         # We convert bool to int to work around ipywidgets json serialization

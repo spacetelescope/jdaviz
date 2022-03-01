@@ -191,6 +191,9 @@ Other Changes and Additions
 
 - Line list plugin now includes a dropdown for valid units for custom lines. [#1073]
 
+- Redshifts imported with a custom line list are now ignored.  Redshift must be set app-wide via 
+  viz.set_redshift or the line list plugin. [#1134]
+
 
 2.2 (2021-12-23)
 ================
