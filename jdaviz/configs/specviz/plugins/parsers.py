@@ -91,8 +91,7 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
         fnuallorig = []
         dfnuallorig = []
 
-        for i in range(len(data)):
-            spec = data[i]
+        for i, spec in enumerate(data):
 
             wave_units = spec.spectral_axis.unit
             flux_units = spec.flux.unit
