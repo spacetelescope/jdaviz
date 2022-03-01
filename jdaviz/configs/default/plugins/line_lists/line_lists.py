@@ -14,7 +14,7 @@ from jdaviz.core.events import (AddDataMessage,
                                 SnackbarMessage,
                                 RedshiftMessage)
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import TemplateMixin
+from jdaviz.core.template_mixin import PluginTemplateMixin
 from jdaviz.core.linelists import load_preset_linelist
 from jdaviz.core.marks import SpectralLine
 from jdaviz.core.validunits import create_spectral_equivalencies_list
@@ -23,7 +23,7 @@ __all__ = ['LineListTool']
 
 
 @tray_registry('g-line-list', label="Line Lists")
-class LineListTool(TemplateMixin):
+class LineListTool(PluginTemplateMixin):
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "line_lists.vue"
 

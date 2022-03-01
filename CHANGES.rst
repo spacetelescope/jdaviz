@@ -111,6 +111,9 @@ Specviz
 
 - Entering line list in units that require spectral equivalencies no longer crashes Line Lists plugin. [#1079]
 
+- Unit Conversion plugin is now disabled in the presence of any Subset due to
+  incompatibility between the two. [#1130]
+
 Other Changes and Additions
 ---------------------------
 

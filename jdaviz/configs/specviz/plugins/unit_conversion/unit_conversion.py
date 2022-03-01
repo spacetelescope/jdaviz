@@ -1,12 +1,12 @@
 from astropy import units as u
 from astropy.nddata import VarianceUncertainty, StdDevUncertainty, InverseVariance
-
+from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage
 from specutils import Spectrum1D
 from traitlets import List, Unicode, Any
 
 from jdaviz.core.events import SnackbarMessage, RemoveDataMessage, AddDataMessage, RedshiftMessage
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import TemplateMixin
+from jdaviz.core.template_mixin import PluginTemplateMixin
 from jdaviz.core.validunits import (create_spectral_equivalencies_list,
                                     create_flux_equivalencies_list)
 from jdaviz.configs.specviz.helper import _apply_redshift_to_spectra
@@ -19,7 +19,7 @@ unit_exponents = {StdDevUncertainty: 1,
 
 
 @tray_registry('g-unit-conversion', label="Unit Conversion")
-class UnitConversion(TemplateMixin):
+class UnitConversion(PluginTemplateMixin):
 
     template_file = __file__, "unit_conversion.vue"
 
@@ -41,15 +41,13 @@ class UnitConversion(TemplateMixin):
 
         self.spectrum = None
 
-        self.hub.subscribe(self, AddDataMessage,
-                           handler=self._on_viewer_data_changed)
-
-        self.hub.subscribe(self, RemoveDataMessage,
-                           handler=self._on_viewer_data_changed)
+        self.hub.subscribe(self, AddDataMessage, handler=self._on_viewer_data_changed)
+        self.hub.subscribe(self, RemoveDataMessage, handler=self._on_viewer_data_changed)
+        self.hub.subscribe(self, SubsetCreateMessage, handler=self._on_viewer_subset_changed)
+        self.hub.subscribe(self, SubsetDeleteMessage, handler=self._on_viewer_subset_changed)
 
         self._redshift = None
-        self.app.hub.subscribe(self, RedshiftMessage,
-                               handler=self._redshift_listener)
+        self.app.hub.subscribe(self, RedshiftMessage, handler=self._redshift_listener)
 
     def _on_viewer_data_changed(self, msg=None):
         """
@@ -94,6 +92,12 @@ class UnitConversion(TemplateMixin):
             self.set_spectrum(spectrum, data_label)
 
         self.update_ui()
+
+    def _on_viewer_subset_changed(self, *args):
+        if len(self.app.data_collection.subset_groups) == 0:
+            self.disabled_msg = ''
+        else:
+            self.disabled_msg = 'Please create Subsets only after unit conversion'
 
     def _redshift_listener(self, msg):
         '''Save new redshifts (including from the helper itself)'''

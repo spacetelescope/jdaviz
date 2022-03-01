@@ -3,6 +3,7 @@ import pytest
 from astropy import units as u
 from astropy.nddata import UnknownUncertainty
 from astropy.tests.helper import assert_quantity_allclose
+from glue.core.roi import XRangeROI
 
 from jdaviz.configs.specviz.plugins.unit_conversion import unit_conversion as uc
 
@@ -50,6 +51,14 @@ def test_no_spec_no_flux_no_uncert(specviz_helper, spectrum1d):
     assert converted_spectrum.flux.unit == spectrum1d.flux.unit
     assert converted_spectrum.spectral_axis.unit == spectrum1d.spectral_axis.unit
     assert converted_spectrum.uncertainty is None
+
+    # Test that applying and removing Subset disables and enables it, respectively.
+    conv_plugin = specviz_helper.app.get_tray_item_from_name('g-unit-conversion')
+    specviz_helper.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(6000, 6500))
+    assert conv_plugin.disabled_msg == 'Please create Subsets only after unit conversion'
+    specviz_helper.app.data_collection.remove_subset_group(
+        specviz_helper.app.data_collection.subset_groups[0])
+    assert conv_plugin.disabled_msg == ''
 
 
 def test_spec_no_flux_no_uncert(specviz_helper, spectrum1d):
