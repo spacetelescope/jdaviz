@@ -1,6 +1,9 @@
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.table import TableViewer
+from ipyvuetify import VuetifyTemplate
+from ipywidgets import widget_serialization
+from traitlets import Any
 
 from jdaviz.core.registries import viewer_registry
 
@@ -11,7 +14,9 @@ viewer_registry.add("g-image-viewer", label="Image 2D", cls=BqplotImageView)
 viewer_registry.add("g-table-viewer", label="Table", cls=TableViewer)
 
 
-class JdavizViewerMixin:
+class JdavizViewerMixin(VuetifyTemplate):
+    toolbar_nested = Any('').tag(sync=True, **widget_serialization)
+
     @property
     def jdaviz_app(self):
         """The Jdaviz application tied to the viewer."""
