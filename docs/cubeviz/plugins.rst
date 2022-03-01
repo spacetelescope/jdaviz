@@ -9,6 +9,13 @@ more detail under :ref:`Specviz: Data Analysis Plugins <specviz-plugins>`.  All 
 are accessed via the :guilabel:`plugin` icon in the upper right corner
 of the Cubeviz application.
 
+.. _cubeviz-metadata-viewer:
+
+Metadata Viewer
+===============
+
+This plugin allows viewing of any metadata associated with the selected data.
+
 .. _cubeviz-export-plot:
 
 Export Plot
