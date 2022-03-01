@@ -47,7 +47,7 @@ Below is an example of importing the :class:`~jdaviz.configs.specviz.helper.Spec
     >>> specviz.load_spectrum(spec1d)  # doctest: +SKIP
 
 You can also pass the path to a file that `~specutils.Spectrum1D` understands directly to the
-`~jdaviz.configs.specviz.helper.Specviz.load_data` method::
+:meth:`jdaviz.configs.specviz.helper.Specviz.load_spectrum` method::
 
     >>> specviz.load_spectrum("path/to/data/file") #doctest: +SKIP
 
@@ -69,7 +69,7 @@ For more information about using the Specutils package, please see the
 Loading multiple spectra via the API
 ------------------------------------
 In addition to loading single spectra as above, in some cases it may be useful to load multiple related
-spectra at once into the Jdaviz application. The `~jdaviz.configs.specviz.helper.Specviz.load_data` accepts
+spectra at once into the Jdaviz application. The :meth:`jdaviz.configs.specviz.helper.Specviz.load_spectrum` accepts
 a `~specutils.SpectrumList` object, in which case it will both load the individual `~specutils.Spectrum1D`
 objects in the list and additionally attempt to stitch together the spectra into a single data object so that
 they can be manipulated and analyzed in the application as a single entity::
@@ -85,7 +85,7 @@ in red.
 .. image:: img/spectrumlist_combined.png
 
 This functionality is also available in limited instances by providing a directory path to the 
-`~jdaviz.configs.specviz.helper.Specviz.load_data` method. Note that `~spectutils.SpectrumList.read`
-is only set up to handle directory input in limited cases, for example JWST MIRI MRS data, and will
-throw an error in other cases. In cases that it does work, only files in the directory level specified
-will be read, with no recursion into deeper folders.
+:meth:`jdaviz.configs.specviz.helper.Specviz.load_spectrum` method. Note that 
+:meth:`~specutils.SpectrumList.read`is only set up to handle directory input in limited cases, 
+for example JWST MIRI MRS data, and will throw an error in other cases. In cases that it does 
+work, only files in the directory level specified will be read, with no recursion into deeper folders.
