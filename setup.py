@@ -41,15 +41,8 @@ if 'test' in sys.argv:
 
 DOCS_HELP = """
 Note: building the documentation is no longer done using
-'python setup.py build_docs'. Instead you will need to run:
-
-    tox -e build_docs
-
-If you don't already have tox installed, you can install it with:
-
-    pip install tox
-
-You can also build the documentation with Sphinx directly using::
+'python setup.py build_docs'. Instead you will need to
+build the documentation with Sphinx directly using::
 
     pip install -e .[docs]
     cd docs
