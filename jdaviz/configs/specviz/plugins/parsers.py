@@ -2,7 +2,11 @@ import base64
 import pathlib
 import uuid
 
+import numpy as np
+
 from astropy.io.registry import IORegistryError
+from astropy.nddata import StdDevUncertainty
+
 from specutils import Spectrum1D, SpectrumList, SpectrumCollection
 
 from jdaviz.core.registries import data_parser_registry
@@ -38,8 +42,11 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
     elif isinstance(data, Spectrum1D):
         data = [data]
         data_label = [data_label]
+    # No special processing is needed in this case, but we include it for completeness
     elif isinstance(data, SpectrumList):
         pass
+    elif isinstance(data, list):
+        data = SpectrumList.read(data, format=format)
     else:
         path = pathlib.Path(data)
 
@@ -50,6 +57,11 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
             except IORegistryError:
                 # Multi-extension files may throw a registry error
                 data = SpectrumList.read(str(path), format=format)
+        elif path.is_dir():
+            data = SpectrumList.read(str(path), format=format)
+            if data == []:
+                raise ValueError(f"`specutils.SpectrumList.read('{str(path)}')` "
+                                 "returned an empty list")
         else:
             raise FileNotFoundError("No such file: " + str(path))
 
@@ -70,14 +82,58 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
         spec_key = list(current_spec.keys())[0]
         current_unit = current_spec[spec_key].spectral_axis.unit
     with app.data_collection.delay_link_manager_update():
-        for i in range(len(data)):
-            spec = data[i]
+
+        # these are used to build a combined spectrum with all
+        # input spectra included (taken from https://github.com/spacetelescope/
+        # dat_pyinthesky/blob/main/jdat_notebooks/MRS_Mstar_analysis/
+        # JWST_Mstar_dataAnalysis_analysis.ipynb)
+        wlallorig = []
+        fnuallorig = []
+        dfnuallorig = []
+
+        for i, spec in enumerate(data):
+
+            wave_units = spec.spectral_axis.unit
+            flux_units = spec.flux.unit
+
             if current_unit is not None and spec.spectral_axis.unit != current_unit:
                 spec = Spectrum1D(flux=spec.flux,
                                   spectral_axis=spec.spectral_axis.to(current_unit))
 
             app.add_data(spec, data_label[i])
 
-            # Only auto-show the first spectrum in a list
-            if i == 0 and show_in_viewer:
-                app.add_data_to_viewer("spectrum-viewer", data_label[i])
+            # handle display, with the SpectrumList special case in mind.
+            if show_in_viewer:
+                if isinstance(data, SpectrumList):
+
+                    # add spectrum to combined result
+                    for wlind in range(len(spec.spectral_axis)):
+                        wlallorig.append(spec.spectral_axis[wlind].value)
+                        fnuallorig.append(spec.flux[wlind].value)
+                        dfnuallorig.append(spec.uncertainty[wlind].array)
+
+                elif i == 0:
+                    app.add_data_to_viewer("spectrum-viewer", data_label[i])
+
+        # reset display ranges, or build combined spectrum, when input is a SpectrumList instance
+        if isinstance(data, SpectrumList):
+
+            # build combined spectrum
+            wlallarr = np.array(wlallorig)
+            fnuallarr = np.array(fnuallorig)
+            dfnuallarr = np.array(dfnuallorig)
+            srtind = np.argsort(wlallarr)
+            wlall = wlallarr[srtind]
+            fnuall = fnuallarr[srtind]
+            fnuallerr = dfnuallarr[srtind]
+
+            # units are not being handled properly yet.
+            unc = StdDevUncertainty(fnuallerr * flux_units)
+            spec = Spectrum1D(flux=fnuall * flux_units, spectral_axis=wlall * wave_units,
+                              uncertainty=unc)
+
+            # needs perhaps a better way to label the combined spectrum
+            label = "Combined " + data_label[0]
+            app.add_data(spec, label)
+            if show_in_viewer:
+                app.add_data_to_viewer("spectrum-viewer", label)

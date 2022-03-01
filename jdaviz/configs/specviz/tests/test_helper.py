@@ -1,13 +1,16 @@
+from zipfile import ZipFile
+
 import pytest
 from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose
 from glue.core.roi import XRangeROI
 from glue.core.edit_subset_mode import OrMode
 from specutils import Spectrum1D, SpectrumList, SpectrumCollection
+from astropy.utils.data import download_file
 
 from jdaviz.app import Application
 from jdaviz.configs.specviz.plugins.unit_conversion import unit_conversion as uc
-from jdaviz.configs.specviz.helper import Specviz
+from jdaviz import Specviz
 
 
 class TestSpecvizHelper:
@@ -31,14 +34,14 @@ class TestSpecvizHelper:
 
     def test_load_spectrum_list_no_labels(self):
         self.spec_app.load_spectrum(self.spec_list)
-        assert len(self.spec_app.app.data_collection) == 4
+        assert len(self.spec_app.app.data_collection) == 5
         for i in (1, 2, 3):
             assert "specviz_data" in self.spec_app.app.data_collection[i].label
 
     def test_load_spectrum_list_with_labels(self):
         labels = ["List test 1", "List test 2", "List test 3"]
         self.spec_app.load_spectrum(self.spec_list, data_label=labels)
-        assert len(self.spec_app.app.data_collection) == 4
+        assert len(self.spec_app.app.data_collection) == 5
 
     def test_mismatched_label_length(self):
         with pytest.raises(ValueError, match='Length'):
@@ -224,3 +227,19 @@ def test_app_links(specviz_helper, spectrum1d):
     sv = specviz_helper.app.get_viewer('spectrum-viewer')
     assert isinstance(sv.jdaviz_app, Application)
     assert isinstance(sv.jdaviz_helper, Specviz)
+
+
+@pytest.mark.remote_data
+def test_load_spectrum_list_directory(tmpdir, specviz_helper):
+    test_data = 'https://stsci.box.com/shared/static/l2azhcqd3tvzhybdlpx2j2qlutkaro3z.zip'
+    fn = download_file(test_data, cache=True, timeout=30)
+    with ZipFile(fn, 'r') as sample_data_zip:
+        sample_data_zip.extractall(tmpdir.strpath)
+    data_path = str(tmpdir.join('NIRISS_for_parser_p0171'))
+
+    with pytest.warns(UserWarning, match='SRCTYPE is missing or UNKNOWN in JWST x1d loader'):
+        specviz_helper.load_spectrum(data_path)
+    assert len(specviz_helper.app.data_collection) == 3
+    for element in specviz_helper.app.data_collection:
+        assert element.data.main_components[0] in ['flux']
+        assert element.data.main_components[1] in ['uncertainty']

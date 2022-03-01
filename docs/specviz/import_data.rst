@@ -46,6 +46,11 @@ Below is an example of importing the :class:`~jdaviz.configs.specviz.helper.Spec
     >>> specviz = Specviz()  # doctest: +SKIP
     >>> specviz.load_spectrum(spec1d)  # doctest: +SKIP
 
+You can also pass the path to a file that `~specutils.Spectrum1D` understands directly to the
+:meth:`jdaviz.configs.specviz.helper.Specviz.load_spectrum` method::
+
+    >>> specviz.load_spectrum("path/to/data/file") #doctest: +SKIP
+
 This method works well for data files that ``specutils`` understands.  However, if you are using your own data file or in-memory data, you can instead create a :class:`~specutils.Spectrum1D` object directly. In this example that is done using randomly generated data, and then that :class:`~specutils.Spectrum1D` object is loaded into the Specviz application::
 
     >>> from jdaviz import Specviz
@@ -60,3 +65,35 @@ This method works well for data files that ``specutils`` understands.  However, 
 
 For more information about using the Specutils package, please see the
 `Specutils documentation <https://specutils.readthedocs.io>`_.
+
+Loading multiple spectra via the API
+------------------------------------
+In addition to loading single spectra as above, in some cases it may be useful
+to load multiple related spectra at once into the Jdaviz application. The most common
+such case is when you have spectra of the same object covering multiple wavelength
+ranges and want to look at and analyze the entire range of spectral coverage
+simultaneously. The :meth:`jdaviz.configs.specviz.helper.Specviz.load_spectrum` accepts
+a `~specutils.SpectrumList` object, in which case it will both load the
+individual `~specutils.Spectrum1D` objects in the list and additionally attempt
+to stitch together the spectra into a single data object so that
+they can be manipulated and analyzed in the application as a single entity::
+
+    >>> from specutils import SpectrumList
+    >>> spec_list = SpectrumList([spec1d_1, spec1d_2]) #doctest: +SKIP
+    >>> specviz.load_spectrum(spec_list) #doctest: +SKIP
+
+In the screenshot below, the combined spectrum is plotted in gray, and one of
+the single component spectra are also selected and plotted in red. Note that the
+"stitching" algorithm to combine the spectra is a simple concatenation of data,
+so in areas where the wavelength ranges of component spectra overlap you may see
+the line plot jumping between points of the two spectra, as at the beginning and
+end of the red region in the screenshot below:
+
+.. image:: img/spectrumlist_combined.png
+
+This functionality is also available in limited instances by providing a directory path
+to the :meth:`jdaviz.configs.specviz.helper.Specviz.load_spectrum` method. Note
+that the ``read`` method of :class:`~specutils.SpectrumList` is only set up to handle
+directory input in limited cases, for example JWST MIRI MRS data, and will throw an error
+in other cases. In cases that it does work, only files in the directory level specified
+will be read, with no recursion into deeper folders.
