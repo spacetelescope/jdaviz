@@ -3,7 +3,6 @@ import sys
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from astropy.utils.introspection import minversion
 from astropy.wcs import NoConvergence
 from echo import delay_callback
 from glue.config import colormaps
@@ -13,8 +12,6 @@ from jdaviz.configs.imviz.helper import data_has_valid_wcs, get_top_layer_index
 from jdaviz.core.events import SnackbarMessage
 
 __all__ = ['AstrowidgetsImageViewerMixin']
-
-ASTROPY_LT_4_3 = not minversion('astropy', '4.3')
 
 
 class AstrowidgetsImageViewerMixin:
@@ -136,12 +133,7 @@ class AstrowidgetsImageViewerMixin:
                 x_cen = self.state.x_min + (width * 0.5)
                 y_cen = self.state.y_min + (height * 0.5)
                 sky_cen = image.coords.pixel_to_world(x_cen, y_cen)
-                if ASTROPY_LT_4_3:
-                    from astropy.coordinates import SkyOffsetFrame
-                    new_sky_cen = sky_cen.__class__(
-                        SkyOffsetFrame(dx, dy, origin=sky_cen.frame).transform_to(sky_cen))
-                else:
-                    new_sky_cen = sky_cen.spherical_offsets_by(dx, dy)
+                new_sky_cen = sky_cen.spherical_offsets_by(dx, dy)
                 self.center_on(new_sky_cen)
             else:
                 raise AttributeError(f'{getattr(image, "label", None)} does not have a valid WCS')

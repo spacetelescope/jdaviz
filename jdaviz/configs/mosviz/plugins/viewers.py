@@ -3,9 +3,7 @@ from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from glue_jupyter.table import TableViewer
 from specutils import Spectrum1D
-import astropy
 from astropy import units as u
-from astropy.utils.introspection import minversion
 
 from jdaviz.core.events import (AddDataToViewerMessage,
                                 RemoveDataFromViewerMessage,
@@ -31,12 +29,7 @@ class MosvizProfileView(BqplotProfileView, JdavizViewerMixin):
     def set_plot_axes(self):
         data = self.data()[0]
         # Set axes labels for the spectrum viewer
-
-        if not minversion(astropy, '4.3'):
-            spectral_axis_unit_type = data.spectral_axis.unit.physical_type.title()
-        else:
-            # physical_type changed from str to class in astropy 4.3
-            spectral_axis_unit_type = str(data.spectral_axis.unit.physical_type).title()
+        spectral_axis_unit_type = str(data.spectral_axis.unit.physical_type).title()
         # flux_unit_type = data.flux.unit.physical_type.title()
         flux_unit_type = "Flux density"
 
