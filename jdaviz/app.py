@@ -1268,7 +1268,7 @@ class Application(VuetifyTemplate, HubListener):
             'id': vid,
             'name': name or vid,
             'widget': "IPY_MODEL_" + viewer.figure_widget.model_id,
-            'toolbar_nested': "IPY_MODEL_" + viewer.toolbar_nested.model_id if viewer.toolbar_nested else '',
+            'toolbar_nested': "IPY_MODEL_" + viewer.toolbar_nested.model_id if viewer.toolbar_nested else '',  # noqa
             'tools': "IPY_MODEL_" + viewer.toolbar_selection_tools.model_id,
             'tools_open': False,
             'layer_options': "IPY_MODEL_" + viewer.layer_options.model_id,

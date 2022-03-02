@@ -107,11 +107,12 @@ class _BaseSidebarShortcut(Tool):
     viewer_select_traitlet = 'selected_viewer'
 
     def activate(self):
-        self.viewer.jdaviz_app.state.drawer = True
-        tray_item_names = [tray_item['name'] for tray_item in self.viewer.jdaviz_app.state.tray_items]
+        jdaviz_state = self.viewer.jdaviz_app.state
+        jdaviz_state.drawer = True
+        tray_item_names = [tray_item['name'] for tray_item in jdaviz_state.tray_items]
         index = tray_item_names.index(self.plugin_name)
-        if index not in self.viewer.jdaviz_app.state.tray_items_open:
-            self.viewer.jdaviz_app.state.tray_items_open = self.viewer.jdaviz_app.state.tray_items_open + [index]
+        if index not in jdaviz_state.tray_items_open:
+            jdaviz_state.tray_items_open = jdaviz_state.tray_items_open + [index]
         plugin = self.viewer.jdaviz_app.get_tray_item_from_name(self.plugin_name)
         setattr(plugin, self.viewer_select_traitlet, self.viewer.reference_id)
 
