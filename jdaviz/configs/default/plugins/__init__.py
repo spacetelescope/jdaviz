@@ -8,3 +8,4 @@ from .collapse.collapse import *  # noqa
 from .line_lists.line_lists import *  # noqa
 from .metadata_viewer.metadata_viewer import *  # noqa
 from .export_viewer.export_viewer import *  # noqa
+from .plot_options.plot_options import *  # noqa

@@ -247,8 +247,8 @@ a:active {
 }
 
 .jdaviz-nested-toolbar .v-icon, .jdaviz-nested-toolbar img {
-  /* icons from dark to light */
-  filter: invert(1);
+  /* icons from dark to (consistent) light */
+  filter: invert(1) saturate(1) brightness(1);
 }
 
 .jdaviz-nested-toolbar .v-btn {

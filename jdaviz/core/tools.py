@@ -117,6 +117,17 @@ class _BaseSidebarShortcut(Tool):
 
 
 @viewer_tool
+class SidebarShortcutPlotOptions(_BaseSidebarShortcut):
+    plugin_name = 'g-plot-options'
+    viewer_select_traitlet = 'selected_viewer'
+
+    icon = os.path.join(ICON_DIR, 'tune.svg')
+    tool_id = 'jdaviz:sidebar_plot'
+    action_text = 'Plot Options'
+    tool_tip = 'Open plot options plugin in sidebar'
+
+
+@viewer_tool
 class SidebarShortcutExport(_BaseSidebarShortcut):
     plugin_name = 'g-export-viewer'
     viewer_select_traitlet = 'selected_viewer'

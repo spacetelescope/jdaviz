@@ -16,6 +16,7 @@ toolbar:
 tray:
   - g-metadata-viewer
   - g-export-viewer
+  - g-plot-options
   - g-gaussian-smooth
   - g-model-fitting
   - g-unit-conversion

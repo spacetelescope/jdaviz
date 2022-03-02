@@ -20,6 +20,7 @@ toolbar:
 tray:
   - g-metadata-viewer
   - g-export-viewer
+  - g-plot-options
   - imviz-links-control
   - imviz-compass
   - imviz-aper-phot-simple
