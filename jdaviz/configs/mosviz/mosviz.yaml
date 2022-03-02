@@ -14,6 +14,7 @@ toolbar:
   - g-row-lock
 tray:
   - g-metadata-viewer
+  - g-export-viewer
   - g-gaussian-smooth
   - g-slit-overlay
   - g-model-fitting

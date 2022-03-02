@@ -34,7 +34,7 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
                     ['bqplot:panzoom', 'jdaviz:panzoommatch'],
                     ['bqplot:circle', 'bqplot:rectangle', 'bqplot:ellipse'],
                     ['jdaviz:blinkonce', 'jdaviz:contrastbias'],
-                    ['jdaviz:sidebar_compass']
+                    ['jdaviz:sidebar_export', 'jdaviz:sidebar_compass']
                 ]
 
     default_class = None

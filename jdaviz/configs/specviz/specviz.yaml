@@ -15,6 +15,7 @@ toolbar:
   - g-subset-tools
 tray:
   - g-metadata-viewer
+  - g-export-viewer
   - g-gaussian-smooth
   - g-model-fitting
   - g-unit-conversion

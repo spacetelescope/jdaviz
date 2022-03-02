@@ -26,6 +26,7 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
                     ['jdaviz:boxzoom'],
                     ['bqplot:panzoom'],
                     ['bqplot:circle', 'bqplot:rectangle'],
+                    ['jdaviz:sidebar_export']
                 ]
 
     default_class = None
@@ -70,7 +71,8 @@ class CubevizProfileView(SpecvizProfileView):
                     ['jdaviz:boxzoom', 'jdaviz:xrangezoom'],
                     ['bqplot:panzoom', 'bqplot:panzoom_x', 'bqplot:panzoom_y'],
                     ['bqplot:xrange'],
-                    ['jdaviz:selectslice']
+                    ['jdaviz:selectslice'],
+                    ['jdaviz:sidebar_export']
                 ]
 
     def __init__(self, *args, **kwargs):

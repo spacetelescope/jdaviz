@@ -117,6 +117,17 @@ class _BaseSidebarShortcut(Tool):
 
 
 @viewer_tool
+class SidebarShortcutExport(_BaseSidebarShortcut):
+    plugin_name = 'g-export-viewer'
+    viewer_select_traitlet = 'selected_viewer'
+
+    icon = os.path.join(ICON_DIR, 'save.svg')
+    tool_id = 'jdaviz:sidebar_export'
+    action_text = 'Export plot'
+    tool_tip = 'Open export viewer plugin in sidebar'
+
+
+@viewer_tool
 class SidebarShortcutCompass(_BaseSidebarShortcut):
     plugin_name = 'imviz-compass'
     viewer_select_traitlet = 'selected_viewer'

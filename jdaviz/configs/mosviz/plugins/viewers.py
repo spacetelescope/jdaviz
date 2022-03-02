@@ -26,6 +26,7 @@ class MosvizProfileView(BqplotProfileView, JdavizViewerMixin):
                     ['jdaviz:boxzoom', 'jdaviz:xrangezoom'],
                     ['bqplot:panzoom', 'bqplot:panzoom_x', 'bqplot:panzoom_y'],
                     ['bqplot:xrange'],
+                    ['jdaviz:sidebar_export']
                 ]
 
     def __init__(self, *args, **kwargs):
@@ -78,6 +79,7 @@ class MosvizImageView(BqplotImageView, JdavizViewerMixin):
                     ['jdaviz:boxzoom'],
                     ['bqplot:panzoom'],
                     ['bqplot:circle', 'bqplot:rectangle'],
+                    ['jdaviz:sidebar_export']
                 ]
 
     default_class = None
@@ -125,6 +127,7 @@ class MosvizProfile2DView(BqplotImageView, JdavizViewerMixin):
                     ['jdaviz:boxzoom', 'jdaviz:xrangezoom'],
                     ['bqplot:panzoom', 'bqplot:panzoom_x'],
                     ['bqplot:xrange'],
+                    ['jdaviz:sidebar_export']
                 ]
 
     _state_cls = FreezableBqplotImageViewerState
