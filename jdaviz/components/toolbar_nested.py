@@ -30,6 +30,8 @@ class NestedJupyterToolbar(BasicJupyterToolbar):
         super().__init__(viewer)
 
         for menu_ind, subtools in enumerate(tools_nested):
+            if isinstance(subtools, str):
+                subtools = [subtools]
             for i, tool_id in enumerate(subtools):
                 mode_cls = viewer_tool.members[tool_id]
                 mode = mode_cls(viewer)
