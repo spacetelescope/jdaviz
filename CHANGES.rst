@@ -7,6 +7,11 @@ New Features
 Cubeviz
 ^^^^^^^
 
+- Cubeviz can now load 3D ndarray (or equivalent) and data without WCS. However,
+  when WCS is not present, not all plugins will work as intended. [#1040]
+
+- New metadata viewer plugin. [#1040]
+
 Imviz
 ^^^^^
 
@@ -21,6 +26,8 @@ API Changes
 
 Cubeviz
 ^^^^^^^
+
+- Cubeviz parser is refactored for better support across all supported data formats. [#1040]
 
 Imviz
 ^^^^^
@@ -86,11 +93,6 @@ Cubeviz
 
 - Move slice slider to the plugin tray and add capability for selecting by wavelength as well as
   through a tool in the spectrum viewer. [#1013]
-
-- Cubeviz can now load 3D ndarray (or equivalent) and data without WCS. However,
-  when WCS is not present, not all plugins will work as intended. [#1040]
-
-- New metadata viewer plugin. [#1040]
 
 Imviz
 ^^^^^
@@ -165,8 +167,6 @@ Cubeviz
 - Moment Map plugin no longer crashes when writing out to FITS file. [#1099]
 
 - Moment Maps result is no longer rotated w.r.t. original data. [#1104]
-
-- Cubeviz parser is refactored for better support across all supported data formats. [#1040]
 
 Imviz
 ^^^^^
