@@ -3,6 +3,7 @@ import os
 from echo import delay_callback
 
 from glue.config import viewer_tool
+from glue.viewers.common.tool import Tool
 from glue_jupyter.bqplot.common.tools import (HomeTool, BqplotPanZoomMode,
                                               BqplotPanZoomXMode, BqplotPanZoomYMode,
                                               BqplotRectangleMode, BqplotCircleMode,
@@ -99,3 +100,28 @@ class XRangeZoom(_BaseSelectZoom):
             return
 
         self.viewer.state.x_min, self.viewer.state.x_max = self.interact.selected
+
+
+class _BaseSidebarShortcut(Tool):
+    plugin_label = None  # define in subclass
+    viewer_select_traitlet = 'selected_viewer'
+
+    def activate(self):
+        self.viewer.jdaviz_app.state.drawer = True
+        tray_item_names = [tray_item['name'] for tray_item in self.viewer.jdaviz_app.state.tray_items]
+        index = tray_item_names.index(self.plugin_name)
+        if index not in self.viewer.jdaviz_app.state.tray_items_open:
+            self.viewer.jdaviz_app.state.tray_items_open = self.viewer.jdaviz_app.state.tray_items_open + [index]
+        plugin = self.viewer.jdaviz_app.get_tray_item_from_name(self.plugin_name)
+        setattr(plugin, self.viewer_select_traitlet, self.viewer.reference_id)
+
+
+@viewer_tool
+class SidebarShortcutCompass(_BaseSidebarShortcut):
+    plugin_name = 'imviz-compass'
+    viewer_select_traitlet = 'selected_viewer'
+
+    icon = os.path.join(ICON_DIR, 'compass.svg')
+    tool_id = 'jdaviz:sidebar_compass'
+    action_text = 'Compass'
+    tool_tip = 'Open compass plugin in sidebar'

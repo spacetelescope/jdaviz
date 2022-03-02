@@ -26,11 +26,23 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
              'bqplot:panzoom', 'jdaviz:panzoommatch',
              'jdaviz:contrastbias', 'jdaviz:blinkonce',
              'bqplot:rectangle', 'bqplot:circle', 'bqplot:ellipse']
+
+    # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
+    tools_nested = [
+                    ['bqplot:home'],
+                    ['jdaviz:boxzoom', 'jdaviz:boxzoommatch'],
+                    ['bqplot:panzoom', 'jdaviz:panzoommatch'],
+                    ['bqplot:circle', 'bqplot:rectangle', 'bqplot:ellipse'],
+                    ['jdaviz:blinkonce', 'jdaviz:contrastbias'],
+                    ['jdaviz:sidebar_compass']
+                ]
+
     default_class = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.init_astrowidgets_api()
+        self._initialize_toolbar_nested()
 
         self.label_mouseover = None
         self.compass = None

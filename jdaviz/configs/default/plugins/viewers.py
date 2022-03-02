@@ -38,3 +38,11 @@ class JdavizViewerMixin(VuetifyTemplate):
     def jdaviz_helper(self):
         """The Jdaviz configuration helper tied to the viewer."""
         return self.jdaviz_app._jdaviz_helper
+
+    @property
+    def reference_id(self):
+        # TODO: this should probably be stored instead of this hideously hacky loop
+        for id in self.jdaviz_app.get_viewer_ids():
+            if self.jdaviz_app.get_viewer_by_id(id) == self:
+                return id
+        return None
