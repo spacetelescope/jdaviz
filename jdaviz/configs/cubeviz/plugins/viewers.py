@@ -20,7 +20,19 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
              'bqplot:panzoom', 'bqplot:rectangle',
              'bqplot:circle']
 
+    # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
+    tools_nested = [
+                    ['bqplot:home'],
+                    ['jdaviz:boxzoom'],
+                    ['bqplot:panzoom'],
+                    ['bqplot:circle', 'bqplot:rectangle'],
+                ]
+
     default_class = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._initialize_toolbar_nested()
 
     def set_plot_axes(self):
         self.figure.axes[1].tick_format = None

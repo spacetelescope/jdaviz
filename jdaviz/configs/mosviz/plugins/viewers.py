@@ -20,6 +20,18 @@ __all__ = ['MosvizProfileView', 'MosvizImageView', 'MosvizProfile2DView',
 class MosvizProfileView(BqplotProfileView, JdavizViewerMixin):
     default_class = Spectrum1D
 
+    # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
+    tools_nested = [
+                    ['bqplot:home'],
+                    ['jdaviz:boxzoom', 'jdaviz:xrangezoom'],
+                    ['bqplot:panzoom', 'bqplot:panzoom_x', 'bqplot:panzoom_y'],
+                    ['bqplot:xrange'],
+                ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._initialize_toolbar_nested()
+
     def data(self, cls=None):
         return [layer_state.layer.get_object(cls=cls or self.default_class)
                 for layer_state in self.state.layers
@@ -60,7 +72,19 @@ class MosvizImageView(BqplotImageView, JdavizViewerMixin):
              'bqplot:panzoom', 'bqplot:rectangle',
              'bqplot:circle']
 
+    # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
+    tools_nested = [
+                    ['bqplot:home'],
+                    ['jdaviz:boxzoom'],
+                    ['bqplot:panzoom'],
+                    ['bqplot:circle', 'bqplot:rectangle'],
+                ]
+
     default_class = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._initialize_toolbar_nested()
 
     def data(self, cls=None):
         return [layer_state.layer  # .get_object(cls=cls or self.default_class)
@@ -95,10 +119,19 @@ class MosvizProfile2DView(BqplotImageView, JdavizViewerMixin):
              'bqplot:panzoom_x',
              'bqplot:xrange']
 
+    # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
+    tools_nested = [
+                    ['bqplot:home'],
+                    ['jdaviz:boxzoom', 'jdaviz:xrangezoom'],
+                    ['bqplot:panzoom', 'bqplot:panzoom_x'],
+                    ['bqplot:xrange'],
+                ]
+
     _state_cls = FreezableBqplotImageViewerState
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._initialize_toolbar_nested()
         # Setup viewer option defaults
         self.state.aspect = 'auto'
 
