@@ -52,8 +52,19 @@ class CubevizProfileView(SpecvizProfileView):
              'bqplot:panzoom_y', 'bqplot:xrange',
              'jdaviz:selectslice']
 
+    # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
+    tools_nested = [
+                    ['bqplot:home'],
+                    ['jdaviz:boxzoom', 'jdaviz:xrangezoom'],
+                    ['bqplot:panzoom', 'bqplot:panzoom_x', 'bqplot:panzoom_y'],
+                    ['bqplot:xrange'],
+                    ['jdaviz:selectslice']
+                ]
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._initialize_toolbar_nested()  # TODO: replicated persistent select for nested toolbar
+
         self._reactivate_persistent_select = False
         self.toolbar.observe(self._on_active_tool_changed, 'active_tool_id')
         # NOTE: the default active state of the indicator itself is controlled in marks.py

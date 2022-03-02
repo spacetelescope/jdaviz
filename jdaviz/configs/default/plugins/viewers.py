@@ -5,7 +5,9 @@ from ipyvuetify import VuetifyTemplate
 from ipywidgets import widget_serialization
 from traitlets import Any
 
+from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.core.registries import viewer_registry
+
 
 __all__ = ['JdavizViewerMixin']
 
@@ -16,6 +18,16 @@ viewer_registry.add("g-table-viewer", label="Table", cls=TableViewer)
 
 class JdavizViewerMixin(VuetifyTemplate):
     toolbar_nested = Any('').tag(sync=True, **widget_serialization)
+
+    tools_nested = []
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def _initialize_toolbar_nested(self):
+        # would be nice to call this from __init__,
+        # but because of inheritance order that isn't simple
+        self.toolbar_nested = NestedJupyterToolbar(self, self.tools_nested)
 
     @property
     def jdaviz_app(self):

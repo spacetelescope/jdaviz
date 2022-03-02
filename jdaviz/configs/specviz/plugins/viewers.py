@@ -18,7 +18,6 @@ from jdaviz.core.registries import viewer_registry
 from jdaviz.core.marks import SpectralLine
 from jdaviz.core.linelists import load_preset_linelist, get_available_linelists
 from jdaviz.core.freezable_state import FreezableProfileViewerState
-from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
 
 __all__ = ['SpecvizProfileView']
@@ -50,12 +49,10 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._initialize_toolbar_nested()
 
         self.display_uncertainties = False
         self.display_mask = False
-
-    def initialize_toolbar_nested(self):
-        self.toolbar_nested = NestedJupyterToolbar(self, self.tools_nested)
 
     def _on_subset_create(self, msg):
         for layer in self.state.layers:
