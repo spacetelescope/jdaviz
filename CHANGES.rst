@@ -4,6 +4,9 @@
 New Features
 ------------
 
+- Lines from the line list plugin can be selected to help identify as well
+  as to assign redshifts from the line analysis plugin. [#1115]
+
 Cubeviz
 ^^^^^^^
 
@@ -82,9 +85,6 @@ New Features
   continuum. [#1060]
 
 - Specviz can load a ``SpectrumList`` and combine all its elements into a single spectrum. [#1014]
-
-- Lines from the line list plugin can be selected to help identify as well
-  as to assign redshifts from the line analysis plugin. [#1115]
 
 Cubeviz
 ^^^^^^^
