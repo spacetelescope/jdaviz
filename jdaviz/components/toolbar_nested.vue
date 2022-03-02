@@ -24,7 +24,7 @@
           v-for="[id, {tooltip, img, menu_ind, has_suboptions, primary}] of Object.entries(tools_data)"
           v-if="menu_ind==suboptions_ind && !primary"
           :key="id"
-          right
+          left
         >
           <template v-slot:activator="{ on, attrs }">
             <v-list-item v-bind="attrs" v-on="on">

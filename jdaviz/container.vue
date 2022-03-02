@@ -47,7 +47,7 @@
                           checked: $event
                         })"
                         class="pl-4"
-                      />
+                      ></v-checkbox>
                   </v-list>
                 </v-menu>
               </j-tooltip>
@@ -68,107 +68,13 @@
               </v-toolbar-items>
               <j-play-pause-widget v-if="viewer.reference == 'table-viewer'" @event="$emit('call-viewer-method', {'id': viewer.id, 'method': 'next_row'})"></j-play-pause-widget>
               <v-spacer></v-spacer>
-               <v-toolbar-items>
-               <j-tooltip tipid='viewer-toolbar-figure'>
-                 <!-- NOTE: since this is just a btn, not a toggle or menu, we cannot use v-model
-                      but instead will use @click to toggle the state AND close any other active
-                      toolbar menus (that won't already by close-on-content-click)-->
-                 <v-btn icon @click="viewer.tools_open = !viewer.tools_open" :class="{active: viewer.tools_open}" color="white">
-                   <v-icon>mdi-hammer-screwdriver</v-icon>
-                 </v-btn>
-               </j-tooltip>
-               <j-tooltip tipid='viewer-toolbar-menu'>
-                 <!-- NOTE: this case uses v-menu, so we'll control the active state with v-model
-                      on that component, but close any other active toolbar menus (that won't already
-                      with close-on-content-click with the @click on the underlying button component  
-                  -->
-                <v-menu offset-y :close-on-content-click="false" style="z-index: 10" v-model="viewer.layer_viewer_open">
-                  <template v-slot:activator="{ on }">
-                    <v-btn icon v-on="on" :class="{active : viewer.layer_viewer_open}" color="white" @click="viewer.tools_open=false">
-                      <v-icon>tune</v-icon>
-                    </v-btn>
-                  </template>
-
-                  <v-tabs v-model="viewer.tab" grow height="36px">
-                    <v-tab key="0">Layer</v-tab>
-                    <v-tab key="1">Viewer</v-tab>
-                  </v-tabs>
-
-                  <!-- NOTE: v-lazy needed for initial tab underline: https://github.com/vuetifyjs/vuetify/issues/1978#issuecomment-676892274 -->
-                  <v-lazy>
-                    <v-tabs-items v-model="viewer.tab" style="max-height: 500px; width: 350px;" lazy>
-
-                    <v-tab-item key="0" class="overflow-y-auto" style="height: 100%">
-                      <v-sheet class="px-4">
-                        <jupyter-widget :widget="viewer.layer_options" /> 
-                      </v-sheet>
-                    </v-tab-item>
-
-                    <v-tab-item key="1" eager class="overflow-y-auto" style="height: 100%">
-                      <v-sheet class="px-4">
-                        <jupyter-widget :widget="viewer.viewer_options" />
-                      </v-sheet>
-                    </v-tab-item>
-                  </v-tabs-items>
-                </v-menu>
-               </j-tooltip>
-               <j-tooltip tipid='viewer-toolbar-more'>
-                <v-btn icon color="white">
-                  <v-icon>more_horiz</v-icon>
-                </v-btn>
-               </j-tooltip>
-             </v-toolbar-items>
+              <jupyter-widget class='jdaviz-nested-toolbar' :widget="viewer.toolbar_nested"></jupyter-widget>
           </v-row>
 
         </div>
 
         <v-card tile flat style="flex: 1; margin-top: -2px; overflow-y: auto;">
-
-          <div style="height: 100%; display: flex; flex-direction: column; overflow-y: auto">
-            <v-toolbar
-              dense
-              floating
-              absolute
-              :tools_open="viewer.tools_open"
-              elevation="1"
-              :width="viewer.tools_open ? null : '0px'"
-              style="right: 2px;"
-            >
-              <v-toolbar-items class="toolbar-jdaviz-style">
-
-                <!-- <v-divider vertical></v-divider> -->
-                <jupyter-widget :widget="viewer.tools"></jupyter-widget>
-                <v-menu offset-y left :close-on-content-click="true" style="z-index: 10">
-                 <template v-slot:activator="{ on }">
-                   <v-btn icon color="primary" v-on="on">
-                    <j-tooltip tipid="viewer-toolbar-figure-save" nudgebottom="14">
-                      <v-icon>mdi-content-save</v-icon>
-                    </j-tooltip>
-                   </v-btn>
-                 </template>
-                 <v-list>
-                  <v-list-item>
-                   <v-btn
-                    color="primary"
-                    @click="$emit('save-figure', {'id': viewer.id, 'filetype': 'png'})"
-                   >
-                    Save as PNG
-                   </v-btn>
-                  </v-list-item>
-                  <v-list-item>
-                   <v-btn
-                    color="primary"
-                    @click="$emit('save-figure', {'id': viewer.id, 'filetype': 'svg'})"
-                   >
-                    Save as SVG
-                   </v-btn>
-                  </v-list-item>
-                 </v-list>
-                </v-menu>
-              </v-toolbar-items>
-            </v-toolbar>
-            <jupyter-widget :widget="viewer.widget" style="width: 100%; flex: 1; overflow-y: auto" />
-          </div>
+          <jupyter-widget :widget="viewer.widget" style="width: 100%; height: 100%"></jupyter-widget>
         </v-card>
     </gl-component>
   </component>

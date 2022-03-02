@@ -33,7 +33,10 @@ class NestedJupyterToolbar(BasicJupyterToolbar):
             for i, tool_id in enumerate(subtools):
                 mode_cls = viewer_tool.members[tool_id]
                 mode = mode_cls(viewer)
-                self.add_tool(mode, menu_ind=menu_ind, has_suboptions=len(subtools)>1, primary=i==0)
+                self.add_tool(mode,
+                              menu_ind=menu_ind,
+                              has_suboptions=len(subtools) > 1,
+                              primary=i == 0)
 
     def add_tool(self, tool, menu_ind, has_suboptions=True, primary=False):
         self.tools[tool.tool_id] = tool
