@@ -20,11 +20,12 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
              'bqplot:panzoom', 'bqplot:rectangle',
              'bqplot:circle']
 
-    # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
+    # categories: zoom resets, (zoom, pan), subset, select tools, shortcuts
+    # NOTE: zoom and pan are merged here for space consideration and to avoid
+    # overflow to second row when opening the tray
     tools_nested = [
                     ['bqplot:home'],
-                    ['jdaviz:boxzoom'],
-                    ['bqplot:panzoom'],
+                    ['jdaviz:boxzoom', 'bqplot:panzoom'],
                     ['bqplot:circle', 'bqplot:rectangle'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
@@ -68,7 +69,7 @@ class CubevizProfileView(SpecvizProfileView):
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
                     ['bqplot:home'],
-                    ['jdaviz:boxzoom', 'jdaviz:xrangezoom'],
+                    ['jdaviz:xrangezoom', 'jdaviz:boxzoom'],
                     ['bqplot:panzoom', 'bqplot:panzoom_x', 'bqplot:panzoom_y'],
                     ['bqplot:xrange'],
                     ['jdaviz:selectslice'],

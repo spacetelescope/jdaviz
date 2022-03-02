@@ -21,53 +21,54 @@
     >
         <div>
           <v-row dense style="background-color: #205f76">
-            <v-col md="auto">
-              <j-tooltip tipid="viewer-toolbar-data">
-                <v-menu offset-y :close-on-content-click="false" v-model="viewer.data_open">
-                  <template v-slot:activator="{ on, attrs }">
-                    <v-btn 
-                      text 
-                      elevation="3" 
-                      v-bind="attrs" 
-                      v-on="on" 
-                      color="white"
-                      :class="{active: viewer.data_open}">
-                      Data
-                    </v-btn>
-                  </template>
+            <j-tooltip tipid="viewer-toolbar-data">
+              <v-menu offset-y :close-on-content-click="false" v-model="viewer.data_open">
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn 
+                    text 
+                    elevation="3" 
+                    v-bind="attrs" 
+                    v-on="on" 
+                    color="white"
+                    tile
+                    icon
+                    outline
+                    :class="{active: viewer.data_open}"
+                    style="height: 42px; width: 42px">
+                    <v-icon>mdi-format-list-bulleted-square</v-icon>
+                  </v-btn>
+                </template>
 
-                  <v-list style="max-height: 500px; width: 350px;" class="overflow-y-auto">
-                      <v-checkbox
-                        v-for="item in dataItems" :key="item.id" :label="item.name" dense hide-details
-                        :input-value="viewer.selected_data_items.includes(item.id)"
-                        @change="$emit('data-item-selected', {
-                          id: viewer.id,
-                          item_id: item.id,
-                          checked: $event
-                        })"
-                        class="pl-4"
-                      ></v-checkbox>
-                  </v-list>
-                </v-menu>
+                <v-list style="max-height: 500px; width: 350px;" class="overflow-y-auto">
+                    <v-checkbox
+                      v-for="item in dataItems" :key="item.id" :label="item.name" dense hide-details
+                      :input-value="viewer.selected_data_items.includes(item.id)"
+                      @change="$emit('data-item-selected', {
+                        id: viewer.id,
+                        item_id: item.id,
+                        checked: $event
+                      })"
+                      class="pl-4"
+                    ></v-checkbox>
+                </v-list>
+              </v-menu>
+            </j-tooltip>
+
+            <v-toolbar-items v-if="viewer.reference === 'table-viewer'">
+              <j-tooltip tipid='table-prev'>
+                <v-btn icon @click="$emit('call-viewer-method', {'id': viewer.id, 'method': 'prev_row'})" color="white">
+                  <v-icon>mdi-arrow-up-bold</v-icon>
+                </v-btn>
               </j-tooltip>
-
-
-              </v-col>
-              <v-toolbar-items v-if="viewer.reference === 'table-viewer'">
-                <j-tooltip tipid='table-prev'>
-                  <v-btn icon @click="$emit('call-viewer-method', {'id': viewer.id, 'method': 'prev_row'})" color="white">
-                    <v-icon>mdi-arrow-up-bold</v-icon>
-                  </v-btn>
-                </j-tooltip>
-                <j-tooltip tipid='table-next'>
-                  <v-btn icon @click="$emit('call-viewer-method', {'id': viewer.id, 'method': 'next_row'})" color="white">
-                    <v-icon>mdi-arrow-down-bold</v-icon>
-                  </v-btn>
-                </j-tooltip>
-              </v-toolbar-items>
-              <j-play-pause-widget v-if="viewer.reference == 'table-viewer'" @event="$emit('call-viewer-method', {'id': viewer.id, 'method': 'next_row'})"></j-play-pause-widget>
-              <v-spacer></v-spacer>
-              <jupyter-widget class='jdaviz-nested-toolbar' :widget="viewer.toolbar_nested"></jupyter-widget>
+              <j-tooltip tipid='table-next'>
+                <v-btn icon @click="$emit('call-viewer-method', {'id': viewer.id, 'method': 'next_row'})" color="white">
+                  <v-icon>mdi-arrow-down-bold</v-icon>
+                </v-btn>
+              </j-tooltip>
+            </v-toolbar-items>
+            <j-play-pause-widget v-if="viewer.reference == 'table-viewer'" @event="$emit('call-viewer-method', {'id': viewer.id, 'method': 'next_row'})"></j-play-pause-widget>
+            <v-spacer></v-spacer>
+            <jupyter-widget class='jdaviz-nested-toolbar' :widget="viewer.toolbar_nested"></jupyter-widget>
           </v-row>
 
         </div>
