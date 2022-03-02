@@ -253,6 +253,9 @@ class Imviz(ConfigHelper):
             If all the regions loaded successfully, this will be empty.
 
         """
+        from glue.core.roi import CircularROI
+        from regions import CircleSkyRegion
+
         bad_regions = {}
         # Subset is global, so we just use default viewer.
         data = self.default_viewer.state.reference_data
@@ -273,6 +276,17 @@ class Imviz(ConfigHelper):
             #    warnings.warn(f'{subset_label} is already used, skipping. '
             #                  'Consider using a different region name.')
             #    continue
+
+            # TODO: This is pretty hacky, need to generalize to other shapes or
+            # fix glue-astronomy translator upstream.
+            if isinstance(region, CircleSkyRegion):
+                if data_has_valid_wcs(data):
+                    pixreg = region.to_pixel(data.coords)
+                    cenxy = pixreg.center.xy
+                    roi = CircularROI(xc=cenxy[0], yc=cenxy[1], radius=pixreg.radius)
+                    self.default_viewer.apply_roi(roi)  # Ignores given Subset label, use Glue scheme  # noqa
+                    self.default_viewer.session.edit_subset_mode.edit_subset = None  # No overwrite next iteration  # noqa
+                    continue
 
             if hasattr(region, 'to_pixel'):
                 if data_has_valid_wcs(data):

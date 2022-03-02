@@ -64,8 +64,7 @@ class SimpleAperturePhotometry(TemplateMixin):
         self.dc_items = [lyr.label for lyr in self.app.data_collection
                          if layer_is_image_data(lyr)]
 
-        self.subset_items = [lyr.label for lyr in self.app.data_collection.subset_groups
-                             if lyr.label.startswith('Subset')]
+        self.subset_items = [lyr.label for lyr in self.app.data_collection.subset_groups]
         self.bg_subset_items = ['Manual'] + self.subset_items
 
     @observe('data_selected')
