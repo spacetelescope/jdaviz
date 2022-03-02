@@ -107,7 +107,7 @@ class XRangeZoom(_BaseSelectZoom):
 
 @viewer_tool
 class SelectLine(CheckableTool, HubListener):
-    icon = os.path.join(ICON_DIR, 'blink.svg')
+    icon = os.path.join(ICON_DIR, 'line_select.svg')
     tool_id = 'jdaviz:selectline'
     action_text = 'Select/identify spectral line'
     tool_tip = 'Select/identify spectral line'

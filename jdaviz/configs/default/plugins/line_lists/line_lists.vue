@@ -192,8 +192,8 @@
                     </v-btn>
                   </j-tooltip>
                   <j-tooltip tipid='plugin-line-lists-line-identify'>
-                    <v-btn :color="line.identify ? 'accent' : 'default'" icon @click="set_identify([item, line, line_ind])">
-                      <v-icon>{{line.identify ? "mdi-crosshairs-gps" : "mdi-crosshairs"}}</v-icon>
+                    <v-btn icon @click="set_identify([item, line, line_ind])">
+                      <img :class="line.identify ? 'color-to-accent' : ''" :src="identify_line_icon" width="20"/>
                     </v-btn>
                   </j-tooltip>
                   <span class='text--primary' style="overflow-wrap: anywhere; font-size: 12pt; padding-top: 6px; padding-left: 6px">

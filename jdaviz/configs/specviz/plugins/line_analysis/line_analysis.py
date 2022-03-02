@@ -1,6 +1,8 @@
 import numpy as np
+import os
 from glue.core.message import (SubsetDeleteMessage,
                                SubsetUpdateMessage)
+from glue_jupyter.common.toolbar_vuetify import read_icon
 from traitlets import Bool, List, Float, Unicode, observe
 from astropy import units as u
 from specutils import analysis
@@ -19,6 +21,7 @@ from jdaviz.core.marks import (LineAnalysisContinuum,
                                Shadow)
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, SpectralSubsetSelect
+from jdaviz.core.tools import ICON_DIR
 
 __all__ = ['LineAnalysis']
 
@@ -47,6 +50,8 @@ class LineAnalysis(PluginTemplateMixin):
     results = List().tag(sync=True)
     line_items = List([]).tag(sync=True)
     sync_identify = Bool(True).tag(sync=True)
+    sync_identify_icon_enabled = Unicode(read_icon(os.path.join(ICON_DIR, 'line_select.svg'), 'svg+xml')).tag(sync=True)  # noqa
+    sync_identify_icon_disabled = Unicode(read_icon(os.path.join(ICON_DIR, 'line_select_disabled.svg'), 'svg+xml')).tag(sync=True)  # noqa
     identified_line = Unicode("").tag(sync=True)
     selected_line = Unicode("").tag(sync=True)
     selected_line_redshift = Float(0).tag(sync=True)
@@ -330,9 +335,9 @@ class LineAnalysis(PluginTemplateMixin):
             # default to the identified line
             self.selected_line = self.identified_line
 
-    def vue_toggle_sync_identify(self, msg=None):
-        self.sync_identify = not self.sync_identify
-        if not self.sync_identify:
+    @observe('sync_identify')
+    def _sync_identify_changed(self, event={}):
+        if not event.get('new', self.sync_identify):
             return
 
         if not self.identified_line and self.selected_line:

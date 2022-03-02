@@ -1,10 +1,13 @@
 import numpy as np
+import os
+
 import astropy.units as u
 from astropy import constants as const
 from astropy.table import QTable
 from glue.core.message import (SubsetCreateMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
+from glue_jupyter.common.toolbar_vuetify import read_icon
 from traitlets import Bool, Float, Int, List, Unicode, Dict, observe
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
@@ -14,10 +17,11 @@ from jdaviz.core.events import (AddDataMessage,
                                 LineIdentifyMessage,
                                 SnackbarMessage,
                                 RedshiftMessage)
-from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin
 from jdaviz.core.linelists import load_preset_linelist
 from jdaviz.core.marks import SpectralLine
+from jdaviz.core.registries import tray_registry
+from jdaviz.core.template_mixin import PluginTemplateMixin
+from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.validunits import create_spectral_equivalencies_list
 
 __all__ = ['LineListTool']
@@ -49,6 +53,8 @@ class LineListTool(PluginTemplateMixin):
     custom_rest = Unicode().tag(sync=True)
     custom_unit_choices = List([]).tag(sync=True)
     custom_unit = Unicode().tag(sync=True)
+
+    identify_line_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'line_select.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -278,4 +278,8 @@ a:active {
   display: none !important;
 }
 
+.color-to-accent {
+  /* https://codepen.io/sosuke/pen/Pjoqqp for #C75109 */
+  filter: brightness(0) saturate(100%) invert(31%) sepia(84%) saturate(1402%) hue-rotate(1deg) brightness(95%) contrast(94%);  
+}
 </style>
