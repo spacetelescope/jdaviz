@@ -264,7 +264,7 @@ a:active {
   margin-bottom: -28px !important;
 }
 
-.jdaviz-nested-toolbar .v-btn--active, .jdaviz-nested-toolbar .v-btn:focus {
+.jdaviz-nested-toolbar .v-btn--active, .jdaviz-nested-toolbar .v-btn:focus, .v-toolbar .active, .jdaviz-viewer-toolbar .active {
   /* active color (orange) */
   background-color: #c75109 !important;
 }

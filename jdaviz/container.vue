@@ -20,7 +20,7 @@
       style="display: flex; flex-flow: column; height: 100%; overflow-y: auto; overflow-x: hidden"
     >
         <div>
-          <v-row dense style="background-color: #205f76">
+          <v-row dense style="background-color: #205f76" class="jdaviz-viewer-toolbar">
             <j-tooltip tipid="viewer-toolbar-data">
               <v-menu offset-y :close-on-content-click="false" v-model="viewer.data_open">
                 <template v-slot:activator="{ on, attrs }">
