@@ -20,10 +20,10 @@ class JdavizViewerMixin:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def _initialize_toolbar_nested(self):
+    def _initialize_toolbar_nested(self, default_tool_priority=[]):
         # would be nice to call this from __init__,
         # but because of inheritance order that isn't simple
-        self.toolbar_nested = NestedJupyterToolbar(self, self.tools_nested)
+        self.toolbar_nested = NestedJupyterToolbar(self, self.tools_nested, default_tool_priority)
 
     @property
     def jdaviz_app(self):

@@ -3,8 +3,7 @@ import traitlets
 
 from glue.config import viewer_tool
 from glue.icons import icon_path
-
-
+from glue.viewers.common.tool import CheckableTool
 from glue_jupyter.common.toolbar_vuetify import BasicJupyterToolbar, read_icon
 
 __all__ = ['NestedJupyterToolbar']
@@ -26,7 +25,7 @@ class NestedJupyterToolbar(BasicJupyterToolbar):
     suboptions_x = traitlets.Float().tag(sync=True)
     suboptions_y = traitlets.Float().tag(sync=True)
 
-    def __init__(self, viewer, tools_nested):
+    def __init__(self, viewer, tools_nested, default_tool_priority=[]):
         super().__init__(viewer)
 
         for menu_ind, subtools in enumerate(tools_nested):
@@ -39,6 +38,34 @@ class NestedJupyterToolbar(BasicJupyterToolbar):
                               menu_ind=menu_ind,
                               has_suboptions=len(subtools) > 1,
                               primary=i == 0)
+
+        # default_tool_priority allows falling back on an existing tool
+        # if its the primary tool.  If no items in default_tool_priority
+        # are currently "primary", then either no tool will be selected
+        # or will fallback on BasicJupyterToolbar's handling of
+        # viewer._default_mouse_mode_cls (which will not show that tool as active).
+        self.default_tool_priority = default_tool_priority
+        self._handle_default_tool()
+
+    def _handle_default_tool(self):
+        # default to the first item in the default_tool_priority list that is currently
+        # already primary
+        for tool_id in self.default_tool_priority:
+            if self.tools_data[tool_id]['primary']:
+                self.active_tool_id = tool_id
+                break
+
+    @traitlets.observe('active_tool_id')
+    def _on_change_v_model(self, event):
+        super()._on_change_v_model(event)
+
+        if event['new'] is None and event['old'] not in self.default_tool_priority:
+            # then we're unchecking a non-default tool
+            self._handle_default_tool()
+        elif event['new'] is not None and not isinstance(self.tools[event['new']], CheckableTool):
+            # then we're clicking on a non-checkable tool and want to default to the previous
+            if event['old'] is not None:
+                self.active_tool_id = event['old']
 
     def add_tool(self, tool, menu_ind, has_suboptions=True, primary=False):
         self.tools[tool.tool_id] = tool
