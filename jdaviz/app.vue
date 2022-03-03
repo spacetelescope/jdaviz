@@ -247,13 +247,21 @@ a:active {
 }
 
 .jdaviz-nested-toolbar .v-icon, .jdaviz-nested-toolbar img {
-  /* icons from dark to (consistent) light */
-  filter: invert(1) saturate(1) brightness(1);
+  /* icons from dark to (consistently) light */
+  filter: invert(1) saturate(1) brightness(100);
 }
 
 .jdaviz-nested-toolbar .v-btn {
   height: 42px !important;
   border: none !important;
+  min-width: 42px !important;
+  /* remove "dimming" since we use orange background for active */
+  color: transparent ! important;
+}
+
+.suboptions-carrot {
+  /* tweak margins for different toolbar size */
+  margin-bottom: -28px !important;
 }
 
 .jdaviz-nested-toolbar .v-btn--active, .jdaviz-nested-toolbar .v-btn:focus {

@@ -5,10 +5,10 @@
             <template v-slot:activator="{ on }">
                 <v-btn v-on="on" icon :value="id" @contextmenu="(e) => show_submenu(e, has_suboptions, menu_ind)">
                     <img :src="img" width="20"/>
-                    <v-icon v-if="has_suboptions" style="position: absolute; transform: rotate(-45deg); bottom: 0px; right: 0px; margin-bottom: -18px; margin-right: -18px;">mdi-menu-down</v-icon>
+                    <v-icon v-if="has_suboptions" class="suboptions-carrot">mdi-menu-down</v-icon>
                 </v-btn>
             </template>
-            <span>{{ tooltip }}</span>
+            <span>{{ tooltip }}{{has_suboptions ? " [right click for more options]" : ""}}</span>
         </v-tooltip>
     </v-btn-toggle>
     <v-menu
@@ -58,3 +58,12 @@
     },
   }
 </script>
+
+<style>
+.suboptions-carrot {
+  transform: rotate(-45deg);
+  bottom: 0px;
+  right: 6px !important;
+  margin-right: -22px;
+}
+</style>
