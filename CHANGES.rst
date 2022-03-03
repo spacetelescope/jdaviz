@@ -51,6 +51,9 @@ Specviz
 Other Changes and Additions
 ---------------------------
 
+- Viewer toolbars are now nested and consolidated, with viewer and layer options 
+  moved to the sidebar. [#1140]
+
 2.3 (2022-03-01)
 ================
 
