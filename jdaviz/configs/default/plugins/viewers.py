@@ -1,9 +1,6 @@
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.table import TableViewer
-from ipyvuetify import VuetifyTemplate
-from ipywidgets import widget_serialization
-from traitlets import Any
 
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.core.registries import viewer_registry
@@ -16,9 +13,8 @@ viewer_registry.add("g-image-viewer", label="Image 2D", cls=BqplotImageView)
 viewer_registry.add("g-table-viewer", label="Table", cls=TableViewer)
 
 
-class JdavizViewerMixin(VuetifyTemplate):
-    toolbar_nested = Any('').tag(sync=True, **widget_serialization)
-
+class JdavizViewerMixin:
+    toolbar_nested = None
     tools_nested = []
 
     def __init__(self, *args, **kwargs):
