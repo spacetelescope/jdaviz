@@ -32,7 +32,7 @@
                     color="white"
                     tile
                     icon
-                    outline
+                    outlined
                     :class="{active: viewer.data_open}"
                     style="height: 42px; width: 42px">
                     <v-icon>mdi-format-list-bulleted-square</v-icon>
