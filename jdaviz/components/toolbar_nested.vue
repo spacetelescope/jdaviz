@@ -46,6 +46,9 @@
         if (!has_suboptions) {
           return
         }
+        /* find the absolute position of the clicked button and position the overlaying
+           submenu directly below.  Note that scrolling while the menu is open will leave
+           the menu fixed on the window */
         this.show_suboptions = false
         this.suboptions_ind = menu_ind
         const bb = e.path.find(element => element.nodeName == 'BUTTON').getBoundingClientRect()

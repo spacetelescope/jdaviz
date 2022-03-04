@@ -28,6 +28,11 @@ class NestedJupyterToolbar(BasicJupyterToolbar):
     def __init__(self, viewer, tools_nested, default_tool_priority=[]):
         super().__init__(viewer)
 
+        # iterate through the nested list.  The first item in each entry
+        # is treated as the default primary tool of that subcategory,
+        # with each additional entry available from a dropdown.  For
+        # backwards compatibility with BasicJupyterToolbar, single strings
+        # will be treated as having no submenu.
         for menu_ind, subtools in enumerate(tools_nested):
             if isinstance(subtools, str):
                 subtools = [subtools]
@@ -68,8 +73,11 @@ class NestedJupyterToolbar(BasicJupyterToolbar):
                 self.active_tool_id = event['old']
 
     def add_tool(self, tool, menu_ind, has_suboptions=True, primary=False):
+        # NOTE: this method is essentially copied from glue-jupyter's BasicJupyterToolbar,
+        # but we need extra values in the tools_data dictionary.  We could call super(),
+        # but then that would create tools_data twice, which would then cause
+        # issues/re-rerendering
         self.tools[tool.tool_id] = tool
-        # TODO: we should ideally just incorporate this check into icon_path directly.
         if os.path.exists(tool.icon):
             path = tool.icon
         else:
