@@ -22,7 +22,7 @@
       <v-list>
         <v-tooltip
           v-for="[id, {tooltip, img, menu_ind, has_suboptions, primary}] of Object.entries(tools_data)"
-          v-if="menu_ind==suboptions_ind && !primary"
+          v-if="menu_ind==suboptions_ind"
           :key="id"
           left
         >
