@@ -465,7 +465,6 @@ class AstrowidgetsImageViewerMixin:
                     for key, val in self.marker.items():
                         setattr(lyr, {'markersize': 'size'}.get(key, key), val)
 
-
             self._marktags.add(marker_name)
 
     def remove_markers(self, marker_name=None):
