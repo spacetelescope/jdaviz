@@ -135,7 +135,7 @@ In a notebook cell, you can access the regions using the
 Plot Settings
 =============
 
-To access plot settings for a particular viewer (including the spectrum viewer), click the |icon-settings-sliders| icon, followed by the  :guilabel:`Layer` tab.
+To access plot settings for a particular viewer (including the spectrum viewer), click the |icon-settings-sliders| icon in the viewer toolbar or open the :ref:`Plot Options<specviz-plot-options>` plugin.
 
 .. image:: img/specviz_plot_settings.png
 

@@ -9,6 +9,20 @@ more detail under :ref:`Specviz: Data Analysis Plugins <specviz-plugins>`.  All 
 are accessed via the :guilabel:`plugin` icon in the upper right corner
 of the Cubeviz application.
 
+.. _cubeviz-export-plot:
+
+Export Plot
+===========
+
+This plugin allows exporting the plot in a given viewer to various image formats.
+
+.. _cubeviz-plot-options:
+
+Plot Options
+============
+
+This plugin gives access to per-viewer and per-layer plotting options.
+
 .. _slice:
 
 Slice

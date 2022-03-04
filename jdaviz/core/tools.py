@@ -129,8 +129,8 @@ class SidebarShortcutPlotOptions(_BaseSidebarShortcut):
 
 
 @viewer_tool
-class SidebarShortcutExport(_BaseSidebarShortcut):
-    plugin_name = 'g-export-viewer'
+class SidebarShortcutExportPlot(_BaseSidebarShortcut):
+    plugin_name = 'g-export-plot'
     viewer_select_traitlet = 'selected_viewer'
 
     icon = os.path.join(ICON_DIR, 'image.svg')

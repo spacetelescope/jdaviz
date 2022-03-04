@@ -1,7 +1,7 @@
 <template>
   <j-tray-plugin>
     <v-row>
-      <j-docs-link>Viewer and data/layer options.</j-docs-link>
+      <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#plot-options'">Viewer and data/layer options.</j-docs-link>
     </v-row>
 
     <v-row v-if="viewer_items.length > 1">

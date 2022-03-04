@@ -12,7 +12,7 @@ toolbar:
   - g-data-tools
   - g-subset-tools
 tray:
-  - g-export-viewer
+  - g-export-plot
   - g-plot-options
   - g-gaussian-smooth
   - g-model-fitting

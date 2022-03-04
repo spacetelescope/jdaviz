@@ -15,7 +15,7 @@ toolbar:
   - g-data-tools
   - g-subset-tools
 tray:
-  - g-export-viewer
+  - g-export-plot
   - g-plot-options
   - cubeviz-slice
   - g-gaussian-smooth

@@ -19,7 +19,7 @@ toolbar:
   - g-coords-info
 tray:
   - g-metadata-viewer
-  - g-export-viewer
+  - g-export-plot
   - g-plot-options
   - imviz-links-control
   - imviz-compass

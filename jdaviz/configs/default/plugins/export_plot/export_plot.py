@@ -7,9 +7,9 @@ from jdaviz.core.template_mixin import TemplateMixin
 __all__ = ['ExportViewer']
 
 
-@tray_registry('g-export-viewer', label="Export Plot")
+@tray_registry('g-export-plot', label="Export Plot")
 class ExportViewer(TemplateMixin):
-    template_file = __file__, "export_viewer.vue"
+    template_file = __file__, "export_plot.vue"
     viewer_items = List([]).tag(sync=True)
     selected_viewer = Unicode("").tag(sync=True)
 

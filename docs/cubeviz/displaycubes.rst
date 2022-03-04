@@ -113,8 +113,8 @@ Specviz.
 Display Settings
 ================
 
-To access all of the different display settings for an image viewer, click
-the |icon-settings-sliders| and go to the :guilabel:`Layer` tab.
+To access all of the different display settings for an image viewer, , click the 
+|icon-settings-sliders| icon in the viewer toolbar or open the :ref:`Plot Options<cubeviz-plot-options>` plugin..
 Changing the display settings DOES NOT change the underlying data, only the
 visualization of that data.
 
