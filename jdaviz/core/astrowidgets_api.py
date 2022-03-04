@@ -463,11 +463,8 @@ class AstrowidgetsImageViewerMixin:
             for lyr in self.state.layers:
                 if isinstance(lyr, BqplotScatterLayerState) and lyr.layer.label == marker_name:
                     for key, val in self.marker.items():
-                        if key == 'markersize':  # Named a little differently in state.layers
-                            k = 'size'
-                        else:
-                            k = key
-                        setattr(lyr, k, val)
+                        setattr(lyr, {'markersize': 'size'}.get(key, key), val)
+
 
             self._marktags.add(marker_name)
 
