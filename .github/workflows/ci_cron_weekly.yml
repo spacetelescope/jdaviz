@@ -1,5 +1,4 @@
 # GitHub Actions workflow that runs on a cron schedule.
-
 name: Cron Scheduled CI Tests
 
 on:
@@ -19,44 +18,30 @@ jobs:
     - name: Set up Python to build docs with sphinx
       uses: actions/setup-python@v2
       with:
-        python-version: 3.8
+        python-version: 3.9
     - name: Install base dependencies
       run: |
         python -m pip install --upgrade pip
         python -m pip install tox
     - name: Check links in docs using tox
-      run: |
-        tox -e linkcheck
-  # everything except the matrix is copied-and-pasted from ci_workflows.yml ... not ideal, maybe there's some way to do this by reference?
+      run: tox -e linkcheck
+
   ci_cron_tests:
-    name: ${{ matrix.name }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - name: Python 3.8 latest developer version of key dependencies
-            os: ubuntu-latest
-            python: 3.8
-            toxenv: py38-test-devdeps
-
-          - name: Python 3.9 with latest dev versions of key dependencies
-            os: ubuntu-latest
-            python: 3.9
-            toxenv: py39-test-devdeps
-
+    name: Python 3.9 with latest dev versions of key dependencies
+    runs-on: ubuntu-latest
+    if: github.repository == 'spacetelescope/jdaviz'
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
       with:
         fetch-depth: 0
-    - name: Set up python ${{ matrix.python }} on ${{ matrix.os }}
+    - name: Set up python
       uses: actions/setup-python@v2
       with:
-        python-version: ${{ matrix.python }}
+        python-version: 3.9
     - name: Install base dependencies
       run: |
         python -m pip install --upgrade pip
         python -m pip install tox
     - name: Test with tox
-      run: |
-        tox -e ${{ matrix.toxenv }}
+      run: tox -e py39-test-devdeps

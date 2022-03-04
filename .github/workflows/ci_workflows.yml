@@ -2,12 +2,7 @@ name: CI
 
 on:
   push:
-  #  branches:  #uncomment to run only on main
-  #  - main
-  #  tags: # run CI if specific tags are pushed
   pull_request:
-  #  branches: # only build on PRs against 'main' if you need to further limit when CI is run.
-  #  - main
 
 jobs:
   # Github Actions supports ubuntu, windows, and macos virtual environments:
@@ -44,10 +39,10 @@ jobs:
             toxposargs: --remote-data
             allow_failure: false
 
-          - name: OS X - Python 3.7
+          - name: OS X - Python 3.9
             os: macos-latest
-            python: 3.7
-            toxenv: py37-test
+            python: 3.9
+            toxenv: py39-test
             allow_failure: false
 
           - name: Windows - Python 3.8
