@@ -27,8 +27,8 @@
           left
         >
           <template v-slot:activator="{ on, attrs }">
-            <v-list-item v-bind="attrs" v-on="on">
-              <v-list-item-title @click="() => select_primary([menu_ind, id])"><img :src="img" width="20"/></v-list-item-title>
+            <v-list-item v-bind="attrs" v-on="on" :input-value="primary" @click="() => select_primary([menu_ind, id])">
+              <v-list-item-title><img :src="img" width="20"/></v-list-item-title>
             </v-list-item>
           </template>
           <span>{{ tooltip }}</span>
