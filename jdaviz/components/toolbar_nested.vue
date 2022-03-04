@@ -8,7 +8,7 @@
                     <v-icon v-if="has_suboptions" class="suboptions-carrot">mdi-menu-down</v-icon>
                 </v-btn>
             </template>
-            <span>{{ tooltip }}{{has_suboptions ? " [right click for more options]" : ""}}</span>
+            <span>{{ tooltip }}{{has_suboptions ? " [right-click for alt. tools]" : ""}}</span>
         </v-tooltip>
     </v-btn-toggle>
     <v-menu
