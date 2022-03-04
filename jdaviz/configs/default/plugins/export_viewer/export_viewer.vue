@@ -21,7 +21,7 @@
          color="primary"
          @click="() => save_figure('png')"
         >
-         Save as PNG
+         Export to PNG
         </v-btn>
        </v-list-item>
        <v-list-item>
@@ -29,7 +29,7 @@
          color="primary"
          @click="() => save_figure('svg')"
         >
-         Save as SVG
+         Export to SVG
         </v-btn>
        </v-list-item>
       </v-list>
