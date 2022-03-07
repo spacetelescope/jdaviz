@@ -127,15 +127,24 @@ def _parse_hdu(app, hdulist, file_name=None):
         if hdu.data.dtype in (int, np.uint, np.uint32) or \
                 any(x in hdu.name.lower() for x in EXT_TYPES['mask']):
             app.add_data_to_viewer('mask-viewer', data_label)
+            viewer = app.get_viewer('mask-viewer')
+            viewer.state.x_att_world = "Right Ascension"
 
         if 'errtype' in [x.lower() for x in hdu.header.keys()] or \
                 any(x in hdu.name.lower() for x in EXT_TYPES['uncert']):
             app.add_data_to_viewer('uncert-viewer', data_label)
+            viewer = app.get_viewer('uncert-viewer')
+            viewer.state.x_att_world = "Right Ascension"
 
         if any(x in hdu.name.lower() for x in EXT_TYPES['flux']):
+            # Add flux to top left image viewer
             app.add_data_to_viewer('flux-viewer', data_label)
+            viewer = app.get_viewer('flux-viewer')
+            viewer.state.x_att_world = "Right Ascension"
+            # Add flux to spectrum viewer
             app.add_data_to_viewer('spectrum-viewer', data_label)
-
+            viewer = app.get_viewer('spectrum-viewer')
+            viewer.state.x_att = "Wave"
 
 def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI', viewer_name='flux-viewer'):
     from specutils import Spectrum1D

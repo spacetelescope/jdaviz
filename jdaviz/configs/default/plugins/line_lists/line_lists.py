@@ -379,7 +379,10 @@ class LineListTool(PluginTemplateMixin):
         ndec = -np.log10(half_range)
         if ndec > 0 and not np.isinf(ndec):
             # round to at least 2 digits, or the first significant digit
-            ndec = np.max([2, int(np.ceil(ndec))])
+            try:
+                ndec = np.max([2, int(np.ceil(ndec))])
+            except OverflowError:
+                ndec = 2
         else:
             ndec = 1
         half_range = np.round(half_range, ndec)
@@ -413,7 +416,10 @@ class LineListTool(PluginTemplateMixin):
             ndec = np.max([2, np.ceil(ndec)+1])
         else:
             ndec = 1
-        self.rs_slider_ndigits = int(ndec)
+        try:
+            self.rs_slider_ndigits = int(ndec)
+        except OverflowError:
+            self.rs_slider_ndigits = 1
 
     @observe('rs_slider_step_auto')
     def _on_rs_slider_step_auto_updated(self, event):
