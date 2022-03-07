@@ -51,7 +51,8 @@ to change the active viewer that it tracks.
 Simple Aperture Photometry
 ==========================
 
-This plugin performs simple aperture photometry on one object within
+This plugin performs simple aperture photometry
+and plots a radial profile for one object within
 an interactively selected region. A typical workflow is as follows:
 
 1. Load image(s) in Imviz (see :ref:`imviz-import-data`).
@@ -84,7 +85,11 @@ an interactively selected region. A typical workflow is as follows:
    display data unit is already in linear flux unit. Setting this to 1 is equivalent
    to not applying any scaling. If this field is not applicable for you, leave it at 0.
    **This field resets every time Data selection changes.**
-9. Select the desired plot type using the :guilabel:`Plot Type` drop-down menu.
+9. Select the desired radial profile plot type using the :guilabel:`Plot Type` drop-down menu:
+
+  * Radial Profile: Binned average as a function of radius from the center of the region.
+  * Radial Profile (Raw): Raw image data points as a function of radius from the center of the region.
+
 10. Once all inputs are populated correctly, click on the :guilabel:`CALCULATE`
     button to perform simple aperture photometry.
 
@@ -95,9 +100,20 @@ an interactively selected region. A typical workflow is as follows:
 
 When calculation is complete, a plot would show the radial profile
 of the background subtracted data and the photometry results are displayed under the
-:guilabel:`CALCULATE` button. You can also retrieve the results as
-`~astropy.table.QTable` as follows, assuming ``imviz`` is the instance
-of your Imviz application::
+:guilabel:`CALCULATE` button.
+
+.. figure:: img/imviz_radial_profile.png
+    :alt: Imviz radial profile plot.
+
+    Radial profile.
+
+.. figure:: img/imviz_radial_profile_raw.png
+    :alt: Imviz radial profile plot (raw).
+
+    Radial profile (raw).
+
+You can also retrieve the results as `~astropy.table.QTable` as follows,
+assuming ``imviz`` is the instance of your Imviz application::
 
     results = imviz.get_aperture_photometry_results()
 
