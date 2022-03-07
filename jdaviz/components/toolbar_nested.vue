@@ -28,7 +28,7 @@
         >
           <template v-slot:activator="{ on, attrs }">
             <v-list-item v-bind="attrs" v-on="on" :input-value="primary" @click="() => select_primary([menu_ind, id])">
-              <v-list-item-title><img :src="img" width="20"/></v-list-item-title>
+              <v-list-item-title><img class='invert-if-dark' :src="img" width="20"/></v-list-item-title>
             </v-list-item>
           </template>
           <span>{{ tooltip }}</span>
@@ -71,5 +71,12 @@
   bottom: 0px;
   right: 6px !important;
   margin-right: -22px;
+  /* the parent button will invert everything anyways, so we need to override this to be black first,
+     regardless of light or dark theme */
+  color: black !important;
+}
+
+.theme--dark .invert-if-dark {
+  filter: invert(1) !important;
 }
 </style>
