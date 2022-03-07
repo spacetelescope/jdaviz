@@ -5,7 +5,7 @@
             <template v-slot:activator="{ on }">
                 <v-btn v-on="on" icon :value="id" @contextmenu="(e) => show_submenu(e, has_suboptions, menu_ind)">
                     <img :src="img" width="20"/>
-                    <v-icon v-if="has_suboptions" class="suboptions-carrot">mdi-menu-down</v-icon>
+                    <v-icon small v-if="has_suboptions" class="suboptions-carrot">mdi-menu-down</v-icon>
                 </v-btn>
             </template>
             <span>{{ tooltip }}{{has_suboptions ? " [right-click for alt. tools]" : ""}}</span>
