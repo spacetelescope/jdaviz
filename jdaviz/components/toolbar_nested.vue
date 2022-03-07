@@ -42,7 +42,10 @@
   export default {
     methods: {
       show_submenu (e, has_suboptions, menu_ind) {
+        // needed to prevent browser context-menu
         e.preventDefault()
+        // needed to prevent lab context-menu
+        e.stopPropagation()
         if (!has_suboptions) {
           return
         }
