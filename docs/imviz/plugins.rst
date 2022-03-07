@@ -51,7 +51,8 @@ to change the active viewer that it tracks.
 Simple Aperture Photometry
 ==========================
 
-This plugin performs simple aperture photometry on one object within
+This plugin performs simple aperture photometry
+and plots a radial profile for one object within
 an interactively selected region. A typical workflow is as follows:
 
 1. Load image(s) in Imviz (see :ref:`imviz-import-data`).
