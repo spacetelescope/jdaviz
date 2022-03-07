@@ -26,11 +26,13 @@ and choose a file that can be parsed as a :class:`~specutils.Spectrum1D` in the 
 
 .. image:: img/import_data_2.png
 
-After clicking :guilabel:`Import`, the data file will be parsed and loaded into the application. A notification will appear to let users know if the data import was successful. Afterward, the new data set can be found in the :guilabel:`Data` tab of each viewer's menu.
-
-.. image:: img/import_data_3.png
-
-Here, users can select the loaded data set to be visualized in the viewer.
+After clicking :guilabel:`Import`, the data file will be parsed and loaded into the
+application. A notification will appear to let users know if the data import was 
+successful, and if possible the data will be immediately displayed. If an incompatible
+spectrum is already being displayed, the newly loaded data will be available in the 
+:guilabel:`Data` menu but not immediately visible in the viewer. Afterward, the new 
+dataset can be found in the :guilabel:`Data` tab of each viewer's menu. Here, 
+users can select which spectra that have be loaded to be visualized in the viewer.
 
 .. image:: img/data_selected_1.png
 
