@@ -7,11 +7,12 @@ from astropy.time import Time
 from bqplot import pyplot as bqplt
 from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage, SubsetUpdateMessage
 from ipywidgets import widget_serialization
-from regions.shapes.rectangle import RectanglePixelRegion
+from photutils.aperture import aperture_photometry
 from traitlets import Any, Bool, List, Unicode, observe
 
 from jdaviz.configs.imviz.helper import layer_is_image_data
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage, SnackbarMessage
+from jdaviz.core.region_translators import regions2aperture
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
 
@@ -184,14 +185,8 @@ class SimpleAperturePhotometry(TemplateMixin):
                 raise ValueError('Missing or invalid background value')
             comp_no_bg = comp.data - bg
 
-            # TODO: Use photutils when it supports astropy regions.
-            if not isinstance(reg, RectanglePixelRegion):
-                aper_mask = reg.to_mask(mode='exact')
-            else:
-                # TODO: https://github.com/astropy/regions/issues/404 (moot if we use photutils?)
-                aper_mask = reg.to_mask(mode='subpixels', subpixels=32)
-            npix = np.sum(aper_mask) * u.pix
-            img = aper_mask.get_values(comp_no_bg, mask=None)
+            aperture = regions2aperture(reg)
+            npix = len(aperture.to_mask(method='center').get_values(comp_no_bg)) * u.pix
             aper_mask_stat = reg.to_mask(mode='center')
             comp_no_bg_cutout = aper_mask_stat.cutout(comp_no_bg)
             img_stat = aper_mask_stat.get_values(comp_no_bg, mask=None)
@@ -200,9 +195,9 @@ class SimpleAperturePhotometry(TemplateMixin):
             include_flux_scale = False
             if comp.units:
                 img_unit = u.Unit(comp.units)
-                img = img * img_unit
                 img_stat = img_stat * img_unit
                 bg = bg * img_unit
+                comp_no_bg = comp_no_bg * img_unit
                 comp_no_bg_cutout = comp_no_bg_cutout * img_unit
                 if u.sr in img_unit.bases:  # TODO: Better way to detect surface brightness unit?
                     try:
@@ -224,12 +219,13 @@ class SimpleAperturePhotometry(TemplateMixin):
                     raise ValueError('Missing or invalid flux scaling')
                 if not np.allclose(flux_scale, 0):
                     include_flux_scale = True
-            rawsum = np.nansum(img)
-            d = {'id': 1,
-                 'xcenter': reg.center.x * u.pix,
-                 'ycenter': reg.center.y * u.pix}
+            phot_table = aperture_photometry(comp_no_bg, aperture)
+            rawsum = phot_table['aperture_sum'][0]
+            d = {'id': phot_table['id'][0],
+                 'xcenter': phot_table['xcenter'][0],
+                 'ycenter': phot_table['ycenter'][0]}
             if data.coords is not None:
-                d['sky_center'] = data.coords.pixel_to_world(reg.center.x, reg.center.y)
+                d['sky_center'] = data.coords.pixel_to_world(d['xcenter'], d['ycenter'])
             else:
                 d['sky_center'] = None
             d.update({'background': bg,

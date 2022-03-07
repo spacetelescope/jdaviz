@@ -61,7 +61,7 @@ def regions2aperture(region_shape):
     elif isinstance(region_shape, EllipsePixelRegion):
         aperture = EllipticalAperture(
             region_shape.center.xy, region_shape.width, region_shape.height,
-            theta=region_shape.angle.radian)
+            theta=region_shape.angle.to_value(u.radian))
 
     elif isinstance(region_shape, EllipseSkyRegion):
         aperture = SkyEllipticalAperture(
@@ -70,7 +70,7 @@ def regions2aperture(region_shape):
     elif isinstance(region_shape, RectanglePixelRegion):
         aperture = RectangularAperture(
             region_shape.center.xy, region_shape.width, region_shape.height,
-            theta=region_shape.angle.radian)
+            theta=region_shape.angle.to_value(u.radian))
 
     elif isinstance(region_shape, RectangleSkyRegion):
         aperture = SkyRectangularAperture(
@@ -87,7 +87,8 @@ def regions2aperture(region_shape):
     elif isinstance(region_shape, EllipseAnnulusPixelRegion):
         aperture = EllipticalAnnulus(
             region_shape.center.xy, region_shape.inner_width, region_shape.outer_width,
-            region_shape.outer_height, b_in=region_shape.inner_height, theta=region_shape.angle.radian)  # noqa: E501
+            region_shape.outer_height, b_in=region_shape.inner_height,
+            theta=region_shape.angle.to_value(u.radian))
 
     elif isinstance(region_shape, EllipseAnnulusSkyRegion):
         aperture = SkyEllipticalAnnulus(
@@ -97,7 +98,8 @@ def regions2aperture(region_shape):
     elif isinstance(region_shape, RectangleAnnulusPixelRegion):
         aperture = RectangularAnnulus(
             region_shape.center.xy, region_shape.inner_width, region_shape.outer_width,
-            region_shape.outer_height, h_in=region_shape.inner_height, theta=region_shape.angle.radian)  # noqa: E501
+            region_shape.outer_height, h_in=region_shape.inner_height,
+            theta=region_shape.angle.to_value(u.radian))
 
     elif isinstance(region_shape, RectangleAnnulusSkyRegion):
         aperture = SkyRectangularAnnulus(

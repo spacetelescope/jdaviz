@@ -20,6 +20,8 @@ Imviz
   for the pixel under cursor when "l" key is pressed or for manually entered
   X and Y values on the displayed image. [#1132]
 
+- Simple aperture photometry plugin now uses ``photutils`` to calculate aperture sum. [#1138]
+
 Mosviz
 ^^^^^^
 

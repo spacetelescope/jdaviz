@@ -168,11 +168,8 @@ The columns are as follow:
 * ``aperture_sum``: Sum of flux in the aperture. If per steradian is in input
   data unit, total pixel area covered in steradian is already multiplied here,
   if applicable, so there will be no per steradian in its unit. Otherwise, it
-  has the same unit as input data. To calculate this,
-  :meth:`regions.PixelRegion.to_mask` is used with ``mode='exact'`` except
-  for rectangular region, where it is used with ``mode='subpixels'`` and
-  ``subpixels=32``. Values from aperture mask are extracted using
-  :meth:`regions.RegionMask.get_values`.
+  has the same unit as input data. For more details on how the photometry is
+  done, see :ref:`photutils:photutils-aperture`.
 * ``pixarea_tot``: If per steradian is in input data unit and pixel area is
   provided, this contains the total pixel area covered by the aperture in
   steradian. Otherwise, it is `None`.
