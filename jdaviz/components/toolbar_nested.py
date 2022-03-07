@@ -103,17 +103,20 @@ class NestedJupyterToolbar(BasicJupyterToolbar):
         else:
             raise ValueError("could not find previous selection")
 
-        self.tools_data = {
-            **self.tools_data,
-            prev_id: {
-                **prev_info,
-                'primary': False
-            },
-            tool_id: {
-                **self.tools_data[tool_id],
-                'primary': True
+        if isinstance(self.tools[tool_id], CheckableTool):
+            # only switch to primary if its actually checkable, otherwise
+            # just activate once
+            self.tools_data = {
+                **self.tools_data,
+                prev_id: {
+                    **prev_info,
+                    'primary': False
+                },
+                tool_id: {
+                    **self.tools_data[tool_id],
+                    'primary': True
+                }
             }
-        }
 
         # and finally, set to be the active tool
         self.active_tool_id = tool_id
