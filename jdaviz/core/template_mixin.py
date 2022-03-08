@@ -1,6 +1,6 @@
 from ipyvuetify import VuetifyTemplate
 from glue.core import HubListener
-from traitlets import Unicode
+from traitlets import Unicode, Bool
 
 from jdaviz import __version__
 
@@ -57,3 +57,14 @@ class TemplateMixin(VuetifyTemplate, HubListener):
 
 class PluginTemplateMixin(TemplateMixin):
     disabled_msg = Unicode("").tag(sync=True)
+    plugin_opened = Bool(False).tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.app.state.add_callback('tray_items_open', self._mxn_update_plugin_opened)
+        self.app.state.add_callback('drawer', self._mxn_update_plugin_opened)
+
+    def _mxn_update_plugin_opened(self, new_value):
+        app_state = self.app.state
+        tray_names_open = [app_state.tray_items[i]['name'] for i in app_state.tray_items_open]
+        self.plugin_opened = app_state.drawer and self._registry_name in tray_names_open
