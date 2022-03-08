@@ -51,7 +51,9 @@ Specviz
 Other Changes and Additions
 ---------------------------
 
-- Viewer toolbars are now nested and consolidated, with viewer and layer options 
+- Jdaviz now requires Python 3.8 or later. [#1145]
+
+- Viewer toolbars are now nested and consolidated, with viewer and layer options
   moved to the sidebar. [#1140]
 
 2.3 (2022-03-01)

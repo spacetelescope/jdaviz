@@ -61,16 +61,6 @@ in bottleneck trying to build numpy from source and crash, stalling the
 installation altogether. When this happens, exit the installation, install
 bottleneck with conda, and try to install jdaviz again.
 
-In Python 3.7.1, install fails due to terminado
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-In Python 3.7.1, installing jdaviz might produce this error::
-
-    ERROR: Cannot uninstall 'terminado'. It is a distutils installed project...
-
-The solution is to upgrade your Python version to at least the latest bug-fix
-version of 3.7.
-
 .. _known_issues_cubeviz:
 
 Cubeviz
