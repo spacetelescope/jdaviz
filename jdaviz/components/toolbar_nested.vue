@@ -1,5 +1,5 @@
 <template>
-  <div style="overflow-y: hidden">
+  <div style="overflow: hidden">
     <v-btn-toggle v-model="active_tool_id" class="transparent">
         <v-tooltip v-for="[id, {tooltip, img, menu_ind, has_suboptions, primary}] of Object.entries(tools_data)" v-if="primary" bottom>
             <template v-slot:activator="{ on }">
