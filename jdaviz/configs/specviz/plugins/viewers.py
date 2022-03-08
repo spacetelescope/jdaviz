@@ -35,12 +35,22 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
              'bqplot:panzoom', 'bqplot:panzoom_x',
              'bqplot:panzoom_y', 'bqplot:xrange']
 
+    # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
+    tools_nested = [
+                    ['bqplot:home'],
+                    ['jdaviz:xrangezoom', 'jdaviz:boxzoom'],
+                    ['bqplot:panzoom', 'bqplot:panzoom_x', 'bqplot:panzoom_y'],
+                    ['bqplot:xrange'],
+                    ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
+                ]
+
     default_class = Spectrum1D
     spectral_lines = None
     _state_cls = FreezableProfileViewerState
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._initialize_toolbar_nested()
 
         self.display_uncertainties = False
         self.display_mask = False

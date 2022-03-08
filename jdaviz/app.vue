@@ -37,7 +37,6 @@
                   @resize="relayout"
                   :closefn="destroy_viewer_item"
                   @data-item-selected="data_item_selected($event)"
-                  @save-figure="save_figure($event)"
                   @call-viewer-method="call_viewer_method($event)"
                 ></g-viewer-tab>
               </gl-row>
@@ -241,32 +240,33 @@ a:active {
   text-decoration: none;
 }
 
-.active, .toolbar-jdaviz-style .v-btn--active, .toolbar-jdaviz-style .v-btn:focus {
+.jdaviz-nested-toolbar {
+  /* height of nested toolbar to match viewer toolbar height */
+  height: 42px;
+  margin-right: 4px;
+}
+
+.jdaviz-nested-toolbar .v-icon, .jdaviz-nested-toolbar img {
+  /* icons from dark to (consistently) light */
+  filter: invert(1) saturate(1) brightness(100);
+}
+
+.jdaviz-nested-toolbar .v-btn {
+  height: 42px !important;
+  border: none !important;
+  min-width: 42px !important;
+  /* remove "dimming" since we use orange background for active */
+  color: transparent ! important;
+}
+
+.suboptions-carrot {
+  /* tweak margins for different toolbar size */
+  margin-bottom: -28px !important;
+}
+
+.jdaviz-nested-toolbar .v-btn--active, .jdaviz-nested-toolbar .v-btn:focus, .v-toolbar .active, .jdaviz-viewer-toolbar .active {
+  /* active color (orange) */
   background-color: #c75109 !important;
-}
-
-.toolbar-jdaviz-style .v-btn--active, .toolbar-jdaviz-style .v-btn:focus {
-  /* remove the semi-transparent overlay */
-  color: transparent !important;
-}
-
-.toolbar-jdaviz-style .v-btn--active img, .toolbar-jdaviz-style .v-btn:focus i {
-  filter: invert(100%) brightness(100%); 
-}
-
-.toolbar-jdaviz-style .theme--light .v-icon {
-  /* non-active color (in light theme) for any v-icon (currently save button) */
-  color: #4e4c4d !important;
-}
-
-.toolbar-jdaviz-style .theme--dark .v-icon  {
-  /* non-active color (in dark theme) for any v-icon (currently save button) */
-  color: #b8bbba !important;
-}
-
-.toolbar-jdaviz-style .theme--dark .v-btn img, .toolbar-jdaviz-style .theme--dark .v-btn i {
-  /* dark theme: invert custom icons */
-  filter: invert(100%) brightness(100%);
 }
 
 .v-divider.theme--dark {

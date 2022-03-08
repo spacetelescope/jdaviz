@@ -6,7 +6,7 @@ from glue.viewers.common.tool import CheckableTool
 
 from jdaviz.core.events import SliceSelectWavelengthMessage, SliceToolStateMessage
 
-__all__ = []
+__all__ = ['SelectSlice']
 
 ICON_DIR = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'icons')
 

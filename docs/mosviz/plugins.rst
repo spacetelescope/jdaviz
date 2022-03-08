@@ -16,6 +16,20 @@ Metadata Viewer
 
 This plugin allows viewing of any metadata associated with the selected data.
 
+.. _mosviz-export-plot:
+
+Export Plot
+===========
+
+This plugin allows exporting the plot in a given viewer to various image formats.
+
+.. _mosviz-plot-options:
+
+Plot Options
+============
+
+This plugin gives access to per-viewer and per-layer plotting options.
+
 Gaussian Smooth
 ===============
 

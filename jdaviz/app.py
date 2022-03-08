@@ -1086,18 +1086,6 @@ class Application(VuetifyTemplate, HubListener):
 
         self._update_selected_data_items(viewer_id, selected_items)
 
-    def vue_save_figure(self, event):
-        """
-        Callback for save figure events in the front end viewer toolbars. Uses
-        the bqplot.Figure save methods.
-        """
-        viewer_id, filetype = event['id'], event['filetype']
-        viewer = self._viewer_store[viewer_id]
-        if filetype == "png":
-            viewer.figure.save_png()
-        elif filetype == "svg":
-            viewer.figure.save_svg()
-
     def vue_close_snackbar_message(self, event):
         """
         Callback to close a message in the snackbar when the "close"
@@ -1280,6 +1268,7 @@ class Application(VuetifyTemplate, HubListener):
             'id': vid,
             'name': name or vid,
             'widget': "IPY_MODEL_" + viewer.figure_widget.model_id,
+            'toolbar_nested': "IPY_MODEL_" + viewer.toolbar_nested.model_id if viewer.toolbar_nested else '',  # noqa
             'tools': "IPY_MODEL_" + viewer.toolbar_selection_tools.model_id,
             'tools_open': False,
             'layer_options': "IPY_MODEL_" + viewer.layer_options.model_id,

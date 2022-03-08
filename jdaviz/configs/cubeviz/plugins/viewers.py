@@ -20,7 +20,21 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
              'bqplot:panzoom', 'bqplot:rectangle',
              'bqplot:circle']
 
+    # categories: zoom resets, (zoom, pan), subset, select tools, shortcuts
+    # NOTE: zoom and pan are merged here for space consideration and to avoid
+    # overflow to second row when opening the tray
+    tools_nested = [
+                    ['bqplot:home'],
+                    ['jdaviz:boxzoom', 'bqplot:panzoom'],
+                    ['bqplot:circle', 'bqplot:rectangle'],
+                    ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
+                ]
+
     default_class = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._initialize_toolbar_nested()
 
     def set_plot_axes(self):
         self.figure.axes[1].tick_format = None
@@ -52,20 +66,19 @@ class CubevizProfileView(SpecvizProfileView):
              'bqplot:panzoom_y', 'bqplot:xrange',
              'jdaviz:selectslice']
 
+    # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
+    tools_nested = [
+                    ['bqplot:home'],
+                    ['jdaviz:xrangezoom', 'jdaviz:boxzoom'],
+                    ['bqplot:panzoom', 'bqplot:panzoom_x', 'bqplot:panzoom_y'],
+                    ['bqplot:xrange'],
+                    ['jdaviz:selectslice'],
+                    ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
+                ]
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._reactivate_persistent_select = False
-        self.toolbar.observe(self._on_active_tool_changed, 'active_tool_id')
-        # NOTE: the default active state of the indicator itself is controlled in marks.py
-        self.toolbar.active_tool_id = 'jdaviz:selectslice'
-
-    def _on_active_tool_changed(self, event):
-        # if no active tool, then default to the persistent selectslice tool
-        # (unless that was manually unchecked, in which case allow no tool)
-        if (event['new'] is None and event['old'] != 'jdaviz:selectslice') or event['new'] == 'bqplot:home': # noqa
-            # no tool is currently active, fallback on persistent
-            # slice select slider tool
-            self.toolbar.active_tool_id = 'jdaviz:selectslice'
+        self._initialize_toolbar_nested(default_tool_priority=['jdaviz:selectslice'])
 
     @property
     def slice_indicator(self):

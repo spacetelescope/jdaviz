@@ -4,7 +4,6 @@ import os
 from echo import delay_callback
 
 from glue.config import viewer_tool
-from glue_jupyter.bqplot.common.tools import Tool
 from glue.viewers.common.tool import CheckableTool
 from glue_jupyter.bqplot.common.tools import BqplotPanZoomMode
 
@@ -61,14 +60,21 @@ class _MatchedZoomMixin:
 
 
 @viewer_tool
-class BlinkOnce(Tool):
+class BlinkOnce(CheckableTool):
     icon = os.path.join(ICON_DIR, 'blink.svg')
     tool_id = 'jdaviz:blinkonce'
     action_text = 'Go to next image'
-    tool_tip = ('Click on this button to display the next image, '
+    tool_tip = ('Click on the viewer to display the next image, '
                 'or you can also press the "b" key anytime')
 
     def activate(self):
+        self.viewer.add_event_callback(self.on_click,
+                                       events=['click'])
+
+    def deactivate(self):
+        self.viewer.remove_event_callback(self.on_click)
+
+    def on_click(self, *args):
         self.viewer.blink_once()
 
 

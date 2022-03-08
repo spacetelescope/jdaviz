@@ -19,6 +19,8 @@ toolbar:
   - g-coords-info
 tray:
   - g-metadata-viewer
+  - g-export-plot
+  - g-plot-options
   - imviz-links-control
   - imviz-compass
   - imviz-aper-phot-simple
