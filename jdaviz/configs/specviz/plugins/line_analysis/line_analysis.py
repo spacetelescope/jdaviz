@@ -114,9 +114,8 @@ class LineAnalysis(TemplateMixin):
     def _on_plugin_opened_changed(self, new_value):
         # toggle continuum lines in spectrum viewer based on whether this plugin
         # is currently open in the tray
-        app_state = self.app.state
-        tray_names_open = [app_state.tray_items[i]['name'] for i in app_state.tray_items_open]
-        self._is_opened = app_state.drawer and 'specviz-line-analysis' in tray_names_open
+        self._is_opened = (self.app.state.drawer and
+                           self.app.is_tray_item_open_from_name('specviz-line-analysis'))
         for pos, mark in self.marks.items():
             mark.visible = self._is_opened
         if self._is_opened and self.selected_spectrum == "":

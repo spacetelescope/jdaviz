@@ -1498,3 +1498,23 @@ class Application(VuetifyTemplate, HubListener):
             raise KeyError(f'{name} not found in app.state.tray_items')
 
         return tray_item
+
+    def is_tray_item_open_from_name(self, name):
+        """Return status of whether tray item is open in the app.
+
+        Parameters
+        ----------
+        name : str
+            The name used when the plugin was registered to
+            an internal `~jdaviz.core.registries.TrayRegistry`.
+
+        Returns
+        -------
+        is_open : bool
+            `True` if it is currently open, else `False`.
+
+        """
+        for i in self.state.tray_items_open:
+            if self.state.tray_items[i]['name'] == name:
+                return True
+        return False
