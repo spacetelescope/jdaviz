@@ -277,4 +277,5 @@ a:active {
 .no-hint .v-text-field__details {
   display: none !important;
 }
+
 </style>

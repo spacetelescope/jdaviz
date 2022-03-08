@@ -34,6 +34,8 @@ Specviz
 Bug Fixes
 ---------
 
+- Fixed support for table scrolling by enabling scrollbar. [#1116]
+
 Cubeviz
 ^^^^^^^
 

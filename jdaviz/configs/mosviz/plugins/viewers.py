@@ -125,6 +125,8 @@ class MosvizTableViewer(TableViewer, JdavizViewerMixin):
         super().__init__(session, *args, **kwargs)
 
         self.figure_widget.observe(self._on_row_selected, names=['highlighted'])
+        # enable scrolling: # https://github.com/glue-viz/glue-jupyter/pull/287
+        self.widget_table.scrollable = True
 
         self._selected_data = {}
         self._shared_image = False

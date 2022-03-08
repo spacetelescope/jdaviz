@@ -18,7 +18,7 @@
       :tab-id="viewer.id"
       @resize="$emit('resize')"
       @destroy="destroy($event, viewer.id)"
-      style="display: flex; flex-flow: column; overflow: hidden"
+      style="display: flex; flex-flow: column; height: 100%; overflow-y: auto; overflow-x: hidden"
     >
         <div>
           <v-row dense style="background-color: #205f76">
@@ -122,52 +122,54 @@
 
         </div>
 
-        <v-card tile flat style="flex: 1; margin-top: -2px;">
+        <v-card tile flat style="flex: 1; margin-top: -2px; overflow-y: auto;">
 
-        <v-toolbar
-          dense
-          floating
-          absolute
-          :tools_open="viewer.tools_open"
-          elevation="1"
-          :width="viewer.tools_open ? null : '0px'"
-          style="right: 2px;"
-        >
-          <v-toolbar-items class="toolbar-jdaviz-style">
+          <div style="height: 100%; display: flex; flex-direction: column; overflow-y: auto">
+            <v-toolbar
+              dense
+              floating
+              absolute
+              :tools_open="viewer.tools_open"
+              elevation="1"
+              :width="viewer.tools_open ? null : '0px'"
+              style="right: 2px;"
+            >
+              <v-toolbar-items class="toolbar-jdaviz-style">
 
-            <!-- <v-divider vertical></v-divider> -->
-            <jupyter-widget :widget="viewer.tools"></jupyter-widget>
-            <v-menu offset-y left :close-on-content-click="true" style="z-index: 10">
-             <template v-slot:activator="{ on }">
-               <v-btn icon color="primary" v-on="on">
-                <j-tooltip tipid="viewer-toolbar-figure-save" nudgebottom="14">
-                  <v-icon>mdi-content-save</v-icon>
-                </j-tooltip>
-               </v-btn>
-             </template>
-             <v-list>
-              <v-list-item>
-               <v-btn
-                color="primary"
-                @click="$emit('save-figure', {'id': viewer.id, 'filetype': 'png'})"
-               >
-                Save as PNG
-               </v-btn>
-              </v-list-item>
-              <v-list-item>
-               <v-btn
-                color="primary"
-                @click="$emit('save-figure', {'id': viewer.id, 'filetype': 'svg'})"
-               >
-                Save as SVG
-               </v-btn>
-              </v-list-item>
-             </v-list>
-            </v-menu>
-          </v-toolbar-items>
-        </v-toolbar>
-        <jupyter-widget :widget="viewer.widget" style="width: 100%; height: 100%" />
-      </v-card>
+                <!-- <v-divider vertical></v-divider> -->
+                <jupyter-widget :widget="viewer.tools"></jupyter-widget>
+                <v-menu offset-y left :close-on-content-click="true" style="z-index: 10">
+                 <template v-slot:activator="{ on }">
+                   <v-btn icon color="primary" v-on="on">
+                    <j-tooltip tipid="viewer-toolbar-figure-save" nudgebottom="14">
+                      <v-icon>mdi-content-save</v-icon>
+                    </j-tooltip>
+                   </v-btn>
+                 </template>
+                 <v-list>
+                  <v-list-item>
+                   <v-btn
+                    color="primary"
+                    @click="$emit('save-figure', {'id': viewer.id, 'filetype': 'png'})"
+                   >
+                    Save as PNG
+                   </v-btn>
+                  </v-list-item>
+                  <v-list-item>
+                   <v-btn
+                    color="primary"
+                    @click="$emit('save-figure', {'id': viewer.id, 'filetype': 'svg'})"
+                   >
+                    Save as SVG
+                   </v-btn>
+                  </v-list-item>
+                 </v-list>
+                </v-menu>
+              </v-toolbar-items>
+            </v-toolbar>
+            <jupyter-widget :widget="viewer.widget" style="width: 100%; flex: 1; overflow-y: auto" />
+          </div>
+        </v-card>
     </gl-component>
   </component>
 </template>
