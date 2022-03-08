@@ -72,13 +72,13 @@ class CubevizProfileView(SpecvizProfileView):
                     ['jdaviz:xrangezoom', 'jdaviz:boxzoom'],
                     ['bqplot:panzoom', 'bqplot:panzoom_x', 'bqplot:panzoom_y'],
                     ['bqplot:xrange'],
-                    ['jdaviz:selectslice'],
+                    ['jdaviz:selectslice', 'jdaviz:selectline'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._initialize_toolbar_nested(default_tool_priority=['jdaviz:selectslice'])
+        self._initialize_toolbar_nested(default_tool_priority=self.tools_nested[4])
 
     @property
     def slice_indicator(self):

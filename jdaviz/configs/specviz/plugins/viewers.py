@@ -44,6 +44,7 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
                     ['jdaviz:xrangezoom', 'jdaviz:boxzoom'],
                     ['bqplot:panzoom', 'bqplot:panzoom_x', 'bqplot:panzoom_y'],
                     ['bqplot:xrange'],
+                    ['jdaviz:selectline'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
 
@@ -53,7 +54,7 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._initialize_toolbar_nested()
+        self._initialize_toolbar_nested(default_tool_priority=self.tools_nested[4])
 
         self.display_uncertainties = False
         self.display_mask = False
