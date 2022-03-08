@@ -54,7 +54,9 @@
            the menu fixed on the window */
         this.show_suboptions = false
         this.suboptions_ind = menu_ind
-        const bb = e.path.find(element => element.nodeName == 'BUTTON').getBoundingClientRect()
+        // e.path is not standard and not available in all browsers: https://stackoverflow.com/questions/39245488/event-path-is-undefined-running-in-firefox
+        const path = e.path || (e.composedPath && e.composedPath());
+        const bb = path.find(element => element.nodeName == 'BUTTON').getBoundingClientRect()
         this.suboptions_x = bb.left
         this.suboptions_y = bb.bottom
         this.$nextTick(() => {
