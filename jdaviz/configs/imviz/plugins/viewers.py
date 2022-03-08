@@ -213,11 +213,14 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
         else:
             wcs = None
 
-        arr = image[image.main_components[0]]
+        # Downsample input data to about 400px (as per compass.vue) for performance.
+        xstep = max(1, round(image.shape[1] / 400))
+        ystep = max(1, round(image.shape[0] / 400))
+        arr = image[image.main_components[0]][::ystep, ::xstep]
         vmin, vmax = PercentileInterval(95).get_limits(arr)
         norm = ImageNormalize(vmin=vmin, vmax=vmax, stretch=LinearStretch())
         self.compass.draw_compass(image.label, wcs_utils.draw_compass_mpl(
-            arr, wcs, show=False, zoom_limits=zoom_limits, norm=norm))
+            arr, orig_shape=image.shape, wcs=wcs, show=False, zoom_limits=zoom_limits, norm=norm))
 
     def set_plot_axes(self):
         self.figure.axes[1].tick_format = None

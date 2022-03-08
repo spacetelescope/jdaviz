@@ -42,6 +42,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Fixed Compass plugin performance for large image. [#1152]
+
 Mosviz
 ^^^^^^
 

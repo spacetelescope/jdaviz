@@ -164,16 +164,19 @@ def get_compass_info(image_wcs, image_shape, r_fac=0.4):
     return x, y, xn, yn, xe, ye, degn, dege, xflip
 
 
-def draw_compass_mpl(image, wcs=None, show=True, zoom_limits=None, **kwargs):
+def draw_compass_mpl(image, orig_shape=None, wcs=None, show=True, zoom_limits=None, **kwargs):
     """Visualize the compass using Matplotlib.
 
     Parameters
     ----------
     image : ndarray
-        2D Numpy array.
+        2D Numpy array (can be resampled).
+
+    orig_shape : tuple of int or `None`
+        The original (non-resampled) array shape in ``(ny, nx)``, if different.
 
     wcs : obj or `None`
-        Associated image WCS that is compatible with APE 14.
+        Associated original image WCS that is compatible with APE 14.
         If `None` given, compass is not drawn.
 
     show : bool
@@ -192,15 +195,19 @@ def draw_compass_mpl(image, wcs=None, show=True, zoom_limits=None, **kwargs):
         Decoded buffer for Compass plugin.
 
     """
+    if orig_shape is None:
+        orig_shape = image.shape
+
     if not show:
         plt.ioff()
 
     fig, ax = plt.subplots()
-    ax.imshow(image, origin='lower', cmap='gray', **kwargs)
+    ax.imshow(image, extent=[-0.5, orig_shape[1] - 0.5, -0.5, orig_shape[0] - 0.5],
+              origin='lower', cmap='gray', **kwargs)
 
     if wcs is not None:
         try:
-            x, y, xn, yn, xe, ye, degn, dege, xflip = get_compass_info(wcs, image.shape)
+            x, y, xn, yn, xe, ye, degn, dege, xflip = get_compass_info(wcs, orig_shape)
         except Exception:
             wcs = None
         else:
@@ -217,12 +224,12 @@ def draw_compass_mpl(image, wcs=None, show=True, zoom_limits=None, **kwargs):
                         arrowprops={'arrowstyle': '<-', 'color': 'cyan', 'lw': 1.5},
                         color='cyan', fontsize=16, va='center', ha='center')  # rotation=-dege
     if wcs is None:
-        x = image.shape[1] * 0.5
-        y = image.shape[0] * 0.5
+        x = orig_shape[1] * 0.5
+        y = orig_shape[0] * 0.5
         ax.plot(x, y, marker='o', color='yellow', markersize=5)
 
     # Also draw X/Y compass.
-    r_xy = float(min(image.shape)) * 0.25
+    r_xy = float(min(orig_shape)) * 0.25
     ax.annotate('X', xy=(x, y), xytext=(x + r_xy, y),
                 arrowprops={'arrowstyle': '<-', 'color': 'yellow', 'lw': 1.5},
                 color='yellow', fontsize=16, va='center', ha='center')
