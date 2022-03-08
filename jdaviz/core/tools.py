@@ -136,6 +136,8 @@ class SelectLine(CheckableTool, HubListener):
         # _on_plotted_lines_changed, but by leaving it here, we let
         # the marks worry about unit conversions
         lines_x = np.array([mark.obs_value for mark in self.line_marks])
+        if not len(lines_x):
+            return
         ind = np.argmin(abs(lines_x - data['domain']['x']))
         # find line closest to mouse position and transmit event
         msg = LineIdentifyMessage(self.line_names[ind], sender=self)
