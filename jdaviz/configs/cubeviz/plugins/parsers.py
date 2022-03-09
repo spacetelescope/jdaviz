@@ -6,7 +6,9 @@ import numpy as np
 from astropy import units as u
 from astropy.io import fits
 from astropy.io.fits import HDUList, ImageHDU, PrimaryHDU
+from astropy.nddata import NDData
 from astropy.wcs import WCS
+from glue.core.data import Component, Data
 from specutils import Spectrum1D
 
 from jdaviz.core.events import SnackbarMessage
@@ -23,11 +25,11 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
     ----------
     app : `~jdaviz.app.Application`
         The application-level object used to reference the viewers.
-    file_obj : str, `~astropy.io.fits.ImageHDU`, `~astropy.io.fits.PrimaryHDU`, `~astropy.io.fits.HDUList`, `~specutils.Spectrum1D`, or ndarray
+    file_obj : str, `~astropy.io.fits.ImageHDU`, `~astropy.io.fits.PrimaryHDU`, `~astropy.io.fits.HDUList`, `~specutils.Spectrum1D`, `~astropy.nddata.NDData`, or ndarray
         The path to a cube-like data FITS file or the data object to be loaded.
     data_type : {'flux', 'uncert', 'mask', `None`}
         The data type used to explicitly differentiate parsed data.
-        This is only used for ndarray.
+        This is only used for ndarray and 2D `~astropy.nddata.NDData`.
         If `None` is given, it tries to parse according to software default.
     data_label : str or `None`
         The label to be applied to the Glue data component.
@@ -85,6 +87,18 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
             _parse_spectrum1d_3d(app, file_obj, data_label)
         elif file_obj.flux.ndim == 1:
             _parse_spectrum1d(app, file_obj, data_label)
+        else:
+            raise NotImplementedError(f'Unsupported data format: {file_obj}')
+
+    elif isinstance(file_obj, NDData):
+        if data_label is None:
+            data_label = f'nddata|{str(base64.b85encode(uuid.uuid4().bytes), "utf-8")}'
+        if file_obj.data.ndim == 2:  # This is mainly to support Moment plugin.
+            if data_type is None:
+                data_type = 'flux'
+            _parse_nddata_2d(app, file_obj, data_label, data_type)
+        elif file_obj.data.ndim == 3:
+            _parse_nddata_3d(app, file_obj, data_label)
         else:
             raise NotImplementedError(f'Unsupported data format: {file_obj}')
 
@@ -239,7 +253,7 @@ def _hdu_to_sc(app, hdu, data_label, hdulist=None):
     return data_type, Spectrum1D(flux=flux, wcs=wcs, meta=hdr)
 
 
-def _show_data_in_cubeviz_viewer(app, data_label, data_type):
+def _show_data_in_cubeviz_viewer(app, data_label, data_type, show_spectrum=True):
     """Display data to Cubeviz viewer depending on given data type.
 
     Parameters
@@ -254,6 +268,9 @@ def _show_data_in_cubeviz_viewer(app, data_label, data_type):
         If ``'flux'`` is given, it also adds a collapsed cube as spectrum
         to the spectrum viewer.
 
+    show_spectrum : bool
+        Show ``spectrum-viewer`` for flux data type.
+
     Raises
     ------
     ValueError
@@ -262,7 +279,8 @@ def _show_data_in_cubeviz_viewer(app, data_label, data_type):
     """
     if data_type == 'flux':
         app.add_data_to_viewer(f'{data_type}-viewer', data_label)
-        app.add_data_to_viewer('spectrum-viewer', data_label)
+        if show_spectrum:
+            app.add_data_to_viewer('spectrum-viewer', data_label)
     elif data_type in ('uncert', 'mask'):
         app.add_data_to_viewer(f'{data_type}-viewer', data_label)
     else:  # pragma: no cover
@@ -327,6 +345,44 @@ def _parse_spectrum1d(app, file_obj, data_label, data_type='flux'):
     data_label = f"{data_label}[{data_type.upper()}]"
     app.add_data(file_obj, data_label)
     app.add_data_to_viewer('spectrum-viewer', data_label)
+
+
+def _parse_nddata_3d(app, file_obj, base_data_label):
+    for attrib in ['data', 'uncertainty', 'mask']:
+        arr = getattr(file_obj, attrib)
+        if arr is None:
+            continue
+
+        if attrib == 'data':
+            flux = u.Quantity(arr, file_obj.unit)
+            data_type = 'flux'
+        elif attrib == 'uncertainty':
+            flux = u.Quantity(arr.array, arr.unit)
+            data_type = 'uncert'
+        else:  # mask
+            flux = arr << u.dimensionless_unscaled
+            data_type = 'mask'
+
+        # NOTE: Transpose here because specutils will not reorder the axes.
+        # NDData WCS is not spectral WCS, so safer to ignore it.
+        s1d = Spectrum1D(flux=flux.T, meta=file_obj.meta)
+        data_label = f"{base_data_label}[{data_type.upper()}]"
+        app.add_data(s1d, data_label)
+        _show_data_in_cubeviz_viewer(app, data_label, data_type)
+
+
+def _parse_nddata_2d(app, file_obj, data_label, data_type):
+    # This is mainly to support Moment plugin, so we ignore mask and uncertainty.
+    # We want to only show main data in the given data_type without any spectrum support.
+    data = Data(label=data_label)
+    data.meta.update(file_obj.meta)
+    if file_obj.wcs is not None:
+        data.coords = file_obj.wcs
+    bunit = file_obj.unit or ''
+    component = Component.autotyped(file_obj.data, units=bunit)
+    data.add_component(component=component, label='flux')
+    app.add_data(data, data_label)
+    _show_data_in_cubeviz_viewer(app, data_label, data_type, show_spectrum=False)
 
 
 def _parse_ndarray_3d(app, file_obj, data_label, data_type):

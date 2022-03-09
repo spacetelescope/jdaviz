@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 from astropy import units as u
 from astropy.io import fits
+from astropy.nddata import NDData, StdDevUncertainty
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.wcs import WCS
 from glue_astronomy.translators.spectrum1d import PaddedSpectrumWCS
@@ -204,6 +205,54 @@ def test_spectrum1d_parse(spectrum1d, cubeviz_helper):
     cubeviz_helper.load_data(spectrum1d)
     assert len(cubeviz_helper.app.data_collection) == 1
     assert cubeviz_helper.app.data_collection[0].label.endswith('[FLUX]')
+
+
+def test_nddata_cube(cubeviz_helper):
+    arr = np.ones(24).reshape((2, 3, 4))
+    uncert = StdDevUncertainty(arr)
+    mask = np.zeros(arr.shape).astype(bool)
+    ndd = NDData(arr, mask=mask, uncertainty=uncert, unit=u.nJy)
+    cubeviz_helper.load_data(ndd, data_label='ndd')
+    assert len(cubeviz_helper.app.data_collection) == 3
+
+    data = cubeviz_helper.app.data_collection[0]
+    flux = data.get_component('flux')
+    assert data.label == 'ndd[FLUX]'
+    assert data.shape == (2, 3, 4)
+    assert isinstance(data.coords, PaddedSpectrumWCS)
+    assert flux.units == 'nJy'
+    assert_allclose(flux.data, 1)
+
+    data = cubeviz_helper.app.data_collection[1]
+    flux = data.get_component('flux')
+    assert data.label == 'ndd[UNCERT]'
+    assert data.shape == (2, 3, 4)
+    assert isinstance(data.coords, PaddedSpectrumWCS)
+    assert flux.units == 'nJy'
+    assert_allclose(flux.data, 1)
+
+    data = cubeviz_helper.app.data_collection[2]
+    flux = data.get_component('flux')
+    assert data.label == 'ndd[MASK]'
+    assert data.shape == (2, 3, 4)
+    assert isinstance(data.coords, PaddedSpectrumWCS)
+    assert flux.units == ''
+    assert_array_equal(flux.data, False)
+
+
+def test_nddata_2d(cubeviz_helper):
+    arr = np.ones(12).reshape((3, 4))
+    ndd = NDData(arr, unit=u.nJy)
+    cubeviz_helper.load_data(ndd, data_label='ndd_2d')
+    assert len(cubeviz_helper.app.data_collection) == 1
+
+    data = cubeviz_helper.app.data_collection[0]
+    flux = data.get_component('flux')
+    assert data.label == 'ndd_2d'
+    assert data.shape == (3, 4)
+    assert not data.coords
+    assert flux.units == 'nJy'
+    assert_allclose(flux.data, 1)
 
 
 @pytest.mark.parametrize(('data_type', 'label_suffix', 'flux_unit'),
