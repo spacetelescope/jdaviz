@@ -11,7 +11,7 @@ from specutils import Spectrum1D, manipulation, analysis
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import TemplateMixin
+from jdaviz.core.template_mixin import PluginTemplateMixin, SpectralSubsetSelectMixin
 
 __all__ = ['MomentMap']
 
@@ -21,7 +21,7 @@ u.add_enabled_units([spaxel])
 
 
 @tray_registry('cubeviz-moment-maps', label="Moment Maps")
-class MomentMap(TemplateMixin):
+class MomentMap(PluginTemplateMixin, SpectralSubsetSelectMixin):
     template_file = __file__, "moment_maps.vue"
     n_moment = Any().tag(sync=True)
     dc_items = List([]).tag(sync=True)
@@ -33,8 +33,6 @@ class MomentMap(TemplateMixin):
     spectral_min = Any().tag(sync=True)
     spectral_max = Any().tag(sync=True)
     spectral_unit = Unicode().tag(sync=True)
-    spectral_subset_items = List(["Entire Spectrum"]).tag(sync=True)
-    selected_subset = Unicode("Entire Spectrum").tag(sync=True)
 
     # NOTE: this is currently cubeviz-specific so will need to be updated
     # to be config-specific if using within other viewer configurations.
@@ -56,7 +54,6 @@ class MomentMap(TemplateMixin):
         self.moment = None
         self.spectral_min = 0.0
         self.spectral_max = 0.0
-        self._spectral_subsets = {}
 
     def _on_data_updated(self, msg):
         self.dc_items = [x.label for x in self.data_collection]
@@ -75,10 +72,6 @@ class MomentMap(TemplateMixin):
                 except (ValueError, TypeError):
                     continue
 
-    def _on_subset_created(self, msg):
-        """Currently unimplemented due to problems with the SubsetCreateMessage"""
-        raise ValueError(msg)
-
     @observe("selected_data")
     def _on_data_selected(self, event):
         self._selected_data = next((x for x in self.data_collection
@@ -93,20 +86,13 @@ class MomentMap(TemplateMixin):
     @observe("selected_subset")
     def _on_subset_selected(self, event):
         # If "Entire Spectrum" selected, reset based on bounds of selected data
-        self._selected_subset = self.selected_subset
-        if self._selected_subset == "Entire Spectrum":
+        if self.selected_subset == "Entire Spectrum":
             cube = self._selected_data.get_object(cls=Spectrum1D, statistic=None)
             self.spectral_min = cube.spectral_axis[0].value
             self.spectral_max = cube.spectral_axis[-1].value
         else:
-            spec_sub = self._spectral_subsets[self._selected_subset]
-            self.spectral_min = spec_sub.lower.value
-            self.spectral_max = spec_sub.upper.value
-
-    def vue_list_subsets(self, event):
-        """Populate the spectral subset selection dropdown"""
-        self._spectral_subsets = self.app.get_subsets_from_viewer("spectrum-viewer")
-        self.spectral_subset_items = ["Entire Spectrum"] + sorted(self._spectral_subsets.keys())
+            self.spectral_min = self.selected_subset_obj.lower.value
+            self.spectral_max = self.selected_subset_obj.upper.value
 
     def vue_calculate_moment(self, *args):
         # Retrieve the data cube and slice out desired region, if specified

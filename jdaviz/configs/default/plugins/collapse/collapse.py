@@ -5,19 +5,19 @@ from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
 from glue.core import Data
 from glue.core.link_helpers import LinkSame
-from specutils import Spectrum1D, SpectralRegion
+from specutils import Spectrum1D
 from specutils.manipulation import spectral_slab
 from traitlets import List, Unicode, Any, observe
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import TemplateMixin
+from jdaviz.core.template_mixin import PluginTemplateMixin, SpectralSubsetSelectMixin
 
 __all__ = ['Collapse']
 
 
 @tray_registry('g-collapse', label="Collapse")
-class Collapse(TemplateMixin):
+class Collapse(PluginTemplateMixin, SpectralSubsetSelectMixin):
     template_file = __file__, "collapse.vue"
     data_items = List([]).tag(sync=True)
     selected_data_item = Unicode().tag(sync=True)
@@ -34,8 +34,6 @@ class Collapse(TemplateMixin):
     spectral_min = Any().tag(sync=True)
     spectral_max = Any().tag(sync=True)
     spectral_unit = Unicode().tag(sync=True)
-    spectral_subset_items = List(["Entire Spectrum"]).tag(sync=True)
-    selected_subset = Unicode("").tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -47,7 +45,6 @@ class Collapse(TemplateMixin):
 
         self._selected_data = None
         self._selected_cube = None
-        self._spectral_subsets = {}
         self._label_counter = 0
 
     def _on_data_updated(self, msg):
@@ -70,10 +67,10 @@ class Collapse(TemplateMixin):
         self.spectral_unit = self._selected_cube.spectral_axis.unit.to_string()
 
         # Also set the spectral min and max to default to the full range
-        self.selected_subset = "Entire Spectrum"  # This calls self._on_subset_selected()
+        self._on_subset_selected()
 
     @observe("selected_subset")
-    def _on_subset_selected(self, event):
+    def _on_subset_selected(self, event={}):
         if self._selected_data is None:
             return
 
@@ -83,21 +80,9 @@ class Collapse(TemplateMixin):
             self.spectral_max = self._selected_cube.spectral_axis[-1].value
 
         else:
-            spec_reg = self._spectral_subsets[self.selected_subset]
+            spec_reg = self.selected_subset_obj
             self.spectral_min = spec_reg.lower.value
             self.spectral_max = spec_reg.upper.value
-
-    def vue_list_subsets(self, event):
-        """Populate the spectral subset selection dropdown"""
-        temp_subsets = self.app.get_subsets_from_viewer("spectrum-viewer",
-                                                        subset_type="spectral")
-        temp_dict = {}
-        # Attempt to filter out spatial subsets
-        for key, region in temp_subsets.items():
-            if type(region) == SpectralRegion:
-                temp_dict[key] = region
-        self._spectral_subsets = temp_dict
-        self.spectral_subset_items = ["Entire Spectrum"] + sorted(temp_dict.keys())
 
     def vue_collapse(self, *args, **kwargs):
         # Collapsing over the spectral axis. Cut out the desired spectral

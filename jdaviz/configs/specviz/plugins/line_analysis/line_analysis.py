@@ -13,7 +13,7 @@ from jdaviz.core.marks import (LineAnalysisContinuum,
                                LineAnalysisContinuumRight,
                                Shadow)
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin
+from jdaviz.core.template_mixin import PluginTemplateMixin, SpectralSubsetSelectMixin
 
 __all__ = ['LineAnalysis']
 
@@ -25,13 +25,11 @@ FUNCTIONS = {"Line Flux": analysis.line_flux,
 
 
 @tray_registry('specviz-line-analysis', label="Line Analysis")
-class LineAnalysis(PluginTemplateMixin):
+class LineAnalysis(PluginTemplateMixin, SpectralSubsetSelectMixin):
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "line_analysis.vue"
     dc_items = List([]).tag(sync=True)
-    spectral_subset_items = List(["Entire Spectrum"]).tag(sync=True)
     selected_spectrum = Unicode("").tag(sync=True)
-    selected_subset = Unicode("Entire Spectrum").tag(sync=True)
     continuum_subset_items = List(["Surrounding"]).tag(sync=True)
     selected_continuum = Unicode("Surrounding").tag(sync=True)
     width = FloatHandleEmpty(3).tag(sync=True)
@@ -85,7 +83,6 @@ class LineAnalysis(PluginTemplateMixin):
         except ValueError:
             pass
 
-        self.spectral_subset_items = ["Entire Spectrum"] + sorted(self._spectral_subsets.keys())
         self.continuum_subset_items = ["Surrounding"] + sorted(self._spectral_subsets.keys())
 
         self.dc_items = [layer_state.layer.label for layer_state in viewer.state.layers

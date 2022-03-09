@@ -26,14 +26,11 @@
 
     <div>
       <v-row>
-        <v-select
-          :items="spectral_subset_items"
-          v-model="selected_subset"
-          label="Spectral Region"
+        <mxn-subset-select 
+          :spectral_subset_items="spectral_subset_items"
+          :selected_subset.sync="selected_subset"
           hint="Select spectral region to apply the collapse."
-          persistent-hint
-          @click="list_subsets"
-        ></v-select>
+        />
       </v-row>
 
       <v-row class="row-no-outside-padding">

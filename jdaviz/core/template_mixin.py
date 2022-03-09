@@ -1,10 +1,15 @@
+from functools import cached_property
 from ipyvuetify import VuetifyTemplate
 from glue.core import HubListener
-from traitlets import Unicode, Bool
+from glue.core.message import (SubsetCreateMessage,
+                               SubsetDeleteMessage,
+                               SubsetUpdateMessage)
+from traitlets import Bool, List, Unicode, observe
 
 from jdaviz import __version__
 
-__all__ = ['TemplateMixin', 'PluginTemplateMixin']
+__all__ = ['TemplateMixin', 'PluginTemplateMixin',
+           'SpectralSubsetSelectMixin']
 
 
 class TemplateMixin(VuetifyTemplate, HubListener):
@@ -68,3 +73,94 @@ class PluginTemplateMixin(TemplateMixin):
         app_state = self.app.state
         tray_names_open = [app_state.tray_items[i]['name'] for i in app_state.tray_items_open]
         self.plugin_opened = app_state.drawer and self._registry_name in tray_names_open
+
+
+class BasePluginComponentMixin(VuetifyTemplate, HubListener):
+    def _clear_cache(self, *attrs):
+        """
+        provide convenience function to clearing the cache for cached_properties
+        """
+        for attr in attrs:
+            if attr in self.__dict__:
+                del self.__dict__[attr]
+
+
+class SpectralSubsetSelectMixin(BasePluginComponentMixin):
+    """
+    Traitlets:
+    * spectral_subset_items (list of dicts with keys: label, color)
+    * selected_subset (string)
+
+    Properties:
+    * spectral_subset_labels (list of labels corresponding to spectral_subset_items)
+    * selected_subset_obj (subset object corresponding to selected_subset, cached)
+
+    Example template (label and hint are optional):
+      <v-row>
+        <mxn-subset-select
+          :spectral_subset_items="spectral_subset_items"
+          :selected_subset.sync="selected_subset"
+          label="Spectral region"
+          hint="Select spectral region."
+        />
+      </v-row>
+    """
+    spectral_subset_items = List([{"label": "Entire Spectrum", "color": False}]).tag(sync=True)
+    selected_subset = Unicode("Entire Spectrum").tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.hub.subscribe(self, SubsetCreateMessage,
+                           handler=self._mxn_create_spectral_subset)
+
+        self.hub.subscribe(self, SubsetDeleteMessage,
+                           handler=self._mxn_delete_spectral_subset)
+
+        self.hub.subscribe(self, SubsetUpdateMessage,
+                           handler=self._mxn_update_spectral_subset)
+
+    def _mxn_subset_to_dict(self, subset):
+        # find layer artist in default spectrum-viewer
+        for layer in self.app.get_viewer("spectrum-viewer").layers:
+            if layer.layer.label == subset.label:
+                color = layer.state.color
+                break
+        else:
+            color = False
+        return {"label": subset.label, "color": color}
+
+    def _mxn_create_spectral_subset(self, msg):
+        self.spectral_subset_items = self.spectral_subset_items + [self._mxn_subset_to_dict(msg.subset)]  # noqa
+
+    def _mxn_delete_spectral_subset(self, msg):
+        # NOTE: calling .remove will not trigger traitlet update
+        self.spectral_subset_items = [s for s in self.spectral_subset_items
+                                      if s['label'] != msg.subset.label]
+        if self.selected_subset not in self.spectral_subset_labels:
+            self.selected_subset = "Entire Spectrum"
+
+    def _mxn_update_spectral_subset(self, msg):
+        if msg.attribute not in ('style'):
+            # TODO: may need to add label and then rebuild the entire list if/when
+            # we add support for renaming subsets
+            return
+
+        # NOTE: in-line replacement will not trigger traitlet update
+        self.spectral_subset_items = [s if s['label'] != msg.subset.label
+                                      else self._mxn_subset_to_dict(msg.subset)
+                                      for s in self.spectral_subset_items]
+
+    @observe("selected_subset")
+    def _mxn_selected_subset_changed(self, event):
+        self._clear_cache("selected_subset_obj")
+
+    @property
+    def spectral_subset_labels(self):
+        return [s['label'] for s in self.spectral_subset_items]
+
+    @cached_property
+    def selected_subset_obj(self):
+        if self.selected_subset == "Entire Spectrum":
+            return None
+        return self.app.get_subsets_from_viewer("spectrum-viewer",
+                                                subset_type="spectral").get(self.selected_subset)

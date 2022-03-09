@@ -22,13 +22,11 @@
     </v-row>
 
     <v-row>
-      <v-select
-        :items="spectral_subset_items"
-        v-model="selected_subset"
-        label="Spectral Region"
+      <mxn-subset-select 
+        :spectral_subset_items="spectral_subset_items"
+        :selected_subset.sync="selected_subset"
         hint="Select spectral region that defines the line."
-        persistent-hint
-      ></v-select>
+      />
     </v-row>
 
     <j-plugin-section-header>Continuum</j-plugin-section-header>
