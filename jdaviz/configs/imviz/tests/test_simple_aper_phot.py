@@ -62,7 +62,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
             'data_label', 'subset_label', 'timestamp']
         assert_array_equal(tbl['id'], [1, 2])
         assert_allclose(tbl['background'], 0)
-        assert_quantity_allclose(tbl['npix'], 60 * u.pix)
+        assert_quantity_allclose(tbl['npix'], 63.617251 * u.pix)
         assert_array_equal(tbl['pixarea_tot'], None)
         assert_array_equal(tbl['aperture_sum_counts'], None)
         assert_array_equal(tbl['aperture_sum_counts_err'], None)
@@ -126,7 +126,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         sky = tbl[-1]['sky_center']
         assert_allclose(sky.ra.deg, 337.518943)
         assert_allclose(sky.dec.deg, -20.832083)
-        assert_quantity_allclose(tbl[-1]['npix'], 64 * u.pix)
+        assert_quantity_allclose(tbl[-1]['npix'], 81 * u.pix)
         assert_allclose(tbl[-1]['aperture_sum'], 0)
         assert_allclose(tbl[-1]['mean'], 0)
         assert tbl[-1]['data_label'] == 'has_wcs_1[SCI,1]'

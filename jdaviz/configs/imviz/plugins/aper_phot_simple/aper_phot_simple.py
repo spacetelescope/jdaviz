@@ -186,7 +186,7 @@ class SimpleAperturePhotometry(TemplateMixin):
             comp_no_bg = comp.data - bg
 
             aperture = regions2aperture(reg)
-            npix = len(aperture.to_mask(method='center').get_values(comp_no_bg)) * u.pix
+            npix = np.nansum(aperture.to_mask(method='exact').to_image(data.shape)) * u.pix
             aper_mask_stat = reg.to_mask(mode='center')
             comp_no_bg_cutout = aper_mask_stat.cutout(comp_no_bg)
             img_stat = aper_mask_stat.get_values(comp_no_bg, mask=None)
