@@ -356,7 +356,7 @@ class AstrowidgetsImageViewerMixin:
         # Validation: Ideally Glue should do this but we have to due to
         # https://github.com/glue-viz/glue/issues/2203
         given = set(val.keys())
-        allowed = set(('color', 'alpha', 'markersize'))
+        allowed = set(('color', 'alpha', 'markersize', 'fill'))
         if not given.issubset(allowed):
             raise KeyError(f'Invalid attribute(s): {given - allowed}')
         if 'color' in val:
@@ -370,6 +370,10 @@ class AstrowidgetsImageViewerMixin:
             size = val['markersize']
             if not isinstance(size, (int, float)):
                 raise ValueError(f'Invalid marker size: {size}')
+        if 'fill' in val:
+            fill = val['fill']
+            if not isinstance(fill, bool):
+                raise ValueError(f'Invalid fill: {fill}')
 
         # Only set this once we have successfully validated a marker.
         # Those not set here use Glue defaults.
@@ -419,6 +423,8 @@ class AstrowidgetsImageViewerMixin:
             Invalid marker name.
 
         """
+        from glue_jupyter.bqplot.scatter.layer_artist import BqplotScatterLayerState
+
         if marker_name is None:
             marker_name = self._default_mark_tag_name
 
@@ -454,8 +460,10 @@ class AstrowidgetsImageViewerMixin:
         else:
             # Only can set alpha and color using self.add_data(), so brute force here instead.
             # https://github.com/glue-viz/glue/issues/2201
-            for key, val in self.marker.items():
-                setattr(jglue.data_collection[jglue.data_collection.labels.index(marker_name)].style, key, val)  # noqa
+            for lyr in self.state.layers:
+                if isinstance(lyr, BqplotScatterLayerState) and lyr.layer.label == marker_name:
+                    for key, val in self.marker.items():
+                        setattr(lyr, {'markersize': 'size'}.get(key, key), val)
 
             self._marktags.add(marker_name)
 

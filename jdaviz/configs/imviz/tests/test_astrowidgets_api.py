@@ -244,6 +244,8 @@ class TestMarkers(BaseImviz_WCS_NoWCS):
             self.viewer.marker = {'alpha': 42}
         with pytest.raises(ValueError, match='Invalid marker size'):
             self.viewer.marker = {'markersize': '1'}
+        with pytest.raises(ValueError, match='Invalid fill'):
+            self.viewer.marker = {'fill': '1'}
 
     def test_mvp_markers(self):
         x_pix = (0, 0)
@@ -254,12 +256,14 @@ class TestMarkers(BaseImviz_WCS_NoWCS):
         self.viewer.add_markers(tbl)
         data = self.imviz.app.data_collection[2]
         assert data.label == 'default-marker-name'
-        assert data.style.color == 'red'
+        assert data.style.color == '#ff0000'  # Converted to hex now but still red
         assert data.style.marker == 'o'
         assert_allclose(data.style.markersize, 5)
         assert_allclose(data.style.alpha, 1)
         assert_allclose(data.get_component('x').data, x_pix)
         assert_allclose(data.get_component('y').data, y_pix)
+        assert self.viewer.layers[2].layer.label == data.label
+        assert self.viewer.layers[2].state.fill is True
 
         # Table with only sky coordinates but no use_skycoord=True
         with pytest.raises(KeyError):
@@ -269,17 +273,23 @@ class TestMarkers(BaseImviz_WCS_NoWCS):
         with pytest.raises(ValueError, match='not allowed'):
             self.viewer.add_markers(tbl, use_skycoord=True, marker_name='all')
 
-        self.viewer.marker = {'color': (0, 1, 0), 'alpha': 0.8}
+        self.viewer.marker = {'color': (0, 1, 0), 'alpha': 0.8, 'fill': False}
 
         self.viewer.add_markers(tbl, use_skycoord=True, marker_name='my_sky')
         data = self.imviz.app.data_collection[3]
         assert data.label == 'my_sky'
-        assert data.style.color == (0, 1, 0)  # green
+        assert data.style.color == '#00ff00'  # Converted to hex now but still green
         assert data.style.marker == 'o'
         assert_allclose(data.style.markersize, 3)  # Glue default
         assert_allclose(data.style.alpha, 0.8)
         assert_allclose(data.get_component('ra').data, sky.ra.deg)
         assert_allclose(data.get_component('dec').data, sky.dec.deg)
+        assert self.viewer.layers[3].layer.label == data.label
+        assert self.viewer.layers[3].state.fill is False
+
+        # Make sure the other marker is not changed.
+        assert self.imviz.app.data_collection[2].style.color == '#ff0000'
+        assert self.viewer.layers[2].state.fill is True
 
         # TODO: How to check imviz.app.data_collection.links is correct?
         assert len(self.imviz.app.data_collection.links) == 14
