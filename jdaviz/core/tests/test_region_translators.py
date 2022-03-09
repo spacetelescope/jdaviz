@@ -66,16 +66,16 @@ def test_translation_ellipse(image_2d_wcs):
     aperture = regions2aperture(region_shape)
     assert isinstance(aperture, EllipticalAperture)
     assert_allclose(aperture.positions, region_shape.center.xy)
-    assert_allclose(aperture.a, region_shape.width)
-    assert_allclose(aperture.b, region_shape.height)
+    assert_allclose(aperture.a * 2, region_shape.width)
+    assert_allclose(aperture.b * 2, region_shape.height)
     assert_allclose(aperture.theta, region_shape.angle.radian)
 
     region_sky = region_shape.to_sky(image_2d_wcs)
     aperture_sky = regions2aperture(region_sky)
     assert isinstance(aperture_sky, SkyEllipticalAperture)
     assert aperture_sky.positions == region_sky.center  # SkyCoord
-    assert_quantity_allclose(aperture_sky.a, region_sky.width)
-    assert_quantity_allclose(aperture_sky.b, region_sky.height)
+    assert_quantity_allclose(aperture_sky.a * 2, region_sky.width)
+    assert_quantity_allclose(aperture_sky.b * 2, region_sky.height)
     assert_quantity_allclose(aperture_sky.theta, region_sky.angle)
 
     # Roundtrip
@@ -176,20 +176,20 @@ def test_translation_ellipse_annulus(image_2d_wcs):
     aperture = regions2aperture(region_shape)
     assert isinstance(aperture, EllipticalAnnulus)
     assert_allclose(aperture.positions, region_shape.center.xy)
-    assert_allclose(aperture.a_in, region_shape.inner_width)
-    assert_allclose(aperture.a_out, region_shape.outer_width)
-    assert_allclose(aperture.b_in, region_shape.inner_height)
-    assert_allclose(aperture.b_out, region_shape.outer_height)
+    assert_allclose(aperture.a_in * 2, region_shape.inner_width)
+    assert_allclose(aperture.a_out * 2, region_shape.outer_width)
+    assert_allclose(aperture.b_in * 2, region_shape.inner_height)
+    assert_allclose(aperture.b_out * 2, region_shape.outer_height)
     assert_allclose(aperture.theta, region_shape.angle.radian)
 
     region_sky = region_shape.to_sky(image_2d_wcs)
     aperture_sky = regions2aperture(region_sky)
     assert isinstance(aperture_sky, SkyEllipticalAnnulus)
     assert aperture_sky.positions == region_sky.center  # SkyCoord
-    assert_quantity_allclose(aperture_sky.a_in, region_sky.inner_width)
-    assert_quantity_allclose(aperture_sky.a_out, region_sky.outer_width)
-    assert_quantity_allclose(aperture_sky.b_in, region_sky.inner_height)
-    assert_quantity_allclose(aperture_sky.b_out, region_sky.outer_height)
+    assert_quantity_allclose(aperture_sky.a_in * 2, region_sky.inner_width)
+    assert_quantity_allclose(aperture_sky.a_out * 2, region_sky.outer_width)
+    assert_quantity_allclose(aperture_sky.b_in * 2, region_sky.inner_height)
+    assert_quantity_allclose(aperture_sky.b_out * 2, region_sky.outer_height)
     assert_quantity_allclose(aperture_sky.theta, region_sky.angle)
 
     # Roundtrip

@@ -60,12 +60,13 @@ def regions2aperture(region_shape):
 
     elif isinstance(region_shape, EllipsePixelRegion):
         aperture = EllipticalAperture(
-            region_shape.center.xy, region_shape.width, region_shape.height,
+            region_shape.center.xy, region_shape.width * 0.5, region_shape.height * 0.5,
             theta=region_shape.angle.to_value(u.radian))
 
     elif isinstance(region_shape, EllipseSkyRegion):
         aperture = SkyEllipticalAperture(
-            region_shape.center, region_shape.width, region_shape.height, theta=region_shape.angle)
+            region_shape.center, region_shape.width * 0.5, region_shape.height * 0.5,
+            theta=region_shape.angle)
 
     elif isinstance(region_shape, RectanglePixelRegion):
         aperture = RectangularAperture(
@@ -86,14 +87,15 @@ def regions2aperture(region_shape):
 
     elif isinstance(region_shape, EllipseAnnulusPixelRegion):
         aperture = EllipticalAnnulus(
-            region_shape.center.xy, region_shape.inner_width, region_shape.outer_width,
-            region_shape.outer_height, b_in=region_shape.inner_height,
+            region_shape.center.xy, region_shape.inner_width * 0.5, region_shape.outer_width * 0.5,
+            region_shape.outer_height * 0.5, b_in=region_shape.inner_height * 0.5,
             theta=region_shape.angle.to_value(u.radian))
 
     elif isinstance(region_shape, EllipseAnnulusSkyRegion):
         aperture = SkyEllipticalAnnulus(
-            region_shape.center, region_shape.inner_width, region_shape.outer_width,
-            region_shape.outer_height, b_in=region_shape.inner_height, theta=region_shape.angle)
+            region_shape.center, region_shape.inner_width * 0.5, region_shape.outer_width * 0.5,
+            region_shape.outer_height * 0.5, b_in=region_shape.inner_height * 0.5,
+            theta=region_shape.angle)
 
     elif isinstance(region_shape, RectangleAnnulusPixelRegion):
         aperture = RectangularAnnulus(
@@ -157,12 +159,13 @@ def aperture2regions(aperture):
 
     elif isinstance(aperture, EllipticalAperture):
         region_shape = EllipsePixelRegion(
-            center=positions2pixcoord(aperture.positions), width=aperture.a, height=aperture.b,
-            angle=theta2angle(aperture.theta))
+            center=positions2pixcoord(aperture.positions), width=aperture.a * 2,
+            height=aperture.b * 2, angle=theta2angle(aperture.theta))
 
     elif isinstance(aperture, SkyEllipticalAperture):
         region_shape = EllipseSkyRegion(
-            center=aperture.positions, width=aperture.a, height=aperture.b, angle=aperture.theta)
+            center=aperture.positions, width=aperture.a * 2, height=aperture.b * 2,
+            angle=aperture.theta)
 
     elif isinstance(aperture, RectangularAperture):
         region_shape = RectanglePixelRegion(
@@ -184,14 +187,15 @@ def aperture2regions(aperture):
 
     elif isinstance(aperture, EllipticalAnnulus):
         region_shape = EllipseAnnulusPixelRegion(
-            center=positions2pixcoord(aperture.positions), inner_width=aperture.a_in,
-            inner_height=aperture.b_in, outer_width=aperture.a_out, outer_height=aperture.b_out,
-            angle=theta2angle(aperture.theta))
+            center=positions2pixcoord(aperture.positions), inner_width=aperture.a_in * 2,
+            inner_height=aperture.b_in * 2, outer_width=aperture.a_out * 2,
+            outer_height=aperture.b_out * 2, angle=theta2angle(aperture.theta))
 
     elif isinstance(aperture, SkyEllipticalAnnulus):
         region_shape = EllipseAnnulusSkyRegion(
-            center=aperture.positions, inner_width=aperture.a_in, inner_height=aperture.b_in,
-            outer_width=aperture.a_out, outer_height=aperture.b_out, angle=aperture.theta)
+            center=aperture.positions, inner_width=aperture.a_in * 2,
+            inner_height=aperture.b_in * 2, outer_width=aperture.a_out * 2,
+            outer_height=aperture.b_out * 2, angle=aperture.theta)
 
     elif isinstance(aperture, RectangularAnnulus):
         region_shape = RectangleAnnulusPixelRegion(
