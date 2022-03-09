@@ -126,7 +126,9 @@ class MomentMap(TemplateMixin):
         label = "Moment {}: {}".format(n_moment, self._selected_data.label)
         fname_label = self._selected_data.label.replace("[", "_").replace("]", "")
         self.filename = "moment{}_{}.fits".format(n_moment, fname_label)
-        self.data_collection[label] = self.moment
+        self.moment.meta["Plugin"] = "Moment Map"
+        self.app.add_data(self.moment, label)
+
         self.moment_available = True
 
         msg = SnackbarMessage("{} added to data collection".format(label),

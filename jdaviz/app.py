@@ -311,16 +311,50 @@ class Application(VuetifyTemplate, HubListener):
 
         # Can't link if there's no world_component_ids
         wc_new = self.data_collection[-1].world_component_ids
-        if wc_new == []:
-            return
+        pc_new = self.data_collection[-1].pixel_component_ids
+
+        # if wc_new == []:
+        #     return
 
         # Link to the first dataset with compatible coordinates
         for i in range(new_len - 1):
             wc_old = self.data_collection[i].world_component_ids
+            pc_old = self.data_collection[i].pixel_component_ids
+
             if wc_old == []:
                 continue
             else:
-                self.data_collection.add_link(LinkSame(wc_old[0], wc_new[0]))
+                # New data is a moment map
+                if ("Plugin" in self.data_collection[-1].meta and
+                        self.data_collection[-1].meta["Plugin"] == "Moment Map"):
+                    # Link moment maps to each other
+                    # if "Moment" in self.data_collection[i].label:
+                    if ("Plugin" in self.data_collection[i].meta and
+                            self.data_collection[i].meta["Plugin"] == "Moment Map"):
+                        links = [LinkSame(pc_old[0], pc_new[0]),
+                                 LinkSame(pc_old[1], pc_new[1])]
+
+                    # Link moment map to cube (pc_old)
+                    else:
+                        links = [LinkSame(pc_old[1], pc_new[0]),
+                                 LinkSame(pc_old[2], pc_new[1])]
+
+                # Link cubes to each other
+                elif len(pc_old) > 2 and len(pc_new) > 2:
+                    links = [LinkSame(pc_old[1], pc_new[1]),
+                             LinkSame(pc_old[2], pc_new[2]),
+                             LinkSame(wc_old[0], wc_new[0])]
+
+                # If data is neither cube nor moment map, use old linking
+                # method
+                elif len(wc_new) > 0:
+                    links = [LinkSame(wc_old[0], wc_new[0])]
+
+                else:
+                    break
+
+                self.data_collection.add_link(links)
+
                 break
 
     def load_data(self, file_obj, parser_reference=None, **kwargs):
