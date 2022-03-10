@@ -1,9 +1,9 @@
 from functools import cached_property
 from ipyvuetify import VuetifyTemplate
 from glue.core import HubListener
-from glue.core.message import (SubsetCreateMessage,
-                               SubsetDeleteMessage,
+from glue.core.message import (SubsetDeleteMessage,
                                SubsetUpdateMessage)
+from glue.core.subset import RoiSubsetState
 from traitlets import Bool, List, Unicode, observe
 
 from jdaviz import __version__
@@ -84,6 +84,10 @@ class BasePluginComponentMixin(VuetifyTemplate, HubListener):
             if attr in self.__dict__:
                 del self.__dict__[attr]
 
+    @cached_property
+    def spectrum_viewer(self):
+        return self.app.get_viewer("spectrum-viewer")
+
 
 class SpectralSubsetSelectMixin(BasePluginComponentMixin):
     """
@@ -110,14 +114,15 @@ class SpectralSubsetSelectMixin(BasePluginComponentMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.hub.subscribe(self, SubsetCreateMessage,
-                           handler=self._mxn_create_spectral_subset)
+
+        # we'll use SubsetUpdateMessage to both make updates to existing subsets
+        # and to catch new subsets (SubsetCreateMessage does not yet contain
+        # the fully-resolved subset, so we can't yet tell if its spectral or spatial)
+        self.hub.subscribe(self, SubsetUpdateMessage,
+                           handler=self._mxn_update_spectral_subset)
 
         self.hub.subscribe(self, SubsetDeleteMessage,
                            handler=self._mxn_delete_spectral_subset)
-
-        self.hub.subscribe(self, SubsetUpdateMessage,
-                           handler=self._mxn_update_spectral_subset)
 
     def _mxn_subset_to_dict(self, subset):
         # find layer artist in default spectrum-viewer
@@ -129,9 +134,6 @@ class SpectralSubsetSelectMixin(BasePluginComponentMixin):
             color = False
         return {"label": subset.label, "color": color}
 
-    def _mxn_create_spectral_subset(self, msg):
-        self.spectral_subset_items = self.spectral_subset_items + [self._mxn_subset_to_dict(msg.subset)]  # noqa
-
     def _mxn_delete_spectral_subset(self, msg):
         # NOTE: calling .remove will not trigger traitlet update
         self.spectral_subset_items = [s for s in self.spectral_subset_items
@@ -140,15 +142,23 @@ class SpectralSubsetSelectMixin(BasePluginComponentMixin):
             self.selected_subset = "Entire Spectrum"
 
     def _mxn_update_spectral_subset(self, msg):
-        if msg.attribute not in ('style'):
-            # TODO: may need to add label and then rebuild the entire list if/when
-            # we add support for renaming subsets
+        if isinstance(msg.subset.subset_state, RoiSubsetState):
+            # then this is a spatial subset, we want to ignore
             return
 
-        # NOTE: in-line replacement will not trigger traitlet update
-        self.spectral_subset_items = [s if s['label'] != msg.subset.label
-                                      else self._mxn_subset_to_dict(msg.subset)
-                                      for s in self.spectral_subset_items]
+        if msg.subset.label not in self.spectral_subset_labels:
+            # NOTE: += will not trigger traitlet update
+            self.spectral_subset_items = self.spectral_subset_items + [self._mxn_subset_to_dict(msg.subset)]  # noqa
+        else:
+            if msg.attribute not in ('style'):
+                # TODO: may need to add label and then rebuild the entire list if/when
+                # we add support for renaming subsets
+                return
+            # NOTE: in-line replacement (self.spectral_subset_items[i] = ...)
+            # will not trigger traitlet update
+            self.spectral_subset_items = [s if s['label'] != msg.subset.label
+                                          else self._mxn_subset_to_dict(msg.subset)
+                                          for s in self.spectral_subset_items]
 
     @observe("selected_subset")
     def _mxn_selected_subset_changed(self, event):
