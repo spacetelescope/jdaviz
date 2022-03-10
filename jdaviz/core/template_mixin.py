@@ -9,6 +9,7 @@ from traitlets import Bool, List, Unicode, observe
 from jdaviz import __version__
 
 __all__ = ['TemplateMixin', 'PluginTemplateMixin',
+           'MultipleHandlerMixin',
            'BasePluginComponentMixin', 'SpectralSubsetSelectMixin']
 
 
@@ -123,24 +124,25 @@ class BasePluginComponentMixin(MultipleHandlerMixin):
 class SpectralSubsetSelectMixin(BasePluginComponentMixin):
     """
     Traitlets:
-
     * spectral_subset_items (list of dicts with keys: label, color)
     * selected_subset (string)
 
     Properties:
-
     * spectral_subset_labels (list of labels corresponding to spectral_subset_items)
     * selected_subset_obj (subset object corresponding to selected_subset, cached)
 
-    Example template (label and hint are optional):
-    <v-row>
-      <mxn-subset-select
-        :spectral_subset_items="spectral_subset_items"
-        :selected_subset.sync="selected_subset"
-        label="Spectral region"
-        hint="Select spectral region."
-      />
-    </v-row>
+
+    Example template (label and hint are optional)::
+
+        <v-row>
+          <mxn-subset-select
+            :spectral_subset_items="spectral_subset_items"
+            :selected_subset.sync="selected_subset"
+            label="Spectral region"
+            hint="Select spectral region."
+          />
+        </v-row>
+
     """
     spectral_subset_items = List([{"label": "Entire Spectrum", "color": False}]).tag(sync=True)
     selected_subset = Unicode("Entire Spectrum").tag(sync=True)
