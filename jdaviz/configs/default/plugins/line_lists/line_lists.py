@@ -377,9 +377,7 @@ class LineListTool(PluginTemplateMixin):
                          "unit": str(row["rest"].unit),
                          "colors": row["colors"] if "colors" in row else "#FF0000FF",
                          "show": row["show"],
-                         "name_rest": row["name_rest"],
-                         "redshift": row["redshift"] if "redshift" in row else
-                         self._global_redshift}
+                         "name_rest": row["name_rest"]}
             list_contents[row["listname"]]["lines"].append(temp_dict)
             tmp_names_rest.append(row["name_rest"])
 
@@ -454,8 +452,7 @@ class LineListTool(PluginTemplateMixin):
                          "unit": str(row["rest"].unit),
                          "colors": row["colors"],
                          "show": False,
-                         "name_rest": str(row["name_rest"]),
-                         "redshift": self._global_redshift}
+                         "name_rest": str(row["name_rest"])}
             # for field in extra_fields:
             #     temp_dict[field] = row[field]
             line_list_dict["lines"].append(temp_dict)
@@ -487,8 +484,7 @@ class LineListTool(PluginTemplateMixin):
                      "rest": float(self.custom_rest),
                      "unit": self.custom_unit,
                      "colors": list_contents["Custom"]["color"],
-                     "show": True,
-                     "redshift": self._global_redshift
+                     "show": True
                      }
 
         # Add to viewer astropy table
@@ -498,7 +494,6 @@ class LineListTool(PluginTemplateMixin):
             temp_table["linename"] = [temp_dict["linename"]]
             temp_table["rest"] = [temp_dict["rest"]*u.Unit(temp_dict["unit"])]
             temp_table["colors"] = [temp_dict["colors"]]
-            temp_table["redshift"] = [temp_dict["redshift"]]
             temp_table = self._viewer.load_line_list(temp_table, return_table=True)
 
             # Add line to Custom lines in local list

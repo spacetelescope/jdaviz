@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 import astropy.units as u
 from astropy.table import QTable
@@ -16,7 +17,6 @@ def test_line_lists():
     lt = QTable()
     lt['linename'] = ['O III', 'Halpha']
     lt['rest'] = [5007, 6563]*u.AA
-    lt['redshift'] = u.Quantity(0.046)
     viz.load_line_list(lt)
 
     assert len(viz.spectral_lines) == 2
@@ -48,3 +48,10 @@ def test_redshift(specviz_helper, spectrum1d):
 
     ll_plugin.rs_rv = 30000
     assert ll_plugin.rs_redshift == 0.10561890816244568
+
+    lt = QTable()
+    lt['linename'] = ['O III', 'Halpha']
+    lt['rest'] = [5007, 6563]*u.AA
+    lt['redshift'] = u.Quantity(0.046)
+    with pytest.warns(UserWarning, match='per line/list redshifts not supported, use viz.set_redshift'):  # noqa
+        specviz_helper.load_line_list(lt)

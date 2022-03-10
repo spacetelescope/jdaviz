@@ -61,6 +61,9 @@ Other Changes and Additions
 - Viewer toolbars are now nested and consolidated, with viewer and layer options
   moved to the sidebar. [#1140]
 
+- Redshifts imported with a custom line list are now ignored.  Redshift must be set app-wide via 
+  viz.set_redshift or the line list plugin. [#1134]
+
 2.3 (2022-03-01)
 ================
 
