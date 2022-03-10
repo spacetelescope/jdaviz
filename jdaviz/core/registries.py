@@ -121,6 +121,10 @@ class TrayRegistry(UniqueDictRegistry):
             raise ValueError(f"Viewer with the name {name} already exists, "
                              f"please choose a different name.")
         else:
+            # store the registry name/label so we can access them from the instantiated
+            # objects (when determining if a specific plugin is open, for example)
+            cls._registry_name = name
+            cls._registry_label = label
             self.members[name] = {'label': label, 'icon': icon, 'cls': cls}
 
 

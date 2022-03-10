@@ -3,13 +3,13 @@ from traitlets import Unicode, List, observe
 from jdaviz.core.events import (ViewerAddedMessage, ViewerRemovedMessage,
                                 AddDataMessage, RemoveDataMessage)
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import TemplateMixin
+from jdaviz.core.template_mixin import PluginTemplateMixin
 
 __all__ = ['Compass']
 
 
 @tray_registry('imviz-compass', label="Imviz Compass")
-class Compass(TemplateMixin):
+class Compass(PluginTemplateMixin):
     template_file = __file__, "compass.vue"
     viewer_items = List([]).tag(sync=True)
     selected_viewer = Unicode("").tag(sync=True)
@@ -38,11 +38,11 @@ class Compass(TemplateMixin):
             viewer = self.app.get_viewer_by_id(self.selected_viewer)
             viewer.on_limits_change()  # Force redraw
 
-    @observe("selected_viewer")
+    @observe("selected_viewer", "plugin_opened")
     def _compass_with_new_viewer(self, *args, **kwargs):
         # There can be only one!
         for vid, viewer in self.app._viewer_store.items():
-            if vid == self.selected_viewer:
+            if vid == self.selected_viewer and self.plugin_opened:
                 viewer.compass = self
                 viewer.on_limits_change()  # Force redraw
             else:

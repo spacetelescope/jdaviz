@@ -13,7 +13,7 @@ from jdaviz.core.marks import (LineAnalysisContinuum,
                                LineAnalysisContinuumRight,
                                Shadow)
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import TemplateMixin
+from jdaviz.core.template_mixin import PluginTemplateMixin
 
 __all__ = ['LineAnalysis']
 
@@ -25,7 +25,7 @@ FUNCTIONS = {"Line Flux": analysis.line_flux,
 
 
 @tray_registry('specviz-line-analysis', label="Line Analysis")
-class LineAnalysis(TemplateMixin):
+class LineAnalysis(PluginTemplateMixin):
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "line_analysis.vue"
     dc_items = List([]).tag(sync=True)
@@ -45,7 +45,6 @@ class LineAnalysis(TemplateMixin):
         self._spectrum1d = None
         self._viewer_id = self.app._viewer_item_by_reference('spectrum-viewer').get('id')
         self._units = {}
-        self._is_opened = False
         self.update_results(None)
 
         self.hub.subscribe(self, AddDataMessage,
@@ -59,9 +58,6 @@ class LineAnalysis(TemplateMixin):
 
         self.hub.subscribe(self, SubsetUpdateMessage,
                            handler=self._on_viewer_data_changed)
-
-        self.app.state.add_callback('tray_items_open', self._on_plugin_opened_changed)
-        self.app.state.add_callback('drawer', self._on_plugin_opened_changed)
 
     def _on_viewer_data_changed(self, msg=None):
         """
@@ -100,7 +96,7 @@ class LineAnalysis(TemplateMixin):
             self.update_results(None)
             return
 
-        if self._is_opened and self.selected_spectrum not in self.dc_items:
+        if self.plugin_opened and self.selected_spectrum not in self.dc_items:
             # default to first entry.  This can be triggered (besides the first opening)
             # during a row change in Mosviz or an x-unit change through the unit conversion
             # plugin, for example
@@ -111,15 +107,13 @@ class LineAnalysis(TemplateMixin):
             if msg.subset.label in [self.selected_subset, self.selected_continuum]:
                 self._calculate_statistics()
 
-    def _on_plugin_opened_changed(self, new_value):
+    @observe('plugin_opened')
+    def _on_plugin_opened_changed(self, *args):
         # toggle continuum lines in spectrum viewer based on whether this plugin
         # is currently open in the tray
-        app_state = self.app.state
-        tray_names_open = [app_state.tray_items[i]['name'] for i in app_state.tray_items_open]
-        self._is_opened = app_state.drawer and 'specviz-line-analysis' in tray_names_open
         for pos, mark in self.marks.items():
-            mark.visible = self._is_opened
-        if self._is_opened and self.selected_spectrum == "":
+            mark.visible = self.plugin_opened
+        if self.plugin_opened and self.selected_spectrum == "":
             # default to first entry in list instead of leaving empty.
             # by placing this logic here, we avoid running on app/data load.
             self.selected_spectrum = self.dc_items[0]
@@ -144,9 +138,9 @@ class LineAnalysis(TemplateMixin):
                 return {}
             # then haven't been initialized yet, so initialize with empty
             # marks that will be populated once the first analysis is done.
-            marks = {'left': LineAnalysisContinuumLeft(viewer, visible=self._is_opened),
-                     'center': LineAnalysisContinuumCenter(viewer, visible=self._is_opened),
-                     'right': LineAnalysisContinuumRight(viewer, visible=self._is_opened)}
+            marks = {'left': LineAnalysisContinuumLeft(viewer, visible=self.plugin_opened),
+                     'center': LineAnalysisContinuumCenter(viewer, visible=self.plugin_opened),
+                     'right': LineAnalysisContinuumRight(viewer, visible=self.plugin_opened)}
             shadows = [Shadow(mark, shadow_width=2) for mark in marks.values()]
             # NOTE: += won't trigger the figure to notice new marks
             viewer.figure.marks = viewer.figure.marks + shadows + list(marks.values())
