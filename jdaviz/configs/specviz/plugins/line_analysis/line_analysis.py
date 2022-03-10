@@ -45,17 +45,10 @@ class LineAnalysis(PluginTemplateMixin, SpectralSubsetSelectMixin):
         self._units = {}
         self.update_results(None)
 
-        self.hub.subscribe(self, AddDataMessage,
-                           handler=self._on_viewer_data_changed)
-
-        self.hub.subscribe(self, RemoveDataMessage,
-                           handler=self._on_viewer_data_changed)
-
-        self.hub.subscribe(self, SubsetDeleteMessage,
-                           handler=self._on_viewer_data_changed)
-
-        self.hub.subscribe(self, SubsetUpdateMessage,
-                           handler=self._on_viewer_data_changed)
+        self.add_handler(AddDataMessage, self._on_viewer_data_changed)
+        self.add_handler(RemoveDataMessage, self._on_viewer_data_changed)
+        self.add_handler(SubsetDeleteMessage, self._on_viewer_data_changed)
+        self.add_handler(SubsetUpdateMessage, self._on_viewer_data_changed)
 
     def _on_viewer_data_changed(self, msg=None):
         """

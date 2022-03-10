@@ -43,12 +43,9 @@ class MomentMap(PluginTemplateMixin, SpectralSubsetSelectMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.hub.subscribe(self, DataCollectionAddMessage,
-                           handler=self._on_data_updated)
-        self.hub.subscribe(self, DataCollectionDeleteMessage,
-                           handler=self._on_data_updated)
-        # self.hub.subscribe(self, SubsetCreateMessage,
-        #                   handler=self._on_subset_created)
+        self.add_handler(DataCollectionAddMessage, self._on_data_updated)
+        self.add_handler(DataCollectionDeleteMessage, self._on_data_updated)
+
         self._selected_data = None
         self.n_moment = 0
         self.moment = None

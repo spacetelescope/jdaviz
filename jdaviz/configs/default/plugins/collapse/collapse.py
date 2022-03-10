@@ -38,10 +38,8 @@ class Collapse(PluginTemplateMixin, SpectralSubsetSelectMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.hub.subscribe(self, DataCollectionAddMessage,
-                           handler=self._on_data_updated)
-        self.hub.subscribe(self, DataCollectionDeleteMessage,
-                           handler=self._on_data_updated)
+        self.add_handler(DataCollectionAddMessage, self._on_data_updated)
+        self.add_handler(DataCollectionDeleteMessage, self._on_data_updated)
 
         self._selected_data = None
         self._selected_cube = None

@@ -82,11 +82,8 @@ class ModelFitting(PluginTemplateMixin, SpectralSubsetSelectMixin):
         if self.app.state.settings.get("configuration") == "cubeviz":
             self.cube_fit = True
 
-        self.hub.subscribe(self, AddDataMessage,
-                           handler=self._on_viewer_data_changed)
-
-        self.hub.subscribe(self, RemoveDataMessage,
-                           handler=self._on_viewer_data_changed)
+        self.add_handler(AddDataMessage, self._on_viewer_data_changed)
+        self.add_handler(RemoveDataMessage, self._on_viewer_data_changed)
 
     def _on_viewer_data_changed(self, msg=None):
         """

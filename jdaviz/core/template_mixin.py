@@ -60,7 +60,38 @@ class TemplateMixin(VuetifyTemplate, HubListener):
         return self._app.session.data_collection
 
 
-class PluginTemplateMixin(TemplateMixin):
+class MultipleHandlerMixin(VuetifyTemplate, HubListener):
+    """
+    This mixin adds support for multiple handlers for the same message from a class,
+    and should replace:
+
+    self.hub.subscribe(self, MessageClass, handler=self._handler)
+
+    with
+
+    self.add_handler(MessageClass, self._handler)
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._wrapped_handlers = {}
+
+    def _call_handlers(self, message_cls, msg):
+        for handler in self._wrapped_handlers.get(message_cls.__name__, []):
+            if isinstance(handler, str):
+                getattr(self, handler)(msg)
+            else:
+                handler(msg)
+
+    def add_handler(self, message_cls, handler):
+        if message_cls.__name__ not in self._wrapped_handlers.keys():
+            self.hub.subscribe(self, message_cls,
+                               handler=lambda msg: self._call_handlers(message_cls, msg))
+            self._wrapped_handlers[message_cls.__name__] = []
+
+        self._wrapped_handlers[message_cls.__name__] += [handler]
+
+
+class PluginTemplateMixin(TemplateMixin, MultipleHandlerMixin):
     disabled_msg = Unicode("").tag(sync=True)
     plugin_opened = Bool(False).tag(sync=True)
 
@@ -75,7 +106,7 @@ class PluginTemplateMixin(TemplateMixin):
         self.plugin_opened = app_state.drawer and self._registry_name in tray_names_open
 
 
-class BasePluginComponentMixin(VuetifyTemplate, HubListener):
+class BasePluginComponentMixin(MultipleHandlerMixin):
     def _clear_cache(self, *attrs):
         """
         provide convenience function to clearing the cache for cached_properties
@@ -102,16 +133,14 @@ class SpectralSubsetSelectMixin(BasePluginComponentMixin):
     * selected_subset_obj (subset object corresponding to selected_subset, cached)
 
     Example template (label and hint are optional):
-    ```
-      <v-row>
-        <mxn-subset-select
-          :spectral_subset_items="spectral_subset_items"
-          :selected_subset.sync="selected_subset"
-          label="Spectral region"
-          hint="Select spectral region."
-        />
-      </v-row>
-     ```
+    <v-row>
+      <mxn-subset-select
+        :spectral_subset_items="spectral_subset_items"
+        :selected_subset.sync="selected_subset"
+        label="Spectral region"
+        hint="Select spectral region."
+      />
+    </v-row>
     """
     spectral_subset_items = List([{"label": "Entire Spectrum", "color": False}]).tag(sync=True)
     selected_subset = Unicode("Entire Spectrum").tag(sync=True)
@@ -122,11 +151,8 @@ class SpectralSubsetSelectMixin(BasePluginComponentMixin):
         # we'll use SubsetUpdateMessage to both make updates to existing subsets
         # and to catch new subsets (SubsetCreateMessage does not yet contain
         # the fully-resolved subset, so we can't yet tell if its spectral or spatial)
-        self.hub.subscribe(self, SubsetUpdateMessage,
-                           handler=self._mxn_update_spectral_subset)
-
-        self.hub.subscribe(self, SubsetDeleteMessage,
-                           handler=self._mxn_delete_spectral_subset)
+        self.add_handler(SubsetUpdateMessage, self._mxn_update_spectral_subset)
+        self.add_handler(SubsetDeleteMessage, self._mxn_delete_spectral_subset)
 
     def _mxn_subset_to_dict(self, subset):
         # find layer artist in default spectrum-viewer
