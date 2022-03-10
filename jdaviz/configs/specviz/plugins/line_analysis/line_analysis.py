@@ -86,7 +86,7 @@ class LineAnalysis(PluginTemplateMixin, SpectralSubsetSelectMixin):
         self.continuum_subset_items = ["Surrounding"] + sorted(self._spectral_subsets.keys())
 
         self.dc_items = [layer_state.layer.label for layer_state in viewer.state.layers
-                         if layer_state.layer.label not in self.spectral_subset_items]
+                         if layer_state.layer.label not in self.spectral_subset_labels]
 
         if len(self.dc_items) == 0:
             self.selected_spectrum = ""
