@@ -18,5 +18,5 @@ The 1D and 2D spectrum objects can be retrieved (with redshift optionally applie
 respectively.
 
 See the ``notebooks/MosvizNIRISSExample.ipynb`` notebook in the 
-`repository <lhttps://github.com/spacetelescope/jdaviz/tree/main/notebooks>`_ to see examples of 
+`repository <https://github.com/spacetelescope/jdaviz/tree/main/notebooks>`_ to see examples of 
 manipulating MOS Table data, including the redshift.
