@@ -42,6 +42,8 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- Fixed linking of data to allow contour over-plotting. [#1154]
+
 Imviz
 ^^^^^
 

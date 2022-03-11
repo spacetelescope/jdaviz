@@ -4,6 +4,8 @@ from astropy import units as u
 from astropy.nddata import CCDData
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
+from glue.core.link_helpers import LinkSame
+
 from traitlets import List, Unicode, Any, Bool, observe
 from specutils import Spectrum1D, manipulation, analysis
 
@@ -126,7 +128,14 @@ class MomentMap(TemplateMixin):
         label = "Moment {}: {}".format(n_moment, self._selected_data.label)
         fname_label = self._selected_data.label.replace("[", "_").replace("]", "")
         self.filename = "moment{}_{}.fits".format(n_moment, fname_label)
-        self.data_collection[label] = self.moment
+
+        # Add information to meta data that this originated from
+        # the moment map plugin. Then, link the moment map data
+        # to the existing data in data_collection
+        self.moment.meta["Plugin"] = "Moment Map"
+        self.app.add_data(self.moment, label)
+        self._link_moment_data()
+
         self.moment_available = True
 
         msg = SnackbarMessage("{} added to data collection".format(label),
@@ -146,3 +155,27 @@ class MomentMap(TemplateMixin):
         # Let the user know where we saved the file.
         self.hub.broadcast(SnackbarMessage(
             f"Moment map saved to {os.path.abspath(self.filename)}", sender=self, color="success"))
+
+    def _link_moment_data(self):
+        new_len = len(self.app.data_collection)
+
+        # Can't link if there's no world_component_ids
+        pc_new = self.app.data_collection[-1].pixel_component_ids
+
+        # Link to the first dataset with compatible coordinates
+        for i in range(new_len - 1):
+            pc_old = self.app.data_collection[i].pixel_component_ids
+            # New data is a moment map
+            if ("Plugin" in self.app.data_collection[i].meta and
+                    self.app.data_collection[i].meta["Plugin"] == "Moment Map"):
+                links = [LinkSame(pc_old[0], pc_new[0]),
+                         LinkSame(pc_old[1], pc_new[1])]
+
+            # Link moment map to cube (pc_old)
+            else:
+                links = [LinkSame(pc_old[1], pc_new[0]),
+                         LinkSame(pc_old[2], pc_new[1])]
+
+            self.app.data_collection.add_link(links)
+
+            break

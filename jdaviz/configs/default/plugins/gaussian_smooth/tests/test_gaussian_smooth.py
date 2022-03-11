@@ -20,10 +20,10 @@ def test_linking_after_spectral_smooth(spectrum1d_cube):
 
     assert len(dc) == 2
     assert dc[1].label == 'Smoothed test stddev 3.2'
-    assert len(dc.external_links) == 1
+    assert len(dc.external_links) == 3
 
-    assert dc.external_links[0].cids1[0] is dc[0].world_component_ids[0]
-    assert dc.external_links[0].cids2[0] is dc[1].world_component_ids[0]
+    assert dc.external_links[2].cids1[0] is dc[0].world_component_ids[0]
+    assert dc.external_links[2].cids2[0] is dc[1].world_component_ids[0]
 
 
 @pytest.mark.filterwarnings("ignore::UserWarning")

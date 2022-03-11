@@ -25,6 +25,8 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
     assert mm.moment_available
     assert dc[1].label == 'Moment 0: test[FLUX]'
 
+    assert len(dc.links) == 8
+
     result = dc[1].get_object(cls=CCDData)
     assert result.shape == (2, 4)  # Cube shape is (2, 2, 4)
 
@@ -39,3 +41,10 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
     # Does not allow overwrite.
     with pytest.raises(OSError, match='already exists'):
         mm.vue_save_as_fits()
+
+    mm.n_moment = 1
+    mm.vue_calculate_moment()
+
+    assert dc[2].label == 'Moment 1: test[FLUX]'
+
+    assert len(dc.links) == 10
