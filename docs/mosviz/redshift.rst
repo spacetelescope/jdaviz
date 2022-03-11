@@ -16,3 +16,7 @@ using :meth:`~jdaviz.configs.mosviz.helper.Mosviz.update_column`.
 The 1D and 2D spectrum objects can be retrieved (with redshift optionally applied) using
 :meth:`~jdaviz.configs.mosviz.helper.Mosviz.get_spectrum_1d` and :meth:`~jdaviz.configs.mosviz.helper.Mosviz.get_spectrum_2d`,
 respectively.
+
+See the ``notebooks/MosvizNIRISSExample.ipynb`` notebook in the 
+`repository <lhttps://github.com/spacetelescope/jdaviz/tree/main/notebooks>`_ to see examples of 
+manipulating MOS Table data, including the redshift.
