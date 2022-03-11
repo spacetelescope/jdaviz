@@ -2,6 +2,8 @@ import os
 
 from astropy import units as u
 from astropy.nddata import CCDData
+from glue.core import Data, Component
+from glue.core.link_helpers import LinkSame
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
 from traitlets import List, Unicode, Any, Bool, observe
@@ -120,14 +122,22 @@ class MomentMap(TemplateMixin):
                 raise ValueError("Moment must be a positive integer")
         except ValueError:
             raise ValueError("Moment must be a positive integer")
-        # Need transpose to align JWST mirror shape. Not sure why.
-        self.moment = CCDData(analysis.moment(slab, order=n_moment).T)
 
         label = "Moment {}: {}".format(n_moment, self._selected_data.label)
+        self.moment = Data(label)
+        # Need transpose to align JWST mirror shape. Not sure why.
+        moment_component = Component.autotyped(analysis.moment(slab, order=n_moment).T)
+        self.moment.add_component(component=moment_component, label='DATA')
+        self.app.add_data(self.moment, label)
         fname_label = self._selected_data.label.replace("[", "_").replace("]", "")
         self.filename = "moment{}_{}.fits".format(n_moment, fname_label)
-        self.data_collection[label] = self.moment
         self.moment_available = True
+
+        pc_old = self._selected_data.pixel_component_ids
+        pc_new = self.moment.pixel_component_ids
+        links = [LinkSame(pc_old[1], pc_new[0]),
+                 LinkSame(pc_old[2], pc_new[1])]
+        self.app.data_collection.add_link(links)
 
         msg = SnackbarMessage("{} added to data collection".format(label),
                               sender=self, color="success")
@@ -142,7 +152,9 @@ class MomentMap(TemplateMixin):
         if self.moment is None or not self.filename:  # pragma: no cover
             return
 
-        self.moment.write(self.filename)
+        comp = self.moment.get_component('DATA')
+        ccd = CCDData(comp.data, unit=comp.units)
+        ccd.write(self.filename)
         # Let the user know where we saved the file.
         self.hub.broadcast(SnackbarMessage(
             f"Moment map saved to {os.path.abspath(self.filename)}", sender=self, color="success"))
