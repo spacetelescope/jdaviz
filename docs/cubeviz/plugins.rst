@@ -41,6 +41,9 @@ the wavelength entry will update to the exact value of that slice).
 
 The spectrum viewer also contains a tool to allow clicking and 
 dragging in the spectrum plot to choose the currently selected slice.
+When the slice tool is active, clicking anywhere on the spectrum viewer
+will select the nearest slice across all viewers, even if the indicator
+is off-screen.
 
 Gaussian Smooth
 ===============
