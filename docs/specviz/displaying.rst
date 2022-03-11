@@ -59,6 +59,22 @@ Horizontal/Vertical Zoom
 ^^^^^^^^^^^^^^^^^^^^^^^^
 The |icon-zoom-pan-horiz| (horizontal) and |icon-zoom-pan-vert| (vertical) Zoom tools allow you to zoom along each axis, while locking the other.  You can also zoom by scrolling.
 
+Box Zoom
+^^^^^^^^
+
+The |icon-box-zoom| (box) and |icon-xrange-zoom| (x-range) zoom tools allow you to zoom by
+clicking and dragging with your mouse. The box zoom tool adjusts both the x and y range of
+the plot, whereas the x-range tool zooms only the x-axis to the selected region. While
+clicking and dragging you will see the selected region as a gray box, as below.
+
+.. image:: img/box_zoom.png
+
+You can switch between the x-range zoom tool and the plot tool by right-clicking
+(or your trackpad equivalent) on the currently selected zoom icon on the viewer
+toolbar, which will open a menu of choices as in the screenshot below:
+
+.. image:: img/zoom_tool_select.png
+
 API Pan/Zoom (Notebook Interface)
 ---------------------------------
 The Specviz helper contains a set of convenience methods to programmatically define the view of the spectrum viewer. You may instantiate a Specviz Helper via:

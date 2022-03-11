@@ -104,9 +104,11 @@ Pan/Zoom
 
 Panning and zooming in the Cubeviz viewers works the same as described in the
 section on :ref:`Panning and Zooming in Specviz <pan-zoom>`, with the exception
-that image viewers have only the bidirectional Pan/Zoom tool enabled. The 
-1D spectrum viewer allows panning and zooming along a single axis as in 
-Specviz.
+that image viewers have only the bidirectional Pan/Zoom tool and the two-dimensional
+box zoom enabled. Note that the box zoom in this case will always respect the x range
+of the selected area, but will expand or limit the y range to preserve the aspect
+ratio of the image. The 1D spectrum viewer allows panning and zooming along a single
+axis as in Specviz.
 
 .. _display-settings:
 

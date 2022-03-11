@@ -117,6 +117,15 @@ rst_epilog += """
 .. |icon-color-square| image:: /img/icons/color_square.png
   :scale: 40
   :alt: color square icon
+
+.. |icon-box-zoom| image:: /img/icons/box_zoom.png
+  :scale: 40
+  :alt: box zoom icon
+
+.. |icon-xrange-zoom| image:: /img/icons/xrange_zoom.png
+  :scale: 40
+  :alt: xrange zoom icon
+
 """
 
 # -- Project information ------------------------------------------------------
