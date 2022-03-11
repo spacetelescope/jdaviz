@@ -46,7 +46,6 @@ def test_line_identify(specviz_helper, spectrum1d):
     lt = QTable()
     lt['linename'] = ['O III', 'Halpha']
     lt['rest'] = [5007, 6563]*u.AA
-    lt['redshift'] = u.Quantity(0.046)
     lt['listname'] = 'Test List'
     specviz_helper.load_line_list(lt)
 

@@ -42,7 +42,8 @@ def test_redshift(specviz_helper, spectrum1d):
     lt['rest'] = [5007, 6563]*u.AA
     lt['redshift'] = u.Quantity(0.046)
     lt['listname'] = 'Test List'
-    specviz_helper.load_line_list(lt)
+    with pytest.warns(UserWarning, match='per line/list redshifts not supported, use viz.set_redshift'):  # noqa
+        specviz_helper.load_line_list(lt)
 
     ll_plugin = specviz_helper.app.get_tray_item_from_name('g-line-list')
     line = ll_plugin.list_contents['Test List']['lines'][0]
@@ -59,13 +60,6 @@ def test_redshift(specviz_helper, spectrum1d):
     ll_plugin.rs_rv = 30000
     assert ll_plugin.rs_redshift == 0.10561890816244568
 
-    lt = QTable()
-    lt['linename'] = ['O III', 'Halpha']
-    lt['rest'] = [5007, 6563]*u.AA
-    lt['redshift'] = u.Quantity(0.046)
-    with pytest.warns(UserWarning, match='per line/list redshifts not supported, use viz.set_redshift'):  # noqa
-        specviz_helper.load_line_list(lt)
-
     ll_plugin.vue_change_line_obs({'list_name': 'Test List',
                                    'line_ind': 0,
                                    'obs_new': 5508})
@@ -79,7 +73,6 @@ def test_line_identify(specviz_helper, spectrum1d):
     lt = QTable()
     lt['linename'] = ['O III', 'Halpha']
     lt['rest'] = [5007, 6563]*u.AA
-    lt['redshift'] = u.Quantity(0.046)
     lt['listname'] = 'Test List'
     specviz_helper.load_line_list(lt)
 
