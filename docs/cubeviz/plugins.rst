@@ -41,13 +41,9 @@ the wavelength entry will update to the exact value of that slice).
 
 The spectrum viewer also contains a tool to allow clicking and 
 dragging in the spectrum plot to choose the currently selected slice.
-If another toolbar icon is selected, and then deselected after use,
-the slice tool will again become the selected tool in the viewer.
-For example, if the :guilabel:`Pan/Zoom` icon is selected, a user
-can zoom into a particular area, click again on the :guilabel:`Pan/Zoom`
-icon, and then click on the viewer. This will move the slice tool to
-the spot where the user clicked, even if the slice tool is off-screen.
-
+When the slice tool is active, clicking anywhere on the spectrum viewer
+will select the nearest slice across all viewers, even if the indicator
+is off-screen.
 
 Gaussian Smooth
 ===============
