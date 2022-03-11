@@ -55,6 +55,9 @@ Imviz
 - Fixed data shown out of order when ``load_data`` is called after
   ``app``. [#1178]
 
+- Fixed the subsequent dataset not showing after blinking if the dataset
+  being shown is removed from viewer. [#1164]
+
 Mosviz
 ^^^^^^
 
