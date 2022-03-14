@@ -7,17 +7,17 @@ from glue.core import Data
 from glue.core.link_helpers import LinkSame
 from specutils import Spectrum1D
 from specutils.manipulation import spectral_slab
-from traitlets import List, Unicode, Any, observe
+from traitlets import List, Unicode, observe
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin, SpectralSubsetSelectMixin
+from jdaviz.core.template_mixin import PluginTemplateMixin, SpectralSubsetSelectMxn
 
 __all__ = ['Collapse']
 
 
 @tray_registry('g-collapse', label="Collapse")
-class Collapse(PluginTemplateMixin, SpectralSubsetSelectMixin):
+class Collapse(PluginTemplateMixin, SpectralSubsetSelectMxn):
     template_file = __file__, "collapse.vue"
     data_items = List([]).tag(sync=True)
     selected_data_item = Unicode().tag(sync=True)
@@ -31,15 +31,15 @@ class Collapse(PluginTemplateMixin, SpectralSubsetSelectMixin):
     viewers = List(['None', 'Left', 'Center', 'Right']).tag(sync=True)
     selected_viewer = Unicode('None').tag(sync=True)
 
-    spectral_min = Any().tag(sync=True)
-    spectral_max = Any().tag(sync=True)
     spectral_unit = Unicode().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.add_handler(DataCollectionAddMessage, self._on_data_updated)
-        self.add_handler(DataCollectionDeleteMessage, self._on_data_updated)
+        self.hub.subscribe(self, DataCollectionAddMessage,
+                           handler=self._on_data_updated)
+        self.hub.subscribe(self, DataCollectionDeleteMessage,
+                           handler=self._on_data_updated)
 
         self._selected_data = None
         self._selected_cube = None
@@ -64,29 +64,11 @@ class Collapse(PluginTemplateMixin, SpectralSubsetSelectMixin):
         self._selected_cube = self._selected_data.get_object(cls=Spectrum1D, statistic=None)
         self.spectral_unit = self._selected_cube.spectral_axis.unit.to_string()
 
-        # Also set the spectral min and max to default to the full range
-        self._on_subset_selected()
-
-    @observe("selected_subset")
-    def _on_subset_selected(self, event={}):
-        if self._selected_data is None:
-            return
-
-        # If "Entire Spectrum" selected, reset based on bounds of selected data
-        if self.selected_subset == "Entire Spectrum":
-            self.spectral_min = self._selected_cube.spectral_axis[0].value
-            self.spectral_max = self._selected_cube.spectral_axis[-1].value
-
-        else:
-            spec_reg = self.selected_subset_obj
-            self.spectral_min = spec_reg.lower.value
-            self.spectral_max = spec_reg.upper.value
-
     def vue_collapse(self, *args, **kwargs):
         # Collapsing over the spectral axis. Cut out the desired spectral
         # region. Defaults to the entire spectrum.
-        spec_min = float(self.spectral_min) * u.Unit(self.spectral_unit)
-        spec_max = float(self.spectral_max) * u.Unit(self.spectral_unit)
+        spec_min = float(self.spectral_subset.selected_min(self._selected_cube)) * u.Unit(self.spectral_unit)
+        spec_max = float(self.spectral_subset.selected_max(self._selected_cube)) * u.Unit(self.spectral_unit)
 
         with warnings.catch_warnings():
             warnings.filterwarnings('ignore', message='No observer defined on WCS')

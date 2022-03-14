@@ -16,13 +16,11 @@
         ></v-select>
       </v-row>
 
-      <v-row>
-        <mxn-subset-select 
-          :spectral_subset_items="spectral_subset_items"
-          :selected_subset.sync="selected_subset"
-          hint="Select spectral region to fit."
-        />
-      </v-row>
+      <plugin-subset-select 
+        :items="spectral_subset_items"
+        :selected.sync="spectral_subset_selected"
+        hint="Select spectral region to fit."
+      />
     </v-form>
 
     <j-plugin-section-header>Model Components</j-plugin-section-header>
@@ -34,7 +32,6 @@
           label="Model"
           hint="Select a model to fit."
           persistent-hint
-          :rules="[() => model_selected!=='' || 'This field is required']"
         ></v-select>
       </v-row>
 

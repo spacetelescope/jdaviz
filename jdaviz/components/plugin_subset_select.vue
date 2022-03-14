@@ -1,0 +1,57 @@
+<template>
+  <div>
+  <v-row>
+    <v-select
+      :items="items"
+      v-model="selected"
+      @change="$emit('update:selected', $event)"
+      :label="label ? label : 'Spectral Region'"
+      :hint="hint ? hint : 'Select spectral region.'"
+      :rules="rules ? rules : []"
+      item-text="label"
+      item-value="label"
+      persistent-hint
+    >
+      <template slot="selection" slot-scope="data">
+        <div class="single-line">
+          <v-icon v-if="data.item.color" left :color="data.item.color">
+            mdi-chart-bell-curve
+          </v-icon>
+          <span>
+            {{ data.item.label }}
+          </span>
+        </div>
+      </template>
+      <template slot="item" slot-scope="data">
+        <div class="single-line">
+          <v-icon v-if="data.item.color" left :color="data.item.color">
+            mdi-chart-bell-curve
+          </v-icon>
+          <span>
+            {{ data.item.label }}
+          </span>
+        </div>
+      </template>
+    </v-select>
+  </v-row>
+  <v-row v-if="has_subregions_warning && has_subregions">
+    <span class="v-messages v-messages__message text--secondary" style="color: red !important">
+        {{ has_subregions_warning }}
+    </span>
+  </v-row>
+  </div>
+</template>
+
+<script>
+module.exports = {
+  props: ['items', 'selected', 'label', 'has_subregions', 'has_subregions_warning', 'hint', 'rules']
+};
+</script>
+
+<style>
+  .single-line {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+  }
+</style>

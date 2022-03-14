@@ -13,7 +13,7 @@ from jdaviz.core.marks import (LineAnalysisContinuum,
                                LineAnalysisContinuumRight,
                                Shadow)
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin, SpectralSubsetSelectMixin
+from jdaviz.core.template_mixin import PluginTemplateMixin, SpectralSubsetSelect
 
 __all__ = ['LineAnalysis']
 
@@ -25,13 +25,18 @@ FUNCTIONS = {"Line Flux": analysis.line_flux,
 
 
 @tray_registry('specviz-line-analysis', label="Line Analysis")
-class LineAnalysis(PluginTemplateMixin, SpectralSubsetSelectMixin):
+class LineAnalysis(PluginTemplateMixin):
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "line_analysis.vue"
     dc_items = List([]).tag(sync=True)
     selected_spectrum = Unicode("").tag(sync=True)
-    continuum_subset_items = List(["Surrounding"]).tag(sync=True)
-    selected_continuum = Unicode("Surrounding").tag(sync=True)
+
+    spectral_subset_items = List([{"label": "Entire Spectrum", "color": False}]).tag(sync=True)
+    spectral_subset_selected = Unicode("Entire Spectrum").tag(sync=True)
+
+    continuum_subset_items = List([{"label": "Surrounding", "color": False}]).tag(sync=True)
+    continuum_selected = Unicode("Surrounding").tag(sync=True)
+
     width = FloatHandleEmpty(3).tag(sync=True)
     results_computing = Bool(False).tag(sync=True)
     results = List().tag(sync=True)
@@ -45,10 +50,17 @@ class LineAnalysis(PluginTemplateMixin, SpectralSubsetSelectMixin):
         self._units = {}
         self.update_results(None)
 
-        self.add_handler(AddDataMessage, self._on_viewer_data_changed)
-        self.add_handler(RemoveDataMessage, self._on_viewer_data_changed)
-        self.add_handler(SubsetDeleteMessage, self._on_viewer_data_changed)
-        self.add_handler(SubsetUpdateMessage, self._on_viewer_data_changed)
+        self.spectral_subset = SpectralSubsetSelect(self, 'spectral_subset_items', 'spectral_subset_selected')
+        self.continuum = SpectralSubsetSelect(self, 'continuum_subset_items', 'continuum_selected')
+
+        self.hub.subscribe(self, AddDataMessage,
+                           handler=self._on_viewer_data_changed)
+        self.hub.subscribe(self, RemoveDataMessage,
+                           handler=self._on_viewer_data_changed)
+        self.hub.subscribe(self, SubsetDeleteMessage,
+                           handler=self._on_viewer_data_changed)
+        self.hub.subscribe(self, SubsetUpdateMessage,
+                           handler=self._on_viewer_data_changed)
 
     def _on_viewer_data_changed(self, msg=None):
         """
@@ -76,10 +88,8 @@ class LineAnalysis(PluginTemplateMixin, SpectralSubsetSelectMixin):
         except ValueError:
             pass
 
-        self.continuum_subset_items = ["Surrounding"] + sorted(self._spectral_subsets.keys())
-
         self.dc_items = [layer_state.layer.label for layer_state in viewer.state.layers
-                         if layer_state.layer.label not in self.spectral_subset_labels]
+                         if layer_state.layer.label not in self.spectral_subset.labels]
 
         if len(self.dc_items) == 0:
             self.selected_spectrum = ""
@@ -94,7 +104,7 @@ class LineAnalysis(PluginTemplateMixin, SpectralSubsetSelectMixin):
 
         if isinstance(msg, SubsetUpdateMessage):
             # update the statistics if any of the referenced regions have changed
-            if msg.subset.label in [self.selected_subset, self.selected_continuum]:
+            if msg.subset.label in [self.spectral_subset_selected, self.continuum_selected]:
                 self._calculate_statistics()
 
     @observe('plugin_opened')
@@ -148,7 +158,7 @@ class LineAnalysis(PluginTemplateMixin, SpectralSubsetSelectMixin):
 
         self.results_computing = False
 
-    @observe("selected_subset", "selected_spectrum", "selected_continuum", "width")
+    @observe("spectral_subset_selected", "selected_spectrum", "continuum_selected", "width")
     def _calculate_statistics(self, *args, **kwargs):
         """
         Run the line analysis functions on the selected data/subset and
@@ -171,24 +181,24 @@ class LineAnalysis(PluginTemplateMixin, SpectralSubsetSelectMixin):
 
         spectral_axis = self._spectrum1d.spectral_axis
 
-        if self.selected_continuum == self.selected_subset:
+        if self.continuum_selected == self.spectral_subset_selected:
             # already raised a validation error in the UI
             self.update_results(None)
             return
 
-        if self.selected_subset != "Surrounding":
+        if self.spectral_subset_selected != "Surrounding":
             sr = self.app.get_subsets_from_viewer("spectrum-viewer",
-                                                  subset_type="spectral").get(self.selected_subset) # noqa
+                                                  subset_type="spectral").get(self.spectral_subset_selected) # noqa
         else:
             sr = None
 
-        if self.selected_subset == "Entire Spectrum":
+        if self.spectral_subset_selected == "Entire Spectrum":
             spectrum = self._spectrum1d
         else:
             spectrum = extract_region(self._spectrum1d, sr, return_single_spectrum=True)
 
         # compute continuum
-        if self.selected_continuum == "Surrounding" and self.selected_subset == "Entire Spectrum":
+        if self.continuum_selected == "Surrounding" and self.spectral_subset_selected == "Entire Spectrum":
             # we know we'll just use the endpoints, so let's be efficient and not even
             # try extracting from the region
             continuum_mask = np.array([0, len(spectral_axis)-1])
@@ -196,8 +206,8 @@ class LineAnalysis(PluginTemplateMixin, SpectralSubsetSelectMixin):
                       'center': np.array([min(spectral_axis.value), max(spectral_axis.value)]),
                       'right': np.array([])}
 
-        elif self.selected_continuum == "Surrounding":
-            # self.selected_subset != "Entire Spectrum"
+        elif self.continuum_selected == "Surrounding":
+            # self.spectral_subset_selected != "Entire Spectrum"
             if self.width > 10 or self.width < 1:
                 # DEV NOTE: if changing the limits, make sure to also update the form validation
                 # rules in line_analysis.vue
@@ -230,10 +240,10 @@ class LineAnalysis(PluginTemplateMixin, SpectralSubsetSelectMixin):
 
         else:
             continuum_mask = ~self.app.get_data_from_viewer("spectrum-viewer",
-                                                            data_label=self.selected_continuum).mask # noqa
+                                                            data_label=self.continuum_selected).mask # noqa
             spectral_axis_nanmasked = spectral_axis.value.copy()
             spectral_axis_nanmasked[~continuum_mask] = np.nan
-            if self.selected_subset == "Entire Spectrum":
+            if self.spectral_subset_selected == "Entire Spectrum":
                 mark_x = {'left': spectral_axis_nanmasked,
                           'center': spectral_axis.value,
                           'right': []}

@@ -9,10 +9,11 @@ from traitlets import Any, Bool, List, Unicode, observe
 from glue.core.data import Data
 from glue.core.subset import Subset, RangeSubsetState, OrState, AndState
 from glue.core.link_helpers import LinkSame
+from ipywidgets.widgets import widget_serialization
 
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage, SnackbarMessage
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin, SpectralSubsetSelectMixin
+from jdaviz.core.template_mixin import PluginTemplateMixin, SpectralSubsetSelectMxn
 from jdaviz.core.custom_traitlets import IntHandleEmpty
 from jdaviz.configs.default.plugins.model_fitting.fitting_backend import fit_model_to_spectrum
 from jdaviz.configs.default.plugins.model_fitting.initializers import (MODELS,
@@ -31,7 +32,7 @@ class _EmptyParam:
 
 
 @tray_registry('g-model-fitting', label="Model Fitting")
-class ModelFitting(PluginTemplateMixin, SpectralSubsetSelectMixin):
+class ModelFitting(PluginTemplateMixin, SpectralSubsetSelectMxn):
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "model_fitting.vue"
     dc_items = List([]).tag(sync=True)
@@ -39,6 +40,7 @@ class ModelFitting(PluginTemplateMixin, SpectralSubsetSelectMixin):
     form_valid_model_component = Bool(False).tag(sync=True)
 
     selected_data = Unicode("").tag(sync=True)
+
     spectral_min = Any().tag(sync=True)
     spectral_max = Any().tag(sync=True)
     spectral_unit = Unicode().tag(sync=True)
@@ -82,8 +84,10 @@ class ModelFitting(PluginTemplateMixin, SpectralSubsetSelectMixin):
         if self.app.state.settings.get("configuration") == "cubeviz":
             self.cube_fit = True
 
-        self.add_handler(AddDataMessage, self._on_viewer_data_changed)
-        self.add_handler(RemoveDataMessage, self._on_viewer_data_changed)
+        self.hub.subscribe(self, AddDataMessage,
+                           handler=self._on_viewer_data_changed)
+        self.hub.subscribe(self, RemoveDataMessage,
+                           handler=self._on_viewer_data_changed)
 
     def _on_viewer_data_changed(self, msg=None):
         """
@@ -269,15 +273,15 @@ class ModelFitting(PluginTemplateMixin, SpectralSubsetSelectMixin):
         self.spectral_max = selected_spec.spectral_axis[-1].value
         self.spectral_unit = str(selected_spec.spectral_axis.unit)
 
-    @observe("selected_subset")
-    def _on_subset_selected(self, event):
+    @observe("spectral_subset_selected")
+    def _on_spectral_subset_selected(self, event):
         # If "Entire Spectrum" selected, reset based on bounds of selected data
-        if self.selected_subset == "Entire Spectrum":
+        if self.spectral_subset_selected == "Entire Spectrum":
             self._window = None
             self.spectral_min = self._spectrum1d.spectral_axis[0].value
             self.spectral_max = self._spectrum1d.spectral_axis[-1].value
         else:
-            spec_sub = self.selected_subset_obj
+            spec_sub = self.spectral_subset.selected_obj
             unit = u.Unit(self.spectral_unit)
             if hasattr(spec_sub, "center"):
                 spreg = SpectralRegion.from_center(spec_sub.center.x * unit,
@@ -404,9 +408,9 @@ class ModelFitting(PluginTemplateMixin, SpectralSubsetSelectMixin):
         models_to_fit = self._reinitialize_with_fixed()
 
         # Apply mask from selected subset
-        if self.selected_subset != "Entire Spectrum":
+        if self.spectral_subset_selected != "Entire Spectrum":
             subset_mask = self.app.get_data_from_viewer("spectrum-viewer",
-                                        data_label = self.selected_subset).mask # noqa
+                                        data_label = self.spectral_subset_selected).mask # noqa
             if self._spectrum1d.mask is None:
                 self._spectrum1d.mask = subset_mask
             else:
