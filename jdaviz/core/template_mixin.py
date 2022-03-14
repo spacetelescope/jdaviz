@@ -80,7 +80,7 @@ class PluginTemplateMixin(TemplateMixin):
 
 class BasePluginComponent(HubListener):
     """
-    This Base class handles attaching traitlets from the plugin itself to logic
+    This base class handles attaching traitlets from the plugin itself to logic
     handled within the component, support for caching and clearing caches on properties,
     and common properties for accessing the app, etc.
     """
@@ -128,26 +128,29 @@ class BasePluginComponent(HubListener):
 class SpectralSubsetSelect(BasePluginComponent):
     """
     Traitlets (in the object, custom traitlets in the plugin):
+
     * ``items`` (list of dicts with keys: label, color)
     * ``selected`` (string)
     * ``selected_has_subregions`` (bool, OPTIONAL)
 
     Properties (in the object only):
+
     * ``labels`` (list of labels corresponding to items)
     * ``selected_obj`` (subset object corresponding to selected, cached)
 
     Methods (in the object only):
+
     * ``selected_min(cube)`` (float)
     * ``selected_max(cube)`` (float)
 
     To use in a plugin:
+
     * create traitlets with default values
     * register with all the automatic logic in the plugin's init by passing the string names
-    of the respective traitlets.
+      of the respective traitlets.
     * use component in plugin template (see below)
     * refer to properties above based on the interally stored reference to the
-    instantiated object of this component
-
+      instantiated object of this component
 
     Example template (label and hint are optional)::
 
@@ -255,19 +258,23 @@ class SpectralSubsetSelectMxn(VuetifyTemplate, HubListener):
     SpectralSubsetSelect component instead.
 
     Traitlets (available from the plugin):
+
     * ``spectral_subset_items``
     * ``spectral_subset_selected``
     * ``spectral_subset_selected_has_subregions``
 
     Properties (available from the plugin):
+
     * ``spectral_subset.labels``
     * ``spectral_subset.selected_obj``
 
     Methods (available from the plugin):
+
     * ``spectral_subset.selected_min``
     * ``spectral_subset.selected_max``
 
     To use in a plugin:
+
     * add ``SpectralSubsetSelectMxn`` as a mixin to the class
     * use the traitlets and properties above as needed (note the prefix for properties)
 
