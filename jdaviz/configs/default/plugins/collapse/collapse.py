@@ -67,8 +67,8 @@ class Collapse(PluginTemplateMixin, SpectralSubsetSelectMxn):
     def vue_collapse(self, *args, **kwargs):
         # Collapsing over the spectral axis. Cut out the desired spectral
         # region. Defaults to the entire spectrum.
-        spec_min = float(self.spectral_subset.selected_min(self._selected_cube)) * u.Unit(self.spectral_unit)
-        spec_max = float(self.spectral_subset.selected_max(self._selected_cube)) * u.Unit(self.spectral_unit)
+        spec_min = float(self.spectral_subset.selected_min(self._selected_cube)) * u.Unit(self.spectral_unit) # noqa
+        spec_max = float(self.spectral_subset.selected_max(self._selected_cube)) * u.Unit(self.spectral_unit) # noqa
 
         with warnings.catch_warnings():
             warnings.filterwarnings('ignore', message='No observer defined on WCS')

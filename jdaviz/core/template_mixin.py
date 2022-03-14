@@ -11,7 +11,8 @@ from traitlets import Bool, List, Unicode
 from jdaviz import __version__
 
 __all__ = ['TemplateMixin', 'PluginTemplateMixin',
-           'BasePluginComponent', 'SpectralSubsetSelect']
+           'BasePluginComponent',
+           'SpectralSubsetSelect', 'SpectralSubsetSelectMxn']
 
 
 class TemplateMixin(VuetifyTemplate, HubListener):
@@ -84,7 +85,7 @@ class BasePluginComponent(HubListener):
     and common properties for accessing the app, etc.
     """
     def __init__(self, plugin, **kwargs):
-        self._plugin_traitlets = {k:v for k,v in kwargs.items() if v is not None}
+        self._plugin_traitlets = {k: v for k, v in kwargs.items() if v is not None}
         self._plugin = plugin
         super().__init__()
 
@@ -141,16 +142,11 @@ class SpectralSubsetSelect(BasePluginComponent):
 
     To use in a plugin:
     * create traitlets with default values
-      * ``spectral_subset_items = List([{"label": "default entry", "color": False}]).tag(sync=True)``
-      * ``spectral_subset_selected = Unicode("").tag(sync=True)
     * register with all the automatic logic in the plugin's init by passing the string names
-        of the respective traitlets.
-      * ``self.spectral_subset = SpectralSubsetSelect(self, 'spectral_subset_items',
-                                                            'spectral_subset_selected')``
+    of the respective traitlets.
     * use component in plugin template (see below)
     * refer to properties above based on the interally stored reference to the
-        instantiated object of this component
-      * ``self.spectral_subset.labels``
+    instantiated object of this component
 
 
     Example template (label and hint are optional)::

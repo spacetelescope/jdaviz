@@ -50,8 +50,12 @@ class LineAnalysis(PluginTemplateMixin):
         self._units = {}
         self.update_results(None)
 
-        self.spectral_subset = SpectralSubsetSelect(self, 'spectral_subset_items', 'spectral_subset_selected')
-        self.continuum = SpectralSubsetSelect(self, 'continuum_subset_items', 'continuum_selected')
+        self.spectral_subset = SpectralSubsetSelect(self,
+                                                    'spectral_subset_items',
+                                                    'spectral_subset_selected')
+        self.continuum = SpectralSubsetSelect(self,
+                                              'continuum_subset_items',
+                                              'continuum_selected')
 
         self.hub.subscribe(self, AddDataMessage,
                            handler=self._on_viewer_data_changed)
@@ -198,7 +202,7 @@ class LineAnalysis(PluginTemplateMixin):
             spectrum = extract_region(self._spectrum1d, sr, return_single_spectrum=True)
 
         # compute continuum
-        if self.continuum_selected == "Surrounding" and self.spectral_subset_selected == "Entire Spectrum":
+        if self.continuum_selected == "Surrounding" and self.spectral_subset_selected == "Entire Spectrum": # noqa
             # we know we'll just use the endpoints, so let's be efficient and not even
             # try extracting from the region
             continuum_mask = np.array([0, len(spectral_axis)-1])
