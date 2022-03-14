@@ -126,6 +126,10 @@ rst_epilog += """
   :scale: 40
   :alt: xrange zoom icon
 
+
+.. |icon-line-select| image:: /img/icons/line_select.png
+  :scale: 40
+  :alt: line select icon
 """
 
 # -- Project information ------------------------------------------------------

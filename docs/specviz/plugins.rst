@@ -199,3 +199,11 @@ secondary region can be created and selected as the region to fit the linear con
 
 The statistics returned include the line centroid, gaussian sigma width, gaussian FWHM,
 total flux, and equivalent width.
+
+Redshift from Centroid
+----------------------
+
+Following the table of statistics, the centroid can be used to set the redshift by assigning
+the centroid value to a line added in the :ref:`Line List Plugin <line-lists>`.  Select the
+corresponding line from the dropdown, or by locking the selection to the identified line and
+using the |icon-line-select| (line selector) tool in the spectrum viewer.

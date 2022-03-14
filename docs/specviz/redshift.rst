@@ -7,6 +7,8 @@ Setting Redshift/RV
 The :ref:`Line Lists Plugin <line-lists>` contains a redshift slider as well as the ability to 
 view and set the redshift and/or radial velocity.
 
+Additionally, the :ref:`Line Analysis Plugin <line-analysis>` includes the capability to 
+compute and assign the redshift based on the measured centroid of a line.
 
 From the notebook
 =================
