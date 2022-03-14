@@ -6,7 +6,7 @@ from glue.core import HubListener
 from glue.core.message import (SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from glue.core.subset import RoiSubsetState
-from traitlets import Bool, List, Unicode, observe
+from traitlets import Bool, List, Unicode
 
 from jdaviz import __version__
 
@@ -64,6 +64,17 @@ class TemplateMixin(VuetifyTemplate, HubListener):
 
 class PluginTemplateMixin(TemplateMixin):
     disabled_msg = Unicode("").tag(sync=True)
+    plugin_opened = Bool(False).tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.app.state.add_callback('tray_items_open', self._mxn_update_plugin_opened)
+        self.app.state.add_callback('drawer', self._mxn_update_plugin_opened)
+
+    def _mxn_update_plugin_opened(self, new_value):
+        app_state = self.app.state
+        tray_names_open = [app_state.tray_items[i]['name'] for i in app_state.tray_items_open]
+        self.plugin_opened = app_state.drawer and self._registry_name in tray_names_open
 
 
 class BasePluginComponent(HubListener):
@@ -89,22 +100,6 @@ class BasePluginComponent(HubListener):
 
         return setattr(self._plugin, self._plugin_traitlets.get(attr), value)
 
-class PluginTemplateMixin(TemplateMixin, MultipleHandlerMixin):
-    disabled_msg = Unicode("").tag(sync=True)
-    plugin_opened = Bool(False).tag(sync=True)
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.app.state.add_callback('tray_items_open', self._mxn_update_plugin_opened)
-        self.app.state.add_callback('drawer', self._mxn_update_plugin_opened)
-
-    def _mxn_update_plugin_opened(self, new_value):
-        app_state = self.app.state
-        tray_names_open = [app_state.tray_items[i]['name'] for i in app_state.tray_items_open]
-        self.plugin_opened = app_state.drawer and self._registry_name in tray_names_open
-
-
-class BasePluginComponentMixin(MultipleHandlerMixin):
     def _clear_cache(self, *attrs):
         """
         provide convenience function to clearing the cache for cached_properties

@@ -36,14 +36,12 @@
       </j-docs-link>
     </v-row>
 
-    <v-row>
-      <plugin-subset-select 
-        :items="continuum_subset_items"
-        :selected.sync="continuum_selected"
-        :rules="[() => continuum_selected!==spectral_subset_selected || 'Must not match line selection.']"
-        hint="Select spectral region that defines the line."
-      />
-    </v-row>
+    <plugin-subset-select 
+      :items="continuum_subset_items"
+      :selected.sync="continuum_selected"
+      :rules="[() => continuum_selected!==spectral_subset_selected || 'Must not match line selection.']"
+      hint="Select spectral region that defines the line."
+    />
 
     <v-row v-if="continuum_selected=='Surrounding' && spectral_subset_selected!='Entire Spectrum'">
       <!-- DEV NOTE: if changing the validation rules below, also update the logic to clear the results
