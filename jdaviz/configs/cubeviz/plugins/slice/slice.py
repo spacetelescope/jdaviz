@@ -56,7 +56,7 @@ class Slice(TemplateMixin):
 
     def _on_data_added(self, msg):
         if len(msg.data.shape) == 3 and isinstance(msg.viewer, BqplotImageView):
-            self.max_value = msg.data.shape[0] - 1
+            self.max_value = msg.data.shape[-1] - 1
 
             if msg.viewer not in self._watched_viewers:
                 self._watched_viewers.append(msg.viewer)
@@ -99,7 +99,7 @@ class Slice(TemplateMixin):
         # the slider observer (_on_slider_updated) and sync across
         # any other applicable viewers
         if len(value):
-            self.slider = float(value[0])
+            self.slider = float(value[-1])
 
     def _on_select_slice_message(self, msg):
         # NOTE: by setting the slice index, the observer (_on_slider_updated)
@@ -135,6 +135,6 @@ class Slice(TemplateMixin):
 
         if self.linked:
             for viewer in self._watched_viewers:
-                viewer.state.slices = (value, 0, 0)
+                viewer.state.slices = (0, 0, value)
             for viewer in self._indicator_viewers:
                 viewer._update_slice_indicator(value)
