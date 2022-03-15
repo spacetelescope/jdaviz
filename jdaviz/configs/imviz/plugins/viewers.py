@@ -7,7 +7,7 @@ from glue_jupyter.bqplot.image import BqplotImageView
 from jdaviz.configs.imviz import wcs_utils
 from jdaviz.configs.imviz.helper import data_has_valid_wcs, layer_is_image_data, get_top_layer_index
 from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
-from jdaviz.core.events import SnackbarMessage
+from jdaviz.core.events import AddDataMessage, RemoveDataMessage, SnackbarMessage
 from jdaviz.core.registries import viewer_registry
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
 
@@ -46,6 +46,11 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
 
         self.label_mouseover = None
         self.compass = None
+
+        self._blink_cycle = []
+        self._blink_index = 0
+        self.session.hub.subscribe(self, AddDataMessage, handler=self._on_data_added)
+        self.session.hub.subscribe(self, RemoveDataMessage, handler=self._on_data_removed)
 
         self.add_event_callback(self.on_mouse_or_key_event, events=['mousemove', 'mouseenter',
                                                                     'mouseleave', 'keydown'])
@@ -151,7 +156,26 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
             data['event'] = 'mousemove'
             self.on_mouse_or_key_event(data)
 
-    def blink_once(self):
+    def _on_data_added(self, msg):
+        if msg.data.label not in self._blink_cycle:
+            self._blink_cycle += [msg.data.label]
+
+    def _on_data_removed(self, msg):
+        # msg.data.label was removed, so we need to update the state of blinking
+        index_removed = self._blink_cycle.index(msg.data.label)
+        self._blink_cycle.remove(msg.data.label)
+        if index_removed == self._blink_index:
+            # then we should keep the same index, but need to update the visible layer
+            # (self.blink_once will handle wrapping, if necessary)
+            self.blink_once(self._blink_index)
+        elif index_removed < self._blink_index:
+            # then the current visible layer is still correct, but the index needs updating
+            self._blink_index -= 1
+        else:
+            # nothing to do here, the layer is later in the list
+            pass
+
+    def blink_once(self, blink_index=None):
         # Simple blinking of images - this will make it so that only one
         # layer is visible at a time and cycles through the layers.
 
@@ -160,32 +184,40 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
                  if layer_is_image_data(layer.layer)]
         n_layers = len(valid)
 
-        if n_layers == 1:
+        if n_layers <= 1:
             msg = SnackbarMessage(
-                'Nothing to blink. Select a second image in the Data menu to use this feature.',
+                'Nothing to blink. Select or add an additional entry in the Data menu to use this feature.', # noqa
                 color='warning', sender=self)
             self.session.hub.broadcast(msg)
+            return
 
-        elif n_layers > 1:
-            # If only one layer is visible, pick the next one to be visible,
-            # otherwise start from the last visible one.
+        visible = [ilayer for ilayer in valid if self.state.layers[ilayer].visible]
+        n_visible = len(visible)
 
-            visible = [ilayer for ilayer in valid if self.state.layers[ilayer].visible]
-            n_visible = len(visible)
+        if n_visible == 0:
+            msg = SnackbarMessage('No visible layer to blink',
+                                  color='warning', sender=self)
+            self.session.hub.broadcast(msg)
+            return
 
-            if n_visible == 0:
-                msg = SnackbarMessage('No visible layer to blink',
-                                      color='warning', sender=self)
-                self.session.hub.broadcast(msg)
-            elif n_visible > 0:
-                next_layer = valid[(valid.index(visible[-1]) + 1) % n_layers]
-                self.state.layers[next_layer].visible = True
+        if blink_index is None:
+            blink_index = self._blink_index + 1
+        if blink_index >= len(self._blink_cycle):
+            # wrap to beginning
+            blink_index = 0
+        blink_label = self._blink_cycle[blink_index]
 
-                for ilayer in (set(valid) - set([next_layer])):
-                    self.state.layers[ilayer].visible = False
+        for layer in [self.state.layers[i] for i in valid]:
+            if layer.layer.label == blink_label:
+                active_layer = layer.layer
+                layer.visible = False
+            else:
+                layer.visible = True
 
-                # We can display the active data label in Compass plugin.
-                self.set_compass(self.state.layers[next_layer].layer)
+        self._blink_index = blink_index
+
+        # We can display the active data label in Compass plugin.
+        self.set_compass(active_layer)
 
     def on_limits_change(self, *args):
         try:
