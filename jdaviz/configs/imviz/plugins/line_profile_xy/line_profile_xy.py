@@ -2,26 +2,28 @@ from bqplot import pyplot as bqplt
 from ipywidgets import widget_serialization
 from traitlets import Any, Bool, List, Unicode, observe
 
+from jdaviz.configs.imviz.helper import get_top_layer_index
 from jdaviz.core.events import ViewerAddedMessage, ViewerRemovedMessage
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import TemplateMixin
+from jdaviz.core.template_mixin import PluginTemplateMixin
 
 __all__ = ['LineProfileXY']
 
 
 @tray_registry('imviz-line-profile-xy', label="Imviz Line Profiles (XY)")
-class LineProfileXY(TemplateMixin):
+class LineProfileXY(PluginTemplateMixin):
     template_file = __file__, "line_profile_xy.vue"
     viewer_items = List([]).tag(sync=True)
     selected_viewer = Unicode("").tag(sync=True)
     plot_available = Bool(False).tag(sync=True)
+    selected_x = Any('').tag(sync=True)
+    selected_y = Any('').tag(sync=True)
     line_plot_across_x = Any('').tag(sync=True, **widget_serialization)
     line_plot_across_y = Any('').tag(sync=True, **widget_serialization)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._ix = None
-        self._iy = None
+        self._default_viewer = f'{self.app.config}-0'
 
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewers_changed)
         self.hub.subscribe(self, ViewerRemovedMessage, handler=self._on_viewers_changed)
@@ -33,19 +35,7 @@ class LineProfileXY(TemplateMixin):
 
         # Selected viewer was removed but Imviz always has a default viewer to fall back on.
         if self.selected_viewer not in self.viewer_items:
-            self.selected_viewer = f'{self.app.config}-0'
-
-    @observe("selected_viewer")
-    def _replot_with_new_viewer(self, *args, **kwargs):
-        if self._ix is None or self._iy is None:
-            self.reset_results()
-            return
-
-        viewer = self.app.get_viewer_by_id(self.selected_viewer)
-        viewer.on_mouse_or_key_event({
-            'event': 'keydown',
-            'key': 'l',
-            'domain': {'x': self._ix, 'y': self._iy}})
+            self.selected_viewer = self._default_viewer
 
     def reset_results(self):
         self.plot_available = False
@@ -53,10 +43,27 @@ class LineProfileXY(TemplateMixin):
         self.line_plot_across_y = ''
         bqplt.clear()
 
-    def plot_lines(self, data, x, y):
+    # This is also triggered from viewer code.
+    @observe("selected_viewer")
+    def vue_draw_plot(self, *args, **kwargs):
         """Draw line profile plots for given Data across given X and Y indices (0-indexed)."""
-        self._ix = x
-        self._iy = y
+        if not self.selected_x or not self.selected_y or not self.plugin_opened:
+            return
+
+        viewer = self.app.get_viewer_by_id(self.selected_viewer)
+        i = get_top_layer_index(viewer)
+        data = viewer.state.layers[i].layer
+
+        if isinstance(self.selected_x, str):
+            x = int(round(float(self.selected_x)))
+        else:
+            x = int(round(self.selected_x))
+
+        if isinstance(self.selected_y, str):
+            y = int(round(float(self.selected_y)))
+        else:
+            y = int(round(self.selected_y))
+
         if x < 0 or y < 0 or x >= data.shape[1] or y >= data.shape[0]:
             self.reset_results()
             return
@@ -72,7 +79,7 @@ class LineProfileXY(TemplateMixin):
                              fig_margin={'top': 60, 'bottom': 60, 'left': 40, 'right': 10},
                              title_style={'font-size': '12px'})
         bqplt.plot(comp.data[:, x], colors='gray', figure=fig_x)
-        bqplt.xlabel(label='Y', mark=fig_x.marks[-1], figure=fig_x)
+        bqplt.xlabel(label='Y (pix)', mark=fig_x.marks[-1], figure=fig_x)
         bqplt.ylabel(label=y_label, mark=fig_x.marks[-1], figure=fig_x)
         self.line_plot_across_x = fig_x
 
@@ -81,7 +88,7 @@ class LineProfileXY(TemplateMixin):
                              fig_margin={'top': 60, 'bottom': 60, 'left': 40, 'right': 10},
                              title_style={'font-size': '12px'})
         bqplt.plot(comp.data[y, :], colors='gray', figure=fig_y)
-        bqplt.xlabel(label='X', mark=fig_y.marks[-1], figure=fig_y)
+        bqplt.xlabel(label='X (pix)', mark=fig_y.marks[-1], figure=fig_y)
         bqplt.ylabel(label=y_label, mark=fig_y.marks[-1], figure=fig_y)
         self.line_plot_across_y = fig_y
 

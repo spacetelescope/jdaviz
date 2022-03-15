@@ -1295,6 +1295,8 @@ class Application(VuetifyTemplate, HubListener):
             n = self._next_viewer_num(pfx)
             vid = f"{pfx}-{n}"
 
+        viewer.LABEL = vid  # For reverse look-up
+
         return {
             'id': vid,
             'name': name or vid,

@@ -164,9 +164,10 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
 
             elif key_pressed == 'l':
                 # Same data as mousemove above.
-                ix = int(round(data['domain']['x']))
-                iy = int(round(data['domain']['y']))
-                self.line_profile_xy.plot_lines(visible_layers[0].layer, ix, iy)
+                self.line_profile_xy.selected_x = data['domain']['x']
+                self.line_profile_xy.selected_y = data['domain']['y']
+                self.line_profile_xy.selected_viewer = self.LABEL
+                self.line_profile_xy.vue_draw_plot()
 
     def blink_once(self):
         # Simple blinking of images - this will make it so that only one
@@ -201,8 +202,12 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
                 for ilayer in (set(valid) - set([next_layer])):
                     self.state.layers[ilayer].visible = False
 
+                data = self.state.layers[next_layer].layer
                 # We can display the active data label in Compass plugin.
-                self.set_compass(self.state.layers[next_layer].layer)
+                self.set_compass(data)
+                # Update line profile plots too.
+                self.line_profile_xy.selected_viewer = self.LABEL
+                self.line_profile_xy.vue_draw_plot()
 
     def on_limits_change(self, *args):
         try:

@@ -2,7 +2,8 @@
   <j-tray-plugin>
     <v-row>
       <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#line-profiles'">
-        Plot line profiles across X and Y under cursor.
+        Press l to plot line profiles across X and Y under cursor.
+        You can also manually enter X, Y and then click PLOT.
       </j-docs-link>
     </v-row>
 
@@ -14,6 +15,32 @@
         hint="Select a viewer to plot."
         persistent-hint
       ></v-select>
+    </v-row>
+
+    <v-row no-gutters>
+      <v-col>
+        <v-text-field
+          v-model='selected_x'
+          type="number"
+          label="X"
+          hint="Value of X"
+        ></v-text-field>
+      </v-col>
+    </v-row>
+
+    <v-row no-gutters>
+      <v-col>
+        <v-text-field
+          v-model='selected_y'
+          type="number"
+          label="Y"
+          hint="Value of Y"
+        ></v-text-field>
+      </v-col>
+    </v-row>
+
+    <v-row justify="end">
+      <v-btn color="primary" text @click="draw_plot">Plot</v-btn>
     </v-row>
 
     <v-row v-if="plot_available">
