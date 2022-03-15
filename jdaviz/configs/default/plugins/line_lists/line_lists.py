@@ -271,27 +271,34 @@ class LineListTool(PluginTemplateMixin):
         if not self._rs_pause_tables:
             # TODO: try to avoid essentially repeating the loop from above, careful to minimize
             # updates to vue, maybe pause traitlets?
-            new_list_contents = {}
-            for list_name, line_list in self.list_contents.items():
-                for i, line in enumerate(line_list['lines']):
-                    if self._rs_line_obs_change[0] == list_name and self._rs_line_obs_change[1] == i:  # noqa
-                        # this trigger is coming from a manual change to the observed
-                        # wavelength and would result in a small change to the value before the
-                        # user can finish typing.  So we'll just keep the old value until the
-                        # widget is blurred (loses focus)
-                        line_list['lines'][i]['obs'] = self._rs_line_obs_change[2]
-                    else:
-                        line_list['lines'][i]['obs'] = self._rest_to_obs(float(line['rest']))
-
-                new_list_contents[list_name] = line_list
-
-            self.list_contents = {}  # TODO: fix with dict magic thing
-            self.list_contents = new_list_contents
+            self._update_line_list_obs()
 
             # Send the redshift back to the Specviz helper (and also trigger
             # self._update_global_redshift)
             msg = RedshiftMessage("redshift", value, sender=self)
             self.app.hub.broadcast(msg)
+
+    @observe('plugin_opened')
+    def _update_line_list_obs(self, *args):
+        if not self.plugin_opened:
+            return
+
+        new_list_contents = {}
+        for list_name, line_list in self.list_contents.items():
+            for i, line in enumerate(line_list['lines']):
+                if self._rs_line_obs_change[0] == list_name and self._rs_line_obs_change[1] == i:  # noqa
+                    # this trigger is coming from a manual change to the observed
+                    # wavelength and would result in a small change to the value before the
+                    # user can finish typing.  So we'll just keep the old value until the
+                    # widget is blurred (loses focus)
+                    line_list['lines'][i]['obs'] = self._rs_line_obs_change[2]
+                else:
+                    line_list['lines'][i]['obs'] = self._rest_to_obs(float(line['rest']))
+
+            new_list_contents[list_name] = line_list
+
+        self.list_contents = {}
+        self.list_contents = new_list_contents
 
     def vue_change_line_obs(self, kwargs):
         # NOTE: we can only pass one argument from vue (it seems), so we'll pass as
@@ -678,8 +685,8 @@ class LineListTool(PluginTemplateMixin):
         list_contents = self.list_contents
         for this_listname, this_list in list_contents.items():
             for i, line in enumerate(this_list['lines']):
-                if (this_listname == listname or listname is None) and \
-                            line['name_rest'] == name_rest:
+                if ((this_listname == listname or listname is None) and
+                        line['name_rest'] == name_rest):
                     list_contents[this_listname]['lines'][i]['identify'] = identify
                 else:
                     list_contents[this_listname]['lines'][i]['identify'] = False
@@ -698,6 +705,7 @@ class LineListTool(PluginTemplateMixin):
 
     def vue_set_identify(self, data):
         """
+        Set the selected line as "identified"
         """
         listname, line, line_ind = data
         identify = not line.get('identify', False)

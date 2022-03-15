@@ -46,6 +46,8 @@ def test_redshift(specviz_helper, spectrum1d):
         specviz_helper.load_line_list(lt)
 
     ll_plugin = specviz_helper.app.get_tray_item_from_name('g-line-list')
+    # fake the plugin to be opened so that all updates run
+    ll_plugin.plugin_opened = True
     line = ll_plugin.list_contents['Test List']['lines'][0]
     assert_allclose(line['obs'], line['rest'])
     # test API access

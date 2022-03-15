@@ -3,7 +3,7 @@ from bqplot.marks import Lines
 from glue.core import HubListener
 from specutils import Spectrum1D
 
-from jdaviz.core.events import (SliceToolStateMessage, LineIdentifyMessage)
+from jdaviz.core.events import SliceToolStateMessage, LineIdentifyMessage
 
 
 class BaseSpectrumVerticalLine(Lines, HubListener):
