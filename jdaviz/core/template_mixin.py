@@ -12,7 +12,7 @@ from jdaviz import __version__
 
 __all__ = ['TemplateMixin', 'PluginTemplateMixin',
            'BasePluginComponent',
-           'SpectralSubsetSelect', 'SpectralSubsetSelectMxn']
+           'SpectralSubsetSelect', 'SpectralSubsetSelectMixin']
 
 
 class TemplateMixin(VuetifyTemplate, HubListener):
@@ -250,7 +250,7 @@ class SpectralSubsetSelect(BasePluginComponent):
             return self.selected_obj.upper.value
 
 
-class SpectralSubsetSelectMxn(VuetifyTemplate, HubListener):
+class SpectralSubsetSelectMixin(VuetifyTemplate, HubListener):
     """
     Applies the SpectralSubsetSelect component as a mixin in the base plugin.  This
     automatically adds traitlets as well as new properties to the plugin with minimal
@@ -275,7 +275,7 @@ class SpectralSubsetSelectMxn(VuetifyTemplate, HubListener):
 
     To use in a plugin:
 
-    * add ``SpectralSubsetSelectMxn`` as a mixin to the class
+    * add ``SpectralSubsetSelectMixin`` as a mixin to the class
     * use the traitlets and properties above as needed (note the prefix for properties)
 
     Example template (label and hint are optional)::

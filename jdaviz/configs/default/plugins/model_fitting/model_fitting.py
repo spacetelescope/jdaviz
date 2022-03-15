@@ -12,7 +12,7 @@ from glue.core.link_helpers import LinkSame
 
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage, SnackbarMessage
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin, SpectralSubsetSelectMxn
+from jdaviz.core.template_mixin import PluginTemplateMixin, SpectralSubsetSelectMixin
 from jdaviz.core.custom_traitlets import IntHandleEmpty
 from jdaviz.configs.default.plugins.model_fitting.fitting_backend import fit_model_to_spectrum
 from jdaviz.configs.default.plugins.model_fitting.initializers import (MODELS,
@@ -31,7 +31,7 @@ class _EmptyParam:
 
 
 @tray_registry('g-model-fitting', label="Model Fitting")
-class ModelFitting(PluginTemplateMixin, SpectralSubsetSelectMxn):
+class ModelFitting(PluginTemplateMixin, SpectralSubsetSelectMixin):
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "model_fitting.vue"
     dc_items = List([]).tag(sync=True)
@@ -69,7 +69,6 @@ class ModelFitting(PluginTemplateMixin, SpectralSubsetSelectMxn):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self._viewer_spectra = None  # TODO: this is unused, safe to remove?
         self._units = {}
         self.n_models = 0
         self._fitted_model = None

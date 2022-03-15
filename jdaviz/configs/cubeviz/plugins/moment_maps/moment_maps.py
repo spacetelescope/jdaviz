@@ -11,7 +11,7 @@ from specutils import Spectrum1D, manipulation, analysis
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin, SpectralSubsetSelectMxn
+from jdaviz.core.template_mixin import PluginTemplateMixin, SpectralSubsetSelectMixin
 
 __all__ = ['MomentMap']
 
@@ -21,7 +21,7 @@ u.add_enabled_units([spaxel])
 
 
 @tray_registry('cubeviz-moment-maps', label="Moment Maps")
-class MomentMap(PluginTemplateMixin, SpectralSubsetSelectMxn):
+class MomentMap(PluginTemplateMixin, SpectralSubsetSelectMixin):
     template_file = __file__, "moment_maps.vue"
     n_moment = Any().tag(sync=True)
     dc_items = List([]).tag(sync=True)

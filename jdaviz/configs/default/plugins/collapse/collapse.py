@@ -11,13 +11,13 @@ from traitlets import List, Unicode, observe
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin, SpectralSubsetSelectMxn
+from jdaviz.core.template_mixin import PluginTemplateMixin, SpectralSubsetSelectMixin
 
 __all__ = ['Collapse']
 
 
 @tray_registry('g-collapse', label="Collapse")
-class Collapse(PluginTemplateMixin, SpectralSubsetSelectMxn):
+class Collapse(PluginTemplateMixin, SpectralSubsetSelectMixin):
     template_file = __file__, "collapse.vue"
     data_items = List([]).tag(sync=True)
     selected_data_item = Unicode().tag(sync=True)
