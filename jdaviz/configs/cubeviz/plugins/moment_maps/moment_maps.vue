@@ -19,7 +19,7 @@
       :selected.sync="spectral_subset_selected"
       :has_subregions="spectral_subset_selected_has_subregions"
       has_subregions_warning="The selected selected subset has subregions, the entire range will be used, ignoring any gaps."
-      hint="Optional: limit to a spectral region defined in the spectrum viewer."
+      hint="Spectral region to compute the moment map."
     />
 
     <v-row>
