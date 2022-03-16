@@ -87,7 +87,7 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
             try:
                 self.line_profile_xy = self.session.jdaviz_app.get_tray_item_from_name(
                     'imviz-line-profile-xy')
-            except KeyError:
+            except KeyError:  # pragma: no cover
                 return
 
         if data['event'] == 'mousemove':
@@ -202,10 +202,16 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
                 for ilayer in (set(valid) - set([next_layer])):
                     self.state.layers[ilayer].visible = False
 
-                data = self.state.layers[next_layer].layer
                 # We can display the active data label in Compass plugin.
-                self.set_compass(data)
+                self.set_compass(self.state.layers[next_layer].layer)
+
                 # Update line profile plots too.
+                if self.line_profile_xy is None:
+                    try:
+                        self.line_profile_xy = self.session.jdaviz_app.get_tray_item_from_name(
+                            'imviz-line-profile-xy')
+                    except KeyError:  # pragma: no cover
+                        return
                 self.line_profile_xy.selected_viewer = self.LABEL
                 self.line_profile_xy.vue_draw_plot()
 

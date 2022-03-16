@@ -66,9 +66,13 @@ Line Profiles
 =============
 
 This plugin plots line profiles across X and Y for the pixel under cursor
-when "l" is pressed on the image viewer. You can also manually type in the
-values of X and Y, and then press the "Plot" button. The top visible image,
-the same one displayed under :ref:`imviz-compass`, will be used for these plots.
+when ``l`` key is pressed on the image viewer. You can also manually type in the
+values of X and Y, and then press the :guilabel:`PLOT` button.
+The top visible image, the same one displayed under :ref:`imviz-compass`,
+will be used for these plots.
+
+This plugin only considers pixel locations, regardless of linking type set in
+:ref:`imviz-link-control`.
 
 .. _aper-phot-simple:
 
