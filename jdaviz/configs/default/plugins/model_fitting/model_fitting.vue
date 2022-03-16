@@ -16,16 +16,11 @@
         ></v-select>
       </v-row>
 
-      <v-row>
-        <v-select
-          :items="spectral_subset_items"
-          v-model="selected_subset"
-          label="Spectral Region"
-          hint="Select spectral region to fit."
-          persistent-hint
-          @click="list_subsets"
-        ></v-select>
-      </v-row>
+      <plugin-subset-select 
+        :items="spectral_subset_items"
+        :selected.sync="spectral_subset_selected"
+        hint="Select spectral region to fit."
+      />
     </v-form>
 
     <j-plugin-section-header>Model Components</j-plugin-section-header>
@@ -37,7 +32,6 @@
           label="Model"
           hint="Select a model to fit."
           persistent-hint
-          :rules="[() => model_selected!=='' || 'This field is required']"
         ></v-select>
       </v-row>
 

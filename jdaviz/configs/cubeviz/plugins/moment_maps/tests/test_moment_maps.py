@@ -17,7 +17,6 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
     mm._on_data_updated(None)
 
     mm._on_data_selected({'new': 'test[FLUX]'})
-    mm._on_subset_selected({'new': None})
 
     mm.n_moment = 0  # Collapsed sum, will get back 2D spatial image
     mm.vue_calculate_moment()

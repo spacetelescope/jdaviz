@@ -21,37 +21,29 @@
       ></v-select>
     </v-row>
 
-    <v-row>
-      <v-select
-        :items="spectral_subset_items"
-        v-model="selected_subset"
-        label="Spectral Region"
-        hint="Select spectral region that defines the line."
-        persistent-hint
-      ></v-select>
-    </v-row>
+    <plugin-subset-select 
+      :items="spectral_subset_items"
+      :selected.sync="spectral_subset_selected"
+      hint="Select spectral region that defines the line."
+    />
 
     <j-plugin-section-header>Continuum</j-plugin-section-header>
     <v-row>
       <j-docs-link>
-        {{selected_subset=='Entire Spectrum' ? "Since using the entire spectrum, the end points will be used to fit a linear continuum." : "Choose a region to fit a linear line as the underlying continuum."}}  
-        {{selected_continuum=='Surrounding' && selected_subset!='Entire Spectrum' ? "Choose a width in number of data points to consider on each side of the line region defined above." : null}}
+        {{spectral_subset_selected=='Entire Spectrum' ? "Since using the entire spectrum, the end points will be used to fit a linear continuum." : "Choose a region to fit a linear line as the underlying continuum."}}  
+        {{continuum_selected=='Surrounding' && spectral_subset_selected!='Entire Spectrum' ? "Choose a width in number of data points to consider on each side of the line region defined above." : null}}
         When this plugin is opened, a visual indicator will show on the spectrum plot showing the continuum fitted as a thick line, and interpolated into the line region as a thin line.
       </j-docs-link>
     </v-row>
 
-    <v-row>
-      <v-select
-        :items="continuum_subset_items"
-        v-model="selected_continuum"
-        label="Spectral Region"
-        :rules="[() => selected_continuum!==selected_subset || 'Must not match line selection.']"
-        hint="Select spectral region to fit linear line to represent the continuum."
-        persistent-hint
-      ></v-select>
-    </v-row>
+    <plugin-subset-select 
+      :items="continuum_subset_items"
+      :selected.sync="continuum_selected"
+      :rules="[() => continuum_selected!==spectral_subset_selected || 'Must not match line selection.']"
+      hint="Select spectral region that defines the line."
+    />
 
-    <v-row v-if="selected_continuum=='Surrounding' && selected_subset!='Entire Spectrum'">
+    <v-row v-if="continuum_selected=='Surrounding' && spectral_subset_selected!='Entire Spectrum'">
       <!-- DEV NOTE: if changing the validation rules below, also update the logic to clear the results
            in line_analysis.py  -->
       <v-text-field

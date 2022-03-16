@@ -30,7 +30,7 @@ def test_plugin(specviz_helper, spectrum1d):
 
     ipy_model_id = specviz_helper.app.state.tray_items[plugin_index]['widget']
     plugin = widget_serialization['from_json'](ipy_model_id, None)
-    assert 'Subset 1' in plugin.spectral_subset_items
+    assert 'Subset 1' in plugin.spectral_subset.labels
     plugin.selected_subset = 'Subset 1'
     plugin.selected_continuum = 'Surrounding'
     plugin.width = 3
