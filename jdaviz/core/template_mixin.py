@@ -237,15 +237,15 @@ class SpectralSubsetSelect(BasePluginComponent):
         return self.app.get_subsets_from_viewer("spectrum-viewer",
                                                 subset_type="spectral").get(self.selected)
 
-    def selected_min(self, cube):
+    def selected_min(self, spectrum1d):
         if self.selected == "Entire Spectrum":
-            return np.nanmin(cube.spectral_axis.value)
+            return np.nanmin(spectrum1d.spectral_axis.value)
         else:
             return self.selected_obj.lower.value
 
-    def selected_max(self, cube):
+    def selected_max(self, spectrum1d):
         if self.selected == "Entire Spectrum":
-            return np.nanmax(cube.spectral_axis.value)
+            return np.nanmax(spectrum1d.spectral_axis.value)
         else:
             return self.selected_obj.upper.value
 
