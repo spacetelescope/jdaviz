@@ -157,19 +157,22 @@ variables in your Python session.
 The output table contains the results you see in the plugin and then some.
 The columns are as follow:
 
-* ``id``: ID number assigned to the row, starting from 1.
-* ``xcenter``, ``ycenter``: Pixel center of the region used. No re-centering
-  w.r.t. flux distribution is done.
-* ``sky_center``: `~astropy.coordinates.SkyCoord` associated with ``xcenter``
-  and ``ycenter``. If WCS is not available, this field is `None`.
+* :attr:`~photutils.aperture.ApertureStats.id`: ID number assigned to the row,
+  starting from 1.
+* :attr:`~photutils.aperture.ApertureStats.xcentroid`,
+  :attr:`~photutils.aperture.ApertureStats.ycentroid`: Pixel centroids
+  calculated using moments. This might differ from center of the aperture.
+* :attr:`~photutils.aperture.ApertureStats.sky_centroid`:
+  `~astropy.coordinates.SkyCoord` associated with the centroid.
+  If WCS is not available, this field is `None`.
 * ``background``: The value from :guilabel:`Background value`, with unit attached.
-* ``npix``: The number of pixels covered by the region. Partial coverage is
-  reported as fraction.
-* ``aperture_sum``: Sum of flux in the aperture. If per steradian is in input
-  data unit, total pixel area covered in steradian is already multiplied here,
-  if applicable, so there will be no per steradian in its unit. Otherwise, it
-  has the same unit as input data. For more details on how the photometry is
-  done, see :ref:`photutils:photutils-aperture`.
+* :attr:`~photutils.aperture.ApertureStats.sum`: Sum of flux in the aperture.
+  If per steradian is in input data unit, total pixel area covered in steradian
+  is already multiplied here, if applicable, so there will be no per steradian
+  in its unit. Otherwise, it has the same unit as input data. For more details
+  on how the photometry is done, see :ref:`photutils:photutils-aperture`.
+* :attr:`~photutils.aperture.ApertureStats.sum_aper_area`: The pixel area
+  covered by the region. Partial coverage is reported as fraction.
 * ``pixarea_tot``: If per steradian is in input data unit and pixel area is
   provided, this contains the total pixel area covered by the aperture in
   steradian. Otherwise, it is `None`.
@@ -188,10 +191,23 @@ The columns are as follow:
   is done without taking account of ``pixarea_tot``, even when it is available.
 * ``flux_scaling``: The value from :guilabel:`Flux scaling`, with unit attached,
   if applicable. Otherwise, it is `None`.
-* ``mean``, ``stddev``, ``median``, ``min``, ``max``: Basic statistics from all
-  the pixels in the region. These are done using :meth:`regions.PixelRegion.to_mask`
-  with ``mode='center'``, unlike ``aperture_sum``. They are not related to
-  the aperture photometry, but are only provided as supplemental information.
+* :attr:`~photutils.aperture.ApertureStats.min`,
+  :attr:`~photutils.aperture.ApertureStats.max`,
+  :attr:`~photutils.aperture.ApertureStats.mean`,
+  :attr:`~photutils.aperture.ApertureStats.median`,
+  :attr:`~photutils.aperture.ApertureStats.mode`,
+  :attr:`~photutils.aperture.ApertureStats.std`,
+  :attr:`~photutils.aperture.ApertureStats.mad_std`,
+  :attr:`~photutils.aperture.ApertureStats.var`,
+  :attr:`~photutils.aperture.ApertureStats.biweight_location`,
+  :attr:`~photutils.aperture.ApertureStats.biweight_midvariance`: Basic statistics
+  from the aperture.
+* :attr:`~photutils.aperture.ApertureStats.fwhm`,
+  :attr:`~photutils.aperture.ApertureStats.semimajor_sigma`,
+  :attr:`~photutils.aperture.ApertureStats.semiminor_sigma`,
+  :attr:`~photutils.aperture.ApertureStats.orientation`,
+  :attr:`~photutils.aperture.ApertureStats.eccentricity`: Properties of a 2D
+  Gaussian function that has the same second-order central moments as the source.
 * ``data_label``: Data label of the image used.
 * ``subset_label``: Subset label of the region used.
 * ``timestamp``: Timestamp of when the photometry was performed as

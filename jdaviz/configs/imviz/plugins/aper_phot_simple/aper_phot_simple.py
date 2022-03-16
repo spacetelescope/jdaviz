@@ -7,7 +7,7 @@ from astropy.time import Time
 from bqplot import pyplot as bqplt
 from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage, SubsetUpdateMessage
 from ipywidgets import widget_serialization
-from photutils.aperture import aperture_photometry
+from photutils.aperture import ApertureStats
 from traitlets import Any, Bool, List, Unicode, observe
 
 from jdaviz.configs.imviz.helper import layer_is_image_data
@@ -183,22 +183,17 @@ class SimpleAperturePhotometry(TemplateMixin):
                 bg = float(self.background_value)
             except ValueError:  # Clearer error message
                 raise ValueError('Missing or invalid background value')
-            comp_no_bg = comp.data - bg
-
             aperture = regions2aperture(reg)
-            npix = np.nansum(aperture.to_mask(method='exact').to_image(data.shape)) * u.pix
-            aper_mask_stat = reg.to_mask(mode='center')
-            comp_no_bg_cutout = aper_mask_stat.cutout(comp_no_bg)
-            img_stat = aper_mask_stat.get_values(comp_no_bg, mask=None)
             include_pixarea_fac = False
             include_counts_fac = False
             include_flux_scale = False
+            # TODO: Optimize for big data -- avoid array arithmetic for entire array
+            comp_no_bg = comp.data - bg
             if comp.units:
                 img_unit = u.Unit(comp.units)
-                img_stat = img_stat * img_unit
                 bg = bg * img_unit
                 comp_no_bg = comp_no_bg * img_unit
-                comp_no_bg_cutout = comp_no_bg_cutout * img_unit
+
                 if u.sr in img_unit.bases:  # TODO: Better way to detect surface brightness unit?
                     try:
                         pixarea = float(self.pixel_area)
@@ -219,99 +214,91 @@ class SimpleAperturePhotometry(TemplateMixin):
                     raise ValueError('Missing or invalid flux scaling')
                 if not np.allclose(flux_scale, 0):
                     include_flux_scale = True
-            phot_table = aperture_photometry(comp_no_bg, aperture)
-            rawsum = phot_table['aperture_sum'][0]
-            d = {'id': phot_table['id'][0],
-                 'xcenter': phot_table['xcenter'][0],
-                 'ycenter': phot_table['ycenter'][0]}
-            if data.coords is not None:
-                d['sky_center'] = data.coords.pixel_to_world(d['xcenter'], d['ycenter'])
-            else:
-                d['sky_center'] = None
-            d.update({'background': bg,
-                      'npix': npix})
+            phot_aperstats = ApertureStats(comp_no_bg, aperture, wcs=data.coords)
+            phot_table = phot_aperstats.to_table(columns=(
+                'id', 'xcentroid', 'ycentroid', 'sky_centroid', 'sum', 'sum_aper_area',
+                'min', 'max', 'mean', 'median', 'mode', 'std', 'mad_std', 'var',
+                'biweight_location', 'biweight_midvariance', 'fwhm', 'semimajor_sigma',
+                'semiminor_sigma', 'orientation', 'eccentricity'))  # Some cols excluded, add back as needed.  # noqa
+            phot_table['xcentroid'].unit = u.pix  # photutils only assumes, we make it real
+            phot_table['ycentroid'].unit = u.pix
+            rawsum = phot_table['sum'][0]
+            npix = phot_table['sum_aper_area'][0]
+
             if include_pixarea_fac:
-                pixarea = pixarea * (u.arcsec * u.arcsec / u.pix)
-                pixarea_fac = npix * pixarea.to(u.sr / u.pix)
-                d.update({'aperture_sum': rawsum * pixarea_fac,
-                          'pixarea_tot': pixarea_fac})
+                pixarea = pixarea * (u.arcsec * u.arcsec / (u.pix * u.pix))
+                pixarea_fac = npix * pixarea.to(u.sr / (u.pix * u.pix))
+                phot_table['sum'] = [rawsum * pixarea_fac]
             else:
-                d.update({'aperture_sum': rawsum,
-                          'pixarea_tot': None})
+                pixarea_fac = None
+
             if include_counts_fac:
                 ctfac = ctfac * (rawsum.unit / u.count)
                 sum_ct = rawsum / ctfac
-                d.update({'aperture_sum_counts': sum_ct,
-                          'aperture_sum_counts_err': np.sqrt(sum_ct.value) * sum_ct.unit,
-                          'counts_fac': ctfac})
+                sum_ct_err = np.sqrt(sum_ct.value) * sum_ct.unit
             else:
-                d.update({'aperture_sum_counts': None,
-                          'aperture_sum_counts_err': None,
-                          'counts_fac': None})
+                ctfac = None
+                sum_ct = None
+                sum_ct_err = None
+
             if include_flux_scale:
                 flux_scale = flux_scale * rawsum.unit
-                d.update({'aperture_sum_mag': -2.5 * np.log10(rawsum / flux_scale) * u.mag,
-                          'flux_scaling': flux_scale})
+                sum_mag = -2.5 * np.log10(rawsum / flux_scale) * u.mag
             else:
-                d.update({'aperture_sum_mag': None,
-                          'flux_scaling': None})
+                flux_scale = None
+                sum_mag = None
 
-            # Extra stats beyond photutils.
-            d.update({'mean': np.nanmean(img_stat),
-                      'stddev': np.nanstd(img_stat),
-                      'median': np.nanmedian(img_stat),
-                      'min': np.nanmin(img_stat),
-                      'max': np.nanmax(img_stat),
-                      'data_label': data.label,
-                      'subset_label': reg.meta.get('label', ''),
-                      'timestamp': Time(datetime.utcnow())})
+            # Extra info beyond photutils.
+            phot_table.add_columns(
+                [bg, pixarea_fac, sum_ct, sum_ct_err, ctfac, sum_mag, flux_scale, data.label,
+                 reg.meta.get('label', ''), Time(datetime.utcnow())],
+                names=['background', 'pixarea_tot', 'aperture_sum_counts',
+                       'aperture_sum_counts_err', 'counts_fac', 'aperture_sum_mag', 'flux_scaling',
+                       'data_label', 'subset_label', 'timestamp'],
+                indexes=[4, 6, 6, 6, 6, 6, 6, 21, 21, 21])
 
             # Attach to app for Python extraction.
             if (not hasattr(self.app, '_aper_phot_results') or
                     not isinstance(self.app._aper_phot_results, QTable)):
-                self.app._aper_phot_results = _qtable_from_dict(d)
+                self.app._aper_phot_results = phot_table
             else:
                 try:
-                    d['id'] = self.app._aper_phot_results['id'].max() + 1
-                    self.app._aper_phot_results.add_row(d.values())
+                    phot_table['id'][0] = self.app._aper_phot_results['id'].max() + 1
+                    self.app._aper_phot_results.add_row(phot_table[0])
                 except Exception:  # Discard incompatible QTable
-                    d['id'] = 1
-                    self.app._aper_phot_results = _qtable_from_dict(d)
+                    phot_table['id'][0] = 1
+                    self.app._aper_phot_results = phot_table
 
             # Radial profile (Raw)
-            reg_bb = reg.bounding_box
+            reg_bb = phot_aperstats.bbox
             reg_ogrid = np.ogrid[reg_bb.iymin:reg_bb.iymax, reg_bb.ixmin:reg_bb.ixmax]
-            radial_dx = reg_ogrid[1] - reg.center.x
-            radial_dy = reg_ogrid[0] - reg.center.y
+            radial_dx = reg_ogrid[1] - aperture.positions[0]
+            radial_dy = reg_ogrid[0] - aperture.positions[1]
             radial_r = np.hypot(radial_dx, radial_dy).ravel()  # pix
-            radial_img = comp_no_bg_cutout.ravel()
-
-            if comp.units:
-                y_data = radial_img.value
-                y_label = radial_img.unit.to_string()
-            else:
-                y_data = radial_img
-                y_label = 'Value'
+            radial_img = phot_aperstats.data_cutout.data.ravel()  # data unit
 
             # Radial profile
             if self.current_plot_type == "Radial Profile":
                 # This algorithm is from the imexam package,
                 # see licenses/IMEXAM_LICENSE.txt for more details
                 radial_r = list(radial_r)
-                y_data = np.bincount(radial_r, y_data) / np.bincount(radial_r)
-                radial_r = np.arange(len(y_data))
-                markerstyle = 'm--o'
+                y_data = np.bincount(radial_r, radial_img) / np.bincount(radial_r)
+                radial_r = np.arange(y_data.size)
+                markerstyle = '--o'
+                bqplot_kw = {'marker_size': 32}
             else:
-                markerstyle = 'mo'
+                y_data = radial_img
+                markerstyle = 'o'
+                bqplot_kw = {'default_size': 1}
 
             bqplt.clear()
             # NOTE: default margin in bqplot is 60 in all directions
             fig = bqplt.figure(1, title='Radial profile from Subset center',
                                fig_margin={'top': 60, 'bottom': 60, 'left': 40, 'right': 10},
                                title_style={'font-size': '12px'})  # TODO: Jenn wants title at bottom. # noqa
-            bqplt.plot(radial_r, y_data, markerstyle, figure=fig, default_size=1)
+            bqplt.plot(radial_r, y_data, markerstyle, figure=fig, colors='gray', **bqplot_kw)
             bqplt.xlabel(label='pix', mark=fig.marks[-1], figure=fig)
-            bqplt.ylabel(label=y_label, mark=fig.marks[-1], figure=fig)
+            bqplt.ylabel(label=comp.units or 'Value', mark=fig.marks[-1], figure=fig)
 
         except Exception as e:  # pragma: no cover
             self.reset_results()
@@ -321,37 +308,27 @@ class SimpleAperturePhotometry(TemplateMixin):
         else:
             # Parse results for GUI.
             tmp = []
-            for key, x in d.items():
+            for key in phot_table.colnames:
                 if key in ('id', 'data_label', 'subset_label', 'background', 'pixarea_tot',
                            'counts_fac', 'aperture_sum_counts_err', 'flux_scaling', 'timestamp'):
                     continue
+                x = phot_table[key][0]
                 if (isinstance(x, (int, float, u.Quantity)) and
-                        key not in ('xcenter', 'ycenter', 'sky_center', 'npix',
+                        key not in ('xcentroid', 'ycentroid', 'sky_centroid', 'sum_aper_area',
                                     'aperture_sum_counts')):
-                    x = f'{x:.4e}'
-                    tmp.append({'function': key, 'result': x})
-                elif key == 'sky_center' and x is not None:
-                    tmp.append({'function': 'RA center', 'result': f'{x.ra.deg:.4f} deg'})
-                    tmp.append({'function': 'Dec center', 'result': f'{x.dec.deg:.4f} deg'})
-                elif key in ('xcenter', 'ycenter', 'npix'):
-                    x = f'{x:.1f}'
-                    tmp.append({'function': key, 'result': x})
+                    tmp.append({'function': key, 'result': f'{x:.4e}'})
+                elif key == 'sky_centroid' and x is not None:
+                    tmp.append({'function': 'RA centroid', 'result': f'{x.ra.deg:.4f} deg'})
+                    tmp.append({'function': 'Dec centroid', 'result': f'{x.dec.deg:.4f} deg'})
+                elif key in ('xcentroid', 'ycentroid', 'sum_aper_area'):
+                    tmp.append({'function': key, 'result': f'{x:.1f}'})
                 elif key == 'aperture_sum_counts' and x is not None:
-                    x = f'{x:.4e} ({d["aperture_sum_counts_err"]:.4e})'
-                    tmp.append({'function': key, 'result': x})
-                elif not isinstance(x, str):
-                    x = str(x)
-                    tmp.append({'function': key, 'result': x})
+                    tmp.append({'function': key, 'result':
+                                f'{x:.4e} ({phot_table["aperture_sum_counts_err"][0]:.4e})'})
+                else:
+                    tmp.append({'function': key, 'result': str(x)})
             self.results = tmp
             self.result_available = True
             self.radial_plot = fig
             self.bqplot_figs_resize = [fig]
             self.plot_available = True
-
-
-def _qtable_from_dict(d):
-    # TODO: Is there more elegant way to do this?
-    tmp = {}
-    for key, x in d.items():
-        tmp[key] = [x]
-    return QTable(tmp)
