@@ -236,8 +236,11 @@ class SubsetSelect(BasePluginComponent):
             return
 
         if msg.subset.label not in self.labels:
-            # NOTE: += will not trigger traitlet update
-            self.items = self.items + [self._subset_to_dict(msg.subset)]  # noqa
+            # NOTE: this logic will need to be revisited if generic renaming of subsets is added
+            # see https://github.com/spacetelescope/jdaviz/pull/1175#discussion_r829372470
+            if msg.subset.label.startswith('Subset'):
+                # NOTE: += will not trigger traitlet update
+                self.items = self.items + [self._subset_to_dict(msg.subset)]  # noqa
         else:
             if msg.attribute in ('style'):
                 # TODO: may need to add label and then rebuild the entire list if/when
