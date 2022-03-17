@@ -12,5 +12,5 @@ toolbar:
   - g-viewer-creator
   - g-subset-tools
 tray:
-  - g-export-plot
   - g-gaussian-smooth
+  - g-export-plot

@@ -15,7 +15,6 @@ toolbar:
   - g-data-tools
   - g-subset-tools
 tray:
-  - g-export-plot
   - g-plot-options
   - cubeviz-slice
   - g-gaussian-smooth
@@ -25,6 +24,7 @@ tray:
   - g-line-list
   - specviz-line-analysis
   - cubeviz-moment-maps
+  - g-export-plot
 viewer_area:
   - container: col
     children:

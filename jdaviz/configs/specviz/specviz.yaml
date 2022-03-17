@@ -15,13 +15,13 @@ toolbar:
   - g-subset-tools
 tray:
   - g-metadata-viewer
-  - g-export-plot
   - g-plot-options
   - g-gaussian-smooth
   - g-model-fitting
   - g-unit-conversion
   - g-line-list
   - specviz-line-analysis
+  - g-export-plot
 viewer_area:
   - container: col
     children:

@@ -14,13 +14,13 @@ toolbar:
   - g-row-lock
 tray:
   - g-metadata-viewer
-  - g-export-plot
   - g-plot-options
   - g-gaussian-smooth
   - g-slit-overlay
   - g-model-fitting
   - g-line-list
   - specviz-line-analysis
+  - g-export-plot
 viewer_area:
   - container: col
     children:
