@@ -9,6 +9,7 @@ from traitlets import Any, Bool, List, Unicode, observe
 from glue.core.data import Data
 from glue.core.subset import Subset, RangeSubsetState, OrState, AndState
 from glue.core.link_helpers import LinkSame
+from glue.core.message import SubsetDeleteMessage, SubsetUpdateMessage
 
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage, SnackbarMessage
 from jdaviz.core.registries import tray_registry
@@ -86,6 +87,10 @@ class ModelFitting(PluginTemplateMixin, SpectralSubsetSelectMixin):
                            handler=self._on_viewer_data_changed)
         self.hub.subscribe(self, RemoveDataMessage,
                            handler=self._on_viewer_data_changed)
+        self.hub.subscribe(self, SubsetUpdateMessage,
+                           handler=self._on_viewer_data_changed)
+        self.hub.subscribe(self, SubsetDeleteMessage,
+                           handler=self._on_viewer_data_changed)
 
     def _on_viewer_data_changed(self, msg=None):
         """
@@ -107,13 +112,6 @@ class ModelFitting(PluginTemplateMixin, SpectralSubsetSelectMixin):
         """
         self._viewer_id = self.app._viewer_item_by_reference(
             'spectrum-viewer').get('id')
-
-        # Subsets are global and are not linked to specific viewer instances,
-        # so it's not required that we match any specific ids for that case.
-        # However, if the msg is not none, check to make sure that it's the
-        # viewer we care about.
-        if msg is not None and msg.viewer_id != self._viewer_id:
-            return
 
         viewer = self.app.get_viewer('spectrum-viewer')
 
@@ -563,9 +561,10 @@ class ModelFitting(PluginTemplateMixin, SpectralSubsetSelectMixin):
 
         self.app.add_data(spectrum, label)
 
-        # Make sure we link the result spectrum to the data we're fitting
-        data_fitted = self.app.session.data_collection[self.selected_data]
-        data_id = data_fitted.world_component_ids[0]
+        # Link the result spectrum to the reference data of the spectrum viewer
+
+        ref_data = self.app.get_viewer('spectrum-viewer').state.reference_data
+        data_id = ref_data.world_component_ids[0]
         model_id = self.app.session.data_collection[label].world_component_ids[0]
         self.app.session.data_collection.add_link(LinkSame(data_id, model_id))
 
