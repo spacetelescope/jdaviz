@@ -131,7 +131,7 @@ class MomentMap(PluginTemplateMixin, SpectralSubsetSelectMixin):
         # Link to the first dataset with compatible coordinates
         for i in range(new_len - 1):
             pc_old = self.app.data_collection[i].pixel_component_ids
-            # New data is a moment map
+            # If data_collection[i] is also from the moment map
             if ("Plugin" in self.app.data_collection[i].meta and
                     self.app.data_collection[i].meta["Plugin"] == "Moment Map"):
                 links = [LinkSame(pc_old[0], pc_new[0]),

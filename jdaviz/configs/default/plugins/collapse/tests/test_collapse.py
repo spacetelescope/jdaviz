@@ -22,5 +22,5 @@ def test_linking_after_collapse(cubeviz_helper, spectral_cube_wcs):
     assert dc[1].label == 'Collapsed 1 Unknown spectrum object[FLUX]'
     assert len(dc.external_links) == 2
 
-    assert dc.external_links[1].cids1[0] is dc[0].pixel_component_ids[1]
-    assert dc.external_links[1].cids2[0] is dc[1].pixel_component_ids[1]
+    assert dc.external_links[1].cids1[0] is dc[1].pixel_component_ids[0]
+    assert dc.external_links[1].cids2[0] is dc[0].pixel_component_ids[1]

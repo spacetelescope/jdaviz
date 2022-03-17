@@ -83,20 +83,10 @@ class Collapse(PluginTemplateMixin, SpectralSubsetSelectMixin):
         self._label_counter += 1
         label = f"Collapsed {self._label_counter} {self._selected_data.label}"
 
-        self.data_collection[label] = data
+        data.meta["Plugin"] = "Collapse"
+        self.app.add_data(data, label)
 
-        # Link the new dataset pixel-wise to the original dataset. In general
-        # direct pixel to pixel links are the most efficient and should be
-        # used in cases like this where we know there is a 1-to-1 mapping of
-        # pixel coordinates.
-        # Spatial-spatial image only.
-        pix_id_1 = self._selected_data.pixel_component_ids[0]  # Pixel Axis 0 [z]
-        pix_id_1c = self.data_collection[label].pixel_component_ids[0]  # Pixel Axis 0 [y]
-        pix_id_2 = self._selected_data.pixel_component_ids[1]  # Pixel Axis 1 [y]
-        pix_id_2c = self.data_collection[label].pixel_component_ids[1]  # Pixel Axis 1 [x]
-
-        self.data_collection.add_link([LinkSame(pix_id_1, pix_id_1c),
-                                       LinkSame(pix_id_2, pix_id_2c)])
+        self._link_collapse_data()
 
         snackbar_message = SnackbarMessage(
             f"Data set '{self._selected_data.label}' collapsed successfully.",
@@ -109,3 +99,33 @@ class Collapse(PluginTemplateMixin, SpectralSubsetSelectMixin):
             # replace the contents in the selected viewer with the results from this plugin
             self.app.add_data_to_viewer(self.viewer_to_id.get(self.selected_viewer),
                                         label, clear_other_data=True)
+
+    def _link_collapse_data(self):
+        """
+        Link the new dataset pixel-wise to the original dataset. In general
+        direct pixel to pixel links are the most efficient and should be
+        used in cases like this where we know there is a 1-to-1 mapping of
+        pixel coordinates.
+
+        """
+        new_len = len(self.app.data_collection)
+
+        pc_new = self.app.data_collection[-1].pixel_component_ids
+
+        # Link to the first dataset with compatible coordinates
+        for i in range(new_len - 1):
+            pc_old = self.app.data_collection[i].pixel_component_ids
+            # If data_collection[i] is also from the collapse plugin
+            if ("Plugin" in self.app.data_collection[i].meta and
+                    self.app.data_collection[i].meta["Plugin"] == "Collapse"):
+                links = [LinkSame(pc_old[0], pc_new[0]),
+                         LinkSame(pc_old[1], pc_new[1])]
+
+            # Else, link collapse data to cube (pc_old)
+            else:
+                links = [[LinkSame(pc_new[1], pc_old[2]),
+                          LinkSame(pc_new[0], pc_old[1])]]
+
+            self.app.data_collection.add_link(links)
+
+            break
