@@ -43,6 +43,9 @@ Cubeviz
 ^^^^^^^
 
 - Fixed linking of data to allow contour over-plotting. [#1154]
+- Fixed an error trace when fitting a model to a spatial subset. [#1174]
+- Fixed the model fitting plugin data dropdown not populating with spatial
+  subsets properly. [#1174]
 
 Imviz
 ^^^^^
