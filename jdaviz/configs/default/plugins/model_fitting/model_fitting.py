@@ -68,6 +68,7 @@ class ModelFitting(PluginTemplateMixin, SpectralSubsetSelectMixin):
     available_models = List(list(MODELS.keys())).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
+        self._spectrum1d = None
         super().__init__(*args, **kwargs)
 
         self._units = {}
@@ -273,6 +274,10 @@ class ModelFitting(PluginTemplateMixin, SpectralSubsetSelectMixin):
     @observe("spectral_subset_selected")
     def _on_spectral_subset_selected(self, event):
         # If "Entire Spectrum" selected, reset based on bounds of selected data
+        if self._spectrum1d is None:
+            # TODO: this should be removed as soon as the data dropdown component is
+            # created and defaults at init
+            return
         if self.spectral_subset_selected == "Entire Spectrum":
             self._window = None
             self.spectral_min = self._spectrum1d.spectral_axis[0].value

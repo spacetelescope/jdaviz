@@ -90,7 +90,7 @@ Other Changes and Additions
 - Redshifts imported with a custom line list are now ignored.  Redshift must be set app-wide via 
   viz.set_redshift or the line list plugin. [#1134]
 
-- Subset selection dropdowns in plugins now show synced color indicators. [#1156]
+- Subset selection dropdowns in plugins now show synced color indicators. [#1156, #1175]
 
 2.3 (2022-03-01)
 ================

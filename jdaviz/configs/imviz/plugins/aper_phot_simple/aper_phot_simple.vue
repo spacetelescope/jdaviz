@@ -17,26 +17,21 @@
     </v-row>
 
     <div v-if='data_selected'>
-      <v-row>
-        <v-select
-          :items="subset_items"
-          v-model="subset_selected"
-          label="Subset"
-          hint="Select subset region for photometry."
-          persistent-hint
-        ></v-select>
-      </v-row>
+      <plugin-subset-select
+        :items="subset_items"
+        :selected.sync="subset_selected"
+        label="Aperture"
+        hint="Select aperture region for photometry."
+      />
 
       <div v-if="subset_selected">
-        <v-row>
-          <v-select
-            :items="bg_subset_items"
-            v-model="bg_subset_selected"
-            label="Subset (background)"
-            hint="Select subset region for background calculation."
-            persistent-hint
-          ></v-select>
-        </v-row>
+        <plugin-subset-select
+          :items="bg_subset_items"
+          :selected.sync="bg_subset_selected"
+          :rules="[() => bg_subset_selected!==subset_selected || 'Must not match aperture.']"
+          label="Background"
+          hint="Select subset region for background calculation."
+        />
 
         <v-row>
           <v-text-field

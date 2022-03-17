@@ -20,7 +20,7 @@ from jdaviz.core.marks import (LineAnalysisContinuum,
                                LineAnalysisContinuumRight,
                                Shadow)
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin, SpectralSubsetSelect
+from jdaviz.core.template_mixin import PluginTemplateMixin, SubsetSelect
 from jdaviz.core.tools import ICON_DIR
 
 __all__ = ['LineAnalysis']
@@ -39,11 +39,11 @@ class LineAnalysis(PluginTemplateMixin):
     dc_items = List([]).tag(sync=True)
     selected_spectrum = Unicode("").tag(sync=True)
 
-    spectral_subset_items = List([{"label": "Entire Spectrum", "color": False}]).tag(sync=True)
-    spectral_subset_selected = Unicode("Entire Spectrum").tag(sync=True)
+    spectral_subset_items = List().tag(sync=True)
+    spectral_subset_selected = Unicode().tag(sync=True)
 
-    continuum_subset_items = List([{"label": "Surrounding", "color": False}]).tag(sync=True)
-    continuum_selected = Unicode("Surrounding").tag(sync=True)
+    continuum_subset_items = List().tag(sync=True)
+    continuum_selected = Unicode().tag(sync=True)
 
     width = FloatHandleEmpty(3).tag(sync=True)
     results_computing = Bool(False).tag(sync=True)
@@ -66,12 +66,16 @@ class LineAnalysis(PluginTemplateMixin):
         self._units = {}
         self.update_results(None)
 
-        self.spectral_subset = SpectralSubsetSelect(self,
-                                                    'spectral_subset_items',
-                                                    'spectral_subset_selected')
-        self.continuum = SpectralSubsetSelect(self,
-                                              'continuum_subset_items',
-                                              'continuum_selected')
+        self.spectral_subset = SubsetSelect(self,
+                                            'spectral_subset_items',
+                                            'spectral_subset_selected',
+                                            default_text="Entire Spectrum",
+                                            allowed_type='spectral')
+        self.continuum = SubsetSelect(self,
+                                      'continuum_subset_items',
+                                      'continuum_selected',
+                                      default_text='Surrounding',
+                                      allowed_type='spectral')
 
         self.hub.subscribe(self, AddDataMessage,
                            handler=self._on_viewer_data_changed)

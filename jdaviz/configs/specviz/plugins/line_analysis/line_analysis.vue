@@ -24,6 +24,7 @@
     <plugin-subset-select 
       :items="spectral_subset_items"
       :selected.sync="spectral_subset_selected"
+      label="Spectral region"
       hint="Select spectral region that defines the line."
     />
 
@@ -40,7 +41,8 @@
       :items="continuum_subset_items"
       :selected.sync="continuum_selected"
       :rules="[() => continuum_selected!==spectral_subset_selected || 'Must not match line selection.']"
-      hint="Select spectral region that defines the line."
+      label="Continuum"
+      hint="Select spectral region that defines the continuum."
     />
 
     <v-row v-if="continuum_selected=='Surrounding' && spectral_subset_selected!='Entire Spectrum'">

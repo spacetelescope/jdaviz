@@ -5,8 +5,8 @@
       :items="items"
       v-model="selected"
       @change="$emit('update:selected', $event)"
-      :label="label ? label : 'Spectral Region'"
-      :hint="hint ? hint : 'Select spectral region.'"
+      :label="label ? label : 'Subset'"
+      :hint="hint ? hint : 'Select subset.'"
       :rules="rules ? rules : []"
       item-text="label"
       item-value="label"
@@ -15,7 +15,7 @@
       <template slot="selection" slot-scope="data">
         <div class="single-line">
           <v-icon v-if="data.item.color" left :color="data.item.color">
-            mdi-chart-bell-curve
+            {{ data.item.type=='spectral' ? 'mdi-chart-bell-curve' : 'mdi-chart-scatter-plot' }}
           </v-icon>
           <span>
             {{ data.item.label }}
@@ -25,7 +25,7 @@
       <template slot="item" slot-scope="data">
         <div class="single-line">
           <v-icon v-if="data.item.color" left :color="data.item.color">
-            mdi-chart-bell-curve
+            {{ data.item.type=='spectral' ? 'mdi-chart-bell-curve' : 'mdi-chart-scatter-plot' }}
           </v-icon>
           <span>
             {{ data.item.label }}

@@ -30,6 +30,7 @@
         :selected.sync="spectral_subset_selected"
         :has_subregions="spectral_subset_selected_has_subregions"
         has_subregions_warning="The selected selected subset has subregions, the entire range will be used, ignoring any gaps."
+        label="Spectral region"
         hint="Select spectral region to apply the collapse."
       />
 
