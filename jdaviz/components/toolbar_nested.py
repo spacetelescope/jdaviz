@@ -56,6 +56,8 @@ class NestedJupyterToolbar(BasicJupyterToolbar):
         # default to the first item in the default_tool_priority list that is currently
         # already primary
         for tool_id in self.default_tool_priority:
+            if tool_id not in self.tools_data:
+                continue
             if self.tools_data[tool_id]['primary']:
                 self.active_tool_id = tool_id
                 break

@@ -54,9 +54,7 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # self.tools_nested[4] will default to whichever tool in the 4th menu (other tools)
-        # is currently the primary tool
-        self._initialize_toolbar_nested(default_tool_priority=self.tools_nested[4])
+        self._initialize_toolbar_nested(default_tool_priority=['jdaviz:selectslice'])
 
         self.display_uncertainties = False
         self.display_mask = False
