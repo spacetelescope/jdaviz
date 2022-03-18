@@ -133,6 +133,8 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
             raise ValueError("Line table must have a 'linename' column'")
         if "rest" not in line_table.columns:
             raise ValueError("Line table must have a 'rest' column'")
+        if np.any(line_table['rest'] <= 0):
+            raise ValueError("all rest values must be positive")
 
         # Use the redshift of the displayed spectrum if no redshifts are specified
         if "redshift" in line_table.colnames:

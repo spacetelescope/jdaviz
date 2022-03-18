@@ -16,6 +16,12 @@ def test_line_lists():
 
     lt = QTable()
     lt['linename'] = ['O III', 'Halpha']
+    lt['rest'] = [0, 6563]*u.AA
+    with pytest.raises(ValueError, match='all rest values must be positive'):
+        viz.load_line_list(lt)
+
+    lt = QTable()
+    lt['linename'] = ['O III', 'Halpha']
     lt['rest'] = [5007, 6563]*u.AA
     viz.load_line_list(lt)
 
