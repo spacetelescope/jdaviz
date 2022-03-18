@@ -4,6 +4,13 @@
       <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#line-lists'">Plot lines from preset or custom line lists.</j-docs-link>
     </v-row>
 
+    <v-row v-if="identify_label">
+      <v-chip
+        label=true
+        @click="set_identify(null)"
+      ><img class="color-to-accent" :src="identify_line_icon" width="20"/> {{ identify_label }}</v-chip>
+    </v-row>
+
     <j-plugin-section-header>Redshift</j-plugin-section-header>
     <v-row>
       <j-docs-link>Shift spectral lines according to a specific redshift. Only enabled if at least one line is plotted.</j-docs-link>

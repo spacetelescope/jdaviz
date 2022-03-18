@@ -54,6 +54,7 @@ class LineListTool(PluginTemplateMixin):
     custom_unit_choices = List([]).tag(sync=True)
     custom_unit = Unicode().tag(sync=True)
 
+    identify_label = Unicode().tag(sync=True)
     identify_line_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'line_select.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
     def __init__(self, *args, **kwargs):
@@ -693,6 +694,7 @@ class LineListTool(PluginTemplateMixin):
 
         self.list_contents = {}
         self.list_contents = list_contents
+        self.identify_label = name_rest if identify else ""
 
     def _process_identify_change(self, msg):
         if msg.sender == self:
@@ -703,10 +705,17 @@ class LineListTool(PluginTemplateMixin):
         # then line mark themselves will also respond to the same event, so there is
         # no need to broadcast another
 
-    def vue_set_identify(self, data):
+    def vue_set_identify(self, data=None):
         """
         Set the selected line as "identified"
         """
+        if data is None:
+            # then default to the currently identified (which will unidentify it)
+            for listname, this_list in self.list_contents.items():
+                for line_ind, line in enumerate(this_list['lines']):
+                    if line['identify']:
+                        return self.vue_set_identify((listname, line, line_ind))
+
         listname, line, line_ind = data
         identify = not line.get('identify', False)
         if identify and not line['show']:
