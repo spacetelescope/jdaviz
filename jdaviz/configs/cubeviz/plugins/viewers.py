@@ -77,7 +77,7 @@ class CubevizProfileView(SpecvizProfileView):
                 ]
 
     def __init__(self, *args, **kwargs):
-        # NOTE: super will initialize nested toolbar with 
+        # NOTE: super will initialize nested toolbar with
         # default_tool_priority=['jdaviz:selectslice']
         super().__init__(*args, **kwargs)
 
