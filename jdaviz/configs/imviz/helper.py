@@ -75,7 +75,7 @@ class Imviz(ConfigHelper):
             raise ValueError(f"Default viewer '{viewer_id}' cannot be destroyed")
         self.app.vue_destroy_viewer_item(viewer_id)
 
-    def load_data(self, data, parser_reference=None, do_link=True, **kwargs):
+    def load_data(self, data, parser_reference=None, do_link=True, show_in_viewer=True, **kwargs):
         """Load data into Imviz.
 
         Parameters
@@ -110,11 +110,13 @@ class Imviz(ConfigHelper):
             load multiple data back-to-back but you must remember to run
             :meth:`link_data` manually at the end.
 
+        show_in_viewer : bool
+            If `True`, show the data in default viewer if ``do_link`` is also `True`.
+
         kwargs : dict
             Extra keywords to be passed into app-level parser.
             The only one you might call directly here is ``ext`` (any FITS
-            extension format supported by `astropy.io.fits`) and
-            ``show_in_viewer`` (bool).
+            extension format supported by `astropy.io.fits`).
 
         Notes
         -----
@@ -124,7 +126,10 @@ class Imviz(ConfigHelper):
         ``0.2125 R + 0.7154 G + 0.0721 B``. If you prefer a different weighting,
         you can use :func:`skimage.io.imread` to produce your own greyscale
         image as Numpy array and load the latter instead.
+
         """
+        prev_data_labels = self.app.data_collection.labels
+
         if isinstance(data, str):
             filelist = data.split(',')
 
@@ -174,6 +179,12 @@ class Imviz(ConfigHelper):
 
         if do_link:
             self.link_data(link_type='pixels', error_on_fail=False)
+
+            # One input might load into multiple Data objects.
+            if show_in_viewer:
+                for cur_label in self.app.data_collection.labels:
+                    if cur_label not in prev_data_labels:
+                        self.app.add_data_to_viewer(f"{self.app.config}-0", cur_label)
 
     def link_data(self, **kwargs):
         """(Re)link loaded data in Imviz with the desired link type.

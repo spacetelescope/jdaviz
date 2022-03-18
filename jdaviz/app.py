@@ -306,6 +306,9 @@ class Application(VuetifyTemplate, HubListener):
         any components are compatible with already loaded data. If so, link
         them so that they can be displayed on the same profile1D plot.
         """
+        if self.config == 'imviz':  # Imviz does its own thing
+            return
+
         new_len = len(self.data_collection)
 
         # Allow for batch linking of data in the parser rather than on

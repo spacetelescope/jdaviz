@@ -21,7 +21,7 @@ INFO_MSG = ("The file contains more viewable extensions. Add the '[*]' suffix"
 
 
 @data_parser_registry("imviz-data-parser")
-def parse_data(app, file_obj, ext=None, data_label=None, show_in_viewer=True):
+def parse_data(app, file_obj, ext=None, data_label=None):
     """Parse a data file into Imviz.
 
     Parameters
@@ -38,9 +38,6 @@ def parse_data(app, file_obj, ext=None, data_label=None, show_in_viewer=True):
     data_label : str, optional
         The label to be applied to the Glue data component.
 
-    show_in_viewer : bool, optional
-        Show data in viewer.
-
     """
     if isinstance(file_obj, str):
         if data_label is None:
@@ -54,14 +51,14 @@ def parse_data(app, file_obj, ext=None, data_label=None, show_in_viewer=True):
             else:  # Assume RGB
                 pf = rgb2gray(im)
             pf = pf[::-1, :]  # Flip it
-            _parse_image(app, pf, data_label, show_in_viewer, ext=ext)
+            _parse_image(app, pf, data_label, ext=ext)
         else:  # Assume FITS
             with fits.open(file_obj) as pf:
-                _parse_image(app, pf, data_label, show_in_viewer, ext=ext)
+                _parse_image(app, pf, data_label, ext=ext)
     else:
         if data_label is None:
             data_label = f'imviz_data|{str(base64.b85encode(uuid.uuid4().bytes), "utf-8")}'
-        _parse_image(app, file_obj, data_label, show_in_viewer, ext=ext)
+        _parse_image(app, file_obj, data_label, ext=ext)
 
 
 def get_image_data_iterator(app, file_obj, data_label, ext=None):
@@ -123,7 +120,7 @@ def get_image_data_iterator(app, file_obj, data_label, ext=None):
     return data_iter
 
 
-def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
+def _parse_image(app, file_obj, data_label, ext=None):
     if data_label is None:
         raise NotImplementedError('data_label should be set by now')
 
@@ -136,8 +133,6 @@ def _parse_image(app, file_obj, data_label, show_in_viewer, ext=None):
             data_label = data_label + "_2"  # 0th-order solution as proposed in issue #600
 
         app.add_data(data, data_label)
-        if show_in_viewer:
-            app.add_data_to_viewer(f"{app.config}-0", data_label)
 
     # Do not run link_image_data here. We do it at the end in Imviz.load_data()
 

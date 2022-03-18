@@ -49,6 +49,9 @@ Imviz
 
 - Fixed Compass plugin performance for large image. [#1152]
 
+- Fixed data shown out of order when ``load_data`` is called after
+  ``app``. [#1178]
+
 Mosviz
 ^^^^^^
 
