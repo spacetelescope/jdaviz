@@ -117,9 +117,10 @@ class ModelFitting(PluginTemplateMixin, SpectralSubsetSelectMixin):
 
         self.dc_items = [layer_state.layer.label
                          for layer_state in viewer.state.layers
-                         if (not isinstance(layer_state.layer, Subset)
-                             or not isinstance(layer_state.layer.subset_state,
-                                               (RangeSubsetState, OrState, AndState)))]
+                         if ((not isinstance(layer_state.layer, Subset)
+                              or not isinstance(layer_state.layer.subset_state,
+                                                (RangeSubsetState, OrState, AndState)))
+                             and layer_state.layer.label not in self.app.fitted_models.keys())]
 
     def _param_units(self, param, model_type=None):
         """Helper function to handle units that depend on x and y"""
@@ -426,8 +427,8 @@ class ModelFitting(PluginTemplateMixin, SpectralSubsetSelectMixin):
         self._fitted_model = fitted_model
         self._fitted_spectrum = fitted_spectrum
 
-        self.vue_register_spectrum({"spectrum": fitted_spectrum})
         self.app.fitted_models[self.model_label] = fitted_model
+        self.vue_register_spectrum({"spectrum": fitted_spectrum})
 
         # Update component model parameters with fitted values
         if type(self._fitted_model) == QuantityModel:
