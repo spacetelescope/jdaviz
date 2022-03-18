@@ -77,10 +77,9 @@ class CubevizProfileView(SpecvizProfileView):
                 ]
 
     def __init__(self, *args, **kwargs):
+        # NOTE: super will initialize nested toolbar with default_tool_priority=self.tools_nested[4]
+        # which will default to whichever tool in the 4th menu (other tools)
         super().__init__(*args, **kwargs)
-        # self.tools_nested[4] will default to whichever tool in the 4th menu (other tools)
-        # is currently the primary tool
-        self._initialize_toolbar_nested(default_tool_priority=self.tools_nested[4])
 
     @property
     def slice_indicator(self):

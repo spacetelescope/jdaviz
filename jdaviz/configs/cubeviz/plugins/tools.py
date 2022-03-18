@@ -24,8 +24,7 @@ class SelectSlice(CheckableTool):
 
     def activate(self):
         self.viewer.add_event_callback(self.on_mouse_event,
-                                       events=['dragstart', 'dragmove',
-                                               'dragend', 'dblclick'])
+                                       events=['dragmove', 'click'])
         msg = SliceToolStateMessage({'active': True}, sender=self)
         self.viewer.session.hub.broadcast(msg)
 
