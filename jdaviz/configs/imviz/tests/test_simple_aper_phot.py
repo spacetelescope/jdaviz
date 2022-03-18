@@ -132,11 +132,11 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         tbl = self.imviz.get_aperture_photometry_results()
         assert len(tbl) == 4  # New result is appended
         assert tbl[-1]['id'] == 4
-        assert_quantity_allclose(tbl[-1]['xcentroid'], 4.5 * u.pix)
-        assert_quantity_allclose(tbl[-1]['ycentroid'], 4.5 * u.pix)
+        assert np.isnan(tbl[-1]['xcentroid'])
+        assert np.isnan(tbl[-1]['ycentroid'])
         sky = tbl[-1]['sky_centroid']
-        assert_allclose(sky.ra.deg, 337.518943)
-        assert_allclose(sky.dec.deg, -20.832083)
+        assert np.isnan(sky.ra.deg)
+        assert np.isnan(sky.dec.deg)
         assert_quantity_allclose(tbl[-1]['sum_aper_area'], 81 * (u.pix * u.pix))
         assert_allclose(tbl[-1]['sum'], 0)
         assert_allclose(tbl[-1]['mean'], 0)
