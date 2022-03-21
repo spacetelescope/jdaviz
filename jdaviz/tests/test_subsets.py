@@ -39,7 +39,7 @@ def test_region_from_subset_2d(jdaviz_app):
 
 
 def test_region_from_subset_3d(jdaviz_app):
-    data = Data(flux=np.ones((256, 128, 128)), label='Test 3D Flux')
+    data = Data(flux=np.ones((128, 128, 256)), label='Test 3D Flux')
     jdaviz_app.data_collection.append(data)
 
     jdaviz_app.add_data_to_viewer('flux-viewer', 'Test 3D Flux')
@@ -60,12 +60,14 @@ def test_region_from_subset_3d(jdaviz_app):
 
 
 def test_region_from_subset_profile(jdaviz_app, spectral_cube_wcs):
-    data = Data(flux=np.ones((256, 128, 128)), label='Test 1D Flux', coords=spectral_cube_wcs)
+    data = Data(flux=np.ones((128, 128, 256)), label='Test 1D Flux', coords=spectral_cube_wcs)
     jdaviz_app.data_collection.append(data)
 
     jdaviz_app.add_data_to_viewer('spectrum-viewer', 'Test 1D Flux')
 
-    jdaviz_app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(5, 15.5))
+    viewer = jdaviz_app.get_viewer('spectrum-viewer')
+    viewer.state.x_att = jdaviz_app.data_collection['Test 1D Flux'].id['Frequency']
+    viewer.apply_roi(XRangeROI(5, 15.5))
 
     subsets = jdaviz_app.get_subsets_from_viewer('spectrum-viewer', subset_type='spectral')
     reg = subsets.get('Subset 1')
@@ -77,15 +79,18 @@ def test_region_from_subset_profile(jdaviz_app, spectral_cube_wcs):
 
 
 def test_region_spectral_spatial(jdaviz_app, spectral_cube_wcs):
-    data = Data(flux=np.ones((256, 128, 128)), label='Test Flux', coords=spectral_cube_wcs)
+    data = Data(flux=np.ones((128, 128, 256)), label='Test Flux', coords=spectral_cube_wcs)
     jdaviz_app.data_collection.append(data)
 
     jdaviz_app.add_data_to_viewer('spectrum-viewer', 'Test Flux')
     jdaviz_app.add_data_to_viewer('flux-viewer', 'Test Flux')
 
-    jdaviz_app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(5, 15.5))
+    spec_viewer = jdaviz_app.get_viewer('spectrum-viewer')
+    spec_viewer.state.x_att = jdaviz_app.data_collection['Test Flux'].id['Frequency']
+    spec_viewer.apply_roi(XRangeROI(5, 15.5))
 
     flux_viewer = jdaviz_app.get_viewer("flux-viewer")
+    flux_viewer.state.x_att_world = jdaviz_app.data_collection['Test Flux'].id['Right Ascension']
     # We set the active tool here to trigger a reset of the Subset state to "Create new"
     flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['bqplot:rectangle']
     flux_viewer.apply_roi(RectangularROI(1, 3.5, -0.2, 3.3))
@@ -112,13 +117,14 @@ def test_region_spectral_spatial(jdaviz_app, spectral_cube_wcs):
 
 
 def test_disjoint_spectral_subset(jdaviz_app, spectral_cube_wcs):
-    data = Data(flux=np.ones((256, 128, 128)), label='Test Flux', coords=spectral_cube_wcs)
+    data = Data(flux=np.ones((128, 128, 256)), label='Test Flux', coords=spectral_cube_wcs)
     jdaviz_app.data_collection.append(data)
 
     jdaviz_app.add_data_to_viewer('spectrum-viewer', 'Test Flux')
     jdaviz_app.add_data_to_viewer('flux-viewer', 'Test Flux')
 
     spec_viewer = jdaviz_app.get_viewer("spectrum-viewer")
+    spec_viewer.state.x_att = jdaviz_app.data_collection['Test Flux'].id['Frequency']
     spec_viewer.apply_roi(XRangeROI(5, 15.5))
 
     # Add second region to Subset 1
