@@ -123,6 +123,8 @@ def _parse_hdu(app, hdulist, file_name=None):
 
         app.add_data(sc, data_label)
 
+        # Get id for correct x axis attribute
+
         # If the data type is some kind of integer, assume it's the mask/dq
         if hdu.data.dtype in (int, np.uint, np.uint32) or \
                 any(x in hdu.name.lower() for x in EXT_TYPES['mask']):
@@ -144,7 +146,10 @@ def _parse_hdu(app, hdulist, file_name=None):
             # Add flux to spectrum viewer
             app.add_data_to_viewer('spectrum-viewer', data_label)
             viewer = app.get_viewer('spectrum-viewer')
-            viewer.state.x_att = app.data_collection[data_label].id['Wave']
+            for att_name in ["Wave", "Wavelength", "Freq", "Frequency"]:
+                if att_name in app.data_collection[data_label].component_ids():
+                    viewer.state.x_att = app.data_collection[data_label].id[att_name]
+
 
 def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI', viewer_name='flux-viewer'):
     from specutils import Spectrum1D
