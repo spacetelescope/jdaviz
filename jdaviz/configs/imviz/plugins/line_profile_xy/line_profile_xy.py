@@ -64,30 +64,51 @@ class LineProfileXY(PluginTemplateMixin):
         else:
             y = int(round(self.selected_y))
 
-        if x < 0 or y < 0 or x >= data.shape[1] or y >= data.shape[0]:
+        nx = data.shape[1]
+        ny = data.shape[0]
+        if x < 0 or y < 0 or x >= nx or y >= ny:
             self.reset_results()
             return
 
+        x_min, y_min, x_max, y_max = viewer._get_zoom_limits(data)
         comp = data.get_component(data.main_components[0])
         if comp.units:
             y_label = comp.units
         else:
             y_label = 'Value'
 
-        _clear_figure(1)
+        _bqplt_clear_all()
+
         fig_x = bqplt.figure(1, title=f'X={x}',
                              fig_margin={'top': 60, 'bottom': 60, 'left': 40, 'right': 10},
                              title_style={'font-size': '12px'})
         bqplt.plot(comp.data[:, x], colors='gray', figure=fig_x)
+        bqplt.xlim(y_min, y_max)
+        y_min = int(y_min)
+        if y_min < 0:
+            y_min = 0
+        y_max = int(y_max)
+        if y_max > ny:
+            y_max = ny
+        zoomed_data_x = comp.data[y_min:y_max, x]
+        bqplt.ylim(zoomed_data_x.min() * 0.95, zoomed_data_x.max() * 1.05)
         bqplt.xlabel(label='Y (pix)', mark=fig_x.marks[-1], figure=fig_x)
         bqplt.ylabel(label=y_label, mark=fig_x.marks[-1], figure=fig_x)
         self.line_plot_across_x = fig_x
 
-        _clear_figure(2)
         fig_y = bqplt.figure(2, title=f'Y={y}',
                              fig_margin={'top': 60, 'bottom': 60, 'left': 40, 'right': 10},
                              title_style={'font-size': '12px'})
         bqplt.plot(comp.data[y, :], colors='gray', figure=fig_y)
+        bqplt.xlim(x_min, x_max)
+        x_min = int(x_min)
+        if x_min < 0:
+            x_min = 0
+        x_max = int(x_max)
+        if x_max > nx:
+            x_max = nx
+        zoomed_data_y = comp.data[y, x_min:x_max]
+        bqplt.ylim(zoomed_data_y.min() * 0.95, zoomed_data_y.max() * 1.05)
         bqplt.xlabel(label='X (pix)', mark=fig_y.marks[-1], figure=fig_y)
         bqplt.ylabel(label=y_label, mark=fig_y.marks[-1], figure=fig_y)
         self.line_plot_across_y = fig_y
@@ -96,13 +117,12 @@ class LineProfileXY(PluginTemplateMixin):
         self.plot_available = True
 
 
-def _clear_figure(key):
-    """Clears the figure tied to given key of all marks axes and grid lines."""
-    fig = bqplt._context['figure_registry'].get(key)
-    if fig is not None:
-        fig.marks = []
-        fig.axes = []
-        setattr(fig, 'axis_registry', {})
-        bqplt._context['scales'] = {}
-        if key == bqplt._context['current_key']:
-            bqplt._context['scale_registry'][key] = {}
+def _bqplt_clear_all():
+    """Clears hidden context of bqplot.pyplot module."""
+    bqplt._context = {
+        'figure': None,
+        'figure_registry': {},
+        'scales': {},
+        'scale_registry': {},
+        'last_mark': None,
+        'current_key': None}

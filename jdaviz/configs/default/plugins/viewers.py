@@ -37,8 +37,4 @@ class JdavizViewerMixin:
 
     @property
     def reference_id(self):
-        # TODO: this should probably be stored instead of this hideously hacky loop
-        for id in self.jdaviz_app.get_viewer_ids():
-            if self.jdaviz_app.get_viewer_by_id(id) == self:
-                return id
-        return None
+        return self.LABEL
