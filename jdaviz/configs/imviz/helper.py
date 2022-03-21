@@ -186,6 +186,8 @@ class Imviz(ConfigHelper):
                     if cur_label not in prev_data_labels:
                         self.app.add_data_to_viewer(f"{self.app.config}-0", cur_label)
 
+        self.default_viewer.cuts = '95%'
+
     def link_data(self, **kwargs):
         """(Re)link loaded data in Imviz with the desired link type.
         All existing links will be replaced.
