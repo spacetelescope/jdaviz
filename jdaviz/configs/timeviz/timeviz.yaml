@@ -1,0 +1,27 @@
+settings:
+  configuration: timeviz
+  data:
+    parser: timeviz-data-parser
+  visible:
+    menu_bar: false
+    toolbar: true
+    tray: true
+    tab_headers: false
+  context:
+    notebook:
+      max_height: 600px
+toolbar:
+  - g-data-tools
+  - g-subset-tools
+tray:
+  - g-metadata-viewer
+  - g-plot-options
+  - g-export-plot
+viewer_area:
+  - container: col
+    children:
+      - container: row
+        viewers:
+          - name: timeviz-0
+            plot: timeviz-ts-viewer
+            reference: timeviz-0
