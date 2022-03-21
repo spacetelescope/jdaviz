@@ -4,16 +4,23 @@
       <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#line-lists'">Plot lines from preset or custom line lists.</j-docs-link>
     </v-row>
 
+    <j-plugin-section-header>Identified Line</j-plugin-section-header>
     <v-row>
+      <j-docs-link>Highlight a line and identify its name by using the line selection tool in the spectrum viewer.</j-docs-link>
+    </v-row>
+    <v-row v-if="rs_enabled">
       <j-tooltip v-if='identify_label' tipid='plugin-line-lists-line-identify-chip-active'>
         <v-chip
           v-if="identify_label"
           label=true
-          @click="set_identify(null)"
-        ><img class="color-to-accent" :src="identify_line_icon" width="20"/> {{ identify_label }}</v-chip>
+          @click="set_identify(null)">
+          <img class="color-to-accent" :src="identify_line_icon" width="20"/> {{ identify_label }}
+        </v-chip>
       </j-tooltip>
       <j-tooltip v-else tipid='plugin-line-lists-line-identify-chip-inactive'>
-        <v-chip>no line identified</v-chip>
+        <v-chip label=true>
+          <img :src="identify_line_icon" width="20"/> no line selected
+        </v-chip>
       </j-tooltip>
     </v-row>
 

@@ -116,7 +116,7 @@
             :items="line_items"
             v-model="selected_line"
             label="Line"
-            hint="Assign computed centroid to line."
+            hint="Select reference line."
             persistent-hint
           ></v-select>
         </v-col>
@@ -128,7 +128,7 @@
           class="mt-0 pt-0"
           type="number"
           label="Redshift"
-          hint="Redshift that will be applied by assigning centroid."
+          hint="Redshift that will be applied by assigning centroid to the selected line."
           persistent-hint
           disabled
         ></v-text-field>
