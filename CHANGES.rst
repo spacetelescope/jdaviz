@@ -136,6 +136,9 @@ Other Changes and Additions
 
 - Line analysis plugin now shows uncertainties, when available. [#1192]
 
+- Cube data now has spectral axis last in the backend, to match specutils Spectrum1D
+  axis order and work with updated glue-astronomy translators. [#1174]
+
 2.3 (2022-03-01)
 ================
 
