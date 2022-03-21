@@ -48,6 +48,7 @@ class LineAnalysis(PluginTemplateMixin):
     width = FloatHandleEmpty(3).tag(sync=True)
     results_computing = Bool(False).tag(sync=True)
     results = List().tag(sync=True)
+    results_centroid = Float().tag(sync=True)  # stored in AA units
     line_items = List([]).tag(sync=True)
     sync_identify = Bool(True).tag(sync=True)
     sync_identify_icon_enabled = Unicode(read_icon(os.path.join(ICON_DIR, 'line_select.svg'), 'svg+xml')).tag(sync=True)  # noqa
@@ -63,7 +64,6 @@ class LineAnalysis(PluginTemplateMixin):
         self._spectrum1d = None
         self._viewer_id = self.app._viewer_item_by_reference('spectrum-viewer').get('id')
         self._units = {}
-        self.results_centroid = None
         self.update_results(None)
 
         self.spectral_subset = SpectralSubsetSelect(self,
@@ -323,17 +323,24 @@ class LineAnalysis(PluginTemplateMixin):
                 # TODO: update specutils to be consistent with region vs regions and default to
                 # regions=None so this elif can be removed
                 temp_result = FUNCTIONS[function](spec_subtracted, region=None)
-                self.results_centroid = temp_result
+                self.results_centroid = temp_result.to_value(u.AA)
             else:
                 temp_result = FUNCTIONS[function](spec_subtracted)
 
             temp_results.append({'function': function, 'result': str(temp_result)})
 
-        self.update_results(temp_results, mark_x, mark_y)
-
         if not self.selected_line and self.identified_line:
             # default to the identified line
             self.selected_line = self.identified_line
+
+        self.update_results(temp_results, mark_x, mark_y)
+
+    def _compute_redshift_for_selected_line(self):
+        index = self.line_items.index(self.selected_line)
+        line_mark = self.line_marks[index]
+        rest_value = (line_mark.rest_value * line_mark._x_unit).to_value(u.AA,
+                                                                         equivalencies=u.spectral())
+        return (self.results_centroid - rest_value) / rest_value
 
     @observe('sync_identify')
     def _sync_identify_changed(self, event={}):
@@ -349,19 +356,15 @@ class LineAnalysis(PluginTemplateMixin):
             # then update the selection the the identified line
             self.selected_line = self.identified_line
 
-    def _compute_redshift_for_selected_line(self):
-        index = self.line_items.index(self.selected_line)
-        line_mark = self.line_marks[index]
-        rest_value = (line_mark.rest_value * line_mark._x_unit).to_value(self.results_centroid.unit,
-                                                                         equivalencies=u.spectral())
-        return (self.results_centroid.value - rest_value) / rest_value
-
     @observe('selected_line')
     def _selected_line_changed(self, event):
         if self.sync_identify:
             msg = LineIdentifyMessage(event.get('new', self.selected_line), sender=self)
             self.hub.broadcast(msg)
-        if self.results_centroid is not None:
+
+    @observe('results_centroid', 'selected_line')
+    def _update_selected_line_redshift(self, event):
+        if self.selected_line and self.results_centroid is not None:
             # compute redshift that WILL be applied if clicking assign
             self.selected_line_redshift = self._compute_redshift_for_selected_line()
 
