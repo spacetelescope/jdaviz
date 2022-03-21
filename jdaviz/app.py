@@ -1177,8 +1177,11 @@ class Application(VuetifyTemplate, HubListener):
 
             # Make everything visible again in Imviz.
             if self.config == 'imviz':
+                from jdaviz.configs.imviz.helper import layer_is_image_data
+
                 for lyr in viewer.state.layers:
-                    lyr.visible = True
+                    if layer_is_image_data(lyr.layer):
+                        lyr.visible = True
                 viewer.on_limits_change()  # Trigger compass redraw
 
     def _on_data_added(self, msg):
