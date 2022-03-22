@@ -103,8 +103,8 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         sky = tbl[-1]['sky_center']
         assert_allclose(sky.ra.deg, 337.51894336144454)
         assert_allclose(sky.dec.deg, -20.832777499255897)
-        assert_quantity_allclose(tbl[-1]['npix'], 7.068583470577035 * u.pix)
-        assert_allclose(tbl[-1]['aperture_sum'], 7.068583470577034)
+        assert_quantity_allclose(tbl[-1]['npix'], 28.274334 * u.pix)
+        assert_allclose(tbl[-1]['aperture_sum'], 28.274334)
         assert_allclose(tbl[-1]['mean'], 1)
         assert tbl[-1]['data_label'] == 'has_wcs_1[SCI,1]'
         assert tbl[-1]['subset_label'] == 'Subset 2'
