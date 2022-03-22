@@ -38,12 +38,11 @@ class LineListTool(PluginTemplateMixin):
     rs_slider_half_range = Float(0.1).tag(sync=True)
     rs_slider_step_auto = Bool(True).tag(sync=True)
     rs_slider_step = Float(0.01).tag(sync=True)
-    rs_redshift_step = Float(1).tag(sync=True)
-    # TODO: rs_wavelength_step (although could be across various units and wavelength/freqeuncy...)
     rs_slider_ndigits = Int(1).tag(sync=True)
+    rs_slider_throttle = Int(100).tag(sync=True)
     rs_redshift = FloatHandleEmpty(0).tag(sync=True)
     rs_rv = FloatHandleEmpty(0).tag(sync=True)
-    rs_slider_throttle = Int(100).tag(sync=True)
+    rs_rv_step = Float(1).tag(sync=True)
 
     dc_items = List([]).tag(sync=True)
     available_lists = List([]).tag(sync=True)
@@ -187,7 +186,7 @@ class LineListTool(PluginTemplateMixin):
                 if slider_step > self.rs_slider_half_range:
                     raise ValueError("step must be smaller than range/2")
                 self.rs_slider_step = slider_step
-                self.rs_redshift_step = self._redshift_to_velocity(slider_step)
+                self.rs_rv_step = self._redshift_to_velocity(slider_step)
         elif param == "redshift":
             # NOTE: this should trigger the observe to update rs_rv, line positions, and
             # update self._global_redshift
@@ -386,7 +385,7 @@ class LineListTool(PluginTemplateMixin):
         half_range = np.round(half_range, ndec)
 
         # this will trigger self._auto_slider_step to set self.rs_slider_step and
-        # self.rs_redshift_step, if applicable
+        # self.rs_rv_step, if applicable
         self.rs_slider_half_range = half_range
 
     @observe('rs_slider_range_auto')
@@ -400,7 +399,7 @@ class LineListTool(PluginTemplateMixin):
             return
         # if set to auto, default to 1000 steps in the range
         self.rs_slider_step = self.rs_slider_half_range * 2 / 1000
-        self.rs_redshift_step = abs(self._redshift_to_velocity(self._global_redshift+self.rs_slider_step) - self.rs_rv) # noqa
+        self.rs_rv_step = abs(self._redshift_to_velocity(self._global_redshift+self.rs_slider_step) - self.rs_rv) # noqa
 
     @observe('rs_slider_step')
     def _on_rs_slider_step_updated(self, event):

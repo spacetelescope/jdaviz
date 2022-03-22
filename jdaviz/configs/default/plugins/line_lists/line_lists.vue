@@ -77,7 +77,7 @@
           v-model="rs_rv"
           @input='setRVFloat'
           @blur="unpause_tables"
-          :step="rs_redshift_step"
+          :step="rs_rv_step"
           class="mt-0 pt-0"
           type="number"
           label="RV"
