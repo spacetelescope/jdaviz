@@ -1,8 +1,6 @@
 import numpy as np
 import warnings
 
-from bqplot.marks import Lines, Scatter
-
 from glue.core import BaseData
 from glue.core.subset import Subset
 from glue.config import data_translator
@@ -17,7 +15,7 @@ from astropy import units as u
 
 from jdaviz.core.events import SpectralMarksChangedMessage
 from jdaviz.core.registries import viewer_registry
-from jdaviz.core.marks import SpectralLine
+from jdaviz.core.marks import SpectralLine, LineUncertainties, ScatterMask
 from jdaviz.core.linelists import load_preset_linelist, get_available_linelists
 from jdaviz.core.freezable_state import FreezableProfileViewerState
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
@@ -322,25 +320,17 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
         self.display_uncertainties = False
         self.display_mask = False
 
-        marks = self.figure.marks[:]
-
         # Remove extra traces, in case they exist.
-        self._clean_error(marks)
-        self._clean_mask(marks)
+        self._clean_error()
+        self._clean_mask()
 
-        self.figure.marks = marks
+    def _clean_mask(self):
+        fig = self.figure
+        fig.marks = [x for x in fig.marks if not isinstance(x, ScatterMask)]
 
-    def _clean_mask(self, marks):
-        if hasattr(self, 'mask_line_mark') and self.mask_line_mark is not None:
-            marks.remove(self.mask_line_mark)
-            self.mask_line_mark = None
-            self.mask_trace_pointer = None
-
-    def _clean_error(self, marks):
-        if hasattr(self, 'error_line_mark') and self.error_line_mark is not None:
-            marks.remove(self.error_line_mark)
-            self.error_line_mark = None
-            self.error_trace_pointer = None
+    def _clean_error(self):
+        fig = self.figure
+        fig.marks = [x for x in fig.marks if not isinstance(x, LineUncertainties)]
 
     def add_data(self, data, color=None, alpha=None, **layer_state):
         """
@@ -365,27 +355,26 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
         # trace representing the spectrum itself.
         result = super().add_data(data, color, alpha, **layer_state)
 
+        data_trace_pointer = 0
+
         # Index of spectrum trace plotted by the super class. It is the
         # **latest** item in figure.marks that is a Line instance
         for ind, mark in reversed(list(enumerate(self.figure.marks))):
             # we'll use __class__.__name__ since other entries (spectral lines,
             # etc) defined in jdaviz.core.marks inherit from Lines
             if mark.__class__.__name__ == 'Lines':
-                self.data_trace_pointer = ind
+                data_trace_pointer = ind
                 break
         else:  # pragma: no cover
             raise ValueError("could not find mark for added data")
 
-        self.error_trace_pointer = None
-        self.mask_trace_pointer = None
-
         # Color and opacity are taken from the already plotted trace,
         # in case they are not set explicitly by the caller.
-        self._color = self.figure.marks[self.data_trace_pointer].colors[0]
+        self._color = self.figure.marks[data_trace_pointer].colors[0]
         if color:
             self._color = color
 
-        self._alpha = self.figure.marks[self.data_trace_pointer].opacities[0]
+        self._alpha = self.figure.marks[data_trace_pointer].opacities[0]
         if alpha:
             self._alpha = alpha
 
@@ -399,84 +388,79 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
         return result
 
     def _plot_mask(self):
+        if not self.display_mask:
+            return
 
-        _data = self._data[0]
-        _data_trace = self.data_trace_pointer
+        # Loop through all active data in the viewer
+        for index, layer_state in enumerate(self.state.layers):
+            comps = [str(component) for component in layer_state.layer.components]
 
-        if 'mask' in _data.components and self.display_mask:
+            # Ignore data that does not have an 'mask' component
+            if "mask" in comps:
+                mask = np.array(layer_state.layer['mask'].data)
 
-            # If a mask was already plotted, remove it.
-            if (hasattr(self, 'mask_trace_pointer') and
-                    self.mask_trace_pointer is not None):
-                marks = self.figure.marks[:]
-                self._clean_mask(marks)
-                self.figure.marks = marks
+                data_x = layer_state.layer.data.get_object().spectral_axis
+                data_y = layer_state.layer.data.get_object().flux.value
 
-            mask = _data['mask'].data
+                # For plotting markers only for the masked data
+                # points, erase un-masked data from trace.
+                y = np.where(np.asarray(mask) == 0, np.nan, data_y)
 
-            # get trace with spectrum.
-            x = self.figure.marks[_data_trace].x
-            y = self.figure.marks[_data_trace].y
-
-            # For plotting markers only for the masked data
-            # points, erase un-masked data from trace.
-            y = np.where(np.asarray(mask) == 0, np.nan, y)
-
-            # there is no 'X' marker option in bqplot
-            self.mask_line_mark = Scatter(scales=self.scales,
-                                          marker='cross',
-                                          x=x,
-                                          y=y,
-                                          stroke_width=0.5,
-                                          # colors=['red'],
-                                          colors=[self._color],
-                                          default_size=25,
-                                          default_opacities=[self._alpha],
-                                          )
-            self.figure.marks = list(self.figure.marks) + [self.mask_line_mark]
-
-            # We added an extra trace. Get pointer to it.
-            self.mask_trace_pointer = len(self.figure.marks) - 1
-
+                # A subclass of the bqplot Scatter object, ScatterMask places
+                # 'X' marks where there is masked data in the viewer.
+                mask_line_mark = ScatterMask(scales=self.scales,
+                                             marker='cross',
+                                             x=data_x,
+                                             y=y,
+                                             stroke_width=0.5,
+                                             # colors=['red'],
+                                             colors=[self._color],
+                                             default_size=25,
+                                             default_opacities=[self._alpha]
+                                             )
+                # Add mask marks to viewer
+                self.figure.marks = list(self.figure.marks) + [mask_line_mark]
+            
     def _plot_uncertainties(self):
+        if not self.display_uncertainties:
+            return
 
-        _data = self._data[0]
-        _data_trace = self.data_trace_pointer
+        # Loop through all active data in the viewer
+        for index, layer_state in enumerate(self.state.layers):
+            comps = [str(component) for component in layer_state.layer.components]
 
-        if 'uncertainty' in _data.components and self.display_uncertainties:
-            error = np.array(_data['uncertainty'].data)
+            # Ignore data that does not have an 'uncertainty' component
+            if "uncertainty" in comps:
+                error = np.array(layer_state.layer['uncertainty'].data)
 
-            # If uncertainties were already plotted, remove them.
-            if (hasattr(self, 'error_trace_pointer') and
-                    self.error_trace_pointer is not None):
-                marks = self.figure.marks[:]
-                self._clean_error(marks)
-                self.figure.marks = marks
+                data_x = layer_state.layer.data.get_object().spectral_axis
+                data_y = layer_state.layer.data.get_object().flux.value
 
-            # The shaded band around the spectrum trace is bounded by
-            # two lines, above and below the spectrum trace itself.
-            x = np.array([np.ndarray.tolist(self.figure.marks[_data_trace].x),
-                          np.ndarray.tolist(self.figure.marks[_data_trace].x)])
-            y = np.array([np.ndarray.tolist(self.figure.marks[_data_trace].y - error),
-                          np.ndarray.tolist(self.figure.marks[_data_trace].y + error)])
+                # The shaded band around the spectrum trace is bounded by
+                # two lines, above and below the spectrum trace itself.
+                x = np.array([np.ndarray.tolist(data_x),
+                              np.ndarray.tolist(data_x)])
+                y = np.array([np.ndarray.tolist(data_y - error),
+                              np.ndarray.tolist(data_y + error)])
 
-            # A Lines bqplot instance with two lines and shaded area
-            # in between.
-            self.error_line_mark = Lines(scales=self.scales,
-                                         x=[x],
-                                         y=[y],
-                                         stroke_width=1,
-                                         colors=[self._color, self._color],
-                                         fill_colors=[self._color, self._color],
-                                         opacities=[0.0, 0.0],
-                                         fill_opacities=[self._alpha_shade, self._alpha_shade],
-                                         fill='between',
-                                         close_path=False
-                                         )
-            self.figure.marks = list(self.figure.marks) + [self.error_line_mark]
-
-            # We added an extra trace. Get pointer to it.
-            self.error_trace_pointer = len(self.figure.marks) - 1
+                # A subclass of the bqplot Lines object, LineUncertainties keeps
+                # track of uncertainties plotted in the viewer. LineUncertainties
+                # appear with two lines and shaded area in between.
+                error_line_mark = LineUncertainties(viewer=self,
+                                                    x=[x],
+                                                    y=[y],
+                                                    scales=self.scales,
+                                                    stroke_width=1,
+                                                    colors=[self._color, self._color],
+                                                    fill_colors=[self._color, self._color],
+                                                    opacities=[0.0, 0.0],
+                                                    fill_opacities=[self._alpha_shade,
+                                                                    self._alpha_shade],
+                                                    fill='between',
+                                                    close_path=False
+                                                    )
+                # Add error lines to viewer
+                self.figure.marks = list(self.figure.marks) + [error_line_mark]
 
     def set_plot_axes(self):
         # Get data to be used for axes labels
