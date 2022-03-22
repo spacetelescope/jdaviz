@@ -1,16 +1,19 @@
+import numpy as np
 import os
-
 from echo import delay_callback
 
 from glue.config import viewer_tool
+from glue.core import HubListener
 from glue.viewers.common.tool import Tool
-from glue_jupyter.bqplot.common.tools import (HomeTool, BqplotPanZoomMode,
+from glue_jupyter.bqplot.common.tools import (CheckableTool, HomeTool, BqplotPanZoomMode,
                                               BqplotPanZoomXMode, BqplotPanZoomYMode,
                                               BqplotRectangleMode, BqplotCircleMode,
                                               BqplotEllipseMode, BqplotXRangeMode,
                                               BqplotYRangeMode, BqplotSelectionTool,
                                               INTERACT_COLOR)
 from bqplot.interacts import BrushSelector, BrushIntervalSelector
+
+from jdaviz.core.events import LineIdentifyMessage, SpectralMarksChangedMessage
 
 __all__ = []
 
@@ -100,6 +103,45 @@ class XRangeZoom(_BaseSelectZoom):
             return
 
         self.viewer.state.x_min, self.viewer.state.x_max = self.interact.selected
+
+
+@viewer_tool
+class SelectLine(CheckableTool, HubListener):
+    icon = os.path.join(ICON_DIR, 'line_select.svg')
+    tool_id = 'jdaviz:selectline'
+    action_text = 'Select/identify spectral line'
+    tool_tip = 'Select/identify spectral line'
+
+    def __init__(self, viewer, **kwargs):
+        super().__init__(viewer, **kwargs)
+        self.line_marks = []
+        self.line_names = []
+
+        self.viewer.session.hub.subscribe(self, SpectralMarksChangedMessage,
+                                          handler=self._on_plotted_lines_changed)
+
+    def activate(self):
+        self.viewer.add_event_callback(self.on_mouse_event,
+                                       events=['click'])
+
+    def deactivate(self):
+        self.viewer.remove_event_callback(self.on_mouse_event)
+
+    def _on_plotted_lines_changed(self, msg):
+        self.line_marks = msg.marks
+        self.line_names = msg.names_rest
+
+    def on_mouse_event(self, data):
+        # yes this would be avoid a list-comprehension by putting in
+        # _on_plotted_lines_changed, but by leaving it here, we let
+        # the marks worry about unit conversions
+        lines_x = np.array([mark.obs_value for mark in self.line_marks])
+        if not len(lines_x):
+            return
+        ind = np.argmin(abs(lines_x - data['domain']['x']))
+        # find line closest to mouse position and transmit event
+        msg = LineIdentifyMessage(self.line_names[ind], sender=self)
+        self.viewer.session.hub.broadcast(msg)
 
 
 class _BaseSidebarShortcut(Tool):

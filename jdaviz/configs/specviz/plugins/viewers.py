@@ -15,6 +15,7 @@ from matplotlib.colors import cnames
 from astropy import units as u
 
 
+from jdaviz.core.events import SpectralMarksChangedMessage
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.marks import SpectralLine
 from jdaviz.core.linelists import load_preset_linelist, get_available_linelists
@@ -34,7 +35,8 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
     tools = ['bqplot:home',
              'jdaviz:boxzoom', 'jdaviz:xrangezoom',
              'bqplot:panzoom', 'bqplot:panzoom_x',
-             'bqplot:panzoom_y', 'bqplot:xrange']
+             'bqplot:panzoom_y', 'bqplot:xrange',
+             'jdaviz:selectline']
 
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
@@ -42,6 +44,7 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
                     ['jdaviz:xrangezoom', 'jdaviz:boxzoom'],
                     ['bqplot:panzoom', 'bqplot:panzoom_x', 'bqplot:panzoom_y'],
                     ['bqplot:xrange'],
+                    ['jdaviz:selectline'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
 
@@ -51,7 +54,7 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._initialize_toolbar_nested()
+        self._initialize_toolbar_nested(default_tool_priority=['jdaviz:selectslice'])
 
         self.display_uncertainties = False
         self.display_mask = False
@@ -128,6 +131,8 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
             raise ValueError("Line table must have a 'linename' column'")
         if "rest" not in line_table.columns:
             raise ValueError("Line table must have a 'rest' column'")
+        if np.any(line_table['rest'] <= 0):
+            raise ValueError("all rest values must be positive")
 
         # Use the redshift of the displayed spectrum if no redshifts are specified
         if "redshift" in line_table.colnames:
@@ -193,6 +198,13 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
         if return_table:
             return line_table
 
+    def _broadcast_plotted_lines(self, marks=None):
+        if marks is None:
+            marks = [x for x in self.figure.marks if isinstance(x, SpectralLine)]
+
+        msg = SpectralMarksChangedMessage(marks, sender=self)
+        self.session.hub.broadcast(msg)
+
     def erase_spectral_lines(self, name=None, name_rest=None, show_none=True):
         """
         Erase either all spectral lines, all spectral lines sharing the same
@@ -204,6 +216,7 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
             fig.marks = [x for x in fig.marks if not isinstance(x, SpectralLine)]
             if show_none:
                 self.spectral_lines["show"] = False
+            self._broadcast_plotted_lines([])
         else:
             temp_marks = []
             # Toggle "show" value in main astropy table. The astropy table
@@ -230,6 +243,7 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
                                 continue
                 temp_marks.append(x)
             fig.marks = temp_marks
+            self._broadcast_plotted_lines()
 
     def get_scales(self):
         fig = self.figure
@@ -261,6 +275,7 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
 
         self.figure.marks = self.figure.marks + [line_mark]
         line["show"] = True
+        self._broadcast_plotted_lines()
 
     def plot_spectral_lines(self, colors=["blue"], **kwargs):
         """
@@ -290,6 +305,7 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
                                 colors=[color], **kwargs)
             marks.append(line)
         fig.marks = fig.marks + marks
+        self._broadcast_plotted_lines()
 
     def available_linelists(self):
         return get_available_linelists()

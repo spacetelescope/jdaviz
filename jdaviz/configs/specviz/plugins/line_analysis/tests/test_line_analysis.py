@@ -1,7 +1,10 @@
+import astropy.units as u
+from astropy.table import QTable
 import numpy as np
 from glue.core.roi import XRangeROI
 from ipywidgets.widgets import widget_serialization
 
+from jdaviz.core.events import LineIdentifyMessage
 from jdaviz.core.marks import LineAnalysisContinuum
 
 
@@ -34,3 +37,41 @@ def test_plugin(specviz_helper, spectrum1d):
     plugin.selected_subset = 'Subset 1'
     plugin.selected_continuum = 'Surrounding'
     plugin.width = 3
+
+
+def test_line_identify(specviz_helper, spectrum1d):
+    label = "Test 1D Spectrum"
+    specviz_helper.load_spectrum(spectrum1d, data_label=label)
+
+    lt = QTable()
+    lt['linename'] = ['O III', 'Halpha']
+    lt['rest'] = [5007, 6563]*u.AA
+    lt['listname'] = 'Test List'
+    specviz_helper.load_line_list(lt)
+
+    ll_plugin = specviz_helper.app.get_tray_item_from_name('g-line-list')
+    la_plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
+    rest_names = [line['name_rest'] for line in ll_plugin.list_contents['Test List']['lines']]
+
+    # will default to no selection
+    assert la_plugin.selected_line == ''
+
+    # but selecting a line from line-list (or clicking) should change the dropdown value
+    # since sync is enabled by default
+    assert la_plugin.sync_identify is True
+    # think this is the problem and we need to send the rest name here!
+    msg = LineIdentifyMessage(rest_names[1],
+                              sender=specviz_helper)
+    specviz_helper.app.session.hub.broadcast(msg)
+    assert la_plugin.selected_line == rest_names[1]
+
+    # and changing the dropdown should change the identified line
+    la_plugin.selected_line = rest_names[0]
+    assert ll_plugin.list_contents['Test List']['lines'][0].get('identify') is True
+    assert ll_plugin.list_contents['Test List']['lines'][1].get('identify') is False
+
+    # unless we disable the sync
+    la_plugin.sync_identify = False
+    la_plugin.selected_line = rest_names[1]
+    assert ll_plugin.list_contents['Test List']['lines'][0].get('identify') is True
+    assert ll_plugin.list_contents['Test List']['lines'][1].get('identify') is False

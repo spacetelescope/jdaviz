@@ -1,22 +1,27 @@
 import numpy as np
+import os
+
 import astropy.units as u
 from astropy import constants as const
 from astropy.table import QTable
 from glue.core.message import (SubsetCreateMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
+from glue_jupyter.common.toolbar_vuetify import read_icon
 from traitlets import Bool, Float, Int, List, Unicode, Dict, observe
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (AddDataMessage,
                                 RemoveDataMessage,
                                 AddLineListMessage,
+                                LineIdentifyMessage,
                                 SnackbarMessage,
                                 RedshiftMessage)
-from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin
 from jdaviz.core.linelists import load_preset_linelist
 from jdaviz.core.marks import SpectralLine
+from jdaviz.core.registries import tray_registry
+from jdaviz.core.template_mixin import PluginTemplateMixin
+from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.validunits import create_spectral_equivalencies_list
 
 __all__ = ['LineListTool']
@@ -33,11 +38,11 @@ class LineListTool(PluginTemplateMixin):
     rs_slider_half_range = Float(0.1).tag(sync=True)
     rs_slider_step_auto = Bool(True).tag(sync=True)
     rs_slider_step = Float(0.01).tag(sync=True)
-    rs_redshift_step = Float(1).tag(sync=True)
     rs_slider_ndigits = Int(1).tag(sync=True)
+    rs_slider_throttle = Int(100).tag(sync=True)
     rs_redshift = FloatHandleEmpty(0).tag(sync=True)
     rs_rv = FloatHandleEmpty(0).tag(sync=True)
-    rs_slider_throttle = Int(100).tag(sync=True)
+    rs_rv_step = Float(1).tag(sync=True)
 
     dc_items = List([]).tag(sync=True)
     available_lists = List([]).tag(sync=True)
@@ -47,6 +52,9 @@ class LineListTool(PluginTemplateMixin):
     custom_rest = Unicode().tag(sync=True)
     custom_unit_choices = List([]).tag(sync=True)
     custom_unit = Unicode().tag(sync=True)
+
+    identify_label = Unicode().tag(sync=True)
+    identify_line_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'line_select.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -63,6 +71,9 @@ class LineListTool(PluginTemplateMixin):
         self._global_redshift = 0
         self._rs_disable_observe = False
         self._rs_pause_tables = False
+        # track which line was recently changed to avoid recursive updates due to imprecise
+        # roundtripping
+        self._rs_line_obs_change = (None, None)
 
         # Watch for messages from Specviz helper redshift functions
         self.hub.subscribe(self, RedshiftMessage,
@@ -85,6 +96,9 @@ class LineListTool(PluginTemplateMixin):
 
         self.hub.subscribe(self, AddLineListMessage,
                            handler=self._list_from_notebook)
+
+        self.hub.subscribe(self, LineIdentifyMessage,
+                           handler=self._process_identify_change)
 
         # if set to auto (default), update the slider range when zooming on the spectrum viewer
         self._viewer.scales['x'].observe(self._auto_slider_range, names=['min', 'max'])
@@ -172,7 +186,7 @@ class LineListTool(PluginTemplateMixin):
                 if slider_step > self.rs_slider_half_range:
                     raise ValueError("step must be smaller than range/2")
                 self.rs_slider_step = slider_step
-                self.rs_redshift_step = self._redshift_to_velocity(slider_step)
+                self.rs_rv_step = self._redshift_to_velocity(slider_step)
         elif param == "redshift":
             # NOTE: this should trigger the observe to update rs_rv, line positions, and
             # update self._global_redshift
@@ -231,6 +245,12 @@ class LineListTool(PluginTemplateMixin):
         self.rs_redshift = np.round(self.rs_redshift + event['new'] - event['old'],
                                     self.rs_slider_ndigits)
 
+    def _rest_to_obs(self, rest, redshift=None):
+        if redshift is None:
+            redshift = float(self.rs_redshift)
+
+        return rest * (1+redshift)
+
     @observe('rs_redshift')
     def _on_rs_redshift_updated(self, event):
         if self._rs_disable_observe:
@@ -246,14 +266,67 @@ class LineListTool(PluginTemplateMixin):
         self._rs_disable_observe = True
         self.rs_rv = self._redshift_to_velocity(value)
         self._rs_disable_observe = False
-
         self._update_line_positions()
 
         if not self._rs_pause_tables:
+            # TODO: try to avoid essentially repeating the loop from above, careful to minimize
+            # updates to vue, maybe pause traitlets?
+            self._update_line_list_obs()
+
             # Send the redshift back to the Specviz helper (and also trigger
             # self._update_global_redshift)
-            msg = RedshiftMessage("redshift", self.rs_redshift, sender=self)
+            msg = RedshiftMessage("redshift", value, sender=self)
             self.app.hub.broadcast(msg)
+
+    @observe('plugin_opened')
+    def _update_line_list_obs(self, *args):
+        if not self.plugin_opened:
+            return
+
+        new_list_contents = {}
+        for list_name, line_list in self.list_contents.items():
+            for i, line in enumerate(line_list['lines']):
+                if self._rs_line_obs_change[0] == list_name and self._rs_line_obs_change[1] == i:  # noqa
+                    # this trigger is coming from a manual change to the observed
+                    # wavelength and would result in a small change to the value before the
+                    # user can finish typing.  So we'll just keep the old value until the
+                    # widget is blurred (loses focus)
+                    line_list['lines'][i]['obs'] = self._rs_line_obs_change[2]
+                else:
+                    line_list['lines'][i]['obs'] = self._rest_to_obs(float(line['rest']))
+
+            new_list_contents[list_name] = line_list
+
+        self.list_contents = {}
+        self.list_contents = new_list_contents
+
+    def vue_change_line_obs(self, kwargs):
+        # NOTE: we can only pass one argument from vue (it seems), so we'll pass as
+        # a dictionary (kwargs) instead of positional or keyword arguments (**kwargs)
+        line_obs = kwargs.get('obs_new')
+        if isinstance(line_obs, str) and not len(line_obs):
+            # empty string, we don't want to revert yet because then
+            # the user can never delete the entry and type something new
+            # so we'll just leave empty
+            return
+        list_name = kwargs.get('list_name')
+        line_ind = kwargs.get('line_ind')
+        line = self.list_contents[list_name]['lines'][line_ind]
+        line_rest = float(line['rest'])
+        if line_obs is None:
+            # then coming from the blur, we'll keep the latest update from the @change
+            line_obs = float(line['obs'])
+
+        # we don't want this call to recursively update THIS obs wavelength, but DO want it to
+        # update the RV and all other obs wavelengths.  Once tabbing or losing focus, vue will
+        # send another event with avoid_feedback=False so that the wavelength updates to
+        # exactly match the redshift (so that can be considered the ground truth value consistently)
+        if kwargs.get('avoid_feedback', False):
+            self._rs_line_obs_change = (list_name, line_ind, line_obs)
+        # ensure tables will update when rs_redshift change is observed
+        self._rs_pause_tables = kwargs.get('avoid_feedback', False)
+        self.rs_redshift = (line_obs - line_rest) / line_rest
+        self._rs_line_obs_change = (None, None)
 
     def vue_unpause_tables(self, event=None):
         # after losing focus, update any elements that were paused during changes
@@ -275,7 +348,7 @@ class LineListTool(PluginTemplateMixin):
         # prevent update the redshift from propagating back to an update in the rv
         self._rs_disable_observe = True
         # we'll wait until the blur event (which will call vue_unpause_tables)
-        # to update the value in the MOS table
+        # to update the value in the MOS table and observed wavelengths
         self._rs_pause_tables = True
         self.rs_redshift = redshift
         # but we do want to update the plotted lines
@@ -288,7 +361,8 @@ class LineListTool(PluginTemplateMixin):
         self.rs_slider = 0.0
         self._rs_disable_observe = False
         self._rs_pause_tables = False
-        # the redshift value in the MOS table wasn't updating during slide, so update them now
+        # the redshift value in the MOS table and observed wavelengths weren't
+        # updating during slide, so update them now
         self.vue_unpause_tables()
 
     def _auto_slider_range(self, event=None):
@@ -311,7 +385,7 @@ class LineListTool(PluginTemplateMixin):
         half_range = np.round(half_range, ndec)
 
         # this will trigger self._auto_slider_step to set self.rs_slider_step and
-        # self.rs_redshift_step, if applicable
+        # self.rs_rv_step, if applicable
         self.rs_slider_half_range = half_range
 
     @observe('rs_slider_range_auto')
@@ -325,7 +399,7 @@ class LineListTool(PluginTemplateMixin):
             return
         # if set to auto, default to 1000 steps in the range
         self.rs_slider_step = self.rs_slider_half_range * 2 / 1000
-        self.rs_redshift_step = abs(self._redshift_to_velocity(self._global_redshift+self.rs_slider_step) - self.rs_rv) # noqa
+        self.rs_rv_step = abs(self._redshift_to_velocity(self._global_redshift+self.rs_slider_step) - self.rs_rv) # noqa
 
     @observe('rs_slider_step')
     def _on_rs_slider_step_updated(self, event):
@@ -374,6 +448,7 @@ class LineListTool(PluginTemplateMixin):
 
             temp_dict = {"linename": row["linename"],
                          "rest": row["rest"].value,
+                         "obs": self._rest_to_obs(row["rest"].value),
                          "unit": str(row["rest"].unit),
                          "colors": row["colors"] if "colors" in row else "#FF0000FF",
                          "show": row["show"],
@@ -449,6 +524,7 @@ class LineListTool(PluginTemplateMixin):
         for row in temp_table:
             temp_dict = {"linename": row["linename"],
                          "rest": row["rest"].value,
+                         "obs": self._rest_to_obs(row["rest"].value),
                          "unit": str(row["rest"].unit),
                          "colors": row["colors"],
                          "show": False,
@@ -482,6 +558,7 @@ class LineListTool(PluginTemplateMixin):
         list_contents = self.list_contents
         temp_dict = {"linename": self.custom_name,
                      "rest": float(self.custom_rest),
+                     "obs": self._rest_to_obs(float(self.custom_rest)),
                      "unit": self.custom_unit,
                      "colors": list_contents["Custom"]["color"],
                      "show": True
@@ -581,16 +658,77 @@ class LineListTool(PluginTemplateMixin):
         self._viewer.erase_spectral_lines()
         self.update_line_mark_dict()
 
-    def vue_change_visible(self, line):
+    def vue_change_visible(self, data):
         """
         Plot or erase a single line as needed when "Visible" checkbox is changed
         """
+        listname, line, line_ind = data
         name_rest = line["name_rest"]
-        if line["show"]:
+        show = not line['show']
+
+        list_contents = self.list_contents
+        list_contents[listname]['lines'][line_ind]['show'] = show
+        if not show:
+            # then make sure to also disable the identify flag
+            list_contents[listname]['lines'][line_ind]['identify'] = False
+        self.list_contents = {}
+        self.list_contents = list_contents
+
+        if show:
             self._viewer.plot_spectral_line(name_rest)
         else:
             self._viewer.erase_spectral_lines(name_rest=name_rest)
+
         self.update_line_mark_dict()
+
+    def _update_identify_to_line(self, name_rest, listname=None, identify=True):
+        list_contents = self.list_contents
+        for this_listname, this_list in list_contents.items():
+            for i, line in enumerate(this_list['lines']):
+                if ((this_listname == listname or listname is None) and
+                        line['name_rest'] == name_rest):
+                    list_contents[this_listname]['lines'][i]['identify'] = identify
+                else:
+                    list_contents[this_listname]['lines'][i]['identify'] = False
+
+        self.list_contents = {}
+        self.list_contents = list_contents
+        self.identify_label = name_rest if identify else ""
+
+    def _process_identify_change(self, msg):
+        if msg.sender == self:
+            return
+        # event from some other plugin (LineAnalysis, for example) requesting a change
+        # in the identified line
+        self._update_identify_to_line(msg.name_rest)
+        # then line mark themselves will also respond to the same event, so there is
+        # no need to broadcast another
+
+    def vue_set_identify(self, data=None):
+        """
+        Set the selected line as "identified"
+        """
+        if data is None:
+            # then default to the currently identified (which will unidentify it)
+            for listname, this_list in self.list_contents.items():
+                for line_ind, line in enumerate(this_list['lines']):
+                    if line['identify']:
+                        return self.vue_set_identify((listname, line, line_ind))
+
+        listname, line, line_ind = data
+        identify = not line.get('identify', False)
+        if identify and not line['show']:
+            # first show the line
+            self.vue_change_visible(data)
+
+        self._update_identify_to_line(name_rest=line['name_rest'],
+                                      listname=listname,
+                                      identify=identify)
+
+        # broadcast and event to update the marks
+        msg = LineIdentifyMessage(name_rest=line['name_rest'] if identify else '',
+                                  sender=self)
+        self.hub.broadcast(msg)
 
     def vue_set_color(self, data):
         """

@@ -4,6 +4,26 @@
       <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#line-lists'">Plot lines from preset or custom line lists.</j-docs-link>
     </v-row>
 
+    <j-plugin-section-header>Identified Line</j-plugin-section-header>
+    <v-row>
+      <j-docs-link>Highlight a line and identify its name by using the line selection tool in the spectrum viewer.</j-docs-link>
+    </v-row>
+    <v-row v-if="rs_enabled">
+      <j-tooltip v-if='identify_label' tipid='plugin-line-lists-line-identify-chip-active'>
+        <v-chip
+          v-if="identify_label"
+          label=true
+          @click="set_identify(null)">
+          <img class="color-to-accent" :src="identify_line_icon" width="20"/> {{ identify_label }}
+        </v-chip>
+      </j-tooltip>
+      <j-tooltip v-else tipid='plugin-line-lists-line-identify-chip-inactive'>
+        <v-chip label=true>
+          <img :src="identify_line_icon" width="20"/> no line selected
+        </v-chip>
+      </j-tooltip>
+    </v-row>
+
     <j-plugin-section-header>Redshift</j-plugin-section-header>
     <v-row>
       <j-docs-link>Shift spectral lines according to a specific redshift. Only enabled if at least one line is plotted.</j-docs-link>
@@ -57,7 +77,7 @@
           v-model="rs_rv"
           @input='setRVFloat'
           @blur="unpause_tables"
-          :step="rs_redshift_step"
+          :step="rs_rv_step"
           class="mt-0 pt-0"
           type="number"
           label="RV"
@@ -183,45 +203,61 @@
               </v-col>
             </v-row>
 
-            <div 
-              v-if="list_contents[item].lines.length" 
-              style="margin-left: -10px; margin-right: -12px"
-            >
-              <v-row
-                justify="center"
-                align="center"
-                classname="row-no-outside-padding"
-              >
-                <v-col cols=5>
-                  <p class="font-weight-bold">Name</p>
-                </v-col>
-                <v-col cols=7> <!-- covers rest value and unit cols below -->
-                  <p class="font-weight-bold">Rest Value</p>
-                </v-col>
-              </v-row>
-              <v-row
-                justify="center"
-                align="center"
-                class="row-no-outside-padding"
-                v-for="line in list_contents[item].lines"
-              >
-                <v-col cols=5>
+            <div v-if="list_contents[item].lines.length">
+              <v-row v-for="(line, line_ind) in list_contents[item].lines">
+                <v-row class="row-min-bottom-padding" style="margin: 0px">
                   <j-tooltip tipid='plugin-line-lists-line-visible'>
-                    <v-checkbox v-model="line.show" @change="change_visible(line)">
-                      <template v-slot:label>
-                        <span class='text--primary' style="overflow-wrap: anywhere; font-size: 10pt">
-                          {{line.linename}}
-                        </span>
-                      </template>
-                    </v-checkbox>
+                    <v-btn :color="line.show ? 'accent' : 'default'" icon @click="change_visible([item, line, line_ind])">
+                      <v-icon>{{line.show ? "mdi-eye" : "mdi-eye-off"}}</v-icon>
+                    </v-btn>
                   </j-tooltip>
-                </v-col>
-                <v-col cols=4 style="font-size: 10pt">
-                  {{ line.rest }}
-                </v-col>
-                <v-col cols=3 style="font-size: 10pt">
-                  {{ line.unit.replace("Angstrom", "&#8491;") }}
-                </v-col>
+                  <j-tooltip tipid='plugin-line-lists-line-identify'>
+                    <v-btn icon @click="set_identify([item, line, line_ind])">
+                      <img :class="line.identify ? 'color-to-accent' : ''" :src="identify_line_icon" width="20"/>
+                    </v-btn>
+                  </j-tooltip>
+                  <span class='text--primary' style="overflow-wrap: anywhere; font-size: 12pt; padding-top: 6px; padding-left: 6px">
+                    {{line.linename}}
+                  </span>
+                </v-row>
+                <v-row class="row-min-bottom-padding">
+                  <v-col cols=3>
+                    <v-subheader>rest</v-subheader>
+                  </v-col>
+                  <v-col cols=6>
+                    <v-text-field
+                      v-model="line.rest"
+                      class="mt-0 pt-0"
+                      type="number"
+                      hide-details
+                      single-line
+                      disabled
+                    ></v-text-field>
+                  </v-col>
+                  <v-col cols=3>
+                    {{ line.unit.replace("Angstrom", "&#8491;") }}
+                  </v-col>
+                </v-row>
+                <v-row>
+                  <v-col cols=3>
+                    <v-subheader>obs</v-subheader>
+                  </v-col>
+                  <v-col cols=6>
+                    <v-text-field
+                      v-model="line.obs"
+                      @input="(e) => change_line_obs({list_name: item, line_ind: line_ind, obs_new: parseFloat(e), avoid_feedback: true})"
+                      @blur="unpause_tables"
+                      step="0.1"
+                      class="mt-0 pt-0"
+                      type="number"
+                      hide-details
+                      single-line
+                    ></v-text-field>
+                  </v-col>
+                  <v-col cols=3>
+                    {{ line.unit.replace("Angstrom", "&#8491;") }}
+                  </v-col>
+                </v-row>
               </v-row>
             </div>
           </v-expansion-panel-content>

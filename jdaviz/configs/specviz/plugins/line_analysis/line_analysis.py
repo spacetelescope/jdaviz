@@ -1,12 +1,19 @@
 import numpy as np
+import os
 from glue.core.message import (SubsetDeleteMessage,
                                SubsetUpdateMessage)
-from traitlets import Bool, List, Unicode, observe
+from glue_jupyter.common.toolbar_vuetify import read_icon
+from traitlets import Bool, List, Float, Unicode, observe
+from astropy import units as u
 from specutils import analysis
 from specutils.manipulation import extract_region
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
-from jdaviz.core.events import AddDataMessage, RemoveDataMessage
+from jdaviz.core.events import (AddDataMessage,
+                                RemoveDataMessage,
+                                SpectralMarksChangedMessage,
+                                LineIdentifyMessage,
+                                RedshiftMessage)
 from jdaviz.core.marks import (LineAnalysisContinuum,
                                LineAnalysisContinuumCenter,
                                LineAnalysisContinuumLeft,
@@ -14,6 +21,7 @@ from jdaviz.core.marks import (LineAnalysisContinuum,
                                Shadow)
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, SpectralSubsetSelect
+from jdaviz.core.tools import ICON_DIR
 
 __all__ = ['LineAnalysis']
 
@@ -40,6 +48,14 @@ class LineAnalysis(PluginTemplateMixin):
     width = FloatHandleEmpty(3).tag(sync=True)
     results_computing = Bool(False).tag(sync=True)
     results = List().tag(sync=True)
+    results_centroid = Float().tag(sync=True)  # stored in AA units
+    line_items = List([]).tag(sync=True)
+    sync_identify = Bool(True).tag(sync=True)
+    sync_identify_icon_enabled = Unicode(read_icon(os.path.join(ICON_DIR, 'line_select.svg'), 'svg+xml')).tag(sync=True)  # noqa
+    sync_identify_icon_disabled = Unicode(read_icon(os.path.join(ICON_DIR, 'line_select_disabled.svg'), 'svg+xml')).tag(sync=True)  # noqa
+    identified_line = Unicode("").tag(sync=True)
+    selected_line = Unicode("").tag(sync=True)
+    selected_line_redshift = Float(0).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -65,6 +81,12 @@ class LineAnalysis(PluginTemplateMixin):
                            handler=self._on_viewer_data_changed)
         self.hub.subscribe(self, SubsetUpdateMessage,
                            handler=self._on_viewer_data_changed)
+
+        self.hub.subscribe(self, SpectralMarksChangedMessage,
+                           handler=self._on_plotted_lines_changed)
+
+        self.hub.subscribe(self, LineIdentifyMessage,
+                           handler=self._on_identified_line_changed)
 
     def _on_viewer_data_changed(self, msg=None):
         """
@@ -161,6 +183,22 @@ class LineAnalysis(PluginTemplateMixin):
             self.results = results
 
         self.results_computing = False
+
+    def _on_plotted_lines_changed(self, msg):
+        self.line_marks = msg.marks
+        self.line_items = msg.names_rest
+        if self.selected_line not in self.line_items:
+            # default to identified line if available
+            self.selected_line = self.identified_line
+
+    def _on_identified_line_changed(self, msg):
+        self.identified_line = msg.name_rest
+        if self.sync_identify or not self.selected_line:
+            # then we should follow the identified line, either because of sync
+            # or because nothing has been selected yet.
+            # if results aren't available yet, then we'll wait until they are
+            # in which case we'll default to the identified line
+            self.selected_line = self.identified_line
 
     @observe("spectral_subset_selected", "selected_spectrum", "continuum_selected", "width")
     def _calculate_statistics(self, *args, **kwargs):
@@ -285,9 +323,52 @@ class LineAnalysis(PluginTemplateMixin):
                 # TODO: update specutils to be consistent with region vs regions and default to
                 # regions=None so this elif can be removed
                 temp_result = FUNCTIONS[function](spec_subtracted, region=None)
+                self.results_centroid = temp_result.to_value(u.AA)
             else:
                 temp_result = FUNCTIONS[function](spec_subtracted)
 
             temp_results.append({'function': function, 'result': str(temp_result)})
 
+        if not self.selected_line and self.identified_line:
+            # default to the identified line
+            self.selected_line = self.identified_line
+
         self.update_results(temp_results, mark_x, mark_y)
+
+    def _compute_redshift_for_selected_line(self):
+        index = self.line_items.index(self.selected_line)
+        line_mark = self.line_marks[index]
+        rest_value = (line_mark.rest_value * line_mark._x_unit).to_value(u.AA,
+                                                                         equivalencies=u.spectral())
+        return (self.results_centroid - rest_value) / rest_value
+
+    @observe('sync_identify')
+    def _sync_identify_changed(self, event={}):
+        if not event.get('new', self.sync_identify):
+            return
+
+        if not self.identified_line and self.selected_line:
+            # then we just enabled the sync, but no line is currently
+            # identified, so we'll identify the current selection
+            msg = LineIdentifyMessage(self.selected_line, sender=self)
+            self.hub.broadcast(msg)
+        elif self.identified_line:
+            # then update the selection the the identified line
+            self.selected_line = self.identified_line
+
+    @observe('selected_line')
+    def _selected_line_changed(self, event):
+        if self.sync_identify:
+            msg = LineIdentifyMessage(event.get('new', self.selected_line), sender=self)
+            self.hub.broadcast(msg)
+
+    @observe('results_centroid', 'selected_line')
+    def _update_selected_line_redshift(self, event):
+        if self.selected_line and self.results_centroid is not None:
+            # compute redshift that WILL be applied if clicking assign
+            self.selected_line_redshift = self._compute_redshift_for_selected_line()
+
+    def vue_line_assign(self, msg=None):
+        z = self._compute_redshift_for_selected_line()
+        msg = RedshiftMessage('redshift', z, sender=self)
+        self.hub.broadcast(msg)
