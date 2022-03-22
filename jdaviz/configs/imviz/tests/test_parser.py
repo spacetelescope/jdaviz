@@ -284,7 +284,7 @@ class TestParseImage:
         assert_quantity_allclose(tbl[0]['sum'], 4.989882e-09 * u.MJy)
         assert_quantity_allclose(tbl[0]['sum_aper_area'], 111.220234 * (u.pix * u.pix))
         assert_quantity_allclose(tbl[0]['pixarea_tot'], 1.038438e-11 * u.sr, atol=1e-15 * u.sr)
-        assert_quantity_allclose(tbl[0]['aperture_sum_counts'], 132061.590298 * u.count)
+        assert_quantity_allclose(tbl[0]['aperture_sum_counts'], 132061.576643 * u.count, rtol=1e-6)
         assert_quantity_allclose(tbl[0]['aperture_sum_counts_err'], 363.402775 * u.count)
         assert_quantity_allclose(tbl[0]['counts_fac'], 0.0036385915646798953 * (data_unit / u.ct))
         assert_quantity_allclose(tbl[0]['aperture_sum_mag'], -6.704274 * u.mag)
