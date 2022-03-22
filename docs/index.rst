@@ -172,6 +172,7 @@ Using Jdaviz
   cubeviz/index.rst
   mosviz/index.rst
   imviz/index.rst
+  timeviz/index.rst
   notebook/index.rst
 
 Reference/API

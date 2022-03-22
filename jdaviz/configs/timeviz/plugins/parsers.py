@@ -55,9 +55,12 @@ def parse_data(app, file_obj, data_label=None, time_column='time', flux_column='
         ts = TimeSeries.read(file_obj, time_column=time_column, **kwargs)
         if data_label is None:
             data_label = os.path.splitext(os.path.basename(file_obj))[0]
-    elif not isinstance(file_obj, TimeSeries):
+    elif isinstance(file_obj, TimeSeries):
+        ts = file_obj
+    else:
         raise NotImplementedError(f'Timeviz cannot parse {file_obj}')
-    elif data_label is None:
+
+    if data_label is None:
         data_label = f'timeviz_data|{str(base64.b85encode(uuid.uuid4().bytes), "utf-8")}'
 
     # TODO: Is there a better way to do this?

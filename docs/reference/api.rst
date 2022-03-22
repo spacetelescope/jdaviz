@@ -54,3 +54,6 @@ Configurations
 
 .. automodapi:: jdaviz.configs.specviz2d
    :no-inheritance-diagram:
+
+.. automodapi:: jdaviz.configs.timeviz
+   :no-inheritance-diagram:
