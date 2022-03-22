@@ -19,6 +19,13 @@ Mosviz
 Specviz
 ^^^^^^^
 
+Timeviz
+^^^^^^^
+
+- New ``Timeviz`` configuration for time series visualization.
+  This only has bare functionality right now, with improvements to
+  be added in the future. [#1181]
+
 API Changes
 -----------
 

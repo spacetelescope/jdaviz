@@ -1,6 +1,7 @@
 settings:
   configuration: timeviz
   data:
+    auto_populate: true
     parser: timeviz-data-parser
   visible:
     menu_bar: false

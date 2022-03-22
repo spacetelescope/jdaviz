@@ -33,6 +33,10 @@ class TimevizTSView(BqplotProfileView, JdavizViewerMixin):
     default_class = TimeSeries
     _state_cls = FreezableProfileViewerState
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._initialize_toolbar_nested()
+
     def data(self, cls=None):
         return [layer_state.layer
                 for layer_state in self.state.layers
