@@ -187,12 +187,11 @@ class SimpleAperturePhotometry(TemplateMixin):
             include_pixarea_fac = False
             include_counts_fac = False
             include_flux_scale = False
-            # TODO: Optimize for big data -- avoid array arithmetic for entire array
-            comp_no_bg = comp.data - bg
+            comp_data = comp.data
             if comp.units:
                 img_unit = u.Unit(comp.units)
                 bg = bg * img_unit
-                comp_no_bg = comp_no_bg * img_unit
+                comp_data = comp_data << img_unit
 
                 if u.sr in img_unit.bases:  # TODO: Better way to detect surface brightness unit?
                     try:
@@ -214,7 +213,7 @@ class SimpleAperturePhotometry(TemplateMixin):
                     raise ValueError('Missing or invalid flux scaling')
                 if not np.allclose(flux_scale, 0):
                     include_flux_scale = True
-            phot_aperstats = ApertureStats(comp_no_bg, aperture, wcs=data.coords)
+            phot_aperstats = ApertureStats(comp_data, aperture, wcs=data.coords, local_bkg=bg)
             phot_table = phot_aperstats.to_table(columns=(
                 'id', 'xcentroid', 'ycentroid', 'sky_centroid', 'sum', 'sum_aper_area',
                 'min', 'max', 'mean', 'median', 'mode', 'std', 'mad_std', 'var',

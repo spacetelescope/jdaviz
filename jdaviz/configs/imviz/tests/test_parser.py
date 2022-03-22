@@ -302,7 +302,7 @@ class TestParseImage:
         assert_quantity_allclose(tbl[0]['fwhm'], 2.8691718 * u.pix)
         assert_quantity_allclose(tbl[0]['semimajor_sigma'], 1.22308648 * u.pix)
         assert_quantity_allclose(tbl[0]['semiminor_sigma'], 1.21374578 * u.pix)
-        assert_quantity_allclose(tbl[0]['orientation'], -27.22056404 * u.deg)
+        assert_quantity_allclose(tbl[0]['orientation'], -27.220559 * u.deg)
         assert_quantity_allclose(tbl[0]['eccentricity'], 0.12335181)
 
         # --- Back to parser testing below. ---
