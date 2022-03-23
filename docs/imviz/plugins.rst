@@ -103,20 +103,22 @@ an interactively selected region. A typical workflow is as follows:
 7. If you also want photometry result in the unit of counts, you can enter a
    conversion factor in the :guilabel:`Counts conversion factor` field. The value
    must be in the unit of display data unit per counts. This is used to convert linear
-   flux unit (e.g., MJy/sr) to counts. If this field is not applicable for you,
-   leave it at 0.
+   flux unit (e.g., MJy/sr) to counts. This field is only used if data has a valid unit.
+   If this field is not applicable for you, leave it at 0.
    **This field resets every time Data selection changes.**
 8. If you also want photometry result in magnitude unit, you can enter a flux
    scaling factor in the :guilabel:`Flux scaling` field. The value must be in the
    same unit as display data unit. A magnitude is then calculated using
    ``-2.5 * log(flux / flux_scaling)``. This calculation only makes sense if your
    display data unit is already in linear flux unit. Setting this to 1 is equivalent
-   to not applying any scaling. If this field is not applicable for you, leave it at 0.
+   to not applying any scaling. This field is only used if data has a valid unit.
+   If this field is not applicable for you, leave it at 0.
    **This field resets every time Data selection changes.**
 9. Select the desired radial profile plot type using the :guilabel:`Plot Type` drop-down menu:
 
   * Radial Profile: Binned average as a function of radius from the center of the region.
   * Radial Profile (Raw): Raw image data points as a function of radius from the center of the region.
+    Do not use this for big data due to performance issues associated with too many data points.
 
 10. Once all inputs are populated correctly, click on the :guilabel:`CALCULATE`
     button to perform simple aperture photometry.
