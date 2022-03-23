@@ -170,7 +170,7 @@ class SubsetSelect(BasePluginComponent):
         """
         Parameters
         ----------
-        plugin :
+        plugin
             the parent plugin object
         items : str
             the name of the items traitlet defined in ``plugin``
@@ -181,10 +181,10 @@ class SubsetSelect(BasePluginComponent):
         viewer_refs : list
             the reference names of the viewer to extract the subregion.  If not provided or None,
             will loop through all references.
-        default_text: str or None
+        default_text : str or None
             the text to show for no selection.  If not provided or None, no entry will be provided
             in the dropdown for no selection.
-        allowed_type: str or None
+        allowed_type : str or None
             whether to filter to 'spatial' or 'spectral' types of subsets.  If not provided or None,
             will include both entries.
         """
