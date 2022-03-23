@@ -13,6 +13,10 @@ Cubeviz
 Imviz
 ^^^^^
 
+- New Line Profiles (XY) plugin to plot line profiles across X and Y axes
+  for the pixel under cursor when "l" key is pressed or for manually entered
+  X and Y values on the displayed image. [#1132]
+
 Mosviz
 ^^^^^^
 

@@ -22,6 +22,7 @@ tray:
   - g-plot-options
   - imviz-links-control
   - imviz-compass
+  - imviz-line-profile-xy
   - imviz-aper-phot-simple
   - g-export-plot
 viewer_area:

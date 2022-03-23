@@ -46,6 +46,7 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
 
         self.label_mouseover = None
         self.compass = None
+        self.line_profile_xy = None
 
         self.add_event_callback(self.on_mouse_or_key_event, events=['mousemove', 'mouseenter',
                                                                     'mouseleave', 'keydown'])
@@ -80,6 +81,13 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
             if 'g-coords-info' in self.session.application._tools:
                 self.label_mouseover = self.session.application._tools['g-coords-info']
             else:
+                return
+
+        if self.line_profile_xy is None:
+            try:
+                self.line_profile_xy = self.session.jdaviz_app.get_tray_item_from_name(
+                    'imviz-line-profile-xy')
+            except KeyError:  # pragma: no cover
                 return
 
         if data['event'] == 'mousemove':
@@ -144,12 +152,22 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
             self.label_mouseover.reset_coords_display()
             self.label_mouseover.value = ""
 
-        elif data['event'] == 'keydown' and data['key'] == 'b':
-            self.blink_once()
+        elif data['event'] == 'keydown':
+            key_pressed = data['key']
 
-            # Also update the coordinates display.
-            data['event'] = 'mousemove'
-            self.on_mouse_or_key_event(data)
+            if key_pressed == 'b':
+                self.blink_once()
+
+                # Also update the coordinates display.
+                data['event'] = 'mousemove'
+                self.on_mouse_or_key_event(data)
+
+            elif key_pressed == 'l':
+                # Same data as mousemove above.
+                self.line_profile_xy.selected_x = data['domain']['x']
+                self.line_profile_xy.selected_y = data['domain']['y']
+                self.line_profile_xy.selected_viewer = self.reference_id
+                self.line_profile_xy.vue_draw_plot()
 
     def blink_once(self):
         # Simple blinking of images - this will make it so that only one
@@ -187,6 +205,16 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
                 # We can display the active data label in Compass plugin.
                 self.set_compass(self.state.layers[next_layer].layer)
 
+                # Update line profile plots too.
+                if self.line_profile_xy is None:
+                    try:
+                        self.line_profile_xy = self.session.jdaviz_app.get_tray_item_from_name(
+                            'imviz-line-profile-xy')
+                    except KeyError:  # pragma: no cover
+                        return
+                self.line_profile_xy.selected_viewer = self.reference_id
+                self.line_profile_xy.vue_draw_plot()
+
     def on_limits_change(self, *args):
         try:
             i = get_top_layer_index(self)
@@ -196,22 +224,27 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
             return
         self.set_compass(self.state.layers[i].layer)
 
+    def _get_zoom_limits(self, image):
+        """Return ``(x_min, y_min, x_max, y_max)`` for given image.
+        This is needed because viewer values are only based on reference
+        image, which can be inaccurate if given image is dithered and
+        they are linked by WCS.
+        """
+        if data_has_valid_wcs(image) and self.get_link_type(image.label) == 'wcs':
+            # Convert X,Y from reference data to the one we are actually seeing.
+            x = image.coords.world_to_pixel(self.state.reference_data.coords.pixel_to_world(
+                    (self.state.x_min, self.state.x_max), (self.state.y_min, self.state.y_max)))
+            zoom_limits = (x[0][0], x[1][0], x[0][1], x[1][1])
+        else:
+            zoom_limits = (self.state.x_min, self.state.y_min, self.state.x_max, self.state.y_max)
+        return zoom_limits
+
     def set_compass(self, image):
         """Update the Compass plugin with info from the given image Data object."""
         if self.compass is None:  # Maybe another viewer has it
             return
 
-        zoom_limits = (self.state.x_min, self.state.y_min, self.state.x_max, self.state.y_max)
-        if data_has_valid_wcs(image):
-            wcs = image.coords
-
-            # Convert X,Y from reference data to the one we are actually seeing.
-            if self.get_link_type(image.label) == 'wcs':
-                x = wcs.world_to_pixel(self.state.reference_data.coords.pixel_to_world(
-                        (self.state.x_min, self.state.x_max), (self.state.y_min, self.state.y_max)))
-                zoom_limits = (x[0][0], x[1][0], x[0][1], x[1][1])
-        else:
-            wcs = None
+        zoom_limits = self._get_zoom_limits(image)
 
         # Downsample input data to about 400px (as per compass.vue) for performance.
         xstep = max(1, round(image.shape[1] / 400))
@@ -220,7 +253,8 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
         vmin, vmax = PercentileInterval(95).get_limits(arr)
         norm = ImageNormalize(vmin=vmin, vmax=vmax, stretch=LinearStretch())
         self.compass.draw_compass(image.label, wcs_utils.draw_compass_mpl(
-            arr, orig_shape=image.shape, wcs=wcs, show=False, zoom_limits=zoom_limits, norm=norm))
+            arr, orig_shape=image.shape, wcs=image.coords, show=False, zoom_limits=zoom_limits,
+            norm=norm))
 
     def set_plot_axes(self):
         self.figure.axes[1].tick_format = None
