@@ -308,9 +308,9 @@ class SubsetSelect(BasePluginComponent):
         if self.selected == self._default_text:
             return None
         subset_type = self.selected_item['type']
-        # NOTE: this might cause some issues with multiple viewers in imviz which
-        # don't have reference names, but get_subsets_from_viewer requires reference
-        # and not IDs
+        # NOTE: we use reference names here instead of IDs since get_subsets_from_viewer requires
+        # that.  For imviz, this will mean we won't be able to loop through each of the viewers,
+        # but the original viewer should have access to all the subsets.
         for viewer_ref in self.viewer_refs:
             match = self.app.get_subsets_from_viewer(viewer_ref,
                                                      subset_type=subset_type).get(self.selected)
