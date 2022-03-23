@@ -58,7 +58,14 @@ class PlotOptions(TemplateMixin):
 
     @observe("show_uncertainty")
     def _toggle_uncertainty(self, event):
-        spec_viewer = self.app.get_viewer("spectrum-viewer")
+        if self.app.state.settings.get("configuration") == "cubeviz":
+            viewer = "cubeviz-3"
+        elif self.app.state.settings.get("configuration") == "specviz":
+            viewer = "specviz-0"
+        else:
+            return
+        spec_viewer = self.app.get_viewer_by_id(viewer)
+
         if self.show_uncertainty:
             spec_viewer.show_uncertainties()
         else:
