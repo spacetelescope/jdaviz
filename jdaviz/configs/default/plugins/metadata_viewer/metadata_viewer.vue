@@ -29,5 +29,20 @@
       </v-row>
     </div>
 
+    <v-row>
+      <v-select
+        :items="zodiac_items"
+        v-model="selected_zodiac"
+        label="Zodiac Sign"
+        hint="Select the Zodiac sign to see your future."
+        persistent-hint
+      ></v-select>
+    </v-row>
+
+    <div v-if="your_future">
+      <j-plugin-section-header>Your Future!!!</j-plugin-section-header>
+      {{ your_future }}
+    </div>
+
   </j-tray-plugin>
 </template>

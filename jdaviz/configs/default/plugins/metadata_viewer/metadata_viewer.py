@@ -15,9 +15,14 @@ class MetadataViewer(TemplateMixin):
     selected_data = Unicode("").tag(sync=True)
     has_metadata = Bool(False).tag(sync=True)
     metadata = List([]).tag(sync=True)
+    zodiac_items = List(["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio",
+                         "Sagittarius", "Capricorn", "Aquarius", "Pisces"]).tag(sync=True)
+    selected_zodiac = Unicode("").tag(sync=True)
+    your_future = Unicode("").tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._cached_futures = {}
 
         self.hub.subscribe(self, AddDataMessage,
                            handler=self._on_viewer_data_changed)
@@ -55,6 +60,27 @@ class MetadataViewer(TemplateMixin):
             # TODO: Option to not sort?
             self.metadata = sorted(zip(d.keys(), map(str, d.values())))
             self.has_metadata = True
+
+    @observe("selected_zodiac")
+    def _show_future(self, event):
+        if self.selected_zodiac in self._cached_futures:
+            self.your_future = self._cached_futures[self.selected_zodiac]
+        else:
+            import requests
+            from bs4 import BeautifulSoup
+            url = f"http://www.astrology.com/us/horoscope/daily-overview.aspx?sign={self.selected_zodiac.lower()}"  # noqa
+            r = requests.get(url, headers={'User-Agent': 'foo/bar'})
+            if r.status_code == 200:
+                try:
+                    soup = BeautifulSoup(r.text, 'html.parser')
+                    item = soup.find('div', {'id': 'content'})
+                    self.your_future = item.getText().strip()
+                except Exception as e:
+                    self.your_future = repr(e)
+                else:
+                    self._cached_futures[self.selected_zodiac] = self.your_future
+            else:
+                self.your_future = r.reason
 
 
 # TODO: If this is natively supported by asdf in the future, replace with native function.
