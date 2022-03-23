@@ -47,7 +47,8 @@ class PlotOptions(TemplateMixin):
         self.selected_viewer = msg.viewer
 
     def _on_data_changed(self):
-        self.show_uncertainty = False
+        # Make sure new data has it's uncertainty plotted
+        self._toggle_uncertainty(None)
 
     @observe("selected_viewer")
     def _selected_viewer_changed(self, event={}):
@@ -61,4 +62,4 @@ class PlotOptions(TemplateMixin):
         if self.show_uncertainty:
             spec_viewer.show_uncertainties()
         else:
-            spec_viewer.clean()
+            spec_viewer._clean_error()

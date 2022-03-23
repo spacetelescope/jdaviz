@@ -23,6 +23,8 @@ Mosviz
 Specviz
 ^^^^^^^
 
+- Exposed toggle in Plot Options plugin for viewing uncertainties. [#1189]
+
 API Changes
 -----------
 

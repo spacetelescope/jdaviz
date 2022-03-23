@@ -391,11 +391,18 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
         if not self.display_mask:
             return
 
+        # Remove existing mask marks
+        self._clean_mask()
+
         # Loop through all active data in the viewer
         for index, layer_state in enumerate(self.state.layers):
             comps = [str(component) for component in layer_state.layer.components]
 
-            # Ignore data that does not have an 'mask' component
+            # Skip subsets
+            if hasattr(layer_state.layer, "subset_state"):
+                continue
+
+            # Ignore data that does not have a mask component
             if "mask" in comps:
                 mask = np.array(layer_state.layer['mask'].data)
 
@@ -420,17 +427,25 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
                                              )
                 # Add mask marks to viewer
                 self.figure.marks = list(self.figure.marks) + [mask_line_mark]
-            
+
     def _plot_uncertainties(self):
         if not self.display_uncertainties:
             return
 
+        # Remove existing error bars
+        self._clean_error()
+
         # Loop through all active data in the viewer
         for index, layer_state in enumerate(self.state.layers):
+
+            # Skip subsets
+            if hasattr(layer_state.layer, "subset_state"):
+                continue
+
             comps = [str(component) for component in layer_state.layer.components]
 
-            # Ignore data that does not have an 'uncertainty' component
-            if "uncertainty" in comps:
+            # Ignore data that does not have an uncertainty component
+            if "uncertainty" in comps:  # noqa
                 error = np.array(layer_state.layer['uncertainty'].data)
 
                 data_x = layer_state.layer.data.get_object().spectral_axis
@@ -459,6 +474,7 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
                                                     fill='between',
                                                     close_path=False
                                                     )
+
                 # Add error lines to viewer
                 self.figure.marks = list(self.figure.marks) + [error_line_mark]
 
