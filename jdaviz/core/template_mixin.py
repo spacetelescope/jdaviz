@@ -166,7 +166,7 @@ class SubsetSelect(BasePluginComponent):
 
     """
     def __init__(self, plugin, items, selected, selected_has_subregions=None,
-                 default_text=None, allowed_type=None):
+                 viewer_refs=None, default_text=None, allowed_type=None):
         """
         Parameters
         ----------
@@ -178,6 +178,9 @@ class SubsetSelect(BasePluginComponent):
             the name of the selected traitlet defined in ``plugin``
         selected_has_subregions: str
             the name of the selected_has_subregions traitlet defined in ``plugin``, optional
+        viewer_refs : list
+            the reference names of the viewer to extract the subregion.  If not provided or None,
+            will loop through all references.
         default_text: str or None
             the text to show for no selection.  If not provided or None, no entry will be provided
             in the dropdown for no selection.
@@ -190,6 +193,7 @@ class SubsetSelect(BasePluginComponent):
                          selected=selected,
                          selected_has_subregions=selected_has_subregions)
 
+        self._viewer_refs = viewer_refs
         self._default_text = default_text
         if allowed_type not in [None, 'spatial', 'spectral']:
             raise ValueError("allowed_type must be None, 'spatial', or 'spectral'")
@@ -212,6 +216,16 @@ class SubsetSelect(BasePluginComponent):
         for lyr in self.app.data_collection.subset_groups:
             self._update_subset(lyr)
 
+    @property
+    def viewer_refs(self):
+        if self._viewer_refs is None:
+            return [ref for ref in self.app.get_viewer_reference_names() if ref is not None]
+        return self._viewer_refs
+
+    @property
+    def viewers(self):
+        return [self.app.get_viewer(ref) for ref in self.viewer_refs]
+
     @staticmethod
     def _subset_type(subset):
         if isinstance(subset.subset_state, RoiSubsetState):
@@ -222,7 +236,7 @@ class SubsetSelect(BasePluginComponent):
 
     def _subset_to_dict(self, subset):
         # find layer artist in default spectrum-viewer
-        for viewer in [self.app.get_viewer_by_id(id) for id in self.app.get_viewer_ids()]:
+        for viewer in self.viewers:
             for layer in viewer.layers:
                 if layer.layer.label == subset.label:
                     color = layer.state.color
@@ -294,8 +308,11 @@ class SubsetSelect(BasePluginComponent):
         if self.selected == self._default_text:
             return None
         subset_type = self.selected_item['type']
-        for viewer_id in self.app.get_viewer_ids():
-            match = self.app.get_subsets_from_viewer(viewer_id,
+        # NOTE: this might cause some issues with multiple viewers in imviz which
+        # don't have reference names, but get_subsets_from_viewer requires reference
+        # and not IDs
+        for viewer_ref in self.viewer_refs:
+            match = self.app.get_subsets_from_viewer(viewer_ref,
                                                      subset_type=subset_type).get(self.selected)
             if match is not None:
                 return match
@@ -364,6 +381,7 @@ class SpectralSubsetSelectMixin(VuetifyTemplate, HubListener):
                                             'spectral_subset_items',
                                             'spectral_subset_selected',
                                             'spectral_subset_selected_has_subregions',
+                                            viewer_refs=['spectrum-viewer'],
                                             default_text='Entire Spectrum',
                                             allowed_type='spectral')
 
