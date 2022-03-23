@@ -234,8 +234,8 @@ class SubsetSelect(BasePluginComponent):
         # NOTE: calling .remove will not trigger traitlet update
         self.items = [s for s in self.items
                       if s['label'] != subset.label]
-        if self.selected not in self.labels:
-            self.selected = "Entire Spectrum"
+        if self.selected not in self.labels and len(self.labels):
+            self.selected = self.labels[0]
 
     def _update_subset(self, subset, attribute=None):
         if self._allowed_type is not None and self._subset_type(subset) != self._allowed_type:
@@ -287,6 +287,7 @@ class SubsetSelect(BasePluginComponent):
         for item in self.items:
             if item['label'] == self.selected:
                 return item
+        return {}
 
     @cached_property
     def selected_obj(self):
@@ -300,18 +301,18 @@ class SubsetSelect(BasePluginComponent):
                 return match
 
     def selected_min(self, spectrum1d):
-        if self.selected_item['type'] != 'spectral':
-            raise TypeError("currently selected subset is not spectral")
         if self.selected == self._default_text:
             return np.nanmin(spectrum1d.spectral_axis.value)
+        if self.selected_item.get('type') != 'spectral':
+            raise TypeError("currently selected subset is not spectral")
         else:
             return self.selected_obj.lower.value
 
     def selected_max(self, spectrum1d):
-        if self.selected_item['type'] != 'spectral':
-            raise TypeError("currently selected subset is not spectral")
         if self.selected == self._default_text:
             return np.nanmax(spectrum1d.spectral_axis.value)
+        if self.selected_item.get('type') != 'spectral':
+            raise TypeError("currently selected subset is not spectral")
         else:
             return self.selected_obj.upper.value
 
