@@ -124,6 +124,9 @@ class SimpleAperturePhotometry(TemplateMixin):
         # Auto-populate background, if applicable
         self._bg_subset_selected_changed()
 
+        # update self._selected_subset with the new self._selected_data
+        self._subset_selected_changed()
+
     def _get_region_from_subset(self, subset):
         for subset_grp in self.app.data_collection.subset_groups:
             if subset_grp.label == subset:

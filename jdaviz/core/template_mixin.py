@@ -202,8 +202,10 @@ class SubsetSelect(BasePluginComponent):
         if selected_has_subregions is not None:
             self.selected_has_subregions = False
 
-        self.hub.subscribe(self, SubsetUpdateMessage, handler=lambda msg: self._update_subset(msg.subset, msg.attribute))
-        self.hub.subscribe(self, SubsetDeleteMessage, handler=lambda msg: self._delete_subset(msg.subset))
+        self.hub.subscribe(self, SubsetUpdateMessage,
+                           handler=lambda msg: self._update_subset(msg.subset, msg.attribute))
+        self.hub.subscribe(self, SubsetDeleteMessage,
+                           handler=lambda msg: self._delete_subset(msg.subset))
         self.add_observe(selected, self._selected_changed)
 
         # intialize any subsets that have already been created
