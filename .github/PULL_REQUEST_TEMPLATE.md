@@ -33,5 +33,5 @@ This checklist is meant to remind the package maintainer(s) who will review this
 - [ ] Are docs added/updated as required? If so, do they follow the [STScI Style Guides](https://github.com/spacetelescope/style-guides)?
 - [ ] Did the CI pass? If not, are the failures related?
 - [ ] Is a change log needed? If yes, is it added to `CHANGES.rst`?
-- [ ] Is a milestone set? Milestone is only currently required for PRs related to Imviz MVP.
+- [ ] Is a milestone set?
 - [ ] After merge, any internal documentations need updating (e.g., JIRA, Innerspace)?
