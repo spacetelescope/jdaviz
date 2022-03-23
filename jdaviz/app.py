@@ -1295,7 +1295,10 @@ class Application(VuetifyTemplate, HubListener):
             n = self._next_viewer_num(pfx)
             vid = f"{pfx}-{n}"
 
-        viewer.LABEL = vid  # For reverse look-up
+        # There is a viewer.LABEL inherited from glue-jupyter but there was
+        # objection in using it here because it is not hidden, so we use our
+        # own attribute instead.
+        viewer._reference_id = vid  # For reverse look-up
 
         return {
             'id': vid,

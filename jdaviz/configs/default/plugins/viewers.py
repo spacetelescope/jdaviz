@@ -37,4 +37,4 @@ class JdavizViewerMixin:
 
     @property
     def reference_id(self):
-        return self.LABEL
+        return self._reference_id
