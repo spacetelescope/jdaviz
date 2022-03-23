@@ -202,9 +202,13 @@ class SubsetSelect(BasePluginComponent):
         if selected_has_subregions is not None:
             self.selected_has_subregions = False
 
-        self.hub.subscribe(self, SubsetUpdateMessage, handler=self._update_subset)
-        self.hub.subscribe(self, SubsetDeleteMessage, handler=self._delete_subset)
+        self.hub.subscribe(self, SubsetUpdateMessage, handler=lambda msg: self._update_subset(msg.subset, msg.attribute))
+        self.hub.subscribe(self, SubsetDeleteMessage, handler=lambda msg: self._delete_subset(msg.subset))
         self.add_observe(selected, self._selected_changed)
+
+        # intialize any subsets that have already been created
+        for lyr in self.app.data_collection.subset_groups:
+            self._update_subset(lyr)
 
     @staticmethod
     def _subset_type(subset):
@@ -224,35 +228,35 @@ class SubsetSelect(BasePluginComponent):
                     return {"label": subset.label, "color": color, "type": subset_type}
         return {"label": subset.label, "color": False, "type": False}
 
-    def _delete_subset(self, msg):
+    def _delete_subset(self, subset):
         # NOTE: calling .remove will not trigger traitlet update
         self.items = [s for s in self.items
-                      if s['label'] != msg.subset.label]
+                      if s['label'] != subset.label]
         if self.selected not in self.labels:
             self.selected = "Entire Spectrum"
 
-    def _update_subset(self, msg):
-        if self._allowed_type is not None and self._subset_type(msg.subset) != self._allowed_type:
+    def _update_subset(self, subset, attribute=None):
+        if self._allowed_type is not None and self._subset_type(subset) != self._allowed_type:
             return
 
-        if msg.subset.label not in self.labels:
+        if subset.label not in self.labels:
             # NOTE: this logic will need to be revisited if generic renaming of subsets is added
             # see https://github.com/spacetelescope/jdaviz/pull/1175#discussion_r829372470
-            if msg.subset.label.startswith('Subset'):
+            if subset.label.startswith('Subset'):
                 # NOTE: += will not trigger traitlet update
-                self.items = self.items + [self._subset_to_dict(msg.subset)]  # noqa
+                self.items = self.items + [self._subset_to_dict(subset)]  # noqa
         else:
-            if msg.attribute in ('style'):
+            if attribute in ('style'):
                 # TODO: may need to add label and then rebuild the entire list if/when
                 # we add support for renaming subsets
 
                 # NOTE: in-line replacement (self.spectral_subset_items[i] = ...)
                 # will not trigger traitlet update
-                self.items = [s if s['label'] != msg.subset.label
-                              else self._subset_to_dict(msg.subset)
+                self.items = [s if s['label'] != subset.label
+                              else self._subset_to_dict(subset)
                               for s in self.items]
 
-        if msg.attribute == 'subset_state' and msg.subset.label == self.selected:
+        if attribute == 'subset_state' and subset.label == self.selected:
             # updated the currently selected subset
             self._clear_cache("selected_obj", "selected_item")
             self._update_has_subregions()
