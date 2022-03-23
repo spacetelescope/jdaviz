@@ -54,15 +54,9 @@ class LineProfileXY(PluginTemplateMixin):
         i = get_top_layer_index(viewer)
         data = viewer.state.layers[i].layer
 
-        if isinstance(self.selected_x, str):
-            x = int(round(float(self.selected_x)))
-        else:
-            x = int(round(self.selected_x))
-
-        if isinstance(self.selected_y, str):
-            y = int(round(float(self.selected_y)))
-        else:
-            y = int(round(self.selected_y))
+        # Can be str if passed in from Vue.js
+        x = int(round(float(self.selected_x)))
+        y = int(round(float(self.selected_y)))
 
         nx = data.shape[1]
         ny = data.shape[0]
@@ -84,12 +78,8 @@ class LineProfileXY(PluginTemplateMixin):
                              title_style={'font-size': '12px'})
         bqplt.plot(comp.data[:, x], colors='gray', figure=fig_x)
         bqplt.xlim(y_min, y_max)
-        y_min = int(y_min)
-        if y_min < 0:
-            y_min = 0
-        y_max = int(y_max)
-        if y_max > ny:
-            y_max = ny
+        y_min = max(int(y_min), 0)
+        y_max = min(int(y_max), ny)
         zoomed_data_x = comp.data[y_min:y_max, x]
         bqplt.ylim(zoomed_data_x.min() * 0.95, zoomed_data_x.max() * 1.05)
         bqplt.xlabel(label='Y (pix)', mark=fig_x.marks[-1], figure=fig_x)
@@ -101,12 +91,8 @@ class LineProfileXY(PluginTemplateMixin):
                              title_style={'font-size': '12px'})
         bqplt.plot(comp.data[y, :], colors='gray', figure=fig_y)
         bqplt.xlim(x_min, x_max)
-        x_min = int(x_min)
-        if x_min < 0:
-            x_min = 0
-        x_max = int(x_max)
-        if x_max > nx:
-            x_max = nx
+        x_min = max(int(x_min), 0)
+        x_max = min(int(x_max), nx)
         zoomed_data_y = comp.data[y, x_min:x_max]
         bqplt.ylim(zoomed_data_y.min() * 0.95, zoomed_data_y.max() * 1.05)
         bqplt.xlabel(label='X (pix)', mark=fig_y.marks[-1], figure=fig_y)
