@@ -84,6 +84,8 @@ Other Changes and Additions
 
 - Subset selection dropdowns in plugins now show synced color indicators. [#1156]
 
+- Line analysis plugin now shows uncertainties, when available. [#1192]
+
 2.3 (2022-03-01)
 ================
 

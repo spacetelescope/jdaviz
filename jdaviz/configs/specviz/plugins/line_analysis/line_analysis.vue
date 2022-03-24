@@ -80,7 +80,7 @@
               </a> 
             </j-tooltip>
           </v-col>
-          <v-col cols=6>{{ item.result }}</v-col>
+          <v-col cols=6>{{ item.result }} {{ item.uncertainty ? "&#177; " + item.uncertainty : null}} {{ item.unit }}</v-col>
         </v-row>
       </div>
       <div v-if="results_computing"

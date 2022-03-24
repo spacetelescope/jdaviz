@@ -308,6 +308,16 @@ class LineAnalysis(PluginTemplateMixin):
         continuum = slope * (spectrum.spectral_axis.value-min_x) + intercept
         mark_y = {k: slope * (v-min_x) + intercept for k, v in mark_x.items()}
 
+        def _uncertainty(result):
+            if hasattr(result, 'uncertainty'):
+                # we'll keep the uncertainty and result in the same unit (so
+                # we only have to show the unit at the end)
+                if np.isnan(result.uncertainty.value) or np.isinf(result.uncertainty.value):
+                    return ''
+                return str(result.uncertainty.to_value(result.unit))
+            else:
+                return ''
+
         temp_results = []
         spec_subtracted = spectrum - continuum
         for function in FUNCTIONS:
@@ -327,7 +337,10 @@ class LineAnalysis(PluginTemplateMixin):
             else:
                 temp_result = FUNCTIONS[function](spec_subtracted)
 
-            temp_results.append({'function': function, 'result': str(temp_result)})
+            temp_results.append({'function': function,
+                                 'result': str(temp_result.value),
+                                 'uncertainty': _uncertainty(temp_result),
+                                 'unit': str(temp_result.unit)})
 
         if not self.selected_line and self.identified_line:
             # default to the identified line
