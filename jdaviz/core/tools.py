@@ -146,7 +146,7 @@ class SelectLine(CheckableTool, HubListener):
 
 class _BaseSidebarShortcut(Tool):
     plugin_label = None  # define in subclass
-    viewer_select_traitlet = 'selected_viewer'
+    viewer_select_traitlet = 'viewer_selected'
 
     def activate(self):
         jdaviz_state = self.viewer.jdaviz_app.state
@@ -162,7 +162,7 @@ class _BaseSidebarShortcut(Tool):
 @viewer_tool
 class SidebarShortcutPlotOptions(_BaseSidebarShortcut):
     plugin_name = 'g-plot-options'
-    viewer_select_traitlet = 'selected_viewer'
+    viewer_select_traitlet = 'viewer_selected'
 
     icon = os.path.join(ICON_DIR, 'tune.svg')
     tool_id = 'jdaviz:sidebar_plot'
@@ -173,7 +173,7 @@ class SidebarShortcutPlotOptions(_BaseSidebarShortcut):
 @viewer_tool
 class SidebarShortcutExportPlot(_BaseSidebarShortcut):
     plugin_name = 'g-export-plot'
-    viewer_select_traitlet = 'selected_viewer'
+    viewer_select_traitlet = 'viewer_selected'
 
     icon = os.path.join(ICON_DIR, 'image.svg')
     tool_id = 'jdaviz:sidebar_export'
@@ -184,7 +184,7 @@ class SidebarShortcutExportPlot(_BaseSidebarShortcut):
 @viewer_tool
 class SidebarShortcutCompass(_BaseSidebarShortcut):
     plugin_name = 'imviz-compass'
-    viewer_select_traitlet = 'selected_viewer'
+    viewer_select_traitlet = 'viewer_selected'
 
     icon = os.path.join(ICON_DIR, 'compass.svg')
     tool_id = 'jdaviz:sidebar_compass'

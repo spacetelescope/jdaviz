@@ -33,3 +33,19 @@ def test_spectralsubsetselect(specviz_helper, spectrum1d):
     assert p.spectral_subset.selected_obj is None
     p.spectral_subset_selected = 'Subset 1'
     assert p.spectral_subset.selected_obj is not None
+
+
+def test_viewer_select(specviz_helper, spectrum1d):
+    specviz_helper.load_spectrum(spectrum1d)
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+
+    # export plot uses the mixin
+    p = specviz_helper.app.get_tray_item_from_name('g-export-plot')
+    assert len(p.viewer.ids) == 1
+    assert len(p.viewer.references) == 1
+    assert len(p.viewer.ref_or_ids) == 1
+    assert p.viewer.selected_obj == sv
+
+    # try setting based on id instead of reference
+    p.viewer_selected = p.viewer.ids[0]
+    assert p.viewer_selected == p.viewer.ref_or_ids[0]

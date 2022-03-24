@@ -6,15 +6,12 @@
       </j-docs-link>
     </v-row>
 
-    <v-row>
-      <v-select
-        :items="viewer_items"
-        v-model="selected_viewer"
-        label="Viewer"
-        hint="Select a viewer to show."
-        persistent-hint
-      ></v-select>
-    </v-row>
+    <plugin-viewer-select
+      :items="viewer_items"
+      :selected.sync="viewer_selected"
+      label="Viewer"
+      hint="Select a viewer to show."
+    />
 
     <v-row v-if="data_label">
       <v-chip
