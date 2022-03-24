@@ -23,6 +23,9 @@ Plot Options
 
 This plugin gives access to per-viewer and per-layer plotting options.
 
+For more information on Specviz specific options, please see
+:ref:`Specviz: Plot options <specviz-plot-options>`.
+
 .. _slice:
 
 Slice
