@@ -141,7 +141,7 @@ class SimpleAperturePhotometry(TemplateMixin):
     @observe('subset_selected')
     def _subset_selected_changed(self, event={}):
         subset_selected = event.get('new', self.subset_selected)
-        if self._selected_data is None:
+        if self._selected_data is None or subset_selected == '':
             self.reset_results()
             return
 

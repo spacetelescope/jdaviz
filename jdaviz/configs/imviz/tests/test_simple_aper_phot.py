@@ -23,7 +23,8 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         with pytest.raises(ValueError):
             # will raise an error and revert to first entry
             phot_plugin.subset_selected = 'no_such_subset'
-        assert phot_plugin.subset_selected == phot_plugin.subset.labels[0]
+        assert phot_plugin.subset_selected == ''
+        phot_plugin.subset_selected = phot_plugin.subset.labels[0]
         assert_allclose(phot_plugin.background_value, 0)
         phot_plugin.vue_do_aper_phot()
         assert not phot_plugin.result_available
@@ -34,9 +35,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert phot_plugin.current_plot_type == 'Radial Profile'  # Software default
 
         phot_plugin.data_selected = 'has_wcs_1[SCI,1]'
-        with pytest.raises(ValueError):
-            phot_plugin.subset_selected = 'no_such_subset'
-        assert phot_plugin.subset_selected == phot_plugin.subset.labels[0]
+        phot_plugin.subset_selected = phot_plugin.subset.labels[0]
         with pytest.raises(ValueError):
             phot_plugin.bg_subset_selected = 'no_such_subset'
         assert phot_plugin.bg_subset_selected == 'Manual'

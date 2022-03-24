@@ -234,6 +234,13 @@ class SubsetSelect(BasePluginComponent):
         else:
             return 'spectral'
 
+    def _apply_default_selection(self):
+        # default to the default_text, if available, otherwise empty
+        if self._default_text:
+            self.selected = self._default_text
+        else:
+            self.selected = ''
+
     def _subset_to_dict(self, subset):
         # find layer artist in default spectrum-viewer
         for viewer in self.viewers:
@@ -248,8 +255,8 @@ class SubsetSelect(BasePluginComponent):
         # NOTE: calling .remove will not trigger traitlet update
         self.items = [s for s in self.items
                       if s['label'] != subset.label]
-        if self.selected not in self.labels and len(self.labels):
-            self.selected = self.labels[0]
+        if self.selected not in self.labels:
+            self._apply_default_selection()
 
     def _update_subset(self, subset, attribute=None):
         if self._allowed_type is not None and self._subset_type(subset) != self._allowed_type:
@@ -278,9 +285,8 @@ class SubsetSelect(BasePluginComponent):
             self._update_has_subregions()
 
     def _selected_changed(self, event):
-        if event['new'] not in self.labels:
-            if len(self.labels):
-                self.selected = self.labels[0]
+        if event['new'] not in self.labels + ['']:
+            self._apply_default_selection()
             raise ValueError(f"{event['new']} not one of {self.labels}")
         self._clear_cache("selected_obj", "selected_item")
         self._update_has_subregions()
