@@ -10,7 +10,7 @@ from astropy.nddata import StdDevUncertainty
 from astropy.wcs import WCS
 from specutils import Spectrum1D
 
-from jdaviz import __version__, Cubeviz, Imviz, Mosviz, Specviz, Specviz2d
+from jdaviz import Cubeviz, Imviz, Mosviz, Specviz, Specviz2d
 
 SPECTRUM_SIZE = 10  # length of spectrum
 
@@ -93,6 +93,8 @@ except ImportError:
 
 
 def pytest_configure(config):
+    from jdaviz import __version__
+
     PYTEST_HEADER_MODULES['astropy'] = 'astropy'
     PYTEST_HEADER_MODULES['pyyaml'] = 'yaml'
     PYTEST_HEADER_MODULES['scikit-image'] = 'skimage'

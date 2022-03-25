@@ -1,5 +1,3 @@
-from jdaviz import __version__
-
 try:
     from pytest_astropy_header.display import PYTEST_HEADER_MODULES, TESTED_VERSIONS
 except ImportError:
@@ -10,6 +8,8 @@ except ImportError:
 # This is repeated from jdaviz/conftest.py because tox cannot grab test
 # header from that file.
 def pytest_configure(config):
+    from jdaviz import __version__
+
     PYTEST_HEADER_MODULES['astropy'] = 'astropy'
     PYTEST_HEADER_MODULES['pyyaml'] = 'yaml'
     PYTEST_HEADER_MODULES['scikit-image'] = 'skimage'
