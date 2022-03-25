@@ -118,7 +118,8 @@ an interactively selected region. A typical workflow is as follows:
 
   * Radial Profile: Binned average as a function of radius from the center of the region.
   * Radial Profile (Raw): Raw image data points as a function of radius from the center of the region.
-    Do not use this for big data due to performance issues associated with too many data points.
+    Caution: having too many data points may cause performance issues with this feature. 
+    The exact limitations depend on your hardware.
 
 10. Once all inputs are populated correctly, click on the :guilabel:`CALCULATE`
     button to perform simple aperture photometry.
