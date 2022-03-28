@@ -77,6 +77,8 @@ Mosviz
 Specviz
 ^^^^^^^
 
+- Fixed loading additional spectra after creating a subset. [#1205]
+
 Other Changes and Additions
 ---------------------------
 

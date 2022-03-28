@@ -78,9 +78,9 @@ class LineAnalysis(PluginTemplateMixin):
         self.hub.subscribe(self, RemoveDataMessage,
                            handler=self._on_viewer_data_changed)
         self.hub.subscribe(self, SubsetDeleteMessage,
-                           handler=self._on_viewer_data_changed)
+                           handler=self._on_viewer_subsets_changed)
         self.hub.subscribe(self, SubsetUpdateMessage,
-                           handler=self._on_viewer_data_changed)
+                           handler=self._on_viewer_subsets_changed)
 
         self.hub.subscribe(self, SpectralMarksChangedMessage,
                            handler=self._on_plotted_lines_changed)
@@ -108,12 +108,6 @@ class LineAnalysis(PluginTemplateMixin):
         """
         viewer = self.app.get_viewer('spectrum-viewer')
 
-        try:
-            self._spectral_subsets = self.app.get_subsets_from_viewer("spectrum-viewer",
-                                                                      subset_type="spectral")
-        except ValueError:
-            pass
-
         self.dc_items = [layer_state.layer.label for layer_state in viewer.state.layers
                          if layer_state.layer.label not in self.spectral_subset.labels]
 
@@ -127,6 +121,21 @@ class LineAnalysis(PluginTemplateMixin):
             # during a row change in Mosviz or an x-unit change through the unit conversion
             # plugin, for example
             self.selected_spectrum = self.dc_items[0]
+
+    def _on_viewer_subsets_changed(self, msg):
+        """
+        Callback message for when a spectral subset is created, modified, or deleted.
+
+        Parameters
+        ----------
+        msg : `glue.core.Message`
+            The glue message passed to this callback method.
+        """
+        try:
+            self._spectral_subsets = self.app.get_subsets_from_viewer("spectrum-viewer",
+                                                                      subset_type="spectral")
+        except ValueError:
+            pass
 
         if isinstance(msg, SubsetUpdateMessage):
             # update the statistics if any of the referenced regions have changed
