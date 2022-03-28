@@ -171,6 +171,13 @@ def test_get_spectra_no_spectra_label_redshift_error(specviz_helper, spectrum1d)
         specviz_helper.get_spectra(data_label=label, apply_slider_redshift=True)
 
 
+def test_add_spectrum_after_subset(specviz_helper, spectrum1d):
+    specviz_helper.load_spectrum(spectrum1d, data_label="test")
+    specviz_helper.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(6200, 7000))
+    new_spec = specviz_helper.get_spectra(apply_slider_redshift=True)["test"]*0.9
+    specviz_helper.load_spectrum(new_spec, data_label="test2")
+
+
 def test_get_spectral_regions_unit(specviz_helper, spectrum1d):
     # Ensure units we put in are the same as the units we get out
     specviz_helper.load_spectrum(spectrum1d)
