@@ -82,9 +82,9 @@ class LineAnalysis(PluginTemplateMixin):
         self.hub.subscribe(self, RemoveDataMessage,
                            handler=self._on_viewer_data_changed)
         self.hub.subscribe(self, SubsetDeleteMessage,
-                           handler=self._on_viewer_data_changed)
+                           handler=self._on_viewer_subsets_changed)
         self.hub.subscribe(self, SubsetUpdateMessage,
-                           handler=self._on_viewer_data_changed)
+                           handler=self._on_viewer_subsets_changed)
 
         self.hub.subscribe(self, SpectralMarksChangedMessage,
                            handler=self._on_plotted_lines_changed)
@@ -112,12 +112,6 @@ class LineAnalysis(PluginTemplateMixin):
         """
         viewer = self.app.get_viewer('spectrum-viewer')
 
-        try:
-            self._spectral_subsets = self.app.get_subsets_from_viewer("spectrum-viewer",
-                                                                      subset_type="spectral")
-        except ValueError:
-            pass
-
         self.dc_items = [layer_state.layer.label for layer_state in viewer.state.layers
                          if layer_state.layer.label not in self.spectral_subset.labels]
 
@@ -132,10 +126,17 @@ class LineAnalysis(PluginTemplateMixin):
             # plugin, for example
             self.selected_spectrum = self.dc_items[0]
 
-        if isinstance(msg, SubsetUpdateMessage):
-            # update the statistics if any of the referenced regions have changed
-            if msg.subset.label in [self.spectral_subset_selected, self.continuum_selected]:
-                self._calculate_statistics()
+    def _on_viewer_subsets_changed(self, msg):
+        """
+        Update the statistics if any of the referenced regions have changed
+
+        Parameters
+        ----------
+        msg : `glue.core.Message`
+            The glue message passed to this callback method.
+        """
+        if msg.subset.label in [self.spectral_subset_selected, self.continuum_selected]:
+            self._calculate_statistics()
 
     @observe('plugin_opened')
     def _on_plugin_opened_changed(self, *args):

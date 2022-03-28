@@ -53,6 +53,8 @@ Bug Fixes
 ---------
 
 - Fixed support for table scrolling by enabling scrollbar. [#1116]
+- Fixed loading additional spectra into a spectrum viewer after creating a 
+  spectral subset. [#1205]
 
 Cubeviz
 ^^^^^^^
