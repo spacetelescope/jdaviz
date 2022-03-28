@@ -19,6 +19,7 @@
       <plugin-subset-select 
         :items="spectral_subset_items"
         :selected.sync="spectral_subset_selected"
+        label="Spectral region"
         hint="Select spectral region to fit."
       />
     </v-form>

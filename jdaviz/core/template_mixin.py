@@ -12,7 +12,7 @@ from jdaviz import __version__
 
 __all__ = ['TemplateMixin', 'PluginTemplateMixin',
            'BasePluginComponent',
-           'SpectralSubsetSelect', 'SpectralSubsetSelectMixin']
+           'SubsetSelect', 'SpatialSubsetSelectMixin', 'SpectralSubsetSelectMixin']
 
 
 class TemplateMixin(VuetifyTemplate, HubListener):
@@ -125,7 +125,7 @@ class BasePluginComponent(HubListener):
         return self._plugin.app.get_viewer("spectrum-viewer")
 
 
-class SpectralSubsetSelect(BasePluginComponent):
+class SubsetSelect(BasePluginComponent):
     """
     Traitlets (in the object, custom traitlets in the plugin):
 
@@ -136,92 +136,164 @@ class SpectralSubsetSelect(BasePluginComponent):
     Properties (in the object only):
 
     * ``labels`` (list of labels corresponding to items)
-    * ``selected_obj`` (subset object corresponding to selected, cached)
+    * ``selected_item`` (dictionary in ``items`` coresponding to ``selected``, cached)
+    * ``selected_obj`` (subset object corresponding to ``selected``, cached)
 
     Methods (in the object only):
 
-    * ``selected_min(cube)`` (float)
-    * ``selected_max(cube)`` (float)
+    * ``selected_min(cube)`` (float, only applicable for spectral subsets)
+    * ``selected_max(cube)`` (float, only applicable for spectral subsets)
 
     To use in a plugin:
 
-    * create traitlets with default values
+    * create (empty) traitlets in the plugin
     * register with all the automatic logic in the plugin's init by passing the string names
-      of the respective traitlets.
+      of the respective traitlets.  Pass ``allowed_type='spectral'`` or ``allowed_type='spatial'``
+      to only support spectral or spatial subsets, respectively.
     * use component in plugin template (see below)
     * refer to properties above based on the interally stored reference to the
       instantiated object of this component
+    * observe the traitlets created and defined in the plugin, as necessary
 
     Example template (label and hint are optional)::
 
       <plugin-subset-select
         :items="spectral_subset_items"
         :selected.sync="spectral_subset_selected"
-        label="Spectral region"
-        hint="Select spectral region."
+        label="Subset"
+        hint="Select subset."
       />
 
     """
-    def __init__(self, plugin, items, selected, selected_has_subregions=None):
+    def __init__(self, plugin, items, selected, selected_has_subregions=None,
+                 viewer_refs=None, default_text=None, allowed_type=None):
+        """
+        Parameters
+        ----------
+        plugin
+            the parent plugin object
+        items : str
+            the name of the items traitlet defined in ``plugin``
+        selected : str
+            the name of the selected traitlet defined in ``plugin``
+        selected_has_subregions: str
+            the name of the selected_has_subregions traitlet defined in ``plugin``, optional
+        viewer_refs : list
+            the reference names of the viewer to extract the subregion.  If not provided or None,
+            will loop through all references.
+        default_text : str or None
+            the text to show for no selection.  If not provided or None, no entry will be provided
+            in the dropdown for no selection.
+        allowed_type : str or None
+            whether to filter to 'spatial' or 'spectral' types of subsets.  If not provided or None,
+            will include both entries.
+        """
         super().__init__(plugin,
                          items=items,
                          selected=selected,
                          selected_has_subregions=selected_has_subregions)
-        self.hub.subscribe(self, SubsetUpdateMessage, handler=self._update_spectral_subset)
-        self.hub.subscribe(self, SubsetDeleteMessage, handler=self._delete_spectral_subset)
+
+        self._viewer_refs = viewer_refs
+        self._default_text = default_text
+        if allowed_type not in [None, 'spatial', 'spectral']:
+            raise ValueError("allowed_type must be None, 'spatial', or 'spectral'")
+        self._allowed_type = allowed_type
+
+        # set default values for traitlets
+        if default_text is not None:
+            self.items = [{"label": default_text}]
+            self.selected = default_text
+        if selected_has_subregions is not None:
+            self.selected_has_subregions = False
+
+        self.hub.subscribe(self, SubsetUpdateMessage,
+                           handler=lambda msg: self._update_subset(msg.subset, msg.attribute))
+        self.hub.subscribe(self, SubsetDeleteMessage,
+                           handler=lambda msg: self._delete_subset(msg.subset))
         self.add_observe(selected, self._selected_changed)
+
+        # intialize any subsets that have already been created
+        for lyr in self.app.data_collection.subset_groups:
+            self._update_subset(lyr)
+
+    @property
+    def viewer_refs(self):
+        if self._viewer_refs is None:
+            return [ref for ref in self.app.get_viewer_reference_names() if ref is not None]
+        return self._viewer_refs
+
+    @property
+    def viewers(self):
+        return [self.app.get_viewer(ref) for ref in self.viewer_refs]
+
+    @staticmethod
+    def _subset_type(subset):
+        if isinstance(subset.subset_state, RoiSubsetState):
+            # then this is a spatial subset, we want to ignore
+            return 'spatial'
+        else:
+            return 'spectral'
+
+    def _apply_default_selection(self):
+        # default to the default_text, if available, otherwise empty
+        if self._default_text:
+            self.selected = self._default_text
+        else:
+            self.selected = ''
 
     def _subset_to_dict(self, subset):
         # find layer artist in default spectrum-viewer
-        for layer in self.spectrum_viewer.layers:
-            if layer.layer.label == subset.label:
-                color = layer.state.color
-                break
-        else:
-            color = False
-        return {"label": subset.label, "color": color}
+        for viewer in self.viewers:
+            for layer in viewer.layers:
+                if layer.layer.label == subset.label:
+                    color = layer.state.color
+                    subset_type = self._subset_type(subset)
+                    return {"label": subset.label, "color": color, "type": subset_type}
+        return {"label": subset.label, "color": False, "type": False}
 
-    def _delete_spectral_subset(self, msg):
+    def _delete_subset(self, subset):
         # NOTE: calling .remove will not trigger traitlet update
         self.items = [s for s in self.items
-                      if s['label'] != msg.subset.label]
+                      if s['label'] != subset.label]
         if self.selected not in self.labels:
-            self.selected = "Entire Spectrum"
+            self._apply_default_selection()
 
-    def _update_spectral_subset(self, msg):
-        if isinstance(msg.subset.subset_state, RoiSubsetState):
-            # then this is a spatial subset, we want to ignore
+    def _update_subset(self, subset, attribute=None):
+        if self._allowed_type is not None and self._subset_type(subset) != self._allowed_type:
             return
 
-        if msg.subset.label not in self.labels:
-            # NOTE: += will not trigger traitlet update
-            self.items = self.items + [self._subset_to_dict(msg.subset)]  # noqa
+        if subset.label not in self.labels:
+            # NOTE: this logic will need to be revisited if generic renaming of subsets is added
+            # see https://github.com/spacetelescope/jdaviz/pull/1175#discussion_r829372470
+            if subset.label.startswith('Subset'):
+                # NOTE: += will not trigger traitlet update
+                self.items = self.items + [self._subset_to_dict(subset)]  # noqa
         else:
-            if msg.attribute in ('style'):
+            if attribute in ('style'):
                 # TODO: may need to add label and then rebuild the entire list if/when
                 # we add support for renaming subsets
 
                 # NOTE: in-line replacement (self.spectral_subset_items[i] = ...)
                 # will not trigger traitlet update
-                self.items = [s if s['label'] != msg.subset.label
-                              else self._subset_to_dict(msg.subset)
+                self.items = [s if s['label'] != subset.label
+                              else self._subset_to_dict(subset)
                               for s in self.items]
 
-        if msg.attribute == 'subset_state' and msg.subset.label == self.selected:
+        if attribute == 'subset_state' and subset.label == self.selected:
             # updated the currently selected subset
-            self._clear_cache("selected_obj")
+            self._clear_cache("selected_obj", "selected_item")
             self._update_has_subregions()
 
     def _selected_changed(self, event):
-        if event['new'] not in self.labels:
-            self.selected = self.labels[0]
+        if event['new'] not in self.labels + ['']:
+            self._apply_default_selection()
             raise ValueError(f"{event['new']} not one of {self.labels}")
-        self._clear_cache("selected_obj")
+        self._clear_cache("selected_obj", "selected_item")
         self._update_has_subregions()
 
     def _update_has_subregions(self):
         if "selected_has_subregions" in self._plugin_traitlets.keys():
-            if self.selected == "Entire Spectrum":
+            if self.selected == self._default_text:
                 self.selected_has_subregions = False
             else:
                 self.selected_has_subregions = len(self.selected_obj.subregions) > 1
@@ -231,31 +303,49 @@ class SpectralSubsetSelect(BasePluginComponent):
         return [s['label'] for s in self.items if 'label' in s.keys()]
 
     @cached_property
+    def selected_item(self):
+        for item in self.items:
+            if item['label'] == self.selected:
+                return item
+        return {}
+
+    @cached_property
     def selected_obj(self):
-        if self.selected == "Entire Spectrum":
+        if self.selected == self._default_text:
             return None
-        return self.app.get_subsets_from_viewer("spectrum-viewer",
-                                                subset_type="spectral").get(self.selected)
+        subset_type = self.selected_item['type']
+        # NOTE: we use reference names here instead of IDs since get_subsets_from_viewer requires
+        # that.  For imviz, this will mean we won't be able to loop through each of the viewers,
+        # but the original viewer should have access to all the subsets.
+        for viewer_ref in self.viewer_refs:
+            match = self.app.get_subsets_from_viewer(viewer_ref,
+                                                     subset_type=subset_type).get(self.selected)
+            if match is not None:
+                return match
 
     def selected_min(self, spectrum1d):
-        if self.selected == "Entire Spectrum":
+        if self.selected == self._default_text:
             return np.nanmin(spectrum1d.spectral_axis.value)
+        if self.selected_item.get('type') != 'spectral':
+            raise TypeError("This action is only supported on spectral-type subsets")
         else:
             return self.selected_obj.lower.value
 
     def selected_max(self, spectrum1d):
-        if self.selected == "Entire Spectrum":
+        if self.selected == self._default_text:
             return np.nanmax(spectrum1d.spectral_axis.value)
+        if self.selected_item.get('type') != 'spectral':
+            raise TypeError("This action is only supported on spectral-type subsets")
         else:
             return self.selected_obj.upper.value
 
 
 class SpectralSubsetSelectMixin(VuetifyTemplate, HubListener):
     """
-    Applies the SpectralSubsetSelect component as a mixin in the base plugin.  This
-    automatically adds traitlets as well as new properties to the plugin with minimal
-    extra code.  For multiple instances or custom traitlet names/defaults, use the
-    SpectralSubsetSelect component instead.
+    Applies the SubsetSelect component with ``allowed_type='spectral'`` as a mixin in the base
+    plugin.  This automatically adds traitlets as well as new properties to the plugin with
+    minimal extra code.  For multiple instances or custom traitlet names/defaults, use the
+    SubsetSelect component instead.
 
     Traitlets (available from the plugin):
 
@@ -280,22 +370,69 @@ class SpectralSubsetSelectMixin(VuetifyTemplate, HubListener):
 
     Example template (label and hint are optional)::
 
-        <v-row>
-          <plugin-subset-select
-            :items="spectral_subset_items"
-            :selected.sync="spectral_subset_selected"
-            label="Spectral region"
-            hint="Select spectral region."
-          />
-        </v-row>
+      <plugin-subset-select
+        :items="spectral_subset_items"
+        :selected.sync="spectral_subset_selected"
+        label="Spectral region"
+        hint="Select spectral region."
+      />
     """
-    spectral_subset_items = List([{"label": "Entire Spectrum", "color": False}]).tag(sync=True)
-    spectral_subset_selected = Unicode("Entire Spectrum").tag(sync=True)
+    spectral_subset_items = List().tag(sync=True)
+    spectral_subset_selected = Unicode().tag(sync=True)
     spectral_subset_selected_has_subregions = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.spectral_subset = SpectralSubsetSelect(self,
-                                                    'spectral_subset_items',
-                                                    'spectral_subset_selected',
-                                                    'spectral_subset_selected_has_subregions')
+        self.spectral_subset = SubsetSelect(self,
+                                            'spectral_subset_items',
+                                            'spectral_subset_selected',
+                                            'spectral_subset_selected_has_subregions',
+                                            viewer_refs=['spectrum-viewer'],
+                                            default_text='Entire Spectrum',
+                                            allowed_type='spectral')
+
+
+class SpatialSubsetSelectMixin(VuetifyTemplate, HubListener):
+    """
+    Applies the SubsetSelect component with ``allowed_type='spatial'`` as a mixin in the base
+    plugin.  This automatically adds traitlets as well as new properties to the plugin with
+    minimal extra code.  For multiple instances or custom traitlet names/defaults, use the
+    SubsetSelect component instead.
+
+    Traitlets (available from the plugin):
+
+    * ``spatial_subset_items``
+    * ``spatial_subset_selected``
+    * ``spatial_subset_selected_has_subregions``
+
+    Properties (available from the plugin):
+
+    * ``spatial_subset.labels``
+    * ``spatial_subset.selected_obj``
+
+    To use in a plugin:
+
+    * add ``SpatialSubsetSelectMixin`` as a mixin to the class
+    * use the traitlets and properties above as needed (note the prefix for properties)
+
+    Example template (label and hint are optional)::
+
+      <plugin-subset-select
+        :items="spatial_subset_items"
+        :selected.sync="spatial_subset_selected"
+        label="Spatial region"
+        hint="Select spatial region."
+      />
+    """
+    spatial_subset_items = List().tag(sync=True)
+    spatial_subset_selected = Unicode().tag(sync=True)
+    spatial_subset_selected_has_subregions = Bool(False).tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.spatial_subset = SubsetSelect(self,
+                                           'spatial_subset_items',
+                                           'spatial_subset_selected',
+                                           'spatial_subset_selected_has_subregions',
+                                           default_text='No Subset',
+                                           allowed_type='spatial')

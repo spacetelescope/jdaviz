@@ -14,7 +14,7 @@ from jdaviz.configs.imviz.helper import layer_is_image_data
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage, SnackbarMessage
 from jdaviz.core.region_translators import regions2aperture
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import TemplateMixin
+from jdaviz.core.template_mixin import TemplateMixin, SubsetSelect
 
 __all__ = ['SimpleAperturePhotometry']
 
@@ -42,6 +42,18 @@ class SimpleAperturePhotometry(TemplateMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.subset = SubsetSelect(self,
+                                   'subset_items',
+                                   'subset_selected',
+                                   default_text=None,
+                                   allowed_type='spatial')
+
+        self.bg_subset = SubsetSelect(self,
+                                      'bg_subset_items',
+                                      'bg_subset_selected',
+                                      default_text='Manual',
+                                      allowed_type='spatial')
+
         self.hub.subscribe(self, AddDataMessage, handler=self._on_viewer_data_changed)
         self.hub.subscribe(self, RemoveDataMessage, handler=self._on_viewer_data_changed)
         self.hub.subscribe(self, SubsetCreateMessage, handler=self._on_viewer_data_changed)
@@ -64,10 +76,6 @@ class SimpleAperturePhotometry(TemplateMixin):
         # To support multiple viewers, we allow the entire data collection.
         self.dc_items = [lyr.label for lyr in self.app.data_collection
                          if layer_is_image_data(lyr)]
-
-        self.subset_items = [lyr.label for lyr in self.app.data_collection.subset_groups
-                             if lyr.label.startswith('Subset')]
-        self.bg_subset_items = ['Manual'] + self.subset_items
 
     @observe('data_selected')
     def _data_selected_changed(self, event={}):
@@ -116,6 +124,9 @@ class SimpleAperturePhotometry(TemplateMixin):
         # Auto-populate background, if applicable
         self._bg_subset_selected_changed()
 
+        # update self._selected_subset with the new self._selected_data
+        self._subset_selected_changed()
+
     def _get_region_from_subset(self, subset):
         for subset_grp in self.app.data_collection.subset_groups:
             if subset_grp.label == subset:
@@ -130,7 +141,7 @@ class SimpleAperturePhotometry(TemplateMixin):
     @observe('subset_selected')
     def _subset_selected_changed(self, event={}):
         subset_selected = event.get('new', self.subset_selected)
-        if self._selected_data is None:
+        if self._selected_data is None or subset_selected == '':
             self.reset_results()
             return
 
