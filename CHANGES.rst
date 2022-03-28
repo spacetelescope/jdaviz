@@ -7,6 +7,9 @@ New Features
 - Lines from the line list plugin can be selected to help identify as well
   as to assign redshifts from the line analysis plugin. [#1115]
 
+- New ``jdaviz.core.region_translators`` module to provide certain translations
+  from ``regions`` shapes to ``photutils`` apertures, and vice versa. [#1138]
+
 Cubeviz
 ^^^^^^^
 
@@ -16,6 +19,9 @@ Imviz
 - New Line Profiles (XY) plugin to plot line profiles across X and Y axes
   for the pixel under cursor when "l" key is pressed or for manually entered
   X and Y values on the displayed image. [#1132]
+
+- Simple aperture photometry plugin now uses ``photutils`` to for all calculation.
+  Additional photometry results are also added, such as centroid and FWHM. [#1138]
 
 Mosviz
 ^^^^^^
@@ -75,6 +81,8 @@ Other Changes and Additions
 ---------------------------
 
 - Jdaviz now requires Python 3.8 or later. [#1145]
+
+- ``photutils`` is now a required dependency. [#1138]
 
 - Viewer toolbars are now nested and consolidated, with viewer and layer options
   moved to the sidebar. [#1140]

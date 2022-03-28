@@ -13,7 +13,6 @@ from regions import CirclePixelRegion, RectanglePixelRegion
 from skimage.io import imsave
 
 from jdaviz.configs.imviz.helper import split_filename_with_fits_ext
-from jdaviz.configs.imviz.plugins.aper_phot_simple.aper_phot_simple import SimpleAperturePhotometry
 from jdaviz.configs.imviz.plugins.parsers import (
     parse_data, _validate_fits_image2d, _validate_bunit, _parse_image)
 
@@ -261,7 +260,7 @@ class TestParseImage:
         assert isinstance(subsets['Subset 2'], RectanglePixelRegion)
 
         # Test simple aperture photometry plugin.
-        phot_plugin = SimpleAperturePhotometry(app=imviz_helper.app)
+        phot_plugin = imviz_helper.app.get_tray_item_from_name('imviz-aper-phot-simple')
         phot_plugin._on_viewer_data_changed()
         phot_plugin.data_selected = 'contents[DATA]'
         phot_plugin.subset_selected = 'Subset 1'
@@ -275,26 +274,36 @@ class TestParseImage:
         phot_plugin.flux_scaling = 1  # Simple mag, no zeropoint
         phot_plugin.vue_do_aper_phot()
         tbl = imviz_helper.get_aperture_photometry_results()
-        assert_quantity_allclose(tbl[0]['xcenter'], 970.95 * u.pix)
-        assert_quantity_allclose(tbl[0]['ycenter'], 1116.05 * u.pix)
-        sky = tbl[0]['sky_center']
+        assert_quantity_allclose(tbl[0]['xcentroid'], 970.935492 * u.pix)
+        assert_quantity_allclose(tbl[0]['ycentroid'], 1116.967619 * u.pix)
+        sky = tbl[0]['sky_centroid']
         assert_allclose(sky.ra.deg, 80.48419863)
-        assert_allclose(sky.dec.deg, -69.49460838)
+        assert_allclose(sky.dec.deg, -69.494592)
         data_unit = u.MJy / u.sr
         assert_quantity_allclose(tbl[0]['background'], 0.1741226315498352 * data_unit)
-        assert_quantity_allclose(tbl[0]['npix'], 111.22023392 * u.pix)
-        assert_quantity_allclose(tbl[0]['aperture_sum'], 4.989882e-09 * u.MJy)
-        assert_quantity_allclose(tbl[0]['pixarea_tot'], 1.0384377922763469e-11 * u.sr)
-        assert_quantity_allclose(tbl[0]['aperture_sum_counts'], 132061.576643 * u.count)
+        assert_quantity_allclose(tbl[0]['sum'], 4.989882e-09 * u.MJy)
+        assert_quantity_allclose(tbl[0]['sum_aper_area'], 111.220234 * (u.pix * u.pix))
+        assert_quantity_allclose(tbl[0]['pixarea_tot'], 1.038438e-11 * u.sr, atol=1e-15 * u.sr)
+        assert_quantity_allclose(tbl[0]['aperture_sum_counts'], 132061.576643 * u.count, rtol=1e-6)
         assert_quantity_allclose(tbl[0]['aperture_sum_counts_err'], 363.402775 * u.count)
         assert_quantity_allclose(tbl[0]['counts_fac'], 0.0036385915646798953 * (data_unit / u.ct))
         assert_quantity_allclose(tbl[0]['aperture_sum_mag'], -6.704274 * u.mag)
         assert_quantity_allclose(tbl[0]['flux_scaling'], 1 * data_unit)
-        assert_quantity_allclose(tbl[0]['mean'], 4.391718 * data_unit)
-        assert_quantity_allclose(tbl[0]['stddev'], 15.618626488031158 * data_unit)
-        assert_quantity_allclose(tbl[0]['median'], 0.482972 * data_unit, rtol=1e-5)
         assert_quantity_allclose(tbl[0]['min'], 0.041017 * data_unit, atol=1e-5 * data_unit)
         assert_quantity_allclose(tbl[0]['max'], 138.923752 * data_unit, rtol=1e-5)
+        assert_quantity_allclose(tbl[0]['mean'], 4.391718 * data_unit)
+        assert_quantity_allclose(tbl[0]['median'], 0.482972 * data_unit, rtol=1e-5)
+        assert_quantity_allclose(tbl[0]['mode'], -7.33452046 * data_unit)
+        assert_quantity_allclose(tbl[0]['std'], 15.618626488031158 * data_unit)
+        assert_quantity_allclose(tbl[0]['mad_std'], 0.47892631 * data_unit)
+        assert_quantity_allclose(tbl[0]['var'], 243.9415 * (data_unit * data_unit))
+        assert_quantity_allclose(tbl[0]['biweight_location'], 0.40664572 * data_unit)
+        assert_quantity_allclose(tbl[0]['biweight_midvariance'], 0.27319583 * (data_unit * data_unit))  # noqa
+        assert_quantity_allclose(tbl[0]['fwhm'], 2.8691718 * u.pix)
+        assert_quantity_allclose(tbl[0]['semimajor_sigma'], 1.22308648 * u.pix)
+        assert_quantity_allclose(tbl[0]['semiminor_sigma'], 1.21374578 * u.pix)
+        assert_quantity_allclose(tbl[0]['orientation'], -27.220559 * u.deg)
+        assert_quantity_allclose(tbl[0]['eccentricity'], 0.12335181)
 
         # --- Back to parser testing below. ---
 
@@ -383,7 +392,7 @@ class TestParseImage:
         imviz_helper._apply_interactive_region('bqplot:ellipse',
                                                (1465, 2541),
                                                (1512, 2611))  # Galaxy
-        phot_plugin = SimpleAperturePhotometry(app=imviz_helper.app)
+        phot_plugin = imviz_helper.app.get_tray_item_from_name('imviz-aper-phot-simple')
         phot_plugin._on_viewer_data_changed()
         phot_plugin.data_selected = 'contents[SCI,1]'
         phot_plugin.subset_selected = 'Subset 1'
@@ -391,26 +400,36 @@ class TestParseImage:
         assert_allclose(phot_plugin.pixel_area, 0.0025)  # Not used but still auto-populated
         phot_plugin.vue_do_aper_phot()
         tbl = imviz_helper.get_aperture_photometry_results()
-        assert_quantity_allclose(tbl[0]['xcenter'], 1488.5 * u.pix)
-        assert_quantity_allclose(tbl[0]['ycenter'], 2576 * u.pix)
-        sky = tbl[0]['sky_center']
-        assert_allclose(sky.ra.deg, 3.6840882015888323, rtol=1e-5)
-        assert_allclose(sky.dec.deg, 10.802065746813046, rtol=1e-5)
+        assert_quantity_allclose(tbl[0]['xcentroid'], 1487.60825422 * u.pix)
+        assert_quantity_allclose(tbl[0]['ycentroid'], 2573.83983184 * u.pix)
+        sky = tbl[0]['sky_centroid']
+        assert_allclose(sky.ra.deg, 3.684062989070131, rtol=1e-5)
+        assert_allclose(sky.dec.deg, 10.802045612042956, rtol=1e-5)
         data_unit = u.electron / u.s
         assert_quantity_allclose(tbl[0]['background'], 0.0014 * data_unit)
-        assert_quantity_allclose(tbl[0]['npix'], 2583.959958 * u.pix)
-        assert_quantity_allclose(tbl[0]['aperture_sum'], 112.680738 * data_unit)
+        assert_quantity_allclose(tbl[0]['sum'], 112.680738 * data_unit)
+        assert_quantity_allclose(tbl[0]['sum_aper_area'], 2583.959958 * (u.pix * u.pix))
         assert_array_equal(tbl[0]['pixarea_tot'], None)
         assert_array_equal(tbl[0]['aperture_sum_counts'], None)
         assert_array_equal(tbl[0]['aperture_sum_counts_err'], None)
         assert_array_equal(tbl[0]['counts_fac'], None)
         assert_array_equal(tbl[0]['aperture_sum_mag'], None)
         assert_array_equal(tbl[0]['flux_scaling'], None)
-        assert_quantity_allclose(tbl[0]['mean'], 0.043656 * data_unit, rtol=1e-5)
-        assert_quantity_allclose(tbl[0]['stddev'], 0.099902 * data_unit, rtol=1e-5)
-        assert_quantity_allclose(tbl[0]['median'], 0.02161 * data_unit, rtol=1e-5)
         assert_quantity_allclose(tbl[0]['min'], -0.024501 * data_unit, rtol=1e-3)
         assert_quantity_allclose(tbl[0]['max'], 1.625122 * data_unit, rtol=1e-5)
+        assert_quantity_allclose(tbl[0]['mean'], 0.043656 * data_unit, rtol=1e-5)
+        assert_quantity_allclose(tbl[0]['median'], 0.02161 * data_unit, rtol=1e-5)
+        assert_quantity_allclose(tbl[0]['mode'], -0.02248222 * data_unit, rtol=1e-5)
+        assert_quantity_allclose(tbl[0]['std'], 0.099902 * data_unit, rtol=1e-5)
+        assert_quantity_allclose(tbl[0]['mad_std'], 0.02354494 * data_unit, rtol=1e-5)
+        assert_quantity_allclose(tbl[0]['var'], 0.00998049 * (data_unit * data_unit), rtol=1e-5)
+        assert_quantity_allclose(tbl[0]['biweight_location'], 0.02106674 * data_unit, rtol=1e-5)
+        assert_quantity_allclose(tbl[0]['biweight_midvariance'], 0.00062667 * (data_unit * data_unit), rtol=1e-5)  # noqa
+        assert_quantity_allclose(tbl[0]['fwhm'], 21.26519725 * u.pix, rtol=1e-5)
+        assert_quantity_allclose(tbl[0]['semimajor_sigma'], 9.75795611 * u.pix, rtol=1e-5)
+        assert_quantity_allclose(tbl[0]['semiminor_sigma'], 8.23905782 * u.pix, rtol=1e-5)
+        assert_quantity_allclose(tbl[0]['orientation'], 79.89755434 * u.deg, rtol=1e-5)
+        assert_quantity_allclose(tbl[0]['eccentricity'], 0.5358037, rtol=1e-5)
 
         # Request specific extension (name only), use given label
         imviz_helper.load_data(filename, ext='CTX', data_label='jclj01010_drz',
