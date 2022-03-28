@@ -124,23 +124,15 @@ class LineAnalysis(PluginTemplateMixin):
 
     def _on_viewer_subsets_changed(self, msg):
         """
-        Callback message for when a spectral subset is created, modified, or deleted.
+        Update the statistics if any of the referenced regions have changed
 
         Parameters
         ----------
         msg : `glue.core.Message`
             The glue message passed to this callback method.
         """
-        try:
-            self._spectral_subsets = self.app.get_subsets_from_viewer("spectrum-viewer",
-                                                                      subset_type="spectral")
-        except ValueError:
-            pass
-
-        if isinstance(msg, SubsetUpdateMessage):
-            # update the statistics if any of the referenced regions have changed
-            if msg.subset.label in [self.spectral_subset_selected, self.continuum_selected]:
-                self._calculate_statistics()
+        if msg.subset.label in [self.spectral_subset_selected, self.continuum_selected]:
+            self._calculate_statistics()
 
     @observe('plugin_opened')
     def _on_plugin_opened_changed(self, *args):
