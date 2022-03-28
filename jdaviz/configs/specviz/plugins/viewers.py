@@ -355,32 +355,6 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
         # trace representing the spectrum itself.
         result = super().add_data(data, color, alpha, **layer_state)
 
-        data_trace_pointer = 0
-
-        # Index of spectrum trace plotted by the super class. It is the
-        # **latest** item in figure.marks that is a Line instance
-        for ind, mark in reversed(list(enumerate(self.figure.marks))):
-            # we'll use __class__.__name__ since other entries (spectral lines,
-            # etc) defined in jdaviz.core.marks inherit from Lines
-            if mark.__class__.__name__ == 'Lines':
-                data_trace_pointer = ind
-                break
-        else:  # pragma: no cover
-            raise ValueError("could not find mark for added data")
-
-        # Color and opacity are taken from the already plotted trace,
-        # in case they are not set explicitly by the caller.
-        self._color = self.figure.marks[data_trace_pointer].colors[0]
-        if color:
-            self._color = color
-
-        self._alpha = self.figure.marks[data_trace_pointer].opacities[0]
-        if alpha:
-            self._alpha = alpha
-
-        # An opacity defined specifically for the shaded areas.
-        self._alpha_shade = self._alpha / 3
-
         self._plot_uncertainties()
 
         self._plot_mask()
@@ -415,15 +389,16 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
 
                 # A subclass of the bqplot Scatter object, ScatterMask places
                 # 'X' marks where there is masked data in the viewer.
+                color = layer_state.color
+                alpha_shade = layer_state.alpha / 3
                 mask_line_mark = ScatterMask(scales=self.scales,
                                              marker='cross',
                                              x=data_x,
                                              y=y,
                                              stroke_width=0.5,
-                                             # colors=['red'],
-                                             colors=[self._color],
+                                             colors=[color],
                                              default_size=25,
-                                             default_opacities=[self._alpha]
+                                             default_opacities=[alpha_shade]
                                              )
                 # Add mask marks to viewer
                 self.figure.marks = list(self.figure.marks) + [mask_line_mark]
@@ -461,16 +436,18 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
                 # A subclass of the bqplot Lines object, LineUncertainties keeps
                 # track of uncertainties plotted in the viewer. LineUncertainties
                 # appear with two lines and shaded area in between.
+                color = layer_state.color
+                alpha_shade = layer_state.alpha / 3
                 error_line_mark = LineUncertainties(viewer=self,
                                                     x=[x],
                                                     y=[y],
                                                     scales=self.scales,
                                                     stroke_width=1,
-                                                    colors=[self._color, self._color],
-                                                    fill_colors=[self._color, self._color],
+                                                    colors=[color, color],
+                                                    fill_colors=[color, color],
                                                     opacities=[0.0, 0.0],
-                                                    fill_opacities=[self._alpha_shade,
-                                                                    self._alpha_shade],
+                                                    fill_opacities=[alpha_shade,
+                                                                    alpha_shade],
                                                     fill='between',
                                                     close_path=False
                                                     )
