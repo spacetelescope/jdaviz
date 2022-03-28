@@ -243,3 +243,19 @@ def test_load_spectrum_list_directory(tmpdir, specviz_helper):
     for element in specviz_helper.app.data_collection:
         assert element.data.main_components[0] in ['flux']
         assert element.data.main_components[1] in ['uncertainty']
+
+
+def test_plot_uncertainties(specviz_helper, spectrum1d):
+    specviz_helper.load_spectrum(spectrum1d)
+
+    specviz_viewer = specviz_helper.app.get_viewer("spectrum-viewer")
+
+    assert len(specviz_viewer.figure.marks) == 1
+
+    specviz_viewer.show_uncertainties()
+
+    assert len(specviz_viewer.figure.marks) == 2
+
+    specviz_viewer.clean()
+
+    assert len(specviz_viewer.figure.marks) == 1

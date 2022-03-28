@@ -44,6 +44,11 @@ Plot Options
 
 This plugin gives access to per-viewer and per-layer plotting options.
 
+Included in this plugin is a toggle called :guilabel:`Plot Uncertainty`,
+which will show uncertainty values as a shaded area above and below the
+spectrum. With this option toggled on, all spectra added to Specviz will
+have their uncertainty values displayed as well.
+
 .. _gaussian-smooth:
 
 Gaussian Smooth

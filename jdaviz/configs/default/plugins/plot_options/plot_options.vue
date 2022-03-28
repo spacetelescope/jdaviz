@@ -19,6 +19,15 @@
       <v-row class="row-no-outside-padding">
         <jupyter-widget v-if="selected_viewer" :widget="viewer_widget"></jupyter-widget>
       </v-row>
+
+      <v-row v-if="['specviz', 'mosviz', 'specviz2d', 'cubeviz'].indexOf(config)!==-1">
+        <v-switch
+            v-model="show_uncertainty"
+            label="Plot Uncertainty"
+            hint="Show uncertainty values in the y-axis above and below the spectrum."
+            persistent-hint>
+        </v-switch>
+      </v-row>
       
       <j-plugin-section-header>Layer Options</j-plugin-section-header>      
       <v-row class="row-no-outside-padding">

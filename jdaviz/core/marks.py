@@ -1,5 +1,5 @@
 from astropy import units as u
-from bqplot.marks import Lines
+from bqplot.marks import Lines, Scatter
 from glue.core import HubListener
 from specutils import Spectrum1D
 
@@ -280,3 +280,13 @@ class LineAnalysisContinuumLeft(LineAnalysisContinuum):
 
 class LineAnalysisContinuumRight(LineAnalysisContinuumLeft):
     pass
+
+
+class LineUncertainties(Lines):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+
+class ScatterMask(Scatter):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)

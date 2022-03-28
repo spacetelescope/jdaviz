@@ -1,7 +1,8 @@
-from traitlets import Any, List, Unicode, observe
+from traitlets import Any, List, Unicode, observe, Bool
 from ipywidgets.widgets import widget_serialization
 
-from jdaviz.core.events import (ViewerAddedMessage, ViewerRemovedMessage)
+from jdaviz.core.events import (ViewerAddedMessage, ViewerRemovedMessage,
+                                AddDataMessage, RemoveDataMessage)
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin
 
@@ -17,6 +18,9 @@ class PlotOptions(TemplateMixin):
     viewer_widget = Any().tag(sync=True, **widget_serialization)
     layer_widget = Any().tag(sync=True, **widget_serialization)
 
+    # Toggle for showing uncertainty in viewer
+    show_uncertainty = Bool(False).tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -24,6 +28,10 @@ class PlotOptions(TemplateMixin):
                            handler=lambda _: self._on_viewers_changed())
         self.hub.subscribe(self, ViewerRemovedMessage,
                            handler=lambda _: self._on_viewers_changed())
+        self.hub.subscribe(self, AddDataMessage,
+                           handler=lambda _: self._on_data_changed())
+        self.hub.subscribe(self, RemoveDataMessage,
+                           handler=lambda _: self._on_data_changed())
 
         # initialize viewer_items from original viewers
         self._on_viewers_changed()
@@ -38,8 +46,31 @@ class PlotOptions(TemplateMixin):
         # message from elsewhere requesting to change the selected viewer
         self.selected_viewer = msg.viewer
 
+    def _on_data_changed(self):
+        # Make sure new data has it's uncertainty plotted
+        self._toggle_uncertainty(None)
+
     @observe("selected_viewer")
     def _selected_viewer_changed(self, event={}):
         viewer = self.app.get_viewer_by_id(event.get('new', self.selected_viewer))
         self.viewer_widget = viewer.viewer_options
         self.layer_widget = viewer.layer_options
+
+    @observe("show_uncertainty")
+    def _toggle_uncertainty(self, event):
+        if self.app.state.settings.get("configuration") == "cubeviz":
+            viewer = "cubeviz-3"
+        elif self.app.state.settings.get("configuration") == "specviz":
+            viewer = "specviz-0"
+        elif self.app.state.settings.get("configuration") == "specviz2d":
+            viewer = "specviz2d-1"
+        elif self.app.state.settings.get("configuration") == "mosviz":
+            viewer = "mosviz-2"
+        else:
+            return
+        spec_viewer = self.app.get_viewer_by_id(viewer)
+
+        if self.show_uncertainty:
+            spec_viewer.show_uncertainties()
+        else:
+            spec_viewer._clean_error()
