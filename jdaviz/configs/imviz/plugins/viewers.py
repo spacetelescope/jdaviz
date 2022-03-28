@@ -42,7 +42,8 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.init_astrowidgets_api()
-        self._initialize_toolbar_nested()
+        # default to either panzoom tool (whichever is currently primary)
+        self._initialize_toolbar_nested(default_tool_priority=self.tools_nested[2])
 
         self.label_mouseover = None
         self.compass = None

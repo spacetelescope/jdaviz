@@ -76,8 +76,8 @@ Other Changes and Additions
 
 - Jdaviz now requires Python 3.8 or later. [#1145]
 
-- Viewer toolbars are now nested and consolidated, with viewer and layer options
-  moved to the sidebar. [#1140]
+- Viewer toolbars are now nested and consolidated, with default tools and viewer and layer options
+  moved to the sidebar. [#1140, #1203]
 
 - Redshifts imported with a custom line list are now ignored.  Redshift must be set app-wide via 
   viz.set_redshift or the line list plugin. [#1134]

@@ -34,7 +34,8 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._initialize_toolbar_nested()
+        # default to any zoom/pan tool, whichever is currently primary
+        self._initialize_toolbar_nested(default_tool_priority=self.tools_nested[1])
 
     def set_plot_axes(self):
         self.figure.axes[1].tick_format = None
