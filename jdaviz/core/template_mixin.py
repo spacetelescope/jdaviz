@@ -327,7 +327,7 @@ class SubsetSelect(BasePluginComponent):
         if self.selected == self._default_text:
             return np.nanmin(spectrum1d.spectral_axis.value)
         if self.selected_item.get('type') != 'spectral':
-            raise TypeError("currently selected subset is not spectral")
+            raise TypeError("This action is only supported on spectral-type subsets")
         else:
             return self.selected_obj.lower.value
 
@@ -335,7 +335,7 @@ class SubsetSelect(BasePluginComponent):
         if self.selected == self._default_text:
             return np.nanmax(spectrum1d.spectral_axis.value)
         if self.selected_item.get('type') != 'spectral':
-            raise TypeError("currently selected subset is not spectral")
+            raise TypeError("This action is only supported on spectral-type subsets")
         else:
             return self.selected_obj.upper.value
 
