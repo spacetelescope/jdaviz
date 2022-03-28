@@ -20,7 +20,7 @@
         <jupyter-widget v-if="selected_viewer" :widget="viewer_widget"></jupyter-widget>
       </v-row>
 
-      <v-row v-if="['specviz', 'mosviz'].indexOf(config)!==-1">
+      <v-row v-if="['specviz', 'mosviz', 'specviz2d', 'cubeviz'].indexOf(config)!==-1">
         <v-switch
             v-model="show_uncertainty"
             label="Plot Uncertainty"

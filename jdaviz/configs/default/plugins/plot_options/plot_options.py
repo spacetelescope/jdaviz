@@ -62,6 +62,10 @@ class PlotOptions(TemplateMixin):
             viewer = "cubeviz-3"
         elif self.app.state.settings.get("configuration") == "specviz":
             viewer = "specviz-0"
+        elif self.app.state.settings.get("configuration") == "specviz2d":
+            viewer = "specviz2d-1"
+        elif self.app.state.settings.get("configuration") == "mosviz":
+            viewer = "mosviz-2"
         else:
             return
         spec_viewer = self.app.get_viewer_by_id(viewer)
