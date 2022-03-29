@@ -2,15 +2,14 @@ import numpy as np
 
 from astropy import units as u
 from astropy.convolution import convolve, Gaussian2DKernel
-from glue.core.message import (DataCollectionAddMessage,
-                               DataCollectionDeleteMessage)
 from specutils import Spectrum1D
 from specutils.manipulation import gaussian_smooth
-from traitlets import List, Unicode, Any, Bool, observe
+from traitlets import List, Unicode, Bool, observe
 
+from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import TemplateMixin
+from jdaviz.core.template_mixin import TemplateMixin, DatasetSelectMixin
 
 __all__ = ['GaussianSmooth']
 
@@ -20,11 +19,9 @@ u.add_enabled_units([spaxel])
 
 
 @tray_registry('g-gaussian-smooth', label="Gaussian Smooth")
-class GaussianSmooth(TemplateMixin):
+class GaussianSmooth(TemplateMixin, DatasetSelectMixin):
     template_file = __file__, "gaussian_smooth.vue"
-    stddev = Any().tag(sync=True)
-    dc_items = List([]).tag(sync=True)
-    selected_data = Unicode().tag(sync=True)
+    stddev = FloatHandleEmpty(1).tag(sync=True)
     selected_data_is_1d = Bool(True).tag(sync=True)
     show_modes = Bool(False).tag(sync=True)
     smooth_modes = List(["Spectral", "Spatial"]).tag(sync=True)
@@ -43,23 +40,13 @@ class GaussianSmooth(TemplateMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.hub.subscribe(self, DataCollectionAddMessage,
-                           handler=self._on_data_updated)
-        self.hub.subscribe(self, DataCollectionDeleteMessage,
-                           handler=self._on_data_updated)
-
-        self._selected_data = None
         if self.config == "cubeviz":
             self.show_modes = True
 
-    def _on_data_updated(self, msg):
-        self.dc_items = [x.label for x in self.data_collection]
-
-    @observe("selected_data")
+    @observe("dataset_selected")
     def _on_data_selected(self, event):
-        self._selected_data = next((x for x in self.data_collection
-                                    if x.label == event['new']))
-        self.selected_data_is_1d = len(self._selected_data.data.shape) == 1
+        # if this pattern is ever used anywhere else, it should be moved into DatasetSelect
+        self.selected_data_is_1d = len(self.dataset.selected_dc_item.data.shape) == 1
 
     def vue_spectral_smooth(self, *args, **kwargs):
         # Testing inputs to make sure putting smoothed spectrum into
@@ -67,10 +54,8 @@ class GaussianSmooth(TemplateMixin):
         # input_flux = Quantity(np.array([0.2, 0.3, 2.2, 0.3]), u.Jy)
         # input_spaxis = Quantity(np.array([1, 2, 3, 4]), u.micron)
         # spec1 = Spectrum1D(input_flux, spectral_axis=input_spaxis)
-        size = float(self.stddev)
-
         try:
-            spec = self._selected_data.get_object(cls=Spectrum1D, statistic=None)
+            spec = self.dataset.get_object()
         except TypeError:
             snackbar_message = SnackbarMessage(
                 "Unable to perform smoothing over selected data.",
@@ -82,9 +67,9 @@ class GaussianSmooth(TemplateMixin):
 
         # Takes the user input from the dialog (stddev) and uses it to
         # define a standard deviation for gaussian smoothing
-        spec_smoothed = gaussian_smooth(spec, stddev=size)
+        spec_smoothed = gaussian_smooth(spec, stddev=self.stddev)
 
-        label = f"Smoothed {self._selected_data.label} stddev {size}"
+        label = f"Smoothed {self.dataset_selected} stddev {self.stddev}"
 
         if label in self.data_collection:
             snackbar_message = SnackbarMessage(
@@ -96,7 +81,9 @@ class GaussianSmooth(TemplateMixin):
             return
 
         # add data to the collection
+        spec_smoothed.meta['Plugin'] = 'gaussian-smooth'
         self.app.add_data(spec_smoothed, label)
+
         if self.add_replace_results:
             viewer = "spectrum-viewer" if self.selected_data_is_1d or self.app.config == 'cubeviz' else "spectrum-2d-viewer" # noqa
             self.app.add_data_to_viewer(viewer, label,
@@ -108,7 +95,7 @@ class GaussianSmooth(TemplateMixin):
                                         label, clear_other_data=True)
 
         snackbar_message = SnackbarMessage(
-            f"Data set '{self._selected_data.label}' smoothed successfully.",
+            f"Data set '{self.dataset_selected}' smoothed successfully.",
             color="success",
             sender=self)
         self.hub.broadcast(snackbar_message)
@@ -118,10 +105,7 @@ class GaussianSmooth(TemplateMixin):
         Use astropy convolution machinery to smooth the spatial dimensions of
         the data cube.
         """
-
-        size = float(self.stddev)
-
-        label = f"Smoothed {self._selected_data.label} spatial stddev {size}"
+        label = f"Smoothed {self.dataset_selected} spatial stddev {self.stddev}"
 
         if label in self.data_collection:
             # immediately cancel before smoothing
@@ -134,16 +118,16 @@ class GaussianSmooth(TemplateMixin):
             return
 
         # Get information from the flux component
-        attribute = self._selected_data.main_components[0]
+        attribute = self.dataset.selected_obj.main_components[0]
 
-        cube = self._selected_data.get_object(cls=Spectrum1D,
-                                              attribute=attribute,
-                                              statistic=None)
+        cube = self.dataset.get_object(cls=Spectrum1D,
+                                       attribute=attribute,
+                                       statistic=None)
         flux_unit = cube.flux.unit
 
         # Extend the 2D kernel to have a length 1 spectral dimension, so that
         # we can do "3d" convolution to the whole cube
-        kernel = np.expand_dims(Gaussian2DKernel(size), 2)
+        kernel = np.expand_dims(Gaussian2DKernel(self.stddev), 2)
 
         # TODO: in vuetify >2.3, timeout should be set to -1 to keep open
         #  indefinitely
@@ -159,6 +143,7 @@ class GaussianSmooth(TemplateMixin):
         newcube = Spectrum1D(flux=convolved_data * flux_unit, wcs=cube.wcs)
 
         # add data to the collection
+        newcube.meta['Plugin'] = 'gaussian-smooth'
         self.app.add_data(newcube, label)
         if self.selected_viewer != 'None':
             # replace the contents in the selected viewer with the results from this plugin
@@ -166,7 +151,7 @@ class GaussianSmooth(TemplateMixin):
                                         label, clear_other_data=True)
 
         snackbar_message = SnackbarMessage(
-            f"Data set '{self._selected_data.label}' smoothed successfully.",
+            f"Data set '{self.dataset_selected}' smoothed successfully.",
             color="success",
             sender=self)
         self.hub.broadcast(snackbar_message)

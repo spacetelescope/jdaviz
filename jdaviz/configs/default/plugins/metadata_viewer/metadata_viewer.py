@@ -1,60 +1,46 @@
 from astropy.io.fits import Header
-from traitlets import Bool, List, Unicode, observe
+from traitlets import Bool, List, observe
 
-from jdaviz.core.events import AddDataMessage, RemoveDataMessage
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import TemplateMixin
+from jdaviz.core.template_mixin import TemplateMixin, DatasetSelectMixin
 
 __all__ = ['MetadataViewer']
 
 
 @tray_registry('g-metadata-viewer', label="Metadata Viewer")
-class MetadataViewer(TemplateMixin):
+class MetadataViewer(TemplateMixin, DatasetSelectMixin):
     template_file = __file__, "metadata_viewer.vue"
-    dc_items = List([]).tag(sync=True)
-    selected_data = Unicode("").tag(sync=True)
     has_metadata = Bool(False).tag(sync=True)
     metadata = List([]).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # override the default filters on dataset entries to require metadata in entries
+        self.dataset.add_filter('has_metadata', 'not_from_plugin')
 
-        self.hub.subscribe(self, AddDataMessage,
-                           handler=self._on_viewer_data_changed)
-        self.hub.subscribe(self, RemoveDataMessage,
-                           handler=self._on_viewer_data_changed)
-
-    def _on_viewer_data_changed(self, *args, **kwargs):
-        self.dc_items = [data.label for data in self.app.data_collection]
-
-    @observe("selected_data")
+    @observe("dataset_selected")
     def _show_metadata(self, event):
-        try:
-            data = self.app.data_collection[self.app.data_collection.labels.index(event['new'])]
-        except ValueError:
+        if not self.dataset.selected:
             self.has_metadata = False
             self.metadata = []
             return
 
-        if not hasattr(data, 'meta') or not isinstance(data.meta, dict) or len(data.meta) < 1:
-            self.has_metadata = False
-            self.metadata = []
-        else:
-            if 'header' in data.meta and isinstance(data.meta['header'], (dict, Header)):
-                if isinstance(data.meta['header'], Header):  # Specviz
-                    meta = dict(data.meta['header'])
-                else:
-                    meta = data.meta['header']
+        data = self.dataset.selected_obj
+        if 'header' in data.meta and isinstance(data.meta['header'], (dict, Header)):
+            if isinstance(data.meta['header'], Header):  # Specviz
+                meta = dict(data.meta['header'])
             else:
-                meta = data.meta
+                meta = data.meta['header']
+        else:
+            meta = data.meta
 
-            d = flatten_nested_dict(meta)
-            for badkey in ('COMMENT', 'HISTORY', ''):
-                if badkey in d:
-                    del d[badkey]  # ipykernel cannot clean for JSON
-            # TODO: Option to not sort?
-            self.metadata = sorted(zip(d.keys(), map(str, d.values())))
-            self.has_metadata = True
+        d = flatten_nested_dict(meta)
+        for badkey in ('COMMENT', 'HISTORY', ''):
+            if badkey in d:
+                del d[badkey]  # ipykernel cannot clean for JSON
+        # TODO: Option to not sort?
+        self.metadata = sorted(zip(d.keys(), map(str, d.values())))
+        self.has_metadata = True
 
 
 # TODO: If this is natively supported by asdf in the future, replace with native function.

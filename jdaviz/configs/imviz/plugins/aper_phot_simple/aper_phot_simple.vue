@@ -6,20 +6,19 @@
       </j-docs-link>
     </v-row>
 
-    <v-row>
-      <v-select
-        :items="dc_items"
-        v-model="data_selected"
-        label="Data"
-        hint="Select data for photometry."
-        persistent-hint
-      ></v-select>
-    </v-row>
+    <plugin-dataset-select
+      :items="dataset_items"
+      :selected.sync="dataset_selected"
+      :show_if_single_entry="false"
+      label="Data"
+      hint="Select the data for photometry."
+    />
 
-    <div v-if='data_selected'>
+    <div v-if='dataset_selected'>
       <plugin-subset-select
         :items="subset_items"
         :selected.sync="subset_selected"
+        :show_if_single_entry="true"
         label="Aperture"
         hint="Select aperture region for photometry."
       />
@@ -29,6 +28,7 @@
           :items="bg_subset_items"
           :selected.sync="bg_subset_selected"
           :rules="[() => bg_subset_selected!==subset_selected || 'Must not match aperture.']"
+          :show_if_single_entry="true"
           label="Background"
           hint="Select subset region for background calculation."
         />

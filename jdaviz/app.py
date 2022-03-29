@@ -73,6 +73,10 @@ ipyvue.register_component_from_file(None, 'j-plugin-section-header',
                                     os.path.join(os.path.dirname(__file__),
                                                  'components/plugin_section_header.vue'))
 
+ipyvue.register_component_from_file(None, 'plugin-dataset-select',
+                                    os.path.join(os.path.dirname(__file__),
+                                                 'components/plugin_dataset_select.vue'))
+
 ipyvue.register_component_from_file(None, 'plugin-subset-select',
                                     os.path.join(os.path.dirname(__file__),
                                                  'components/plugin_subset_select.vue'))

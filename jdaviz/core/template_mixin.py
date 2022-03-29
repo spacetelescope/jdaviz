@@ -9,12 +9,14 @@ from glue.core.subset import RoiSubsetState
 from traitlets import Bool, List, Unicode
 
 from jdaviz import __version__
-from jdaviz.core.events import ViewerAddedMessage, ViewerRemovedMessage
+from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
+                                ViewerAddedMessage, ViewerRemovedMessage)
 
 __all__ = ['TemplateMixin', 'PluginTemplateMixin',
            'BasePluginComponent',
            'SubsetSelect', 'SpatialSubsetSelectMixin', 'SpectralSubsetSelectMixin',
-           'ViewerSelect', 'ViewerSelectMixin']
+           'ViewerSelect', 'ViewerSelectMixin',
+           'DatasetSelect', 'DatasetSelectMixin']
 
 
 class TemplateMixin(VuetifyTemplate, HubListener):
@@ -66,6 +68,9 @@ class TemplateMixin(VuetifyTemplate, HubListener):
 
 
 class PluginTemplateMixin(TemplateMixin):
+    """
+    This base class can be inherited by all sidebar plugins to expose common functionality.
+    """
     disabled_msg = Unicode("").tag(sync=True)
     plugin_opened = Bool(False).tag(sync=True)
 
@@ -127,7 +132,92 @@ class BasePluginComponent(HubListener):
         return self._plugin.app.get_viewer("spectrum-viewer")
 
 
-class SubsetSelect(BasePluginComponent):
+class BaseSelectPluginComponent(BasePluginComponent):
+    """
+    This base class extends BasePluginComponent for common functionality for a select/dropdown
+    component.  The subclasses MUST have an ``items`` traitlet as a list of dictionaries, with
+    'label' as the selection entry (and any other optional entries for styling, etc) and a
+    ``selected`` string traitlet.  The subclasses should also override ``selected_obj`` and may
+    choose to override ``_selected_changed`` (likely with a super call to keep the base logic).
+    """
+    # default_mode can be one of empty, first, default_text (requires default_text to be set)
+    default_mode = 'empty'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._viewer_refs = kwargs.get('viewer_refs', None)
+        self._cached_properties = ["selected_obj", "selected_item"]
+        default_text = kwargs.get('default_text', None)
+        manual_options = kwargs.get('manual_options', [])
+        self._default_text = default_text
+        if default_text is not None and default_text not in manual_options:
+            manual_options = [default_text] + manual_options
+        self._manual_options = manual_options
+
+        self.items = [{"label": opt} for opt in manual_options]
+        # set default values for traitlets
+        if default_text is not None:
+            self.selected = default_text
+
+        self.add_observe(kwargs.get('selected'), self._selected_changed)
+
+    @property
+    def manual_options(self):
+        return self._manual_options
+        # read-only access to manual options (cannot change after init)
+
+    @property
+    def cached_properties(self):
+        return self._cached_properties
+
+    @property
+    def viewer_refs(self):
+        if self._viewer_refs is None:
+            # exclude dynamically created image viewers (don't have refs) and table viewers
+            # that don't contain plottable data
+            return [ref for ref in self.app.get_viewer_reference_names()
+                    if ref is not None and hasattr(self.app.get_viewer(ref), 'default_class')]
+        return self._viewer_refs
+
+    @property
+    def viewers(self):
+        return [self.app.get_viewer(ref) for ref in self.viewer_refs]
+
+    @property
+    def labels(self):
+        return [s['label'] for s in self.items if 'label' in s.keys()]
+
+    @cached_property
+    def selected_item(self):
+        for item in self.items:
+            if item['label'] == self.selected:
+                return item
+        return {}
+
+    @cached_property
+    def selected_obj(self):
+        raise NotImplementedError(f"selected_obj not implemented by {self.__class__.__name__}")
+
+    def _apply_default_selection(self):
+        if self.selected in self.labels:
+            # current selection is valid
+            return
+
+        if self.default_mode == 'first':
+            self.selected = self.labels[0] if len(self.labels) else ''
+        elif self.default_mode == 'default_text':
+            self.selected = self._default_text if self._default_text else ''
+        else:
+            self.selected = ''
+
+    def _selected_changed(self, event):
+        if event['new'] not in self.labels + ['']:
+            self._apply_default_selection()
+            raise ValueError(f"{event['new']} not one of {self.labels}")
+        self._clear_cache(*self._cached_properties)
+
+
+class SubsetSelect(BaseSelectPluginComponent):
     """
     Traitlets (in the object, custom traitlets in the plugin):
 
@@ -143,8 +233,7 @@ class SubsetSelect(BasePluginComponent):
 
     Methods (in the object only):
 
-    * ``selected_min(cube)`` (float, only applicable for spectral subsets)
-    * ``selected_max(cube)`` (float, only applicable for spectral subsets)
+    * ``selected_min_max(cube)`` (quantity, only applicable for spectral subsets)
 
     To use in a plugin:
 
@@ -167,6 +256,8 @@ class SubsetSelect(BasePluginComponent):
       />
 
     """
+    default_mode = 'default_text'
+
     def __init__(self, plugin, items, selected, selected_has_subregions=None,
                  viewer_refs=None, default_text=None, manual_options=[], allowed_type=None):
         """
@@ -197,22 +288,15 @@ class SubsetSelect(BasePluginComponent):
         super().__init__(plugin,
                          items=items,
                          selected=selected,
-                         selected_has_subregions=selected_has_subregions)
+                         selected_has_subregions=selected_has_subregions,
+                         viewer_refs=viewer_refs,
+                         default_text=default_text,
+                         manual_options=manual_options)
 
-        self._viewer_refs = viewer_refs
-        self._default_text = default_text
         if allowed_type not in [None, 'spatial', 'spectral']:
             raise ValueError("allowed_type must be None, 'spatial', or 'spectral'")
         self._allowed_type = allowed_type
 
-        if default_text is not None and default_text not in manual_options:
-            manual_options = [default_text] + manual_options
-        self._manual_options = manual_options
-
-        self.items = [{"label": opt} for opt in manual_options]
-        # set default values for traitlets
-        if default_text is not None:
-            self.selected = default_text
         if selected_has_subregions is not None:
             self.selected_has_subregions = False
 
@@ -220,26 +304,10 @@ class SubsetSelect(BasePluginComponent):
                            handler=lambda msg: self._update_subset(msg.subset, msg.attribute))
         self.hub.subscribe(self, SubsetDeleteMessage,
                            handler=lambda msg: self._delete_subset(msg.subset))
-        self.add_observe(selected, self._selected_changed)
 
         # intialize any subsets that have already been created
         for lyr in self.app.data_collection.subset_groups:
             self._update_subset(lyr)
-
-    @property
-    def manual_options(self):
-        # read-only access to manual options (cannot change after init)
-        return self._manual_options
-
-    @property
-    def viewer_refs(self):
-        if self._viewer_refs is None:
-            return [ref for ref in self.app.get_viewer_reference_names() if ref is not None]
-        return self._viewer_refs
-
-    @property
-    def viewers(self):
-        return [self.app.get_viewer(ref) for ref in self.viewer_refs]
 
     @staticmethod
     def _subset_type(subset):
@@ -249,12 +317,9 @@ class SubsetSelect(BasePluginComponent):
         else:
             return 'spectral'
 
-    def _apply_default_selection(self):
-        # default to the default_text, if available, otherwise empty
-        if self._default_text:
-            self.selected = self._default_text
-        else:
-            self.selected = ''
+    def _selected_changed(self, event):
+        super()._selected_changed(event)
+        self._update_has_subregions()
 
     def _subset_to_dict(self, subset):
         # find layer artist in default spectrum-viewer
@@ -299,30 +364,12 @@ class SubsetSelect(BasePluginComponent):
             self._clear_cache("selected_obj", "selected_item")
             self._update_has_subregions()
 
-    def _selected_changed(self, event):
-        if event['new'] not in self.labels + ['']:
-            self._apply_default_selection()
-            raise ValueError(f"{event['new']} not one of {self.labels}")
-        self._clear_cache("selected_obj", "selected_item")
-        self._update_has_subregions()
-
     def _update_has_subregions(self):
         if "selected_has_subregions" in self._plugin_traitlets.keys():
             if self.selected in self._manual_options:
                 self.selected_has_subregions = False
             else:
                 self.selected_has_subregions = len(self.selected_obj.subregions) > 1
-
-    @property
-    def labels(self):
-        return [s['label'] for s in self.items if 'label' in s.keys()]
-
-    @cached_property
-    def selected_item(self):
-        for item in self.items:
-            if item['label'] == self.selected:
-                return item
-        return {}
 
     @cached_property
     def selected_obj(self):
@@ -338,21 +385,13 @@ class SubsetSelect(BasePluginComponent):
             if match is not None:
                 return match
 
-    def selected_min(self, spectrum1d):
+    def selected_min_max(self, spectrum1d):
         if self.selected in self._manual_options:
-            return np.nanmin(spectrum1d.spectral_axis.value)
+            return np.nanmin(spectrum1d.spectral_axis), np.nanmax(spectrum1d.spectral_axis)
         if self.selected_item.get('type') != 'spectral':
             raise TypeError("This action is only supported on spectral-type subsets")
         else:
-            return self.selected_obj.lower.value
-
-    def selected_max(self, spectrum1d):
-        if self.selected in self._manual_options:
-            return np.nanmax(spectrum1d.spectral_axis.value)
-        if self.selected_item.get('type') != 'spectral':
-            raise TypeError("This action is only supported on spectral-type subsets")
-        else:
-            return self.selected_obj.upper.value
+            return self.selected_obj.lower, self.selected_obj.upper
 
 
 class SpectralSubsetSelectMixin(VuetifyTemplate, HubListener):
@@ -375,8 +414,7 @@ class SpectralSubsetSelectMixin(VuetifyTemplate, HubListener):
 
     Methods (available from the plugin):
 
-    * ``spectral_subset.selected_min``
-    * ``spectral_subset.selected_max``
+    * ``spectral_subset.selected_min_max``
 
     To use in a plugin:
 
@@ -453,7 +491,7 @@ class SpatialSubsetSelectMixin(VuetifyTemplate, HubListener):
                                            allowed_type='spatial')
 
 
-class ViewerSelect(BasePluginComponent):
+class ViewerSelect(BaseSelectPluginComponent):
     """
     Traitlets (in the object, custom traitlets in the plugin):
 
@@ -464,7 +502,7 @@ class ViewerSelect(BasePluginComponent):
 
     * ``ids`` (list of ids corresponding to ``items``)
     * ``references`` (list of references corresponding to ``items``)
-    * ``ref_or_ids`` (list of references falling back on ids corresponding to ``items``.  These
+    * ``labels`` (list of references falling back on ids corresponding to ``items``.  These
         are the values seen in the dropdown, although setting either id or reference to the traitlet
         will still process correctly)
     * ``selected_item`` (dict of the currently selected entry in ``items``)
@@ -490,12 +528,13 @@ class ViewerSelect(BasePluginComponent):
       />
 
     """
+    default_mode = 'first'
+
     def __init__(self, plugin, items, selected):
         super().__init__(plugin, items=items, selected=selected)
 
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewers_changed)
         self.hub.subscribe(self, ViewerRemovedMessage, handler=self._on_viewers_changed)
-        self.add_observe(selected, self._selected_changed)
 
         # initialize viewer_items from original viewers
         self._on_viewers_changed()
@@ -508,15 +547,12 @@ class ViewerSelect(BasePluginComponent):
     def references(self):
         return [item['reference'] for item in self.items]
 
-    @property
-    def ref_or_ids(self):
-        return [item['ref_or_id'] for item in self.items]
-
-    @property
+    @cached_property
     def selected_item(self):
-        for item in self.items:
-            if item['ref_or_id'] == self.selected:
-                return item
+        item = super().selected_item
+        if item:
+            return item
+
         # try again but this time allow match to id alone.  Note that _selected_changed
         # will handle resetting the trait to the reference since it exists, but this
         # will allow access to the underlying item/object for any observes in the meantime.
@@ -528,23 +564,17 @@ class ViewerSelect(BasePluginComponent):
     def selected_id(self):
         return self.selected_item['id']
 
-    @property
+    @cached_property
     def selected_obj(self):
         return self.app.get_viewer_by_id(self.selected_id)
 
     def _selected_changed(self, event):
-        if event['new'] not in self.ref_or_ids:
+        if event['new'] not in self.labels:
             if self.selected in self.ids:
                 # provided id in place of ref
-                self.selected = self.ref_or_ids[self.ids.index(self.selected)]
-            else:
-                self._handle_default()
-                raise ValueError(f"{event['new']} not one of {self.ref_or_ids}")
-
-    def _handle_default(self):
-        if self.selected not in self.ref_or_ids:
-            # default to first entry, will trigger any observer on selected
-            self.selected = self.ref_or_ids[0] if len(self.items) else ""
+                self.selected = self.labels[self.ids.index(self.selected)]
+                return
+        return super()._selected_changed(event)
 
     def _on_viewers_changed(self, msg=None):
         # NOTE: _on_viewers_changed is passed without a msg object during init
@@ -553,16 +583,16 @@ class ViewerSelect(BasePluginComponent):
             d = {'id': viewer_item['id']}
             if viewer_item.get('reference') is not None:
                 d['reference'] = viewer_item['reference']
-                d['ref_or_id'] = viewer_item['reference']
+                d['label'] = viewer_item['reference']
             else:
                 d['reference'] = None
-                d['ref_or_id'] = viewer_item['id']
+                d['label'] = viewer_item['id']
             return d
 
         self.items = [_dict_from_viewer(self.app._viewer_item_by_id(vid))
                       for vid, viewer in self.app._viewer_store.items()
                       if viewer.__class__.__name__ != 'MosvizTableViewer']
-        self._handle_default()
+        self._apply_default_selection()
 
 
 class ViewerSelectMixin(VuetifyTemplate, HubListener):
@@ -570,7 +600,7 @@ class ViewerSelectMixin(VuetifyTemplate, HubListener):
     Applies the ViewerSelect component as a mixin in the base plugin.  This
     automatically adds traitlets as well as new properties to the plugin with minimal
     extra code.  For multiple instances or custom traitlet names/defaults, use the
-    SpectralSubsetSelect component instead.
+    ViewerSelect component instead.
 
     Traitlets (available from the plugin):
 
@@ -581,7 +611,7 @@ class ViewerSelectMixin(VuetifyTemplate, HubListener):
 
     * ``viewer.ids``
     * ``viewer.references``
-    * ``viewer.ref_or_ids``
+    * ``viewer.labels``
     * ``viewer.selected_item``
     * ``viewer.selected_id``
     * ``viewer.selected_obj``
@@ -608,3 +638,162 @@ class ViewerSelectMixin(VuetifyTemplate, HubListener):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.viewer = ViewerSelect(self, 'viewer_items', 'viewer_selected')
+
+
+class DatasetSelect(BaseSelectPluginComponent):
+    """
+    Traitlets (in the object, custom traitlets in the plugin):
+
+    * ``items`` (list of dicts with keys: )
+    * ``selected`` (string)
+
+    Properties (in the object only):
+
+    * ``selected_obj``
+    * ``selected_dc_item``
+
+    Methods (in the object only):
+
+    * ``get_object``
+    * ``add_filter`` (more useful for the mixin, when creating a custom component, pass ``filters``)
+
+    To use in a plugin:
+
+    * create traitlets with default values
+    * register with all the automatic logic in the plugin's init by passing the string names
+      of the respective traitlets
+    * use component in plugin template (see below)
+    * refer to properties above based on the interally stored reference to the
+      instantiated object of this component
+
+    Example template (label and hint are optional)::
+
+      <plugin-dataset-select
+        :items="dataset_items"
+        :selected.sync="dataset_selected"
+        label="Data"
+        hint="Select data."
+      />
+
+    """
+    default_mode = 'first'
+
+    def __init__(self, plugin, items, selected,
+                 filters=['not_from_plugin_model_fitting', 'layer_in_viewer_refs']):
+        super().__init__(plugin, items=items, selected=selected)
+        self._cached_properties += ["selected_dc_item"]
+        self.hub.subscribe(self, AddDataMessage, handler=self._on_data_changed)
+        self.hub.subscribe(self, RemoveDataMessage, handler=self._on_data_changed)
+        self._filters = filters[:]  # [:] needed to force copy from kwarg default
+
+        # initialize items from original viewers
+        self._on_data_changed()
+
+    @property
+    def filters(self):
+        return self._filters
+
+    def add_filter(self, *filters):
+        self._filters += [filter for filter in filters]
+        self._on_data_changed()
+
+    @cached_property
+    def selected_dc_item(self):
+        return next((x for x in self.app.data_collection if x.label == self.selected))
+
+    def get_object(self, *args, **kwargs):
+        return self.selected_dc_item.get_object(*args, **kwargs)
+
+    @cached_property
+    def selected_obj(self):
+        for viewer_ref in self.viewer_refs:
+            match = self.app.get_data_from_viewer(viewer_ref, data_label=self.selected)
+            if match is not None:
+                return match
+
+    def _is_valid_item(self, data):
+        def not_from_plugin(data):
+            return data.meta.get('Plugin', None) is None
+
+        def not_from_plugin_model_fitting(data):
+            return data.meta.get('Plugin', None) != 'model-fitting'
+
+        def has_metadata(data):
+            return hasattr(data, 'meta') and isinstance(data.meta, dict) and len(data.meta)
+
+        def layer_in_viewer_refs(data):
+            for viewer_ref in self.viewer_refs:
+                if data.label in [l.layer.label for l in self.app.get_viewer(viewer_ref).layers]: # noqa E741
+                    return True
+            return False
+
+        def layer_in_spectrum_viewer(data):
+            return data.label in [l.layer.label for l in self.spectrum_viewer.layers] # noqa E741
+
+        def is_image(data):
+            return len(data.shape) == 3
+
+        for valid_filter in self.filters:
+            if isinstance(valid_filter, str):
+                # pull from the functions above, will raise an error if not in locals
+                try:
+                    valid_filter = locals()[valid_filter]
+                except KeyError:
+                    raise ValueError(f"{valid_filter} not an implemented filter.")
+            if not valid_filter(data):
+                return False
+        return True
+
+    def _on_data_changed(self, msg=None):
+        # NOTE: _on_data_changed is passed without a msg object during init
+        # TODO: don't recreate the entire list when msg is passed
+        self.items = [{"label": data.label} for data in self.app.data_collection
+                      if self._is_valid_item(data)]
+        self._apply_default_selection()
+
+
+class DatasetSelectMixin(VuetifyTemplate, HubListener):
+    """
+    Applies the DatasetSelect component as a mixin in the base plugin.  This
+    automatically adds traitlets as well as new properties to the plugin with minimal
+    extra code.  For multiple instances or custom traitlet names/defaults, use the
+    DatasetSelect component instead.
+
+    Traitlets (available from the plugin):
+
+    * ``dataset_items``
+    * ``dataset_selected``
+
+    Properties (available from the plugin):
+
+    * ``dataset.selected_obj``
+    * ``dataset.selected_dc_item``
+
+    Methods (available from the plugin):
+
+    * ``dataset.get_object``
+    * ``dataset.add_filter`` (preferably used during plugin init)
+
+    To use in a plugin:
+
+    * add ``DatasetSelectMixin`` as a mixin to the class
+    * use the traitlets and properties above as needed (note the prefix for properties)
+
+    Example template (label and hint are optional)::
+
+        <v-row>
+          <plugin-dataset-select
+            :items="dataset_items"
+            :selected.sync="dataset_selected"
+            label="Data"
+            hint="Select data."
+          />
+        </v-row>
+    """
+    dataset_items = List().tag(sync=True)
+    dataset_selected = Unicode().tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # NOTE: cannot be named self.data or will conflict with existing self.data traitlet!
+        self.dataset = DatasetSelect(self, 'dataset_items', 'dataset_selected')

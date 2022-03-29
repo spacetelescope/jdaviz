@@ -11,15 +11,15 @@
       <j-docs-link>Choose a region that defines the spectral line.</j-docs-link>
     </v-row>
 
-    <v-row v-if="dc_items.length > 1">
-      <v-select
-        :items="dc_items"
-        v-model="selected_spectrum"
-        label="Data"
-        hint="Select the data set to be analysed."
-        persistent-hint
-      ></v-select>
-    </v-row>
+    <!-- for mosviz, the entries change on row change, so we want to always show the dropdown
+         to make sure that is clear -->
+    <plugin-dataset-select
+      :items="dataset_items"
+      :selected.sync="dataset_selected"
+      :show_if_single_entry="config=='mosviz'"
+      label="Data"
+      hint="Select the data set to be analysed."
+    />
 
     <plugin-subset-select 
       :items="spectral_subset_items"

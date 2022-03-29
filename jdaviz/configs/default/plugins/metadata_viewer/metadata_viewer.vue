@@ -4,15 +4,15 @@
       <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#metadata-viewer'">View metadata.</j-docs-link>
     </v-row>
 
-    <v-row>
-      <v-select
-        :items="dc_items"
-        v-model="selected_data"
-        label="Data"
-        hint="Select the data to see metadata."
-        persistent-hint
-      ></v-select>
-    </v-row>
+    <!-- for specviz, we'll allow this to hide for a single entry, but since filters are being
+         applied on other configs, we'll always show -->
+    <plugin-dataset-select
+      :items="dataset_items"
+      :selected.sync="dataset_selected"
+      :show_if_single_entry="config!='specviz'"
+      label="Data"
+      hint="Select the data to see metadata."
+    />
 
     <div v-if="has_metadata">
       <j-plugin-section-header>Metadata</j-plugin-section-header>

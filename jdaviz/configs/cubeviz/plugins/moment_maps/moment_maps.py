@@ -2,16 +2,17 @@ import os
 
 from astropy import units as u
 from astropy.nddata import CCDData
-from glue.core.message import (DataCollectionAddMessage,
-                               DataCollectionDeleteMessage)
 from glue.core.link_helpers import LinkSame
 
-from traitlets import List, Unicode, Any, Bool, observe
+from traitlets import List, Unicode, Bool
 from specutils import Spectrum1D, manipulation, analysis
 
+from jdaviz.core.custom_traitlets import IntHandleEmpty
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin, SpectralSubsetSelectMixin
+from jdaviz.core.template_mixin import (PluginTemplateMixin,
+                                        DatasetSelectMixin,
+                                        SpectralSubsetSelectMixin)
 
 __all__ = ['MomentMap']
 
@@ -21,16 +22,12 @@ u.add_enabled_units([spaxel])
 
 
 @tray_registry('cubeviz-moment-maps', label="Moment Maps")
-class MomentMap(PluginTemplateMixin, SpectralSubsetSelectMixin):
+class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin):
     template_file = __file__, "moment_maps.vue"
-    n_moment = Any().tag(sync=True)
-    dc_items = List([]).tag(sync=True)
-    selected_data = Unicode().tag(sync=True)
 
+    n_moment = IntHandleEmpty(0).tag(sync=True)
     filename = Unicode().tag(sync=True)
-
     moment_available = Bool(False).tag(sync=True)
-    spectral_unit = Unicode().tag(sync=True)
 
     # NOTE: this is currently cubeviz-specific so will need to be updated
     # to be config-specific if using within other viewer configurations.
@@ -41,44 +38,14 @@ class MomentMap(PluginTemplateMixin, SpectralSubsetSelectMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.hub.subscribe(self, DataCollectionAddMessage,
-                           handler=self._on_data_updated)
-        self.hub.subscribe(self, DataCollectionDeleteMessage,
-                           handler=self._on_data_updated)
-
-        self._selected_data = None
-        self.n_moment = 0
         self.moment = None
 
-    def _on_data_updated(self, msg):
-        self.dc_items = [x.label for x in self.data_collection]
-        # Default to selecting the first loaded cube
-        if self._selected_data is None:
-            for i in range(len(self.dc_items)):
-                # Also set the spectral min and max to default to the full range
-                try:
-                    self.selected_data = self.dc_items[i]
-                    cube = self._selected_data.get_object(cls=Spectrum1D, statistic=None)
-                    self.spectral_unit = str(cube.spectral_axis.unit)
-                    break
-                # Skip data that can't be returned as a Spectrum1D
-                except (ValueError, TypeError):
-                    continue
-
-    @observe("selected_data")
-    def _on_data_selected(self, event):
-        self._selected_data = next((x for x in self.data_collection
-                                    if x.label == event['new']))
-        cube = self._selected_data.get_object(cls=Spectrum1D, statistic=None)
-        # Update spectral bounds and unit if we've switched to another unit
-        if str(cube.spectral_axis.unit) != self.spectral_unit:
-            self.spectral_unit = str(cube.spectral_axis.unit)
+        self.dataset.add_filter('is_image')
 
     def vue_calculate_moment(self, *args):
         # Retrieve the data cube and slice out desired region, if specified
-        cube = self._selected_data.get_object(cls=Spectrum1D, statistic=None)
-        spec_min = float(self.spectral_subset.selected_min(cube)) * u.Unit(self.spectral_unit)
-        spec_max = float(self.spectral_subset.selected_max(cube)) * u.Unit(self.spectral_unit)
+        cube = self.dataset.get_object(cls=Spectrum1D, statistic=None)
+        spec_min, spec_max = self.spectral_subset.selected_min_max(cube)
         slab = manipulation.spectral_slab(cube, spec_min, spec_max)
 
         # Calculate the moment and convert to CCDData to add to the viewers
@@ -91,8 +58,8 @@ class MomentMap(PluginTemplateMixin, SpectralSubsetSelectMixin):
         # Need transpose to align JWST mirror shape. Not sure why.
         self.moment = CCDData(analysis.moment(slab, order=n_moment).T)
 
-        label = "Moment {}: {}".format(n_moment, self._selected_data.label)
-        fname_label = self._selected_data.label.replace("[", "_").replace("]", "")
+        label = "Moment {}: {}".format(n_moment, self.dataset_selected)
+        fname_label = self.dataset_selected.replace("[", "_").replace("]", "")
         self.filename = "moment{}_{}.fits".format(n_moment, fname_label)
 
         # Add information to meta data that this originated from

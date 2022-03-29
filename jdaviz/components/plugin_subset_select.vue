@@ -1,6 +1,6 @@
 <template>
   <div>
-  <v-row>
+  <v-row v-if="items.length > 1 || show_if_single_entry">
     <v-select
       :items="items"
       v-model="selected"
@@ -44,7 +44,7 @@
 
 <script>
 module.exports = {
-  props: ['items', 'selected', 'label', 'has_subregions', 'has_subregions_warning', 'hint', 'rules']
+  props: ['items', 'selected', 'label', 'has_subregions', 'has_subregions_warning', 'hint', 'rules', 'show_if_single_entry']
 };
 </script>
 

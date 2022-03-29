@@ -3,17 +3,17 @@ import numpy as np
 
 import astropy.units as u
 from astropy.wcs import WCSSUB_SPECTRAL
-from specutils import Spectrum1D, SpectralRegion
+from specutils import Spectrum1D
 from specutils.utils import QuantityModel
-from traitlets import Any, Bool, List, Unicode, observe
+from traitlets import Bool, List, Unicode, observe
 from glue.core.data import Data
-from glue.core.subset import Subset, RangeSubsetState, OrState, AndState
 from glue.core.link_helpers import LinkSame
-from glue.core.message import SubsetDeleteMessage, SubsetUpdateMessage
 
-from jdaviz.core.events import AddDataMessage, RemoveDataMessage, SnackbarMessage
+from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin, SpectralSubsetSelectMixin
+from jdaviz.core.template_mixin import (PluginTemplateMixin,
+                                        SpectralSubsetSelectMixin,
+                                        DatasetSelectMixin)
 from jdaviz.core.custom_traitlets import IntHandleEmpty
 from jdaviz.configs.default.plugins.model_fitting.fitting_backend import fit_model_to_spectrum
 from jdaviz.configs.default.plugins.model_fitting.initializers import (MODELS,
@@ -32,18 +32,10 @@ class _EmptyParam:
 
 
 @tray_registry('g-model-fitting', label="Model Fitting")
-class ModelFitting(PluginTemplateMixin, SpectralSubsetSelectMixin):
+class ModelFitting(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin):
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "model_fitting.vue"
-    dc_items = List([]).tag(sync=True)
-    form_valid_data_selection = Bool(False).tag(sync=True)
     form_valid_model_component = Bool(False).tag(sync=True)
-
-    selected_data = Unicode("").tag(sync=True)
-
-    spectral_min = Any().tag(sync=True)
-    spectral_max = Any().tag(sync=True)
-    spectral_unit = Unicode().tag(sync=True)
 
     model_label = Unicode().tag(sync=True)
     cube_fit = Bool(False).tag(sync=True)
@@ -84,44 +76,10 @@ class ModelFitting(PluginTemplateMixin, SpectralSubsetSelectMixin):
         if self.app.state.settings.get("configuration") == "cubeviz":
             self.cube_fit = True
 
-        self.hub.subscribe(self, AddDataMessage,
-                           handler=self._on_viewer_data_changed)
-        self.hub.subscribe(self, RemoveDataMessage,
-                           handler=self._on_viewer_data_changed)
-        self.hub.subscribe(self, SubsetUpdateMessage,
-                           handler=self._on_viewer_data_changed)
-        self.hub.subscribe(self, SubsetDeleteMessage,
-                           handler=self._on_viewer_data_changed)
-
-    def _on_viewer_data_changed(self, msg=None):
-        """
-        Callback method for when data is added or removed from a viewer, or
-        when a subset is created, deleted, or updated. This method receives
-        a glue message containing viewer information in the case of the former
-        set of events, and updates the available data list displayed to the
-        user.
-
-        Notes
-        -----
-        We do not attempt to parse any data at this point, at it can cause
-        visible lag in the application.
-
-        Parameters
-        ----------
-        msg : `glue.core.Message`
-            The glue message passed to this callback method.
-        """
-        self._viewer_id = self.app._viewer_item_by_reference(
-            'spectrum-viewer').get('id')
-
-        viewer = self.app.get_viewer('spectrum-viewer')
-
-        self.dc_items = [layer_state.layer.label
-                         for layer_state in viewer.state.layers
-                         if ((not isinstance(layer_state.layer, Subset)
-                              or not isinstance(layer_state.layer.subset_state,
-                                                (RangeSubsetState, OrState, AndState)))
-                             and layer_state.layer.label not in self.app.fitted_models.keys())]
+        # when accessing the selected data, access the spectrum-viewer version
+        self.dataset._viewer_refs = ['spectrum-viewer']
+        # require entries to be in spectrum-viewer (not other cubeviz images, etc)
+        self.dataset.add_filter('layer_in_spectrum_viewer')
 
     def _param_units(self, param, model_type=None):
         """Helper function to handle units that depend on x and y"""
@@ -231,8 +189,8 @@ class ModelFitting(PluginTemplateMixin, SpectralSubsetSelectMixin):
         else:
             return False
 
-    @observe("selected_data")
-    def _selected_data_changed(self, event):
+    @observe("dataset_selected")
+    def _dataset_selected_changed(self, event=None):
         """
         Callback method for when the user has selected data from the drop down
         in the front-end. It is here that we actually parse and create a new
@@ -246,8 +204,10 @@ class ModelFitting(PluginTemplateMixin, SpectralSubsetSelectMixin):
             IPyWidget callback event object. In this case, represents the data
             label of the data collection object selected by the user.
         """
-        selected_spec = self.app.get_data_from_viewer("spectrum-viewer",
-                                                      data_label=event['new'])
+        selected_spec = self.dataset.selected_obj
+        if selected_spec is None:
+            return
+
         # Replace NaNs from collapsed Spectrum1D in Cubeviz
         # (won't affect calculations because these locations are masked)
         selected_spec.flux[np.isnan(selected_spec.flux)] = 0.0
@@ -255,11 +215,10 @@ class ModelFitting(PluginTemplateMixin, SpectralSubsetSelectMixin):
         # Save original mask so we can reset after applying a subset mask
         self._original_mask = selected_spec.mask
 
-        if self._units == {}:
-            self._units["x"] = str(
-                selected_spec.spectral_axis.unit)
-            self._units["y"] = str(
-                selected_spec.flux.unit)
+        self._units["x"] = str(
+            selected_spec.spectral_axis.unit)
+        self._units["y"] = str(
+            selected_spec.flux.unit)
 
         self._spectrum1d = selected_spec
 
@@ -267,30 +226,16 @@ class ModelFitting(PluginTemplateMixin, SpectralSubsetSelectMixin):
         # This is no longer needed for 1D but is preserved for now pending
         # fixes to Cubeviz for multi-subregion subsets
         self._window = None
-        self.spectral_min = selected_spec.spectral_axis[0].value
-        self.spectral_max = selected_spec.spectral_axis[-1].value
-        self.spectral_unit = str(selected_spec.spectral_axis.unit)
 
     @observe("spectral_subset_selected")
     def _on_spectral_subset_selected(self, event):
-        # If "Entire Spectrum" selected, reset based on bounds of selected data
-        if self._spectrum1d is None:
-            # TODO: this should be removed as soon as the data dropdown component is
-            # created and defaults at init
-            return
+        # TODO: does this window not account for gaps?  Should we add the warning?
+        # or can this be removed (see note above in _dataset_selected_changed)
         if self.spectral_subset_selected == "Entire Spectrum":
             self._window = None
-            self.spectral_min = self._spectrum1d.spectral_axis[0].value
-            self.spectral_max = self._spectrum1d.spectral_axis[-1].value
         else:
-            spec_sub = self.spectral_subset.selected_obj
-            unit = u.Unit(self.spectral_unit)
-            if hasattr(spec_sub, "center"):
-                spreg = SpectralRegion.from_center(spec_sub.center.x * unit,
-                                                   spec_sub.width * unit)
-                self._window = (spreg.lower, spreg.upper)
-                self.spectral_min = spreg.lower.value
-                self.spectral_max = spreg.upper.value
+            spectral_min, spectral_max = self.spectral_subset.selected_min_max(self._spectrum1d)
+            self._window = (spectral_min.value, spectral_max.value)
 
     def vue_model_selected(self, event):
         # Add the model selected to the list of models
@@ -327,6 +272,9 @@ class ModelFitting(PluginTemplateMixin, SpectralSubsetSelectMixin):
 
     def vue_add_model(self, event):
         """Add the selected model and input string ID to the list of models"""
+        if not self._spectrum1d:
+            self._dataset_selected_changed()
+
         # validate provided label (only allow "word characters").   These should already be
         # stripped by JS in the UI element, but we'll confirm here (especially if this is ever
         # extended to have better API-support)
@@ -526,7 +474,9 @@ class ModelFitting(PluginTemplateMixin, SpectralSubsetSelectMixin):
         output_cube.get_component('flux').units = \
             fitted_spectrum.flux.unit.to_string()
 
-        # Add to data collection
+        # Add to data collection, tracking that it came from this plugin to be filtered out
+        # from dataset-select dropdowns
+        output_cube.meta['Plugin'] = 'model-fitting'
         self.app.add_data(output_cube, label)
         if self.selected_viewer != 'None':
             # replace the contents in the selected viewer with the results from this plugin
@@ -565,6 +515,9 @@ class ModelFitting(PluginTemplateMixin, SpectralSubsetSelectMixin):
             # Remove the actual Glue data object from the data_collection
             self.data_collection.remove(self.data_collection[label])
 
+        # Add to data collection, tracking that it came from this plugin to be filtered out
+        # from dataset-select dropdowns
+        spectrum.meta['Plugin'] = 'model-fitting'
         self.app.add_data(spectrum, label)
 
         # Link the result spectrum to the reference data of the spectrum viewer

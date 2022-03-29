@@ -4,15 +4,13 @@
       <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#moment-maps'">Create a 2D image from a data cube</j-docs-link>
     </v-row>
 
-    <v-row>
-      <v-select
-        :items="dc_items"
-        v-model="selected_data"
-        label="Data"
-        hint="Select the data set."
-        persistent-hint
-      ></v-select>
-    </v-row>
+    <plugin-dataset-select
+      :items="dataset_items"
+      :selected.sync="dataset_selected"
+      :show_if_single_entry="false"
+      label="Data"
+      hint="Select the data set."
+    />
 
     <plugin-subset-select 
       :items="spectral_subset_items"
@@ -36,8 +34,9 @@
     <v-row>
       <v-text-field
         ref="n_moment"
+        type="number"
         label="Moment"
-        v-model="n_moment"
+        v-model.number="n_moment"
         hint="The desired moment."
         persistent-hint
         :rules="[() => !!n_moment || 'This field is required']"
