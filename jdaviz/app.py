@@ -77,6 +77,10 @@ ipyvue.register_component_from_file(None, 'plugin-subset-select',
                                     os.path.join(os.path.dirname(__file__),
                                                  'components/plugin_subset_select.vue'))
 
+ipyvue.register_component_from_file(None, 'plugin-viewer-select',
+                                    os.path.join(os.path.dirname(__file__),
+                                                 'components/plugin_viewer_select.vue'))
+
 # Register pure vue component. This allows us to do recursive component instantiation only in the
 # vue component file
 ipyvue.register_component_from_file('g-viewer-tab', "container.vue", __file__)

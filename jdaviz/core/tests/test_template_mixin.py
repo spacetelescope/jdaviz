@@ -1,3 +1,5 @@
+import pytest
+
 from glue.core.roi import XRangeROI
 
 
@@ -33,3 +35,28 @@ def test_spectralsubsetselect(specviz_helper, spectrum1d):
     assert p.spectral_subset.selected_obj is None
     p.spectral_subset_selected = 'Subset 1'
     assert p.spectral_subset.selected_obj is not None
+
+
+@pytest.mark.filterwarnings('ignore:No observer defined on WCS')
+def test_viewer_select(cubeviz_helper, spectrum1d_cube):
+    app = cubeviz_helper.app
+    app.add_data(spectrum1d_cube, 'test')
+    app.add_data_to_viewer("spectrum-viewer", "test")
+    app.add_data_to_viewer("flux-viewer", "test")
+    fv = app.get_viewer("flux-viewer")
+    sv = app.get_viewer("spectrum-viewer")
+
+    # export plot uses the mixin
+    p = app.get_tray_item_from_name('g-export-plot')
+    assert len(p.viewer.ids) == 4
+    assert len(p.viewer.references) == 4
+    assert len(p.viewer.ref_or_ids) == 4
+    assert p.viewer.selected_obj == fv
+
+    # set by reference
+    p.viewer_selected = 'spectrum-viewer'
+    assert p.viewer.selected_obj == sv
+
+    # try setting based on id instead of reference
+    p.viewer_selected = p.viewer.ids[0]
+    assert p.viewer_selected == p.viewer.ref_or_ids[0]

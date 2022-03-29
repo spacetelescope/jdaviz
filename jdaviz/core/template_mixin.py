@@ -9,10 +9,12 @@ from glue.core.subset import RoiSubsetState
 from traitlets import Bool, List, Unicode
 
 from jdaviz import __version__
+from jdaviz.core.events import ViewerAddedMessage, ViewerRemovedMessage
 
 __all__ = ['TemplateMixin', 'PluginTemplateMixin',
            'BasePluginComponent',
-           'SubsetSelect', 'SpatialSubsetSelectMixin', 'SpectralSubsetSelectMixin']
+           'SubsetSelect', 'SpatialSubsetSelectMixin', 'SpectralSubsetSelectMixin',
+           'ViewerSelect', 'ViewerSelectMixin']
 
 
 class TemplateMixin(VuetifyTemplate, HubListener):
@@ -436,3 +438,160 @@ class SpatialSubsetSelectMixin(VuetifyTemplate, HubListener):
                                            'spatial_subset_selected_has_subregions',
                                            default_text='No Subset',
                                            allowed_type='spatial')
+
+
+class ViewerSelect(BasePluginComponent):
+    """
+    Traitlets (in the object, custom traitlets in the plugin):
+
+    * ``items`` (list of dicts with keys: id, reference, ref_or_id)
+    * ``selected`` (string)
+
+    Properties (in the object only):
+
+    * ``ids`` (list of ids corresponding to ``items``)
+    * ``references`` (list of references corresponding to ``items``)
+    * ``ref_or_ids`` (list of references falling back on ids corresponding to ``items``.  These
+        are the values seen in the dropdown, although setting either id or reference to the traitlet
+        will still process correctly)
+    * ``selected_item`` (dict of the currently selected entry in ``items``)
+    * ``selected_id`` (string corresponding to the id of ``selected_item``)
+    * ``selected_obj`` (viewer item corresponding to ``selected``)
+
+    To use in a plugin:
+
+    * create traitlets with default values
+    * register with all the automatic logic in the plugin's init by passing the string names
+      of the respective traitlets
+    * use component in plugin template (see below)
+    * refer to properties above based on the interally stored reference to the
+      instantiated object of this component
+
+    Example template (label and hint are optional)::
+
+      <plugin-viewer-select
+        :items="viewer_items"
+        :selected.sync="viewer_selected"
+        label="Viewer"
+        hint="Select viewer."
+      />
+
+    """
+    def __init__(self, plugin, items, selected):
+        super().__init__(plugin, items=items, selected=selected)
+
+        self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewers_changed)
+        self.hub.subscribe(self, ViewerRemovedMessage, handler=self._on_viewers_changed)
+        self.add_observe(selected, self._selected_changed)
+
+        # initialize viewer_items from original viewers
+        self._on_viewers_changed()
+
+    @property
+    def ids(self):
+        return [item['id'] for item in self.items]
+
+    @property
+    def references(self):
+        return [item['reference'] for item in self.items]
+
+    @property
+    def ref_or_ids(self):
+        return [item['ref_or_id'] for item in self.items]
+
+    @property
+    def selected_item(self):
+        for item in self.items:
+            if item['ref_or_id'] == self.selected:
+                return item
+        # try again but this time allow match to id alone.  Note that _selected_changed
+        # will handle resetting the trait to the reference since it exists, but this
+        # will allow access to the underlying item/object for any observes in the meantime.
+        for item in self.items:
+            if item['id'] == self.selected:
+                return item
+
+    @property
+    def selected_id(self):
+        return self.selected_item['id']
+
+    @property
+    def selected_obj(self):
+        return self.app.get_viewer_by_id(self.selected_id)
+
+    def _selected_changed(self, event):
+        if event['new'] not in self.ref_or_ids:
+            if self.selected in self.ids:
+                # provided id in place of ref
+                self.selected = self.ref_or_ids[self.ids.index(self.selected)]
+            else:
+                self._handle_default()
+                raise ValueError(f"{event['new']} not one of {self.ref_or_ids}")
+
+    def _handle_default(self):
+        if self.selected not in self.ref_or_ids:
+            # default to first entry, will trigger any observer on selected
+            self.selected = self.ref_or_ids[0] if len(self.items) else ""
+
+    def _on_viewers_changed(self, msg=None):
+        # NOTE: _on_viewers_changed is passed without a msg object during init
+        # list of dictionaries with id, ref, ref_or_id
+        def _dict_from_viewer(viewer_item):
+            d = {'id': viewer_item['id']}
+            if viewer_item.get('reference') is not None:
+                d['reference'] = viewer_item['reference']
+                d['ref_or_id'] = viewer_item['reference']
+            else:
+                d['reference'] = None
+                d['ref_or_id'] = viewer_item['id']
+            return d
+
+        self.items = [_dict_from_viewer(self.app._viewer_item_by_id(vid))
+                      for vid, viewer in self.app._viewer_store.items()
+                      if viewer.__class__.__name__ != 'MosvizTableViewer']
+        self._handle_default()
+
+
+class ViewerSelectMixin(VuetifyTemplate, HubListener):
+    """
+    Applies the ViewerSelect component as a mixin in the base plugin.  This
+    automatically adds traitlets as well as new properties to the plugin with minimal
+    extra code.  For multiple instances or custom traitlet names/defaults, use the
+    SpectralSubsetSelect component instead.
+
+    Traitlets (available from the plugin):
+
+    * ``viewer_items``
+    * ``viewer_selected``
+
+    Properties (available from the plugin):
+
+    * ``viewer.ids``
+    * ``viewer.references``
+    * ``viewer.ref_or_ids``
+    * ``viewer.selected_item``
+    * ``viewer.selected_id``
+    * ``viewer.selected_obj``
+
+    To use in a plugin:
+
+    * add ``ViewerSelectMixin`` as a mixin to the class
+    * use the traitlets and properties above as needed (note the prefix for properties)
+
+    Example template (label and hint are optional)::
+
+        <v-row>
+          <plugin-viewer-select
+            :items="viewer_items"
+            :selected.sync="viewer_selected"
+            label="Viewer"
+            hint="Select viewer."
+          />
+        </v-row>
+    """
+    viewer_items = List().tag(sync=True)
+    viewer_selected = Unicode().tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.viewer = ViewerSelect(self, 'viewer_items', 'viewer_selected')
