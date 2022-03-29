@@ -197,7 +197,7 @@ You can create a clean checkout as follows (requires
 #. Check `RTD builds <https://readthedocs.org/projects/jdaviz/builds/>`_ to make sure
    that documentation built successfully for both ``latest`` and the new ``vX.Y.Z`` tag.
 
-#. Check `Zenodo page for Jdaviz <https://zenodo.org/badge/latestdoi/185452341>`_.
+#. Check `Zenodo page for Jdaviz <https://doi.org/10.5281/zenodo.5513927>`_.
    It should have picked up the GitHub Release automatically.
 
 #. Follow procedures for :ref:`release-milestones`.
@@ -254,7 +254,7 @@ You can do a release from your fork directly without a clean code check-out.
 #. Check `RTD builds <https://readthedocs.org/projects/jdaviz/builds/>`_ to make sure
    that documentation built successfully for both ``latest`` and the new ``vX.Y.Z`` tag.
 
-#. Check `Zenodo page for Jdaviz <https://zenodo.org/badge/latestdoi/185452341>`_.
+#. Check `Zenodo page for Jdaviz <https://doi.org/10.5281/zenodo.5513927>`_.
    It should have picked up the GitHub Release automatically.
 
 #. The release is basically done, but now you have to set it up for the
