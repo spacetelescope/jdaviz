@@ -1,6 +1,7 @@
 from traitlets import Any, observe, Bool
 from ipywidgets.widgets import widget_serialization
 
+from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin, ViewerSelectMixin
@@ -15,7 +16,9 @@ class PlotOptions(TemplateMixin, ViewerSelectMixin):
     viewer_widget = Any().tag(sync=True, **widget_serialization)
     layer_widget = Any().tag(sync=True, **widget_serialization)
 
-    # Toggle for showing uncertainty in viewer
+    # Whether the currently selected viewer has the ability to toggle uncertainty
+    has_show_uncertainty = Bool(False).tag(sync=True)
+    # Toggle for showing uncertainty in the currently selected viewer
     show_uncertainty = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
@@ -39,24 +42,20 @@ class PlotOptions(TemplateMixin, ViewerSelectMixin):
             return
 
         viewer = self.viewer.selected_obj
+        self.has_show_uncertainty = isinstance(viewer, SpecvizProfileView)
+        if self.has_show_uncertainty:
+            # TODO: refactor so that an API call to viewer.show_uncertainties, which would
+            # set viewer.display_uncertainties would then update the widget state.
+            self.show_uncertainty = viewer.display_uncertainties
         self.viewer_widget = viewer.viewer_options
         self.layer_widget = viewer.layer_options
 
     @observe("show_uncertainty")
     def _toggle_uncertainty(self, event):
-        if self.app.state.settings.get("configuration") == "cubeviz":
-            viewer = "cubeviz-3"
-        elif self.app.state.settings.get("configuration") == "specviz":
-            viewer = "specviz-0"
-        elif self.app.state.settings.get("configuration") == "specviz2d":
-            viewer = "specviz2d-1"
-        elif self.app.state.settings.get("configuration") == "mosviz":
-            viewer = "mosviz-2"
-        else:
+        if not self.has_show_uncertainty:
+            # the currently selected viewer does not support uncertainties
             return
-        spec_viewer = self.app.get_viewer_by_id(viewer)
-
         if self.show_uncertainty:
-            spec_viewer.show_uncertainties()
+            self.viewer.selected_obj.show_uncertainties()
         else:
-            spec_viewer._clean_error()
+            self.viewer.selected_obj._clean_error()
