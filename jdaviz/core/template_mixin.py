@@ -9,7 +9,7 @@ from glue.core.subset import RoiSubsetState
 from traitlets import Bool, List, Unicode
 
 from jdaviz import __version__
-from jdaviz.core.events import (ViewerAddedMessage, ViewerRemovedMessage)
+from jdaviz.core.events import ViewerAddedMessage, ViewerRemovedMessage
 
 __all__ = ['TemplateMixin', 'PluginTemplateMixin',
            'BasePluginComponent',
@@ -458,12 +458,11 @@ class ViewerSelect(BasePluginComponent):
     * ``selected_id`` (string corresponding to the id of ``selected_item``)
     * ``selected_obj`` (viewer item corresponding to ``selected``)
 
-
     To use in a plugin:
 
     * create traitlets with default values
     * register with all the automatic logic in the plugin's init by passing the string names
-      of the respective traitlets.
+      of the respective traitlets
     * use component in plugin template (see below)
     * refer to properties above based on the interally stored reference to the
       instantiated object of this component
@@ -479,14 +478,10 @@ class ViewerSelect(BasePluginComponent):
 
     """
     def __init__(self, plugin, items, selected):
-        super().__init__(plugin,
-                         items=items,
-                         selected=selected)
+        super().__init__(plugin, items=items, selected=selected)
 
-        self.hub.subscribe(self, ViewerAddedMessage,
-                           handler=lambda _: self._on_viewers_changed())
-        self.hub.subscribe(self, ViewerRemovedMessage,
-                           handler=lambda _: self._on_viewers_changed())
+        self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewers_changed)
+        self.hub.subscribe(self, ViewerRemovedMessage, handler=self._on_viewers_changed)
         self.add_observe(selected, self._selected_changed)
 
         # initialize viewer_items from original viewers
@@ -538,7 +533,8 @@ class ViewerSelect(BasePluginComponent):
             # default to first entry, will trigger any observer on selected
             self.selected = self.ref_or_ids[0] if len(self.items) else ""
 
-    def _on_viewers_changed(self):
+    def _on_viewers_changed(self, msg=None):
+        # NOTE: _on_viewers_changed is passed without a msg object during init
         # list of dictionaries with id, ref, ref_or_id
         def _dict_from_viewer(viewer_item):
             d = {'id': viewer_item['id']}
@@ -597,6 +593,4 @@ class ViewerSelectMixin(VuetifyTemplate, HubListener):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.viewer = ViewerSelect(self,
-                                   'viewer_items',
-                                   'viewer_selected')
+        self.viewer = ViewerSelect(self, 'viewer_items', 'viewer_selected')
