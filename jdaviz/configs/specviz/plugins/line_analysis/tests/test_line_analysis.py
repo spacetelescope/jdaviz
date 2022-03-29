@@ -38,6 +38,11 @@ def test_plugin(specviz_helper, spectrum1d):
     plugin.selected_continuum = 'Surrounding'
     plugin.width = 3
 
+    for result_dict in plugin.results:
+        if result_dict in ['Line Flux']:
+            # should have an assigned uncertainty (with min required version of specutils)
+            assert len(result_dict.get('uncertainty')) > 0
+
 
 def test_line_identify(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
