@@ -37,13 +37,13 @@
       </v-row>
 
       <v-row v-if="selected_data && stddev > 0">
-        <v-select v-if="config=='cubeviz'"
+        <v-select v-if="selected_mode == 'Spatial'"
           :items="viewers"
           v-model="selected_viewer"
           label='Plot in Viewer'
           hint='Smoothed data will replace plot in the specified viewer.  Will also be available in the data dropdown in all image viewers.'
           persistent-hint></v-select>
-        <v-switch v-if="selected_mode !== 'Spatial'"
+        <v-switch v-if="selected_mode == 'Spectral'"
           label="Plot in Viewer"
           hint="Smoothed data will immediately plot in the spectral viewer.  Will also be available in the data menu of each viewer."
           v-model="add_replace_results"

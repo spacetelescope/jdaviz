@@ -63,6 +63,7 @@ Cubeviz
 - Fixed an error trace when fitting a model to a spatial subset. [#1176]
 - Fixed the model fitting plugin data dropdown not populating with spatial
   subsets properly. [#1176]
+- Fixed visibility of switch and dropdown options in gaussian smooth plugin. [#1216]
 
 Imviz
 ^^^^^
