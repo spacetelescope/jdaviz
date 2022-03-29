@@ -1,4 +1,4 @@
-2.4 (unreleased)
+2.4 (2022-03-29)
 ================
 
 New Features
@@ -10,9 +10,6 @@ New Features
 - New ``jdaviz.core.region_translators`` module to provide certain translations
   from ``regions`` shapes to ``photutils`` apertures, and vice versa. [#1138]
 
-Cubeviz
-^^^^^^^
-
 Imviz
 ^^^^^
 
@@ -23,9 +20,6 @@ Imviz
 - Simple aperture photometry plugin now uses ``photutils`` to for all calculation.
   Additional photometry results are also added, such as centroid and FWHM. [#1138]
 
-Mosviz
-^^^^^^
-
 Specviz
 ^^^^^^^
 
@@ -34,20 +28,11 @@ Specviz
 API Changes
 -----------
 
-Cubeviz
-^^^^^^^
-
 Imviz
 ^^^^^
 
 - ``viewer.marker`` dictionary now accepts ``fill`` as an option, settable to
   ``True`` (default) or ``False``; the latter draws unfilled circle. [#1101]
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
 
 Bug Fixes
 ---------
@@ -75,12 +60,6 @@ Imviz
 
 - Fixed the subsequent dataset not showing after blinking if the dataset
   being shown is removed from viewer. [#1164]
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
 
 Other Changes and Additions
 ---------------------------
