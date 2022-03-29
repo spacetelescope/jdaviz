@@ -547,7 +547,8 @@ class ViewerSelect(BasePluginComponent):
             return d
 
         self.items = [_dict_from_viewer(self.app._viewer_item_by_id(vid))
-                      for vid in self.app._viewer_store]
+                      for vid, viewer in self.app._viewer_store.items()
+                      if viewer.__class__.__name__ != 'MosvizTableViewer']
         self._handle_default()
 
 
