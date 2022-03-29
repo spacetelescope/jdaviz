@@ -1,7 +1,7 @@
 .. image:: docs/logos/jdaviz_1.svg
 
-.. image:: https://zenodo.org/badge/185452341.svg
-   :target: https://zenodo.org/badge/latestdoi/185452341
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.5513927.svg
+   :target: https://doi.org/10.5281/zenodo.5513927
    :alt: Zenodo DOI
 
 .. image:: https://github.com/spacetelescope/jdaviz/workflows/CI/badge.svg
