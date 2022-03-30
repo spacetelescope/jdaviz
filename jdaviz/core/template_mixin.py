@@ -168,7 +168,7 @@ class SubsetSelect(BasePluginComponent):
 
     """
     def __init__(self, plugin, items, selected, selected_has_subregions=None,
-                 viewer_refs=None, default_text=None, allowed_type=None):
+                 viewer_refs=None, default_text=None, manual_options=[], allowed_type=None):
         """
         Parameters
         ----------
@@ -186,6 +186,10 @@ class SubsetSelect(BasePluginComponent):
         default_text : str or None
             the text to show for no selection.  If not provided or None, no entry will be provided
             in the dropdown for no selection.
+        manual_options: list
+            list of options to provide that are not automatically populated by subsets.  If
+            ``default`` text is provided but not in ``manual_options`` it will still be included as
+            the first item in the list.
         allowed_type : str or None
             whether to filter to 'spatial' or 'spectral' types of subsets.  If not provided or None,
             will include both entries.
@@ -201,9 +205,13 @@ class SubsetSelect(BasePluginComponent):
             raise ValueError("allowed_type must be None, 'spatial', or 'spectral'")
         self._allowed_type = allowed_type
 
+        if default_text is not None and default_text not in manual_options:
+            manual_options = [default_text] + manual_options
+        self._manual_options = manual_options
+
+        self.items = [{"label": opt} for opt in manual_options]
         # set default values for traitlets
         if default_text is not None:
-            self.items = [{"label": default_text}]
             self.selected = default_text
         if selected_has_subregions is not None:
             self.selected_has_subregions = False
@@ -217,6 +225,11 @@ class SubsetSelect(BasePluginComponent):
         # intialize any subsets that have already been created
         for lyr in self.app.data_collection.subset_groups:
             self._update_subset(lyr)
+
+    @property
+    def manual_options(self):
+        # read-only access to manual options (cannot change after init)
+        return self._manual_options
 
     @property
     def viewer_refs(self):
@@ -295,7 +308,7 @@ class SubsetSelect(BasePluginComponent):
 
     def _update_has_subregions(self):
         if "selected_has_subregions" in self._plugin_traitlets.keys():
-            if self.selected == self._default_text:
+            if self.selected in self._manual_options:
                 self.selected_has_subregions = False
             else:
                 self.selected_has_subregions = len(self.selected_obj.subregions) > 1
@@ -313,7 +326,7 @@ class SubsetSelect(BasePluginComponent):
 
     @cached_property
     def selected_obj(self):
-        if self.selected == self._default_text:
+        if self.selected in self._manual_options:
             return None
         subset_type = self.selected_item['type']
         # NOTE: we use reference names here instead of IDs since get_subsets_from_viewer requires
@@ -326,7 +339,7 @@ class SubsetSelect(BasePluginComponent):
                 return match
 
     def selected_min(self, spectrum1d):
-        if self.selected == self._default_text:
+        if self.selected in self._manual_options:
             return np.nanmin(spectrum1d.spectral_axis.value)
         if self.selected_item.get('type') != 'spectral':
             raise TypeError("This action is only supported on spectral-type subsets")
@@ -334,7 +347,7 @@ class SubsetSelect(BasePluginComponent):
             return self.selected_obj.lower.value
 
     def selected_max(self, spectrum1d):
-        if self.selected == self._default_text:
+        if self.selected in self._manual_options:
             return np.nanmax(spectrum1d.spectral_axis.value)
         if self.selected_item.get('type') != 'spectral':
             raise TypeError("This action is only supported on spectral-type subsets")
