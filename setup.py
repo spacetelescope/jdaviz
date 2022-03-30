@@ -5,6 +5,7 @@
 # other information are set in the setup.cfg file.
 
 import os
+import shutil
 import sys
 
 from setuptools import setup
@@ -115,8 +116,8 @@ def user_dir():
 
 class DevelopCmd(develop):
     prefix_targets = [
-        ("nbconvert/templates", 'jdaviz-default'),
-        ("voila/templates", 'jdaviz-default')
+        (os.path.join("nbconvert", "templates"), 'jdaviz-default'),
+        (os.path.join("voila", "templates"), 'jdaviz-default')
     ]
 
     def run(self):
@@ -124,6 +125,7 @@ class DevelopCmd(develop):
         if '--user' in sys.prefix:  # TODO: is there a better way to find out?
             target_dir = user_dir()
         target_dir = os.path.join(target_dir)
+        is_win = sys.platform.startswith('win')
 
         for prefix_target, name in self.prefix_targets:
             source = os.path.join('share', 'jupyter', prefix_target, name)
@@ -131,14 +133,23 @@ class DevelopCmd(develop):
             target_subdir = os.path.dirname(target)
             if not os.path.exists(target_subdir):
                 os.makedirs(target_subdir)
-            rel_source = os.path.relpath(os.path.abspath(
-                source), os.path.abspath(target_subdir))
+            if not is_win:
+                rel_source = os.path.relpath(os.path.abspath(
+                    source), os.path.abspath(target_subdir))
+            else:  # relpath does not work if source/target on different Windows disks
+                rel_source = os.path.abspath(source)
             try:
-                os.remove(target)
+                if not is_win:
+                    os.remove(target)
+                else:
+                    shutil.rmtree(target)
             except Exception:
                 pass
             print(rel_source, '->', target)
-            os.symlink(rel_source, target)
+            if not is_win:
+                os.symlink(rel_source, target)
+            else:  # Cannot symlink without relpath or Windows admin priv in some OS versions
+                shutil.copytree(rel_source, target)
 
         super(DevelopCmd, self).run()
 
