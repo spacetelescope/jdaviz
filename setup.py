@@ -130,13 +130,13 @@ class DevelopCmd(develop):
             rel_source = source.resolve(strict=True)
             print(rel_source, '->', target)
 
+            # Beware: https://docs.python.org/3/library/shutil.html#shutil.rmtree.avoids_symlink_attacks  # noqa
+            shutil.rmtree(target, ignore_errors=True)
+
             if not is_win:
-                rel_source = rel_source.relative_to(target_subdir.resolve(strict=True))
                 target.unlink()
-                target.symlink_to(rel_source)
+                target.symlink_to(rel_source, target_is_directory=True)
             else:  # Cannot symlink without relpath or Windows admin priv in some OS versions
-                # Beware: https://docs.python.org/3/library/shutil.html#shutil.rmtree.avoids_symlink_attacks  # noqa
-                shutil.rmtree(target, ignore_errors=True)
                 shutil.copytree(rel_source, target)
 
         super(DevelopCmd, self).run()
@@ -148,10 +148,10 @@ data_files = []
 # Add all the templates
 for (dirpath, dirnames, filenames) in os.walk('share/jupyter/'):
     if filenames:
-        data_files.append((dirpath, [Path(dirpath, filename)
+        data_files.append((dirpath, [os.path.join(dirpath, filename)
                                      for filename in filenames]))
 
 
 setup(data_files=data_files, cmdclass={'develop': DevelopCmd},
-      use_scm_version={'write_to': Path('jdaviz', 'version.py'),
+      use_scm_version={'write_to': os.path.join('jdaviz', 'version.py'),
                        'write_to_template': VERSION_TEMPLATE})
