@@ -7,6 +7,8 @@ from astropy.time import Time
 from bqplot import pyplot as bqplt
 from ipywidgets import widget_serialization
 from photutils.aperture import ApertureStats
+from regions import (CircleAnnulusPixelRegion, CirclePixelRegion, EllipsePixelRegion,
+                     RectanglePixelRegion)
 from traitlets import Any, Bool, List, Unicode, observe
 
 from jdaviz.core.events import SnackbarMessage
@@ -25,6 +27,8 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
     bg_subset_items = List().tag(sync=True)
     bg_subset_selected = Unicode("").tag(sync=True)
     background_value = Any(0).tag(sync=True)
+    bg_annulus_inner_r = Any(0).tag(sync=True)
+    bg_annulus_width = Any(10).tag(sync=True)
     pixel_area = Any(0).tag(sync=True)
     counts_factor = Any(0).tag(sync=True)
     flux_scaling = Any(0).tag(sync=True)
@@ -48,6 +52,7 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
                                       'bg_subset_items',
                                       'bg_subset_selected',
                                       default_text='Manual',
+                                      manual_options=['Manual', 'Annulus'],
                                       allowed_type='spatial')
 
         self._selected_data = None
@@ -108,11 +113,10 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
                 f"Failed to extract {self.dataset_selected}: {repr(e)}",
                 color='error', sender=self))
 
-        # Auto-populate background, if applicable
-        self._bg_subset_selected_changed()
-
-        # update self._selected_subset with the new self._selected_data
+        # Update self._selected_subset with the new self._selected_data
+        # and auto-populate background, if applicable.
         self._subset_selected_changed()
+        self._bg_subset_selected_changed()
 
     def _get_region_from_subset(self, subset):
         for subset_grp in self.app.data_collection.subset_groups:
@@ -135,11 +139,48 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
         try:
             self._selected_subset = self._get_region_from_subset(subset_selected)
             self._selected_subset.meta['label'] = subset_selected
+
+            if isinstance(self._selected_subset, CirclePixelRegion):
+                self.bg_annulus_inner_r = self._selected_subset.radius
+            elif isinstance(self._selected_subset, (EllipsePixelRegion, RectanglePixelRegion)):
+                self.bg_annulus_inner_r = max(self._selected_subset.width,
+                                              self._selected_subset.height) * 0.5
+            else:  # pragma: no cover
+                raise TypeError(f'Unsupported region shape: {self._selected_subset.__class__}')
+
         except Exception as e:
             self._selected_subset = None
             self.reset_results()
             self.hub.broadcast(SnackbarMessage(
                 f"Failed to extract {subset_selected}: {repr(e)}", color='error', sender=self))
+
+    def _calc_bg_subset_median(self, reg):
+        # Basically same way image stats are calculated in vue_do_aper_phot()
+        # except here we only care about one stat for the background.
+        data = self._selected_data
+        comp = data.get_component(data.main_components[0])
+        aper_mask_stat = reg.to_mask(mode='center')
+        img_stat = aper_mask_stat.get_values(comp.data, mask=None)
+
+        # photutils/background/_utils.py --> nanmedian()
+        return np.nanmedian(img_stat)  # Naturally in data unit
+
+    @observe('bg_annulus_inner_r', 'bg_annulus_width')
+    def _bg_annulus_updated(self, *args):
+        if self.bg_subset_selected != 'Annulus':
+            return
+
+        try:
+            inner_r = float(self.bg_annulus_inner_r)
+            reg = CircleAnnulusPixelRegion(
+                self._selected_subset.center, inner_radius=inner_r,
+                outer_radius=inner_r + float(self.bg_annulus_width))
+            self.background_value = self._calc_bg_subset_median(reg)
+
+        except Exception as e:
+            self.background_value = 0
+            self.hub.broadcast(SnackbarMessage(
+                f"Failed to extract annulus: {repr(e)}", color='error', sender=self))
 
     @observe('bg_subset_selected')
     def _bg_subset_selected_changed(self, event={}):
@@ -147,19 +188,13 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
         if bg_subset_selected == 'Manual':
             # we'll later access the user's self.background_value directly
             return
+        if bg_subset_selected == 'Annulus':
+            self._bg_annulus_updated()
+            return
 
         try:
-            # Basically same way image stats are calculated in vue_do_aper_phot()
-            # except here we only care about one stat for the background.
-            data = self._selected_data
             reg = self._get_region_from_subset(bg_subset_selected)
-            comp = data.get_component(data.main_components[0])
-            aper_mask_stat = reg.to_mask(mode='center')
-            img_stat = aper_mask_stat.get_values(comp.data, mask=None)
-
-            # photutils/background/_utils.py --> nanmedian()
-            self.background_value = np.nanmedian(img_stat)  # Naturally in data unit
-
+            self.background_value = self._calc_bg_subset_median(reg)
         except Exception as e:
             self.background_value = 0
             self.hub.broadcast(SnackbarMessage(

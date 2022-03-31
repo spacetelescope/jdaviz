@@ -33,6 +33,28 @@
           hint="Select subset region for background calculation."
         />
 
+        <v-row v-if="bg_subset_selected=='Annulus'">
+          <v-text-field
+            label="Annulus inner radius"
+            v-model="bg_annulus_inner_r"
+            :rules="[() => bg_annulus_inner_r>0 || 'Must be positive.']"
+            hint="Background annulus inner radius in pixels"
+            persistent-hint
+          >
+          </v-text-field>
+        </v-row>
+
+        <v-row v-if="bg_subset_selected=='Annulus'">
+          <v-text-field
+            label="Annulus width"
+            v-model="bg_annulus_width"
+            :rules="[() => bg_annulus_width>0 || 'Must be positive.']"
+            hint="Background annulus width in pixels"
+            persistent-hint
+          >
+          </v-text-field>
+        </v-row>
+
         <v-row>
           <v-text-field
             label="Background value"

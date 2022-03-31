@@ -43,7 +43,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         phot_plugin.current_plot_type = 'Radial Profile (Raw)'
         assert phot_plugin._selected_data is not None
         assert phot_plugin._selected_subset is not None
-        assert phot_plugin.bg_subset.labels == ['Manual', 'Subset 1']
+        assert phot_plugin.bg_subset.labels == ['Manual', 'Annulus', 'Subset 1']
         assert_allclose(phot_plugin.background_value, 0)
         assert_allclose(phot_plugin.counts_factor, 0)
         assert_allclose(phot_plugin.pixel_area, 0)
@@ -169,3 +169,67 @@ class TestSimpleAperPhot_NoWCS(BaseImviz_WCS_NoWCS):
         tbl = self.imviz.get_aperture_photometry_results()
         assert len(tbl) == 1  # Old table discarded due to incompatible column
         assert_array_equal(tbl['sky_centroid'], None)
+
+
+def test_annulus_background(imviz_helper):
+    from photutils.datasets import make_4gaussians_image
+
+    gauss4 = make_4gaussians_image()  # The background has a mean of 5 with noise
+    ones = np.ones(gauss4.shape)
+
+    imviz_helper.load_data(gauss4, data_label='four_gaussians')
+    imviz_helper.load_data(ones, data_label='ones')
+
+    phot_plugin = imviz_helper.app.get_tray_item_from_name('imviz-aper-phot-simple')
+    phot_plugin.data_selected = 'ones'
+
+    # Mark an object of interest
+    imviz_helper._apply_interactive_region('bqplot:circle', (143, 18), (157, 32))
+    phot_plugin.subset_selected = 'Subset 1'
+    phot_plugin.bg_subset_selected = 'Annulus'
+
+    # Check annulus for ones
+    assert_allclose(phot_plugin.bg_annulus_inner_r, 7)  # From circle
+    assert_allclose(phot_plugin.bg_annulus_width, 10)  # Default
+    assert_allclose(phot_plugin.background_value, 1)
+
+    # Switch data
+    phot_plugin.data_selected = 'four_gaussians'
+    assert_allclose(phot_plugin.bg_annulus_inner_r, 7)  # Unchanged
+    assert_allclose(phot_plugin.bg_annulus_width, 10)
+    assert_allclose(phot_plugin.background_value, 5.745596129482831)  # Changed
+
+    # Draw ellipse on another object
+    imviz_helper._apply_interactive_region('bqplot:ellipse', (0, 30), (41, 45))
+    phot_plugin.subset_selected = 'Subset 2'
+
+    # Check new annulus for four_gaussians
+    assert_allclose(phot_plugin.bg_annulus_inner_r, 20.5)  # From ellipse half-width
+    assert_allclose(phot_plugin.bg_annulus_width, 10)  # Unchanged
+    assert_allclose(phot_plugin.background_value, 5.13918435824334)  # Changed
+
+    # Switch to manual, should not change
+    phot_plugin.bg_subset_selected = 'Manual'
+    assert_allclose(phot_plugin.background_value, 5.13918435824334)
+
+    # Switch to Subset, should change a lot because this is not background area
+    phot_plugin.bg_subset_selected = 'Subset 1'
+    assert_allclose(phot_plugin.background_value, 44.72559981461203)
+
+    # Switch back to annulus, should be same as before in same mode
+    phot_plugin.bg_subset_selected = 'Annulus'
+    assert_allclose(phot_plugin.bg_annulus_inner_r, 20.5)
+    assert_allclose(phot_plugin.bg_annulus_width, 10)
+    assert_allclose(phot_plugin.background_value, 5.13918435824334)
+
+    # Manually change inner_r
+    phot_plugin.bg_annulus_inner_r = 40
+    assert_allclose(phot_plugin.background_value, 4.783765940615679)
+
+    # Manually change width
+    phot_plugin.bg_annulus_width = 5
+    assert_allclose(phot_plugin.background_value, 4.894003242594493)
+
+    # Bad annulus should not crash plugin
+    phot_plugin.bg_annulus_inner_r = -1
+    assert_allclose(phot_plugin.background_value, 0)

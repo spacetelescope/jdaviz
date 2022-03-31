@@ -10,6 +10,9 @@ Cubeviz
 Imviz
 ^^^^^
 
+- New way to estimate background from annulus around aperture
+  in Simple Aperture Photometry plugin. [#1224]
+
 Mosviz
 ^^^^^^
 
