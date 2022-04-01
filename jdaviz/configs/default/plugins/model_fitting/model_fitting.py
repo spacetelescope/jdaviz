@@ -204,6 +204,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             IPyWidget callback event object. In this case, represents the data
             label of the data collection object selected by the user.
         """
+        if not hasattr(self, 'dataset'):
+            # during initial init, this can trigger before the component is initialized
+            return
+
         selected_spec = self.dataset.selected_obj
         if selected_spec is None:
             return

@@ -92,7 +92,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin):
         msg : `glue.core.Message`
             The glue message passed to this callback method.
         """
-        if msg.subset.label in [self.spectral_subset_selected, self.continuum_selected]:
+        if (msg.subset.label in [self.spectral_subset_selected, self.continuum_selected]
+                and self.plugin_opened):
             self._calculate_statistics()
 
     @observe('plugin_opened')
@@ -169,12 +170,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin):
         # show spinner with overlay
         self.results_computing = True
 
-        if self.dataset_selected == "" or self.width == "":
-            self.update_results(None)
-            return
-
         full_spectrum = self.dataset.selected_obj
-        if full_spectrum is None:
+        if full_spectrum is None or self.width == "" or not self.plugin_opened:
             # this can happen DURING a unit conversion change
             self.update_results(None)
             return
@@ -295,7 +292,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin):
                 # TODO: update specutils to be consistent with region vs regions and default to
                 # regions=None so this elif can be removed
                 temp_result = FUNCTIONS[function](spec_subtracted, region=None)
-                self.results_centroid = temp_result.to_value(u.AA)
+                self.results_centroid = temp_result.to_value(u.AA, equivalencies=u.spectral())
             else:
                 temp_result = FUNCTIONS[function](spec_subtracted)
 

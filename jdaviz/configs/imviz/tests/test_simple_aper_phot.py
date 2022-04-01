@@ -14,27 +14,17 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
 
         phot_plugin = self.imviz.app.get_tray_item_from_name('imviz-aper-phot-simple')
 
-        # Populate plugin menu items.
-        phot_plugin._on_viewer_data_changed()
-
         # Make sure invalid Data/Subset selection does not crash plugin.
-        phot_plugin.data_selected = 'no_such_data'
-        assert phot_plugin._selected_data is None
+        with pytest.raises(ValueError):
+            phot_plugin.dataset_selected = 'no_such_data'
         with pytest.raises(ValueError):
             # will raise an error and revert to first entry
             phot_plugin.subset_selected = 'no_such_subset'
         assert phot_plugin.subset_selected == ''
         phot_plugin.subset_selected = phot_plugin.subset.labels[0]
         assert_allclose(phot_plugin.background_value, 0)
-        phot_plugin.vue_do_aper_phot()
-        assert not phot_plugin.result_available
-        assert len(phot_plugin.results) == 0
-        assert self.imviz.get_aperture_photometry_results() is None
-        assert not phot_plugin.plot_available
-        assert phot_plugin.radial_plot == ''
-        assert phot_plugin.current_plot_type == 'Radial Profile'  # Software default
 
-        phot_plugin.data_selected = 'has_wcs_1[SCI,1]'
+        phot_plugin.dataset_selected = 'has_wcs_1[SCI,1]'
         phot_plugin.subset_selected = phot_plugin.subset.labels[0]
         with pytest.raises(ValueError):
             phot_plugin.bg_subset_selected = 'no_such_subset'
@@ -42,24 +32,29 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert_allclose(phot_plugin.background_value, 0)
 
         # Perform photometry on both images using same Subset.
+        phot_plugin.dataset_selected = 'has_wcs_1[SCI,1]'
         phot_plugin.subset_selected = 'Subset 1'
+        assert phot_plugin._selected_data is not None
         phot_plugin.vue_do_aper_phot()
-        phot_plugin.data_selected = 'has_wcs_2[SCI,1]'
+        tbl = self.imviz.get_aperture_photometry_results()
+        assert len(tbl) == 1
+
+        phot_plugin.dataset_selected = 'has_wcs_2[SCI,1]'
         phot_plugin.current_plot_type = 'Radial Profile (Raw)'
         assert phot_plugin._selected_data is not None
         assert phot_plugin._selected_subset is not None
-        phot_plugin.vue_do_aper_phot()
         assert phot_plugin.bg_subset.labels == ['Manual', 'Subset 1']
         assert_allclose(phot_plugin.background_value, 0)
         assert_allclose(phot_plugin.counts_factor, 0)
         assert_allclose(phot_plugin.pixel_area, 0)
         assert_allclose(phot_plugin.flux_scaling, 0)
+        phot_plugin.vue_do_aper_phot()
+        tbl = self.imviz.get_aperture_photometry_results()
+        assert len(tbl) == 2
         assert phot_plugin.plot_available
         assert phot_plugin.radial_plot != ''  # Does not check content
 
         # Check photometry results.
-        tbl = self.imviz.get_aperture_photometry_results()
-        assert len(tbl) == 2
         assert tbl.colnames == [
             'id', 'xcentroid', 'ycentroid', 'sky_centroid', 'background', 'sum',
             'sum_aper_area', 'pixarea_tot', 'aperture_sum_counts', 'aperture_sum_counts_err',
@@ -107,8 +102,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
 
         # Make sure it also works on an ellipse subset.
         self.imviz._apply_interactive_region('bqplot:ellipse', (0, 0), (9, 4))
-        phot_plugin._on_viewer_data_changed()
-        phot_plugin.data_selected = 'has_wcs_1[SCI,1]'
+        phot_plugin.dataset_selected = 'has_wcs_1[SCI,1]'
         phot_plugin.subset_selected = 'Subset 2'
         phot_plugin.current_plot_type = 'Radial Profile'
         phot_plugin.vue_do_aper_phot()
@@ -129,8 +123,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         # Make sure it also works on a rectangle subset.
         # We also subtract off background from itself here.
         self.imviz._apply_interactive_region('bqplot:rectangle', (0, 0), (9, 9))
-        phot_plugin._on_viewer_data_changed()
-        phot_plugin.data_selected = 'has_wcs_1[SCI,1]'
+        phot_plugin.dataset_selected = 'has_wcs_1[SCI,1]'
         phot_plugin.subset_selected = 'Subset 3'
         phot_plugin.bg_subset_selected = 'Subset 3'
         assert_allclose(phot_plugin.background_value, 1)
@@ -155,8 +148,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         phot_plugin.bg_subset_selected = 'Subset 1'
         assert_allclose(phot_plugin.background_value, 1)
         self.imviz.load_data(np.ones((10, 10)) + 1, data_label='twos')
-        phot_plugin._on_viewer_data_changed()
-        phot_plugin.data_selected = 'twos'
+        phot_plugin.dataset_selected = 'twos'
         assert_allclose(phot_plugin.background_value, 2)  # Recalculate based on new Data
 
 
@@ -165,15 +157,14 @@ class TestSimpleAperPhot_NoWCS(BaseImviz_WCS_NoWCS):
         # Most things already tested above, so not re-tested here.
         self.imviz._apply_interactive_region('bqplot:circle', (0, 0), (9, 9))  # Draw a circle
         phot_plugin = self.imviz.app.get_tray_item_from_name('imviz-aper-phot-simple')
-        phot_plugin._on_viewer_data_changed()
 
-        phot_plugin.data_selected = 'has_wcs[SCI,1]'
+        phot_plugin.dataset_selected = 'has_wcs[SCI,1]'
         phot_plugin.subset_selected = 'Subset 1'
         phot_plugin.vue_do_aper_phot()
         tbl = self.imviz.get_aperture_photometry_results()
         assert len(tbl) == 1
 
-        phot_plugin.data_selected = 'no_wcs[SCI,1]'
+        phot_plugin.dataset_selected = 'no_wcs[SCI,1]'
         phot_plugin.vue_do_aper_phot()
         tbl = self.imviz.get_aperture_photometry_results()
         assert len(tbl) == 1  # Old table discarded due to incompatible column

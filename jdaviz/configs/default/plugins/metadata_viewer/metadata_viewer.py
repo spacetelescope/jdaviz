@@ -20,12 +20,12 @@ class MetadataViewer(TemplateMixin, DatasetSelectMixin):
 
     @observe("dataset_selected")
     def _show_metadata(self, event):
-        if not self.dataset.selected:
+        data = self.dataset.selected_obj
+        if data is None:
             self.has_metadata = False
             self.metadata = []
             return
 
-        data = self.dataset.selected_obj
         if 'header' in data.meta and isinstance(data.meta['header'], (dict, Header)):
             if isinstance(data.meta['header'], Header):  # Specviz
                 meta = dict(data.meta['header'])

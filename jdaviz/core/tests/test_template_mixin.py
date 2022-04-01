@@ -21,7 +21,7 @@ def test_spectralsubsetselect(specviz_helper, spectrum1d):
     assert p.spectral_subset.selected_obj is not None
     expected_min = spectrum1d.spectral_axis[spectrum1d.spectral_axis.value >= 6500][0]
     expected_max = spectrum1d.spectral_axis[spectrum1d.spectral_axis.value <= 7400][-1]
-    assert p.spectral_subset.selected_min_max(spectrum1d)[0] == (expected_min, expected_max)
+    assert p.spectral_subset.selected_min_max(spectrum1d) == (expected_min, expected_max)
 
     assert p.spectral_subset.app == p.app
     assert p.spectral_subset.spectrum_viewer == sv

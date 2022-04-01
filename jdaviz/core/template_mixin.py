@@ -6,6 +6,7 @@ from glue.core import HubListener
 from glue.core.message import (SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from glue.core.subset import RoiSubsetState
+from specutils import Spectrum1D
 from traitlets import Bool, List, Unicode
 
 from jdaviz import __version__
@@ -13,7 +14,7 @@ from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage)
 
 __all__ = ['TemplateMixin', 'PluginTemplateMixin',
-           'BasePluginComponent',
+           'BasePluginComponent', 'BaseSelectPluginComponent',
            'SubsetSelect', 'SpatialSubsetSelectMixin', 'SpectralSubsetSelectMixin',
            'ViewerSelect', 'ViewerSelectMixin',
            'DatasetSelect', 'DatasetSelectMixin']
@@ -94,6 +95,7 @@ class BasePluginComponent(HubListener):
     def __init__(self, plugin, **kwargs):
         self._plugin_traitlets = {k: v for k, v in kwargs.items() if v is not None}
         self._plugin = plugin
+        self._cached_properties = []
         super().__init__()
 
     def __getattr__(self, attr):
@@ -112,6 +114,8 @@ class BasePluginComponent(HubListener):
         """
         provide convenience function to clearing the cache for cached_properties
         """
+        if not len(attrs):
+            attrs = self._cached_properties
         for attr in attrs:
             if attr in self.__dict__:
                 del self.__dict__[attr]
@@ -172,12 +176,14 @@ class BaseSelectPluginComponent(BasePluginComponent):
 
     @property
     def viewer_refs(self):
+        valid_viewer_refs = [ref for ref in self.app.get_viewer_reference_names()
+                             if ref is not None and hasattr(self.app.get_viewer(ref),
+                                                            'default_class')]
         if self._viewer_refs is None:
             # exclude dynamically created image viewers (don't have refs) and table viewers
             # that don't contain plottable data
-            return [ref for ref in self.app.get_viewer_reference_names()
-                    if ref is not None and hasattr(self.app.get_viewer(ref), 'default_class')]
-        return self._viewer_refs
+            return valid_viewer_refs
+        return [ref for ref in self._viewer_refs if ref in valid_viewer_refs]
 
     @property
     def viewers(self):
@@ -211,10 +217,10 @@ class BaseSelectPluginComponent(BasePluginComponent):
             self.selected = ''
 
     def _selected_changed(self, event):
+        self._clear_cache()
         if event['new'] not in self.labels + ['']:
             self._apply_default_selection()
             raise ValueError(f"{event['new']} not one of {self.labels}")
-        self._clear_cache(*self._cached_properties)
 
 
 class SubsetSelect(BaseSelectPluginComponent):
@@ -373,7 +379,7 @@ class SubsetSelect(BaseSelectPluginComponent):
 
     @cached_property
     def selected_obj(self):
-        if self.selected in self._manual_options:
+        if self.selected in self.manual_options or self.selected not in self.labels:
             return None
         subset_type = self.selected_item['type']
         # NOTE: we use reference names here instead of IDs since get_subsets_from_viewer requires
@@ -386,7 +392,7 @@ class SubsetSelect(BaseSelectPluginComponent):
                 return match
 
     def selected_min_max(self, spectrum1d):
-        if self.selected in self._manual_options:
+        if self.selected_obj is None:
             return np.nanmin(spectrum1d.spectral_axis), np.nanmax(spectrum1d.spectral_axis)
         if self.selected_item.get('type') != 'spectral':
             raise TypeError("This action is only supported on spectral-type subsets")
@@ -699,17 +705,32 @@ class DatasetSelect(BaseSelectPluginComponent):
 
     @cached_property
     def selected_dc_item(self):
+        if self.selected not in self.labels:
+            # _apply_default_selection will override shortly anyways
+            return None
         return next((x for x in self.app.data_collection if x.label == self.selected))
 
     def get_object(self, *args, **kwargs):
+        if self.selected not in self.labels:
+            # _apply_default_selection will override shortly anyways
+            return None
         return self.selected_dc_item.get_object(*args, **kwargs)
 
     @cached_property
     def selected_obj(self):
+        if self.selected not in self.labels:
+            # _apply_default_selection will override shortly anyways
+            return None
         for viewer_ref in self.viewer_refs:
             match = self.app.get_data_from_viewer(viewer_ref, data_label=self.selected)
             if match is not None:
+                if hasattr(match, 'get_object'):
+                    # cube viewers return the data collection instance from get_data_from_viewer
+                    return match.get_object(cls=Spectrum1D)
                 return match
+        # handle the case of empty Application with no viewer, we'll just pull directly
+        # from the data collection
+        return self.get_object(cls=Spectrum1D)
 
     def _is_valid_item(self, data):
         def not_from_plugin(data):
@@ -722,12 +743,18 @@ class DatasetSelect(BaseSelectPluginComponent):
             return hasattr(data, 'meta') and isinstance(data.meta, dict) and len(data.meta)
 
         def layer_in_viewer_refs(data):
+            if not len(self.app.get_viewer_reference_names()):
+                # then this is a bar Application object, so ignore this filter
+                return True
             for viewer_ref in self.viewer_refs:
                 if data.label in [l.layer.label for l in self.app.get_viewer(viewer_ref).layers]: # noqa E741
                     return True
             return False
 
         def layer_in_spectrum_viewer(data):
+            if not len(self.app.get_viewer_reference_names()):
+                # then this is a bar Application object, so ignore this filter
+                return True
             return data.label in [l.layer.label for l in self.spectrum_viewer.layers] # noqa E741
 
         def is_image(data):
@@ -746,10 +773,12 @@ class DatasetSelect(BaseSelectPluginComponent):
 
     def _on_data_changed(self, msg=None):
         # NOTE: _on_data_changed is passed without a msg object during init
-        # TODO: don't recreate the entire list when msg is passed
+        # future improvement: don't recreate the entire list when msg is passed
         self.items = [{"label": data.label} for data in self.app.data_collection
                       if self._is_valid_item(data)]
         self._apply_default_selection()
+        # future improvement: only clear cache if the selected data entry was changed?
+        self._clear_cache(*self._cached_properties)
 
 
 class DatasetSelectMixin(VuetifyTemplate, HubListener):

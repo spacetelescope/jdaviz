@@ -10,11 +10,14 @@ def test_linking_after_spectral_smooth(spectrum1d_cube):
     app = Application(configuration="cubeviz")
     dc = app.data_collection
     app.add_data(spectrum1d_cube, 'test')
+    app.add_data_to_viewer('flux-viewer', 'test')
+
+    assert len(dc) == 1
+    assert len(dc.external_links) == 0
 
     gs = GaussianSmooth(app=app)
-
-    gs._on_data_selected({'new': 'test'})
-    gs.stddev = '3.2'
+    gs.dataset_selected = 'test'
+    gs.stddev = 3.2
     gs.add_replace_results = False
     gs.vue_spectral_smooth()
 
@@ -32,10 +35,11 @@ def test_spatial_convolution(spectrum1d_cube):
     app = Application(configuration="cubeviz")
     dc = app.data_collection
     app.add_data(spectrum1d_cube, 'test')
+    app.add_data_to_viewer('flux-viewer', 'test')
 
     gs = GaussianSmooth(app=app)
-    gs._on_data_selected({'new': 'test'})
-    gs.stddev = '3'
+    gs.dataset_selected = 'test'
+    gs.stddev = 3
     gs.vue_spatial_convolution()
 
     assert len(dc) == 2

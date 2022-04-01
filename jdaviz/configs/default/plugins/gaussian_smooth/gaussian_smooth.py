@@ -42,10 +42,18 @@ class GaussianSmooth(TemplateMixin, DatasetSelectMixin):
 
         if self.config == "cubeviz":
             self.show_modes = True
+            # retrieve the data from the cube, not the collapsed 1d spectrum
+            self.dataset._viewer_refs = ['flux-viewer', 'spectrum-viewer']
+            # clear the cache in case the spectrum-viewer selection was already cached
+            self.dataset._clear_cache()
 
     @observe("dataset_selected")
     def _on_data_selected(self, event):
-        # if this pattern is ever used anywhere else, it should be moved into DatasetSelect
+        if not hasattr(self, 'dataset'):
+            # during initial init, this can trigger before the component is initialized
+            return
+
+        # NOTE: if this is ever used anywhere else, it should be moved into DatasetSelect
         self.selected_data_is_1d = len(self.dataset.selected_dc_item.data.shape) == 1
 
     def vue_spectral_smooth(self, *args, **kwargs):
@@ -54,20 +62,6 @@ class GaussianSmooth(TemplateMixin, DatasetSelectMixin):
         # input_flux = Quantity(np.array([0.2, 0.3, 2.2, 0.3]), u.Jy)
         # input_spaxis = Quantity(np.array([1, 2, 3, 4]), u.micron)
         # spec1 = Spectrum1D(input_flux, spectral_axis=input_spaxis)
-        try:
-            spec = self.dataset.get_object()
-        except TypeError:
-            snackbar_message = SnackbarMessage(
-                "Unable to perform smoothing over selected data.",
-                color="error",
-                sender=self)
-            self.hub.broadcast(snackbar_message)
-
-            return
-
-        # Takes the user input from the dialog (stddev) and uses it to
-        # define a standard deviation for gaussian smoothing
-        spec_smoothed = gaussian_smooth(spec, stddev=self.stddev)
 
         label = f"Smoothed {self.dataset_selected} stddev {self.stddev}"
 
@@ -79,6 +73,11 @@ class GaussianSmooth(TemplateMixin, DatasetSelectMixin):
             self.hub.broadcast(snackbar_message)
 
             return
+
+        # Takes the user input from the dialog (stddev) and uses it to
+        # define a standard deviation for gaussian smoothing
+        cube = self.dataset.get_object(cls=Spectrum1D, statistic=None)
+        spec_smoothed = gaussian_smooth(cube, stddev=self.stddev)
 
         # add data to the collection
         spec_smoothed.meta['Plugin'] = 'gaussian-smooth'
@@ -118,7 +117,7 @@ class GaussianSmooth(TemplateMixin, DatasetSelectMixin):
             return
 
         # Get information from the flux component
-        attribute = self.dataset.selected_obj.main_components[0]
+        attribute = self.dataset.selected_dc_item.main_components[0]
 
         cube = self.dataset.get_object(cls=Spectrum1D,
                                        attribute=attribute,
