@@ -14,6 +14,15 @@
       hint="Select the data set to be fitted."
     />
 
+    <plugin-subset-select
+      v-if="cube_fit"
+      :items="spatial_subset_items"
+      :selected.sync="spatial_subset_selected"
+      :show_if_single_entry="false"
+      label="Spatial region"
+      hint="Select spatial region to fit."
+    />
+
     <plugin-subset-select 
       :items="spectral_subset_items"
       :selected.sync="spectral_subset_selected"

@@ -13,6 +13,7 @@ from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SpectralSubsetSelectMixin,
+                                        SubsetSelect,
                                         DatasetSelectMixin)
 from jdaviz.core.custom_traitlets import IntHandleEmpty
 from jdaviz.configs.default.plugins.model_fitting.fitting_backend import fit_model_to_spectrum
@@ -36,6 +37,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "model_fitting.vue"
     form_valid_model_component = Bool(False).tag(sync=True)
+
+    spatial_subset_items = List().tag(sync=True)
+    spatial_subset_selected = Unicode().tag(sync=True)
 
     model_label = Unicode().tag(sync=True)
     cube_fit = Bool(False).tag(sync=True)
@@ -75,6 +79,14 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         self._original_mask = None
         if self.app.state.settings.get("configuration") == "cubeviz":
             self.cube_fit = True
+
+            self.spatial_subset = SubsetSelect(self,
+                                               'spatial_subset_items',
+                                               'spatial_subset_selected',
+                                               default_text='Entire Cube',
+                                               allowed_type='spatial')
+        else:
+            self.spatial_subset = None
 
         # when accessing the selected data, access the spectrum-viewer version
         self.dataset._viewer_refs = ['spectrum-viewer']
@@ -189,7 +201,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         else:
             return False
 
-    @observe("dataset_selected")
+    @observe("dataset_selected", "spatial_subset_selected")
     def _dataset_selected_changed(self, event=None):
         """
         Callback method for when the user has selected data from the drop down
@@ -208,7 +220,15 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             # during initial init, this can trigger before the component is initialized
             return
 
-        selected_spec = self.dataset.selected_obj
+        if self.cube_fit and self.spatial_subset_selected != 'Entire Cube':
+            # then we're acting on the auto-collapsed data in the spectrum-viewer
+            # of a spatial subset.  In the future, we may want to expose on-the-fly
+            # collapse options... but right now these will follow the settings of the
+            # spectrum-viewer itself
+            selected_spec = self.app.get_data_from_viewer('spectrum-viewer',
+                                                          self.spatial_subset_selected)
+        else:
+            selected_spec = self.dataset.selected_obj
         if selected_spec is None:
             return
 
