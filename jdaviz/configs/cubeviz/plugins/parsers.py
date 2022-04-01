@@ -11,7 +11,7 @@ from jdaviz.core.registries import data_parser_registry
 
 __all__ = ['parse_data']
 
-EXT_TYPES = dict(flux=['flux', 'sci'],
+EXT_TYPES = dict(flux=['flux', 'sci', 'data'],
                  uncert=['ivar', 'err', 'var', 'uncert'],
                  mask=['mask', 'dq'])
 
@@ -52,12 +52,20 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
             prihdr = hdulist[0].header
             telescop = prihdr.get('TELESCOP', '').lower()
             filetype = prihdr.get('FILETYPE', '').lower()
+            system = prihdr.get('SYSTEM', '').lower()
             if telescop == 'jwst' and filetype == '3d ifu cube':
                 for ext, viewer_name in (('SCI', 'flux-viewer'),
                                          ('ERR', 'uncert-viewer'),
                                          ('DQ', 'mask-viewer')):
                     data_label = f'{file_name}[{ext}]'
                     _parse_jwst_s3d(app, hdulist, data_label, ext=ext, viewer_name=viewer_name)
+            elif telescop == 'jwst' and filetype == 'r3d' and system == 'esa-pipeline':
+                for ext, viewer_name in (('DATA', 'flux-viewer'),
+                                         ('ERR', 'uncert-viewer'),
+                                         ('QUALITY', 'mask-viewer')):
+                    data_label = f'{file_name}[{ext}]'
+                    _parse_esa_s3d(app, hdulist, data_label, ext=ext, viewer_name=viewer_name)
+
             else:
                 _parse_hdu(app, hdulist, file_name=data_label or file_name)
 
@@ -158,6 +166,31 @@ def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI', viewer_name='flux-viewe
     # NOTE: Tried to only pass in sliced WCS but got error in Glue.
     # sliced_wcs = wcs[:, 0, 0]  # Only want wavelengths
     # data = Spectrum1D(flux, wcs=sliced_wcs)
+
+    app.add_data(data, data_label)
+    app.add_data_to_viewer(viewer_name, data_label)
+    if viewer_name == 'flux-viewer':
+        app.add_data_to_viewer('spectrum-viewer', data_label)
+
+
+def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', viewer_name='flux-viewer'):
+    if ext == 'QUALITY':  # QUALITY flags have no unit
+        flux = hdulist[ext].data << u.dimensionless_unscaled
+    else:
+        unit = u.Unit(hdulist[ext].header.get('BUNIT', 'count'))
+        flux = hdulist[ext].data << unit
+
+    hdr = hdulist[1].header
+    wcs_dict = {
+        'CTYPE1': 'RA---TAN', 'CUNIT1': 'deg', 'CDELT1': hdr['CDELT2'], 'CRPIX1': hdr['CRPIX2'],
+        'CRVAL1': hdr['CRVAL2'], 'NAXIS1': hdr['NAXIS2'],
+        'CTYPE2': 'DEC--TAN', 'CUNIT2': 'deg', 'CDELT2': hdr['CDELT1'], 'CRPIX2': hdr['CRPIX1'],
+        'CRVAL2': hdr['CRVAL1'], 'NAXIS2': hdr['NAXIS1'],
+        'CTYPE3': 'WAVE-LOG', 'CUNIT3': 'um', 'CDELT3': hdr['CDELT3'] * 1E6, 'CRPIX3': hdr['CRPIX3'] - 1,
+        'CRVAL3': hdr['CRVAL3'] * 1E6, 'NAXIS3': hdr['NAXIS3'] - 2}
+
+    wcs = WCS(wcs_dict)
+    data = Spectrum1D(flux, wcs=wcs)
 
     app.add_data(data, data_label)
     app.add_data_to_viewer(viewer_name, data_label)
