@@ -13,7 +13,7 @@ __all__ = ['parse_data']
 
 EXT_TYPES = dict(flux=['flux', 'sci', 'data'],
                  uncert=['ivar', 'err', 'var', 'uncert'],
-                 mask=['mask', 'dq'])
+                 mask=['mask', 'dq', 'quality'])
 
 
 @data_parser_registry("cubeviz-data-parser")
