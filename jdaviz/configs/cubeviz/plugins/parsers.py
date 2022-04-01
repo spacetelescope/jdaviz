@@ -186,8 +186,8 @@ def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', viewer_name='flux-viewe
         'CRVAL1': hdr['CRVAL2'], 'NAXIS1': hdr['NAXIS2'],
         'CTYPE2': 'DEC--TAN', 'CUNIT2': 'deg', 'CDELT2': hdr['CDELT1'], 'CRPIX2': hdr['CRPIX1'],
         'CRVAL2': hdr['CRVAL1'], 'NAXIS2': hdr['NAXIS1'],
-        'CTYPE3': 'WAVE-LOG', 'CUNIT3': 'um', 'CDELT3': hdr['CDELT3'] * 1E6, 'CRPIX3': hdr['CRPIX3'] - 1,
-        'CRVAL3': hdr['CRVAL3'] * 1E6, 'NAXIS3': hdr['NAXIS3'] - 2}
+        'CTYPE3': 'WAVE-LOG', 'CUNIT3': 'um', 'CDELT3': hdr['CDELT3'] * 1E6,
+        'CRPIX3': hdr['CRPIX3'] - 1, 'CRVAL3': hdr['CRVAL3'] * 1E6, 'NAXIS3': hdr['NAXIS3'] - 2}
 
     wcs = WCS(wcs_dict)
     data = Spectrum1D(flux, wcs=wcs)
