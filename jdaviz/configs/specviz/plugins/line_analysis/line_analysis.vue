@@ -32,20 +32,20 @@
     <v-row>
       <j-docs-link>
         {{spectral_subset_selected=='Entire Spectrum' ? "Since using the entire spectrum, the end points will be used to fit a linear continuum." : "Choose a region to fit a linear line as the underlying continuum."}}  
-        {{continuum_selected=='Surrounding' && spectral_subset_selected!='Entire Spectrum' ? "Choose a width in number of data points to consider on each side of the line region defined above." : null}}
+        {{continuum_subset_selected=='Surrounding' && spectral_subset_selected!='Entire Spectrum' ? "Choose a width in number of data points to consider on each side of the line region defined above." : null}}
         When this plugin is opened, a visual indicator will show on the spectrum plot showing the continuum fitted as a thick line, and interpolated into the line region as a thin line.
       </j-docs-link>
     </v-row>
 
     <plugin-subset-select 
       :items="continuum_subset_items"
-      :selected.sync="continuum_selected"
-      :rules="[() => continuum_selected!==spectral_subset_selected || 'Must not match line selection.']"
+      :selected.sync="continuum_subset_selected"
+      :rules="[() => continuum_subset_selected!==spectral_subset_selected || 'Must not match line selection.']"
       label="Continuum"
       hint="Select spectral region that defines the continuum."
     />
 
-    <v-row v-if="continuum_selected=='Surrounding' && spectral_subset_selected!='Entire Spectrum'">
+    <v-row v-if="continuum_subset_selected=='Surrounding' && spectral_subset_selected!='Entire Spectrum'">
       <!-- DEV NOTE: if changing the validation rules below, also update the logic to clear the results
            in line_analysis.py  -->
       <v-text-field
