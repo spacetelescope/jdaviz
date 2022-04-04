@@ -227,7 +227,7 @@ class SubsetSelect(BaseSelectPluginComponent):
     """
     Traitlets (in the object, custom traitlets in the plugin):
 
-    * ``items`` (list of dicts with keys: label, color)
+    * ``items`` (list of dicts with keys: label, color, type)
     * ``selected`` (string)
     * ``selected_has_subregions`` (bool, OPTIONAL)
 
@@ -503,7 +503,7 @@ class ViewerSelect(BaseSelectPluginComponent):
     """
     Traitlets (in the object, custom traitlets in the plugin):
 
-    * ``items`` (list of dicts with keys: id, reference, ref_or_id)
+    * ``items`` (list of dicts with keys: id, reference, label)
     * ``selected`` (string)
 
     Properties (in the object only):
@@ -652,7 +652,7 @@ class DatasetSelect(BaseSelectPluginComponent):
     """
     Traitlets (in the object, custom traitlets in the plugin):
 
-    * ``items`` (list of dicts with keys: )
+    * ``items`` (list of dicts with keys: label)
     * ``selected`` (string)
 
     Properties (in the object only):
