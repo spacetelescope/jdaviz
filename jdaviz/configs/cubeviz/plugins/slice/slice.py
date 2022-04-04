@@ -56,7 +56,6 @@ class Slice(TemplateMixin):
 
     def _on_data_added(self, msg):
         if isinstance(msg.viewer, BqplotImageView):
-            print(msg.data.shape)
             if len(msg.data.shape) == 3:
                 self.max_value = msg.data.shape[-1] - 1
 
@@ -104,7 +103,7 @@ class Slice(TemplateMixin):
         # so we'll update the slider to match which will trigger
         # the slider observer (_on_slider_updated) and sync across
         # any other applicable viewers
-        if len(value):
+        if len(value) == 3:
             self.slider = float(value[-1])
 
     def _on_select_slice_message(self, msg):
