@@ -425,8 +425,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         if self._warn_if_no_equation():
             return
 
-        if self.selected_data in self.app.data_collection.labels:
-            data = self.app.data_collection[self.selected_data]
+        if self.dataset_selected in self.app.data_collection.labels:
+            data = self.app.data_collection[self.dataset_selected]
         else:  # User selected some subset from spectrum viewer, just use original cube
             data = self.app.data_collection[0]
 
@@ -434,7 +434,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         # that the user has selected a pre-existing 1d data object.
         if data.ndim != 3:
             snackbar_message = SnackbarMessage(
-                f"Selected data {self.selected_data} is not cube-like",
+                f"Selected data {self.dataset_selected} is not cube-like",
                 color='error',
                 sender=self)
             self.hub.broadcast(snackbar_message)
