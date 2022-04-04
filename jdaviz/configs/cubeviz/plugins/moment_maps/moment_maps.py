@@ -58,9 +58,9 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         # Need transpose to align JWST mirror shape. Not sure why.
         self.moment = CCDData(analysis.moment(slab, order=n_moment).T)
 
-        label = "Moment {}: {}".format(n_moment, self.dataset_selected)
+        label = f"Moment {n_moment}: {self.dataset_selected}"
         fname_label = self.dataset_selected.replace("[", "_").replace("]", "")
-        self.filename = "moment{}_{}.fits".format(n_moment, fname_label)
+        self.filename = f"moment{n_moment}_{fname_label}.fits"
 
         # Add information to meta data that this originated from
         # the moment map plugin. Then, link the moment map data
