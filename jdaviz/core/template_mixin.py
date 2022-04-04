@@ -131,6 +131,22 @@ class BasePluginComponent(HubListener):
     def hub(self):
         return self._plugin.hub
 
+    @property
+    def viewer_dicts(self):
+        def _dict_from_viewer(viewer, viewer_item):
+            d = {'viewer': viewer, 'id': viewer_item['id']}
+            if viewer_item.get('reference') is not None:
+                d['reference'] = viewer_item['reference']
+                d['label'] = viewer_item['reference']
+            else:
+                d['reference'] = None
+                d['label'] = viewer_item['id']
+            return d
+
+        return [_dict_from_viewer(viewer, self.app._viewer_item_by_id(vid))
+                for vid, viewer in self.app._viewer_store.items()
+                if viewer.__class__.__name__ != 'MosvizTableViewer']
+
     @cached_property
     def spectrum_viewer(self):
         return self._plugin.app.get_viewer("spectrum-viewer")
@@ -149,7 +165,7 @@ class BaseSelectPluginComponent(BasePluginComponent):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._viewer_refs = kwargs.get('viewer_refs', None)
+        self._viewers = kwargs.get('viewers', None)
         self._cached_properties = ["selected_obj", "selected_item"]
         default_text = kwargs.get('default_text', None)
         manual_options = kwargs.get('manual_options', [])
@@ -175,19 +191,25 @@ class BaseSelectPluginComponent(BasePluginComponent):
         return self._cached_properties
 
     @property
+    def viewer_dicts(self):
+        all_viewer_dicts = super().viewer_dicts
+        if self._viewers is None:
+            return all_viewer_dicts
+        # filter to those provided (either by id or reference)
+        return [v for v in all_viewer_dicts
+                if v['reference'] in self._viewers or v['id'] in self._viewers]
+
+    @property
     def viewer_refs(self):
-        valid_viewer_refs = [ref for ref in self.app.get_viewer_reference_names()
-                             if ref is not None and hasattr(self.app.get_viewer(ref),
-                                                            'default_class')]
-        if self._viewer_refs is None:
-            # exclude dynamically created image viewers (don't have refs) and table viewers
-            # that don't contain plottable data
-            return valid_viewer_refs
-        return [ref for ref in self._viewer_refs if ref in valid_viewer_refs]
+        return [v['reference'] for v in self.viewer_dicts]
+
+    @property
+    def viewer_ids(self):
+        return [v['id'] for v in self.viewer_dicts]
 
     @property
     def viewers(self):
-        return [self.app.get_viewer(ref) for ref in self.viewer_refs]
+        return [v['viewer'] for v in self.viewer_dicts]
 
     @property
     def labels(self):
@@ -266,7 +288,7 @@ class SubsetSelect(BaseSelectPluginComponent):
     default_mode = 'default_text'
 
     def __init__(self, plugin, items, selected, selected_has_subregions=None,
-                 viewer_refs=None, default_text=None, manual_options=[], allowed_type=None):
+                 viewers=None, default_text=None, manual_options=[], allowed_type=None):
         """
         Parameters
         ----------
@@ -278,9 +300,9 @@ class SubsetSelect(BaseSelectPluginComponent):
             the name of the selected traitlet defined in ``plugin``
         selected_has_subregions: str
             the name of the selected_has_subregions traitlet defined in ``plugin``, optional
-        viewer_refs : list
-            the reference names of the viewer to extract the subregion.  If not provided or None,
-            will loop through all references.
+        viewers : list
+            the reference names or ids of the viewer to extract the subregion.  If not provided o
+            None, will loop through all references.
         default_text : str or None
             the text to show for no selection.  If not provided or None, no entry will be provided
             in the dropdown for no selection.
@@ -296,7 +318,7 @@ class SubsetSelect(BaseSelectPluginComponent):
                          items=items,
                          selected=selected,
                          selected_has_subregions=selected_has_subregions,
-                         viewer_refs=viewer_refs,
+                         viewers=viewers,
                          default_text=default_text,
                          manual_options=manual_options)
 
@@ -448,7 +470,7 @@ class SpectralSubsetSelectMixin(VuetifyTemplate, HubListener):
                                             'spectral_subset_items',
                                             'spectral_subset_selected',
                                             'spectral_subset_selected_has_subregions',
-                                            viewer_refs=['spectrum-viewer'],
+                                            viewers=['spectrum-viewer'],
                                             default_text='Entire Spectrum',
                                             allowed_type='spectral')
 
@@ -587,19 +609,7 @@ class ViewerSelect(BaseSelectPluginComponent):
     def _on_viewers_changed(self, msg=None):
         # NOTE: _on_viewers_changed is passed without a msg object during init
         # list of dictionaries with id, ref, ref_or_id
-        def _dict_from_viewer(viewer_item):
-            d = {'id': viewer_item['id']}
-            if viewer_item.get('reference') is not None:
-                d['reference'] = viewer_item['reference']
-                d['label'] = viewer_item['reference']
-            else:
-                d['reference'] = None
-                d['label'] = viewer_item['id']
-            return d
-
-        self.items = [_dict_from_viewer(self.app._viewer_item_by_id(vid))
-                      for vid, viewer in self.app._viewer_store.items()
-                      if viewer.__class__.__name__ != 'MosvizTableViewer']
+        self.items = [{k: v for k, v in vd.items() if k != 'viewer'} for vd in self.viewer_dicts]
         self._apply_default_selection()
 
 
@@ -687,7 +697,7 @@ class DatasetSelect(BaseSelectPluginComponent):
     default_mode = 'first'
 
     def __init__(self, plugin, items, selected,
-                 filters=['not_from_plugin_model_fitting', 'layer_in_viewer_refs']):
+                 filters=['not_from_plugin_model_fitting', 'layer_in_viewers']):
         super().__init__(plugin, items=items, selected=selected)
         self._cached_properties += ["selected_dc_item"]
         self.hub.subscribe(self, AddDataMessage, handler=self._on_data_changed)
@@ -724,6 +734,10 @@ class DatasetSelect(BaseSelectPluginComponent):
             # _apply_default_selection will override shortly anyways
             return None
         for viewer_ref in self.viewer_refs:
+            if viewer_ref is None:
+                # image viewers might not have a reference, but get_data_from_viewer
+                # does not take id
+                continue
             match = self.app.get_data_from_viewer(viewer_ref, data_label=self.selected)
             if match is not None:
                 if hasattr(match, 'get_object'):
@@ -744,12 +758,12 @@ class DatasetSelect(BaseSelectPluginComponent):
         def has_metadata(data):
             return hasattr(data, 'meta') and isinstance(data.meta, dict) and len(data.meta)
 
-        def layer_in_viewer_refs(data):
+        def layer_in_viewers(data):
             if not len(self.app.get_viewer_reference_names()):
                 # then this is a bar Application object, so ignore this filter
                 return True
-            for viewer_ref in self.viewer_refs:
-                if data.label in [l.layer.label for l in self.app.get_viewer(viewer_ref).layers]: # noqa E741
+            for viewer in self.viewers:
+                if data.label in [l.layer.label for l in viewer.layers]: # noqa E741
                     return True
             return False
 

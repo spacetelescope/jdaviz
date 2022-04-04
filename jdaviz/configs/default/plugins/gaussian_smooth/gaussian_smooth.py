@@ -43,7 +43,7 @@ class GaussianSmooth(TemplateMixin, DatasetSelectMixin):
         if self.config == "cubeviz":
             self.show_modes = True
             # retrieve the data from the cube, not the collapsed 1d spectrum
-            self.dataset._viewer_refs = ['flux-viewer', 'spectrum-viewer']
+            self.dataset._viewers = ['flux-viewer', 'spectrum-viewer']
             # clear the cache in case the spectrum-viewer selection was already cached
             self.dataset._clear_cache()
 

@@ -42,7 +42,7 @@ class UnitConversion(PluginTemplateMixin, DatasetSelectMixin):
         # when accessing the selected data, access the spectrum-viewer version
         # TODO: we'll probably want to update unit-conversion to be able to act on cubes directly
         # in the future
-        self.dataset._viewer_refs = ['spectrum-viewer']
+        self.dataset._viewers = ['spectrum-viewer']
         # require entries to be in spectrum-viewer (not other cubeviz images, etc)
         self.dataset.add_filter('layer_in_spectrum_viewer')
 
