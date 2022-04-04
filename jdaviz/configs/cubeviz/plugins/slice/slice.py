@@ -55,14 +55,20 @@ class Slice(TemplateMixin):
                                           self._viewer_slices_changed)
 
     def _on_data_added(self, msg):
-        if len(msg.data.shape) == 3 and isinstance(msg.viewer, BqplotImageView):
-            self.max_value = msg.data.shape[-1] - 1
+        if isinstance(msg.viewer, BqplotImageView):
+            print(msg.data.shape)
+            if len(msg.data.shape) == 3:
+                self.max_value = msg.data.shape[-1] - 1
 
-            if msg.viewer not in self._watched_viewers:
-                self._watched_viewers.append(msg.viewer)
+                if msg.viewer not in self._watched_viewers:
+                    self._watched_viewers.append(msg.viewer)
 
-                msg.viewer.state.add_callback('slices',
-                                              self._viewer_slices_changed)
+                    msg.viewer.state.add_callback('slices',
+                                                  self._viewer_slices_changed)
+
+            else:
+                if msg.viewer in self._watched_viewers:
+                    self._watched_viewers.remove(msg.viewer)
 
         elif isinstance(msg.viewer, BqplotProfileView):
             if msg.viewer not in self._indicator_viewers:
@@ -134,6 +140,7 @@ class Slice(TemplateMixin):
         self.wavelength = self._x_all[value]
 
         if self.linked:
+            print(self._watched_viewers)
             for viewer in self._watched_viewers:
                 viewer.state.slices = (0, 0, value)
             for viewer in self._indicator_viewers:

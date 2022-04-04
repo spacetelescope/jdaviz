@@ -86,16 +86,8 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
         # Link to the first dataset with compatible coordinates
         for i in range(new_len - 1):
             pc_old = self.app.data_collection[i].pixel_component_ids
-            # If data_collection[i] is also from the collapse plugin
-            if ("Plugin" in self.app.data_collection[i].meta and
-                    self.app.data_collection[i].meta["Plugin"] == "Collapse"):
-                links = [LinkSame(pc_old[0], pc_new[0]),
-                         LinkSame(pc_old[1], pc_new[1])]
-
-            # Else, link collapse data to cube (pc_old)
-            else:
-                links = [[LinkSame(pc_new[1], pc_old[2]),
-                          LinkSame(pc_new[0], pc_old[1])]]
+            links = [LinkSame(pc_old[0], pc_new[0]),
+                     LinkSame(pc_old[1], pc_new[1])]
 
             self.app.data_collection.add_link(links)
 
