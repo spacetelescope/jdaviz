@@ -18,7 +18,7 @@
       v-if="cube_fit"
       :items="spatial_subset_items"
       :selected.sync="spatial_subset_selected"
-      :show_if_single_entry="false"
+      :show_if_single_entry="true"
       label="Spatial region"
       hint="Select spatial region to fit."
     />
@@ -26,7 +26,7 @@
     <plugin-subset-select 
       :items="spectral_subset_items"
       :selected.sync="spectral_subset_selected"
-      :show_if_single_entry="false"
+      :show_if_single_entry="true"
       label="Spectral region"
       hint="Select spectral region to fit."
     />

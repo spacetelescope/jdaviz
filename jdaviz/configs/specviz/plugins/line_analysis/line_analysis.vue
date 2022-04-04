@@ -24,6 +24,7 @@
     <plugin-subset-select 
       :items="spectral_subset_items"
       :selected.sync="spectral_subset_selected"
+      :show_if_single_entry="true"
       label="Spectral region"
       hint="Select spectral region that defines the line."
     />
@@ -40,6 +41,7 @@
     <plugin-subset-select 
       :items="continuum_subset_items"
       :selected.sync="continuum_subset_selected"
+      :show_if_single_entry="true"
       :rules="[() => continuum_subset_selected!==spectral_subset_selected || 'Must not match line selection.']"
       label="Continuum"
       hint="Select spectral region that defines the continuum."

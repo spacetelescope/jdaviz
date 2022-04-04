@@ -257,6 +257,7 @@ class SubsetSelect(BaseSelectPluginComponent):
       <plugin-subset-select
         :items="spectral_subset_items"
         :selected.sync="spectral_subset_selected"
+        :show_if_single_entry="true"
         label="Subset"
         hint="Select subset."
       />
@@ -432,6 +433,7 @@ class SpectralSubsetSelectMixin(VuetifyTemplate, HubListener):
       <plugin-subset-select
         :items="spectral_subset_items"
         :selected.sync="spectral_subset_selected"
+        :show_if_single_entry="true"
         label="Spectral region"
         hint="Select spectral region."
       />
