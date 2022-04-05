@@ -37,33 +37,19 @@
         ></v-text-field>
       </v-row>
 
-      <v-row v-if="dataset_selected && stddev > 0">
-        <v-select v-if="selected_mode == 'Spatial'"
-          :items="viewers"
-          v-model="selected_viewer"
-          label='Plot in Viewer'
-          hint='Smoothed data will replace plot in the specified viewer.  Will also be available in the data dropdown in all image viewers.'
-          persistent-hint></v-select>
-        <v-switch v-if="selected_mode == 'Spectral'"
-          label="Plot in Viewer"
-          hint="Smoothed data will immediately plot in the spectral viewer.  Will also be available in the data menu of each viewer."
-          v-model="add_replace_results"
-          persistent-hint>
-        </v-switch>
-      </v-row>
+      <plugin-add-results
+        :label.sync="results_label"
+        label_hint="Label for the smoothed data"
+        :label_changed_by_user.sync="results_label_changed_by_user"
+        :add_to_viewer_items="add_to_viewer_items"
+        :add_to_viewer_selected.sync="add_to_viewer_selected"
+      ></plugin-add-results>
 
       <v-row justify="end">
-        <j-tooltip v-if="selected_mode=='Spectral'" tipid='plugin-gaussian-apply'>
+        <j-tooltip tipid='plugin-gaussian-apply'>
           <v-btn :disabled="stddev <= 0 || dataset_selected == ''"
             color="accent" text 
-            @click="spectral_smooth"
-          >Apply</v-btn>
-        </j-tooltip>
-        <j-tooltip v-else tipid='plugin-gaussian-apply'>
-          <v-btn 
-            :disabled="stddev <= 0 || dataset_selected == ''"
-            color="accent" text
-            @click="spatial_convolution"
+            @click="apply"
           >Apply</v-btn>
         </j-tooltip>
       </v-row>

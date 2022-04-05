@@ -7,7 +7,7 @@ from glue.core.message import (SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from glue.core.subset import RoiSubsetState
 from specutils import Spectrum1D
-from traitlets import Bool, List, Unicode
+from traitlets import Bool, HasTraits, List, Unicode, observe
 
 from jdaviz import __version__
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
@@ -17,7 +17,8 @@ __all__ = ['TemplateMixin', 'PluginTemplateMixin',
            'BasePluginComponent', 'BaseSelectPluginComponent',
            'SubsetSelect', 'SpatialSubsetSelectMixin', 'SpectralSubsetSelectMixin',
            'ViewerSelect', 'ViewerSelectMixin',
-           'DatasetSelect', 'DatasetSelectMixin']
+           'DatasetSelect', 'DatasetSelectMixin',
+           'AddResults', 'AddResultsMixin']
 
 
 class TemplateMixin(VuetifyTemplate, HubListener):
@@ -157,7 +158,7 @@ class BasePluginComponent(HubListener):
         return self._plugin.app.get_viewer("spectrum-viewer")
 
 
-class BaseSelectPluginComponent(BasePluginComponent):
+class BaseSelectPluginComponent(BasePluginComponent, HasTraits):
     """
     This base class extends BasePluginComponent for common functionality for a select/dropdown
     component.  The subclasses MUST have an ``items`` traitlet as a list of dictionaries, with
@@ -167,13 +168,19 @@ class BaseSelectPluginComponent(BasePluginComponent):
     """
     # default_mode can be one of empty, first, default_text (requires default_text to be set)
     default_mode = 'empty'
+    filters = List([]).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
+        default_text = kwargs.pop('default_text', None)
+        manual_options = kwargs.pop('manual_options', [])
+        self._viewers = kwargs.pop('viewers', None)
+        # we'll pop from kwargs now to avoid passing to the super.__init__, but need to
+        # wait for everything else to be set before setting to the traitlet
+        filters = kwargs.pop('filters', [])[:]  # [:] needed to force copy from kwarg default
+
         super().__init__(*args, **kwargs)
-        self._viewers = kwargs.get('viewers', None)
         self._cached_properties = ["selected_obj", "selected_item"]
-        default_text = kwargs.get('default_text', None)
-        manual_options = kwargs.get('manual_options', [])
+
         self._default_text = default_text
         if default_text is not None and default_text not in manual_options:
             manual_options = [default_text] + manual_options
@@ -188,6 +195,7 @@ class BaseSelectPluginComponent(BasePluginComponent):
         # callbacks triggered AFTER the cache is cleared and the value is checked against
         # valid options
         self.add_observe(kwargs.get('selected'), self._selected_changed, first=True)
+        self.filters = filters
 
     @property
     def manual_options(self):
@@ -197,6 +205,9 @@ class BaseSelectPluginComponent(BasePluginComponent):
     @property
     def cached_properties(self):
         return self._cached_properties
+
+    def add_filter(self, *filters):
+        self.filters += [filter for filter in filters]
 
     @property
     def viewer_dicts(self):
@@ -245,6 +256,19 @@ class BaseSelectPluginComponent(BasePluginComponent):
             self.selected = self._default_text if self._default_text else ''
         else:
             self.selected = ''
+
+    def _is_valid_item(self, item, filter_callables={}):
+        for valid_filter in self.filters:
+            if isinstance(valid_filter, str):
+                # pull from the functions above (should be subclassed),
+                # will raise an error if not in locals
+                try:
+                    valid_filter = filter_callables[valid_filter]
+                except KeyError:
+                    raise ValueError(f"{valid_filter} not an implemented filter.")
+            if not valid_filter(item):
+                return False
+        return True
 
     def _selected_changed(self, event):
         self._clear_cache()
@@ -568,8 +592,9 @@ class ViewerSelect(BaseSelectPluginComponent):
     """
     default_mode = 'first'
 
-    def __init__(self, plugin, items, selected):
-        super().__init__(plugin, items=items, selected=selected)
+    def __init__(self, plugin, items, selected, default_text=None, manual_options=[]):
+        super().__init__(plugin, items=items, selected=selected,
+                         default_text=default_text, manual_options=manual_options)
 
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewers_changed)
         self.hub.subscribe(self, ViewerRemovedMessage, handler=self._on_viewers_changed)
@@ -587,6 +612,8 @@ class ViewerSelect(BaseSelectPluginComponent):
 
     @cached_property
     def selected_item(self):
+        if self.selected in self.manual_options:
+            return {}
         item = super().selected_item
         if item:
             return item
@@ -600,24 +627,38 @@ class ViewerSelect(BaseSelectPluginComponent):
 
     @property
     def selected_id(self):
-        return self.selected_item['id']
+        return self.selected_item.get('id', None)
 
     @cached_property
     def selected_obj(self):
+        if self.selected in self.manual_options:
+            return None
         return self.app.get_viewer_by_id(self.selected_id)
 
     def _selected_changed(self, event):
-        if event['new'] not in self.labels:
+        if event['new'] not in self.labels + self.manual_options:
             if self.selected in self.ids:
                 # provided id in place of ref
                 self.selected = self.labels[self.ids.index(self.selected)]
                 return
         return super()._selected_changed(event)
 
+    def _is_valid_item(self, viewer):
+        def is_spectrum_viewer(viewer):
+            return 'ProfileView' in viewer.__class__.__name__
+
+        def is_image_viewer(viewer):
+            return 'ImageView' in viewer.__class__.__name__
+
+        return super()._is_valid_item(viewer, locals())
+
+    @observe('filters')
     def _on_viewers_changed(self, msg=None):
         # NOTE: _on_viewers_changed is passed without a msg object during init
         # list of dictionaries with id, ref, ref_or_id
-        self.items = [{k: v for k, v in vd.items() if k != 'viewer'} for vd in self.viewer_dicts]
+        manual_items = [{'label': l} for l in self.manual_options]
+        self.items = manual_items + [{k: v for k, v in vd.items() if k != 'viewer'}
+                                     for vd in self.viewer_dicts if self._is_valid_item(vd['viewer'])] # noqa
         self._apply_default_selection()
 
 
@@ -706,11 +747,10 @@ class DatasetSelect(BaseSelectPluginComponent):
 
     def __init__(self, plugin, items, selected,
                  filters=['not_from_plugin_model_fitting', 'layer_in_viewers']):
-        super().__init__(plugin, items=items, selected=selected)
+        super().__init__(plugin, items=items, selected=selected, filters=filters)
         self._cached_properties += ["selected_dc_item"]
         self.hub.subscribe(self, AddDataMessage, handler=self._on_data_changed)
         self.hub.subscribe(self, RemoveDataMessage, handler=self._on_data_changed)
-        self._filters = filters[:]  # [:] needed to force copy from kwarg default
 
         # initialize items from original viewers
         self._on_data_changed()
@@ -720,14 +760,6 @@ class DatasetSelect(BaseSelectPluginComponent):
         if self.app.config == 'imviz':
             return None
         return Spectrum1D
-
-    @property
-    def filters(self):
-        return self._filters
-
-    def add_filter(self, *filters):
-        self._filters += [filter for filter in filters]
-        self._on_data_changed()
 
     @cached_property
     def selected_dc_item(self):
@@ -790,17 +822,9 @@ class DatasetSelect(BaseSelectPluginComponent):
         def is_image(data):
             return len(data.shape) == 3
 
-        for valid_filter in self.filters:
-            if isinstance(valid_filter, str):
-                # pull from the functions above, will raise an error if not in locals
-                try:
-                    valid_filter = locals()[valid_filter]
-                except KeyError:
-                    raise ValueError(f"{valid_filter} not an implemented filter.")
-            if not valid_filter(data):
-                return False
-        return True
+        return super()._is_valid_item(data, locals())
 
+    @observe('filters')
     def _on_data_changed(self, msg=None):
         # NOTE: _on_data_changed is passed without a msg object during init
         # future improvement: don't recreate the entire list when msg is passed
@@ -856,3 +880,123 @@ class DatasetSelectMixin(VuetifyTemplate, HubListener):
         super().__init__(*args, **kwargs)
         # NOTE: cannot be named self.data or will conflict with existing self.data traitlet!
         self.dataset = DatasetSelect(self, 'dataset_items', 'dataset_selected')
+
+
+class AddResults(BasePluginComponent):
+    """
+    Traitlets (in the object, custom traitlets in the plugin):
+
+    * 
+
+    Properties (in the object only):
+
+    * 
+
+    Methods (in the object only):
+
+    * 
+
+
+    Example template (label and hint are optional)::
+
+      <plugin-results
+        :items="dataset_items"
+        :selected.sync="dataset_selected"
+        label="Data"
+        hint="Select data."
+      />
+
+    """
+    def __init__(self, plugin, label, label_changed_by_user,
+                 add_to_viewer_items, add_to_viewer_selected):
+        super().__init__(plugin, label=label, label_changed_by_user=label_changed_by_user,
+                         add_to_viewer_items=add_to_viewer_items,
+                         add_to_viewer_selected=add_to_viewer_selected)
+
+        self.hub.subscribe(self, AddDataMessage, handler=self._on_data_changed)
+        self.hub.subscribe(self, RemoveDataMessage, handler=self._on_data_changed)
+
+        self.viewer = ViewerSelect(plugin, add_to_viewer_items, add_to_viewer_selected,
+                                   manual_options=['None'])
+
+        self.add_observe(label, self._label_changed)
+
+        # initialize items from original viewers
+        self._on_data_changed()
+
+    def _on_data_changed(self, msg=None):
+        # store list of existing dataset collection items so we can check against name conflicts
+
+        # NOTE: _on_data_changed is passed without a msg object during init
+        # future improvement: don't recreate the entire list when msg is passed
+        self.dc_labels = [data.label for data in self.app.data_collection]
+
+    def _label_changed(self, event):
+        if event['new'] in self.dc_labels:
+            # TODO: fail form validation
+            raise ValueError(f"{event['new']} cannot be one of {self.dc_labels}")
+
+    def add_results_from_plugin(self, data_item, plugin_name):
+        """
+        Add ``data_item`` to the app's data_collection according to the default or user-provided
+        label and adds to any requested viewers.
+        """
+        if self.label in self.dc_labels:
+            raise ValueError(f"{self.label} cannot be one of {self.dc_labels}")
+        data_item.meta['Plugin'] = plugin_name
+        self.app.add_data(data_item, self.label)
+
+        if self.add_to_viewer_selected != 'None':
+            # replace the contents in the selected viewer with the results from this plugin
+            # TODO: switch to an instance/classname check?
+            replace = self.viewer.selected_item.get('reference', None) != 'spectrum-viewer'
+            print(f"*** add_data_to_viewer({self.viewer.selected_id}, {self.label}, {replace})")
+            self.app.add_data_to_viewer(self.viewer.selected_id,
+                                        self.label, clear_other_data=replace)
+
+
+class AddResultsMixin(VuetifyTemplate, HubListener):
+    """
+    Applies the AddResults component as a mixin in the base plugin.  This
+    automatically adds traitlets as well as new properties to the plugin with minimal
+    extra code.  For multiple instances or custom traitlet names/defaults, use the
+    AddResults component instead.
+
+    Traitlets (available from the plugin):
+
+    * 
+
+    Properties (available from the plugin):
+
+    * 
+
+    Methods (available from the plugin):
+
+    * 
+
+    To use in a plugin:
+
+    * add ``AddResultsMixin`` as a mixin to the class
+    * use the traitlets and properties above as needed (note the prefix for properties)
+
+    Example template (label and hint are optional)::
+
+        <v-row>
+          <plugin-add-results
+            :items="dataset_items"
+            :selected.sync="dataset_selected"
+            label="Data"
+            hint="Select data."
+          />
+        </v-row>
+    """
+    results_label = Unicode().tag(sync=True)
+    results_label_changed_by_user = Bool(False).tag(sync=True)
+
+    add_to_viewer_items = List().tag(sync=True)
+    add_to_viewer_selected = Unicode().tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.add_results = AddResults(self, 'results_label', 'results_label_changed_by_user',
+                                      'add_to_viewer_items', 'add_to_viewer_selected')

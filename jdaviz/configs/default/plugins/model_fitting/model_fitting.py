@@ -13,7 +13,8 @@ from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SpectralSubsetSelectMixin,
                                         SubsetSelect,
-                                        DatasetSelectMixin)
+                                        DatasetSelectMixin,
+                                        AddResultsMixin)
 from jdaviz.core.custom_traitlets import IntHandleEmpty
 from jdaviz.configs.default.plugins.model_fitting.fitting_backend import fit_model_to_spectrum
 from jdaviz.configs.default.plugins.model_fitting.initializers import (MODELS,
@@ -32,7 +33,8 @@ class _EmptyParam:
 
 
 @tray_registry('g-model-fitting', label="Model Fitting")
-class ModelFitting(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin):
+class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
+                   SpectralSubsetSelectMixin, AddResultsMixin):
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "model_fitting.vue"
     form_valid_model_component = Bool(False).tag(sync=True)
@@ -40,7 +42,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     spatial_subset_items = List().tag(sync=True)
     spatial_subset_selected = Unicode().tag(sync=True)
 
-    model_label = Unicode().tag(sync=True)
     cube_fit = Bool(False).tag(sync=True)
     temp_name = Unicode().tag(sync=True)
     temp_model = Unicode().tag(sync=True)
@@ -49,16 +50,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     component_models = List([]).tag(sync=True)
     display_order = Bool(False).tag(sync=True)
     poly_order = IntHandleEmpty(0).tag(sync=True)
-
-    # add/replace results for "fit"
-    add_replace_results = Bool(True).tag(sync=True)
-
-    # selected_viewer for "apply to cube"
-    # NOTE: this is currently cubeviz-specific so will need to be updated
-    # to be config-specific if using within other viewer configurations.
-    viewer_to_id = {'Left': 'cubeviz-0', 'Center': 'cubeviz-1', 'Right': 'cubeviz-2'}
-    viewers = List(['None', 'Left', 'Center', 'Right']).tag(sync=True)
-    selected_viewer = Unicode('None').tag(sync=True)
 
     available_models = List(list(MODELS.keys())).tag(sync=True)
 
@@ -73,7 +64,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         self.component_models = []
         self._initialized_models = {}
         self._display_order = False
-        self.model_label = "Model"
         self._window = None
         self._original_mask = None
         if self.app.state.settings.get("configuration") == "cubeviz":
@@ -403,7 +393,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         self._fitted_model = fitted_model
         self._fitted_spectrum = fitted_spectrum
 
-        self.app.fitted_models[self.model_label] = fitted_model
+        self.app.fitted_models[self.results_label] = fitted_model
         self.vue_register_spectrum({"spectrum": fitted_spectrum})
 
         # Update component model parameters with fitted values
@@ -469,13 +459,13 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         # Save fitted 3D model in a way that the cubeviz
         # helper can access it.
         for m in fitted_model:
-            temp_label = "{} ({}, {})".format(self.model_label, m["x"], m["y"])
+            temp_label = "{} ({}, {})".format(self.results_label, m["x"], m["y"])
             self.app.fitted_models[temp_label] = m["model"]
 
         count = max(map(lambda s: int(next(iter(re.findall(r"\d$", s)), 0)),
                         self.data_collection.labels)) + 1
 
-        label = f"{self.model_label} [Cube] {count}"
+        label = f"{self.results_label} [Cube] {count}"
 
         # Create new glue data object
         output_cube = Data(label=label,
@@ -518,7 +508,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                                                     window=self._window)
 
         self.n_models += 1
-        label = self.model_label
+        label = self.results_label
         if label in self.data_collection:
             self.app.remove_data_from_viewer('spectrum-viewer', label)
             # Remove the actual Glue data object from the data_collection
