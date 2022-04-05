@@ -53,8 +53,9 @@ Other Changes and Additions
 
 - Change default collapse function to sum.
   This affects collapsed spectrum in Cubeviz and its Collapse plugin default. [#1229, #1237]
-
 - Data dropdowns in plugins are now filtered to only applicable entries. [#1221]
+- Cube data now has spectral axis last in the backend, to match specutils Spectrum1D
+  axis order and work with updated glue-astronomy translators. [#1174]
 
 2.4 (2022-03-29)
 ================
@@ -135,9 +136,6 @@ Other Changes and Additions
 - Subset selection dropdowns in plugins now show synced color indicators. [#1156, #1175]
 
 - Line analysis plugin now shows uncertainties, when available. [#1192]
-
-- Cube data now has spectral axis last in the backend, to match specutils Spectrum1D
-  axis order and work with updated glue-astronomy translators. [#1174]
 
 2.3 (2022-03-01)
 ================
