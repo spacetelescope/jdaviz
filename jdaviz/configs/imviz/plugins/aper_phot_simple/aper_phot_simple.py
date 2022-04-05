@@ -307,8 +307,9 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
             reg_ogrid = np.ogrid[reg_bb.iymin:reg_bb.iymax, reg_bb.ixmin:reg_bb.ixmax]
             radial_dx = reg_ogrid[1] - aperture.positions[0]
             radial_dy = reg_ogrid[0] - aperture.positions[1]
-            radial_r = np.hypot(radial_dx, radial_dy).ravel()  # pix
-            radial_img = phot_aperstats.data_cutout.data.ravel()  # data unit
+            radial_cutout = phot_aperstats.data_cutout
+            radial_r = np.hypot(radial_dx, radial_dy)[~radial_cutout.mask].ravel()  # pix
+            radial_img = radial_cutout.compressed()  # data unit
 
             # Radial profile
             if self.current_plot_type == "Radial Profile":
