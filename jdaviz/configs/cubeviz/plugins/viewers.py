@@ -94,17 +94,6 @@ class CubevizProfileView(SpecvizProfileView):
         # NOTE: super will initialize nested toolbar with
         # default_tool_priority=['jdaviz:selectslice']
         super().__init__(*args, **kwargs)
-        #self.state.add_callback('reference_data', self._initial_x_axis)
-
-    def _initial_x_axis(self, *args):
-        ref_data = self.state.reference_data
-        if ref_data and ref_data.ndim == 3:
-            for att_name in ["Wave", "Wavelength", "Freq", "Frequency"]:
-                if att_name in ref_data.component_ids():
-                    self.state.x_att = ref_data.id[att_name]
-                    break
-                else:
-                    self.state.x_att_pixel = ref_data.id["Pixel Axis 2 [x]"]
 
     @property
     def slice_indicator(self):

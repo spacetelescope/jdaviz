@@ -4,6 +4,7 @@ import os
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
+from astropy.time import Time
 from astropy.wcs import WCS
 from specutils import Spectrum1D
 
@@ -137,17 +138,9 @@ def _parse_hdu(app, hdulist, file_name=None):
             app.add_data_to_viewer('flux-viewer', data_label)
             # Add flux to spectrum viewer
             app.add_data_to_viewer('spectrum-viewer', data_label)
-            viewer = app.get_viewer('spectrum-viewer')
-            for att_name in ["Wave", "Wavelength", "Freq", "Frequency"]:
-                if att_name in app.data_collection[data_label].component_ids():
-                    viewer.state.x_att = app.data_collection[data_label].id[att_name]
-                    break
-            else:
-                viewer.state.x_att_pixel = app.data_collection[data_label].id["Pixel Axis 2 [x]"]
+
 
 def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI', viewer_name='flux-viewer'):
-    from specutils import Spectrum1D
-
     # Manually inject MJD-OBS until we can support GWCS, see
     # https://github.com/spacetelescope/jdaviz/issues/690 and
     # https://github.com/glue-viz/glue-astronomy/issues/59
@@ -158,7 +151,6 @@ def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI', viewer_name='flux-viewe
                     hdulist[ext].header['MJD-OBS'] = hdulist[ext].header[key]
                     break
                 else:
-                    from astropy.time import Time
                     t = Time(hdulist[ext].header[key])
                     hdulist[ext].header['MJD-OBS'] = t.mjd
                     break

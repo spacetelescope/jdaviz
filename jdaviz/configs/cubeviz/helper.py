@@ -3,7 +3,9 @@ import numpy as np
 from jdaviz.core.helpers import ConfigHelper
 from jdaviz.configs.default.plugins.line_lists.line_list_mixin import LineListMixin
 from jdaviz.configs.specviz import Specviz
-from jdaviz.core.events import SliceSelectWavelengthMessage, SliceSelectSliceMessage
+from jdaviz.core.events import (AddDataMessage,
+                                SliceSelectWavelengthMessage,
+                                SliceSelectSliceMessage)
 
 __all__ = ['Cubeviz', 'CubeViz']
 
@@ -16,6 +18,21 @@ class Cubeviz(ConfigHelper, LineListMixin):
         super().__init__(*args, **kwargs)
         self.app.hub.subscribe(self, SliceSelectWavelengthMessage,
                                handler=self.select_wavelength)
+        self.app.hub.subscribe(self, AddDataMessage,
+                               handler=self._set_spectrum_x_axis)
+
+    def _set_spectrum_x_axis(self, msg):
+        if msg.viewer_id != "cubeviz-3":
+            return
+        viewer = self.app.get_viewer("spectrum-viewer")
+        ref_data = viewer.state.reference_data
+        if ref_data and ref_data.ndim == 3:
+            for att_name in ["Wave", "Wavelength", "Freq", "Frequency"]:
+                if att_name in ref_data.component_ids():
+                    viewer.state.x_att = ref_data.id[att_name]
+                    break
+            else:
+                viewer.state.x_att_pixel = ref_data.id["Pixel Axis 2 [x]"]
 
     def select_slice(self, slice):
         """
