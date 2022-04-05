@@ -15,6 +15,7 @@ from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.region_translators import regions2aperture
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin, DatasetSelectMixin, SubsetSelect
+from jdaviz.utils import bqplot_clear_context
 
 __all__ = ['SimpleAperturePhotometry']
 
@@ -323,7 +324,7 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
                 markerstyle = 'o'
                 bqplot_kw = {'default_size': 1}
 
-            bqplt.clear()
+            bqplot_clear_context()
             # NOTE: default margin in bqplot is 60 in all directions
             fig = bqplt.figure(1, title='Radial profile from Subset center',
                                fig_margin={'top': 60, 'bottom': 60, 'left': 40, 'right': 10},

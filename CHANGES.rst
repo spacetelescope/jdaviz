@@ -28,6 +28,9 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Line profile plot in Line Profile plugin no longer affects
+  radial profile plot in Simple Aperture Photometry plugin. [#1224]
+
 Mosviz
 ^^^^^^
 

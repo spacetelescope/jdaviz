@@ -114,3 +114,17 @@ def enable_hot_reloading():
         print((
             'Watchdog module, needed for hot reloading, not found.'
             ' Please install with `pip install watchdog`'))
+
+
+def bqplot_clear_context():
+    """Clears hidden context of `bqplot.pyplot` module
+    to mimic matplotlib ``clf()``. This is necessary when
+    we draw multiple plots across different plugins.
+    """
+    from bqplot import pyplot as bqplt
+    bqplt._context = {'figure': None,
+                      'figure_registry': {},
+                      'scales': {},
+                      'scale_registry': {},
+                      'last_mark': None,
+                      'current_key': None}

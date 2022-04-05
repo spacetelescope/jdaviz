@@ -6,6 +6,7 @@ from jdaviz.configs.imviz.helper import get_top_layer_index
 from jdaviz.core.events import ViewerAddedMessage, ViewerRemovedMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin
+from jdaviz.utils import bqplot_clear_context
 
 __all__ = ['LineProfileXY']
 
@@ -71,7 +72,7 @@ class LineProfileXY(PluginTemplateMixin):
         else:
             y_label = 'Value'
 
-        _bqplt_clear_all()
+        bqplot_clear_context()
 
         fig_x = bqplt.figure(1, title=f'X={x}',
                              fig_margin={'top': 60, 'bottom': 60, 'left': 40, 'right': 10},
@@ -101,14 +102,3 @@ class LineProfileXY(PluginTemplateMixin):
 
         self.bqplot_figs_resize = [fig_x, fig_y]
         self.plot_available = True
-
-
-def _bqplt_clear_all():
-    """Clears hidden context of bqplot.pyplot module."""
-    bqplt._context = {
-        'figure': None,
-        'figure_registry': {},
-        'scales': {},
-        'scale_registry': {},
-        'last_mark': None,
-        'current_key': None}
