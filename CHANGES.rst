@@ -7,6 +7,8 @@ New Features
 Cubeviz
 ^^^^^^^
 
+- Add ESA pipeline data parser. [#1227]
+
 Imviz
 ^^^^^
 
