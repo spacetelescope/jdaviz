@@ -173,6 +173,7 @@ Using Jdaviz
   mosviz/index.rst
   imviz/index.rst
   notebook/index.rst
+  sample_notebooks.rst
 
 Reference/API
 =============

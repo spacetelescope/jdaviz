@@ -43,11 +43,51 @@ images.
 This tool is designed with instrument modes from the James Webb Space Telescope (JWST) in mind, but 
 the tool should be flexible enough to read in data from many astronomical telescopes.  The documentation provides a complete `table of all supported modes <https://jdaviz.readthedocs.io/en/latest/#jwst-instrument-modes-in-jdaviz>`_.
 
-
 Installing
 ----------
+
+Installing the released version can be done using pip::
+
+   pip install jdaviz --upgrade
+
 For details on installing and using Jdaviz, see the
-`Jdaviz documentation <https://jdaviz.readthedocs.io/en/latest/>`_.
+`Jdaviz Installation <https://jdaviz.readthedocs.io/en/latest/installation.html>`_.
+
+Quick Start
+-----------
+
+Once installed, ``jdaviz`` can be run either as a standalone web application or in a Jupyter notebook.
+
+As a Web Application
+++++++++++++++++++++
+
+``jdaviz`` provides a command-line tool to start the web application. To see the syntax and usage,
+from a terminal, type::
+
+    jdaviz --help
+    jdaviz /path/to/data/spectral_file --layout=specviz
+
+For more information on the command line interface, see the
+`Jdaviz Quickstart <https://jdaviz.readthedocs.io/en/latest/quickstart.html>`_.
+
+
+In a Jupyter Notebook
++++++++++++++++++++++
+
+The power of ``jdaviz`` is that it can integrated into your Juppyter notebook workflow::
+
+    from jdaviz import Specviz
+
+    app = Specviz()
+    app
+To learn more about the various ``jdaviz`` application configurations and loading data, see the
+`specviz <https://jdaviz.readthedocs.io/en/latest/specviz/import_data.html>`_, `cubeviz <https://jdaviz.readthedocs.io/en/latest/cubeviz/import_data.html>`_, `mosviz <https://jdaviz.readthedocs.io/en/latest/mosviz/import_data.html>`_, or `imviz <https://jdaviz.readthedocs.io/en/latest/imviz/import_data.html>`_ tools.
+
+``jdaviz`` also provides a directory of `sample notebooks <https://jdaviz.readthedocs.io/en/latest/sample_notebooks.html>`_ to test the application, located in the ``notebooks`` sub-directory
+of the git repository.  ``Example.ipynb`` is provided as an example that loads a SDSS MaNGA IFU data cube with the
+``Cubeviz`` configuration.  To run the provided example, start the jupyter kernel with the notebook path::
+
+    jupyter notebook /path/to/jdaviz/notebooks/Example.ipynb
 
 Help
 ----
