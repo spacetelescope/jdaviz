@@ -49,6 +49,8 @@ Specviz
 Other Changes and Additions
 ---------------------------
 
+- Change default collapse function to sum. [#1229]
+
 2.4 (2022-03-29)
 ================
 

@@ -476,5 +476,12 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
         # Make it so y axis label is not covering tick numbers.
         self.figure.axes[1].label_offset = "-50"
 
-        # # Set Y-axis to scientific notation
+        # Set Y-axis to scientific notation
         self.figure.axes[1].tick_format = '0.1e'
+
+        # Change collapse function to sum and
+        # reset axes limits to match new spectrum view
+        self.state.function = 'sum'
+        # TODO: remove when glue-viz/glue PR #2277 is merged
+        #  and the released version is pinned
+        self.state.reset_limits()
