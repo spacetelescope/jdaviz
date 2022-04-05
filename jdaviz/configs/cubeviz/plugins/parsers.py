@@ -123,43 +123,18 @@ def _parse_hdu(app, hdulist, file_name=None):
 
         app.add_data(sc, data_label)
 
-        # Get id for correct x axis attribute
-        for att_name in ["Right Ascension", "RA"]:
-            if att_name in app.data_collection[data_label].component_ids():
-                x_att = att_name
-                x_att_type = "world"
-                break
-        else:
-            x_att = "Pixel Axis 0 [z]"
-            x_att_type = "pixel"
-
         # If the data type is some kind of integer, assume it's the mask/dq
         if hdu.data.dtype in (int, np.uint, np.uint32) or \
                 any(x in hdu.name.lower() for x in EXT_TYPES['mask']):
             app.add_data_to_viewer('mask-viewer', data_label)
-            viewer = app.get_viewer('mask-viewer')
-            if x_att_type == "world":
-                viewer.state.x_att_world = app.data_collection[data_label].id[x_att]
-            else:
-                viewer.state.x_att = app.data_collection[data_label].id[x_att]
 
         if 'errtype' in [x.lower() for x in hdu.header.keys()] or \
                 any(x in hdu.name.lower() for x in EXT_TYPES['uncert']):
             app.add_data_to_viewer('uncert-viewer', data_label)
-            viewer = app.get_viewer('uncert-viewer')
-            if x_att_type == "world":
-                viewer.state.x_att_world = app.data_collection[data_label].id[x_att]
-            else:
-                viewer.state.x_att = app.data_collection[data_label].id[x_att]
 
         if any(x in hdu.name.lower() for x in EXT_TYPES['flux']):
             # Add flux to top left image viewer
             app.add_data_to_viewer('flux-viewer', data_label)
-            viewer = app.get_viewer('flux-viewer')
-            if x_att_type == "world":
-                viewer.state.x_att_world = app.data_collection[data_label].id[x_att]
-            else:
-                viewer.state.x_att = app.data_collection[data_label].id[x_att]
             # Add flux to spectrum viewer
             app.add_data_to_viewer('spectrum-viewer', data_label)
             viewer = app.get_viewer('spectrum-viewer')
@@ -169,7 +144,6 @@ def _parse_hdu(app, hdulist, file_name=None):
                     break
             else:
                 viewer.state.x_att_pixel = app.data_collection[data_label].id["Pixel Axis 2 [x]"]
-
 
 def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI', viewer_name='flux-viewer'):
     from specutils import Spectrum1D

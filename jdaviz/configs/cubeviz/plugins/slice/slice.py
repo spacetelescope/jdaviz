@@ -139,7 +139,6 @@ class Slice(TemplateMixin):
         self.wavelength = self._x_all[value]
 
         if self.linked:
-            print(self._watched_viewers)
             for viewer in self._watched_viewers:
                 viewer.state.slices = (0, 0, value)
             for viewer in self._indicator_viewers:
