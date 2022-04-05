@@ -13,3 +13,4 @@ Here is some documentation specific for developers.
   ui_style_guide
   specviz_selection
   links
+  win_dev
