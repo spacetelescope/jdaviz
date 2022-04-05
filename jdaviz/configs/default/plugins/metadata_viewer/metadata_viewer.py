@@ -20,7 +20,7 @@ class MetadataViewer(TemplateMixin, DatasetSelectMixin):
 
     @observe("dataset_selected")
     def _show_metadata(self, event):
-        data = self.dataset.selected_obj
+        data = self.dataset.selected_dc_item
         if data is None:
             self.has_metadata = False
             self.metadata = []
