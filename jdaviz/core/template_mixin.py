@@ -708,6 +708,12 @@ class DatasetSelect(BaseSelectPluginComponent):
         self._on_data_changed()
 
     @property
+    def default_data_cls(self):
+        if self.app.config == 'imviz':
+            return None
+        return Spectrum1D
+
+    @property
     def filters(self):
         return self._filters
 
@@ -742,11 +748,11 @@ class DatasetSelect(BaseSelectPluginComponent):
             if match is not None:
                 if hasattr(match, 'get_object'):
                     # cube viewers return the data collection instance from get_data_from_viewer
-                    return match.get_object(cls=Spectrum1D)
+                    return match.get_object(cls=self.default_data_cls)
                 return match
         # handle the case of empty Application with no viewer, we'll just pull directly
         # from the data collection
-        return self.get_object(cls=Spectrum1D)
+        return self.get_object(cls=self.default_data_cls)
 
     def _is_valid_item(self, data):
         def not_from_plugin(data):
