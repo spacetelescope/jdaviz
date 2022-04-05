@@ -88,7 +88,7 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
             pc_old = self.app.data_collection[i].pixel_component_ids
             # If data_collection[i] is also from the collapse plugin
             if ("Plugin" in self.app.data_collection[i].meta and
-                self.app.data_collection[i].meta["Plugin"] == "Collapse"):
+                    self.app.data_collection[i].meta["Plugin"] == "Collapse"):
                 links = [LinkSame(pc_old[0], pc_new[0]),
                          LinkSame(pc_old[1], pc_new[1])]
             else:
