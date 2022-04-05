@@ -415,19 +415,15 @@ class Mosviz(ConfigHelper, LineListMixin):
         instrument = kwargs.pop('instrument', None)
         msg = ""
 
-        if directory is not None and instrument is not None:
+        if Path(directory).is_dir():
+            if instrument not in ('nirspec', 'niriss'):
+                msg = "Warning: Unspecific or Unrecognized MOS Instrument. Only JWST NIRSpec and \
+                       NIRCam folder parsing is fully supported. Falling back to NIRSpec parsing..."
+                instrument = "nirspec"
             if instrument.lower() == "nirspec":
                 super().load_data(directory, "mosviz-nirspec-directory-parser")
             elif instrument.lower() == "niriss":
                 self.load_niriss_data(directory)
-            else:
-                msg = "Warning: Data is not from NIRISS or Nirspec, " \
-                      "data loading may not work"
-                super().load_data(directory, "mosviz-nirspec-directory-parser")
-
-        elif directory is not None:
-            msg = "Warning: Please provide the name of the instrument" \
-                  " in the load_data method"
 
         elif (spectra_1d is not None and spectra_2d is not None
                 and images is not None):
