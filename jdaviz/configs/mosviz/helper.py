@@ -417,10 +417,9 @@ class Mosviz(ConfigHelper, LineListMixin):
 
         if Path(directory).is_dir():
             if instrument not in ('nirspec', 'niriss'):
-                warnings.warn('Warning: Unspecific or Unrecognized MOS Instrument. Only JWST '
-                              'NIRSpec and NIRISS folder parsing is fully supported. Falling '
-                              'back to NIRSpec parsing...'
-                              )
+                msg = ("Warning: Unspecific or Unrecognized MOS Instrument. Only JWST NIRSpec and "
+                       "NIRCam folder parsing is fully supported. Falling back to NIRSpec parsing")
+                warnings.warn(msg)
                 instrument = "nirspec"
             if instrument.lower() == "nirspec":
                 super().load_data(directory, "mosviz-nirspec-directory-parser")
