@@ -181,7 +181,7 @@ def test_annulus_background(imviz_helper):
     imviz_helper.load_data(ones, data_label='ones')
 
     phot_plugin = imviz_helper.app.get_tray_item_from_name('imviz-aper-phot-simple')
-    phot_plugin.data_selected = 'ones'
+    phot_plugin.dataset_selected = 'ones'
 
     # Mark an object of interest
     imviz_helper._apply_interactive_region('bqplot:circle', (143, 18), (157, 32))
@@ -194,7 +194,7 @@ def test_annulus_background(imviz_helper):
     assert_allclose(phot_plugin.background_value, 1)
 
     # Switch data
-    phot_plugin.data_selected = 'four_gaussians'
+    phot_plugin.dataset_selected = 'four_gaussians'
     assert_allclose(phot_plugin.bg_annulus_inner_r, 7)  # Unchanged
     assert_allclose(phot_plugin.bg_annulus_width, 10)
     assert_allclose(phot_plugin.background_value, 5.745596129482831)  # Changed
