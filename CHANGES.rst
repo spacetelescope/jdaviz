@@ -16,7 +16,7 @@ Mosviz
 ^^^^^^
 
 - Mosviz Desktop App utilizes new directory parsers, fallsback to NIRSpec parser if
-  no instrument keyword specified
+  no instrument keyword specified [#1232]
 
 Specviz
 ^^^^^^^
