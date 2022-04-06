@@ -5,9 +5,7 @@
 # other information are set in the setup.cfg file.
 
 import os
-import shutil
 import sys
-from pathlib import Path
 
 from setuptools import setup
 from setuptools.command.develop import develop
@@ -76,68 +74,71 @@ def jupyter_config_dir():
     """Get the Jupyter config directory for this platform and user.
     Returns JUPYTER_CONFIG_DIR if defined, else ~/.jupyter
     """
+    import pathlib
     from tempfile import mkdtemp
 
     env = os.environ
-    home_dir = Path.home()
+    home_dir = pathlib.Path.home().as_posix()
 
     if env.get('JUPYTER_NO_CONFIG'):
-        return Path(mkdtemp(suffix='jupyter-clean-cfg'))
+        return mkdtemp(suffix='jupyter-clean-cfg')
 
     if env.get('JUPYTER_CONFIG_DIR'):
-        return Path(env['JUPYTER_CONFIG_DIR'])
+        return env['JUPYTER_CONFIG_DIR']
 
-    return home_dir / '.jupyter'
+    return os.path.join(home_dir, '.jupyter')
 
 
 def user_dir():
+    homedir = os.path.expanduser('~')
+    # Next line will make things work even when /home/ is a symlink to
+    # /usr/home as it is on FreeBSD, for example
+    homedir = os.path.realpath(homedir)
     if sys.platform == 'darwin':
-        # realpath will make things work even when /home/ is a symlink to
-        # /usr/home as it is on FreeBSD, for example
-        return Path(os.path.realpath(os.path.expanduser('~'))) / 'Library' / 'Jupyter'
-    elif sys.platform.startswith('win'):
+        return os.path.join(homedir, 'Library', 'Jupyter')
+    elif os.name == 'nt':
         appdata = os.environ.get('APPDATA', None)
         if appdata:
-            return Path(appdata, 'jupyter')
+            return os.path.join(appdata, 'jupyter')
         else:
-            return jupyter_config_dir() / 'data'
-    # Linux, non-OS X Unix, AIX, etc.
-    elif "XDG_DATA_HOME" in os.environ:
-        return Path(os.environ["XDG_DATA_HOME"], 'jupyter')
+            return os.path.join(jupyter_config_dir(), 'data')
     else:
-        return Path.home() / '.local' / 'share' / 'jupyter'
+        # Linux, non-OS X Unix, AIX, etc.
+        import pathlib
+        env = os.environ
+        home = pathlib.Path.home().as_posix()
+        xdg = env.get("XDG_DATA_HOME", None)
+        if not xdg:
+            xdg = os.path.join(home, '.local', 'share')
+        return os.path.join(xdg, 'jupyter')
 
 
 class DevelopCmd(develop):
     prefix_targets = [
-        (Path("nbconvert", "templates"), 'jdaviz-default'),
-        (Path("voila", "templates"), 'jdaviz-default')
+        ("nbconvert/templates", 'jdaviz-default'),
+        ("voila/templates", 'jdaviz-default')
     ]
 
     def run(self):
+        target_dir = os.path.join(sys.prefix, 'share', 'jupyter')
         if '--user' in sys.prefix:  # TODO: is there a better way to find out?
             target_dir = user_dir()
-        else:
-            target_dir = Path(sys.prefix, 'share', 'jupyter')
-
-        is_win = sys.platform.startswith('win')
+        target_dir = os.path.join(target_dir)
 
         for prefix_target, name in self.prefix_targets:
-            source = Path('share', 'jupyter') / prefix_target / name
-            target = target_dir / prefix_target / name
-            target_subdir = target.parent
-            target_subdir.mkdir(parents=True, exist_ok=True)
-            rel_source = source.resolve(strict=True)
+            source = os.path.join('share', 'jupyter', prefix_target, name)
+            target = os.path.join(target_dir, prefix_target, name)
+            target_subdir = os.path.dirname(target)
+            if not os.path.exists(target_subdir):
+                os.makedirs(target_subdir)
+            rel_source = os.path.relpath(os.path.abspath(
+                source), os.path.abspath(target_subdir))
+            try:
+                os.remove(target)
+            except Exception:
+                pass
             print(rel_source, '->', target)
-
-            # Beware: https://docs.python.org/3/library/shutil.html#shutil.rmtree.avoids_symlink_attacks  # noqa
-            shutil.rmtree(target, ignore_errors=True)
-
-            if not is_win:
-                target.unlink()
-                target.symlink_to(rel_source, target_is_directory=True)
-            else:  # Cannot symlink without relpath or Windows admin priv in some OS versions
-                shutil.copytree(rel_source, target)
+            os.symlink(rel_source, target)
 
         super(DevelopCmd, self).run()
 
