@@ -20,11 +20,11 @@ as such:
 
     >>> from jdaviz import Mosviz
     >>> mosviz = Mosviz()
-    >>> mosviz.load_data(directory="path/to/my/data", instrument="nirspec")
+    >>> mosviz.load_data(directory="path/to/my/data", instrument="nirspec")  # doctest: +SKIP
 
 or for NIRISS:
 
-    >>> mosviz.load_data(directory="path/to/my/data", instrument="niriss")
+    >>> mosviz.load_data(directory="path/to/my/data", instrument="niriss")  # doctest: +SKIP
 
 If an instrument isn't specified, Mosviz will default to NIRSpec parsing.
 
