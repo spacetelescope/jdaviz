@@ -52,7 +52,7 @@ Other Changes and Additions
 ---------------------------
 
 - Change default collapse function to sum.
-  This affects collapsed spectrum in Cubeviz and its Collapse plugin default. [#1229]
+  This affects collapsed spectrum in Cubeviz and its Collapse plugin default. [#1229, #1237]
 
 2.4 (2022-03-29)
 ================
