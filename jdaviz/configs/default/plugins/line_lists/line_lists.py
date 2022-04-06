@@ -377,7 +377,7 @@ class LineListTool(PluginTemplateMixin):
         # by taking abs, this will work for wavelength or frequency units.
         half_range = abs(x_max - x_min) / x_mid
         ndec = -np.log10(half_range)
-        if ndec > 0:
+        if ndec > 0 and not np.isinf(ndec):
             # round to at least 2 digits, or the first significant digit
             ndec = np.max([2, int(np.ceil(ndec))])
         else:
@@ -406,7 +406,7 @@ class LineListTool(PluginTemplateMixin):
         # When using the slider, we'll "round" redshift to the digits in the
         # slider step to avoid extra digits due to rounding errors
         ndec = -np.log10(event['new'])
-        if ndec > 0:
+        if ndec > 0 and not np.isinf(ndec):
             # round to at least 2 digits, or one past the first significant digit
             # note: the UI will not show trailing zeros, we just want to avoid
             # and 1 at floating point precision if not significant

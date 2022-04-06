@@ -11,12 +11,10 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
     app = cubeviz_helper.app
     dc = app.data_collection
     app.add_data(spectrum1d_cube, 'test[FLUX]')
+    app.add_data_to_viewer('flux-viewer', 'test[FLUX]')
 
     mm = MomentMap(app=app)
-    mm._subset_selected = 'None'
-    mm._on_data_updated(None)
-
-    mm._on_data_selected({'new': 'test[FLUX]'})
+    mm.dataset_selected = 'test[FLUX]'
 
     mm.n_moment = 0  # Collapsed sum, will get back 2D spatial image
     mm.vue_calculate_moment()

@@ -10,6 +10,7 @@ from astropy.utils.data import download_file
 
 from jdaviz.app import Application
 from jdaviz.configs.specviz.plugins.unit_conversion import unit_conversion as uc
+from jdaviz.core.marks import LineUncertainties
 from jdaviz import Specviz
 
 
@@ -257,12 +258,12 @@ def test_plot_uncertainties(specviz_helper, spectrum1d):
 
     specviz_viewer = specviz_helper.app.get_viewer("spectrum-viewer")
 
-    assert len(specviz_viewer.figure.marks) == 1
+    assert len([m for m in specviz_viewer.figure.marks if isinstance(m, LineUncertainties)]) == 0
 
     specviz_viewer.show_uncertainties()
 
-    assert len(specviz_viewer.figure.marks) == 2
+    assert len([m for m in specviz_viewer.figure.marks if isinstance(m, LineUncertainties)]) == 1
 
     specviz_viewer.clean()
 
-    assert len(specviz_viewer.figure.marks) == 1
+    assert len([m for m in specviz_viewer.figure.marks if isinstance(m, LineUncertainties)]) == 0

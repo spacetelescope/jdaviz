@@ -19,10 +19,9 @@ def test_spectralsubsetselect(specviz_helper, spectrum1d):
     p.spectral_subset_selected = 'Subset 1'
     assert p.spectral_subset_selected_has_subregions is False
     assert p.spectral_subset.selected_obj is not None
-    expected_min = spectrum1d.spectral_axis[spectrum1d.spectral_axis.value >= 6500][0].value
-    expected_max = spectrum1d.spectral_axis[spectrum1d.spectral_axis.value <= 7400][-1].value
-    assert p.spectral_subset.selected_min(spectrum1d) == expected_min
-    assert p.spectral_subset.selected_max(spectrum1d) == expected_max
+    expected_min = spectrum1d.spectral_axis[spectrum1d.spectral_axis.value >= 6500][0]
+    expected_max = spectrum1d.spectral_axis[spectrum1d.spectral_axis.value <= 7400][-1]
+    assert p.spectral_subset.selected_min_max(spectrum1d) == (expected_min, expected_max)
 
     assert p.spectral_subset.app == p.app
     assert p.spectral_subset.spectrum_viewer == sv
@@ -50,7 +49,7 @@ def test_viewer_select(cubeviz_helper, spectrum1d_cube):
     p = app.get_tray_item_from_name('g-export-plot')
     assert len(p.viewer.ids) == 4
     assert len(p.viewer.references) == 4
-    assert len(p.viewer.ref_or_ids) == 4
+    assert len(p.viewer.labels) == 4
     assert p.viewer.selected_obj == fv
 
     # set by reference
@@ -59,4 +58,4 @@ def test_viewer_select(cubeviz_helper, spectrum1d_cube):
 
     # try setting based on id instead of reference
     p.viewer_selected = p.viewer.ids[0]
-    assert p.viewer_selected == p.viewer.ref_or_ids[0]
+    assert p.viewer_selected == p.viewer.labels[0]

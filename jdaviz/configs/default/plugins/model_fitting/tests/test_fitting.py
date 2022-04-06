@@ -61,8 +61,7 @@ def test_model_ids(spectral_cube_wcs):
     dc.append(Data(x=np.ones((3, 4, 5)), label='test', coords=spectral_cube_wcs))
 
     plugin = ModelFitting(app=app)
-
-    plugin.data_selected = 'test'
+    plugin.dataset_selected = 'test'
     plugin.component_models = [{'id': 'valid_string_already_exists'}]
     plugin.temp_model = 'Linear1D'
 

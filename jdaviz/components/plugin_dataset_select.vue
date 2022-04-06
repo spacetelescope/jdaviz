@@ -5,8 +5,8 @@
       :items="items"
       v-model="selected"
       @change="$emit('update:selected', $event)"
-      :label="label ? label : 'Viewer'"
-      :hint="hint ? hint : 'Select viewer.'"
+      :label="label ? label : 'Data'"
+      :hint="hint ? hint : 'Select data.'"
       :rules="rules ? rules : []"
       item-text="label"
       item-value="label"
@@ -30,7 +30,6 @@
   </v-row>
  </div>
 </template>
-
 <script>
 module.exports = {
   props: ['items', 'selected', 'label', 'hint', 'rules', 'show_if_single_entry']

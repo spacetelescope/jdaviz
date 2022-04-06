@@ -5,25 +5,21 @@ from astropy import units as u
 from astropy.table import QTable
 from astropy.time import Time
 from bqplot import pyplot as bqplt
-from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage, SubsetUpdateMessage
 from ipywidgets import widget_serialization
 from photutils.aperture import ApertureStats
 from traitlets import Any, Bool, List, Unicode, observe
 
-from jdaviz.configs.imviz.helper import layer_is_image_data
-from jdaviz.core.events import AddDataMessage, RemoveDataMessage, SnackbarMessage
+from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.region_translators import regions2aperture
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import TemplateMixin, SubsetSelect
+from jdaviz.core.template_mixin import TemplateMixin, DatasetSelectMixin, SubsetSelect
 
 __all__ = ['SimpleAperturePhotometry']
 
 
 @tray_registry('imviz-aper-phot-simple', label="Imviz Simple Aperture Photometry")
-class SimpleAperturePhotometry(TemplateMixin):
+class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
     template_file = __file__, "aper_phot_simple.vue"
-    dc_items = List([]).tag(sync=True)
-    data_selected = Unicode("").tag(sync=True)
     subset_items = List([]).tag(sync=True)
     subset_selected = Unicode("").tag(sync=True)
     bg_subset_items = List().tag(sync=True)
@@ -54,12 +50,6 @@ class SimpleAperturePhotometry(TemplateMixin):
                                       default_text='Manual',
                                       allowed_type='spatial')
 
-        self.hub.subscribe(self, AddDataMessage, handler=self._on_viewer_data_changed)
-        self.hub.subscribe(self, RemoveDataMessage, handler=self._on_viewer_data_changed)
-        self.hub.subscribe(self, SubsetCreateMessage, handler=self._on_viewer_data_changed)
-        self.hub.subscribe(self, SubsetDeleteMessage, handler=self._on_viewer_data_changed)
-        self.hub.subscribe(self, SubsetUpdateMessage, handler=self._on_viewer_data_changed)
-
         self._selected_data = None
         self._selected_subset = None
         self.plot_types = ["Radial Profile", "Radial Profile (Raw)"]
@@ -72,17 +62,10 @@ class SimpleAperturePhotometry(TemplateMixin):
         self.radial_plot = ''
         bqplt.clear()
 
-    def _on_viewer_data_changed(self, msg=None):
-        # To support multiple viewers, we allow the entire data collection.
-        self.dc_items = [lyr.label for lyr in self.app.data_collection
-                         if layer_is_image_data(lyr)]
-
-    @observe('data_selected')
-    def _data_selected_changed(self, event={}):
-        data_selected = event.get('new', self.data_selected)
+    @observe('dataset_selected')
+    def _dataset_selected_changed(self, event={}):
         try:
-            self._selected_data = self.app.data_collection[
-                self.app.data_collection.labels.index(data_selected)]
+            self._selected_data = self.dataset.selected_dc_item
             self.counts_factor = 0
             self.pixel_area = 0
             self.flux_scaling = 0
@@ -119,7 +102,8 @@ class SimpleAperturePhotometry(TemplateMixin):
             self.reset_results()
             self._selected_data = None
             self.hub.broadcast(SnackbarMessage(
-                f"Failed to extract {data_selected}: {repr(e)}", color='error', sender=self))
+                f"Failed to extract {self.dataset_selected}: {repr(e)}",
+                color='error', sender=self))
 
         # Auto-populate background, if applicable
         self._bg_subset_selected_changed()
@@ -131,7 +115,7 @@ class SimpleAperturePhotometry(TemplateMixin):
         for subset_grp in self.app.data_collection.subset_groups:
             if subset_grp.label == subset:
                 for sbst in subset_grp.subsets:
-                    if sbst.data.label == self.data_selected:
+                    if sbst.data.label == self.dataset_selected:
                         # TODO: https://github.com/glue-viz/glue-astronomy/issues/52
                         return sbst.data.get_selection_definition(
                                 subset_id=subset, format='astropy-regions')

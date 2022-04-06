@@ -4,15 +4,15 @@
         <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#gaussian-smooth'">Smooth your data in xy or wavelength with a Gaussian kernel</j-docs-link>
       </v-row>
 
-      <v-row>
-        <v-select
-          :items="dc_items"
-          v-model="selected_data"
-          label="Data"
-          hint="Select the data set to be smoothed."
-          persistent-hint
-        ></v-select>
-      </v-row>
+      <!-- for mosviz, the entries change on row change, so we want to always show the dropdown
+           to make sure that is clear -->
+      <plugin-dataset-select
+        :items="dataset_items"
+        :selected.sync="dataset_selected"
+        :show_if_single_entry="config=='mosviz'"
+        label="Data"
+        hint="Select the data to be smoothed."
+      />
 
       <v-row v-if="show_modes">
         <v-select
@@ -27,8 +27,9 @@
       <v-row>
         <v-text-field
           ref="stddev"
+          type="number"
           label="Standard deviation"
-          v-model="stddev"
+          v-model.number="stddev"
           type="number"
           hint="The stddev of the kernel, in pixels."
           persistent-hint
@@ -36,7 +37,7 @@
         ></v-text-field>
       </v-row>
 
-      <v-row v-if="selected_data && stddev > 0">
+      <v-row v-if="dataset_selected && stddev > 0">
         <v-select v-if="selected_mode == 'Spatial'"
           :items="viewers"
           v-model="selected_viewer"
@@ -53,14 +54,14 @@
 
       <v-row justify="end">
         <j-tooltip v-if="selected_mode=='Spectral'" tipid='plugin-gaussian-apply'>
-          <v-btn :disabled="stddev <= 0 || selected_data == ''"
+          <v-btn :disabled="stddev <= 0 || dataset_selected == ''"
             color="accent" text 
             @click="spectral_smooth"
           >Apply</v-btn>
         </j-tooltip>
         <j-tooltip v-else tipid='plugin-gaussian-apply'>
           <v-btn 
-            :disabled="stddev <= 0 || selected_data == ''"
+            :disabled="stddev <= 0 || dataset_selected == ''"
             color="accent" text
             @click="spatial_convolution"
           >Apply</v-btn>

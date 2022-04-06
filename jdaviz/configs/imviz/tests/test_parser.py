@@ -261,7 +261,6 @@ class TestParseImage:
 
         # Test simple aperture photometry plugin.
         phot_plugin = imviz_helper.app.get_tray_item_from_name('imviz-aper-phot-simple')
-        phot_plugin._on_viewer_data_changed()
         phot_plugin.data_selected = 'contents[DATA]'
         phot_plugin.subset_selected = 'Subset 1'
         assert_allclose(phot_plugin.background_value, 0)
@@ -393,7 +392,6 @@ class TestParseImage:
                                                (1465, 2541),
                                                (1512, 2611))  # Galaxy
         phot_plugin = imviz_helper.app.get_tray_item_from_name('imviz-aper-phot-simple')
-        phot_plugin._on_viewer_data_changed()
         phot_plugin.data_selected = 'contents[SCI,1]'
         phot_plugin.subset_selected = 'Subset 1'
         phot_plugin.background_value = 0.0014  # Manual entry: Median on whole array

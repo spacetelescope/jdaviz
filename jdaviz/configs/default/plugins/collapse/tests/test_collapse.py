@@ -14,6 +14,7 @@ def test_linking_after_collapse(cubeviz_helper, spectral_cube_wcs):
     coll = Collapse(app=cubeviz_helper.app)
 
     coll.selected_data_item = 'Unknown spectrum object[FLUX]'
+    coll.dataset_selected = 'Unknown spectrum object[FLUX]'
 
     coll.add_replace_results = False
     coll.vue_collapse()

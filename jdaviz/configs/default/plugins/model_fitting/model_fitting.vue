@@ -4,25 +4,32 @@
       <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#model-fitting'">Fit an analytic model to data or a subset.</j-docs-link>
     </v-row>
 
-    <v-form v-model="form_valid_data_selection">
-      <v-row>
-        <v-select
-          :items="dc_items"
-          v-model="selected_data"
-          label="Data"
-          hint="Select the data set to be fitted."
-          :rules="[() => !!selected_data || 'This field is required']"
-          persistent-hint
-        ></v-select>
-      </v-row>
+    <!-- for mosviz, the entries change on row change, so we want to always show the dropdown
+         to make sure that is clear -->
+    <plugin-dataset-select
+      :items="dataset_items"
+      :selected.sync="dataset_selected"
+      :show_if_single_entry="config=='mosviz'"
+      label="Data"
+      hint="Select the data set to be fitted."
+    />
 
-      <plugin-subset-select 
-        :items="spectral_subset_items"
-        :selected.sync="spectral_subset_selected"
-        label="Spectral region"
-        hint="Select spectral region to fit."
-      />
-    </v-form>
+    <plugin-subset-select
+      v-if="cube_fit"
+      :items="spatial_subset_items"
+      :selected.sync="spatial_subset_selected"
+      :show_if_single_entry="true"
+      label="Spatial region"
+      hint="Select spatial region to fit."
+    />
+
+    <plugin-subset-select 
+      :items="spectral_subset_items"
+      :selected.sync="spectral_subset_selected"
+      :show_if_single_entry="true"
+      label="Spectral region"
+      hint="Select spectral region to fit."
+    />
 
     <j-plugin-section-header>Model Components</j-plugin-section-header>
     <v-form v-model="form_valid_model_component">
@@ -66,7 +73,7 @@
           <v-btn 
             color="primary" 
             text 
-            :disabled="!form_valid_model_component || !form_valid_data_selection"
+            :disabled="!form_valid_model_component"
             @click="add_model"
             >Add Component
           </v-btn>
@@ -195,6 +202,9 @@
 
     <div v-if="cube_fit">
       <j-plugin-section-header>Cube Fit</j-plugin-section-header>
+      <!-- TODO: use plugin-viewer-select once custom viewer names are supported.  For now we'll
+           use a custom component so that they can be referred to by position (left, center, right)
+           instead of the viewer names -->
       <v-row>
         <v-select
           :items="viewers"

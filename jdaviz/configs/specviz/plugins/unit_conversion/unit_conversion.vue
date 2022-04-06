@@ -4,15 +4,15 @@
       <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#unit-conversion'">Convert the spectral flux density and spectral axis units.</j-docs-link>
     </v-row>
 
-    <v-row>
-      <v-text-field
-        v-model="selected_data"
-        label="Data"
-        hint="Data to be converted."
-        disabled="True"
-        persistent-hint
-      ></v-text-field>
-    </v-row>
+    <!-- for mosviz, the entries change on row change, so we want to always show the dropdown
+         to make sure that is clear -->
+    <plugin-dataset-select
+      :items="dataset_items"
+      :selected.sync="dataset_selected"
+      :show_if_single_entry="config=='mosviz'"
+      label="Data"
+      hint="Select the data to be converted."
+    />
 
     <v-row>
       <v-text-field
@@ -63,7 +63,7 @@
 
     <v-row justify="end">
       <j-tooltip tipid='plugin-unit-conversion-apply'>
-        <v-btn :disabled="selected_data == ''"
+        <v-btn :disabled="dataset_selected == ''"
         color="accent" text @click="unit_conversion">Apply</v-btn>
       </j-tooltip>
     </v-row>
