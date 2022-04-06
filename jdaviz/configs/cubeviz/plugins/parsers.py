@@ -183,7 +183,8 @@ def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', viewer_name='flux-viewe
     hdr = hdulist[1].header
 
     wcs_dict = {
-        'CTYPE1': 'WAVE    ', 'CUNIT1': 'um', 'CDELT1': hdr['CDELT3'] * 1E6, 'CRPIX1': hdr['CRPIX3'] - 1,
+        'CTYPE1': 'WAVE    ', 'CUNIT1': 'um', 'CDELT1': hdr['CDELT3'] * 1E6,
+        'CRPIX1': hdr['CRPIX3'] - 1,
         'CRVAL1': hdr['CRVAL3'] * 1E6, 'NAXIS1': hdr['NAXIS3'] - 2,
         'CTYPE2': 'DEC--TAN', 'CUNIT2': 'deg', 'CDELT2': hdr['CDELT1'], 'CRPIX2': hdr['CRPIX1'],
         'CRVAL2': hdr['CRVAL1'], 'NAXIS2': hdr['NAXIS1'],
