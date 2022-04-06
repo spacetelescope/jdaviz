@@ -833,7 +833,10 @@ class Application(VuetifyTemplate, HubListener):
         data_label = self._build_data_label(data_path, ext=ext)
         data_id = self._data_id_from_label(data_label)
 
-        data_ids = viewer_item['selected_data_items'] if not clear_other_data else []
+        if clear_other_data:
+            self._update_selected_data_items(viewer_item['id'], [])
+
+        data_ids = viewer_item['selected_data_items']
 
         if data_id is not None:
             data_ids.append(data_id)
