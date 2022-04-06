@@ -205,8 +205,6 @@ def test_load_image(mosviz_helper, image):
     assert list(data.keys())[0] == f"{label} 0"
 
 
-
-
 @pytest.mark.filterwarnings('ignore')
 def test_viewer_axis_link(mosviz_helper, spectrum1d, spectrum2d):
     label1d = "Test 1D Spectrum"
