@@ -57,6 +57,9 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
         self.display_uncertainties = False
         self.display_mask = False
 
+        # Change collapse function to sum
+        self.state.function = 'sum'
+
     def _on_subset_create(self, msg):
         for layer in self.state.layers:
             if layer.layer.label == msg.subset.label:
@@ -478,10 +481,3 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
 
         # Set Y-axis to scientific notation
         self.figure.axes[1].tick_format = '0.1e'
-
-        # Change collapse function to sum and
-        # reset axes limits to match new spectrum view
-        self.state.function = 'sum'
-        # TODO: remove when glue-viz/glue PR #2277 is merged
-        #  and the released version is pinned
-        self.state.reset_limits()
