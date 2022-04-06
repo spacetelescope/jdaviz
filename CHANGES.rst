@@ -52,7 +52,7 @@ Other Changes and Additions
 ---------------------------
 
 - Change default collapse function to sum.
-  This affects collapsed spectrum in Cubeviz and its Collapse plugin default. [#1229]
+  This affects collapsed spectrum in Cubeviz and its Collapse plugin default. [#1229, #1237]
 
 - Data dropdowns in plugins are now filtered to only applicable entries. [#1221]
 
