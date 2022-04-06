@@ -14,8 +14,8 @@
       hint="Select the data to see metadata."
     />
 
+    <j-plugin-section-header>Metadata</j-plugin-section-header>
     <div v-if="has_metadata">
-      <j-plugin-section-header>Metadata</j-plugin-section-header>
       <v-row no-gutters>
         <v-col cols=6><U>Key</U></v-col>
         <v-col cols=6><U>Value</U></v-col>
@@ -28,6 +28,11 @@
         <v-col cols=6>{{ item[1] }}</v-col>
       </v-row>
     </div>
+    <v-row v-else>
+      <span class="v-messages v-messages__message text--secondary">
+          Selected data does not contain any metadata.
+      </span>
+    </v-row>
 
   </j-tray-plugin>
 </template>

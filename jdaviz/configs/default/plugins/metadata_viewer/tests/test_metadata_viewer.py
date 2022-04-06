@@ -16,7 +16,7 @@ def test_view_dict(imviz_helper):
     imviz_helper.load_data(ndd_1, data_label='has_simple_meta')
     imviz_helper.load_data(ndd_2, data_label='has_nested_meta')
     imviz_helper.load_data(arr, data_label='no_meta')
-    assert mv.dataset.labels == ['has_simple_meta[DATA]', 'has_nested_meta[DATA]']
+    assert mv.dataset.labels == ['has_simple_meta[DATA]', 'has_nested_meta[DATA]', 'no_meta']
 
     mv.dataset_selected = 'has_simple_meta[DATA]'
     assert mv.has_metadata
@@ -30,9 +30,8 @@ def test_view_dict(imviz_helper):
         ('EXTNAME', 'ASDF'), ('REF.bar', '10.0'),
         ('REF.foo.1', ''), ('REF.foo.2.0', '1'), ('REF.foo.2.1', '2')], mv.metadata
 
-    with pytest.raises(ValueError):
-        mv.dataset_selected = 'no_meta'
-    assert mv.dataset_selected == mv.dataset.labels[0]
+    mv.dataset_selected = 'no_meta'
+    assert not mv.has_metadata
 
 
 def test_view_invalid(imviz_helper):

@@ -16,12 +16,12 @@ class MetadataViewer(TemplateMixin, DatasetSelectMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # override the default filters on dataset entries to require metadata in entries
-        self.dataset.add_filter('has_metadata', 'not_from_plugin')
+        self.dataset.add_filter('not_from_plugin')
 
     @observe("dataset_selected")
     def _show_metadata(self, event):
         data = self.dataset.selected_dc_item
-        if data is None:
+        if data is None or not hasattr(data, 'meta') or not isinstance(data.meta, dict) or len(data.meta) < 1: # noqa
             self.has_metadata = False
             self.metadata = []
             return
