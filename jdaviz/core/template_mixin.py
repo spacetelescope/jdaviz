@@ -120,8 +120,13 @@ class BasePluginComponent(HubListener):
             if attr in self.__dict__:
                 del self.__dict__[attr]
 
-    def add_observe(self, traitlet_name, handler):
+    def add_observe(self, traitlet_name, handler, first=False):
         self._plugin.observe(handler, traitlet_name)
+        if first:
+            # re-order the callbacks so this one is first
+            existing_callbacks = self._plugin._trait_notifiers[traitlet_name]['change']
+            new_order = [handler] + [other for other in existing_callbacks if other != handler]
+            self._plugin._trait_notifiers[traitlet_name]['change'] = new_order
 
     @property
     def app(self):
@@ -179,7 +184,10 @@ class BaseSelectPluginComponent(BasePluginComponent):
         if default_text is not None:
             self.selected = default_text
 
-        self.add_observe(kwargs.get('selected'), self._selected_changed)
+        # this callback MUST come first so that any plugins that use @observe have those
+        # callbacks triggered AFTER the cache is cleared and the value is checked against
+        # valid options
+        self.add_observe(kwargs.get('selected'), self._selected_changed, first=True)
 
     @property
     def manual_options(self):
