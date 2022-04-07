@@ -249,6 +249,7 @@ def test_load_single_image_multi_spec(mosviz_helper, image, spectrum1d, spectrum
     assert len(qtable) == 3
 
 
+@pytest.mark.filterwarnings('ignore')
 @pytest.mark.remote_data
 def test_nirpsec_loader(mosviz_helper, tmpdir):
     '''
@@ -307,8 +308,8 @@ def test_nirpsec_fallback(mosviz_helper, tmpdir):
     level3_path = (pathlib.Path(tmpdir) / 'mosviz_nirspec_data_0.3' / 'level3')
 
     data_dir = level3_path
-
-    mosviz_helper.load_data(directory=data_dir)
+    with pytest.warns(UserWarning, match="Unspecific or Unrecognized MOS Instrument"):
+        mosviz_helper.load_data(directory=data_dir)
 
     assert len(mosviz_helper.app.data_collection) == 16
     assert "MOS Table" in mosviz_helper.app.data_collection
