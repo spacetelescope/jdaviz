@@ -39,8 +39,10 @@
 
       <plugin-add-results
         :label.sync="results_label"
+        :label_default="results_label_default"
+        :label_auto.sync="results_label_auto"
+        :label_invalid="results_label_invalid"
         label_hint="Label for the smoothed data"
-        :label_changed_by_user.sync="results_label_changed_by_user"
         :add_to_viewer_items="add_to_viewer_items"
         :add_to_viewer_selected.sync="add_to_viewer_selected"
       ></plugin-add-results>

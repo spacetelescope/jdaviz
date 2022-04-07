@@ -74,6 +74,7 @@ const tooltips = {
   'plugin-moment-maps-calculate': 'Calculate moment map',
   'plugin-moment-save-fits': 'Save moment map as FITS file',
   'plugin-link-apply': 'Apply linking to data',
+  'plugin-label-auto': 'Automatic/default label',
 }
 
 

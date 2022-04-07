@@ -907,9 +907,11 @@ class AddResults(BasePluginComponent):
       />
 
     """
-    def __init__(self, plugin, label, label_changed_by_user,
+    def __init__(self, plugin, label, label_default, label_auto, label_invalid,
                  add_to_viewer_items, add_to_viewer_selected):
-        super().__init__(plugin, label=label, label_changed_by_user=label_changed_by_user,
+        super().__init__(plugin, label=label,
+                         label_default=label_default, label_auto=label_auto,
+                         label_invalid=label_invalid,
                          add_to_viewer_items=add_to_viewer_items,
                          add_to_viewer_selected=add_to_viewer_selected)
 
@@ -919,8 +921,6 @@ class AddResults(BasePluginComponent):
         self.viewer = ViewerSelect(plugin, add_to_viewer_items, add_to_viewer_selected,
                                    manual_options=['None'])
 
-        self.add_observe(label, self._label_changed)
-
         # initialize items from original viewers
         self._on_data_changed()
 
@@ -929,20 +929,15 @@ class AddResults(BasePluginComponent):
 
         # NOTE: _on_data_changed is passed without a msg object during init
         # future improvement: don't recreate the entire list when msg is passed
-        self.dc_labels = [data.label for data in self.app.data_collection]
-
-    def _label_changed(self, event):
-        if event['new'] in self.dc_labels:
-            # TODO: fail form validation
-            raise ValueError(f"{event['new']} cannot be one of {self.dc_labels}")
+        self.label_invalid = [data.label for data in self.app.data_collection]
 
     def add_results_from_plugin(self, data_item, plugin_name):
         """
         Add ``data_item`` to the app's data_collection according to the default or user-provided
         label and adds to any requested viewers.
         """
-        if self.label in self.dc_labels:
-            raise ValueError(f"{self.label} cannot be one of {self.dc_labels}")
+        if self.label in self.label_invalid:
+            raise ValueError(f"{self.label} cannot be one of {self.label_invalid}")
         data_item.meta['Plugin'] = plugin_name
         self.app.add_data(data_item, self.label)
 
@@ -991,12 +986,16 @@ class AddResultsMixin(VuetifyTemplate, HubListener):
         </v-row>
     """
     results_label = Unicode().tag(sync=True)
-    results_label_changed_by_user = Bool(False).tag(sync=True)
+    results_label_default = Unicode().tag(sync=True)
+    results_label_auto = Bool(True).tag(sync=True)
+    results_label_invalid = List().tag(sync=True)
 
     add_to_viewer_items = List().tag(sync=True)
     add_to_viewer_selected = Unicode().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.add_results = AddResults(self, 'results_label', 'results_label_changed_by_user',
+        self.add_results = AddResults(self, 'results_label',
+                                      'results_label_default', 'results_label_auto',
+                                      'results_label_invalid',
                                       'add_to_viewer_items', 'add_to_viewer_selected')

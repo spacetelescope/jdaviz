@@ -42,9 +42,15 @@ class GaussianSmooth(TemplateMixin, DatasetSelectMixin, AddResultsMixin):
 
     @observe("dataset_selected", "stddev", "selected_mode")
     def _set_default_results_label(self, event={}):
-        if not self.results_label_changed_by_user:
-            prefix = f"{self.selected_mode.lower()}-" if self.config == "cubeviz" else ""
-            self.results_label = f"{self.dataset_selected} {prefix}smooth stddev {self.stddev}"
+        label_comps = []
+        if len(self.dataset.labels) > 1:
+            label_comps += [self.dataset_selected]
+        if self.config == "cubeviz":
+            label_comps += [f"{self.selected_mode.lower()}-smooth"]
+        else:
+            label_comps += ["smooth"]
+        label_comps += [f"stddev-{self.stddev}"]
+        self.results_label_default = " ".join(label_comps)
 
     @observe("dataset_selected")
     def _on_data_selected(self, event={}):
@@ -94,7 +100,6 @@ class GaussianSmooth(TemplateMixin, DatasetSelectMixin, AddResultsMixin):
 
         # add data to the collection/viewer
         self.add_results.add_results_from_plugin(spec_smoothed, 'gaussian-smooth')
-        self.results_label_changed_by_user = False
         self._set_default_results_label()
 
         snackbar_message = SnackbarMessage(
@@ -145,7 +150,6 @@ class GaussianSmooth(TemplateMixin, DatasetSelectMixin, AddResultsMixin):
 
         # add data to the collection/plots
         self.add_results.add_results_from_plugin(newcube, 'gaussian-smooth')
-        self.results_label_changed_by_user = False
         self._set_default_results_label()
 
         snackbar_message = SnackbarMessage(
