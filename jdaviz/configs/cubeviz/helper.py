@@ -27,7 +27,8 @@ class Cubeviz(ConfigHelper, LineListMixin):
         viewer = self.app.get_viewer("spectrum-viewer")
         ref_data = viewer.state.reference_data
         if ref_data and ref_data.ndim == 3:
-            for att_name in ["Wave", "Wavelength", "Freq", "Frequency"]:
+            for att_name in ["Wave", "Wavelength", "Freq", "Frequency",
+                             "Wavenumber", "Velocity", "Energy"]:
                 if att_name in ref_data.component_ids():
                     viewer.state.x_att = ref_data.id[att_name]
                     break
