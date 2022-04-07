@@ -1,5 +1,6 @@
-from zipfile import ZipFile
+import warnings
 import pathlib
+from zipfile import ZipFile
 
 from astropy.nddata import CCDData
 import astropy.units as u
@@ -8,7 +9,7 @@ from astropy.wcs import WCS
 import numpy as np
 import pytest
 from jdaviz.configs.mosviz.helper import Mosviz
-from specutils import Spectrum1D
+from specutils import Spectrum1D, SpectrumCollection
 
 
 @pytest.fixture
