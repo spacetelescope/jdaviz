@@ -1,7 +1,6 @@
 import astropy.units as u
 from astropy.tests.helper import assert_quantity_allclose
 import numpy as np
-import pytest
 from glue.core import Data
 from glue.core.roi import RectangularROI, XRangeROI
 from glue.core.edit_subset_mode import OrMode
