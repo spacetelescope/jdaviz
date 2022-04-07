@@ -69,6 +69,16 @@ def spectrum1d():
 
 
 @pytest.fixture
+def spectrum_collection(spectrum1d):
+    sc = [spectrum1d]*5
+
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        result = SpectrumCollection.from_spectra(sc)
+    return result
+
+
+@pytest.fixture
 def spectrum2d():
     header = """
 WCSAXES =                    2 / Number of coordinate axes
