@@ -1,120 +1,13 @@
-import warnings
+# Tests data loading in the Mosviz Jdaviz configuration
+
 import pathlib
 from zipfile import ZipFile
 
 from astropy.nddata import CCDData
-import astropy.units as u
 from astropy.utils.data import download_file
-from astropy.wcs import WCS
 import numpy as np
 import pytest
-from jdaviz.configs.mosviz.helper import Mosviz
-from specutils import Spectrum1D, SpectrumCollection
-
-
-@pytest.fixture
-def mosviz_helper():
-    return Mosviz()
-
-
-@pytest.fixture
-def image():
-    header = """
-WCSAXES =                    2 / Number of coordinate axes
-CRPIX1  =                937.0 / Pixel coordinate of reference point
-CRPIX2  =                696.0 / Pixel coordinate of reference point
-CDELT1  = -1.5182221158397E-05 / [deg] Coordinate increment at reference point
-CDELT2  =  1.5182221158397E-05 / [deg] Coordinate increment at reference point
-CUNIT1  = 'deg'                / Units of coordinate increment and value
-CUNIT2  = 'deg'                / Units of coordinate increment and value
-CTYPE1  = 'RA---TAN'           / Right ascension, gnomonic projection
-CTYPE2  = 'DEC--TAN'           / Declination, gnomonic projection
-CRVAL1  =      5.0155198140981 / [deg] Coordinate value at reference point
-CRVAL2  =       5.002450989248 / [deg] Coordinate value at reference point
-LONPOLE =                180.0 / [deg] Native longitude of celestial pole
-LATPOLE =       5.002450989248 / [deg] Native latitude of celestial pole
-DATEREF = '1858-11-17'         / ISO-8601 fiducial time
-MJDREFI =                  0.0 / [d] MJD of fiducial time, integer part
-MJDREFF =                  0.0 / [d] MJD of fiducial time, fractional part
-RADESYS = 'ICRS'               / Equatorial coordinate system
-"""
-    new_hdr = {}
-
-    for line in header.split('\n'):
-        try:
-            key, value = line.split('=')
-            key = key.strip()
-            value, _ = value.split('/')
-            value = value.strip()
-            value = value.strip("'")
-        except ValueError:
-            continue
-
-        new_hdr[key] = value
-
-    wcs = WCS(new_hdr)
-    data = np.random.sample((55, 55))
-    ccd_data = CCDData(data, wcs=wcs, unit='Jy')
-
-    return ccd_data
-
-
-@pytest.fixture
-def spectrum1d():
-    spec_axis = np.linspace(6000, 8000, 1024) * u.AA
-    flux = (np.random.randn(len(spec_axis.value)) +
-            10*np.exp(-0.001*(spec_axis.value-6563)**2) +
-            spec_axis.value/500) * u.Jy
-
-    return Spectrum1D(spectral_axis=spec_axis, flux=flux)
-
-
-@pytest.fixture
-def spectrum_collection(spectrum1d):
-    sc = [spectrum1d]*5
-
-    with warnings.catch_warnings():
-        warnings.simplefilter('ignore')
-        result = SpectrumCollection.from_spectra(sc)
-    return result
-
-
-@pytest.fixture
-def spectrum2d():
-    header = """
-WCSAXES =                    2 / Number of coordinate axes
-CRPIX1  =                  0.0 / Pixel coordinate of reference point
-CRPIX2  =               1024.5 / Pixel coordinate of reference point
-CDELT1  =                1E-06 / [m] Coordinate increment at reference point
-CDELT2  =  2.9256727777778E-05 / [deg] Coordinate increment at reference point
-CUNIT1  = 'm'                  / Units of coordinate increment and value
-CUNIT2  = 'deg'                / Units of coordinate increment and value
-CTYPE1  = 'WAVE'               / Vacuum wavelength (linear)
-CTYPE2  = 'OFFSET'             / Spatial offset
-CRVAL1  =                  0.0 / [m] Coordinate value at reference point
-CRVAL2  =                  5.0 / [deg] Coordinate value at reference point
-RADESYS = 'ICRS'               / Equatorial coordinate system
-SPECSYS = 'BARYCENT'           / Reference frame of spectral coordinates
-"""
-    new_hdr = {}
-
-    for line in header.split('\n'):
-        try:
-            key, value = line.split('=')
-            key = key.strip()
-            value, _ = value.split('/')
-            value = value.strip()
-            value = value.strip("'")
-        except ValueError:
-            continue
-
-        new_hdr[key] = value
-
-    wcs = WCS(new_hdr)
-    data = np.random.sample((1024, 15)) * u.one
-    spectral_cube = Spectrum1D(data, wcs=wcs)
-
-    return spectral_cube
+from specutils import Spectrum1D
 
 
 def test_load_spectrum1d(mosviz_helper, spectrum1d):
@@ -137,9 +30,9 @@ def test_load_spectrum1d(mosviz_helper, spectrum1d):
 
 
 @pytest.mark.filterwarnings('ignore')
-def test_load_image(mosviz_helper, image):
+def test_load_image(mosviz_helper, mos_image):
     label = "Test Image"
-    mosviz_helper.load_images(image, data_labels=label)
+    mosviz_helper.load_images(mos_image, data_labels=label)
 
     assert len(mosviz_helper.app.data_collection) == 2
     assert mosviz_helper.app.data_collection[0].label == f"{label} 0"
@@ -189,10 +82,10 @@ def test_load_list_of_spectrum1d(mosviz_helper, spectrum1d):
 
 
 @pytest.mark.filterwarnings('ignore')
-def test_load_spectrum2d(mosviz_helper, spectrum2d):
+def test_load_mos_spectrum2d(mosviz_helper, mos_spectrum2d):
 
     label = "Test 2D Spectrum"
-    mosviz_helper.load_2d_spectra(spectrum2d, data_labels=label)
+    mosviz_helper.load_2d_spectra(mos_spectrum2d, data_labels=label)
 
     assert len(mosviz_helper.app.data_collection) == 2
     assert mosviz_helper.app.data_collection[0].label == label
@@ -208,10 +101,10 @@ def test_load_spectrum2d(mosviz_helper, spectrum2d):
 
 @pytest.mark.filterwarnings('ignore')
 @pytest.mark.parametrize('label', [None, "Test Label"])
-def test_load_multi_image_spec(mosviz_helper, image, spectrum1d, spectrum2d, label):
+def test_load_multi_image_spec(mosviz_helper, mos_image, spectrum1d, mos_spectrum2d, label):
     spectra1d = [spectrum1d]*3
-    spectra2d = [spectrum2d]*3
-    images = [image]*3
+    spectra2d = [mos_spectrum2d]*3
+    images = [mos_image]*3
 
     mosviz_helper.load_data(spectra1d, spectra2d, images=images, images_label=label)
 
@@ -227,16 +120,16 @@ def test_load_multi_image_spec(mosviz_helper, image, spectrum1d, spectrum2d, lab
 
 @pytest.mark.filterwarnings('ignore')
 @pytest.mark.parametrize('label', [None, "Test Label"])
-def test_load_single_image_multi_spec(mosviz_helper, image, spectrum1d, spectrum2d, label):
+def test_load_single_image_multi_spec(mosviz_helper, mos_image, spectrum1d, mos_spectrum2d, label):
     spectra1d = [spectrum1d] * 3
-    spectra2d = [spectrum2d] * 3
+    spectra2d = [mos_spectrum2d] * 3
 
     # Test that loading is still possible after previous crash:
     # https://github.com/spacetelescope/jdaviz/issues/364
     with pytest.raises(ValueError, match='The dimensions of component 2D Spectra are incompatible'):
         mosviz_helper.load_data(spectra1d, spectra2d, images=[])
 
-    mosviz_helper.load_data(spectra1d, spectra2d, images=image, images_label=label)
+    mosviz_helper.load_data(spectra1d, spectra2d, images=mos_image, images_label=label)
 
     assert mosviz_helper.app.get_viewer("table-viewer").figure_widget.highlighted == 0
     assert len(mosviz_helper.app.data_collection) == 8
