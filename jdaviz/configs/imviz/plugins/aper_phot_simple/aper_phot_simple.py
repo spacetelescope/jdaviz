@@ -11,6 +11,7 @@ from regions import (CircleAnnulusPixelRegion, CirclePixelRegion, EllipsePixelRe
                      RectanglePixelRegion)
 from traitlets import Any, Bool, List, Unicode, observe
 
+from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.region_translators import regions2aperture
 from jdaviz.core.registries import tray_registry
@@ -28,8 +29,8 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
     bg_subset_items = List().tag(sync=True)
     bg_subset_selected = Unicode("").tag(sync=True)
     background_value = Any(0).tag(sync=True)
-    bg_annulus_inner_r = Any(0).tag(sync=True)
-    bg_annulus_width = Any(10).tag(sync=True)
+    bg_annulus_inner_r = FloatHandleEmpty(0).tag(sync=True)
+    bg_annulus_width = FloatHandleEmpty(10).tag(sync=True)
     pixel_area = Any(0).tag(sync=True)
     counts_factor = Any(0).tag(sync=True)
     flux_scaling = Any(0).tag(sync=True)
@@ -143,9 +144,12 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
 
             if isinstance(self._selected_subset, CirclePixelRegion):
                 self.bg_annulus_inner_r = self._selected_subset.radius
-            elif isinstance(self._selected_subset, (EllipsePixelRegion, RectanglePixelRegion)):
+            elif isinstance(self._selected_subset, EllipsePixelRegion):
                 self.bg_annulus_inner_r = max(self._selected_subset.width,
                                               self._selected_subset.height) * 0.5
+            elif isinstance(self._selected_subset, RectanglePixelRegion):
+                self.bg_annulus_inner_r = np.sqrt(self._selected_subset.width ** 2 +
+                                                  self._selected_subset.height ** 2) * 0.5
             else:  # pragma: no cover
                 raise TypeError(f'Unsupported region shape: {self._selected_subset.__class__}')
 
@@ -178,10 +182,8 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
                 outer_radius=inner_r + float(self.bg_annulus_width))
             self.background_value = self._calc_bg_subset_median(reg)
 
-        except Exception as e:
+        except Exception:  # Error snackbar suppressed to prevent excessive queue.
             self.background_value = 0
-            self.hub.broadcast(SnackbarMessage(
-                f"Failed to extract annulus: {repr(e)}", color='error', sender=self))
 
     @observe('bg_subset_selected')
     def _bg_subset_selected_changed(self, event={}):

@@ -151,6 +151,12 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         phot_plugin.dataset_selected = 'twos'
         assert_allclose(phot_plugin.background_value, 2)  # Recalculate based on new Data
 
+        # Check rectangle annulus math
+        phot_plugin.bg_subset_selected = 'Annulus'
+        phot_plugin.subset_selected = 'Subset 3'
+        assert_allclose(phot_plugin.bg_annulus_inner_r, 6.363961030678928)  # half-width = 4.5
+        assert_allclose(phot_plugin.bg_annulus_width, 10)
+
 
 class TestSimpleAperPhot_NoWCS(BaseImviz_WCS_NoWCS):
     def test_plugin_no_wcs(self):

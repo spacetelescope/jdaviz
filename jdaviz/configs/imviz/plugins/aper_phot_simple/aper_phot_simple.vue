@@ -49,7 +49,7 @@
             label="Annulus width"
             v-model="bg_annulus_width"
             :rules="[() => bg_annulus_width>0 || 'Must be positive.']"
-            hint="Background annulus width in pixels"
+            hint="Background annulus width in pixels (inner radius + width = outer radius)"
             persistent-hint
           >
           </v-text-field>
