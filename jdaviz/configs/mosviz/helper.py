@@ -2,7 +2,7 @@ import warnings
 from copy import deepcopy
 from pathlib import Path
 from time import time
-from zipfile import ZipFile
+from zipfile import is_zipfile
 
 import numpy as np
 from astropy import units as u
@@ -416,7 +416,7 @@ class Mosviz(ConfigHelper, LineListMixin):
         instrument = kwargs.pop('instrument', None)
         msg = ""
 
-        if zipfile.is_zipfile(directory):
+        if is_zipfile(directory):
             raise TypeError("Please extract your data first and provide the directory")
 
         if directory is not None and Path(directory).is_dir():
