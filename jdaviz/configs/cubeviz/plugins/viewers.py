@@ -41,7 +41,7 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
         # Make sure that the x_att is correct on data load
         ref_data = self.state.reference_data
         if ref_data and ref_data.ndim == 3:
-            for att_name in ["Right Ascension", "RA"]:
+            for att_name in ["Right Ascension", "RA", "Galactic Longitude"]:
                 if att_name in ref_data.component_ids():
                     x_att = att_name
                     self.state.x_att_world = ref_data.id[x_att]
