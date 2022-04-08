@@ -41,9 +41,9 @@ def test_load_image(mosviz_helper, mos_image):
 
     data = mosviz_helper.app.get_data_from_viewer('image-viewer')
 
-    assert isinstance(list(data.values())[0], CCDData)
-    assert list(data.values())[0].shape == (55, 55)
-    assert list(data.keys())[0] == f"{label} 0"
+    dataval = data[label]
+    assert isinstance(dataval, CCDData)
+    assert dataval.shape == (55, 55)
 
 
 def test_load_spectrum_collection(mosviz_helper, spectrum_collection):
