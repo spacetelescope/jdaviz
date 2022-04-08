@@ -426,7 +426,7 @@ class Mosviz(ConfigHelper, LineListMixin):
                 super().load_data(directory, "mosviz-nirspec-directory-parser")
             elif instrument.lower() == "niriss":
                 self.load_niriss_data(directory)
-        elif is_zipfile(str(directory)):
+        elif directory is not None and is_zipfile(str(directory)):
             raise TypeError("Please extract your data first and provide the directory")
 
         elif (spectra_1d is not None and spectra_2d is not None
