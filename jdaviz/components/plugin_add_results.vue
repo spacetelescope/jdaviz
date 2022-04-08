@@ -12,7 +12,7 @@
       :label_hint="label_hint ? label_hint : 'Label for the resulting data item.'"
     ></plugin-auto-label>   
 
-    <plugin-viewer-select
+    <plugin-viewer-select v-if="add_to_viewer_items.length > 2"
       :items="add_to_viewer_items"
       :selected="add_to_viewer_selected"
       @update:selected="$emit('update:add_to_viewer_selected', $event)"
@@ -20,6 +20,15 @@
       label='Plot in Viewer'
       :hint="add_to_viewer_hint ? add_to_viewer_hint : 'Plot results in the specified viewer.  Data entry will be available in the data dropdown for all applicable viewers.'"
     ></plugin-viewer-select>
+
+    <v-switch v-else
+      :value="add_to_viewer_selected == add_to_viewer_items[1].label"
+      @change="(e) => {$emit('update:add_to_viewer_selected', this.$props.add_to_viewer_items[Number(e)].label)}"
+      :label="'Plot results in '+add_to_viewer_items[1].label"
+      hint='Data entry will be available to toggle in the data dropdown'
+      persistent-hint
+    >
+    </v-switch>
   </div>
 </template>
 <script>
