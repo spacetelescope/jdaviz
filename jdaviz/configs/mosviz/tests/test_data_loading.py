@@ -222,4 +222,4 @@ def test_zip_error(mosviz_helper):
     zip.close()
 
     with pytest.raises(TypeError, match="Please extract"):
-        mosviz_helper.load_data(str(zip_path))
+        mosviz_helper.load_data(directory=str(zip_path))
