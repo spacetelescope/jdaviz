@@ -218,7 +218,7 @@ def test_zip_error(mosviz_helper):
     raised if the user tries to supply a Zipfile and expects Mosviz to autoextract.
     '''
     zip_path = pathlib.Path(gettempdir(), "jdaviz_test_zip.zip")
-    zip = ZipFile(zip_path)
+    zip = ZipFile(zip_path, mode='w')
     zip.close()
 
     with pytest.raises(TypeError, match="Please extract"):
