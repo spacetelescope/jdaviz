@@ -1,6 +1,7 @@
 # Tests data loading in the Mosviz Jdaviz configuration
 
 import pathlib
+from tempfile import gettempdir
 from zipfile import ZipFile
 
 from astropy.nddata import CCDData
@@ -209,3 +210,15 @@ def test_nirpsec_fallback(mosviz_helper, tmpdir):
     assert "Image 4" in mosviz_helper.app.data_collection
     assert "1D Spectrum 4" in mosviz_helper.app.data_collection
     assert "2D Spectrum 4" in mosviz_helper.app.data_collection
+
+def test_zip_error(mosviz_helper):
+    '''
+    Zipfiles are explicitly and intentionally not supported. This test confirms a TypeError is
+    raised if the user tries to supply a Zipfile and expects Mosviz to autoextract.
+    '''
+    zip_path = pathlib.Path(gettempdir(), "jdaviz_test_zip.zip")
+    zip = ZipFile(zip_path)
+    zip.close()
+
+    with pytest.raises(TypeError, match="Please extract"):
+        mosviz_helper.load_data(str(zip_path))
