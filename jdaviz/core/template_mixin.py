@@ -457,30 +457,16 @@ class SubsetSelect(BaseSelectPluginComponent):
 
 class SpectralSubsetSelectMixin(VuetifyTemplate, HubListener):
     """
-    Applies the SubsetSelect component with ``allowed_type='spectral'`` as a mixin in the base
-    plugin.  This automatically adds traitlets as well as new properties to the plugin with
-    minimal extra code.  For multiple instances or custom traitlet names/defaults, use the
-    SubsetSelect component instead.
-
-    Traitlets (available from the plugin):
-
-    * ``spectral_subset_items``
-    * ``spectral_subset_selected``
-    * ``spectral_subset_selected_has_subregions``
-
-    Properties (available from the plugin):
-
-    * ``spectral_subset.labels``
-    * ``spectral_subset.selected_obj``
-
-    Methods (available from the plugin):
-
-    * ``spectral_subset.selected_min_max``
+    Applies the SubsetSelect component as a mixin in the base plugin.  This
+    automatically adds traitlets as well as new properties to the plugin with minimal
+    extra code.  For multiple instances or custom traitlet names/defaults, use the
+    component instead.
 
     To use in a plugin:
 
     * add ``SpectralSubsetSelectMixin`` as a mixin to the class
-    * use the traitlets and properties above as needed (note the prefix for properties)
+    * use the traitlets available from the plugin or properties/methods available from
+    ``plugin.spectral_subset``.
 
     Example template (label and hint are optional)::
 
@@ -509,26 +495,16 @@ class SpectralSubsetSelectMixin(VuetifyTemplate, HubListener):
 
 class SpatialSubsetSelectMixin(VuetifyTemplate, HubListener):
     """
-    Applies the SubsetSelect component with ``allowed_type='spatial'`` as a mixin in the base
-    plugin.  This automatically adds traitlets as well as new properties to the plugin with
-    minimal extra code.  For multiple instances or custom traitlet names/defaults, use the
-    SubsetSelect component instead.
-
-    Traitlets (available from the plugin):
-
-    * ``spatial_subset_items``
-    * ``spatial_subset_selected``
-    * ``spatial_subset_selected_has_subregions``
-
-    Properties (available from the plugin):
-
-    * ``spatial_subset.labels``
-    * ``spatial_subset.selected_obj``
+    Applies the SubsetSelect component as a mixin in the base plugin.  This
+    automatically adds traitlets as well as new properties to the plugin with minimal
+    extra code.  For multiple instances or custom traitlet names/defaults, use the
+    component instead.
 
     To use in a plugin:
 
     * add ``SpatialSubsetSelectMixin`` as a mixin to the class
-    * use the traitlets and properties above as needed (note the prefix for properties)
+    * use the traitlets available from the plugin or properties/methods available from
+    ``plugin.spatial_subset``.
 
     Example template (label and hint are optional)::
 
@@ -667,37 +643,22 @@ class ViewerSelectMixin(VuetifyTemplate, HubListener):
     Applies the ViewerSelect component as a mixin in the base plugin.  This
     automatically adds traitlets as well as new properties to the plugin with minimal
     extra code.  For multiple instances or custom traitlet names/defaults, use the
-    ViewerSelect component instead.
-
-    Traitlets (available from the plugin):
-
-    * ``viewer_items``
-    * ``viewer_selected``
-
-    Properties (available from the plugin):
-
-    * ``viewer.ids``
-    * ``viewer.references``
-    * ``viewer.labels``
-    * ``viewer.selected_item``
-    * ``viewer.selected_id``
-    * ``viewer.selected_obj``
+    component instead.
 
     To use in a plugin:
 
     * add ``ViewerSelectMixin`` as a mixin to the class
-    * use the traitlets and properties above as needed (note the prefix for properties)
+    * use the traitlets available from the plugin or properties/methods available from
+    ``plugin.viewer``.
 
     Example template (label and hint are optional)::
 
-        <v-row>
-          <plugin-viewer-select
-            :items="viewer_items"
-            :selected.sync="viewer_selected"
-            label="Viewer"
-            hint="Select viewer."
-          />
-        </v-row>
+      <plugin-viewer-select
+        :items="viewer_items"
+        :selected.sync="viewer_selected"
+        label="Viewer"
+        hint="Select viewer."
+      />
     """
     viewer_items = List().tag(sync=True)
     viewer_selected = Unicode().tag(sync=True)
@@ -840,38 +801,22 @@ class DatasetSelectMixin(VuetifyTemplate, HubListener):
     Applies the DatasetSelect component as a mixin in the base plugin.  This
     automatically adds traitlets as well as new properties to the plugin with minimal
     extra code.  For multiple instances or custom traitlet names/defaults, use the
-    DatasetSelect component instead.
-
-    Traitlets (available from the plugin):
-
-    * ``dataset_items``
-    * ``dataset_selected``
-
-    Properties (available from the plugin):
-
-    * ``dataset.selected_obj``
-    * ``dataset.selected_dc_item``
-
-    Methods (available from the plugin):
-
-    * ``dataset.get_object``
-    * ``dataset.add_filter`` (preferably used during plugin init)
+    component instead.
 
     To use in a plugin:
 
     * add ``DatasetSelectMixin`` as a mixin to the class
-    * use the traitlets and properties above as needed (note the prefix for properties)
+    * use the traitlets available from the plugin or properties/methods available from
+    ``plugin.dataset``.
 
     Example template (label and hint are optional)::
 
-        <v-row>
-          <plugin-dataset-select
-            :items="dataset_items"
-            :selected.sync="dataset_selected"
-            label="Data"
-            hint="Select data."
-          />
-        </v-row>
+      <plugin-dataset-select
+        :items="dataset_items"
+        :selected.sync="dataset_selected"
+        label="Data"
+        hint="Select data."
+      />
     """
     dataset_items = List().tag(sync=True)
     dataset_selected = Unicode().tag(sync=True)
@@ -886,20 +831,29 @@ class AddResults(BasePluginComponent):
     """
     Traitlets (in the object, custom traitlets in the plugin):
 
-    * 
+    * ``label`` (string: user-provided label for the results data-entry.  If ``label_auto``, changes
+        to ``label_default`` will update ``label``.  Otherwise, changes to ``label`` will set
+        ``label_auto`` to False.)
+    * ``label_default`` (string: plugin-determined default label that will be synced to ``label``
+        if/when ``label_auto`` is set to True)
+    * ``label_auto`` (bool: whether to sync ``label_default`` to ``label``)
+    * ``label_invalid_msg`` (string: validation string for the current value of ``label``.  If
+        not an empty string, calls to ``add_results_from_plugin`` will raise an error.)
+    * ``label_overwrite`` (bool: whether the value of ``label`` already exists for a data-entry
+        from the same plugin)
+    * ``add_to_viewer_items`` (list of dicts: see ``ViewerSelect``)
+    * ``add_to_viewer_selected`` (string: name of the viewer to add the results,
+        see ``ViewerSelect``)
 
-    Properties (in the object only):
 
-    * 
+    Methods:
 
-    Methods (in the object only):
-
-    * 
+    * ``add_results_from_plugin``
 
 
     Example template (label and hint are optional)::
 
-      <plugin-results
+      <plugin-add-results
         :items="dataset_items"
         :selected.sync="dataset_selected"
         label="Data"
@@ -974,24 +928,13 @@ class AddResultsMixin(VuetifyTemplate, HubListener):
     Applies the AddResults component as a mixin in the base plugin.  This
     automatically adds traitlets as well as new properties to the plugin with minimal
     extra code.  For multiple instances or custom traitlet names/defaults, use the
-    AddResults component instead.
-
-    Traitlets (available from the plugin):
-
-    * 
-
-    Properties (available from the plugin):
-
-    * 
-
-    Methods (available from the plugin):
-
-    * 
+    component instead.
 
     To use in a plugin:
 
     * add ``AddResultsMixin`` as a mixin to the class
-    * use the traitlets and properties above as needed (note the prefix for properties)
+    * use the traitlets available from the plugin or properties/methods available from
+    ``plugin.add_results``.
 
     Example template (label and hint are optional)::
 
