@@ -23,8 +23,7 @@ def test_load_spectrum1d(mosviz_helper, spectrum1d):
 
     data = mosviz_helper.app.get_data_from_viewer('spectrum-viewer')
 
-    assert isinstance(list(data.values())[0], Spectrum1D)
-    assert list(data.keys())[0] == label
+    assert isinstance(data[label], Spectrum1D)
 
     with pytest.raises(TypeError):
         mosviz_helper.load_1d_spectra([1, 2, 3])
@@ -60,8 +59,7 @@ def test_load_spectrum_collection(mosviz_helper, spectrum_collection):
 
     data = mosviz_helper.app.get_data_from_viewer('spectrum-viewer')
 
-    assert isinstance(list(data.values())[0], Spectrum1D)
-    assert list(data.keys())[0] == labels[0]
+    assert isinstance(data[labels[0]], Spectrum1D)
 
 
 def test_load_list_of_spectrum1d(mosviz_helper, spectrum1d):
@@ -78,8 +76,7 @@ def test_load_list_of_spectrum1d(mosviz_helper, spectrum1d):
 
     data = mosviz_helper.app.get_data_from_viewer('spectrum-viewer')
 
-    assert isinstance(list(data.values())[0], Spectrum1D)
-    assert list(data.keys())[0] == labels[0]
+    assert isinstance(data[labels[0]], Spectrum1D)
 
 
 @pytest.mark.filterwarnings('ignore')
@@ -96,16 +93,15 @@ def test_load_mos_spectrum2d(mosviz_helper, mos_spectrum2d):
 
     data = mosviz_helper.app.get_data_from_viewer('spectrum-2d-viewer')
 
-    assert list(data.values())[0].shape == (1024, 15)
-    assert list(data.keys())[0] == label
+    assert data[label].shape == (1024, 15)
 
 
 @pytest.mark.filterwarnings('ignore')
 @pytest.mark.parametrize('label', [None, "Test Label"])
 def test_load_multi_image_spec(mosviz_helper, mos_image, spectrum1d, mos_spectrum2d, label):
-    spectra1d = [spectrum1d]*3
-    spectra2d = [mos_spectrum2d]*3
-    images = [mos_image]*3
+    spectra1d = [spectrum1d] * 3
+    spectra2d = [mos_spectrum2d] * 3
+    images = [mos_image] * 3
 
     mosviz_helper.load_data(spectra1d, spectra2d, images=images, images_label=label)
 
