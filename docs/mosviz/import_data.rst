@@ -15,7 +15,7 @@ time, Mosviz supports automatic parsing for the following instruments:
 * JWST NIRSpec
 * JWST NIRISS
 
-In a Jupyter context (notebook or lab), you can specify the instrument with a directory
+In a Jupyter context (notebook or Lab), you can specify the instrument with a directory
 as such:
 
     >>> from jdaviz import Mosviz
@@ -26,9 +26,9 @@ or for NIRISS:
 
     >>> mosviz.load_data(directory="path/to/my/data", instrument="niriss")  # doctest: +SKIP
 
-If an instrument isn't specified, Mosviz will default to NIRSpec parsing.
+If an instrument is not specified, Mosviz will default to NIRSpec parsing.
 
-Specifying an instrument from the command line isn't supported yet, and will default to
+Specifying an instrument from the command line is not supported yet, and will default to
 NIRSpec parsing as if an instrument wasn't provided:
 
     jdaviz /path/to/my/data --layout=mosviz
@@ -36,13 +36,13 @@ NIRSpec parsing as if an instrument wasn't provided:
 Manual Loading
 --------------
 
-If an automatic parser isn't provided yet for your data, Mosviz provides manual loading by
+If an automatic parser is not provided yet for your data, Mosviz provides manual loading by
 specifying which files are which, and the associations between them. This is done by
 generating three lists containing the filenames for the 1D spectra, 
 2D spectra, and images in your dataset. These three lists are taken as arguments 
 by :meth:`~jdaviz.configs.mosviz.helper.Mosviz.load_data`. The association between files is
-assumed to be the order of each list. (e.g. The first object consists of the first filenames
-specified in each list, the second target is the second in each list, and so forth.)
+assumed to be the order of each list (e.g., the first object consists of the first filename
+specified in each list, the second target is the second in each list, and so forth).
 
 Currently, manual loading is supported in the Jupyter context only.
 

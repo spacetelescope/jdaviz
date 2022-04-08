@@ -82,7 +82,7 @@ def spectrum1d():
 
 @pytest.fixture
 def spectrum_collection(spectrum1d):
-    sc = [spectrum1d]*5
+    sc = [spectrum1d] * 5
 
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
@@ -163,9 +163,7 @@ SPECSYS = 'BARYCENT'           / Reference frame of spectral coordinates
 
     wcs = WCS(new_hdr)
     data = np.random.sample((1024, 15)) * u.one
-    spectral_cube = Spectrum1D(data, wcs=wcs)
-
-    return spectral_cube
+    return Spectrum1D(data, wcs=wcs)
 
 
 @pytest.fixture
@@ -205,9 +203,7 @@ RADESYS = 'ICRS'               / Equatorial coordinate system
 
     wcs = WCS(new_hdr)
     data = np.random.sample((55, 55))
-    ccd_data = CCDData(data, wcs=wcs, unit='Jy')
-
-    return ccd_data
+    return CCDData(data, wcs=wcs, unit='Jy')
 
 
 try:

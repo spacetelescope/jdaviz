@@ -65,7 +65,7 @@ def test_load_spectrum_collection(mosviz_helper, spectrum_collection):
 
 
 def test_load_list_of_spectrum1d(mosviz_helper, spectrum1d):
-    spectra = [spectrum1d]*3
+    spectra = [spectrum1d] * 3
 
     labels = [f"Test Spectrum 1D {i}" for i in range(3)]
     mosviz_helper.load_1d_spectra(spectra, data_labels=labels)
