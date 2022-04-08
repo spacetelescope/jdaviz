@@ -38,9 +38,9 @@ class GaussianSmooth(TemplateMixin, DatasetSelectMixin, AddResultsMixin):
             self.dataset._clear_cache()
 
         # set the filter on the viewer options
-        self._selected_mode_changed()
+        self._update_viewer_filters()
 
-    @observe("dataset_selected", "stddev", "selected_mode")
+    @observe("dataset_selected", "dataset_items", "stddev", "selected_mode")
     def _set_default_results_label(self, event={}):
         label_comps = []
         if len(self.dataset.labels) > 1:
@@ -63,7 +63,7 @@ class GaussianSmooth(TemplateMixin, DatasetSelectMixin, AddResultsMixin):
             self.selected_data_is_1d = len(self.dataset.selected_dc_item.data.shape) == 1
 
     @observe("selected_mode")
-    def _selected_mode_changed(self, event={}):
+    def _update_viewer_filters(self, event={}):
         if event.get('new', self.selected_mode) == 'Spatial':
             # only want image viewers in the options
             self.add_results.viewer.filters = ['is_image_viewer']
@@ -99,7 +99,7 @@ class GaussianSmooth(TemplateMixin, DatasetSelectMixin, AddResultsMixin):
         spec_smoothed = gaussian_smooth(cube, stddev=self.stddev)
 
         # add data to the collection/viewer
-        self.add_results.add_results_from_plugin(spec_smoothed, 'gaussian-smooth')
+        self.add_results.add_results_from_plugin(spec_smoothed)
         self._set_default_results_label()
 
         snackbar_message = SnackbarMessage(
@@ -149,7 +149,7 @@ class GaussianSmooth(TemplateMixin, DatasetSelectMixin, AddResultsMixin):
         newcube = Spectrum1D(flux=convolved_data * flux_unit, wcs=cube.wcs)
 
         # add data to the collection/plots
-        self.add_results.add_results_from_plugin(newcube, 'gaussian-smooth')
+        self.add_results.add_results_from_plugin(newcube)
         self._set_default_results_label()
 
         snackbar_message = SnackbarMessage(

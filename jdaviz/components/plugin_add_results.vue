@@ -21,14 +21,16 @@
       :hint="add_to_viewer_hint ? add_to_viewer_hint : 'Plot results in the specified viewer.  Data entry will be available in the data dropdown for all applicable viewers.'"
     ></plugin-viewer-select>
 
-    <v-switch v-else
-      :value="add_to_viewer_selected == add_to_viewer_items[1].label"
-      @change="(e) => {$emit('update:add_to_viewer_selected', this.$props.add_to_viewer_items[Number(e)].label)}"
-      :label="'Plot results in '+add_to_viewer_items[1].label"
-      hint='Data entry will be available to toggle in the data dropdown'
-      persistent-hint
-    >
-    </v-switch>
+    <v-row v-else>
+      <v-switch
+        :value="add_to_viewer_selected == add_to_viewer_items[1].label"
+        @change="(e) => {$emit('update:add_to_viewer_selected', this.$props.add_to_viewer_items[Number(e)].label)}"
+        :label="'Show in '+add_to_viewer_items[1].label"
+        hint='Immediately plot results.  Data entry will be available to toggle in the data dropdown'
+        persistent-hint
+      >
+      </v-switch>
+    </v-row>
   </div>
 </template>
 <script>

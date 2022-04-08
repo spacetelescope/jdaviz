@@ -23,16 +23,6 @@
     />
 
     <v-row>
-      <v-select
-        :items="viewers"
-        v-model="selected_viewer"
-        label='Plot in Viewer'
-        hint='Moment map will replace plot in the specified viewer.  Will also be available in the data dropdown in all image viewers.'
-        persistent-hint
-      ></v-select>
-    </v-row>
-
-    <v-row>
       <v-text-field
         ref="n_moment"
         type="number"
@@ -44,9 +34,24 @@
       ></v-text-field>
     </v-row>
 
+    <plugin-add-results
+      :label.sync="results_label"
+      :label_default="results_label_default"
+      :label_auto.sync="results_label_auto"
+      :label_invalid_msg="results_label_invalid_msg"
+      :label_overwrite="results_label_overwrite"
+      label_hint="Label for the collapsed cube"
+      :add_to_viewer_items="add_to_viewer_items"
+      :add_to_viewer_selected.sync="add_to_viewer_selected"
+    ></plugin-add-results>
+
     <v-row justify="end">
-      <j-tooltip tipid='plugin-moment-maps-calculate'>
-        <v-btn color="primary" text @click="calculate_moment">Calculate</v-btn>
+      <j-tooltip :tipid="results_label_overwrite ? 'plugin-moment-maps-calculate-overwrite' : 'plugin-moment-maps-calculate'">
+        <v-btn :disabled="results_label_invalid_msg.length > 0"
+          color="accent" text
+          @click="calculate_moment"
+        >{{results_label_overwrite ? 'Calculate (Overwrite)' : 'Calculate'}}
+        </v-btn>
       </j-tooltip>
     </v-row>
 
@@ -56,7 +61,9 @@
           <v-text-field
            v-model="filename"
            label="Filename"
-           :rules="[() => !!filename || 'This field is required']">
+           hint="Export the latest calculated moment map"
+           :rules="[() => !!filename || 'This field is required']"
+           persistent-hint>
           </v-text-field>
       </v-row>
       <v-row justify="end">

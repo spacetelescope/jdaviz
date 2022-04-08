@@ -854,11 +854,15 @@ class AddResults(BasePluginComponent):
     Example template (label and hint are optional)::
 
       <plugin-add-results
-        :items="dataset_items"
-        :selected.sync="dataset_selected"
-        label="Data"
-        hint="Select data."
-      />
+        :label.sync="results_label"
+        :label_default="results_label_default"
+        :label_auto.sync="results_label_auto"
+        :label_invalid_msg="results_label_invalid_msg"
+        :label_overwrite="results_label_overwrite"
+        label_hint="Label for the smoothed data"
+        :add_to_viewer_items="add_to_viewer_items"
+        :add_to_viewer_selected.sync="add_to_viewer_selected"
+      ></plugin-add-results>
 
     """
     def __init__(self, plugin, label, label_default, label_auto,
@@ -887,7 +891,8 @@ class AddResults(BasePluginComponent):
         self._on_label_changed()
 
     def _on_label_changed(self, msg=None):
-        if not len(self.label):
+        if not len(self.label.strip()):
+            # strip will raise the same error for a label of all spaces
             self.label_invalid_msg = 'label must be provided'
             return
 
@@ -905,7 +910,7 @@ class AddResults(BasePluginComponent):
         self.label_invalid_msg = ''
         self.label_overwrite = False
 
-    def add_results_from_plugin(self, data_item, plugin_name):
+    def add_results_from_plugin(self, data_item):
         """
         Add ``data_item`` to the app's data_collection according to the default or user-provided
         label and adds to any requested viewers.
@@ -913,6 +918,10 @@ class AddResults(BasePluginComponent):
         if self.label_invalid_msg:
             raise ValueError(self.label_invalid_msg)
         data_item.meta['Plugin'] = self._plugin.__class__.__name__
+
+        if self.label in self.app.data_collection:
+            self.app.data_collection.remove(self.app.data_collection[self.label])
+
         self.app.add_data(data_item, self.label)
 
         if self.add_to_viewer_selected != 'None':
@@ -950,7 +959,7 @@ class AddResultsMixin(VuetifyTemplate, HubListener):
     results_label = Unicode().tag(sync=True)
     results_label_default = Unicode().tag(sync=True)
     results_label_auto = Bool(True).tag(sync=True)
-    results_label_invalid_msg = Unicode().tag(sync=True)
+    results_label_invalid_msg = Unicode('').tag(sync=True)
     results_label_overwrite = Bool().tag(sync=True)
 
     add_to_viewer_items = List().tag(sync=True)

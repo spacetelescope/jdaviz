@@ -54,7 +54,7 @@
           <v-btn :disabled="stddev <= 0 || dataset_selected == '' || results_label_invalid_msg.length > 0"
             color="accent" text 
             @click="apply"
-          >{{results_label_overwrite ? 'Overwrite' : 'Apply'}}</v-btn>
+          >{{results_label_overwrite ? 'Smooth (Overwrite)' : 'Smooth'}}</v-btn>
         </j-tooltip>
       </v-row>
     </j-tray-plugin>

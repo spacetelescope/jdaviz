@@ -15,7 +15,7 @@
     />
 
     <plugin-subset-select
-      v-if="cube_fit"
+      v-if="config=='cubeviz'"
       :items="spatial_subset_items"
       :selected.sync="spatial_subset_selected"
       :show_if_single_entry="true"
@@ -170,27 +170,32 @@
 
     <j-plugin-section-header>Fit Model</j-plugin-section-header>
     <v-row>
-      <v-text-field
-        v-model="model_label"
-        label="Model Label"
-        hint="Label for the resulting modeled spectrum/cube."
+      <v-switch v-if="config=='cubeviz'"
+        v-model="cube_fit"
+        label="Cube Fit"
+        hint="Whether to fit to the collapsed spectrum or entire cube"
         persistent-hint
-      >
-      </v-text-field>
+      ></v-switch>
     </v-row>
-
-    <v-row>
-      <v-switch
-        label="Plot Results"
-        hint="Model will immediately be plotted in the spectral viewer.  Will also be available in the data menu of each spectral viewer."
-        v-model="add_replace_results"
-        persistent-hint>
-      </v-switch>
-    </v-row>
+    
+    <plugin-add-results
+      :label.sync="results_label"
+      :label_default="results_label_default"
+      :label_auto.sync="results_label_auto"
+      :label_invalid_msg="results_label_invalid_msg"
+      :label_overwrite="results_label_overwrite"
+      label_hint="Label for the model"
+      :add_to_viewer_items="add_to_viewer_items"
+      :add_to_viewer_selected.sync="add_to_viewer_selected"
+    ></plugin-add-results>
 
     <v-row justify="end">
-      <j-tooltip tipid='plugin-model-fitting-fit'>
-        <v-btn color="accent" text @click="model_fitting">Fit Model</v-btn>
+      <j-tooltip :tipid="results_label_overwrite ? 'plugin-gaussian-model-fitting-fit-overwrite' : 'plugin-model-fitting-fit'">
+        <v-btn :disabled="results_label_invalid_msg.length > 0"
+          color="accent" text
+          @click="apply"
+        >{{results_label_overwrite ? 'Fit Model (Overwrite)' : 'Fit Model'}}
+        </v-btn>
       </j-tooltip>
     </v-row>
 
@@ -199,29 +204,6 @@
           If fit is not sufficiently converged, try clicking fitting again to complete additional iterations.
       </span>
     </v-row>
-
-    <div v-if="cube_fit">
-      <j-plugin-section-header>Cube Fit</j-plugin-section-header>
-      <!-- TODO: use plugin-viewer-select once custom viewer names are supported.  For now we'll
-           use a custom component so that they can be referred to by position (left, center, right)
-           instead of the viewer names -->
-      <v-row>
-        <v-select
-          :items="viewers"
-          v-model="selected_viewer"
-          label='Plot Cube Results in Viewer'
-          hint='Cube results will replace plot in the specified viewer. Will also be available in the data dropdown in all image viewers.'
-          persistent-hint
-        ></v-select>
-      </v-row>
-
-      <v-row justify="end">
-        <j-tooltip tipid='plugin-model-fitting-apply'>
-          <v-btn color="accent" text @click="fit_model_to_cube">Apply to Cube</v-btn>
-        </j-tooltip>
-      </v-row>
-    </div>
-
   </j-tray-plugin>
 </template>
 

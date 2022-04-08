@@ -58,7 +58,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         super().__init__(*args, **kwargs)
 
         self._units = {}
-        self.n_models = 0
         self._fitted_model = None
         self._fitted_spectrum = None
         self.component_models = []
@@ -67,8 +66,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self._window = None
         self._original_mask = None
         if self.app.state.settings.get("configuration") == "cubeviz":
-            self.cube_fit = True
-
             self.spatial_subset = SubsetSelect(self,
                                                'spatial_subset_items',
                                                'spatial_subset_selected',
@@ -81,6 +78,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self.dataset._viewers = ['spectrum-viewer']
         # require entries to be in spectrum-viewer (not other cubeviz images, etc)
         self.dataset.add_filter('layer_in_spectrum_viewer')
+
+        # set the filter on the viewer options
+        self._update_viewer_filters()
 
     def _param_units(self, param, model_type=None):
         """Helper function to handle units that depend on x and y"""
@@ -209,7 +209,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             # during initial init, this can trigger before the component is initialized
             return
 
-        if self.cube_fit and self.spatial_subset_selected != 'Entire Cube':
+        if self.config=='cubeviz' and self.spatial_subset_selected != 'Entire Cube':
             # then we're acting on the auto-collapsed data in the spectrum-viewer
             # of a spatial subset.  In the future, we may want to expose on-the-fly
             # collapse options... but right now these will follow the settings of the
@@ -360,6 +360,31 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         if len(self.model_equation) > 20:
             self.eq_error = True
 
+    @observe("dataset_selected", "dataset_items", "cube_fit")
+    def _set_default_results_label(self, event={}):
+        label_comps = []
+        if len(self.dataset.labels) > 1:
+            label_comps += [self.dataset_selected]
+        if self.cube_fit:
+            label_comps += ["cube-fit"]
+        label_comps += ["model"]
+        self.results_label_default = " ".join(label_comps)
+
+    @observe("cube_fit")
+    def _update_viewer_filters(self, event={}):
+        if event.get('new', self.cube_fit):
+            # only want image viewers in the options
+            self.add_results.viewer.filters = ['is_image_viewer']
+        else:
+            # only want spectral viewers in the options
+            self.add_results.viewer.filters = ['is_spectrum_viewer']
+
+    def vue_apply(self, event):
+        if self.cube_fit:
+            self.vue_fit_model_to_cube()
+        else:
+            self.vue_model_fitting()
+
     def vue_model_fitting(self, *args, **kwargs):
         """
         Run fitting on the initialized models, fixing any parameters marked
@@ -473,14 +498,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         output_cube['flux'] = fitted_spectrum.flux.value
         output_cube.get_component('flux').units = fitted_spectrum.flux.unit.to_string()
 
-        # Add to data collection, tracking that it came from this plugin to be filtered out
-        # from dataset-select dropdowns
-        output_cube.meta['Plugin'] = 'model-fitting'
-        self.app.add_data(output_cube, label)
-        if self.selected_viewer != 'None':
-            # replace the contents in the selected viewer with the results from this plugin
-            self.app.add_data_to_viewer(self.viewer_to_id.get(self.selected_viewer),
-                                        label, clear_other_data=True)
+        self.add_results.add_results_from_plugin(output_cube)
+        self._set_default_results_label()
 
         snackbar_message = SnackbarMessage(
             "Finished cube fitting",
@@ -507,24 +526,12 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                                                     self.model_equation,
                                                     window=self._window)
 
-        self.n_models += 1
-        label = self.results_label
-        if label in self.data_collection:
-            self.app.remove_data_from_viewer('spectrum-viewer', label)
-            # Remove the actual Glue data object from the data_collection
-            self.data_collection.remove(self.data_collection[label])
-
-        # Add to data collection, tracking that it came from this plugin to be filtered out
-        # from dataset-select dropdowns
-        spectrum.meta['Plugin'] = 'model-fitting'
-        self.app.add_data(spectrum, label)
+        self.add_results.add_results_from_plugin(spectrum)
+        self._set_default_results_label()
 
         # Link the result spectrum to the reference data of the spectrum viewer
 
         ref_data = self.app.get_viewer('spectrum-viewer').state.reference_data
         data_id = ref_data.world_component_ids[-1]
-        model_id = self.app.session.data_collection[label].world_component_ids[0]
+        model_id = self.app.session.data_collection[self.results_label].world_component_ids[0]
         self.app.session.data_collection.add_link(LinkSame(data_id, model_id))
-
-        if self.add_replace_results:
-            self.app.add_data_to_viewer('spectrum-viewer', label)
