@@ -416,9 +416,6 @@ class Mosviz(ConfigHelper, LineListMixin):
         instrument = kwargs.pop('instrument', None)
         msg = ""
 
-        if is_zipfile(directory):
-            raise TypeError("Please extract your data first and provide the directory")
-
         if directory is not None and Path(directory).is_dir():
             if instrument not in ('nirspec', 'niriss'):
                 msg = ("Warning: Unspecific or Unrecognized MOS Instrument. Only JWST NIRSpec and "
@@ -429,6 +426,8 @@ class Mosviz(ConfigHelper, LineListMixin):
                 super().load_data(directory, "mosviz-nirspec-directory-parser")
             elif instrument.lower() == "niriss":
                 self.load_niriss_data(directory)
+        elif is_zipfile(directory):
+            raise TypeError("Please extract your data first and provide the directory")
 
         elif (spectra_1d is not None and spectra_2d is not None
                 and images is not None):
