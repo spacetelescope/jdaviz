@@ -197,7 +197,7 @@ def test_nirpsec_fallback(mosviz_helper, tmpdir):
     level3_path = (pathlib.Path(tmpdir) / 'mosviz_nirspec_data_0.3' / 'level3')
 
     data_dir = level3_path
-    with pytest.warns(UserWarning, match="Unspecific or Unrecognized MOS Instrument"):
+    with pytest.warns(UserWarning, match="Ambiguous MOS Instrument"):
         mosviz_helper.load_data(directory=data_dir)
 
     assert len(mosviz_helper.app.data_collection) == 16
