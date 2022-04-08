@@ -799,7 +799,7 @@ class DatasetSelect(BaseSelectPluginComponent):
             return data.meta.get('Plugin', None) is None
 
         def not_from_plugin_model_fitting(data):
-            return data.meta.get('Plugin', None) != 'model-fitting'
+            return data.meta.get('Plugin', None) != 'ModelFitting'
 
         def has_metadata(data):
             return hasattr(data, 'meta') and isinstance(data.meta, dict) and len(data.meta)
@@ -907,11 +907,12 @@ class AddResults(BasePluginComponent):
       />
 
     """
-    def __init__(self, plugin, label, label_default, label_auto, label_invalid,
+    def __init__(self, plugin, label, label_default, label_auto,
+                 label_invalid_msg, label_overwrite,
                  add_to_viewer_items, add_to_viewer_selected):
         super().__init__(plugin, label=label,
                          label_default=label_default, label_auto=label_auto,
-                         label_invalid=label_invalid,
+                         label_invalid_msg=label_invalid_msg, label_overwrite=label_overwrite,
                          add_to_viewer_items=add_to_viewer_items,
                          add_to_viewer_selected=add_to_viewer_selected)
 
@@ -921,31 +922,49 @@ class AddResults(BasePluginComponent):
         self.viewer = ViewerSelect(plugin, add_to_viewer_items, add_to_viewer_selected,
                                    manual_options=['None'])
 
-        # initialize items from original viewers
-        self._on_data_changed()
+        self.add_observe(label, self._on_label_changed)
 
     def _on_data_changed(self, msg=None):
         # store list of existing dataset collection items so we can check against name conflicts
 
         # NOTE: _on_data_changed is passed without a msg object during init
         # future improvement: don't recreate the entire list when msg is passed
-        self.label_invalid = [data.label for data in self.app.data_collection]
+        self.dc_items = [data.label for data in self.app.data_collection]
+        self._on_label_changed()
+
+    def _on_label_changed(self, msg=None):
+        if not len(self.label):
+            self.label_invalid_msg = 'label must be provided'
+            return
+
+        for data in self.app.data_collection:
+            if self.label == data.label:
+                if data.meta.get('Plugin', None) == self._plugin.__class__.__name__:
+                    self.label_invalid_msg = ''
+                    self.label_overwrite = True
+                    return
+                else:
+                    self.label_invalid_msg = 'label already in use'
+                    self.label_overwrite = False
+                    return
+
+        self.label_invalid_msg = ''
+        self.label_overwrite = False
 
     def add_results_from_plugin(self, data_item, plugin_name):
         """
         Add ``data_item`` to the app's data_collection according to the default or user-provided
         label and adds to any requested viewers.
         """
-        if self.label in self.label_invalid:
-            raise ValueError(f"{self.label} cannot be one of {self.label_invalid}")
-        data_item.meta['Plugin'] = plugin_name
+        if self.label_invalid_msg:
+            raise ValueError(self.label_invalid_msg)
+        data_item.meta['Plugin'] = self._plugin.__class__.__name__
         self.app.add_data(data_item, self.label)
 
         if self.add_to_viewer_selected != 'None':
             # replace the contents in the selected viewer with the results from this plugin
             # TODO: switch to an instance/classname check?
             replace = self.viewer.selected_item.get('reference', None) != 'spectrum-viewer'
-            print(f"*** add_data_to_viewer({self.viewer.selected_id}, {self.label}, {replace})")
             self.app.add_data_to_viewer(self.viewer.selected_id,
                                         self.label, clear_other_data=replace)
 
@@ -988,7 +1007,8 @@ class AddResultsMixin(VuetifyTemplate, HubListener):
     results_label = Unicode().tag(sync=True)
     results_label_default = Unicode().tag(sync=True)
     results_label_auto = Bool(True).tag(sync=True)
-    results_label_invalid = List().tag(sync=True)
+    results_label_invalid_msg = Unicode().tag(sync=True)
+    results_label_overwrite = Bool().tag(sync=True)
 
     add_to_viewer_items = List().tag(sync=True)
     add_to_viewer_selected = Unicode().tag(sync=True)
@@ -997,5 +1017,5 @@ class AddResultsMixin(VuetifyTemplate, HubListener):
         super().__init__(*args, **kwargs)
         self.add_results = AddResults(self, 'results_label',
                                       'results_label_default', 'results_label_auto',
-                                      'results_label_invalid',
+                                      'results_label_invalid_msg', 'results_label_overwrite',
                                       'add_to_viewer_items', 'add_to_viewer_selected')

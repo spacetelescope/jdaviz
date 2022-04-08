@@ -51,6 +51,7 @@ const tooltips = {
   'table-play-pause-delay': 'Set delay before cycling to next entry',
   
   'plugin-gaussian-apply': 'Apply to smooth your data',
+  'plugin-gaussian-apply-overwrite': 'Smooth data and replace existing entry',
   'plugin-collapse-apply': 'Apply to collapse your data set',
   'plugin-model-fitting-add-model': 'Create model component',
   'plugin-model-fitting-param-fixed': 'Check the box to freeze parameter value',

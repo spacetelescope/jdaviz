@@ -1,47 +1,33 @@
 <template>
   <v-row>
-    <v-text-field
-      :value="displayValue"
-      @keyup="if(auto) {$emit('update:auto', false)}; $emit('update:label', $event.srcElement._value)"
-      :label="label_label"
-      :hint="label_hint"
-      :rules="[validLabel]"
-      persistent-hint
-    >
-      <template v-slot:append>
-        <j-tooltip tipid='plugin-label-auto'>
-          <v-btn icon @click="() => {$emit('update:auto', !auto)}" style="margin-bottom: 6px">
-            <v-icon :color="auto ? 'accent' : ''">mdi-auto-fix</v-icon>
-          </v-btn>
-        </j-tooltip>
-      </template>
-    </v-text-field>   
+    <v-form ref="form" style="width: 100%">
+      <v-text-field
+        ref="textField"
+        :value="displayValue"
+        @keyup="if(auto) {$emit('update:auto', false)}; $emit('update:label', $event.srcElement._value)"
+        :label="label_label"
+        :hint="label_hint"
+        :rules="[(e) => label_invalid_msg || true]"
+        persistent-hint
+      >
+        <template v-slot:append>
+          <j-tooltip tipid='plugin-label-auto'>
+            <v-btn icon @click="() => {$emit('update:auto', !auto)}" style="margin-bottom: 6px">
+              <v-icon :color="auto ? 'accent' : ''">mdi-auto-fix</v-icon>
+            </v-btn>
+          </j-tooltip>
+        </template>
+      </v-text-field>   
+    </v-form>
   </v-row>
 </template>
 <script>
 module.exports = {
-  props: ['label', 'label_default', 'auto', 'label_label', 'label_hint', 'label_invalid'],
+  props: ['label', 'label_default', 'auto', 'label_label', 'label_hint', 'label_invalid_msg'],
   data: function() {
       return {
           // default value is the one that was intially passed
           displayValue: this.label_default
-      }
-  },
-  methods: {
-      validLabel() {
-          var value = this.$props.label;
-          if (this.$props.auto) {
-            value = this.$props.label_default
-          }
-
-          if (value.length === 0) {
-            return "Please enter a value"
-          }
-          const label_invalid = this.$props.label_invalid || []
-          if (label_invalid.indexOf(value) !== -1) {
-            return "Already in use"
-          }
-          return true;
       }
   },
   watch: {
@@ -65,6 +51,9 @@ module.exports = {
             this.$emit('update:auto', false);
           }
           this.displayValue = this.$props.label;
+       },
+       label_invalid_msg() {
+          this.$refs.form.validate();
        }
   }
 };

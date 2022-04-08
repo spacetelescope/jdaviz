@@ -7,7 +7,7 @@
       :label_default="label_default"
       :auto="label_auto"
       @update:auto="$emit('update:label_auto', $event)"
-      :label_invalid="label_invalid"
+      :label_invalid_msg="label_invalid_msg"
       :label_label="label_label ? label_label : 'Output Data Label'"
       :label_hint="label_hint ? label_hint : 'Label for the resulting data item.'"
     ></plugin-auto-label>   
@@ -24,7 +24,7 @@
 </template>
 <script>
 module.exports = {
-  props: ['label', 'label_default', 'label_auto', 'label_invalid', 'label_label', 'label_hint',
+  props: ['label', 'label_default', 'label_auto', 'label_invalid_msg', 'label_overwrite', 'label_label', 'label_hint',
           'add_to_viewer_items', 'add_to_viewer_selected', 'add_to_viewer_hint']
 };
 </script>

@@ -33,7 +33,8 @@
           type="number"
           hint="The stddev of the kernel, in pixels."
           persistent-hint
-          :rules="[() => !!stddev || 'This field is required', () => stddev > 0 || 'Kernel must be greater than zero']"
+          :rules="[() => !!stddev || 'This field is required',
+                   () => stddev > 0 || 'Kernel must be greater than zero']"
         ></v-text-field>
       </v-row>
 
@@ -41,18 +42,19 @@
         :label.sync="results_label"
         :label_default="results_label_default"
         :label_auto.sync="results_label_auto"
-        :label_invalid="results_label_invalid"
+        :label_invalid_msg="results_label_invalid_msg"
+        :label_overwrite="results_label_overwrite"
         label_hint="Label for the smoothed data"
         :add_to_viewer_items="add_to_viewer_items"
         :add_to_viewer_selected.sync="add_to_viewer_selected"
       ></plugin-add-results>
 
       <v-row justify="end">
-        <j-tooltip tipid='plugin-gaussian-apply'>
-          <v-btn :disabled="stddev <= 0 || dataset_selected == ''"
+        <j-tooltip :tipid="results_label_overwrite ? 'plugin-gaussian-apply-overwrite' : 'plugin-gaussian-apply'">
+          <v-btn :disabled="stddev <= 0 || dataset_selected == '' || results_label_invalid_msg.length > 0"
             color="accent" text 
             @click="apply"
-          >Apply</v-btn>
+          >{{results_label_overwrite ? 'Overwrite' : 'Apply'}}</v-btn>
         </j-tooltip>
       </v-row>
     </j-tray-plugin>
