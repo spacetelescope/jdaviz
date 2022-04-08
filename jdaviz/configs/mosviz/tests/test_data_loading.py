@@ -211,6 +211,7 @@ def test_nirpsec_fallback(mosviz_helper, tmpdir):
     assert "1D Spectrum 4" in mosviz_helper.app.data_collection
     assert "2D Spectrum 4" in mosviz_helper.app.data_collection
 
+
 def test_zip_error(mosviz_helper):
     '''
     Zipfiles are explicitly and intentionally not supported. This test confirms a TypeError is
