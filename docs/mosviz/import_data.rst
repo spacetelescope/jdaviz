@@ -29,7 +29,7 @@ or for NIRISS:
 If an instrument is not specified, Mosviz will default to NIRSpec parsing.
 
 Specifying an instrument from the command line is not supported yet, and will default to
-NIRSpec parsing as if an instrument wasn't provided:
+NIRSpec parsing as if an instrument wasn't provided::
 
     jdaviz /path/to/my/data --layout=mosviz
 
