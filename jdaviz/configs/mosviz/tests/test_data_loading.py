@@ -41,7 +41,7 @@ def test_load_image(mosviz_helper, mos_image):
 
     data = mosviz_helper.app.get_data_from_viewer('image-viewer')
 
-    dataval = data[label]
+    dataval = data[f"{label} 0"]
     assert isinstance(dataval, CCDData)
     assert dataval.shape == (55, 55)
 
