@@ -41,16 +41,10 @@
       label_hint="Label for the collapsed cube"
       :add_to_viewer_items="add_to_viewer_items"
       :add_to_viewer_selected.sync="add_to_viewer_selected"
+      action_label="Collapse"
+      action_tooltip="Collapse data"
+      @action-click="collapse"
     ></plugin-add-results>
 
-    <v-row justify="end">
-      <j-tooltip :tipid="results_label_overwrite ? 'plugin-collapse-apply-overwrite' : 'plugin-collapse-apply'">
-        <v-btn :disabled="results_label_invalid_msg.length > 0"
-          color="accent" text
-          @click="collapse"
-        >{{results_label_overwrite ? 'Collapse (Overwrite)' : 'Collapse'}}
-        </v-btn>
-      </j-tooltip>
-    </v-row>
   </j-tray-plugin>
 </template>

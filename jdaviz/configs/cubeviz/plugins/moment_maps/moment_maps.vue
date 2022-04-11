@@ -43,17 +43,10 @@
       label_hint="Label for the collapsed cube"
       :add_to_viewer_items="add_to_viewer_items"
       :add_to_viewer_selected.sync="add_to_viewer_selected"
+      action_label="Calculate"
+      action_tooltip="Calculate moment map"
+      @action-click="calculate_moment"
     ></plugin-add-results>
-
-    <v-row justify="end">
-      <j-tooltip :tipid="results_label_overwrite ? 'plugin-moment-maps-calculate-overwrite' : 'plugin-moment-maps-calculate'">
-        <v-btn :disabled="results_label_invalid_msg.length > 0"
-          color="accent" text
-          @click="calculate_moment"
-        >{{results_label_overwrite ? 'Calculate (Overwrite)' : 'Calculate'}}
-        </v-btn>
-      </j-tooltip>
-    </v-row>
 
     <div v-if="moment_available">
       <j-plugin-section-header>Results</j-plugin-section-header>

@@ -854,7 +854,7 @@ class AddResults(BasePluginComponent):
     * ``add_results_from_plugin``
 
 
-    Example template (label and hint are optional)::
+    Example template::
 
       <plugin-add-results
         :label.sync="results_label"
@@ -865,6 +865,9 @@ class AddResults(BasePluginComponent):
         label_hint="Label for the smoothed data"
         :add_to_viewer_items="add_to_viewer_items"
         :add_to_viewer_selected.sync="add_to_viewer_selected"
+        action_label="Apply"
+        action_tooltip="Apply the action to the data"
+        @action-click="apply"
       ></plugin-add-results>
 
     """
@@ -943,16 +946,21 @@ class AddResultsMixin(VuetifyTemplate, HubListener):
     * use the traitlets available from the plugin or properties/methods available from
     ``plugin.add_results``.
 
-    Example template (label and hint are optional)::
+    Example template::
 
-        <v-row>
-          <plugin-add-results
-            :items="dataset_items"
-            :selected.sync="dataset_selected"
-            label="Data"
-            hint="Select data."
-          />
-        </v-row>
+      <plugin-add-results
+        :label.sync="results_label"
+        :label_default="results_label_default"
+        :label_auto.sync="results_label_auto"
+        :label_invalid_msg="results_label_invalid_msg"
+        :label_overwrite="results_label_overwrite"
+        label_hint="Label for the smoothed data"
+        :add_to_viewer_items="add_to_viewer_items"
+        :add_to_viewer_selected.sync="add_to_viewer_selected"
+        action_label="Apply"
+        action_tooltip="Apply the action to the data"
+        @action-click="apply"
+      ></plugin-add-results>
     """
     results_label = Unicode().tag(sync=True)
     results_label_default = Unicode().tag(sync=True)

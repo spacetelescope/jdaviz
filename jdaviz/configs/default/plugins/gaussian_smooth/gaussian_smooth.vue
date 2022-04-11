@@ -47,15 +47,9 @@
         label_hint="Label for the smoothed data"
         :add_to_viewer_items="add_to_viewer_items"
         :add_to_viewer_selected.sync="add_to_viewer_selected"
+        action_label="Smooth"
+        action_tooltip="Smooth data"
+        @action-click="apply"
       ></plugin-add-results>
-
-      <v-row justify="end">
-        <j-tooltip :tipid="results_label_overwrite ? 'plugin-gaussian-apply-overwrite' : 'plugin-gaussian-apply'">
-          <v-btn :disabled="stddev <= 0 || dataset_selected == '' || results_label_invalid_msg.length > 0"
-            color="accent" text 
-            @click="apply"
-          >{{results_label_overwrite ? 'Smooth (Overwrite)' : 'Smooth'}}</v-btn>
-        </j-tooltip>
-      </v-row>
     </j-tray-plugin>
 </template>

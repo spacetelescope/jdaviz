@@ -187,17 +187,10 @@
       label_hint="Label for the model"
       :add_to_viewer_items="add_to_viewer_items"
       :add_to_viewer_selected.sync="add_to_viewer_selected"
+      action_label="Fit Model"
+      action_tooltip="Fit the model to the data"
+      @action-click="apply"
     ></plugin-add-results>
-
-    <v-row justify="end">
-      <j-tooltip :tipid="results_label_overwrite ? 'plugin-gaussian-model-fitting-fit-overwrite' : 'plugin-model-fitting-fit'">
-        <v-btn :disabled="results_label_invalid_msg.length > 0"
-          color="accent" text
-          @click="apply"
-        >{{results_label_overwrite ? 'Fit Model (Overwrite)' : 'Fit Model'}}
-        </v-btn>
-      </j-tooltip>
-    </v-row>
 
     <v-row>
       <span class="v-messages v-messages__message text--secondary">

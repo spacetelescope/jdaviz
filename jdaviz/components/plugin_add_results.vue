@@ -31,11 +31,21 @@
       >
       </v-switch>
     </v-row>
+
+    <v-row justify="end">
+      <j-tooltip :tooltipcontent="label_overwrite ? action_tooltip+' and replace existing entry' : action_tooltip">
+        <v-btn :disabled="label_invalid_msg.length > 0"
+          color="accent" text
+          @click="$emit('action-click')"
+        >{{action_label}}{{label_overwrite ? ' (Overwrite)' : ''}}
+        </v-btn>
+      </j-tooltip>
+    </v-row>
   </div>
 </template>
 <script>
 module.exports = {
   props: ['label', 'label_default', 'label_auto', 'label_invalid_msg', 'label_overwrite', 'label_label', 'label_hint',
-          'add_to_viewer_items', 'add_to_viewer_selected', 'add_to_viewer_hint']
+          'add_to_viewer_items', 'add_to_viewer_selected', 'add_to_viewer_hint', 'action_label', 'action_tooltip']
 };
 </script>
