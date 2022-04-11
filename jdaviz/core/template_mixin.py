@@ -468,7 +468,7 @@ class SpectralSubsetSelectMixin(VuetifyTemplate, HubListener):
 
     * add ``SpectralSubsetSelectMixin`` as a mixin to the class
     * use the traitlets available from the plugin or properties/methods available from
-    ``plugin.spectral_subset``.
+      ``plugin.spectral_subset``.
 
     Example template (label and hint are optional)::
 
@@ -479,6 +479,7 @@ class SpectralSubsetSelectMixin(VuetifyTemplate, HubListener):
         label="Spectral region"
         hint="Select spectral region."
       />
+
     """
     spectral_subset_items = List().tag(sync=True)
     spectral_subset_selected = Unicode().tag(sync=True)
@@ -506,7 +507,7 @@ class SpatialSubsetSelectMixin(VuetifyTemplate, HubListener):
 
     * add ``SpatialSubsetSelectMixin`` as a mixin to the class
     * use the traitlets available from the plugin or properties/methods available from
-    ``plugin.spatial_subset``.
+      ``plugin.spatial_subset``.
 
     Example template (label and hint are optional)::
 
@@ -516,6 +517,7 @@ class SpatialSubsetSelectMixin(VuetifyTemplate, HubListener):
         label="Spatial region"
         hint="Select spatial region."
       />
+
     """
     spatial_subset_items = List().tag(sync=True)
     spatial_subset_selected = Unicode().tag(sync=True)
@@ -634,7 +636,7 @@ class ViewerSelect(BaseSelectPluginComponent):
     def _on_viewers_changed(self, msg=None):
         # NOTE: _on_viewers_changed is passed without a msg object during init
         # list of dictionaries with id, ref, ref_or_id
-        manual_items = [{'label': l} for l in self.manual_options]
+        manual_items = [{'label': label} for label in self.manual_options]
         self.items = manual_items + [{k: v for k, v in vd.items() if k != 'viewer'}
                                      for vd in self.viewer_dicts if self._is_valid_item(vd['viewer'])] # noqa
         self._apply_default_selection()
@@ -651,7 +653,7 @@ class ViewerSelectMixin(VuetifyTemplate, HubListener):
 
     * add ``ViewerSelectMixin`` as a mixin to the class
     * use the traitlets available from the plugin or properties/methods available from
-    ``plugin.viewer``.
+      ``plugin.viewer``.
 
     Example template (label and hint are optional)::
 
@@ -661,6 +663,7 @@ class ViewerSelectMixin(VuetifyTemplate, HubListener):
         label="Viewer"
         hint="Select viewer."
       />
+
     """
     viewer_items = List().tag(sync=True)
     viewer_selected = Unicode().tag(sync=True)
@@ -810,7 +813,7 @@ class DatasetSelectMixin(VuetifyTemplate, HubListener):
 
     * add ``DatasetSelectMixin`` as a mixin to the class
     * use the traitlets available from the plugin or properties/methods available from
-    ``plugin.dataset``.
+      ``plugin.dataset``.
 
     Example template (label and hint are optional)::
 
@@ -820,6 +823,7 @@ class DatasetSelectMixin(VuetifyTemplate, HubListener):
         label="Data"
         hint="Select data."
       />
+
     """
     dataset_items = List().tag(sync=True)
     dataset_selected = Unicode().tag(sync=True)
@@ -954,7 +958,7 @@ class AddResultsMixin(VuetifyTemplate, HubListener):
 
     * add ``AddResultsMixin`` as a mixin to the class
     * use the traitlets available from the plugin or properties/methods available from
-    ``plugin.add_results``.
+      ``plugin.add_results``.
 
     Example template::
 
@@ -971,6 +975,7 @@ class AddResultsMixin(VuetifyTemplate, HubListener):
         action_tooltip="Apply the action to the data"
         @action-click="apply"
       ></plugin-add-results>
+
     """
     results_label = Unicode().tag(sync=True)
     results_label_default = Unicode().tag(sync=True)

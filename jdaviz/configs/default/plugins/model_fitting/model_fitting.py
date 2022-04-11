@@ -209,7 +209,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             # during initial init, this can trigger before the component is initialized
             return
 
-        if self.config=='cubeviz' and self.spatial_subset_selected != 'Entire Cube':
+        if self.config == 'cubeviz' and self.spatial_subset_selected != 'Entire Cube':
             # then we're acting on the auto-collapsed data in the spectrum-viewer
             # of a spatial subset.  In the future, we may want to expose on-the-fly
             # collapse options... but right now these will follow the settings of the

@@ -60,6 +60,8 @@ Other Changes and Additions
 - Cube data now has spectral axis last in the backend, to match specutils Spectrum1D
   axis order and work with updated glue-astronomy translators. [#1174]
 
+- Plugins that create data entries allow overriding the default labels. [#1239]
+
 - Help button in toolbar to open docs in a new tab. [#1240]
 
 2.4 (2022-03-29)
