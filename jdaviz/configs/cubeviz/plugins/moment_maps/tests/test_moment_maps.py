@@ -17,12 +17,17 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
     mm.dataset_selected = 'test[FLUX]'
 
     mm.n_moment = 0  # Collapsed sum, will get back 2D spatial image
+    assert mm.results_label == 'moment 0'
     mm.vue_calculate_moment()
 
     assert mm.moment_available
-    assert dc[1].label == 'Moment 0: test[FLUX]'
+    assert dc[1].label == 'moment 0'
 
     assert len(dc.links) == 8
+
+    # label should remain unchanged but raise overwrite warnings
+    assert mm.results_label == 'moment 0'
+    assert mm.results_label_overwrite is True
 
     result = dc[1].get_object(cls=CCDData)
     assert result.shape == (2, 4)  # Cube shape is (2, 2, 4)
@@ -40,8 +45,10 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
         mm.vue_save_as_fits()
 
     mm.n_moment = 1
+    assert mm.results_label == 'moment 1'
+    assert mm.results_label_overwrite is False
     mm.vue_calculate_moment()
 
-    assert dc[2].label == 'Moment 1: test[FLUX]'
+    assert dc[2].label == 'moment 1'
 
     assert len(dc.links) == 10
