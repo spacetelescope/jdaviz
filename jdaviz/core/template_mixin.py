@@ -3,7 +3,9 @@ import numpy as np
 from functools import cached_property
 from ipyvuetify import VuetifyTemplate
 from glue.core import HubListener
-from glue.core.message import (SubsetDeleteMessage,
+from glue.core.message import (DataCollectionAddMessage,
+                               DataCollectionDeleteMessage,
+                               SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from glue.core.subset import RoiSubsetState
 from specutils import Spectrum1D
@@ -710,6 +712,7 @@ class DatasetSelect(BaseSelectPluginComponent):
                  filters=['not_from_plugin_model_fitting', 'layer_in_viewers']):
         super().__init__(plugin, items=items, selected=selected, filters=filters)
         self._cached_properties += ["selected_dc_item"]
+        # Add/Remove Data are triggered when checked/unchecked from viewers
         self.hub.subscribe(self, AddDataMessage, handler=self._on_data_changed)
         self.hub.subscribe(self, RemoveDataMessage, handler=self._on_data_changed)
 
@@ -874,21 +877,14 @@ class AddResults(BasePluginComponent):
                          add_to_viewer_items=add_to_viewer_items,
                          add_to_viewer_selected=add_to_viewer_selected)
 
-        self.hub.subscribe(self, AddDataMessage, handler=self._on_data_changed)
-        self.hub.subscribe(self, RemoveDataMessage, handler=self._on_data_changed)
+        # DataCollectionAdd/Delete are fired even if remain unchecked in all viewers
+        self.hub.subscribe(self, DataCollectionAddMessage, handler=self._on_label_changed)
+        self.hub.subscribe(self, DataCollectionDeleteMessage, handler=self._on_label_changed)
 
         self.viewer = ViewerSelect(plugin, add_to_viewer_items, add_to_viewer_selected,
                                    manual_options=['None'])
 
         self.add_observe(label, self._on_label_changed)
-
-    def _on_data_changed(self, msg=None):
-        # store list of existing dataset collection items so we can check against name conflicts
-
-        # NOTE: _on_data_changed is passed without a msg object during init
-        # future improvement: don't recreate the entire list when msg is passed
-        self.dc_items = [data.label for data in self.app.data_collection]
-        self._on_label_changed()
 
     def _on_label_changed(self, msg=None):
         if not len(self.label.strip()):
