@@ -56,6 +56,8 @@ Other Changes and Additions
 
 - Data dropdowns in plugins are now filtered to only applicable entries. [#1221]
 
+- Help button in toolbar to open docs in a new tab. [#1240]
+
 2.4 (2022-03-29)
 ================
 

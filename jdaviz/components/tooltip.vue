@@ -22,6 +22,7 @@
 // affected by the wrapping divs.
 const tooltips = {
   // app toolbar
+  'app-help': 'Open docs in new tab',
   'app-toolbar-plugins': 'Data analysis plug-ins',
 
   'g-data-tools': 

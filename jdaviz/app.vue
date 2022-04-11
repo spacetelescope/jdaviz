@@ -9,13 +9,18 @@
         </j-tooltip>
       </v-toolbar-items>
       <v-spacer></v-spacer>
+      <v-toolbar-items>
+        <j-tooltip tipid="app-help">
+          <v-btn icon :href="'https://jdaviz.readthedocs.io/en/latest/'+config+'/index.html'" target="_blank">
+            <v-icon medium>mdi-help-box</v-icon>
+          </v-btn>
+        </j-tooltip>
         <j-tooltip tipid="app-toolbar-plugins">
-          <v-toolbar-items>
           <v-btn icon @click="state.drawer = !state.drawer" :class="{active : state.drawer}">
             <v-icon>mdi-menu</v-icon>
           </v-btn>
-        </v-toolbar-items>
         </j-tooltip>
+      </v-toolbar-items>
     </v-app-bar>
 
     <v-content
