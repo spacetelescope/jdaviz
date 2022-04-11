@@ -1,8 +1,8 @@
 .. _cubeviz-import-data:
 
-***********
-Import Data
-***********
+***************************
+Importing Data into Cubeviz
+***************************
 
 There are two primary ways in which you can load your data into the Cubeviz
 application. Cubeviz supports loading FITS files that can be parsed as 

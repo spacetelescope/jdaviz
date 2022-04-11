@@ -1,6 +1,6 @@
-*************************
-Loading Data into Specviz
-*************************
+***************************
+Importing Data into Specviz
+***************************
 
 By design, Specviz only supports data that can be parsed as :class:`~specutils.Spectrum1D` objects, as that allows the Python-level interface and parsing tools to be defined in ``specutils`` instead of being duplicated in Jdaviz.  :class:`~specutils.Spectrum1D` objects are very flexible in their capabilities, however, and hence should address most astronomical spectrum use cases.
 
@@ -38,7 +38,7 @@ users can select which spectra that have be loaded to be visualized in the viewe
 
 .. _specviz-import-api:
 
-Loading data via the API
+Importing data via the API
 ------------------------
 Alternatively, if users are working in a coding environment like a Jupyter notebook, they have access to the :class:`~jdaviz.configs.specviz.helper.Specviz` helper class API. Using this API, users can load data into the application through code.
 Below is an example of importing the :class:`~jdaviz.configs.specviz.helper.Specviz` helper class, creating a :class:`~specutils.Spectrum1D` object from a data file via the `specutils.Spectrum1D.read` method::
@@ -70,7 +70,7 @@ This method works well for data files that ``specutils`` understands.  However, 
 For more information about using the Specutils package, please see the
 `Specutils documentation <https://specutils.readthedocs.io>`_.
 
-Loading multiple spectra via the API
+Importing multiple spectra via the API
 ------------------------------------
 In addition to loading single spectra as above, in some cases it may be useful
 to load multiple related spectra at once into the Jdaviz application. The most common

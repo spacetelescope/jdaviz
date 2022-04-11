@@ -1,8 +1,8 @@
 .. _imviz-import-data:
 
-***********
-Import Data
-***********
+*************************
+Importing Data into Imviz
+*************************
 
 Imviz can load data in the form of a filename (FITS, JPEG, or PNG),
 an `~astropy.nddata.NDData` object, or a NumPy array if the data is 2D.

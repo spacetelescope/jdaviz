@@ -4,24 +4,20 @@
 Data Analysis Plugins
 *********************
 
-To enable quick analysis of astronomical spectra, Specviz ships with a number of
+To enable quick analysis of astronomical spectra, Specviz includes a number of
 plugins that let you do various standard spectral analysis tasks.  Note that
 these plugins all depend on ``specutils`` to do the actual analysis work - when
 doing these operations in the Notebook you are often better off using
 the ``specutils`` or ``astropy`` APIs directly instead of using the plugins. But
-for quick-look or interaction heavy workflows, the plugins provide a UI-based
+for quick-look or interaction-heavy workflows, the plugins provide a UI-based
 alternative.
 
 Data analysis plugins are found in the plugin tray, accessed via the
 :guilabel:`plugin` icon in the upper right corner of the Specviz application window.
 Each plugin may be used to perform data analysis tasks on
-selected datasets.
-
-Input/Output
-============
-
-Data to be operated on are selected in each plugin via a
-:guilabel:`Data` pulldown menu.
+selected datasets. Data to be operated on are selected in each plugin via a
+:guilabel:`Data` pulldown menu; plugins may also have a 
+:guilabel:`Subset` dropdown where relevant if any subsets have been defined.
 
 .. _specviz-metadata-viewer:
 
