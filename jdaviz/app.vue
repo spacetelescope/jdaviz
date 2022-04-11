@@ -11,7 +11,7 @@
       <v-spacer></v-spacer>
       <v-toolbar-items>
         <j-tooltip tipid="app-help">
-          <v-btn icon :href="'https://jdaviz.readthedocs.io/en/latest/'+config+'/index.html'" target="_blank">
+          <v-btn icon :href="getReadTheDocsLink()" target="_blank">
             <v-icon medium>mdi-help-box</v-icon>
           </v-btn>
         </j-tooltip>
@@ -102,6 +102,13 @@ export default {
       this.notebook_context = document.getElementById("ipython-main-app")
         || document.querySelector('.jp-LabShell');
       return this.notebook_context;
+    },
+    getReadTheDocsLink() {
+      if (['specviz', 'cubeviz', 'mosviz', 'imviz'].indexOf(this.config) !== -1) {
+        return 'https://jdaviz.readthedocs.io/en/'+this.vdocs+'/'+this.config+'/index.html'
+      } else {
+        return 'https://jdaviz.readthedocs.io'
+      }
     }
   },
   created() {
