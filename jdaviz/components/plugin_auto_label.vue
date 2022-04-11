@@ -31,21 +31,7 @@ module.exports = {
       }
   },
   watch: {
-       auto() {
-           if(this.$props.auto) {
-               // then the auto switch is being turned on and we need to overwrite the existing
-               // label with the latest default set by the plugin
-               this.$emit('update:label', this.$props.label_default);
-           }
-       },
-       label_default() {
-           if(this.$props.auto) {
-             // then the label_default was changed via the traitlet, and we
-             // need to mirror that in the label itself, which will then trigger the watcher
-             // below to update the displayed label
-             this.$emit('update:label', this.$props.label_default);
-           }
-       },
+       // watching of label_default and label_auto are handled in python
        label() {
           if(this.$props.auto && this.displayValue != this.$props.label && this.$props.label != this.$props.label_default) {
             // then the label traitlet itself was changed (perhaps by the user), so we need to 

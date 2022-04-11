@@ -890,9 +890,11 @@ class AddResults(BasePluginComponent):
                                    manual_options=['None'])
 
         self.add_observe(label, self._on_label_changed)
+        self.add_observe(label_default, self._on_label_default_changed)
+        self.add_observe(label_auto, self._on_label_auto_changed)
 
     def _on_label_changed(self, msg={}):
-        if not len(msg.get('new', self.label.strip())):
+        if not len(self.label.strip()):
             # strip will raise the same error for a label of all spaces
             self.label_invalid_msg = 'label must be provided'
             return
@@ -910,6 +912,14 @@ class AddResults(BasePluginComponent):
 
         self.label_invalid_msg = ''
         self.label_overwrite = False
+
+    def _on_label_default_changed(self, msg={}):
+        if self.label_auto:
+            self.label = self.label_default
+
+    def _on_label_auto_changed(self, msg={}):
+        if self.label_auto:
+            self.label = self.label_default
 
     def add_results_from_plugin(self, data_item):
         """
