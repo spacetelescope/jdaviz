@@ -871,7 +871,7 @@ class AddResults(BasePluginComponent):
         :add_to_viewer_selected.sync="add_to_viewer_selected"
         action_label="Apply"
         action_tooltip="Apply the action to the data"
-        @action-click="apply"
+        @click:action="apply"
       ></plugin-add-results>
 
     """
@@ -894,8 +894,8 @@ class AddResults(BasePluginComponent):
                                    manual_options=['None'])
 
         self.add_observe(label, self._on_label_changed)
-        self.add_observe(label_default, self._on_label_default_changed)
-        self.add_observe(label_auto, self._on_label_auto_changed)
+        self.add_observe(label_default, self._on_label_set_to_default)
+        self.add_observe(label_auto, self._on_label_set_to_default)
 
     def _on_label_changed(self, msg={}):
         if not len(self.label.strip()):
@@ -917,11 +917,7 @@ class AddResults(BasePluginComponent):
         self.label_invalid_msg = ''
         self.label_overwrite = False
 
-    def _on_label_default_changed(self, msg={}):
-        if self.label_auto:
-            self.label = self.label_default
-
-    def _on_label_auto_changed(self, msg={}):
+    def _on_label_set_to_default(self, msg={}):
         if self.label_auto:
             self.label = self.label_default
 
@@ -973,7 +969,7 @@ class AddResultsMixin(VuetifyTemplate, HubListener):
         :add_to_viewer_selected.sync="add_to_viewer_selected"
         action_label="Apply"
         action_tooltip="Apply the action to the data"
-        @action-click="apply"
+        @click:action="apply"
       ></plugin-add-results>
 
     """

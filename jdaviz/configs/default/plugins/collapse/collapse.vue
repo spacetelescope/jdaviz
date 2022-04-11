@@ -43,7 +43,7 @@
       :add_to_viewer_selected.sync="add_to_viewer_selected"
       action_label="Collapse"
       action_tooltip="Collapse data"
-      @action-click="collapse"
+      @click:action="collapse"
     ></plugin-add-results>
 
   </j-tray-plugin>

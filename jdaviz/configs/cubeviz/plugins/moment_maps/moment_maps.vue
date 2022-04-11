@@ -45,7 +45,7 @@
       :add_to_viewer_selected.sync="add_to_viewer_selected"
       action_label="Calculate"
       action_tooltip="Calculate moment map"
-      @action-click="calculate_moment"
+      @click:action="calculate_moment"
     ></plugin-add-results>
 
     <div v-if="moment_available">

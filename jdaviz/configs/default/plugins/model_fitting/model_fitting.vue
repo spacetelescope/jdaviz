@@ -189,7 +189,7 @@
       :add_to_viewer_selected.sync="add_to_viewer_selected"
       action_label="Fit Model"
       action_tooltip="Fit the model to the data"
-      @action-click="apply"
+      @click:action="apply"
     ></plugin-add-results>
 
     <v-row>
