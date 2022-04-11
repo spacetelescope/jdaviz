@@ -12,7 +12,7 @@
       >
         <template v-slot:append>
           <j-tooltip tipid='plugin-label-auto'>
-            <v-btn icon @click="() => {$emit('update:auto', !auto)}" style="padding-bottom: 8px">
+            <v-btn icon small @click="() => {$emit('update:auto', !auto)}" style="padding-bottom: 4px">
               <v-icon :color="auto ? 'accent' : ''">mdi-auto-fix</v-icon>
             </v-btn>
           </j-tooltip>
