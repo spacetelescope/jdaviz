@@ -878,16 +878,18 @@ class AddResults(BasePluginComponent):
                          add_to_viewer_selected=add_to_viewer_selected)
 
         # DataCollectionAdd/Delete are fired even if remain unchecked in all viewers
-        self.hub.subscribe(self, DataCollectionAddMessage, handler=self._on_label_changed)
-        self.hub.subscribe(self, DataCollectionDeleteMessage, handler=self._on_label_changed)
+        self.hub.subscribe(self, DataCollectionAddMessage,
+                           handler=lambda _: self._on_label_changed())
+        self.hub.subscribe(self, DataCollectionDeleteMessage,
+                           handler=lambda _: self._on_label_changed())
 
         self.viewer = ViewerSelect(plugin, add_to_viewer_items, add_to_viewer_selected,
                                    manual_options=['None'])
 
         self.add_observe(label, self._on_label_changed)
 
-    def _on_label_changed(self, msg=None):
-        if not len(self.label.strip()):
+    def _on_label_changed(self, msg={}):
+        if not len(msg.get('new', self.label.strip())):
             # strip will raise the same error for a label of all spaces
             self.label_invalid_msg = 'label must be provided'
             return
