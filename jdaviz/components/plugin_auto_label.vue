@@ -5,15 +5,17 @@
         ref="textField"
         :value="displayValue"
         @keyup="if(auto) {$emit('update:auto', false)}; $emit('update:label', $event.srcElement._value)"
+        @mouseenter="showIcon = true"
+        @mouseleave="showIcon = false"
         :label="label_label"
         :hint="label_hint"
         :rules="[(e) => label_invalid_msg || true]"
         persistent-hint
       >
         <template v-slot:append>
-          <j-tooltip tipid='plugin-label-auto'>
-            <v-btn icon small @click="() => {$emit('update:auto', !auto)}" style="padding-bottom: 4px">
-              <v-icon :color="auto ? 'accent' : ''">mdi-auto-fix</v-icon>
+          <j-tooltip v-if="!auto || showIcon" :tooltipcontent="auto ? 'Using default label (click to use custom label)' : 'Using custom label (click to use default label)'">
+            <v-btn icon small @click="() => {$emit('update:auto', !auto)}" style="padding-bottom: 4px" @mouseenter="showIcon = true" @mouseleave="showIcon = false">
+              <v-icon :color="auto ? 'accent' : ''" style="transform: rotate(180deg);">mdi-label</v-icon>
             </v-btn>
           </j-tooltip>
         </template>
@@ -26,8 +28,8 @@ module.exports = {
   props: ['label', 'label_default', 'auto', 'label_label', 'label_hint', 'label_invalid_msg'],
   data: function() {
       return {
-          // default value is the one that was intially passed
-          displayValue: this.label_default
+          displayValue: this.label_default,
+          showIcon: false,
       }
   },
   watch: {

@@ -68,7 +68,7 @@ const tooltips = {
   'plugin-line-analysis-assign': 'Assign the centroid wavelength and update the redshift',
   'plugin-moment-save-fits': 'Save moment map as FITS file',
   'plugin-link-apply': 'Apply linking to data',
-  'plugin-label-auto': 'Automatic/default label',
+  'plugin-label-auto': 'Use automatic/default label',
 }
 
 
