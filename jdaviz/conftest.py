@@ -3,12 +3,13 @@
 # get picked up when running the tests inside an interpreter using
 # packagename.test
 
+import warnings
 import numpy as np
 import pytest
 from astropy import units as u
-from astropy.nddata import StdDevUncertainty
+from astropy.nddata import CCDData, StdDevUncertainty
 from astropy.wcs import WCS
-from specutils import Spectrum1D
+from specutils import Spectrum1D, SpectrumCollection
 
 from jdaviz import __version__, Cubeviz, Imviz, Mosviz, Specviz, Specviz2d
 
@@ -80,6 +81,16 @@ def spectrum1d():
 
 
 @pytest.fixture
+def spectrum_collection(spectrum1d):
+    sc = [spectrum1d] * 5
+
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        result = SpectrumCollection.from_spectra(sc)
+    return result
+
+
+@pytest.fixture
 def spectrum1d_cube():
     flux = np.arange(16).reshape((2, 2, 4)) * u.Jy
     wcs_dict = {"CTYPE1": "RA---TAN", "CTYPE2": "DEC--TAN", "CTYPE3": "WAVE-LOG",
@@ -91,6 +102,108 @@ def spectrum1d_cube():
     spec = Spectrum1D(flux=flux, wcs=w)
 
     return spec
+
+
+@pytest.fixture
+def mos_spectrum1d():
+    '''
+    A specially defined Spectrum1d that matches the corresponding spectrum2d below.
+
+    TODO: this fixture should be replaced by the global spectrum1d fixture defined in
+    jdaviz/conftest.py AFTER reforming the spectrum2d fixture below to match the
+    global spectrum1d fixture.
+
+    Unless linking the two is required, try to use the global spectrum1d fixture.
+    '''
+    spec_axis = np.linspace(6000, 8000, 1024) * u.AA
+    flux = (np.random.randn(len(spec_axis.value)) +
+            10*np.exp(-0.001*(spec_axis.value-6563)**2) +
+            spec_axis.value/500) * u.Jy
+
+    return Spectrum1D(spectral_axis=spec_axis, flux=flux)
+
+
+@pytest.fixture
+def mos_spectrum2d():
+    '''
+    A specially defined 2D (spatial) Spectrum1D whose wavelength range matches the
+    mos-specific 1D spectrum.
+
+    TODO: This should be reformed to match the global Spectrum1D defined above so that we may
+    deprecate the mos-specific spectrum1d.
+    '''
+    header = """
+WCSAXES =                    2 / Number of coordinate axes
+CRPIX1  =                  0.0 / Pixel coordinate of reference point
+CRPIX2  =               1024.5 / Pixel coordinate of reference point
+CDELT1  =                1E-06 / [m] Coordinate increment at reference point
+CDELT2  =  2.9256727777778E-05 / [deg] Coordinate increment at reference point
+CUNIT1  = 'm'                  / Units of coordinate increment and value
+CUNIT2  = 'deg'                / Units of coordinate increment and value
+CTYPE1  = 'WAVE'               / Vacuum wavelength (linear)
+CTYPE2  = 'OFFSET'             / Spatial offset
+CRVAL1  =                  0.0 / [m] Coordinate value at reference point
+CRVAL2  =                  5.0 / [deg] Coordinate value at reference point
+RADESYS = 'ICRS'               / Equatorial coordinate system
+SPECSYS = 'BARYCENT'           / Reference frame of spectral coordinates
+"""
+    new_hdr = {}
+
+    for line in header.split('\n'):
+        try:
+            key, value = line.split('=')
+            key = key.strip()
+            value, _ = value.split('/')
+            value = value.strip()
+            value = value.strip("'")
+        except ValueError:
+            continue
+
+        new_hdr[key] = value
+
+    wcs = WCS(new_hdr)
+    data = np.random.sample((1024, 15)) * u.one
+    return Spectrum1D(data, wcs=wcs)
+
+
+@pytest.fixture
+def mos_image():
+    header = """
+WCSAXES =                    2 / Number of coordinate axes
+CRPIX1  =                937.0 / Pixel coordinate of reference point
+CRPIX2  =                696.0 / Pixel coordinate of reference point
+CDELT1  = -1.5182221158397E-05 / [deg] Coordinate increment at reference point
+CDELT2  =  1.5182221158397E-05 / [deg] Coordinate increment at reference point
+CUNIT1  = 'deg'                / Units of coordinate increment and value
+CUNIT2  = 'deg'                / Units of coordinate increment and value
+CTYPE1  = 'RA---TAN'           / Right ascension, gnomonic projection
+CTYPE2  = 'DEC--TAN'           / Declination, gnomonic projection
+CRVAL1  =      5.0155198140981 / [deg] Coordinate value at reference point
+CRVAL2  =       5.002450989248 / [deg] Coordinate value at reference point
+LONPOLE =                180.0 / [deg] Native longitude of celestial pole
+LATPOLE =       5.002450989248 / [deg] Native latitude of celestial pole
+DATEREF = '1858-11-17'         / ISO-8601 fiducial time
+MJDREFI =                  0.0 / [d] MJD of fiducial time, integer part
+MJDREFF =                  0.0 / [d] MJD of fiducial time, fractional part
+RADESYS = 'ICRS'               / Equatorial coordinate system
+"""
+    new_hdr = {}
+
+    for line in header.split('\n'):
+        try:
+            key, value = line.split('=')
+            key = key.strip()
+            value, _ = value.split('/')
+            value = value.strip()
+            value = value.strip("'")
+        except ValueError:
+            continue
+
+        new_hdr[key] = value
+
+    wcs = WCS(new_hdr)
+    data = np.random.sample((55, 55))
+    return CCDData(data, wcs=wcs, unit='Jy')
 
 
 try:

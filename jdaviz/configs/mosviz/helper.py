@@ -2,6 +2,7 @@ import warnings
 from copy import deepcopy
 from pathlib import Path
 from time import time
+from zipfile import is_zipfile
 
 import numpy as np
 from astropy import units as u
@@ -415,19 +416,18 @@ class Mosviz(ConfigHelper, LineListMixin):
         instrument = kwargs.pop('instrument', None)
         msg = ""
 
-        if directory is not None and instrument is not None:
+        if directory is not None and Path(directory).is_dir():
+            if instrument not in ('nirspec', 'niriss'):
+                msg = ("Ambiguous MOS Instrument: Only JWST NIRSpec and "
+                       "NIRISS folder parsing is fully supported; falling back to NIRSpec parsing.")
+                warnings.warn(msg)
+                instrument = "nirspec"
             if instrument.lower() == "nirspec":
                 super().load_data(directory, "mosviz-nirspec-directory-parser")
             elif instrument.lower() == "niriss":
                 self.load_niriss_data(directory)
-            else:
-                msg = "Warning: Data is not from NIRISS or Nirspec, " \
-                      "data loading may not work"
-                super().load_data(directory, "mosviz-nirspec-directory-parser")
-
-        elif directory is not None:
-            msg = "Warning: Please provide the name of the instrument" \
-                  " in the load_data method"
+        elif directory is not None and is_zipfile(str(directory)):
+            raise TypeError("Please extract your data first and provide the directory")
 
         elif (spectra_1d is not None and spectra_2d is not None
                 and images is not None):

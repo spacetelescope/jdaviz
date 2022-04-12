@@ -4,30 +4,54 @@
 Import Data
 ***********
 
-Currently, data must be imported into Mosviz using the API in the Jupyter notebook. 
-After initializing the app as explained in :ref:`mosviz-notebook`, 
-you must generate three lists containing the filenames for the 1D spectra, 
+Mosviz provides two different ways to load data: Auto-recognition directory loading
+or manual loading:
+
+Automatic Directory Loading
+---------------------------
+Mosviz provides instrument-specific directory parsers for select instruments. At this
+time, Mosviz supports automatic parsing for the following instruments:
+
+* JWST NIRSpec
+* JWST NIRISS
+
+In a Jupyter context (notebook or Lab), you can specify the instrument with a directory
+as such:
+
+    >>> from jdaviz import Mosviz
+    >>> mosviz = Mosviz()
+    >>> mosviz.load_data(directory="path/to/my/data", instrument="nirspec")  # doctest: +SKIP
+
+or for NIRISS:
+
+    >>> mosviz.load_data(directory="path/to/my/data", instrument="niriss")  # doctest: +SKIP
+
+If an instrument is not specified, Mosviz will default to NIRSpec parsing.
+
+Specifying an instrument from the command line is not supported yet, and will default to
+NIRSpec parsing as if an instrument wasn't provided::
+
+    jdaviz /path/to/my/data --layout=mosviz
+
+Manual Loading
+--------------
+
+If an automatic parser is not provided yet for your data, Mosviz provides manual loading by
+specifying which files are which, and the associations between them. This is done by
+generating three lists containing the filenames for the 1D spectra, 
 2D spectra, and images in your dataset. These three lists are taken as arguments 
-to the :meth:`~jdaviz.configs.mosviz.helper.Mosviz.load_data` method.
+by :meth:`~jdaviz.configs.mosviz.helper.Mosviz.load_data`. The association between files is
+assumed to be the order of each list (e.g., the first object consists of the first filename
+specified in each list, the second target is the second in each list, and so forth).
+
+Currently, manual loading is supported in the Jupyter context only.
+
 An example is given below, where ``file_dir`` is a
 directory that contains all the files for the dataset to be loaded::
 
-    >>> import glob
     >>> from jdaviz import Mosviz
     >>> mosviz = Mosviz()
-    >>> mosviz.app  # doctest: +SKIP
-    >>> spectra_1d = []
-    >>> spectra_2d = []
-    >>> images = []
-    >>> for filename in glob.iglob(f"{file_dir}/*"):  # doctest: +SKIP
-    >>>     if "x1d" in filename:  # doctest: +SKIP
-    >>>         spectra_1d.append(filename)  # doctest: +SKIP
-    >>>     elif "s2d" in filename:  # doctest: +SKIP
-    >>>         spectra_2d.append(filename)  # doctest: +SKIP
-    >>>     elif "fits" in filename:  # doctest: +SKIP
-    >>>         images.append(filename)  # doctest: +SKIP
-    >>>     mosviz.load_data(spectra_1d, spectra_2d, images)  # doctest: +SKIP
-
-This example assumes that all 1D spectra have "x1d" in the filename, all 2D spectra
-have "s2d" in the filename, and any other FITS files in the directory are the 
-corresponding images. 
+    >>> spectra_1d = ['target1_1d.fits', 'target2_1d.fits']
+    >>> spectra_2d = ['target1_2d.fits', 'target2_2d.fits']
+    >>> images = ['target1_img.fits', 'target2_img.fits']
+    >>> mosviz.load_data(spectra_1d, spectra_2d, images)  # doctest: +SKIP
