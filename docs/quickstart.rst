@@ -22,7 +22,7 @@ For example, to load a `SDSS MaNGA IFU data cube <https://data.sdss.org/sas/dr14
 In a Jupyter Notebook
 ---------------------
 
-The power of ``jdaviz`` is that it can integrated into your Juppyter notebook workflow::
+The power of ``jdaviz`` is that it can integrated into your Jupyter notebook workflow::
 
     from jdaviz import Specviz
 
