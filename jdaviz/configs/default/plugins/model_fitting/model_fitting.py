@@ -441,17 +441,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             return
 
         # Get the primary data component
-        attribute = data.main_components[0]
-        component = data.get_component(attribute)
-        temp_values = data.get_data(attribute)
-
-        # Transpose the axis order
-        values = np.moveaxis(temp_values, 0, -1) * u.Unit(component.units)
-
-        # We manually create a Spectrum1D object from the flux information
-        #  in the cube we select
-        wcs = data.coords.sub([WCSSUB_SPECTRAL])
-        spec = Spectrum1D(flux=values, wcs=wcs)
+        spec = data.get_object(Spectrum1D, statistic=None)
 
         # TODO: in vuetify >2.3, timeout should be set to -1 to keep open
         #  indefinitely
@@ -483,9 +473,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             temp_label = "{} ({}, {})".format(self.model_label, m["x"], m["y"])
             self.app.fitted_models[temp_label] = m["model"]
 
-        # Transpose the axis order back
-        values = np.moveaxis(fitted_spectrum.flux.value, -1, 0)
-
         count = max(map(lambda s: int(next(iter(re.findall(r"\d$", s)), 0)),
                         self.data_collection.labels)) + 1
 
@@ -494,9 +481,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         # Create new glue data object
         output_cube = Data(label=label,
                            coords=data.coords)
-        output_cube['flux'] = values
-        output_cube.get_component('flux').units = \
-            fitted_spectrum.flux.unit.to_string()
+        output_cube['flux'] = fitted_spectrum.flux.value
+        output_cube.get_component('flux').units = fitted_spectrum.flux.unit.to_string()
 
         # Add to data collection, tracking that it came from this plugin to be filtered out
         # from dataset-select dropdowns
@@ -547,7 +533,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         # Link the result spectrum to the reference data of the spectrum viewer
 
         ref_data = self.app.get_viewer('spectrum-viewer').state.reference_data
-        data_id = ref_data.world_component_ids[0]
+        data_id = ref_data.world_component_ids[-1]
         model_id = self.app.session.data_collection[label].world_component_ids[0]
         self.app.session.data_collection.add_link(LinkSame(data_id, model_id))
 
