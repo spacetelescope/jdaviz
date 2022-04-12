@@ -88,7 +88,7 @@ To learn more about the various ``jdaviz`` application configurations and loadin
 of the git repository.  ``CubevizExample.ipynb`` is provided as an example that loads a SDSS MaNGA IFU data cube with the
 ``Cubeviz`` configuration.  To run the provided example, start the jupyter kernel with the notebook path::
 
-    jupyter notebook /path/to/jdaviz/notebooks/Example.ipynb
+    jupyter notebook /path/to/jdaviz/notebooks/CubevizExample.ipynb
 
 Help
 ----
