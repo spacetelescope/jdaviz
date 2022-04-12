@@ -2,7 +2,6 @@ import re
 import numpy as np
 
 import astropy.units as u
-from astropy.wcs import WCSSUB_SPECTRAL
 from specutils import Spectrum1D
 from specutils.utils import QuantityModel
 from traitlets import Bool, List, Unicode, observe

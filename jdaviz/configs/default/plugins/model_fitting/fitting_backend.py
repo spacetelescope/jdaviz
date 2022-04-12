@@ -7,7 +7,7 @@ import numpy as np
 
 import astropy.units as u
 
-from specutils import Spectrum1D, SpectralRegion
+from specutils import Spectrum1D
 from specutils.fitting import fit_lines
 
 __all__ = ['fit_model_to_spectrum']
