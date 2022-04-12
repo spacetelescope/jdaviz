@@ -74,7 +74,7 @@ For more information on the command line interface, see the
 In a Jupyter Notebook
 +++++++++++++++++++++
 
-The power of ``jdaviz`` is that it can integrated into your Juppyter notebook workflow::
+The power of ``jdaviz`` is that it can integrated into your Jupyter notebook workflow::
 
     from jdaviz import Specviz
 
