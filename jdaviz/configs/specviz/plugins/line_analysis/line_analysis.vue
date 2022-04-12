@@ -84,7 +84,14 @@
               </a> 
             </j-tooltip>
           </v-col>
-          <v-col cols=6>{{ item.result }} {{ item.uncertainty ? "&#177; " + item.uncertainty : null}} {{ item.unit }}</v-col>
+          <v-col cols=6>
+            <j-number-uncertainty
+              :value="item.result"
+              :uncertainty="item.uncertainty"
+              :unit="item.unit"
+              :maxDecs="5"
+            ></j-number-uncertainty>
+          </v-col>
         </v-row>
       </div>
       <div v-if="results_computing"
