@@ -30,7 +30,9 @@ class Cubeviz(ConfigHelper, LineListMixin):
             for att_name in ["Wave", "Wavelength", "Freq", "Frequency",
                              "Wavenumber", "Velocity", "Energy"]:
                 if att_name in ref_data.component_ids():
-                    viewer.state.x_att = ref_data.id[att_name]
+                    if viewer.state.x_att != ref_data.id[att_name]:
+                        viewer.state.x_att = ref_data.id[att_name]
+                        self.specviz.y_limits('auto', 'auto')
                     break
             else:
                 viewer.state.x_att_pixel = ref_data.id["Pixel Axis 2 [x]"]
