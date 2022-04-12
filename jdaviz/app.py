@@ -29,6 +29,7 @@ from glue_jupyter.state_traitlets_helpers import GlueState
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from ipyvuetify import VuetifyTemplate
 
+from jdaviz import __version__
 from jdaviz.core.config import read_configuration, get_configuration
 from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
                                 SnackbarMessage, RemoveDataMessage,
@@ -168,6 +169,7 @@ class Application(VuetifyTemplate, HubListener):
 
     loading = Bool(False).tag(sync=True)
     config = Unicode("").tag(sync=True)
+    vdocs = Unicode("").tag(sync=True)
 
     def __init__(self, configuration=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -1416,6 +1418,7 @@ class Application(VuetifyTemplate, HubListener):
         self._loaded_configuration = config
         # give the vue templates access to the current config/layout
         self.config = config['settings'].get('configuration', 'unknown')
+        self.vdocs = 'latest' if 'dev' in __version__ else 'v'+__version__
 
         self.state.settings.update(config.get('settings'))
 

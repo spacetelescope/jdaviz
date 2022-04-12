@@ -9,13 +9,18 @@
         </j-tooltip>
       </v-toolbar-items>
       <v-spacer></v-spacer>
+      <v-toolbar-items>
+        <j-tooltip tipid="app-help">
+          <v-btn icon :href="getReadTheDocsLink()" target="_blank">
+            <v-icon medium>mdi-help-box</v-icon>
+          </v-btn>
+        </j-tooltip>
         <j-tooltip tipid="app-toolbar-plugins">
-          <v-toolbar-items>
           <v-btn icon @click="state.drawer = !state.drawer" :class="{active : state.drawer}">
             <v-icon>mdi-menu</v-icon>
           </v-btn>
-        </v-toolbar-items>
         </j-tooltip>
+      </v-toolbar-items>
     </v-app-bar>
 
     <v-content
@@ -97,6 +102,13 @@ export default {
       this.notebook_context = document.getElementById("ipython-main-app")
         || document.querySelector('.jp-LabShell');
       return this.notebook_context;
+    },
+    getReadTheDocsLink() {
+      if (['specviz', 'cubeviz', 'mosviz', 'imviz'].indexOf(this.config) !== -1) {
+        return 'https://jdaviz.readthedocs.io/en/'+this.vdocs+'/'+this.config+'/index.html'
+      } else {
+        return 'https://jdaviz.readthedocs.io'
+      }
     }
   },
   created() {
