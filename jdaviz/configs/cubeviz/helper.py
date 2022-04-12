@@ -32,7 +32,7 @@ class Cubeviz(ConfigHelper, LineListMixin):
                 if att_name in ref_data.component_ids():
                     if viewer.state.x_att != ref_data.id[att_name]:
                         viewer.state.x_att = ref_data.id[att_name]
-                        self.specviz.y_limits('auto', 'auto')
+                        viewer.state.reset_limits()
                     break
             else:
                 viewer.state.x_att_pixel = ref_data.id["Pixel Axis 2 [x]"]
