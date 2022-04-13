@@ -1,6 +1,9 @@
 
 .. _sample_notebook:
 
+Sample Notebooks
+================
+
 ``jdaviz`` is one tool that is part of STScI's larger `Data Analysis Tools Ecosystem <https://jwst-docs.stsci.edu/jwst-post-pipeline-data-analysis>`_.
 
 These tools include three types of example Jupyter notebooks.
