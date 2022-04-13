@@ -36,34 +36,36 @@ users can select which spectra that have be loaded to be visualized in the viewe
 
 .. image:: img/data_selected_1.png
 
-.. _api-import:
+.. _specviz-import-api:
 
 Loading data via the API
 ------------------------
 Alternatively, if users are working in a coding environment like a Jupyter notebook, they have access to the :class:`~jdaviz.configs.specviz.helper.Specviz` helper class API. Using this API, users can load data into the application through code.
 Below is an example of importing the :class:`~jdaviz.configs.specviz.helper.Specviz` helper class, creating a :class:`~specutils.Spectrum1D` object from a data file via the `specutils.Spectrum1D.read` method::
 
-    >>> from specutils import Spectrum1D
-    >>> spec1d = Spectrum1D.read("/path/to/data/file") #doctest: +SKIP
-    >>> specviz = Specviz()  # doctest: +SKIP
-    >>> specviz.load_spectrum(spec1d)  # doctest: +SKIP
+    from specutils import Spectrum1D
+    spec1d = Spectrum1D.read("/path/to/data/file") #doctest: +SKIP
+    specviz = Specviz()  # doctest: +SKIP
+    specviz.load_spectrum(spec1d)  # doctest: +SKIP
+    specviz.app
 
 You can also pass the path to a file that `~specutils.Spectrum1D` understands directly to the
 :meth:`jdaviz.configs.specviz.helper.Specviz.load_spectrum` method::
 
-    >>> specviz.load_spectrum("path/to/data/file") #doctest: +SKIP
+    specviz.load_spectrum("path/to/data/file") #doctest: +SKIP
 
 This method works well for data files that ``specutils`` understands.  However, if you are using your own data file or in-memory data, you can instead create a :class:`~specutils.Spectrum1D` object directly. In this example that is done using randomly generated data, and then that :class:`~specutils.Spectrum1D` object is loaded into the Specviz application::
 
-    >>> from jdaviz import Specviz
-    >>> import numpy as np
-    >>> import astropy.units as u
-    >>> from specutils import Spectrum1D
-    >>> flux = np.random.randn(200)*u.Jy
-    >>> wavelength = np.arange(5100, 5300)*u.AA
-    >>> spec1d = Spectrum1D(spectral_axis=wavelength, flux=flux)
-    >>> specviz = Specviz()
-    >>> specviz.load_spectrum(spec1d)  # doctest: +IGNORE_OUTPUT
+    from jdaviz import Specviz
+    import numpy as np
+    import astropy.units as u
+    from specutils import Spectrum1D
+    flux = np.random.randn(200)*u.Jy
+    wavelength = np.arange(5100, 5300)*u.AA
+    spec1d = Spectrum1D(spectral_axis=wavelength, flux=flux)
+    specviz = Specviz()
+    specviz.load_spectrum(spec1d)  # doctest: +IGNORE_OUTPUT
+    specviz.app
 
 For more information about using the Specutils package, please see the
 `Specutils documentation <https://specutils.readthedocs.io>`_.
@@ -80,9 +82,10 @@ individual `~specutils.Spectrum1D` objects in the list and additionally attempt
 to stitch together the spectra into a single data object so that
 they can be manipulated and analyzed in the application as a single entity::
 
-    >>> from specutils import SpectrumList
-    >>> spec_list = SpectrumList([spec1d_1, spec1d_2]) #doctest: +SKIP
-    >>> specviz.load_spectrum(spec_list) #doctest: +SKIP
+    from specutils import SpectrumList
+    spec_list = SpectrumList([spec1d_1, spec1d_2]) #doctest: +SKIP
+    specviz.load_spectrum(spec_list) #doctest: +SKIP
+    specviz.app
 
 In the screenshot below, the combined spectrum is plotted in gray, and one of
 the single component spectra are also selected and plotted in red. Note that the

@@ -28,6 +28,8 @@ application. A notification will appear to let users know if the data import
 was successful. Afterward, the new data set can be found in the :guilabel:`Data`
 tab of each viewer's options menu as described in :ref:`cubeviz-selecting-data`.
 
+.. _imviz-import-api:
+
 Importing data via the API
 --------------------------
 
@@ -42,8 +44,8 @@ The example below loads the first science extension of the given FITS file into 
 
     from jdaviz import Imviz
     imviz = Imviz()
-    imviz.app
     imviz.load_data("/path/to/data/image.fits")
+    imviz.app
 
 .. _imviz-import-regions-api:
 

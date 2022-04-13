@@ -1,4 +1,4 @@
-.. _mosviz-import-data:
+.. _mosviz-import-api:
 
 ***********
 Import Data
@@ -16,15 +16,16 @@ time, Mosviz supports automatic parsing for the following instruments:
 * JWST NIRISS
 
 In a Jupyter context (notebook or Lab), you can specify the instrument with a directory
-as such:
+as such::
 
-    >>> from jdaviz import Mosviz
-    >>> mosviz = Mosviz()
-    >>> mosviz.load_data(directory="path/to/my/data", instrument="nirspec")  # doctest: +SKIP
+    from jdaviz import Mosviz
+    mosviz = Mosviz()
+    mosviz.load_data(directory="path/to/my/data", instrument="nirspec")  # doctest: +SKIP
+    mosviz.app
 
-or for NIRISS:
+or for NIRISS::
 
-    >>> mosviz.load_data(directory="path/to/my/data", instrument="niriss")  # doctest: +SKIP
+    mosviz.load_data(directory="path/to/my/data", instrument="niriss")  # doctest: +SKIP
 
 If an instrument is not specified, Mosviz will default to NIRSpec parsing.
 
@@ -49,9 +50,11 @@ Currently, manual loading is supported in the Jupyter context only.
 An example is given below, where ``file_dir`` is a
 directory that contains all the files for the dataset to be loaded::
 
-    >>> from jdaviz import Mosviz
-    >>> mosviz = Mosviz()
-    >>> spectra_1d = ['target1_1d.fits', 'target2_1d.fits']
-    >>> spectra_2d = ['target1_2d.fits', 'target2_2d.fits']
-    >>> images = ['target1_img.fits', 'target2_img.fits']
-    >>> mosviz.load_data(spectra_1d, spectra_2d, images)  # doctest: +SKIP
+    from jdaviz import Mosviz
+    mosviz = Mosviz()
+    spectra_1d = ['target1_1d.fits', 'target2_1d.fits']
+    spectra_2d = ['target1_2d.fits', 'target2_2d.fits']
+    images = ['target1_img.fits', 'target2_img.fits']
+    mosviz.load_data(spectra_1d, spectra_2d, images)  # doctest: +SKIP
+    mosviz.app
+
