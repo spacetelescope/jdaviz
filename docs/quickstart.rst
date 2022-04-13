@@ -26,13 +26,14 @@ The power of ``jdaviz`` is that it can integrated into your Jupyter notebook wor
 
     from jdaviz import Specviz
 
-    app = Specviz()
-    app
+    specviz = Specviz()
+    specviz.app
+
 
 To learn more about the various ``jdaviz`` application configurations and loading data, see the
 `specviz <https://jdaviz.readthedocs.io/en/latest/specviz/import_data.html>`_, `cubeviz <https://jdaviz.readthedocs.io/en/latest/cubeviz/import_data.html>`_, `mosviz <https://jdaviz.readthedocs.io/en/latest/mosviz/import_data.html>`_, or `imviz <https://jdaviz.readthedocs.io/en/latest/imviz/import_data.html>`_ tools.
 
-``jdaviz`` also provides a directory of `sample notebooks <https://jdaviz.readthedocs.io/en/latest/sample_notebooks.html>`_ to test the application, located in the ``notebooks`` sub-directory
+``jdaviz`` also provides a directory of `sample notebooks :ref:`sample_notebook` to test the application, located in the ``notebooks`` sub-directory
 of the git repository. ``CubevizExample.ipynb`` is provided as an example that loads a SDSS MaNGA IFU data cube with the
 ``Cubeviz`` configuration.  To run the provided example, start the jupyter kernel with the notebook path::
 
