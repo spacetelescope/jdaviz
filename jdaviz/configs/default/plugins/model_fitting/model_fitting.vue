@@ -35,25 +35,12 @@
     <v-form v-model="form_valid_model_component">
       <v-row>
         <v-select
-          :items="available_models"
-          @change="model_selected"
-          label="Model"
-          hint="Select a model to fit."
+          :items="available_comps"
+          v-model="comp_selected"
+          label="Model Component"
+          hint="Select a model component to add."
           persistent-hint
         ></v-select>
-      </v-row>
-
-      <v-row>
-        <v-text-field
-          label="Model ID"
-          v-model="temp_name"
-          @change="sanitizeModelId"
-          hint="A unique string label for this component model."
-          persistent-hint
-          :rules="[() => temp_name!=='' || 'This field is required',
-                   () => component_models.map((item) => item.id).indexOf(temp_name) === -1 || 'ID already in use']"
-        >
-        </v-text-field>
       </v-row>
 
       <v-row v-if="display_order">
@@ -68,12 +55,21 @@
         </v-text-field>
       </v-row>
 
+      <plugin-auto-label
+        :value.sync="comp_label"
+        @update:value="sanitizeCompLabel"
+        :default="comp_label_default"
+        :auto.sync="comp_label_auto"
+        :invalid_msg="comp_label_invalid_msg"
+        hint="Label for this new model component."
+      ></plugin-auto-label>
+
       <v-row justify="end">
         <j-tooltip tipid='plugin-model-fitting-add-model'>
           <v-btn 
             color="primary" 
             text 
-            :disabled="!form_valid_model_component"
+            :disabled="!form_valid_model_component || comp_label_invalid_msg.length > 0"
             @click="add_model"
             >Add Component
           </v-btn>
@@ -155,17 +151,14 @@
 
     <div v-if="component_models.length">
       <j-plugin-section-header>Equation Editor</j-plugin-section-header>
-      <v-row>
-        <v-text-field
-          v-model="model_equation"
-          hint="Enter an equation specifying how to combine the component models, using their model IDs and basic arithmetic operators (ex. component1+component2)."
-          persistent-hint
-          :rules="[() => !!model_equation || 'This field is required']"
-          @change="equation_changed"
-          :error="eq_error"
-        >
-        </v-text-field>
-      </v-row>
+      <!-- eq_error -->
+      <plugin-auto-label
+        :value.sync="model_equation"
+        :default="model_equation_default"
+        :auto.sync="model_equation_auto"
+        :invalid_msg="model_equation_invalid_msg"
+        hint="Enter an equation specifying how to combine the component models, using their model IDs and basic arithmetic operators (ex. component1+component2)."
+      ></plugin-auto-label>
     </div>
 
     <j-plugin-section-header>Fit Model</j-plugin-section-header>
@@ -189,6 +182,7 @@
       :add_to_viewer_selected.sync="add_to_viewer_selected"
       action_label="Fit Model"
       action_tooltip="Fit the model to the data"
+      :action_disabled="model_equation_invalid_msg.length > 0"
       @click:action="apply"
     ></plugin-add-results>
 
@@ -203,9 +197,9 @@
 <script>
   module.exports = {
     created() {
-      this.sanitizeModelId = (v) => {
+      this.sanitizeCompLabel = (v) => {
         // strip non-word character entries
-        this.temp_name = v.replace(/[\W]+/g, '');
+        this.comp_label = v.replace(/[\W]+/g, '');
       }
     },
   }

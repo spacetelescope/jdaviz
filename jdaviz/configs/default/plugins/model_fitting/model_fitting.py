@@ -14,6 +14,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SpectralSubsetSelectMixin,
                                         SubsetSelect,
                                         DatasetSelectMixin,
+                                        AutoLabel,
                                         AddResultsMixin)
 from jdaviz.core.custom_traitlets import IntHandleEmpty
 from jdaviz.configs.default.plugins.model_fitting.fitting_backend import fit_model_to_spectrum
@@ -42,16 +43,26 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     spatial_subset_items = List().tag(sync=True)
     spatial_subset_selected = Unicode().tag(sync=True)
 
-    cube_fit = Bool(False).tag(sync=True)
-    temp_name = Unicode().tag(sync=True)
-    temp_model = Unicode().tag(sync=True)
+    # model components:
+    available_comps = List(list(MODELS.keys())).tag(sync=True)
+    comp_selected = Unicode().tag(sync=True)
+    poly_order = IntHandleEmpty(0).tag(sync=True)
+
+    comp_label = Unicode().tag(sync=True)
+    comp_label_default = Unicode().tag(sync=True)
+    comp_label_auto = Bool(True).tag(sync=True)
+    comp_label_invalid_msg = Unicode().tag(sync=True)
+
     model_equation = Unicode().tag(sync=True)
+    model_equation_default = Unicode().tag(sync=True)
+    model_equation_auto = Bool(True).tag(sync=True)
+    model_equation_invalid_msg = Unicode().tag(sync=True)
+
     eq_error = Bool(False).tag(sync=True)
     component_models = List([]).tag(sync=True)
     display_order = Bool(False).tag(sync=True)
-    poly_order = IntHandleEmpty(0).tag(sync=True)
 
-    available_models = List(list(MODELS.keys())).tag(sync=True)
+    cube_fit = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         self._spectrum1d = None
@@ -78,6 +89,11 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self.dataset._viewers = ['spectrum-viewer']
         # require entries to be in spectrum-viewer (not other cubeviz images, etc)
         self.dataset.add_filter('layer_in_spectrum_viewer')
+
+        self.auto_component_label = AutoLabel(self, 'comp_label', 'comp_label_default',
+                                              'comp_label_auto', 'comp_label_invalid_msg')
+        self.auto_equation = AutoLabel(self, 'model_equation', 'model_equation_default',
+                                       'model_equation_auto', 'model_equation_invalid_msg')
 
         # set the filter on the viewer options
         self._update_viewer_filters()
@@ -250,13 +266,37 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             spectral_min, spectral_max = self.spectral_subset.selected_min_max(self._spectrum1d)
             self._window = (spectral_min.value, spectral_max.value)
 
-    def vue_model_selected(self, event):
-        # Add the model selected to the list of models
-        self.temp_model = event
-        if event == "Polynomial1D":
+    @observe('comp_selected', 'poly_order')
+    def _update_comp_label_default(self, event={}):
+        abbrevs = {'BlackBody': 'BB', 'PowerLaw': 'PL', 'Lorentz': 'Lo'}
+        abbrev = abbrevs.get(self.comp_selected, self.comp_selected[0].upper())
+        if self.comp_selected == "Polynomial1D":
             self.display_order = True
+            abbrev += f'{self.poly_order}'
         else:
             self.display_order = False
+
+        # append a number suffix to avoid any duplicates
+        ind = 1
+        while abbrev in [cm['id'] for cm in self.component_models]:
+            abbrev = f'{abbrev.split("_")[0]}_{ind}'
+            ind += 1
+
+        self.comp_label_default = abbrev
+
+    @observe('comp_label')
+    def _comp_label_changed(self, event={}):
+        if not len(self.comp_label.strip()):
+            # strip will raise the same error for a label of all spaces
+            self.comp_label_invalid_msg = 'label must be provided'
+            return
+        if self.comp_label in [cm['id'] for cm in self.component_models]:
+            self.comp_label_invalid_msg = 'label already in use'
+            return
+        self.comp_label_invalid_msg = ''
+
+    def _update_model_equation_default(self):
+        self.model_equation_default = '+'.join(cm['id'] for cm in self.component_models)
 
     def _reinitialize_with_fixed(self):
         """
@@ -291,22 +331,22 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # validate provided label (only allow "word characters").   These should already be
         # stripped by JS in the UI element, but we'll confirm here (especially if this is ever
         # extended to have better API-support)
-        if re.search(r'\W+', self.temp_name):
-            raise ValueError(f"invalid model component ID {self.temp_name}")
+        if re.search(r'\W+', self.comp_label):
+            raise ValueError(f"invalid model component ID {self.comp_label}")
 
-        if self.temp_name in [cm['id'] for cm in self.component_models]:
-            raise ValueError(f"model component ID {self.temp_name} already in use")
+        if self.comp_label in [cm['id'] for cm in self.component_models]:
+            raise ValueError(f"model component ID {self.comp_label} already in use")
 
-        new_model = {"id": self.temp_name, "model_type": self.temp_model,
+        new_model = {"id": self.comp_label, "model_type": self.comp_selected,
                      "parameters": [], "model_kwargs": {}}
-        model_cls = MODELS[self.temp_model]
+        model_cls = MODELS[self.comp_selected]
 
-        if self.temp_model == "Polynomial1D":
+        if self.comp_selected == "Polynomial1D":
             # self.poly_order is the value in the widget for creating
             # the new model component.  We need to store that with the
             # model itself as the value could change for another component.
             new_model["model_kwargs"] = {"degree": self.poly_order}
-        elif self.temp_model == "BlackBody":
+        elif self.comp_selected == "BlackBody":
             new_model["model_kwargs"] = {"output_units": self._units["y"],
                                          "bounds": {"scale": (0.0, None)}}
 
@@ -330,9 +370,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             initial_values[param_name] = initial_val
 
         initialized_model = initialize(
-            MODELS[self.temp_model](name=self.temp_name,
-                                    **initial_values,
-                                    **new_model.get("model_kwargs", {})),
+            MODELS[self.comp_selected](name=self.comp_label,
+                                       **initial_values,
+                                       **new_model.get("model_kwargs", {})),
             self._spectrum1d.spectral_axis,
             self._spectrum1d.flux)
 
@@ -345,20 +385,28 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                                             "unit": str(param_quant.unit),
                                             "fixed": False})
 
-        self._initialized_models[self.temp_name] = initialized_model
+        self._initialized_models[self.comp_label] = initialized_model
 
         new_model["Initialized"] = True
         self.component_models = self.component_models + [new_model]
+        # update the default label (likely adding the suffix)
+        self._update_comp_label_default()
+        self._update_model_equation_default()
 
     def vue_remove_model(self, event):
         self.component_models = [x for x in self.component_models
                                  if x["id"] != event]
         del(self._initialized_models[event])
+        self._update_comp_label_default()
+        self._update_model_equation_default()
 
-    def vue_equation_changed(self, event):
+    @observe('model_equation')
+    def _model_equation_changed(self, event):
         # Length is a dummy check to test the infrastructure
         if len(self.model_equation) > 20:
-            self.eq_error = True
+            self.model_equation_invalid_msg = 'model equation too long'
+            return
+        self.model_equation_invalid_msg = ''
 
     @observe("dataset_selected", "dataset_items", "cube_fit")
     def _set_default_results_label(self, event={}):

@@ -851,11 +851,8 @@ class AutoLabel(BasePluginComponent):
 
       <plugin-auto-label
         :value.sync="value"
-        @change="$emit('update:value', $event)"
-        @update:value="$emit('update:value', $event)"
         :default="comp_label_default"
-        :auto="comp_label_auto"
-        @update:auto="$emit('update:auto', $event)"
+        :auto.sync="comp_label_auto"
         :invalid_msg="invalid_msg"
         hint="Label hint."
       ></plugin-auto-label>
@@ -886,17 +883,14 @@ class AutoLabelMixin(VuetifyTemplate, HubListener):
 
     * add ``AutoLabelMixin`` as a mixin to the class
     * use the traitlets available from the plugin or properties/methods available from
-      ``plugin.auto_label`.
+      ``plugin.auto_label``.
 
     Example template::
 
       <plugin-auto-label
         :value.sync="label"
-        @change="$emit('update:label', $event)"
-        @update:value="$emit('update:label', $event)"
         :default="label_default"
-        :auto="label_auto"
-        @update:auto="$emit('update:label_auto', $event)"
+        :auto.sync="label_auto"
         :invalid_msg="invalid_msg"
         hint="Label hint."
       ></plugin-auto-label>
