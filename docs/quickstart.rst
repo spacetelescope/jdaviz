@@ -30,8 +30,7 @@ The power of ``jdaviz`` is that it can integrated into your Jupyter notebook wor
     specviz.app
 
 
-
-``jdaviz`` also provides a directory of `sample notebooks :ref:`sample_notebook` to test the application, located in the ``notebooks`` sub-directory
+``jdaviz`` also provides a directory of :ref:`sample notebooks <sample_notebook>` to test the application, located in the ``notebooks`` sub-directory
 of the git repository. ``CubevizExample.ipynb`` is provided as an example that loads a SDSS MaNGA IFU data cube with the
 ``Cubeviz`` configuration.  To run the provided example, start the jupyter kernel with the notebook path::
 
