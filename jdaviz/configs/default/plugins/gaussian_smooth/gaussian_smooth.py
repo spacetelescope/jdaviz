@@ -54,7 +54,8 @@ class GaussianSmooth(TemplateMixin, DatasetSelectMixin):
             return
 
         # NOTE: if this is ever used anywhere else, it should be moved into DatasetSelect
-        self.selected_data_is_1d = len(self.dataset.selected_dc_item.data.shape) == 1
+        if self.dataset.selected_dc_item is not None:
+            self.selected_data_is_1d = len(self.dataset.selected_dc_item.data.shape) == 1
 
     def vue_spectral_smooth(self, *args, **kwargs):
         # Testing inputs to make sure putting smoothed spectrum into

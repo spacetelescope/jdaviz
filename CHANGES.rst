@@ -56,8 +56,9 @@ Other Changes and Additions
 
 - Change default collapse function to sum.
   This affects collapsed spectrum in Cubeviz and its Collapse plugin default. [#1229, #1237]
-
 - Data dropdowns in plugins are now filtered to only applicable entries. [#1221]
+- Cube data now has spectral axis last in the backend, to match specutils Spectrum1D
+  axis order and work with updated glue-astronomy translators. [#1174]
 
 - Help button in toolbar to open docs in a new tab. [#1240]
 

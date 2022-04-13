@@ -7,7 +7,7 @@ import numpy as np
 
 import astropy.units as u
 
-from specutils.spectra import Spectrum1D
+from specutils import Spectrum1D
 from specutils.fitting import fit_lines
 
 __all__ = ['fit_model_to_spectrum']
@@ -189,7 +189,7 @@ def _fit_3D(initial_model, spectrum, window=None, n_cpu=None):
 
     # Build output 3D spectrum
     funit = spectrum.flux.unit
-    output_spectrum = Spectrum1D(spectral_axis=spectrum.spectral_axis,
+    output_spectrum = Spectrum1D(wcs=spectrum.wcs,
                                  flux=output_flux_cube * funit)
 
     return fitted_models, output_spectrum
@@ -231,7 +231,7 @@ class SpaxelWorker:
             # spectrum reference into the callable somehow prevents it
             # to execute. This behavior was seen also with other functions
             # passed to the callable.
-            flux = self.cube[x, y, :]  # transposed!
+            flux = self.cube[x, y, :]
             sp = Spectrum1D(spectral_axis=self.wave, flux=flux)
 
             fitted_model = fit_lines(sp, self.model, window=self.window)

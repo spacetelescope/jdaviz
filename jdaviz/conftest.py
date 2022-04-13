@@ -53,7 +53,7 @@ def image_2d_wcs(request):
 def spectral_cube_wcs(request):
     # A simple spectral cube WCS used by some tests
     wcs = WCS(naxis=3)
-    wcs.wcs.ctype = 'RA---TAN', 'DEC--TAN', 'FREQ'
+    wcs.wcs.ctype = 'FREQ', 'DEC--TAN', 'RA---TAN'
     wcs.wcs.set()
     return wcs
 
@@ -62,7 +62,7 @@ def spectral_cube_wcs(request):
 def spectrum1d_cube_wcs(request):
     # A simple spectrum1D WCS used by some tests
     wcs = WCS(naxis=3)
-    wcs.wcs.ctype = 'RA---TAN', 'DEC--TAN', 'WAVE-LOG'
+    wcs.wcs.ctype = 'WAVE-LOG', 'DEC--TAN', 'RA---TAN'
     wcs.wcs.set()
     return wcs
 

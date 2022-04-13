@@ -91,11 +91,9 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
                     self.app.data_collection[i].meta["Plugin"] == "Collapse"):
                 links = [LinkSame(pc_old[0], pc_new[0]),
                          LinkSame(pc_old[1], pc_new[1])]
-
-            # Else, link collapse data to cube (pc_old)
             else:
-                links = [[LinkSame(pc_new[1], pc_old[2]),
-                          LinkSame(pc_new[0], pc_old[1])]]
+                links = [LinkSame(pc_old[0], pc_new[1]),
+                         LinkSame(pc_old[1], pc_new[0])]
 
             self.app.data_collection.add_link(links)
 

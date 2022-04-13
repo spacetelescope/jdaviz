@@ -35,6 +35,20 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._initialize_toolbar_nested()
+        self.state.add_callback('reference_data', self._initial_x_axis)
+
+    def _initial_x_axis(self, *args):
+        # Make sure that the x_att is correct on data load
+        ref_data = self.state.reference_data
+        if ref_data and ref_data.ndim == 3:
+            for att_name in ["Right Ascension", "RA", "Galactic Longitude"]:
+                if att_name in ref_data.component_ids():
+                    x_att = att_name
+                    self.state.x_att_world = ref_data.id[x_att]
+                    break
+            else:
+                x_att = "Pixel Axis 0 [z]"
+                self.state.x_att = ref_data.id[x_att]
 
     def set_plot_axes(self):
         self.figure.axes[1].tick_format = None
