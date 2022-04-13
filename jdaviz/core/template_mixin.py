@@ -20,6 +20,7 @@ __all__ = ['TemplateMixin', 'PluginTemplateMixin',
            'SubsetSelect', 'SpatialSubsetSelectMixin', 'SpectralSubsetSelectMixin',
            'ViewerSelect', 'ViewerSelectMixin',
            'DatasetSelect', 'DatasetSelectMixin',
+           'AutoLabel', 'AutoLabelMixin',
            'AddResults', 'AddResultsMixin']
 
 
@@ -834,6 +835,84 @@ class DatasetSelectMixin(VuetifyTemplate, HubListener):
         self.dataset = DatasetSelect(self, 'dataset_items', 'dataset_selected')
 
 
+class AutoLabel(BasePluginComponent):
+    """
+    Traitlets (in the object, custom traitlets in the plugin):
+
+    * ``value`` (string: user-provided label for the results data-entry.  If ``auto``, changes
+        to ``default`` will update ``value``.  Otherwise, changes to ``value`` will set
+        ``auto`` to False.)
+    * ``default`` (string: plugin-determined default label that will be synced to ``value``
+        if/when ``auto`` is set to True)
+    * ``auto`` (bool: whether to sync ``default`` to ``value``)
+    * ``invalid_msg`` (string: validation string for the current value of ``value``.)
+
+    Example template::
+
+      <plugin-auto-label
+        :value.sync="value"
+        @change="$emit('update:value', $event)"
+        @update:value="$emit('update:value', $event)"
+        :default="comp_label_default"
+        :auto="comp_label_auto"
+        @update:auto="$emit('update:auto', $event)"
+        :invalid_msg="invalid_msg"
+        hint="Label hint."
+      ></plugin-auto-label>
+
+    """
+    def __init__(self, plugin, value, default, auto,
+                 invalid_msg):
+        super().__init__(plugin, value=value,
+                         default=default, auto=auto,
+                         invalid_msg=invalid_msg)
+
+        self.add_observe(default, self._on_set_to_default)
+        self.add_observe(auto, self._on_set_to_default)
+
+    def _on_set_to_default(self, msg={}):
+        if self.auto:
+            self.value = self.default
+
+
+class AutoLabelMixin(VuetifyTemplate, HubListener):
+    """
+    Applies the AutoLabel component as a mixin in the base plugin.  This
+    automatically adds traitlets as well as new properties to the plugin with minimal
+    extra code.  For multiple instances or custom traitlet names/defaults, use the
+    component instead.
+
+    To use in a plugin:
+
+    * add ``AutoLabelMixin`` as a mixin to the class
+    * use the traitlets available from the plugin or properties/methods available from
+      ``plugin.auto_label`.
+
+    Example template::
+
+      <plugin-auto-label
+        :value.sync="label"
+        @change="$emit('update:label', $event)"
+        @update:value="$emit('update:label', $event)"
+        :default="label_default"
+        :auto="label_auto"
+        @update:auto="$emit('update:label_auto', $event)"
+        :invalid_msg="invalid_msg"
+        hint="Label hint."
+      ></plugin-auto-label>
+    """
+    label = Unicode().tag(sync=True)
+    label_default = Unicode().tag(sync=True)
+    label_auto = Bool(True).tag(sync=True)
+    label_invalid_msg = Unicode('').tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.auto_label = AddResults(self, 'label',
+                                     'label_default', 'label_auto',
+                                     'label_invalid_msg')
+
+
 class AddResults(BasePluginComponent):
     """
     Traitlets (in the object, custom traitlets in the plugin):
@@ -893,9 +972,8 @@ class AddResults(BasePluginComponent):
         self.viewer = ViewerSelect(plugin, add_to_viewer_items, add_to_viewer_selected,
                                    manual_options=['None'])
 
+        self.auto_label = AutoLabel(plugin, label, label_default, label_auto, label_invalid_msg)
         self.add_observe(label, self._on_label_changed)
-        self.add_observe(label_default, self._on_label_set_to_default)
-        self.add_observe(label_auto, self._on_label_set_to_default)
 
     def _on_label_changed(self, msg={}):
         if not len(self.label.strip()):
@@ -916,10 +994,6 @@ class AddResults(BasePluginComponent):
 
         self.label_invalid_msg = ''
         self.label_overwrite = False
-
-    def _on_label_set_to_default(self, msg={}):
-        if self.label_auto:
-            self.label = self.label_default
 
     def add_results_from_plugin(self, data_item):
         """

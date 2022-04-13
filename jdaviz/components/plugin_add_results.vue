@@ -1,15 +1,15 @@
 <template>
   <div>
     <plugin-auto-label
-      :label="label"
+      :value="label"
       @change="$emit('update:label', $event)"
-      @update:label="$emit('update:label', $event)"
-      :label_default="label_default"
+      @update:value="$emit('update:label', $event)"
+      :default="label_default"
       :auto="label_auto"
       @update:auto="$emit('update:label_auto', $event)"
-      :label_invalid_msg="label_invalid_msg"
-      :label_label="label_label ? label_label : 'Output Data Label'"
-      :label_hint="label_hint ? label_hint : 'Label for the resulting data item.'"
+      :invalid_msg="label_invalid_msg"
+      :label="label_label ? label_label : 'Output Data Label'"
+      :hint="label_hint ? label_hint : 'Label for the resulting data item.'"
     ></plugin-auto-label>   
 
     <plugin-viewer-select v-if="add_to_viewer_items.length > 2"
