@@ -23,7 +23,7 @@
 
     <v-row v-else>
       <v-switch
-        :value="add_to_viewer_selected == add_to_viewer_items[1].label"
+        v-model="add_to_viewer_selected == this.add_to_viewer_items[1].label"
         @change="(e) => {$emit('update:add_to_viewer_selected', this.$props.add_to_viewer_items[Number(e)].label)}"
         :label="'Show in '+add_to_viewer_items[1].label"
         hint='Immediately plot results.  Data entry will be available to toggle in the data dropdown'

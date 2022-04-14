@@ -169,11 +169,11 @@ class BaseSelectPluginComponent(BasePluginComponent, HasTraits):
     ``selected`` string traitlet.  The subclasses should also override ``selected_obj`` and may
     choose to override ``_selected_changed`` (likely with a super call to keep the base logic).
     """
-    # default_mode can be one of empty, first, default_text (requires default_text to be set)
-    default_mode = 'empty'
     filters = List([]).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
+        # default_mode can be one of empty, first, default_text (requires default_text to be set)
+        default_mode = kwargs.pop('default_mode', 'empty')
         default_text = kwargs.pop('default_text', None)
         manual_options = kwargs.pop('manual_options', [])
         self._viewers = kwargs.pop('viewers', None)
@@ -184,6 +184,7 @@ class BaseSelectPluginComponent(BasePluginComponent, HasTraits):
         super().__init__(*args, **kwargs)
         self._cached_properties = ["selected_obj", "selected_item"]
 
+        self._default_mode = default_mode
         self._default_text = default_text
         if default_text is not None and default_text not in manual_options:
             manual_options = [default_text] + manual_options
@@ -248,8 +249,21 @@ class BaseSelectPluginComponent(BasePluginComponent, HasTraits):
     def selected_obj(self):
         raise NotImplementedError(f"selected_obj not implemented by {self.__class__.__name__}")
 
+    @property
+    def default_mode(self):
+        return self._default_mode
+
     def _apply_default_selection(self):
-        if self.selected in self.labels:
+        is_valid = self.selected in self.labels
+        if callable(self.default_mode):
+            # callable was defined and passed by the plugin or inheriting component.
+            # the callable takes the viewer component as input as well as the `is_valid` boolean
+            # which states if the current selection is already valid and returns the default label
+            # (to keep the current selection
+            self.selected = self.default_mode(self, is_valid=is_valid)
+            return
+
+        if is_valid:
             # current selection is valid
             return
 
@@ -320,10 +334,9 @@ class SubsetSelect(BaseSelectPluginComponent):
       />
 
     """
-    default_mode = 'default_text'
-
     def __init__(self, plugin, items, selected, selected_has_subregions=None,
-                 viewers=None, default_text=None, manual_options=[], allowed_type=None):
+                 viewers=None, default_text=None, manual_options=[], allowed_type=None,
+                 default_mode='default_text'):
         """
         Parameters
         ----------
@@ -355,7 +368,8 @@ class SubsetSelect(BaseSelectPluginComponent):
                          selected_has_subregions=selected_has_subregions,
                          viewers=viewers,
                          default_text=default_text,
-                         manual_options=manual_options)
+                         manual_options=manual_options,
+                         default_mode=default_mode)
 
         if allowed_type not in [None, 'spatial', 'spectral']:
             raise ValueError("allowed_type must be None, 'spatial', or 'spectral'")
@@ -571,11 +585,11 @@ class ViewerSelect(BaseSelectPluginComponent):
       />
 
     """
-    default_mode = 'first'
-
-    def __init__(self, plugin, items, selected, default_text=None, manual_options=[]):
+    def __init__(self, plugin, items, selected, default_text=None, manual_options=[],
+                 default_mode='first'):
         super().__init__(plugin, items=items, selected=selected,
-                         default_text=default_text, manual_options=manual_options)
+                         default_text=default_text, manual_options=manual_options,
+                         default_mode=default_mode)
 
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewers_changed)
         self.hub.subscribe(self, ViewerRemovedMessage, handler=self._on_viewers_changed)
@@ -710,11 +724,11 @@ class DatasetSelect(BaseSelectPluginComponent):
       />
 
     """
-    default_mode = 'first'
-
     def __init__(self, plugin, items, selected,
-                 filters=['not_from_plugin_model_fitting', 'layer_in_viewers']):
-        super().__init__(plugin, items=items, selected=selected, filters=filters)
+                 filters=['not_from_plugin_model_fitting', 'layer_in_viewers'],
+                 default_mode='first'):
+        super().__init__(plugin, items=items, selected=selected, filters=filters,
+                         default_mode=default_mode)
         self._cached_properties += ["selected_dc_item"]
         # Add/Remove Data are triggered when checked/unchecked from viewers
         self.hub.subscribe(self, AddDataMessage, handler=self._on_data_changed)
@@ -964,10 +978,19 @@ class AddResults(BasePluginComponent):
                            handler=lambda _: self._on_label_changed())
 
         self.viewer = ViewerSelect(plugin, add_to_viewer_items, add_to_viewer_selected,
-                                   manual_options=['None'])
+                                   manual_options=['None'],
+                                   default_mode=self._handle_default_viewer_selected)
 
         self.auto_label = AutoLabel(plugin, label, label_default, label_auto, label_invalid_msg)
         self.add_observe(label, self._on_label_changed)
+
+    def _handle_default_viewer_selected(self, viewer_comp, is_valid):
+        if len(viewer_comp.items) == 2:
+            # then we're a switch, so we want to default to ON
+            return viewer_comp.labels[1]
+        else:
+            # then we're a dropdown, so want to default to None and force the user to choose
+            return 'None'
 
     def _on_label_changed(self, msg={}):
         if not len(self.label.strip()):
