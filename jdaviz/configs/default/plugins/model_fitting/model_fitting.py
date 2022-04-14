@@ -323,7 +323,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         return temp_models
 
-    def vue_add_model(self, event):
+    def vue_add_model(self, event={}):
         """Add the selected model and input string ID to the list of models"""
         if not self._spectrum1d:
             self._dataset_selected_changed()

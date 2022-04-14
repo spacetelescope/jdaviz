@@ -33,7 +33,7 @@
 
     <j-plugin-section-header>Model Components</j-plugin-section-header>
     <v-form v-model="form_valid_model_component">
-      <v-row>
+      <v-row v-if="available_comps">
         <v-select
           :items="available_comps"
           v-model="comp_selected"
@@ -91,7 +91,7 @@
                     <v-icon>mdi-close-circle</v-icon>
                   </v-btn>
                 </v-col>
-                <v-col cols=9 class="text--secondary">
+                <v-col cols=9 class="text--secondary" :style="componentInEquation(item.id) ? '': 'color: #80808087 !important'">
                   <v-row>
                     <b>{{ item.id }}</b>&nbsp;({{ item.model_type }})
                   </v-row>
@@ -104,6 +104,13 @@
               </v-row>
             </v-expansion-panel-header>
             <v-expansion-panel-content>
+              <v-row 
+                v-if="!componentInEquation(item.id)"
+                class="v-messages v-messages__message text--secondary"
+                style="padding-top: 12px"
+              >
+                <span><b>{{ item.id }}</b> model component not in equation</span>
+              </v-row>
               <v-row
                 justify="left"
                 align="center"
@@ -121,10 +128,11 @@
                 align="center"
                 class="row-no-outside-padding"
                 v-for="param in item.parameters"
+                :style="componentInEquation(item.id) ? '': 'opacity: 0.3'"
               >
                 <v-col cols=4>
                   <j-tooltip tipid='plugin-model-fitting-param-fixed'>
-                    <v-checkbox v-model="param.fixed">
+                    <v-checkbox v-model="param.fixed" :disabled="!componentInEquation(item.id)">
                       <template v-slot:label>
                         <span class="text--primary" style="overflow-wrap: anywhere; font-size: 10pt">
                           {{param.name}}
@@ -202,5 +210,10 @@
         this.comp_label = v.replace(/[\W]+/g, '');
       }
     },
+    methods: {
+      componentInEquation(componentId) {
+        return this.model_equation.split(/[+*\/-]/).indexOf(componentId) !== -1
+      }
+    }
   }
 </script>
