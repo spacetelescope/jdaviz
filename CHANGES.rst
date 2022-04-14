@@ -61,6 +61,7 @@ Other Changes and Additions
   axis order and work with updated glue-astronomy translators. [#1174]
 
 - Help button in toolbar to open docs in a new tab. [#1240]
+- Snackbar queue handles loading interrupt more cleanly. [#1249]
 
 2.4 (2022-03-29)
 ================
