@@ -85,7 +85,9 @@
             </j-tooltip>
           </v-col>
           <v-col cols=6>
+            <span v-if="item.error_msg">{{ item.error_msg }}</span>
             <j-number-uncertainty
+              v-else
               :value="item.result"
               :uncertainty="item.uncertainty"
               :unit="item.unit"

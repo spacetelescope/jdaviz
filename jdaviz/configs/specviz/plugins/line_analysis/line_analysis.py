@@ -279,7 +279,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             if function == "Equivalent Width":
                 if np.any(continuum <= 0):
                     temp_results.append({'function': function,
-                                         'result': 'N/A (continuum <= 0)',
+                                         'result': '',
+                                         'error_msg': 'N/A (continuum <= 0)',
                                          'uncertainty': '',
                                          'unit': ''})
                     continue
