@@ -8,34 +8,35 @@
 
 module.exports = {
   data: function () {
-    const maxDecs = this.maxDecs || 5;
+    const defaultDigs = this.defaultDigs || 5;
     return {
       // default to passed values, whenever value or uncertainty are changed
       // updateTruncatedValues will overwrite the displayed values
-      maxDecs: maxDecs,
+      defaultDigs: defaultDigs,
       valueTrunc: this.value,
       uncertTrunc: this.uncertainty
     }
   },
   methods: {
     updateTruncatedValues() {
+      var nDigs = this.defaultDigs;
       if (this.uncertainty !== '') {
-        // then uncertainty was provided, so let's round both the uncertainty and value
-        // to show up to the second significant digit in the uncertainty.
-        var nDecs = 2 - Math.log10(parseFloat(this.uncertainty));
-        if (nDecs > this.maxDecs) {
-          nDecs = this.maxDecs
-        } else if (nDecs < 0) {
-          // NOTE: could support rounding of integers to less significant digits, but for now
-          // we'll at least show all digits before the decimal.
-          nDecs = 0
-        }
+        // then uncertainty was provided, so we'll round the uncertainty to 2 significant digits
+        this.uncertTrunc = +parseFloat(this.uncertainty).toPrecision(2);
 
-        this.uncertTrunc = +parseFloat(this.uncertainty).toFixed(nDecs)
+        // we then want to round the value to the same place, we do that by determining the power
+        // of both the value and uncertainty and adding the two places that we already showed for 
+        // the uncertainty above.
+        nDigs = 2 + Math.ceil(Math.log10(Math.abs(parseFloat(this.value)))) - Math.ceil(Math.log10(this.uncertainty));
+        if (nDigs < 1) {
+          // this should only happen if the uncertainty was larger than the value, make sure to show
+          // at least one digit
+          nDigs = 1
+        }
       }
 
-      this.valueTrunc = +parseFloat(this.value).toFixed(nDecs);
-    }
+      this.valueTrunc = +parseFloat(this.value).toPrecision(nDigs);
+    },
   },
   watch: {
     value() {
@@ -45,6 +46,11 @@ module.exports = {
       this.updateTruncatedValues();
     }
   },
-  props: ['value', 'uncertainty', 'unit', 'maxDecs'],
+  mounted() {
+    // this should never need to be used in practice, but if using hot-reloading, the UI will
+    // fallback on the values defined in data above.  This forces the truncation logic to trigger.
+    this.updateTruncatedValues();
+  },
+  props: ['value', 'uncertainty', 'unit', 'defaultDigs'],
 };
 </script>

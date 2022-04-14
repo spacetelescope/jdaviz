@@ -89,7 +89,7 @@
               :value="item.result"
               :uncertainty="item.uncertainty"
               :unit="item.unit"
-              :maxDecs="5"
+              :defaultDigs="8"
             ></j-number-uncertainty>
           </v-col>
         </v-row>
