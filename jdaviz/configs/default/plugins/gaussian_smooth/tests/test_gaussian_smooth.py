@@ -19,9 +19,22 @@ def test_linking_after_spectral_smooth(spectrum1d_cube):
     gs.dataset_selected = 'test'
     gs.selected_mode = 'Spectral'
     gs.stddev = 3.2
+    gs.add_to_viewer_selected = 'None'
     assert gs.results_label == 'spectral-smooth stddev-3.2'
     gs.vue_apply()
+    # when not showing the results, the label will remain the same,
+    # so there should be an overwrite warning
     assert gs.results_label_overwrite is True
+    gs.add_to_viewer_selected = 'spectrum-viewer'
+    gs.vue_apply()
+    # since we now plotted the results, the dataset should be fixed,
+    # but the dataset dropdown contains multiple choices, so the dataset
+    # itself is prepended to the default label, and there is no longer
+    # an overwrite warning.
+    assert len(gs.dataset_items) == 2
+    assert gs.dataset_selected == 'test'
+    assert gs.results_label == 'test spectral-smooth stddev-3.2'
+    assert gs.results_label_overwrite is False
 
     assert len(dc) == 2
     assert dc[1].label == 'spectral-smooth stddev-3.2'

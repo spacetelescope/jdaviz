@@ -84,15 +84,6 @@ class GaussianSmooth(TemplateMixin, DatasetSelectMixin, AddResultsMixin):
         # input_spaxis = Quantity(np.array([1, 2, 3, 4]), u.micron)
         # spec1 = Spectrum1D(input_flux, spectral_axis=input_spaxis)
 
-        if self.results_label in self.data_collection:
-            snackbar_message = SnackbarMessage(
-                "Data with selected stddev already exists, canceling operation.",
-                color="error",
-                sender=self)
-            self.hub.broadcast(snackbar_message)
-
-            return
-
         # Takes the user input from the dialog (stddev) and uses it to
         # define a standard deviation for gaussian smoothing
         cube = self.dataset.get_object(cls=Spectrum1D, statistic=None)
