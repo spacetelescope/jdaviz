@@ -45,6 +45,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- No longer issues a Snackbar error message when all data is deselected. [#1250]
+
 Mosviz
 ^^^^^^
 
