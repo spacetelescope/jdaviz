@@ -64,6 +64,9 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
 
     @observe('dataset_selected')
     def _dataset_selected_changed(self, event={}):
+        if self._selected_data is None:
+            self.reset_results()
+            return
         try:
             self._selected_data = self.dataset.selected_dc_item
             self.counts_factor = 0
