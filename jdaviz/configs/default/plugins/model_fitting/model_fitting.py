@@ -442,11 +442,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         # Get the primary data component
         spec = data.get_object(Spectrum1D, statistic=None)
 
-        # TODO: in vuetify >2.3, timeout should be set to -1 to keep open
-        #  indefinitely
         snackbar_message = SnackbarMessage(
             "Fitting model to cube...",
-            loading=True, timeout=0, sender=self)
+            loading=True, sender=self)
         self.hub.broadcast(snackbar_message)
 
         # Retrieve copy of the models with proper "fixed" dictionaries

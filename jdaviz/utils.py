@@ -39,13 +39,13 @@ class SnackbarQueue:
 
     def close_current_message(self, state):
 
-        # turn off snackbar iteself
-        state.snackbar['show'] = False
-
         if self.loading:
             # then we've been interrupted, so keep this item in the queue to show after
             # loading is complete
             return
+
+        # turn off snackbar iteself
+        state.snackbar['show'] = False
 
         if len(self.queue) > 0:
             # determine if the closed entry came from the queue (not an interrupt)
@@ -68,6 +68,8 @@ class SnackbarQueue:
         state.snackbar['show'] = False
         state.snackbar['text'] = msg.text
         state.snackbar['color'] = msg.color
+        # TODO: in vuetify >2.3, timeout should be set to -1 to keep open
+        #  indefinitely
         state.snackbar['timeout'] = 0  # timeout controlled by thread
         state.snackbar['loading'] = msg.loading
         state.snackbar['show'] = True
@@ -85,6 +87,9 @@ class SnackbarQueue:
         # the implementation of VSnackbarQueue in ipyvuetify, it's
         # better to keep the solution contained all in one place here.
         timeout = msg.timeout
+        if timeout < 500:
+            # half-second minimum timeout
+            timeout = 500
         if self.first:
             timeout += 5000
             self.first = False
