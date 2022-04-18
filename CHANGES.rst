@@ -4,6 +4,8 @@
 New Features
 ------------
 
+- Search bar to filter plugins in sidebar. [#1253]
+
 Cubeviz
 ^^^^^^^
 

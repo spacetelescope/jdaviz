@@ -151,6 +151,9 @@ class ApplicationState(State):
     tray_items_open = CallbackProperty(
         [], docstring="The plugin(s) opened in sidebar tray area.")
 
+    tray_items_filter = CallbackProperty(
+        '', docstring='User-filter on tray items')
+
     stack_items = ListCallbackProperty(
         docstring="Nested collection of viewers constructed to support the "
                   "Golden Layout viewer area.")
