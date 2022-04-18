@@ -65,7 +65,7 @@ As a Web Application
 from a terminal, type::
 
     jdaviz --help
-    jdaviz /path/to/data/spectral_file --layout=specviz
+    jdaviz specviz /path/to/data/spectral_file
 
 For more information on the command line interface, see the
 `Jdaviz Quickstart <https://jdaviz.readthedocs.io/en/latest/quickstart.html>`_.
