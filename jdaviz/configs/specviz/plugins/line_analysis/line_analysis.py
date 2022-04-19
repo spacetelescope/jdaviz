@@ -271,6 +271,29 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             else:
                 return ''
 
+        def _coerce_unit(quantity):
+            """
+            coerce the unity on a quantity to have a single length unit (will take the first length
+            unit with a power of 1) and to strip any constants from the units.
+            """
+            # for some reason, quantity.unit.powers gives floats which then raise an error in
+            # quantity.to and we want to avoid casting to integer in case of fractional powers
+            unit = u.Unit(str(quantity.unit))
+            unit_types = [str(subunit.physical_type) for subunit in unit.bases]
+            length_inds = [ind for ind, (base, power, unit_type)
+                           in enumerate(zip(unit.bases, unit.powers, unit_types))
+                           if unit_type == 'length' and abs(power) == 1]
+            # we want to force all length units (not area) to use the same base unit so they can
+            # combine/cancel appropriately
+            coerced_bases = [unit.bases[i if i not in length_inds else length_inds[0]]
+                             for i in range(len(unit.bases))]
+            coerced_unit_string = ' * '.join([f'{base}**{power}'
+                                              for base, power in zip(coerced_bases, unit.powers)])
+            coerced_quantity = quantity.to(coerced_unit_string)
+            if getattr(quantity, 'uncertainty', None) is not None:
+                coerced_quantity.uncertainty = quantity.uncertainty.to(coerced_unit_string)
+            return coerced_quantity
+
         temp_results = []
         spec_subtracted = spectrum - continuum
         for function in FUNCTIONS:
@@ -295,6 +318,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             else:
                 temp_result = FUNCTIONS[function](spec_subtracted)
 
+            temp_result = _coerce_unit(temp_result)
             temp_results.append({'function': function,
                                  'result': str(temp_result.value),
                                  'uncertainty': _uncertainty(temp_result),
