@@ -32,20 +32,19 @@
       hint="Select spectral region to apply the collapse."
     />
 
-    <v-row>
-      <v-select
-        :items="viewers"
-        v-model="selected_viewer"
-        label='Plot in Viewer'
-        hint='Collapsed cube will replace plot in the specified viewer.  Will also be available in the data dropdown in all image viewers.'
-        persistent-hint
-      ></v-select>
-    </v-row>
+    <plugin-add-results
+      :label.sync="results_label"
+      :label_default="results_label_default"
+      :label_auto.sync="results_label_auto"
+      :label_invalid_msg="results_label_invalid_msg"
+      :label_overwrite="results_label_overwrite"
+      label_hint="Label for the collapsed cube"
+      :add_to_viewer_items="add_to_viewer_items"
+      :add_to_viewer_selected.sync="add_to_viewer_selected"
+      action_label="Collapse"
+      action_tooltip="Collapse data"
+      @click:action="collapse"
+    ></plugin-add-results>
 
-    <v-row justify="end">
-      <j-tooltip tipid='plugin-collapse-apply'>
-        <v-btn color="accent" text @click="collapse">Apply</v-btn>
-      </j-tooltip>
-    </v-row>
   </j-tray-plugin>
 </template>

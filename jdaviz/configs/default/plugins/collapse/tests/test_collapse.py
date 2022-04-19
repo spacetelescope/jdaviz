@@ -16,11 +16,12 @@ def test_linking_after_collapse(cubeviz_helper, spectral_cube_wcs):
     coll.selected_data_item = 'Unknown spectrum object[FLUX]'
     coll.dataset_selected = 'Unknown spectrum object[FLUX]'
 
-    coll.add_replace_results = False
+    assert coll.results_label == 'collapsed'
     coll.vue_collapse()
+    assert coll.results_label_overwrite is True
 
     assert len(dc) == 2
-    assert dc[1].label == 'Collapsed 1 Unknown spectrum object[FLUX]'
+    assert dc[1].label == 'collapsed'
     assert len(dc.external_links) == 2
 
     assert dc.external_links[1].cids1[0] is dc[0].pixel_component_ids[1]

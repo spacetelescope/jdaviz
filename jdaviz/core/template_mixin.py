@@ -3,11 +3,13 @@ import numpy as np
 from functools import cached_property
 from ipyvuetify import VuetifyTemplate
 from glue.core import HubListener
-from glue.core.message import (SubsetDeleteMessage,
+from glue.core.message import (DataCollectionAddMessage,
+                               DataCollectionDeleteMessage,
+                               SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from glue.core.subset import RoiSubsetState
 from specutils import Spectrum1D
-from traitlets import Bool, List, Unicode
+from traitlets import Bool, HasTraits, List, Unicode, observe
 
 from jdaviz import __version__
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
@@ -17,7 +19,9 @@ __all__ = ['TemplateMixin', 'PluginTemplateMixin',
            'BasePluginComponent', 'BaseSelectPluginComponent',
            'SubsetSelect', 'SpatialSubsetSelectMixin', 'SpectralSubsetSelectMixin',
            'ViewerSelect', 'ViewerSelectMixin',
-           'DatasetSelect', 'DatasetSelectMixin']
+           'DatasetSelect', 'DatasetSelectMixin',
+           'AutoLabel', 'AutoLabelMixin',
+           'AddResults', 'AddResultsMixin']
 
 
 class TemplateMixin(VuetifyTemplate, HubListener):
@@ -157,7 +161,7 @@ class BasePluginComponent(HubListener):
         return self._plugin.app.get_viewer("spectrum-viewer")
 
 
-class BaseSelectPluginComponent(BasePluginComponent):
+class BaseSelectPluginComponent(BasePluginComponent, HasTraits):
     """
     This base class extends BasePluginComponent for common functionality for a select/dropdown
     component.  The subclasses MUST have an ``items`` traitlet as a list of dictionaries, with
@@ -165,15 +169,22 @@ class BaseSelectPluginComponent(BasePluginComponent):
     ``selected`` string traitlet.  The subclasses should also override ``selected_obj`` and may
     choose to override ``_selected_changed`` (likely with a super call to keep the base logic).
     """
-    # default_mode can be one of empty, first, default_text (requires default_text to be set)
-    default_mode = 'empty'
+    filters = List([]).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
+        # default_mode can be one of empty, first, default_text (requires default_text to be set)
+        default_mode = kwargs.pop('default_mode', 'empty')
+        default_text = kwargs.pop('default_text', None)
+        manual_options = kwargs.pop('manual_options', [])
+        self._viewers = kwargs.pop('viewers', None)
+        # we'll pop from kwargs now to avoid passing to the super.__init__, but need to
+        # wait for everything else to be set before setting to the traitlet
+        filters = kwargs.pop('filters', [])[:]  # [:] needed to force copy from kwarg default
+
         super().__init__(*args, **kwargs)
-        self._viewers = kwargs.get('viewers', None)
         self._cached_properties = ["selected_obj", "selected_item"]
-        default_text = kwargs.get('default_text', None)
-        manual_options = kwargs.get('manual_options', [])
+
+        self._default_mode = default_mode
         self._default_text = default_text
         if default_text is not None and default_text not in manual_options:
             manual_options = [default_text] + manual_options
@@ -188,6 +199,7 @@ class BaseSelectPluginComponent(BasePluginComponent):
         # callbacks triggered AFTER the cache is cleared and the value is checked against
         # valid options
         self.add_observe(kwargs.get('selected'), self._selected_changed, first=True)
+        self.filters = filters
 
     @property
     def manual_options(self):
@@ -197,6 +209,9 @@ class BaseSelectPluginComponent(BasePluginComponent):
     @property
     def cached_properties(self):
         return self._cached_properties
+
+    def add_filter(self, *filters):
+        self.filters += [filter for filter in filters]
 
     @property
     def viewer_dicts(self):
@@ -234,8 +249,21 @@ class BaseSelectPluginComponent(BasePluginComponent):
     def selected_obj(self):
         raise NotImplementedError(f"selected_obj not implemented by {self.__class__.__name__}")
 
+    @property
+    def default_mode(self):
+        return self._default_mode
+
     def _apply_default_selection(self):
-        if self.selected in self.labels:
+        is_valid = self.selected in self.labels
+        if callable(self.default_mode):
+            # callable was defined and passed by the plugin or inheriting component.
+            # the callable takes the viewer component as input as well as the `is_valid` boolean
+            # which states if the current selection is already valid and returns the default label
+            # (to keep the current selection
+            self.selected = self.default_mode(self, is_valid=is_valid)
+            return
+
+        if is_valid:
             # current selection is valid
             return
 
@@ -245,6 +273,19 @@ class BaseSelectPluginComponent(BasePluginComponent):
             self.selected = self._default_text if self._default_text else ''
         else:
             self.selected = ''
+
+    def _is_valid_item(self, item, filter_callables={}):
+        for valid_filter in self.filters:
+            if isinstance(valid_filter, str):
+                # pull from the functions above (should be subclassed),
+                # will raise an error if not in locals
+                try:
+                    valid_filter = filter_callables[valid_filter]
+                except KeyError:
+                    raise ValueError(f"{valid_filter} not an implemented filter.")
+            if not valid_filter(item):
+                return False
+        return True
 
     def _selected_changed(self, event):
         self._clear_cache()
@@ -293,10 +334,9 @@ class SubsetSelect(BaseSelectPluginComponent):
       />
 
     """
-    default_mode = 'default_text'
-
     def __init__(self, plugin, items, selected, selected_has_subregions=None,
-                 viewers=None, default_text=None, manual_options=[], allowed_type=None):
+                 viewers=None, default_text=None, manual_options=[], allowed_type=None,
+                 default_mode='default_text'):
         """
         Parameters
         ----------
@@ -328,7 +368,8 @@ class SubsetSelect(BaseSelectPluginComponent):
                          selected_has_subregions=selected_has_subregions,
                          viewers=viewers,
                          default_text=default_text,
-                         manual_options=manual_options)
+                         manual_options=manual_options,
+                         default_mode=default_mode)
 
         if allowed_type not in [None, 'spatial', 'spectral']:
             raise ValueError("allowed_type must be None, 'spatial', or 'spectral'")
@@ -433,30 +474,16 @@ class SubsetSelect(BaseSelectPluginComponent):
 
 class SpectralSubsetSelectMixin(VuetifyTemplate, HubListener):
     """
-    Applies the SubsetSelect component with ``allowed_type='spectral'`` as a mixin in the base
-    plugin.  This automatically adds traitlets as well as new properties to the plugin with
-    minimal extra code.  For multiple instances or custom traitlet names/defaults, use the
-    SubsetSelect component instead.
-
-    Traitlets (available from the plugin):
-
-    * ``spectral_subset_items``
-    * ``spectral_subset_selected``
-    * ``spectral_subset_selected_has_subregions``
-
-    Properties (available from the plugin):
-
-    * ``spectral_subset.labels``
-    * ``spectral_subset.selected_obj``
-
-    Methods (available from the plugin):
-
-    * ``spectral_subset.selected_min_max``
+    Applies the SubsetSelect component as a mixin in the base plugin.  This
+    automatically adds traitlets as well as new properties to the plugin with minimal
+    extra code.  For multiple instances or custom traitlet names/defaults, use the
+    component instead.
 
     To use in a plugin:
 
     * add ``SpectralSubsetSelectMixin`` as a mixin to the class
-    * use the traitlets and properties above as needed (note the prefix for properties)
+    * use the traitlets available from the plugin or properties/methods available from
+      ``plugin.spectral_subset``.
 
     Example template (label and hint are optional)::
 
@@ -467,6 +494,7 @@ class SpectralSubsetSelectMixin(VuetifyTemplate, HubListener):
         label="Spectral region"
         hint="Select spectral region."
       />
+
     """
     spectral_subset_items = List().tag(sync=True)
     spectral_subset_selected = Unicode().tag(sync=True)
@@ -485,26 +513,16 @@ class SpectralSubsetSelectMixin(VuetifyTemplate, HubListener):
 
 class SpatialSubsetSelectMixin(VuetifyTemplate, HubListener):
     """
-    Applies the SubsetSelect component with ``allowed_type='spatial'`` as a mixin in the base
-    plugin.  This automatically adds traitlets as well as new properties to the plugin with
-    minimal extra code.  For multiple instances or custom traitlet names/defaults, use the
-    SubsetSelect component instead.
-
-    Traitlets (available from the plugin):
-
-    * ``spatial_subset_items``
-    * ``spatial_subset_selected``
-    * ``spatial_subset_selected_has_subregions``
-
-    Properties (available from the plugin):
-
-    * ``spatial_subset.labels``
-    * ``spatial_subset.selected_obj``
+    Applies the SubsetSelect component as a mixin in the base plugin.  This
+    automatically adds traitlets as well as new properties to the plugin with minimal
+    extra code.  For multiple instances or custom traitlet names/defaults, use the
+    component instead.
 
     To use in a plugin:
 
     * add ``SpatialSubsetSelectMixin`` as a mixin to the class
-    * use the traitlets and properties above as needed (note the prefix for properties)
+    * use the traitlets available from the plugin or properties/methods available from
+      ``plugin.spatial_subset``.
 
     Example template (label and hint are optional)::
 
@@ -514,6 +532,7 @@ class SpatialSubsetSelectMixin(VuetifyTemplate, HubListener):
         label="Spatial region"
         hint="Select spatial region."
       />
+
     """
     spatial_subset_items = List().tag(sync=True)
     spatial_subset_selected = Unicode().tag(sync=True)
@@ -566,10 +585,11 @@ class ViewerSelect(BaseSelectPluginComponent):
       />
 
     """
-    default_mode = 'first'
-
-    def __init__(self, plugin, items, selected):
-        super().__init__(plugin, items=items, selected=selected)
+    def __init__(self, plugin, items, selected, default_text=None, manual_options=[],
+                 default_mode='first'):
+        super().__init__(plugin, items=items, selected=selected,
+                         default_text=default_text, manual_options=manual_options,
+                         default_mode=default_mode)
 
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewers_changed)
         self.hub.subscribe(self, ViewerRemovedMessage, handler=self._on_viewers_changed)
@@ -587,6 +607,8 @@ class ViewerSelect(BaseSelectPluginComponent):
 
     @cached_property
     def selected_item(self):
+        if self.selected in self.manual_options:
+            return {}
         item = super().selected_item
         if item:
             return item
@@ -600,24 +622,42 @@ class ViewerSelect(BaseSelectPluginComponent):
 
     @property
     def selected_id(self):
-        return self.selected_item['id']
+        return self.selected_item.get('id', None)
+
+    @property
+    def selected_reference(self):
+        return self.selected_item.get('reference', None)
 
     @cached_property
     def selected_obj(self):
+        if self.selected in self.manual_options:
+            return None
         return self.app.get_viewer_by_id(self.selected_id)
 
     def _selected_changed(self, event):
-        if event['new'] not in self.labels:
+        if event['new'] not in self.labels + self.manual_options:
             if self.selected in self.ids:
                 # provided id in place of ref
                 self.selected = self.labels[self.ids.index(self.selected)]
                 return
         return super()._selected_changed(event)
 
+    def _is_valid_item(self, viewer):
+        def is_spectrum_viewer(viewer):
+            return 'ProfileView' in viewer.__class__.__name__
+
+        def is_image_viewer(viewer):
+            return 'ImageView' in viewer.__class__.__name__
+
+        return super()._is_valid_item(viewer, locals())
+
+    @observe('filters')
     def _on_viewers_changed(self, msg=None):
         # NOTE: _on_viewers_changed is passed without a msg object during init
         # list of dictionaries with id, ref, ref_or_id
-        self.items = [{k: v for k, v in vd.items() if k != 'viewer'} for vd in self.viewer_dicts]
+        manual_items = [{'label': label} for label in self.manual_options]
+        self.items = manual_items + [{k: v for k, v in vd.items() if k != 'viewer'}
+                                     for vd in self.viewer_dicts if self._is_valid_item(vd['viewer'])] # noqa
         self._apply_default_selection()
 
 
@@ -626,37 +666,23 @@ class ViewerSelectMixin(VuetifyTemplate, HubListener):
     Applies the ViewerSelect component as a mixin in the base plugin.  This
     automatically adds traitlets as well as new properties to the plugin with minimal
     extra code.  For multiple instances or custom traitlet names/defaults, use the
-    ViewerSelect component instead.
-
-    Traitlets (available from the plugin):
-
-    * ``viewer_items``
-    * ``viewer_selected``
-
-    Properties (available from the plugin):
-
-    * ``viewer.ids``
-    * ``viewer.references``
-    * ``viewer.labels``
-    * ``viewer.selected_item``
-    * ``viewer.selected_id``
-    * ``viewer.selected_obj``
+    component instead.
 
     To use in a plugin:
 
     * add ``ViewerSelectMixin`` as a mixin to the class
-    * use the traitlets and properties above as needed (note the prefix for properties)
+    * use the traitlets available from the plugin or properties/methods available from
+      ``plugin.viewer``.
 
     Example template (label and hint are optional)::
 
-        <v-row>
-          <plugin-viewer-select
-            :items="viewer_items"
-            :selected.sync="viewer_selected"
-            label="Viewer"
-            hint="Select viewer."
-          />
-        </v-row>
+      <plugin-viewer-select
+        :items="viewer_items"
+        :selected.sync="viewer_selected"
+        label="Viewer"
+        hint="Select viewer."
+      />
+
     """
     viewer_items = List().tag(sync=True)
     viewer_selected = Unicode().tag(sync=True)
@@ -702,15 +728,15 @@ class DatasetSelect(BaseSelectPluginComponent):
       />
 
     """
-    default_mode = 'first'
-
     def __init__(self, plugin, items, selected,
-                 filters=['not_from_plugin_model_fitting', 'layer_in_viewers']):
-        super().__init__(plugin, items=items, selected=selected)
+                 filters=['not_from_plugin_model_fitting', 'layer_in_viewers'],
+                 default_mode='first'):
+        super().__init__(plugin, items=items, selected=selected, filters=filters,
+                         default_mode=default_mode)
         self._cached_properties += ["selected_dc_item"]
+        # Add/Remove Data are triggered when checked/unchecked from viewers
         self.hub.subscribe(self, AddDataMessage, handler=self._on_data_changed)
         self.hub.subscribe(self, RemoveDataMessage, handler=self._on_data_changed)
-        self._filters = filters[:]  # [:] needed to force copy from kwarg default
 
         # initialize items from original viewers
         self._on_data_changed()
@@ -720,14 +746,6 @@ class DatasetSelect(BaseSelectPluginComponent):
         if self.app.config == 'imviz':
             return None
         return Spectrum1D
-
-    @property
-    def filters(self):
-        return self._filters
-
-    def add_filter(self, *filters):
-        self._filters += [filter for filter in filters]
-        self._on_data_changed()
 
     @cached_property
     def selected_dc_item(self):
@@ -767,7 +785,7 @@ class DatasetSelect(BaseSelectPluginComponent):
             return data.meta.get('Plugin', None) is None
 
         def not_from_plugin_model_fitting(data):
-            return data.meta.get('Plugin', None) != 'model-fitting'
+            return data.meta.get('Plugin', None) != 'ModelFitting'
 
         def has_metadata(data):
             return hasattr(data, 'meta') and isinstance(data.meta, dict) and len(data.meta)
@@ -790,17 +808,9 @@ class DatasetSelect(BaseSelectPluginComponent):
         def is_image(data):
             return len(data.shape) == 3
 
-        for valid_filter in self.filters:
-            if isinstance(valid_filter, str):
-                # pull from the functions above, will raise an error if not in locals
-                try:
-                    valid_filter = locals()[valid_filter]
-                except KeyError:
-                    raise ValueError(f"{valid_filter} not an implemented filter.")
-            if not valid_filter(data):
-                return False
-        return True
+        return super()._is_valid_item(data, locals())
 
+    @observe('filters')
     def _on_data_changed(self, msg=None):
         # NOTE: _on_data_changed is passed without a msg object during init
         # future improvement: don't recreate the entire list when msg is passed
@@ -816,38 +826,23 @@ class DatasetSelectMixin(VuetifyTemplate, HubListener):
     Applies the DatasetSelect component as a mixin in the base plugin.  This
     automatically adds traitlets as well as new properties to the plugin with minimal
     extra code.  For multiple instances or custom traitlet names/defaults, use the
-    DatasetSelect component instead.
-
-    Traitlets (available from the plugin):
-
-    * ``dataset_items``
-    * ``dataset_selected``
-
-    Properties (available from the plugin):
-
-    * ``dataset.selected_obj``
-    * ``dataset.selected_dc_item``
-
-    Methods (available from the plugin):
-
-    * ``dataset.get_object``
-    * ``dataset.add_filter`` (preferably used during plugin init)
+    component instead.
 
     To use in a plugin:
 
     * add ``DatasetSelectMixin`` as a mixin to the class
-    * use the traitlets and properties above as needed (note the prefix for properties)
+    * use the traitlets available from the plugin or properties/methods available from
+      ``plugin.dataset``.
 
     Example template (label and hint are optional)::
 
-        <v-row>
-          <plugin-dataset-select
-            :items="dataset_items"
-            :selected.sync="dataset_selected"
-            label="Data"
-            hint="Select data."
-          />
-        </v-row>
+      <plugin-dataset-select
+        :items="dataset_items"
+        :selected.sync="dataset_selected"
+        label="Data"
+        hint="Select data."
+      />
+
     """
     dataset_items = List().tag(sync=True)
     dataset_selected = Unicode().tag(sync=True)
@@ -856,3 +851,238 @@ class DatasetSelectMixin(VuetifyTemplate, HubListener):
         super().__init__(*args, **kwargs)
         # NOTE: cannot be named self.data or will conflict with existing self.data traitlet!
         self.dataset = DatasetSelect(self, 'dataset_items', 'dataset_selected')
+
+
+class AutoLabel(BasePluginComponent):
+    """
+    Traitlets (in the object, custom traitlets in the plugin):
+
+    * ``value`` (string: user-provided label for the results data-entry.  If ``auto``, changes
+        to ``default`` will update ``value``.  Otherwise, changes to ``value`` will set
+        ``auto`` to False.)
+    * ``default`` (string: plugin-determined default label that will be synced to ``value``
+        if/when ``auto`` is set to True)
+    * ``auto`` (bool: whether to sync ``default`` to ``value``)
+    * ``invalid_msg`` (string: validation string for the current value of ``value``.)
+
+    Example template::
+
+      <plugin-auto-label
+        :value.sync="value"
+        :default="comp_label_default"
+        :auto.sync="comp_label_auto"
+        :invalid_msg="invalid_msg"
+        hint="Label hint."
+      ></plugin-auto-label>
+
+    """
+    def __init__(self, plugin, value, default, auto,
+                 invalid_msg):
+        super().__init__(plugin, value=value,
+                         default=default, auto=auto,
+                         invalid_msg=invalid_msg)
+
+        self.add_observe(default, self._on_set_to_default)
+        self.add_observe(auto, self._on_set_to_default)
+
+    def _on_set_to_default(self, msg={}):
+        if self.auto:
+            self.value = self.default
+
+
+class AutoLabelMixin(VuetifyTemplate, HubListener):
+    """
+    Applies the AutoLabel component as a mixin in the base plugin.  This
+    automatically adds traitlets as well as new properties to the plugin with minimal
+    extra code.  For multiple instances or custom traitlet names/defaults, use the
+    component instead.
+
+    To use in a plugin:
+
+    * add ``AutoLabelMixin`` as a mixin to the class
+    * use the traitlets available from the plugin or properties/methods available from
+      ``plugin.auto_label``.
+
+    Example template::
+
+      <plugin-auto-label
+        :value.sync="label"
+        :default="label_default"
+        :auto.sync="label_auto"
+        :invalid_msg="invalid_msg"
+        hint="Label hint."
+      ></plugin-auto-label>
+    """
+    label = Unicode().tag(sync=True)
+    label_default = Unicode().tag(sync=True)
+    label_auto = Bool(True).tag(sync=True)
+    label_invalid_msg = Unicode('').tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.auto_label = AddResults(self, 'label',
+                                     'label_default', 'label_auto',
+                                     'label_invalid_msg')
+
+
+class AddResults(BasePluginComponent):
+    """
+    Traitlets (in the object, custom traitlets in the plugin):
+
+    * ``label`` (string: user-provided label for the results data-entry.  If ``label_auto``, changes
+        to ``label_default`` will update ``label``.  Otherwise, changes to ``label`` will set
+        ``label_auto`` to False.)
+    * ``label_default`` (string: plugin-determined default label that will be synced to ``label``
+        if/when ``label_auto`` is set to True)
+    * ``label_auto`` (bool: whether to sync ``label_default`` to ``label``)
+    * ``label_invalid_msg`` (string: validation string for the current value of ``label``.  If
+        not an empty string, calls to ``add_results_from_plugin`` will raise an error.)
+    * ``label_overwrite`` (bool: whether the value of ``label`` already exists for a data-entry
+        from the same plugin)
+    * ``add_to_viewer_items`` (list of dicts: see ``ViewerSelect``)
+    * ``add_to_viewer_selected`` (string: name of the viewer to add the results,
+        see ``ViewerSelect``)
+
+
+    Methods:
+
+    * ``add_results_from_plugin``
+
+
+    Example template::
+
+      <plugin-add-results
+        :label.sync="results_label"
+        :label_default="results_label_default"
+        :label_auto.sync="results_label_auto"
+        :label_invalid_msg="results_label_invalid_msg"
+        :label_overwrite="results_label_overwrite"
+        label_hint="Label for the smoothed data"
+        :add_to_viewer_items="add_to_viewer_items"
+        :add_to_viewer_selected.sync="add_to_viewer_selected"
+        action_label="Apply"
+        action_tooltip="Apply the action to the data"
+        @click:action="apply"
+      ></plugin-add-results>
+
+    """
+    def __init__(self, plugin, label, label_default, label_auto,
+                 label_invalid_msg, label_overwrite,
+                 add_to_viewer_items, add_to_viewer_selected):
+        super().__init__(plugin, label=label,
+                         label_default=label_default, label_auto=label_auto,
+                         label_invalid_msg=label_invalid_msg, label_overwrite=label_overwrite,
+                         add_to_viewer_items=add_to_viewer_items,
+                         add_to_viewer_selected=add_to_viewer_selected)
+
+        # DataCollectionAdd/Delete are fired even if remain unchecked in all viewers
+        self.hub.subscribe(self, DataCollectionAddMessage,
+                           handler=lambda _: self._on_label_changed())
+        self.hub.subscribe(self, DataCollectionDeleteMessage,
+                           handler=lambda _: self._on_label_changed())
+
+        self.viewer = ViewerSelect(plugin, add_to_viewer_items, add_to_viewer_selected,
+                                   manual_options=['None'],
+                                   default_mode=self._handle_default_viewer_selected)
+
+        self.auto_label = AutoLabel(plugin, label, label_default, label_auto, label_invalid_msg)
+        self.add_observe(label, self._on_label_changed)
+
+    def _handle_default_viewer_selected(self, viewer_comp, is_valid):
+        if len(viewer_comp.items) == 2:
+            # then we're a switch, so we want to default to ON
+            return viewer_comp.labels[1]
+        else:
+            # then we're a dropdown, so want to default to None and force the user to choose
+            return 'None'
+
+    def _on_label_changed(self, msg={}):
+        if not len(self.label.strip()):
+            # strip will raise the same error for a label of all spaces
+            self.label_invalid_msg = 'label must be provided'
+            return
+
+        for data in self.app.data_collection:
+            if self.label == data.label:
+                if data.meta.get('Plugin', None) == self._plugin.__class__.__name__:
+                    self.label_invalid_msg = ''
+                    self.label_overwrite = True
+                    return
+                else:
+                    self.label_invalid_msg = 'label already in use'
+                    self.label_overwrite = False
+                    return
+
+        self.label_invalid_msg = ''
+        self.label_overwrite = False
+
+    def add_results_from_plugin(self, data_item):
+        """
+        Add ``data_item`` to the app's data_collection according to the default or user-provided
+        label and adds to any requested viewers.
+        """
+        if self.label_invalid_msg:
+            raise ValueError(self.label_invalid_msg)
+        data_item.meta['Plugin'] = self._plugin.__class__.__name__
+
+        replace = self.viewer.selected_reference != 'spectrum-viewer'
+
+        if self.label in self.app.data_collection:
+            if not replace:
+                self.app.remove_data_from_viewer(self.viewer.selected_reference, self.label)
+            self.app.data_collection.remove(self.app.data_collection[self.label])
+
+        self.app.add_data(data_item, self.label)
+
+        if self.add_to_viewer_selected != 'None':
+            # replace the contents in the selected viewer with the results from this plugin
+            # TODO: switch to an instance/classname check?
+            self.app.add_data_to_viewer(self.viewer.selected_id,
+                                        self.label, clear_other_data=replace)
+
+
+class AddResultsMixin(VuetifyTemplate, HubListener):
+    """
+    Applies the AddResults component as a mixin in the base plugin.  This
+    automatically adds traitlets as well as new properties to the plugin with minimal
+    extra code.  For multiple instances or custom traitlet names/defaults, use the
+    component instead.
+
+    To use in a plugin:
+
+    * add ``AddResultsMixin`` as a mixin to the class
+    * use the traitlets available from the plugin or properties/methods available from
+      ``plugin.add_results``.
+
+    Example template::
+
+      <plugin-add-results
+        :label.sync="results_label"
+        :label_default="results_label_default"
+        :label_auto.sync="results_label_auto"
+        :label_invalid_msg="results_label_invalid_msg"
+        :label_overwrite="results_label_overwrite"
+        label_hint="Label for the smoothed data"
+        :add_to_viewer_items="add_to_viewer_items"
+        :add_to_viewer_selected.sync="add_to_viewer_selected"
+        action_label="Apply"
+        action_tooltip="Apply the action to the data"
+        @click:action="apply"
+      ></plugin-add-results>
+
+    """
+    results_label = Unicode().tag(sync=True)
+    results_label_default = Unicode().tag(sync=True)
+    results_label_auto = Bool(True).tag(sync=True)
+    results_label_invalid_msg = Unicode('').tag(sync=True)
+    results_label_overwrite = Bool().tag(sync=True)
+
+    add_to_viewer_items = List().tag(sync=True)
+    add_to_viewer_selected = Unicode().tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.add_results = AddResults(self, 'results_label',
+                                      'results_label_default', 'results_label_auto',
+                                      'results_label_invalid_msg', 'results_label_overwrite',
+                                      'add_to_viewer_items', 'add_to_viewer_selected')

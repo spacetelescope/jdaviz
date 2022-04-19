@@ -259,3 +259,4 @@ intersphinx_mapping['regions'] = ('https://astropy-regions.readthedocs.io/en/sta
 intersphinx_mapping['skimage'] = ('https://scikit-image.org/docs/stable/', None)
 intersphinx_mapping['specutils'] = ('https://specutils.readthedocs.io/en/stable/', None)
 intersphinx_mapping['photutils'] = ('https://photutils.readthedocs.io/en/stable/', None)
+intersphinx_mapping['traitlets'] = ('https://traitlets.readthedocs.io/en/stable/', None)

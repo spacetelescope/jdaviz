@@ -63,18 +63,18 @@ def test_model_ids(spectral_cube_wcs):
     plugin = ModelFitting(app=app)
     plugin.dataset_selected = 'test'
     plugin.component_models = [{'id': 'valid_string_already_exists'}]
-    plugin.temp_model = 'Linear1D'
+    plugin.comp_selected = 'Linear1D'
 
     with pytest.raises(
             ValueError,
             match="model component ID valid_string_already_exists already in use"):
-        plugin.temp_name = 'valid_string_already_exists'
+        plugin.comp_label = 'valid_string_already_exists'
         plugin.vue_add_model({})
 
     with pytest.raises(
             ValueError,
             match="invalid model component ID invalid-string"):
-        plugin.temp_name = 'invalid-string'
+        plugin.comp_label = 'invalid-string'
         plugin.vue_add_model({})
 
 
