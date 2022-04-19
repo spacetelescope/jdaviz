@@ -28,7 +28,7 @@ module.exports = {
   props: ['value', 'default', 'auto', 'label', 'hint', 'invalid_msg'],
   data: function() {
       return {
-          displayValue: this.default,
+          displayValue: this.auto ? this.default : this.value,
           showIcon: false,
       }
   },
