@@ -1,6 +1,6 @@
 <template>
   <span>
-    {{ valueTrunc }} {{ uncertainty ? "&#177; " + uncertTrunc : null}} {{ unit }}
+    {{ valueTrunc }} {{ uncertTrunc ? "&#177; " + uncertTrunc : null}} {{ unit }}
   </span>
 </template>
 
@@ -20,7 +20,10 @@ module.exports = {
   methods: {
     updateTruncatedValues() {
       var nDigs = this.defaultDigs;
-      if (this.uncertainty !== '') {
+      if (parseFloat(this.uncertainty) == 0) {
+        // then treat as no uncertainty
+        this.uncertTrunc = null;
+      } else if (this.uncertainty !== '') {
         // then uncertainty was provided, so we'll round the uncertainty to 2 significant digits
         this.uncertTrunc = +parseFloat(this.uncertainty).toPrecision(2);
 
