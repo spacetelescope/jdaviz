@@ -24,7 +24,7 @@ Specviz
 API Changes
 -----------
 
-- CLI now takes the layout as a required second positional argument
+- CLI now takes the layout as a required first positional argument after jdaviz
   (``jdaviz cubeviz path/to/file``). [#1252]
 
 Cubeviz
