@@ -624,6 +624,10 @@ class ViewerSelect(BaseSelectPluginComponent):
     def selected_id(self):
         return self.selected_item.get('id', None)
 
+    @property
+    def selected_reference(self):
+        return self.selected_item.get('reference', None)
+
     @cached_property
     def selected_obj(self):
         if self.selected in self.manual_options:
@@ -1021,7 +1025,11 @@ class AddResults(BasePluginComponent):
             raise ValueError(self.label_invalid_msg)
         data_item.meta['Plugin'] = self._plugin.__class__.__name__
 
+        replace = self.viewer.selected_reference != 'spectrum-viewer'
+
         if self.label in self.app.data_collection:
+            if not replace:
+                self.app.remove_data_from_viewer(self.viewer.selected_reference, self.label)
             self.app.data_collection.remove(self.app.data_collection[self.label])
 
         self.app.add_data(data_item, self.label)
@@ -1029,7 +1037,6 @@ class AddResults(BasePluginComponent):
         if self.add_to_viewer_selected != 'None':
             # replace the contents in the selected viewer with the results from this plugin
             # TODO: switch to an instance/classname check?
-            replace = self.viewer.selected_item.get('reference', None) != 'spectrum-viewer'
             self.app.add_data_to_viewer(self.viewer.selected_id,
                                         self.label, clear_other_data=replace)
 

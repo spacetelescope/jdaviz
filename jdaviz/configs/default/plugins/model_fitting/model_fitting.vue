@@ -159,7 +159,6 @@
 
     <div v-if="component_models.length">
       <j-plugin-section-header>Equation Editor</j-plugin-section-header>
-      <!-- eq_error -->
       <plugin-auto-label
         :value.sync="model_equation"
         :default="model_equation_default"
