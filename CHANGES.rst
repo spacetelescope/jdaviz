@@ -65,6 +65,8 @@ Other Changes and Additions
 - Help button in toolbar to open docs in a new tab. [#1240]
 - Snackbar queue handles loading interrupt more cleanly. [#1249]
 
+- Reported quantities are rounded/truncated to avoid showing unnecessary precision. [#1244]
+
 2.4 (2022-03-29)
 ================
 

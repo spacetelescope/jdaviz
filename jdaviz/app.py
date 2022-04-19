@@ -74,6 +74,10 @@ ipyvue.register_component_from_file(None, 'j-plugin-section-header',
                                     os.path.join(os.path.dirname(__file__),
                                                  'components/plugin_section_header.vue'))
 
+ipyvue.register_component_from_file(None, 'j-number-uncertainty',
+                                    os.path.join(os.path.dirname(__file__),
+                                                 'components/number_uncertainty.vue'))
+
 ipyvue.register_component_from_file(None, 'plugin-dataset-select',
                                     os.path.join(os.path.dirname(__file__),
                                                  'components/plugin_dataset_select.vue'))
