@@ -23,7 +23,7 @@ To export spectra currently loaded into the instance of your app back into your 
 
 which yields a `specutils.Spectrum1D` object that you can manipulate however
 you wish.  You can then load the modified spectrum back into the notebook via
-the API described in :ref:`api-import`.
+the API described in :ref:`specviz-import-api`.
 
 Alternatively, if you want more control over Specviz, you can access it the
 via the lower-level application interface that connects to the ``glue-jupyter``

@@ -26,7 +26,7 @@ application. A green success message will appear if the data import
 was successful. Afterward, the new data set can be found in the :guilabel:`Data` 
 tab of each viewer's options menu as described in :ref:`cubeviz-selecting-data`.
 
-.. _api-import-cubeviz:
+.. _cubeviz-import-api:
 
 Importing data via the API
 --------------------------
@@ -36,8 +36,10 @@ notebook, you have access to the Cubeviz helper class API. Using this API,
 you can load data into the application through code using the
 :meth:`~jdaviz.core.helpers.ConfigHelper.load_data`
 method, which takes as input either the name of a local file or a 
-:class:`~specutils.Spectrum1D` object.
+:class:`~specutils.Spectrum1D` object.::
 
-    >>> from jdaviz import Cubeviz
-    >>> cubeviz = Cubeviz()
-    >>> cubeviz.load_data("/Users/demouser/data/cube_file.fits")  # doctest: +SKIP
+    from jdaviz import Cubeviz
+    cubeviz = Cubeviz()
+    cubeviz.load_data("/Users/demouser/data/cube_file.fits")  # doctest: +SKIP
+    cubeviz.app
+
