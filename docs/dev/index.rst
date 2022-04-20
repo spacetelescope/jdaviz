@@ -11,5 +11,6 @@ Here is some documentation specific for developers.
   infrastructure
   ui_description
   ui_style_guide
+  ui_plugin_components
   specviz_selection
   links
