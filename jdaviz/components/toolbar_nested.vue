@@ -4,8 +4,8 @@
         <v-tooltip v-for="[id, {tooltip, img, menu_ind, has_suboptions, primary}] of Object.entries(tools_data)" v-if="primary" bottom>
             <template v-slot:activator="{ on }">
                 <v-btn v-on="on" icon :value="id" @contextmenu="(e) => show_submenu(e, has_suboptions, menu_ind)">
-                    <img :src="img" width="20"/>
-                    <v-icon small v-if="has_suboptions" class="suboptions-carrot">mdi-menu-down</v-icon>
+                    <img :src="img" width="20" @click.ctrl.stop=""/>
+                    <v-icon small v-if="has_suboptions" class="suboptions-carrot" @click.ctrl.stop="">mdi-menu-down</v-icon>
                 </v-btn>
             </template>
             <span>{{ tooltip }}{{has_suboptions ? " [right-click for alt. tools]" : ""}}</span>
@@ -18,6 +18,7 @@
       absolute
       offset-y
       dense
+      :close-on-click="close_on_click"
     >
       <v-list>
         <v-tooltip
@@ -40,6 +41,19 @@
 
 <script>
   export default {
+    watch: {
+      show_suboptions(value) {
+        /* workaround for safari on MacOS, which triggers an extra click when using ctrl-click as right-click. The
+         * `close-on-click` can't be prevented with `@click.ctrl.stop` */
+        if (value) {
+          setTimeout(() => {
+            this.close_on_click = true;
+          }, 100)
+        } else {
+          this.close_on_click = false;
+        }
+      }
+    },
     methods: {
       show_submenu (e, has_suboptions, menu_ind) {
         // needed to prevent browser context-menu
