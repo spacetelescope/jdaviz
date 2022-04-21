@@ -43,3 +43,24 @@ method, which takes as input either the name of a local file or a
     cubeviz.load_data("/Users/demouser/data/cube_file.fits")  # doctest: +SKIP
     cubeviz.app
 
+
+If instead you would like to load data you have created within the notebook,
+you can do the following::
+
+    import numpy as np
+    from astropy import units as u
+    from astropy.wcs import WCS
+    from specutils import Spectrum1D
+
+    flux = np.arange(16).reshape((2, 2, 4)) * u.Jy
+    wcs_dict = {"CTYPE1": "RA---TAN", "CTYPE2": "DEC--TAN", "CTYPE3": "WAVE-LOG",
+                "CRVAL1": 205, "CRVAL2": 27, "CRVAL3": 4.622e-7,
+                "CDELT1": -0.0001, "CDELT2": 0.0001, "CDELT3": 8e-11,
+                "CRPIX1": 0, "CRPIX2": 0, "CRPIX3": 0}
+    w = WCS(wcs_dict)
+
+    cube = Spectrum1D(flux=flux, wcs=w)
+    cubeviz.load_data(cube) # doctest: +SKIP
+    cubeviz.app
+
+To then extract your data from Cubeviz, please see the :ref:`cubeviz-notebook` section.
