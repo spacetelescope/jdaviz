@@ -164,6 +164,28 @@ Similarly, all of the line lists may be shown or hidden via
 :guilabel:`Plot All` and :guilabel:`Erase All`, located at the
 bottom of the plugin.
 
+.. _custom-line-lists:
+
+Importing Custom Line Lists
+---------------------------
+
+Jdaviz comes with curated line lists built by the scientific community.
+If you cannot find the lines you need, you can add your own by constructing
+an :ref:`astropy table <astropy:construct_table>`; For example::
+
+    from astropy.table import QTable
+    from astropy import units as u
+
+    my_line_list = QTable()
+    my_line_list['linename'] = ['Hbeta','Halpha']
+    my_line_list['rest'] = [4851.3, 6563]*u.AA
+    my_line_list['redshift'] = u.Quantity(0.046) # Optional
+
+    viz.load_line_list(my_line_list)
+    # Show all imported line lists
+    viz.spectral_lines
+
+
 Redshift Slider
 ---------------
 

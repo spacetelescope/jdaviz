@@ -38,6 +38,17 @@ try to adhere to the following principles:
   create a ``form_valid_section_name = Bool(False).tag(sync=True)`` in the python class for the 
   plugin, add rules to any relevant inputs, and set ``:disabled="!form_valid_section_name"`` to any
   action buttons.
+* Select input elements should default whenever possible (not start as empty), and self-hide if only
+  one valid option. Whenever possible, inputs should use form validation rules with red text
+  explaining the error and disabling action buttons. When one selection/check makes others 
+  contextually irrelevant, those irrelevant items should be hidden entirely.  When order needs to be
+  enforced, future inputs should be hidden.
+* Re-usable components should be implemented in ``template_mixin.py`` by inheriting from 
+  ``BasePluginComponent`` along with an accompanying mixin and vue template file in 
+  ``jdaviz/components`` (which in turn are made available through ``ipyvue.register_component_from_file``
+  calls in ``app.py``.  These components allow the traitlets to live in the plugin-level so they
+  can easily be observed, and separating per-component logic from the plugin logic itself.
+
 
 .. code::
 

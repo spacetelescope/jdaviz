@@ -17,3 +17,4 @@ available functionality. For example::
 
     viewer = imviz.default_viewer
     viewer.center_on((100, 100))
+

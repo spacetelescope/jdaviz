@@ -4,14 +4,18 @@
 Using Specviz in a Jupyter Notebook
 ***********************************
 
-Specviz is developed to fully support analyzing spectra within your existing `Jupyter notebooks <https://jupyter.org/>`_! To use Specviz, install jdaviz in your notebook's python environment and add a new cell wherever you would like to use Specviz.
+Specviz is developed to fully support analyzing spectra within
+your existing `Jupyter notebooks <https://jupyter.org/>`_!
+To use Specviz, install jdaviz in your notebook's python
+environment and add a new cell wherever you would like
+to use Specviz.::
 
-    >>> # Import specviz
-    >>> from jdaviz import Specviz
-    >>> # Instantiate an instance of Specviz
-    >>> specviz = Specviz()
-    >>> # Display Specviz
-    >>> specviz.app   #doctest: +SKIP
+    # Import specviz
+    from jdaviz import Specviz
+    # Instantiate an instance of Specviz
+    specviz = Specviz()
+    # Display Specviz
+    specviz.app   #doctest: +SKIP
 
 To extract the data currently loaded into the viewer do::
 
@@ -19,7 +23,7 @@ To extract the data currently loaded into the viewer do::
 
 which yields a `specutils.Spectrum1D` object that you can manipulate however
 you wish.  You can then load the modified spectrum back into the notebook via
-the API described in :ref:`api-import`.
+the API described in :ref:`specviz-import-api`.
 
 Alternatively, if you want more control over Specviz, you can access it the
 via the lower-level application interface that connects to the ``glue-jupyter``

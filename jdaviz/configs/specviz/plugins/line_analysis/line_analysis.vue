@@ -84,7 +84,16 @@
               </a> 
             </j-tooltip>
           </v-col>
-          <v-col cols=6>{{ item.result }} {{ item.uncertainty ? "&#177; " + item.uncertainty : null}} {{ item.unit }}</v-col>
+          <v-col cols=6>
+            <span v-if="item.error_msg">{{ item.error_msg }}</span>
+            <j-number-uncertainty
+              v-else
+              :value="item.result"
+              :uncertainty="item.uncertainty"
+              :unit="item.unit"
+              :defaultDigs="8"
+            ></j-number-uncertainty>
+          </v-col>
         </v-row>
       </div>
       <div v-if="results_computing"

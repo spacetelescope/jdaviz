@@ -13,7 +13,9 @@ from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SpectralSubsetSelectMixin,
                                         SubsetSelect,
-                                        DatasetSelectMixin)
+                                        DatasetSelectMixin,
+                                        AutoLabel,
+                                        AddResultsMixin)
 from jdaviz.core.custom_traitlets import IntHandleEmpty
 from jdaviz.configs.default.plugins.model_fitting.fitting_backend import fit_model_to_spectrum
 from jdaviz.configs.default.plugins.model_fitting.initializers import (MODELS,
@@ -32,7 +34,8 @@ class _EmptyParam:
 
 
 @tray_registry('g-model-fitting', label="Model Fitting")
-class ModelFitting(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin):
+class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
+                   SpectralSubsetSelectMixin, AddResultsMixin):
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "model_fitting.vue"
     form_valid_model_component = Bool(False).tag(sync=True)
@@ -40,45 +43,40 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     spatial_subset_items = List().tag(sync=True)
     spatial_subset_selected = Unicode().tag(sync=True)
 
-    model_label = Unicode().tag(sync=True)
-    cube_fit = Bool(False).tag(sync=True)
-    temp_name = Unicode().tag(sync=True)
-    temp_model = Unicode().tag(sync=True)
+    # model components:
+    available_comps = List(list(MODELS.keys())).tag(sync=True)
+    comp_selected = Unicode().tag(sync=True)
+    poly_order = IntHandleEmpty(0).tag(sync=True)
+
+    comp_label = Unicode().tag(sync=True)
+    comp_label_default = Unicode().tag(sync=True)
+    comp_label_auto = Bool(True).tag(sync=True)
+    comp_label_invalid_msg = Unicode().tag(sync=True)
+
     model_equation = Unicode().tag(sync=True)
+    model_equation_default = Unicode().tag(sync=True)
+    model_equation_auto = Bool(True).tag(sync=True)
+    model_equation_invalid_msg = Unicode().tag(sync=True)
+
     eq_error = Bool(False).tag(sync=True)
     component_models = List([]).tag(sync=True)
     display_order = Bool(False).tag(sync=True)
-    poly_order = IntHandleEmpty(0).tag(sync=True)
 
-    # add/replace results for "fit"
-    add_replace_results = Bool(True).tag(sync=True)
-
-    # selected_viewer for "apply to cube"
-    # NOTE: this is currently cubeviz-specific so will need to be updated
-    # to be config-specific if using within other viewer configurations.
-    viewer_to_id = {'Left': 'cubeviz-0', 'Center': 'cubeviz-1', 'Right': 'cubeviz-2'}
-    viewers = List(['None', 'Left', 'Center', 'Right']).tag(sync=True)
-    selected_viewer = Unicode('None').tag(sync=True)
-
-    available_models = List(list(MODELS.keys())).tag(sync=True)
+    cube_fit = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         self._spectrum1d = None
         super().__init__(*args, **kwargs)
 
         self._units = {}
-        self.n_models = 0
         self._fitted_model = None
         self._fitted_spectrum = None
         self.component_models = []
         self._initialized_models = {}
         self._display_order = False
-        self.model_label = "Model"
         self._window = None
         self._original_mask = None
         if self.app.state.settings.get("configuration") == "cubeviz":
-            self.cube_fit = True
-
             self.spatial_subset = SubsetSelect(self,
                                                'spatial_subset_items',
                                                'spatial_subset_selected',
@@ -91,6 +89,14 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         self.dataset._viewers = ['spectrum-viewer']
         # require entries to be in spectrum-viewer (not other cubeviz images, etc)
         self.dataset.add_filter('layer_in_spectrum_viewer')
+
+        self.auto_component_label = AutoLabel(self, 'comp_label', 'comp_label_default',
+                                              'comp_label_auto', 'comp_label_invalid_msg')
+        self.auto_equation = AutoLabel(self, 'model_equation', 'model_equation_default',
+                                       'model_equation_auto', 'model_equation_invalid_msg')
+
+        # set the filter on the viewer options
+        self._update_viewer_filters()
 
     def _param_units(self, param, model_type=None):
         """Helper function to handle units that depend on x and y"""
@@ -219,7 +225,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             # during initial init, this can trigger before the component is initialized
             return
 
-        if self.cube_fit and self.spatial_subset_selected != 'Entire Cube':
+        if self.config == 'cubeviz' and self.spatial_subset_selected != 'Entire Cube':
             # then we're acting on the auto-collapsed data in the spectrum-viewer
             # of a spatial subset.  In the future, we may want to expose on-the-fly
             # collapse options... but right now these will follow the settings of the
@@ -260,13 +266,37 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             spectral_min, spectral_max = self.spectral_subset.selected_min_max(self._spectrum1d)
             self._window = (spectral_min.value, spectral_max.value)
 
-    def vue_model_selected(self, event):
-        # Add the model selected to the list of models
-        self.temp_model = event
-        if event == "Polynomial1D":
+    @observe('comp_selected', 'poly_order')
+    def _update_comp_label_default(self, event={}):
+        abbrevs = {'BlackBody': 'BB', 'PowerLaw': 'PL', 'Lorentz': 'Lo'}
+        abbrev = abbrevs.get(self.comp_selected, self.comp_selected[0].upper())
+        if self.comp_selected == "Polynomial1D":
             self.display_order = True
+            abbrev += f'{self.poly_order}'
         else:
             self.display_order = False
+
+        # append a number suffix to avoid any duplicates
+        ind = 1
+        while abbrev in [cm['id'] for cm in self.component_models]:
+            abbrev = f'{abbrev.split("_")[0]}_{ind}'
+            ind += 1
+
+        self.comp_label_default = abbrev
+
+    @observe('comp_label')
+    def _comp_label_changed(self, event={}):
+        if not len(self.comp_label.strip()):
+            # strip will raise the same error for a label of all spaces
+            self.comp_label_invalid_msg = 'label must be provided'
+            return
+        if self.comp_label in [cm['id'] for cm in self.component_models]:
+            self.comp_label_invalid_msg = 'label already in use'
+            return
+        self.comp_label_invalid_msg = ''
+
+    def _update_model_equation_default(self):
+        self.model_equation_default = '+'.join(cm['id'] for cm in self.component_models)
 
     def _reinitialize_with_fixed(self):
         """
@@ -293,7 +323,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
 
         return temp_models
 
-    def vue_add_model(self, event):
+    def vue_add_model(self, event={}):
         """Add the selected model and input string ID to the list of models"""
         if not self._spectrum1d:
             self._dataset_selected_changed()
@@ -301,22 +331,22 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         # validate provided label (only allow "word characters").   These should already be
         # stripped by JS in the UI element, but we'll confirm here (especially if this is ever
         # extended to have better API-support)
-        if re.search(r'\W+', self.temp_name):
-            raise ValueError(f"invalid model component ID {self.temp_name}")
+        if re.search(r'\W+', self.comp_label):
+            raise ValueError(f"invalid model component ID {self.comp_label}")
 
-        if self.temp_name in [cm['id'] for cm in self.component_models]:
-            raise ValueError(f"model component ID {self.temp_name} already in use")
+        if self.comp_label in [cm['id'] for cm in self.component_models]:
+            raise ValueError(f"model component ID {self.comp_label} already in use")
 
-        new_model = {"id": self.temp_name, "model_type": self.temp_model,
+        new_model = {"id": self.comp_label, "model_type": self.comp_selected,
                      "parameters": [], "model_kwargs": {}}
-        model_cls = MODELS[self.temp_model]
+        model_cls = MODELS[self.comp_selected]
 
-        if self.temp_model == "Polynomial1D":
+        if self.comp_selected == "Polynomial1D":
             # self.poly_order is the value in the widget for creating
             # the new model component.  We need to store that with the
             # model itself as the value could change for another component.
             new_model["model_kwargs"] = {"degree": self.poly_order}
-        elif self.temp_model == "BlackBody":
+        elif self.comp_selected == "BlackBody":
             new_model["model_kwargs"] = {"output_units": self._units["y"],
                                          "bounds": {"scale": (0.0, None)}}
 
@@ -340,9 +370,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             initial_values[param_name] = initial_val
 
         initialized_model = initialize(
-            MODELS[self.temp_model](name=self.temp_name,
-                                    **initial_values,
-                                    **new_model.get("model_kwargs", {})),
+            MODELS[self.comp_selected](name=self.comp_label,
+                                       **initial_values,
+                                       **new_model.get("model_kwargs", {})),
             self._spectrum1d.spectral_axis,
             self._spectrum1d.flux)
 
@@ -355,20 +385,53 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                                             "unit": str(param_quant.unit),
                                             "fixed": False})
 
-        self._initialized_models[self.temp_name] = initialized_model
+        self._initialized_models[self.comp_label] = initialized_model
 
         new_model["Initialized"] = True
         self.component_models = self.component_models + [new_model]
+        # update the default label (likely adding the suffix)
+        self._update_comp_label_default()
+        self._update_model_equation_default()
 
     def vue_remove_model(self, event):
         self.component_models = [x for x in self.component_models
                                  if x["id"] != event]
         del(self._initialized_models[event])
+        self._update_comp_label_default()
+        self._update_model_equation_default()
 
-    def vue_equation_changed(self, event):
+    @observe('model_equation')
+    def _model_equation_changed(self, event):
         # Length is a dummy check to test the infrastructure
         if len(self.model_equation) > 20:
-            self.eq_error = True
+            self.model_equation_invalid_msg = 'model equation too long'
+            return
+        self.model_equation_invalid_msg = ''
+
+    @observe("dataset_selected", "dataset_items", "cube_fit")
+    def _set_default_results_label(self, event={}):
+        label_comps = []
+        if hasattr(self, 'dataset') and len(self.dataset.labels) > 1:
+            label_comps += [self.dataset_selected]
+        if self.cube_fit:
+            label_comps += ["cube-fit"]
+        label_comps += ["model"]
+        self.results_label_default = " ".join(label_comps)
+
+    @observe("cube_fit")
+    def _update_viewer_filters(self, event={}):
+        if event.get('new', self.cube_fit):
+            # only want image viewers in the options
+            self.add_results.viewer.filters = ['is_image_viewer']
+        else:
+            # only want spectral viewers in the options
+            self.add_results.viewer.filters = ['is_spectrum_viewer']
+
+    def vue_apply(self, event):
+        if self.cube_fit:
+            self.vue_fit_model_to_cube()
+        else:
+            self.vue_model_fitting()
 
     def vue_model_fitting(self, *args, **kwargs):
         """
@@ -403,7 +466,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         self._fitted_model = fitted_model
         self._fitted_spectrum = fitted_spectrum
 
-        self.app.fitted_models[self.model_label] = fitted_model
+        self.app.fitted_models[self.results_label] = fitted_model
         self.vue_register_spectrum({"spectrum": fitted_spectrum})
 
         # Update component model parameters with fitted values
@@ -467,13 +530,13 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         # Save fitted 3D model in a way that the cubeviz
         # helper can access it.
         for m in fitted_model:
-            temp_label = "{} ({}, {})".format(self.model_label, m["x"], m["y"])
+            temp_label = "{} ({}, {})".format(self.results_label, m["x"], m["y"])
             self.app.fitted_models[temp_label] = m["model"]
 
         count = max(map(lambda s: int(next(iter(re.findall(r"\d$", s)), 0)),
                         self.data_collection.labels)) + 1
 
-        label = f"{self.model_label} [Cube] {count}"
+        label = f"{self.results_label} [Cube] {count}"
 
         # Create new glue data object
         output_cube = Data(label=label,
@@ -481,14 +544,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         output_cube['flux'] = fitted_spectrum.flux.value
         output_cube.get_component('flux').units = fitted_spectrum.flux.unit.to_string()
 
-        # Add to data collection, tracking that it came from this plugin to be filtered out
-        # from dataset-select dropdowns
-        output_cube.meta['Plugin'] = 'model-fitting'
-        self.app.add_data(output_cube, label)
-        if self.selected_viewer != 'None':
-            # replace the contents in the selected viewer with the results from this plugin
-            self.app.add_data_to_viewer(self.viewer_to_id.get(self.selected_viewer),
-                                        label, clear_other_data=True)
+        self.add_results.add_results_from_plugin(output_cube)
+        self._set_default_results_label()
 
         snackbar_message = SnackbarMessage(
             "Finished cube fitting",
@@ -515,24 +572,12 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                                                     self.model_equation,
                                                     window=self._window)
 
-        self.n_models += 1
-        label = self.model_label
-        if label in self.data_collection:
-            self.app.remove_data_from_viewer('spectrum-viewer', label)
-            # Remove the actual Glue data object from the data_collection
-            self.data_collection.remove(self.data_collection[label])
-
-        # Add to data collection, tracking that it came from this plugin to be filtered out
-        # from dataset-select dropdowns
-        spectrum.meta['Plugin'] = 'model-fitting'
-        self.app.add_data(spectrum, label)
+        self.add_results.add_results_from_plugin(spectrum)
+        self._set_default_results_label()
 
         # Link the result spectrum to the reference data of the spectrum viewer
 
         ref_data = self.app.get_viewer('spectrum-viewer').state.reference_data
         data_id = ref_data.world_component_ids[-1]
-        model_id = self.app.session.data_collection[label].world_component_ids[0]
+        model_id = self.app.session.data_collection[self.results_label].world_component_ids[0]
         self.app.session.data_collection.add_link(LinkSame(data_id, model_id))
-
-        if self.add_replace_results:
-            self.app.add_data_to_viewer('spectrum-viewer', label)

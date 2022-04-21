@@ -4,29 +4,23 @@ from glue.core import Data
 from glue.core.link_helpers import LinkSame
 from specutils import Spectrum1D
 from specutils.manipulation import spectral_slab
-from traitlets import List, Unicode
+from traitlets import List, Unicode, observe
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         DatasetSelectMixin,
-                                        SpectralSubsetSelectMixin)
+                                        SpectralSubsetSelectMixin,
+                                        AddResultsMixin)
 
 __all__ = ['Collapse']
 
 
 @tray_registry('g-collapse', label="Collapse")
-class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin):
+class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin, AddResultsMixin):
     template_file = __file__, "collapse.vue"
     funcs = List(['Mean', 'Median', 'Min', 'Max', 'Sum']).tag(sync=True)
     selected_func = Unicode('Sum').tag(sync=True)
-
-    # selected_viewer for spatial-spatial image.
-    # NOTE: this is currently cubeviz-specific so will need to be updated
-    # to be config-specific if using within other viewer configurations.
-    viewer_to_id = {'Left': 'cubeviz-0', 'Center': 'cubeviz-1', 'Right': 'cubeviz-2'}
-    viewers = List(['None', 'Left', 'Center', 'Right']).tag(sync=True)
-    selected_viewer = Unicode('None').tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -34,6 +28,15 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
         self._label_counter = 0
 
         self.dataset.add_filter('is_image')
+        self.add_results.viewer.filters = ['is_image_viewer']
+
+    @observe("dataset_selected", "dataset_items")
+    def _set_default_results_label(self, event={}):
+        label_comps = []
+        if hasattr(self, 'dataset') and len(self.dataset.labels) > 1:
+            label_comps += [self.dataset_selected]
+        label_comps += ["collapsed"]
+        self.results_label_default = " ".join(label_comps)
 
     def vue_collapse(self, *args, **kwargs):
         # Collapsing over the spectral axis. Cut out the desired spectral
@@ -51,12 +54,7 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
         data['flux'] = collapsed_spec.value
         data.get_component('flux').units = str(collapsed_spec.unit)
 
-        self._label_counter += 1
-        label = f"Collapsed {self._label_counter} {self.dataset_selected}"
-
-        data.meta["Plugin"] = "Collapse"
-        self.app.add_data(data, label)
-
+        self.add_results.add_results_from_plugin(data)
         self._link_collapse_data()
 
         snackbar_message = SnackbarMessage(
@@ -64,12 +62,6 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
             color="success",
             sender=self)
         self.hub.broadcast(snackbar_message)
-
-        # Spatial-spatial image only.
-        if self.selected_viewer != 'None':
-            # replace the contents in the selected viewer with the results from this plugin
-            self.app.add_data_to_viewer(self.viewer_to_id.get(self.selected_viewer),
-                                        label, clear_other_data=True)
 
     def _link_collapse_data(self):
         """
@@ -87,8 +79,7 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
         for i in range(new_len - 1):
             pc_old = self.app.data_collection[i].pixel_component_ids
             # If data_collection[i] is also from the collapse plugin
-            if ("Plugin" in self.app.data_collection[i].meta and
-                    self.app.data_collection[i].meta["Plugin"] == "Collapse"):
+            if self.app.data_collection[i].meta.get("Plugin", None) == self.__class__.__name__:
                 links = [LinkSame(pc_old[0], pc_new[0]),
                          LinkSame(pc_old[1], pc_new[1])]
             else:

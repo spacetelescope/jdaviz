@@ -7,14 +7,14 @@ Using Mosviz in a Jupyter Notebook
 To initialize an instance of the Mosviz app in a Jupyter notebook, simply run
 the following code in a cell of the notebook::
 
-    >>> from jdaviz import Mosviz
-    >>> mosviz = Mosviz()
-    >>> mosviz.app  # doctest: +SKIP
+    from jdaviz import Mosviz
+    mosviz = Mosviz()
+    mosviz.app  # doctest: +SKIP
 
 After running the code above, you can interact with the Mosviz application from 
 subsequent notebook cells via the API methods attached to the
 `~jdaviz.configs.mosviz.helper.Mosviz` object,
-for example loading data into the app as described in :ref:`mosviz-import-data`.
+for example loading data into the app as described in :ref:`mosviz-import-api`.
 
 .. seealso::
 
@@ -39,3 +39,4 @@ The contents of ``table-viewer`` can also be extracted to a notebook cell by
 running `~jdaviz.configs.mosviz.helper.Mosviz.to_table`::
 
     mosviz.to_table()
+

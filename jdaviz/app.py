@@ -74,6 +74,10 @@ ipyvue.register_component_from_file(None, 'j-plugin-section-header',
                                     os.path.join(os.path.dirname(__file__),
                                                  'components/plugin_section_header.vue'))
 
+ipyvue.register_component_from_file(None, 'j-number-uncertainty',
+                                    os.path.join(os.path.dirname(__file__),
+                                                 'components/number_uncertainty.vue'))
+
 ipyvue.register_component_from_file(None, 'plugin-dataset-select',
                                     os.path.join(os.path.dirname(__file__),
                                                  'components/plugin_dataset_select.vue'))
@@ -85,6 +89,14 @@ ipyvue.register_component_from_file(None, 'plugin-subset-select',
 ipyvue.register_component_from_file(None, 'plugin-viewer-select',
                                     os.path.join(os.path.dirname(__file__),
                                                  'components/plugin_viewer_select.vue'))
+
+ipyvue.register_component_from_file(None, 'plugin-add-results',
+                                    os.path.join(os.path.dirname(__file__),
+                                                 'components/plugin_add_results.vue'))
+
+ipyvue.register_component_from_file(None, 'plugin-auto-label',
+                                    os.path.join(os.path.dirname(__file__),
+                                                 'components/plugin_auto_label.vue'))
 
 # Register pure vue component. This allows us to do recursive component instantiation only in the
 # vue component file
