@@ -15,9 +15,9 @@ from a terminal, type::
     jdaviz --help
     jdaviz /path/to/data/spectral_file --layout=specviz
 
-For example, to load a `SDSS MaNGA IFU data cube <https://data.sdss.org/sas/dr14/manga/spectro/redux/v2_1_2/8485/stack/manga-8485-1901-LOGCUBE.fits.gz>`_ into ``Cubeviz``, you would run the following from a terminal::
+For example, to load a `SDSS MaNGA IFU data cube <https://stsci.box.com/shared/static/28a88k1qfipo4yxc4p4d40v4axtlal8y.fits>`_ into ``Cubeviz``, you would run the following from a terminal::
 
-    jdaviz /my/manga/cube/manga-8485-1901-LOGCUBE.fits.gz --layout=cubeviz
+    jdaviz /my/manga/cube/manga-7495-12704-LOGCUBE.fits --layout=cubeviz
 
 In a Jupyter Notebook
 ---------------------
