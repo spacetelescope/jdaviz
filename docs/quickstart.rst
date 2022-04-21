@@ -13,11 +13,11 @@ As a Web Application
 from a terminal, type::
 
     jdaviz --help
-    jdaviz /path/to/data/spectral_file --layout=specviz
+    jdaviz specviz /path/to/data/spectral_file
 
 For example, to load a `SDSS MaNGA IFU data cube <https://stsci.box.com/shared/static/28a88k1qfipo4yxc4p4d40v4axtlal8y.fits>`_ into ``Cubeviz``, you would run the following from a terminal::
 
-    jdaviz /my/manga/cube/manga-7495-12704-LOGCUBE.fits --layout=cubeviz
+    jdaviz cubeviz /my/manga/cube/manga-7495-12704-LOGCUBE.fits
 
 In a Jupyter Notebook
 ---------------------

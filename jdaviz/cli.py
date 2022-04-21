@@ -16,14 +16,11 @@ CONFIGS_DIR = os.path.join(os.path.dirname(__file__), 'configs')
 
 @click.version_option(__version__)
 @click.command()
+@click.argument('layout',
+                nargs=1,
+                type=click.Choice(['cubeviz', 'specviz', 'mosviz', 'imviz'],
+                                  case_sensitive=False))
 @click.argument('filename', nargs=1)
-@click.option('--layout',
-              default='default',
-              nargs=1,
-              show_default=True,
-              type=click.Choice(['default', 'cubeviz', 'specviz', 'mosviz', 'imviz'],
-                                case_sensitive=False),
-              help="Configuration to use on application startup")
 @click.option('--browser',
               default='default',
               nargs=1,
