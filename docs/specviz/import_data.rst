@@ -39,7 +39,7 @@ users can select which spectra that have be loaded to be visualized in the viewe
 .. _specviz-import-api:
 
 Importing data via the API
-------------------------
+--------------------------
 Alternatively, if users are working in a coding environment like a Jupyter notebook, they have access to the :class:`~jdaviz.configs.specviz.helper.Specviz` helper class API. Using this API, users can load data into the application through code.
 Below is an example of importing the :class:`~jdaviz.configs.specviz.helper.Specviz` helper class, creating a :class:`~specutils.Spectrum1D` object from a data file via the `specutils.Spectrum1D.read` method::
 
@@ -71,7 +71,7 @@ For more information about using the Specutils package, please see the
 `Specutils documentation <https://specutils.readthedocs.io>`_.
 
 Importing multiple spectra via the API
-------------------------------------
+--------------------------------------
 In addition to loading single spectra as above, in some cases it may be useful
 to load multiple related spectra at once into the Jdaviz application. The most common
 such case is when you have spectra of the same object covering multiple wavelength
