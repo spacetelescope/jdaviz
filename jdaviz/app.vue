@@ -48,7 +48,7 @@
             </golden-layout>
           </pane>
           <pane size="25" min-size="25" v-if="state.drawer" style="background-color: #fafbfc;">
-            <v-card flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="#f8f8f8">
+            <v-card flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
               <v-text-field
                 v-model='state.tray_items_filter'
                 append-icon='mdi-magnify'
@@ -139,6 +139,7 @@ export default {
       info: '#2196F3',
       success: '#4CAF50',
       warning: '#FFC107',
+      gray: '#F8F8F8',
     };
     this.$vuetify.theme.themes.dark = {
       toolbar: "#153A4B",
@@ -151,6 +152,7 @@ export default {
       info: '#2196F3',
       success: '#4CAF50',
       warning: '#FFC107',
+      gray: '#141414',
     };
   },
   mounted() {
