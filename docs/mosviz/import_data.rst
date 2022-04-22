@@ -1,8 +1,8 @@
 .. _mosviz-import-api:
 
-***********
-Import Data
-***********
+**************************
+Importing Data into Mosviz
+**************************
 
 Mosviz provides two different ways to load data: Auto-recognition directory loading
 or manual loading:
