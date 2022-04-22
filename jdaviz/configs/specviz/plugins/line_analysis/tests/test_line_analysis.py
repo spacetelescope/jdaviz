@@ -4,6 +4,7 @@ import numpy as np
 from glue.core.roi import XRangeROI
 from ipywidgets.widgets import widget_serialization
 
+from jdaviz.configs.specviz.plugins.line_analysis.line_analysis import _coerce_unit
 from jdaviz.core.events import LineIdentifyMessage
 from jdaviz.core.marks import LineAnalysisContinuum
 
@@ -80,3 +81,16 @@ def test_line_identify(specviz_helper, spectrum1d):
     la_plugin.selected_line = rest_names[1]
     assert ll_plugin.list_contents['Test List']['lines'][0].get('identify') is True
     assert ll_plugin.list_contents['Test List']['lines'][1].get('identify') is False
+
+
+def test_coerce_unit():
+    q_input = 1 * u.Unit('1E-20 erg m / (Angstrom cm**2 s)')
+    q_input.uncertainty = 0.1 * u.Unit('1E-20 erg m / (Angstrom cm**2 s)')
+    q_coerced = _coerce_unit(q_input)
+    assert q_coerced.unit == u.Unit('erg / (cm**2 s)')
+    assert np.allclose(q_coerced.value, 1e-20 * u.m.to(u.Angstrom))
+    assert q_coerced.uncertainty.unit == u.Unit('erg / (cm**2 s)')
+    assert np.allclose(q_coerced.uncertainty.value, 0.1 * 1e-20 * u.m.to(u.Angstrom))
+    q_input.uncertainty = None
+    q_coerced = _coerce_unit(q_input)
+    assert not hasattr(q_coerced, 'uncertainty')

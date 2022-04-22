@@ -74,6 +74,8 @@ Other Changes and Additions
 - Snackbar queue handles loading interrupt more cleanly. [#1249]
 
 - Reported quantities are rounded/truncated to avoid showing unnecessary precision. [#1244]
+- Line analysis quantities are coerced so length units cancel and constants are removed from units. 
+  [#1261]
 
 2.4 (2022-03-29)
 ================
