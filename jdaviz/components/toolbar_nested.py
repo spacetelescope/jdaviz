@@ -19,6 +19,7 @@ class NestedJupyterToolbar(BasicJupyterToolbar):
 
     # whether to show a popup menu
     show_suboptions = traitlets.Bool(False).tag(sync=True)
+    close_on_click = traitlets.Bool(False).tag(sync=True)
     # which submenu to show when show_suboptions is True
     suboptions_ind = traitlets.Int(0).tag(sync=True)
     # absolute positions to display the menu

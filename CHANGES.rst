@@ -44,6 +44,8 @@ Specviz
 Bug Fixes
 ---------
 
+- Fixed clicking in Safari on MacOS when using CTRL-click as right-click. [#1262]
+
 Cubeviz
 ^^^^^^^
 
