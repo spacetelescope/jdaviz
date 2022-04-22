@@ -273,7 +273,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
 
         def _coerce_unit(quantity):
             """
-            coerce the unity on a quantity to have a single length unit (will take the first length
+            coerce the unit on a quantity to have a single length unit (will take the first length
             unit with a power of 1) and to strip any constants from the units.
             """
             # for some reason, quantity.unit.powers gives floats which then raise an error in
