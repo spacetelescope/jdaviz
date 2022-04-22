@@ -48,17 +48,26 @@
             </golden-layout>
           </pane>
           <pane size="25" min-size="25" v-if="state.drawer" style="background-color: #fafbfc;">
-            <v-card flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="#f8f8f8">
+            <v-card flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
+              <v-text-field
+                v-model='state.tray_items_filter'
+                append-icon='mdi-magnify'
+                style="padding: 0px 8px"
+                clearable
+                hide-details
+              ></v-text-field>
               <v-expansion-panels accordion multiple focusable flat tile v-model="state.tray_items_open">
-                <v-expansion-panel v-for="(tray, index) in state.tray_items" :key="index">
-                  <v-expansion-panel-header>
-                    <j-tooltip :tipid="tray.name">
-                      {{ tray.label }}
-                    </j-tooltip>
-                  </v-expansion-panel-header>
-                  <v-expansion-panel-content style="margin-left: -12px; margin-right: -12px">
-                    <jupyter-widget :widget="tray.widget"></jupyter-widget>
-                  </v-expansion-panel-content>
+                <v-expansion-panel v-for="(trayItem, index) in state.tray_items" :key="index">
+                  <div v-if="trayItemVisible(trayItem, state.tray_items_filter)">
+                    <v-expansion-panel-header >
+                      <j-tooltip :tipid="trayItem.name">
+                        {{ trayItem.label }}
+                      </j-tooltip>
+                    </v-expansion-panel-header>
+                    <v-expansion-panel-content style="margin-left: -12px; margin-right: -12px">
+                      <jupyter-widget :widget="trayItem.widget"></jupyter-widget>
+                    </v-expansion-panel-content>
+                  </div>
                 </v-expansion-panel>
               </v-expansion-panels>
               <v-divider></v-divider>
@@ -109,6 +118,13 @@ export default {
       } else {
         return 'https://jdaviz.readthedocs.io'
       }
+    },
+    trayItemVisible(trayItem, tray_items_filter) {
+      if (tray_items_filter === null || tray_items_filter.length == 0) {
+        return true
+      }
+      // simple exact text search match on the plugin title for now.
+      return trayItem.label.toLowerCase().indexOf(tray_items_filter.toLowerCase()) !== -1
     }
   },
   created() {
@@ -123,6 +139,7 @@ export default {
       info: '#2196F3',
       success: '#4CAF50',
       warning: '#FFC107',
+      gray: '#F8F8F8',
     };
     this.$vuetify.theme.themes.dark = {
       toolbar: "#153A4B",
@@ -135,6 +152,7 @@ export default {
       info: '#2196F3',
       success: '#4CAF50',
       warning: '#FFC107',
+      gray: '#141414',
     };
   },
   mounted() {
