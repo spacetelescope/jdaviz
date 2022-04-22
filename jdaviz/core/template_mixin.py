@@ -133,11 +133,24 @@ class BasePluginComponent(HubListener):
             self._plugin._trait_notifiers[traitlet_name]['change'] = new_order
 
     @property
+    def plugin(self):
+        """
+        Access the parent plugin object
+        """
+        return self._plugin
+
+    @property
     def app(self):
+        """
+        Access the parent app object
+        """
         return self._plugin.app
 
     @property
     def hub(self):
+        """
+        Access the hub attached to the parent plugin object
+        """
         return self._plugin.hub
 
     @property
