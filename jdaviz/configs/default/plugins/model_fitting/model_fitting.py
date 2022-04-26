@@ -403,6 +403,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     @observe('model_equation')
     def _model_equation_changed(self, event):
         # Length is a dummy check to test the infrastructure
+        if len(self.model_equation) == 0:
+            self.model_equation_invalid_msg = 'model equation is required'
+            return
         if len(self.model_equation) > 20:
             self.model_equation_invalid_msg = 'model equation too long'
             return

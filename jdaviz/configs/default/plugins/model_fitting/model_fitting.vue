@@ -166,38 +166,38 @@
         :invalid_msg="model_equation_invalid_msg"
         hint="Enter an equation specifying how to combine the component models, using their model IDs and basic arithmetic operators (ex. component1+component2)."
       ></plugin-auto-label>
+
+      <j-plugin-section-header>Fit Model</j-plugin-section-header>
+      <v-row>
+        <v-switch v-if="config=='cubeviz'"
+          v-model="cube_fit"
+          label="Cube Fit"
+          hint="Whether to fit to the collapsed spectrum or entire cube"
+          persistent-hint
+        ></v-switch>
+      </v-row>
+      
+      <plugin-add-results
+        :label.sync="results_label"
+        :label_default="results_label_default"
+        :label_auto.sync="results_label_auto"
+        :label_invalid_msg="results_label_invalid_msg"
+        :label_overwrite="results_label_overwrite"
+        label_hint="Label for the model"
+        :add_to_viewer_items="add_to_viewer_items"
+        :add_to_viewer_selected.sync="add_to_viewer_selected"
+        action_label="Fit Model"
+        action_tooltip="Fit the model to the data"
+        :action_disabled="model_equation_invalid_msg.length > 0"
+        @click:action="apply"
+      ></plugin-add-results>
+
+      <v-row>
+        <span class="v-messages v-messages__message text--secondary">
+            If fit is not sufficiently converged, try clicking fitting again to complete additional iterations.
+        </span>
+      </v-row>
     </div>
-
-    <j-plugin-section-header>Fit Model</j-plugin-section-header>
-    <v-row>
-      <v-switch v-if="config=='cubeviz'"
-        v-model="cube_fit"
-        label="Cube Fit"
-        hint="Whether to fit to the collapsed spectrum or entire cube"
-        persistent-hint
-      ></v-switch>
-    </v-row>
-    
-    <plugin-add-results
-      :label.sync="results_label"
-      :label_default="results_label_default"
-      :label_auto.sync="results_label_auto"
-      :label_invalid_msg="results_label_invalid_msg"
-      :label_overwrite="results_label_overwrite"
-      label_hint="Label for the model"
-      :add_to_viewer_items="add_to_viewer_items"
-      :add_to_viewer_selected.sync="add_to_viewer_selected"
-      action_label="Fit Model"
-      action_tooltip="Fit the model to the data"
-      :action_disabled="model_equation_invalid_msg.length > 0"
-      @click:action="apply"
-    ></plugin-add-results>
-
-    <v-row>
-      <span class="v-messages v-messages__message text--secondary">
-          If fit is not sufficiently converged, try clicking fitting again to complete additional iterations.
-      </span>
-    </v-row>
   </j-tray-plugin>
 </template>
 
