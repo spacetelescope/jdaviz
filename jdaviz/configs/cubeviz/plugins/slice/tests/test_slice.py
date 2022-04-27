@@ -28,3 +28,8 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
 
     cubeviz_helper.select_wavelength(4.62360028e-07)
     assert sl.slider == 1
+
+    # test setting a static image to one of the image viewers
+    # there is only one watched viewer, since the uncertainty/mask viewers are empty
+    assert len(sl._watched_viewers) == 1
+    assert len(sl._indicator_viewers) == 1
