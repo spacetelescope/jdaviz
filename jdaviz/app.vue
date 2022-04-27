@@ -1,6 +1,6 @@
 <template>
   <v-app id="web-app" class="jdaviz" ref="mainapp">
-    <v-app-bar color="toolbar" dark :dense="state.settings.dense_toolbar" flat app absolute clipped-right>
+    <v-app-bar color="toolbar" dark :dense="state.settings.dense_toolbar" flat app absolute clipped-right style="margin-left: 1px; margin-right: 1px">
       <v-toolbar-items v-for="item in state.tool_items">
         <v-divider v-if="['g-data-tools', 'g-subset-tools'].indexOf(item.name) === -1" vertical style="margin: 0px 10px"></v-divider>
         <v-divider v-else-if="item.name === 'g-subset-tools'" vertical style="margin: 0px 10px; border-width: 0"></v-divider>
@@ -24,7 +24,7 @@
     </v-app-bar>
 
     <v-content
-      :style="checkNotebookContext() ? 'height: ' + state.settings.context.notebook.max_height + '; border: solid 1px #e5e5e5;' : 'max-height: calc(100% - 48px)'"
+      :style="checkNotebookContext() ? 'height: ' + state.settings.context.notebook.max_height + '; border: solid 1px #e5e5e5; border-top: 0px' : 'max-height: calc(100% - 48px)'"
     >
       <v-container class="fill-height pa-0" fluid>
         <splitpanes @resize="relayout">
@@ -47,7 +47,7 @@
               </gl-row>
             </golden-layout>
           </pane>
-          <pane size="25" min-size="25" v-if="state.drawer" style="background-color: #fafbfc;">
+          <pane size="25" min-size="25" v-if="state.drawer" style="background-color: #fafbfc; border-top: 6px solid #C75109">
             <v-card flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
               <v-text-field
                 v-model='state.tray_items_filter'
