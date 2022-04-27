@@ -1,10 +1,10 @@
 from datetime import datetime
 
+import bqplot
 import numpy as np
 from astropy import units as u
 from astropy.table import QTable
 from astropy.time import Time
-from bqplot import pyplot as bqplt
 from ipywidgets import widget_serialization
 from photutils.aperture import ApertureStats
 from regions import (CircleAnnulusPixelRegion, CirclePixelRegion, EllipsePixelRegion,
@@ -16,7 +16,7 @@ from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.region_translators import regions2aperture
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin, DatasetSelectMixin, SubsetSelect
-from jdaviz.utils import bqplot_clear_context
+from jdaviz.utils import bqplot_clear_figure
 
 __all__ = ['SimpleAperturePhotometry']
 
@@ -59,6 +59,7 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
 
         self._selected_data = None
         self._selected_subset = None
+        self._fig = bqplot.Figure()
         self.plot_types = ["Radial Profile", "Radial Profile (Raw)"]
         self.current_plot_type = self.plot_types[0]
 
@@ -67,7 +68,7 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
         self.results = []
         self.plot_available = False
         self.radial_plot = ''
-        bqplt.clear()
+        bqplot_clear_figure(self._fig)
 
     @observe('dataset_selected')
     def _dataset_selected_changed(self, event={}):
@@ -314,27 +315,31 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
             radial_img = radial_cutout.compressed()  # data unit
 
             # Radial profile
+            bqplot_clear_figure(self._fig)
+            self._fig.title = 'Radial profile from Subset center'  # TODO: Jenn wants title at bottom.  # noqa
+            self._fig.title_style = {'font-size': '12px'}
+            # NOTE: default margin in bqplot is 60 in all directions
+            self._fig.fig_margin = {'top': 60, 'bottom': 60, 'left': 40, 'right': 10}
+            line_x_sc = bqplot.LinearScale()
+            line_y_sc = bqplot.LinearScale()
+            self._fig.axes = [bqplot.Axis(scale=line_x_sc, label='pix'),
+                              bqplot.Axis(scale=line_y_sc, orientation='vertical',
+                                          label=comp.units or 'Value')]
+
             if self.current_plot_type == "Radial Profile":
                 # This algorithm is from the imexam package,
                 # see licenses/IMEXAM_LICENSE.txt for more details
                 radial_r = list(radial_r)
                 y_data = np.bincount(radial_r, radial_img) / np.bincount(radial_r)
-                radial_r = np.arange(y_data.size)
-                markerstyle = '--o'
-                bqplot_kw = {'marker_size': 32}
+                bqplot_line = bqplot.Lines(x=np.arange(y_data.size), y=y_data, marker='circle',
+                                           scales={'x': line_x_sc, 'y': line_y_sc},
+                                           marker_size=32, colors='gray')
             else:
-                y_data = radial_img
-                markerstyle = 'o'
-                bqplot_kw = {'default_size': 1}
+                bqplot_line = bqplot.Scatter(x=radial_r, y=radial_img, marker='circle',
+                                             scales={'x': line_x_sc, 'y': line_y_sc},
+                                             default_size=1, colors='gray')
 
-            bqplot_clear_context()
-            # NOTE: default margin in bqplot is 60 in all directions
-            fig = bqplt.figure(1, title='Radial profile from Subset center',
-                               fig_margin={'top': 60, 'bottom': 60, 'left': 40, 'right': 10},
-                               title_style={'font-size': '12px'})  # TODO: Jenn wants title at bottom. # noqa
-            bqplt.plot(radial_r, y_data, markerstyle, figure=fig, colors='gray', **bqplot_kw)
-            bqplt.xlabel(label='pix', mark=fig.marks[-1], figure=fig)
-            bqplt.ylabel(label=comp.units or 'Value', mark=fig.marks[-1], figure=fig)
+            self._fig.marks = [bqplot_line]
 
         except Exception as e:  # pragma: no cover
             self.reset_results()
@@ -365,6 +370,6 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
                     tmp.append({'function': key, 'result': str(x)})
             self.results = tmp
             self.result_available = True
-            self.radial_plot = fig
-            self.bqplot_figs_resize = [fig]
+            self.radial_plot = self._fig
+            self.bqplot_figs_resize = [self._fig]
             self.plot_available = True

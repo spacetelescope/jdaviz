@@ -116,15 +116,11 @@ def enable_hot_reloading():
             ' Please install with `pip install watchdog`'))
 
 
-def bqplot_clear_context():
-    """Clears hidden context of `bqplot.pyplot` module
-    to mimic matplotlib ``clf()``. This is necessary when
-    we draw multiple plots across different plugins.
+def bqplot_clear_figure(fig):
+    """Clears a given ``bqplot.Figure`` to mimic matplotlib ``clf()``.
+    This is necessary when we draw multiple plots across different plugins.
     """
-    from bqplot import pyplot as bqplt
-    bqplt._context = {'figure': None,
-                      'figure_registry': {},
-                      'scales': {},
-                      'scale_registry': {},
-                      'last_mark': None,
-                      'current_key': None}
+    # Clear bqplot figure (copied from bqplot/pyplot.py)
+    fig.marks = []
+    fig.axes = []
+    setattr(fig, 'axis_registry', {})
