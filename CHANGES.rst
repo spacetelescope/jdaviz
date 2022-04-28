@@ -1,4 +1,4 @@
-2.5 (unreleased)
+2.5 (2022-04-28)
 ================
 
 New Features
@@ -11,17 +11,11 @@ Cubeviz
 
 - Add ESA pipeline data parser. [#1227]
 
-Imviz
-^^^^^
-
 Mosviz
 ^^^^^^
 
 - Mosviz Desktop App utilizes new directory parsers, which falls back to NIRSpec parser if
   no instrument keyword is specified. [#1232]
-
-Specviz
-^^^^^^^
 
 API Changes
 -----------
@@ -29,36 +23,16 @@ API Changes
 - CLI now takes the layout as a required first positional argument after jdaviz
   (``jdaviz cubeviz path/to/file``). [#1252]
 
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
 Bug Fixes
 ---------
 
 - Fixed clicking in Safari on MacOS when using CTRL-click as right-click. [#1262]
-
-Cubeviz
-^^^^^^^
 
 Imviz
 ^^^^^
 
 - No longer issues a Snackbar error message when all data is deselected. [#1250]
 
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
 
 Other Changes and Additions
 ---------------------------
@@ -72,7 +46,6 @@ Other Changes and Additions
 - Automatic defaults for model component IDs and equation editor in model fitting. [#1239]
 - Help button in toolbar to open docs in a new tab. [#1240]
 - Snackbar queue handles loading interrupt more cleanly. [#1249]
-
 - Reported quantities are rounded/truncated to avoid showing unnecessary precision. [#1244]
 - Line analysis quantities are coerced so length units cancel and constants are removed from units. 
   [#1261]
