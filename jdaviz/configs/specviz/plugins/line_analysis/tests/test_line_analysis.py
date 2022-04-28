@@ -2,6 +2,7 @@ import astropy.units as u
 from astropy.table import QTable
 import numpy as np
 from glue.core.roi import XRangeROI
+from glue.core.edit_subset_mode import NewMode
 from ipywidgets.widgets import widget_serialization
 
 from jdaviz.configs.specviz.plugins.line_analysis.line_analysis import _coerce_unit
@@ -62,6 +63,9 @@ def test_line_identify(specviz_helper, spectrum1d):
     # will default to no selection
     assert la_plugin.selected_line == ''
 
+    # check redshift
+    assert la_plugin.selected_line_redshift == 0.0
+
     # but selecting a line from line-list (or clicking) should change the dropdown value
     # since sync is enabled by default
     assert la_plugin.sync_identify is True
@@ -82,6 +86,23 @@ def test_line_identify(specviz_helper, spectrum1d):
     assert ll_plugin.list_contents['Test List']['lines'][0].get('identify') is True
     assert ll_plugin.list_contents['Test List']['lines'][1].get('identify') is False
 
+    # selected_line should become the same as identified_line
+    assert la_plugin.selected_line == "Halpha 6563.0"
+    assert la_plugin.identified_line == "O III 5007.0"
+    la_plugin.sync_identify = True
+    assert la_plugin.selected_line == "O III 5007.0"
+    assert la_plugin.identified_line == "O III 5007.0"
+
+    # identified_line should become the same as selected_line
+    la_plugin.identified_line = ''
+    la_plugin.sync_identify = False
+    la_plugin.sync_identify = True
+    assert la_plugin.identified_line == "O III 5007.0"
+
+    # manually update redshift
+    la_plugin.vue_line_assign()
+    assert la_plugin.selected_line_redshift == -1.0
+
 
 def test_coerce_unit():
     q_input = 1 * u.Unit('1E-20 erg m / (Angstrom cm**2 s)')
@@ -94,3 +115,248 @@ def test_coerce_unit():
     q_input.uncertainty = None
     q_coerced = _coerce_unit(q_input)
     assert not hasattr(q_coerced, 'uncertainty')
+
+
+def test_continuum_surrounding_spectral_subset(specviz_helper, spectrum1d):
+    label = "Test 1D Spectrum"
+    specviz_helper.load_spectrum(spectrum1d, data_label=label)
+
+    specviz_helper.app.state.drawer = True
+    tray_names = [ti['name'] for ti in specviz_helper.app.state.tray_items]
+    plugin_index = tray_names.index('specviz-line-analysis')
+    specviz_helper.app.state.tray_items_open = [plugin_index]
+
+    # continuum should be created, plotted, and visible
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+    continuum_marks = [m for m in sv.figure.marks if isinstance(m, LineAnalysisContinuum)]
+    assert len(continuum_marks) == 3
+    assert np.all([cm.visible for cm in continuum_marks])
+
+    # add a region and rerun stats for that region
+    sv.apply_roi(XRangeROI(6500, 7400))
+    specviz_helper.app.state.drawer = True
+
+    plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
+    assert 'Subset 1' in plugin.spectral_subset.labels
+    plugin.continuum_subset_selected = 'Surrounding'
+    plugin.spectral_subset_selected = 'Subset 1'
+    plugin.width = 3
+
+    # Values have not yet been validated
+    assert np.allclose(float(plugin.results[0]['result']), 350.89288537581467, atol=1e-5)
+
+
+def test_continuum_spectral_same_value(specviz_helper, spectrum1d):
+    label = "Test 1D Spectrum"
+    specviz_helper.load_spectrum(spectrum1d, data_label=label)
+
+    specviz_helper.app.state.drawer = True
+    tray_names = [ti['name'] for ti in specviz_helper.app.state.tray_items]
+    plugin_index = tray_names.index('specviz-line-analysis')
+    specviz_helper.app.state.tray_items_open = [plugin_index]
+
+    # continuum should be created, plotted, and visible
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+    continuum_marks = [m for m in sv.figure.marks if isinstance(m, LineAnalysisContinuum)]
+    assert len(continuum_marks) == 3
+    assert np.all([cm.visible for cm in continuum_marks])
+
+    # add a region and rerun stats for that region
+    sv.apply_roi(XRangeROI(6500, 7400))
+    specviz_helper.app.state.drawer = True
+
+    plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
+    assert 'Subset 1' in plugin.spectral_subset.labels
+    plugin.continuum_subset_selected = 'Subset 1'
+    plugin.spectral_subset_selected = 'Subset 1'
+    plugin.width = 3
+
+    # continuum and spectral cannot be the same value
+    assert plugin.results[0]['result'] == ''
+
+
+def test_continuum_surrounding_invalid_width(specviz_helper, spectrum1d):
+    label = "Test 1D Spectrum"
+    specviz_helper.load_spectrum(spectrum1d, data_label=label)
+
+    specviz_helper.app.state.drawer = True
+    tray_names = [ti['name'] for ti in specviz_helper.app.state.tray_items]
+    plugin_index = tray_names.index('specviz-line-analysis')
+    specviz_helper.app.state.tray_items_open = [plugin_index]
+
+    # continuum should be created, plotted, and visible
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+    continuum_marks = [m for m in sv.figure.marks if isinstance(m, LineAnalysisContinuum)]
+    assert len(continuum_marks) == 3
+    assert np.all([cm.visible for cm in continuum_marks])
+
+    # add a region and rerun stats for that region
+    sv.apply_roi(XRangeROI(6500, 7400))
+    specviz_helper.app.state.drawer = True
+
+    plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
+    assert 'Subset 1' in plugin.spectral_subset.labels
+    plugin.continuum_subset_selected = 'Surrounding'
+    plugin.spectral_subset_selected = 'Subset 1'
+    plugin.width = 11
+    assert plugin.results[0]['result'] == ''
+
+
+def test_continuum_subset_spectral_entire(specviz_helper, spectrum1d):
+    label = "Test 1D Spectrum"
+    specviz_helper.load_spectrum(spectrum1d, data_label=label)
+
+    specviz_helper.app.state.drawer = True
+    tray_names = [ti['name'] for ti in specviz_helper.app.state.tray_items]
+    plugin_index = tray_names.index('specviz-line-analysis')
+    specviz_helper.app.state.tray_items_open = [plugin_index]
+
+    # continuum should be created, plotted, and visible
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+    continuum_marks = [m for m in sv.figure.marks if isinstance(m, LineAnalysisContinuum)]
+    assert len(continuum_marks) == 3
+    assert np.all([cm.visible for cm in continuum_marks])
+
+    # add a region and rerun stats for that region
+    sv.apply_roi(XRangeROI(6500, 7400))
+    specviz_helper.app.state.drawer = True
+
+    plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
+    assert 'Subset 1' in plugin.spectral_subset.labels
+    plugin.continuum_subset_selected = 'Subset 1'
+    plugin.spectral_subset_selected = 'Entire Spectrum'
+    plugin.width = 3
+
+    # Values have not yet been validated
+    assert np.allclose(float(plugin.results[0]['result']), -467.6854635447396, atol=1e-5)
+
+
+def test_continuum_subset_spectral_subset2(specviz_helper, spectrum1d):
+    label = "Test 1D Spectrum"
+    specviz_helper.load_spectrum(spectrum1d, data_label=label)
+
+    specviz_helper.app.state.drawer = True
+    tray_names = [ti['name'] for ti in specviz_helper.app.state.tray_items]
+    plugin_index = tray_names.index('specviz-line-analysis')
+    specviz_helper.app.state.tray_items_open = [plugin_index]
+
+    # continuum should be created, plotted, and visible
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+    continuum_marks = [m for m in sv.figure.marks if isinstance(m, LineAnalysisContinuum)]
+    assert len(continuum_marks) == 3
+    assert np.all([cm.visible for cm in continuum_marks])
+
+    # add a region and rerun stats for that region
+    sv.apply_roi(XRangeROI(6200, 7000))
+    specviz_helper.app.state.drawer = True
+
+    sv.session.edit_subset_mode._mode = NewMode
+    sv.session.edit_subset = []
+    sv.apply_roi(XRangeROI(7100, 7700))
+    specviz_helper.app.state.drawer = True
+
+    plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
+    assert 'Subset 1' in plugin.spectral_subset.labels
+    assert 'Subset 2' in plugin.spectral_subset.labels
+
+    # TODO: Find why uncommenting the following line
+    #  causes a ValueError: zero-size array
+    # plugin.spectral_subset_selected = 'Subset 2'
+    plugin.continuum_subset_selected = 'Subset 1'
+    plugin.width = 3
+
+    # Values have not yet been validated
+    assert np.allclose(float(plugin.results[0]['result']), -264.7195451356822, atol=1e-5)
+
+
+def test_continuum_surrounding_no_right(specviz_helper, spectrum1d):
+    label = "Test 1D Spectrum"
+    specviz_helper.load_spectrum(spectrum1d, data_label=label)
+
+    specviz_helper.app.state.drawer = True
+    tray_names = [ti['name'] for ti in specviz_helper.app.state.tray_items]
+    plugin_index = tray_names.index('specviz-line-analysis')
+    specviz_helper.app.state.tray_items_open = [plugin_index]
+
+    # continuum should be created, plotted, and visible
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+    continuum_marks = [m for m in sv.figure.marks if isinstance(m, LineAnalysisContinuum)]
+    assert len(continuum_marks) == 3
+    assert np.all([cm.visible for cm in continuum_marks])
+
+    # add a region and rerun stats for that region
+    sv.apply_roi(XRangeROI(6500, 8000))
+    specviz_helper.app.state.drawer = True
+
+    plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
+    assert 'Subset 1' in plugin.spectral_subset.labels
+
+    plugin.spectral_subset_selected = 'Subset 1'
+    plugin.continuum_subset_selected = 'Surrounding'
+    plugin.width = 3
+
+    # Values have not yet been validated
+    assert np.allclose(float(plugin.results[0]['result']), 39.76685499263615, atol=1e-5)
+
+
+def test_continuum_surrounding_no_left(specviz_helper, spectrum1d):
+    label = "Test 1D Spectrum"
+    specviz_helper.load_spectrum(spectrum1d, data_label=label)
+
+    specviz_helper.app.state.drawer = True
+    tray_names = [ti['name'] for ti in specviz_helper.app.state.tray_items]
+    plugin_index = tray_names.index('specviz-line-analysis')
+    specviz_helper.app.state.tray_items_open = [plugin_index]
+
+    # continuum should be created, plotted, and visible
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+    continuum_marks = [m for m in sv.figure.marks if isinstance(m, LineAnalysisContinuum)]
+    assert len(continuum_marks) == 3
+    assert np.all([cm.visible for cm in continuum_marks])
+
+    # add a region and rerun stats for that region
+    sv.apply_roi(XRangeROI(6000, 7500))
+    specviz_helper.app.state.drawer = True
+
+    plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
+    assert 'Subset 1' in plugin.spectral_subset.labels
+
+    plugin.spectral_subset_selected = 'Subset 1'
+    plugin.continuum_subset_selected = 'Surrounding'
+    plugin.width = 3
+
+    # Values have not yet been validated
+    assert np.allclose(float(plugin.results[0]['result']), 146.67186446784513, atol=1e-5)
+
+
+def test_subset_changed(specviz_helper, spectrum1d):
+    label = "Test 1D Spectrum"
+    specviz_helper.load_spectrum(spectrum1d, data_label=label)
+
+    specviz_helper.app.state.drawer = True
+    tray_names = [ti['name'] for ti in specviz_helper.app.state.tray_items]
+    plugin_index = tray_names.index('specviz-line-analysis')
+    specviz_helper.app.state.tray_items_open = [plugin_index]
+
+    # continuum should be created, plotted, and visible
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+    continuum_marks = [m for m in sv.figure.marks if isinstance(m, LineAnalysisContinuum)]
+    assert len(continuum_marks) == 3
+    assert np.all([cm.visible for cm in continuum_marks])
+
+    # add a region and rerun stats for that region
+    sv.apply_roi(XRangeROI(6000, 7500))
+    specviz_helper.app.state.drawer = True
+
+    plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
+    assert 'Subset 1' in plugin.spectral_subset.labels
+
+    plugin.spectral_subset_selected = 'Subset 1'
+    plugin.continuum_subset_selected = 'Surrounding'
+    plugin.width = 3
+
+    sv.apply_roi(XRangeROI(6500, 7500))
+    specviz_helper.app.state.drawer = True
+
+    # Values have not yet been validated
+    assert np.allclose(float(plugin.results[0]['result']), 350.89288537581467, atol=1e-5)

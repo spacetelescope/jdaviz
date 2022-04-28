@@ -205,11 +205,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             self.update_results(None)
             return
 
-        if self.spectral_subset_selected != "Surrounding":
-            sr = self.app.get_subsets_from_viewer("spectrum-viewer",
-                                                  subset_type="spectral").get(self.spectral_subset_selected) # noqa
-        else:
-            sr = None
+        sr = self.app.get_subsets_from_viewer("spectrum-viewer",
+                                              subset_type="spectral").get(self.spectral_subset_selected) # noqa
 
         if self.spectral_subset_selected == "Entire Spectrum":
             spectrum = full_spectrum
