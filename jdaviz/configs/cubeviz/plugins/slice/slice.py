@@ -84,7 +84,7 @@ class Slice(TemplateMixin):
 
     def _update_reference_data(self, reference_data):
         if reference_data is None:
-            return
+            return  # pragma: no cover
         self._update_data(reference_data.get_object(cls=Spectrum1D).spectral_axis)
 
     def _update_data(self, x_all):
@@ -119,7 +119,7 @@ class Slice(TemplateMixin):
         self.slider = msg.slice
 
     def vue_change_wavelength(self, event):
-        # convert to float after stripping any invalid characters
+        # convert to float (JS handles stripping any invalid characters)
         try:
             value = float(event)
         except ValueError:
