@@ -14,3 +14,4 @@ Here is some documentation specific for developers.
   ui_plugin_components
   specviz_selection
   links
+  win_dev
