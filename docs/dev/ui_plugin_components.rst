@@ -56,12 +56,16 @@ something like ``@update:value="$emit('update_value', $event)"`` in the relevant
 * overrides ``getattr`` and ``setattr`` to redirect any calls to the internal traitlet attributes
   to those in the plugin.
 
-Considerations
---------------
+Motivations for this Design
+---------------------------
+
+We converged on this framework for several reasons (compared to alternate options).  If ever
+considering changing to a different architecture, the following should be considered there as well:
 
 * Each class can only subscribe to each `~glue.core.message.Message` object once (via ``self.hub.subscribe``),
   without introducing extra wrappers.  By isolating the component-logic from the plugin, the
-  component and the plugin itself can subscribe to the same message without issues.
+  component and the plugin itself can subscribe to the same message without issues which makes
+  writing a plugin simpler without having to worry about breaking any message subscriptions.
 * Having all the logic in a Mixin, instead of a Mixin wrapping around a separate "component" class
   would also prevent the ability to have multiple instances
   of the same component within a single plugin.  This is needed in several places: subsets in line
@@ -70,5 +74,13 @@ Considerations
   individually) would complicate communication between components.  The component would need its own
   traitlets which are then synced to traitlets in the plugin and/or message events would need to be
   used.
+
+Considerations when Writing/Using Components
+--------------------------------------------
+  
 * Plugin components are specifically designed to be used within plugins, and should not be used
   elsewhere.
+* Plugin components must use ``add_observe`` instead of ``@observe`` for any traitlets referenced
+  from the plugin itself.
+* Plugins should use the Mixin whenever appropriate for so attributes are named consistently across
+  plugins.
