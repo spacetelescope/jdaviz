@@ -79,4 +79,5 @@ jobs:
       if: "contains(matrix.toxenv, '-cov')"
       uses: codecov/codecov-action@v3
       with:
-          files: /home/runner/work/jdaviz/jdaviz/coverage.xml
+          files: ./coverage.xml
+          version: 0.1.22
