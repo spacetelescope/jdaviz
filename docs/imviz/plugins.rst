@@ -95,7 +95,7 @@ an interactively selected region. A typical workflow is as follows:
 4. Select the desired region using the :guilabel:`Subset` drop-down menu.
 5. If you want to subtract background before performing photometry,
    you have the following 3 options. Otherwise if your image is already
-   background subtracted, leave it at 0:
+   background subtracted, choose "Manual" and leave the background set at 0:
 
   * Manual: Enter the background value in the :guilabel:`Background value` field.
     This value must be in the same unit as display data, if applicable.
@@ -103,7 +103,7 @@ an interactively selected region. A typical workflow is as follows:
     and :guilabel:`Annulus width`, respectively. Median of the pixels within
     the annulus region will be used but the annulus shape will not be shown on display.
   * Subset: Define a region for background calculation (median) using Subset draw tool
-    and select that region using the :guilabel:`Subset (background)` drop-down menu.
+    and select that region using the :guilabel:`Background` drop-down menu.
 
 6. For some JWST and HST images, pixel area in arcsec squared is automatically
    populated in the :guilabel:`Pixel area` field from image metadata. If it does
