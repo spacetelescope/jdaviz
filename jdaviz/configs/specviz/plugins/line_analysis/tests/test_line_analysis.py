@@ -256,17 +256,14 @@ def test_continuum_subset_spectral_subset2(specviz_helper, spectrum1d):
     specviz_helper.app.state.drawer = True
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
-    assert 'Subset 1' in plugin.spectral_subset.labels
-    assert 'Subset 2' in plugin.spectral_subset.labels
+    assert plugin.spectral_subset.labels == ['Entire Spectrum', 'Subset 1', 'Subset 2']
 
-    # TODO: Find why uncommenting the following line
-    #  causes a ValueError: zero-size array
-    # plugin.spectral_subset_selected = 'Subset 2'
+    plugin.spectral_subset_selected = 'Subset 2'
     plugin.continuum_subset_selected = 'Subset 1'
     plugin.width = 3
 
     # Values have not yet been validated
-    assert np.allclose(float(plugin.results[0]['result']), -264.7195451356822, atol=1e-5)
+    np.testing.assert_allclose(float(plugin.results[0]['result']), 32.520521, atol=1e-5)
 
 
 def test_continuum_surrounding_no_right(specviz_helper, spectrum1d):
