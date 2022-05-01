@@ -10,6 +10,9 @@ Cubeviz
 Imviz
 ^^^^^
 
+- New way to estimate background from annulus around aperture
+  in Simple Aperture Photometry plugin. [#1224]
+
 Mosviz
 ^^^^^^
 
@@ -24,6 +27,12 @@ Cubeviz
 
 Imviz
 ^^^^^
+
+- Line profile plot in Line Profile plugin no longer affects
+  radial profile plot in Simple Aperture Photometry plugin. [#1224]
+
+- Radial profile plot in Simple Aperture Photometry plugin
+  no longer shows masked aperture data. [#1224]
 
 Mosviz
 ^^^^^^

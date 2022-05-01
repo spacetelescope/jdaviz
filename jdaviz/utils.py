@@ -114,3 +114,13 @@ def enable_hot_reloading():
         print((
             'Watchdog module, needed for hot reloading, not found.'
             ' Please install with `pip install watchdog`'))
+
+
+def bqplot_clear_figure(fig):
+    """Clears a given ``bqplot.Figure`` to mimic matplotlib ``clf()``.
+    This is necessary when we draw multiple plots across different plugins.
+    """
+    # Clear bqplot figure (copied from bqplot/pyplot.py)
+    fig.marks = []
+    fig.axes = []
+    setattr(fig, 'axis_registry', {})

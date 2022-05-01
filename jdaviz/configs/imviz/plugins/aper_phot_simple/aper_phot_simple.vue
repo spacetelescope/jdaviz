@@ -33,10 +33,35 @@
           hint="Select subset region for background calculation."
         />
 
+        <v-row v-if="bg_subset_selected=='Annulus'">
+          <v-text-field
+            label="Annulus inner radius"
+            v-model.number="bg_annulus_inner_r"
+            type="number"
+            :rules="[() => bg_annulus_inner_r>0 || 'Must be positive.']"
+            hint="Background annulus inner radius in pixels"
+            persistent-hint
+          >
+          </v-text-field>
+        </v-row>
+
+        <v-row v-if="bg_subset_selected=='Annulus'">
+          <v-text-field
+            label="Annulus width"
+            v-model.number="bg_annulus_width"
+            type="number"
+            :rules="[() => bg_annulus_width>0 || 'Must be positive.']"
+            hint="Background annulus width in pixels (inner radius + width = outer radius)"
+            persistent-hint
+          >
+          </v-text-field>
+        </v-row>
+
         <v-row>
           <v-text-field
             label="Background value"
-            v-model="background_value"
+            v-model.number="background_value"
+            type="number"
             hint="Background to subtract, same unit as data"
             :disabled="bg_subset_selected!='Manual'"
             persistent-hint
@@ -47,7 +72,8 @@
         <v-row>
           <v-text-field
             label="Pixel area"
-            v-model="pixel_area"
+            v-model.number="pixel_area"
+            type="number"
             hint="Pixel area in arcsec squared, only used if sr in data unit"
             persistent-hint
           >
@@ -57,7 +83,8 @@
         <v-row>
           <v-text-field
             label="Counts conversion factor"
-            v-model="counts_factor"
+            v-model.number="counts_factor"
+            type="number"
             hint="Factor to convert data unit to counts, in unit of flux/counts"
             persistent-hint
           >
@@ -67,7 +94,8 @@
         <v-row>
           <v-text-field
             label="Flux scaling"
-            v-model="flux_scaling"
+            v-model.number="flux_scaling"
+            type="number"
             hint="Same unit as data, used in -2.5 * log(flux / flux_scaling)"
             persistent-hint
           >

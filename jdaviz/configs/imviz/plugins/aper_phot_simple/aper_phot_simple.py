@@ -1,18 +1,22 @@
 from datetime import datetime
 
+import bqplot
 import numpy as np
 from astropy import units as u
 from astropy.table import QTable
 from astropy.time import Time
-from bqplot import pyplot as bqplt
 from ipywidgets import widget_serialization
 from photutils.aperture import ApertureStats
+from regions import (CircleAnnulusPixelRegion, CirclePixelRegion, EllipsePixelRegion,
+                     RectanglePixelRegion)
 from traitlets import Any, Bool, List, Unicode, observe
 
+from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.region_translators import regions2aperture
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin, DatasetSelectMixin, SubsetSelect
+from jdaviz.utils import bqplot_clear_figure
 
 __all__ = ['SimpleAperturePhotometry']
 
@@ -25,6 +29,8 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
     bg_subset_items = List().tag(sync=True)
     bg_subset_selected = Unicode("").tag(sync=True)
     background_value = Any(0).tag(sync=True)
+    bg_annulus_inner_r = FloatHandleEmpty(0).tag(sync=True)
+    bg_annulus_width = FloatHandleEmpty(10).tag(sync=True)
     pixel_area = Any(0).tag(sync=True)
     counts_factor = Any(0).tag(sync=True)
     flux_scaling = Any(0).tag(sync=True)
@@ -48,10 +54,12 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
                                       'bg_subset_items',
                                       'bg_subset_selected',
                                       default_text='Manual',
+                                      manual_options=['Manual', 'Annulus'],
                                       allowed_type='spatial')
 
         self._selected_data = None
         self._selected_subset = None
+        self._fig = bqplot.Figure()
         self.plot_types = ["Radial Profile", "Radial Profile (Raw)"]
         self.current_plot_type = self.plot_types[0]
 
@@ -60,7 +68,7 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
         self.results = []
         self.plot_available = False
         self.radial_plot = ''
-        bqplt.clear()
+        bqplot_clear_figure(self._fig)
 
     @observe('dataset_selected')
     def _dataset_selected_changed(self, event={}):
@@ -108,11 +116,10 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
                 f"Failed to extract {self.dataset_selected}: {repr(e)}",
                 color='error', sender=self))
 
-        # Auto-populate background, if applicable
-        self._bg_subset_selected_changed()
-
-        # update self._selected_subset with the new self._selected_data
+        # Update self._selected_subset with the new self._selected_data
+        # and auto-populate background, if applicable.
         self._subset_selected_changed()
+        self._bg_subset_selected_changed()
 
     def _get_region_from_subset(self, subset):
         for subset_grp in self.app.data_collection.subset_groups:
@@ -135,11 +142,49 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
         try:
             self._selected_subset = self._get_region_from_subset(subset_selected)
             self._selected_subset.meta['label'] = subset_selected
+
+            if isinstance(self._selected_subset, CirclePixelRegion):
+                self.bg_annulus_inner_r = self._selected_subset.radius
+            elif isinstance(self._selected_subset, EllipsePixelRegion):
+                self.bg_annulus_inner_r = max(self._selected_subset.width,
+                                              self._selected_subset.height) * 0.5
+            elif isinstance(self._selected_subset, RectanglePixelRegion):
+                self.bg_annulus_inner_r = np.sqrt(self._selected_subset.width ** 2 +
+                                                  self._selected_subset.height ** 2) * 0.5
+            else:  # pragma: no cover
+                raise TypeError(f'Unsupported region shape: {self._selected_subset.__class__}')
+
         except Exception as e:
             self._selected_subset = None
             self.reset_results()
             self.hub.broadcast(SnackbarMessage(
                 f"Failed to extract {subset_selected}: {repr(e)}", color='error', sender=self))
+
+    def _calc_bg_subset_median(self, reg):
+        # Basically same way image stats are calculated in vue_do_aper_phot()
+        # except here we only care about one stat for the background.
+        data = self._selected_data
+        comp = data.get_component(data.main_components[0])
+        aper_mask_stat = reg.to_mask(mode='center')
+        img_stat = aper_mask_stat.get_values(comp.data, mask=None)
+
+        # photutils/background/_utils.py --> nanmedian()
+        return np.nanmedian(img_stat)  # Naturally in data unit
+
+    @observe('bg_annulus_inner_r', 'bg_annulus_width')
+    def _bg_annulus_updated(self, *args):
+        if self.bg_subset_selected != 'Annulus':
+            return
+
+        try:
+            inner_r = float(self.bg_annulus_inner_r)
+            reg = CircleAnnulusPixelRegion(
+                self._selected_subset.center, inner_radius=inner_r,
+                outer_radius=inner_r + float(self.bg_annulus_width))
+            self.background_value = self._calc_bg_subset_median(reg)
+
+        except Exception:  # Error snackbar suppressed to prevent excessive queue.
+            self.background_value = 0
 
     @observe('bg_subset_selected')
     def _bg_subset_selected_changed(self, event={}):
@@ -147,19 +192,13 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
         if bg_subset_selected == 'Manual':
             # we'll later access the user's self.background_value directly
             return
+        if bg_subset_selected == 'Annulus':
+            self._bg_annulus_updated()
+            return
 
         try:
-            # Basically same way image stats are calculated in vue_do_aper_phot()
-            # except here we only care about one stat for the background.
-            data = self._selected_data
             reg = self._get_region_from_subset(bg_subset_selected)
-            comp = data.get_component(data.main_components[0])
-            aper_mask_stat = reg.to_mask(mode='center')
-            img_stat = aper_mask_stat.get_values(comp.data, mask=None)
-
-            # photutils/background/_utils.py --> nanmedian()
-            self.background_value = np.nanmedian(img_stat)  # Naturally in data unit
-
+            self.background_value = self._calc_bg_subset_median(reg)
         except Exception as e:
             self.background_value = 0
             self.hub.broadcast(SnackbarMessage(
@@ -271,31 +310,36 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
             reg_ogrid = np.ogrid[reg_bb.iymin:reg_bb.iymax, reg_bb.ixmin:reg_bb.ixmax]
             radial_dx = reg_ogrid[1] - aperture.positions[0]
             radial_dy = reg_ogrid[0] - aperture.positions[1]
-            radial_r = np.hypot(radial_dx, radial_dy).ravel()  # pix
-            radial_img = phot_aperstats.data_cutout.data.ravel()  # data unit
+            radial_cutout = phot_aperstats.data_cutout
+            radial_r = np.hypot(radial_dx, radial_dy)[~radial_cutout.mask].ravel()  # pix
+            radial_img = radial_cutout.compressed()  # data unit
 
             # Radial profile
+            bqplot_clear_figure(self._fig)
+            self._fig.title = 'Radial profile from Subset center'  # TODO: Jenn wants title at bottom.  # noqa
+            self._fig.title_style = {'font-size': '12px'}
+            # NOTE: default margin in bqplot is 60 in all directions
+            self._fig.fig_margin = {'top': 60, 'bottom': 60, 'left': 40, 'right': 10}
+            line_x_sc = bqplot.LinearScale()
+            line_y_sc = bqplot.LinearScale()
+            self._fig.axes = [bqplot.Axis(scale=line_x_sc, label='pix'),
+                              bqplot.Axis(scale=line_y_sc, orientation='vertical',
+                                          label=comp.units or 'Value')]
+
             if self.current_plot_type == "Radial Profile":
                 # This algorithm is from the imexam package,
                 # see licenses/IMEXAM_LICENSE.txt for more details
                 radial_r = list(radial_r)
                 y_data = np.bincount(radial_r, radial_img) / np.bincount(radial_r)
-                radial_r = np.arange(y_data.size)
-                markerstyle = '--o'
-                bqplot_kw = {'marker_size': 32}
+                bqplot_line = bqplot.Lines(x=np.arange(y_data.size), y=y_data, marker='circle',
+                                           scales={'x': line_x_sc, 'y': line_y_sc},
+                                           marker_size=32, colors='gray')
             else:
-                y_data = radial_img
-                markerstyle = 'o'
-                bqplot_kw = {'default_size': 1}
+                bqplot_line = bqplot.Scatter(x=radial_r, y=radial_img, marker='circle',
+                                             scales={'x': line_x_sc, 'y': line_y_sc},
+                                             default_size=1, colors='gray')
 
-            bqplt.clear()
-            # NOTE: default margin in bqplot is 60 in all directions
-            fig = bqplt.figure(1, title='Radial profile from Subset center',
-                               fig_margin={'top': 60, 'bottom': 60, 'left': 40, 'right': 10},
-                               title_style={'font-size': '12px'})  # TODO: Jenn wants title at bottom. # noqa
-            bqplt.plot(radial_r, y_data, markerstyle, figure=fig, colors='gray', **bqplot_kw)
-            bqplt.xlabel(label='pix', mark=fig.marks[-1], figure=fig)
-            bqplt.ylabel(label=comp.units or 'Value', mark=fig.marks[-1], figure=fig)
+            self._fig.marks = [bqplot_line]
 
         except Exception as e:  # pragma: no cover
             self.reset_results()
@@ -326,6 +370,6 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
                     tmp.append({'function': key, 'result': str(x)})
             self.results = tmp
             self.result_available = True
-            self.radial_plot = fig
-            self.bqplot_figs_resize = [fig]
+            self.radial_plot = self._fig
+            self.bqplot_figs_resize = [self._fig]
             self.plot_available = True
