@@ -15,6 +15,9 @@ Imviz
 - New way to estimate background from annulus around aperture
   in Simple Aperture Photometry plugin. [#1224]
 
+- New curve of growth plot available in Simple Aperture
+  Photometry plugin. [#1287]
+
 Mosviz
 ^^^^^^
 

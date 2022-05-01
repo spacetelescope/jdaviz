@@ -6,7 +6,8 @@ from astropy import units as u
 from astropy.table import QTable
 from astropy.time import Time
 from ipywidgets import widget_serialization
-from photutils.aperture import ApertureStats
+from photutils.aperture import (ApertureStats, CircularAperture, EllipticalAperture,
+                                RectangularAperture)
 from regions import (CircleAnnulusPixelRegion, CirclePixelRegion, EllipsePixelRegion,
                      RectanglePixelRegion)
 from traitlets import Any, Bool, List, Unicode, observe
@@ -60,7 +61,7 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
         self._selected_data = None
         self._selected_subset = None
         self._fig = bqplot.Figure()
-        self.plot_types = ["Radial Profile", "Radial Profile (Raw)"]
+        self.plot_types = ["Curve of Growth", "Radial Profile", "Radial Profile (Raw)"]
         self.current_plot_type = self.plot_types[0]
 
     def reset_results(self):
@@ -305,39 +306,54 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
                     phot_table['id'][0] = 1
                     self.app._aper_phot_results = phot_table
 
-            # Radial profile (Raw)
-            reg_bb = phot_aperstats.bbox
-            reg_ogrid = np.ogrid[reg_bb.iymin:reg_bb.iymax, reg_bb.ixmin:reg_bb.ixmax]
-            radial_dx = reg_ogrid[1] - aperture.positions[0]
-            radial_dy = reg_ogrid[0] - aperture.positions[1]
-            radial_cutout = phot_aperstats.data_cutout
-            radial_r = np.hypot(radial_dx, radial_dy)[~radial_cutout.mask].ravel()  # pix
-            radial_img = radial_cutout.compressed()  # data unit
-
-            # Radial profile
+            # Plots.
+            # TODO: Jenn wants title at bottom.
             bqplot_clear_figure(self._fig)
-            self._fig.title = 'Radial profile from Subset center'  # TODO: Jenn wants title at bottom.  # noqa
             self._fig.title_style = {'font-size': '12px'}
             # NOTE: default margin in bqplot is 60 in all directions
             self._fig.fig_margin = {'top': 60, 'bottom': 60, 'left': 40, 'right': 10}
             line_x_sc = bqplot.LinearScale()
             line_y_sc = bqplot.LinearScale()
-            self._fig.axes = [bqplot.Axis(scale=line_x_sc, label='pix'),
-                              bqplot.Axis(scale=line_y_sc, orientation='vertical',
-                                          label=comp.units or 'Value')]
 
-            if self.current_plot_type == "Radial Profile":
-                # This algorithm is from the imexam package,
-                # see licenses/IMEXAM_LICENSE.txt for more details
-                radial_r = list(radial_r)
-                y_data = np.bincount(radial_r, radial_img) / np.bincount(radial_r)
-                bqplot_line = bqplot.Lines(x=np.arange(y_data.size), y=y_data, marker='circle',
+            if self.current_plot_type == "Curve of Growth":
+                self._fig.title = 'Curve of growth from Subset center'
+                x_arr, sum_arr, x_label, y_label = _curve_of_growth(
+                    comp_data, aperture, phot_table['sum'][0], wcs=data.coords,
+                    background=bg, pixarea_fac=pixarea_fac)
+                self._fig.axes = [bqplot.Axis(scale=line_x_sc, label=x_label),
+                                  bqplot.Axis(scale=line_y_sc, orientation='vertical',
+                                              label=y_label)]
+                bqplot_line = bqplot.Lines(x=x_arr, y=sum_arr, marker='circle',
                                            scales={'x': line_x_sc, 'y': line_y_sc},
                                            marker_size=32, colors='gray')
+
             else:
-                bqplot_line = bqplot.Scatter(x=radial_r, y=radial_img, marker='circle',
-                                             scales={'x': line_x_sc, 'y': line_y_sc},
-                                             default_size=1, colors='gray')
+                # Radial profile
+                reg_bb = phot_aperstats.bbox
+                reg_ogrid = np.ogrid[reg_bb.iymin:reg_bb.iymax, reg_bb.ixmin:reg_bb.ixmax]
+                radial_dx = reg_ogrid[1] - aperture.positions[0]
+                radial_dy = reg_ogrid[0] - aperture.positions[1]
+                radial_cutout = phot_aperstats.data_cutout
+                radial_r = np.hypot(radial_dx, radial_dy)[~radial_cutout.mask].ravel()  # pix
+                radial_img = radial_cutout.compressed()  # data unit
+                self._fig.axes = [bqplot.Axis(scale=line_x_sc, label='pix'),
+                                  bqplot.Axis(scale=line_y_sc, orientation='vertical',
+                                              label=comp.units or 'Value')]
+
+                if self.current_plot_type == "Radial Profile":
+                    self._fig.title = 'Radial profile from Subset center'
+                    # This algorithm is from the imexam package,
+                    # see licenses/IMEXAM_LICENSE.txt for more details
+                    radial_r = list(radial_r)
+                    y_data = np.bincount(radial_r, radial_img) / np.bincount(radial_r)
+                    bqplot_line = bqplot.Lines(x=np.arange(y_data.size), y=y_data, marker='circle',
+                                               scales={'x': line_x_sc, 'y': line_y_sc},
+                                               marker_size=32, colors='gray')
+                else:  # Radial Profile (Raw)
+                    self._fig.title = 'Raw radial profile from Subset center'
+                    bqplot_line = bqplot.Scatter(x=radial_r, y=radial_img, marker='circle',
+                                                 scales={'x': line_x_sc, 'y': line_y_sc},
+                                                 default_size=1, colors='gray')
 
             self._fig.marks = [bqplot_line]
 
@@ -373,3 +389,91 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
             self.radial_plot = self._fig
             self.bqplot_figs_resize = [self._fig]
             self.plot_available = True
+
+
+# NOTE: This is hidden because the API is for internal use only
+# but we need it as a separate function for unit testing.
+def _curve_of_growth(data, aperture, final_sum, wcs=None, background=0, n_datapoints=10,
+                     pixarea_fac=None):
+    """Calculate curve of growth for aperture photometry.
+
+    Parameters
+    ----------
+    data : ndarray or `~astropy.units.Quantity`
+        Data for the calculation.
+
+    aperture : obj
+        ``photutils`` aperture object.
+
+    final_sum : float or `~astropy.units.Quantity`
+        Aperture sum that is already calculated in the
+        main plugin above.
+
+    wcs : obj or `None`
+        Supported WCS objects or `None`.
+
+    background : float or `~astropy.units.Quantity`
+        Background to subtract, if any. Unit must match ``data``.
+
+    n_datapoints : int
+        Number of data points in the curve.
+
+    pixarea_fac : float or `None`
+        For ``flux_unit/sr`` to ``flux_unit`` conversion.
+
+    Returns
+    -------
+    x_arr : ndarray
+        Data for X-axis of the curve.
+
+    sum_arr : ndarray or `~astropy.units.Quantity`
+        Data for Y-axis of the curve.
+
+    x_label, y_label : str
+        X- and Y-axis labels, respectively.
+
+    Raises
+    ------
+    TypeError
+        Unsupported aperture.
+
+    """
+    n_datapoints += 1  # n + 1
+
+    if isinstance(aperture, CircularAperture):
+        x_label = 'Radius (pix)'
+        x_arr = np.linspace(0, aperture.r, num=n_datapoints)[1:]
+        aper_list = [CircularAperture(aperture.positions, cur_r) for cur_r in x_arr[:-1]]
+    elif isinstance(aperture, EllipticalAperture):
+        x_label = 'Semimajor axis (pix)'
+        x_arr = np.linspace(0, aperture.a, num=n_datapoints)[1:]
+        a_arr = x_arr[:-1]
+        b_arr = aperture.b * a_arr / aperture.a
+        aper_list = [EllipticalAperture(aperture.positions, cur_a, cur_b, theta=aperture.theta)
+                     for (cur_a, cur_b) in zip(a_arr, b_arr)]
+    elif isinstance(aperture, RectangularAperture):
+        x_label = 'Width (pix)'
+        x_arr = np.linspace(0, aperture.w, num=n_datapoints)[1:]
+        w_arr = x_arr[:-1]
+        h_arr = aperture.h * w_arr / aperture.w
+        aper_list = [RectangularAperture(aperture.positions, cur_w, cur_h, theta=aperture.theta)
+                     for (cur_w, cur_h) in zip(w_arr, h_arr)]
+    else:
+        raise TypeError(f'Unsupported aperture: {aperture}')
+
+    sum_arr = [ApertureStats(data, cur_aper, wcs=wcs, local_bkg=background).sum
+               for cur_aper in aper_list]
+    if isinstance(sum_arr[0], u.Quantity):
+        sum_arr = u.Quantity(sum_arr)
+    else:
+        sum_arr = np.array(sum_arr)
+    if pixarea_fac is not None:
+        sum_arr = sum_arr * pixarea_fac
+    sum_arr = np.append(sum_arr, final_sum)
+
+    if isinstance(sum_arr, u.Quantity):
+        y_label = sum_arr.unit.to_string()
+    else:
+        y_label = 'Value'
+
+    return x_arr, sum_arr, x_label, y_label
