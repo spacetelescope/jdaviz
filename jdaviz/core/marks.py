@@ -2,7 +2,6 @@ from astropy import units as u
 from bqplot.marks import Lines, Scatter
 from glue.core import HubListener
 from specutils import Spectrum1D
-from echo import delay_callback
 
 from jdaviz.core.events import SliceToolStateMessage, LineIdentifyMessage
 
@@ -29,9 +28,8 @@ class BaseUnitLine(Lines, HubListener):
                 self._native_y = value
         return super().__setattr__(attr, value)
 
-    def set_native_units(self, viewer, xunit, yunit):
+    def set_native_units(self, xunit, yunit):
         # will need to call this somewhere once the data is added to the data_collection
-        self._viewer = viewer
         self._native_xunit = u.Unit(xunit)
         self._native_yunit = u.Unit(yunit)
 
@@ -55,9 +53,6 @@ class BaseUnitLine(Lines, HubListener):
         if self._native_xunit is None or self._native_yunit is None:
             raise ValueError("native units have not (yet) been set, cannot set display units")
         self._changing_units = True
-        prev_xunit, prev_yunit = self.xunit, self.yunit
-        prev_xmin, prev_xmax = self._viewer.state.x_min, self._viewer.state.x_max
-        prev_ymin, prev_ymax = self._viewer.state.y_min, self._viewer.state.y_max
         if xunit is not None:
             self.x = (self._native_x * self._native_xunit).to_value(xunit)
             self._xunit = u.Unit(xunit)
@@ -65,11 +60,7 @@ class BaseUnitLine(Lines, HubListener):
             self.y = (self._native_y * self._native_yunit).to_value(yunit)
             self._yunit = u.Unit(yunit)
         self._changing_units = False
-        with delay_callback(self._viewer.state, 'x_min', 'x_max', 'y_min', 'y_max'):
-            self._viewer.state.x_min = (prev_xmin * prev_xunit).to_value(self.xunit)
-            self._viewer.state.x_max = (prev_xmax * prev_xunit).to_value(self.xunit)
-            self._viewer.state.y_min = (prev_ymin * prev_yunit).to_value(self.yunit)
-            self._viewer.state.y_max = (prev_ymax * prev_yunit).to_value(self.yunit)
+
         return self.xunit, self.yunit
 
 
@@ -357,7 +348,3 @@ class LineUncertainties(Lines):
 class ScatterMask(Scatter):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-
-
-### Need to have glue get our subclass in place of bqplot.Lines
-Lines = BaseUnitLine

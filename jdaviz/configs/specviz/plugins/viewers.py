@@ -1,6 +1,7 @@
 import numpy as np
 import warnings
 
+from echo import delay_callback
 from glue.core import BaseData
 from glue.core.subset import Subset
 from glue.config import data_translator
@@ -53,6 +54,9 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._initialize_toolbar_nested(default_tool_priority=['jdaviz:selectslice'])
+
+        self._xunit = None
+        self._yunit = None
 
         self.display_uncertainties = False
         self.display_mask = False
@@ -458,9 +462,46 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
                 # Add error lines to viewer
                 self.figure.marks = list(self.figure.marks) + [error_line_mark]
 
+    @property
+    def xunit(self):
+        return self._xunit if self._xunit is not None else u.Unit()
+
+    @property
+    def yunit(self):
+        return self._yunit if self._yunit is not None else u.Unit()
+
+    def set_display_units(self, xunit=None, yunit=None):
+        prev_xunit, prev_yunit = self.xunit, self.yunit
+        prev_xmin, prev_xmax = self.state.x_min, self.state.x_max
+        prev_ymin, prev_ymax = self.state.y_min, self.state.y_max
+
+        for mark in self.figure.marks:
+            if hasattr(mark, 'set_display_units'):
+                if mark._native_xunit is None:
+                    mark.set_native_units(xunit=self.xunit, yunit=self.yunit)
+                mark.set_display_units(xunit=xunit, yunit=yunit)
+
+        if xunit is not None:
+            self._xunit = u.Unit(xunit)
+        if yunit is not None:
+            self._yunit = u.Unit(yunit)
+
+        # update limits
+        with delay_callback(self.state, 'x_min', 'x_max', 'y_min', 'y_max'):
+            self.state.x_min = (prev_xmin * prev_xunit).to_value(self.xunit)
+            self.state.x_max = (prev_xmax * prev_xunit).to_value(self.xunit)
+            self.state.y_min = (prev_ymin * prev_yunit).to_value(self.yunit)
+            self.state.y_max = (prev_ymax * prev_yunit).to_value(self.yunit)
+
+        self.set_plot_axes()
+
     def set_plot_axes(self):
         # Get data to be used for axes labels
         data = self.data()[0]
+        if self._xunit is None:
+            self._xunit = data.spectral_axis.unit
+        if self._yunit is None:
+            self._yunit = data.flux.unit
 
         # Set axes labels for the spectrum viewer
         spectral_axis_unit_type = str(data.spectral_axis.unit.physical_type).title()
@@ -472,9 +513,9 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
         elif data.spectral_axis.unit.is_equivalent(u.pixel):
             spectral_axis_unit_type = "pixel"
 
-        label_0 = f"{spectral_axis_unit_type} [{data.spectral_axis.unit.to_string()}]"
+        label_0 = f"{spectral_axis_unit_type} [{self.xunit.to_string()}]"
         self.figure.axes[0].label = label_0
-        self.figure.axes[1].label = f"{flux_unit_type} [{data.flux.unit.to_string()}]"
+        self.figure.axes[1].label = f"{flux_unit_type} [{self.yunit.to_string()}]"
 
         # Make it so y axis label is not covering tick numbers.
         self.figure.axes[1].label_offset = "-50"
