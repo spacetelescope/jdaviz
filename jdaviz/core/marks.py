@@ -2,8 +2,75 @@ from astropy import units as u
 from bqplot.marks import Lines, Scatter
 from glue.core import HubListener
 from specutils import Spectrum1D
+from echo import delay_callback
 
 from jdaviz.core.events import SliceToolStateMessage, LineIdentifyMessage
+
+
+class BaseUnitLine(Lines, HubListener):
+    _changing_units = False
+
+    def __init__(self, x, y, **kwargs):
+        self._viewer = None
+        self._native_xunit = None
+        self._native_yunit = None
+        self._xunit = None
+        self._yunit = None
+        self._native_x = x
+        self._native_y = y
+
+        super().__init__(x=x, y=y, **kwargs)
+
+    def __setattr__(self, attr, value):
+        if not self._changing_units:
+            if attr == 'x':
+                self._native_x = value
+            elif attr == 'y':
+                self._native_y = value
+        return super().__setattr__(attr, value)
+
+    def set_native_units(self, viewer, xunit, yunit):
+        # will need to call this somewhere once the data is added to the data_collection
+        self._viewer = viewer
+        self._native_xunit = u.Unit(xunit)
+        self._native_yunit = u.Unit(yunit)
+
+    @property
+    def native_xunit(self):
+        return self._native_xunit
+
+    @property
+    def native_yunit(self):
+        return self._native_yunit
+
+    @property
+    def xunit(self):
+        return self._xunit if self._xunit is not None else self._native_xunit
+
+    @property
+    def yunit(self):
+        return self._yunit if self._yunit is not None else self._native_yunit
+
+    def set_display_units(self, xunit, yunit):
+        if self._native_xunit is None or self._native_yunit is None:
+            raise ValueError("native units have not (yet) been set, cannot set display units")
+        self._changing_units = True
+        prev_xunit, prev_yunit = self.xunit, self.yunit
+        prev_xmin, prev_xmax = self._viewer.state.x_min, self._viewer.state.x_max
+        prev_ymin, prev_ymax = self._viewer.state.y_min, self._viewer.state.y_max
+        if xunit is not None:
+            self.x = (self._native_x * self._native_xunit).to_value(xunit)
+            self._xunit = u.Unit(xunit)
+        if yunit is not None:
+            self.y = (self._native_y * self._native_yunit).to_value(yunit)
+            self._yunit = u.Unit(yunit)
+        self._changing_units = False
+        with delay_callback(self._viewer.state, 'x_min', 'x_max', 'y_min', 'y_max'):
+            self._viewer.state.x_min = (prev_xmin * prev_xunit).to_value(self.xunit)
+            self._viewer.state.x_max = (prev_xmax * prev_xunit).to_value(self.xunit)
+            self._viewer.state.y_min = (prev_ymin * prev_yunit).to_value(self.yunit)
+            self._viewer.state.y_max = (prev_ymax * prev_yunit).to_value(self.yunit)
+        return self.xunit, self.yunit
 
 
 class BaseSpectrumVerticalLine(Lines, HubListener):
