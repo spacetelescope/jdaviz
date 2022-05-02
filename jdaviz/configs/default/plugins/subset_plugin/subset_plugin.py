@@ -1,3 +1,4 @@
+from glue.core.message import EditSubsetMessage, SubsetCreateMessage
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode)
 from glue_jupyter.widgets.subset_mode_vuetify import SelectionModeMenu
@@ -20,38 +21,53 @@ SUBSET_MODES = {
 
 @tray_registry('g-subset-plugin', label="Subset Tools")
 class SubsetPlugin(TemplateMixin):
-    template_file = __file__, "subset_tools.vue"
+    template_file = __file__, "subset_plugin.vue"
     select = List([]).tag(sync=True)
     subset_items = List([]).tag(sync=True)
-    subset_selected = List([]).tag(sync=True)
+    subset_selected = Unicode("No selection (create new)").tag(sync=True)
     mode_selected = Unicode('add').tag(sync=True)
-    subset_selected_plugin = Unicode('').tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.components = {
-            'g-subset-select': SubsetSelect(session=self.session),
             'g-subset-mode': SelectionModeMenu(session=self.session)
         }
 
-        self.subset_items = self.components['g-subset-select'].available
-        self.subset_selected = self.components['g-subset-select'].selected
-        no_selection_text = self.components['g-subset-select'].no_selection_text
+        self.session.hub.subscribe(self, EditSubsetMessage,
+                              handler=self._sync_selected_from_state)
+        #self.session.hub.subscribe(self, SubsetCreateMessage,
+        #                      handler=self._sync_available_from_state)
 
+        no_selection_text = "No selection (create new)"
         self.subset_select = JSubsetSelect(self,
                                            'subset_items',
-                                           'subset_selected_plugin',
+                                           'subset_selected',
                                            default_text=no_selection_text)
 
-
-    @observe("subset_selected")
-    def _subset_selected_changed(self, event={}):
-        if isinstance(self.subset_selected, list):
-            self.subset_selected_plugin = self.subset_selected[0]
+    def _sync_selected_from_state(self, *args):
+        if self.session.edit_subset_mode.edit_subset == []:
+            self.subset_selected = "No selection (create new)"
         else:
-            raise ValueError(f"Got non-list subset selection: {self.subset_selected} "
-                             f"{type(self.subset_selected)}")
+            new_label = self.session.edit_subset_mode.edit_subset[0].label
+            print(new_label)
+            if new_label not in self.subset_items:
+                self.subset_items.append(new_label)
+            if new_label != self.subset_selected:
+                print(self.session.edit_subset_mode.edit_subset[0].label)
+                self.subset_selected = self.session.edit_subset_mode.edit_subset[0].label
+
+    #def _sync_available_from_state(self, *args):
+    #    self.available = [subset_to_dict(subset) for subset in
+    #                      self.data_collection.subset_groups]
+    #    if len(self.available) == 0:
+    #        self.selected = []
+
+    #@observe('subset_selected')
+    def _sync_selected_from_ui(self, change):
+        print(change['new'])
+        m = [s for s in self.app.data_collection.subset_groups if s.label == change['new']]
+        self.session.edit_subset_mode.edit_subset = m
 
     @observe("mode_selected")
     def _mode_selected_changed(self, event={}):
