@@ -1,5 +1,7 @@
-import numpy as np
 import os
+import warnings
+
+import numpy as np
 from glue.core.message import (SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from glue_jupyter.common.toolbar_vuetify import read_icon
@@ -205,11 +207,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             self.update_results(None)
             return
 
-        if self.spectral_subset_selected != "Surrounding":
-            sr = self.app.get_subsets_from_viewer("spectrum-viewer",
-                                                  subset_type="spectral").get(self.spectral_subset_selected) # noqa
-        else:
-            sr = None
+        sr = self.app.get_subsets_from_viewer("spectrum-viewer",
+                                              subset_type="spectral").get(self.spectral_subset_selected) # noqa
 
         if self.spectral_subset_selected == "Entire Spectrum":
             spectrum = full_spectrum
@@ -269,10 +268,15 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             else:
                 mark_x = {'left': spectral_axis_nanmasked[spectral_axis.value < sr.lower.value],
                           'right': spectral_axis_nanmasked[spectral_axis.value > sr.upper.value]}
-                # center should extend (at least) across the line region between the full
-                # range defined by the continuum subset(s)
-                left_min = np.nanmin([np.nanmin(mark_x['left']), sr.lower.value])
-                right_max = np.nanmax([np.nanmax(mark_x['right']), sr.upper.value])
+                # Center should extend (at least) across the line region between the full
+                # range defined by the continuum subset(s).
+                # OK for mark_x to be all NaNs.
+                with warnings.catch_warnings():
+                    warnings.simplefilter('ignore', category=RuntimeWarning)
+                    mark_x_min = np.nanmin(mark_x['left'])
+                    mark_x_max = np.nanmax(mark_x['right'])
+                left_min = np.nanmin([mark_x_min, sr.lower.value])
+                right_max = np.nanmax([mark_x_max, sr.upper.value])
                 mark_x['center'] = np.array([left_min, right_max])
 
         continuum_x = spectral_axis[continuum_mask].value
