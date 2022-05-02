@@ -6,6 +6,9 @@
 from ._astropy_init import *   # noqa
 # ----------------------------------------------------------------------------
 
+from glue_jupyter.bqplot.profile import layer_artist
+layer_artist.USE_GL = False
+
 # top-level API as exposed to users
 from jdaviz.app import *  # noqa
 from jdaviz.configs.specviz import Specviz, SpecViz  # noqa
@@ -14,3 +17,9 @@ from jdaviz.configs.mosviz import Mosviz, MosViz  # noqa
 from jdaviz.configs.cubeviz import Cubeviz, CubeViz  # noqa
 from jdaviz.configs.imviz import Imviz  # noqa
 from jdaviz.utils import enable_hot_reloading  # noqa
+
+import bqplot
+from jdaviz.core.marks import BaseUnitLine
+bqplot.Lines = BaseUnitLine
+
+del layer_artist, bqplot, BaseUnitLine

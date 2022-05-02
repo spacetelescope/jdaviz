@@ -357,3 +357,7 @@ class LineUncertainties(Lines):
 class ScatterMask(Scatter):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+
+### Need to have glue get our subclass in place of bqplot.Lines
+Lines = BaseUnitLine
