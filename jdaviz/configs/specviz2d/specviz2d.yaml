@@ -13,6 +13,7 @@ toolbar:
   - g-subset-tools
 tray:
   - g-plot-options
+  - g-subset-plugin
   - g-gaussian-smooth
   - g-model-fitting
   - g-unit-conversion

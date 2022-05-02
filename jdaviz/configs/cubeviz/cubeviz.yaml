@@ -16,6 +16,7 @@ toolbar:
   - g-subset-tools
 tray:
   - g-plot-options
+  - g-subset-plugin
   - cubeviz-slice
   - g-gaussian-smooth
   - g-collapse
