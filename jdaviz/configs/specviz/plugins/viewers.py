@@ -34,7 +34,7 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
     tools = ['bqplot:home',
              'jdaviz:boxzoom', 'jdaviz:xrangezoom',
              'bqplot:panzoom', 'bqplot:panzoom_x',
-             'bqplot:panzoom_y', 'bqplot:xrange',
+             'bqplot:panzoom_y', 'jdaviz:xrange',
              'jdaviz:selectline']
 
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
@@ -42,10 +42,13 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
                     ['bqplot:home'],
                     ['jdaviz:xrangezoom', 'jdaviz:boxzoom'],
                     ['bqplot:panzoom', 'bqplot:panzoom_x', 'bqplot:panzoom_y'],
-                    ['bqplot:xrange'],
+                    ['jdaviz:xrange'],
                     ['jdaviz:selectline'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
+
+    _x_equivalencies = u.spectral()
+    _y_equivalencies = []
 
     default_class = Spectrum1D
     spectral_lines = None
@@ -479,7 +482,8 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
             if hasattr(mark, 'set_display_units'):
                 if mark._native_xunit is None:
                     mark.set_native_units(xunit=self.xunit, yunit=self.yunit)
-                    mark._x_equivalencies = u.spectral()
+                    mark._x_equivalencies = self._x_equivalencies
+                    mark._y_equivalencies = self._y_equivalencies
                 mark.set_display_units(xunit=xunit, yunit=yunit)
 
         if xunit is not None:
@@ -489,10 +493,10 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
 
         # update limits
         with delay_callback(self.state, 'x_min', 'x_max', 'y_min', 'y_max'):
-            self.state.x_min = (prev_xmin * prev_xunit).to_value(self.xunit, equivalencies=u.spectral())
-            self.state.x_max = (prev_xmax * prev_xunit).to_value(self.xunit, equivalencies=u.spectral())
-            self.state.y_min = (prev_ymin * prev_yunit).to_value(self.yunit)
-            self.state.y_max = (prev_ymax * prev_yunit).to_value(self.yunit)
+            self.state.x_min = (prev_xmin * prev_xunit).to_value(self.xunit, equivalencies=self._x_equivalencies)
+            self.state.x_max = (prev_xmax * prev_xunit).to_value(self.xunit, equivalencies=self._x_equivalencies)
+            self.state.y_min = (prev_ymin * prev_yunit).to_value(self.yunit, equivalencies=self._y_equivalencies)
+            self.state.y_max = (prev_ymax * prev_yunit).to_value(self.yunit, equivalencies=self._y_equivalencies)
 
         self.set_plot_axes()
 
@@ -500,8 +504,10 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
         # Get data to be used for axes labels
         data = self.data()[0]
         if self._xunit is None:
+            self._native_xunit = data.spectral_axis.unit
             self._xunit = data.spectral_axis.unit
         if self._yunit is None:
+            self._native_yunit = data.flux.unit
             self._yunit = data.flux.unit
 
         # Set axes labels for the spectrum viewer

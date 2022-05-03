@@ -4,6 +4,7 @@ from echo import delay_callback
 
 from glue.config import viewer_tool
 from glue.core import HubListener
+from glue.core.roi import RangeROI
 from glue.viewers.common.tool import Tool
 from glue_jupyter.bqplot.common.tools import (CheckableTool, HomeTool, BqplotPanZoomMode,
                                               BqplotPanZoomXMode, BqplotPanZoomYMode,
@@ -30,6 +31,28 @@ BqplotCircleMode.icon = os.path.join(ICON_DIR, 'select_circle.svg')
 BqplotEllipseMode.icon = os.path.join(ICON_DIR, 'select_ellipse.svg')
 BqplotXRangeMode.icon = os.path.join(ICON_DIR, 'select_x.svg')
 BqplotYRangeMode.icon = os.path.join(ICON_DIR, 'select_y.svg')
+
+
+@viewer_tool
+class BqplotXRangeModeUnitAware(BqplotXRangeMode):
+    icon = os.path.join(ICON_DIR, 'select_x.svg')
+    tool_id = 'jdaviz:xrange'
+    action_text = 'X range ROI'
+    tool_tip = 'Select a range of x values'
+
+    def update_selection(self, *args):
+        with self.viewer._output_widget:
+            if self.interact.selected is not None:
+                x = self.interact.selected
+                if x is not None and len(x):
+                    x = (x * self.viewer.xunit).to_value(self.viewer._native_xunit, equivalencies=self.viewer._x_equivalencies)
+                    roi = RangeROI(min=min(x), max=max(x), orientation='x')
+                    self.viewer.apply_roi(roi)
+                    mark = self.viewer.figure.marks[-1]
+                    mark._x_equivalencies = self.viewer._x_equivalencies
+                    mark._y_equivalencies = self.viewer._y_equivalencies
+                    mark.set_native_units(self.viewer._native_xunit, self.viewer._native_yunit)
+                    mark.set_display_units(self.viewer.xunit, self.viewer.yunit)
 
 
 class _BaseSelectZoom(BqplotSelectionTool):
