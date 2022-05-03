@@ -6,19 +6,15 @@ from specutils import Spectrum1D
 from jdaviz.core.events import SliceToolStateMessage, LineIdentifyMessage
 
 
-class BaseUnitLine(Lines, HubListener):
+class LinesWithUnitsMixin():
     _changing_units = False
-
-    def __init__(self, x, y, **kwargs):
-        self._viewer = None
-        self._native_xunit = None
-        self._native_yunit = None
-        self._xunit = None
-        self._yunit = None
-        self._native_x = x
-        self._native_y = y
-
-        super().__init__(x=x, y=y, **kwargs)
+    _viewer = None
+    _native_xunit = None
+    _native_yunit = None
+    _xunit = None
+    _yunit = None
+    _native_x = None
+    _native_y = None
 
     def __setattr__(self, attr, value):
         if not self._changing_units:

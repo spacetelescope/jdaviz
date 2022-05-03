@@ -18,8 +18,17 @@ from jdaviz.configs.cubeviz import Cubeviz, CubeViz  # noqa
 from jdaviz.configs.imviz import Imviz  # noqa
 from jdaviz.utils import enable_hot_reloading  # noqa
 
+import bqplot_image_gl
 import bqplot
-from jdaviz.core.marks import BaseUnitLine
-bqplot.Lines = BaseUnitLine
+from jdaviz.core.marks import LinesWithUnitsMixin
 
-del layer_artist, bqplot, BaseUnitLine
+class BqplotLinesWithUnits(bqplot.Lines, LinesWithUnitsMixin):
+    pass
+
+class ImageGLLinesWithUnits(bqplot_image_gl.LinesGL, LinesWithUnitsMixin):
+    pass
+
+bqplot_image_gl.LinesGL = ImageGLLinesWithUnits
+bqplot.Lines = BqplotLinesWithUnits
+
+del bqplot, bqplot_image_gl, LinesWithUnitsMixin, BqplotLinesWithUnits, ImageGLLinesWithUnits
