@@ -39,7 +39,7 @@ class SubsetPlugin(TemplateMixin):
         self.session.hub.subscribe(self, SubsetCreateMessage,
                                    handler=self._sync_available_from_state)
 
-        self.no_selection_text = "No selection (create new)"
+        self.no_selection_text = "Create new"
         self.subset_select = SubsetSelect(self,
                                           'subset_items',
                                           'subset_selected',
