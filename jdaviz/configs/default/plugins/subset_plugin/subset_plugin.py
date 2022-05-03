@@ -35,9 +35,9 @@ class SubsetPlugin(TemplateMixin):
         }
 
         self.session.hub.subscribe(self, EditSubsetMessage,
-                              handler=self._sync_selected_from_state)
-        #self.session.hub.subscribe(self, SubsetCreateMessage,
-        #                      handler=self._sync_available_from_state)
+                                   handler=self._sync_selected_from_state)
+        self.session.hub.subscribe(self, SubsetCreateMessage,
+                                   handler=self._sync_available_from_state)
 
         no_selection_text = "No selection (create new)"
         self.subset_select = JSubsetSelect(self,
@@ -50,22 +50,16 @@ class SubsetPlugin(TemplateMixin):
             self.subset_selected = "No selection (create new)"
         else:
             new_label = self.session.edit_subset_mode.edit_subset[0].label
-            print(new_label)
-            if new_label not in self.subset_items:
-                self.subset_items.append(new_label)
             if new_label != self.subset_selected:
-                print(self.session.edit_subset_mode.edit_subset[0].label)
                 self.subset_selected = self.session.edit_subset_mode.edit_subset[0].label
 
-    #def _sync_available_from_state(self, *args):
-    #    self.available = [subset_to_dict(subset) for subset in
-    #                      self.data_collection.subset_groups]
-    #    if len(self.available) == 0:
-    #        self.selected = []
+    def _sync_available_from_state(self, *args):
+        self.subset_items = [{'label': "No selection (create new)"}] + [
+                             self.subset_select._subset_to_dict(subset) for subset in
+                             self.data_collection.subset_groups]
 
-    #@observe('subset_selected')
+    @observe('subset_selected')
     def _sync_selected_from_ui(self, change):
-        print(change['new'])
         m = [s for s in self.app.data_collection.subset_groups if s.label == change['new']]
         self.session.edit_subset_mode.edit_subset = m
 
