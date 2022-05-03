@@ -18,5 +18,10 @@
     <v-row>
       <g-subset-mode></g-subset-mode>
     </v-row>
+
+    <div v-if="show_region_info">
+      <j-plugin-section-header>Subset Region Definition</j-plugin-section-header>
+      <v-row><v-row>
+    </div>
   </j-tray-plugin>
 </template>
