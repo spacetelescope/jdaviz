@@ -479,6 +479,7 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
             if hasattr(mark, 'set_display_units'):
                 if mark._native_xunit is None:
                     mark.set_native_units(xunit=self.xunit, yunit=self.yunit)
+                    mark._x_equivalencies = u.spectral()
                 mark.set_display_units(xunit=xunit, yunit=yunit)
 
         if xunit is not None:
@@ -488,8 +489,8 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
 
         # update limits
         with delay_callback(self.state, 'x_min', 'x_max', 'y_min', 'y_max'):
-            self.state.x_min = (prev_xmin * prev_xunit).to_value(self.xunit)
-            self.state.x_max = (prev_xmax * prev_xunit).to_value(self.xunit)
+            self.state.x_min = (prev_xmin * prev_xunit).to_value(self.xunit, equivalencies=u.spectral())
+            self.state.x_max = (prev_xmax * prev_xunit).to_value(self.xunit, equivalencies=u.spectral())
             self.state.y_min = (prev_ymin * prev_yunit).to_value(self.yunit)
             self.state.y_max = (prev_ymax * prev_yunit).to_value(self.yunit)
 

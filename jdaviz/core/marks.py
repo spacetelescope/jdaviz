@@ -15,6 +15,8 @@ class LinesWithUnitsMixin():
     _yunit = None
     _native_x = None
     _native_y = None
+    _x_equivalencies = []
+    _y_equivalencies = []
 
     def __setattr__(self, attr, value):
         if not self._changing_units:
@@ -50,10 +52,12 @@ class LinesWithUnitsMixin():
             raise ValueError("native units have not (yet) been set, cannot set display units")
         self._changing_units = True
         if xunit is not None:
-            self.x = (self._native_x * self._native_xunit).to_value(xunit)
+            self.x = (self._native_x * self._native_xunit).to_value(xunit,
+                                                                    equivalencies=self._x_equivalencies)
             self._xunit = u.Unit(xunit)
         if yunit is not None:
-            self.y = (self._native_y * self._native_yunit).to_value(yunit)
+            self.y = (self._native_y * self._native_yunit).to_value(yunit,
+                                                                    equivalencies=self._y_equivalencies)
             self._yunit = u.Unit(yunit)
         self._changing_units = False
 
