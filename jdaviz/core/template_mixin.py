@@ -402,15 +402,24 @@ class SubsetSelect(BaseSelectPluginComponent):
                            handler=lambda msg: self._delete_subset(msg.subset))
 
         # intialize any subsets that have already been created
-        self.items = self.manual_items + [self._subset_to_dict(s) for s in
-                                          self.app.data_collection.subset_groups]
+        self._reset_items()
+
+    def _reset_items(self):
+        all_subsets = [self._subset_to_dict(s) for s in
+                       self.app.data_collection.subset_groups]
+        self.items = self.manual_items + [s for s in all_subsets
+                                          if self._allowed_type is None
+                                          or s['type'] == self._allowed_type]
 
     @staticmethod
     def _subset_type(subset):
         if isinstance(subset.subset_state, RoiSubsetState):
-            # then this is a spatial subset, we want to ignore
+            # then this is a spatial subset,
             return 'spatial'
         else:
+            # TODO: more advanced logic.  This is counting static regions in imviz as spectral
+            # (which isn't an issue so long as those are isolated to imviz which will never use
+            # subset selects with spectral regions)
             return 'spectral'
 
     def _selected_changed(self, event):
@@ -435,11 +444,14 @@ class SubsetSelect(BaseSelectPluginComponent):
             self._apply_default_selection()
 
     def _update_subset(self, subset, attribute=None):
+        if self._allowed_type is not None and self._subset_type(subset) != self._allowed_type:
+            # the subset that was changed is not of the allowed type (spectral, spatial)
+            return
+
         if attribute == 'label':
             selected = self.selected
             # then rebuild the whole items list
-            self.items = self.manual_items + [self._subset_to_dict(s) for s in
-                                              self.app.data_collection.subset_groups]
+            self._reset_items()
             # check to see if the original selection is no longer in the list, and
             # if so, assume the selected entry was renamed and select that
             if selected not in self.labels:
