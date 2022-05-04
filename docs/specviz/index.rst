@@ -14,6 +14,16 @@ Specviz allows spectra to be easily plotted and examined. It supports flexible s
 
 Specviz notably includes a measurement tool for spectral lines which enables the user, with a few mouse actions, to perform and record measurements. It has a model fitting capability that enables the user to create simple (e.g., single Gaussian) or multi-component models (e.g., multiple Gaussians for emission and absorption lines in addition to regions of flat continua). A typical data-analysis workflow might involve data exploration using Specviz and then scripting to create more complex measurements or modeling workflows using specutils.
 
+Quickstart
+----------
+
+To load a sample `SDSS Spectrum <https://data.sdss.org/sas/dr14/sdss/spectro/redux/26/spectra/0751/spec-0751-52251-0160.fits>`_ into ``Specviz`` in the standalone app, run::
+
+    jdaviz specviz /path/to/spec-0751-52251-0160.fits
+
+
+Or to load in a Jupyter notebook, see the :gh-notebook:`SpecvizExample`.
+
 
 Using Specviz
 -------------
