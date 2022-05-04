@@ -19,7 +19,6 @@ class Slice(TemplateMixin):
     wavelength_unit = Any("").tag(sync=True)
     min_value = Float(0).tag(sync=True)
     max_value = Float(100).tag(sync=True)
-    linked = Bool(True).tag(sync=True)
     wait = Int(200).tag(sync=True)
 
     setting_show_indicator = Bool(True).tag(sync=True)
@@ -32,6 +31,13 @@ class Slice(TemplateMixin):
         self._indicator_viewers = []
         self._x_all = None
 
+        # initialize watching existing viewers WITH data (if initializing the plugin after data
+        # already exists - otherwise the AddDataMessage will handle watching image viewers once
+        # data is available)
+        for id, viewer in self.app._viewer_store.items():
+            if isinstance(viewer, BqplotProfileView) or len(viewer.data()):
+                self._watch_viewer(viewer, True)
+
         # Subscribe to requests from the helper to change the slice across all viewers
         self.session.hub.subscribe(self, SliceSelectSliceMessage,
                                    handler=self._on_select_slice_message)
@@ -43,50 +49,42 @@ class Slice(TemplateMixin):
         self.session.hub.subscribe(self, AddDataMessage,
                                    handler=self._on_data_added)
 
-    @observe("linked")
-    def _on_linked_changed(self, event):
-        for viewer in self._watched_viewers:
-
-            if not event['new']:
-                viewer.state.remove_callback('slices',
-                                             self._viewer_slices_changed)
-            else:
+    def _watch_viewer(self, viewer, watch=True):
+        if isinstance(viewer, BqplotImageView):
+            if watch and viewer not in self._watched_viewers:
+                self._watched_viewers.append(viewer)
                 viewer.state.add_callback('slices',
                                           self._viewer_slices_changed)
+            elif not watch and viewer in self._watched_viewers:
+                viewer.state.remove_callback('slices',
+                                             self._viewer_slices_changed)
+                self._watched_viewers.remove(viewer)
+        elif isinstance(viewer, BqplotProfileView) and watch:
+            if self._x_all is None and len(viewer.data()):
+                # cache wavelengths so that wavelength <> slice conversion can be done efficiently
+                self._update_data(viewer.data()[0].spectral_axis)
+
+            if viewer not in self._indicator_viewers:
+                self._indicator_viewers.append(viewer)
+                # if the units (or data) change, we need to update internally
+                viewer.state.add_callback("reference_data",
+                                          self._update_reference_data)
 
     def _on_data_added(self, msg):
         if isinstance(msg.viewer, BqplotImageView):
             if len(msg.data.shape) == 3:
                 self.max_value = msg.data.shape[-1] - 1
-
-                if msg.viewer not in self._watched_viewers:
-                    self._watched_viewers.append(msg.viewer)
-
-                    msg.viewer.state.add_callback('slices',
-                                                  self._viewer_slices_changed)
-
+                self._watch_viewer(msg.viewer, True)
             else:
-                if msg.viewer in self._watched_viewers:
-                    self._watched_viewers.remove(msg.viewer)
+                # then the viewer is showing a static 2d image instead of cube data
+                self._watch_viewer(msg.viewer, False)
 
         elif isinstance(msg.viewer, BqplotProfileView):
-            if msg.viewer not in self._indicator_viewers:
-                self._indicator_viewers.append(msg.viewer)
-                # cache wavelengths so that wavelength <> slice conversion can be done efficiently
-                x_all = msg.viewer.data()[0].spectral_axis
-                self._x_all = x_all.value
-                self.wavelength_unit = str(x_all.unit)
-                # but if the units (or data) change, we need to update internally
-                msg.viewer.state.add_callback("reference_data",
-                                              self._update_reference_data)
-
-                if self.wavelength == -1:
-                    # initialize at middle of cube
-                    self.slider = int(len(x_all)/2)
+            self._watch_viewer(msg.viewer, True)
 
     def _update_reference_data(self, reference_data):
         if reference_data is None:
-            return
+            return  # pragma: no cover
         self._update_data(reference_data.get_object(cls=Spectrum1D).spectral_axis)
 
     def _update_data(self, x_all):
@@ -95,6 +93,15 @@ class Slice(TemplateMixin):
             x_all = x_all.value
 
         self._x_all = x_all
+
+        if self.wavelength == -1:
+            if len(x_all):
+                # initialize at middle of cube
+                self.slider = int(len(x_all)/2)
+            else:
+                # leave in the pre-init state and don't update the wavelength/slider
+                return
+
         # force wavelength to update from the current slider value
         self._on_slider_updated({'new': self.slider})
 
@@ -112,7 +119,7 @@ class Slice(TemplateMixin):
         self.slider = msg.slice
 
     def vue_change_wavelength(self, event):
-        # convert to float after stripping any invalid characters
+        # convert to float (JS handles stripping any invalid characters)
         try:
             value = float(event)
         except ValueError:
@@ -134,12 +141,11 @@ class Slice(TemplateMixin):
 
     @observe('slider')
     def _on_slider_updated(self, event):
-        value = int(event.get('new', 0))
+        value = int(event.get('new', int(len(self._x_all)/2)))
 
         self.wavelength = self._x_all[value]
 
-        if self.linked:
-            for viewer in self._watched_viewers:
-                viewer.state.slices = (0, 0, value)
-            for viewer in self._indicator_viewers:
-                viewer._update_slice_indicator(value)
+        for viewer in self._watched_viewers:
+            viewer.state.slices = (0, 0, value)
+        for viewer in self._indicator_viewers:
+            viewer._update_slice_indicator(value)
