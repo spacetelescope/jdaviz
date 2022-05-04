@@ -6,7 +6,8 @@ from numpy.testing import assert_allclose, assert_array_equal
 from photutils.aperture import (ApertureStats, CircularAperture, EllipticalAperture,
                                 RectangularAperture, EllipticalAnnulus)
 
-from jdaviz.configs.imviz.plugins.aper_phot_simple.aper_phot_simple import _curve_of_growth
+from jdaviz.configs.imviz.plugins.aper_phot_simple.aper_phot_simple import (
+    _curve_of_growth, _radial_profile)
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS, BaseImviz_WCS_NoWCS
 
 
@@ -247,6 +248,30 @@ def test_annulus_background(imviz_helper):
     # Bad annulus should not crash plugin
     phot_plugin.bg_annulus_inner_r = -1
     assert_allclose(phot_plugin.background_value, 0)
+
+
+# NOTE: Extracting the cutout for radial profile is aperture
+#       shape agnostic, so we use ellipse as representative case.
+class TestRadialProfile():
+    def setup_class(self):
+        data = np.ones((51, 51)) * u.nJy
+        self.aperture = EllipticalAperture((25, 25), 20, 15)
+        phot_aperstats = ApertureStats(data, self.aperture)
+        self.data_cutout = phot_aperstats.data_cutout
+        self.bbox = phot_aperstats.bbox
+
+    def test_profile_raw(self):
+        x_arr, y_arr = _radial_profile(self.data_cutout, self.bbox, self.aperture, raw=True)
+        # Too many data points to compare each one for X.
+        assert x_arr.shape == y_arr.shape == (923, )
+        assert_allclose(x_arr.min(), 0)
+        assert_allclose(x_arr.max(), 19.4164878389476)
+        assert_allclose(y_arr, 1)
+
+    def test_profile_imexam(self):
+        x_arr, y_arr = _radial_profile(self.data_cutout, self.bbox, self.aperture, raw=False)
+        assert_allclose(x_arr, range(20))
+        assert_allclose(y_arr, 1)
 
 
 @pytest.mark.parametrize('with_unit', (False, True))

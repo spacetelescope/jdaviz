@@ -327,15 +327,7 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
                                            scales={'x': line_x_sc, 'y': line_y_sc},
                                            marker_size=32, colors='gray')
 
-            else:
-                # Radial profile
-                reg_bb = phot_aperstats.bbox
-                reg_ogrid = np.ogrid[reg_bb.iymin:reg_bb.iymax, reg_bb.ixmin:reg_bb.ixmax]
-                radial_dx = reg_ogrid[1] - aperture.positions[0]
-                radial_dy = reg_ogrid[0] - aperture.positions[1]
-                radial_cutout = phot_aperstats.data_cutout
-                radial_r = np.hypot(radial_dx, radial_dy)[~radial_cutout.mask].ravel()  # pix
-                radial_img = radial_cutout.compressed()  # data unit
+            else:  # Radial profile
                 self._fig.axes = [bqplot.Axis(scale=line_x_sc, label='pix'),
                                   bqplot.Axis(scale=line_y_sc, orientation='vertical',
                                               label=comp.units or 'Value')]
@@ -344,13 +336,15 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
                     self._fig.title = 'Radial profile from Subset center'
                     # This algorithm is from the imexam package,
                     # see licenses/IMEXAM_LICENSE.txt for more details
-                    radial_r = list(radial_r)
-                    y_data = np.bincount(radial_r, radial_img) / np.bincount(radial_r)
-                    bqplot_line = bqplot.Lines(x=np.arange(y_data.size), y=y_data, marker='circle',
+                    x_data, y_data = _radial_profile(
+                        phot_aperstats.data_cutout, phot_aperstats.bbox, aperture, raw=False)
+                    bqplot_line = bqplot.Lines(x=x_data, y=y_data, marker='circle',
                                                scales={'x': line_x_sc, 'y': line_y_sc},
                                                marker_size=32, colors='gray')
                 else:  # Radial Profile (Raw)
                     self._fig.title = 'Raw radial profile from Subset center'
+                    radial_r, radial_img = _radial_profile(
+                        phot_aperstats.data_cutout, phot_aperstats.bbox, aperture, raw=True)
                     bqplot_line = bqplot.Scatter(x=radial_r, y=radial_img, marker='circle',
                                                  scales={'x': line_x_sc, 'y': line_y_sc},
                                                  default_size=1, colors='gray')
@@ -391,8 +385,45 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
             self.plot_available = True
 
 
-# NOTE: This is hidden because the API is for internal use only
-# but we need it as a separate function for unit testing.
+# NOTE: These are hidden because the APIs are for internal use only
+# but we need them as a separate functions for unit testing.
+
+def _radial_profile(radial_cutout, reg_bb, aperture, raw=False):
+    """Calculate radial profile.
+
+    Parameters
+    ----------
+    radial_cutout : ndarray
+        Cutout image from ``ApertureStats``.
+
+    reg_bb : obj
+        Bounding box from ``ApertureStats``.
+
+    aperture : obj
+        ``photutils`` aperture object.
+
+    raw : bool
+        If `True`, returns raw data points for scatter plot.
+        Otherwise, use ``imexam`` algorithm for a clean plot.
+
+    """
+    reg_ogrid = np.ogrid[reg_bb.iymin:reg_bb.iymax, reg_bb.ixmin:reg_bb.ixmax]
+    radial_dx = reg_ogrid[1] - aperture.positions[0]
+    radial_dy = reg_ogrid[0] - aperture.positions[1]
+    radial_r = np.hypot(radial_dx, radial_dy)[~radial_cutout.mask].ravel()  # pix
+    radial_img = radial_cutout.compressed()  # data unit
+
+    if raw:
+        x_arr = radial_r
+        y_arr = radial_img
+    else:
+        radial_r = list(radial_r)
+        y_arr = np.bincount(radial_r, radial_img) / np.bincount(radial_r)
+        x_arr = np.arange(y_arr.size)
+
+    return x_arr, y_arr
+
+
 def _curve_of_growth(data, aperture, final_sum, wcs=None, background=0, n_datapoints=10,
                      pixarea_fac=None):
     """Calculate curve of growth for aperture photometry.
