@@ -12,7 +12,7 @@ attempt to automatically parse the data into the viewers as described in
 into Cubeviz MUST contain valid WCS keywords. For more information on how :class:`~specutils.Spectrum1D`
 uses WCS, please go to the `Spectrum1D defining WCS section <https://specutils.readthedocs.io/en/stable/spectrum1d.html#defining-wcs>`_.
 To check if your FITS file contains valid WCS keywords, please use
-`Astropy WCS validate <https://docs.astropy.org/en/stable/api/astropy.wcs.validate.html>`_.
+`Astropy WCS validate <astropy.wcs.validate>`.
 For an example on loading a cube with valid WCS keywords, please see the :ref:`cubeviz-import-api`
 section below.
 
