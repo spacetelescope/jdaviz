@@ -8,7 +8,13 @@ There are two primary ways in which you can load your data into the Cubeviz
 application. Cubeviz supports loading FITS files that can be parsed as 
 :class:`~specutils.Spectrum1D` objects, in which case the application will
 attempt to automatically parse the data into the viewers as described in 
-:ref:`cubeviz-display-cubes`, including the 1D spectrum viewer.
+:ref:`cubeviz-display-cubes`, including the 1D spectrum viewer. Data loaded
+into Cubeviz MUST contain valid WCS keywords. For more information on how :class:`~specutils.Spectrum1D`
+uses WCS, please go to the `Spectrum1D defining WCS section <https://specutils.readthedocs.io/en/stable/spectrum1d.html#defining-wcs>`_.
+To check if your FITS file contains valid WCS keywords, please use
+`Astropy WCS validate <https://docs.astropy.org/en/stable/api/astropy.wcs.validate.html>`_.
+For an example on loading a cube with valid WCS keywords, please see the :ref:`cubeviz-import-api`
+section below.
 
 Importing data through the GUI
 ------------------------------
