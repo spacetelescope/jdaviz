@@ -71,8 +71,7 @@ values of X and Y, and then press the :guilabel:`PLOT` button.
 The top visible image, the same one displayed under :ref:`imviz-compass`,
 will be used for these plots.
 
-This plugin only considers pixel locations, regardless of linking type set in
-:ref:`imviz-link-control`.
+This plugin only considers pixel locations, not sky coordinates.
 
 .. _aper-phot-simple:
 

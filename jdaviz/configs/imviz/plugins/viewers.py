@@ -99,7 +99,7 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
             # of dataset shouldn't matter if the datasets are linked correctly
             image = visible_layers[0].layer
 
-            # Extract data coordinates - these are pixels in the image
+            # Extract data coordinates - these are pixels in the reference image
             x = data['domain']['x']
             y = data['domain']['y']
 
@@ -111,26 +111,13 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
 
             maxsize = int(np.ceil(np.log10(np.max(image.shape)))) + 3
             fmt = 'x={0:0' + str(maxsize) + '.1f} y={1:0' + str(maxsize) + '.1f}'
+            x, y, coords_status = self._get_real_xy(image, x, y)
+            self.label_mouseover.pixel = (fmt.format(x, y))
 
-            if data_has_valid_wcs(image):
-                # Convert these to a SkyCoord via WCS - note that for other datasets
-                # we aren't actually guaranteed to get a SkyCoord out, just for images
-                # with valid celestial WCS
-                try:
-                    # Convert X,Y from reference data to the one we are actually seeing.
-                    # world_to_pixel return scalar ndarray that we need to convert to float.
-                    if self.get_link_type(image.label) == 'wcs':
-                        x, y = list(map(float, image.coords.world_to_pixel(
-                            self.state.reference_data.coords.pixel_to_world(x, y))))
-
-                    self.label_mouseover.pixel = (fmt.format(x, y))
-                    coo = image.coords.pixel_to_world(x, y).icrs
-                    self.label_mouseover.set_coords(coo)
-                except Exception:
-                    self.label_mouseover.pixel = (fmt.format(x, y))
-                    self.label_mouseover.reset_coords_display()
+            if coords_status:
+                coo = image.coords.pixel_to_world(x, y).icrs
+                self.label_mouseover.set_coords(coo)
             else:
-                self.label_mouseover.pixel = (fmt.format(x, y))
                 self.label_mouseover.reset_coords_display()
 
             # Extract data values at this position.
@@ -164,8 +151,14 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
 
             elif key_pressed == 'l':
                 # Same data as mousemove above.
-                self.line_profile_xy.selected_x = data['domain']['x']
-                self.line_profile_xy.selected_y = data['domain']['y']
+                image = visible_layers[0].layer
+                x = data['domain']['x']
+                y = data['domain']['y']
+                if x is None or y is None:  # Out of bounds
+                    return
+                x, y, _ = self._get_real_xy(image, x, y)
+                self.line_profile_xy.selected_x = x
+                self.line_profile_xy.selected_y = y
                 self.line_profile_xy.selected_viewer = self.reference_id
                 self.line_profile_xy.vue_draw_plot()
 
@@ -223,6 +216,31 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
                 self.compass.clear_compass()
             return
         self.set_compass(self.state.layers[i].layer)
+
+    def _get_real_xy(self, image, x, y):
+        """Return real (X, Y) position and status in case of dithering.
+
+        ``coords_status`` is for ``self.label_mouseover`` coords handling only.
+        When `True`, it sets the coords, otherwise it resets.
+
+        """
+        if data_has_valid_wcs(image):
+            # Convert these to a SkyCoord via WCS - note that for other datasets
+            # we aren't actually guaranteed to get a SkyCoord out, just for images
+            # with valid celestial WCS
+            try:
+                # Convert X,Y from reference data to the one we are actually seeing.
+                # world_to_pixel return scalar ndarray that we need to convert to float.
+                if self.get_link_type(image.label) == 'wcs':
+                    x, y = list(map(float, image.coords.world_to_pixel(
+                        self.state.reference_data.coords.pixel_to_world(x, y))))
+                coords_status = True
+            except Exception:
+                coords_status = False
+        else:
+            coords_status = False
+
+        return x, y, coords_status
 
     def _get_zoom_limits(self, image):
         """Return ``(x_min, y_min, x_max, y_max)`` for given image.

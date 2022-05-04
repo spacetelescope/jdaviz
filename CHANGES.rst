@@ -28,12 +28,6 @@ Cubeviz
 Imviz
 ^^^^^
 
-- Line profile plot in Line Profile plugin no longer affects
-  radial profile plot in Simple Aperture Photometry plugin. [#1224]
-
-- Radial profile plot in Simple Aperture Photometry plugin
-  no longer shows masked aperture data. [#1224]
-
 Mosviz
 ^^^^^^
 
@@ -48,6 +42,15 @@ Cubeviz
 
 Imviz
 ^^^^^
+
+- Line profile plot in Line Profile plugin no longer affects
+  radial profile plot in Simple Aperture Photometry plugin. [#1224]
+
+- Line profile plot no longer report wrong coordinates on
+  dithered data that is not the reference data. [#1293]
+
+- Radial profile plot in Simple Aperture Photometry plugin
+  no longer shows masked aperture data. [#1224]
 
 Mosviz
 ^^^^^^
