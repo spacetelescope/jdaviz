@@ -47,7 +47,7 @@ def regions2aperture(region_shape):
     >>> regions2aperture(region_shape)
     <CircularAperture([42., 43.], r=4.2)>
 
-    Also see
+    See Also
     --------
     aperture2regions
 
@@ -145,7 +145,7 @@ def aperture2regions(aperture):
     >>> aperture2regions(aperture)
     <CirclePixelRegion(center=PixCoord(x=42.0, y=43.0), radius=4.2)>
 
-    Also see
+    See Also
     --------
     regions2aperture
 
