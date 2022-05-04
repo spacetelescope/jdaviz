@@ -149,6 +149,12 @@ release = importlib_metadata.version(project)
 # The short X.Y version.
 version = '.'.join(release.split('.')[:2])
 
+extensions += ['sphinx.ext.extlinks']
+gh_tag = f'v{release}' if '.dev' not in release else 'main'
+extlinks = {'gh-tree': (f'https://github.com/spacetelescope/jdaviz/tree/{gh_tag}/%s', '%s'),
+            'gh-notebook': (f'https://github.com/spacetelescope/jdaviz/blob/{gh_tag}/notebooks/%s.ipynb',
+                            '%s notebook')}
+
 # -- Options for HTML output --------------------------------------------------
 
 # A NOTE ON HTML THEMES
