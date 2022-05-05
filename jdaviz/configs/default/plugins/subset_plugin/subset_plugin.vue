@@ -36,7 +36,6 @@
         <v-col>
           <j-number-uncertainty
             :value="val"
-            :uncertainty="0"
             :defaultDigs="6"
           ></j-number-uncertainty>
         </v-col>

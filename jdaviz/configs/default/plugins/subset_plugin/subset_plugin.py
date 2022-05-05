@@ -2,7 +2,7 @@ from glue.core.message import EditSubsetMessage, SubsetCreateMessage
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode)
 from glue.core.subset import (RoiSubsetState, RangeSubsetState,
-                              OrState, AndState)
+                              OrState, AndState, XorState, InvertState)
 from glue_jupyter.widgets.subset_mode_vuetify import SelectionModeMenu
 from traitlets import List, Unicode, Bool, Dict, observe
 
@@ -91,7 +91,7 @@ class SubsetPlugin(TemplateMixin):
         subset_state = subset_group.subset_state
         subset_class = subset_state.__class__
 
-        if subset_class in (OrState, AndState):
+        if subset_class in (OrState, AndState, XorState, InvertState):
             self.subset_class = "Compound Subset"
         else:
             if isinstance(subset_state, RoiSubsetState):
@@ -102,7 +102,10 @@ class SubsetPlugin(TemplateMixin):
                                               "Y Center": y,
                                               "Radius": subset_state.roi.radius}
                 elif self.subset_classname == "RectangularROI":
-                    pass
+                    temp_def = {}
+                    for att in ("Xmin", "Xmax", "Ymin","Ymax"):
+                        temp_def[att] = getattr(subset_state.roi, att.lower())
+                    self.subset_definition = temp_def
             elif isinstance(subset_state, RangeSubsetState):
                 self.subset_classname = "Range"
                 self.subset_definition = {"Upper bound": subset_state.hi,
