@@ -20,10 +20,10 @@ module.exports = {
   methods: {
     updateTruncatedValues() {
       var nDigs = this.defaultDigs;
-      if (parseFloat(this.uncertainty) == 0) {
+      if (this.uncertainty === undefined || parseFloat(this.uncertainty) == 0 || this.uncertainty == '') {
         // then treat as no uncertainty
         this.uncertTrunc = null;
-      } else if (this.uncertainty !== '') {
+      } else {
         // then uncertainty was provided, so we'll round the uncertainty to 2 significant digits
         this.uncertTrunc = +parseFloat(this.uncertainty).toPrecision(2);
 
