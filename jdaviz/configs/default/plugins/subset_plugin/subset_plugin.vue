@@ -33,7 +33,13 @@
       </v-row>
       <v-row v-for="(val, key, index) in subset_definition">
         <v-col>{{ key }}:</v-col> 
-        <v-col>{{ val }}</v-col>
+        <v-col>
+          <j-number-uncertainty
+            :value="val"
+            :uncertainty="0"
+            :defaultDigs="6"
+          ></j-number-uncertainty>
+        </v-col>
       </v-row>
     </div>
   </j-tray-plugin>
