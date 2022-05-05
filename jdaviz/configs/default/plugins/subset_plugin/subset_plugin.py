@@ -103,7 +103,7 @@ class SubsetPlugin(TemplateMixin):
                                               "Radius": subset_state.roi.radius}
                 elif self.subset_classname == "RectangularROI":
                     temp_def = {}
-                    for att in ("Xmin", "Xmax", "Ymin","Ymax"):
+                    for att in ("Xmin", "Xmax", "Ymin", "Ymax"):
                         temp_def[att] = getattr(subset_state.roi, att.lower())
                     self.subset_definition = temp_def
             elif isinstance(subset_state, RangeSubsetState):

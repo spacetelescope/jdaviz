@@ -5,6 +5,7 @@ New Features
 ------------
 
 - Line list plugin now supports exact-text filtering on line names. [#1298]
+- Added a Subset Tools plugin for viewing information about defined subsets. [#1292]
 
 Cubeviz
 ^^^^^^^
