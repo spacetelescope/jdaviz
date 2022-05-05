@@ -301,9 +301,6 @@ def test_curve_of_growth(with_unit):
         assert_allclose(x_arr, [2, 4, 6, 8, 10, 12, 14, 16, 18, 20])
         assert y_label == expected_ylabel
 
-        if isinstance(sum_arr, u.Quantity):
-            sum_arr = sum_arr.value  # Unit checked via y_label
-
         if isinstance(aperture, CircularAperture):
             assert x_label == 'Radius (pix)'
             assert_allclose(sum_arr, [

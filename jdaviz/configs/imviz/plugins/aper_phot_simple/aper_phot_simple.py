@@ -504,6 +504,7 @@ def _curve_of_growth(data, aperture, final_sum, wcs=None, background=0, n_datapo
 
     if isinstance(sum_arr, u.Quantity):
         y_label = sum_arr.unit.to_string()
+        sum_arr = sum_arr.value  # bqplot does not like Quantity
     else:
         y_label = 'Value'
 
