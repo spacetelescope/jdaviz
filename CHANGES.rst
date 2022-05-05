@@ -4,6 +4,8 @@
 New Features
 ------------
 
+- Line list plugin now supports exact-text filtering on line names. [#1298]
+
 Cubeviz
 ^^^^^^^
 

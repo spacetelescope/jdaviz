@@ -184,80 +184,92 @@
               </v-row>
             </div>
 
-            <v-row class="row-no-padding">
-              <v-col cols=6>
-                <j-tooltip tipid='plugin-line-lists-erase-all-in-list'>
-                  <v-btn 
-                   color="accent" 
-                   style="padding-left: 8px; padding-right: 8px;"
-                   text @click="hide_all_in_list(item)">Erase All</v-btn>
-                </j-tooltip>
-              </v-col>
-              <v-col cols=6 style="text-align: right">
-                <j-tooltip tipid='plugin-line-lists-plot-all-in-list'>
-                  <v-btn 
-                   color="accent"
-                   style="padding-left: 8px; padding-right: 8px;"
-                   text @click="show_all_in_list(item)">Plot All</v-btn>
-                </j-tooltip>
-              </v-col>
-            </v-row>
-
             <div v-if="list_contents[item].lines.length">
-              <v-row v-for="(line, line_ind) in list_contents[item].lines">
-                <v-row class="row-min-bottom-padding" style="margin: 0px">
-                  <j-tooltip tipid='plugin-line-lists-line-visible'>
-                    <v-btn :color="line.show ? 'accent' : 'default'" icon @click="change_visible([item, line, line_ind])">
-                      <v-icon>{{line.show ? "mdi-eye" : "mdi-eye-off"}}</v-icon>
-                    </v-btn>
+              <v-row class="row-no-padding">
+                <v-col cols=6>
+                  <j-tooltip tipid='plugin-line-lists-erase-all-in-list'>
+                    <v-btn 
+                     color="accent" 
+                     style="padding-left: 8px; padding-right: 8px;"
+                     text @click="hide_all_in_list(item)">Erase All</v-btn>
                   </j-tooltip>
-                  <j-tooltip tipid='plugin-line-lists-line-identify'>
-                    <v-btn icon @click="set_identify([item, line, line_ind])">
-                      <img :class="line.identify ? 'color-to-accent' : ''" :src="identify_line_icon" width="20"/>
-                    </v-btn>
+                </v-col>
+                <v-col cols=6 style="text-align: right">
+                  <j-tooltip tipid='plugin-line-lists-plot-all-in-list'>
+                    <v-btn 
+                     color="accent"
+                     style="padding-left: 8px; padding-right: 8px;"
+                     text @click="show_all_in_list(item)">Plot All</v-btn>
                   </j-tooltip>
-                  <span class='text--primary' style="overflow-wrap: anywhere; font-size: 12pt; padding-top: 6px; padding-left: 6px">
-                    {{line.linename}}
-                  </span>
-                </v-row>
-                <v-row class="row-min-bottom-padding">
-                  <v-col cols=3>
-                    <v-subheader>rest</v-subheader>
-                  </v-col>
-                  <v-col cols=6>
-                    <v-text-field
-                      v-model="line.rest"
-                      class="mt-0 pt-0"
-                      type="number"
-                      hide-details
-                      single-line
-                      disabled
-                    ></v-text-field>
-                  </v-col>
-                  <v-col cols=3>
-                    {{ line.unit.replace("Angstrom", "&#8491;") }}
-                  </v-col>
-                </v-row>
-                <v-row>
-                  <v-col cols=3>
-                    <v-subheader>obs</v-subheader>
-                  </v-col>
-                  <v-col cols=6>
-                    <v-text-field
-                      v-model="line.obs"
-                      @input="(e) => change_line_obs({list_name: item, line_ind: line_ind, obs_new: parseFloat(e), avoid_feedback: true})"
-                      @blur="unpause_tables"
-                      step="0.1"
-                      class="mt-0 pt-0"
-                      type="number"
-                      hide-details
-                      single-line
-                    ></v-text-field>
-                  </v-col>
-                  <v-col cols=3>
-                    {{ line.unit.replace("Angstrom", "&#8491;") }}
-                  </v-col>
-                </v-row>
+                </v-col>
+              </v-row>
+
+              <v-row>
+                <v-text-field
+                  v-model="lines_filter"
+                  append-icon='mdi-magnify'
+                  style="padding: 0px 8px"
+                  clearable
+                  hide-details
+                ></v-text-field>
+              </v-row>
+
+              <v-row v-for="(line, line_ind) in list_contents[item].lines" style="margin-bottom: 0px !important;">
+                <div v-if="lineItemVisible(line, lines_filter)">
+                  <v-row class="row-min-bottom-padding" style="margin: 0px">
+                    <j-tooltip tipid='plugin-line-lists-line-visible'>
+                      <v-btn :color="line.show ? 'accent' : 'default'" icon @click="change_visible([item, line, line_ind])">
+                        <v-icon>{{line.show ? "mdi-eye" : "mdi-eye-off"}}</v-icon>
+                      </v-btn>
+                    </j-tooltip>
+                    <j-tooltip tipid='plugin-line-lists-line-identify'>
+                      <v-btn icon @click="set_identify([item, line, line_ind])">
+                        <img :class="line.identify ? 'color-to-accent' : ''" :src="identify_line_icon" width="20"/>
+                      </v-btn>
+                    </j-tooltip>
+                    <span class='text--primary' style="overflow-wrap: anywhere; font-size: 12pt; padding-top: 6px; padding-left: 6px">
+                      {{line.linename}}
+                    </span>
+                  </v-row>
+                  <v-row class="row-min-bottom-padding">
+                    <v-col cols=3>
+                      <v-subheader>rest</v-subheader>
+                    </v-col>
+                    <v-col cols=6>
+                      <v-text-field
+                        v-model="line.rest"
+                        class="mt-0 pt-0"
+                        type="number"
+                        hide-details
+                        single-line
+                        disabled
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols=3>
+                      {{ line.unit.replace("Angstrom", "&#8491;") }}
+                    </v-col>
+                  </v-row>
+                  <v-row>
+                    <v-col cols=3>
+                      <v-subheader>obs</v-subheader>
+                    </v-col>
+                    <v-col cols=6>
+                      <v-text-field
+                        v-model="line.obs"
+                        @input="(e) => change_line_obs({list_name: item, line_ind: line_ind, obs_new: parseFloat(e), avoid_feedback: true})"
+                        @blur="unpause_tables"
+                        step="0.1"
+                        class="mt-0 pt-0"
+                        type="number"
+                        hide-details
+                        single-line
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols=3>
+                      {{ line.unit.replace("Angstrom", "&#8491;") }}
+                    </v-col>
+                  </v-row>
+                </div>
               </v-row>
             </div>
           </v-expansion-panel-content>
@@ -290,6 +302,15 @@
 
 <script>
   module.exports = {
+    methods: {
+      lineItemVisible(lineItem, lines_filter) {
+        if (lines_filter === null || lines_filter.length == 0) {
+          return true
+        }
+        // simple exact text search match on the line name for now.
+        return lineItem.linename.toLowerCase().indexOf(lines_filter.toLowerCase()) !== -1
+      }
+    },
     created() {
       this.throttledSlider = (v) => {
         // we want the throttle wait to be dynamic (as set by line_lists.py based
