@@ -27,7 +27,14 @@
 
     <div v-if="show_region_info">
       <j-plugin-section-header>Subset Region Definition</j-plugin-section-header>
-      <v-row><v-row>
+      <v-row>
+        <v-col>Subset Type: </v-col>
+        <v-col>{{ subset_classname }}</v-col>
+      </v-row>
+      <v-row v-for="(val, key, index) in subset_definition">
+        <v-col>{{ key }}:</v-col> 
+        <v-col>{{ val }}</v-col>
+      </v-row>
     </div>
   </j-tray-plugin>
 </template>

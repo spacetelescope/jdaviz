@@ -72,7 +72,8 @@ class SubsetPlugin(TemplateMixin):
             self._get_region_definition(change['new'])
         self.show_region_info = change['new'] != self.no_selection_text
         m = [s for s in self.app.data_collection.subset_groups if s.label == change['new']]
-        self.session.edit_subset_mode.edit_subset = m
+        if m != self.session.edit_subset_mode.edit_subset:
+            self.session.edit_subset_mode.edit_subset = m
 
     '''
     # This will be needed once we use a dropdown instead of the actual
@@ -84,7 +85,6 @@ class SubsetPlugin(TemplateMixin):
     '''
 
     def _get_region_definition(self, subset_label):
-        subset_atts = {"CircularROI": [""]}
         self.subset_definition = {}
         subset_group = [s for s in self.app.data_collection.subset_groups if
                         s.label == subset_label][0]
@@ -94,13 +94,20 @@ class SubsetPlugin(TemplateMixin):
         if subset_class in (OrState, AndState):
             self.subset_class = "Compound Subset"
         else:
-            if isinstance(subset_class, RoiSubsetState):
+            if isinstance(subset_state, RoiSubsetState):
                 self.subset_classname = subset_state.roi.__class__.__name__
                 if self.subset_classname == "CircularROI":
-                    self.subset_definition = {"Center": subset_state.roi.get_center(),
+                    x, y = subset_state.roi.get_center()
+                    self.subset_definition = {"X Center": x,
+                                              "Y Center": y,
                                               "Radius": subset_state.roi.radius}
-            elif isinstance(subset_class, RangeSubsetState):
+                elif self.subset_classname == "RectangularROI":
+                    pass
+            elif isinstance(subset_state, RangeSubsetState):
                 self.subset_classname = "Range"
                 self.subset_definition = {"Upper bound": subset_state.hi,
                                           "Lower bound": subset_state.lo}
-
+            else:
+                print(f"Missed this class: {type(subset_state)}")
+        print(self.subset_classname)
+        print(self.subset_definition)
