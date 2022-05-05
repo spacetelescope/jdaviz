@@ -70,22 +70,21 @@ Model Fitting
 .. image:: ../img/model_fitting_components.png
 
 Astropy models can be fit to a spectrum via the Model Fitting plugin.
-Model components are selected via the :guilabel:`Model` pulldown menu.
-Each component should be given a :guilabel:`Model ID`.
-The :guilabel:`Add Model` button adds a Model Parameters block.
+Model components are selected via the :guilabel:`Model Component` pulldown menu.
+The :guilabel:`Add Component` button adds a Model Components block.
 
 Model Parameters are automatically initialized with a guess.
 These starting values can be edited by the user.
-They may also be fixed by selecting the :guilabel:`Fixed?` checkbox,
+They may also be fixed by selecting the checkbox,
 so that they are not fit or changed by the model fitting.
 
 A mathematical expression must be entered into the
-:guilabel:`Model Equation Editor` to specify the mathematical
+:guilabel:`Equation Editor` to specify the mathematical
 combination of models.
 This is also necessary even if there is only one model component.
-The model components are specified by their :guilabel:`Model ID`.
+The model components are specified by their label.
 For example, add together Constant and Gaussian models with
-model IDs 'C' and 'G1' by entering the Model Equation 'C+G1'.
+model labels 'C' and 'G1' by entering the Model Equation 'C+G1'.
 
 Fitted models can be extracted from the app into notebook cells by using
 the :meth:`~jdaviz.core.helpers.ConfigHelper.get_models` method of the
