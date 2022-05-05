@@ -213,6 +213,10 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         if self.spectral_subset_selected == "Entire Spectrum":
             spectrum = full_spectrum
         else:
+            if sr.bounds[0].target is None:
+                sr.bounds[0].target = sr.bounds[0].observer
+            if sr.bounds[1].target is None:
+                sr.bounds[1].target = sr.bounds[1].observer
             spectrum = extract_region(full_spectrum, sr, return_single_spectrum=True)
 
         # compute continuum

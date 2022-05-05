@@ -51,6 +51,11 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         # Retrieve the data cube and slice out desired region, if specified
         cube = self.dataset.get_object(cls=Spectrum1D, statistic=None)
         spec_min, spec_max = self.spectral_subset.selected_min_max(cube)
+        if spec_min.target is None:
+            spec_min.target = spec_min.observer
+        if spec_max.target is None:
+            spec_max.target = spec_max.observer
+
         slab = manipulation.spectral_slab(cube, spec_min, spec_max)
 
         # Calculate the moment and convert to CCDData to add to the viewers
