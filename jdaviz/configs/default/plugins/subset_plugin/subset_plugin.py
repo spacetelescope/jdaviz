@@ -1,4 +1,4 @@
-from glue.core.message import EditSubsetMessage, SubsetCreateMessage
+from glue.core.message import EditSubsetMessage, SubsetUpdateMessage
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode)
 from glue.core.subset import (RoiSubsetState, RangeSubsetState,
@@ -40,8 +40,8 @@ class SubsetPlugin(TemplateMixin):
 
         self.session.hub.subscribe(self, EditSubsetMessage,
                                    handler=self._sync_selected_from_state)
-        self.session.hub.subscribe(self, SubsetCreateMessage,
-                                   handler=self._sync_available_from_state)
+        self.session.hub.subscribe(self, SubsetUpdateMessage,
+                                   handler=self._get_region_definition)
 
         self.no_selection_text = "Create new"
         self.subset_select = SubsetSelect(self,
@@ -57,8 +57,9 @@ class SubsetPlugin(TemplateMixin):
         else:
             new_label = self.session.edit_subset_mode.edit_subset[0].label
             if new_label != self.subset_selected:
+                if new_label not in [s['label'] for s in self.subset_items]:
+                    self._sync_available_from_state()
                 self.subset_selected = self.session.edit_subset_mode.edit_subset[0].label
-                self._get_region_definition(self.subset_selected)
                 self.show_region_info = True
 
     def _sync_available_from_state(self, *args):
@@ -84,15 +85,15 @@ class SubsetPlugin(TemplateMixin):
             self.session.edit_subset_mode = self.mode_selected
     '''
 
-    def _get_region_definition(self, subset_label):
+    def _get_region_definition(self, *args):
         self.subset_definition = {}
         subset_group = [s for s in self.app.data_collection.subset_groups if
-                        s.label == subset_label][0]
+                        s.label == self.subset_selected][0]
         subset_state = subset_group.subset_state
         subset_class = subset_state.__class__
 
         if subset_class in (OrState, AndState, XorState, InvertState):
-            self.subset_class = "Compound Subset"
+            self.subset_classname = "Compound Subset"
         else:
             if isinstance(subset_state, RoiSubsetState):
                 self.subset_classname = subset_state.roi.__class__.__name__
@@ -106,11 +107,12 @@ class SubsetPlugin(TemplateMixin):
                     for att in ("Xmin", "Xmax", "Ymin", "Ymax"):
                         temp_def[att] = getattr(subset_state.roi, att.lower())
                     self.subset_definition = temp_def
+                elif self.subset_classname == "EllipticalROI":
+                    self.subset_definition = {"X Center": subset_state.roi.xc,
+                                              "Y Center": subset_state.roi.yc,
+                                              "X Radius": subset_state.roi.radius_x,
+                                              "Y Radius": subset_state.roi.radius_y}
             elif isinstance(subset_state, RangeSubsetState):
                 self.subset_classname = "Range"
                 self.subset_definition = {"Upper bound": subset_state.hi,
                                           "Lower bound": subset_state.lo}
-            else:
-                print(f"Missed this class: {type(subset_state)}")
-        print(self.subset_classname)
-        print(self.subset_definition)
