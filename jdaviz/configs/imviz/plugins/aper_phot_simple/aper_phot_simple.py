@@ -334,8 +334,6 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
 
                 if self.current_plot_type == "Radial Profile":
                     self._fig.title = 'Radial profile from Subset center'
-                    # This algorithm is from the imexam package,
-                    # see licenses/IMEXAM_LICENSE.txt for more details
                     x_data, y_data = _radial_profile(
                         phot_aperstats.data_cutout, phot_aperstats.bbox, aperture, raw=False)
                     bqplot_line = bqplot.Lines(x=x_data, y=y_data, marker='circle',
@@ -417,6 +415,8 @@ def _radial_profile(radial_cutout, reg_bb, aperture, raw=False):
         x_arr = radial_r
         y_arr = radial_img
     else:
+        # This algorithm is from the imexam package,
+        # see licenses/IMEXAM_LICENSE.txt for more details
         radial_r = list(radial_r)
         y_arr = np.bincount(radial_r, radial_img) / np.bincount(radial_r)
         x_arr = np.arange(y_arr.size)
