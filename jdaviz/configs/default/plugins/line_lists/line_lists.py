@@ -8,7 +8,7 @@ from glue.core.message import (SubsetCreateMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from glue_jupyter.common.toolbar_vuetify import read_icon
-from traitlets import Bool, Float, Int, List, Unicode, Dict, observe
+from traitlets import Any, Bool, Float, Int, List, Unicode, Dict, observe
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (AddDataMessage,
@@ -52,6 +52,8 @@ class LineListTool(PluginTemplateMixin):
     custom_rest = Unicode().tag(sync=True)
     custom_unit_choices = List([]).tag(sync=True)
     custom_unit = Unicode().tag(sync=True)
+
+    lines_filter = Any().tag(sync=True)  # string or None
 
     identify_label = Unicode().tag(sync=True)
     identify_line_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'line_select.svg'), 'svg+xml')).tag(sync=True)  # noqa
