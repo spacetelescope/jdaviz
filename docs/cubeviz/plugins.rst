@@ -98,7 +98,7 @@ The Model Fitting plugin is described in more detail by the
 For Cubeviz, there is an additional option to fit the model over each individual spaxel by
 enabling the :guilabel:`Cube Fit` toggle before pressing :guilabel:`Fit Model`.  
 The fit parameter planes are saved in a data structure
-that can be accessed in a jupyter notebook. The best model fit, evaluated over the cube is
+that can be accessed in a jupyter notebook. The best model fit (evaluated over the cube) is
 also saved to a dataset with the label specified in the :guilabel:`Output Data Label` field.
 
 .. seealso::

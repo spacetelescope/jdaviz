@@ -82,9 +82,10 @@ A mathematical expression must be entered into the
 :guilabel:`Equation Editor` to specify the mathematical
 combination of models.
 This is also necessary even if there is only one model component.
-The model components are specified by their label.
-For example, add together Constant and Gaussian models with
-model labels 'C' and 'G1' by entering the Model Equation 'C+G1'.
+The model components are specified by their labels and the equation
+defaults to the sum of all created components, but can be modified to
+exclude some of components without needing to delete them entirely
+or to change to subtraction, for example.
 
 Fitted models can be extracted from the app into notebook cells by using
 the :meth:`~jdaviz.core.helpers.ConfigHelper.get_models` method of the
