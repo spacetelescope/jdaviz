@@ -41,7 +41,7 @@ class SubsetPlugin(TemplateMixin):
         self.session.hub.subscribe(self, EditSubsetMessage,
                                    handler=self._sync_selected_from_state)
         self.session.hub.subscribe(self, SubsetUpdateMessage,
-                                   handler=self._get_region_definition)
+                                   handler=self._on_subset_update)
 
         self.no_selection_text = "Create new"
         self.subset_select = SubsetSelect(self,
@@ -61,6 +61,12 @@ class SubsetPlugin(TemplateMixin):
                     self._sync_available_from_state()
                 self.subset_selected = self.session.edit_subset_mode.edit_subset[0].label
                 self.show_region_info = True
+
+    def _on_subset_update(self, *args):
+        self._sync_selected_from_state(*args)
+        self._get_region_definition(*args)
+        subset_to_update = self.session.edit_subset_mode.edit_subset[0]
+        self.subset_select._update_subset(subset_to_update, attribute="type")
 
     def _sync_available_from_state(self, *args):
         self.subset_items = [{'label': self.no_selection_text}] + [
