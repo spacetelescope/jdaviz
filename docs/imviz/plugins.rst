@@ -34,6 +34,10 @@ This plugin gives access to per-viewer and per-layer plotting options.
 Subset Tools
 ============
 
+Note that the subset plugin only displays information for regions defined via
+the region selector tools in the UI, and does not show static regions loaded 
+via the API. 
+
 .. seealso::
 
     :ref:`Subset Tools <specviz-subset-plugin>`
