@@ -29,6 +29,16 @@ Plot Options
 
 This plugin gives access to per-viewer and per-layer plotting options.
 
+.. _imviz-subset-plugin:
+
+Subset Tools
+============
+
+.. seealso::
+
+    :ref:`Subset Tools <specviz-subset-plugin>`
+        Specviz documentation on the Subset Tools plugin.
+
 .. _imviz-link-control:
 
 Link Control

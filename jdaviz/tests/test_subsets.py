@@ -10,6 +10,7 @@ from regions import RectanglePixelRegion
 
 from jdaviz.configs.default import SubsetPlugin
 
+
 def test_region_from_subset_2d(cubeviz_helper):
     data = Data(flux=np.ones((128, 128)), label='Test 2D Flux')
     cubeviz_helper.app.data_collection.append(data)
@@ -72,6 +73,7 @@ def test_region_from_subset_3d(cubeviz_helper):
     assert subset_plugin.subset_definition["Y Center"] == 4
     assert subset_plugin.subset_definition["Radius"] == 2.4
 
+
 def test_region_from_subset_profile(cubeviz_helper, spectral_cube_wcs):
     data = Data(flux=np.ones((128, 128, 256)), label='Test 1D Flux', coords=spectral_cube_wcs)
     subset_plugin = SubsetPlugin(app=cubeviz_helper.app)
@@ -94,6 +96,7 @@ def test_region_from_subset_profile(cubeviz_helper, spectral_cube_wcs):
     assert subset_plugin.subset_classname == "Range"
     assert subset_plugin.subset_definition["Lower bound"] == 5
     assert subset_plugin.subset_definition["Upper bound"] == 15.5
+
 
 def test_region_spectral_spatial(cubeviz_helper, spectral_cube_wcs):
     data = Data(flux=np.ones((128, 128, 256)), label='Test Flux', coords=spectral_cube_wcs)
