@@ -25,7 +25,7 @@ class SubsetPlugin(TemplateMixin):
     template_file = __file__, "subset_plugin.vue"
     select = List([]).tag(sync=True)
     subset_items = List([]).tag(sync=True)
-    subset_selected = Unicode("No selection (create new)").tag(sync=True)
+    subset_selected = Unicode("Create new").tag(sync=True)
     mode_selected = Unicode('add').tag(sync=True)
     show_region_info = Bool(False).tag(sync=True)
     subset_classname = Unicode('').tag(sync=True)

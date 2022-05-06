@@ -2,12 +2,13 @@ import astropy.units as u
 from astropy.tests.helper import assert_quantity_allclose
 import numpy as np
 from glue.core import Data
-from glue.core.roi import RectangularROI, XRangeROI
+from glue.core.roi import RectangularROI, XRangeROI, CircularROI
 from glue.core.edit_subset_mode import OrMode
 from numpy.testing import assert_allclose
 from specutils import SpectralRegion
 from regions import RectanglePixelRegion
 
+from jdaviz.configs.default import SubsetPlugin
 
 def test_region_from_subset_2d(cubeviz_helper):
     data = Data(flux=np.ones((128, 128)), label='Test 2D Flux')
@@ -34,6 +35,9 @@ def test_region_from_subset_3d(cubeviz_helper):
     data = Data(flux=np.ones((128, 128, 256)), label='Test 3D Flux')
     cubeviz_helper.app.data_collection.append(data)
 
+    subset_plugin = SubsetPlugin(app=cubeviz_helper.app)
+    assert subset_plugin.subset_selected == "Create new"
+
     cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'Test 3D Flux')
 
     cubeviz_helper.app.get_viewer('flux-viewer').apply_roi(RectangularROI(1, 3.5, -0.2, 3.3))
@@ -50,9 +54,28 @@ def test_region_from_subset_3d(cubeviz_helper):
     assert_allclose(reg.width, 2.5)
     assert_allclose(reg.height, 3.5)
 
+    assert subset_plugin.subset_selected == "Subset 1"
+    assert subset_plugin.subset_classname == "RectangularROI"
+    assert subset_plugin.subset_definition["Xmin"] == 1
+    assert subset_plugin.subset_definition["Xmax"] == 3.5
+    assert subset_plugin.subset_definition["Ymin"] == -0.2
+    assert subset_plugin.subset_definition["Ymax"] == 3.3
+
+    # Circular Subset
+    flux_viewer = cubeviz_helper.app.get_viewer("flux-viewer")
+    # We set the active tool here to trigger a reset of the Subset state to "Create new"
+    flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['bqplot:circle']
+    cubeviz_helper.app.get_viewer('flux-viewer').apply_roi(CircularROI(xc=3, yc=4, radius=2.4))
+    assert subset_plugin.subset_selected == "Subset 2"
+    assert subset_plugin.subset_classname == "CircularROI"
+    assert subset_plugin.subset_definition["X Center"] == 3
+    assert subset_plugin.subset_definition["Y Center"] == 4
+    assert subset_plugin.subset_definition["Radius"] == 2.4
 
 def test_region_from_subset_profile(cubeviz_helper, spectral_cube_wcs):
     data = Data(flux=np.ones((128, 128, 256)), label='Test 1D Flux', coords=spectral_cube_wcs)
+    subset_plugin = SubsetPlugin(app=cubeviz_helper.app)
+
     cubeviz_helper.app.data_collection.append(data)
 
     cubeviz_helper.app.add_data_to_viewer('spectrum-viewer', 'Test 1D Flux')
@@ -67,6 +90,10 @@ def test_region_from_subset_profile(cubeviz_helper, spectral_cube_wcs):
     assert_quantity_allclose(reg.lower, 5.0 * u.Hz)
     assert_quantity_allclose(reg.upper, 15.0 * u.Hz)
 
+    assert subset_plugin.subset_selected == "Subset 1"
+    assert subset_plugin.subset_classname == "Range"
+    assert subset_plugin.subset_definition["Lower bound"] == 5
+    assert subset_plugin.subset_definition["Upper bound"] == 15.5
 
 def test_region_spectral_spatial(cubeviz_helper, spectral_cube_wcs):
     data = Data(flux=np.ones((128, 128, 256)), label='Test Flux', coords=spectral_cube_wcs)
