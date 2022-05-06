@@ -1,7 +1,7 @@
 import uuid
 
-from jdaviz.configs.default.plugins.model_fitting.model_fitting import ModelFitting
-from jdaviz.configs.default.plugins.model_fitting.initializers import MODELS 
+from jdaviz.configs.default.plugins.model_fitting.initializers import MODELS
+
 
 def test_default_model_labels(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
@@ -11,10 +11,10 @@ def test_default_model_labels(specviz_helper, spectrum1d):
 
     for model in MODELS:
         # Check that the auto label is set correctly (or at least the first character matches)
-        # BlackBody and Polynomial labels behave differently, so let's at least check the first character
+        # BlackBody and Polynomial labels behave differently, so check only the first character
         modelfit_plugin.comp_selected = model
         assert modelfit_plugin.comp_label[0] == model[0]
-        
+
         # Test component label increments by default
         previous_label = modelfit_plugin.comp_label
         modelfit_plugin.vue_add_model()
