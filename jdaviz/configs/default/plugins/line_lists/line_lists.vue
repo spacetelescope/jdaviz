@@ -19,7 +19,7 @@
       </j-tooltip>
       <j-tooltip v-else tipid='plugin-line-lists-line-identify-chip-inactive'>
         <v-chip label=true>
-          <img :src="identify_line_icon" width="20"/> no line selected
+          <img class="invert-if-dark" :src="identify_line_icon" width="20"/> no line selected
         </v-chip>
       </j-tooltip>
     </v-row>
@@ -224,7 +224,7 @@
                     </j-tooltip>
                     <j-tooltip tipid='plugin-line-lists-line-identify'>
                       <v-btn icon @click="set_identify([item, line, line_ind])">
-                        <img :class="line.identify ? 'color-to-accent' : ''" :src="identify_line_icon" width="20"/>
+                        <img :class="line.identify ? 'color-to-accent' : 'invert-if-dark'" :src="identify_line_icon" width="20"/>
                       </v-btn>
                     </j-tooltip>
                     <span class='text--primary' style="overflow-wrap: anywhere; font-size: 12pt; padding-top: 6px; padding-left: 6px">
