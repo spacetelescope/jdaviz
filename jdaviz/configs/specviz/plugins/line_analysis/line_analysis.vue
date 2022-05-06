@@ -120,7 +120,7 @@
         <v-col cols=2>
           <j-tooltip tipid='plugin-line-analysis-sync-identify'>
             <v-btn icon @click="() => sync_identify = !sync_identify" style="margin-top: 14px">
-              <img :class="sync_identify ? 'color-to-accent' : ''" :src="sync_identify ? sync_identify_icon_enabled : sync_identify_icon_disabled" width="20"/>
+              <img :class="sync_identify ? 'color-to-accent' : 'invert-if-dark'" :src="sync_identify ? sync_identify_icon_enabled : sync_identify_icon_disabled" width="20"/>
             </v-btn>
           </j-tooltip>
         </v-col>
