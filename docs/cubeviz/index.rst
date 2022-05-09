@@ -51,6 +51,16 @@ Future functionality will include the ability to:
 
 * bin data into constant signal-to-noise regions
 
+Quickstart
+----------
+
+To load a sample `SDSS MaNGA IFU data cube <https://stsci.box.com/shared/static/28a88k1qfipo4yxc4p4d40v4axtlal8y.fits>`_ into ``Cubeviz`` in the standalone app, run::
+
+    jdaviz cubeviz /path/to/manga-7495-12704-LOGCUBE.fits
+
+
+Or to load in a Jupyter notebook, see the :gh-notebook:`CubevizExample`.
+
 Using Cubeviz
 -------------
 

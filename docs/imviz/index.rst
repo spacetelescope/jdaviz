@@ -15,6 +15,17 @@ language, and therefore can be run anywhere Python is supported
 interactive interface to the analysis capabilities in that library.
 
 
+Quickstart
+----------
+
+To load a sample `HST/ACS Image <https://mast.stsci.edu/api/v0.1/Download/file?uri=mast:HST/product/jbqf03gjq_flc.fits>`_ into ``Imviz`` in the standalone app, run::
+
+    jdaviz imviz /path/to/jbqf03gjq_flc.fits
+
+
+Or to load in a Jupyter notebook, see the :gh-notebook:`ImvizExample`.
+
+
 Using Imviz
 -----------
 
