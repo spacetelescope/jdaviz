@@ -37,7 +37,7 @@ def test_region_from_subset_3d(cubeviz_helper):
     cubeviz_helper.app.data_collection.append(data)
 
     subset_plugin = SubsetPlugin(app=cubeviz_helper.app)
-    assert subset_plugin.subset_selected == "Create new"
+    assert subset_plugin.subset_selected == "Create New"
 
     cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'Test 3D Flux')
 
