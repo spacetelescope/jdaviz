@@ -7,6 +7,8 @@ from jdaviz.core.events import SliceToolStateMessage, LineIdentifyMessage
 
 
 class BaseSpectrumVerticalLine(Lines, HubListener):
+    _y_stretch = 1
+
     def __init__(self, viewer, x, **kwargs):
         # we'll store the current units so that we can automatically update the
         # positioning on a change to the x-units
@@ -29,8 +31,11 @@ class BaseSpectrumVerticalLine(Lines, HubListener):
         super().__init__(x=[x, x], y=self.y, scales=scales, **kwargs)
 
     def _update_ys(self, y_min=None, y_max=None):
-        self.y = [y_min if y_min is not None else self.y[0],
-                  y_max if y_max is not None else self.y[1]]
+        y_min = y_min if y_min is not None else self.y[0]
+        y_max = y_max if y_max is not None else self.y[1]
+        y_range = y_max - y_min
+        self.y = [y_min - (self._y_stretch-1)*y_range,
+                  y_max + (self._y_stretch-1)*y_range]
 
     def _update_reference_data(self, reference_data):
         if reference_data is None:
@@ -55,6 +60,9 @@ class SpectralLine(BaseSpectrumVerticalLine):
     by eliminating any SpectralLines objects from a figures marks list. Also
     lets us do wavelength redshifting here on mark creation.
     """
+    # extend to double the current range so interactive panning will never show edge    
+    _y_stretch = 2
+
     def __init__(self, viewer, rest_value, redshift=0, name=None, **kwargs):
         self._rest_value = rest_value
         self._identify = False
