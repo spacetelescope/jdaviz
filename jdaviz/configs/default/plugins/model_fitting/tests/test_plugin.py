@@ -27,7 +27,6 @@ def test_default_model_labels(specviz_helper, spectrum1d):
         modelfit_plugin.vue_add_model()
         assert modelfit_plugin.comp_label == previous_label + "_1"
 
-
     assert len(modelfit_plugin.component_models) == len(MODELS)
 
     # Test that default equation adds all components together
