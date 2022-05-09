@@ -57,7 +57,7 @@ selector tool. Note that these are synched with the subset tools in the
 app-level toolbar.
 
 If an existing subset is selected, the parameters of the subset will also be 
-shown. Note that parameters compound regions (e.g. a subset with three disjoint 
+shown. Note that parameters compound regions (e.g., a subset with three disjoint 
 regions) are not currently displayed.
 
 .. _gaussian-smooth:

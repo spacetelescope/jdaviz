@@ -36,7 +36,7 @@ Subset Tools
 
 Note that the subset plugin only displays information for regions defined via
 the region selector tools in the UI, and does not show static regions loaded 
-via the API. 
+via the API unless an interactive region is drawn after. 
 
 .. seealso::
 
