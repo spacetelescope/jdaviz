@@ -31,7 +31,7 @@
         <v-col>Subset Type: </v-col>
         <v-col>{{ subset_classname }}</v-col>
       </v-row>
-      <div v-if="subset_definition">
+      <div v-if="has_subset_details">
         <v-row v-for="(val, key, index) in subset_definition">
           <v-col>{{ key }}:</v-col> 
           <v-col>

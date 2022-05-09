@@ -30,6 +30,7 @@ class SubsetPlugin(TemplateMixin):
     show_region_info = Bool(False).tag(sync=True)
     subset_classname = Unicode('').tag(sync=True)
     subset_definition = Dict({}).tag(sync=True)
+    has_subset_details = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -100,9 +101,11 @@ class SubsetPlugin(TemplateMixin):
 
         if subset_class in (OrState, AndState, XorState, InvertState):
             self.subset_classname = "Compound Subset"
+            self.has_subset_details = False
         else:
             if isinstance(subset_state, RoiSubsetState):
                 self.subset_classname = subset_state.roi.__class__.__name__
+                self.has_subset_details = True
                 if self.subset_classname == "CircularROI":
                     x, y = subset_state.roi.get_center()
                     self.subset_definition = {"X Center": x,
@@ -122,5 +125,7 @@ class SubsetPlugin(TemplateMixin):
                 self.subset_classname = "Range"
                 self.subset_definition = {"Upper bound": subset_state.hi,
                                           "Lower bound": subset_state.lo}
+                self.has_subset_details = True
             else:
                 self.subset_classname = subset_class.__name__
+                self.has_subset_details = False
