@@ -85,3 +85,17 @@ def test_register_model(specviz_helper, spectrum1d):
     modelfit_plugin.results_label = test_label
     modelfit_plugin.vue_model_fitting()
     assert test_label in specviz_helper.app.data_collection
+
+
+@pytest.mark.filterwarnings('ignore')
+def test_register_cube_model(cubeviz_helper, spectrum1d_cube):
+    cubeviz_helper.load_data(spectrum1d_cube)
+    modelfit_plugin = cubeviz_helper.app.get_tray_item_from_name('g-model-fitting')
+
+    # Test custom model label
+    modelfit_plugin.comp_selected = 'Linear1D'
+    modelfit_plugin.vue_add_model()
+    test_label = uuid.uuid4().hex
+    modelfit_plugin.results_label = test_label
+    modelfit_plugin.vue_model_fitting()
+    assert test_label in cubeviz_helper.app.data_collection
