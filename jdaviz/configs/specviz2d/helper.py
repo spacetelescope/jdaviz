@@ -59,6 +59,9 @@ class Specviz2d(ConfigHelper, LineListMixin):
                 setattr(scales['x'], name, idx)
 
     def _update_spec1d_x_axis(self, change):
+        if self.app.get_viewer('spectrum-viewer').state.reference_data is None:
+            return
+
         # This assumes the two spectrum viewers have the same x-axis shape and
         # wavelength solution, which should always hold
         if change['old'] is None:
@@ -125,8 +128,14 @@ class Specviz2d(ConfigHelper, LineListMixin):
         if spectrum_2d is not None:
             self.app.load_data(spectrum_2d, parser_reference="mosviz-spec2d-parser",
                                data_labels=spectrum_2d_label,
-                               show_in_viewer=show_in_viewer,
+                               show_in_viewer=False,
                                add_to_table=False)
+
+            # Passing show_in_viewer into app.load_data does not work anymore,
+            # so we force it to show here.
+            if show_in_viewer:
+                self.app.add_data_to_viewer("spectrum-2d-viewer", spectrum_2d_label)
+
             # Collapse the 2D spectrum to 1D if no 1D spectrum provided
             if spectrum_1d is None:
                 self.app.load_data(spectrum_2d,
@@ -135,15 +144,14 @@ class Specviz2d(ConfigHelper, LineListMixin):
                                    show_in_viewer=show_in_viewer)
 
                 # Warn that this shouldn't be used for science
-                msg = "Warning: The collapsed 1D spectrum is for quicklook" +\
-                    " purposes only. A robust extraction should be used for" +\
-                    " scientific use cases."
+                msg = ("The collapsed 1D spectrum is for quicklook"
+                       " purposes only. A robust extraction should be used for"
+                       " scientific use cases.")
                 msg = SnackbarMessage(msg, color='warning', sender=self,
                                       timeout=10000)
                 self.app.hub.broadcast(msg)
 
-                return
-
-        self.app.load_data(spectrum_1d, data_label=spectrum_1d_label,
-                           parser_reference="specviz-spectrum1d-parser",
-                           show_in_viewer=show_in_viewer)
+        else:
+            self.app.load_data(spectrum_1d, data_label=spectrum_1d_label,
+                               parser_reference="specviz-spectrum1d-parser",
+                               show_in_viewer=show_in_viewer)

@@ -64,6 +64,12 @@ Mosviz
 Specviz
 ^^^^^^^
 
+Specviz2d
+^^^^^^^^^
+
+- Fixed a regression that caused NIRSpec s2d to stop loading
+  properly. [#1307]
+
 Other Changes and Additions
 ---------------------------
 
