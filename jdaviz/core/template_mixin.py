@@ -439,6 +439,7 @@ class SubsetSelect(BaseSelectPluginComponent):
                 # NOTE: += will not trigger traitlet update
                 self.items = self.items + [self._subset_to_dict(subset)]  # noqa
         else:
+            # 'type' can be passed manually rather than coming from SubsetUpdateMessage.attribute
             if attribute in ('style', 'type'):
                 # TODO: may need to add label and then rebuild the entire list if/when
                 # we add support for renaming subsets

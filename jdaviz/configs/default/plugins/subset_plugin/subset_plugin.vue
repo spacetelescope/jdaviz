@@ -31,15 +31,20 @@
         <v-col>Subset Type: </v-col>
         <v-col>{{ subset_classname }}</v-col>
       </v-row>
-      <v-row v-for="(val, key, index) in subset_definition">
-        <v-col>{{ key }}:</v-col> 
-        <v-col>
-          <j-number-uncertainty
-            :value="val"
-            :defaultDigs="6"
-          ></j-number-uncertainty>
-        </v-col>
-      </v-row>
+      <div v-if="subset_definition">
+        <v-row v-for="(val, key, index) in subset_definition">
+          <v-col>{{ key }}:</v-col> 
+          <v-col>
+            <j-number-uncertainty
+              :value="val"
+              :defaultDigs="6"
+            ></j-number-uncertainty>
+          </v-col>
+        </v-row>
+      </div>
+      <div v-else>
+        <v-row>Could not retrieve subset parameters for this subset type</v-row>
+      </div>
     </div>
   </j-tray-plugin>
 </template>

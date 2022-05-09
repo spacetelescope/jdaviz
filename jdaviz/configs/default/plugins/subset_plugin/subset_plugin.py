@@ -122,3 +122,5 @@ class SubsetPlugin(TemplateMixin):
                 self.subset_classname = "Range"
                 self.subset_definition = {"Upper bound": subset_state.hi,
                                           "Lower bound": subset_state.lo}
+            else:
+                self.subset_classname = self.subset_state.__class__.__name__
