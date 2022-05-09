@@ -268,7 +268,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
     @observe('comp_selected', 'poly_order')
     def _update_comp_label_default(self, event={}):
-        abbrevs = {'BlackBody': 'BB', 'PowerLaw': 'PL', 'Lorentz': 'Lo'}
+        abbrevs = {'BlackBody': 'BB', 'PowerLaw': 'PL', 'Lorentz1D': 'Lo'}
         abbrev = abbrevs.get(self.comp_selected, self.comp_selected[0].upper())
         if self.comp_selected == "Polynomial1D":
             self.display_order = True

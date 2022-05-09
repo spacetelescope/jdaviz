@@ -25,15 +25,8 @@ def test_default_model_labels(specviz_helper, spectrum1d):
         # Test component label increments by default
         previous_label = modelfit_plugin.comp_label
         modelfit_plugin.vue_add_model()
-        try:
-            assert modelfit_plugin.comp_label == previous_label + "_1"
-        except AssertionError:
-            # Both Linear and Lortenz have the same default label
-            # If the above check fails, check to see if it's incremented by 2
-            if model in ('Linear1D', 'Lorentz1D'):
-                assert modelfit_plugin.comp_label == "L_2"
-            else:
-                raise
+        assert modelfit_plugin.comp_label == previous_label + "_1"
+
 
     assert len(modelfit_plugin.component_models) == len(MODELS)
 
