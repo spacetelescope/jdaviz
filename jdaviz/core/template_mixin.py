@@ -215,6 +215,10 @@ class BaseSelectPluginComponent(BasePluginComponent, HasTraits):
         self.filters = filters
 
     @property
+    def default_text(self):
+        return self._default_text
+
+    @property
     def manual_options(self):
         return self._manual_options
         # read-only access to manual options (cannot change after init)

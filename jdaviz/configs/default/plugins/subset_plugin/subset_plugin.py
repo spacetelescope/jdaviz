@@ -44,16 +44,18 @@ class SubsetPlugin(TemplateMixin):
         self.session.hub.subscribe(self, SubsetUpdateMessage,
                                    handler=self._on_subset_update)
 
-        self.no_selection_text = "Create new"
         self.subset_select = SubsetSelect(self,
                                           'subset_items',
                                           'subset_selected',
-                                          default_text=self.no_selection_text)
+                                          default_text="Create New")
 
     def _sync_selected_from_state(self, *args):
+        if not hasattr(self, 'subset_select'):
+            # during initial init, this can trigger before the component is initialized
+            return
         if self.session.edit_subset_mode.edit_subset == []:
-            if self.subset_selected != self.no_selection_text:
-                self.subset_selected = self.no_selection_text
+            if self.subset_selected != self.subset_select.default_text:
+                self.subset_selected = self.subset_select.default_text
                 self.show_region_info = False
         else:
             new_label = self.session.edit_subset_mode.edit_subset[0].label
@@ -70,15 +72,22 @@ class SubsetPlugin(TemplateMixin):
         self.subset_select._update_subset(subset_to_update, attribute="type")
 
     def _sync_available_from_state(self, *args):
-        self.subset_items = [{'label': self.no_selection_text}] + [
+        if not hasattr(self, 'subset_select'):
+            # during initial init, this can trigger before the component is initialized
+            return
+        self.subset_items = [{'label': self.subset_select.default_text}] + [
                              self.subset_select._subset_to_dict(subset) for subset in
                              self.data_collection.subset_groups]
 
     @observe('subset_selected')
     def _sync_selected_from_ui(self, change):
-        if change['new'] != self.no_selection_text:
+        if not hasattr(self, 'subset_select'):
+            # during initial init, this can trigger before the component is initialized
+            return
+
+        if change['new'] != self.subset_select.default_text:
             self._get_region_definition(change['new'])
-        self.show_region_info = change['new'] != self.no_selection_text
+        self.show_region_info = change['new'] != self.subset_select.default_text
         m = [s for s in self.app.data_collection.subset_groups if s.label == change['new']]
         if m != self.session.edit_subset_mode.edit_subset:
             self.session.edit_subset_mode.edit_subset = m
