@@ -30,7 +30,6 @@ def test_default_model_labels(specviz_helper, spectrum1d):
     assert len(modelfit_plugin.component_models) == len(MODELS)
 
     # Test that default equation adds all components together
-    # Make sure to remove the trailing '+' sign!
     assert (
         modelfit_plugin.model_equation
         == "+".join(param["id"] for param in modelfit_plugin.component_models)
@@ -50,7 +49,6 @@ def test_custom_model_labels(specviz_helper, spectrum1d):
     assert len(modelfit_plugin.component_models) == len(MODELS)
 
     # Test that default equation adds all components together
-    # Make sure to remove the trailing '+' sign!
     assert (
         modelfit_plugin.model_equation
         == "+".join(param["id"] for param in modelfit_plugin.component_models)
