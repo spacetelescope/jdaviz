@@ -34,7 +34,7 @@ def test_default_model_labels(specviz_helper, spectrum1d):
     # Make sure to remove the trailing '+' sign!
     assert (
         modelfit_plugin.model_equation
-        == "".join((param["id"] + "+") for param in modelfit_plugin.component_models)[:-1]
+        == "+".join(param["id"] for param in modelfit_plugin.component_models)
     )
 
 
@@ -54,7 +54,7 @@ def test_custom_model_labels(specviz_helper, spectrum1d):
     # Make sure to remove the trailing '+' sign!
     assert (
         modelfit_plugin.model_equation
-        == "".join((param["id"] + "+") for param in modelfit_plugin.component_models)[:-1]
+        == "+".join(param["id"] for param in modelfit_plugin.component_models)
     )
 
 
