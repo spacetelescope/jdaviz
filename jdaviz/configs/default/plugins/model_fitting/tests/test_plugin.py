@@ -97,5 +97,5 @@ def test_register_cube_model(cubeviz_helper, spectrum1d_cube):
     modelfit_plugin.vue_add_model()
     test_label = uuid.uuid4().hex
     modelfit_plugin.results_label = test_label
-    modelfit_plugin.vue_model_fitting()
+    modelfit_plugin.vue_fit_model_to_cube()
     assert test_label in cubeviz_helper.app.data_collection
