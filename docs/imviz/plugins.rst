@@ -127,6 +127,10 @@ an interactively selected region. A typical workflow is as follows:
    **This field resets every time Data selection changes.**
 9. Select the desired radial profile plot type using the :guilabel:`Plot Type` drop-down menu:
 
+  * Curve of Growth: :attr:`~photutils.aperture.ApertureStats.sum` (sum of flux in the aperture)
+    across radii from center out to the edge of the aperture. This is calculated in the same
+    way as the final aperture sum in the output table, which is explained farther down on
+    this page.
   * Radial Profile: Binned average as a function of radius from the center of the region.
   * Radial Profile (Raw): Raw image data points as a function of radius from the center of the region.
     Caution: having too many data points may cause performance issues with this feature. 

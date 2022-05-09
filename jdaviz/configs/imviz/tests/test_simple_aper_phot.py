@@ -3,7 +3,11 @@ import numpy as np
 from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose
 from numpy.testing import assert_allclose, assert_array_equal
+from photutils.aperture import (ApertureStats, CircularAperture, EllipticalAperture,
+                                RectangularAperture, EllipticalAnnulus)
 
+from jdaviz.configs.imviz.plugins.aper_phot_simple.aper_phot_simple import (
+    _curve_of_growth, _radial_profile)
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS, BaseImviz_WCS_NoWCS
 
 
@@ -157,6 +161,11 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert_allclose(phot_plugin.bg_annulus_inner_r, 6.363961030678928)  # half-width = 4.5
         assert_allclose(phot_plugin.bg_annulus_width, 10)
 
+        # Curve of growth
+        phot_plugin.current_plot_type = 'Curve of Growth'
+        phot_plugin.vue_do_aper_phot()
+        assert phot_plugin._fig.title == 'Curve of growth from Subset center'
+
 
 class TestSimpleAperPhot_NoWCS(BaseImviz_WCS_NoWCS):
     def test_plugin_no_wcs(self):
@@ -239,3 +248,73 @@ def test_annulus_background(imviz_helper):
     # Bad annulus should not crash plugin
     phot_plugin.bg_annulus_inner_r = -1
     assert_allclose(phot_plugin.background_value, 0)
+
+
+# NOTE: Extracting the cutout for radial profile is aperture
+#       shape agnostic, so we use ellipse as representative case.
+class TestRadialProfile():
+    def setup_class(self):
+        data = np.ones((51, 51)) * u.nJy
+        self.aperture = EllipticalAperture((25, 25), 20, 15)
+        phot_aperstats = ApertureStats(data, self.aperture)
+        self.data_cutout = phot_aperstats.data_cutout
+        self.bbox = phot_aperstats.bbox
+
+    def test_profile_raw(self):
+        x_arr, y_arr = _radial_profile(self.data_cutout, self.bbox, self.aperture, raw=True)
+        # Too many data points to compare each one for X.
+        assert x_arr.shape == y_arr.shape == (923, )
+        assert_allclose(x_arr.min(), 0)
+        assert_allclose(x_arr.max(), 19.4164878389476)
+        assert_allclose(y_arr, 1)
+
+    def test_profile_imexam(self):
+        x_arr, y_arr = _radial_profile(self.data_cutout, self.bbox, self.aperture, raw=False)
+        assert_allclose(x_arr, range(20))
+        assert_allclose(y_arr, 1)
+
+
+@pytest.mark.parametrize('with_unit', (False, True))
+def test_curve_of_growth(with_unit):
+    data = np.ones((51, 51))
+    cen = (25, 25)
+    if with_unit:
+        data = data << (u.MJy / u.sr)
+        bg = 0 * data.unit
+        pixarea_fac = 1 * u.sr
+        expected_ylabel = 'MJy'
+    else:
+        bg = 0
+        pixarea_fac = None
+        expected_ylabel = 'Value'
+
+    apertures = (CircularAperture(cen, 20),
+                 EllipticalAperture(cen, 20, 15),
+                 RectangularAperture(cen, 20, 15))
+
+    for aperture in apertures:
+        final_sum = ApertureStats(data, aperture).sum
+        if pixarea_fac is not None:
+            final_sum = final_sum * pixarea_fac
+        x_arr, sum_arr, x_label, y_label = _curve_of_growth(
+            data, aperture, final_sum, background=bg, pixarea_fac=pixarea_fac)
+        assert_allclose(x_arr, [2, 4, 6, 8, 10, 12, 14, 16, 18, 20])
+        assert y_label == expected_ylabel
+
+        if isinstance(aperture, CircularAperture):
+            assert x_label == 'Radius (pix)'
+            assert_allclose(sum_arr, [
+                12.566371, 50.265482, 113.097336, 201.06193, 314.159265,
+                452.389342, 615.75216, 804.247719, 1017.87602, 1256.637061])
+        elif isinstance(aperture, EllipticalAperture):
+            assert x_label == 'Semimajor axis (pix)'
+            assert_allclose(sum_arr, [
+                9.424778, 37.699112, 84.823002, 150.796447, 235.619449,
+                339.292007, 461.81412, 603.185789, 763.407015, 942.477796])
+        else:  # RectangularAperture
+            assert x_label == 'Width (pix)'
+            assert_allclose(sum_arr, [3, 12, 27, 48, 75, 108, 147, 192, 243, 300])
+
+    with pytest.raises(TypeError, match='Unsupported aperture'):
+        _curve_of_growth(data, EllipticalAnnulus(cen, 3, 8, 5), 100,
+                         pixarea_fac=pixarea_fac)
