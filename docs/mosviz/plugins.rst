@@ -30,6 +30,16 @@ Plot Options
 
 This plugin gives access to per-viewer and per-layer plotting options.
 
+.. _mosviz-subset-plugin:
+
+Subset Tools
+============
+
+.. seealso::
+
+    :ref:`Subset Tools <specviz-subset-plugin>`
+        Specviz documentation on the Subset Tools plugin.
+
 Gaussian Smooth
 ===============
 

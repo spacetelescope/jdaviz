@@ -215,6 +215,10 @@ class BaseSelectPluginComponent(BasePluginComponent, HasTraits):
         self.filters = filters
 
     @property
+    def default_text(self):
+        return self._default_text
+
+    @property
     def manual_options(self):
         return self._manual_options
         # read-only access to manual options (cannot change after init)
@@ -403,7 +407,6 @@ class SubsetSelect(BaseSelectPluginComponent):
     @staticmethod
     def _subset_type(subset):
         if isinstance(subset.subset_state, RoiSubsetState):
-            # then this is a spatial subset, we want to ignore
             return 'spatial'
         else:
             return 'spectral'
@@ -440,7 +443,8 @@ class SubsetSelect(BaseSelectPluginComponent):
                 # NOTE: += will not trigger traitlet update
                 self.items = self.items + [self._subset_to_dict(subset)]  # noqa
         else:
-            if attribute in ('style'):
+            # 'type' can be passed manually rather than coming from SubsetUpdateMessage.attribute
+            if attribute in ('style', 'type'):
                 # TODO: may need to add label and then rebuild the entire list if/when
                 # we add support for renaming subsets
 

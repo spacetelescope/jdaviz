@@ -29,6 +29,8 @@ const tooltips = {
     'Import data file',
   'g-subset-tools': 
     'Select, create, and delete subsets',
+  'g-subset-mode':
+    'Operation performed by subset selection in viewer',
   'g-unified-slider':
     'Grab slider to slice through cube or select slice number',
   'g-redshift-slider':

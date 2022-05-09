@@ -45,6 +45,21 @@ which will show uncertainty values as a shaded area above and below the
 spectrum. With this option toggled on, all spectra added to Specviz will
 have their uncertainty values displayed as well.
 
+.. _specviz-subset-plugin:
+
+Subset Tools
+============
+
+This plugin allows you to select an existing subset to modify, or to select
+"Create new" to create a new subset by selecting and using the region selector 
+in the spectrum viewer toolbar. You can also choose the operation that will be 
+applied by the selector tool. Note that these are synched with the subset tools 
+in the app-level toolbar.
+
+If an existing subset is selected, the parameters of the subset will also be 
+shown. Note that parameters compound regions (e.g., a subset with three disjoint 
+regions) are not currently displayed.
+
 .. _gaussian-smooth:
 
 Gaussian Smooth
