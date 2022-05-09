@@ -1,7 +1,11 @@
+"""
+Tests the features of the Model Fitting Plugin (Selecting model parameters, adding models, etc.)
+This does NOT test the actual fitting self (see test_fitting.py for that)
+"""
+
 import uuid
 
 import pytest
-from jdaviz.configs import specviz
 
 from jdaviz.configs.default.plugins.model_fitting.initializers import MODELS
 
@@ -60,11 +64,12 @@ def test_custom_model_labels(specviz_helper, spectrum1d):
         == "".join((param["id"] + "+") for param in modelfit_plugin.component_models)[:-1]
     )
 
+
 @pytest.mark.filterwarnings('ignore')
 def test_register_model(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
     modelfit_plugin = specviz_helper.app.get_tray_item_from_name('g-model-fitting')
-    
+
     # Test registering a simple linear fit
     modelfit_plugin.comp_selected = 'Linear1D'
     modelfit_plugin.vue_add_model()
