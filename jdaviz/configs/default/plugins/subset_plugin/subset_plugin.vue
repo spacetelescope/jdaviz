@@ -1,8 +1,8 @@
 <template>
   <j-tray-plugin>
     <v-row>
-      <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+
-                          '/specviz/displaying.html#defining-spectral-regions'">
+      <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+
+                          '/plugins.html#subset-tools'">
         Tools for selecting and interacting with subsets.
       </j-docs-link>
     </v-row>
