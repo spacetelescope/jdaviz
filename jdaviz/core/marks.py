@@ -1,6 +1,5 @@
-import numpy as np
-
 from astropy import units as u
+from bqplot import LinearScale
 from bqplot.marks import Lines, Label, Scatter
 from glue.core import HubListener
 from specutils import Spectrum1D
@@ -13,27 +12,18 @@ from jdaviz.core.events import (SliceToolStateMessage, LineIdentifyMessage,
 class OffscreenIndicator(Label, HubListener):
     def __init__(self, viewer):
         self.viewer = viewer
-        viewer.state.add_callback("y_min", self._update_ys)
-        viewer.state.add_callback("y_max", self._update_ys)
-        viewer.state.add_callback("x_min", self._update_xs)
-        viewer.state.add_callback("x_max", self._update_xs)
+
+        viewer.state.add_callback("x_min", lambda x_min: self._update_counts())
+        viewer.state.add_callback("x_max", lambda x_max: self._update_counts())
 
         viewer.session.hub.subscribe(self, RedshiftMessage,
                                      handler=self._update_counts)
         viewer.session.hub.subscribe(self, SpectralMarksChangedMessage,
                                      handler=self._update_counts)
 
-        super().__init__(text=['', ''], x_offset=8, scales={}, colors=['black', 'black'])
-        self._update_xs()
-        self._update_ys()
-
-    def _update_ys(self, *args):
-        y_range = self.viewer.state.y_max - self.viewer.state.y_min
-        self.y = [self.viewer.state.y_min + y_range*0.8] * 2
-
-    def _update_xs(self, *args):
-        x_range = self.viewer.state.x_max - self.viewer.state.x_min
-        self.x = [self.viewer.state.x_min, self.viewer.state.x_max - 0.05*x_range]
+        super().__init__(text=['', ''], x=[0.02, 0.9], y=[0.8, 0.8],
+                         scales={'x': LinearScale(min=0, max=1), 'y': LinearScale(min=0, max=1)},
+                         colors=['black', 'black'])
         self._update_counts()
 
     def _update_counts(self, *args):
@@ -44,12 +34,10 @@ class OffscreenIndicator(Label, HubListener):
                     oob_left += 1
                 elif m.x[0] > self.viewer.state.x_max:
                     oob_right += 1
-        self.text = [f'< {oob_left}' if oob_left > 0 else '', f'{oob_right} >' if oob_right > 0 else '']
+        self.text = [f'\u25c0 {oob_left}' if oob_left > 0 else '', f'{oob_right} \u25b6' if oob_right > 0 else '']
 
 
 class BaseSpectrumVerticalLine(Lines, HubListener):
-    _y_stretch = 1
-
     def __init__(self, viewer, x, **kwargs):
         # we'll store the current units so that we can automatically update the
         # positioning on a change to the x-units
@@ -60,23 +48,12 @@ class BaseSpectrumVerticalLine(Lines, HubListener):
         viewer.state.add_callback("reference_data",
                                   self._update_reference_data)
 
-        # keep the y values at the y-limits of the plot
-        viewer.state.add_callback("y_min", lambda y_min: self._update_ys(y_min=y_min))
-        viewer.state.add_callback("y_max", lambda y_max: self._update_ys(y_max=y_max))
-
         scales = viewer.scales
-        # _update_ys will set self.y
-        self._update_ys(scales['y'].min, scales['y'].max)
 
         # Lines.__init__ will set self.x
-        super().__init__(x=[x, x], y=self.y, scales=scales, **kwargs)
-
-    def _update_ys(self, y_min=None, y_max=None):
-        y_min = y_min if y_min is not None else self.y[0]
-        y_max = y_max if y_max is not None else self.y[1]
-        y_range = y_max - y_min
-        self.y = [y_min - (self._y_stretch-1)*y_range,
-                  y_max + (self._y_stretch-1)*y_range]
+        super().__init__(x=[x, x], y=[0, 1],
+                         scales={'x': scales['x'], 'y': LinearScale(min=0, max=1)},
+                         **kwargs)
 
     def _update_reference_data(self, reference_data):
         if reference_data is None:
@@ -101,9 +78,6 @@ class SpectralLine(BaseSpectrumVerticalLine):
     by eliminating any SpectralLines objects from a figures marks list. Also
     lets us do wavelength redshifting here on mark creation.
     """
-    # extend to double the current range so interactive panning will never show edge    
-    _y_stretch = 2
-
     def __init__(self, viewer, rest_value, redshift=0, name=None, **kwargs):
         self._rest_value = rest_value
         self._identify = False
@@ -223,19 +197,23 @@ class SliceIndicator(BaseSpectrumVerticalLine, HubListener):
             self.x = [x_coord, x_coord]
             return
         x_range = x_max - x_min
-        padding = 0.01 * x_range
+        padding_fig = 0.01
+        padding = padding_fig * x_range
         x_min += padding
         x_max -= padding
         if x_coord < x_min:
-            self.x = [x_min, x_min]
+            self.x = [padding_fig, padding_fig]
+            self.scales = {**self.scales, 'x': LinearScale(min=0, max=1)}
             self.line_style = 'dashed'
             self._oob = 'left'
         elif x_coord > x_max:
-            self.x = [x_max, x_max]
+            self.x = [1-padding_fig, 1-padding_fig]
+            self.scales = {**self.scales, 'x': LinearScale(min=0, max=1)}
             self.line_style = 'dashed'
             self._oob = 'right'
         else:
             self.x = [x_coord, x_coord]
+            self.scales = {**self.scales, 'x': self._viewer.scales['x']}
             self.line_style = 'solid'
             self._oob = False
         if update_label:
@@ -274,7 +252,7 @@ class SliceIndicator(BaseSpectrumVerticalLine, HubListener):
 
     def _update_label(self):
         # TODO: right vs left oob
-        self.labels = [f"\u00A0{'< ' if self._oob == 'left' else ''}{self._slice_to_x(self.slice):0.4e} {self._x_unit}{' >' if self._oob == 'right' else ''}"]
+        self.labels = [f"\u00A0 \u25c0{'' if self._oob == 'left' else ''}{self._slice_to_x(self.slice):0.4e} {self._x_unit}{' >' if self._oob == 'right' else ''}"]
 
     @property
     def slice(self):
