@@ -3,8 +3,6 @@ Tests the features of the Model Fitting Plugin (Selecting model parameters, addi
 This does NOT test the actual fitting self (see test_fitting.py for that)
 """
 
-import uuid
-
 import pytest
 
 from jdaviz.configs.default.plugins.model_fitting.initializers import MODELS
@@ -40,10 +38,10 @@ def test_custom_model_labels(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
     modelfit_plugin = specviz_helper.app.get_tray_item_from_name('g-model-fitting')
 
-    for model in MODELS:
+    for i, model in enumerate(MODELS):
         # Add one of each model with a unique name
         modelfit_plugin.comp_selected = model
-        modelfit_plugin.comp_label = uuid.uuid4().hex
+        modelfit_plugin.comp_label = f"test_model_{i}"
         modelfit_plugin.vue_add_model()
 
     assert len(modelfit_plugin.component_models) == len(MODELS)
@@ -71,7 +69,7 @@ def test_register_model(specviz_helper, spectrum1d):
     assert len(specviz_helper.app.data_collection) == 2
 
     # Test custom model label
-    test_label = uuid.uuid4().hex
+    test_label = 'my_Linear1D'
     modelfit_plugin.results_label = test_label
     modelfit_plugin.vue_model_fitting()
     assert test_label in specviz_helper.app.data_collection
@@ -85,7 +83,7 @@ def test_register_cube_model(cubeviz_helper, spectrum1d_cube):
     # Test custom model label
     modelfit_plugin.comp_selected = 'Linear1D'
     modelfit_plugin.vue_add_model()
-    test_label = uuid.uuid4().hex
+    test_label = 'my_Linear1D'
     modelfit_plugin.results_label = test_label
     modelfit_plugin.vue_fit_model_to_cube()
     assert test_label in cubeviz_helper.app.data_collection
