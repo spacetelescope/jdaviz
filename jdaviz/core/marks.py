@@ -188,6 +188,8 @@ class SliceIndicator(BaseSpectrumVerticalLine, HubListener):
     Subclass on bqplot Lines to handle slice/wavelength indicator
     """
     def __init__(self, viewer, slice=0, **kwargs):
+        self._viewer = viewer
+        self._oob = False  # out-of-bounds
         self._active = False
         self._show_if_inactive = True
 
@@ -196,6 +198,8 @@ class SliceIndicator(BaseSpectrumVerticalLine, HubListener):
         # _update_data will set self._x_all, self._x_unit, self.x
         self._update_data(x_all)
 
+        viewer.state.add_callback("x_min", lambda x_min: self._handle_oob(update_label=True))
+        viewer.state.add_callback("x_max", lambda x_max: self._handle_oob(update_label=True))
         viewer.session.hub.subscribe(self, SliceToolStateMessage,
                                      handler=self._on_change_state)
 
@@ -206,9 +210,36 @@ class SliceIndicator(BaseSpectrumVerticalLine, HubListener):
                          fill='none', close_path=False,
                          labels=['slice'], labels_visibility='label', **kwargs)
 
+        self._handle_oob()
         # default to the initial state of the tool since we can't control if this will
         # happen before or after the initialization of the tool
         self._on_change_state({'active': True})
+
+    def _handle_oob(self, x_coord=None, update_label=False):
+        if x_coord is None:
+            x_coord = self._slice_to_x(self.slice)
+        x_min, x_max = self._viewer.state.x_min, self._viewer.state.x_max
+        if x_min is None or x_max is None:
+            self.x = [x_coord, x_coord]
+            return
+        x_range = x_max - x_min
+        padding = 0.01 * x_range
+        x_min += padding
+        x_max -= padding
+        if x_coord < x_min:
+            self.x = [x_min, x_min]
+            self.line_style = 'dashed'
+            self._oob = 'left'
+        elif x_coord > x_max:
+            self.x = [x_max, x_max]
+            self.line_style = 'dashed'
+            self._oob = 'right'
+        else:
+            self.x = [x_coord, x_coord]
+            self.line_style = 'solid'
+            self._oob = False
+        if update_label:
+            self._update_label()
 
     def _slice_to_x(self, slice=0):
         if not isinstance(slice, int):
@@ -242,7 +273,8 @@ class SliceIndicator(BaseSpectrumVerticalLine, HubListener):
         self._update_colors_opacities()
 
     def _update_label(self):
-        self.labels = [f'\u00A0{self.x[0]:0.4e} {self._x_unit}']
+        # TODO: right vs left oob
+        self.labels = [f"\u00A0{'< ' if self._oob == 'left' else ''}{self._slice_to_x(self.slice):0.4e} {self._x_unit}{' >' if self._oob == 'right' else ''}"]
 
     @property
     def slice(self):
@@ -256,7 +288,7 @@ class SliceIndicator(BaseSpectrumVerticalLine, HubListener):
         # do not need to update self.x or label (yet)
         if hasattr(self, '_x_all'):
             x_coord = self._slice_to_x(slice)
-            self.x = [x_coord, x_coord]
+            self._handle_oob(x_coord)
             self._update_label()
 
     def _update_data(self, x_all):
@@ -265,7 +297,7 @@ class SliceIndicator(BaseSpectrumVerticalLine, HubListener):
         self._x_all = x_all.value
         self._x_unit = str(x_all.unit)
         x_coord = self._slice_to_x(self.slice)
-        self.x = [x_coord, x_coord]
+        self._handle_oob(x_coord)
         if self.labels_visibility == 'label':
             # update label with new value/unit
             self._update_label()
