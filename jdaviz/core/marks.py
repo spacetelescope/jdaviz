@@ -21,7 +21,7 @@ class OffscreenIndicator(Label, HubListener):
         viewer.session.hub.subscribe(self, SpectralMarksChangedMessage,
                                      handler=self._update_counts)
 
-        super().__init__(text=['', ''], x=[0.02, 0.9], y=[0.8, 0.8],
+        super().__init__(text=['', ''], x=[0.02, 0.97], y=[0.8, 0.8],
                          scales={'x': LinearScale(min=0, max=1), 'y': LinearScale(min=0, max=1)},
                          colors=['black', 'black'])
         self._update_counts()
@@ -182,7 +182,7 @@ class SliceIndicator(BaseSpectrumVerticalLine, HubListener):
                          stroke_width=2,
                          marker='diamond',
                          fill='none', close_path=False,
-                         labels=['slice'], labels_visibility='label', **kwargs)
+                         labels=['slice'], labels_visibility='none', **kwargs)
 
         self._handle_oob()
         # default to the initial state of the tool since we can't control if this will
@@ -245,14 +245,19 @@ class SliceIndicator(BaseSpectrumVerticalLine, HubListener):
                 self._active = v
             elif k == 'setting_show_indicator':
                 self._show_if_inactive = v
-            elif k == 'setting_show_wavelength':
-                self.labels_visibility = 'label' if v else 'none'
+
+#            elif k == 'setting_show_wavelength':
+#                self.labels_visibility = 'label' if v else 'none'
 
         self._update_colors_opacities()
 
     def _update_label(self):
-        # TODO: right vs left oob
-        self.labels = [f"\u00A0 \u25c0{'' if self._oob == 'left' else ''}{self._slice_to_x(self.slice):0.4e} {self._x_unit}{' >' if self._oob == 'right' else ''}"]
+        if self._oob == 'left':
+            self.labels = [f'\u00A0 \u25c0 {self._slice_to_x(self.slice):0.4e} {self._x_unit} \u00A0']
+        elif self._oob == 'right':
+            self.labels = [f'{self._slice_to_x(self.slice):0.4e} {self._x_unit} \u25b6 \u00A0']
+        else:
+            self.labels = [f'\u00A0 {self._slice_to_x(self.slice):0.4e} {self._x_unit} \u00A0']
 
     @property
     def slice(self):
@@ -281,9 +286,25 @@ class SliceIndicator(BaseSpectrumVerticalLine, HubListener):
             self._update_label()
 
 
-class Shadow(Lines, HubListener):
-    _sync_traits = ['scales', 'x', 'y', 'visible', 'line_style', 'marker']
+class ShadowMixin:
+    def _setup_shadowing(self, shadowing, sync_traits=[], other_traits=[]):
+        self._shadowing = shadowing
+        self._sync_traits = sync_traits
 
+        # sync initial values
+        for attr in sync_traits + other_traits:
+            self._on_shadowing_changed({'name': attr, 'new': getattr(shadowing, attr)})
+
+        # subscribe to future changes
+        shadowing.observe(self._on_shadowing_changed)
+
+    def _on_shadowing_changed(self, change):
+        if change['name'] in self._sync_traits:
+            setattr(self, change['name'], change['new'])
+        return
+
+
+class ShadowLine(Lines, HubListener, ShadowMixin):
     def __init__(self, shadowing, shadow_width=1, **kwargs):
         self._shadow_width = shadow_width
         super().__init__(scales=shadowing.scales,
@@ -292,23 +313,68 @@ class Shadow(Lines, HubListener):
                          colors=[kwargs.pop('color', 'white')],
                          **kwargs)
 
-        # sync initial values
-        for attr in self._sync_traits:
-            setattr(self, attr, getattr(shadowing, attr))
-
-        # keep values synced when traits on shadowing object change
-        shadowing.observe(self._on_shadowing_changed)
+        self._setup_shadowing(shadowing,
+                             ['scales', 'x', 'y', 'visible', 'line_style', 'marker'],
+                             ['stroke_width', 'marker_size'])
 
     def _on_shadowing_changed(self, change):
-        attr = change['name']
-        if attr[0] in ['stroke_width', 'marker_size']:
-            value = change['new'] + self._shadow_width if change['new'] else 0
-        elif attr not in self._sync_traits:
-            return
-        else:
-            value = change['new']
+        super()._on_shadowing_changed(change)
+        if change['name'] in ['stroke_width', 'marker_size']:
+            setattr(self, change['name'], change['new'] + self._shadow_width if change['new'] else 0)
+        return
 
-        setattr(self, attr, value)
+
+class ShadowLabelFixedY(Label, ShadowMixin):
+    def __init__(self, viewer, shadowing, y=0.95, point_index=0, **kwargs):
+        super().__init__(**kwargs)
+        self._viewer = viewer
+        self.y = [y]
+        self.scales['y'] = LinearScale(min=0, max=1)
+        self._point_index = point_index
+        self._setup_shadowing(shadowing,
+                              ['visible'],
+                              ['x', 'scales', 'labels', 'colors'])
+
+        viewer.state.add_callback("x_min", lambda x_min: self._update_align())
+        viewer.state.add_callback("x_max", lambda x_max: self._update_align())
+
+    def _force_redraw(self):
+        # TODO: bug in bqplot that change in align/colors traitlet doesn't update immediately
+        text = self.text
+        self.text = ['']
+        self.text = text
+
+    def _update_align(self):
+        if not isinstance(self.scales.get('x'), LinearScale):
+            return
+        # determine alignment automatically
+        if self.scales['x'].min == 0 and self.scales['x'].max == 1:
+            is_to_right = self.x[0] > 0.5
+        else:
+            is_to_right = self.x[0] > (self._viewer.state.x_min + self._viewer.state.x_max) / 2.
+
+        if is_to_right and self.align != 'end':
+            self.align = 'end'
+            # force redraw by re-updating label
+            self._force_redraw()
+        if not is_to_right and self.align != 'start':
+            self.align = 'start'
+            # force redraw by re-updating label
+            self._force_redraw()
+
+    def _on_shadowing_changed(self, change):
+        super()._on_shadowing_changed(change)
+        if change['name'] == 'labels':
+            self.text = [change['new'][self._point_index]]
+        elif change['name'] in ['x', 'colors']:
+            setattr(self, change['name'], [change['new'][self._point_index]])
+            if change['name'] == 'colors':
+                self._force_redraw()
+        elif change['name'] == 'scales':
+            self.scales = {**self.scales, 'x': change['new']['x']}
+
+        if change['name'] in ['x', 'scales']:
+            self._update_align()
 
 
 class LineAnalysisContinuum(Lines, HubListener):

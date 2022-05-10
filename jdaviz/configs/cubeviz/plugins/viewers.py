@@ -2,7 +2,7 @@ from glue.core import BaseData
 from glue_jupyter.bqplot.image import BqplotImageView
 
 from jdaviz.core.registries import viewer_registry
-from jdaviz.core.marks import SliceIndicator
+from jdaviz.core.marks import SliceIndicator, ShadowLabelFixedY
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
 
@@ -103,7 +103,8 @@ class CubevizProfileView(SpecvizProfileView):
 
         # SliceIndicator does not yet exist
         slice_indicator = SliceIndicator(self)
-        self.figure.marks = self.figure.marks + [slice_indicator]
+        slice_indicator_label = ShadowLabelFixedY(self, slice_indicator)
+        self.figure.marks = self.figure.marks + [slice_indicator, slice_indicator_label]
         return slice_indicator
 
     def _update_slice_indicator(self, slice):
