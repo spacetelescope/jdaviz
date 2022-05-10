@@ -1,9 +1,50 @@
+import numpy as np
+
 from astropy import units as u
-from bqplot.marks import Lines, Scatter
+from bqplot.marks import Lines, Label, Scatter
 from glue.core import HubListener
 from specutils import Spectrum1D
 
-from jdaviz.core.events import SliceToolStateMessage, LineIdentifyMessage
+from jdaviz.core.events import (SliceToolStateMessage, LineIdentifyMessage,
+                                SpectralMarksChangedMessage,
+                                RedshiftMessage)
+
+
+class OffscreenIndicator(Label, HubListener):
+    def __init__(self, viewer):
+        self.viewer = viewer
+        viewer.state.add_callback("y_min", self._update_ys)
+        viewer.state.add_callback("y_max", self._update_ys)
+        viewer.state.add_callback("x_min", self._update_xs)
+        viewer.state.add_callback("x_max", self._update_xs)
+
+        viewer.session.hub.subscribe(self, RedshiftMessage,
+                                     handler=self._update_counts)
+        viewer.session.hub.subscribe(self, SpectralMarksChangedMessage,
+                                     handler=self._update_counts)
+
+        super().__init__(text=['', ''], x_offset=8, scales={}, colors=['black', 'black'])
+        self._update_xs()
+        self._update_ys()
+
+    def _update_ys(self, *args):
+        y_range = self.viewer.state.y_max - self.viewer.state.y_min
+        self.y = [self.viewer.state.y_min + y_range*0.8] * 2
+
+    def _update_xs(self, *args):
+        x_range = self.viewer.state.x_max - self.viewer.state.x_min
+        self.x = [self.viewer.state.x_min, self.viewer.state.x_max - 0.05*x_range]
+        self._update_counts()
+
+    def _update_counts(self, *args):
+        oob_left, oob_right = 0, 0
+        for m in self.viewer.figure.marks:
+            if isinstance(m, SpectralLine):
+                if m.x[0] < self.viewer.state.x_min:
+                    oob_left += 1
+                elif m.x[0] > self.viewer.state.x_max:
+                    oob_right += 1
+        self.text = [f'< {oob_left}' if oob_left > 0 else '', f'{oob_right} >' if oob_right > 0 else '']
 
 
 class BaseSpectrumVerticalLine(Lines, HubListener):

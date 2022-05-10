@@ -15,7 +15,7 @@ from astropy import units as u
 
 from jdaviz.core.events import SpectralMarksChangedMessage
 from jdaviz.core.registries import viewer_registry
-from jdaviz.core.marks import SpectralLine, LineUncertainties, ScatterMask
+from jdaviz.core.marks import SpectralLine, LineUncertainties, ScatterMask, OffscreenIndicator
 from jdaviz.core.linelists import load_preset_linelist, get_available_linelists
 from jdaviz.core.freezable_state import FreezableProfileViewerState
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
