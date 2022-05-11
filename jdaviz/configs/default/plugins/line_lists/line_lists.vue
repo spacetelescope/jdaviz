@@ -112,7 +112,7 @@
     <v-row>
       <v-expansion-panels accordion>
         <v-expansion-panel v-for="item in loaded_lists" key=":item">
-          <v-expansion-panel-header v-slot="{ open }">
+          <v-expansion-panel-header v-slot="{ open }" @click="active_linelist=item">
             <v-row no-gutters align="center">
               <v-col cols=3>
                 <v-btn 
@@ -143,7 +143,7 @@
                         >&nbsp;</span>
                     </template>
                     
-                    <div @click.stop="" style="text-align: end; background-color: white">
+                    <div v-if="active_linelist==item" @click.stop="" style="text-align: end; background-color: white">
                         <v-btn icon @click="color_menu_open = false">
                             <v-icon>mdi-close</v-icon>
                         </v-btn>
