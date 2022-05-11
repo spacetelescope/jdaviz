@@ -148,7 +148,7 @@
                             <v-icon>mdi-close</v-icon>
                         </v-btn>
                         <v-color-picker :value="list_contents[item].color"
-                                    @update:color="set_color({listname:item, color: $event.hexa})"></v-color-picker>
+                                    @update:color="throttledSetColor({listname:item, color: $event.hexa})"></v-color-picker>
                     </div>
                 </div> 
               </v-menu>
@@ -347,6 +347,9 @@
       this.setRVFloat = (v) => {
         this.rs_rv = parseFloat(v)
       }
+      this.throttledSetColor = _.throttle(
+        (v) => { this.set_color(v) },
+        100);
     }
   }
 </script>
