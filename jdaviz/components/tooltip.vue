@@ -66,6 +66,7 @@ const tooltips = {
   'plugin-line-lists-line-identify-chip-inactive': 'No line currently highlighted.  Use selection tool in spectrum viewer to identify a line.',
   'plugin-line-lists-line-visible': 'Toggle showing the line in the spectrum viewer',
   'plugin-line-lists-line-identify': 'Highlight this line in the spectrum viewer for easy identification',
+  'plugin-line-lists-color-picker': 'Change the color of this list',
   'plugin-line-analysis-sync-identify': 'Lock/unlock selection with identified line',
   'plugin-line-analysis-assign': 'Assign the centroid wavelength and update the redshift',
   'plugin-moment-save-fits': 'Save moment map as FITS file',

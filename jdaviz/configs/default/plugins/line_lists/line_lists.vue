@@ -135,24 +135,24 @@
 
             <v-row justify="space-around" style="padding-top: 16px">
               <div class="single-line">
-                <v-menu v-model="color_menu_open">
-                    <template v-slot:activator="{ on }">
-                        <span class="linelist-color-menu"
-                              :style="`background:${list_contents[item].color}`"
-                              @click.stop="on.click"
-                        >&nbsp;</span>
-                    </template>
-                    
-                    <div v-if="active_linelist==item" @click.stop="" style="text-align: end; background-color: white">
-                        <v-btn icon @click="color_menu_open = false">
-                            <v-icon>mdi-close</v-icon>
-                        </v-btn>
-                        <v-color-picker :value="list_contents[item].color"
-                                    @update:color="throttledSetColor({listname:item, color: $event.hexa})"></v-color-picker>
-                    </div>
-                </div> 
-              </v-menu>
-            
+                <j-tooltip tipid='plugin-line-lists-color-picker'>
+                  <v-menu v-model="color_menu_open">
+                      <template v-slot:activator="{ on }">
+                          <span class="linelist-color-menu"
+                                :style="`background:${list_contents[item].color}`"
+                                @click.stop="on.click"
+                          >&nbsp;</span>
+                      </template>
+                      <div v-if="active_linelist==item" @click.stop="" style="text-align: end; background-color: white">
+                          <v-btn icon @click="color_menu_open = false">
+                              <v-icon>mdi-close</v-icon>
+                          </v-btn>
+                          <v-color-picker :value="list_contents[item].color"
+                                      @update:color="throttledSetColor({listname:item, color: $event.hexa})"></v-color-picker>
+                      </div>  
+                  </v-menu>
+                </j-tooltip>
+              </div>
             </v-row>
 
             <div v-if="item == 'Custom'" style="padding-top: 16px">
