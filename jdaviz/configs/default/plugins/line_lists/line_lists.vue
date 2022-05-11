@@ -138,7 +138,7 @@
                 <v-menu v-model="color_menu_open">
                     <template v-slot:activator="{ on }">
                         <span class="linelist-color-menu"
-                              :style="`background:${item.color}`"
+                              :style="`background:${list_contents[item].color}`"
                               @click.stop="on.click"
                         >&nbsp;</span>
                     </template>
@@ -147,7 +147,7 @@
                         <v-btn icon @click="color_menu_open = false">
                             <v-icon>mdi-close</v-icon>
                         </v-btn>
-                        <v-color-picker :value="item.color"
+                        <v-color-picker :value="list_contents[item].color"
                                     @update:color="set_color({listname:item, color: $event.hexa})"></v-color-picker>
                     </div>
                 </div> 

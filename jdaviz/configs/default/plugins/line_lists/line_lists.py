@@ -754,6 +754,12 @@ class LineListTool(PluginTemplateMixin):
                 if name_rest in self.line_mark_dict:
                     self.line_mark_dict[name_rest].colors = [color]
 
+            # Reset list_contents dict to force traitlets to update
+            # Traitlets can't detect changes in a dictionary entry
+            list_contents = self.list_contents
+            self.list_contents = {}
+            self.list_contents = {**list_contents, listname: lc}
+
         elif "linename" in data:
             pass
 
