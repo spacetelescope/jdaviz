@@ -15,7 +15,7 @@ from astropy import units as u
 
 from jdaviz.core.events import SpectralMarksChangedMessage
 from jdaviz.core.registries import viewer_registry
-from jdaviz.core.marks import SpectralLine, LineUncertainties, ScatterMask, OffscreenIndicator
+from jdaviz.core.marks import SpectralLine, LineUncertainties, ScatterMask, OffscreenLinesMarks
 from jdaviz.core.linelists import load_preset_linelist, get_available_linelists
 from jdaviz.core.freezable_state import FreezableProfileViewerState
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
@@ -53,6 +53,8 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._initialize_toolbar_nested(default_tool_priority=['jdaviz:selectslice'])
+        self._offscreen_lines_marks = OffscreenLinesMarks(self)
+        self.figure.marks = self.figure.marks + self._offscreen_lines_marks.marks
 
         self.display_uncertainties = False
         self.display_mask = False

@@ -9,7 +9,7 @@ from jdaviz.core.events import (SliceToolStateMessage, LineIdentifyMessage,
                                 RedshiftMessage)
 
 
-class OffscreenIndicator(Label, HubListener):
+class OffscreenLinesMarks(HubListener):
     def __init__(self, viewer):
         self.viewer = viewer
 
@@ -21,10 +21,20 @@ class OffscreenIndicator(Label, HubListener):
         viewer.session.hub.subscribe(self, SpectralMarksChangedMessage,
                                      handler=self._update_counts)
 
-        super().__init__(text=['', ''], x=[0.02, 0.97], y=[0.8, 0.8],
-                         scales={'x': LinearScale(min=0, max=1), 'y': LinearScale(min=0, max=1)},
-                         colors=['black', 'black'])
+        self.left = Label(text=[''], x=[0.02], y=[0.8],
+                          scales={'x': LinearScale(min=0, max=1), 'y': LinearScale(min=0, max=1)},
+                          colors=['black'], default_size=12,
+                          align='start')
+        self.right = Label(text=[''], x=[0.98], y=[0.8],
+                           scales={'x': LinearScale(min=0, max=1), 'y': LinearScale(min=0, max=1)},
+                           colors=['black'], default_size=12,
+                           align='end')
+
         self._update_counts()
+
+    @property
+    def marks(self):
+        return [self.left, self.right]
 
     def _update_counts(self, *args):
         oob_left, oob_right = 0, 0
@@ -34,7 +44,8 @@ class OffscreenIndicator(Label, HubListener):
                     oob_left += 1
                 elif m.x[0] > self.viewer.state.x_max:
                     oob_right += 1
-        self.text = [f'\u25c0 {oob_left}' if oob_left > 0 else '', f'{oob_right} \u25b6' if oob_right > 0 else '']
+        self.left.text = [f'\u25c0 {oob_left}' if oob_left > 0 else '']
+        self.right.text = [f'{oob_right} \u25b6' if oob_right > 0 else '']
 
 
 class BaseSpectrumVerticalLine(Lines, HubListener):
@@ -157,7 +168,7 @@ class SpectralLine(BaseSpectrumVerticalLine):
         self._x_unit = new_unit
 
 
-class SliceIndicator(BaseSpectrumVerticalLine, HubListener):
+class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
     """
     Subclass on bqplot Lines to handle slice/wavelength indicator
     """
@@ -188,6 +199,12 @@ class SliceIndicator(BaseSpectrumVerticalLine, HubListener):
         # default to the initial state of the tool since we can't control if this will
         # happen before or after the initialization of the tool
         self._on_change_state({'active': True})
+
+        self.label = ShadowLabelFixedY(viewer, self, default_size=12, y=0.95)
+
+    @property
+    def marks(self):
+        return [self, self.label]
 
     def _handle_oob(self, x_coord=None, update_label=False):
         if x_coord is None:
@@ -245,15 +262,14 @@ class SliceIndicator(BaseSpectrumVerticalLine, HubListener):
                 self._active = v
             elif k == 'setting_show_indicator':
                 self._show_if_inactive = v
-
-#            elif k == 'setting_show_wavelength':
-#                self.labels_visibility = 'label' if v else 'none'
+            elif k == 'setting_show_wavelength':
+                self.label.visible = v
 
         self._update_colors_opacities()
 
     def _update_label(self):
         if self._oob == 'left':
-            self.labels = [f'\u00A0 \u25c0 {self._slice_to_x(self.slice):0.4e} {self._x_unit} \u00A0']
+            self.labels = [f'\u00A0 \u25c0 {self._slice_to_x(self.slice):0.4e} {self._x_unit} \u00A0']  # noqa
         elif self._oob == 'right':
             self.labels = [f'{self._slice_to_x(self.slice):0.4e} {self._x_unit} \u25b6 \u00A0']
         else:
@@ -314,13 +330,14 @@ class ShadowLine(Lines, HubListener, ShadowMixin):
                          **kwargs)
 
         self._setup_shadowing(shadowing,
-                             ['scales', 'x', 'y', 'visible', 'line_style', 'marker'],
-                             ['stroke_width', 'marker_size'])
+                              ['scales', 'x', 'y', 'visible', 'line_style', 'marker'],
+                              ['stroke_width', 'marker_size'])
 
     def _on_shadowing_changed(self, change):
         super()._on_shadowing_changed(change)
         if change['name'] in ['stroke_width', 'marker_size']:
-            setattr(self, change['name'], change['new'] + self._shadow_width if change['new'] else 0)
+            setattr(self, change['name'],
+                    change['new'] + self._shadow_width if change['new'] else 0)
         return
 
 
