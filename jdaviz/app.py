@@ -54,57 +54,28 @@ EXT_TYPES = dict(flux=['flux', 'sci'],
 # some glue-core versions
 glue_settings.DATA_ALPHA = 1
 
-ipyvue.register_component_from_file(None, 'j-tooltip',
-                                    os.path.join(os.path.dirname(__file__),
-                                                 'components/tooltip.vue'))
+custom_components = {'j-tooltip': 'components/tooltip.vue',
+                     'j-external-link': 'components/external_link.vue',
+                     'j-docs-link': 'components/docs_link.vue',
+                     'j-viewer-data-select': 'components/viewer_data_select.vue',
+                     'j-tray-plugin': 'components/tray_plugin.vue',
+                     'j-play-pause-widget': 'components/play_pause_widget.vue',
+                     'j-plugin-section-header': 'components/plugin_section_header.vue',
+                     'j-number-uncertainty': 'components/number_uncertainty.vue',
+                     'plugin-dataset-select': 'components/plugin_dataset_select.vue',
+                     'plugin-subset-select': 'components/plugin_subset_select.vue',
+                     'plugin-viewer-select': 'components/plugin_viewer_select.vue',
+                     'plugin-add-results': 'components/plugin_add_results.vue',
+                     'plugin-auto-label': 'components/plugin_auto_label.vue'}
 
-ipyvue.register_component_from_file(None, 'j-external-link',
-                                    os.path.join(os.path.dirname(__file__),
-                                                 'components/external_link.vue'))
-
-ipyvue.register_component_from_file(None, 'j-docs-link',
-                                    os.path.join(os.path.dirname(__file__),
-                                                 'components/docs_link.vue'))
-
-ipyvue.register_component_from_file(None, 'j-tray-plugin',
-                                    os.path.join(os.path.dirname(__file__),
-                                                 'components/tray_plugin.vue'))
-
-ipyvue.register_component_from_file(None, 'j-plugin-section-header',
-                                    os.path.join(os.path.dirname(__file__),
-                                                 'components/plugin_section_header.vue'))
-
-ipyvue.register_component_from_file(None, 'j-number-uncertainty',
-                                    os.path.join(os.path.dirname(__file__),
-                                                 'components/number_uncertainty.vue'))
-
-ipyvue.register_component_from_file(None, 'plugin-dataset-select',
-                                    os.path.join(os.path.dirname(__file__),
-                                                 'components/plugin_dataset_select.vue'))
-
-ipyvue.register_component_from_file(None, 'plugin-subset-select',
-                                    os.path.join(os.path.dirname(__file__),
-                                                 'components/plugin_subset_select.vue'))
-
-ipyvue.register_component_from_file(None, 'plugin-viewer-select',
-                                    os.path.join(os.path.dirname(__file__),
-                                                 'components/plugin_viewer_select.vue'))
-
-ipyvue.register_component_from_file(None, 'plugin-add-results',
-                                    os.path.join(os.path.dirname(__file__),
-                                                 'components/plugin_add_results.vue'))
-
-ipyvue.register_component_from_file(None, 'plugin-auto-label',
-                                    os.path.join(os.path.dirname(__file__),
-                                                 'components/plugin_auto_label.vue'))
 
 # Register pure vue component. This allows us to do recursive component instantiation only in the
 # vue component file
-ipyvue.register_component_from_file('g-viewer-tab', "container.vue", __file__)
+for name, path in custom_components.items():
+    ipyvue.register_component_from_file(None, name,
+                                        os.path.join(os.path.dirname(__file__), path))
 
-ipyvue.register_component_from_file(None, 'j-play-pause-widget',
-                                    os.path.join(os.path.dirname(__file__),
-                                                 'components/play_pause_widget.vue'))
+ipyvue.register_component_from_file('g-viewer-tab', "container.vue", __file__)
 
 
 class ApplicationState(State):
@@ -1135,6 +1106,11 @@ class Application(VuetifyTemplate, HubListener):
                 lambda id: id != item_id, viewer_item['selected_data_items']))
 
         self._update_selected_data_items(viewer_id, selected_items)
+
+    def vue_data_item_remove(self, event):
+        """
+        """
+        self.data_collection.remove(self.data_collection[event['item_name']])
 
     def vue_close_snackbar_message(self, event):
         """

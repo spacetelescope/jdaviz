@@ -754,6 +754,7 @@ class DatasetSelect(BaseSelectPluginComponent):
         # Add/Remove Data are triggered when checked/unchecked from viewers
         self.hub.subscribe(self, AddDataMessage, handler=self._on_data_changed)
         self.hub.subscribe(self, RemoveDataMessage, handler=self._on_data_changed)
+        self.hub.subscribe(self, DataCollectionDeleteMessage, handler=self._on_data_changed)
 
         # initialize items from original viewers
         self._on_data_changed()

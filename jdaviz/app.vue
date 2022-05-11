@@ -42,6 +42,7 @@
                   @resize="relayout"
                   :closefn="destroy_viewer_item"
                   @data-item-selected="data_item_selected($event)"
+                  @data-item-remove="data_item_remove($event)"
                   @call-viewer-method="call_viewer_method($event)"
                 ></g-viewer-tab>
               </gl-row>

@@ -46,6 +46,8 @@ const tooltips = {
   'viewer-toolbar-figure-save': 'Save figure',
   'viewer-toolbar-menu': 'Adjust display: contrast, bias, stretch',
   'viewer-toolbar-more': 'More options...',
+  'viewer-data-select-toggle': 'Toggle visibility of layer in this viewer',
+  'viewer-data-select-delete': 'Remove data entry across entire app',
 
   'table-prev': 'Select previous row in table',
   'table-next': 'Select next row in table',

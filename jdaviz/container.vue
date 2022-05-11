@@ -8,6 +8,7 @@
       @resize="$emit('resize')"
       :closefn="closefn"
       @data-item-selected="$emit('data-item-selected', $event)"
+      @data-item-remove="$emit('data-item-remove', $event)"
       @call-viewer-method="$emit('call-viewer-method', $event)"
     ></g-viewer-tab>
     <gl-component
@@ -39,18 +40,12 @@
                   </v-btn>
                 </template>
 
-                <v-list style="max-height: 500px; width: 350px;" class="overflow-y-auto">
-                    <v-checkbox
-                      v-for="item in dataItems" :key="item.id" :label="item.name" dense hide-details
-                      :input-value="viewer.selected_data_items.includes(item.id)"
-                      @change="$emit('data-item-selected', {
-                        id: viewer.id,
-                        item_id: item.id,
-                        checked: $event
-                      })"
-                      class="pl-4"
-                    ></v-checkbox>
-                </v-list>
+                <j-viewer-data-select
+                  :data_items="dataItems" 
+                  :viewer="viewer"
+                  @data-item-selected="$emit('data-item-selected', $event)"
+                  @data-item-remove="$emit('data-item-remove', $event)"
+                ></j-viewer-data-select>
               </v-menu>
             </j-tooltip>
 
