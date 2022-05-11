@@ -174,7 +174,7 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
     """
     def __init__(self, viewer, slice=0, **kwargs):
         self._viewer = viewer
-        self._oob = False  # out-of-bounds
+        self._oob = False  # out-of-bounds, either False, 'left', or 'right'
         self._active = False
         self._show_if_inactive = True
         self._show_wavelength = True
@@ -198,6 +198,10 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
 
         self._handle_oob()
 
+        # instead of using the Lines label which is limited, we'll use a Label object which
+        # will follow the x-coordinate of the slice indicator line, with a fixed y-value
+        # (in axes-units) and will flip its alignment depending on whether the line is on the
+        # left or right side of the axes.
         self.label = ShadowLabelFixedY(viewer, self, shadow_traits=[], default_size=12, y=0.95)
 
         # default to the initial state of the tool since we can't control if this will
@@ -272,6 +276,7 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
         self._update_colors_opacities()
 
     def _update_label(self):
+        # U+00A0 is a blank space, U+25C0 a left arrow triangle, and U+25B6 a right arrow triangle
         if self._oob == 'left':
             self.labels = [f'\u00A0 \u25c0 {self._slice_to_x(self.slice):0.4e} {self._x_unit} \u00A0']  # noqa
         elif self._oob == 'right':
@@ -349,6 +354,7 @@ class ShadowLine(Lines, HubListener, ShadowMixin):
     def _on_shadowing_changed(self, change):
         super()._on_shadowing_changed(change)
         if change['name'] in ['stroke_width', 'marker_size']:
+            # apply the same, but increased by the shadow width
             setattr(self, change['name'],
                     change['new'] + self._shadow_width if change['new'] else 0)
         return
@@ -374,7 +380,9 @@ class ShadowLabelFixedY(Label, ShadowMixin):
         viewer.state.add_callback("x_max", lambda x_max: self._update_align())
 
     def _force_redraw(self):
-        # TODO: bug in bqplot that change in align/colors traitlet doesn't update immediately
+        # TODO: bug in bqplot that change in align/colors traitlet doesn't update immediately,
+        # we'll get around it in the meantime by just forcing the Label to see a change to the
+        # text traitlet
         text = self.text
         self.text = ['']
         self.text = text
@@ -384,8 +392,10 @@ class ShadowLabelFixedY(Label, ShadowMixin):
             return
         # determine alignment automatically
         if self.scales['x'].min == 0 and self.scales['x'].max == 1:
+            # then we're in axes units, so just check position compared to 0.5
             is_to_right = self.x[0] > 0.5
         else:
+            # then we're in data units, so check position compared to the median of the axes limits
             is_to_right = self.x[0] > (self._viewer.state.x_min + self._viewer.state.x_max) / 2.
 
         if is_to_right and self.align != 'end':
@@ -404,11 +414,14 @@ class ShadowLabelFixedY(Label, ShadowMixin):
         elif change['name'] in ['x', 'colors']:
             setattr(self, change['name'], [change['new'][self._point_index]])
             if change['name'] == 'colors':
+                # bqplot bug that won't notice change to colors, manually force re-draw
                 self._force_redraw()
         elif change['name'] == 'scales':
             self.scales = {**self.scales, 'x': change['new']['x']}
 
         if change['name'] in ['x', 'scales']:
+            # then the position of the label on the plot has changed, so re-determine whether
+            # it should be aligned to the left or right
             self._update_align()
 
 
