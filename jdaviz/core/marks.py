@@ -177,6 +177,7 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
         self._oob = False  # out-of-bounds
         self._active = False
         self._show_if_inactive = True
+        self._show_wavelength = True
 
         self.slice = slice
         x_all = viewer.data()[0].spectral_axis
@@ -196,11 +197,12 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
                          labels=['slice'], labels_visibility='none', **kwargs)
 
         self._handle_oob()
+
+        self.label = ShadowLabelFixedY(viewer, self, shadow_traits=[], default_size=12, y=0.95)
+
         # default to the initial state of the tool since we can't control if this will
         # happen before or after the initialization of the tool
         self._on_change_state({'active': True})
-
-        self.label = ShadowLabelFixedY(viewer, self, default_size=12, y=0.95)
 
     @property
     def marks(self):
@@ -244,10 +246,12 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
     def _update_colors_opacities(self):
         # orange (accent) if active, import button blue otherwise (see css in app.vue)
         if not self._show_if_inactive and not self._active:
+            self.label.visible = False
             self.visible = False
             return
 
         self.visible = True
+        self.label.visible = self._show_wavelength
         self.colors = ["#c75109" if self._active else "#007BA1"]
         self.opacities = [1.0 if self._active else 0.9]
 
@@ -263,7 +267,7 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
             elif k == 'setting_show_indicator':
                 self._show_if_inactive = v
             elif k == 'setting_show_wavelength':
-                self.label.visible = v
+                self._show_wavelength = v
 
         self._update_colors_opacities()
 
@@ -303,6 +307,12 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
 
 
 class ShadowMixin:
+    """
+    Mixin class to propagate traits from one mark object to another.  Anything in ``sync_traits``
+    will be mirrored directly from ``shadowing`` to the shadowed object.
+
+    Can manually override ``_on_shadowing_changed`` for more advanced logic cases.
+    """
     def _setup_shadowing(self, shadowing, sync_traits=[], other_traits=[]):
         self._shadowing = shadowing
         self._sync_traits = sync_traits
@@ -321,6 +331,9 @@ class ShadowMixin:
 
 
 class ShadowLine(Lines, HubListener, ShadowMixin):
+    """
+    Create a white shadow line around another line to help make it standout on top of other lines.
+    """
     def __init__(self, shadowing, shadow_width=1, **kwargs):
         self._shadow_width = shadow_width
         super().__init__(scales=shadowing.scales,
@@ -342,14 +355,19 @@ class ShadowLine(Lines, HubListener, ShadowMixin):
 
 
 class ShadowLabelFixedY(Label, ShadowMixin):
-    def __init__(self, viewer, shadowing, y=0.95, point_index=0, **kwargs):
+    """
+    Label whose position shadows that of a parent ``shadowing`` line and will flip alignment
+    based on whether it is left or right of the center of the viewer.
+    """
+    def __init__(self, viewer, shadowing, shadow_traits=['visible'],
+                 y=0.95, point_index=0, **kwargs):
         super().__init__(**kwargs)
         self._viewer = viewer
         self.y = [y]
         self.scales['y'] = LinearScale(min=0, max=1)
         self._point_index = point_index
         self._setup_shadowing(shadowing,
-                              ['visible'],
+                              shadow_traits,
                               ['x', 'scales', 'labels', 'colors'])
 
         viewer.state.add_callback("x_min", lambda x_min: self._update_align())

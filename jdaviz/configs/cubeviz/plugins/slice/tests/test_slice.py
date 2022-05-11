@@ -66,10 +66,10 @@ def test_indicator_settings(cubeviz_helper, spectrum1d_cube):
     assert sl.setting_show_indicator is True
     assert indicator._show_if_inactive is True
     assert sl.setting_show_wavelength is True
-    assert indicator.labels_visibility == 'label'
+    assert indicator.label.visible is True
 
     sl.setting_show_indicator = False
     assert indicator._show_if_inactive is False
 
     sl.setting_show_wavelength = False
-    assert indicator.labels_visibility == 'none'
+    assert indicator.label.visible is False
