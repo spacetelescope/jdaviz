@@ -1201,7 +1201,7 @@ class Application(VuetifyTemplate, HubListener):
             the new data.
         """
         self._link_new_data()
-        data_item = self._create_data_item(msg.data.label)
+        data_item = self._create_data_item(msg.data)
         self.state.data_items.append(data_item)
 
     def _on_data_deleted(self, msg):
@@ -1220,11 +1220,13 @@ class Application(VuetifyTemplate, HubListener):
                 self.state.data_items.remove(data_item)
 
     @staticmethod
-    def _create_data_item(label):
+    def _create_data_item(data):
         return {
             'id': str(uuid.uuid4()),
-            'name': label,
+            'name': data.label,
             'locked': False,
+            'ndims': len(data.shape),
+            'plugin': data.meta.get('Plugin', None),
             'children': []}
 
     @staticmethod

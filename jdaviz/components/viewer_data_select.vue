@@ -1,5 +1,5 @@
 <template>
-  <j-tooltip v-if="show()" tipid="viewer-toolbar-data">
+  <j-tooltip v-if="menuButtonAvailable()" tipid="viewer-toolbar-data">
     <v-menu offset-y :close-on-content-click="false" v-model="viewer.data_open">
       <template v-slot:activator="{ on, attrs }">
         <v-btn 
@@ -18,7 +18,7 @@
       </template>
   
         <v-list style="max-height: 500px; width: 350px;" class="overflow-y-auto">
-          <v-row v-for="item in data_items" :key="item.id" style="padding-left: 25px">
+          <v-row v-for="item in filteredDataItems" :key="item.id" style="padding-left: 25px">
             <j-tooltip tipid='viewer-data-select-toggle'>
               <v-btn 
                 icon
@@ -55,13 +55,55 @@
 module.exports = {
   props: ['data_items', 'viewer'],
   methods: {
-    show() {
+    menuButtonAvailable() {
       if (this.$props.viewer.config === 'mosviz') {
         if (this.$props.viewer.reference !== 'spectrum-viewer') {
+          // if making available for other viewers, those cases will also
+          // need to be handled in filteredDataItems below.
           return false
         }
       }
       return true
+    },
+  },
+  computed: {
+    filteredDataItems() {
+      itemIsVisible = (item) => {
+        if (this.$props.viewer.config === 'mosviz') {
+          if (this.$props.viewer.reference === 'spectrum-viewer') {
+            if (item.ndims !== 1) {
+              // filters out table, spectrum 2d, images
+              return false
+            }
+            // TODO: filter by row
+            return true
+          }
+        } else if (this.$props.viewer.config === 'cubeviz') {
+          if (this.$props.viewer.reference === 'spectrum-viewer') {
+            if (item.plugin === null) {
+              // then the data can be a cube (auto-collapsed) as long as its the flux data
+              return item.name.indexOf('[FLUX]') !== -1
+            } else {
+              // filter plugin results to only those that are spectra
+              return item.ndims === 1
+            }
+          } else {
+            // then we're one of the three image viewers
+            // filter out non-images (support 2d images and cubes)
+            return item.ndims >= 2
+          }
+        } else if (this.$props.viewer.config === 'specviz2d') {
+          if (this.$props.viewer.reference === 'spectrum-viewer') {
+            return item.ndims === 1
+          } else if (this.$props.viewer.reference === 'spectrum-2d-viewer') {
+            return item.ndims === 2
+          }
+        }
+        // for any situation not covered above, default to showing the entry
+        return true
+      }
+
+      return this.$props.data_items.filter(itemIsVisible)
     }
   }
 };
