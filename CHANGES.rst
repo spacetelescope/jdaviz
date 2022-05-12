@@ -10,6 +10,8 @@ New Features
 Cubeviz
 ^^^^^^^
 
+- Cubeviz image viewer now has coordinates info panel like Imviz. [#1315]
+
 Imviz
 ^^^^^
 

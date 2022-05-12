@@ -195,3 +195,13 @@ The spectrum of colors used to visualize data can be changed using this drop dow
 
     :ref:`Plot Settings (Specviz) <plot-settings>`
         Plot settings for the spectrum 1D viewer.
+
+.. _cubeviz_cursor_info:
+
+Cursor Information
+==================
+
+By moving your cursor along the image viewer, you will be able to see information on the
+cursor's location in pixel space (X and Y), the RA and Dec at that point, and the value
+of the data there. This information is located in the top bar of the UI, on the
+middle-right side.

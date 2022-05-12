@@ -1,9 +1,11 @@
+import numpy as np
 from glue.core import BaseData
 from glue_jupyter.bqplot.image import BqplotImageView
 
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.marks import SliceIndicator
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
+from jdaviz.configs.imviz.helper import data_has_valid_wcs
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
 
 __all__ = ['CubevizImageView', 'CubevizProfileView']
@@ -36,6 +38,76 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
         super().__init__(*args, **kwargs)
         self._initialize_toolbar_nested()
         self.state.add_callback('reference_data', self._initial_x_axis)
+
+        self.label_mouseover = None
+        self.add_event_callback(self.on_mouse_or_key_event, events=['mousemove', 'mouseenter',
+                                                                    'mouseleave'])
+
+    def on_mouse_or_key_event(self, data):
+
+        # Find visible layers
+        visible_layers = [layer for layer in self.state.layers if layer.visible]
+
+        if len(visible_layers) == 0:
+            return
+
+        if self.label_mouseover is None:
+            if 'g-coords-info' in self.session.application._tools:
+                self.label_mouseover = self.session.application._tools['g-coords-info']
+            else:
+                return
+
+        if data['event'] == 'mousemove':
+            # Display the current cursor coordinates (both pixel and world) as
+            # well as data values. For now we use the first dataset in the
+            # viewer for the data values.
+
+            # Extract first dataset from visible layers and use this for coordinates - the choice
+            # of dataset shouldn't matter if the datasets are linked correctly
+            image = visible_layers[0].layer
+
+            # Extract data coordinates - these are pixels in the reference image
+            x = data['domain']['x']
+            y = data['domain']['y']
+
+            if x is None or y is None:  # Out of bounds
+                self.label_mouseover.pixel = ""
+                self.label_mouseover.reset_coords_display()
+                self.label_mouseover.value = ""
+                return
+
+            maxsize = int(np.ceil(np.log10(np.max(image.shape[:2])))) + 3
+            fmt = 'x={0:0' + str(maxsize) + '.1f} y={1:0' + str(maxsize) + '.1f}'
+            self.label_mouseover.pixel = (fmt.format(x, y))
+
+            if data_has_valid_wcs(image):
+                try:
+                    coo = image.coords.pixel_to_world(x, y, self.state.slices[-1])[-1].icrs
+                except Exception:
+                    self.label_mouseover.reset_coords_display()
+                else:
+                    self.label_mouseover.set_coords(coo)
+            else:
+                self.label_mouseover.reset_coords_display()
+
+            # Extract data values at this position.
+            # Assume shape is [x, y, z] and not [y, x] like Imviz.
+            if (x > -0.5 and y > -0.5
+                    and x < image.shape[0] - 0.5 and y < image.shape[1] - 0.5
+                    and hasattr(visible_layers[0], 'attribute')):
+                attribute = visible_layers[0].attribute
+                value = image.get_data(attribute)[int(round(x)), int(round(y)),
+                                                  self.state.slices[-1]]
+                unit = image.get_component(attribute).units
+                self.label_mouseover.value = f'{value:+10.5e} {unit}'
+            else:
+                self.label_mouseover.value = ''
+
+        elif data['event'] == 'mouseleave' or data['event'] == 'mouseenter':
+
+            self.label_mouseover.pixel = ""
+            self.label_mouseover.reset_coords_display()
+            self.label_mouseover.value = ""
 
     def _initial_x_axis(self, *args):
         # Make sure that the x_att is correct on data load

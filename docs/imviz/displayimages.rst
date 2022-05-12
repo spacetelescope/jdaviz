@@ -54,6 +54,8 @@ and bias. Moving along the X-axis will change the bias and moving along the Y-ax
 contrast. If you would like to reset to the default contrast and bias settings, you can
 double-click on the display while the mode is active.
 
+.. _imviz_cursor_info:
+
 Cursor Information
 ==================
 
