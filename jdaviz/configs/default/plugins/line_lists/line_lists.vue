@@ -193,9 +193,11 @@
             <div v-if="list_contents[item].lines.length">
 
               <v-row>
-                <v-btn :color="list_contents[item].color ? 'accent' : 'default'" icon @click="">
-                  <v-icon>mdi-filter</v-icon>
-                </v-btn>
+                <j-tooltip tipid='plugin-line-lists-spectral-range'>
+                  <v-btn :color="list_contents[item].color ? 'accent' : 'default'" icon @click="">
+                    <v-icon>mdi-chart-bell-curve</v-icon>
+                  </v-btn>
+                </j-tooltip>
 
                 <v-text-field
                   v-model="lines_filter"
