@@ -193,6 +193,10 @@
             <div v-if="list_contents[item].lines.length">
 
               <v-row>
+                <v-btn :color="list_contents[item].color ? 'accent' : 'default'" icon @click="">
+                  <v-icon>mdi-filter</v-icon>
+                </v-btn>
+
                 <v-text-field
                   v-model="lines_filter"
                   append-icon='mdi-magnify'

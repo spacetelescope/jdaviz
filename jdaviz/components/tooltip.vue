@@ -67,6 +67,7 @@ const tooltips = {
   'plugin-line-lists-line-visible': 'Toggle showing the line in the spectrum viewer',
   'plugin-line-lists-line-identify': 'Highlight this line in the spectrum viewer for easy identification',
   'plugin-line-lists-color-picker': 'Change the color of this list',
+  'plugin-line-lists-spectral-range': 'Filter to only lines within the range of the Spectrum Viewer',
   'plugin-line-analysis-sync-identify': 'Lock/unlock selection with identified line',
   'plugin-line-analysis-assign': 'Assign the centroid wavelength and update the redshift',
   'plugin-moment-save-fits': 'Save moment map as FITS file',
