@@ -411,7 +411,7 @@ class ShadowLabelFixedY(Label, ShadowMixin):
         super()._on_shadowing_changed(change)
         if change['name'] == 'labels':
             self.text = [change['new'][self._point_index]]
-        elif change['name'] in ['x', 'colors']:
+        elif change['name'] in ('x', 'colors'):
             setattr(self, change['name'], [change['new'][self._point_index]])
             if change['name'] == 'colors':
                 # bqplot bug that won't notice change to colors, manually force re-draw
@@ -419,7 +419,7 @@ class ShadowLabelFixedY(Label, ShadowMixin):
         elif change['name'] == 'scales':
             self.scales = {**self.scales, 'x': change['new']['x']}
 
-        if change['name'] in ['x', 'scales']:
+        if change['name'] in ('x', 'scales'):
             # then the position of the label on the plot has changed, so re-determine whether
             # it should be aligned to the left or right
             self._update_align()
