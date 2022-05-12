@@ -221,9 +221,10 @@ def mos_spec1d_parser(app, data_obj, data_labels=None):
 
     with app.data_collection.delay_link_manager_update():
 
-        for cur_data, cur_label in zip(data_obj, data_labels):
+        for i, (cur_data, cur_label) in enumerate(zip(data_obj, data_labels)):
             # Make metadata layout conform with other viz.
             cur_data.meta = standardize_metadata(cur_data.meta)
+            cur_data.meta['mosviz_row'] = i
 
             app.add_data(cur_data, cur_label, notify_done=False)
 

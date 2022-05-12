@@ -1226,7 +1226,7 @@ class Application(VuetifyTemplate, HubListener):
             'name': data.label,
             'locked': False,
             'ndims': len(data.shape),
-            'plugin': data.meta.get('Plugin', None),
+            'meta': {k: v for k, v in data.meta.items() if k in ['Plugin', 'mosviz_row']},
             'children': []}
 
     @staticmethod

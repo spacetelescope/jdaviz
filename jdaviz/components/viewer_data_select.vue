@@ -53,7 +53,7 @@
 <script>
 
 module.exports = {
-  props: ['data_items', 'viewer'],
+  props: ['data_items', 'viewer', 'app_settings'],
   methods: {
     menuButtonAvailable() {
       if (this.$props.viewer.config === 'mosviz') {
@@ -75,7 +75,8 @@ module.exports = {
               // filters out table, spectrum 2d, images
               return false
             } else if (item.meta.Plugin === undefined) {
-              console.log("***", item.name, item.meta.mosviz_row)
+              // TODO: determine whether to also filter plugin outputs to the row they were created
+              return item.meta.mosviz_row == this.$props.app_settings.mosviz_row
             }
             return true
           }
