@@ -92,6 +92,9 @@ module.exports = {
             if (item.meta.Plugin === undefined) {
               // then the data can be a cube (auto-collapsed) as long as its the flux data
               return item.name.indexOf('[FLUX]') !== -1
+            } else if (item.meta.Plugin === 'GaussianSmooth') {
+              // spectrally smoothed would still be a collapsible cube
+              return item.ndims === 3
             } else {
               // filter plugin results to only those that are spectra
               return item.ndims === 1
