@@ -1042,6 +1042,8 @@ class AddResults(BasePluginComponent):
         if self.label_invalid_msg:
             raise ValueError(self.label_invalid_msg)
         data_item.meta['Plugin'] = self._plugin.__class__.__name__
+        if self.app.config == 'mosviz':
+            data_item.meta['mosviz_row'] = self.app.state.settings['mosviz_row']
 
         replace = self.viewer.selected_reference != 'spectrum-viewer'
 
