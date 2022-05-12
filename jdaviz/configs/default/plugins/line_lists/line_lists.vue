@@ -112,48 +112,40 @@
     <v-row>
       <v-expansion-panels accordion>
         <v-expansion-panel v-for="item in loaded_lists" key=":item">
-          <v-expansion-panel-header v-slot="{ open }" @click="active_linelist=item">
+          <v-expansion-panel-header v-slot="{ open }">
             <v-row no-gutters align="center">
-              <v-col cols=3>
+              <v-col cols=2>
                 <v-btn 
                   v-if="item != 'Custom'" 
                   @click.native.stop="remove_list(item)" 
+                  small="true"
                   icon
-                  style="width: 60%"
                 >
                   <v-icon>mdi-close-circle</v-icon>
                 </v-btn>
               </v-col>
-              <v-col cols=9 class="text--secondary">
-                <v-row>
-                  <span>{{ item }}</span>
-                </v-row>
+              <v-col cols=2>
+                <v-menu>
+                  <template v-slot:activator="{ on }">
+                      <span class="linelist-color-menu"
+                            :style="`background:${list_contents[item].color}`"
+                            @click.stop="on.click"
+                      >&nbsp;</span>
+                  </template>
+                  <div @click.stop="" style="text-align: end; background-color: white">
+                      <v-color-picker :value="list_contents[item].color"
+                                  @update:color="throttledSetColor({listname:item, color: $event.hexa})"></v-color-picker>
+                  </div>
+                </v-menu>
               </v-col>
+              <v-col cols=8>
+                <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 100px">{{ item }}</span>
+              </v-col>
+
+
             </v-row>
           </v-expansion-panel-header>
           <v-expansion-panel-content style="padding-left: 0px">
-
-            <v-row justify="space-around" style="padding-top: 16px">
-              <div class="single-line">
-                <j-tooltip tipid='plugin-line-lists-color-picker'>
-                  <v-menu v-model="color_menu_open">
-                      <template v-slot:activator="{ on }">
-                          <span class="linelist-color-menu"
-                                :style="`background:${list_contents[item].color}`"
-                                @click.stop="on.click"
-                          >&nbsp;</span>
-                      </template>
-                      <div v-if="active_linelist==item" @click.stop="" style="text-align: end; background-color: white">
-                          <v-btn icon @click="color_menu_open = false">
-                              <v-icon>mdi-close</v-icon>
-                          </v-btn>
-                          <v-color-picker :value="list_contents[item].color"
-                                      @update:color="throttledSetColor({listname:item, color: $event.hexa})"></v-color-picker>
-                      </div>  
-                  </v-menu>
-                </j-tooltip>
-              </div>
-            </v-row>
 
             <div v-if="item == 'Custom'" style="padding-top: 16px">
               <v-row class="row-min-bottom-padding" style="display: block">

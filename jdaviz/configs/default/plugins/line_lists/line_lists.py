@@ -58,9 +58,6 @@ class LineListTool(PluginTemplateMixin):
     identify_label = Unicode().tag(sync=True)
     identify_line_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'line_select.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
-    color_menu_open = Bool(False).tag(sync=True)
-    # Track which linelist entry is actively opened
-    active_linelist = Any().tag(sync=True)  # string or None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
