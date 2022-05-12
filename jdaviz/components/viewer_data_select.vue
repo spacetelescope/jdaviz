@@ -36,7 +36,7 @@
             {{item.name}}
           </span>
 
-          <div style="position: absolute; right: 10px">
+          <div v-if="isDeletable(item)" style="position: absolute; right: 10px">
             <j-tooltip tipid='viewer-data-select-delete'>
               <v-btn
                 icon
@@ -65,6 +65,13 @@ module.exports = {
       }
       return true
     },
+    isDeletable(item) {
+      if (this.$props.viewer.config === 'mosviz' && item.meta.Plugin === undefined) {
+        return false
+      }
+      // for any exceptions not above, enable deleting
+      return true
+    }
   },
   computed: {
     filteredDataItems() {
