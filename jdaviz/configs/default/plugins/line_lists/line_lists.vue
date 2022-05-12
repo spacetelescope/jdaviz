@@ -204,19 +204,27 @@
 
               <v-row class="row-no-padding">
                 <v-col cols=6>
-                  <j-tooltip tipid='plugin-line-lists-erase-all-in-list'>
-                    <v-btn 
-                     color="accent" 
-                     style="padding-left: 8px; padding-right: 8px;"
-                     text @click="hide_all_in_list(item)">Erase All</v-btn>
+                  <j-tooltip tipid='plugin-line-lists-plot-all-in-list'>
+                    <v-btn
+                      x-small 
+                      color="accent"
+                      style="padding-left: 8px; padding-right: 8px;"
+                      @click="show_all_in_list(item)">
+                      <v-icon left>mdi-eye</v-icon>
+                      Plot All
+                    </v-btn>
                   </j-tooltip>
                 </v-col>
                 <v-col cols=6 style="text-align: right">
-                  <j-tooltip tipid='plugin-line-lists-plot-all-in-list'>
-                    <v-btn 
-                     color="accent"
-                     style="padding-left: 8px; padding-right: 8px;"
-                     text @click="show_all_in_list(item)">Plot All</v-btn>
+                  <j-tooltip tipid='plugin-line-lists-erase-all-in-list'>
+                    <v-btn
+                      x-small
+                      color="accent"
+                      style="padding-left: 8px; padding-right: 8px;"
+                      @click="hide_all_in_list(item)">
+                      <v-icon left>mdi-eye-off</v-icon>
+                      Erase All                     
+                    </v-btn>
                   </j-tooltip>
                 </v-col>
               </v-row>
