@@ -125,18 +125,20 @@
                 </v-btn>
               </v-col>
               <v-col cols=2>
-                <v-menu>
-                  <template v-slot:activator="{ on }">
-                      <span class="linelist-color-menu"
-                            :style="`background:${list_contents[item].color}`"
-                            @click.stop="on.click"
-                      >&nbsp;</span>
-                  </template>
-                  <div @click.stop="" style="text-align: end; background-color: white">
-                      <v-color-picker :value="list_contents[item].color"
-                                  @update:color="throttledSetColor({listname:item, color: $event.hexa})"></v-color-picker>
-                  </div>
-                </v-menu>
+                <j-tooltip tipid='plugin-line-lists-color-picker'>
+                  <v-menu>
+                    <template v-slot:activator="{ on }">
+                        <span class="linelist-color-menu"
+                              :style="`background:${list_contents[item].color}`"
+                              @click.stop="on.click"
+                        >&nbsp;</span>
+                    </template>
+                    <div @click.stop="" style="text-align: end; background-color: white">
+                        <v-color-picker :value="list_contents[item].color"
+                                    @update:color="throttledSetColor({listname:item, color: $event.hexa})"></v-color-picker>
+                    </div>
+                  </v-menu>
+                </j-tooltip>
               </v-col>
               <v-col cols=8>
                 <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 100px">{{ item }}</span>
@@ -189,6 +191,17 @@
             </div>
 
             <div v-if="list_contents[item].lines.length">
+
+              <v-row>
+                <v-text-field
+                  v-model="lines_filter"
+                  append-icon='mdi-magnify'
+                  style="padding: 0px 8px"
+                  clearable
+                  hide-details
+                ></v-text-field>
+              </v-row>
+
               <v-row class="row-no-padding">
                 <v-col cols=6>
                   <j-tooltip tipid='plugin-line-lists-erase-all-in-list'>
@@ -206,16 +219,6 @@
                      text @click="show_all_in_list(item)">Plot All</v-btn>
                   </j-tooltip>
                 </v-col>
-              </v-row>
-
-              <v-row>
-                <v-text-field
-                  v-model="lines_filter"
-                  append-icon='mdi-magnify'
-                  style="padding: 0px 8px"
-                  clearable
-                  hide-details
-                ></v-text-field>
               </v-row>
 
               <v-row v-for="(line, line_ind) in list_contents[item].lines" style="margin-bottom: 0px !important;">
