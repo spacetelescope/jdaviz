@@ -4,7 +4,7 @@
       v-for="(child, index) in stack.children"
       :stack="child"
       :key="index"
-      :data-items="dataItems"
+      :data_items="data_items"
       @resize="$emit('resize')"
       :closefn="closefn"
       @data-item-selected="$emit('data-item-selected', $event)"
@@ -23,7 +23,7 @@
         <div>
           <v-row dense style="background-color: #205f76" class="jdaviz-viewer-toolbar">
             <j-viewer-data-select
-              :data_items="dataItems" 
+              :data_items="data_items" 
               :viewer="viewer"
               @data-item-selected="$emit('data-item-selected', $event)"
               @data-item-remove="$emit('data-item-remove', $event)"
@@ -59,7 +59,7 @@
 <script>
 module.exports = {
   name: "g-viewer-tab",
-  props: ["stack", "dataItems", "closefn"],
+  props: ["stack", "data_items", "closefn"],
   created() {
     this.$parent.childMe = () => {
       return this.$children[0];

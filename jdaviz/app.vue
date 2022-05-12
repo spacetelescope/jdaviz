@@ -38,7 +38,7 @@
                   v-for="(stack, index) in state.stack_items"
                   :stack="stack"
                   :key="stack.viewers.map(v => v.id).join('-')"
-                  :data-items="state.data_items"
+                  :data_items="state.data_items"
                   @resize="relayout"
                   :closefn="destroy_viewer_item"
                   @data-item-selected="data_item_selected($event)"
