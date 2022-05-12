@@ -235,6 +235,8 @@
                 </v-col>
               </v-row>
 
+              <j-plugin-section-header>Lines</j-plugin-section-header>
+
               <v-row v-for="(line, line_ind) in list_contents[item].lines" style="margin-bottom: 0px !important;">
                 <div v-if="lineItemVisible(line, lines_filter)">
                   <v-row class="row-min-bottom-padding" style="margin: 0px">
