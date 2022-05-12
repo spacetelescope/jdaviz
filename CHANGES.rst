@@ -58,6 +58,9 @@ Imviz
 - Radial profile plot in Simple Aperture Photometry plugin
   no longer shows masked aperture data. [#1224]
 
+- Markers API now handles GWCS with ICRS Lon/Lat defined instead of
+  Right Ascension and Declination. [#1314]
+
 Mosviz
 ^^^^^^
 
