@@ -113,7 +113,7 @@
       <v-expansion-panels accordion>
         <v-expansion-panel v-for="item in loaded_lists" key=":item">
           <v-expansion-panel-header v-slot="{ open }">
-            <v-row no-gutters align="center">
+            <v-row no-gutters align="center" style="max-width: calc(100% - 26px)">
               <v-col cols=2>
                 <v-btn 
                   v-if="item != 'Custom'" 
@@ -141,7 +141,7 @@
                 </j-tooltip>
               </v-col>
               <v-col cols=8>
-                <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 100px">{{ item }}</span>
+                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ item }}</div>
               </v-col>
 
 
