@@ -43,6 +43,9 @@ Specviz
 Bug Fixes
 ---------
 
+- Line Lists plugin no longer crashes when a list is removed under
+  certain conditions. [#1318]
+
 Cubeviz
 ^^^^^^^
 

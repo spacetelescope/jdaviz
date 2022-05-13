@@ -772,8 +772,11 @@ class LineListTool(PluginTemplateMixin):
         self.list_contents = {k: v for k, v in self.list_contents.items() if k != listname}
         row_inds = [i for i, ln in
                     enumerate(self._viewer.spectral_lines['listname'])
-                    if ln == listname]
-        self._viewer.spectral_lines.remove_rows(row_inds)
+                    if ln != listname]
+        if len(row_inds) == 0:
+            self._viewer.spectral_lines = None
+        else:
+            self._viewer.spectral_lines = self._viewer.spectral_lines[row_inds]
 
     def vue_remove_line(self, line, erase=True):
         """
