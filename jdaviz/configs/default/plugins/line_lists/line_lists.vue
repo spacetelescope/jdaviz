@@ -263,26 +263,16 @@
                     </span>
                   </v-row>
                   <v-row class="row-min-bottom-padding">
-                    <v-col cols=3>
-                      <v-subheader>rest</v-subheader>
-                    </v-col>
                     <v-col cols=6>
                       <v-text-field
                         v-model="line.rest"
                         class="mt-0 pt-0"
                         type="number"
-                        hide-details
-                        single-line
+                        label="Rest"
+                        :hint="line.unit"
+                        persistent-hint
                         disabled
                       ></v-text-field>
-                    </v-col>
-                    <v-col cols=3>
-                      {{ line.unit.replace("Angstrom", "&#8491;") }}
-                    </v-col>
-                  </v-row>
-                  <v-row>
-                    <v-col cols=3>
-                      <v-subheader>obs</v-subheader>
                     </v-col>
                     <v-col cols=6>
                       <v-text-field
@@ -292,12 +282,10 @@
                         step="0.1"
                         class="mt-0 pt-0"
                         type="number"
-                        hide-details
-                        single-line
+                        label="Observed"
+                        :hint="line.unit"
+                        persistent-hint
                       ></v-text-field>
-                    </v-col>
-                    <v-col cols=3>
-                      {{ line.unit.replace("Angstrom", "&#8491;") }}
                     </v-col>
                   </v-row>
                 </div>
