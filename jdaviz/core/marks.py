@@ -463,3 +463,8 @@ class LineUncertainties(Lines):
 class ScatterMask(Scatter):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+
+class SelectedPixel(Lines):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)

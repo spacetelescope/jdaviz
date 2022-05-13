@@ -110,6 +110,19 @@ of the selected area, but will expand or limit the y range to preserve the aspec
 ratio of the image. The 1D spectrum viewer allows panning and zooming along a single
 axis as in Specviz.
 
+.. _cubeviz-spectrum-at-spaxel:
+
+Spectrum At Spaxel
+==================
+
+This tool allows a user to select one pixel in the image viewer and visualize the spectrum
+at that point in the spectrum viewer. The selected pixel will be highlighted in the image viewer
+and the spectrum will have the same color. If there are multiple data selected in the image viewer
+a spectrum will be created for each data. Once the tool is deselected, the highlighted pixel will
+revert back to normal but the created spectrum/spectra will remain in the spectrum viewer.
+The zoom level of the spectrum viewer will then revert to what it was when the tool was first
+activated.
+
 .. _display-settings:
 
 Display Settings
