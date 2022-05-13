@@ -74,6 +74,9 @@ but you can re-link them via WCS using `~jdaviz.configs.imviz.helper.Imviz.link_
 
 Regular Pan/Zoom is also available and is used in a similar way as other Jdaviz tools.
 
+When in either of these modes, clicking on the image will recenter the image to the
+location under cursor.
+
 .. seealso::
 
     :ref:`Pan/Zoom <cubeviz-pan-zoom>`

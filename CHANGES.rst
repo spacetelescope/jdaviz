@@ -19,6 +19,9 @@ Imviz
 - New curve of growth plot available in Simple Aperture
   Photometry plugin. [#1287]
 
+- Clicking on image in pan/zoom mode now centers the image to location
+  under cursor. [#1319]
+
 Mosviz
 ^^^^^^
 

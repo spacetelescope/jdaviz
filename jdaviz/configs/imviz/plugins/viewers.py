@@ -49,7 +49,8 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
         self.line_profile_xy = None
 
         self.add_event_callback(self.on_mouse_or_key_event, events=['mousemove', 'mouseenter',
-                                                                    'mouseleave', 'keydown'])
+                                                                    'mouseleave', 'keydown',
+                                                                    'click'])
         self.state.add_callback('x_min', self.on_limits_change)
         self.state.add_callback('x_max', self.on_limits_change)
         self.state.add_callback('y_min', self.on_limits_change)
@@ -161,6 +162,17 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
                 self.line_profile_xy.selected_y = y
                 self.line_profile_xy.selected_viewer = self.reference_id
                 self.line_profile_xy.vue_draw_plot()
+
+        elif (data['event'] == 'click' and
+                self.toolbar_nested.active_tool_id in ('bqplot:panzoom', 'jdaviz:panzoommatch')):
+            # Same data as mousemove above.
+            image = visible_layers[0].layer
+            x = data['domain']['x']
+            y = data['domain']['y']
+            if x is None or y is None:  # Out of bounds
+                return
+            x, y, _ = self._get_real_xy(image, x, y)
+            self.center_on((x, y))
 
     def blink_once(self):
         # Simple blinking of images - this will make it so that only one
