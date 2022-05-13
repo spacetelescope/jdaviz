@@ -60,6 +60,38 @@ class _MatchedZoomMixin:
 
 
 @viewer_tool
+class JdavizPanZoomMode(BqplotPanZoomMode):
+    tool_id = 'jdaviz:panzoom'
+    tool_tip = 'Interactively pan (click-drag), zoom (scroll), and center (click)'
+
+    def activate(self):
+        super().activate()
+        self.viewer.add_event_callback(self.on_click, events=['click'])
+
+    def deactivate(self):
+        self.viewer.remove_event_callback(self.on_click)
+        super().deactivate()
+
+    def on_click(self, data):
+        # Find visible layers
+        visible_layers = [layer for layer in self.viewer.state.layers if layer.visible]
+        if len(visible_layers) == 0:
+            return
+
+        # Same data as mousemove event in Imviz viewer.
+        # Any other config that wants this functionality has to have the following:
+        #   viewer._get_real_xy()
+        #   viewer.center_on() --> inherited from AstrowidgetsImageViewerMixin
+        image = visible_layers[0].layer
+        x = data['domain']['x']
+        y = data['domain']['y']
+        if x is None or y is None:  # Out of bounds
+            return
+        x, y, _ = self.viewer._get_real_xy(image, x, y)
+        self.viewer.center_on((x, y))
+
+
+@viewer_tool
 class BlinkOnce(CheckableTool):
     icon = os.path.join(ICON_DIR, 'blink.svg')
     tool_id = 'jdaviz:blinkonce'
@@ -68,8 +100,7 @@ class BlinkOnce(CheckableTool):
                 'or you can also press the "b" key anytime')
 
     def activate(self):
-        self.viewer.add_event_callback(self.on_click,
-                                       events=['click'])
+        self.viewer.add_event_callback(self.on_click, events=['click'])
 
     def deactivate(self):
         self.viewer.remove_event_callback(self.on_click)
@@ -87,7 +118,7 @@ class MatchBoxZoom(_MatchedZoomMixin, BoxZoom):
 
 
 @viewer_tool
-class MatchPanZoom(_MatchedZoomMixin, BqplotPanZoomMode):
+class MatchPanZoom(_MatchedZoomMixin, JdavizPanZoomMode):
     icon = os.path.join(ICON_DIR, 'panzoom_match.svg')
     tool_id = 'jdaviz:panzoommatch'
     action_text = 'Pan, matching between viewers'

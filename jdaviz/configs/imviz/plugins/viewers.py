@@ -23,7 +23,7 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
     inherit_tools = False
 
     tools = ['bqplot:home', 'jdaviz:boxzoom', 'jdaviz:boxzoommatch',
-             'bqplot:panzoom', 'jdaviz:panzoommatch',
+             'jdaviz:panzoom', 'jdaviz:panzoommatch',
              'jdaviz:contrastbias', 'jdaviz:blinkonce',
              'bqplot:rectangle', 'bqplot:circle', 'bqplot:ellipse']
 
@@ -31,7 +31,7 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
     tools_nested = [
                     ['bqplot:home'],
                     ['jdaviz:boxzoom', 'jdaviz:boxzoommatch'],
-                    ['bqplot:panzoom', 'jdaviz:panzoommatch'],
+                    ['jdaviz:panzoom', 'jdaviz:panzoommatch'],
                     ['bqplot:circle', 'bqplot:rectangle', 'bqplot:ellipse'],
                     ['jdaviz:blinkonce', 'jdaviz:contrastbias'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export', 'jdaviz:sidebar_compass']
@@ -49,8 +49,7 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
         self.line_profile_xy = None
 
         self.add_event_callback(self.on_mouse_or_key_event, events=['mousemove', 'mouseenter',
-                                                                    'mouseleave', 'keydown',
-                                                                    'click'])
+                                                                    'mouseleave', 'keydown'])
         self.state.add_callback('x_min', self.on_limits_change)
         self.state.add_callback('x_max', self.on_limits_change)
         self.state.add_callback('y_min', self.on_limits_change)
@@ -162,17 +161,6 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
                 self.line_profile_xy.selected_y = y
                 self.line_profile_xy.selected_viewer = self.reference_id
                 self.line_profile_xy.vue_draw_plot()
-
-        elif (data['event'] == 'click' and
-                self.toolbar_nested.active_tool_id in ('bqplot:panzoom', 'jdaviz:panzoommatch')):
-            # Same data as mousemove above.
-            image = visible_layers[0].layer
-            x = data['domain']['x']
-            y = data['domain']['y']
-            if x is None or y is None:  # Out of bounds
-                return
-            x, y, _ = self._get_real_xy(image, x, y)
-            self.center_on((x, y))
 
     def blink_once(self):
         # Simple blinking of images - this will make it so that only one
