@@ -297,6 +297,7 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
             # TODO: this should not be set to nirspec for all datasets
             data.meta['INSTRUME'] = 'nirspec'
 
+            data.meta['mosviz_row'] = index
             # Get the corresponding label for this data product
             label = data_labels[index]
 
@@ -383,6 +384,7 @@ def mos_image_parser(app, data_obj, data_labels=None, share_image=0):
 
         for i in n_data_range:
             data_obj[i].label = data_labels[i]
+            data_obj[i].meta['mosviz_row'] = i
             app.add_data(data_obj[i], data_labels[i], notify_done=False)
 
         if share_image:

@@ -43,7 +43,7 @@ class GaussianSmooth(TemplateMixin, DatasetSelectMixin, AddResultsMixin):
     @observe("dataset_selected", "dataset_items", "stddev", "selected_mode")
     def _set_default_results_label(self, event={}):
         label_comps = []
-        if hasattr(self, 'dataset') and len(self.dataset.labels) > 1:
+        if hasattr(self, 'dataset') and (len(self.dataset.labels) > 1 or self.app.config == 'mosviz'):  # noqa
             label_comps += [self.dataset_selected]
         if self.config == "cubeviz":
             label_comps += [f"{self.selected_mode.lower()}-smooth"]

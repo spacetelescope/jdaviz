@@ -56,12 +56,8 @@ module.exports = {
   props: ['data_items', 'viewer', 'app_settings'],
   methods: {
     menuButtonAvailable() {
-      if (this.$props.viewer.config === 'mosviz') {
-        if (this.$props.viewer.reference !== 'spectrum-viewer') {
-          // if making available for other viewers, those cases will also
-          // need to be handled in filteredDataItems below.
-          return false
-        }
+      if (this.$props.viewer.reference === 'table-viewer') {
+        return false
       }
       return true
     },
@@ -77,16 +73,17 @@ module.exports = {
     filteredDataItems() {
       itemIsVisible = (item) => {
         if (this.$props.viewer.config === 'mosviz') {
-          if (this.$props.viewer.reference === 'spectrum-viewer') {
-            if (item.ndims !== 1) {
-              // filters out table, spectrum 2d, images
-              return false
-            } else if (item.meta.Plugin === undefined) {
-              // TODO: determine whether to also filter plugin outputs to the row they were created
-              return item.meta.mosviz_row == this.$props.app_settings.mosviz_row
-            }
-            return true
+          if (this.$props.viewer.reference === 'spectrum-viewer' && item.type !== '1d spectrum') {
+            // filters out table, spectrum 2d, images
+            return false
+          } else if (this.$props.viewer.reference === 'spectrum-2d-viewer' && item.type !== '2d spectrum') {
+            return false
+          } else if (this.$props.viewer.reference === 'image-viewer' && item.type !== 'image') {
+            return false
+          } else if (item.meta.mosviz_row !== undefined) {
+            return item.meta.mosviz_row == this.$props.app_settings.mosviz_row
           }
+          return true
         } else if (this.$props.viewer.config === 'cubeviz') {
           if (this.$props.viewer.reference === 'spectrum-viewer') {
             if (item.meta.Plugin === undefined) {

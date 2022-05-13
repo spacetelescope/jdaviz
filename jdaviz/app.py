@@ -1221,11 +1221,25 @@ class Application(VuetifyTemplate, HubListener):
 
     @staticmethod
     def _create_data_item(data):
+        ndims = len(data.shape)
+        component_ids = [str(c) for c in data.component_ids()]
+        if 'Identifier' in component_ids:
+            typ = 'table'
+        elif ndims == 1:
+            typ = '1d spectrum'
+        elif ndims == 2:
+            typ = '2d spectrum' if 'Wavelength' in component_ids else 'image'
+        elif ndims == 3:
+            typ = 'cube'
+        else:
+            typ = 'unknown'
+
         return {
             'id': str(uuid.uuid4()),
             'name': data.label,
             'locked': False,
             'ndims': len(data.shape),
+            'type': typ,
             'meta': {k: v for k, v in data.meta.items() if k in ['Plugin', 'mosviz_row']},
             'children': []}
 
