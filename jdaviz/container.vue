@@ -6,6 +6,7 @@
       :key="index"
       :data_items="data_items"
       :app_settings="app_settings"
+      :icons="icons"
       @resize="$emit('resize')"
       :closefn="closefn"
       @data-item-selected="$emit('data-item-selected', $event)"
@@ -27,6 +28,7 @@
               :data_items="data_items" 
               :viewer="viewer"
               :app_settings="app_settings"
+              :icons="icons"
               @data-item-selected="$emit('data-item-selected', $event)"
               @data-item-remove="$emit('data-item-remove', $event)"
             ></j-viewer-data-select>
@@ -61,7 +63,7 @@
 <script>
 module.exports = {
   name: "g-viewer-tab",
-  props: ["stack", "data_items", "closefn", "app_settings"],
+  props: ["stack", "data_items", "closefn", "app_settings", "icons"],
   created() {
     this.$parent.childMe = () => {
       return this.$children[0];

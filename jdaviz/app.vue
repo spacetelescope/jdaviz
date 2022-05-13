@@ -40,6 +40,7 @@
                   :key="stack.viewers.map(v => v.id).join('-')"
                   :data_items="state.data_items"
                   :app_settings="state.settings"
+                  :icons="state.icons"
                   @resize="relayout"
                   :closefn="destroy_viewer_item"
                   @data-item-selected="data_item_selected($event)"

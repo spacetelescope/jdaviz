@@ -25,6 +25,7 @@ from glue.core.message import (DataCollectionAddMessage,
 from glue.core.state_objects import State
 from glue.core.subset import Subset, RangeSubsetState, RoiSubsetState
 from glue_jupyter.app import JupyterApplication
+from glue_jupyter.common.toolbar_vuetify import read_icon
 from glue_jupyter.state_traitlets_helpers import GlueState
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from ipyvuetify import VuetifyTemplate
@@ -37,6 +38,7 @@ from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessag
                                 ViewerAddedMessage, ViewerRemovedMessage)
 from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registry,
                                     data_parser_registry)
+from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import SnackbarQueue
 
 __all__ = ['Application']
@@ -121,6 +123,11 @@ class ApplicationState(State):
         'layout': {
         }
     }, docstring="Top-level application settings.")
+
+    icons = DictCallbackProperty({
+        'radialtocheck': read_icon(os.path.join(ICON_DIR, 'radialtocheck.svg'), 'svg+xml'),
+        'checktoradial': read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml')
+    }, docstring="Custom application icons")
 
     data_items = ListCallbackProperty(
         docstring="List of data items parsed from the Glue data collection.")
@@ -1095,11 +1102,14 @@ class Application(VuetifyTemplate, HubListener):
         """
         viewer_id, item_id, checked = event['id'], event['item_id'], event['checked']
         viewer_item = self._viewer_item_by_id(viewer_id)
+        replace = event.get('replace', False)
 
         if viewer_item is None:
             raise ValueError(f'viewer {viewer_id} not found')
 
-        if checked:
+        if replace:
+            selected_items = [item_id]
+        elif checked:
             selected_items = [*viewer_item['selected_data_items'], item_id]
         else:
             selected_items = list(filter(

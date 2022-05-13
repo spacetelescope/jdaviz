@@ -17,18 +17,38 @@
         </v-btn>
       </template>
   
-      <v-list style="max-height: 500px; width: 350px;" class="overflow-y-auto">
-        <v-row v-for="item in filteredDataItems" :key="item.id" style="padding-left: 25px">
-          <j-tooltip tipid='viewer-data-select-toggle'>
+      <v-list style="max-height: 500px; width: 350px; padding-top: 0px" class="overflow-y-auto">
+        <v-row key="title" style="padding-left: 25px; margin-right: 0px; padding-bottom: 4px; background-color: #E4F8FF">
+            <span class='text--primary' style="overflow-wrap: anywhere; font-size: 12pt; padding-top: 6px; padding-left: 6px; font-family: 'Oswald'; font-weight: bold">
+              {{viewerTitleCase}}
+            </span>
+
+            <span style="position: absolute; right: 10px">
+              <j-tooltip :tipid="multiSelect ? 'viewer-data-select-enabled' : 'viewer-data-radio-enabled'">
+                <v-btn
+                  icon
+                  @click="() => {multiSelect = !multiSelect}"
+                  style="opacity: 0.7"
+                  >
+                    <img :src="multiSelect ? icons.checktoradial : icons.radialtocheck" width="20"/>
+                </v-btn>
+              </j-tooltip>
+            </span>
+        </v-row>
+
+        <v-row v-for="item in filteredDataItems" :key="item.id" style="padding-left: 25px; margin-right: 0px">
+          <j-tooltip :tipid="multiSelect ? 'viewer-data-select' : 'viewer-data-radio'">
             <v-btn 
               icon
               :color="viewer.selected_data_items.includes(item.id) ? 'accent' : 'default'"
               @click="$emit('data-item-selected', {
                 id: viewer.id,
                 item_id: item.id,
-                checked: !viewer.selected_data_items.includes(item.id)
+                checked: !viewer.selected_data_items.includes(item.id),
+                replace: !multiSelect
               })">
-                <v-icon>{{viewer.selected_data_items.includes(item.id) ? "mdi-eye" : "mdi-eye-off"}}</v-icon>
+                <v-icon v-if="multiSelect">{{viewer.selected_data_items.includes(item.id) ? "mdi-checkbox-marked" : "mdi-checkbox-blank-outline"}}</v-icon>
+                <v-icon v-else>{{viewer.selected_data_items.includes(item.id) ? "mdi-radiobox-marked" : "mdi-radiobox-blank"}}</v-icon>
             </v-btn>
           </j-tooltip>
 
@@ -37,7 +57,7 @@
           </span>
 
           <div v-if="isDeletable(item)" style="position: absolute; right: 10px">
-            <j-tooltip tipid='viewer-data-select-delete'>
+            <j-tooltip tipid='viewer-data-delete'>
               <v-btn
                 icon
                 @click="$emit('data-item-remove', {item_name: item.name})"
@@ -53,7 +73,26 @@
 <script>
 
 module.exports = {
-  props: ['data_items', 'viewer', 'app_settings'],
+  props: ['data_items', 'viewer', 'app_settings', 'icons'],
+  data: function () {
+    var multiSelect = true
+    if (this.$props.viewer.config === 'cubeviz') {
+      if (this.$props.viewer.reference !== 'spectrum-viewer') {
+        multiSelect = false
+      }
+    } else if (this.$props.viewer.config === 'mosviz') {
+      if (['image-viewer', 'spectrum-2d-viewer'].indexOf(this.$props.viewer.reference) !== -1) {
+        multiSelect = false
+      }
+    }
+    return {
+      // default to passed values, whenever value or uncertainty are changed
+      // updateTruncatedValues will overwrite the displayed values
+      multiSelect: multiSelect,
+      valueTrunc: this.value,
+      uncertTrunc: this.uncertainty
+    }
+  },
   methods: {
     menuButtonAvailable() {
       if (this.$props.viewer.reference === 'table-viewer') {
@@ -70,6 +109,17 @@ module.exports = {
     }
   },
   computed: {
+    viewerTitleCase() {
+      return this.$props.viewer.reference.toLowerCase().replaceAll('-', ' ').split(' ').map((word) => {return (word.charAt(0).toUpperCase() + word.slice(1))}).join(' ');
+    },
+    showModeToggle() {
+      if (this.$props.viewer.config === 'cubeviz') {
+        if (this.$props.viewer.reference !== 'spectrum-viewer') {
+          return true
+        }
+      }
+      return false
+    },
     filteredDataItems() {
       itemIsVisible = (item) => {
         if (this.$props.viewer.config === 'mosviz') {
