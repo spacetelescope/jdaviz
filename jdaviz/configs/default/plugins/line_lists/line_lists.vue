@@ -194,7 +194,7 @@
 
               <v-row>
                 <j-tooltip tipid='plugin-line-lists-spectral-range'>
-                  <v-btn :color="list_contents[item].color ? 'accent' : 'default'" icon @click="">
+                  <v-btn :color="list_contents[item].color ? 'accent' : 'default'" icon @click="" style="width: 20px">
                     <v-icon>mdi-chart-bell-curve</v-icon>
                   </v-btn>
                 </j-tooltip>
@@ -202,7 +202,7 @@
                 <v-text-field
                   v-model="lines_filter"
                   append-icon='mdi-magnify'
-                  style="padding: 0px 8px"
+                  style="padding: 0px 8px; max-width: calc(100% - 20px)"
                   clearable
                   hide-details
                 ></v-text-field>
