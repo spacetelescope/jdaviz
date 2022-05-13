@@ -1232,13 +1232,15 @@ class Application(VuetifyTemplate, HubListener):
     @staticmethod
     def _create_data_item(data):
         ndims = len(data.shape)
-        component_ids = [str(c) for c in data.component_ids()]
-        if 'Identifier' in component_ids:
+        wcsaxes = data.meta.get('WCSAXES', data.meta.get('header', {}).get('WCSAXES', None))
+        if data.label == 'MOS Table':
             typ = 'table'
         elif ndims == 1:
             typ = '1d spectrum'
-        elif ndims == 2:
-            typ = '2d spectrum' if 'Wavelength' in component_ids else 'image'
+        elif ndims == 2 and wcsaxes == 3:
+            typ = '2d spectrum'
+        elif ndims == 2 and wcsaxes == 2:
+            typ = 'image'
         elif ndims == 3:
             typ = 'cube'
         else:
