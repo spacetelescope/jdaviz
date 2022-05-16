@@ -18,8 +18,8 @@
       </template>
   
       <v-list style="max-height: 500px; width: 350px; padding-top: 0px" class="overflow-y-auto">
-        <v-row key="title" style="padding-left: 25px; margin-right: 0px; padding-bottom: 4px; background-color: #E4F8FF">
-            <span class='text--primary' style="overflow-wrap: anywhere; font-size: 12pt; padding-top: 6px; padding-left: 6px; font-family: 'Oswald'; font-weight: bold">
+        <v-row key="title" style="padding-left: 25px; margin-right: 0px; padding-bottom: 4px; background-color: #E3F2FD">
+            <span class='text--primary' style="overflow-wrap: anywhere; font-size: 12pt; padding-top: 6px; padding-left: 6px; font-weight: bold">
               {{viewerTitleCase}}
             </span>
 
@@ -30,7 +30,7 @@
                   @click="() => {multi_select = !multi_select}"
                   style="opacity: 0.7"
                   >
-                    <img :src="multi_select ? icons.checktoradial : icons.radialtocheck" width="20"/>
+                    <img :src="multi_select ? icons.checktoradial : icons.radialtocheck" width="24"/>
                 </v-btn>
               </j-tooltip>
             </span>
@@ -47,7 +47,7 @@
         </v-row>
 
         <div v-if="viewer.config === 'mosviz'" style="margin-bottom: -8px">
-          <v-row key="mosviz-expand" style="padding-left: 25px; margin-right: 0px; padding-bottom: 4px; background-color: #E4F8FF"> 
+          <v-row key="mosviz-expand" style="padding-left: 25px; margin-right: 0px; padding-bottom: 4px; background-color: #E3F2FD"> 
             <span 
               @click="toggleMosvizShowExtraItems"
               class='text--primary' 

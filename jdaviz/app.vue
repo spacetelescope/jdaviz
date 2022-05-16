@@ -137,6 +137,7 @@ export default {
       secondary: "#007DA4",
       accent: "#C75109",
       turquoise: "#007BA1",
+      lightblue: "#E3F2FD",  // matches highlighted row in MOS table
       spinner: "#163C4C",
       error: '#FF5252',
       info: '#2196F3',
@@ -150,6 +151,7 @@ export default {
       secondary: "#007DA4",
       accent: "#C75109",
       turquoise: "#007BA1",
+      lightblue: "#E3F2FD",
       spinner: "#ACE1FF",
       error: '#FF5252',
       info: '#2196F3',
