@@ -23,11 +23,11 @@ class OffscreenLinesMarks(HubListener):
 
         self.left = Label(text=[''], x=[0.02], y=[0.8],
                           scales={'x': LinearScale(min=0, max=1), 'y': LinearScale(min=0, max=1)},
-                          colors=['black'], default_size=12,
+                          colors=['gray'], default_size=12,
                           align='start')
         self.right = Label(text=[''], x=[0.98], y=[0.8],
                            scales={'x': LinearScale(min=0, max=1), 'y': LinearScale(min=0, max=1)},
-                           colors=['black'], default_size=12,
+                           colors=['gray'], default_size=12,
                            align='end')
 
         self._update_counts()
