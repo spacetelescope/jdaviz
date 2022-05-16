@@ -64,6 +64,8 @@ Mosviz
 Specviz
 ^^^^^^^
 
+- Fixed clearing an identified spectral line when its removed. [#1322]
+
 Specviz2d
 ^^^^^^^^^
 
