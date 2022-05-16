@@ -13,7 +13,7 @@ from matplotlib.colors import cnames
 from astropy import units as u
 
 
-from jdaviz.core.events import SpectralMarksChangedMessage
+from jdaviz.core.events import SpectralMarksChangedMessage, LineIdentifyMessage
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.marks import SpectralLine, LineUncertainties, ScatterMask
 from jdaviz.core.linelists import load_preset_linelist, get_available_linelists
@@ -205,6 +205,11 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
 
         msg = SpectralMarksChangedMessage(marks, sender=self)
         self.session.hub.broadcast(msg)
+
+        if not np.any([mark.identify for mark in marks]):
+            # then clear the identified entry
+            msg = LineIdentifyMessage(name_rest='', sender=self)
+            self.session.hub.broadcast(msg)
 
     def erase_spectral_lines(self, name=None, name_rest=None, show_none=True):
         """
