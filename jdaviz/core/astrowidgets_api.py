@@ -443,7 +443,7 @@ class AstrowidgetsImageViewerMixin:
             t_glue = Data(marker_name, ra=sky.ra.deg, dec=sky.dec.deg)
             dcomps = image.components
             if (isinstance(image.coords, gwcs.WCS) and
-                    image.coords.output_frame.reference_frame.name == 'icrs' and
+                    image.coords.output_frame.reference_frame.name != 'galactic' and
                     'Lon' in dcomps and 'Lat' in dcomps):
                 ra_str = 'Lon'
                 dec_str = 'Lat'
