@@ -56,6 +56,29 @@ def test_fits_image_hdu_parse_from_file(tmpdir, image_hdu_obj, cubeviz_helper):
     assert len(cubeviz_helper.app.data_collection) == 3
     assert cubeviz_helper.app.data_collection[0].label.endswith('[FLUX]')
 
+    # This tests the same data as test_fits_image_hdu_parse above.
+
+    flux_viewer = cubeviz_helper.app.get_viewer('flux-viewer')
+    flux_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
+    assert flux_viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
+    assert flux_viewer.label_mouseover.value == '+1.00000e+00 1e-17 erg / (Angstrom cm2 pix s)'
+    assert flux_viewer.label_mouseover.world_ra_deg == '205.4433848390'
+    assert flux_viewer.label_mouseover.world_dec_deg == '26.9996149270'
+
+    unc_viewer = cubeviz_helper.app.get_viewer('uncert-viewer')
+    unc_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': -1, 'y': 0}})
+    assert unc_viewer.label_mouseover.pixel == 'x=-1.0 y=00.0'
+    assert unc_viewer.label_mouseover.value == ''  # Out of bounds
+    assert unc_viewer.label_mouseover.world_ra_deg == '205.4441642302'
+    assert unc_viewer.label_mouseover.world_dec_deg == '26.9996148973'
+
+    mask_viewer = cubeviz_helper.app.get_viewer('mask-viewer')
+    mask_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 9, 'y': 0}})
+    assert mask_viewer.label_mouseover.pixel == 'x=09.0 y=00.0'
+    assert mask_viewer.label_mouseover.value == '+0.00000e+00 ct'  # No unit define, ct as fallback
+    assert mask_viewer.label_mouseover.world_ra_deg == '205.4441642302'
+    assert mask_viewer.label_mouseover.world_dec_deg == '26.9996148973'
+
 
 @pytest.mark.filterwarnings('ignore')
 def test_spectrum3d_parse(image_hdu_obj, cubeviz_helper):
@@ -67,12 +90,34 @@ def test_spectrum3d_parse(image_hdu_obj, cubeviz_helper):
     assert len(cubeviz_helper.app.data_collection) == 1
     assert cubeviz_helper.app.data_collection[0].label.endswith('[FLUX]')
 
+    # Same as flux viewer data in test_fits_image_hdu_parse_from_file
+    flux_viewer = cubeviz_helper.app.get_viewer('flux-viewer')
+    flux_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
+    assert flux_viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
+    assert flux_viewer.label_mouseover.value == '+1.00000e+00 1e-17 erg / (Angstrom cm2 pix s)'
+    assert flux_viewer.label_mouseover.world_ra_deg == '205.4433848390'
+    assert flux_viewer.label_mouseover.world_dec_deg == '26.9996149270'
+
+    # These viewers have no data.
+
+    unc_viewer = cubeviz_helper.app.get_viewer('uncert-viewer')
+    unc_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': -1, 'y': 0}})
+    assert unc_viewer.label_mouseover is None
+
+    mask_viewer = cubeviz_helper.app.get_viewer('mask-viewer')
+    mask_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 9, 'y': 0}})
+    assert mask_viewer.label_mouseover is None
+
 
 def test_spectrum1d_parse(spectrum1d, cubeviz_helper):
     cubeviz_helper.load_data(spectrum1d)
 
     assert len(cubeviz_helper.app.data_collection) == 1
     assert cubeviz_helper.app.data_collection[0].label.endswith('[FLUX]')
+
+    # Coordinate display is only for spatial image, which is missing here.
+    flux_viewer = cubeviz_helper.app.get_viewer('flux-viewer')
+    assert flux_viewer.label_mouseover is None
 
 
 def test_numpy_cube(cubeviz_helper):

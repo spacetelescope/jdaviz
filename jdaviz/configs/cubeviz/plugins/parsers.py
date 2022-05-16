@@ -75,9 +75,9 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
     #  into something glue can understand.
     elif isinstance(file_obj, Spectrum1D):
         if file_obj.flux.ndim == 3:
-            _parse_spectrum1d_3d(app, file_obj)
+            _parse_spectrum1d_3d(app, file_obj, data_label=data_label)
         else:
-            _parse_spectrum1d(app, file_obj)
+            _parse_spectrum1d(app, file_obj, data_label=data_label)
     else:
         raise NotImplementedError(f'Unsupported data format: {file_obj}')
 
@@ -202,8 +202,11 @@ def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', viewer_name='flux-viewe
         app.add_data_to_viewer('spectrum-viewer', data_label)
 
 
-def _parse_spectrum1d_3d(app, file_obj):
-    # Load spectrum1d as a cube
+def _parse_spectrum1d_3d(app, file_obj, data_label=None):
+    """Load spectrum1d as a cube."""
+
+    if data_label is None:
+        data_label = "Unknown spectrum object"
 
     for attr in ["flux", "mask", "uncertainty"]:
         val = getattr(file_obj, attr)
@@ -224,20 +227,21 @@ def _parse_spectrum1d_3d(app, file_obj):
 
         s1d = Spectrum1D(flux=flux, wcs=file_obj.wcs)
 
-        data_label = f"Unknown spectrum object[{attr.upper()}]"
-        app.add_data(s1d, data_label)
+        cur_data_label = f"{data_label}[{attr.upper()}]"
+        app.add_data(s1d, cur_data_label)
 
         if attr == 'flux':
-            app.add_data_to_viewer('flux-viewer', data_label)
-            app.add_data_to_viewer('spectrum-viewer', data_label)
+            app.add_data_to_viewer('flux-viewer', cur_data_label)
+            app.add_data_to_viewer('spectrum-viewer', cur_data_label)
         elif attr == 'mask':
-            app.add_data_to_viewer('mask-viewer', data_label)
+            app.add_data_to_viewer('mask-viewer', cur_data_label)
         else:  # 'uncertainty'
-            app.add_data_to_viewer('uncert-viewer', data_label)
+            app.add_data_to_viewer('uncert-viewer', cur_data_label)
 
 
-def _parse_spectrum1d(app, file_obj):
-    data_label = "Unknown spectrum object"
+def _parse_spectrum1d(app, file_obj, data_label=None):
+    if data_label is None:
+        data_label = "Unknown spectrum object"
 
     # TODO: glue-astronomy translators only look at the flux property of
     #  specutils Spectrum1D objects. Fix to support uncertainties and masks.
