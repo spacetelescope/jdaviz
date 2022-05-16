@@ -15,7 +15,7 @@
       </v-btn>
     </j-tooltip>
 
-    <span class='text--primary' style="overflow-wrap: anywhere; font-size: 12pt; padding-top: 6px; padding-left: 6px">
+    <span style="overflow-wrap: anywhere; font-size: 12pt; padding-top: 6px; padding-left: 6px">
       {{item.name}}
     </span>
 
