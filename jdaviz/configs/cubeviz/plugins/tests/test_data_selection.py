@@ -4,9 +4,13 @@ import pytest
 @pytest.mark.filterwarnings('ignore:No observer defined on WCS')
 def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
     app = cubeviz_helper.app
-    app.add_data(spectrum1d_cube, 'test[FLUX]')
-    app.add_data(spectrum1d_cube, 'test[IVAR]')
-    app.add_data_to_viewer('flux-viewer', 'test[FLUX]')
+    # NOTE: these are the same underlying data.  This works fine for the current scope
+    # of the tests (to make sure checking/unchecking operations change the data exposed
+    # in the viewer), but will need to be more advanced if we extend tests here to
+    # cover scrubbing/linking/etc
+    app.add_data(spectrum1d_cube, 'cube1')
+    app.add_data(spectrum1d_cube, 'cube2')
+    app.add_data_to_viewer('flux-viewer', 'cube1')
     fv = app.get_viewer('flux-viewer')
 
     assert len(app.state.data_items) == 2
