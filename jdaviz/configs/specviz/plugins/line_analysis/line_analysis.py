@@ -18,7 +18,7 @@ from jdaviz.core.marks import (LineAnalysisContinuum,
                                LineAnalysisContinuumCenter,
                                LineAnalysisContinuumLeft,
                                LineAnalysisContinuumRight,
-                               Shadow)
+                               ShadowLine)
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         DatasetSelectMixin,
@@ -149,7 +149,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             marks = {'left': LineAnalysisContinuumLeft(viewer, visible=self.plugin_opened),
                      'center': LineAnalysisContinuumCenter(viewer, visible=self.plugin_opened),
                      'right': LineAnalysisContinuumRight(viewer, visible=self.plugin_opened)}
-            shadows = [Shadow(mark, shadow_width=2) for mark in marks.values()]
+            shadows = [ShadowLine(mark, shadow_width=2) for mark in marks.values()]
             # NOTE: += won't trigger the figure to notice new marks
             viewer.figure.marks = viewer.figure.marks + shadows + list(marks.values())
 

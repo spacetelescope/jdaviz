@@ -2,7 +2,6 @@ import pytest
 import numpy as np
 
 from jdaviz.configs.cubeviz.plugins.slice.slice import Slice
-from jdaviz.core.marks import SliceIndicator
 
 
 @pytest.mark.filterwarnings('ignore:No observer defined on WCS')
@@ -62,15 +61,15 @@ def test_indicator_settings(cubeviz_helper, spectrum1d_cube):
     app.add_data_to_viewer("flux-viewer", "test")
     sl = Slice(app=app)
     sv = app.get_viewer('spectrum-viewer')
-    indicator = [m for m in sv.figure.marks if isinstance(m, SliceIndicator)][0]
+    indicator = sv.slice_indicator
 
     assert sl.setting_show_indicator is True
     assert indicator._show_if_inactive is True
     assert sl.setting_show_wavelength is True
-    assert indicator.labels_visibility == 'label'
+    assert indicator.label.visible is True
 
     sl.setting_show_indicator = False
     assert indicator._show_if_inactive is False
 
     sl.setting_show_wavelength = False
-    assert indicator.labels_visibility == 'none'
+    assert indicator.label.visible is False
