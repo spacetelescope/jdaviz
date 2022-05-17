@@ -22,7 +22,7 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
 
     assert mm.moment_available
     assert dc[1].label == 'moment 0'
-    mv_data = app.get_viewer('mask-viewer').data()
+    mv_data = cubeviz_helper.app.get_viewer('mask-viewer').data()
     # by default, will overwrite the previous entry (so only one data entry)
     assert len(mv_data) == 1
     assert mv_data[0].label == 'moment 0'
