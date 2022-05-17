@@ -14,6 +14,8 @@ Cubeviz
 
 - Cubeviz image viewer now has coordinates info panel like Imviz. [#1315]
 
+- New Metadata Viewer plugin. [#1325]
+
 Imviz
 ^^^^^
 

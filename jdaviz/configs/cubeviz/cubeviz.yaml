@@ -17,6 +17,7 @@ toolbar:
   - g-subset-tools
   - g-coords-info
 tray:
+  - g-metadata-viewer
   - g-plot-options
   - g-subset-plugin
   - cubeviz-slice

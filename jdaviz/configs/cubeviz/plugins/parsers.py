@@ -117,7 +117,7 @@ def _parse_hdu(app, hdulist, file_name=None):
         flux = hdu.data << flux_unit
 
         try:
-            sc = Spectrum1D(flux=flux, wcs=wcs)
+            sc = Spectrum1D(flux=flux, wcs=wcs, meta=hdu.header)
         except Exception as e:
             logging.warning(e)
             continue
@@ -125,12 +125,12 @@ def _parse_hdu(app, hdulist, file_name=None):
         app.add_data(sc, data_label)
 
         # If the data type is some kind of integer, assume it's the mask/dq
-        if hdu.data.dtype in (int, np.uint, np.uint32) or \
-                any(x in hdu.name.lower() for x in EXT_TYPES['mask']):
+        if (hdu.data.dtype in (int, np.uint, np.uint32) or
+                any(x in hdu.name.lower() for x in EXT_TYPES['mask'])):
             app.add_data_to_viewer('mask-viewer', data_label)
 
-        if 'errtype' in [x.lower() for x in hdu.header.keys()] or \
-                any(x in hdu.name.lower() for x in EXT_TYPES['uncert']):
+        if ('errtype' in [x.lower() for x in hdu.header.keys()] or
+                any(x in hdu.name.lower() for x in EXT_TYPES['uncert'])):
             app.add_data_to_viewer('uncert-viewer', data_label)
 
         if any(x in hdu.name.lower() for x in EXT_TYPES['flux']):
@@ -161,11 +161,11 @@ def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI', viewer_name='flux-viewe
         unit = u.Unit(hdulist[ext].header.get('BUNIT', 'count'))
         flux = hdulist[ext].data << unit
     wcs = WCS(hdulist['SCI'].header, hdulist)  # Everything uses SCI WCS
-    data = Spectrum1D(flux, wcs=wcs)
+    data = Spectrum1D(flux, wcs=wcs, meta=hdulist[ext].header)
 
     # NOTE: Tried to only pass in sliced WCS but got error in Glue.
     # sliced_wcs = wcs[:, 0, 0]  # Only want wavelengths
-    # data = Spectrum1D(flux, wcs=sliced_wcs)
+    # data = Spectrum1D(flux, wcs=sliced_wcs, meta=hdulist[ext].header)
 
     app.add_data(data, data_label)
     app.add_data_to_viewer(viewer_name, data_label)
@@ -194,7 +194,9 @@ def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', viewer_name='flux-viewe
     wcs = WCS(wcs_dict)
     flux = np.moveaxis(flux, 0, -1)
     flux = np.swapaxes(flux, 0, 1)
-    data = Spectrum1D(flux, wcs=wcs)
+    metadata = hdr.copy()
+    metadata.update(wcs_dict)  # To be internally consistent
+    data = Spectrum1D(flux, wcs=wcs, meta=metadata)
 
     app.add_data(data, data_label)
     app.add_data_to_viewer(viewer_name, data_label)
@@ -225,7 +227,7 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None):
 
         flux = np.moveaxis(flux, 1, 0)
 
-        s1d = Spectrum1D(flux=flux, wcs=file_obj.wcs)
+        s1d = Spectrum1D(flux=flux, wcs=file_obj.wcs, meta=file_obj.meta)
 
         cur_data_label = f"{data_label}[{attr.upper()}]"
         app.add_data(s1d, cur_data_label)
