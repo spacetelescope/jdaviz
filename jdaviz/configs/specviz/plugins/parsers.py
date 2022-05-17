@@ -3,13 +3,12 @@ import pathlib
 import uuid
 
 import numpy as np
-
 from astropy.io.registry import IORegistryError
 from astropy.nddata import StdDevUncertainty
-
 from specutils import Spectrum1D, SpectrumList, SpectrumCollection
 
 from jdaviz.core.registries import data_parser_registry
+from jdaviz.utils import PRIHDR_KEY
 
 __all__ = ["specviz_spectrum1d_parser"]
 
@@ -100,6 +99,11 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
                 spec = Spectrum1D(flux=spec.flux,
                                   spectral_axis=spec.spectral_axis.to(current_unit))
 
+            # Make metadata layout conform with other viz.
+            if 'header' in spec.meta:
+                spec.meta.update(spec.meta['header'])
+                del spec.meta['header']
+
             app.add_data(spec, data_label[i])
 
             # handle display, with the SpectrumList special case in mind.
@@ -131,6 +135,11 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
             unc = StdDevUncertainty(fnuallerr * flux_units)
             spec = Spectrum1D(flux=fnuall * flux_units, spectral_axis=wlall * wave_units,
                               uncertainty=unc)
+
+            # Make metadata layout conform with other viz.
+            if 'header' in spec.meta:
+                spec.meta.update(spec.meta['header'])
+                del spec.meta['header']
 
             # needs perhaps a better way to label the combined spectrum
             label = "Combined " + data_label[0]

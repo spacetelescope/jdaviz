@@ -14,6 +14,15 @@
       hint="Select the data to see metadata."
     />
 
+    <v-row v-if="has_primary">
+      <v-switch
+        label="Show primary header"
+        hint="Show MEF primary header metadata instead."
+        v-model="show_primary"
+        persistent-hint>
+      </v-switch>
+    </v-row>
+
     <j-plugin-section-header>Metadata</j-plugin-section-header>
     <div v-if="has_metadata">
       <v-row no-gutters>

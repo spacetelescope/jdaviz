@@ -17,6 +17,7 @@ from specutils import Spectrum1D, SpectrumList, SpectrumCollection
 from jdaviz.configs.imviz.plugins.parsers import get_image_data_iterator
 from jdaviz.core.registries import data_parser_registry
 from jdaviz.core.events import SnackbarMessage
+from jdaviz.utils import PRIHDR_KEY
 
 __all__ = ['mos_spec1d_parser', 'mos_spec2d_parser', 'mos_image_parser']
 
@@ -253,7 +254,9 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
             data = hdulist[1].data
             header = hdulist[1].header
             wcs = WCS(header)
-        return Spectrum1D(data, wcs=wcs)
+            metadata = header.copy()
+            metadata[PRIHDR_KEY] = hdulist[0].header
+        return Spectrum1D(data, wcs=wcs, meta=metadata)
 
     # Coerce into list-like object
     if not isinstance(data_obj, (list, tuple, SpectrumCollection)):
@@ -283,11 +286,10 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
                 except IORegistryError:
                     data = _parse_as_spectrum1d(data)
 
-            # Copy (if present) region to top-level meta object
-            if ('header' in data.meta and
-                    'S_REGION' in data.meta['header'] and
-                    'S_REGION' not in data.meta):
-                data.meta['S_REGION'] = data.meta['header']['S_REGION']
+            # Make metadata layout conform with other viz.
+            if 'header' in data.meta:
+                data.meta.update(data.meta['header'])
+                del data.meta['header']
 
             # Set the instrument
             # TODO: this should not be set to nirspec for all datasets
@@ -309,13 +311,9 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
 
 
 def _load_fits_image_from_filename(filename, app):
-    data_list = []
     with fits.open(filename) as hdulist:
-        meta = dict(hdulist[0].header.copy())
-        data_iter = get_image_data_iterator(app, hdulist, "Image", ext=None)
-        for d, _ in data_iter:  # We do not use the generated labels
-            d.meta.update(meta)
-            data_list.append(d)
+        # We do not use the generated labels
+        data_list = [d for d, _ in get_image_data_iterator(app, hdulist, "Image", ext=None)]
     return data_list
 
 
@@ -647,10 +645,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
 
                         spec2d.meta['INSTRUME'] = 'NIRISS'
 
-                        label = "{} Source {} spec2d {}".format(filter_name,
-                                                                temp[sci].header["SOURCEID"],
-                                                                orientation
-                                                                )
+                        label = f"{filter_name} Source {temp[sci].header['SOURCEID']} spec2d {orientation}"  # noqa
                         ra, dec = pupil_id_dict[filter_name][temp[sci].header["SOURCEID"]]
                         ras.append(ra)
                         decs.append(dec)
@@ -670,8 +665,8 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
             with fits.open(fname, memmap=False) as temp:
                 # TODO: Remove this once valid SRCTYPE values are present in all headers
                 for hdu in temp:
-                    if "SRCTYPE" in hdu.header and\
-                            (hdu.header["SRCTYPE"] in ["POINT", "EXTENDED"]):
+                    if ("SRCTYPE" in hdu.header and
+                            (hdu.header["SRCTYPE"] in ["POINT", "EXTENDED"])):
                         pass
                     else:
                         hdu.header["SRCTYPE"] = "EXTENDED"
@@ -685,13 +680,13 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                 orientation = f[-1]
 
                 for spec in specs:
-                    if spec.meta['header']['SPORDER'] == 1 and\
-                            spec.meta['header']['EXTNAME'] == "EXTRACT1D":
+                    # Make metadata layout conform with other viz.
+                    if 'header' in spec.meta:
+                        spec.meta.update(spec.meta['header'])
+                        del spec.meta['header']
 
-                        label = "{} Source {} spec1d {}".format(filter_name,
-                                                                spec.meta['header']['SOURCEID'],
-                                                                orientation
-                                                                )
+                    if spec.meta['SPORDER'] == 1 and spec.meta['EXTNAME'] == "EXTRACT1D":
+                        label = f"{filter_name} Source {spec.meta['SOURCEID']} spec1d {orientation}"
                         spec_labels_1d.append(label)
                         add_to_glue[label] = spec
 

@@ -7,6 +7,9 @@ from ipyvue import watch
 
 __all__ = []
 
+# For Metadata Viewer plugin internal use only.
+PRIHDR_KEY = '_primary_header'
+
 
 class SnackbarQueue:
     '''

@@ -3,6 +3,7 @@ from traitlets import Bool, List, observe
 
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin, DatasetSelectMixin
+from jdaviz.utils import PRIHDR_KEY
 
 __all__ = ['MetadataViewer']
 
@@ -11,6 +12,8 @@ __all__ = ['MetadataViewer']
 class MetadataViewer(TemplateMixin, DatasetSelectMixin):
     template_file = __file__, "metadata_viewer.vue"
     has_metadata = Bool(False).tag(sync=True)
+    has_primary = Bool(False).tag(sync=True)
+    show_primary = Bool(False).tag(sync=True)
     metadata = List([]).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
@@ -18,12 +21,18 @@ class MetadataViewer(TemplateMixin, DatasetSelectMixin):
         # override the default filters on dataset entries to require metadata in entries
         self.dataset.add_filter('not_from_plugin')
 
+    def reset(self):
+        self.has_metadata = False
+        self.has_primary = False
+        self.show_primary = False
+        self.metadata = []
+
     @observe("dataset_selected")
-    def _show_metadata(self, event):
+    def show_metadata(self, event):
         data = self.dataset.selected_dc_item
-        if data is None or not hasattr(data, 'meta') or not isinstance(data.meta, dict) or len(data.meta) < 1: # noqa
-            self.has_metadata = False
-            self.metadata = []
+        if (data is None or not hasattr(data, 'meta') or not isinstance(data.meta, dict)
+                or len(data.meta) < 1):
+            self.reset()
             return
 
         if 'header' in data.meta and isinstance(data.meta['header'], (dict, Header)):
@@ -34,13 +43,51 @@ class MetadataViewer(TemplateMixin, DatasetSelectMixin):
         else:
             meta = data.meta
 
+        if PRIHDR_KEY in data.meta:
+            self.has_primary = True
+        else:
+            self.has_primary = False
+
+        self.show_primary = False
+        self.find_public_metadata(meta, primary_only=False)
+
+    @observe("show_primary")
+    def handle_show_primary(self, event):
+        if not self.show_primary:
+            self.show_metadata(event)
+            return
+
+        data = self.dataset.selected_dc_item
+        if (data is None or not hasattr(data, 'meta') or not isinstance(data.meta, dict)
+                or len(data.meta) < 1):
+            self.reset()
+            return
+
+        self.find_public_metadata(data.meta, primary_only=True)
+
+    def find_public_metadata(self, meta, primary_only=False):
+        if primary_only:
+            if PRIHDR_KEY in meta:
+                meta = meta[PRIHDR_KEY]
+            else:
+                return []
+
         d = flatten_nested_dict(meta)
-        for badkey in ('COMMENT', 'HISTORY', ''):
+        # Some FITS keywords cause "# ipykernel cannot clean for JSON" messages.
+        # Also, we want to hide internal metadata that starts with underscore.
+        badkeys = ['COMMENT', 'HISTORY', ''] + [k for k in d if k.startswith('_')]
+        for badkey in badkeys:
             if badkey in d:
-                del d[badkey]  # ipykernel cannot clean for JSON
+                del d[badkey]
+
         # TODO: Option to not sort?
-        self.metadata = sorted(zip(d.keys(), map(str, d.values())))
-        self.has_metadata = True
+        public_meta = sorted(zip(d.keys(), map(str, d.values())))
+        if len(public_meta) > 0:
+            self.metadata = public_meta
+            self.has_metadata = True
+        else:
+            self.metadata = []
+            self.has_metadata = False
 
 
 # TODO: If this is natively supported by asdf in the future, replace with native function.

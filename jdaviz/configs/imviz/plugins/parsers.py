@@ -12,7 +12,7 @@ from glue.core.data import Component, Data
 
 from jdaviz.core.registries import data_parser_registry
 from jdaviz.core.events import SnackbarMessage
-
+from jdaviz.utils import PRIHDR_KEY
 
 __all__ = ['parse_data']
 
@@ -287,7 +287,7 @@ def _hdu2data(hdu, data_label, hdulist, include_wcs=True):
 
     data = Data(label=new_data_label)
     if hdulist is not None and hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
-        data.meta.update(dict(hdulist['PRIMARY'].header))
+        data.meta[PRIHDR_KEY] = dict(hdulist['PRIMARY'].header)
     data.meta.update(dict(hdu.header))
     if include_wcs:
         data.coords = WCS(hdu.header, hdulist)
