@@ -23,7 +23,7 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
     inherit_tools = False
 
     tools = ['bqplot:home', 'jdaviz:boxzoom', 'jdaviz:boxzoommatch',
-             'bqplot:panzoom', 'jdaviz:panzoommatch',
+             'jdaviz:panzoom', 'jdaviz:panzoommatch',
              'jdaviz:contrastbias', 'jdaviz:blinkonce',
              'bqplot:rectangle', 'bqplot:circle', 'bqplot:ellipse']
 
@@ -31,7 +31,7 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
     tools_nested = [
                     ['bqplot:home'],
                     ['jdaviz:boxzoom', 'jdaviz:boxzoommatch'],
-                    ['bqplot:panzoom', 'jdaviz:panzoommatch'],
+                    ['jdaviz:panzoom', 'jdaviz:panzoommatch'],
                     ['bqplot:circle', 'bqplot:rectangle', 'bqplot:ellipse'],
                     ['jdaviz:blinkonce', 'jdaviz:contrastbias'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export', 'jdaviz:sidebar_compass']
