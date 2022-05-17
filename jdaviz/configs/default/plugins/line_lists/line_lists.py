@@ -814,4 +814,4 @@ class LineListTool(PluginTemplateMixin):
                 'max': (x_scale.max*spec_unit).to(u.Unit(unit)).value
                 }
         print(x)
-        return(x['min'])
+        return(x)
