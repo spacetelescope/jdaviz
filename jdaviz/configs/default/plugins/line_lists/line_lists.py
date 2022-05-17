@@ -54,6 +54,7 @@ class LineListTool(PluginTemplateMixin):
     custom_unit = Unicode().tag(sync=True)
 
     lines_filter = Any().tag(sync=True)  # string or None
+    filter_range = Bool(False).tag(sync=True)
 
     identify_label = Unicode().tag(sync=True)
     identify_line_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'line_select.svg'), 'svg+xml')).tag(sync=True)  # noqa
@@ -800,3 +801,17 @@ class LineListTool(PluginTemplateMixin):
                 raise KeyError("line marks: {}".format(self._viewer.figure.marks))
         else:
             return name_rest
+
+    def vue_get_spectral_limits(self, unit):
+        x_scale = self.app.get_viewer('spectrum-viewer').scale_x
+
+        # Retrieve the spectral axis unit
+        ref_index = self.app.get_viewer("spectrum-viewer").state.reference_data.label
+        spec_unit = self.app.get_data_from_viewer('spectrum-viewer', ref_index).spectral_axis.unit
+
+        x = {
+                'min': (x_scale.min*spec_unit).to(u.Unit(unit)).value, 
+                'max': (x_scale.max*spec_unit).to(u.Unit(unit)).value
+                }
+        print(x)
+        return(x['min'])

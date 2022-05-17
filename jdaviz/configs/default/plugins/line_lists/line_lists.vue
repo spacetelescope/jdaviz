@@ -194,8 +194,12 @@
 
               <v-row>
                 <j-tooltip tipid='plugin-line-lists-spectral-range'>
-                  <v-btn :color="list_contents[item].color ? 'accent' : 'default'" icon @click="" style="width: 20px">
-                    <v-icon>mdi-chart-bell-curve</v-icon>
+                  <v-btn
+                    v-model="filter_range"
+                    icon
+                    @click="filter_range = !filter_range"
+                    style="width: 20px">
+                    <v-icon>{{filter_range ? "mdi-chart-bell-curve" : "mdi-eye-off"}}</v-icon>
                   </v-btn>
                 </j-tooltip>
 
@@ -246,7 +250,7 @@
               <j-plugin-section-header>Lines</j-plugin-section-header>
 
               <v-row v-for="(line, line_ind) in list_contents[item].lines" style="margin-bottom: 0px !important;">
-                <div v-if="lineItemVisible(line, lines_filter)">
+                <div v-if="lineItemVisible(line, lines_filter, filter_range)">
                   <v-row class="row-min-bottom-padding" style="margin: 0px">
                     <j-tooltip tipid='plugin-line-lists-line-visible'>
                       <v-btn :color="line.show ? 'accent' : 'default'" icon @click="change_visible([item, line, line_ind])">
@@ -322,12 +326,20 @@
 <script>
   module.exports = {
     methods: {
-      lineItemVisible(lineItem, lines_filter) {
+      lineItemVisible(lineItem, lines_filter, filter_range) {       
         if (lines_filter === null || lines_filter.length == 0) {
           return true
         }
         // simple exact text search match on the line name for now.
-        return lineItem.linename.toLowerCase().indexOf(lines_filter.toLowerCase()) !== -1
+        text_filter = lineItem.linename.toLowerCase().indexOf(lines_filter.toLowerCase()) !== -1
+        
+        in_range = true
+        if (filter_range) {
+          spec_range = this.get_spectral_limits(lineItem.unit)
+          console.log(spec_range)
+          in_range = (lineItem.obs > spec_range[min]) && (lineItem.obs < spec_range[max])
+        }
+        return (text_filter && in_range)
       }
     },
     created() {
