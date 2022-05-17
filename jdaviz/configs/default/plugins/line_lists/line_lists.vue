@@ -328,17 +328,20 @@
     methods: {
       lineItemVisible(lineItem, lines_filter, filter_range) {       
         if (lines_filter === null || lines_filter.length == 0) {
-          return true
+          text_filter = true
         }
-        // simple exact text search match on the line name for now.
-        text_filter = lineItem.linename.toLowerCase().indexOf(lines_filter.toLowerCase()) !== -1
-        
-        in_range = true
+        else{
+          // simple exact text search match on the line name for now.
+          text_filter = lineItem.linename.toLowerCase().indexOf(lines_filter.toLowerCase()) !== -1
+        }
+
         if (filter_range) {
-          spec_range = this.get_spectral_limits(lineItem.unit)
-          console.log(spec_range)
-          in_range = (lineItem.obs > spec_range[min]) && (lineItem.obs < spec_range[max])
+          in_range = (lineItem.obs > this.spectrum_viewer_min) && (lineItem.obs < this.spectrum_viewer_max)
         }
+        else{
+          in_range = true
+        }
+
         return (text_filter && in_range)
       }
     },
