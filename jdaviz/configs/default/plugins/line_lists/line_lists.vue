@@ -195,11 +195,11 @@
               <v-row>
                 <j-tooltip tipid='plugin-line-lists-spectral-range'>
                   <v-btn
-                    v-model="filter_range"
+                    :color="filter_range ? 'accent' : 'default'"
                     icon
                     @click="filter_range = !filter_range"
-                    style="width: 20px">
-                    <v-icon>{{filter_range ? "mdi-chart-bell-curve" : "mdi-eye-off"}}</v-icon>
+                    style="width: 20px"
+                    ><v-icon>mdi-chart-bell-curve</v-icon>
                   </v-btn>
                 </j-tooltip>
 
