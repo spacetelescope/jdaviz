@@ -39,7 +39,10 @@ module.exports = {
       return this.$props.viewer.selected_data_items.includes(this.$props.item.id)
     }, 
     isDeletable() {
-      if (this.$props.viewer.config === 'mosviz' && this.$props.item.meta.Plugin === undefined) {
+      // only allow deleting products from plugins.  We might want to allow some non-plugin
+      // data to also be deleted in the future, but would probably need more advanced logic
+      // to ensure essential data isn't removed that would break the app.
+      if (this.$props.item.meta.Plugin === undefined) {
         return false
       }
       // for any exceptions not above, enable deleting
