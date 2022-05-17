@@ -91,13 +91,16 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
                 self.label_mouseover.reset_coords_display()
 
             # Extract data values at this position.
-            # Assume shape is [x, y, z] and not [y, x] like Imviz.
-            if (x > -0.5 and y > -0.5
-                    and x < image.shape[0] - 0.5 and y < image.shape[1] - 0.5
+            # Check if shape is [x, y, z] or [x, y] and show value accordingly.
+            if (-0.5 < x < image.shape[0] - 0.5 and -0.5 < y < image.shape[1] - 0.5
                     and hasattr(visible_layers[0], 'attribute')):
                 attribute = visible_layers[0].attribute
-                value = image.get_data(attribute)[int(round(x)), int(round(y)),
-                                                  self.state.slices[-1]]
+                if len(image.shape) == 3:
+                    value = image.get_data(attribute)[int(round(x)), int(round(y)),
+                                                      self.state.slices[-1]]
+                elif len(image.shape) == 2:
+                    value = image.get_data(attribute)[int(round(x)), int(round(y))]
+
                 unit = image.get_component(attribute).units
                 self.label_mouseover.value = f'{value:+10.5e} {unit}'
             else:
