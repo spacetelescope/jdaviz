@@ -41,6 +41,7 @@ class PlotOptions(TemplateMixin, ViewerSelectMixin):
             # mixin object not yet initialized
             return
 
+        return
         viewer = self.viewer.selected_obj
         self.has_show_uncertainty = isinstance(viewer, SpecvizProfileView)
         if self.has_show_uncertainty:

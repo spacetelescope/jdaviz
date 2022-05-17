@@ -9,7 +9,7 @@ from glue.core.message import (DataCollectionAddMessage,
                                SubsetUpdateMessage)
 from glue.core.subset import RoiSubsetState
 from specutils import Spectrum1D
-from traitlets import Bool, HasTraits, List, Unicode, observe
+from traitlets import Any, Bool, HasTraits, List, Unicode, observe
 
 from jdaviz import __version__
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
@@ -155,7 +155,7 @@ class BasePluginComponent(HubListener):
 
     @property
     def viewer_dicts(self):
-        def _dict_from_viewer(viewer, viewer_item):
+        def _dict_from_viewer(viewer, viewer_item, index=None):
             d = {'viewer': viewer, 'id': viewer_item['id']}
             if viewer_item.get('reference') is not None:
                 d['reference'] = viewer_item['reference']
@@ -163,10 +163,12 @@ class BasePluginComponent(HubListener):
             else:
                 d['reference'] = None
                 d['label'] = viewer_item['id']
+            if index is not None:
+                d['icon'] = f"mdi-numeric-{index+1}-circle-outline"
             return d
 
-        return [_dict_from_viewer(viewer, self.app._viewer_item_by_id(vid))
-                for vid, viewer in self.app._viewer_store.items()
+        return [_dict_from_viewer(viewer, self.app._viewer_item_by_id(vid), index)
+                for index, (vid, viewer) in enumerate(self.app._viewer_store.items())
                 if viewer.__class__.__name__ != 'MosvizTableViewer']
 
     @cached_property
@@ -208,11 +210,21 @@ class BaseSelectPluginComponent(BasePluginComponent, HasTraits):
         if default_text is not None:
             self.selected = default_text
 
+        if kwargs.get('multiselect'):
+            self.add_observe(kwargs.get('multiselect'), self._multiselect_changed)
+
         # this callback MUST come first so that any plugins that use @observe have those
         # callbacks triggered AFTER the cache is cleared and the value is checked against
         # valid options
         self.add_observe(kwargs.get('selected'), self._selected_changed, first=True)
         self.filters = filters
+
+    @property
+    def is_multiselect(self):
+        if not hasattr(self, 'multiselect'):
+            return False
+        else:
+            return self.multiselect
 
     @property
     def default_text(self):
@@ -255,12 +267,17 @@ class BaseSelectPluginComponent(BasePluginComponent, HasTraits):
     def labels(self):
         return [s['label'] for s in self.items if 'label' in s.keys()]
 
-    @cached_property
-    def selected_item(self):
+    def _get_selected_item(self, selected):
         for item in self.items:
-            if item['label'] == self.selected:
+            if item['label'] == selected:
                 return item
         return {}
+
+    @cached_property
+    def selected_item(self):
+        if self.is_multiselect:
+            return [self._get_selected_item(selected) for selected in self.selected]
+        return self._get_selected_item(self.selected)
 
     @cached_property
     def selected_obj(self):
@@ -271,6 +288,7 @@ class BaseSelectPluginComponent(BasePluginComponent, HasTraits):
         return self._default_mode
 
     def _apply_default_selection(self):
+        # TODO: make this multi-ready
         is_valid = self.selected in self.labels
         if callable(self.default_mode):
             # callable was defined and passed by the plugin or inheriting component.
@@ -304,11 +322,25 @@ class BaseSelectPluginComponent(BasePluginComponent, HasTraits):
                 return False
         return True
 
+    def _multiselect_changed(self, event):
+        self._clear_cache()
+        if self.is_multiselect:
+            self.selected = [self.selected]
+        elif len(self.selected):
+            self.selected = self.selected[0]
+        else:
+            self._apply_default_selection()
+
     def _selected_changed(self, event):
         self._clear_cache()
-        if event['new'] not in self.labels + ['']:
-            self._apply_default_selection()
-            raise ValueError(f"{event['new']} not one of {self.labels}")
+        if self.is_multiselect:
+            if not np.all([item in self.labels + [''] for item in event['new']]):
+                self._apply_default_selection()
+                raise ValueError(f"not all items in {event['new']} are one of {self.labels}")
+        else:
+            if event['new'] not in self.labels + ['']:
+                self._apply_default_selection()
+                raise ValueError(f"{event['new']} not one of {self.labels}")
 
 
 class SubsetSelect(BaseSelectPluginComponent):
@@ -602,9 +634,11 @@ class ViewerSelect(BaseSelectPluginComponent):
       />
 
     """
-    def __init__(self, plugin, items, selected, default_text=None, manual_options=[],
-                 default_mode='first'):
+    def __init__(self, plugin, items, selected,
+                 multiselect=None,
+                 default_text=None, manual_options=[], default_mode='first'):
         super().__init__(plugin, items=items, selected=selected,
+                         multiselect=multiselect,
                          default_text=default_text, manual_options=manual_options,
                          default_mode=default_mode)
 
@@ -622,11 +656,10 @@ class ViewerSelect(BaseSelectPluginComponent):
     def references(self):
         return [item['reference'] for item in self.items]
 
-    @cached_property
-    def selected_item(self):
-        if self.selected in self.manual_options:
+    def _get_selected_item(self, selected):
+        if selected in self.manual_options:
             return {}
-        item = super().selected_item
+        item = super()._get_selected_item(selected)
         if item:
             return item
 
@@ -634,8 +667,15 @@ class ViewerSelect(BaseSelectPluginComponent):
         # will handle resetting the trait to the reference since it exists, but this
         # will allow access to the underlying item/object for any observes in the meantime.
         for item in self.items:
-            if item['id'] == self.selected:
+            if item['id'] == selected:
                 return item
+
+    @cached_property
+    def selected_item(self):
+        if self.is_multiselect:
+            items = [self._get_selected_item(selected) for selected in self.selected]
+            return {k: [item[k] for item in items] for k in items[0].keys()}
+        return self._get_selected_item(self.selected)
 
     @property
     def selected_id(self):
@@ -645,11 +685,16 @@ class ViewerSelect(BaseSelectPluginComponent):
     def selected_reference(self):
         return self.selected_item.get('reference', None)
 
+    def _get_selected_obj(self, selected, selected_id):
+        if selected in self.manual_options:
+            return None
+        return self.app.get_viewer_by_id(selected_id)
+
     @cached_property
     def selected_obj(self):
-        if self.selected in self.manual_options:
-            return None
-        return self.app.get_viewer_by_id(self.selected_id)
+        if self.is_multiselect:
+            return [self._get_selected_obj(selected, selected_id) for selected, selected_id in zip(self.selected, self.selected_id)]
+        return self._get_selected_obj(self.selected, self.selected_id)
 
     def _selected_changed(self, event):
         if event['new'] not in self.labels + self.manual_options:
@@ -702,11 +747,12 @@ class ViewerSelectMixin(VuetifyTemplate, HubListener):
 
     """
     viewer_items = List().tag(sync=True)
-    viewer_selected = Unicode().tag(sync=True)
+    viewer_selected = Any().tag(sync=True)
+    viewer_multiselect = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.viewer = ViewerSelect(self, 'viewer_items', 'viewer_selected')
+        self.viewer = ViewerSelect(self, 'viewer_items', 'viewer_selected', 'viewer_multiselect')
 
 
 class DatasetSelect(BaseSelectPluginComponent):

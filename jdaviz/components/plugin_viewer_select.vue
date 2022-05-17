@@ -8,16 +8,43 @@
       :label="label ? label : 'Viewer'"
       :hint="hint ? hint : 'Select viewer.'"
       :rules="rules ? rules : []"
+      :multiple="multiselect"
+      :chips="multiselect"
       item-text="label"
       item-value="label"
       persistent-hint
     >
     <template slot="selection" slot-scope="data">
       <div class="single-line">
-        <span>
+        <v-chip v-if="multiselect">
+          <span>
+            <v-icon style='margin-left: -10px; margin-right: 2px'>{{ data.item.icon }}</v-icon>
+            {{ data.item.label.split("-viewer")[0] }}
+          </span>
+        </v-chip>
+        <span v-else>
           {{ data.item.label }}
         </span>
       </div>
+    </template>
+    <template v-slot:prepend-item v-if="multiselect">
+      <v-list-item
+        ripple
+        @mousedown.prevent
+        @click="() => {if (selected.length < items.length) { selected = items} else {selected = []}}"
+      >
+        <v-list-item-action>
+          <v-icon>
+            {{ selected.length == items.length ? 'mdi-close-box' : selected.length ? 'mdi-minus-box' : 'mdi-checkbox-blank-outline' }}
+          </v-icon>
+        </v-list-item-action>
+        <v-list-item-content>
+          <v-list-item-title>
+            {{ selected.length < items.length ? "Select All" : "Clear All" }}
+          </v-list-item-title>
+        </v-list-item-content>
+      </v-list-item>
+      <v-divider class="mt-2"></v-divider>
     </template>
     <template slot="item" slot-scope="data">
       <div class="single-line">
@@ -33,7 +60,7 @@
 
 <script>
 module.exports = {
-  props: ['items', 'selected', 'label', 'hint', 'rules', 'show_if_single_entry']
+  props: ['items', 'selected', 'label', 'hint', 'rules', 'show_if_single_entry', 'multiselect']
 };
 </script>
 

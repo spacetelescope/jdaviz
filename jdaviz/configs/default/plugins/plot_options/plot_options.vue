@@ -3,10 +3,20 @@
     <v-row>
       <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#plot-options'">Viewer and data/layer options.</j-docs-link>
     </v-row>
+  
+    <v-row justify="end">
+      <v-btn
+        icon
+        @click="() => {viewer_multiselect = !viewer_multiselect}"
+      >
+        <v-icon>{{viewer_multiselect ? 'mdi-checkbox-multiple-marked-outline' : 'mdi-checkbox-marked-outline'}}</v-icon>
+      </v-btn>
+    </v-row>
 
     <plugin-viewer-select
       :items="viewer_items"
       :selected.sync="viewer_selected"
+      :multiselect="viewer_multiselect"
       label="Viewer"
       hint="Select the viewer to set options."
     />
