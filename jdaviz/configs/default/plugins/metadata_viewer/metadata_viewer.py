@@ -1,4 +1,3 @@
-from astropy.io.fits import Header
 from traitlets import Bool, List, observe
 
 from jdaviz.core.registries import tray_registry
@@ -35,21 +34,13 @@ class MetadataViewer(TemplateMixin, DatasetSelectMixin):
             self.reset()
             return
 
-        if 'header' in data.meta and isinstance(data.meta['header'], (dict, Header)):
-            if isinstance(data.meta['header'], Header):  # Specviz
-                meta = dict(data.meta['header'])
-            else:
-                meta = data.meta['header']
-        else:
-            meta = data.meta
-
         if PRIHDR_KEY in data.meta:
             self.has_primary = True
         else:
             self.has_primary = False
 
         self.show_primary = False
-        self.find_public_metadata(meta, primary_only=False)
+        self.find_public_metadata(data.meta, primary_only=False)
 
     @observe("show_primary")
     def handle_show_primary(self, event):
@@ -70,7 +61,9 @@ class MetadataViewer(TemplateMixin, DatasetSelectMixin):
             if PRIHDR_KEY in meta:
                 meta = meta[PRIHDR_KEY]
             else:
-                return []
+                self.metadata = []
+                self.has_metadata = False
+                return
 
         d = flatten_nested_dict(meta)
         # Some FITS keywords cause "# ipykernel cannot clean for JSON" messages.

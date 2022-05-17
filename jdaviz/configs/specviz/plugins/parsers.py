@@ -8,7 +8,6 @@ from astropy.nddata import StdDevUncertainty
 from specutils import Spectrum1D, SpectrumList, SpectrumCollection
 
 from jdaviz.core.registries import data_parser_registry
-from jdaviz.utils import PRIHDR_KEY
 
 __all__ = ["specviz_spectrum1d_parser"]
 

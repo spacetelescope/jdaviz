@@ -254,8 +254,8 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
             data = hdulist[1].data
             header = hdulist[1].header
             wcs = WCS(header)
-            metadata = header.copy()
-            metadata[PRIHDR_KEY] = hdulist[0].header
+            metadata = dict(header)
+            metadata[PRIHDR_KEY] = dict(hdulist[0].header)
         return Spectrum1D(data, wcs=wcs, meta=metadata)
 
     # Coerce into list-like object
