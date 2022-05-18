@@ -60,6 +60,7 @@ class LineListTool(PluginTemplateMixin):
 
     identify_label = Unicode().tag(sync=True)
     identify_line_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'line_select.svg'), 'svg+xml')).tag(sync=True)  # noqa
+    filter_range_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'spectral_range.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
