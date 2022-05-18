@@ -31,7 +31,7 @@
       <v-list-item
         ripple
         @mousedown.prevent
-        @click="() => {if (selected.length < items.length) { selected = items} else {selected = []}}"
+        @click="() => {if (selected.length < items.length) { $emit('update:selected', items.map((item) => item.label))} else {$emit('update:selected', [])}}"
       >
         <v-list-item-action>
           <v-icon>

@@ -70,7 +70,8 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'plugin-viewer-select': 'components/plugin_viewer_select.vue',
                      'plugin-layer-select': 'components/plugin_layer_select.vue',
                      'plugin-add-results': 'components/plugin_add_results.vue',
-                     'plugin-auto-label': 'components/plugin_auto_label.vue'}
+                     'plugin-auto-label': 'components/plugin_auto_label.vue',
+                     'glue-state-sync-wrapper': 'components/glue_state_sync_wrapper.vue'}
 
 _verbosity_levels = ('debug', 'info', 'warning', 'error')
 

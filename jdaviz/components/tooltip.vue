@@ -2,13 +2,13 @@
   <v-tooltip v-if="getTooltipHtml()" bottom :open-delay="getOpenDelay()"
       :nudge-bottom="getNudgeBottom()">
     <template v-slot:activator="{ on, attrs }">
-      <span v-bind="attrs" v-on="on" style="height: inherit; display: inherit">
+      <span v-bind="attrs" v-on="on" :style="getSpanStyle()">
         <slot></slot>
       </span>
     </template>
     <span v-html="getTooltipHtml()"></span>
   </v-tooltip>
-  <span v-else style="height: inherit; display: inherit">
+  <span v-else :style="getSpanStyle()">
     <!-- in the case where there is no tooltip, just pass through the wrapped element -->
     <slot></slot>
   </span>
@@ -57,6 +57,7 @@ const tooltips = {
   'table-next': 'Select next row in table',
   'table-play-pause-toggle': 'Toggle cycling through rows of table',
   'table-play-pause-delay': 'Set delay before cycling to next entry',
+  'plugin-plot-options-mixed-state': 'Current values are mixed, click to sync at shown value',
   'plugin-model-fitting-add-model': 'Create model component',
   'plugin-model-fitting-param-fixed': 'Check the box to freeze parameter value',
   'plugin-unit-conversion-apply': 'Apply unit conversion',
@@ -82,7 +83,7 @@ const tooltips = {
 
 
 module.exports = {
-  props: ['tooltipcontent', 'tipid', 'delay', 'nudgebottom'],
+  props: ['tooltipcontent', 'tipid', 'delay', 'nudgebottom', 'span_style'],
   methods: {
     getTooltipHtml() {
       // use tooltipcontent if provided, default to tooltips dictionary
@@ -97,6 +98,9 @@ module.exports = {
       // in the tooltips dictionary above.
       //return tooltips[this.$props.tipid] || "tipid: "+this.$props.tipid;
       return tooltips[this.$props.tipid];
+    },
+    getSpanStyle() {
+      return this.$props.span_style || "height: inherit; display: inherit";
     },
     getOpenDelay() {
       return this.$props.delay || "0";

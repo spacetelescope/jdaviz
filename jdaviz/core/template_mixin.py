@@ -277,7 +277,10 @@ class BaseSelectPluginComponent(BasePluginComponent, HasTraits):
     @cached_property
     def selected_item(self):
         if self.is_multiselect:
-            return [self._get_selected_item(selected) for selected in self.selected]
+            items = [self._get_selected_item(selected) for selected in self.selected]
+            if not len(items):
+                return {}
+            return {k: [item[k] for item in items] for k in items[0].keys()}
         return self._get_selected_item(self.selected)
 
     @cached_property
@@ -439,6 +442,7 @@ class LayerSelect(BaseSelectPluginComponent):
         if not isinstance(new, list):
             new = [new]
         if new != old:
+            self._clear_cache()
             self._on_layers_changed()
 
     @observe('filters')
@@ -457,7 +461,22 @@ class LayerSelect(BaseSelectPluginComponent):
 
     @cached_property
     def selected_obj(self):
-        raise NotImplementedError()
+        viewer_names = self.viewer
+        if not isinstance(viewer_names, list):
+            # case for single-select on the viewer select
+            viewer_names = [viewer_names]
+
+        selected = self.selected
+        if not isinstance(selected, list):
+            selected = [selected]
+
+        layers = [layer for viewer_name in viewer_names for layer in self.app.get_viewer(viewer_name).layers
+                  if layer.layer.label in selected]
+
+        if not self.multiselect and len(layers) == 1:
+            return layers[0]
+        else:
+            return layers
 
 
 class LayerSelectMixin(VuetifyTemplate, HubListener):
@@ -825,13 +844,6 @@ class ViewerSelect(BaseSelectPluginComponent):
             if item['id'] == selected:
                 return item
 
-    @cached_property
-    def selected_item(self):
-        if self.is_multiselect:
-            items = [self._get_selected_item(selected) for selected in self.selected]
-            return {k: [item[k] for item in items] for k in items[0].keys()}
-        return self._get_selected_item(self.selected)
-
     @property
     def selected_id(self):
         return self.selected_item.get('id', None)
@@ -847,7 +859,7 @@ class ViewerSelect(BaseSelectPluginComponent):
 
     @cached_property
     def selected_obj(self):
-        if self.is_multiselect:
+        if self.is_multiselect and len(self.selected):
             return [self._get_selected_obj(selected, selected_id) for selected, selected_id in zip(self.selected, self.selected_id)]
         return self._get_selected_obj(self.selected, self.selected_id)
 
@@ -1307,3 +1319,134 @@ class AddResultsMixin(VuetifyTemplate, HubListener):
                                       'results_label_default', 'results_label_auto',
                                       'results_label_invalid_msg', 'results_label_overwrite',
                                       'add_to_viewer_items', 'add_to_viewer_selected')
+
+
+from glue_jupyter.widgets.linked_dropdown import get_choices as _get_glue_choices
+
+class PlotOptionsSyncState(BasePluginComponent):
+    """
+    """
+    def __init__(self, plugin, viewer_select, layer_select, glue_name, value, sync):
+        super().__init__(plugin, value=value, sync=sync)
+        self._linked_states = []
+        self._processing_change_from_glue = False
+        self._processing_change_to_glue = False
+        self._cached_properties = ["subscribed_states", "subscribed_icons"]
+
+        self._viewer_select = viewer_select
+        self._layer_select = layer_select
+        self._glue_name = glue_name
+        self.add_observe(viewer_select._plugin_traitlets['selected'], self._on_viewer_layer_changed)
+        self.add_observe(layer_select._plugin_traitlets['selected'], self._on_viewer_layer_changed)
+        self.add_observe(value, self._on_value_changed)
+        self._on_viewer_layer_changed()
+
+    @cached_property
+    def subscribed_states(self):
+        # states object that according to the viewer selection, we *should*
+        # link if this entry is found there
+        viewers = self._viewer_select.selected_obj
+        if not isinstance(viewers, list):
+            # which is the case for single-select
+            viewers = [viewers]
+
+        layers = self._layer_select.selected_obj
+        if not isinstance(layers, list):
+            layers = [layers]
+
+        viewer_states = [viewer.state for viewer in viewers]
+        layer_states = [layer.state for layer in layers]
+        return viewer_states + layer_states
+
+    @cached_property
+    def subscribed_icons(self):
+        # dictionary items giving information about the entries in subscribed_states
+        viewer_icons = self._viewer_select.selected_item.get('icon', [])
+        if not isinstance(viewer_icons, list):
+            viewer_icons = [viewer_icons]
+
+        layer_icons = self._layer_select.selected_item.get('icon', [])
+        if not isinstance(layer_icons, list):
+            layer_icons = [layer_icons]
+
+        return viewer_icons + layer_icons
+
+    @property
+    def linked_states(self):
+        # access glue state objects for which the callbacks are currently connected
+        return self._linked_states
+
+    def _on_viewer_layer_changed(self, msg=None):
+        self._clear_cache(*self._cached_properties)
+        #print("_on_viewer_layer_changed", len(self.subscribed_items))
+
+        # clear existing callbacks - we'll re-create those we need later
+        for state in self.linked_states:
+            state.remove_callback(self._glue_name, self._on_glue_value_changed)
+
+        in_subscribed_states = False
+        icons = []
+        current_glue_values = []
+        self._linked_states = []
+        for state, icon in zip(self.subscribed_states, self.subscribed_icons):
+            if hasattr(state, self._glue_name):
+                in_subscribed_states = True
+                icons.append(icon)
+                current_glue_values.append(getattr(state, self._glue_name))
+                self._linked_states.append(state)  # these will be iterated through when value is set
+                state.add_callback(self._glue_name, self._on_glue_value_changed)
+
+                if self.sync.get('choices') is None and hasattr(getattr(type(state), self._glue_name), 'get_display_func'):
+                    # then we can access and populate the choices.  We are assuming here
+                    # that each state-instance with this same name will have the same
+                    # choices and that those will not change.  If we ever hookup options
+                    # with changing choices, we'll need additional logic to sync to those
+                    # and handle mixed state in the choices...
+                    choices = _get_glue_choices(state, self._glue_name)[0]  # TODO: store value-label pairs?
+                    self.sync = {**self.sync, 'choices': choices}
+
+        self.sync = {**self.sync,
+                     'in_subscribed_states': in_subscribed_states,
+                     'icons': icons,
+                     'mixed': len(np.unique(current_glue_values)) > 1}
+
+        if len(current_glue_values):
+            # sync the initial value of the widget, avoiding recursion
+            self._on_glue_value_changed(current_glue_values[0])
+
+    def _on_value_changed(self, msg):
+        #print("_on_value_changed", msg['new'], self._processing_change_from_glue)
+        if self._processing_change_from_glue:
+            return
+
+        self._processing_change_to_glue = True
+        for glue_state in self.linked_states:
+            setattr(glue_state, self._glue_name, msg['new'])
+        self._processing_change_to_glue = False
+
+    def _on_glue_value_changed(self, value):
+        if self._processing_change_to_glue:
+            return
+
+        self._processing_change_from_glue = True
+        self.value = value
+        if len(self.linked_states) > 1:
+            # need to recompute mixed state
+            current_glue_values = []
+            for state in self.linked_states:
+                current_glue_values.append(getattr(state, self._glue_name))
+            self.sync = {**self.sync,
+                         'mixed': len(np.unique(current_glue_values)) > 1}
+        self._processing_change_from_glue = False
+
+    def unmix_state(self):
+        self._on_value_changed({'new': self.value})
+        self.sync = {**self.sync,
+                     'mixed': False}
+
+
+class PlotOptionsSyncStateInt(PlotOptionsSyncState):
+    def __init__(self, plugin, viewer_select, layer_select, glue_name, value, sync):
+#        self._min = min  # does the template need this, if so it needs to be a traitlet...
+#        self._max = max
+        super().__init__(plugin, viewer_select, layer_select, glue_name, value=value, sync=sync)
