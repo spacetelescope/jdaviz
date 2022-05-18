@@ -1,10 +1,13 @@
-import pytest
 from zipfile import ZipFile
 import pathlib
 
+import pytest
 from astropy.utils.data import download_file
 
+from jdaviz.utils import PRIHDR_KEY
 
+
+# This is another version of test_niriss_loader in test_data_loading.py
 @pytest.mark.remote_data
 def test_niriss_parser(mosviz_helper, tmpdir):
 
@@ -20,5 +23,23 @@ def test_niriss_parser(mosviz_helper, tmpdir):
     mosviz_helper.load_niriss_data(data_dir)
 
     assert len(mosviz_helper.app.data_collection) == 80
-    assert mosviz_helper.app.data_collection[0].label == "Image canucs F150W"
-    assert mosviz_helper.app.data_collection[-1].label == "MOS Table"
+
+    dc_0 = mosviz_helper.app.data_collection[0]
+    assert dc_0.label == "Image canucs F150W"
+    assert PRIHDR_KEY not in dc_0.meta
+    assert dc_0.meta['bunit_data'] == 'MJy/sr'  # ASDF metadata
+
+    dc_1 = mosviz_helper.app.data_collection[1]
+    assert dc_1.label == 'F150W Source 1 spec2d C'
+    assert PRIHDR_KEY not in dc_1.meta
+    assert dc_1.meta['SOURCEID'] == 1
+
+    dc_40 = mosviz_helper.app.data_collection[40]
+    assert dc_40.label == 'F150W Source 1 spec1d C'
+    assert PRIHDR_KEY not in dc_40.meta
+    assert 'header' not in dc_40.meta
+    assert dc_40.meta['FILTER'] == 'GR150C'
+
+    dc_tab = mosviz_helper.app.data_collection[-1]
+    assert dc_tab.label == "MOS Table"
+    assert len(dc_tab.meta) == 0

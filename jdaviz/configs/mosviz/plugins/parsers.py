@@ -221,8 +221,13 @@ def mos_spec1d_parser(app, data_obj, data_labels=None):
 
     with app.data_collection.delay_link_manager_update():
 
-        for i in range(len(data_obj)):
-            app.add_data(data_obj[i], data_labels[i], notify_done=False)
+        for cur_data, cur_label in zip(data_obj, data_labels):
+            # Make metadata layout conform with other viz.
+            if 'header' in cur_data.meta:
+                cur_data.meta.update(cur_data.meta['header'])
+                del cur_data.meta['header']
+
+            app.add_data(cur_data, cur_label, notify_done=False)
 
         _add_to_table(app, data_labels, '1D Spectra')
 

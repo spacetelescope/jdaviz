@@ -9,13 +9,17 @@ import numpy as np
 import pytest
 from specutils import Spectrum1D
 
+from jdaviz.utils import PRIHDR_KEY
+
 
 def test_load_spectrum1d(mosviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
     mosviz_helper.load_1d_spectra(spectrum1d, data_labels=label)
 
     assert len(mosviz_helper.app.data_collection) == 2
-    assert mosviz_helper.app.data_collection[0].label == label
+    dc_0 = mosviz_helper.app.data_collection[0]
+    assert dc_0.label == label
+    assert dc_0.meta['uncertainty_type'] == 'std'
 
     table = mosviz_helper.app.get_viewer('table-viewer')
     table.widget_table.vue_on_row_clicked(0)
@@ -24,7 +28,7 @@ def test_load_spectrum1d(mosviz_helper, spectrum1d):
 
     assert isinstance(data[label], Spectrum1D)
 
-    with pytest.raises(TypeError):
+    with pytest.raises(AttributeError):
         mosviz_helper.load_1d_spectra([1, 2, 3])
 
 
@@ -34,7 +38,10 @@ def test_load_image(mosviz_helper, mos_image):
     mosviz_helper.load_images(mos_image, data_labels=label)
 
     assert len(mosviz_helper.app.data_collection) == 2
-    assert mosviz_helper.app.data_collection[0].label == f"{label} 0"
+    dc_0 = mosviz_helper.app.data_collection[0]
+    assert dc_0.label == f"{label} 0"
+    assert PRIHDR_KEY not in dc_0.meta
+    assert dc_0.meta['RADESYS'] == 'ICRS'
 
     table = mosviz_helper.app.get_viewer('table-viewer')
     table.widget_table.vue_on_row_clicked(0)
@@ -51,7 +58,9 @@ def test_load_spectrum_collection(mosviz_helper, spectrum_collection):
     mosviz_helper.load_1d_spectra(spectrum_collection, data_labels=labels)
 
     assert len(mosviz_helper.app.data_collection) == 6
-    assert mosviz_helper.app.data_collection[0].label == labels[0]
+    dc_0 = mosviz_helper.app.data_collection[0]
+    assert dc_0.label == labels[0]
+    assert dc_0.meta['uncertainty_type'] == 'std'
 
     table = mosviz_helper.app.get_viewer('table-viewer')
     table.widget_table.vue_on_row_clicked(0)
@@ -68,7 +77,9 @@ def test_load_list_of_spectrum1d(mosviz_helper, spectrum1d):
     mosviz_helper.load_1d_spectra(spectra, data_labels=labels)
 
     assert len(mosviz_helper.app.data_collection) == 4
-    assert mosviz_helper.app.data_collection[0].label == labels[0]
+    dc_0 = mosviz_helper.app.data_collection[0]
+    assert dc_0.label == labels[0]
+    assert dc_0.meta['uncertainty_type'] == 'std'
 
     table = mosviz_helper.app.get_viewer('table-viewer')
     table.widget_table.vue_on_row_clicked(0)
@@ -85,7 +96,9 @@ def test_load_mos_spectrum2d(mosviz_helper, mos_spectrum2d):
     mosviz_helper.load_2d_spectra(mos_spectrum2d, data_labels=label)
 
     assert len(mosviz_helper.app.data_collection) == 2
-    assert mosviz_helper.app.data_collection[0].label == label
+    dc_0 = mosviz_helper.app.data_collection[0]
+    assert dc_0.label == label
+    assert dc_0.meta['INSTRUME'] == 'nirspec'
 
     table = mosviz_helper.app.get_viewer('table-viewer')
     table.widget_table.vue_on_row_clicked(0)
@@ -140,7 +153,7 @@ def test_load_single_image_multi_spec(mosviz_helper, mos_image, spectrum1d, mos_
 
 @pytest.mark.filterwarnings('ignore')
 @pytest.mark.remote_data
-def test_nirpsec_loader(mosviz_helper, tmpdir):
+def test_nirspec_loader(mosviz_helper, tmpdir):
     '''
     Tests loading our default MosvizExample notebook data
     '''
@@ -157,12 +170,30 @@ def test_nirpsec_loader(mosviz_helper, tmpdir):
     mosviz_helper.load_data(directory=data_dir, instrument='nirspec')
 
     assert len(mosviz_helper.app.data_collection) == 16
-    assert "MOS Table" in mosviz_helper.app.data_collection
-    assert "Image 4" in mosviz_helper.app.data_collection
-    assert "1D Spectrum 4" in mosviz_helper.app.data_collection
-    assert "2D Spectrum 4" in mosviz_helper.app.data_collection
+
+    dc_0 = mosviz_helper.app.data_collection[0]
+    assert dc_0.label == "MOS Table"
+    assert len(dc_0.meta) == 0
+
+    dc_5 = mosviz_helper.app.data_collection[5]
+    assert dc_5.label == "Image 4"
+    assert PRIHDR_KEY not in dc_5.meta
+    assert dc_5.meta['WCSAXES'] == 2
+
+    dc_10 = mosviz_helper.app.data_collection[10]
+    assert dc_10.label == "1D Spectrum 4"
+    assert PRIHDR_KEY not in dc_10.meta
+    assert 'header' not in dc_10.meta
+    assert dc_10.meta['TARGNAME'] == 'FOO'
+
+    dc_15 = mosviz_helper.app.data_collection[15]
+    assert dc_15.label == "2D Spectrum 4"
+    assert PRIHDR_KEY not in dc_15.meta
+    assert 'header' not in dc_15.meta
+    assert dc_15.meta['SOURCEID'] == 2315
 
 
+# This is another version of test_niriss_parser in test_parsers.py
 @pytest.mark.remote_data
 def test_niriss_loader(mosviz_helper, tmpdir):
 
@@ -183,7 +214,7 @@ def test_niriss_loader(mosviz_helper, tmpdir):
 
 
 @pytest.mark.remote_data
-def test_nirpsec_fallback(mosviz_helper, tmpdir):
+def test_nirspec_fallback(mosviz_helper, tmpdir):
     '''
     When no instrument is provided, mosviz.load_data is expected to fallback to the nirspec loader.
     Naturally, the nirspec dataset should then work without any instrument keyword

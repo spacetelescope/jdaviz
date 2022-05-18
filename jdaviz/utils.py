@@ -4,7 +4,6 @@ from collections import deque
 import os
 from ipyvue import watch
 
-
 __all__ = []
 
 # For Metadata Viewer plugin internal use only.

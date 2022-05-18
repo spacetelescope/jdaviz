@@ -26,7 +26,9 @@ class TestSpecvizHelper:
 
     def test_load_spectrum1d(self):
         assert len(self.spec_app.app.data_collection) == 1
-        assert self.spec_app.app.data_collection[0].label == self.label
+        dc_0 = self.spec_app.app.data_collection[0]
+        assert dc_0.label == self.label
+        assert dc_0.meta['uncertainty_type'] == 'std'
 
         data = self.spec_app.app.get_data_from_viewer('spectrum-viewer')
 
@@ -248,9 +250,12 @@ def test_load_spectrum_list_directory(tmpdir, specviz_helper):
     with pytest.warns(UserWarning, match='SRCTYPE is missing or UNKNOWN in JWST x1d loader'):
         specviz_helper.load_spectrum(data_path)
     assert len(specviz_helper.app.data_collection) == 3
-    for element in specviz_helper.app.data_collection:
-        assert element.data.main_components[0] in ['flux']
-        assert element.data.main_components[1] in ['uncertainty']
+    for data in specviz_helper.app.data_collection:
+        assert data.main_components[:2] == ['flux', 'uncertainty']
+
+    dc_0 = specviz_helper.app.data_collection[0]
+    assert 'header' not in dc_0.meta
+    assert dc_0.meta['SPORDER'] == 1
 
 
 def test_plot_uncertainties(specviz_helper, spectrum1d):
