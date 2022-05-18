@@ -75,7 +75,7 @@ class MetadataViewer(TemplateMixin, DatasetSelectMixin):
                 del d[badkey]
 
         if COMMENTCARD_KEY in meta:
-            self.has_comments = True
+            has_comments = True
 
             def get_comment(key):
                 if key in meta[COMMENTCARD_KEY]._header:
@@ -84,7 +84,7 @@ class MetadataViewer(TemplateMixin, DatasetSelectMixin):
                     val = ''
                 return val
         else:
-            self.has_comments = False
+            has_comments = False
 
             def get_comment(key):
                 return ''
@@ -94,9 +94,9 @@ class MetadataViewer(TemplateMixin, DatasetSelectMixin):
         if len(public_meta) > 0:
             self.metadata = public_meta
             self.has_metadata = True
+            self.has_comments = has_comments
         else:
-            self.metadata = []
-            self.has_metadata = False
+            self.reset()
 
 
 # TODO: If this is natively supported by asdf in the future, replace with native function.
