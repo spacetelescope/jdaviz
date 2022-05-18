@@ -107,8 +107,10 @@ class LineListTool(PluginTemplateMixin):
                            handler=self._process_identify_change)
 
         # if set to auto (default), update the slider range when zooming on the spectrum viewer
-        self._viewer.state.add_callback("x_min", lambda x_min: self._on_spectrum_viewer_limits_changed())
-        self._viewer.state.add_callback("x_max", lambda x_max: self._on_spectrum_viewer_limits_changed())
+        self._viewer.state.add_callback("x_min",
+                                        lambda x_min: self._on_spectrum_viewer_limits_changed())
+        self._viewer.state.add_callback("x_max",
+                                        lambda x_max: self._on_spectrum_viewer_limits_changed())
 
     def _on_viewer_data_changed(self, msg=None):
         """
