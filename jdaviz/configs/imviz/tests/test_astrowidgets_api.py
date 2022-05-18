@@ -1,9 +1,13 @@
 import os
 
+import asdf
 import numpy as np
 import pytest
 from astropy import units as u
+from astropy.coordinates import SkyCoord
+from astropy.nddata import NDData
 from astropy.table import Table
+from astropy.utils.data import get_pkg_data_filename
 from astropy.visualization import AsinhStretch, LinearStretch, LogStretch, SqrtStretch
 from numpy.testing import assert_allclose
 
@@ -315,3 +319,20 @@ class TestMarkers(BaseImviz_WCS_NoWCS):
         self.imviz.app.data_collection.clear()
         with pytest.raises(AttributeError, match='does not have a valid WCS'):
             self.viewer.add_markers(tbl, use_skycoord=True, marker_name='my_sky')
+
+
+def test_markers_gwcs_lonlat(imviz_helper):
+    """GWCS uses Lon/Lat for ICRS."""
+    gw_file = get_pkg_data_filename('data/miri_i2d_lonlat_gwcs.asdf')
+    with asdf.open(gw_file) as af:
+        gw = af.tree['wcs']
+    ndd = NDData(np.ones((10, 10), dtype=np.float32), wcs=gw, unit='MJy/sr')
+    imviz_helper.load_data(ndd, data_label='MIRI_i2d')
+    assert imviz_helper.app.data_collection[0].label == 'MIRI_i2d[DATA]'
+    assert imviz_helper.app.data_collection[0].components == [
+        'Pixel Axis 0 [y]', 'Pixel Axis 1 [x]', 'Lat', 'Lon', 'DATA']
+
+    # If you run this interactively, should appear slightly off-center.
+    calib_cat = Table({'coord': [SkyCoord(80.6609, -69.4524, unit='deg')]})
+    imviz_helper.default_viewer.add_markers(calib_cat, use_skycoord=True, marker_name='my_sky')
+    assert imviz_helper.app.data_collection[1].label == 'my_sky'

@@ -1,5 +1,6 @@
 import sys
 
+import gwcs
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -440,10 +441,19 @@ class AstrowidgetsImageViewerMixin:
                 raise AttributeError(f'{getattr(image, "label", None)} does not have a valid WCS')
             sky = table[skycoord_colname]
             t_glue = Data(marker_name, ra=sky.ra.deg, dec=sky.dec.deg)
+            dcomps = image.components
+            if (isinstance(image.coords, gwcs.WCS) and
+                    image.coords.output_frame.reference_frame.name != 'galactic' and
+                    'Lon' in dcomps and 'Lat' in dcomps):
+                ra_str = 'Lon'
+                dec_str = 'Lat'
+            else:
+                ra_str = 'Right Ascension'
+                dec_str = 'Declination'
             with jglue.data_collection.delay_link_manager_update():
                 jglue.data_collection[marker_name] = t_glue
-                jglue.add_link(t_glue, 'ra', image, 'Right Ascension')
-                jglue.add_link(t_glue, 'dec', image, 'Declination')
+                jglue.add_link(t_glue, 'ra', image, ra_str)
+                jglue.add_link(t_glue, 'dec', image, dec_str)
         else:
             t_glue = Data(marker_name, **table[x_colname, y_colname])
             with jglue.data_collection.delay_link_manager_update():
