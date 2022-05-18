@@ -303,18 +303,34 @@
     <v-row class="row-no-padding">
       <v-col cols=6>
         <j-tooltip tipid='plugin-line-lists-erase-all'>
-          <v-btn 
-            color="accent"
-            style="padding-left: 8px; padding-right: 8px;"
-            text @click="erase_all_lines">Erase All</v-btn>
+          <v-btn
+            tile
+            :elevation=0
+            x-small
+            dense 
+            color="turquoise"
+            dark
+            style="padding-left: 8px; padding-right: 6px;"
+            @click="plot_all_lines">
+            <v-icon left small dense style="margin-right: 2px">mdi-eye</v-icon>
+            Plot All
+          </v-btn>
         </j-tooltip>
       </v-col>
       <v-col cols=6 style="text-align: right">
         <j-tooltip tipid='plugin-line-lists-plot-all'>
-          <v-btn 
-            color="accent"
-            style="padding-left: 8px; padding-right: 8px;"
-            text @click="plot_all_lines">Plot All</v-btn>
+          <v-btn
+            tile
+            :elevation=0
+            x-small
+            dense
+            color="turquoise"
+            dark
+            style="padding-left: 8px; padding-right: 6px;"
+            @click="erase_all_lines">
+            <v-icon left small dense style="margin-right: 2px">mdi-eye-off</v-icon>
+            Erase All                     
+          </v-btn>  
         </j-tooltip>
       </v-col>
 
