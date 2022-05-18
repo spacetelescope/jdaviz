@@ -271,7 +271,6 @@
                       <v-text-field
                         v-model="line.rest"
                         class="mt-0 pt-0"
-                        type="number"
                         label="Rest"
                         :hint="line.unit"
                         persistent-hint
