@@ -20,7 +20,7 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
 
     tools = ['bqplot:home', 'jdaviz:boxzoom',
              'bqplot:panzoom', 'bqplot:rectangle',
-             'bqplot:circle']
+             'bqplot:circle', 'jdaviz:spectrumperspaxel']
 
     # categories: zoom resets, (zoom, pan), subset, select tools, shortcuts
     # NOTE: zoom and pan are merged here for space consideration and to avoid
