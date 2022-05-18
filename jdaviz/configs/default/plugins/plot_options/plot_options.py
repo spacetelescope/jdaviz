@@ -1,17 +1,25 @@
-from traitlets import Any, observe, Bool
+from traitlets import Any, observe, Bool, List
 from ipywidgets.widgets import widget_serialization
 
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import TemplateMixin, ViewerSelectMixin
+from jdaviz.core.template_mixin import TemplateMixin, ViewerSelect, LayerSelect
 
 __all__ = ['PlotOptions']
 
 
 @tray_registry('g-plot-options', label="Plot Options")
-class PlotOptions(TemplateMixin, ViewerSelectMixin):
+class PlotOptions(TemplateMixin):
     template_file = __file__, "plot_options.vue"
+
+    # multiselect is shared between viewer and layer
+    multiselect = Bool(False).tag(sync=True)
+
+    viewer_items = List().tag(sync=True)
+    viewer_selected = Any().tag(sync=True)
+    layer_items = List().tag(sync=True)
+    layer_selected = Any().tag(sync=True)
 
     viewer_widget = Any().tag(sync=True, **widget_serialization)
     layer_widget = Any().tag(sync=True, **widget_serialization)
@@ -25,6 +33,9 @@ class PlotOptions(TemplateMixin, ViewerSelectMixin):
         super().__init__(*args, **kwargs)
         # populate the initial widgets
         self._viewer_selected_changed()
+
+        self.viewer = ViewerSelect(self, 'viewer_items', 'viewer_selected', 'multiselect')
+        self.layer = LayerSelect(self, 'layer_items', 'layer_selected', 'viewer_selected', 'multiselect')
 
         self.hub.subscribe(self, AddDataMessage,
                            handler=lambda _: self._on_data_changed())

@@ -5,6 +5,7 @@ from ipyvuetify import VuetifyTemplate
 from glue.core import HubListener
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage,
+                               SubsetCreateMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from glue.core.subset import RoiSubsetState
@@ -341,6 +342,160 @@ class BaseSelectPluginComponent(BasePluginComponent, HasTraits):
             if event['new'] not in self.labels + ['']:
                 self._apply_default_selection()
                 raise ValueError(f"{event['new']} not one of {self.labels}")
+
+
+class LayerSelect(BaseSelectPluginComponent):
+    """
+    Traitlets (in the object, custom traitlets in the plugin):
+
+    * ``items`` (list of dicts with keys: label, color)
+    * ``selected`` (string)
+
+    Properties (in the object only):
+
+    * ``labels`` (list of labels corresponding to items)
+    * ``selected_item`` (dictionary in ``items`` coresponding to ``selected``, cached)
+    * ``selected_obj`` (layer object corresponding to ``selected``, cached)
+
+
+    To use in a plugin:
+
+    * create (empty) traitlets in the plugin
+    * register with all the automatic logic in the plugin's init by passing the string names
+      of the respective traitlets.
+    * use component in plugin template (see below)
+    * refer to properties above based on the interally stored reference to the
+      instantiated object of this component
+    * observe the traitlets created and defined in the plugin, as necessary
+
+    Example template (label and hint are optional)::
+
+      <plugin-layer-select
+        :items="layer_items"
+        :selected.sync="layer_selected"
+        :show_if_single_entry="true"
+        label="Layer"
+        hint="Select layer."
+      />
+
+    """
+    def __init__(self, plugin, items, selected, viewer,
+                 multiselect=None,
+                 default_text=None, manual_options=[], allowed_type=None,
+                 default_mode='default_text'):
+        """
+        Parameters
+        ----------
+        plugin
+            the parent plugin object
+        items : str
+            the name of the items traitlet defined in ``plugin``
+        selected : str
+            the name of the selected traitlet defined in ``plugin``
+        viewer: str
+            the name of the traitlet defined in ``plugin`` storing the viewer(s) to expose the layers
+        default_text : str or None
+            the text to show for no selection.  If not provided or None, no entry will be provided
+            in the dropdown for no selection.
+        manual_options: list
+            list of options to provide that are not automatically populated by subsets.  If
+            ``default`` text is provided but not in ``manual_options`` it will still be included as
+            the first item in the list.
+        """
+        super().__init__(plugin,
+                         items=items,
+                         selected=selected,
+                         viewer=viewer,
+                         multiselect=multiselect,
+                         default_text=default_text,
+                         manual_options=manual_options,
+                         default_mode=default_mode)
+
+        self.hub.subscribe(self, AddDataMessage,
+                           handler=lambda _: self._on_layers_changed())
+        self.hub.subscribe(self, RemoveDataMessage,
+                           handler=lambda _: self._on_layers_changed())
+        self.hub.subscribe(self, SubsetCreateMessage,
+                           handler=lambda _: self._on_layers_changed())
+        self.hub.subscribe(self, SubsetUpdateMessage,
+                           handler=lambda _: self._on_layers_changed())
+        self.hub.subscribe(self, SubsetDeleteMessage,
+                           handler=lambda _: self._on_layers_changed())
+
+        self.add_observe(viewer, self._on_viewer_changed)
+        self._on_layers_changed()
+
+    def _layer_to_dict(self, layer, index=None):
+        d = {"label": layer.layer.label, "color": layer.state.color}
+        if index is not None:
+            d['icon'] = f"mdi-alpha-{chr(97 + index)}-box-outline"
+        return d
+
+    def _on_viewer_changed(self, msg=None):
+        # we don't want to update the layers if we're just toggling between single and multi-select
+        old, new = msg['old'], msg['new']
+        if not isinstance(old, list):
+            old = [old]
+        if not isinstance(new, list):
+            new = [new]
+        if new != old:
+            self._on_layers_changed()
+
+    @observe('filters')
+    def _on_layers_changed(self, msg=None):
+        # NOTE: _on_layers_changed is passed without a msg object during init
+
+        viewer_names = self.viewer
+        if not isinstance(viewer_names, list):
+            viewer_names = [viewer_names]
+        viewers = [self.app.get_viewer(viewer) for viewer in viewer_names]
+
+        manual_items = [{'label': label} for label in self.manual_options]
+        layers = [layer for viewer in viewers for layer in viewer.layers]
+        self.items = manual_items + [self._layer_to_dict(layer, index) for index, layer in enumerate(layers)]  # noqa
+        self._apply_default_selection()
+
+    @cached_property
+    def selected_obj(self):
+        raise NotImplementedError()
+
+
+class LayerSelectMixin(VuetifyTemplate, HubListener):
+    """
+    Applies the LayerSelect component as a mixin in the base plugin.  This
+    automatically adds traitlets as well as new properties to the plugin with minimal
+    extra code.  For multiple instances or custom traitlet names/defaults, use the
+    component instead.
+
+    To use in a plugin:
+
+    * add ``LayerSelectMixin`` as a mixin to the class
+    * use the traitlets available from the plugin or properties/methods available from
+      ``plugin.layer``.
+
+    Example template (label and hint are optional)::
+
+      <plugin-layer-select
+        :items="layer_items"
+        :selected.sync="layer_selected"
+        :show_if_single_entry="true"
+        label="Layer"
+        hint="Select layer."
+      />
+
+    """
+    layer_items = List().tag(sync=True)
+    layer_selected = Any().tag(sync=True)
+    layer_viewer = Unicode().tag(sync=True)
+    layer_multiselect = Bool(False).tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.layer = LayerSelect(self,
+                                 'layer_items',
+                                 'layer_selected',
+                                 'layer_viewer',
+                                 'layer_multiselect')
 
 
 class SubsetSelect(BaseSelectPluginComponent):

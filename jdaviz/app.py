@@ -68,6 +68,7 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'plugin-dataset-select': 'components/plugin_dataset_select.vue',
                      'plugin-subset-select': 'components/plugin_subset_select.vue',
                      'plugin-viewer-select': 'components/plugin_viewer_select.vue',
+                     'plugin-layer-select': 'components/plugin_layer_select.vue',
                      'plugin-add-results': 'components/plugin_add_results.vue',
                      'plugin-auto-label': 'components/plugin_auto_label.vue'}
 
