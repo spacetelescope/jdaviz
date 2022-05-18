@@ -9,7 +9,7 @@ from astropy.wcs import WCS
 from specutils import Spectrum1D
 
 from jdaviz.core.registries import data_parser_registry
-from jdaviz.utils import PRIHDR_KEY
+from jdaviz.utils import standardize_metadata, PRIHDR_KEY
 
 __all__ = ['parse_data']
 
@@ -117,9 +117,9 @@ def _parse_hdulist(app, hdulist, file_name=None):
 
         flux = hdu.data << flux_unit
 
-        metadata = dict(hdu.header)
+        metadata = standardize_metadata(hdu.header)
         if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
-            metadata[PRIHDR_KEY] = dict(hdulist['PRIMARY'].header)
+            metadata[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
 
         try:
             sc = Spectrum1D(flux=flux, wcs=wcs, meta=metadata)
@@ -167,9 +167,9 @@ def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI', viewer_name='flux-viewe
         flux = hdulist[ext].data << unit
     wcs = WCS(hdulist['SCI'].header, hdulist)  # Everything uses SCI WCS
 
-    metadata = dict(hdulist[ext].header)
+    metadata = standardize_metadata(hdulist[ext].header)
     if hdulist[ext].name != 'PRIMARY' and 'PRIMARY' in hdulist:
-        metadata[PRIHDR_KEY] = dict(hdulist['PRIMARY'].header)
+        metadata[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
 
     data = Spectrum1D(flux, wcs=wcs, meta=metadata)
 
@@ -205,10 +205,10 @@ def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', viewer_name='flux-viewe
     flux = np.moveaxis(flux, 0, -1)
     flux = np.swapaxes(flux, 0, 1)
 
-    metadata = dict(hdulist[ext].header)
+    metadata = standardize_metadata(hdulist[ext].header)
     metadata.update(wcs_dict)  # To be internally consistent
     if hdulist[ext].name != 'PRIMARY' and 'PRIMARY' in hdulist:
-        metadata[PRIHDR_KEY] = dict(hdulist['PRIMARY'].header)
+        metadata[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
 
     data = Spectrum1D(flux, wcs=wcs, meta=metadata)
 
@@ -241,7 +241,7 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None):
 
         flux = np.moveaxis(flux, 1, 0)
 
-        s1d = Spectrum1D(flux=flux, wcs=file_obj.wcs, meta=file_obj.meta)
+        s1d = Spectrum1D(flux=flux, wcs=file_obj.wcs, meta=standardize_metadata(file_obj.meta))
 
         cur_data_label = f"{data_label}[{attr.upper()}]"
         app.add_data(s1d, cur_data_label)

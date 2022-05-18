@@ -6,7 +6,7 @@ import astropy.units as u
 import numpy as np
 
 from jdaviz.core.registries import data_parser_registry
-from jdaviz.utils import PRIHDR_KEY
+from jdaviz.utils import standardize_metadata, PRIHDR_KEY
 
 __all__ = ['spec2d_1d_parser']
 
@@ -59,8 +59,8 @@ def spec2d_1d_parser(app, data_obj, data_label=None, show_in_viewer=True):
             # we use it here as well, even though the actual unit is pixels
             spectral_axis = np.arange(1, flux.size + 1, 1) * u.m
 
-        metadata = dict(header)
-        metadata[PRIHDR_KEY] = dict(prihdr)
+        metadata = standardize_metadata(header)
+        metadata[PRIHDR_KEY] = standardize_metadata(prihdr)
 
         data_obj = Spectrum1D(flux, spectral_axis=spectral_axis, meta=metadata)
 

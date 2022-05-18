@@ -28,6 +28,7 @@
       <v-row no-gutters>
         <v-col cols=6><U>Key</U></v-col>
         <v-col cols=6><U>Value</U></v-col>
+        <v-col v-if="has_comments" cols=6><U>Comment</U></v-col>
       </v-row>
       <v-row
         v-for="item in metadata"
@@ -35,6 +36,7 @@
         no-gutters>
         <v-col cols=6>{{ item[0] }}</v-col>
         <v-col cols=6>{{ item[1] }}</v-col>
+        <v-col v-if="has_comments" cols=6>{{ item[2] }}</v-col>
       </v-row>
     </div>
     <v-row v-else>

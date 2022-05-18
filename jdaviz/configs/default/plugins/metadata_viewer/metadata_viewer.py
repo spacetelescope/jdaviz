@@ -2,7 +2,7 @@ from traitlets import Bool, List, observe
 
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin, DatasetSelectMixin
-from jdaviz.utils import PRIHDR_KEY
+from jdaviz.utils import PRIHDR_KEY, COMMENTCARD_KEY
 
 __all__ = ['MetadataViewer']
 
@@ -13,6 +13,7 @@ class MetadataViewer(TemplateMixin, DatasetSelectMixin):
     has_metadata = Bool(False).tag(sync=True)
     has_primary = Bool(False).tag(sync=True)
     show_primary = Bool(False).tag(sync=True)
+    has_comments = Bool(False).tag(sync=True)
     metadata = List([]).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
@@ -24,6 +25,7 @@ class MetadataViewer(TemplateMixin, DatasetSelectMixin):
         self.has_metadata = False
         self.has_primary = False
         self.show_primary = False
+        self.has_comments = False
         self.metadata = []
 
     @observe("dataset_selected")
@@ -38,9 +40,9 @@ class MetadataViewer(TemplateMixin, DatasetSelectMixin):
             self.has_primary = True
         else:
             self.has_primary = False
+            self.show_primary = False
 
-        self.show_primary = False
-        self.find_public_metadata(data.meta, primary_only=False)
+        self.find_public_metadata(data.meta, primary_only=self.show_primary)
 
     @observe("show_primary")
     def handle_show_primary(self, event):
@@ -61,8 +63,7 @@ class MetadataViewer(TemplateMixin, DatasetSelectMixin):
             if PRIHDR_KEY in meta:
                 meta = meta[PRIHDR_KEY]
             else:
-                self.metadata = []
-                self.has_metadata = False
+                self.reset()
                 return
 
         d = flatten_nested_dict(meta)
@@ -73,8 +74,23 @@ class MetadataViewer(TemplateMixin, DatasetSelectMixin):
             if badkey in d:
                 del d[badkey]
 
+        if COMMENTCARD_KEY in meta:
+            self.has_comments = True
+
+            def get_comment(key):
+                if key in meta[COMMENTCARD_KEY]._header:
+                    val = meta[COMMENTCARD_KEY][key]
+                else:
+                    val = ''
+                return val
+        else:
+            self.has_comments = False
+
+            def get_comment(key):
+                return ''
+
         # TODO: Option to not sort?
-        public_meta = sorted(zip(d.keys(), map(str, d.values())))
+        public_meta = sorted(zip(d.keys(), map(str, d.values()), map(get_comment, d.keys())))
         if len(public_meta) > 0:
             self.metadata = public_meta
             self.has_metadata = True

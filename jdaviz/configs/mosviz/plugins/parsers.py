@@ -17,7 +17,7 @@ from specutils import Spectrum1D, SpectrumList, SpectrumCollection
 from jdaviz.configs.imviz.plugins.parsers import get_image_data_iterator
 from jdaviz.core.registries import data_parser_registry
 from jdaviz.core.events import SnackbarMessage
-from jdaviz.utils import PRIHDR_KEY
+from jdaviz.utils import standardize_metadata, PRIHDR_KEY
 
 __all__ = ['mos_spec1d_parser', 'mos_spec2d_parser', 'mos_image_parser']
 
@@ -223,9 +223,7 @@ def mos_spec1d_parser(app, data_obj, data_labels=None):
 
         for cur_data, cur_label in zip(data_obj, data_labels):
             # Make metadata layout conform with other viz.
-            if 'header' in cur_data.meta:
-                cur_data.meta.update(cur_data.meta['header'])
-                del cur_data.meta['header']
+            cur_data.meta = standardize_metadata(cur_data.meta)
 
             app.add_data(cur_data, cur_label, notify_done=False)
 
@@ -259,8 +257,8 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
             data = hdulist[1].data
             header = hdulist[1].header
             wcs = WCS(header)
-            metadata = dict(header)
-            metadata[PRIHDR_KEY] = dict(hdulist[0].header)
+            metadata = standardize_metadata(header)
+            metadata[PRIHDR_KEY] = standardize_metadata(hdulist[0].header)
         return Spectrum1D(data, wcs=wcs, meta=metadata)
 
     # Coerce into list-like object
@@ -292,9 +290,7 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
                     data = _parse_as_spectrum1d(data)
 
             # Make metadata layout conform with other viz.
-            if 'header' in data.meta:
-                data.meta.update(data.meta['header'])
-                del data.meta['header']
+            data.meta = standardize_metadata(data.meta)
 
             # Set the instrument
             # TODO: this should not be set to nirspec for all datasets
@@ -500,10 +496,10 @@ def _get_source_identifiers_by_hdu(hdus, filepaths=None, header_keys=['SOURCEID'
                 # Fallback 1: filepath if only one is given
                 # Fallback 2: filepath at indx, if list of files given
                 # Fallback 3: If nothing else, just our fallback value
-                src_name = \
-                    os.path.basename(filepaths) if type(filepaths) is str \
-                    else os.path.basename(filepaths[indx]) if type(filepaths) is list \
-                    else FALLBACK_NAME
+                src_name = (
+                    os.path.basename(filepaths) if type(filepaths) is str
+                    else os.path.basename(filepaths[indx]) if type(filepaths) is list
+                    else FALLBACK_NAME)
             src_names.append(src_name)
         except Exception:
             # Source ID lookup shouldn't ever prevent target from loading. Downgrade all errors to
@@ -639,7 +635,8 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                     if temp[sci].header["SPORDER"] == 1:
 
                         data = temp[sci].data
-                        meta = temp[sci].header
+                        meta = standardize_metadata(temp[sci].header)
+                        meta[PRIHDR_KEY] = standardize_metadata(temp[0].header)
 
                         # The wavelength is stored in a WAVELENGTH HDU. This is
                         # a 2D array, but in order to be able to use Spectrum1D
@@ -671,7 +668,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                 # TODO: Remove this once valid SRCTYPE values are present in all headers
                 for hdu in temp:
                     if ("SRCTYPE" in hdu.header and
-                            (hdu.header["SRCTYPE"] in ["POINT", "EXTENDED"])):
+                            (hdu.header["SRCTYPE"] in ("POINT", "EXTENDED"))):
                         pass
                     else:
                         hdu.header["SRCTYPE"] = "EXTENDED"
@@ -686,9 +683,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
 
                 for spec in specs:
                     # Make metadata layout conform with other viz.
-                    if 'header' in spec.meta:
-                        spec.meta.update(spec.meta['header'])
-                        del spec.meta['header']
+                    spec.meta = standardize_metadata(spec.meta)
 
                     if spec.meta['SPORDER'] == 1 and spec.meta['EXTNAME'] == "EXTRACT1D":
                         label = f"{filter_name} Source {spec.meta['SOURCEID']} spec1d {orientation}"

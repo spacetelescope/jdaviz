@@ -8,6 +8,7 @@ from astropy.nddata import StdDevUncertainty
 from specutils import Spectrum1D, SpectrumList, SpectrumCollection
 
 from jdaviz.core.registries import data_parser_registry
+from jdaviz.utils import standardize_metadata
 
 __all__ = ["specviz_spectrum1d_parser"]
 
@@ -99,9 +100,7 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
                                   spectral_axis=spec.spectral_axis.to(current_unit))
 
             # Make metadata layout conform with other viz.
-            if 'header' in spec.meta:
-                spec.meta.update(spec.meta['header'])
-                del spec.meta['header']
+            spec.meta = standardize_metadata(spec.meta)
 
             app.add_data(spec, data_label[i])
 
@@ -136,9 +135,7 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
                               uncertainty=unc)
 
             # Make metadata layout conform with other viz.
-            if 'header' in spec.meta:
-                spec.meta.update(spec.meta['header'])
-                del spec.meta['header']
+            spec.meta = standardize_metadata(spec.meta)
 
             # needs perhaps a better way to label the combined spectrum
             label = "Combined " + data_label[0]
