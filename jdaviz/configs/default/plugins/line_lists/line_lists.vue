@@ -192,27 +192,7 @@
 
             <div v-if="list_contents[item].lines.length">
 
-              <v-row>
-                <j-tooltip tipid='plugin-line-lists-spectral-range'>
-                  <v-btn
-                    icon
-                    @click="filter_range = !filter_range"
-                    style="width: 30px; margin-top: 4px"
-                    ><img :class="filter_range ? 'color-to-accent' : 'invert-if-dark'" :src="filter_range_icon"/>
-                    
-                  </v-btn>
-                </j-tooltip>
-
-                <v-text-field
-                  v-model="lines_filter"
-                  append-icon='mdi-magnify'
-                  style="padding: 0px 0px; margin-left: 8px; max-width: calc(100% - 38px)"
-                  clearable
-                  hide-details
-                ></v-text-field>
-              </v-row>
-
-              <v-row class="row-no-padding">
+              <v-row class="row-no-padding" style="margin-top: 4px">
                 <v-col cols=6 style="padding: 0">
                   <j-tooltip tipid='plugin-line-lists-plot-all-in-list'>
                     <v-btn
@@ -247,24 +227,51 @@
                 </v-col>
               </v-row>
 
-              <j-plugin-section-header>Lines</j-plugin-section-header>
+              <v-row>
+                <j-tooltip tipid='plugin-line-lists-spectral-range'>
+                  <v-btn
+                    icon
+                    @click="filter_range = !filter_range"
+                    style="width: 30px; margin-top: 4px"
+                    ><img :class="filter_range ? 'color-to-accent' : 'invert-if-dark'" :src="filter_range_icon"/>
+                    
+                  </v-btn>
+                </j-tooltip>
+
+                <v-text-field
+                  v-model="lines_filter"
+                  append-icon='mdi-magnify'
+                  style="padding: 0px 0px; margin-left: 8px; max-width: calc(100% - 38px)"
+                  clearable
+                  hide-details
+                ></v-text-field>
+              </v-row>
 
               <v-row v-for="(line, line_ind) in list_contents[item].lines" style="margin-bottom: 0px !important;">
                 <div v-if="lineItemVisible(line, lines_filter, filter_range)">
+                  
                   <v-row class="row-min-bottom-padding" style="margin: 0px">
-                    <j-tooltip tipid='plugin-line-lists-line-visible'>
-                      <v-btn :color="line.show ? 'accent' : 'default'" icon @click="change_visible([item, line, line_ind])">
-                        <v-icon>{{line.show ? "mdi-eye" : "mdi-eye-off"}}</v-icon>
-                      </v-btn>
-                    </j-tooltip>
-                    <j-tooltip tipid='plugin-line-lists-line-identify'>
-                      <v-btn icon @click="set_identify([item, line, line_ind])">
-                        <img :class="line.identify ? 'color-to-accent' : 'invert-if-dark'" :src="identify_line_icon" width="20"/>
-                      </v-btn>
-                    </j-tooltip>
-                    <span class='text--primary' style="overflow-wrap: anywhere; font-size: 12pt; padding-top: 6px; padding-left: 6px">
-                      {{line.linename}}
-                    </span>
+                    <v-col cols=7  style="padding: 0">
+                      <span class='text--primary' style="overflow-wrap: anywhere; font-size: 16pt; padding-top: 3px;">
+                        <b>{{line.linename}}</b>
+                      </span>                    
+                    </v-col>
+                    
+                    <v-col cols=2 align="right" style="padding: 0">
+                      <j-tooltip tipid='plugin-line-lists-line-identify'>
+                        <v-btn icon @click="set_identify([item, line, line_ind])">
+                          <img :class="line.identify ? 'color-to-accent' : 'invert-if-dark'" :src="identify_line_icon" width="20"/>
+                        </v-btn>
+                      </j-tooltip>
+                    </v-col>
+                    <v-col cols=3 align="right" style="padding: 0">
+                      <j-tooltip tipid='plugin-line-lists-line-visible'>
+                        <v-btn :color="line.show ? 'accent' : 'default'" icon @click="change_visible([item, line, line_ind])">
+                          <v-icon>{{line.show ? "mdi-eye" : "mdi-eye-off"}}</v-icon>
+                        </v-btn>
+                      </j-tooltip style="padding: 0">
+                    </v-col>
+
                   </v-row>
                   <v-row class="row-min-bottom-padding">
                     <v-col cols=6>
