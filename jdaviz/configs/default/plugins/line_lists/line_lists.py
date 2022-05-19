@@ -383,6 +383,10 @@ class LineListTool(PluginTemplateMixin):
         self._auto_slider_range()
 
     def _auto_slider_range(self, event=None):
+        """
+        Automatically adjusts the Redshift slider range to the values of the
+        spectrum_viewer_min and spectrum_viewer_max traitlets
+        """
         if not self.rs_slider_range_auto:
             return
         # if set to auto, default the range based on the limits of the spectrum plot
