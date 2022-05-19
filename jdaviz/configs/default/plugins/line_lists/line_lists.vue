@@ -274,18 +274,19 @@
 
                   </v-row>
                   <v-row class="row-min-bottom-padding">
-                    <v-col cols=6>
+                    <v-col cols=6 style="padding-bottom: 0px; padding-top: 0px">
+                      <v-subheader class="pl-0 slider-label"><b>Rest</b/></v-subheader>
                       <v-text-field
                         v-model="line.rest"
                         class="mt-0 pt-0"
                         dense
-                        label="Rest"
                         :hint="line.unit"
                         persistent-hint
                         disabled
                       ></v-text-field>
                     </v-col>
-                    <v-col cols=6>
+                    <v-col cols=6 style="padding-bottom: 0px; padding-top: 0px">
+                      <v-subheader class="pl-0 slider-label" style="height: 16px"><b>Observed</b/></v-subheader>
                       <v-text-field
                         v-model="line.obs"
                         @input="(e) => change_line_obs({list_name: item, line_ind: line_ind, obs_new: parseFloat(e), avoid_feedback: true})"
@@ -294,7 +295,6 @@
                         class="mt-0 pt-0"
                         dense
                         type="number"
-                        label="Observed"
                         :hint="line.unit"
                         persistent-hint
                       ></v-text-field>
