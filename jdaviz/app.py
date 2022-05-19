@@ -1233,7 +1233,7 @@ class Application(VuetifyTemplate, HubListener):
     @staticmethod
     def _create_data_item(data):
         ndims = len(data.shape)
-        wcsaxes = data.meta.get('WCSAXES', data.meta.get('header', {}).get('WCSAXES', None))
+        wcsaxes = data.meta.get('WCSAXES', None)
         if data.label == 'MOS Table':
             typ = 'table'
         elif ndims == 1:
