@@ -280,9 +280,9 @@ class TestParseImage:
         assert_allclose(sky.dec.deg, -69.494592)
         data_unit = u.MJy / u.sr
         assert_quantity_allclose(tbl[0]['background'], 0.1741226315498352 * data_unit)
-        assert_quantity_allclose(tbl[0]['sum'], 4.989882e-09 * u.MJy)
+        assert_quantity_allclose(tbl[0]['sum'], 4.486487e-11 * u.MJy, rtol=1e-6)
         assert_quantity_allclose(tbl[0]['sum_aper_area'], 111.220234 * (u.pix * u.pix))
-        assert_quantity_allclose(tbl[0]['pixarea_tot'], 1.038438e-11 * u.sr, atol=1e-15 * u.sr)
+        assert_quantity_allclose(tbl[0]['pixarea_tot'], 9.33677e-14 * u.sr, rtol=1e-6)
         assert_quantity_allclose(tbl[0]['aperture_sum_counts'], 132061.576643 * u.count, rtol=1e-6)
         assert_quantity_allclose(tbl[0]['aperture_sum_counts_err'], 363.402775 * u.count)
         assert_quantity_allclose(tbl[0]['counts_fac'], 0.0036385915646798953 * (data_unit / u.ct))

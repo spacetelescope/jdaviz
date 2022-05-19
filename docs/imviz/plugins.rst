@@ -206,8 +206,8 @@ The columns are as follow:
 * :attr:`~photutils.aperture.ApertureStats.sum_aper_area`: The pixel area
   covered by the region. Partial coverage is reported as fraction.
 * ``pixarea_tot``: If per steradian is in input data unit and pixel area is
-  provided, this contains the total pixel area covered by the aperture in
-  steradian. Otherwise, it is `None`.
+  provided, this contains the conversion factor for the *sum* to take out
+  the steradian unit. Otherwise, it is `None`.
 * ``aperture_sum_counts``: This is the aperture sum converted to counts,
   if :guilabel:`Counts conversion factor` was set. Otherwise, it is `None`.
   This calculation is done without taking account of ``pixarea_tot``, even

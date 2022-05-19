@@ -263,11 +263,11 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
             phot_table['xcentroid'].unit = u.pix  # photutils only assumes, we make it real
             phot_table['ycentroid'].unit = u.pix
             rawsum = phot_table['sum'][0]
-            npix = phot_table['sum_aper_area'][0]
 
             if include_pixarea_fac:
                 pixarea = pixarea * (u.arcsec * u.arcsec / (u.pix * u.pix))
-                pixarea_fac = npix * pixarea.to(u.sr / (u.pix * u.pix))
+                # NOTE: Sum already has npix value encoded, so we simply apply the npix unit here.
+                pixarea_fac = (u.pix * u.pix) * pixarea.to(u.sr / (u.pix * u.pix))
                 phot_table['sum'] = [rawsum * pixarea_fac]
             else:
                 pixarea_fac = None
