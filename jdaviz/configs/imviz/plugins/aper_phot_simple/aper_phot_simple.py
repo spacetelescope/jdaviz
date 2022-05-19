@@ -17,7 +17,7 @@ from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.region_translators import regions2aperture
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin, DatasetSelectMixin, SubsetSelect
-from jdaviz.utils import bqplot_clear_figure
+from jdaviz.utils import bqplot_clear_figure, PRIHDR_KEY
 
 __all__ = ['SimpleAperturePhotometry']
 
@@ -83,7 +83,10 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
             self.flux_scaling = 0
 
             # Extract telescope specific unit conversion factors, if applicable.
-            meta = self._selected_data.meta
+            meta = self._selected_data.meta.copy()
+            if PRIHDR_KEY in meta:
+                meta.update(meta[PRIHDR_KEY])
+                del meta[PRIHDR_KEY]
             if 'telescope' in meta:
                 telescope = meta['telescope']
             else:

@@ -1,11 +1,17 @@
+import os
 import time
 import threading
 from collections import deque
-import os
+
+from astropy.io import fits
 from ipyvue import watch
 
 
 __all__ = []
+
+# For Metadata Viewer plugin internal use only.
+PRIHDR_KEY = '_primary_header'
+COMMENTCARD_KEY = '_fits_comment_card'
 
 
 class SnackbarQueue:
@@ -124,3 +130,24 @@ def bqplot_clear_figure(fig):
     fig.marks = []
     fig.axes = []
     setattr(fig, 'axis_registry', {})
+
+
+def standardize_metadata(metadata):
+    """Standardize given metadata so it can be viewed in
+    Metadata Viewer plugin. The input can be plain
+    dictionary or FITS header object. Output is just a plain
+    dictionary.
+    """
+    if isinstance(metadata, fits.Header):
+        out_meta = dict(metadata)
+        out_meta[COMMENTCARD_KEY] = metadata.comments
+    elif isinstance(metadata, dict):
+        out_meta = metadata.copy()
+        # specutils nests it but we do not want nesting
+        if 'header' in metadata and isinstance(metadata['header'], fits.Header):
+            out_meta.update(standardize_metadata(metadata['header']))
+            del out_meta['header']
+    else:
+        raise TypeError('metadata must be dictionary or FITS header')
+
+    return out_meta

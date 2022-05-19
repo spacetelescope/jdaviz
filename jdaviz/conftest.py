@@ -99,9 +99,7 @@ def spectrum1d_cube():
                 "CRPIX1": 0, "CRPIX2": 0, "CRPIX3": 0}
     w = WCS(wcs_dict)
 
-    spec = Spectrum1D(flux=flux, wcs=w)
-
-    return spec
+    return Spectrum1D(flux=flux, wcs=w)
 
 
 @pytest.fixture
@@ -116,6 +114,7 @@ def mos_spectrum1d():
     Unless linking the two is required, try to use the global spectrum1d fixture.
     '''
     spec_axis = np.linspace(6000, 8000, 1024) * u.AA
+    np.random.seed(42)
     flux = (np.random.randn(len(spec_axis.value)) +
             10*np.exp(-0.001*(spec_axis.value-6563)**2) +
             spec_axis.value/500) * u.Jy
@@ -132,78 +131,36 @@ def mos_spectrum2d():
     TODO: This should be reformed to match the global Spectrum1D defined above so that we may
     deprecate the mos-specific spectrum1d.
     '''
-    header = """
-WCSAXES =                    2 / Number of coordinate axes
-CRPIX1  =                  0.0 / Pixel coordinate of reference point
-CRPIX2  =               1024.5 / Pixel coordinate of reference point
-CDELT1  =                1E-06 / [m] Coordinate increment at reference point
-CDELT2  =  2.9256727777778E-05 / [deg] Coordinate increment at reference point
-CUNIT1  = 'm'                  / Units of coordinate increment and value
-CUNIT2  = 'deg'                / Units of coordinate increment and value
-CTYPE1  = 'WAVE'               / Vacuum wavelength (linear)
-CTYPE2  = 'OFFSET'             / Spatial offset
-CRVAL1  =                  0.0 / [m] Coordinate value at reference point
-CRVAL2  =                  5.0 / [deg] Coordinate value at reference point
-RADESYS = 'ICRS'               / Equatorial coordinate system
-SPECSYS = 'BARYCENT'           / Reference frame of spectral coordinates
-"""
-    new_hdr = {}
-
-    for line in header.split('\n'):
-        try:
-            key, value = line.split('=')
-            key = key.strip()
-            value, _ = value.split('/')
-            value = value.strip()
-            value = value.strip("'")
-        except ValueError:
-            continue
-
-        new_hdr[key] = value
-
-    wcs = WCS(new_hdr)
+    header = {
+        'WCSAXES': 2,
+        'CRPIX1': 0.0, 'CRPIX2': 1024.5,
+        'CDELT1': 1E-06, 'CDELT2': 2.9256727777778E-05,
+        'CUNIT1': 'm', 'CUNIT2': 'deg',
+        'CTYPE1': 'WAVE', 'CTYPE2': 'OFFSET',
+        'CRVAL1': 0.0, 'CRVAL2': 5.0,
+        'RADESYS': 'ICRS', 'SPECSYS': 'BARYCENT'}
+    wcs = WCS(header)
+    np.random.seed(42)
     data = np.random.sample((1024, 15)) * u.one
-    return Spectrum1D(data, wcs=wcs)
+    return Spectrum1D(data, wcs=wcs, meta=header)
 
 
 @pytest.fixture
 def mos_image():
-    header = """
-WCSAXES =                    2 / Number of coordinate axes
-CRPIX1  =                937.0 / Pixel coordinate of reference point
-CRPIX2  =                696.0 / Pixel coordinate of reference point
-CDELT1  = -1.5182221158397E-05 / [deg] Coordinate increment at reference point
-CDELT2  =  1.5182221158397E-05 / [deg] Coordinate increment at reference point
-CUNIT1  = 'deg'                / Units of coordinate increment and value
-CUNIT2  = 'deg'                / Units of coordinate increment and value
-CTYPE1  = 'RA---TAN'           / Right ascension, gnomonic projection
-CTYPE2  = 'DEC--TAN'           / Declination, gnomonic projection
-CRVAL1  =      5.0155198140981 / [deg] Coordinate value at reference point
-CRVAL2  =       5.002450989248 / [deg] Coordinate value at reference point
-LONPOLE =                180.0 / [deg] Native longitude of celestial pole
-LATPOLE =       5.002450989248 / [deg] Native latitude of celestial pole
-DATEREF = '1858-11-17'         / ISO-8601 fiducial time
-MJDREFI =                  0.0 / [d] MJD of fiducial time, integer part
-MJDREFF =                  0.0 / [d] MJD of fiducial time, fractional part
-RADESYS = 'ICRS'               / Equatorial coordinate system
-"""
-    new_hdr = {}
-
-    for line in header.split('\n'):
-        try:
-            key, value = line.split('=')
-            key = key.strip()
-            value, _ = value.split('/')
-            value = value.strip()
-            value = value.strip("'")
-        except ValueError:
-            continue
-
-        new_hdr[key] = value
-
-    wcs = WCS(new_hdr)
+    header = {
+        'WCSAXES': 2,
+        'CRPIX1': 937.0, 'CRPIX2': 696.0,
+        'CDELT1': -1.5182221158397e-05, 'CDELT2': 1.5182221158397e-05,
+        'CUNIT1': 'deg', 'CUNIT2': 'deg',
+        'CTYPE1': 'RA---TAN', 'CTYPE2': 'DEC--TAN',
+        'CRVAL1': 5.0155198140981, 'CRVAL2': 5.002450989248,
+        'LONPOLE': 180.0, 'LATPOLE': 5.002450989248,
+        'DATEREF': '1858-11-17', 'MJDREFI': 0.0, 'MJDREFF': 0.0,
+        'RADESYS': 'ICRS'}
+    wcs = WCS(header)
+    np.random.seed(42)
     data = np.random.sample((55, 55))
-    return CCDData(data, wcs=wcs, unit='Jy')
+    return CCDData(data, wcs=wcs, unit='Jy', meta=header)
 
 
 try:

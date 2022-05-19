@@ -9,6 +9,7 @@ from astropy.wcs import WCS
 from specutils import Spectrum1D
 
 from jdaviz.core.registries import data_parser_registry
+from jdaviz.utils import standardize_metadata, PRIHDR_KEY
 
 __all__ = ['parse_data']
 
@@ -45,7 +46,7 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
     #  generic enough to work with other file types (e.g. ASDF). For now, this
     #  supports MaNGA and JWST data.
     if isinstance(file_obj, fits.hdu.hdulist.HDUList):
-        _parse_hdu(app, file_obj, file_name=data_label)
+        _parse_hdulist(app, file_obj, file_name=data_label)
     elif isinstance(file_obj, str) and os.path.exists(file_obj):
         file_name = os.path.basename(file_obj)
 
@@ -68,7 +69,7 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
                     _parse_esa_s3d(app, hdulist, data_label, ext=ext, viewer_name=viewer_name)
 
             else:
-                _parse_hdu(app, hdulist, file_name=data_label or file_name)
+                _parse_hdulist(app, hdulist, file_name=data_label or file_name)
 
     # If the data types are custom data objects, use explicit parsers. Note
     #  that this relies on the glue-astronomy machinery to turn the data object
@@ -82,7 +83,7 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
         raise NotImplementedError(f'Unsupported data format: {file_obj}')
 
 
-def _parse_hdu(app, hdulist, file_name=None):
+def _parse_hdulist(app, hdulist, file_name=None):
     if file_name is None:
         if hasattr(hdulist, 'file_name'):
             file_name = hdulist.file_name
@@ -116,8 +117,12 @@ def _parse_hdu(app, hdulist, file_name=None):
 
         flux = hdu.data << flux_unit
 
+        metadata = standardize_metadata(hdu.header)
+        if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
+            metadata[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
+
         try:
-            sc = Spectrum1D(flux=flux, wcs=wcs)
+            sc = Spectrum1D(flux=flux, wcs=wcs, meta=metadata)
         except Exception as e:
             logging.warning(e)
             continue
@@ -125,12 +130,12 @@ def _parse_hdu(app, hdulist, file_name=None):
         app.add_data(sc, data_label)
 
         # If the data type is some kind of integer, assume it's the mask/dq
-        if hdu.data.dtype in (int, np.uint, np.uint32) or \
-                any(x in hdu.name.lower() for x in EXT_TYPES['mask']):
+        if (hdu.data.dtype in (int, np.uint, np.uint32) or
+                any(x in hdu.name.lower() for x in EXT_TYPES['mask'])):
             app.add_data_to_viewer('mask-viewer', data_label)
 
-        if 'errtype' in [x.lower() for x in hdu.header.keys()] or \
-                any(x in hdu.name.lower() for x in EXT_TYPES['uncert']):
+        if ('errtype' in [x.lower() for x in hdu.header.keys()] or
+                any(x in hdu.name.lower() for x in EXT_TYPES['uncert'])):
             app.add_data_to_viewer('uncert-viewer', data_label)
 
         if any(x in hdu.name.lower() for x in EXT_TYPES['flux']):
@@ -161,11 +166,16 @@ def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI', viewer_name='flux-viewe
         unit = u.Unit(hdulist[ext].header.get('BUNIT', 'count'))
         flux = hdulist[ext].data << unit
     wcs = WCS(hdulist['SCI'].header, hdulist)  # Everything uses SCI WCS
-    data = Spectrum1D(flux, wcs=wcs)
+
+    metadata = standardize_metadata(hdulist[ext].header)
+    if hdulist[ext].name != 'PRIMARY' and 'PRIMARY' in hdulist:
+        metadata[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
+
+    data = Spectrum1D(flux, wcs=wcs, meta=metadata)
 
     # NOTE: Tried to only pass in sliced WCS but got error in Glue.
     # sliced_wcs = wcs[:, 0, 0]  # Only want wavelengths
-    # data = Spectrum1D(flux, wcs=sliced_wcs)
+    # data = Spectrum1D(flux, wcs=sliced_wcs, meta=metadata)
 
     app.add_data(data, data_label)
     app.add_data_to_viewer(viewer_name, data_label)
@@ -194,7 +204,13 @@ def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', viewer_name='flux-viewe
     wcs = WCS(wcs_dict)
     flux = np.moveaxis(flux, 0, -1)
     flux = np.swapaxes(flux, 0, 1)
-    data = Spectrum1D(flux, wcs=wcs)
+
+    metadata = standardize_metadata(hdulist[ext].header)
+    metadata.update(wcs_dict)  # To be internally consistent
+    if hdulist[ext].name != 'PRIMARY' and 'PRIMARY' in hdulist:
+        metadata[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
+
+    data = Spectrum1D(flux, wcs=wcs, meta=metadata)
 
     app.add_data(data, data_label)
     app.add_data_to_viewer(viewer_name, data_label)
@@ -225,7 +241,7 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None):
 
         flux = np.moveaxis(flux, 1, 0)
 
-        s1d = Spectrum1D(flux=flux, wcs=file_obj.wcs)
+        s1d = Spectrum1D(flux=flux, wcs=file_obj.wcs, meta=standardize_metadata(file_obj.meta))
 
         cur_data_label = f"{data_label}[{attr.upper()}]"
         app.add_data(s1d, cur_data_label)
