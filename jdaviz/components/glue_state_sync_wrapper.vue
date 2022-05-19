@@ -19,10 +19,9 @@
         style="z-index:2;
                margin-left: -24px;
                margin-right: -24px;
-               padding-top: 60px;
                cursor: pointer;
                background-color: rgb(0 0 0 / 20%)">
-        <v-icon large dark style="bottom: 100%">mdi-link-off</v-icon>
+        <v-icon large dark>mdi-link-off</v-icon>
       </div> 
     </j-tooltip>
   </div>

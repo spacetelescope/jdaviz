@@ -33,7 +33,7 @@
     </div>
 
     <!-- PROFILE -->
-    <j-plugin-section-header v-if="linewidth_sync.in_subscribed_states">Profile Line</j-plugin-section-header>
+    <j-plugin-section-header v-if="line_width_sync.in_subscribed_states">Profile Line</j-plugin-section-header>
     <glue-state-sync-wrapper v-if="config === 'cubeviz'" :sync="collapse_func_sync" :multiselect="multiselect" @unmix-state="unmix_state('function')">
       <v-select
         :items="collapse_func_sync.choices"
@@ -44,15 +44,36 @@
       ></v-select>
     </glue-state-sync-wrapper>
 
-    <v-row v-if="linewidth_sync.in_subscribed_states">
-      <span>TODO: line color (needs to be able to filter on layer type)</span>
-    </v-row>
+    <glue-state-sync-wrapper :sync="line_color_sync" :multiselect="multiselect" @unmix-state="unmix_state('line_color')">
+      <div>
+        <v-subheader class="pl-0 slider-label">Line Color</v-subheader>
+        <v-menu>
+          <template v-slot:activator="{ on }">
+              <span class="color-menu"
+                    :style="`background:${line_color_value}`"
+                    @click.stop="on.click"
+              >&nbsp;</span>
+          </template>
+          <div @click.stop="" style="text-align: end; background-color: white">
+              <v-color-picker :value="line_color_value"
+                              @update:color="throttledSetValue('line_color_value', $event.hexa)"></v-color-picker>
+          </div>
+        </v-menu>
+      </div>
+    </glue-state-sync-wrapper>
     
-    <glue-state-sync-wrapper :sync="linewidth_sync" :multiselect="multiselect" @unmix-state="unmix_state('linewidth')">
-      <glue-float-field label="Line Width" :value.sync="linewidth_value" />
+    <glue-state-sync-wrapper :sync="line_width_sync" :multiselect="multiselect" @unmix-state="unmix_state('line_width')">
+      <glue-float-field label="Line Width" :value.sync="line_width_value" />
     </glue-state-sync-wrapper>
 
-    <v-row v-if="linewidth_sync.in_subscribed_states">
+    <glue-state-sync-wrapper :sync="line_opacity_sync" :multiselect="multiselect" @unmix-state="unmix_state('line_opacity')">
+      <div>
+        <v-subheader class="pl-0 slider-label">Line Opacity</v-subheader>
+        <glue-throttled-slider wait="300" max="1" step="0.01" :value.sync="line_opacity_value" hide-details class="no-hint" />
+      </div>
+    </glue-state-sync-wrapper>
+
+    <v-row v-if="line_width_sync.in_subscribed_states">
       <span>TODO: uncertainty (needs to handle custom implementation)</span>
     </v-row>
 
@@ -65,7 +86,6 @@
         v-model="stretch_value"
         label="Stretch"
         class="no-hint"
-        dense
       ></v-select>
     </glue-state-sync-wrapper>
 
@@ -75,7 +95,6 @@
         v-model="stretch_perc_value"
         label="Stretch Percentile"
         class="no-hint"
-        dense
       ></v-select>
     </glue-state-sync-wrapper>
 
@@ -110,16 +129,52 @@
         ></v-select>
       </glue-state-sync-wrapper>
 
-      <v-row v-if="color_mode_value === 'Colormaps'">
-        <span>TODO: colormap options</span>
-      </v-row>
-      <v-row v-else>
-        <span>TODO: color picker</span>
-      </v-row>
+      <glue-state-sync-wrapper v-if="color_mode_value === 'Colormaps'" :sync="bitmap_cmap_sync" :multiselect="multiselect" @unmix-state="unmix_state('bitmap_cmap')">
+        <v-select
+          :items="bitmap_cmap_sync.choices"
+          v-model="bitmap_cmap_value"
+          label="Colormap"
+          dense
+        ></v-select>
+      </glue-state-sync-wrapper>
+      <glue-state-sync-wrapper v-else :sync="bitmap_color_sync" :multiselect="multiselect" @unmix-state="unmix_state('bitmap_color')">
+        <div>
+          <v-subheader class="pl-0 slider-label">Image Color</v-subheader>
+          <v-menu>
+            <template v-slot:activator="{ on }">
+                <span class="color-menu"
+                      :style="`background:${bitmap_color_value}`"
+                      @click.stop="on.click"
+                >&nbsp;</span>
+            </template>
+            <div @click.stop="" style="text-align: end; background-color: white">
+                <v-color-picker :value="bitmap_color_value"
+                                @update:color="throttledSetValue('bitmap_color_value', $event.hexa)"></v-color-picker>
+            </div>
+          </v-menu>
+        </div>
+      </glue-state-sync-wrapper>
 
-      <v-row>
-        <span>TODO: contrast, bias, opacity</span>
-      </v-row>
+      <glue-state-sync-wrapper :sync="bitmap_opacity_sync" :multiselect="multiselect" @unmix-state="unmix_state('bitmap_opacity')">
+        <div>
+          <v-subheader class="pl-0 slider-label">opacity</v-subheader>
+          <glue-throttled-slider wait="300" max="1" step="0.01" :value.sync="bitmap_opacity_value" hide-details class="no-hint" />
+        </div>
+      </glue-state-sync-wrapper>
+
+      <glue-state-sync-wrapper :sync="bitmap_contrast_sync" :multiselect="multiselect" @unmix-state="unmix_state('bitmap_contrast')">
+        <div>
+          <v-subheader class="pl-0 slider-label">contrast</v-subheader>
+          <glue-throttled-slider wait="300" max="4" step="0.01" :value.sync="bitmap_contrast_value" hide-details />
+        </div>
+      </glue-state-sync-wrapper>
+
+      <glue-state-sync-wrapper :sync="bitmap_bias_sync" :multiselect="multiselect" @unmix-state="unmix_state('bitmap_bias')">
+        <div>
+          <v-subheader class="pl-0 slider-label">bias</v-subheader>
+          <glue-throttled-slider wait="300" max="1" step="0.01" :value.sync="bitmap_bias_value" hide-details />
+        </div>
+      </glue-state-sync-wrapper>
     </div>
 
     <!-- IMAGE:CONTOUR -->
@@ -133,9 +188,19 @@
       </span>
     </glue-state-sync-wrapper>
 
-    <row v-if="contour_visible_sync.in_subscribed_states && contour_visible_value">
-      <span>TODO: contour options</span>
-    </row>
+    <div v-if="contour_visible_sync.in_subscribed_states && contour_visible_value">
+      <glue-state-sync-wrapper :sync="contour_min_sync" :multiselect="multiselect" @unmix-state="unmix_state('contour_min')">
+        <glue-float-field label="contour min" :value.sync="contour_min_value" />
+      </glue-state-sync-wrapper>
+
+      <glue-state-sync-wrapper :sync="contour_max_sync" :multiselect="multiselect" @unmix-state="unmix_state('contour_max')">
+        <glue-float-field label="contour max" :value.sync="contour_max_value" />
+      </glue-state-sync-wrapper>
+
+      <glue-state-sync-wrapper :sync="contour_nlevels_sync" :multiselect="multiselect" @unmix-state="unmix_state('contour_nlevels')">
+        <glue-float-field label="number of contour levels" :value.sync="contour_nlevels_value" />
+      </glue-state-sync-wrapper>
+    </div>
 
     <!-- GENERAL:AXES -->
     <j-plugin-section-header v-if="show_axes_sync.in_subscribed_states">Axes</j-plugin-section-header>
@@ -148,3 +213,21 @@
 
   </j-tray-plugin>
 </template>
+
+<script>
+module.exports = {
+  created() {
+    this.throttledSetValue = _.throttle(
+      (name, v) => { this.set_value({name: name, value: v}) },
+      100);
+  }
+}
+</script>
+
+<style>
+.color-menu {
+    font-size: 16px;
+    padding-left: 16px;
+    border: 2px solid rgba(0,0,0,0.54);
+}
+</style>

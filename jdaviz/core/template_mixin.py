@@ -420,8 +420,9 @@ class LayerSelect(BaseSelectPluginComponent):
                            handler=lambda _: self._on_layers_changed())
         self.hub.subscribe(self, SubsetCreateMessage,
                            handler=lambda _: self._on_layers_changed())
-        self.hub.subscribe(self, SubsetUpdateMessage,
-                           handler=lambda _: self._on_layers_changed())
+        # will need SubsetUpdateMessage for name only (style shouldn't force a full refresh)
+        #self.hub.subscribe(self, SubsetUpdateMessage,
+        #                   handler=lambda _: self._on_layers_changed())
         self.hub.subscribe(self, SubsetDeleteMessage,
                            handler=lambda _: self._on_layers_changed())
 
@@ -1326,8 +1327,10 @@ from glue_jupyter.widgets.linked_dropdown import get_choices as _get_glue_choice
 class PlotOptionsSyncState(BasePluginComponent):
     """
     """
-    def __init__(self, plugin, viewer_select, layer_select, glue_name, value, sync):
+    def __init__(self, plugin, viewer_select, layer_select, glue_name,
+                 value, sync, state_filter=None):
         super().__init__(plugin, value=value, sync=sync)
+        self._state_filter = state_filter
         self._linked_states = []
         self._processing_change_from_glue = False
         self._processing_change_to_glue = False
@@ -1340,6 +1343,11 @@ class PlotOptionsSyncState(BasePluginComponent):
         self.add_observe(layer_select._plugin_traitlets['selected'], self._on_viewer_layer_changed)
         self.add_observe(value, self._on_value_changed)
         self._on_viewer_layer_changed()
+
+    def state_filter(self, state):
+        if self._state_filter is None:
+            return True
+        return self._state_filter(state)
 
     @cached_property
     def subscribed_states(self):
@@ -1389,7 +1397,9 @@ class PlotOptionsSyncState(BasePluginComponent):
         current_glue_values = []
         self._linked_states = []
         for state, icon in zip(self.subscribed_states, self.subscribed_icons):
-            if hasattr(state, self._glue_name):
+            if not self.state_filter(state):
+                continue
+            if self._glue_name is not None and hasattr(state, self._glue_name):
                 in_subscribed_states = True
                 icons.append(icon)
                 current_glue_values.append(getattr(state, self._glue_name))
@@ -1429,6 +1439,8 @@ class PlotOptionsSyncState(BasePluginComponent):
             return
 
         self._processing_change_from_glue = True
+        if "Colormap" in value.__class__.__name__:  # TODO: better logic
+            value = str(value)
         self.value = value
         if len(self.linked_states) > 1:
             # need to recompute mixed state
@@ -1443,10 +1455,3 @@ class PlotOptionsSyncState(BasePluginComponent):
         self._on_value_changed({'new': self.value})
         self.sync = {**self.sync,
                      'mixed': False}
-
-
-class PlotOptionsSyncStateInt(PlotOptionsSyncState):
-    def __init__(self, plugin, viewer_select, layer_select, glue_name, value, sync):
-#        self._min = min  # does the template need this, if so it needs to be a traitlet...
-#        self._max = max
-        super().__init__(plugin, viewer_select, layer_select, glue_name, value=value, sync=sync)
