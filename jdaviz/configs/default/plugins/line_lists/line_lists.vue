@@ -250,7 +250,7 @@
               <v-row v-for="(line, line_ind) in list_contents[item].lines" style="margin-bottom: 0px !important;">
                 <div v-if="lineItemVisible(line, lines_filter, filter_range)">
                   
-                  <v-row class="row-min-bottom-padding" style="margin: 0px">
+                  <v-row class="row-no-vertical-padding-margin" style="margin: 0px">
                     <v-col cols=7  style="padding: 0">
                       <span class='text--primary' style="overflow-wrap: anywhere; font-size: 16pt; padding-top: 3px;">
                         <b>{{line.linename}}</b>
@@ -273,8 +273,8 @@
                     </v-col>
 
                   </v-row>
-                  <v-row>
-                    <v-col cols=6 style="padding-bottom: 0px; padding-top: 0px">
+                  <v-row class="row-min-bottom-padding" >
+                    <v-col cols=6 style="padding-bottom: 3px; padding-top: 0px">
                       <v-subheader class="pl-0 slider-label" style="height: 16px"><b>Rest</b/></v-subheader>
                       <v-text-field
                         v-model="line.rest"
@@ -285,7 +285,7 @@
                         disabled
                       ></v-text-field>
                     </v-col>
-                    <v-col cols=6 style="padding-bottom: 0px; padding-top: 0px">
+                    <v-col cols=6 style="padding-top: 0px">
                       <v-subheader class="pl-0 slider-label" style="height: 16px"><b>Observed</b/></v-subheader>
                       <v-text-field
                         v-model="line.obs"
