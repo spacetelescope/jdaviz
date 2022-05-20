@@ -1418,11 +1418,22 @@ class PlotOptionsSyncState(BasePluginComponent):
         self.sync = {**self.sync,
                      'in_subscribed_states': in_subscribed_states,
                      'icons': icons,
-                     'mixed': len(np.unique(current_glue_values)) > 1}
+                     'mixed': len(np.unique(current_glue_values, axis=0)) > 1}
 
         if len(current_glue_values):
             # sync the initial value of the widget, avoiding recursion
             self._on_glue_value_changed(current_glue_values[0])
+
+    def _update_mixed_state(self):
+        if len(self.linked_states) <= 1:
+            mixed = False
+        else:
+            current_glue_values = []
+            for state in self.linked_states:
+                current_glue_values.append(getattr(state, self._glue_name))
+            mixed = len(np.unique(current_glue_values, axis=0)) > 1
+        self.sync = {**self.sync,
+                     'mixed': mixed}
 
     def _on_value_changed(self, msg):
         #print("_on_value_changed", msg['new'], self._processing_change_from_glue)
@@ -1432,6 +1443,8 @@ class PlotOptionsSyncState(BasePluginComponent):
         self._processing_change_to_glue = True
         for glue_state in self.linked_states:
             setattr(glue_state, self._glue_name, msg['new'])
+        # need to recompute mixed state
+        self._update_mixed_state()
         self._processing_change_to_glue = False
 
     def _on_glue_value_changed(self, value):
@@ -1442,13 +1455,8 @@ class PlotOptionsSyncState(BasePluginComponent):
         if "Colormap" in value.__class__.__name__:  # TODO: better logic
             value = str(value)
         self.value = value
-        if len(self.linked_states) > 1:
-            # need to recompute mixed state
-            current_glue_values = []
-            for state in self.linked_states:
-                current_glue_values.append(getattr(state, self._glue_name))
-            self.sync = {**self.sync,
-                         'mixed': len(np.unique(current_glue_values)) > 1}
+        # need to recompute mixed state
+        self._update_mixed_state()
         self._processing_change_from_glue = False
 
     def unmix_state(self):
