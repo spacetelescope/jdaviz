@@ -174,8 +174,8 @@ class SpectrumPerSpaxel(CheckableTool):
 
     def highlight_pixel(self, x, y):
         # Creates a box that outlines the pixel at coordinate (x, y)
-        x_coords = [x - 0.5, x + 0.5, x + 0.5, x - 0.5]
-        y_coords = [y - 0.5, y - 0.5, y + 0.5, y + 0.5]
+        x_coords = [[x - 0.5, x + 0.5], [x - 0.5, x + 0.5]]
+        y_coords = [[y - 0.5, y + 0.5], [y + 0.5, y - 0.5]]
 
         # Create LinearScale that is the same size as the image viewer
         scales = {'x': self.viewer.figure.interaction.x_scale,
