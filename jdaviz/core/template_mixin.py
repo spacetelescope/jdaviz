@@ -337,7 +337,7 @@ class BaseSelectPluginComponent(BasePluginComponent, HasTraits):
 
     def _selected_changed(self, event):
         self._clear_cache()
-        if self.is_multiselect:
+        if self.is_multiselect and isinstance(event['new'], list):
             if not np.all([item in self.labels + [''] for item in event['new']]):
                 self._apply_default_selection()
                 raise ValueError(f"not all items in {event['new']} are one of {self.labels}")
@@ -865,11 +865,24 @@ class ViewerSelect(BaseSelectPluginComponent):
         return self._get_selected_obj(self.selected, self.selected_id)
 
     def _selected_changed(self, event):
-        if event['new'] not in self.labels + self.manual_options:
-            if self.selected in self.ids:
-                # provided id in place of ref
-                self.selected = self.labels[self.ids.index(self.selected)]
-                return
+        self._clear_cache()
+        if self.is_multiselect and isinstance(event['new'], list):
+            new_selected = []
+            for entry in event['new']:
+                if entry in self.labels + self.manual_options:
+                    new_selected.append(entry)
+                elif entry in self.ids:
+                    new_selected.append(self.labels[self.ids.index(entry)])
+                else:
+                    raise ValueError(f"could not map {entry} to valid choice")
+            self.selected = new_selected
+            return
+        else:
+            if event['new'] not in self.labels + self.manual_options:
+                if self.selected in self.ids:
+                    # provided id in place of ref
+                    self.selected = self.labels[self.ids.index(self.selected)]
+                    return
         return super()._selected_changed(event)
 
     def _is_valid_item(self, viewer):

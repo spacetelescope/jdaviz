@@ -145,8 +145,8 @@ class SelectLine(CheckableTool, HubListener):
 
 
 class _BaseSidebarShortcut(Tool):
-    plugin_label = None  # define in subclass
-    viewer_select_traitlet = 'viewer_selected'
+    plugin_name = None  # define in subclass
+    viewer_attr = 'viewer'
 
     def activate(self):
         jdaviz_state = self.viewer.jdaviz_app.state
@@ -156,13 +156,16 @@ class _BaseSidebarShortcut(Tool):
         if index not in jdaviz_state.tray_items_open:
             jdaviz_state.tray_items_open = jdaviz_state.tray_items_open + [index]
         plugin = self.viewer.jdaviz_app.get_tray_item_from_name(self.plugin_name)
-        setattr(plugin, self.viewer_select_traitlet, self.viewer.reference_id)
+        viewer_id = self.viewer.reference_id
+        viewer_select = getattr(plugin, self.viewer_attr)
+        if viewer_select.multiselect:
+            viewer_id = [viewer_id]
+        setattr(viewer_select, 'selected', viewer_id)
 
 
 @viewer_tool
 class SidebarShortcutPlotOptions(_BaseSidebarShortcut):
     plugin_name = 'g-plot-options'
-    viewer_select_traitlet = 'viewer_selected'
 
     icon = os.path.join(ICON_DIR, 'tune.svg')
     tool_id = 'jdaviz:sidebar_plot'
@@ -173,7 +176,6 @@ class SidebarShortcutPlotOptions(_BaseSidebarShortcut):
 @viewer_tool
 class SidebarShortcutExportPlot(_BaseSidebarShortcut):
     plugin_name = 'g-export-plot'
-    viewer_select_traitlet = 'viewer_selected'
 
     icon = os.path.join(ICON_DIR, 'image.svg')
     tool_id = 'jdaviz:sidebar_export'
@@ -184,7 +186,6 @@ class SidebarShortcutExportPlot(_BaseSidebarShortcut):
 @viewer_tool
 class SidebarShortcutCompass(_BaseSidebarShortcut):
     plugin_name = 'imviz-compass'
-    viewer_select_traitlet = 'viewer_selected'
 
     icon = os.path.join(ICON_DIR, 'compass.svg')
     tool_id = 'jdaviz:sidebar_compass'
