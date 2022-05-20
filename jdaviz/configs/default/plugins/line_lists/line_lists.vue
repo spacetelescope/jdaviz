@@ -275,7 +275,7 @@
                   </v-row>
                   <v-row class="row-min-bottom-padding">
                     <v-col cols=6 style="padding-bottom: 0px; padding-top: 0px">
-                      <v-subheader class="pl-0 slider-label"><b>Rest</b/></v-subheader>
+                      <v-subheader class="pl-0 slider-label" style="height: 16px"><b>Rest</b/></v-subheader>
                       <v-text-field
                         v-model="line.rest"
                         class="mt-0 pt-0"
