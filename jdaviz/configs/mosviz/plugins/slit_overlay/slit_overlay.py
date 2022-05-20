@@ -76,16 +76,19 @@ class SlitOverlay(TemplateMixin):
         self.remove_slit_overlay()
 
         # Get data from relevant viewers
+        image_viewer = self.app.get_viewer("image-viewer")
         image_data = self.app.get_viewer("image-viewer").state.reference_data
-        spec2d_data = self.app.get_viewer("spectrum-2d-viewer").data()
+
+        # Must hardcode this or Mosviz Example notebook shows slit on wrong location.
+        spec2d_data = self.app.data_collection['2D Spectrum 0']
 
         # 'S_REGION' contains slit information. Bypass in case no images exist.
         if image_data is not None:
             # Only use S_REGION for Nirspec data, turn the plugin off
             # if other data is loaded
-            if (len(spec2d_data) > 0 and 'S_REGION' in spec2d_data[0].meta
-                    and spec2d_data[0].meta.get('INSTRUME', '').lower() == "nirspec"):
-                header = spec2d_data[0].meta
+            if (spec2d_data is not None and 'S_REGION' in spec2d_data.meta
+                    and spec2d_data.meta.get('INSTRUME', '').lower() == "nirspec"):
+                header = spec2d_data.meta
                 sky_region = jwst_header_to_skyregion(header)
 
                 # Use wcs of image viewer to scale slit dimensions correctly
@@ -97,14 +100,13 @@ class SlitOverlay(TemplateMixin):
                 x_coords = pix_rec.vertices.x
                 y_coords = pix_rec.vertices.y
 
-                fig_image = self.app.get_viewer("image-viewer").figure
+                fig_image = image_viewer.figure
 
-                if self.app.get_viewer("image-viewer").toolbar.active_tool is not None:
-                    self.app.get_viewer("image-viewer").toolbar.active_tool = None
+                if image_viewer.toolbar.active_tool is not None:
+                    image_viewer.toolbar.active_tool = None
 
                 # Create LinearScale that is the same size as the image viewer
                 scales = {'x': fig_image.interaction.x_scale, 'y': fig_image.interaction.y_scale}
-
                 # Create slit
                 patch2 = bqplot.Lines(x=x_coords, y=y_coords, scales=scales,
                                       fill='none', colors=["red"], stroke_width=2,
@@ -112,6 +114,7 @@ class SlitOverlay(TemplateMixin):
 
                 # Visualize slit on the figure
                 fig_image.marks = fig_image.marks + [patch2]
+                image_viewer.center_on((pixel_region.center.x, pixel_region.center.y))
 
                 self._slit_overlay_mark = patch2
 

@@ -82,6 +82,9 @@ Imviz
 Mosviz
 ^^^^^^
 
+- Fixed slit not always around the correct object in Mosviz example
+  notebook. [#1335]
+
 Specviz
 ^^^^^^^
 
