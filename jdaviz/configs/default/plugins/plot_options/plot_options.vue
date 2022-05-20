@@ -18,6 +18,7 @@
       :selected.sync="viewer_selected"
       :multiselect="multiselect"
       :label="multiselect ? 'Viewers' : 'Viewer'"
+      :show_if_single_entry="multiselect"
       :hint="multiselect ? 'Select viewers to set options simultaneously' : 'Select the viewer to set options.'"
     />
 
@@ -73,9 +74,12 @@
       </div>
     </glue-state-sync-wrapper>
 
-    <v-row v-if="line_width_sync.in_subscribed_states">
-      <span>TODO: uncertainty (needs to handle custom implementation)</span>
-    </v-row>
+    <glue-state-sync-wrapper v-if="config !== 'cubeviz'" :sync="uncertainty_sync" :multiselect="multiselect" @unmix-state="unmix_state('uncertainty')">
+      <v-switch
+        v-model="uncertainty_value"
+        label="Plot uncertainties"
+        />
+    </glue-state-sync-wrapper>
 
     <!-- IMAGE -->
     <!-- IMAGE:STRETCH -->

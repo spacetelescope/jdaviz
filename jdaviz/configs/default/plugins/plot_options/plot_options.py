@@ -28,14 +28,6 @@ class PlotOptions(TemplateMixin):
     viewer_widget = Any().tag(sync=True, **widget_serialization)
     layer_widget = Any().tag(sync=True, **widget_serialization)
 
-    # Whether the currently selected viewer has the ability to toggle uncertainty
-    has_show_uncertainty = Bool(False).tag(sync=True)
-    # Toggle for showing uncertainty in the currently selected viewer
-    show_uncertainty = Bool(False).tag(sync=True)
-
-    # shared viewer options:
-
-
     # spectrum viewer/layer options:
     collapse_func_value = Unicode().tag(sync=True)
     collapse_func_sync = Dict().tag(sync=True)
@@ -117,7 +109,7 @@ class PlotOptions(TemplateMixin):
         self.line_color = PlotOptionsSyncState(self, self.viewer, self.layer, 'color', 'line_color_value', 'line_color_sync', state_filter=is_profile)
         self.line_width = PlotOptionsSyncState(self, self.viewer, self.layer, 'linewidth', 'line_width_value', 'line_width_sync')
         self.line_opacity = PlotOptionsSyncState(self, self.viewer, self.layer, 'alpha', 'line_opacity_value', 'line_opacity_sync', state_filter=is_profile)
-        #self.uncertainty = PlotOptionsSyncState(self, self.viewer, self.layer, None, 'uncertainty_value', 'uncertainty_sync')
+        self.uncertainty = PlotOptionsSyncState(self, self.viewer, self.layer, 'show_uncertainty', 'uncertainty_value', 'uncertainty_sync')
 
         # Image viewer/layer options:
         self.stretch = PlotOptionsSyncState(self, self.viewer, self.layer, 'stretch', 'stretch_value', 'stretch_sync', state_filter=not_profile)
