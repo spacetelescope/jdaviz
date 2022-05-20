@@ -46,7 +46,7 @@
           ></j-viewer-data-select-item>
         </v-row>
 
-        <div v-if="viewer.config === 'mosviz'" style="margin-bottom: -8px">
+        <div v-if="viewer.config === 'mosviz' && mosvizExtraDataItems.length" style="margin-bottom: -8px">
           <v-row key="mosviz-expand" style="padding-left: 25px; margin-right: 0px; padding-bottom: 4px; background-color: #E3F2FD"> 
             <span 
               @click="toggleMosvizShowExtraItems"
@@ -58,7 +58,7 @@
             </span>
           </v-row>
 
-          <v-row v-for="item in mosvizExtraDataItems"  :key="item.id" style="padding-left: 25px; margin-right: 0px">
+          <v-row v-if="mosvizShowExtraItems" v-for="item in mosvizExtraDataItems"  :key="item.id" style="padding-left: 25px; margin-right: 0px">
             <j-viewer-data-select-item
               :item="item"
               :viewer="viewer"
@@ -116,10 +116,6 @@ module.exports = {
           return false
         } else if (item.meta.mosviz_row !== undefined) {
           if (mosvizExtraItems) {
-            // then show ONLY items from OTHER rows
-            if (!this.mosvizShowExtraItems) {
-              return false
-            }
             // then show only plugin items and only those in a different row
             return item.meta.mosviz_row !== this.$props.app_settings.mosviz_row
           } else {
@@ -127,7 +123,7 @@ module.exports = {
             return item.meta.mosviz_row == this.$props.app_settings.mosviz_row
           }
         }
-        return true
+        return !mosvizExtraItems
       } else if (this.$props.viewer.config === 'cubeviz') {
         if (this.$props.viewer.reference === 'spectrum-viewer') {
           if (item.meta.Plugin === undefined) {

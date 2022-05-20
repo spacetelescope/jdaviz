@@ -1234,19 +1234,27 @@ class Application(VuetifyTemplate, HubListener):
     def _create_data_item(data):
         ndims = len(data.shape)
         wcsaxes = data.meta.get('WCSAXES', None)
+        if wcsaxes is None:
+            # then we'll need to determine type another way, we want to avoid
+            # this when we can though since its not as cheap
+            component_ids = [str(c) for c in data.component_ids()]
         if data.label == 'MOS Table':
             typ = 'table'
         elif ndims == 1:
             typ = '1d spectrum'
-        elif ndims == 2 and wcsaxes == 3:
-            typ = '2d spectrum'
-        elif ndims == 2 and wcsaxes == 2:
-            typ = 'image'
+        elif ndims == 2 and wcsaxes is not None:
+            if wcsaxes == 3:
+                typ = '2d spectrum'
+            elif wcsaxes == 2:
+                typ = 'image'
+            else:
+                typ = 'unknown'
+        elif ndims == 2 and wcsaxes is None:
+            typ = '2d spectrum' if 'Wavelength' in component_ids else 'image'
         elif ndims == 3:
             typ = 'cube'
         else:
             typ = 'unknown'
-
         return {
             'id': str(uuid.uuid4()),
             'name': data.label,
