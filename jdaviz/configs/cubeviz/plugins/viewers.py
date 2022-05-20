@@ -28,7 +28,8 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
     tools_nested = [
                     ['bqplot:home'],
                     ['jdaviz:boxzoom', 'bqplot:panzoom'],
-                    ['bqplot:circle', 'bqplot:rectangle', 'jdaviz:spectrumperspaxel'],
+                    ['bqplot:circle', 'bqplot:rectangle'],
+                    ['jdaviz:spectrumperspaxel'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
 

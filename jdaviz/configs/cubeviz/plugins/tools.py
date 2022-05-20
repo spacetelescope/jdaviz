@@ -9,6 +9,8 @@ from specutils import Spectrum1D
 
 from jdaviz.core.events import SliceSelectWavelengthMessage, SliceToolStateMessage
 from jdaviz.core.marks import SelectedPixel
+from jdaviz.core.events import SnackbarMessage
+
 
 __all__ = ['SelectSlice', 'SpectrumPerSpaxel']
 
@@ -95,16 +97,21 @@ class SpectrumPerSpaxel(CheckableTool):
             new_y_min = 0
             new_y_max = 0
 
+            # Check if there are any cubes in the viewer
+            cube_in_viewer = False
+
             # Spectrum is created for each active layer in the viewer
             for data in self.viewer.data():
                 if len(data.shape) != 3:
-                    return
+                    continue
+                cube_in_viewer = True
 
                 cube = data.get_object(cls=Spectrum1D, statistic=None)
                 if x > cube.shape[0] or y > cube.shape[1] or x < 0 or y < 0:
                     return
 
-                spec = Spectrum1D(flux=cube.flux[x][y], spectral_axis=cube.spectral_axis)
+                spec = Spectrum1D(flux=cube.flux[x][y], spectral_axis=cube.spectral_axis,
+                                  meta=cube.meta)
                 label = f"{data.label}_at_pixel"
 
                 # Remove data from viewer, re-add data to app, and then add data
@@ -119,9 +126,10 @@ class SpectrumPerSpaxel(CheckableTool):
                 dc = self.viewer.session.data_collection
                 dc[label].meta["reference_data"] = data.label
                 dc[label].meta["created_from_pixel"] = f"({x}, {y})"
+                dc[label].meta["Plugin"] = "Spectrum per spaxel"
 
-                # Set color of spectrum to magenta to not conflict with subset colors
-                self.spectrum_viewer.figure.marks[-1].colors = self.colors
+                # Set color of spectrum to not conflict with subset colors
+                self.spectrum_viewer.state.layers[-1].color = self.colors[0]
 
                 # Link newly created spectrum to reference data
                 ref_cube = self.spectrum_viewer.state.reference_data
@@ -134,17 +142,29 @@ class SpectrumPerSpaxel(CheckableTool):
                 if min(spec.flux.value) < new_y_min:
                     new_y_min = min(spec.flux.value)
 
+            # Flux viewer is empty or contains only 2D images
+            if not cube_in_viewer:
+                self.remove_highlight_on_pixel()
+                msg = SnackbarMessage("No cube in viewer, cannot create spectrum from pixel",
+                                      sender=self, color="warning")
+                self.viewer.session.hub.broadcast(msg)
+                return
+
             with delay_callback(self.spectrum_viewer.state, 'y_min', 'y_max'):
                 self.spectrum_viewer.state.y_min, self.spectrum_viewer.state.y_max = (new_y_min,
                                                                                       new_y_max)
 
     def link_data(self, data1, data2):
+        # If spectrum is also reference data
         if data1.label == data2.label:
             return
+
         world1 = data1.world_component_ids
         world2 = data2.world_component_ids
+        # Reference data is cube
         if len(world1) == 3 and len(world2) == 1:
             links = [LinkSame(world1[2], world2[0])]
+        # Reference data is 1D spectrum
         elif len(world1) == 1 and len(world2) == 1:
             links = [LinkSame(world1[0], world2[0])]
         else:
