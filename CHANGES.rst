@@ -34,6 +34,9 @@ Mosviz
 Specviz
 ^^^^^^^
 
+- Line List Spectral Range filter displays only lines with an observed
+  wavelength within the range of the spectrum viewer [#1327]
+
 API Changes
 -----------
 
