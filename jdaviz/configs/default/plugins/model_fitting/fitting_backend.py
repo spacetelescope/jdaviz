@@ -165,27 +165,38 @@ def _fit_3D(initial_model, spectrum, window=None, n_cpu=None):
 
     # Run multiprocessor pool to fit each spaxel and
     # compute model values on that same spaxel.
-    results = []
-    pool = Pool(n_cpu)
+    if n_cpu > 1:
+        results = []
+        pool = Pool(n_cpu)
 
-    # The communicate overhead of spawning a process for each *individual*
-    # parameter set is prohibitively high (it's actually faster to run things
-    # sequentially). Instead, chunk the spaxel list based on the number of
-    # available processors, and have each processor do the model fitting
-    # on the entire subset of spaxel tuples, then return the set of results.
-    for spx in np.array_split(spaxels, n_cpu):
-        # Worker for the multiprocess pool.
+        # The communicate overhead of spawning a process for each *individual*
+        # parameter set is prohibitively high (it's actually faster to run things
+        # sequentially). Instead, chunk the spaxel list based on the number of
+        # available processors, and have each processor do the model fitting
+        # on the entire subset of spaxel tuples, then return the set of results.
+        for spx in np.array_split(spaxels, n_cpu):
+            # Worker for the multiprocess pool.
+            worker = SpaxelWorker(spectrum.flux,
+                                  spectrum.spectral_axis,
+                                  initial_model,
+                                  param_set=spx,
+                                  window=window)
+            r = pool.apply_async(worker, callback=collect_result)
+            results.append(r)
+        for r in results:
+            r.wait()
+
+        pool.close()
+
+    # This route is only for dev debugging because it is very slow
+    # but exceptions will not get swallowed up by multiprocessing.
+    else:  # pragma: no cover
         worker = SpaxelWorker(spectrum.flux,
                               spectrum.spectral_axis,
                               initial_model,
-                              param_set=spx,
+                              param_set=spaxels,
                               window=window)
-        r = pool.apply_async(worker, callback=collect_result)
-        results.append(r)
-    for r in results:
-        r.wait()
-
-    pool.close()
+        collect_result(worker())
 
     # Build output 3D spectrum
     funit = spectrum.flux.unit

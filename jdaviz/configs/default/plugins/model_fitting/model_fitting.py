@@ -264,7 +264,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             self._window = None
         else:
             spectral_min, spectral_max = self.spectral_subset.selected_min_max(self._spectrum1d)
-            self._window = (spectral_min.value, spectral_max.value)
+            self._window = u.Quantity([spectral_min, spectral_max])
 
     @observe('comp_selected', 'poly_order')
     def _update_comp_label_default(self, event={}):

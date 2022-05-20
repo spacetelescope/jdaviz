@@ -66,6 +66,9 @@ Cubeviz
 - Parser now respects user-provided ``data_label`` when ``Spectrum1D``
   object is loaded. Previously, it only had effect on FITS data. [#1315]
 
+- Fixed a bug where fitting a model to the entire cube returns all
+  zeroes on failure. [#1333]
+
 Imviz
 ^^^^^
 
