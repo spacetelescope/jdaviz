@@ -26,6 +26,9 @@ from jdaviz.core.validunits import create_spectral_equivalencies_list
 
 __all__ = ['LineListTool']
 
+# Set the base unit of this plugin to the SI base unit for length: meters
+BASE_WAVE_UNIT = u.m
+
 
 @tray_registry('g-line-list', label="Line Lists")
 class LineListTool(PluginTemplateMixin):
@@ -303,6 +306,11 @@ class LineListTool(PluginTemplateMixin):
                     line_list['lines'][i]['obs'] = self._rs_line_obs_change[2]
                 else:
                     line_list['lines'][i]['obs'] = self._rest_to_obs(float(line['rest']))
+
+                # Keep a copy of the observed wavelength in the base unit for this plugin
+                line_list['lines'][i]['obs_meter'] = (line_list['lines'][i]['obs'] * u.Unit(
+                                                        line_list['lines'][i]['unit'])
+                                                      ).to(BASE_WAVE_UNIT).value
 
             new_list_contents[list_name] = line_list
 
