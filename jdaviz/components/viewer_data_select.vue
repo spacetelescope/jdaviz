@@ -170,7 +170,8 @@ module.exports = {
   },
   computed: {
     viewerTitleCase() {
-      return this.$props.viewer.reference.toLowerCase().replaceAll('-', ' ').split(' ').map((word) => {return (word.charAt(0).toUpperCase() + word.slice(1))}).join(' ');
+      var title = this.$props.viewer.reference || this.$props.viewer.id
+      return title.toLowerCase().replaceAll('-', ' ').split(' ').map((word) => {return (word.charAt(0).toUpperCase() + word.slice(1))}).join(' ');
     },
     showModeToggle() {
       if (this.$props.viewer.config === 'cubeviz') {
