@@ -1119,8 +1119,6 @@ class Application(VuetifyTemplate, HubListener):
         self._update_selected_data_items(viewer_id, selected_items)
 
     def vue_data_item_remove(self, event):
-        """
-        """
         self.data_collection.remove(self.data_collection[event['item_name']])
 
     def vue_close_snackbar_message(self, event):
@@ -1255,11 +1253,13 @@ class Application(VuetifyTemplate, HubListener):
             typ = 'cube'
         else:
             typ = 'unknown'
+        # we'll expose any information we need here.  For "meta", not all entries are guaranteed
+        # to be serializable, so we'll just send those that we need.
         return {
             'id': str(uuid.uuid4()),
             'name': data.label,
             'locked': False,
-            'ndims': len(data.shape),
+            'ndims': data.ndim,
             'type': typ,
             'meta': {k: v for k, v in data.meta.items() if k in ['Plugin', 'mosviz_row']},
             'children': []}

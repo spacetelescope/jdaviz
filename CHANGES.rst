@@ -6,7 +6,7 @@ New Features
 
 - Line list plugin now supports exact-text filtering on line names. [#1298]
 - Added a Subset Tools plugin for viewing information about defined subsets. [#1292]
-- Data menus in the viewers are filtered to applicable entries only and support removing data from
+- Data menus in the viewers are filtered to applicable entries only and support removing generated data from
   the app. [#1313]
 
 - Offscreen indication for spectral lines and slice indicator. [#1312]

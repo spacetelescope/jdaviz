@@ -234,13 +234,11 @@ class MosvizTableViewer(TableViewer, JdavizViewerMixin):
         for data_item in self.jdaviz_app.data_collection:
             if data_item.meta.get('Plugin') is not None:
                 if data_item.meta.get('mosviz_row') == selected_index:
-                    add_data_to_viewer_message = AddDataToViewerMessage(
-                        'spectrum-viewer', data_item.label, sender=self)
-                    self.session.hub.broadcast(add_data_to_viewer_message)
+                    self.session.hub.broadcast(AddDataToViewerMessage(
+                        'spectrum-viewer', data_item.label, sender=self))
                 else:
-                    remove_data_from_viewer_message = RemoveDataFromViewerMessage(
-                        'spectrum-viewer', data_item.label, sender=self)
-                    self.session.hub.broadcast(remove_data_from_viewer_message)
+                    self.session.hub.broadcast(RemoveDataFromViewerMessage(
+                        'spectrum-viewer', data_item.label, sender=self))
 
         for component in mos_data.components:
             comp_data = mos_data.get_component(component).data
