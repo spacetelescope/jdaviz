@@ -4,7 +4,6 @@ import os
 from glue.config import viewer_tool
 from glue.viewers.common.tool import CheckableTool
 from glue.core.link_helpers import LinkSame
-from echo import delay_callback
 from specutils import Spectrum1D
 
 from jdaviz.core.events import SliceSelectWavelengthMessage, SliceToolStateMessage
@@ -75,14 +74,9 @@ class SpectrumPerSpaxel(CheckableTool):
         self.viewer.add_event_callback(self.on_mouse_event,
                                        events=['click'])
         self.spectrum_viewer = self.viewer.jdaviz_app.get_viewer_by_id("cubeviz-3")
-        # self.old_y_min, self.old_y_max = (self.spectrum_viewer.state.y_min,
-        #                                   self.spectrum_viewer.state.y_max)
 
     def deactivate(self):
         self.viewer.remove_event_callback(self.on_mouse_event)
-        # with delay_callback(self.spectrum_viewer.state, 'y_min', 'y_max'):
-        #     self.spectrum_viewer.state.y_min, self.spectrum_viewer.state.y_max = (self.old_y_min,
-        #                                                                           self.old_y_max)
         self.remove_highlight_on_pixel()
         for label in self.created_data_labels:
             self.viewer.jdaviz_app.remove_data_from_viewer("spectrum-viewer", label)
@@ -100,9 +94,6 @@ class SpectrumPerSpaxel(CheckableTool):
 
             self.remove_highlight_on_pixel()
             self.highlight_pixel(x, y)
-
-            # new_y_min = 0
-            # new_y_max = 0
 
             # Check if there are any cubes in the viewer
             cube_in_viewer = False
@@ -144,12 +135,6 @@ class SpectrumPerSpaxel(CheckableTool):
                 new_spec = dc[label]
                 self.link_data(ref_cube, new_spec)
 
-                # # Set y limits based on the new spectrum or spectra being created
-                # if max(spec.flux.value) > new_y_max:
-                #     new_y_max = max(spec.flux.value)
-                # if min(spec.flux.value) < new_y_min:
-                #     new_y_min = min(spec.flux.value)
-
             # Flux viewer is empty or contains only 2D images
             if not cube_in_viewer:
                 self.remove_highlight_on_pixel()
@@ -157,10 +142,6 @@ class SpectrumPerSpaxel(CheckableTool):
                                       sender=self, color="warning")
                 self.viewer.session.hub.broadcast(msg)
                 return
-
-            # with delay_callback(self.spectrum_viewer.state, 'y_min', 'y_max'):
-            #     self.spectrum_viewer.state.y_min, self.spectrum_viewer.state.y_max = (new_y_min,
-            #                                                                           new_y_max)
 
     def link_data(self, data1, data2):
         # If spectrum is also reference data
