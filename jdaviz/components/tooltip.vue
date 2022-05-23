@@ -46,6 +46,11 @@ const tooltips = {
   'viewer-toolbar-figure-save': 'Save figure',
   'viewer-toolbar-menu': 'Adjust display: contrast, bias, stretch',
   'viewer-toolbar-more': 'More options...',
+  'viewer-data-select-enabled': 'Allow multiple entries (click to enable replace)',
+  'viewer-data-radio-enabled': 'Replace current entry (click to enable multi-select)',
+  'viewer-data-select': 'Toggle whether data entry is loaded in the viewer',
+  'viewer-data-radio': 'Change viewer to this data entry',
+  'viewer-data-delete': 'Remove data entry across entire app',
 
   'table-prev': 'Select previous row in table',
   'table-next': 'Select next row in table',

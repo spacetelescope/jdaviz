@@ -38,10 +38,13 @@
                   v-for="(stack, index) in state.stack_items"
                   :stack="stack"
                   :key="stack.viewers.map(v => v.id).join('-')"
-                  :data-items="state.data_items"
+                  :data_items="state.data_items"
+                  :app_settings="state.settings"
+                  :icons="state.icons"
                   @resize="relayout"
                   :closefn="destroy_viewer_item"
                   @data-item-selected="data_item_selected($event)"
+                  @data-item-remove="data_item_remove($event)"
                   @call-viewer-method="call_viewer_method($event)"
                 ></g-viewer-tab>
               </gl-row>
@@ -134,6 +137,7 @@ export default {
       secondary: "#007DA4",
       accent: "#C75109",
       turquoise: "#007BA1",
+      lightblue: "#E3F2FD",  // matches highlighted row in MOS table
       spinner: "#163C4C",
       error: '#FF5252',
       info: '#2196F3',
@@ -147,6 +151,7 @@ export default {
       secondary: "#007DA4",
       accent: "#C75109",
       turquoise: "#007BA1",
+      lightblue: "#E3F2FD",
       spinner: "#ACE1FF",
       error: '#FF5252',
       info: '#2196F3',

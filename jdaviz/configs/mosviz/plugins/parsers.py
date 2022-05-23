@@ -221,9 +221,10 @@ def mos_spec1d_parser(app, data_obj, data_labels=None):
 
     with app.data_collection.delay_link_manager_update():
 
-        for cur_data, cur_label in zip(data_obj, data_labels):
+        for i, (cur_data, cur_label) in enumerate(zip(data_obj, data_labels)):
             # Make metadata layout conform with other viz.
             cur_data.meta = standardize_metadata(cur_data.meta)
+            cur_data.meta['mosviz_row'] = i
 
             app.add_data(cur_data, cur_label, notify_done=False)
 
@@ -296,6 +297,7 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
             # TODO: this should not be set to nirspec for all datasets
             data.meta['INSTRUME'] = 'nirspec'
 
+            data.meta['mosviz_row'] = index
             # Get the corresponding label for this data product
             label = data_labels[index]
 
@@ -382,6 +384,7 @@ def mos_image_parser(app, data_obj, data_labels=None, share_image=0):
 
         for i in n_data_range:
             data_obj[i].label = data_labels[i]
+            data_obj[i].meta['mosviz_row'] = i
             app.add_data(data_obj[i], data_labels[i], notify_done=False)
 
         if share_image:
@@ -646,6 +649,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                         spec2d = Spectrum1D(data * u.one, spectral_axis=wav, meta=meta)
 
                         spec2d.meta['INSTRUME'] = 'NIRISS'
+                        spec2d.meta['mosviz_row'] = len(spec_labels_2d)
 
                         label = f"{filter_name} Source {temp[sci].header['SOURCEID']} spec2d {orientation}"  # noqa
                         ra, dec = pupil_id_dict[filter_name][temp[sci].header["SOURCEID"]]
@@ -684,6 +688,7 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                 for spec in specs:
                     # Make metadata layout conform with other viz.
                     spec.meta = standardize_metadata(spec.meta)
+                    spec.meta['mosviz_row'] = len(spec_labels_1d)
 
                     if spec.meta['SPORDER'] == 1 and spec.meta['EXTNAME'] == "EXTRACT1D":
                         label = f"{filter_name} Source {spec.meta['SOURCEID']} spec1d {orientation}"

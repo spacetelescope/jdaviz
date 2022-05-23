@@ -414,7 +414,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     @observe("dataset_selected", "dataset_items", "cube_fit")
     def _set_default_results_label(self, event={}):
         label_comps = []
-        if hasattr(self, 'dataset') and len(self.dataset.labels) > 1:
+        if hasattr(self, 'dataset') and (len(self.dataset.labels) > 1 or self.app.config == 'mosviz'):  # noqa
             label_comps += [self.dataset_selected]
         if self.cube_fit:
             label_comps += ["cube-fit"]
