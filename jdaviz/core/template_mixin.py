@@ -1087,6 +1087,9 @@ class DatasetSelect(BaseSelectPluginComponent):
         def is_image(data):
             return len(data.shape) == 3
 
+        if data.meta.get('Plugin', None) == 'Simple Image Rotation':
+            return False
+
         return super()._is_valid_item(data, locals())
 
     @observe('filters')

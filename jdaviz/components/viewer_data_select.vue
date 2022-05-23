@@ -114,7 +114,10 @@ module.exports = {
       return true
     },
     itemIsVisible(item, mosvizExtraItems) {
-      if (this.$props.viewer.config === 'mosviz') {
+      if (item.meta.Plugin === 'Simple Image Rotation') {
+        // hide dummy image with fake WCS from that plugin
+        return false
+      } else if (this.$props.viewer.config === 'mosviz') {
         if (this.$props.viewer.reference === 'spectrum-viewer' && item.type !== '1d spectrum') {
           // filters out table, spectrum 2d, images
           return false

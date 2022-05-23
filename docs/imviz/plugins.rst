@@ -251,3 +251,39 @@ The columns are as follow:
 
 Once you have the results in a table, you can further manipulated them as
 documented in :ref:`astropy:astropy-table`.
+
+
+.. _rotate-image-simple:
+
+Simple Image Rotation
+=====================
+
+.. warning::
+
+    Distortion is ignored, so using this plugin on distorted data is
+    not recommended.
+
+.. note::
+
+    Zoom box in :ref:`imviz-compass` will not show when rotation mode is on.
+
+This plugins rotates image(s) by its celestial axes by the given angle.
+You can toggle the rotation mode on and off. You can select viewer and data
+but those options only show when applicable. You can enter the desired
+rotation angle in degrees. When the angle is zero, it will align image(s) to
+N-up and E-left orientation. If an image does not have a valid WCS, it will
+not be rotated. Click on the :guilabel:`ROTATE` button to finalize.
+
+Given that this plugin affects the linking of the entire data collection
+in Imviz by introducing a hidden data layer with the desired WCS,
+it is not recommended to keep toggling this on and off continuously.
+You might also notice some lag when a lot of images are loaded.
+
+Furthermore, linking is global across Imviz, regardless of the viewer.
+Therefore, when WCS is rotated in one viewer, it will propagate to
+the other viewers when multiple viewers are open.
+
+Toggling the rotation mode off would re-orient the viewer to have
+Y-up and X-right for the original reference data but the other data
+would still be linked to it by WCS. To change the linking back to pixels,
+use the :ref:`imviz-link-control` plugin.

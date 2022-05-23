@@ -481,13 +481,19 @@ def layer_is_image_data(layer):
     return isinstance(layer, BaseData) and layer.ndim == 2
 
 
+def layer_is_hidden(layer):
+    # This is fake image with rotated WCS from the plugin.
+    return layer.meta.get('Plugin', '') == 'Simple Image Rotation'
+
+
 def get_top_layer_index(viewer):
     """Get index of the top visible image layer in Imviz.
     This is because when blinked, first layer might not be top visible layer.
 
     """
     return [i for i, lyr in enumerate(viewer.layers)
-            if lyr.visible and layer_is_image_data(lyr.layer)][-1]
+            if (lyr.visible and layer_is_image_data(lyr.layer) and
+                not layer_is_hidden(lyr.layer))][-1]
 
 
 def get_reference_image_data(app):

@@ -1017,12 +1017,19 @@ class Application(VuetifyTemplate, HubListener):
 
         Returns
         -------
-        `~glue_jupyter.bqplot.common.BqplotBaseView`
+        viewer : `~glue_jupyter.bqplot.common.BqplotBaseView`
             The viewer class instance.
         """
         viewer_item = self._viewer_item_by_reference(reference)
 
-        return self._viewer_store[viewer_item['id']]
+        # There is a degeneracy between reference and ID.
+        # Imviz falls back to ID for user-created viewers.
+        if viewer_item is not None:
+            viewer = self._viewer_store[viewer_item['id']]
+        else:  # Maybe it is ID
+            viewer = self._viewer_store[reference]
+
+        return viewer
 
     def _viewer_item_by_reference(self, reference):
         """
@@ -1218,10 +1225,12 @@ class Application(VuetifyTemplate, HubListener):
 
             # Make everything visible again in Imviz.
             if self.config == 'imviz':
-                from jdaviz.configs.imviz.helper import layer_is_image_data
+                from jdaviz.configs.imviz.helper import layer_is_image_data, layer_is_hidden
 
                 for lyr in viewer.state.layers:
-                    if layer_is_image_data(lyr.layer):
+                    if layer_is_hidden(lyr.layer):
+                        lyr.visible = False
+                    elif layer_is_image_data(lyr.layer):
                         lyr.visible = True
                 viewer.on_limits_change()  # Trigger compass redraw
 

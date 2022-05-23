@@ -18,6 +18,9 @@ Cubeviz
 Imviz
 ^^^^^
 
+- New Simple Image Rotation plugin to rotate the celestial axes of
+  images if they have valid WCS. [#1340]
+
 Mosviz
 ^^^^^^
 

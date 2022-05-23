@@ -1,6 +1,3 @@
-# This is adapted from Ginga (ginga.util.wcs, ginga.trcalc, and ginga.Bindings.ImageViewBindings).
-# Please see the file licenses/GINGA_LICENSE.txt for details.
-#
 """This module handles calculations based on world coordinate system (WCS)."""
 
 import base64
@@ -10,10 +7,59 @@ from io import BytesIO
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy.coordinates import SkyCoord
+from astropy.wcs import WCS
 from matplotlib.patches import Rectangle
 
-__all__ = ['get_compass_info', 'draw_compass_mpl']
+__all__ = ['generate_rotated_wcs', 'get_compass_info', 'draw_compass_mpl']
 
+
+# This is adapted from MPDAF lib/mpdaf/obj/coords.py module.
+# Please see the file licenses/MPDAF_LICENSE.txt for details.
+
+def generate_rotated_wcs(theta, shape=(2, 2)):
+    """Create a FITS WCS with N-up, E-left, and the desired rotation.
+    This does not take distortions into account.
+
+    Parameters
+    ----------
+    theta : float
+        This can be used to specify a value for the rotation angle of the
+        image in degrees. This is the angle between celestial north and the Y
+        axis of the image (positive is clockwise).
+
+    shape : tuple of int
+        Image shape that the WCS corresponds to in the form of ``(ny, nx)``.
+
+    Returns
+    -------
+    w_out : `astropy.wcs.WCS`
+        FITS WCS with rotation applied.
+
+    References
+    ----------
+    .. [1] Calabretta, M. R., & Greisen, E. W. 2002, A&A, 395, 1077-1122
+
+    """
+    w_out = WCS({'CTYPE1': 'RA---TAN', 'CTYPE2': 'DEC--TAN',
+                 'CUNIT1': 'deg', 'CUNIT2': 'deg',
+                 'CDELT1': -1, 'CDELT2': 1,
+                 'CRPIX1': 1, 'CRPIX2': 1,
+                 'NAXIS1': shape[1], 'NAXIS2': shape[0]})
+
+    if not np.allclose(theta, 0):
+        rho = math.radians(theta)
+        sin_rho = math.sin(rho)
+        cos_rho = math.cos(rho)
+        w_out.wcs.pc = np.array([[cos_rho, -sin_rho],
+                                 [sin_rho, cos_rho]])
+        w_out.wcs.set()
+
+    return w_out
+
+
+# These below are adapted from Ginga (ginga.util.wcs, ginga.trcalc,
+# and ginga.Bindings.ImageViewBindings).
+# Please see the file licenses/GINGA_LICENSE.txt for details.
 
 def rotate_pt(x_arr, y_arr, theta_deg, xoff=0, yoff=0):
     """

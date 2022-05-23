@@ -5,7 +5,9 @@ from glue.core.link_helpers import LinkSame
 from glue_jupyter.bqplot.image import BqplotImageView
 
 from jdaviz.configs.imviz import wcs_utils
-from jdaviz.configs.imviz.helper import data_has_valid_wcs, layer_is_image_data, get_top_layer_index
+from jdaviz.configs.imviz.helper import (
+    data_has_valid_wcs, layer_is_image_data, layer_is_hidden, get_top_layer_index,
+    get_reference_image_data)
 from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import viewer_registry
@@ -46,6 +48,7 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
 
         self.label_mouseover = None
         self.compass = None
+        self._compass_show_zoom = True
         self.line_profile_xy = None
 
         self.add_event_callback(self.on_mouse_or_key_event, events=['mousemove', 'mouseenter',
@@ -72,10 +75,14 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
     def on_mouse_or_key_event(self, data):
 
         # Find visible layers
-        visible_layers = [layer for layer in self.state.layers if layer.visible]
+        visible_layers = [layer for layer in self.state.layers
+                          if (layer.visible and layer_is_image_data(layer.layer) and
+                              not layer_is_hidden(layer.layer))]
 
         if len(visible_layers) == 0:
             return
+
+        active_layer = visible_layers[-1]
 
         if self.label_mouseover is None:
             if 'g-coords-info' in self.session.application._tools:
@@ -97,7 +104,7 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
 
             # Extract first dataset from visible layers and use this for coordinates - the choice
             # of dataset shouldn't matter if the datasets are linked correctly
-            image = visible_layers[0].layer
+            image = active_layer.layer
 
             # Extract data coordinates - these are pixels in the reference image
             x = data['domain']['x']
@@ -125,8 +132,8 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
             # of how to display values when multiple datasets are present.
             if (x > -0.5 and y > -0.5
                     and x < image.shape[1] - 0.5 and y < image.shape[0] - 0.5
-                    and hasattr(visible_layers[0], 'attribute')):
-                attribute = visible_layers[0].attribute
+                    and hasattr(active_layer, 'attribute')):
+                attribute = active_layer.attribute
                 value = image.get_data(attribute)[int(round(y)), int(round(x))]
                 unit = image.get_component(attribute).units
                 self.label_mouseover.value = f'{value:+10.5e} {unit}'
@@ -151,7 +158,7 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
 
             elif key_pressed == 'l':
                 # Same data as mousemove above.
-                image = visible_layers[0].layer
+                image = active_layer.layer
                 x = data['domain']['x']
                 y = data['domain']['y']
                 if x is None or y is None:  # Out of bounds
@@ -168,7 +175,7 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
 
         # Exclude Subsets: They are global
         valid = [ilayer for ilayer, layer in enumerate(self.state.layers)
-                 if layer_is_image_data(layer.layer)]
+                 if (layer_is_image_data(layer.layer) and not layer_is_hidden(layer.layer))]
         n_layers = len(valid)
 
         if n_layers == 1:
@@ -224,6 +231,9 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
         When `True`, it sets the coords, otherwise it resets.
 
         """
+        coords_status = False
+        link_type = self.get_link_type(image.label)
+
         if data_has_valid_wcs(image):
             # Convert these to a SkyCoord via WCS - note that for other datasets
             # we aren't actually guaranteed to get a SkyCoord out, just for images
@@ -231,14 +241,16 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
             try:
                 # Convert X,Y from reference data to the one we are actually seeing.
                 # world_to_pixel return scalar ndarray that we need to convert to float.
-                if self.get_link_type(image.label) == 'wcs':
+                if link_type == 'wcs':
                     x, y = list(map(float, image.coords.world_to_pixel(
                         self.state.reference_data.coords.pixel_to_world(x, y))))
                 coords_status = True
-            except Exception:
-                coords_status = False
-        else:
-            coords_status = False
+            except Exception:  # nosec: B110
+                pass
+        elif link_type == 'wcs_via_app_ref':
+            app_ref = get_reference_image_data(self.session.jdaviz_app)[0]
+            x, y = list(map(float, app_ref.coords.world_to_pixel(
+                self.state.reference_data.coords.pixel_to_world(x, y))))
 
         return x, y, coords_status
 
@@ -248,7 +260,12 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
         image, which can be inaccurate if given image is dithered and
         they are linked by WCS.
         """
-        if data_has_valid_wcs(image) and self.get_link_type(image.label) == 'wcs':
+        try:
+            link_type = self.get_link_type(image.label)
+        except ValueError:
+            return None
+
+        if data_has_valid_wcs(image) and link_type == 'wcs':
             # Convert X,Y from reference data to the one we are actually seeing.
             x = image.coords.world_to_pixel(self.state.reference_data.coords.pixel_to_world(
                     (self.state.x_min, self.state.x_max), (self.state.y_min, self.state.y_max)))
@@ -262,7 +279,10 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
         if self.compass is None:  # Maybe another viewer has it
             return
 
-        zoom_limits = self._get_zoom_limits(image)
+        if self._compass_show_zoom:
+            zoom_limits = self._get_zoom_limits(image)
+        else:
+            zoom_limits = None
 
         # Downsample input data to about 400px (as per compass.vue) for performance.
         xstep = max(1, round(image.shape[1] / 400))
@@ -287,8 +307,16 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
     def data(self, cls=None):
         return [layer_state.layer  # .get_object(cls=cls or self.default_class)
                 for layer_state in self.state.layers
-                if hasattr(layer_state, 'layer') and
-                layer_is_image_data(layer_state.layer)]
+                if (hasattr(layer_state, 'layer') and
+                    layer_is_image_data(layer_state.layer) and
+                    not layer_is_hidden(layer_state.layer))]
+
+    def update(self):
+        """Force viewer to update all its layers.
+        This is useful when viewer does not update automatically on time.
+        """
+        for lyr in self.layers:
+            lyr.update()
 
     def get_link_type(self, data_label):
         """Find the type of ``glue`` linking between the given
@@ -301,9 +329,11 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
 
         Returns
         -------
-        link_type : {'pixels', 'wcs', 'self'}
-            One of the link types accepted by :func:`~jdaviz.configs.imviz.helper.link_image_data`
-            or ``'self'`` if the data label belongs to the reference data itself.
+        link_type : {'pixels', 'wcs', 'self', 'wcs_via_app_ref'}
+            One of the link types accepted by :func:`~jdaviz.configs.imviz.helper.link_image_data`,
+            ``'self'`` if the data label belongs to the reference data itself, or
+            ``'wcs_via_app_ref'`` when the data has no WCS but relies on WCS translation
+            between two other data (e.g., when using Simple Image Rotation plugin).
 
         Raises
         ------
@@ -314,20 +344,34 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
         if self.state.reference_data is None:
             raise ValueError('No reference data for link look-up')
 
-        ref_label = self.state.reference_data.label
-        if data_label == ref_label:
-            return 'self'
+        def _search_links(ref_label):
+            if data_label == ref_label:
+                return 'self'
 
-        link_type = None
-        for elink in self.session.application.data_collection.external_links:
-            elink_labels = (elink.data1.label, elink.data2.label)
-            if data_label in elink_labels and ref_label in elink_labels:
-                if isinstance(elink, LinkSame):  # Assumes WCS link never uses LinkSame
-                    link_type = 'pixels'
-                else:  # If not pixels, must be WCS
-                    link_type = 'wcs'
-                break  # Might have duplicate, just grab first match
+            link_type = None
+            for elink in self.session.application.data_collection.external_links:
+                elink_labels = (elink.data1.label, elink.data2.label)
+                if data_label in elink_labels and ref_label in elink_labels:
+                    if isinstance(elink, LinkSame):  # Assumes WCS link never uses LinkSame
+                        link_type = 'pixels'
+                    else:  # If not pixels, must be WCS
+                        link_type = 'wcs'
+                    break  # Might have duplicate, just grab first match
+            return link_type
 
+        link_type = _search_links(self.state.reference_data.label)
+
+        # Maybe viewer reference is not the one actually used for linking.
+        if link_type is None:
+            app_ref = get_reference_image_data(self.session.jdaviz_app)[0]
+            link_type = _search_links(app_ref.label)
+            # Data has no WCS but it needs transitive WCS look-up.
+            # This situation happens when someone is using the Simple Image Rotation plugin.
+            if (link_type == 'pixels' and app_ref.coords is not None
+                    and self.state.reference_data.coords is not None):
+                link_type = 'wcs_via_app_ref'
+
+        # Just no luck.
         if link_type is None:
             raise ValueError(f'{data_label} not found in data collection external links')
 
