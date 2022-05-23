@@ -193,17 +193,51 @@
     </glue-state-sync-wrapper>
 
     <div v-if="contour_visible_sync.in_subscribed_states && contour_visible_value">
-      <glue-state-sync-wrapper :sync="contour_min_sync" :multiselect="multiselect" @unmix-state="unmix_state('contour_min')">
-        <glue-float-field label="contour min" :value.sync="contour_min_value" />
+      <glue-state-sync-wrapper :sync="contour_mode_sync" :multiselect="multiselect" @unmix-state="unmix_state('contour_mode')">
+        <v-btn-toggle dense v-model="contour_mode_value" style="margin-right: 8px; margin-top: 8px">
+            <v-tooltip bottom>
+                <template v-slot:activator="{ on }">
+                    <v-btn v-on="on" small value="Linear">
+                        <v-icon>mdi-call-made</v-icon>
+                    </v-btn>
+                </template>
+                <span>linear</span>
+            </v-tooltip>
+
+            <v-tooltip bottom>
+                <template v-slot:activator="{ on }">
+                    <v-btn v-on="on" small value="Custom">
+                        <v-icon>mdi-wrench</v-icon>
+                    </v-btn>
+                </template>
+                <span>custom</span>
+            </v-tooltip>
+        </v-btn-toggle>
       </glue-state-sync-wrapper>
 
-      <glue-state-sync-wrapper :sync="contour_max_sync" :multiselect="multiselect" @unmix-state="unmix_state('contour_max')">
-        <glue-float-field label="contour max" :value.sync="contour_max_value" />
-      </glue-state-sync-wrapper>
+      <div v-if="contour_mode_value === 'Linear'">
+        <glue-state-sync-wrapper :sync="contour_min_sync" :multiselect="multiselect" @unmix-state="unmix_state('contour_min')">
+          <glue-float-field label="contour min" :value.sync="contour_min_value" />
+        </glue-state-sync-wrapper>
 
-      <glue-state-sync-wrapper :sync="contour_nlevels_sync" :multiselect="multiselect" @unmix-state="unmix_state('contour_nlevels')">
-        <glue-float-field label="number of contour levels" :value.sync="contour_nlevels_value" />
-      </glue-state-sync-wrapper>
+        <glue-state-sync-wrapper :sync="contour_max_sync" :multiselect="multiselect" @unmix-state="unmix_state('contour_max')">
+          <glue-float-field label="contour max" :value.sync="contour_max_value" />
+        </glue-state-sync-wrapper>
+
+        <glue-state-sync-wrapper :sync="contour_nlevels_sync" :multiselect="multiselect" @unmix-state="unmix_state('contour_nlevels')">
+          <glue-float-field label="number of contour levels" :value.sync="contour_nlevels_value" />
+        </glue-state-sync-wrapper>
+      </div>
+      <div v-else>
+        <glue-state-sync-wrapper :sync="contour_custom_levels_sync" :multiselect="multiselect" @unmix-state="unmix_state('contour_levels')">
+          <v-text-field 
+            label="contour levels"
+            :value="contour_custom_levels_txt"
+            @focus="contour_custom_levels_focus"
+            @blur="contour_custom_levels_blur"
+            @input="contour_custom_levels_set_value"/>
+        </glue-state-sync-wrapper>
+      </div>
     </div>
 
     <!-- GENERAL:AXES -->
@@ -221,10 +255,34 @@
 <script>
 module.exports = {
   created() {
+    this.contour_custom_levels_user_editing = false
     this.throttledSetValue = _.throttle(
       (name, v) => { this.set_value({name: name, value: v}) },
       100);
-  }
+  },
+  watch: {
+    contour_custom_levels_value() {
+      if (!this.contour_custom_levels_user_editing) {
+        this.contour_custom_levels_txt_update_from_value()
+      }
+    }
+  },
+  methods: {
+    contour_custom_levels_focus(e) {
+      this.contour_custom_levels_user_editing = true
+    },
+    contour_custom_levels_blur(e) {
+      this.contour_custom_levels_user_editing = false
+      this.contour_custom_levels_txt_update_from_value();
+    },
+    contour_custom_levels_txt_update_from_value() {
+      this.contour_custom_levels_txt = this.contour_custom_levels_value.join(', ')
+    },
+    contour_custom_levels_set_value(e) {
+      this.contour_custom_levels_txt = e
+      this.contour_custom_levels_value = e.split(',').filter(n => n.trim().length).map(n => Number(n)).filter(n => !isNaN(n))
+    }
+  },
 }
 </script>
 

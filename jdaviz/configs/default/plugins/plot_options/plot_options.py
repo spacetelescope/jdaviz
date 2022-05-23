@@ -81,6 +81,9 @@ class PlotOptions(TemplateMixin):
     contour_visible_value = Bool().tag(sync=True)
     contour_visible_sync = Dict().tag(sync=True)
 
+    contour_mode_value = Unicode().tag(sync=True)
+    contour_mode_sync = Dict().tag(sync=True)
+
     contour_min_value = Float().tag(sync=True)
     contour_min_sync = Dict().tag(sync=True)
 
@@ -89,6 +92,10 @@ class PlotOptions(TemplateMixin):
 
     contour_nlevels_value = Int().tag(sync=True)
     contour_nlevels_sync = Dict().tag(sync=True)
+
+    contour_custom_levels_value = List().tag(sync=True)
+    contour_custom_levels_txt = Unicode().tag(sync=True)   # controlled by vue
+    contour_custom_levels_sync = Dict().tag(sync=True)
 
     show_axes_value = Bool().tag(sync=True)
     show_axes_sync = Dict().tag(sync=True)
@@ -126,9 +133,12 @@ class PlotOptions(TemplateMixin):
         self.bitmap_bias = PlotOptionsSyncState(self, self.viewer, self.layer, 'bias', 'bitmap_bias_value', 'bitmap_bias_sync')
 
         self.contour = PlotOptionsSyncState(self, self.viewer, self.layer, 'contour_visible', 'contour_visible_value', 'contour_visible_sync')
+        self.contour_mode = PlotOptionsSyncState(self, self.viewer, self.layer, 'level_mode', 'contour_mode_value', 'contour_mode_sync')
         self.contour_min = PlotOptionsSyncState(self, self.viewer, self.layer, 'c_min', 'contour_min_value', 'contour_min_sync')
         self.contour_max = PlotOptionsSyncState(self, self.viewer, self.layer, 'c_max', 'contour_max_value', 'contour_max_sync')
         self.contour_nlevels = PlotOptionsSyncState(self, self.viewer, self.layer, 'n_levels', 'contour_nlevels_value', 'contour_nlevels_sync')
+        # TODO: expose glue errors for input text, parse text to set levels (see glue-jupyter layer_image.py... this set levels in the state as a list of floats)
+        self.contour_custom_levels = PlotOptionsSyncState(self, self.viewer, self.layer, 'levels', 'contour_custom_levels_value', 'contour_custom_levels_sync')
 
         # Axes options:
         self.show_axes = PlotOptionsSyncState(self, self.viewer, self.layer, 'show_axes', 'show_axes_value', 'show_axes_sync', state_filter=not_profile)
