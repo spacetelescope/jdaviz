@@ -41,7 +41,7 @@ const tooltips = {
     'Create new image viewer',
 
   // viewer toolbars
-  'viewer-toolbar-data': 'Select dataset(s) to display',
+  'viewer-toolbar-data': 'Select dataset(s) to display in this viewer',
   'viewer-toolbar-figure': 'Tools: pan, zoom, select region, save',
   'viewer-toolbar-figure-save': 'Save figure',
   'viewer-toolbar-menu': 'Adjust display: contrast, bias, stretch',

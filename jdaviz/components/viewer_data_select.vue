@@ -36,6 +36,14 @@
             </span>
         </v-row>
 
+        <v-row style="padding-left: 32px; margin-right: 0px; padding-bottom: 4px; padding-top: 6 px;
+                     background-color: #E3F2FD">
+          <span>
+            To add more datasets to this list, use the "Load Data" button or load 
+            additional data using the API.
+          </span>
+        </v-row>
+
         <v-row v-for="item in filteredDataItems" :key="item.id" style="padding-left: 25px; margin-right: 0px">
           <j-viewer-data-select-item
             :item="item"
