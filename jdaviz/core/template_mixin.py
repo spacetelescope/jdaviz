@@ -1425,8 +1425,8 @@ class PlotOptionsSyncState(BasePluginComponent):
                     # choices and that those will not change.  If we ever hookup options
                     # with changing choices, we'll need additional logic to sync to those
                     # and handle mixed state in the choices...
-                    choices = _get_glue_choices(state, self._glue_name)[0]  # TODO: store value-label pairs?
-                    self.sync = {**self.sync, 'choices': choices}
+                    values, labels = _get_glue_choices(state, self._glue_name)
+                    self.sync = {**self.sync, 'choices': [{'text': l, 'value': v} for v, l in zip(values, labels)]}
 
         self.sync = {**self.sync,
                      'in_subscribed_states': in_subscribed_states,
