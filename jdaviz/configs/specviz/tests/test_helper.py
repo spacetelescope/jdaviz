@@ -265,10 +265,10 @@ def test_plot_uncertainties(specviz_helper, spectrum1d):
 
     assert len([m for m in specviz_viewer.figure.marks if isinstance(m, LineUncertainties)]) == 0
 
-    specviz_viewer.show_uncertainties()
+    specviz_viewer.state.show_uncertainty = True
 
     assert len([m for m in specviz_viewer.figure.marks if isinstance(m, LineUncertainties)]) == 1
 
-    specviz_viewer.clean()
+    specviz_viewer.state.show_uncertainty = False
 
     assert len([m for m in specviz_viewer.figure.marks if isinstance(m, LineUncertainties)]) == 0
