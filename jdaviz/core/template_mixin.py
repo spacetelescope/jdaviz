@@ -856,7 +856,7 @@ class ViewerSelect(BaseSelectPluginComponent):
         return self.selected_item.get('reference', None)
 
     def _get_selected_obj(self, selected, selected_id):
-        if selected in self.manual_options:
+        if selected in self.manual_options or selected_id is None:
             return None
         return self.app.get_viewer_by_id(selected_id)
 
@@ -1375,8 +1375,8 @@ class PlotOptionsSyncState(BasePluginComponent):
         if not isinstance(layers, list):
             layers = [layers]
 
-        viewer_states = [viewer.state for viewer in viewers]
-        layer_states = [layer.state for layer in layers]
+        viewer_states = [viewer.state for viewer in viewers if viewer is not None]
+        layer_states = [layer.state for layer in layers if layer is not None]
         return viewer_states + layer_states
 
     @cached_property
