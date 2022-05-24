@@ -398,7 +398,8 @@ class LayerSelect(BaseSelectPluginComponent):
         selected : str
             the name of the selected traitlet defined in ``plugin``
         viewer: str
-            the name of the traitlet defined in ``plugin`` storing the viewer(s) to expose the layers
+            the name of the traitlet defined in ``plugin`` storing the viewer(s) to expose the
+            layers
         default_text : str or None
             the text to show for no selection.  If not provided or None, no entry will be provided
             in the dropdown for no selection.
@@ -423,8 +424,8 @@ class LayerSelect(BaseSelectPluginComponent):
         self.hub.subscribe(self, SubsetCreateMessage,
                            handler=lambda _: self._on_layers_changed())
         # will need SubsetUpdateMessage for name only (style shouldn't force a full refresh)
-        #self.hub.subscribe(self, SubsetUpdateMessage,
-        #                   handler=lambda _: self._on_layers_changed())
+        # self.hub.subscribe(self, SubsetUpdateMessage,
+        #                    handler=lambda _: self._on_layers_changed())
         self.hub.subscribe(self, SubsetDeleteMessage,
                            handler=lambda _: self._on_layers_changed())
 
@@ -473,7 +474,8 @@ class LayerSelect(BaseSelectPluginComponent):
         if not isinstance(selected, list):
             selected = [selected]
 
-        layers = [layer for viewer_name in viewer_names for layer in self.app.get_viewer(viewer_name).layers
+        layers = [layer for viewer_name in viewer_names
+                  for layer in self.app.get_viewer(viewer_name).layers
                   if layer.layer.label in selected]
 
         if not self.multiselect and len(layers) == 1:
@@ -863,7 +865,8 @@ class ViewerSelect(BaseSelectPluginComponent):
     @cached_property
     def selected_obj(self):
         if self.is_multiselect and len(self.selected):
-            return [self._get_selected_obj(selected, selected_id) for selected, selected_id in zip(self.selected, self.selected_id)]
+            return [self._get_selected_obj(selected, selected_id)
+                    for selected, selected_id in zip(self.selected, self.selected_id)]
         return self._get_selected_obj(self.selected, self.selected_id)
 
     def _selected_changed(self, event):
@@ -1411,7 +1414,6 @@ class PlotOptionsSyncState(BasePluginComponent):
 
     def _on_viewer_layer_changed(self, msg=None):
         self._clear_cache(*self._cached_properties)
-        #print("_on_viewer_layer_changed", len(self.subscribed_items))
 
         # clear existing callbacks - we'll re-create those we need later
         for state in self.linked_states:
@@ -1428,7 +1430,7 @@ class PlotOptionsSyncState(BasePluginComponent):
                 in_subscribed_states = True
                 icons.append(icon)
                 current_glue_values.append(self._get_glue_value(state))
-                self._linked_states.append(state)  # these will be iterated through when value is set
+                self._linked_states.append(state)  # these will be iterated when value is set
                 state.add_callback(self._glue_name, self._on_glue_value_changed)
 
                 if self.sync.get('choices') is None and \

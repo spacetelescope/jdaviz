@@ -100,7 +100,7 @@ class PlotOptions(TemplateMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.viewer = ViewerSelect(self, 'viewer_items', 'viewer_selected', 'multiselect')
-        self.layer = LayerSelect(self, 'layer_items', 'layer_selected', 'viewer_selected', 'multiselect')
+        self.layer = LayerSelect(self, 'layer_items', 'layer_selected', 'viewer_selected', 'multiselect')  # noqa
 
         def not_profile(state):
             return not isinstance(state, (ProfileViewerState, ProfileLayerState))
@@ -109,36 +109,67 @@ class PlotOptions(TemplateMixin):
             return isinstance(state, (ProfileViewerState, ProfileLayerState))
 
         # Spectrum viewer/layer options:
-        self.collapse_function = PlotOptionsSyncState(self, self.viewer, self.layer, 'function', 'collapse_func_value', 'collapse_func_sync')
-        self.line_color = PlotOptionsSyncState(self, self.viewer, self.layer, 'color', 'line_color_value', 'line_color_sync', state_filter=is_profile)
-        self.line_width = PlotOptionsSyncState(self, self.viewer, self.layer, 'linewidth', 'line_width_value', 'line_width_sync')
-        self.line_opacity = PlotOptionsSyncState(self, self.viewer, self.layer, 'alpha', 'line_opacity_value', 'line_opacity_sync', state_filter=is_profile)
-        self.uncertainty = PlotOptionsSyncState(self, self.viewer, self.layer, 'show_uncertainty', 'uncertainty_value', 'uncertainty_sync')
+        self.collapse_function = PlotOptionsSyncState(self, self.viewer, self.layer, 'function',
+                                                      'collapse_func_value', 'collapse_func_sync')
+        self.line_color = PlotOptionsSyncState(self, self.viewer, self.layer, 'color',
+                                               'line_color_value', 'line_color_sync',
+                                               state_filter=is_profile)
+        self.line_width = PlotOptionsSyncState(self, self.viewer, self.layer, 'linewidth',
+                                               'line_width_value', 'line_width_sync')
+        self.line_opacity = PlotOptionsSyncState(self, self.viewer, self.layer, 'alpha',
+                                                 'line_opacity_value', 'line_opacity_sync',
+                                                 state_filter=is_profile)
+        self.uncertainty = PlotOptionsSyncState(self, self.viewer, self.layer, 'show_uncertainty',
+                                                'uncertainty_value', 'uncertainty_sync')
 
         # Image viewer/layer options:
-        self.stretch = PlotOptionsSyncState(self, self.viewer, self.layer, 'stretch', 'stretch_value', 'stretch_sync', state_filter=not_profile)
-        self.stretch_perc = PlotOptionsSyncState(self, self.viewer, self.layer, 'percentile', 'stretch_perc_value', 'stretch_perc_sync', state_filter=not_profile)
-        self.stretch_min = PlotOptionsSyncState(self, self.viewer, self.layer, 'v_min', 'stretch_min_value', 'stretch_min_sync', state_filter=not_profile)
-        self.stretch_max = PlotOptionsSyncState(self, self.viewer, self.layer, 'v_max', 'stretch_max_value', 'stretch_max_sync', state_filter=not_profile)
+        self.stretch = PlotOptionsSyncState(self, self.viewer, self.layer, 'stretch',
+                                            'stretch_value', 'stretch_sync',
+                                            state_filter=not_profile)
+        self.stretch_perc = PlotOptionsSyncState(self, self.viewer, self.layer, 'percentile',
+                                                 'stretch_perc_value', 'stretch_perc_sync',
+                                                 state_filter=not_profile)
+        self.stretch_min = PlotOptionsSyncState(self, self.viewer, self.layer, 'v_min',
+                                                'stretch_min_value', 'stretch_min_sync',
+                                                state_filter=not_profile)
+        self.stretch_max = PlotOptionsSyncState(self, self.viewer, self.layer, 'v_max',
+                                                'stretch_max_value', 'stretch_max_sync',
+                                                state_filter=not_profile)
 
-        self.bitmap = PlotOptionsSyncState(self, self.viewer, self.layer, 'bitmap_visible', 'bitmap_visible_value', 'bitmap_visible_sync')
-        self.color_mode = PlotOptionsSyncState(self, self.viewer, self.layer, 'color_mode', 'color_mode_value', 'color_mode_sync')
-        self.bitmap_color = PlotOptionsSyncState(self, self.viewer, self.layer, 'color', 'bitmap_color_value', 'bitmap_color_sync', state_filter=not_profile)
-        self.bitmap_cmap = PlotOptionsSyncState(self, self.viewer, self.layer, 'cmap', 'bitmap_cmap_value', 'bitmap_cmap_sync')
-        self.bitmap_opacity = PlotOptionsSyncState(self, self.viewer, self.layer, 'alpha', 'bitmap_opacity_value', 'bitmap_opacity_sync', state_filter=not_profile)
-        self.bitmap_contrast = PlotOptionsSyncState(self, self.viewer, self.layer, 'contrast', 'bitmap_contrast_value', 'bitmap_contrast_sync')
-        self.bitmap_bias = PlotOptionsSyncState(self, self.viewer, self.layer, 'bias', 'bitmap_bias_value', 'bitmap_bias_sync')
+        self.bitmap = PlotOptionsSyncState(self, self.viewer, self.layer, 'bitmap_visible',
+                                           'bitmap_visible_value', 'bitmap_visible_sync')
+        self.color_mode = PlotOptionsSyncState(self, self.viewer, self.layer, 'color_mode',
+                                               'color_mode_value', 'color_mode_sync')
+        self.bitmap_color = PlotOptionsSyncState(self, self.viewer, self.layer, 'color',
+                                                 'bitmap_color_value', 'bitmap_color_sync',
+                                                 state_filter=not_profile)
+        self.bitmap_cmap = PlotOptionsSyncState(self, self.viewer, self.layer, 'cmap',
+                                                'bitmap_cmap_value', 'bitmap_cmap_sync')
+        self.bitmap_opacity = PlotOptionsSyncState(self, self.viewer, self.layer, 'alpha',
+                                                   'bitmap_opacity_value', 'bitmap_opacity_sync',
+                                                   state_filter=not_profile)
+        self.bitmap_contrast = PlotOptionsSyncState(self, self.viewer, self.layer, 'contrast',
+                                                    'bitmap_contrast_value', 'bitmap_contrast_sync')
+        self.bitmap_bias = PlotOptionsSyncState(self, self.viewer, self.layer, 'bias',
+                                                'bitmap_bias_value', 'bitmap_bias_sync')
 
-        self.contour = PlotOptionsSyncState(self, self.viewer, self.layer, 'contour_visible', 'contour_visible_value', 'contour_visible_sync')
-        self.contour_mode = PlotOptionsSyncState(self, self.viewer, self.layer, 'level_mode', 'contour_mode_value', 'contour_mode_sync')
-        self.contour_min = PlotOptionsSyncState(self, self.viewer, self.layer, 'c_min', 'contour_min_value', 'contour_min_sync')
-        self.contour_max = PlotOptionsSyncState(self, self.viewer, self.layer, 'c_max', 'contour_max_value', 'contour_max_sync')
-        self.contour_nlevels = PlotOptionsSyncState(self, self.viewer, self.layer, 'n_levels', 'contour_nlevels_value', 'contour_nlevels_sync')
-        # TODO: expose glue errors for input text, parse text to set levels (see glue-jupyter layer_image.py... this set levels in the state as a list of floats)
-        self.contour_custom_levels = PlotOptionsSyncState(self, self.viewer, self.layer, 'levels', 'contour_custom_levels_value', 'contour_custom_levels_sync')
+        self.contour = PlotOptionsSyncState(self, self.viewer, self.layer, 'contour_visible',
+                                            'contour_visible_value', 'contour_visible_sync')
+        self.contour_mode = PlotOptionsSyncState(self, self.viewer, self.layer, 'level_mode',
+                                                 'contour_mode_value', 'contour_mode_sync')
+        self.contour_min = PlotOptionsSyncState(self, self.viewer, self.layer, 'c_min',
+                                                'contour_min_value', 'contour_min_sync')
+        self.contour_max = PlotOptionsSyncState(self, self.viewer, self.layer, 'c_max',
+                                                'contour_max_value', 'contour_max_sync')
+        self.contour_nlevels = PlotOptionsSyncState(self, self.viewer, self.layer, 'n_levels',
+                                                    'contour_nlevels_value', 'contour_nlevels_sync')
+        self.contour_custom_levels = PlotOptionsSyncState(self, self.viewer, self.layer, 'levels',
+                                                          'contour_custom_levels_value', 'contour_custom_levels_sync')  # noqa
 
         # Axes options:
-        self.show_axes = PlotOptionsSyncState(self, self.viewer, self.layer, 'show_axes', 'show_axes_value', 'show_axes_sync', state_filter=not_profile)
+        self.show_axes = PlotOptionsSyncState(self, self.viewer, self.layer, 'show_axes',
+                                              'show_axes_value', 'show_axes_sync',
+                                              state_filter=not_profile)
         # zoom limits
         # display_units
 
