@@ -78,6 +78,12 @@ Imviz
 - Radial profile plot in Simple Aperture Photometry plugin
   no longer shows masked aperture data. [#1224]
 
+- Aperture sum in Simple Aperture Photometry plugin no longer reports
+  the wrong value in MJy when input data is in MJy/sr. Previously,
+  it applied number of pixels twice in the calculations, so sum in MJy
+  with 10-pixel aperture would be off by a factor of 10. This bug did not
+  affect data in any other units. [#1332]
+
 - Markers API now handles GWCS with ICRS Lon/Lat defined instead of
   Right Ascension and Declination. [#1314]
 
