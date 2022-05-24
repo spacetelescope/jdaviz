@@ -9,6 +9,7 @@ from glue.core.message import (DataCollectionAddMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from glue.core.subset import RoiSubsetState
+from glue_jupyter.widgets.linked_dropdown import get_choices as _get_glue_choices
 from specutils import Spectrum1D
 from traitlets import Any, Bool, HasTraits, List, Unicode, observe
 
@@ -1335,8 +1336,6 @@ class AddResultsMixin(VuetifyTemplate, HubListener):
                                       'add_to_viewer_items', 'add_to_viewer_selected')
 
 
-from glue_jupyter.widgets.linked_dropdown import get_choices as _get_glue_choices
-
 class PlotOptionsSyncState(BasePluginComponent):
     """
     """
@@ -1449,7 +1448,6 @@ class PlotOptionsSyncState(BasePluginComponent):
                      'mixed': mixed}
 
     def _on_value_changed(self, msg):
-        #print("_on_value_changed", msg['new'], self._processing_change_from_glue)
         if self._processing_change_from_glue:
             return
 

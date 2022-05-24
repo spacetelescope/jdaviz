@@ -1,11 +1,8 @@
-from traitlets import Any, Dict, Float, Bool, Int, List, Unicode, observe
+from traitlets import Any, Dict, Float, Bool, Int, List, Unicode
 from ipywidgets.widgets import widget_serialization
 
 from glue.viewers.profile.state import ProfileViewerState, ProfileLayerState
-#from glue_jupyter.bqplot.image.state import BqplotImageViewerState
 
-from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
-from jdaviz.core.events import AddDataMessage, RemoveDataMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (TemplateMixin, ViewerSelect, LayerSelect,
                                         PlotOptionsSyncState)
@@ -127,7 +124,7 @@ class PlotOptions(TemplateMixin):
         self.bitmap = PlotOptionsSyncState(self, self.viewer, self.layer, 'bitmap_visible', 'bitmap_visible_value', 'bitmap_visible_sync')
         self.color_mode = PlotOptionsSyncState(self, self.viewer, self.layer, 'color_mode', 'color_mode_value', 'color_mode_sync')
         self.bitmap_color = PlotOptionsSyncState(self, self.viewer, self.layer, 'color', 'bitmap_color_value', 'bitmap_color_sync', state_filter=not_profile)
-#        self.bitmap_cmap = PlotOptionsSyncState(self, self.viewer, self.layer, 'cmap', 'bitmap_cmap_value', 'bitmap_cmap_sync')
+        self.bitmap_cmap = PlotOptionsSyncState(self, self.viewer, self.layer, 'cmap', 'bitmap_cmap_value', 'bitmap_cmap_sync')
         self.bitmap_opacity = PlotOptionsSyncState(self, self.viewer, self.layer, 'alpha', 'bitmap_opacity_value', 'bitmap_opacity_sync', state_filter=not_profile)
         self.bitmap_contrast = PlotOptionsSyncState(self, self.viewer, self.layer, 'contrast', 'bitmap_contrast_value', 'bitmap_contrast_sync')
         self.bitmap_bias = PlotOptionsSyncState(self, self.viewer, self.layer, 'bias', 'bitmap_bias_value', 'bitmap_bias_sync')
