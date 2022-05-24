@@ -2,6 +2,7 @@ import numpy as np
 
 from functools import cached_property
 from ipyvuetify import VuetifyTemplate
+from glue.config import colormaps
 from glue.core import HubListener
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage,
@@ -1396,6 +1397,18 @@ class PlotOptionsSyncState(BasePluginComponent):
         # access glue state objects for which the callbacks are currently connected
         return self._linked_states
 
+    def _get_glue_value(self, state):
+        if self._glue_name == 'cmap':
+            return getattr(state, self._glue_name).name
+        return getattr(state, self._glue_name)
+
+    def _get_glue_choices(self, state):
+        if self._glue_name == 'cmap':
+            return [{'text': cmap[0], 'value': cmap[1].name} for cmap in colormaps.members]
+        else:
+            values, labels = _get_glue_choices(state, self._glue_name)
+            return [{'text': l, 'value': v} for v, l in zip(values, labels)]
+
     def _on_viewer_layer_changed(self, msg=None):
         self._clear_cache(*self._cached_properties)
         #print("_on_viewer_layer_changed", len(self.subscribed_items))
@@ -1414,18 +1427,19 @@ class PlotOptionsSyncState(BasePluginComponent):
             if self._glue_name is not None and hasattr(state, self._glue_name):
                 in_subscribed_states = True
                 icons.append(icon)
-                current_glue_values.append(getattr(state, self._glue_name))
+                current_glue_values.append(self._get_glue_value(state))
                 self._linked_states.append(state)  # these will be iterated through when value is set
                 state.add_callback(self._glue_name, self._on_glue_value_changed)
 
-                if self.sync.get('choices') is None and hasattr(getattr(type(state), self._glue_name), 'get_display_func'):
+                if self.sync.get('choices') is None and \
+                        (hasattr(getattr(type(state), self._glue_name), 'get_display_func')
+                         or self._glue_name == 'cmap'):
                     # then we can access and populate the choices.  We are assuming here
                     # that each state-instance with this same name will have the same
                     # choices and that those will not change.  If we ever hookup options
                     # with changing choices, we'll need additional logic to sync to those
                     # and handle mixed state in the choices...
-                    values, labels = _get_glue_choices(state, self._glue_name)
-                    self.sync = {**self.sync, 'choices': [{'text': l, 'value': v} for v, l in zip(values, labels)]}
+                    self.sync = {**self.sync, 'choices': self._get_glue_choices(state)}
 
         self.sync = {**self.sync,
                      'in_subscribed_states': in_subscribed_states,
@@ -1442,8 +1456,8 @@ class PlotOptionsSyncState(BasePluginComponent):
         else:
             current_glue_values = []
             for state in self.linked_states:
-                current_glue_values.append(getattr(state, self._glue_name))
-            mixed = len(np.unique(current_glue_values, axis=0)) > 1
+                current_glue_values.append(self._get_glue_value(state))
+                mixed = len(np.unique(current_glue_values, axis=0)) > 1
         self.sync = {**self.sync,
                      'mixed': mixed}
 
@@ -1453,7 +1467,15 @@ class PlotOptionsSyncState(BasePluginComponent):
 
         self._processing_change_to_glue = True
         for glue_state in self.linked_states:
-            setattr(glue_state, self._glue_name, msg['new'])
+            if self._glue_name == 'cmap':
+                cmap = None
+                for member in colormaps.members:
+                    if member[1].name == msg['new']:
+                        cmap = member[1]
+                        break
+                setattr(glue_state, self._glue_name, cmap)
+            else:
+                setattr(glue_state, self._glue_name, msg['new'])
         # need to recompute mixed state
         self._update_mixed_state()
         self._processing_change_to_glue = False
