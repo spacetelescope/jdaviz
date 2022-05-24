@@ -15,7 +15,7 @@
       persistent-hint
     >
     <template slot="selection" slot-scope="data">
-      <div class="single-line">
+      <div class="single-line" style="width: 100%">
         <v-chip v-if="multiselect" style="width: calc(100% - 20px)">
           <span>
             <v-icon style='margin-left: -10px; margin-right: 2px'>{{ data.item.icon }}</v-icon>

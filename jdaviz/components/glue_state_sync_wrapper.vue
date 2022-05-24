@@ -1,5 +1,5 @@
 <template>
-  <div v-if="sync.in_subscribed_states" style="display: grid"> <!-- overlay container -->
+  <div v-if="sync.in_subscribed_states" style="display: grid; padding-top: 4px; padding-bottom: 4px"> <!-- overlay container -->
     <div style="grid-area: 1/1">
       <v-row class="row-no-outside-padding">
         <v-col :cols="multiselect ? '8' : '12'" style="padding: 0">
@@ -20,8 +20,15 @@
                margin-left: -24px;
                margin-right: -24px;
                cursor: pointer;
-               background-color: rgb(0 0 0 / 20%)">
-        <v-icon large dark>mdi-link-off</v-icon>
+               border: 1px solid rgb(21 58 75);
+               border-radius: 4px;
+               background-color: rgb(245 245 245 / 70%);">
+        <v-icon
+          large 
+          dark
+          color="rgb(21 58 75 / 70%)"
+          style="height: 100%"
+          >mdi-link-off</v-icon>
       </div> 
     </j-tooltip>
   </div>

@@ -47,7 +47,7 @@
 
     <glue-state-sync-wrapper :sync="line_color_sync" :multiselect="multiselect" @unmix-state="unmix_state('line_color')">
       <div>
-        <v-subheader class="pl-0 slider-label">Line Color</v-subheader>
+        <v-subheader class="pl-0 slider-label" style="height: 12px">Line Color</v-subheader>
         <v-menu>
           <template v-slot:activator="{ on }">
               <span class="color-menu"
@@ -69,7 +69,7 @@
 
     <glue-state-sync-wrapper :sync="line_opacity_sync" :multiselect="multiselect" @unmix-state="unmix_state('line_opacity')">
       <div>
-        <v-subheader class="pl-0 slider-label">Line Opacity</v-subheader>
+        <v-subheader class="pl-0 slider-label" style="height: 12px">Line Opacity</v-subheader>
         <glue-throttled-slider wait="300" max="1" step="0.01" :value.sync="line_opacity_value" hide-details class="no-hint" />
       </div>
     </glue-state-sync-wrapper>
@@ -143,7 +143,7 @@
       </glue-state-sync-wrapper>
       <glue-state-sync-wrapper v-else :sync="bitmap_color_sync" :multiselect="multiselect" @unmix-state="unmix_state('bitmap_color')">
         <div>
-          <v-subheader class="pl-0 slider-label">Image Color</v-subheader>
+          <v-subheader class="pl-0 slider-label" style="height: 12px">Image Color</v-subheader>
           <v-menu>
             <template v-slot:activator="{ on }">
                 <span class="color-menu"
@@ -161,21 +161,21 @@
 
       <glue-state-sync-wrapper :sync="bitmap_opacity_sync" :multiselect="multiselect" @unmix-state="unmix_state('bitmap_opacity')">
         <div>
-          <v-subheader class="pl-0 slider-label">opacity</v-subheader>
+          <v-subheader class="pl-0 slider-label" style="height: 12px">opacity</v-subheader>
           <glue-throttled-slider wait="300" max="1" step="0.01" :value.sync="bitmap_opacity_value" hide-details class="no-hint" />
         </div>
       </glue-state-sync-wrapper>
 
       <glue-state-sync-wrapper :sync="bitmap_contrast_sync" :multiselect="multiselect" @unmix-state="unmix_state('bitmap_contrast')">
         <div>
-          <v-subheader class="pl-0 slider-label">contrast</v-subheader>
+          <v-subheader class="pl-0 slider-label" style="height: 12px">contrast</v-subheader>
           <glue-throttled-slider wait="300" max="4" step="0.01" :value.sync="bitmap_contrast_value" hide-details />
         </div>
       </glue-state-sync-wrapper>
 
       <glue-state-sync-wrapper :sync="bitmap_bias_sync" :multiselect="multiselect" @unmix-state="unmix_state('bitmap_bias')">
         <div>
-          <v-subheader class="pl-0 slider-label">bias</v-subheader>
+          <v-subheader class="pl-0 slider-label" style="height: 12px" style="height: 12px">bias</v-subheader>
           <glue-throttled-slider wait="300" max="1" step="0.01" :value.sync="bitmap_bias_value" hide-details />
         </div>
       </glue-state-sync-wrapper>

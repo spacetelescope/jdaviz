@@ -137,7 +137,8 @@ class PlotOptions(TemplateMixin):
                                                 state_filter=not_profile)
 
         self.bitmap = PlotOptionsSyncState(self, self.viewer, self.layer, 'bitmap_visible',
-                                           'bitmap_visible_value', 'bitmap_visible_sync')
+                                           'bitmap_visible_value', 'bitmap_visible_sync',
+                                           state_filter=not_profile)
         self.color_mode = PlotOptionsSyncState(self, self.viewer, self.layer, 'color_mode',
                                                'color_mode_value', 'color_mode_sync')
         self.bitmap_color = PlotOptionsSyncState(self, self.viewer, self.layer, 'color',
