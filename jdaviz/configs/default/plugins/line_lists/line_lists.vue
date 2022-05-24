@@ -360,7 +360,7 @@
         }
 
         if (filter_range) {
-          in_range = (lineItem.obs > this.spectrum_viewer_min) && (lineItem.obs < this.spectrum_viewer_max)
+          in_range = (lineItem.obs_base > this.spectrum_viewer_min_base) && (lineItem.obs < this.spectrum_viewer_max_base)
         }
         else{
           in_range = true

@@ -58,8 +58,12 @@ class LineListTool(PluginTemplateMixin):
 
     lines_filter = Any().tag(sync=True)  # string or None
     filter_range = Bool(False).tag(sync=True)
+    # The raw value of the specrum viewer limits
     spectrum_viewer_min = Float(0.01).tag(sync=True)
     spectrum_viewer_max = Float(0.01).tag(sync=True)
+    # The limits, but converted to the BASE_UNIT of this plugin
+    spectrum_viewer_min_base = Float(0.01).tag(sync=True)
+    spectrum_viewer_max_base = Float(0.01).tag(sync=True)
 
     identify_label = Unicode().tag(sync=True)
     identify_line_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'line_select.svg'), 'svg+xml')).tag(sync=True)  # noqa
@@ -308,7 +312,7 @@ class LineListTool(PluginTemplateMixin):
                     line_list['lines'][i]['obs'] = self._rest_to_obs(float(line['rest']))
 
                 # Keep a copy of the observed wavelength in the base unit for this plugin
-                line_list['lines'][i]['obs_meter'] = (line_list['lines'][i]['obs'] * u.Unit(
+                line_list['lines'][i]['obs_base'] = (line_list['lines'][i]['obs'] * u.Unit(
                                                         line_list['lines'][i]['unit'])
                                                       ).to(BASE_WAVE_UNIT).value
 
@@ -383,9 +387,15 @@ class LineListTool(PluginTemplateMixin):
         self.vue_unpause_tables()
 
     def _on_spectrum_viewer_limits_changed(self, event=None):
+        """
+        Save the limits of the spectrum viewer in a traitlet in the BASE UNIT of this plugin
+        """
         sv = self.app.get_viewer('spectrum-viewer')
+        spectral_unit = sv.data()[0].spectral_axis.unit
         self.spectrum_viewer_min = sv.state.x_min
         self.spectrum_viewer_max = sv.state.x_max
+        self.spectrum_viewer_min_base = (sv.state.x_min * spectral_unit).to(BASE_WAVE_UNIT).value
+        self.spectrum_viewer_max_base = (sv.state.x_max * spectral_unit).to(BASE_WAVE_UNIT).value
 
         # Also update the slider range
         self._auto_slider_range()
