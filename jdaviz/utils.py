@@ -139,8 +139,11 @@ def standardize_metadata(metadata):
     dictionary.
     """
     if isinstance(metadata, fits.Header):
-        out_meta = dict(metadata)
-        out_meta[COMMENTCARD_KEY] = metadata.comments
+        try:
+            out_meta = dict(metadata)
+            out_meta[COMMENTCARD_KEY] = metadata.comments
+        except Exception:  # Invalid FITS header  # pragma: no cover
+            out_meta = {}
     elif isinstance(metadata, dict):
         out_meta = metadata.copy()
         # specutils nests it but we do not want nesting
