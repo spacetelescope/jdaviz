@@ -22,12 +22,13 @@ This process is fairly straightforward, users need only click on the :guilabel:`
 
 .. image:: img/import_data_1.png
 
-and choose a file that can be parsed as a :class:`~specutils.Spectrum1D` in the text field:
+and choose a file that can be parsed as a :class:`~specutils.Spectrum1D`. 
+Note that single clicking a folder will navigate into that directory:
 
 .. image:: img/import_data_2.png
 
-After clicking :guilabel:`Import`, the data file will be parsed and loaded into the
-application. A notification will appear to let users know if the data import was 
+After clicking :guilabel:`Import`, the selected data file will be parsed and loaded into 
+the application. A notification will appear to let users know if the data import was 
 successful, and if possible the data will be immediately displayed. If an incompatible
 spectrum is already being displayed, the newly loaded data will be available in the 
 :guilabel:`Data` menu but not immediately visible in the viewer. Afterward, the new 
