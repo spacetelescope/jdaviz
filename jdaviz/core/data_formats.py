@@ -1,4 +1,3 @@
-
 import os
 import pathlib
 
@@ -8,6 +7,7 @@ from specutils import SpectrumList
 
 from jdaviz.core.config import list_configurations
 
+__all__ = ['guess_dimensionality', 'get_valid_format', 'identify_data']
 
 # create a default file format to configuration mapping
 default_mapping = {'JWST x1d': 'specviz', 'JWST s2d': 'specviz2d',
@@ -28,7 +28,7 @@ ndim_to_config_mapping = {1: 'specviz', 2: 'specviz2d', 3: 'cubeviz'}
 
 
 def guess_dimensionality(filename):
-    """ Guess the dimensionality of a file.
+    """Guess the dimensionality of a file.
 
     Parameters
     ----------
@@ -51,7 +51,7 @@ def guess_dimensionality(filename):
 
 
 def get_valid_format(filename):
-    """ Identify a best match jdaviz configuration from a filename
+    """Identify a best match Jdaviz configuration from a filename.
 
     Parameters
     ----------
@@ -60,10 +60,10 @@ def get_valid_format(filename):
 
     Returns
     -------
-        valid_format : str
-            A valid file format
-        config : str
-            The recommended application configuration
+    valid_format : str
+        A valid file format
+    config : str
+        The recommended application configuration
     """
 
     valid_file_format = identify_spectrum_format(filename, SpectrumList)
@@ -78,23 +78,21 @@ def get_valid_format(filename):
 
 
 def identify_data(filename, current=None):
-    """ Identify the data format and application configuration from a filename.
+    """Identify the data format and application configuration from a filename.
 
     Parameters
     ----------
     filename : str or `pathlib.Path` or file-like object
         The filename of the loaded data
-    current : str or ``None``
+    current : str or `None`
         The currently loading application configuration, if any
 
     Returns
     -------
-        valid_format : str
-            A valid file format
-        config : str
-            The recommended application configuration
-        status : str
-            A status message
+    valid_format : str
+        A valid file format
+    config : str
+        The recommended application configuration
     """
 
     valid_format, config = get_valid_format(filename)

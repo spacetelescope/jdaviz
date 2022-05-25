@@ -1,10 +1,12 @@
 import astropy.units as u
 import numpy as np
 
+__all__ = ['units_to_strings', 'create_spectral_equivalencies_list',
+           'create_flux_equivalencies_list']
+
 
 def units_to_strings(unit_list):
-    """
-    Convert equivalencies into readable versions of the units.
+    """Convert equivalencies into readable versions of the units.
 
     Parameters
     ----------
@@ -14,7 +16,7 @@ def units_to_strings(unit_list):
 
     Returns
     -------
-    list
+    result: list
         A list of the units with their best (i.e., most readable) string version.
     """
     return [u.Unit(unit).name
@@ -28,8 +30,7 @@ def units_to_strings(unit_list):
 def create_spectral_equivalencies_list(spectrum,
                                        exclude=[u.jupiterRad, u.earthRad, u.solRad,
                                                 u.lyr, u.AU, u.pc]):
-    """
-    Gets all possible conversions from current spectral_axis_unit.
+    """Get all possible conversions from current spectral_axis_unit.
     """
     # Get unit equivalencies.
     curr_spectral_axis_unit_equivalencies = u.Unit(
@@ -57,8 +58,7 @@ def create_spectral_equivalencies_list(spectrum,
 
 
 def create_flux_equivalencies_list(spectrum):
-    """
-    Gets all possible conversions for flux from current flux units.
+    """Get all possible conversions for flux from current flux units.
     """
     # Get unit equivalencies.
     curr_flux_unit_equivalencies = u.Unit(

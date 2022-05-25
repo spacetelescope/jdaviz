@@ -9,7 +9,7 @@ from glue_jupyter.bqplot.common.tools import BqplotPanZoomMode
 
 from jdaviz.core.tools import BoxZoom
 
-__all__ = []
+__all__ = ['JdavizPanZoomMode', 'BlinkOnce', 'MatchBoxZoom', 'MatchPanZoom', 'ContrastBias']
 
 ICON_DIR = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'icons')
 

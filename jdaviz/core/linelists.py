@@ -3,8 +3,11 @@ import json
 
 from astropy.table import QTable
 
+__all__ = ['get_linelist_metadata', 'get_available_linelists', 'load_preset_linelist']
+
 
 def get_linelist_metadata():
+    """Return metadata for line lists."""
     metadata_file = pkg_resources.resource_filename("jdaviz",
                                                     "data/linelists/linelist_metadata.json")
     with open(metadata_file) as f:
@@ -13,12 +16,12 @@ def get_linelist_metadata():
 
 
 def get_available_linelists():
+    """Return all available line lists."""
     return list(get_linelist_metadata().keys())
 
 
 def load_preset_linelist(name):
-    """
-    Returns one of our preset line lists, loaded into an astropy QTable
+    """Return one of the preset line lists, loaded into `~astropy.table.QTable`.
     """
     metadata = get_linelist_metadata()
     if name not in metadata.keys():

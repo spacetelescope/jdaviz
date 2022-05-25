@@ -3,3 +3,12 @@ py:class ipyvuetify.VuetifyTemplate.VuetifyTemplate
 
 # https://github.com/glue-viz/glue-jupyter/issues/258
 py:class glue_jupyter.table.viewer.TableViewer
+
+# Upstream refs not found
+py:class bqplot.marks.Lines
+py:class bqplot.marks.Scatter
+py:class bqplot.marks.Label
+py:class ipywidgets.widgets.valuewidget.ValueWidget
+py:class ipywidgets.widgets.widget_box.VBox
+py:class glue_jupyter.bqplot.common.tools.BqplotPanZoomMode
+py:class glue_jupyter.bqplot.image.state.BqplotImageViewerState

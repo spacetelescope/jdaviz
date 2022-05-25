@@ -15,7 +15,8 @@ from bqplot.interacts import BrushSelector, BrushIntervalSelector
 
 from jdaviz.core.events import LineIdentifyMessage, SpectralMarksChangedMessage
 
-__all__ = []
+__all__ = ['BoxZoom', 'XRangeZoom', 'SelectLine', 'SidebarShortcutPlotOptions',
+           'SidebarShortcutExportPlot', 'SidebarShortcutCompass']
 
 ICON_DIR = os.path.join(os.path.dirname(__file__), '..', 'data', 'icons')
 

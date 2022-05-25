@@ -1,6 +1,8 @@
 from glue.viewers.profile.state import ProfileViewerState
 from glue_jupyter.bqplot.image.state import BqplotImageViewerState
 
+__all__ = ['FreezableState', 'FreezableProfileViewerState', 'FreezableBqplotImageViewerState']
+
 
 class FreezableState():
     _frozen_state = []

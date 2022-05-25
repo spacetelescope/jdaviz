@@ -1,18 +1,15 @@
-
-#
-#  This file contains helper function related to configuration handling
-#
+"""This file contains helper function related to configuration handling."""
 
 import copy
 import os
 import pathlib
 import yaml
 
+__all__ = ['read_configuration', 'get_configuration', 'list_configurations']
+
 
 def read_configuration(path=None):
-    """ Loads a configuration from a YAML file
-
-    Loads application configuration settings from a YAML file
+    """Loads a configuration from a YAML file.
 
     Parameters
     ----------
@@ -20,8 +17,10 @@ def read_configuration(path=None):
         Path to the configuration file to be loaded. If None, loads the
         default configuration.
 
-    Returns:
-        A dictionary object
+    Returns
+    -------
+    config : dict
+        A dictionary object.
     """
     if not isinstance(path, (str, type(None))):
         raise ValueError('path must be a string')
@@ -51,7 +50,7 @@ def read_configuration(path=None):
 
 
 def get_configuration(path=None, section=None, config=None):
-    """ Retrieve a copy of a specified configuration
+    """Retrieve a copy of a specified configuration.
 
     Returns a copy of a configuration specification.  If ``path``
     is not specified, then returns a copy of the current application
@@ -68,7 +67,8 @@ def get_configuration(path=None, section=None, config=None):
 
     Returns
     -------
-    A configuration specification dictionary
+    cfg : dict
+        A configuration specification dictionary
 
     """
     # read the YAML configuration for the given path

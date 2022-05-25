@@ -66,15 +66,15 @@ class _Linear1DInitializer(object):
 
         Parameters
         ----------
-        instance: `~astropy.modeling.models`
+        instance : `~astropy.modeling.Model`
             The model to initialize.
 
-        x, y: numpy.ndarray
+        x, y : numpy.ndarray
             The data to use to initialize from.
 
         Returns
         -------
-        instance: `~astropy.modeling.models`
+        instance : `~astropy.modeling.Model`
             The initialized model.
         """
 
@@ -114,7 +114,7 @@ class _WideBand1DInitializer(object):
 
         Parameters
         ----------
-        instance: `~astropy.modeling.models`
+        instance: `~astropy.modeling.Model`
             The model to initialize.
 
         x, y: numpy.ndarray
@@ -122,7 +122,7 @@ class _WideBand1DInitializer(object):
 
         Returns
         -------
-        instance: `~astropy.modeling.models`
+        instance: `~astropy.modeling.Model`
             The initialized model.
         """
         y_mean = np.mean(y)
@@ -165,7 +165,7 @@ class _LineProfile1DInitializer(object):
         name : str
             The attribute name
 
-        instance: `~astropy.modeling.models`
+        instance: `~astropy.modeling.Model`
             The model to initialize.
 
         fwhm : float
@@ -179,7 +179,7 @@ class _LineProfile1DInitializer(object):
 
         Parameters
         ----------
-        instance: `~astropy.modeling.models`
+        instance: `~astropy.modeling.Model`
             The model to initialize.
 
         x, y: numpy.ndarray
@@ -187,7 +187,7 @@ class _LineProfile1DInitializer(object):
 
         Returns
         -------
-        instance: `~astropy.modeling.models`
+        instance: `~astropy.modeling.Model`
             The initialized model.
         """
 
@@ -240,7 +240,7 @@ class _BlackBodyInitializer:
 
         Parameters
         ----------
-        instance: `~astropy.modeling.models`
+        instance: `~astropy.modeling.Model`
             The model to initialize.
 
         x, y: numpy.ndarray
@@ -248,7 +248,7 @@ class _BlackBodyInitializer:
 
         Returns
         -------
-        instance: `~astropy.modeling.models`
+        instance: `~astropy.modeling.Model`
             The initialized model.
         """
         y_mean = np.nanmean(y)
@@ -278,7 +278,7 @@ def _setattr(instance, mname, pname, value):
 
     Parameters
     ----------
-    instance: `~astropy.modeling.models`
+    instance: `~astropy.modeling.Model`
         The model to initialize.
 
     mname: str
@@ -347,7 +347,7 @@ def initialize(instance, x, y):
 
     Parameters
     ----------
-    instance: `~astropy.modeling.models`
+    instance: `~astropy.modeling.Model`
         The model to initialize.
 
     x, y: numpy.ndarray
@@ -355,7 +355,7 @@ def initialize(instance, x, y):
 
     Returns
     -------
-    instance: `~astropy.modeling.models`
+    instance: `~astropy.modeling.Model`
         The initialized model.
         If there are any errors, the instance is returned
         uninitialized.

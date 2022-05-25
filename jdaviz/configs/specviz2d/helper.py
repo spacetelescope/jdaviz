@@ -4,6 +4,8 @@ from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.configs.default.plugins.line_lists.line_list_mixin import LineListMixin
 
+__all__ = ['Specviz2d']
+
 
 class Specviz2d(ConfigHelper, LineListMixin):
     """Specviz2D Helper class"""
