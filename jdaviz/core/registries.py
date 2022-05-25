@@ -171,16 +171,7 @@ class DataParserRegistry(UniqueDictRegistry):
 
 
 viewer_registry = ViewerRegistry()
-"""Instance of `ViewerRegistry`."""
-
 tray_registry = TrayRegistry()
-"""Instance of `TrayRegistry`."""
-
 tool_registry = ToolRegistry()
-"""Instance of `ToolRegistry`."""
-
 menu_registry = MenuRegistry()
-"""Instance of `MenuRegistry`."""
-
 data_parser_registry = DataParserRegistry()
-"""Instance of `DataParserRegistry`."""

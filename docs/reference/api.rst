@@ -147,10 +147,6 @@ Nuts and Bolts
    :no-inheritance-diagram:
    :no-inherited-members:
 
-.. automodapi:: jdaviz.cli
-   :no-inheritance-diagram:
-   :no-inherited-members:
-
 .. automodapi:: jdaviz.configs.default.plugins.data_tools.file_chooser
    :no-inheritance-diagram:
    :no-inherited-members:
@@ -218,7 +214,6 @@ Nuts and Bolts
 .. automodapi:: jdaviz.core.template_mixin
    :no-inheritance-diagram:
    :no-inherited-members:
-
 
 .. automodapi:: jdaviz.core.validunits
    :no-inheritance-diagram:

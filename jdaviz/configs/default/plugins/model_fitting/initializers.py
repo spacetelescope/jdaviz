@@ -347,15 +347,15 @@ def initialize(instance, x, y):
 
     Parameters
     ----------
-    instance: `~astropy.modeling.Model`
+    instance : `~astropy.modeling.Model`
         The model to initialize.
 
-    x, y: numpy.ndarray
+    x, y : ndarray
         The data to use to initialize from.
 
     Returns
     -------
-    instance: `~astropy.modeling.Model`
+    instance : `~astropy.modeling.Model`
         The initialized model.
         If there are any errors, the instance is returned
         uninitialized.

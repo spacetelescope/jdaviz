@@ -16,7 +16,7 @@ def units_to_strings(unit_list):
 
     Returns
     -------
-    result: list
+    result : list
         A list of the units with their best (i.e., most readable) string version.
     """
     return [u.Unit(unit).name
@@ -63,8 +63,8 @@ def create_flux_equivalencies_list(spectrum):
     # Get unit equivalencies.
     curr_flux_unit_equivalencies = u.Unit(
         spectrum.flux.unit).find_equivalent_units(
-        equivalencies=u.spectral_density(np.sum(spectrum.spectral_axis)),
-                                         include_prefix_units=False) # noqa
+            equivalencies=u.spectral_density(np.sum(spectrum.spectral_axis)),
+            include_prefix_units=False)
 
     # Get local units.
     locally_defined_flux_units = ['Jy', 'mJy', 'uJy',
@@ -87,7 +87,7 @@ def create_flux_equivalencies_list(spectrum):
     flux_unit_equivalencies_titles = sorted(units_to_strings(curr_flux_unit_equivalencies))
 
     # Concatenate both lists with the local units coming first.
-    flux_unit_equivalencies_titles = sorted(units_to_strings(local_units)) + \
-                                     flux_unit_equivalencies_titles # noqa
+    flux_unit_equivalencies_titles = (sorted(units_to_strings(local_units)) +
+                                      flux_unit_equivalencies_titles)
 
     return flux_unit_equivalencies_titles
