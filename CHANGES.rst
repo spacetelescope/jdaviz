@@ -5,11 +5,13 @@ New Features
 ------------
 
 - Line list plugin now supports exact-text filtering on line names. [#1298]
+
 - Added a Subset Tools plugin for viewing information about defined subsets. [#1292]
+
 - Data menus in the viewers are filtered to applicable entries only and support removing generated data from
   the app. [#1313]
 
-- Offscreen indication for spectral lines and slice indicator. [#1312]
+- Added offscreen indication for spectral lines and slice indicator. [#1312]
 
 Cubeviz
 ^^^^^^^
@@ -30,29 +32,11 @@ Imviz
 - Clicking on image in pan/zoom mode now centers the image to location
   under cursor. [#1319]
 
-Mosviz
-^^^^^^
-
 Specviz
 ^^^^^^^
 
 - Line List Spectral Range filter displays only lines with an observed
   wavelength within the range of the spectrum viewer [#1327]
-
-API Changes
------------
-
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
 
 Bug Fixes
 ---------
@@ -90,9 +74,6 @@ Imviz
 - Markers API now handles GWCS with ICRS Lon/Lat defined instead of
   Right Ascension and Declination. [#1314]
 
-Mosviz
-^^^^^^
-
 Specviz
 ^^^^^^^
 
@@ -103,9 +84,6 @@ Specviz2d
 
 - Fixed a regression that caused NIRSpec s2d to stop loading
   properly. [#1307]
-
-Other Changes and Additions
----------------------------
 
 2.5 (2022-04-28)
 ================
