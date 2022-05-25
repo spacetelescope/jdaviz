@@ -20,13 +20,12 @@
                margin-left: -24px;
                margin-right: -24px;
                cursor: pointer;
-               border: 1px solid rgb(21 58 75);
-               border-radius: 4px;
+               border: 2px solid #00617E;
                background-color: rgb(245 245 245 / 70%);">
         <v-icon
           large 
           dark
-          color="rgb(21 58 75 / 70%)"
+          color="#00617E"
           style="height: 100%"
           >mdi-link-off</v-icon>
       </div> 

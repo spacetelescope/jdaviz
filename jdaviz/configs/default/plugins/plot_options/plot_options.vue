@@ -1,16 +1,20 @@
 <template>
   <j-tray-plugin>
     <v-row>
-      <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#plot-options'">Viewer and data/layer options.</j-docs-link>
-    </v-row>
-  
-    <v-row justify="end">
-      <v-btn
-        icon
-        @click="() => {multiselect = !multiselect}"
-      >
-        <v-icon>{{multiselect ? 'mdi-checkbox-multiple-marked-outline' : 'mdi-checkbox-marked-outline'}}</v-icon>
-      </v-btn>
+      <div style="width: calc(100% - 32px)">
+        <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#plot-options'">Viewer and data/layer options.</j-docs-link>
+      </div>
+      <div style="width: 32px">
+        <j-tooltip tipid='plugin-plot-options-multiselect-toggle'>
+          <v-btn
+            icon
+            style="opacity: 0.7"
+            @click="() => {multiselect = !multiselect}"
+          >
+            <img :src="multiselect ? icon_checktoradial : icon_radialtocheck" width="24"/>
+          </v-btn>
+        </j-tooltip>
+      </div>
     </v-row>
 
     <plugin-viewer-select

@@ -1,11 +1,15 @@
+import os
+
 from traitlets import Any, Dict, Float, Bool, Int, List, Unicode
 from ipywidgets.widgets import widget_serialization
 
 from glue.viewers.profile.state import ProfileViewerState, ProfileLayerState
+from glue_jupyter.common.toolbar_vuetify import read_icon
 
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (TemplateMixin, ViewerSelect, LayerSelect,
                                         PlotOptionsSyncState)
+from jdaviz.core.tools import ICON_DIR
 
 __all__ = ['PlotOptions']
 
@@ -96,6 +100,9 @@ class PlotOptions(TemplateMixin):
 
     show_axes_value = Bool().tag(sync=True)
     show_axes_sync = Dict().tag(sync=True)
+
+    icon_radialtocheck = Unicode(read_icon(os.path.join(ICON_DIR, 'radialtocheck.svg'), 'svg+xml')).tag(sync=True)  # noqa
+    icon_checktoradial = Unicode(read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
