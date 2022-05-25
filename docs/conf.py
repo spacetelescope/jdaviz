@@ -133,7 +133,7 @@ rst_epilog += """
 
 
 .. |icon-viewer-data-select| image:: /img/icons/viewer_data_select.png
-  :scale: 40
+  :scale: 30
   :alt: data select icon
 """
 

@@ -35,11 +35,13 @@ Selecting Data Set
 ==================
 
 The data to be displayed in each viewer can be selected and de-selected by 
-clicking on the :guilabel:`Data` icon at the top left of each viewer. Here, 
-you can click the checkbox next to each listed dataset to make that dataset 
-visible (checked) or invisible (unchecked).
+clicking on the |icon-viewer-data-select| icon at the top left of each viewer. Here, 
+you can click the radio button next to each listed dataset to make that dataset 
+visible (checked) or invisible (unchecked). By default only one selection at a time
+is allowed; to allow multiple data entries to be selected at once, click the toggle
+in the top right of the menu.
 
- .. image:: img/data_tab_with_2_data.png
+ .. image:: img/data_tab_radio.png
 
 Changing Wavelength Slice
 =========================
