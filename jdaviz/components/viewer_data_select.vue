@@ -39,7 +39,7 @@
         <v-row style="padding-left: 32px; margin-right: 0px; padding-bottom: 4px; padding-top: 6 px;
                      background-color: #E3F2FD">
           <span>
-            Add more datasets to this list using the "Load Data" button or the API.
+            Add more datasets to this list using the "Import Data" button or the API.
           </span>
         </v-row>
 

@@ -130,6 +130,11 @@ rst_epilog += """
 .. |icon-line-select| image:: /img/icons/line_select.png
   :scale: 40
   :alt: line select icon
+
+
+.. |icon-viewer-data-select| image:: /img/icons/viewer_data_select.png
+  :scale: 40
+  :alt: data select icon
 """
 
 # -- Project information ------------------------------------------------------
