@@ -339,7 +339,10 @@ class BaseSelectPluginComponent(BasePluginComponent, HasTraits):
 
     def _selected_changed(self, event):
         self._clear_cache()
-        if self.is_multiselect and isinstance(event['new'], list):
+        if self.is_multiselect:
+            if not isinstance(event['new'], list):
+                self.selected = [event['new']]
+                return
             if not np.all([item in self.labels + [''] for item in event['new']]):
                 self._apply_default_selection()
                 raise ValueError(f"not all items in {event['new']} are one of {self.labels}")
