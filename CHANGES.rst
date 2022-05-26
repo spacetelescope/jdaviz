@@ -4,6 +4,8 @@
 New Features
 ------------
 
+- Snackbar queue priority and history access. [#1352]
+
 Cubeviz
 ^^^^^^^
 

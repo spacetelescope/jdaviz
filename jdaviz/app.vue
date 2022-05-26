@@ -1,5 +1,39 @@
 <template>
   <v-app id="web-app" class="jdaviz" ref="mainapp">
+    <v-overlay v-if="state.logger_overlay"
+      absolute
+      opacity="0.7">
+      <div :style="['imviz', 'cubeviz'].indexOf(config) !== -1 ? 'position: absolute; top: 14px; right: 55px' : 'position: absolute; top: 6px; right: 55px'">
+        <j-tooltip tipid="app-snackbar-history">
+          <v-btn icon @click="state.logger_overlay = !state.logger_overlay" :class="{active : state.logger_overlay}">
+            <v-icon medium style="padding-top: 2px">mdi-message-reply</v-icon>
+          </v-btn>
+        </j-tooltip>
+      </div>
+      <div :style="{'position': 'absolute',
+                    'top': ['imviz', 'cubeviz'].indexOf(config) !== -1 ? '64px' : '48px',
+                    'left': '0px',
+                    'width': '100%',
+                    'height': ['imviz', 'cubeviz'].indexOf(config) !== -1 ? 'calc(100% - 64px)' : 'calc(100% - 48px)',
+                    'overflow-y': 'scroll',
+                    'border-top': '6px solid #C75109',
+                    'padding-left': '15%',
+                    'padding-top': '20px'}"
+            @click="state.logger_overlay = false">
+        <v-row 
+            dense 
+            @click="(e) => {e.stopImmediatePropagation()}"
+            v-for="history in state.snackbar_history.slice().reverse()"
+            style="width: 80%">
+          <v-alert 
+            dense 
+            :type="history.color" 
+            style="width: 100%; margin: 6px 0px 0px; text-align: left">
+              [{{history.time}}]: {{history.text}}
+          </v-alert>
+        </v-row>
+      </div>
+    </v-overlay>
     <v-app-bar color="toolbar" dark :dense="state.settings.dense_toolbar" flat app absolute clipped-right style="margin-left: 1px; margin-right: 1px">
       <v-toolbar-items v-for="item in state.tool_items">
         <v-divider v-if="['g-data-tools', 'g-subset-tools'].indexOf(item.name) === -1" vertical style="margin: 0px 10px"></v-divider>
@@ -13,6 +47,11 @@
         <j-tooltip tipid="app-help">
           <v-btn icon :href="getReadTheDocsLink()" target="_blank">
             <v-icon medium>mdi-help-box</v-icon>
+          </v-btn>
+        </j-tooltip>
+        <j-tooltip tipid="app-snackbar-history">
+          <v-btn icon @click="state.logger_overlay = !state.logger_overlay" :class="{active : state.logger_overlay}">
+            <v-icon medium style="padding-top: 2px">mdi-message-reply-text</v-icon>
           </v-btn>
         </j-tooltip>
         <j-tooltip tipid="app-toolbar-plugins">
@@ -83,8 +122,11 @@
       v-model="state.snackbar.show"
       :timeout="state.snackbar.timeout"
       :color="state.snackbar.color"
-      :top=true
+      top
+      right
+      transition="slide-x-transition"
       absolute
+      style="margin-right: 95px; margin-top: -2px"
     >
       {{ state.snackbar.text }}
 
@@ -321,4 +363,9 @@ a:active {
   /* https://codepen.io/sosuke/pen/Pjoqqp for #C75109 */
   filter: brightness(0) saturate(100%) invert(31%) sepia(84%) saturate(1402%) hue-rotate(1deg) brightness(95%) contrast(94%);  
 }
+
+.v-overlay__content {
+  position: unset !important;
+}
+
 </style>

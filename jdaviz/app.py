@@ -93,6 +93,8 @@ class ApplicationState(State):
     """
     drawer = CallbackProperty(
         False, docstring="State of the plugins drawer.")
+    logger_overlay = CallbackProperty(
+        False, docstring="State of the logger history overlay.")
 
     snackbar = DictCallbackProperty({
         'show': False,
@@ -103,6 +105,8 @@ class ApplicationState(State):
     }, docstring="State of the quick toast messages.")
 
     snackbar_queue = SnackbarQueue()
+
+    snackbar_history = ListCallbackProperty(docstring="Previously dismissed snackbar items")
 
     settings = DictCallbackProperty({
         'data': {
