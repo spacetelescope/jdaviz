@@ -432,6 +432,14 @@ class LayerSelect(BaseSelectPluginComponent):
         self.add_observe(viewer, self._on_viewer_changed)
         self._on_layers_changed()
 
+    def _get_viewer(self, viewer):
+        # newer will likely be the viewer name in most cases, but viewer id in the case
+        # of additional viewers in imviz.
+        try:
+            return self.app.get_viewer(viewer)
+        except TypeError:
+            return self.app.get_viewer_by_id(viewer)
+
     def _layer_to_dict(self, layer, index=None):
         d = {"label": layer.layer.label, "color": layer.state.color}
         if index is not None:
@@ -456,7 +464,7 @@ class LayerSelect(BaseSelectPluginComponent):
         viewer_names = self.viewer
         if not isinstance(viewer_names, list):
             viewer_names = [viewer_names]
-        viewers = [self.app.get_viewer(viewer) for viewer in viewer_names]
+        viewers = [self._get_viewer(viewer) for viewer in viewer_names]
 
         manual_items = [{'label': label} for label in self.manual_options]
         layers = [layer for viewer in viewers for layer in viewer.layers]
@@ -475,7 +483,7 @@ class LayerSelect(BaseSelectPluginComponent):
             selected = [selected]
 
         layers = [layer for viewer_name in viewer_names
-                  for layer in self.app.get_viewer(viewer_name).layers
+                  for layer in self._get_viewer(viewer_name).layers
                   if layer.layer.label in selected]
 
         if not self.multiselect and len(layers) == 1:

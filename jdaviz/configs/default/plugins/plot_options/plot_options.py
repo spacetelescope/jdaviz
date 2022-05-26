@@ -1,7 +1,6 @@
 import os
 
 from traitlets import Any, Dict, Float, Bool, Int, List, Unicode
-from ipywidgets.widgets import widget_serialization
 
 from glue.viewers.profile.state import ProfileViewerState, ProfileLayerState
 from glue_jupyter.common.toolbar_vuetify import read_icon
@@ -25,9 +24,6 @@ class PlotOptions(TemplateMixin):
     viewer_selected = Any().tag(sync=True)  # Any needed for multiselect
     layer_items = List().tag(sync=True)
     layer_selected = Any().tag(sync=True)  # Any needed for multiselect
-
-    viewer_widget = Any().tag(sync=True, **widget_serialization)
-    layer_widget = Any().tag(sync=True, **widget_serialization)
 
     # spectrum viewer/layer options:
     collapse_func_value = Unicode().tag(sync=True)
