@@ -26,6 +26,9 @@ class PlotOptions(TemplateMixin):
     layer_selected = Any().tag(sync=True)  # Any needed for multiselect
 
     # spectrum viewer/layer options:
+    line_visible_value = Bool().tag(sync=True)
+    line_visible_sync = Dict().tag(sync=True)
+
     collapse_func_value = Unicode().tag(sync=True)
     collapse_func_sync = Dict().tag(sync=True)
 
@@ -112,6 +115,9 @@ class PlotOptions(TemplateMixin):
             return isinstance(state, (ProfileViewerState, ProfileLayerState))
 
         # Spectrum viewer/layer options:
+        self.line_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'visible',
+                                                 'line_visible_value', 'line_visible_sync',
+                                                 state_filter=is_profile)
         self.collapse_function = PlotOptionsSyncState(self, self.viewer, self.layer, 'function',
                                                       'collapse_func_value', 'collapse_func_sync')
         self.line_color = PlotOptionsSyncState(self, self.viewer, self.layer, 'color',

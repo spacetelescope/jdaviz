@@ -39,6 +39,15 @@
 
     <!-- PROFILE -->
     <j-plugin-section-header v-if="line_width_sync.in_subscribed_states">Profile Line</j-plugin-section-header>
+    <glue-state-sync-wrapper :sync="line_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('line_visible')">
+      <span>
+        <v-btn icon @click.stop="line_visible_value = !line_visible_value">
+          <v-icon>mdi-eye{{ line_visible_value ? '' : '-off' }}</v-icon>
+        </v-btn>
+        Show layer
+      </span>
+    </glue-state-sync-wrapper>
+
     <glue-state-sync-wrapper v-if="config === 'cubeviz'" :sync="collapse_func_sync" :multiselect="multiselect" @unmix-state="unmix_state('function')">
       <v-select
         :items="collapse_func_sync.choices"
@@ -187,7 +196,7 @@
 
     <!-- IMAGE:CONTOUR -->
     <j-plugin-section-header v-if="contour_visible_sync.in_subscribed_states">Contours</j-plugin-section-header>
-    <glue-state-sync-wrapper :sync="contour_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('contour')">
+    <glue-state-sync-wrapper :sync="contour_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('contour_visible')">
       <span>
         <v-btn icon @click.stop="contour_visible_value = !contour_visible_value">
           <v-icon>mdi-eye{{ contour_visible_value ? '' : '-off' }}</v-icon>
