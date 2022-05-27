@@ -245,8 +245,8 @@
     </div>
 
     <!-- GENERAL:AXES -->
-    <j-plugin-section-header v-if="show_axes_sync.in_subscribed_states">Axes</j-plugin-section-header>
-    <glue-state-sync-wrapper :sync="show_axes_sync" :multiselect="multiselect" @unmix-state="unmix_state('show_axes')">
+    <j-plugin-section-header v-if="show_axes_sync.in_subscribed_states && config !== 'imviz'">Axes</j-plugin-section-header>
+    <glue-state-sync-wrapper v-if="config !== 'imviz'":sync="show_axes_sync" :multiselect="multiselect" @unmix-state="unmix_state('show_axes')">
       <v-switch
         v-model="show_axes_value"
         label="Show axes"

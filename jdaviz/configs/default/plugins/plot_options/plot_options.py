@@ -171,6 +171,7 @@ class PlotOptions(TemplateMixin):
                                                           'contour_custom_levels_value', 'contour_custom_levels_sync')  # noqa
 
         # Axes options:
+        # show_axes hidden for imviz in plot_options.vue
         self.show_axes = PlotOptionsSyncState(self, self.viewer, self.layer, 'show_axes',
                                               'show_axes_value', 'show_axes_sync',
                                               state_filter=not_profile)
