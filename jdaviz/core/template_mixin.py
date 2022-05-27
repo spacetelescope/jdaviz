@@ -332,7 +332,7 @@ class BaseSelectPluginComponent(BasePluginComponent, HasTraits):
         self._clear_cache()
         if self.is_multiselect:
             self.selected = [self.selected]
-        elif len(self.selected):
+        elif isinstance(self.selected, list):
             self.selected = self.selected[0]
         else:
             self._apply_default_selection()
@@ -390,7 +390,7 @@ class LayerSelect(BaseSelectPluginComponent):
     def __init__(self, plugin, items, selected, viewer,
                  multiselect=None,
                  default_text=None, manual_options=[], allowed_type=None,
-                 default_mode='default_text'):
+                 default_mode='first'):
         """
         Parameters
         ----------
@@ -1500,6 +1500,12 @@ class PlotOptionsSyncState(BasePluginComponent):
         self._processing_change_from_glue = True
         if "Colormap" in value.__class__.__name__:  # TODO: better logic
             value = str(value)
+        elif isinstance(self.value, (int, float)) and self._glue_name != 'percentile':
+            # glue might pass us ints for float or vice versa, but our traitlets care
+            # so let's cast to the type expected by the traitlet to avoid having to
+            # use Any traitlets for all of these.  We skip percentile as that needs
+            # to be an Any traitlet in order to handle "Custom"
+            value = type(self.value)(value)
         self.value = value
         # need to recompute mixed state
         self._update_mixed_state()
