@@ -39,7 +39,9 @@ clicking on the |icon-viewer-data-select| icon at the top left of each viewer. H
 you can click the radio button next to each listed dataset to make that dataset 
 visible (checked) or invisible (unchecked). By default only one selection at a time
 is allowed; to allow multiple data entries to be selected at once, click the toggle
-in the top right of the menu.
+in the top right of the menu. The datasets available in each viewer are filtered
+to include only compatible data, so you may not see all loaded data in the menu for
+every viewer. For example, 1D spectra will not be available in the image viewers.
 
  .. image:: img/data_tab_radio.png
 
