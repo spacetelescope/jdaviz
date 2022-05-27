@@ -35,7 +35,12 @@ class SnackbarQueue:
         if not msg.loading:
             now = time.localtime()
             timestamp = f'{now.tm_hour}:{now.tm_min:02d}:{now.tm_sec:02d}'
-            state.snackbar_history.append({'time': timestamp, 'text': msg.text, 'color': msg.color})
+            new_history = {'time': timestamp, 'text': msg.text, 'color': msg.color}
+            # for now, we'll hardcode the max length of the stored history
+            if len(state.snackbar_history) >= 50:
+                state.snackbar_history = state.snackbar_history[1:] + [new_history]
+            else:
+                state.snackbar_history.append(new_history)
 
         if msg.loading:
             # immediately show the loading message indefinitely until cleared by a new message
