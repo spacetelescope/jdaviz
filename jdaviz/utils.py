@@ -28,11 +28,11 @@ class SnackbarQueue:
         # to give time for the app to load.
         self.first = True
 
-    def put(self, state, msg):
+    def put(self, state, msg, history=True, popup=True):
         if msg.color not in ['info', 'warning', 'error', 'success', None]:
             raise ValueError(f"color ({msg.color}) must be on of: info, warning, error, success")
 
-        if not msg.loading:
+        if not msg.loading and history:
             now = time.localtime()
             timestamp = f'{now.tm_hour}:{now.tm_min:02d}:{now.tm_sec:02d}'
             new_history = {'time': timestamp, 'text': msg.text, 'color': msg.color}
@@ -41,6 +41,9 @@ class SnackbarQueue:
                 state.snackbar_history = state.snackbar_history[1:] + [new_history]
             else:
                 state.snackbar_history.append(new_history)
+
+        if not popup:
+            return
 
         if msg.loading:
             # immediately show the loading message indefinitely until cleared by a new message
