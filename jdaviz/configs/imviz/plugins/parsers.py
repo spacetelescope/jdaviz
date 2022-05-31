@@ -1,6 +1,8 @@
 import os
 
 import numpy as np
+import asdf
+from asdf.fits_embed import AsdfInFits
 from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import NDData
@@ -12,6 +14,9 @@ from stdatamodels import asdf_in_fits
 from jdaviz.core.registries import data_parser_registry
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.utils import standardize_metadata, PRIHDR_KEY
+
+from roman_datamodels import datamodels as rdd
+
 
 __all__ = ['parse_data']
 
@@ -51,9 +56,18 @@ def parse_data(app, file_obj, ext=None, data_label=None):
                 pf = rgb2gray(im)
             pf = pf[::-1, :]  # Flip it
             _parse_image(app, pf, data_label, ext=ext)
-        else:  # Assume FITS
+        elif file_obj.lower().endswith('.fits'):
             with fits.open(file_obj) as pf:
                 _parse_image(app, pf, data_label, ext=ext)
+        elif file_obj.lower().endswith('.asdf'):
+            try:
+                pf = rdd.open(file_obj)
+                _parse_image(app, pf, data_label, ext=ext)
+            except:
+                with asdf.open(file_obj) as pf:
+                    _parse_image(app, pf, data_label, ext=ext)
+        else:
+            raise NotImplementedError('File extension is not implemented.')
     else:
         _parse_image(app, file_obj, data_label, ext=ext)
 
@@ -104,6 +118,13 @@ def get_image_data_iterator(app, file_obj, data_label, ext=None):
         # NOTE: ext is not used here. It only means something if HDUList is given.
         _validate_fits_image2d(file_obj)
         data_iter = _hdu_to_glue_data(file_obj, data_label)
+
+    # Roman 2-D datamodels
+    elif isinstance(file_obj, (rdd.ImageModel, rdd.RampModel, rdd.RampFitOutputModel, rdd.FlatRefModel,
+                               rdd.GainRefModel, rdd.LinearityRefModel,
+                               rdd.MaskRefModel, rdd.PixelareaRefModel, rdd.ReadnoiseRefModel,
+                               rdd.SaturationRefModel, rdd.SuperbiasRefModel)):
+        data_iter = _roman_2d_asdf_to_glue_data(file_obj, data_label)
 
     elif isinstance(file_obj, NDData):
         data_iter = _nddata_to_glue_data(file_obj, data_label)
@@ -262,6 +283,27 @@ def _jwst2data(file_obj, ext, data_label):
         return _hdu2data(hdu, data_label, file_obj, include_wcs=False)
 
     return data, new_data_label
+
+# ---- Functions that handle input from Roman ASDF files -----
+
+
+def _roman_2d_asdf_to_glue_data(file_obj, data_label):
+    ext_list = ['data', 'dq', 'err', 'var_poisson', 'var_rnoise', 'amp33']
+
+    for ext in ext_list:
+        comp_label = ext.lower()
+        new_data_label = f'{data_label}[{comp_label}]'
+        data = Data(label=new_data_label)
+
+        # For now, set bunit to a blank string.
+        bunit = ''
+        component = Component.autotyped(np.array(getattr(file_obj, ext)), units=bunit)
+        data.add_component(component=component, label=comp_label)
+        data.coords = None
+
+        yield data, new_data_label
+
+# ---- Functions that handle input from non-Roman ASDF files -----
 
 
 # ---- Functions that handle input from non-JWST FITS files -----
