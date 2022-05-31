@@ -54,9 +54,13 @@ class LineListTool(PluginTemplateMixin):
     custom_unit = Unicode().tag(sync=True)
 
     lines_filter = Any().tag(sync=True)  # string or None
+    filter_range = Bool(False).tag(sync=True)
+    spectrum_viewer_min = Float(0.01).tag(sync=True)
+    spectrum_viewer_max = Float(0.01).tag(sync=True)
 
     identify_label = Unicode().tag(sync=True)
     identify_line_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'line_select.svg'), 'svg+xml')).tag(sync=True)  # noqa
+    filter_range_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'spectral_range.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -103,7 +107,10 @@ class LineListTool(PluginTemplateMixin):
                            handler=self._process_identify_change)
 
         # if set to auto (default), update the slider range when zooming on the spectrum viewer
-        self._viewer.scales['x'].observe(self._auto_slider_range, names=['min', 'max'])
+        self._viewer.state.add_callback("x_min",
+                                        lambda x_min: self._on_spectrum_viewer_limits_changed())
+        self._viewer.state.add_callback("x_max",
+                                        lambda x_max: self._on_spectrum_viewer_limits_changed())
 
     def _on_viewer_data_changed(self, msg=None):
         """
@@ -155,7 +162,7 @@ class LineListTool(PluginTemplateMixin):
         self.rs_redshift = (viewer_data.redshift.value
                             if hasattr(viewer_data.redshift, 'value')
                             else viewer_data.redshift)
-        self._auto_slider_range()  # will also trigger _auto_slider_step
+        self._on_spectrum_viewer_limits_changed()  # will also trigger _auto_slider_step
 
         # set the choices (and default) for the units for new custom lines
         self.custom_unit_choices = create_spectral_equivalencies_list(viewer_data)
@@ -367,12 +374,23 @@ class LineListTool(PluginTemplateMixin):
         # updating during slide, so update them now
         self.vue_unpause_tables()
 
+    def _on_spectrum_viewer_limits_changed(self, event=None):
+        sv = self.app.get_viewer('spectrum-viewer')
+        self.spectrum_viewer_min = sv.state.x_min
+        self.spectrum_viewer_max = sv.state.x_max
+
+        # Also update the slider range
+        self._auto_slider_range()
+
     def _auto_slider_range(self, event=None):
+        """
+        Automatically adjusts the Redshift slider range to the values of the
+        spectrum_viewer_min and spectrum_viewer_max traitlets
+        """
         if not self.rs_slider_range_auto:
             return
         # if set to auto, default the range based on the limits of the spectrum plot
-        sv = self.app.get_viewer('spectrum-viewer')
-        x_min, x_max = sv.state.x_min, sv.state.x_max
+        x_min, x_max = self.spectrum_viewer_min, self.spectrum_viewer_max
         x_mid = abs(x_max + x_min) / 2.
         # we'll *estimate* the redshift range to shift the range of the viewer
         # (for a line with a rest wavelength in the center of the viewer),
@@ -393,7 +411,7 @@ class LineListTool(PluginTemplateMixin):
     @observe('rs_slider_range_auto')
     def _on_rs_slider_range_auto_updated(self, event):
         if event['new']:
-            self._auto_slider_range()
+            self._on_spectrum_viewer_limits_changed()
 
     @observe('rs_slider_half_range')
     def _auto_slider_step(self, event=None):
@@ -740,7 +758,8 @@ class LineListTool(PluginTemplateMixin):
         color = data['color']
         if "listname" in data:
             listname = data["listname"]
-            lc = self.list_contents[listname]
+            # force a copy so that the change is picked up by traitlets
+            lc = self.list_contents[listname].copy()
             lc["color"] = color
 
             for line in lc["lines"]:
@@ -751,6 +770,8 @@ class LineListTool(PluginTemplateMixin):
                 # Update the color on the plot
                 if name_rest in self.line_mark_dict:
                     self.line_mark_dict[name_rest].colors = [color]
+
+            self.list_contents = {**self.list_contents, listname: lc}
 
         elif "linename" in data:
             pass

@@ -5,6 +5,8 @@ from astropy.io import fits
 from astropy.wcs import WCS
 from specutils import Spectrum1D
 
+from jdaviz.utils import PRIHDR_KEY
+
 
 @pytest.fixture
 def image_hdu_obj():
@@ -57,6 +59,12 @@ def test_fits_image_hdu_parse_from_file(tmpdir, image_hdu_obj, cubeviz_helper):
     assert cubeviz_helper.app.data_collection[0].label.endswith('[FLUX]')
 
     # This tests the same data as test_fits_image_hdu_parse above.
+
+    cubeviz_helper.app.data_collection[0].meta['EXTNAME'] == 'FLUX'
+    cubeviz_helper.app.data_collection[1].meta['EXTNAME'] == 'MASK'
+    cubeviz_helper.app.data_collection[2].meta['EXTNAME'] == 'ERR'
+    for i in range(3):
+        assert cubeviz_helper.app.data_collection[i].meta[PRIHDR_KEY]['BITPIX'] == 8
 
     flux_viewer = cubeviz_helper.app.get_viewer('flux-viewer')
     flux_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
@@ -114,6 +122,7 @@ def test_spectrum1d_parse(spectrum1d, cubeviz_helper):
 
     assert len(cubeviz_helper.app.data_collection) == 1
     assert cubeviz_helper.app.data_collection[0].label.endswith('[FLUX]')
+    assert cubeviz_helper.app.data_collection[0].meta['uncertainty_type'] == 'std'
 
     # Coordinate display is only for spatial image, which is missing here.
     flux_viewer = cubeviz_helper.app.get_viewer('flux-viewer')

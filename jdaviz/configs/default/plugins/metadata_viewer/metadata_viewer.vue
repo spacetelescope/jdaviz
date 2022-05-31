@@ -14,18 +14,29 @@
       hint="Select the data to see metadata."
     />
 
+    <v-row v-if="has_primary">
+      <v-switch
+        label="Show primary header"
+        hint="Show MEF primary header metadata instead."
+        v-model="show_primary"
+        persistent-hint>
+      </v-switch>
+    </v-row>
+
     <j-plugin-section-header>Metadata</j-plugin-section-header>
     <div v-if="has_metadata">
       <v-row no-gutters>
-        <v-col cols=6><U>Key</U></v-col>
+        <v-col cols=6><U><B>Key</B></U></v-col>
         <v-col cols=6><U>Value</U></v-col>
+        <v-col v-if="has_comments" cols=6 class="text--secondary"><U>Comment</U></v-col>
       </v-row>
       <v-row
         v-for="item in metadata"
         :key="item[0]"
         no-gutters>
-        <v-col cols=6>{{ item[0] }}</v-col>
+        <v-col cols=6><B>{{ item[0] }}</B></v-col>
         <v-col cols=6>{{ item[1] }}</v-col>
+        <v-col v-if="has_comments" cols=6 class="text--secondary">{{ item[2] }}</v-col>
       </v-row>
     </div>
     <v-row v-else>

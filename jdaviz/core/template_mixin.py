@@ -754,6 +754,7 @@ class DatasetSelect(BaseSelectPluginComponent):
         # Add/Remove Data are triggered when checked/unchecked from viewers
         self.hub.subscribe(self, AddDataMessage, handler=self._on_data_changed)
         self.hub.subscribe(self, RemoveDataMessage, handler=self._on_data_changed)
+        self.hub.subscribe(self, DataCollectionDeleteMessage, handler=self._on_data_changed)
 
         # initialize items from original viewers
         self._on_data_changed()
@@ -1041,6 +1042,8 @@ class AddResults(BasePluginComponent):
         if self.label_invalid_msg:
             raise ValueError(self.label_invalid_msg)
         data_item.meta['Plugin'] = self._plugin.__class__.__name__
+        if self.app.config == 'mosviz':
+            data_item.meta['mosviz_row'] = self.app.state.settings['mosviz_row']
 
         replace = self.viewer.selected_reference != 'spectrum-viewer'
 

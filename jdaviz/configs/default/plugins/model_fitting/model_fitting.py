@@ -264,7 +264,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             self._window = None
         else:
             spectral_min, spectral_max = self.spectral_subset.selected_min_max(self._spectrum1d)
-            self._window = (spectral_min.value, spectral_max.value)
+            self._window = u.Quantity([spectral_min, spectral_max])
 
     @observe('comp_selected', 'poly_order')
     def _update_comp_label_default(self, event={}):
@@ -414,7 +414,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     @observe("dataset_selected", "dataset_items", "cube_fit")
     def _set_default_results_label(self, event={}):
         label_comps = []
-        if hasattr(self, 'dataset') and len(self.dataset.labels) > 1:
+        if hasattr(self, 'dataset') and (len(self.dataset.labels) > 1 or self.app.config == 'mosviz'):  # noqa
             label_comps += [self.dataset_selected]
         if self.cube_fit:
             label_comps += ["cube-fit"]

@@ -12,7 +12,7 @@ from glue.core.data import Component, Data
 
 from jdaviz.core.registries import data_parser_registry
 from jdaviz.core.events import SnackbarMessage
-
+from jdaviz.utils import standardize_metadata, PRIHDR_KEY
 
 __all__ = ['parse_data']
 
@@ -230,7 +230,7 @@ def _jwst2data(file_obj, ext, data_label):
         with AsdfInFits.open(file_obj) as af:
             dm = af.tree
             dm_meta = af.tree["meta"]
-            data.meta.update(dm_meta)
+            data.meta.update(standardize_metadata(dm_meta))
 
             if unit_attr in dm_meta:
                 bunit = _validate_bunit(dm_meta[unit_attr], raise_error=False)
@@ -287,8 +287,8 @@ def _hdu2data(hdu, data_label, hdulist, include_wcs=True):
 
     data = Data(label=new_data_label)
     if hdulist is not None and hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
-        data.meta.update(dict(hdulist['PRIMARY'].header))
-    data.meta.update(dict(hdu.header))
+        data.meta[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
+    data.meta.update(standardize_metadata(hdu.header))
     if include_wcs:
         data.coords = WCS(hdu.header, hdulist)
     component = Component.autotyped(hdu.data, units=bunit)
@@ -310,7 +310,7 @@ def _nddata_to_glue_data(ndd, data_label):
         comp_label = attrib.upper()
         cur_label = f'{data_label}[{comp_label}]'
         cur_data = Data(label=cur_label)
-        cur_data.meta.update(ndd.meta)
+        cur_data.meta.update(standardize_metadata(ndd.meta))
         if ndd.wcs is not None:
             cur_data.coords = ndd.wcs
         raw_arr = arr

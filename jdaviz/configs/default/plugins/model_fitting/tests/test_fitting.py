@@ -3,18 +3,14 @@ import astropy.modeling.parameters as params
 import astropy.units as u
 import numpy as np
 import pytest
+
 from specutils.spectra import Spectrum1D
 
-from glue.core import Data
-
-from jdaviz import Application
 from jdaviz.configs.default.plugins.model_fitting import fitting_backend as fb
 from jdaviz.configs.default.plugins.model_fitting import initializers
 from jdaviz.configs.default.plugins.model_fitting.model_fitting import ModelFitting
 
-
 SPECTRUM_SIZE = 200  # length of spectrum
-IMAGE_SIZE = 15  # size of slab (IMAGE_SIZE x IMAGE_SIZE spaxels)
 
 
 def build_spectrum(sigma=0.1):
@@ -55,13 +51,11 @@ def test_model_params():
 
 
 @pytest.mark.filterwarnings('ignore')
-def test_model_ids(spectral_cube_wcs):
-    app = Application()
-    dc = app.data_collection
-    dc.append(Data(x=np.ones((3, 4, 5)), label='test', coords=spectral_cube_wcs))
-
-    plugin = ModelFitting(app=app)
-    plugin.dataset_selected = 'test'
+def test_model_ids(cubeviz_helper, spectral_cube_wcs):
+    cubeviz_helper.load_data(Spectrum1D(flux=np.ones((3, 4, 5)) * u.nJy, wcs=spectral_cube_wcs),
+                             data_label='test')
+    plugin = ModelFitting(app=cubeviz_helper.app)
+    plugin.dataset_selected = 'test[FLUX]'
     plugin.component_models = [{'id': 'valid_string_already_exists'}]
     plugin.comp_selected = 'Linear1D'
 
@@ -119,14 +113,16 @@ def test_cube_fitting_backend():
 
     SIGMA = 0.1  # noise in data
     TOL = 0.4  # test tolerance
+    IMAGE_SIZE_X = 15
+    IMAGE_SIZE_Y = 14
 
     # Flux cube oriented as in JWST data. To build a Spectrum1D
     # instance with this, one need to transpose it so the spectral
     # axis direction corresponds to the last index.
-    flux_cube = np.zeros((SPECTRUM_SIZE, IMAGE_SIZE, IMAGE_SIZE))
+    flux_cube = np.zeros((SPECTRUM_SIZE, IMAGE_SIZE_X, IMAGE_SIZE_Y))
 
     # Generate list of all spaxels to be fitted
-    _spx = [[(x, y) for x in range(IMAGE_SIZE)] for y in range(IMAGE_SIZE)]
+    _spx = [[(x, y) for x in range(IMAGE_SIZE_X)] for y in range(IMAGE_SIZE_Y)]
     spaxels = [item for sublist in _spx for item in sublist]
 
     # Fill cube spaxels with spectra that differ from
@@ -149,13 +145,16 @@ def test_cube_fitting_backend():
     model_list = [g1f, g2f, g3f, zero_level]
     expression = "g1 + g2 + g3 + const1d"
 
+    n_cpu = None
+    # n_cpu = 1  # NOTE: UNCOMMENT TO DEBUG LOCALLY, AS NEEDED
+
     # Fit to all spaxels.
     fitted_parameters, fitted_spectrum = fb.fit_model_to_spectrum(
-        spectrum, model_list, expression)
+        spectrum, model_list, expression, n_cpu=n_cpu)
 
     # Check that parameter results are formatted as expected.
     assert type(fitted_parameters) == list
-    assert len(fitted_parameters) == 225
+    assert len(fitted_parameters) == IMAGE_SIZE_X * IMAGE_SIZE_Y
 
     for m in fitted_parameters:
         if m['x'] == 3 and m['y'] == 2:
@@ -171,8 +170,9 @@ def test_cube_fitting_backend():
     # Check that spectrum result is formatted as expected.
     assert type(fitted_spectrum) == Spectrum1D
     assert len(fitted_spectrum.shape) == 3
-    assert fitted_spectrum.shape == (IMAGE_SIZE, IMAGE_SIZE, SPECTRUM_SIZE)
+    assert fitted_spectrum.shape == (IMAGE_SIZE_X, IMAGE_SIZE_Y, SPECTRUM_SIZE)
     assert fitted_spectrum.flux.unit == u.Jy
+    assert not np.all(fitted_spectrum.flux.value == 0)
 
     # The important point here isn't to check the accuracy of the
     # fit, which was already tested elsewhere. We are mostly

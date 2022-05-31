@@ -47,6 +47,24 @@ The example below loads the first science extension of the given FITS file into 
     imviz.load_data("/path/to/data/image.fits")
     imviz.app
 
+JWST datamodels
+^^^^^^^^^^^^^^^
+
+If you have a `jwst.datamodels <https://jwst-pipeline.readthedocs.io/en/latest/jwst/datamodels/index.html>`_
+object, you can load it into Imviz as follows::
+
+    import numpy as np
+    from astropy.nddata import NDData
+    from jdaviz import Imviz
+    # mydatamodel is a jwst.datamodels object
+    ndd = NDData(np.array(mydatamodel.data), wcs=mydatamodel.wcs)
+    imviz = Imviz()
+    imviz.load_data(ndd)
+    imviz.app
+
+There is no plan to natively load such objects until ``datamodels``
+is separated out of the ``jwst`` pipeline package.
+
 .. _imviz-import-regions-api:
 
 Importing regions via the API

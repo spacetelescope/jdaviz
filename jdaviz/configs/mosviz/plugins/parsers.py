@@ -17,6 +17,7 @@ from specutils import Spectrum1D, SpectrumList, SpectrumCollection
 from jdaviz.configs.imviz.plugins.parsers import get_image_data_iterator
 from jdaviz.core.registries import data_parser_registry
 from jdaviz.core.events import SnackbarMessage
+from jdaviz.utils import standardize_metadata, PRIHDR_KEY
 
 __all__ = ['mos_spec1d_parser', 'mos_spec2d_parser', 'mos_image_parser']
 
@@ -220,8 +221,12 @@ def mos_spec1d_parser(app, data_obj, data_labels=None):
 
     with app.data_collection.delay_link_manager_update():
 
-        for i in range(len(data_obj)):
-            app.add_data(data_obj[i], data_labels[i], notify_done=False)
+        for i, (cur_data, cur_label) in enumerate(zip(data_obj, data_labels)):
+            # Make metadata layout conform with other viz.
+            cur_data.meta = standardize_metadata(cur_data.meta)
+            cur_data.meta['mosviz_row'] = i
+
+            app.add_data(cur_data, cur_label, notify_done=False)
 
         _add_to_table(app, data_labels, '1D Spectra')
 
@@ -253,7 +258,9 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
             data = hdulist[1].data
             header = hdulist[1].header
             wcs = WCS(header)
-        return Spectrum1D(data, wcs=wcs)
+            metadata = standardize_metadata(header)
+            metadata[PRIHDR_KEY] = standardize_metadata(hdulist[0].header)
+        return Spectrum1D(data, wcs=wcs, meta=metadata)
 
     # Coerce into list-like object
     if not isinstance(data_obj, (list, tuple, SpectrumCollection)):
@@ -283,16 +290,14 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
                 except IORegistryError:
                     data = _parse_as_spectrum1d(data)
 
-            # Copy (if present) region to top-level meta object
-            if ('header' in data.meta and
-                    'S_REGION' in data.meta['header'] and
-                    'S_REGION' not in data.meta):
-                data.meta['S_REGION'] = data.meta['header']['S_REGION']
+            # Make metadata layout conform with other viz.
+            data.meta = standardize_metadata(data.meta)
 
             # Set the instrument
             # TODO: this should not be set to nirspec for all datasets
             data.meta['INSTRUME'] = 'nirspec'
 
+            data.meta['mosviz_row'] = index
             # Get the corresponding label for this data product
             label = data_labels[index]
 
@@ -309,13 +314,9 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
 
 
 def _load_fits_image_from_filename(filename, app):
-    data_list = []
     with fits.open(filename) as hdulist:
-        meta = dict(hdulist[0].header.copy())
-        data_iter = get_image_data_iterator(app, hdulist, "Image", ext=None)
-        for d, _ in data_iter:  # We do not use the generated labels
-            d.meta.update(meta)
-            data_list.append(d)
+        # We do not use the generated labels
+        data_list = [d for d, _ in get_image_data_iterator(app, hdulist, "Image", ext=None)]
     return data_list
 
 
@@ -383,6 +384,7 @@ def mos_image_parser(app, data_obj, data_labels=None, share_image=0):
 
         for i in n_data_range:
             data_obj[i].label = data_labels[i]
+            data_obj[i].meta['mosviz_row'] = i
             app.add_data(data_obj[i], data_labels[i], notify_done=False)
 
         if share_image:
@@ -497,10 +499,10 @@ def _get_source_identifiers_by_hdu(hdus, filepaths=None, header_keys=['SOURCEID'
                 # Fallback 1: filepath if only one is given
                 # Fallback 2: filepath at indx, if list of files given
                 # Fallback 3: If nothing else, just our fallback value
-                src_name = \
-                    os.path.basename(filepaths) if type(filepaths) is str \
-                    else os.path.basename(filepaths[indx]) if type(filepaths) is list \
-                    else FALLBACK_NAME
+                src_name = (
+                    os.path.basename(filepaths) if type(filepaths) is str
+                    else os.path.basename(filepaths[indx]) if type(filepaths) is list
+                    else FALLBACK_NAME)
             src_names.append(src_name)
         except Exception:
             # Source ID lookup shouldn't ever prevent target from loading. Downgrade all errors to
@@ -636,7 +638,8 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                     if temp[sci].header["SPORDER"] == 1:
 
                         data = temp[sci].data
-                        meta = temp[sci].header
+                        meta = standardize_metadata(temp[sci].header)
+                        meta[PRIHDR_KEY] = standardize_metadata(temp[0].header)
 
                         # The wavelength is stored in a WAVELENGTH HDU. This is
                         # a 2D array, but in order to be able to use Spectrum1D
@@ -646,11 +649,9 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                         spec2d = Spectrum1D(data * u.one, spectral_axis=wav, meta=meta)
 
                         spec2d.meta['INSTRUME'] = 'NIRISS'
+                        spec2d.meta['mosviz_row'] = len(spec_labels_2d)
 
-                        label = "{} Source {} spec2d {}".format(filter_name,
-                                                                temp[sci].header["SOURCEID"],
-                                                                orientation
-                                                                )
+                        label = f"{filter_name} Source {temp[sci].header['SOURCEID']} spec2d {orientation}"  # noqa
                         ra, dec = pupil_id_dict[filter_name][temp[sci].header["SOURCEID"]]
                         ras.append(ra)
                         decs.append(dec)
@@ -670,8 +671,8 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
             with fits.open(fname, memmap=False) as temp:
                 # TODO: Remove this once valid SRCTYPE values are present in all headers
                 for hdu in temp:
-                    if "SRCTYPE" in hdu.header and\
-                            (hdu.header["SRCTYPE"] in ["POINT", "EXTENDED"]):
+                    if ("SRCTYPE" in hdu.header and
+                            (hdu.header["SRCTYPE"] in ("POINT", "EXTENDED"))):
                         pass
                     else:
                         hdu.header["SRCTYPE"] = "EXTENDED"
@@ -685,13 +686,12 @@ def mos_niriss_parser(app, data_dir, obs_label=""):
                 orientation = f[-1]
 
                 for spec in specs:
-                    if spec.meta['header']['SPORDER'] == 1 and\
-                            spec.meta['header']['EXTNAME'] == "EXTRACT1D":
+                    # Make metadata layout conform with other viz.
+                    spec.meta = standardize_metadata(spec.meta)
+                    spec.meta['mosviz_row'] = len(spec_labels_1d)
 
-                        label = "{} Source {} spec1d {}".format(filter_name,
-                                                                spec.meta['header']['SOURCEID'],
-                                                                orientation
-                                                                )
+                    if spec.meta['SPORDER'] == 1 and spec.meta['EXTNAME'] == "EXTRACT1D":
+                        label = f"{filter_name} Source {spec.meta['SOURCEID']} spec1d {orientation}"
                         spec_labels_1d.append(label)
                         add_to_glue[label] = spec
 

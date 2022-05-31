@@ -4,10 +4,13 @@
       v-for="(child, index) in stack.children"
       :stack="child"
       :key="index"
-      :data-items="dataItems"
+      :data_items="data_items"
+      :app_settings="app_settings"
+      :icons="icons"
       @resize="$emit('resize')"
       :closefn="closefn"
       @data-item-selected="$emit('data-item-selected', $event)"
+      @data-item-remove="$emit('data-item-remove', $event)"
       @call-viewer-method="$emit('call-viewer-method', $event)"
     ></g-viewer-tab>
     <gl-component
@@ -21,38 +24,15 @@
     >
         <div>
           <v-row dense style="background-color: #205f76" class="jdaviz-viewer-toolbar">
-            <j-tooltip tipid="viewer-toolbar-data">
-              <v-menu offset-y :close-on-content-click="false" v-model="viewer.data_open">
-                <template v-slot:activator="{ on, attrs }">
-                  <v-btn 
-                    text 
-                    elevation="3" 
-                    v-bind="attrs" 
-                    v-on="on" 
-                    color="white"
-                    tile
-                    icon
-                    outlined
-                    :class="{active: viewer.data_open}"
-                    style="height: 42px; width: 42px">
-                    <v-icon>mdi-format-list-bulleted-square</v-icon>
-                  </v-btn>
-                </template>
+            <j-viewer-data-select
+              :data_items="data_items" 
+              :viewer="viewer"
+              :app_settings="app_settings"
+              :icons="icons"
+              @data-item-selected="$emit('data-item-selected', $event)"
+              @data-item-remove="$emit('data-item-remove', $event)"
+            ></j-viewer-data-select>
 
-                <v-list style="max-height: 500px; width: 350px;" class="overflow-y-auto">
-                    <v-checkbox
-                      v-for="item in dataItems" :key="item.id" :label="item.name" dense hide-details
-                      :input-value="viewer.selected_data_items.includes(item.id)"
-                      @change="$emit('data-item-selected', {
-                        id: viewer.id,
-                        item_id: item.id,
-                        checked: $event
-                      })"
-                      class="pl-4"
-                    ></v-checkbox>
-                </v-list>
-              </v-menu>
-            </j-tooltip>
 
             <v-toolbar-items v-if="viewer.reference === 'table-viewer'">
               <j-tooltip tipid='table-prev'>
@@ -83,7 +63,7 @@
 <script>
 module.exports = {
   name: "g-viewer-tab",
-  props: ["stack", "dataItems", "closefn"],
+  props: ["stack", "data_items", "closefn", "app_settings", "icons"],
   created() {
     this.$parent.childMe = () => {
       return this.$children[0];

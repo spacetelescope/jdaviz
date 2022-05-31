@@ -35,6 +35,13 @@ module.exports = {
     padding-left: 0px !important;
   }
 
+  .row-no-vertical-padding-margin {
+    padding-top: 0px !important;
+    padding-bottom: 0px !important;
+    margin-bottom: 0px !important;
+    margin-top: 0px !important;
+  }
+
   .row-no-outside-padding .col:last-of-type {
     padding-right: 0px !important;
   }

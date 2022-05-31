@@ -230,6 +230,16 @@ class MosvizTableViewer(TableViewer, JdavizViewerMixin):
         selected_index = event['new']
         mos_data = self.session.data_collection['MOS Table']
 
+        # plugin data entries: select all in new row, deselect all others
+        for data_item in self.jdaviz_app.data_collection:
+            if data_item.meta.get('Plugin') is not None:
+                if data_item.meta.get('mosviz_row') == selected_index:
+                    self.session.hub.broadcast(AddDataToViewerMessage(
+                        'spectrum-viewer', data_item.label, sender=self))
+                else:
+                    self.session.hub.broadcast(RemoveDataFromViewerMessage(
+                        'spectrum-viewer', data_item.label, sender=self))
+
         for component in mos_data.components:
             comp_data = mos_data.get_component(component).data
             selected_data = comp_data[selected_index]

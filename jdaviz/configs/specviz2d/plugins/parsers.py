@@ -1,10 +1,12 @@
-from jdaviz.core.registries import data_parser_registry
+from pathlib import Path
 
 from specutils import Spectrum1D
 from astropy.io import fits
 import astropy.units as u
 import numpy as np
-from pathlib import Path
+
+from jdaviz.core.registries import data_parser_registry
+from jdaviz.utils import standardize_metadata, PRIHDR_KEY
 
 __all__ = ['spec2d_1d_parser']
 
@@ -38,6 +40,7 @@ def spec2d_1d_parser(app, data_obj, data_label=None, show_in_viewer=True):
         with fits.open(data_obj) as hdulist:
             data = hdulist[1].data
             header = hdulist[1].header
+            prihdr = hdulist[0].header
 
         # Should only be 2D, so DISPAXIS-1 should be 0 or -1 and sum over the
         # correct axis. If Unit doesn't understand the BUNIT we leave flux
@@ -56,7 +59,10 @@ def spec2d_1d_parser(app, data_obj, data_label=None, show_in_viewer=True):
             # we use it here as well, even though the actual unit is pixels
             spectral_axis = np.arange(1, flux.size + 1, 1) * u.m
 
-        data_obj = Spectrum1D(flux, spectral_axis=spectral_axis)
+        metadata = standardize_metadata(header)
+        metadata[PRIHDR_KEY] = standardize_metadata(prihdr)
+
+        data_obj = Spectrum1D(flux, spectral_axis=spectral_axis, meta=metadata)
 
     app.data_collection[data_label] = data_obj
 

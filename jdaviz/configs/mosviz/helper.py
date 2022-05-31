@@ -254,6 +254,8 @@ class Mosviz(ConfigHelper, LineListMixin):
     def _row_click_message_handler(self, msg):
         self._handle_image_zoom(msg)
         self._handle_flipped_data()
+        # expose the row to vue for each of the viewers
+        self.app.state.settings = {**self.app.state.settings, 'mosviz_row': msg.selected_index}
 
     def _handle_image_zoom(self, msg):
         mos_data = self.app.data_collection['MOS Table']

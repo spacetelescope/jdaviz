@@ -25,6 +25,7 @@ from glue.core.message import (DataCollectionAddMessage,
 from glue.core.state_objects import State
 from glue.core.subset import Subset, RangeSubsetState, RoiSubsetState
 from glue_jupyter.app import JupyterApplication
+from glue_jupyter.common.toolbar_vuetify import read_icon
 from glue_jupyter.state_traitlets_helpers import GlueState
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from ipyvuetify import VuetifyTemplate
@@ -37,6 +38,7 @@ from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessag
                                 ViewerAddedMessage, ViewerRemovedMessage)
 from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registry,
                                     data_parser_registry)
+from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import SnackbarQueue
 
 __all__ = ['Application']
@@ -54,57 +56,29 @@ EXT_TYPES = dict(flux=['flux', 'sci'],
 # some glue-core versions
 glue_settings.DATA_ALPHA = 1
 
-ipyvue.register_component_from_file(None, 'j-tooltip',
-                                    os.path.join(os.path.dirname(__file__),
-                                                 'components/tooltip.vue'))
+custom_components = {'j-tooltip': 'components/tooltip.vue',
+                     'j-external-link': 'components/external_link.vue',
+                     'j-docs-link': 'components/docs_link.vue',
+                     'j-viewer-data-select': 'components/viewer_data_select.vue',
+                     'j-viewer-data-select-item': 'components/viewer_data_select_item.vue',
+                     'j-tray-plugin': 'components/tray_plugin.vue',
+                     'j-play-pause-widget': 'components/play_pause_widget.vue',
+                     'j-plugin-section-header': 'components/plugin_section_header.vue',
+                     'j-number-uncertainty': 'components/number_uncertainty.vue',
+                     'plugin-dataset-select': 'components/plugin_dataset_select.vue',
+                     'plugin-subset-select': 'components/plugin_subset_select.vue',
+                     'plugin-viewer-select': 'components/plugin_viewer_select.vue',
+                     'plugin-add-results': 'components/plugin_add_results.vue',
+                     'plugin-auto-label': 'components/plugin_auto_label.vue'}
 
-ipyvue.register_component_from_file(None, 'j-external-link',
-                                    os.path.join(os.path.dirname(__file__),
-                                                 'components/external_link.vue'))
-
-ipyvue.register_component_from_file(None, 'j-docs-link',
-                                    os.path.join(os.path.dirname(__file__),
-                                                 'components/docs_link.vue'))
-
-ipyvue.register_component_from_file(None, 'j-tray-plugin',
-                                    os.path.join(os.path.dirname(__file__),
-                                                 'components/tray_plugin.vue'))
-
-ipyvue.register_component_from_file(None, 'j-plugin-section-header',
-                                    os.path.join(os.path.dirname(__file__),
-                                                 'components/plugin_section_header.vue'))
-
-ipyvue.register_component_from_file(None, 'j-number-uncertainty',
-                                    os.path.join(os.path.dirname(__file__),
-                                                 'components/number_uncertainty.vue'))
-
-ipyvue.register_component_from_file(None, 'plugin-dataset-select',
-                                    os.path.join(os.path.dirname(__file__),
-                                                 'components/plugin_dataset_select.vue'))
-
-ipyvue.register_component_from_file(None, 'plugin-subset-select',
-                                    os.path.join(os.path.dirname(__file__),
-                                                 'components/plugin_subset_select.vue'))
-
-ipyvue.register_component_from_file(None, 'plugin-viewer-select',
-                                    os.path.join(os.path.dirname(__file__),
-                                                 'components/plugin_viewer_select.vue'))
-
-ipyvue.register_component_from_file(None, 'plugin-add-results',
-                                    os.path.join(os.path.dirname(__file__),
-                                                 'components/plugin_add_results.vue'))
-
-ipyvue.register_component_from_file(None, 'plugin-auto-label',
-                                    os.path.join(os.path.dirname(__file__),
-                                                 'components/plugin_auto_label.vue'))
 
 # Register pure vue component. This allows us to do recursive component instantiation only in the
 # vue component file
-ipyvue.register_component_from_file('g-viewer-tab', "container.vue", __file__)
+for name, path in custom_components.items():
+    ipyvue.register_component_from_file(None, name,
+                                        os.path.join(os.path.dirname(__file__), path))
 
-ipyvue.register_component_from_file(None, 'j-play-pause-widget',
-                                    os.path.join(os.path.dirname(__file__),
-                                                 'components/play_pause_widget.vue'))
+ipyvue.register_component_from_file('g-viewer-tab', "container.vue", __file__)
 
 
 class ApplicationState(State):
@@ -150,6 +124,11 @@ class ApplicationState(State):
         'layout': {
         }
     }, docstring="Top-level application settings.")
+
+    icons = DictCallbackProperty({
+        'radialtocheck': read_icon(os.path.join(ICON_DIR, 'radialtocheck.svg'), 'svg+xml'),
+        'checktoradial': read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml')
+    }, docstring="Custom application icons")
 
     data_items = ListCallbackProperty(
         docstring="List of data items parsed from the Glue data collection.")
@@ -1124,17 +1103,23 @@ class Application(VuetifyTemplate, HubListener):
         """
         viewer_id, item_id, checked = event['id'], event['item_id'], event['checked']
         viewer_item = self._viewer_item_by_id(viewer_id)
+        replace = event.get('replace', False)
 
         if viewer_item is None:
             raise ValueError(f'viewer {viewer_id} not found')
 
-        if checked:
+        if replace:
+            selected_items = [item_id]
+        elif checked:
             selected_items = [*viewer_item['selected_data_items'], item_id]
         else:
             selected_items = list(filter(
                 lambda id: id != item_id, viewer_item['selected_data_items']))
 
         self._update_selected_data_items(viewer_id, selected_items)
+
+    def vue_data_item_remove(self, event):
+        self.data_collection.remove(self.data_collection[event['item_name']])
 
     def vue_close_snackbar_message(self, event):
         """
@@ -1225,7 +1210,7 @@ class Application(VuetifyTemplate, HubListener):
             the new data.
         """
         self._link_new_data()
-        data_item = self._create_data_item(msg.data.label)
+        data_item = self._create_data_item(msg.data)
         self.state.data_items.append(data_item)
 
     def _on_data_deleted(self, msg):
@@ -1244,11 +1229,39 @@ class Application(VuetifyTemplate, HubListener):
                 self.state.data_items.remove(data_item)
 
     @staticmethod
-    def _create_data_item(label):
+    def _create_data_item(data):
+        ndims = len(data.shape)
+        wcsaxes = data.meta.get('WCSAXES', None)
+        if wcsaxes is None:
+            # then we'll need to determine type another way, we want to avoid
+            # this when we can though since its not as cheap
+            component_ids = [str(c) for c in data.component_ids()]
+        if data.label == 'MOS Table':
+            typ = 'table'
+        elif ndims == 1:
+            typ = '1d spectrum'
+        elif ndims == 2 and wcsaxes is not None:
+            if wcsaxes == 3:
+                typ = '2d spectrum'
+            elif wcsaxes == 2:
+                typ = 'image'
+            else:
+                typ = 'unknown'
+        elif ndims == 2 and wcsaxes is None:
+            typ = '2d spectrum' if 'Wavelength' in component_ids else 'image'
+        elif ndims == 3:
+            typ = 'cube'
+        else:
+            typ = 'unknown'
+        # we'll expose any information we need here.  For "meta", not all entries are guaranteed
+        # to be serializable, so we'll just send those that we need.
         return {
             'id': str(uuid.uuid4()),
-            'name': label,
+            'name': data.label,
             'locked': False,
+            'ndims': data.ndim,
+            'type': typ,
+            'meta': {k: v for k, v in data.meta.items() if k in ['Plugin', 'mosviz_row']},
             'children': []}
 
     @staticmethod
