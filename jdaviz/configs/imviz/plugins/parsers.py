@@ -299,7 +299,7 @@ def _roman_2d_asdf_to_glue_data(file_obj, data_label):
         bunit = ''
         component = Component.autotyped(np.array(getattr(file_obj, ext)), units=bunit)
         data.add_component(component=component, label=comp_label)
-        data.coords = None
+        data.coords = getattr(getattr(file_obj, 'meta'), 'wcs')
 
         yield data, new_data_label
 
