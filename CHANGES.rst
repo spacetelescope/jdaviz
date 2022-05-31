@@ -7,6 +7,9 @@ New Features
 Cubeviz
 ^^^^^^^
 
+- New tool for visualizing spectrum at a pixel's coordinate location
+  in the image viewer [#1317]
+
 Imviz
 ^^^^^
 
@@ -21,9 +24,6 @@ API Changes
 
 Cubeviz
 ^^^^^^^
-
-- New tool for visualizing spectrum at a pixel's coordinate location
-  in the image viewer [#1317]
 
 Imviz
 ^^^^^
