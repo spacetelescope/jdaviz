@@ -92,8 +92,10 @@ class SpectrumPerSpaxel(CheckableTool):
             x = round(event_x)
             y = round(event_y)
 
-            self.remove_highlight_on_pixel()
-            self.highlight_pixel(x, y)
+            if len(self.created_data_labels) == 0:
+                self.highlight_pixel(x, y)
+            else:
+                self.update_highlight_pixel(x, y)
 
             # Check if there are any cubes in the viewer
             cube_in_viewer = False
@@ -107,10 +109,15 @@ class SpectrumPerSpaxel(CheckableTool):
 
                 cube = data.get_object(cls=Spectrum1D, statistic=None)
                 if x > cube.shape[0] or y > cube.shape[1] or x < 0 or y < 0:
-                    return
+                    continue
 
                 spec = Spectrum1D(flux=cube.flux[x][y], spectral_axis=cube.spectral_axis,
                                   meta=cube.meta)
+                # Add meta data for reference data and pixel
+                spec.meta["reference_data"] = data.label
+                spec.meta["created_from_pixel"] = f"({x}, {y})"
+                spec.meta["Plugin"] = "Spectrum per spaxel"
+
                 label = f"{data.label}_at_pixel"
 
                 # Remove data from viewer, re-add data to app, and then add data
@@ -122,13 +129,10 @@ class SpectrumPerSpaxel(CheckableTool):
                                                           clear_other_data=False)
                 self.created_data_labels.append(label)
 
-                # Add meta data for reference data and pixel
-                dc[label].meta["reference_data"] = data.label
-                dc[label].meta["created_from_pixel"] = f"({x}, {y})"
-                dc[label].meta["Plugin"] = "Spectrum per spaxel"
-
                 # Set color of spectrum to not conflict with subset colors
-                self.spectrum_viewer.state.layers[-1].color = self.colors[0]
+                for layer in self.spectrum_viewer.state.layers:
+                    if layer.layer.label == label:
+                        layer.color = self.colors[0]
 
                 # Link newly created spectrum to reference data
                 ref_cube = self.spectrum_viewer.state.reference_data
@@ -162,7 +166,7 @@ class SpectrumPerSpaxel(CheckableTool):
         self.viewer.session.data_collection.add_link(links)
 
     def highlight_pixel(self, x, y):
-        # Creates a box that outlines the pixel at coordinate (x, y)
+        # Creates an X that shows the pixel at coordinate (x, y)
         x_coords = [[x - 0.5, x + 0.5], [x - 0.5, x + 0.5]]
         y_coords = [[y - 0.5, y + 0.5], [y + 0.5, y - 0.5]]
 
@@ -173,6 +177,15 @@ class SpectrumPerSpaxel(CheckableTool):
                                   fill='none', colors=self.colors, stroke_width=2,
                                   close_path=True)
         self.viewer.figure.marks = self.viewer.figure.marks + [highlight]
+
+    def update_highlight_pixel(self, x, y):
+        x_coords = [[x - 0.5, x + 0.5], [x - 0.5, x + 0.5]]
+        y_coords = [[y - 0.5, y + 0.5], [y + 0.5, y - 0.5]]
+
+        for pixel in self.viewer.figure.marks:
+            if isinstance(pixel, SelectedPixel):
+                pixel.x = x_coords
+                pixel.y = y_coords
 
     def remove_highlight_on_pixel(self):
         self.viewer.figure.marks = [x for x in self.viewer.figure.marks
