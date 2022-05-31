@@ -1,30 +1,14 @@
-2.6 (unreleased)
+2.7 (unreleased)
 ================
 
 New Features
 ------------
 
-- Line list plugin now supports exact-text filtering on line names. [#1298]
-- Added a Subset Tools plugin for viewing information about defined subsets. [#1292]
-
-- Offscreen indication for spectral lines and slice indicator. [#1312]
-
 Cubeviz
 ^^^^^^^
 
-- Cubeviz image viewer now has coordinates info panel like Imviz. [#1315]
-
 Imviz
 ^^^^^
-
-- New way to estimate background from annulus around aperture
-  in Simple Aperture Photometry plugin. [#1224]
-
-- New curve of growth plot available in Simple Aperture
-  Photometry plugin. [#1287]
-
-- Clicking on image in pan/zoom mode now centers the image to location
-  under cursor. [#1319]
 
 Mosviz
 ^^^^^^
@@ -53,6 +37,64 @@ Specviz
 Bug Fixes
 ---------
 
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Other Changes and Additions
+---------------------------
+
+2.6 (2022-05-25)
+================
+
+New Features
+------------
+
+- Line list plugin now supports exact-text filtering on line names. [#1298]
+
+- Added a Subset Tools plugin for viewing information about defined subsets. [#1292]
+
+- Data menus in the viewers are filtered to applicable entries only and support removing generated data from
+  the app. [#1313]
+
+- Added offscreen indication for spectral lines and slice indicator. [#1312]
+
+Cubeviz
+^^^^^^^
+
+- Cubeviz image viewer now has coordinates info panel like Imviz. [#1315]
+
+- New Metadata Viewer plugin. [#1325]
+
+Imviz
+^^^^^
+
+- New way to estimate background from annulus around aperture
+  in Simple Aperture Photometry plugin. [#1224]
+
+- New curve of growth plot available in Simple Aperture
+  Photometry plugin. [#1287]
+
+- Clicking on image in pan/zoom mode now centers the image to location
+  under cursor. [#1319]
+
+Specviz
+^^^^^^^
+
+- Line List Spectral Range filter displays only lines with an observed
+  wavelength within the range of the spectrum viewer [#1327]
+
+Bug Fixes
+---------
+
 - Line Lists plugin no longer crashes when a list is removed under
   certain conditions. [#1318]
 
@@ -61,6 +103,9 @@ Cubeviz
 
 - Parser now respects user-provided ``data_label`` when ``Spectrum1D``
   object is loaded. Previously, it only had effect on FITS data. [#1315]
+
+- Fixed a bug where fitting a model to the entire cube returns all
+  zeroes on failure. [#1333]
 
 Imviz
 ^^^^^
@@ -74,11 +119,14 @@ Imviz
 - Radial profile plot in Simple Aperture Photometry plugin
   no longer shows masked aperture data. [#1224]
 
+- Aperture sum in Simple Aperture Photometry plugin no longer reports
+  the wrong value in MJy when input data is in MJy/sr. Previously,
+  it applied number of pixels twice in the calculations, so sum in MJy
+  with 10-pixel aperture would be off by a factor of 10. This bug did not
+  affect data in any other units. [#1332]
+
 - Markers API now handles GWCS with ICRS Lon/Lat defined instead of
   Right Ascension and Declination. [#1314]
-
-Mosviz
-^^^^^^
 
 Specviz
 ^^^^^^^
@@ -90,9 +138,6 @@ Specviz2d
 
 - Fixed a regression that caused NIRSpec s2d to stop loading
   properly. [#1307]
-
-Other Changes and Additions
----------------------------
 
 2.5 (2022-04-28)
 ================
