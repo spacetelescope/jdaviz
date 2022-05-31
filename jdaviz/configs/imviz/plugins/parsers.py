@@ -76,6 +76,9 @@ def get_image_data_iterator(app, file_obj, data_label, ext=None):
     """This function is for internal use, so other viz can also extract image data
     like Imviz does.
     """
+
+    print(type(file_obj))
+
     if isinstance(file_obj, fits.HDUList):
         if 'ASDF' in file_obj:  # JWST ASDF-in-FITS
             # Load all extensions
@@ -288,7 +291,7 @@ def _jwst2data(file_obj, ext, data_label):
 
 
 def _roman_2d_asdf_to_glue_data(file_obj, data_label):
-    ext_list = ['data', 'dq', 'err', 'var_poisson', 'var_rnoise', 'amp33']
+    ext_list = ['data', 'dq', 'err', 'var_poisson', 'var_rnoise']
 
     for ext in ext_list:
         comp_label = ext.lower()
