@@ -55,12 +55,13 @@ class SnackbarQueue:
             self.loading = False
             self._write_message(state, msg)
         else:
-            if msg.color in ['warning', 'error']:
+            warn_and_err = ('warning', 'error')
+            if msg.color in warn_and_err:
                 if (state.snackbar.get('show') and
-                        ((msg.color == 'warning' and state.snackbar.get('color') in ['warning', 'error']) or  # noqa
-                         (msg.color == 'error' and state.snackbar.get('color') in ['error']))):
+                        ((msg.color == 'warning' and state.snackbar.get('color') in warn_and_err) or  # noqa
+                         (msg.color == 'error' and state.snackbar.get('color') == 'error'))):
                     # put this NEXT in the queue immediately FOLLOWING all warning/errors
-                    non_warning_error = [msg.color not in ['warning', 'error'] for msg in self.queue]  # noqa
+                    non_warning_error = [msg.color not in warn_and_err for msg in self.queue]  # noqa
                     if True in non_warning_error:
                         # insert BEFORE index
                         self.queue.insert(non_warning_error.index(True), msg)
