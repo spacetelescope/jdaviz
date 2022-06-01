@@ -14,5 +14,5 @@ below.
     :ref:`Displaying Spectra (Specviz) <specviz-displaying>`
         Documentation on displaying spectra in a 1D spectrum viewer.
 
-The functionality of the `~jdaviz.configs.specviz.Specviz` API can be accessed in Cubeviz via
-the `jdaviz.configs.cubeviz.Cubeviz.specviz` attribute, e.g. ``cubeviz.specviz.get_spectra()``.
+The functionality of the `~jdaviz.configs.specviz.helper.Specviz` API can be accessed in Cubeviz via
+the `jdaviz.configs.cubeviz.helper.Cubeviz.specviz` attribute, e.g. ``cubeviz.specviz.get_spectra()``.

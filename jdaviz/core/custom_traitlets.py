@@ -1,7 +1,10 @@
 from traitlets import Int, Float
 
+__all__ = ['HandleEmptyMixin', 'IntHandleEmpty', 'FloatHandleEmpty']
+
 
 class HandleEmptyMixin:
+    """Mixin to handle empty field."""
     def __init__(self, *args, **kwargs):
         self._empty_to_default = kwargs.pop('replace_with_default', False)
         super().__init__(*args, **kwargs)
@@ -19,10 +22,12 @@ class HandleEmptyMixin:
 
 
 class IntHandleEmpty(HandleEmptyMixin, Int):
+    """Mixin to handle empty integer field."""
     pass
 
 
 class FloatHandleEmpty(HandleEmptyMixin, Float):
+    """Mixin to handle empty floating point field."""
     def validate(self, obj, value):
         if value == '.':
             return value

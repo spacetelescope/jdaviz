@@ -5,20 +5,20 @@ from ipyvuetify import VuetifyTemplate
 from ipywidgets import Widget
 
 
-__all__ = ['viewer_registry', 'tray_registry', 'tool_registry',
-           'data_parser_registry', 'ViewerRegistry', 'TrayRegistry',
-           'ToolRegistry', 'MenuRegistry', 'DataParserRegistry', 'UniqueDictRegistry']
+__all__ = ['convert', 'UniqueDictRegistry', 'ViewerRegistry', 'TrayRegistry',
+           'ToolRegistry', 'MenuRegistry', 'DataParserRegistry',
+           'viewer_registry', 'tray_registry', 'tool_registry', 'menu_registry',
+           'data_parser_registry']
 
 
 def convert(name):
-    """
-    Converts camel case strings to snake case. Used when a user does not define
+    """Converts camel-case strings to snake-case. Used when a user does not define
     a specific name for a registry item.
 
     Returns
     -------
-    str
-        Name converted to snake case.
+    val : str
+        Name converted to snake-case.
     """
     s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
 
@@ -26,13 +26,11 @@ def convert(name):
 
 
 class UniqueDictRegistry(DictRegistry):
-    """
-    Base registry class that handles hashmap-like associations between a string
+    """Base registry class that handles hashmap-like associations between a string
     representation of a plugin and the class to be instantiated.
     """
     def add(self, name, cls):
-        """
-        Add an item to the registry.
+        """Add an item to the registry.
 
         Parameters
         ----------
@@ -50,9 +48,7 @@ class UniqueDictRegistry(DictRegistry):
 
 
 class ViewerRegistry(UniqueDictRegistry):
-    """
-    Registry containing references to custom viewers.
-    """
+    """Registry containing references to custom viewers."""
     def __call__(self, name=None, label=None):
         def decorator(cls):
             self.add(name, cls, label)
@@ -60,8 +56,7 @@ class ViewerRegistry(UniqueDictRegistry):
         return decorator
 
     def add(self, name, cls, label=None):
-        """
-        Add an item to the registry.
+        """Add an item to the registry.
 
         Parameters
         ----------
@@ -82,8 +77,7 @@ class ViewerRegistry(UniqueDictRegistry):
 
 
 class TrayRegistry(UniqueDictRegistry):
-    """
-    Registry containing references to plugins that will be added to the sidebar
+    """Registry containing references to plugins that will be added to the sidebar
     tray tabs.
     """
     def __call__(self, name=None, label=None, icon=None):
@@ -101,8 +95,7 @@ class TrayRegistry(UniqueDictRegistry):
         return decorator
 
     def add(self, name, cls, label=None, icon=None):
-        """
-        Add an item to the registry.
+        """Add an item to the registry.
 
         Parameters
         ----------
@@ -129,8 +122,7 @@ class TrayRegistry(UniqueDictRegistry):
 
 
 class ToolRegistry(UniqueDictRegistry):
-    """
-    Registry containing references to plugins which will populate the
+    """Registry containing references to plugins which will populate the
     application-level toolbar.
     """
     def __call__(self, name=None):
@@ -149,8 +141,7 @@ class ToolRegistry(UniqueDictRegistry):
 
 
 class MenuRegistry(UniqueDictRegistry):
-    """
-    Registry containing references to plugins that will populate the
+    """Registry containing references to plugins that will populate the
     application-level menu bar.
     """
     def __call__(self, name=None):
@@ -169,8 +160,7 @@ class MenuRegistry(UniqueDictRegistry):
 
 
 class DataParserRegistry(UniqueDictRegistry):
-    """
-    Registry containing parsing functions for attempting to auto-populate the
+    """Registry containing parsing functions for attempting to auto-populate the
     application-defined initial viewers.
     """
     def __call__(self, name=None):
