@@ -13,6 +13,7 @@ from jdaviz.core.events import SnackbarMessage
 
 __all__ = ['SelectSlice', 'SpectrumPerSpaxel']
 
+
 ICON_DIR = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'icons')
 
 

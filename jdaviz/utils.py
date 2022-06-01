@@ -6,8 +6,8 @@ from collections import deque
 from astropy.io import fits
 from ipyvue import watch
 
-
-__all__ = []
+__all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
+           'standardize_metadata']
 
 # For Metadata Viewer plugin internal use only.
 PRIHDR_KEY = '_primary_header'
@@ -114,6 +114,7 @@ class SnackbarQueue:
 
 
 def enable_hot_reloading():
+    """Use ``watchdog`` to perform hot reloading."""
     try:
         watch(os.path.dirname(__file__))
     except ModuleNotFoundError:

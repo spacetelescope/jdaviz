@@ -75,7 +75,7 @@ class Cubeviz(ConfigHelper, LineListMixin):
     @property
     def specviz(self):
         """
-        A specviz helper (`~jdaviz.configs.specviz.Specviz`) for the Jdaviz
+        A specviz helper (`~jdaviz.configs.specviz.helper.Specviz`) for the Jdaviz
         application that is wrapped by cubeviz
         """
         if not hasattr(self, '_specviz'):

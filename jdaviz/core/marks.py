@@ -8,6 +8,12 @@ from jdaviz.core.events import (SliceToolStateMessage, LineIdentifyMessage,
                                 SpectralMarksChangedMessage,
                                 RedshiftMessage)
 
+__all__ = ['OffscreenLinesMarks', 'BaseSpectrumVerticalLine', 'SpectralLine',
+           'SliceIndicatorMarks', 'ShadowMixin', 'ShadowLine', 'ShadowLabelFixedY',
+           'LineAnalysisContinuum', 'LineAnalysisContinuumCenter',
+           'LineAnalysisContinuumLeft', 'LineAnalysisContinuumRight',
+           'LineUncertainties', 'ScatterMask']
+
 
 class OffscreenLinesMarks(HubListener):
     def __init__(self, viewer):
@@ -169,8 +175,7 @@ class SpectralLine(BaseSpectrumVerticalLine):
 
 
 class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
-    """
-    Subclass on bqplot Lines to handle slice/wavelength indicator
+    """Subclass on bqplot Lines to handle slice/wavelength indicator.
     """
     def __init__(self, viewer, slice=0, **kwargs):
         self._viewer = viewer
@@ -312,9 +317,9 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
 
 
 class ShadowMixin:
-    """
-    Mixin class to propagate traits from one mark object to another.  Anything in ``sync_traits``
-    will be mirrored directly from ``shadowing`` to the shadowed object.
+    """Mixin class to propagate traits from one mark object to another.
+    Anything in ``sync_traits`` will be mirrored directly from
+    ``shadowing`` to the shadowed object.
 
     Can manually override ``_on_shadowing_changed`` for more advanced logic cases.
     """
@@ -336,8 +341,8 @@ class ShadowMixin:
 
 
 class ShadowLine(Lines, HubListener, ShadowMixin):
-    """
-    Create a white shadow line around another line to help make it standout on top of other lines.
+    """Create a white shadow line around another line
+    to help make it standout on top of other lines.
     """
     def __init__(self, shadowing, shadow_width=1, **kwargs):
         self._shadow_width = shadow_width
@@ -361,9 +366,9 @@ class ShadowLine(Lines, HubListener, ShadowMixin):
 
 
 class ShadowLabelFixedY(Label, ShadowMixin):
-    """
-    Label whose position shadows that of a parent ``shadowing`` line and will flip alignment
-    based on whether it is left or right of the center of the viewer.
+    """Label whose position shadows that of a parent ``shadowing``
+    line and will flip alignment based on whether it is left or
+    right of the center of the viewer.
     """
     def __init__(self, viewer, shadowing, shadow_traits=['visible'],
                  y=0.95, point_index=0, **kwargs):

@@ -15,31 +15,37 @@ __all__ = ['fit_model_to_spectrum']
 
 def fit_model_to_spectrum(spectrum, component_list, expression,
                           run_fitter=False, window=None, n_cpu=None):
-    """
-    Fits an astropy CompoundModel to a Spectrum1D instance.
+    """Fits a `~astropy.modeling.CompoundModel` to a
+    `~specutils.Spectrum1D` instance.
 
     If the input spectrum represents a spectral cube, then fits
-    an astropy CompoundModel to every spaxel in the cube, using
-    a multiprocessor pool running in parallel.
+    the model to every spaxel in the cube, using
+    a multiprocessor pool running in parallel (if ``n_cpu`` is
+    larger than 1).
 
     Parameters
     ----------
-    spectrum : :class:`specutils.spectra.Spectrum1D`
+    spectrum : `~specutils.Spectrum1D`
         The spectrum to be fitted.
+
     component_list : list
         Spectral model subcomponents stored in a list.
-        Their `name` attribute must be unique. Each subcomponent
-        should be an initialized object from `astropy.modeling.models'
+        Their ``'name'`` attribute must be unique. Each subcomponent
+        should be an initialized object from `~astropy.modeling.Model`.
+
     expression : str
         The arithmetic expression that combines together
         the model subcomponents. The subcomponents are
-        referred via their 'name' attribute.
+        referred via their ``'name'`` attribute.
+
     run_fitter : bool
-        When False (the default), the function composes the compound
-        model and returns it without fitting - This is currently being
-        ignored for 3D fits.
-    window : `None` or :class:`specutils.spectra.SpectralRegion`
-        See :func:`specutils.fitting.fitmodels.fit_lines`.
+        **This is currently being ignored for 3D fits.**
+        When `False` (the default), the function composes the compound
+        model and returns it without fitting.
+
+    window : `None` or `~specutils.SpectralRegion`
+        See :func:`specutils.fitting.fit_lines`.
+
     n_cpu : `None` or int
         **This is only used for spectral cube fitting.**
         Number of cores to use for multiprocessing.
@@ -49,15 +55,16 @@ def fit_model_to_spectrum(spectrum, component_list, expression,
 
     Returns
     -------
-    :class: `astropy.modeling.CompoundModel` or `list`
+    output_model : `~astropy.modeling.CompoundModel` or list
         The model resulting from the fit. In the case of a 1D input
         spectrum, a single model instance is returned. In case of a
         3D spectral cube input, instead o model instances for every
         spaxel, a list with 2D arrays, each one storing fitted parameter
         values for all spaxels, is returned.
-    :class:`specutils.spectra.Spectrum1D`
+
+    output_spectrum : `~specutils.Spectrum1D`
         The realization of the fitted model as a spectrum. The spectrum
-        will be 1D or 3D depending on the input spectrum's shape.
+        will be 1D or 3D depending on the shape of input spectrum.
     """
     # Initial guess for the fit.
     initial_model = _build_model(component_list, expression)
@@ -76,7 +83,7 @@ def _fit_1D(initial_model, spectrum, run_fitter, window=None):
     ----------
     initial_model : :class: `astropy.modeling.CompoundModel`
         Initial guess for the model to be fitted.
-    spectrum : :class:`specutils.spectra.Spectrum1D`
+    spectrum : :class:`specutils.Spectrum1D`
         The spectrum to be fitted.
     run_fitter : bool
         When False (the default), the function composes the compound
@@ -86,9 +93,9 @@ def _fit_1D(initial_model, spectrum, run_fitter, window=None):
 
     Returns
     -------
-    :class: `astropy.modeling.CompoundModel`
+    output_model : :class: `astropy.modeling.CompoundModel`
         The model resulting from the fit.
-    :class:`specutils.spectra.Spectrum1D`
+    output_spectrum : :class:`specutils.Spectrum1D`
         The realization of the fitted model as a spectrum.
 
     """
@@ -117,7 +124,7 @@ def _fit_3D(initial_model, spectrum, window=None, n_cpu=None):
     ----------
     initial_model : :class: `astropy.modeling.CompoundModel`
         Initial guess for the model to be fitted.
-    spectrum : :class:`specutils.spectra.Spectrum1D`
+    spectrum : :class:`specutils.Spectrum1D`
         The spectrum that stores the cube in its 'flux' attribute.
     window : `None` or :class:`specutils.spectra.SpectralRegion`
         See :func:`specutils.fitting.fitmodels.fit_lines`.
@@ -129,10 +136,10 @@ def _fit_3D(initial_model, spectrum, window=None, n_cpu=None):
 
     Returns
     -------
-    :list: a list that stores 2D arrays. Each array contains one
+    output_model : :list: a list that stores 2D arrays. Each array contains one
         parameter from `astropy.modeling.CompoundModel` instances
         fitted to every spaxel in the input cube.
-    :class:`specutils.spectra.Spectrum1D`
+    output_spectrum : :class:`specutils.Spectrum1D`
         The spectrum that stores the fitted model values in its 'flux'
         attribute.
     """
@@ -266,16 +273,16 @@ def _build_model(component_list, expression):
     ----------
     component_list : list
         Spectral model subcomponents stored in a list.
-        Their `name` attribute must be unique. Each subcomponent
+        Their ``'name'`` attribute must be unique. Each subcomponent
         should be an initialized object from `astropy.modeling.models'
     expression : str
         The arithmetic expression that combines together
         the model subcomponents. The subcomponents are
-        referred via their 'name' attribute.
+        referred via their ``'name'`` attribute.
 
     Returns
     -------
-    :class:`astropy.modeling.CompoundModel`
+    model : :class:`astropy.modeling.CompoundModel`
         The model resulting from the fit.
     """
     # The expression parser needs the subcomponents stored in a
@@ -305,19 +312,20 @@ def _handle_parameter_units(model, fitted_parameters_cube, param_units):
 
     Parameters
     ----------
-    model : :class: `astropy.modeling.CompoundModel`
+    model : :class:`astropy.modeling.CompoundModel`
         An instance of a model.
-    fitted_parameters_cube : `ndarray`
+    fitted_parameters_cube : ndarray
         A 3D array in which the 1st dimension addresses model
         parameters, and the 2nd and 3rd dimensions address
         spaxels.
-    param_units : `list`
+    param_units : list
         A list with each parameter's units (this is not available
         in the model instance itself).
 
     Returns
     -------
-    :dict: 2D Quantity arrays keyed by parameter name
+    fitted_parameters_dict : dict
+        2D Quantity arrays keyed by parameter name
     """
 
     fitted_parameters_dict = {}
@@ -337,12 +345,13 @@ def _generate_spaxel_list(spectrum):
 
     Parameters
     ----------
-    spectrum : :class:`specutils.spectra.Spectrum1D`
-        The spectrum that stores the cube in its 'flux' attribute.
+    spectrum : :class:`specutils.Spectrum1D`
+        The spectrum that stores the cube in its ``'flux'`` attribute.
 
     Returns
     -------
-    :list: list with spaxels
+    spaxels : list
+        List with spaxels
     """
     spx = [[(x, y) for x in range(spectrum.flux.shape[0])]
            for y in range(spectrum.flux.shape[1])]
