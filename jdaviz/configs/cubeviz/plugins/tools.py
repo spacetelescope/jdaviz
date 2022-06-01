@@ -10,8 +10,7 @@ from jdaviz.core.events import SliceSelectWavelengthMessage, SliceToolStateMessa
 from jdaviz.core.marks import SelectedPixel
 from jdaviz.core.events import SnackbarMessage
 
-
-__all__ = ['SelectSlice', 'SpectrumPerSpaxel']
+__all__ = []
 
 
 ICON_DIR = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'icons')
