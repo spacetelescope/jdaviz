@@ -3,8 +3,8 @@
     <v-btn-toggle v-model="active_tool_id" class="transparent">
         <v-tooltip v-for="[id, {tooltip, img, menu_ind, has_suboptions, primary}] of Object.entries(tools_data)" v-if="primary" bottom>
             <template v-slot:activator="{ on }">
-                <v-btn v-on="on" icon :value="id" @contextmenu="(e) => show_submenu(e, has_suboptions, menu_ind)">
-                    <img :src="img" width="20" @click.ctrl.stop=""/>
+                <v-btn v-on="on" icon :value="id" style="min-width: 40px !important" @contextmenu="(e) => show_submenu(e, has_suboptions, menu_ind)">
+                    <img :src="img" width="20px" @click.ctrl.stop=""/>
                     <v-icon small v-if="has_suboptions" class="suboptions-carrot" @click.ctrl.stop="">mdi-menu-down</v-icon>
                 </v-btn>
             </template>
