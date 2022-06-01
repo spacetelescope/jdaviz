@@ -66,7 +66,8 @@
     </v-app-bar>
 
     <v-content
-      :style="checkNotebookContext() ? 'height: ' + state.settings.context.notebook.max_height + '; border: solid 1px #e5e5e5; border-top: 0px' : 'max-height: calc(100% - 48px)'"
+      :style="checkNotebookContext() ? 'height: ' + state.settings.context.notebook.max_height + '; border: solid 1px #e5e5e5; border-top: 0px' : ''"
+      :class="checkNotebookContext() ? '' : 'jdaviz__content--not-in-notebook'"
     >
       <v-container class="fill-height pa-0" fluid>
         <splitpanes @resize="relayout">
@@ -369,10 +370,19 @@ a:active {
 
 .v-overlay__content {
   position: unset !important;
+}
 
-#popout-widget-container .v-content {
+.jdaviz__content--not-in-notebook {
+  max-height: calc(100% - 48px);
+}
+
+#popout-widget-container .v-application.jdaviz {
   min-height: 100vh;
   max-height: 100vh;
+}
+
+#popout-widget-container .jdaviz__content--not-in-notebook {
+  max-height: 100%;
 }
 
 </style>
