@@ -28,7 +28,7 @@ const tooltips = {
   'app-toolbar-popout': `Display in a new window<br /><br />
     <div style="width: 200px; border: 1px solid gray;" class="pa-2">
       <strong>Note:</strong>
-      some add blockers or browser settings may block popup windows,
+      some ad blockers or browser settings may block popup windows,
       causing this feature not to work.
     </div>`,
 
