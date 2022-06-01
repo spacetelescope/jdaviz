@@ -3,8 +3,7 @@
     <v-dialog v-model="dialog" height="400" width="600">
       <template v-slot:activator="{ on }">
         <v-btn tile depressed v-on="on" color="turquoise">
-          Import
-          <v-icon right>mdi-plus</v-icon>
+          Import Data
         </v-btn>
       </template>
 
@@ -13,7 +12,9 @@
         <v-card-title class="headline" color="primary" primary-title>Import Data</v-card-title>
 
         <v-card-text>
-          Single click to select directory. Select and click "IMPORT" to open a file.
+          Select a file with data you want to load into this instance of Jdaviz
+          and click "IMPORT". Imported data can be shown in any compatible
+          viewer. Note that single clicks navigate into directories.
           <v-container>
             <v-row>
               <v-col>

@@ -26,7 +26,7 @@ const tooltips = {
   'app-toolbar-plugins': 'Data analysis plug-ins',
 
   'g-data-tools': 
-    'Import data file',
+    'Load data from file',
   'g-subset-tools': 
     'Select, create, and delete subsets',
   'g-subset-mode':
@@ -41,7 +41,7 @@ const tooltips = {
     'Create new image viewer',
 
   // viewer toolbars
-  'viewer-toolbar-data': 'Select dataset(s) to display',
+  'viewer-toolbar-data': 'Select dataset(s) to display in this viewer',
   'viewer-toolbar-figure': 'Tools: pan, zoom, select region, save',
   'viewer-toolbar-figure-save': 'Save figure',
   'viewer-toolbar-menu': 'Adjust display: contrast, bias, stretch',

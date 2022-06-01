@@ -28,7 +28,9 @@ using the Python API.  Both are detailed further below.
 Selecting/Showing Data Sets
 ===========================
 
-Data can be selected and de-selected under the "Data" tab. Here, you can click a checkbox next to the listed data to make the data visible (checked) or invisible (unchecked).
+Data can be selected and de-selected in each viewer's data menu, opened by clicking the 
+|icon-viewer-data-select| button in the top left of the viewer. Here, you can click a 
+checkbox next to the listed data to make the data visible (checked) or invisible (unchecked).
 
 .. image:: img/spec_viewer_with_data.png
 

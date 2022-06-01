@@ -18,7 +18,7 @@ Importing data through the GUI
 ------------------------------
 
 The first way that you can load your data into the Imviz application is
-by clicking the :guilabel:`Import` button at the top left of the application's
+by clicking the :guilabel:`Import Data` button at the top left of the application's
 user interface. This opens a dialogue where the user can select a file
 that can be parsed as a :class:`~astropy.nddata.NDData`, :class:`~astropy.io.fits.HDUList`,
 or :class:`~astropy.io.fits.ImageHDU` in the text field.
