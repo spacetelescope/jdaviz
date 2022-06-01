@@ -7,7 +7,7 @@ from glue.core.link_helpers import LinkSame
 from specutils import Spectrum1D
 
 from jdaviz.core.events import SliceSelectWavelengthMessage, SliceToolStateMessage
-from jdaviz.core.marks import SelectedPixel
+from jdaviz.core.marks import SelectedSpaxel
 from jdaviz.core.events import SnackbarMessage
 
 __all__ = []
@@ -77,7 +77,7 @@ class SpectrumPerSpaxel(CheckableTool):
 
     def deactivate(self):
         self.viewer.remove_event_callback(self.on_mouse_event)
-        self.remove_highlight_on_pixel()
+        self.remove_highlight_on_spaxel()
         for label in self.created_data_labels:
             self.viewer.jdaviz_app.remove_data_from_viewer("spectrum-viewer", label)
         self.created_data_labels = []
@@ -93,9 +93,9 @@ class SpectrumPerSpaxel(CheckableTool):
             y = round(event_y)
 
             if len(self.created_data_labels) == 0:
-                self.highlight_pixel(x, y)
+                self.highlight_spaxel(x, y)
             else:
-                self.update_highlight_pixel(x, y)
+                self.update_highlight_spaxel(x, y)
 
             # Check if there are any cubes in the viewer
             cube_in_viewer = False
@@ -113,7 +113,7 @@ class SpectrumPerSpaxel(CheckableTool):
 
                 spec = Spectrum1D(flux=cube.flux[x][y], spectral_axis=cube.spectral_axis,
                                   meta=cube.meta)
-                # Add meta data for reference data and pixel
+                # Add meta data for reference data and spaxel
                 spec.meta["reference_data"] = data.label
                 spec.meta["created_from_spaxel"] = f"({x}, {y})"
                 spec.meta["Plugin"] = "Spectrum per spaxel"
@@ -141,7 +141,7 @@ class SpectrumPerSpaxel(CheckableTool):
 
             # Flux viewer is empty or contains only 2D images
             if not cube_in_viewer:
-                self.remove_highlight_on_pixel()
+                self.remove_highlight_on_spaxel()
                 msg = SnackbarMessage("No cube in viewer, cannot create spectrum from spaxel",
                                       sender=self, color="warning")
                 self.viewer.session.hub.broadcast(msg)
@@ -165,28 +165,32 @@ class SpectrumPerSpaxel(CheckableTool):
 
         self.viewer.session.data_collection.add_link(links)
 
-    def highlight_pixel(self, x, y):
-        # Creates an X that shows the pixel at coordinate (x, y)
-        x_coords = [[x - 0.5, x + 0.5], [x - 0.5, x + 0.5]]
-        y_coords = [[y - 0.5, y + 0.5], [y + 0.5, y - 0.5]]
+    def highlight_spaxel(self, x, y):
+        # Creates an X that shows the spaxel at coordinate (x, y)
+        x_coords, y_coords = self._calc_coords(x, y)
 
         # Create LinearScale that is the same size as the image viewer
         scales = {'x': self.viewer.figure.interaction.x_scale,
                   'y': self.viewer.figure.interaction.y_scale}
-        highlight = SelectedPixel(x=x_coords, y=y_coords, scales=scales,
-                                  fill='none', colors=self.colors, stroke_width=2,
-                                  close_path=True)
+        highlight = SelectedSpaxel(x=x_coords, y=y_coords, scales=scales,
+                                   fill='none', colors=self.colors, stroke_width=2,
+                                   close_path=True)
         self.viewer.figure.marks = self.viewer.figure.marks + [highlight]
 
-    def update_highlight_pixel(self, x, y):
+    def update_highlight_spaxel(self, x, y):
+        x_coords, y_coords = self._calc_coords(x, y)
+
+        for spaxel in self.viewer.figure.marks:
+            if isinstance(spaxel, SelectedSpaxel):
+                spaxel.x = x_coords
+                spaxel.y = y_coords
+
+    def remove_highlight_on_spaxel(self):
+        self.viewer.figure.marks = [x for x in self.viewer.figure.marks
+                                    if not isinstance(x, SelectedSpaxel)]
+
+    def _calc_coords(self, x, y):
         x_coords = [[x - 0.5, x + 0.5], [x - 0.5, x + 0.5]]
         y_coords = [[y - 0.5, y + 0.5], [y + 0.5, y - 0.5]]
 
-        for pixel in self.viewer.figure.marks:
-            if isinstance(pixel, SelectedPixel):
-                pixel.x = x_coords
-                pixel.y = y_coords
-
-    def remove_highlight_on_pixel(self):
-        self.viewer.figure.marks = [x for x in self.viewer.figure.marks
-                                    if not isinstance(x, SelectedPixel)]
+        return x_coords, y_coords

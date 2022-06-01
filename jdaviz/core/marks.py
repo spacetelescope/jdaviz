@@ -12,7 +12,7 @@ __all__ = ['OffscreenLinesMarks', 'BaseSpectrumVerticalLine', 'SpectralLine',
            'SliceIndicatorMarks', 'ShadowMixin', 'ShadowLine', 'ShadowLabelFixedY',
            'LineAnalysisContinuum', 'LineAnalysisContinuumCenter',
            'LineAnalysisContinuumLeft', 'LineAnalysisContinuumRight',
-           'LineUncertainties', 'ScatterMask']
+           'LineUncertainties', 'ScatterMask', 'SelectedSpaxel']
 
 
 class OffscreenLinesMarks(HubListener):
@@ -470,6 +470,6 @@ class ScatterMask(Scatter):
         super().__init__(**kwargs)
 
 
-class SelectedPixel(Lines):
+class SelectedSpaxel(Lines):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
