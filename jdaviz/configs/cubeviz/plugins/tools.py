@@ -190,7 +190,11 @@ class SpectrumPerSpaxel(CheckableTool):
                                     if not isinstance(x, SelectedSpaxel)]
 
     def _calc_coords(self, x, y):
-        x_coords = [[x - 0.5, x + 0.5], [x - 0.5, x + 0.5]]
-        y_coords = [[y - 0.5, y + 0.5], [y + 0.5, y - 0.5]]
+        xmin = x - 0.5
+        xmax = x + 0.5
+        ymin = y - 0.5
+        ymax = y + 0.5
+        x_coords = [[xmin, xmax], [xmin, xmax]]
+        y_coords = [[ymin, ymax], [ymax, ymin]]
 
         return x_coords, y_coords
