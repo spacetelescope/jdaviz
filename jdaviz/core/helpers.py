@@ -39,7 +39,7 @@ class ConfigHelper(HubListener):
     verbosity : {'debug', 'info', 'warning', 'error'}
         Verbosity of the popup messages in the application.
     history_verbosity : {'debug', 'info', 'warning', 'error'}
-        Verbosity of the history logger in the application
+        Verbosity of the history logger in the application.
     """
     _default_configuration = 'default'
 

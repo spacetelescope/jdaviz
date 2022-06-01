@@ -71,6 +71,7 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'plugin-add-results': 'components/plugin_add_results.vue',
                      'plugin-auto-label': 'components/plugin_auto_label.vue'}
 
+_verbosity_levels = ('debug', 'info', 'warning', 'error')
 
 # Register pure vue component. This allows us to do recursive component instantiation only in the
 # vue component file
@@ -274,7 +275,7 @@ class Application(VuetifyTemplate, HubListener):
 
     @verbosity.setter
     def verbosity(self, val):
-        if val not in ('debug', 'info', 'warning', 'error'):
+        if val not in _verbosity_levels:
             raise ValueError(f'Invalid verbosity: {val}')
         self._verbosity = val
 
@@ -288,7 +289,7 @@ class Application(VuetifyTemplate, HubListener):
 
     @history_verbosity.setter
     def history_verbosity(self, val):
-        if val not in ('debug', 'info', 'warning', 'error'):
+        if val not in _verbosity_levels:
             raise ValueError(f'Invalid verbosity: {val}')
         self._history_verbosity = val
 
@@ -315,17 +316,16 @@ class Application(VuetifyTemplate, HubListener):
         # * info lets everything through
         # * success, secondary, and primary are treated as info (not sure what they are used for)
         # * None is also treated as info (when color is not set)
-        levels = ['debug', 'info', 'warning', 'error']
-        popup_level = levels.index(self.verbosity)
-        history_level = levels.index(self.history_verbosity)
+        popup_level = _verbosity_levels.index(self.verbosity)
+        history_level = _verbosity_levels.index(self.history_verbosity)
 
         def _color_to_level(color):
-            if color in levels:
+            if color in _verbosity_levels:
                 return color
             # could create dictionary mapping if we need anything more advanced
             return 'info'
 
-        msg_level = levels.index(_color_to_level(msg.color))
+        msg_level = _verbosity_levels.index(_color_to_level(msg.color))
         self.state.snackbar_queue.put(self.state, msg,
                                       history=msg_level >= history_level,
                                       popup=msg_level >= popup_level)

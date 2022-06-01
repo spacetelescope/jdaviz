@@ -10,6 +10,7 @@ from voila.app import Voila
 from voila.configuration import VoilaConfiguration
 
 from jdaviz import __version__
+from jdaviz.app import _verbosity_levels
 
 CONFIGS_DIR = os.path.join(os.path.dirname(__file__), 'configs')
 
