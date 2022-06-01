@@ -73,7 +73,7 @@ class SpectrumPerSpaxel(CheckableTool):
     def activate(self):
         self.viewer.add_event_callback(self.on_mouse_event,
                                        events=['click'])
-        self.spectrum_viewer = self.viewer.jdaviz_app.get_viewer_by_id("cubeviz-3")
+        self.spectrum_viewer = self.viewer.jdaviz_app.get_viewer("spectrum-viewer")
 
     def deactivate(self):
         self.viewer.remove_event_callback(self.on_mouse_event)
@@ -108,17 +108,17 @@ class SpectrumPerSpaxel(CheckableTool):
                 cube_in_viewer = True
 
                 cube = data.get_object(cls=Spectrum1D, statistic=None)
-                if x > cube.shape[0] or y > cube.shape[1] or x < 0 or y < 0:
+                if x >= cube.shape[0] or y >= cube.shape[1] or x < 0 or y < 0:
                     continue
 
                 spec = Spectrum1D(flux=cube.flux[x][y], spectral_axis=cube.spectral_axis,
                                   meta=cube.meta)
                 # Add meta data for reference data and pixel
                 spec.meta["reference_data"] = data.label
-                spec.meta["created_from_pixel"] = f"({x}, {y})"
+                spec.meta["created_from_spaxel"] = f"({x}, {y})"
                 spec.meta["Plugin"] = "Spectrum per spaxel"
 
-                label = f"{data.label}_at_pixel"
+                label = f"{data.label}_at_spaxel"
 
                 # Remove data from viewer, re-add data to app, and then add data
                 # back to spectrum viewer
@@ -142,7 +142,7 @@ class SpectrumPerSpaxel(CheckableTool):
             # Flux viewer is empty or contains only 2D images
             if not cube_in_viewer:
                 self.remove_highlight_on_pixel()
-                msg = SnackbarMessage("No cube in viewer, cannot create spectrum from pixel",
+                msg = SnackbarMessage("No cube in viewer, cannot create spectrum from spaxel",
                                       sender=self, color="warning")
                 self.viewer.session.hub.broadcast(msg)
                 return

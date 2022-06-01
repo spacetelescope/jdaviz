@@ -5,9 +5,7 @@ from astropy.nddata import CCDData
 @pytest.mark.filterwarnings('ignore:No observer defined on WCS')
 def test_spectrum_at_spaxel(cubeviz_helper, spectrum1d_cube):
     app = cubeviz_helper.app
-    app.add_data(spectrum1d_cube, 'test')
-    app.add_data_to_viewer("spectrum-viewer", "test")
-    app.add_data_to_viewer("flux-viewer", "test")
+    cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
 
     flux_viewer = cubeviz_helper.app.get_viewer("flux-viewer")
     spectrum_viewer = cubeviz_helper.app.get_viewer("spectrum-viewer")
