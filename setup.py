@@ -125,7 +125,6 @@ class DevelopCmd(develop):
         if '--user' in sys.prefix:  # TODO: is there a better way to find out?
             target_dir = user_dir()
         target_dir = os.path.join(target_dir)
-        is_win = sys.platform.startswith('win')
 
         for prefix_target, name in self.prefix_targets:
             source = os.path.join('share', 'jupyter', prefix_target, name)
@@ -133,23 +132,34 @@ class DevelopCmd(develop):
             target_subdir = os.path.dirname(target)
             if not os.path.exists(target_subdir):
                 os.makedirs(target_subdir)
-            if not is_win:
-                rel_source = os.path.relpath(os.path.abspath(
-                    source), os.path.abspath(target_subdir))
-            else:  # relpath does not work if source/target on different Windows disks
-                rel_source = os.path.abspath(source)
+            abs_source = os.path.abspath(source)
+
             try:
-                if not is_win:
-                    os.remove(target)
-                else:
-                    shutil.rmtree(target)
+                rel_source = os.path.relpath(abs_source, os.path.abspath(target_subdir))
             except Exception:
-                pass
-            print(rel_source, '->', target)
-            if not is_win:
-                os.symlink(rel_source, target)
-            else:  # Cannot symlink without relpath or Windows admin priv in some OS versions
-                shutil.copytree(rel_source, target)
+                # relpath does not work if source/target on different Windows disks.
+                do_symlink = False
+            else:
+                do_symlink = True
+
+            try:
+                os.remove(target)
+            except Exception:
+                try:
+                    shutil.rmtree(target)  # Maybe not a symlink
+                except Exception:
+                    pass
+
+            # Cannot symlink without relpath or Windows admin priv in some OS versions.
+            try:
+                if do_symlink:
+                    print(rel_source, '->', target)
+                    os.symlink(rel_source, target)
+                else:
+                    raise OSError('just make copies')
+            except Exception:
+                print(abs_source, '->', target)
+                shutil.copytree(abs_source, target)
 
         super(DevelopCmd, self).run()
 
