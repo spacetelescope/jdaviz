@@ -114,16 +114,15 @@ class SpectrumPerSpaxel(CheckableTool):
                 spec = Spectrum1D(flux=cube.flux[x][y], spectral_axis=cube.spectral_axis,
                                   meta=cube.meta)
                 # Add meta data for reference data and spaxel
-                spec.meta["reference_data"] = data.label
-                spec.meta["created_from_spaxel"] = f"({x}, {y})"
-                spec.meta["Plugin"] = "Spectrum per spaxel"
-
+                spec.meta.update({"reference_data": data.label,
+                                  "created_from_spaxel": f"({x}, {y})",
+                                  "Plugin": "Spectrum per spaxel"})
                 label = f"{data.label}_at_spaxel"
 
                 # Remove data from viewer, re-add data to app, and then add data
                 # back to spectrum viewer
                 self.viewer.jdaviz_app.remove_data_from_viewer("spectrum-viewer", label)
-                dc[label] = spec
+                self.viewer.jdaviz_app.add_data(spec, data_label=label, notify_done=False)
                 self.viewer.jdaviz_app.add_data_to_viewer("spectrum-viewer",
                                                           label,
                                                           clear_other_data=False)
