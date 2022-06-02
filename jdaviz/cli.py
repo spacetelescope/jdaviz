@@ -6,8 +6,6 @@ import sys
 import tempfile
 
 import click
-from voila.app import Voila
-from voila.configuration import VoilaConfiguration
 
 from jdaviz import __version__
 from jdaviz.app import _verbosity_levels
@@ -72,6 +70,9 @@ def main(filename, layout='default', browser='default', theme='light',
         Whether to enable hot-reloading of the UI (for development)
     """
     import logging  # Local import to avoid possibly messing with JWST pipeline logger.
+
+    from voila.app import Voila
+    from voila.configuration import VoilaConfiguration
 
     # Tornado Webserver py3.8 compatibility hotfix for windows
     if sys.platform == 'win32':
