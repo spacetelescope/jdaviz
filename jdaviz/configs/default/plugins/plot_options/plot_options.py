@@ -3,6 +3,7 @@ import os
 from traitlets import Any, Dict, Float, Bool, Int, List, Unicode
 
 from glue.viewers.profile.state import ProfileViewerState, ProfileLayerState
+from glue.viewers.image.state import ImageSubsetLayerState
 from glue_jupyter.common.toolbar_vuetify import read_icon
 
 from jdaviz.core.registries import tray_registry
@@ -56,6 +57,9 @@ class PlotOptions(TemplateMixin):
 
     stretch_max_value = Float().tag(sync=True)
     stretch_max_sync = Dict().tag(sync=True)
+
+    subset_visible_value = Bool().tag(sync=True)
+    subset_visible_sync = Dict().tag(sync=True)
 
     bitmap_visible_value = Bool().tag(sync=True)
     bitmap_visible_sync = Dict().tag(sync=True)
@@ -114,6 +118,9 @@ class PlotOptions(TemplateMixin):
         def is_profile(state):
             return isinstance(state, (ProfileViewerState, ProfileLayerState))
 
+        def is_spatial_subset(state):
+            return isinstance(state, ImageSubsetLayerState)
+
         # Spectrum viewer/layer options:
         self.line_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'visible',
                                                  'line_visible_value', 'line_visible_sync',
@@ -145,9 +152,12 @@ class PlotOptions(TemplateMixin):
                                                 'stretch_max_value', 'stretch_max_sync',
                                                 state_filter=not_profile)
 
-        self.bitmap = PlotOptionsSyncState(self, self.viewer, self.layer, 'bitmap_visible',
-                                           'bitmap_visible_value', 'bitmap_visible_sync',
-                                           state_filter=not_profile)
+        self.subset_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'visible',
+                                                   'subset_visible_value', 'subset_visible_sync',
+                                                   state_filter=is_spatial_subset)
+        self.bitmap_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'bitmap_visible',
+                                                   'bitmap_visible_value', 'bitmap_visible_sync',
+                                                   state_filter=not_profile)
         self.color_mode = PlotOptionsSyncState(self, self.viewer, self.layer, 'color_mode',
                                                'color_mode_value', 'color_mode_sync')
         self.bitmap_color = PlotOptionsSyncState(self, self.viewer, self.layer, 'color',
@@ -163,8 +173,8 @@ class PlotOptions(TemplateMixin):
         self.bitmap_bias = PlotOptionsSyncState(self, self.viewer, self.layer, 'bias',
                                                 'bitmap_bias_value', 'bitmap_bias_sync')
 
-        self.contour = PlotOptionsSyncState(self, self.viewer, self.layer, 'contour_visible',
-                                            'contour_visible_value', 'contour_visible_sync')
+        self.contour_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'contour_visible',  # noqa
+                                                    'contour_visible_value', 'contour_visible_sync')
         self.contour_mode = PlotOptionsSyncState(self, self.viewer, self.layer, 'level_mode',
                                                  'contour_mode_value', 'contour_mode_sync')
         self.contour_min = PlotOptionsSyncState(self, self.viewer, self.layer, 'c_min',

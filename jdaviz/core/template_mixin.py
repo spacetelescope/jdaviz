@@ -10,6 +10,7 @@ from glue.core.message import (DataCollectionAddMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from glue.core.subset import RoiSubsetState
+from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.widgets.linked_dropdown import get_choices as _get_glue_choices
 from specutils import Spectrum1D
 from traitlets import Any, Bool, HasTraits, List, Unicode, observe
@@ -17,6 +18,7 @@ from traitlets import Any, Bool, HasTraits, List, Unicode, observe
 from jdaviz import __version__
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage)
+
 
 __all__ = ['TemplateMixin', 'PluginTemplateMixin',
            'BasePluginComponent', 'BaseSelectPluginComponent',
@@ -460,6 +462,13 @@ class LayerSelect(BaseSelectPluginComponent):
             self._clear_cache()
             self._on_layers_changed()
 
+    def _valid_layer(self, viewer, layer):
+        if isinstance(viewer, BqplotImageView) and self.plugin.config == 'cubeviz':
+            # exclude spectral subsets in image viewers (but not in 2d spectrum viewers)
+            if hasattr(layer.state.layer, 'subset_state') and not isinstance(layer.state.layer.subset_state, RoiSubsetState):  # noqa
+                return False
+        return True
+
     @observe('filters')
     def _on_layers_changed(self, msg=None):
         # NOTE: _on_layers_changed is passed without a msg object during init
@@ -470,7 +479,14 @@ class LayerSelect(BaseSelectPluginComponent):
         viewers = [self._get_viewer(viewer) for viewer in viewer_names]
 
         manual_items = [{'label': label} for label in self.manual_options]
-        layers = [layer for viewer in viewers for layer in viewer.layers]
+        layers = [layer for viewer in viewers for layer in viewer.layers if self._valid_layer(viewer, layer)]  # noqa
+        # remove duplicates - NOTE: by doing this, any color-mismatch between layers with the
+        # same name in different viewers will be randomly assigned within plot_options
+        # based on which was found _first.
+        layer_labels = [layer.layer.label for layer in layers]
+        _, inds = np.unique(layer_labels, return_index=True)
+        layers = [layers[i] for i in inds]
+
         self.items = manual_items + [self._layer_to_dict(layer, index) for index, layer in enumerate(layers)]  # noqa
         self._apply_default_selection()
 
@@ -485,9 +501,11 @@ class LayerSelect(BaseSelectPluginComponent):
         if not isinstance(selected, list):
             selected = [selected]
 
-        layers = [layer for viewer_name in viewer_names
-                  for layer in self._get_viewer(viewer_name).layers
-                  if layer.layer.label in selected]
+        viewers = [self._get_viewer(viewer_name) for viewer_name in viewer_names]
+
+        layers = [[layer for layer in viewer.layers
+                   if layer.layer.label in selected and self._valid_layer(viewer, layer)]
+                  for viewer in viewers]
 
         if not self.multiselect and len(layers) == 1:
             return layers[0]
@@ -1385,12 +1403,31 @@ class PlotOptionsSyncState(BasePluginComponent):
             # which is the case for single-select
             viewers = [viewers]
 
-        layers = self._layer_select.selected_obj
-        if not isinstance(layers, list):
-            layers = [layers]
+        def _state_item(item):
+            if isinstance(item, list):
+                return [_state_item(item_i) for item_i in item]
+            elif item is None:
+                return None
+            else:
+                return item.state
 
-        viewer_states = [viewer.state for viewer in viewers if viewer is not None]
-        layer_states = [layer.state for layer in layers if layer is not None]
+        viewer_states = [_state_item(viewer) for viewer in viewers]
+
+        layer_labels = self._layer_select.selected
+        if not isinstance(layer_labels, list):
+            layer_labels = [layer_labels]
+
+        # NOTE: accessing from self._layer_select.selected_obj would give us a per-viewer
+        # list, but we need a per-selected-layer list.
+        layer_states = []
+        for selected_layer_label in layer_labels:
+            layer_states.append([])
+            for viewer in viewers:
+                for layer in viewer.layers:
+                    if layer.layer.label == selected_layer_label:
+                        layer_states[-1].append(layer.state)
+
+        # subscribed states can still be nested list
         return viewer_states + layer_states
 
     @cached_property
@@ -1434,12 +1471,19 @@ class PlotOptionsSyncState(BasePluginComponent):
         icons = []
         current_glue_values = []
         self._linked_states = []
-        for state, icon in zip(self.subscribed_states, self.subscribed_icons):
-            if not self.state_filter(state):
-                continue
-            if self._glue_name is not None and hasattr(state, self._glue_name):
+        for states, icon in zip(self.subscribed_states, self.subscribed_icons):
+            if not isinstance(states, list):
+                states = [states]
+
+            for state in states:
+                if state is None or not self.state_filter(state):
+                    continue
+                if self._glue_name is None or not hasattr(state, self._glue_name):
+                    continue
+
                 in_subscribed_states = True
-                icons.append(icon)
+                if icon not in icons:
+                    icons.append(icon)
                 current_glue_values.append(self._get_glue_value(state))
                 self._linked_states.append(state)  # these will be iterated when value is set
                 state.add_callback(self._glue_name, self._on_glue_value_changed)

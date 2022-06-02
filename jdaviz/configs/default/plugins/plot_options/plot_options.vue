@@ -47,7 +47,16 @@
       </span>
     </glue-state-sync-wrapper>
 
-    <glue-state-sync-wrapper :sync="bitmap_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('bitmap')">
+    <glue-state-sync-wrapper :sync="subset_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('subset_visible')">
+      <span>
+        <v-btn icon @click.stop="subset_visible_value = !subset_visible_value">
+          <v-icon>mdi-eye{{ subset_visible_value ? '' : '-off' }}</v-icon>
+        </v-btn>
+        Show subset
+      </span>
+    </glue-state-sync-wrapper>
+
+    <glue-state-sync-wrapper :sync="bitmap_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('bitmap_visible')">
       <span>
         <v-btn icon @click.stop="bitmap_visible_value = !bitmap_visible_value">
           <v-icon>mdi-eye{{ bitmap_visible_value ? '' : '-off' }}</v-icon>
