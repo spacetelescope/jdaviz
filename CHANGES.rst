@@ -32,6 +32,10 @@ API Changes
 
 - Default percentile for all image viewers is now 95%, not min/max. [#1386]
 
+- Default verbosity for popup messages is now "warnings" but
+  the history logger is still at "info" so you can see all messages
+  there instead. [#1368]
+
 Cubeviz
 ^^^^^^^
 

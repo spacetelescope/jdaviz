@@ -34,7 +34,6 @@ class ConfigHelper(HubListener):
     app : `~jdaviz.app.Application` or `None`
         The application object, or if `None`, creates a new one based on the
         default configuration for this helper.
-
     verbosity : {'debug', 'info', 'warning', 'error'}
         Verbosity of the popup messages in the application.
     history_verbosity : {'debug', 'info', 'warning', 'error'}
@@ -42,7 +41,7 @@ class ConfigHelper(HubListener):
     """
     _default_configuration = 'default'
 
-    def __init__(self, app=None, verbosity='info', history_verbosity='info'):
+    def __init__(self, app=None, verbosity='warning', history_verbosity='info'):
         if app is None:
             self.app = Application(configuration=self._default_configuration)
         else:
