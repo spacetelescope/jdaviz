@@ -37,16 +37,19 @@ class ConfigHelper(HubListener):
         default configuration for this helper.
 
     verbosity : {'debug', 'info', 'warning', 'error'}
-        Verbosity of the application.
+        Verbosity of the popup messages in the application.
+    history_verbosity : {'debug', 'info', 'warning', 'error'}
+        Verbosity of the history logger in the application.
     """
     _default_configuration = 'default'
 
-    def __init__(self, app=None, verbosity='info'):
+    def __init__(self, app=None, verbosity='info', history_verbosity='info'):
         if app is None:
             self.app = Application(configuration=self._default_configuration)
         else:
             self.app = app
         self.app.verbosity = verbosity
+        self.app.history_verbosity = history_verbosity
 
         # give a reference from the app back to this config helper.  These can be accessed from a
         # viewer via viewer.jdaviz_app and viewer.jdaviz_helper

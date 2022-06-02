@@ -28,7 +28,23 @@ class SnackbarQueue:
         # to give time for the app to load.
         self.first = True
 
-    def put(self, state, msg):
+    def put(self, state, msg, history=True, popup=True):
+        if msg.color not in ['info', 'warning', 'error', 'success', None]:
+            raise ValueError(f"color ({msg.color}) must be on of: info, warning, error, success")
+
+        if not msg.loading and history:
+            now = time.localtime()
+            timestamp = f'{now.tm_hour}:{now.tm_min:02d}:{now.tm_sec:02d}'
+            new_history = {'time': timestamp, 'text': msg.text, 'color': msg.color}
+            # for now, we'll hardcode the max length of the stored history
+            if len(state.snackbar_history) >= 50:
+                state.snackbar_history = state.snackbar_history[1:] + [new_history]
+            else:
+                state.snackbar_history.append(new_history)
+
+        if not popup:
+            return
+
         if msg.loading:
             # immediately show the loading message indefinitely until cleared by a new message
             # with loading=False (or overwritten by a new indefinite message with loading=True)
@@ -39,7 +55,25 @@ class SnackbarQueue:
             self.loading = False
             self._write_message(state, msg)
         else:
-            self.queue.append(msg)
+            warn_and_err = ('warning', 'error')
+            if msg.color in warn_and_err:
+                if (state.snackbar.get('show') and
+                        ((msg.color == 'warning' and state.snackbar.get('color') in warn_and_err) or  # noqa
+                         (msg.color == 'error' and state.snackbar.get('color') == 'error'))):
+                    # put this NEXT in the queue immediately FOLLOWING all warning/errors
+                    non_warning_error = [msg.color not in warn_and_err for msg in self.queue]  # noqa
+                    if True in non_warning_error:
+                        # insert BEFORE index
+                        self.queue.insert(non_warning_error.index(True), msg)
+                    else:
+                        self.queue.append(msg)
+                else:
+                    # interrupt the queue IMMEDIATELY
+                    # (any currently shown messages will repeat after)
+                    self._write_message(state, msg)
+            else:
+                # put this LAST in the queue
+                self.queue.append(msg)
             if len(self.queue) == 1:
                 self._write_message(state, msg)
 
@@ -70,7 +104,6 @@ class SnackbarQueue:
             self._write_message(state, msg)
 
     def _write_message(self, state, msg):
-
         state.snackbar['show'] = False
         state.snackbar['text'] = msg.text
         state.snackbar['color'] = msg.color
@@ -102,13 +135,15 @@ class SnackbarQueue:
 
         # create the timeout function which will close this message and
         # show the next message if one has been added to the queue since
-        def sleep_function(timeout):
+        def sleep_function(timeout, text):
             timeout_ = float(timeout) / 1000
             time.sleep(timeout_)
-            self.close_current_message(state)
+            if state.snackbar['show'] and state.snackbar['text'] == text:
+                # don't close the next message if the user manually clicked close!
+                self.close_current_message(state)
 
         x = threading.Thread(target=sleep_function,
-                             args=(timeout,),
+                             args=(timeout, msg.text),
                              daemon=True)
         x.start()
 

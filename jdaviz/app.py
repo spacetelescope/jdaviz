@@ -71,6 +71,7 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'plugin-add-results': 'components/plugin_add_results.vue',
                      'plugin-auto-label': 'components/plugin_auto_label.vue'}
 
+_verbosity_levels = ('debug', 'info', 'warning', 'error')
 
 # Register pure vue component. This allows us to do recursive component instantiation only in the
 # vue component file
@@ -93,6 +94,8 @@ class ApplicationState(State):
     """
     drawer = CallbackProperty(
         False, docstring="State of the plugins drawer.")
+    logger_overlay = CallbackProperty(
+        False, docstring="State of the logger history overlay.")
 
     snackbar = DictCallbackProperty({
         'show': False,
@@ -103,6 +106,8 @@ class ApplicationState(State):
     }, docstring="State of the quick toast messages.")
 
     snackbar_queue = SnackbarQueue()
+
+    snackbar_history = ListCallbackProperty(docstring="Previously dismissed snackbar items")
 
     settings = DictCallbackProperty({
         'data': {
@@ -168,6 +173,7 @@ class Application(VuetifyTemplate, HubListener):
     def __init__(self, configuration=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._verbosity = 'info'
+        self._history_verbosity = 'info'
 
         # Generate a state object for this application to maintain the state of
         #  the user interface.
@@ -262,23 +268,38 @@ class Application(VuetifyTemplate, HubListener):
     @property
     def verbosity(self):
         """
-        Verbosity of the application, choose from ``'debug'``, ``'info'`` (default),
-        ``'warning'``, or ``'error'``.
+        Verbosity of the application for popup snackbars, choose from ``'debug'``,
+        ``'info'`` (default), ``'warning'``, or ``'error'``.
         """
         return self._verbosity
 
     @verbosity.setter
     def verbosity(self, val):
-        if val not in ('debug', 'info', 'warning', 'error'):
+        if val not in _verbosity_levels:
             raise ValueError(f'Invalid verbosity: {val}')
         self._verbosity = val
+
+    @property
+    def history_verbosity(self):
+        """
+        Verbosity of the logger history, choose from ``'debug'``, ``'info'`` (default),
+        ``'warning'``, or ``'error'``.
+        """
+        return self._history_verbosity
+
+    @history_verbosity.setter
+    def history_verbosity(self, val):
+        if val not in _verbosity_levels:
+            raise ValueError(f'Invalid verbosity: {val}')
+        self._history_verbosity = val
 
     def _on_snackbar_message(self, msg):
         """
         Displays a toast message with an editable message that be dismissed
         manually or will dismiss automatically after a timeout.
 
-        This is also controlled by ``self.verbosity``.
+        Whether the message shows as a snackbar popup is controlled by ``self.verbosity``,
+        whether the message is added to the history log is controlled by ``self.history_verbosity``.
 
         Parameters
         ----------
@@ -295,14 +316,19 @@ class Application(VuetifyTemplate, HubListener):
         # * info lets everything through
         # * success, secondary, and primary are treated as info (not sure what they are used for)
         # * None is also treated as info (when color is not set)
-        ignored = []
-        if self.verbosity in ('warning', 'error'):
-            ignored += ['success', 'info', 'secondary', 'primary', None]
-            if self.verbosity == 'error':
-                ignored.append('warning')
+        popup_level = _verbosity_levels.index(self.verbosity)
+        history_level = _verbosity_levels.index(self.history_verbosity)
 
-        if msg.color not in ignored:
-            self.state.snackbar_queue.put(self.state, msg)
+        def _color_to_level(color):
+            if color in _verbosity_levels:
+                return color
+            # could create dictionary mapping if we need anything more advanced
+            return 'info'
+
+        msg_level = _verbosity_levels.index(_color_to_level(msg.color))
+        self.state.snackbar_queue.put(self.state, msg,
+                                      history=msg_level >= history_level,
+                                      popup=msg_level >= popup_level)
 
     def _link_new_data(self):
         """
