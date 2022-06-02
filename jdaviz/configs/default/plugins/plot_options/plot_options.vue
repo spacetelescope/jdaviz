@@ -11,7 +11,7 @@
             style="opacity: 0.7"
             @click="() => {multiselect = !multiselect}"
           >
-            <img :src="multiselect ? icon_checktoradial : icon_radialtocheck" width="24"/>
+            <img :src="multiselect ? icon_checktoradial : icon_radialtocheck" width="24" class="invert-if-dark"/>
           </v-btn>
         </j-tooltip>
       </div>
