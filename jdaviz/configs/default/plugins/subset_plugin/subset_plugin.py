@@ -101,13 +101,18 @@ class SubsetPlugin(TemplateMixin):
             self.session.edit_subset_mode = self.mode_selected
     '''
 
-    def _unpack_nested_subset(self, *args):
-        pass
+    def _unpack_nested_subset(self, subset_state):
+        compound_states = (OrState, AndState, XorState, InvertState)
+        if hasattr(subset_state, "state2") and isinstance(subset_state, compound_states):
+            temp_state = subset_state.state1
+            print(temp_state)
+            self._get_subset_subregion_definition(temp_state)
+            self._unpack_nested_subset(subset_state.state2)
 
     def _get_subset_subregion_definition(self, subset_state):
+        print("Called definition retrieval!")
         if isinstance(subset_state, RoiSubsetState):
             self.subset_classname = subset_state.roi.__class__.__name__
-            self.has_subset_details = True
             if self.subset_classname == "CircularROI":
                 x, y = subset_state.roi.get_center()
                 subset_definitions = {"X Center": x,
@@ -133,25 +138,20 @@ class SubsetPlugin(TemplateMixin):
             subset_definition = {"Upper bound": subset_state.hi,
                                  "Lower bound": subset_state.lo}
             self.subset_definitions.append(subset_definition)
-            self.has_subset_details = True
-
-        else:
-            self.has_subset_details = False
 
     def _get_subset_definition(self, *args):
         """
         Retrieve the parameters defining the selected subset, for example the
         upper and lower bounds for a simple spectral subset.
         """
-        self.subset_definition = []
+        self.subset_definitions = []
         subset_group = [s for s in self.app.data_collection.subset_groups if
                         s.label == self.subset_selected][0]
         subset_state = subset_group.subset_state
-        subset_class = subset_state.__class__
 
-        if subset_class in (OrState, AndState, XorState, InvertState):
+        if isinstance(subset_state, (OrState, AndState, XorState, InvertState)):
             self._unpack_nested_subset(subset_state)
-            self.has_subset_details = False
+            print(self.subset_definitions)
         else:
             self._get_subset_subregion_definition(subset_state)
 
