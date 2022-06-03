@@ -31,15 +31,17 @@
         <v-col>Subset Type: </v-col>
         <v-col>{{ subset_classname }}</v-col>
       </v-row>
-      <div v-if="has_subset_details">
-        <v-row v-for="(val, key, index) in subset_definition">
-          <v-col>{{ key }}:</v-col> 
-          <v-col>
-            <j-number-uncertainty
-              :value="val"
-              :defaultDigs="6"
-            ></j-number-uncertainty>
-          </v-col>
+      <div v-if="subset_definitions.length">
+        <v-row v-for="subset_definition in subset_definitions">
+          <v-row v-for="(val, key, index) in subset_definition">
+            <v-col>{{ key }}:</v-col>
+            <v-col>
+              <j-number-uncertainty
+                :value="val"
+                :defaultDigs="6"
+              ></j-number-uncertainty>
+            </v-col>
+          </v-row>
         </v-row>
       </div>
       <div v-else>
