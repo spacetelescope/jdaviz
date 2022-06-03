@@ -45,6 +45,10 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Fixed a bug where image loaded via the "IMPORT DATA" button is not
+  linked to the data collection, resulting in Imviz unusable until
+  the data are re-linked manually. [#1365]
+
 Mosviz
 ^^^^^^
 

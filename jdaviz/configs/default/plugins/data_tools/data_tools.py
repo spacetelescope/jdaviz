@@ -43,7 +43,12 @@ class DataTools(TemplateMixin):
             try:
                 load_data_message = LoadDataMessage(self._file_upload.file_path, sender=self)
                 self.hub.broadcast(load_data_message)
-            except Exception:
-                self.error_message = "An error occurred when loading the file"
+            except Exception as err:
+                self.error_message = f"An error occurred when loading the file: {repr(err)}"
             else:
                 self.dialog = False
+
+            if self.config == 'imviz':
+                # Do this like what Imviz does at the end of loading sequence from helper.
+                from jdaviz.configs.imviz.helper import link_image_data
+                link_image_data(self._app, link_type='pixels', error_on_fail=False)
