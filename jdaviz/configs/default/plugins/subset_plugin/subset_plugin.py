@@ -103,14 +103,13 @@ class SubsetPlugin(TemplateMixin):
 
     def _unpack_nested_subset(self, subset_state):
         compound_states = (OrState, AndState, XorState, InvertState)
-        if hasattr(subset_state, "state2") and isinstance(subset_state, compound_states):
+        if hasattr(subset_state, "state2") and isinstance(subset_state.state2, compound_states):
             temp_state = subset_state.state1
             print(temp_state)
             self._get_subset_subregion_definition(temp_state)
             self._unpack_nested_subset(subset_state.state2)
 
     def _get_subset_subregion_definition(self, subset_state):
-        print("Called definition retrieval!")
         if isinstance(subset_state, RoiSubsetState):
             self.subset_classname = subset_state.roi.__class__.__name__
             if self.subset_classname == "CircularROI":
@@ -151,7 +150,6 @@ class SubsetPlugin(TemplateMixin):
 
         if isinstance(subset_state, (OrState, AndState, XorState, InvertState)):
             self._unpack_nested_subset(subset_state)
-            print(self.subset_definitions)
         else:
             self._get_subset_subregion_definition(subset_state)
 
