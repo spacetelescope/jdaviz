@@ -4,7 +4,7 @@ from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
 from glue.core.subset import (RoiSubsetState, RangeSubsetState,
                               OrState, AndState, XorState, InvertState)
 from glue_jupyter.widgets.subset_mode_vuetify import SelectionModeMenu
-from traitlets import List, Unicode, Bool, Dict, observe
+from traitlets import List, Unicode, Bool, observe
 
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin, SubsetSelect
@@ -115,9 +115,9 @@ class SubsetPlugin(TemplateMixin):
             self.subset_classname = subset_state.roi.__class__.__name__
             if self.subset_classname == "CircularROI":
                 x, y = subset_state.roi.get_center()
-                subset_definitions = {"X Center": x,
-                                      "Y Center": y,
-                                      "Radius": subset_state.roi.radius}
+                subset_definition = {"X Center": x,
+                                     "Y Center": y,
+                                     "Radius": subset_state.roi.radius}
                 self.subset_definitions.append(subset_definition)
 
             elif self.subset_classname == "RectangularROI":
