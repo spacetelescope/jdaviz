@@ -1,3 +1,6 @@
+from packaging.version import Version
+
+import specutils
 from astropy import units as u
 from astropy.nddata import VarianceUncertainty, StdDevUncertainty, InverseVariance
 from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage
@@ -15,6 +18,7 @@ __all__ = ['UnitConversion']
 unit_exponents = {StdDevUncertainty: 1,
                   InverseVariance: -2,
                   VarianceUncertainty: 2}
+SPECUTILS_GT_1_7_0 = Version(specutils.__version__) > Version('1.7.0')
 
 
 @tray_registry('g-unit-conversion', label="Unit Conversion")
@@ -248,8 +252,9 @@ class UnitConversion(PluginTemplateMixin, DatasetSelectMixin):
                                             wcs=None,
                                             spectral_axis=set_spectral_axis_unit,
                                             unit=set_flux_unit.unit,
-                                            uncertainty=temp_uncertainty
-                                            )
-
-        converted_spectrum.redshift = spectrum.redshift
+                                            uncertainty=temp_uncertainty)
+        if SPECUTILS_GT_1_7_0:
+            converted_spectrum.shift_spectrum_to(redshift=spectrum.redshift)
+        else:
+            converted_spectrum.redshift = spectrum.redshift
         return converted_spectrum
