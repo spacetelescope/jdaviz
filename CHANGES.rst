@@ -6,6 +6,9 @@ New Features
 
 - Snackbar queue priority and history access. [#1352]
 
+- Plot options are simplified and include an advanced mode to act on multiple viewers/layers
+  simultaneously. [#1343]
+
 Cubeviz
 ^^^^^^^
 
@@ -72,6 +75,7 @@ New Features
   the app. [#1313]
 
 - Added offscreen indication for spectral lines and slice indicator. [#1312]
+
 
 Cubeviz
 ^^^^^^^

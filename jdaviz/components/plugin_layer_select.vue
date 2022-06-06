@@ -5,8 +5,8 @@
       :items="items"
       v-model="selected"
       @change="$emit('update:selected', $event)"
-      :label="label ? label : 'Viewer'"
-      :hint="hint ? hint : 'Select viewer.'"
+      :label="label ? label : 'Layer'"
+      :hint="hint ? hint : 'Select layer.'"
       :rules="rules ? rules : []"
       :multiple="multiselect"
       :chips="multiselect"
@@ -19,7 +19,7 @@
         <v-chip v-if="multiselect" style="width: calc(100% - 20px)">
           <span>
             <v-icon style='margin-left: -10px; margin-right: 2px'>{{ data.item.icon }}</v-icon>
-            {{ data.item.label.split("-viewer")[0] }}
+            {{ data.item.label }}
           </span>
         </v-chip>
         <span v-else>

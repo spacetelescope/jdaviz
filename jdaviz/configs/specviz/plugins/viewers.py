@@ -56,7 +56,7 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
         self._offscreen_lines_marks = OffscreenLinesMarks(self)
         self.figure.marks = self.figure.marks + self._offscreen_lines_marks.marks
 
-        self.display_uncertainties = False
+        self.state.add_callback('show_uncertainty', self._show_uncertainty_changed)
         self.display_mask = False
 
         # Change collapse function to sum
@@ -318,21 +318,25 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
     def available_linelists(self):
         return get_available_linelists()
 
-    def show_uncertainties(self):
-        self.display_uncertainties = True
-        self._plot_uncertainties()
+    def _show_uncertainty_changed(self, msg=None):
+        # this is subscribed in init to watch for changes to the state
+        # object since uncertainty handling is in jdaviz instead of glue/glue-jupyter
+        if self.state.show_uncertainty:
+            self._plot_uncertainties()
+        else:
+            self._clean_error()
 
     def show_mask(self):
         self.display_mask = True
         self._plot_mask()
 
     def clean(self):
-        self.display_uncertainties = False
-        self.display_mask = False
-
         # Remove extra traces, in case they exist.
-        self._clean_error()
+        self.display_mask = False
         self._clean_mask()
+
+        # this will automatically call _clean_error via _show_uncertainty_changed
+        self.state.show_uncertainty = False
 
     def _clean_mask(self):
         fig = self.figure
@@ -414,7 +418,7 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
                 self.figure.marks = list(self.figure.marks) + [mask_line_mark]
 
     def _plot_uncertainties(self):
-        if not self.display_uncertainties:
+        if not self.state.show_uncertainty:
             return
 
         # Remove existing error bars

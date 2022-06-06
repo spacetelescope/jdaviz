@@ -2,18 +2,23 @@ import numpy as np
 
 from functools import cached_property
 from ipyvuetify import VuetifyTemplate
+from glue.config import colormaps
 from glue.core import HubListener
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage,
+                               SubsetCreateMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from glue.core.subset import RoiSubsetState
+from glue_jupyter.bqplot.image import BqplotImageView
+from glue_jupyter.widgets.linked_dropdown import get_choices as _get_glue_choices
 from specutils import Spectrum1D
-from traitlets import Bool, HasTraits, List, Unicode, observe
+from traitlets import Any, Bool, HasTraits, List, Unicode, observe
 
 from jdaviz import __version__
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage)
+
 
 __all__ = ['TemplateMixin', 'PluginTemplateMixin',
            'BasePluginComponent', 'BaseSelectPluginComponent',
@@ -155,7 +160,7 @@ class BasePluginComponent(HubListener):
 
     @property
     def viewer_dicts(self):
-        def _dict_from_viewer(viewer, viewer_item):
+        def _dict_from_viewer(viewer, viewer_item, index=None):
             d = {'viewer': viewer, 'id': viewer_item['id']}
             if viewer_item.get('reference') is not None:
                 d['reference'] = viewer_item['reference']
@@ -163,10 +168,12 @@ class BasePluginComponent(HubListener):
             else:
                 d['reference'] = None
                 d['label'] = viewer_item['id']
+            if index is not None:
+                d['icon'] = f"mdi-numeric-{index+1}-circle-outline"
             return d
 
-        return [_dict_from_viewer(viewer, self.app._viewer_item_by_id(vid))
-                for vid, viewer in self.app._viewer_store.items()
+        return [_dict_from_viewer(viewer, self.app._viewer_item_by_id(vid), index)
+                for index, (vid, viewer) in enumerate(self.app._viewer_store.items())
                 if viewer.__class__.__name__ != 'MosvizTableViewer']
 
     @cached_property
@@ -208,11 +215,21 @@ class BaseSelectPluginComponent(BasePluginComponent, HasTraits):
         if default_text is not None:
             self.selected = default_text
 
+        if kwargs.get('multiselect'):
+            self.add_observe(kwargs.get('multiselect'), self._multiselect_changed)
+
         # this callback MUST come first so that any plugins that use @observe have those
         # callbacks triggered AFTER the cache is cleared and the value is checked against
         # valid options
         self.add_observe(kwargs.get('selected'), self._selected_changed, first=True)
         self.filters = filters
+
+    @property
+    def is_multiselect(self):
+        if not hasattr(self, 'multiselect'):
+            return False
+        else:
+            return self.multiselect
 
     @property
     def default_text(self):
@@ -255,12 +272,20 @@ class BaseSelectPluginComponent(BasePluginComponent, HasTraits):
     def labels(self):
         return [s['label'] for s in self.items if 'label' in s.keys()]
 
-    @cached_property
-    def selected_item(self):
+    def _get_selected_item(self, selected):
         for item in self.items:
-            if item['label'] == self.selected:
+            if item['label'] == selected:
                 return item
         return {}
+
+    @cached_property
+    def selected_item(self):
+        if self.is_multiselect:
+            items = [self._get_selected_item(selected) for selected in self.selected]
+            if not len(items):
+                return {}
+            return {k: [item[k] for item in items] for k in items[0].keys()}
+        return self._get_selected_item(self.selected)
 
     @cached_property
     def selected_obj(self):
@@ -271,6 +296,7 @@ class BaseSelectPluginComponent(BasePluginComponent, HasTraits):
         return self._default_mode
 
     def _apply_default_selection(self):
+        # TODO: make this multi-ready
         is_valid = self.selected in self.labels
         if callable(self.default_mode):
             # callable was defined and passed by the plugin or inheriting component.
@@ -304,11 +330,225 @@ class BaseSelectPluginComponent(BasePluginComponent, HasTraits):
                 return False
         return True
 
+    def _multiselect_changed(self, event):
+        self._clear_cache()
+        if self.is_multiselect:
+            self.selected = [self.selected]
+        elif isinstance(self.selected, list):
+            self.selected = self.selected[0]
+        else:
+            self._apply_default_selection()
+
     def _selected_changed(self, event):
         self._clear_cache()
-        if event['new'] not in self.labels + ['']:
-            self._apply_default_selection()
-            raise ValueError(f"{event['new']} not one of {self.labels}")
+        if self.is_multiselect:
+            if not isinstance(event['new'], list):
+                self.selected = [event['new']]
+                return
+            if not np.all([item in self.labels + [''] for item in event['new']]):
+                self._apply_default_selection()
+                raise ValueError(f"not all items in {event['new']} are one of {self.labels}")
+        else:
+            if event['new'] not in self.labels + ['']:
+                self._apply_default_selection()
+                raise ValueError(f"{event['new']} not one of {self.labels}")
+
+
+class LayerSelect(BaseSelectPluginComponent):
+    """
+    Traitlets (in the object, custom traitlets in the plugin):
+
+    * ``items`` (list of dicts with keys: label, color)
+    * ``selected`` (string)
+
+    Properties (in the object only):
+
+    * ``labels`` (list of labels corresponding to items)
+    * ``selected_item`` (dictionary in ``items`` coresponding to ``selected``, cached)
+    * ``selected_obj`` (layer object corresponding to ``selected``, cached)
+
+
+    To use in a plugin:
+
+    * create (empty) traitlets in the plugin
+    * register with all the automatic logic in the plugin's init by passing the string names
+      of the respective traitlets.
+    * use component in plugin template (see below)
+    * refer to properties above based on the interally stored reference to the
+      instantiated object of this component
+    * observe the traitlets created and defined in the plugin, as necessary
+
+    Example template (label and hint are optional)::
+
+      <plugin-layer-select
+        :items="layer_items"
+        :selected.sync="layer_selected"
+        :show_if_single_entry="true"
+        label="Layer"
+        hint="Select layer."
+      />
+
+    """
+    def __init__(self, plugin, items, selected, viewer,
+                 multiselect=None,
+                 default_text=None, manual_options=[], allowed_type=None,
+                 default_mode='first'):
+        """
+        Parameters
+        ----------
+        plugin
+            the parent plugin object
+        items : str
+            the name of the items traitlet defined in ``plugin``
+        selected : str
+            the name of the selected traitlet defined in ``plugin``
+        viewer: str
+            the name of the traitlet defined in ``plugin`` storing the viewer(s) to expose the
+            layers
+        default_text : str or None
+            the text to show for no selection.  If not provided or None, no entry will be provided
+            in the dropdown for no selection.
+        manual_options: list
+            list of options to provide that are not automatically populated by subsets.  If
+            ``default`` text is provided but not in ``manual_options`` it will still be included as
+            the first item in the list.
+        """
+        super().__init__(plugin,
+                         items=items,
+                         selected=selected,
+                         viewer=viewer,
+                         multiselect=multiselect,
+                         default_text=default_text,
+                         manual_options=manual_options,
+                         default_mode=default_mode)
+
+        self.hub.subscribe(self, AddDataMessage,
+                           handler=lambda _: self._on_layers_changed())
+        self.hub.subscribe(self, RemoveDataMessage,
+                           handler=lambda _: self._on_layers_changed())
+        self.hub.subscribe(self, SubsetCreateMessage,
+                           handler=lambda _: self._on_layers_changed())
+        # will need SubsetUpdateMessage for name only (style shouldn't force a full refresh)
+        # self.hub.subscribe(self, SubsetUpdateMessage,
+        #                    handler=lambda _: self._on_layers_changed())
+        self.hub.subscribe(self, SubsetDeleteMessage,
+                           handler=lambda _: self._on_layers_changed())
+
+        self.add_observe(viewer, self._on_viewer_changed)
+        self._on_layers_changed()
+
+    def _get_viewer(self, viewer):
+        # newer will likely be the viewer name in most cases, but viewer id in the case
+        # of additional viewers in imviz.
+        try:
+            return self.app.get_viewer(viewer)
+        except TypeError:
+            return self.app.get_viewer_by_id(viewer)
+
+    def _layer_to_dict(self, layer, index=None):
+        d = {"label": layer.layer.label, "color": layer.state.color}
+        if index is not None:
+            d['icon'] = f"mdi-alpha-{chr(97 + index)}-box-outline"
+        return d
+
+    def _on_viewer_changed(self, msg=None):
+        # we don't want to update the layers if we're just toggling between single and multi-select
+        old, new = msg['old'], msg['new']
+        if not isinstance(old, list):
+            old = [old]
+        if not isinstance(new, list):
+            new = [new]
+        if new != old:
+            self._clear_cache()
+            self._on_layers_changed()
+
+    def _valid_layer(self, viewer, layer):
+        if isinstance(viewer, BqplotImageView) and self.plugin.config == 'cubeviz':
+            # exclude spectral subsets in image viewers (but not in 2d spectrum viewers)
+            if hasattr(layer.state.layer, 'subset_state') and not isinstance(layer.state.layer.subset_state, RoiSubsetState):  # noqa
+                return False
+        return True
+
+    @observe('filters')
+    def _on_layers_changed(self, msg=None):
+        # NOTE: _on_layers_changed is passed without a msg object during init
+
+        viewer_names = self.viewer
+        if not isinstance(viewer_names, list):
+            viewer_names = [viewer_names]
+        viewers = [self._get_viewer(viewer) for viewer in viewer_names]
+
+        manual_items = [{'label': label} for label in self.manual_options]
+        layers = [layer for viewer in viewers for layer in viewer.layers if self._valid_layer(viewer, layer)]  # noqa
+        # remove duplicates - NOTE: by doing this, any color-mismatch between layers with the
+        # same name in different viewers will be randomly assigned within plot_options
+        # based on which was found _first.
+        layer_labels = [layer.layer.label for layer in layers]
+        _, inds = np.unique(layer_labels, return_index=True)
+        layers = [layers[i] for i in inds]
+
+        self.items = manual_items + [self._layer_to_dict(layer, index) for index, layer in enumerate(layers)]  # noqa
+        self._apply_default_selection()
+
+    @cached_property
+    def selected_obj(self):
+        viewer_names = self.viewer
+        if not isinstance(viewer_names, list):
+            # case for single-select on the viewer select
+            viewer_names = [viewer_names]
+
+        selected = self.selected
+        if not isinstance(selected, list):
+            selected = [selected]
+
+        viewers = [self._get_viewer(viewer_name) for viewer_name in viewer_names]
+
+        layers = [[layer for layer in viewer.layers
+                   if layer.layer.label in selected and self._valid_layer(viewer, layer)]
+                  for viewer in viewers]
+
+        if not self.multiselect and len(layers) == 1:
+            return layers[0]
+        else:
+            return layers
+
+
+class LayerSelectMixin(VuetifyTemplate, HubListener):
+    """
+    Applies the LayerSelect component as a mixin in the base plugin.  This
+    automatically adds traitlets as well as new properties to the plugin with minimal
+    extra code.  For multiple instances or custom traitlet names/defaults, use the
+    component instead.
+
+    To use in a plugin:
+
+    * add ``LayerSelectMixin`` as a mixin to the class
+    * use the traitlets available from the plugin or properties/methods available from
+      ``plugin.layer``.
+
+    Example template (label and hint are optional)::
+
+      <plugin-layer-select
+        :items="layer_items"
+        :selected.sync="layer_selected"
+        :show_if_single_entry="true"
+        label="Layer"
+        hint="Select layer."
+      />
+
+    """
+    layer_items = List().tag(sync=True)
+    layer_selected = Any().tag(sync=True)
+    layer_viewer = Unicode().tag(sync=True)
+    layer_multiselect = Bool(False).tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.layer = LayerSelect(self,
+                                 'layer_items',
+                                 'layer_selected',
+                                 'layer_viewer',
+                                 'layer_multiselect')
 
 
 class SubsetSelect(BaseSelectPluginComponent):
@@ -602,9 +842,11 @@ class ViewerSelect(BaseSelectPluginComponent):
       />
 
     """
-    def __init__(self, plugin, items, selected, default_text=None, manual_options=[],
-                 default_mode='first'):
+    def __init__(self, plugin, items, selected,
+                 multiselect=None,
+                 default_text=None, manual_options=[], default_mode='first'):
         super().__init__(plugin, items=items, selected=selected,
+                         multiselect=multiselect,
                          default_text=default_text, manual_options=manual_options,
                          default_mode=default_mode)
 
@@ -622,11 +864,10 @@ class ViewerSelect(BaseSelectPluginComponent):
     def references(self):
         return [item['reference'] for item in self.items]
 
-    @cached_property
-    def selected_item(self):
-        if self.selected in self.manual_options:
+    def _get_selected_item(self, selected):
+        if selected in self.manual_options:
             return {}
-        item = super().selected_item
+        item = super()._get_selected_item(selected)
         if item:
             return item
 
@@ -634,7 +875,7 @@ class ViewerSelect(BaseSelectPluginComponent):
         # will handle resetting the trait to the reference since it exists, but this
         # will allow access to the underlying item/object for any observes in the meantime.
         for item in self.items:
-            if item['id'] == self.selected:
+            if item['id'] == selected:
                 return item
 
     @property
@@ -645,18 +886,37 @@ class ViewerSelect(BaseSelectPluginComponent):
     def selected_reference(self):
         return self.selected_item.get('reference', None)
 
+    def _get_selected_obj(self, selected, selected_id):
+        if selected in self.manual_options or selected_id is None:
+            return None
+        return self.app.get_viewer_by_id(selected_id)
+
     @cached_property
     def selected_obj(self):
-        if self.selected in self.manual_options:
-            return None
-        return self.app.get_viewer_by_id(self.selected_id)
+        if self.is_multiselect and len(self.selected):
+            return [self._get_selected_obj(selected, selected_id)
+                    for selected, selected_id in zip(self.selected, self.selected_id)]
+        return self._get_selected_obj(self.selected, self.selected_id)
 
     def _selected_changed(self, event):
-        if event['new'] not in self.labels + self.manual_options:
-            if self.selected in self.ids:
-                # provided id in place of ref
-                self.selected = self.labels[self.ids.index(self.selected)]
-                return
+        self._clear_cache()
+        if self.is_multiselect and isinstance(event['new'], list):
+            new_selected = []
+            for entry in event['new']:
+                if entry in self.labels + self.manual_options:
+                    new_selected.append(entry)
+                elif entry in self.ids:
+                    new_selected.append(self.labels[self.ids.index(entry)])
+                else:
+                    raise ValueError(f"could not map {entry} to valid choice")
+            self.selected = new_selected
+            return
+        else:
+            if event['new'] not in self.labels + self.manual_options:
+                if self.selected in self.ids:
+                    # provided id in place of ref
+                    self.selected = self.labels[self.ids.index(self.selected)]
+                    return
         return super()._selected_changed(event)
 
     def _is_valid_item(self, viewer):
@@ -702,11 +962,12 @@ class ViewerSelectMixin(VuetifyTemplate, HubListener):
 
     """
     viewer_items = List().tag(sync=True)
-    viewer_selected = Unicode().tag(sync=True)
+    viewer_selected = Any().tag(sync=True)
+    viewer_multiselect = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.viewer = ViewerSelect(self, 'viewer_items', 'viewer_selected')
+        self.viewer = ViewerSelect(self, 'viewer_items', 'viewer_selected', 'viewer_multiselect')
 
 
 class DatasetSelect(BaseSelectPluginComponent):
@@ -1106,3 +1367,195 @@ class AddResultsMixin(VuetifyTemplate, HubListener):
                                       'results_label_default', 'results_label_auto',
                                       'results_label_invalid_msg', 'results_label_overwrite',
                                       'add_to_viewer_items', 'add_to_viewer_selected')
+
+
+class PlotOptionsSyncState(BasePluginComponent):
+    """
+    """
+    def __init__(self, plugin, viewer_select, layer_select, glue_name,
+                 value, sync, state_filter=None):
+        super().__init__(plugin, value=value, sync=sync)
+        self._state_filter = state_filter
+        self._linked_states = []
+        self._processing_change_from_glue = False
+        self._processing_change_to_glue = False
+        self._cached_properties = ["subscribed_states", "subscribed_icons"]
+
+        self._viewer_select = viewer_select
+        self._layer_select = layer_select
+        self._glue_name = glue_name
+        self.add_observe(viewer_select._plugin_traitlets['selected'], self._on_viewer_layer_changed)
+        self.add_observe(layer_select._plugin_traitlets['selected'], self._on_viewer_layer_changed)
+        self.add_observe(value, self._on_value_changed)
+        self._on_viewer_layer_changed()
+
+    def state_filter(self, state):
+        if self._state_filter is None:
+            return True
+        return self._state_filter(state)
+
+    @cached_property
+    def subscribed_states(self):
+        # states object that according to the viewer selection, we *should*
+        # link if this entry is found there
+        viewers = self._viewer_select.selected_obj
+        if not isinstance(viewers, list):
+            # which is the case for single-select
+            viewers = [viewers]
+
+        def _state_item(item):
+            if isinstance(item, list):
+                return [_state_item(item_i) for item_i in item]
+            elif item is None:
+                return None
+            else:
+                return item.state
+
+        viewer_states = [_state_item(viewer) for viewer in viewers]
+
+        layer_labels = self._layer_select.selected
+        if not isinstance(layer_labels, list):
+            layer_labels = [layer_labels]
+
+        # NOTE: accessing from self._layer_select.selected_obj would give us a per-viewer
+        # list, but we need a per-selected-layer list.
+        layer_states = []
+        for selected_layer_label in layer_labels:
+            layer_states.append([])
+            for viewer in viewers:
+                for layer in viewer.layers:
+                    if layer.layer.label == selected_layer_label:
+                        layer_states[-1].append(layer.state)
+
+        # subscribed states can still be nested list
+        return viewer_states + layer_states
+
+    @cached_property
+    def subscribed_icons(self):
+        # dictionary items giving information about the entries in subscribed_states
+        viewer_icons = self._viewer_select.selected_item.get('icon', [])
+        if not isinstance(viewer_icons, list):
+            viewer_icons = [viewer_icons]
+
+        layer_icons = self._layer_select.selected_item.get('icon', [])
+        if not isinstance(layer_icons, list):
+            layer_icons = [layer_icons]
+
+        return viewer_icons + layer_icons
+
+    @property
+    def linked_states(self):
+        # access glue state objects for which the callbacks are currently connected
+        return self._linked_states
+
+    def _get_glue_value(self, state):
+        if self._glue_name == 'cmap':
+            return getattr(state, self._glue_name).name
+        return getattr(state, self._glue_name)
+
+    def _get_glue_choices(self, state):
+        if self._glue_name == 'cmap':
+            return [{'text': cmap[0], 'value': cmap[1].name} for cmap in colormaps.members]
+        else:
+            values, labels = _get_glue_choices(state, self._glue_name)
+            return [{'text': l, 'value': v} for v, l in zip(values, labels)]
+
+    def _on_viewer_layer_changed(self, msg=None):
+        self._clear_cache(*self._cached_properties)
+
+        # clear existing callbacks - we'll re-create those we need later
+        for state in self.linked_states:
+            state.remove_callback(self._glue_name, self._on_glue_value_changed)
+
+        in_subscribed_states = False
+        icons = []
+        current_glue_values = []
+        self._linked_states = []
+        for states, icon in zip(self.subscribed_states, self.subscribed_icons):
+            if not isinstance(states, list):
+                states = [states]
+
+            for state in states:
+                if state is None or not self.state_filter(state):
+                    continue
+                if self._glue_name is None or not hasattr(state, self._glue_name):
+                    continue
+
+                in_subscribed_states = True
+                if icon not in icons:
+                    icons.append(icon)
+                current_glue_values.append(self._get_glue_value(state))
+                self._linked_states.append(state)  # these will be iterated when value is set
+                state.add_callback(self._glue_name, self._on_glue_value_changed)
+
+                if self.sync.get('choices') is None and \
+                        (hasattr(getattr(type(state), self._glue_name), 'get_display_func')
+                         or self._glue_name == 'cmap'):
+                    # then we can access and populate the choices.  We are assuming here
+                    # that each state-instance with this same name will have the same
+                    # choices and that those will not change.  If we ever hookup options
+                    # with changing choices, we'll need additional logic to sync to those
+                    # and handle mixed state in the choices...
+                    self.sync = {**self.sync, 'choices': self._get_glue_choices(state)}
+
+        self.sync = {**self.sync,
+                     'in_subscribed_states': in_subscribed_states,
+                     'icons': icons,
+                     'mixed': len(np.unique(current_glue_values, axis=0)) > 1}
+
+        if len(current_glue_values):
+            # sync the initial value of the widget, avoiding recursion
+            self._on_glue_value_changed(current_glue_values[0])
+
+    def _update_mixed_state(self):
+        if len(self.linked_states) <= 1:
+            mixed = False
+        else:
+            current_glue_values = []
+            for state in self.linked_states:
+                current_glue_values.append(self._get_glue_value(state))
+                mixed = len(np.unique(current_glue_values, axis=0)) > 1
+        self.sync = {**self.sync,
+                     'mixed': mixed}
+
+    def _on_value_changed(self, msg):
+        if self._processing_change_from_glue:
+            return
+
+        self._processing_change_to_glue = True
+        for glue_state in self.linked_states:
+            if self._glue_name == 'cmap':
+                cmap = None
+                for member in colormaps.members:
+                    if member[1].name == msg['new']:
+                        cmap = member[1]
+                        break
+                setattr(glue_state, self._glue_name, cmap)
+            else:
+                setattr(glue_state, self._glue_name, msg['new'])
+        # need to recompute mixed state
+        self._update_mixed_state()
+        self._processing_change_to_glue = False
+
+    def _on_glue_value_changed(self, value):
+        if self._processing_change_to_glue:
+            return
+
+        self._processing_change_from_glue = True
+        if "Colormap" in value.__class__.__name__:  # TODO: better logic
+            value = str(value)
+        elif isinstance(self.value, (int, float)) and self._glue_name != 'percentile':
+            # glue might pass us ints for float or vice versa, but our traitlets care
+            # so let's cast to the type expected by the traitlet to avoid having to
+            # use Any traitlets for all of these.  We skip percentile as that needs
+            # to be an Any traitlet in order to handle "Custom"
+            value = type(self.value)(value)
+        self.value = value
+        # need to recompute mixed state
+        self._update_mixed_state()
+        self._processing_change_from_glue = False
+
+    def unmix_state(self):
+        self._on_value_changed({'new': self.value})
+        self.sync = {**self.sync,
+                     'mixed': False}

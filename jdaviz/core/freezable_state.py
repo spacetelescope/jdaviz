@@ -1,5 +1,6 @@
 from glue.viewers.profile.state import ProfileViewerState
 from glue_jupyter.bqplot.image.state import BqplotImageViewerState
+from glue.viewers.matplotlib.state import DeferredDrawCallbackProperty as DDCProperty
 
 __all__ = ['FreezableState', 'FreezableProfileViewerState', 'FreezableBqplotImageViewerState']
 
@@ -16,7 +17,7 @@ class FreezableState():
 
 
 class FreezableProfileViewerState(ProfileViewerState, FreezableState):
-    pass
+    show_uncertainty = DDCProperty(False, docstring='Whether to show data uncertainties')
 
 
 class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
