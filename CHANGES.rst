@@ -9,6 +9,13 @@ New Features
 - Plot options are simplified and include an advanced mode to act on multiple viewers/layers
   simultaneously. [#1343]
 
+Other Changes and Additions
+---------------------------
+
+- File browser changed to Solara's file browser. We now use double click to import a file
+  and single click to select a file or directory. [#1376]
+
+
 Cubeviz
 ^^^^^^^
 
