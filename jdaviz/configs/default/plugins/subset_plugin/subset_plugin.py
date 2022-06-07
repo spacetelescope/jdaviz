@@ -27,7 +27,7 @@ class SubsetPlugin(TemplateMixin):
     subset_items = List([]).tag(sync=True)
     subset_selected = Unicode("Create new").tag(sync=True)
     mode_selected = Unicode('add').tag(sync=True)
-    show_region_info = Bool(False).tag(sync=True)
+    show_region_info = Bool(True).tag(sync=True)
     subset_classname = Unicode('').tag(sync=True)
     subset_definitions = List([]).tag(sync=True)
     has_subset_details = Bool(False).tag(sync=True)
@@ -103,13 +103,15 @@ class SubsetPlugin(TemplateMixin):
 
     def _unpack_nested_subset(self, subset_state):
         compound_states = (OrState, AndState, XorState, InvertState)
-        if hasattr(subset_state, "state2") and isinstance(subset_state.state2, compound_states):
-            temp_state = subset_state.state1
-            print(temp_state)
-            self._get_subset_subregion_definition(temp_state)
-            self._unpack_nested_subset(subset_state.state2)
+        if hasattr(subset_state, "state2"):
+            self._get_subset_subregion_definition(subset_state.state1)
+            if isinstance(subset_state.state2, (RoiSubsetState, RangeSubsetState)):
+                self._get_subset_subregion_definition(subset_state.state2)
+            else:
+                self._unpack_nested_subset(subset_state.state2)
 
     def _get_subset_subregion_definition(self, subset_state):
+        subset_definition = None
         if isinstance(subset_state, RoiSubsetState):
             self.subset_classname = subset_state.roi.__class__.__name__
             if self.subset_classname == "CircularROI":
@@ -117,25 +119,24 @@ class SubsetPlugin(TemplateMixin):
                 subset_definition = {"X Center": x,
                                      "Y Center": y,
                                      "Radius": subset_state.roi.radius}
-                self.subset_definitions.append(subset_definition)
 
             elif self.subset_classname == "RectangularROI":
                 subset_definition = {}
                 for att in ("Xmin", "Xmax", "Ymin", "Ymax"):
                     subset_definition[att] = getattr(subset_state.roi, att.lower())
-                self.subset_definitions.append(subset_definition)
 
             elif self.subset_classname == "EllipticalROI":
                 subset_definition = {"X Center": subset_state.roi.xc,
                                      "Y Center": subset_state.roi.yc,
                                      "X Radius": subset_state.roi.radius_x,
                                      "Y Radius": subset_state.roi.radius_y}
-                self.subset_definitions.append(subset_definition)
 
         elif isinstance(subset_state, RangeSubsetState):
             self.subset_classname = "Range"
             subset_definition = {"Upper bound": subset_state.hi,
                                  "Lower bound": subset_state.lo}
+
+        if subset_definition is not None and subset_definition not in self.subset_definitions:
             self.subset_definitions.append(subset_definition)
 
     def _get_subset_definition(self, *args):
