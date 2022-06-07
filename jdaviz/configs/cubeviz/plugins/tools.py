@@ -3,14 +3,10 @@ import os
 
 from glue.config import viewer_tool
 from glue.viewers.common.tool import CheckableTool
-from glue.core.link_helpers import LinkSame
-from specutils import Spectrum1D
-from glue.core.roi import RectangularROI, XRangeROI, CircularROI
-from glue.core.edit_subset_mode import OrMode, NewMode, ReplaceMode
+from glue.core.roi import RectangularROI
+from glue.core.edit_subset_mode import NewMode
 
 from jdaviz.core.events import SliceSelectWavelengthMessage, SliceToolStateMessage
-from jdaviz.core.marks import SelectedSpaxel
-from jdaviz.core.events import SnackbarMessage
 
 __all__ = []
 

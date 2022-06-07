@@ -19,7 +19,8 @@ def test_spectrum_at_spaxel(cubeviz_helper, spectrum1d_cube):
     assert len(spectrum_viewer.data()) == 1
 
     # Click on spaxel location
-    flux_viewer.toolbar.active_tool.on_mouse_event({'event': 'click', 'domain': {'x': x, 'y': y}, 'altKey': False})
+    flux_viewer.toolbar.active_tool.on_mouse_event(
+        {'event': 'click', 'domain': {'x': x, 'y': y}, 'altKey': False})
     assert len(flux_viewer.figure.marks) == 3
     assert len(spectrum_viewer.data()) == 2
 
@@ -48,7 +49,8 @@ def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube):
     assert len(spectrum_viewer.data()) == 1
 
     # Click on spaxel location
-    flux_viewer.toolbar.active_tool.on_mouse_event({'event': 'click', 'domain': {'x': x, 'y': y}, 'altKey': False})
+    flux_viewer.toolbar.active_tool.on_mouse_event(
+        {'event': 'click', 'domain': {'x': x, 'y': y}, 'altKey': False})
     assert len(flux_viewer.figure.marks) == 3
     assert len(spectrum_viewer.data()) == 2
 
@@ -61,7 +63,8 @@ def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube):
     # Using altKey should create a new subset
     x = 2
     y = 2
-    flux_viewer.toolbar.active_tool.on_mouse_event({'event': 'click', 'domain': {'x': x, 'y': y}, 'altKey': True})
+    flux_viewer.toolbar.active_tool.on_mouse_event(
+        {'event': 'click', 'domain': {'x': x, 'y': y}, 'altKey': True})
     assert len(flux_viewer.figure.marks) == 4
     assert len(spectrum_viewer.data()) == 3
 
@@ -90,7 +93,8 @@ def test_spectrum_at_spaxel_with_2d(cubeviz_helper):
     assert len(spectrum_viewer.data()) == 0
 
     # Click on spaxel location
-    flux_viewer.toolbar.active_tool.on_mouse_event({'event': 'click', 'domain': {'x': x, 'y': y}, 'altKey': False})
+    flux_viewer.toolbar.active_tool.on_mouse_event(
+        {'event': 'click', 'domain': {'x': x, 'y': y}, 'altKey': False})
     assert len(flux_viewer.figure.marks) == 3
     assert len(spectrum_viewer.data()) == 0
 
