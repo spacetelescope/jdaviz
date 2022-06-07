@@ -1,10 +1,9 @@
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Optional
 from jdaviz.core.template_mixin import TemplateMixin
 from jdaviz.core.events import LoadDataMessage
 from traitlets import Unicode, Bool
 import os
-from jdaviz.configs.default.plugins.data_tools.file_chooser import FileChooser
 from jdaviz.core.registries import tool_registry
 import solara as sol
 import react_ipywidgets as react
@@ -25,13 +24,13 @@ class DataTools(TemplateMixin):
         start_path = os.environ.get('JDAVIZ_START_DIR', os.path.curdir)
         start_path = str(Path(start_path).resolve())
 
-        def on_directory_change(directory : Path):
+        def on_directory_change(directory: Path):
             self.directory = str(directory)
 
-        def on_file_open(file : Path):
+        def on_file_open(file: Path):
             self._load(file)
 
-        def on_path_select(path : Optional[Path]):
+        def on_path_select(path: Optional[Path]):
             if path is None:
                 self.directory = None
                 self.file = None
@@ -51,7 +50,7 @@ class DataTools(TemplateMixin):
 
         self.components = {'g-file-import': self._file_upload}
 
-    def _load(self, path : Path):
+    def _load(self, path: Path):
         try:
             load_data_message = LoadDataMessage(str(path), sender=self)
             self.hub.broadcast(load_data_message)
@@ -59,6 +58,11 @@ class DataTools(TemplateMixin):
             self.error_message = "An error occurred when loading the file"
         else:
             self.dialog = False
+
+            if self.config == 'imviz':
+                # Do this like what Imviz does at the end of loading sequence from helper.
+                from jdaviz.configs.imviz.helper import link_image_data
+                link_image_data(self._app, link_type='pixels', error_on_fail=False)
 
     def vue_load_file(self, *args, **kwargs):
         self._load(Path(self.file))
