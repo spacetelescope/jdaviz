@@ -56,8 +56,6 @@ class SpectrumPerSpaxel(CheckableTool):
     tool_tip = 'Click on the viewer and see the spectrum at that spaxel in the spectrum viewer'
 
     def __init__(self, viewer, **kwargs):
-        self.previous_subset_mode = None
-
         super().__init__(viewer, **kwargs)
 
     def activate(self):
