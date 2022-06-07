@@ -7,6 +7,9 @@
 Imviz
 #####
 
+.. image:: ../img/landing_gifs/Imviz_landing.gif
+    :alt: Introductory video tour of the Imviz configuration and its features
+
 Imviz is a tool for visualization and quick-look analysis for 2D astronomical
 images. Like the rest of Jdaviz, it is written in the Python programming
 language, and therefore can be run anywhere Python is supported
