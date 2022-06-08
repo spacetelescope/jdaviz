@@ -224,12 +224,11 @@ def test_subset_default_thickness(specviz_helper, spectrum1d):
     specviz_helper.load_spectrum(spectrum1d)
 
     sv = specviz_helper.app.get_viewer('spectrum-viewer')
-    tool = sv.toolbar.tools['bqplot:xrange']
-    tool.activate()
-    tool.interact.brushing = True
-    tool.interact.selected = [2.5, 3.5]
-    tool.interact.brushing = False
-
+    sv.toolbar.active_tool = sv.toolbar.tools['bqplot:xrange']
+    from glue.core.roi import XRangeROI
+    sv.apply_roi(XRangeROI(2.5, 3.5))
+    # _on_layers_update is not triggered within CI
+    sv._on_layers_update()
     assert sv.state.layers[-1].linewidth == 3
 
 
