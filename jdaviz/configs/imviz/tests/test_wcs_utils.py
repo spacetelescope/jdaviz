@@ -1,5 +1,6 @@
 import gwcs
 import numpy as np
+import pytest
 from astropy import units as u
 from astropy.coordinates import ICRS
 from astropy.modeling import models
@@ -104,3 +105,10 @@ def test_simple_gwcs():
                                   1262.0057201165127, 606.2863901330095,
                                   155.2870478938214, -86.89813081941797))
     assert not result[-1]
+
+
+@pytest.mark.parametrize(('angle', 'ans'), [(0, 0), (45, 45), (-45, -45), (360, 0)])
+def test_rotate_wcs(angle, ans):
+    w = wcs_utils.generate_rotated_wcs(angle)
+    degn = wcs_utils.get_compass_info(w, (2, 2))[6]
+    assert_allclose(degn, ans, atol=1e-7)

@@ -94,6 +94,6 @@ class RotateImageSimple(TemplateMixin, ViewerSelectMixin, DatasetSelectMixin):
 
             # Force all viewers to update.
             self._update_all_viewers()
-        except Exception as err:
+        except Exception as err:  # pragma: no cover
             self.hub.broadcast(SnackbarMessage(
                 f"Image rotation failed: {repr(err)}", color='error', sender=self))
