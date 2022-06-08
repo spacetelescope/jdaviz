@@ -8,6 +8,9 @@
 Specviz
 #######
 
+.. image:: ../img/landing_gifs/Specviz_landing.gif
+    :alt: Introductory video tour of the Specviz configuration and its features
+
 Specviz is a tool for visualization and quick-look analysis of 1D astronomical spectra. Like the rest of Jdaviz, it is written in the Python programming language, and therefore can be run anywhere Python is supported (see :ref:`install`). Specviz is built on top of the `specutils <https://specutils.readthedocs.io/en/latest/>`_ package from `astropy <https://www.astropy.org>`_ , providing a visual, interactive interface to the analysis capabilities in that library.
 
 Specviz allows spectra to be easily plotted and examined. It supports flexible spectral unit conversions, custom plotting attributes, interactive selections, multiple plots, and other features.
