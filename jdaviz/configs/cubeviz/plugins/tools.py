@@ -3,12 +3,10 @@ import os
 
 from glue.config import viewer_tool
 from glue.viewers.common.tool import CheckableTool
-from glue.core.link_helpers import LinkSame
-from specutils import Spectrum1D
+from glue.core.roi import RectangularROI
+from glue.core.edit_subset_mode import NewMode
 
 from jdaviz.core.events import SliceSelectWavelengthMessage, SliceToolStateMessage
-from jdaviz.core.marks import SelectedSpaxel
-from jdaviz.core.events import SnackbarMessage
 
 __all__ = []
 
@@ -58,142 +56,41 @@ class SpectrumPerSpaxel(CheckableTool):
     tool_tip = 'Click on the viewer and see the spectrum at that spaxel in the spectrum viewer'
 
     def __init__(self, viewer, **kwargs):
-        self.old_y_min = 0
-        self.old_y_max = 0
-        self.spectrum_viewer = None
-
-        # Keep track of data created during this session and remove
-        # them from the spectrum viewer after the tool is deactivated
-        self.created_data_labels = []
-
-        # #b515d1 is magenta
-        self.colors = ['#b515d1']
         super().__init__(viewer, **kwargs)
 
     def activate(self):
         self.viewer.add_event_callback(self.on_mouse_event,
                                        events=['click'])
-        self.spectrum_viewer = self.viewer.jdaviz_app.get_viewer("spectrum-viewer")
 
     def deactivate(self):
         self.viewer.remove_event_callback(self.on_mouse_event)
-        self.remove_highlight_on_spaxel()
-        for label in self.created_data_labels:
-            self.viewer.jdaviz_app.remove_data_from_viewer("spectrum-viewer", label)
-        self.created_data_labels = []
 
     def on_mouse_event(self, data):
         event = data['event']
 
-        if event == 'click':
-            event_x = data['domain']['x']
-            event_y = data['domain']['y']
+        if event == 'click' and data['altKey'] is True:
+            self.alt_subset_at_spaxel(data)
+        elif event == 'click':
+            self.subset_at_spaxel(data)
 
-            x = round(event_x)
-            y = round(event_y)
+    def alt_subset_at_spaxel(self, data):
+        # Add a new subset if the alt key is held down
+        previous_subset_mode = self.viewer.session.edit_subset_mode.mode
 
-            if len(self.created_data_labels) == 0:
-                self.highlight_spaxel(x, y)
-            else:
-                self.update_highlight_spaxel(x, y)
+        self.viewer.session.edit_subset_mode.mode = NewMode
+        self.subset_at_spaxel(data)
+        self.viewer.session.edit_subset_mode.mode = previous_subset_mode
 
-            # Check if there are any cubes in the viewer
-            cube_in_viewer = False
-            dc = self.viewer.session.data_collection
-
-            # Spectrum is created for each active layer in the viewer
-            for data in self.viewer.data():
-                if len(data.shape) != 3:
-                    continue
-                cube_in_viewer = True
-
-                cube = data.get_object(cls=Spectrum1D, statistic=None)
-                if x >= cube.shape[0] or y >= cube.shape[1] or x < 0 or y < 0:
-                    continue
-
-                spec = Spectrum1D(flux=cube.flux[x][y], spectral_axis=cube.spectral_axis,
-                                  meta=cube.meta)
-                # Add meta data for reference data and spaxel
-                spec.meta.update({"reference_data": data.label,
-                                  "created_from_spaxel": f"({x}, {y})",
-                                  "Plugin": "Spectrum per spaxel"})
-                label = f"{data.label}_at_spaxel"
-
-                # Remove data from viewer, re-add data to app, and then add data
-                # back to spectrum viewer
-                self.viewer.jdaviz_app.remove_data_from_viewer("spectrum-viewer", label)
-                self.viewer.jdaviz_app.add_data(spec, data_label=label, notify_done=False)
-                self.viewer.jdaviz_app.add_data_to_viewer("spectrum-viewer",
-                                                          label,
-                                                          clear_other_data=False)
-                self.created_data_labels.append(label)
-
-                # Set color of spectrum to not conflict with subset colors
-                for layer in self.spectrum_viewer.state.layers:
-                    if layer.layer.label == label:
-                        layer.color = self.colors[0]
-
-                # Link newly created spectrum to reference data
-                ref_cube = self.spectrum_viewer.state.reference_data
-                new_spec = dc[label]
-                self.link_data(ref_cube, new_spec)
-
-            # Flux viewer is empty or contains only 2D images
-            if not cube_in_viewer:
-                self.remove_highlight_on_spaxel()
-                msg = SnackbarMessage("No cube in viewer, cannot create spectrum from spaxel",
-                                      sender=self, color="warning")
-                self.viewer.session.hub.broadcast(msg)
-                return
-
-    def link_data(self, data1, data2):
-        # If spectrum is also reference data
-        if data1.label == data2.label:
-            return
-
-        world1 = data1.world_component_ids
-        world2 = data2.world_component_ids
-        # Reference data is cube
-        if len(world1) == 3 and len(world2) == 1:
-            links = [LinkSame(world1[2], world2[0])]
-        # Reference data is 1D spectrum
-        elif len(world1) == 1 and len(world2) == 1:
-            links = [LinkSame(world1[0], world2[0])]
-        else:
-            return
-
-        self.viewer.session.data_collection.add_link(links)
-
-    def highlight_spaxel(self, x, y):
-        # Creates an X that shows the spaxel at coordinate (x, y)
-        x_coords, y_coords = self._calc_coords(x, y)
-
-        # Create LinearScale that is the same size as the image viewer
-        scales = {'x': self.viewer.figure.interaction.x_scale,
-                  'y': self.viewer.figure.interaction.y_scale}
-        highlight = SelectedSpaxel(x=x_coords, y=y_coords, scales=scales,
-                                   fill='none', colors=self.colors, stroke_width=2,
-                                   close_path=True)
-        self.viewer.figure.marks = self.viewer.figure.marks + [highlight]
-
-    def update_highlight_spaxel(self, x, y):
-        x_coords, y_coords = self._calc_coords(x, y)
-
-        for spaxel in self.viewer.figure.marks:
-            if isinstance(spaxel, SelectedSpaxel):
-                spaxel.x = x_coords
-                spaxel.y = y_coords
-
-    def remove_highlight_on_spaxel(self):
-        self.viewer.figure.marks = [x for x in self.viewer.figure.marks
-                                    if not isinstance(x, SelectedSpaxel)]
+    def subset_at_spaxel(self, data):
+        x = data['domain']['x']
+        y = data['domain']['y']
+        xmin, xmax, ymin, ymax = self._calc_coords(x, y)
+        self.viewer.apply_roi(RectangularROI(xmin, xmax, ymin, ymax))
 
     def _calc_coords(self, x, y):
         xmin = x - 0.5
         xmax = x + 0.5
         ymin = y - 0.5
         ymax = y + 0.5
-        x_coords = [[xmin, xmax], [xmin, xmax]]
-        y_coords = [[ymin, ymax], [ymax, ymin]]
 
-        return x_coords, y_coords
+        return xmin, xmax, ymin, ymax

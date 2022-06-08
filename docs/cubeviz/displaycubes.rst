@@ -119,13 +119,11 @@ axis as in Specviz.
 Spectrum At Spaxel
 ==================
 
-This tool allows a user to select one pixel in the image viewer and visualize the spectrum
-at that point in the spectrum viewer. The selected pixel will be highlighted in the image viewer
-and the spectrum will have the same color. If there are multiple data selected in the image viewer
-a spectrum will be created for each data. Once the tool is deselected, the highlighted pixel will
-revert back to normal but the created spectrum/spectra will remain in the spectrum viewer.
-The zoom level of the spectrum viewer will then revert to what it was when the tool was first
-activated.
+This tool allows the user to create a one spaxel subset in an image viewer. This subset will then be
+visualized in the spectrum viewer by showing the spectrum at that spaxel. Users can hold down the
+alt key (Alt key on Windows, Option key on Mac) while clicking on a spaxel to create a new subset at
+that point. Users can then compare spectra at different spaxels using the spectrum viewer. Users can
+also utilize the different subset modes that are explained in the :ref:`Spatial Regions <spatial-regions>` section.
 
 .. _display-settings:
 
