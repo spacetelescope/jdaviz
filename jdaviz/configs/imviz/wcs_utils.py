@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.wcs import WCS
-from matplotlib.patches import Rectangle
+from matplotlib.patches import Polygon
 
 __all__ = ['generate_rotated_wcs', 'get_compass_info', 'draw_compass_mpl']
 
@@ -228,9 +228,10 @@ def draw_compass_mpl(image, orig_shape=None, wcs=None, show=True, zoom_limits=No
     show : bool
         Display the plot.
 
-    zoom_limits : tuple of float or None
+    zoom_limits : ndarray or None
         If not `None`, also draw a rectangle to represent the
-        current zoom limits in the form of ``(x1, y1, x2, y2)``.
+        current zoom limits in the form of list of ``(x, y)``
+        representing the four corners of the zoom box.
 
     kwargs : dict
         Keywords for ``matplotlib.pyplot.imshow``.
@@ -284,10 +285,8 @@ def draw_compass_mpl(image, orig_shape=None, wcs=None, show=True, zoom_limits=No
                 color='yellow', fontsize=16, va='center', ha='center')
 
     if zoom_limits is not None:
-        zx1, zy1, zx2, zy2 = zoom_limits
-        rect = Rectangle((zx1, zy1), zx2 - zx1, zy2 - zy1,
-                         linewidth=1.5, edgecolor='r', facecolor='none')
-        ax.add_patch(rect)
+        ax.add_patch(Polygon(
+            zoom_limits, closed=True, linewidth=1.5, edgecolor='r', facecolor='none'))
 
     if show:
         plt.draw()

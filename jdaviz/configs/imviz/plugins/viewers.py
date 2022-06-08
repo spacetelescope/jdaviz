@@ -48,7 +48,6 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
 
         self.label_mouseover = None
         self.compass = None
-        self._compass_show_zoom = True
         self.line_profile_xy = None
 
         self.add_event_callback(self.on_mouse_or_key_event, events=['mousemove', 'mouseenter',
@@ -255,23 +254,33 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
         return x, y, coords_status
 
     def _get_zoom_limits(self, image):
-        """Return ``(x_min, y_min, x_max, y_max)`` for given image.
+        """Return a list of ``(x, y)`` that defines four corners of
+        the zoom box for a given image.
         This is needed because viewer values are only based on reference
         image, which can be inaccurate if given image is dithered and
-        they are linked by WCS.
+        they are linked by WCS. When not applicable, return `None` instead.
         """
         try:
             link_type = self.get_link_type(image.label)
         except ValueError:
             return None
 
-        if data_has_valid_wcs(image) and link_type == 'wcs':
+        if (data_has_valid_wcs(image) and link_type == 'wcs') or (link_type == 'wcs_via_app_ref'):
             # Convert X,Y from reference data to the one we are actually seeing.
-            x = image.coords.world_to_pixel(self.state.reference_data.coords.pixel_to_world(
-                    (self.state.x_min, self.state.x_max), (self.state.y_min, self.state.y_max)))
-            zoom_limits = (x[0][0], x[1][0], x[0][1], x[1][1])
+            if link_type == 'wcs_via_app_ref':
+                data_wcs = get_reference_image_data(self.session.jdaviz_app)[0].coords
+            else:
+                data_wcs = image.coords
+            x = data_wcs.world_to_pixel(self.state.reference_data.coords.pixel_to_world(
+                (self.state.x_min, self.state.x_min, self.state.x_max, self.state.x_max),
+                (self.state.y_min, self.state.y_max, self.state.y_max, self.state.y_min)))
+            zoom_limits = np.array(list(zip(x[0], x[1])))
         else:
-            zoom_limits = (self.state.x_min, self.state.y_min, self.state.x_max, self.state.y_max)
+            zoom_limits = np.array(((self.state.x_min, self.state.y_min),
+                                    (self.state.x_min, self.state.y_max),
+                                    (self.state.x_max, self.state.y_max),
+                                    (self.state.x_max, self.state.y_min)))
+
         return zoom_limits
 
     def set_compass(self, image):
@@ -279,10 +288,7 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
         if self.compass is None:  # Maybe another viewer has it
             return
 
-        if self._compass_show_zoom:
-            zoom_limits = self._get_zoom_limits(image)
-        else:
-            zoom_limits = None
+        zoom_limits = self._get_zoom_limits(image)
 
         # Downsample input data to about 400px (as per compass.vue) for performance.
         xstep = max(1, round(image.shape[1] / 400))

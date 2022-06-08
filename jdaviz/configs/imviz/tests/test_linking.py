@@ -30,24 +30,20 @@ class TestLink_WCS_NoWCS(BaseImviz_WCS_NoWCS, BaseLinkHandler):
         assert self.viewer.get_link_type('has_wcs[SCI,1]') == 'self'
         assert self.viewer.get_link_type('no_wcs[SCI,1]') == 'pixels'
 
-        # Also check the coordinates display
+        # Also check the coordinates display: Last loaded is on top.
 
         self.viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
         assert self.viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
         assert self.viewer.label_mouseover.value == '+0.00000e+00 '
-        assert self.viewer.label_mouseover.world_ra_deg == '337.5202808000'
-        assert self.viewer.label_mouseover.world_dec_deg == '-20.8333330600'
-
-        # Not sure why but need one extra blink to work properly.
-        # This does not happen when we load real data from files.
-        self.viewer.blink_once()
+        assert self.viewer.label_mouseover.world_ra_deg == ''
+        assert self.viewer.label_mouseover.world_dec_deg == ''
 
         self.viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'b',
                                            'domain': {'x': 0, 'y': 0}})
         assert self.viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
         assert self.viewer.label_mouseover.value == '+0.00000e+00 '
-        assert self.viewer.label_mouseover.world_ra_deg == ''
-        assert self.viewer.label_mouseover.world_dec_deg == ''
+        assert self.viewer.label_mouseover.world_ra_deg == '337.5202808000'
+        assert self.viewer.label_mouseover.world_dec_deg == '-20.8333330600'
 
     def test_wcslink_nofallback_noerror(self):
         self.imviz.link_data(link_type='wcs', wcs_fallback_scheme=None)
@@ -112,23 +108,19 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
 
         # Ensure pan/zoom does not change when markers are not present.
         assert_allclose((self.viewer.state.x_min, self.viewer.state.y_min,
-                        self.viewer.state.x_max, self.viewer.state.y_max), ans)
+                         self.viewer.state.x_max, self.viewer.state.y_max), ans)
 
-        # Also check the coordinates display
+        # Also check the coordinates display: Last loaded is on top.
 
         self.viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
-        assert self.viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
+        assert self.viewer.label_mouseover.pixel == 'x=01.0 y=-0.0'
         assert self.viewer.label_mouseover.value == '+1.00000e+00 '
         assert self.viewer.label_mouseover.world_ra_deg == '337.5202808000'
         assert self.viewer.label_mouseover.world_dec_deg == '-20.8333330600'
 
-        # Not sure why but need one extra blink to work properly.
-        # This does not happen when we load real data from files.
-        self.viewer.blink_once()
-
         self.viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'b',
                                            'domain': {'x': 0, 'y': 0}})
-        assert self.viewer.label_mouseover.pixel == 'x=01.0 y=-0.0'
+        assert self.viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
         assert self.viewer.label_mouseover.value == '+1.00000e+00 '
         assert self.viewer.label_mouseover.world_ra_deg == '337.5202808000'
         assert self.viewer.label_mouseover.world_dec_deg == '-20.8333330600'

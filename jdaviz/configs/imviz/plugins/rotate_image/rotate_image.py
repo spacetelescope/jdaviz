@@ -31,14 +31,8 @@ class RotateImageSimple(TemplateMixin, ViewerSelectMixin, DatasetSelectMixin):
             self._data_ref_label = cur_label
             break  # Just the DATA
 
-    def _handle_compass_zoom_box(self):
-        # Hide zoom box in Compass because it is all screwy unless
-        # N lines up with Y, which then you do not need this plugin anyway.
+    def _update_all_viewers(self):
         for viewer in self.app._viewer_store.values():
-            viewer._compass_show_zoom = not self.rotate_mode_on
-            # Force redraw if the compass is visible.
-            if viewer.compass is not None and viewer.compass.plugin_opened:
-                viewer.on_limits_change()
             viewer.update()  # Force viewer to update.
 
     @observe('rotate_mode_on')
@@ -52,8 +46,6 @@ class RotateImageSimple(TemplateMixin, ViewerSelectMixin, DatasetSelectMixin):
                     self.app.remove_data_from_viewer(vid, self._data_ref_label)
                 except Exception:  # nosec B110
                     pass
-
-        self._handle_compass_zoom_box()
 
     def vue_rotate_image(self, *args, **kwargs):
         # We only grab the value here to avoid constantly updating as
@@ -100,9 +92,8 @@ class RotateImageSimple(TemplateMixin, ViewerSelectMixin, DatasetSelectMixin):
             if viewer.state.reference_data.label != self._data_ref_label:
                 viewer.state.reference_data = self.app.data_collection[self._data_ref_label]
 
-            # Hide Compass zoom box here too, for multi-viewer use case.
-            # And force all viewers to update.
-            self._handle_compass_zoom_box()
+            # Force all viewers to update.
+            self._update_all_viewers()
         except Exception as err:
             self.hub.broadcast(SnackbarMessage(
                 f"Image rotation failed: {repr(err)}", color='error', sender=self))

@@ -483,7 +483,7 @@ def layer_is_image_data(layer):
 
 def layer_is_hidden(layer):
     # This is fake image with rotated WCS from the plugin.
-    return layer.meta.get('Plugin', '') == 'Simple Image Rotation'
+    return hasattr(layer, 'meta') and layer.meta.get('Plugin', '') == 'Simple Image Rotation'
 
 
 def get_top_layer_index(viewer):
