@@ -80,7 +80,11 @@
             </div>
           </div>
 
-          <jupyter-widget :widget="viewer.widget" style="width: 100%; height: 100%"></jupyter-widget>
+          <jupyter-widget
+            :widget="viewer.widget"
+            :ref="'viewer-widget-'+viewer.id"
+            :style="'width: 100%; height: 100%; overflow: hidden; transform: rotate('+viewer.rotation+'deg)'"
+          ></jupyter-widget>
         </v-card>
     </gl-component>
   </component>

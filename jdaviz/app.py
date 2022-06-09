@@ -1645,6 +1645,7 @@ class Application(VuetifyTemplate, HubListener):
             'viewer_options': "IPY_MODEL_" + viewer.viewer_options.model_id,
             'selected_data_items': {},  # noqa data_id: visibility state (visible, hidden, mixed), READ-ONLY
             'visible_layers': {},  # label: {color, label_suffix}, READ-ONLY
+            'rotation': 0,
             'config': self.config,  # give viewer access to app config/layout
             'data_open': False,
             'collapse': True,
