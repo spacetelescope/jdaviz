@@ -5,56 +5,22 @@ import pathlib
 import sys
 import tempfile
 
-import click
 from voila.app import Voila
 from voila.configuration import VoilaConfiguration
 
 from jdaviz import __version__
 from jdaviz.app import _verbosity_levels
 
+__all__ = ['main']
+
 CONFIGS_DIR = os.path.join(os.path.dirname(__file__), 'configs')
 
 
-@click.version_option(__version__)
-@click.command()
-@click.argument('layout',
-                nargs=1,
-                type=click.Choice(['cubeviz', 'specviz', 'mosviz', 'imviz'],
-                                  case_sensitive=False))
-@click.argument('filename', nargs=1)
-@click.option('--browser',
-              default='default',
-              nargs=1,
-              show_default=True,
-              type=str,
-              help="Browser to use for application")
-@click.option('--theme',
-              default='light',
-              nargs=1,
-              show_default=True,
-              type=click.Choice(['light', 'dark']),
-              help="Theme to use for application")
-@click.option('--verbosity',
-              default='info',
-              nargs=1,
-              show_default=True,
-              type=click.Choice(_verbosity_levels),
-              help="Verbosity of the application for popup snackbars")
-@click.option('--history-verbosity',
-              default='info',
-              nargs=1,
-              show_default=True,
-              type=click.Choice(_verbosity_levels),
-              help="Verbosity of the logger history")
-@click.option('--hotreload/--no-hotreload',
-              default=False,
-              help="Whether to enable hot-reloading of the UI (for development)")
-# NOTE: \f is to prevent entire docstring from appearing in CLI --help option.
 def main(filename, layout='default', browser='default', theme='light',
          verbosity='warning', history_verbosity='info',
          hotreload=False):
     """
-    Start a Jdaviz application instance with data loaded from FILENAME.\f
+    Start a Jdaviz application instance with data loaded from FILENAME.
 
     Parameters
     ----------
@@ -70,7 +36,7 @@ def main(filename, layout='default', browser='default', theme='light',
         Verbosity of the popup messages in the application.
     history_verbosity : {'debug', 'info', 'warning', 'error'}
         Verbosity of the history logger in the application.
-    hotreload: bool
+    hotreload : bool
         Whether to enable hot-reloading of the UI (for development)
     """
     import logging  # Local import to avoid possibly messing with JWST pipeline logger.
@@ -117,5 +83,34 @@ def main(filename, layout='default', browser='default', theme='light',
         os.chdir(start_dir)
 
 
-if __name__ == '__main__':
-    main()
+def _main():
+    import argparse
+    import sys
+
+    parser = argparse.ArgumentParser(description='Start a Jdaviz application instance with data '
+                                     'loaded from FILENAME.')
+    parser.add_argument('layout', choices=['cubeviz', 'specviz', 'mosviz', 'imviz'],
+                        help='Configuration to use.')
+    parser.add_argument('filename', type=str,
+                        help='The path to the file to be loaded into the Jdaviz application.')
+    parser.add_argument('--browser', type=str, default='default',
+                        help='Browser to use for application.')
+    parser.add_argument('--theme', choices=['light', 'dark'], default='light',
+                        help='Theme to use for application.')
+    parser.add_argument('--verbosity', choices=_verbosity_levels, default='info',
+                        help='Verbosity of the application for popup snackbars.')
+    parser.add_argument('--history-verbosity', choices=_verbosity_levels, default='info',
+                        help='Verbosity of the logger history.')
+    if sys.version_info >= (3, 9):
+        # Also enables --no-hotreload
+        parser.add_argument('--hotreload', action=argparse.BooleanOptionalAction, default=False,
+                            help='Whether to enable hot-reloading of the UI (for development).')
+    else:
+        parser.add_argument('--hotreload', action='store_true', default=False,
+                            help='Enable hot-reloading of the UI (for development).')
+    parser.add_argument('--version', action='version', version=f'%(prog)s {__version__}')
+    args = parser.parse_args()
+
+    main(args.filename, layout=args.layout, browser=args.browser, theme=args.theme,
+         verbosity=args.verbosity, history_verbosity=args.history_verbosity,
+         hotreload=args.hotreload)
