@@ -5,6 +5,7 @@ New Features
 ------------
 
 - Snackbar queue priority and history access. [#1352]
+- Subset Tools plugin now shows information for composite subsets. [#1378]
 
 - Plot options are simplified and include an advanced mode to act on multiple viewers/layers
   simultaneously. [#1343]
