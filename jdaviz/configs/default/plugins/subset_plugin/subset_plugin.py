@@ -102,12 +102,15 @@ class SubsetPlugin(TemplateMixin):
     '''
 
     def _unpack_nested_subset(self, subset_state):
-        compound_states = (OrState, AndState, XorState, InvertState)
+        if isinstance(subset_state.state1, (RoiSubsetState, RangeSubsetState)):
+            self._get_subset_subregion_definition(subset_state.state1)
+        else:
+            self._unpack_nested_subset(subset_state.state1)
         if hasattr(subset_state, "state2"):
             self._get_subset_subregion_definition(subset_state.state1)
             if isinstance(subset_state.state2, (RoiSubsetState, RangeSubsetState)):
                 self._get_subset_subregion_definition(subset_state.state2)
-            else:
+            elif subset_state.state2 is not None:
                 self._unpack_nested_subset(subset_state.state2)
 
     def _get_subset_subregion_definition(self, subset_state, subset_op=""):
