@@ -12,6 +12,8 @@ from jdaviz.core.template_mixin import TemplateMixin, ViewerSelectMixin, Dataset
 __all__ = ['RotateImageSimple']
 
 
+# TODO: Refactor to use Kyle's CSS rotation?
+# TODO: Maybe we do not need DataSelectMixin.
 @tray_registry('imviz-rotate-image', label="Simple Image Rotation")
 class RotateImageSimple(TemplateMixin, ViewerSelectMixin, DatasetSelectMixin):
     template_file = __file__, "rotate_image.vue"

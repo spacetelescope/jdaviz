@@ -6,10 +6,16 @@ from astropy.modeling import models
 from astropy.nddata import NDData
 from astropy.wcs import WCS
 from gwcs import coordinate_frames as cf
+from numpy.testing import assert_allclose
 
 
 def test_simple_image_rotation_plugin(imviz_helper):
+    # Mimic interactive mode where viewer is displayed.
+    imviz_helper.default_viewer.shape = (100, 100)
+    imviz_helper.default_viewer.state._set_axes_aspect_ratio(1)
+
     a = np.zeros((10, 8))
+    a[0, 0] = 1  # Bright corner for sanity check.
 
     # Adapted from HST/ACS FITS WCS without the distortion.
     w_fits = WCS({'WCSAXES': 2, 'NAXIS1': 8, 'NAXIS2': 10,
@@ -52,9 +58,32 @@ def test_simple_image_rotation_plugin(imviz_helper):
     plg = imviz_helper.app.get_tray_item_from_name('imviz-rotate-image')
     plg.plugin_opened = True
 
+    # Toggle it on.
+    plg.rotate_mode_on = True
+    assert plg.dataset.selected == 'fits_wcs[DATA]'
+
+    # Rotate with default settings.
+    plg.vue_rotate_image()
+    assert_allclose(plg._theta, 0)
+
+    # Dummy data with desired WCS is now in data collection but user cannot see it.
+    assert imviz_helper.app.data_collection.labels == [
+        'fits_wcs[DATA]', 'gwcs[DATA]', 'no_wcs', '_simple_rotated_wcs_ref[DATA]']
+    assert plg.dataset.labels == ['fits_wcs[DATA]', 'gwcs[DATA]', 'no_wcs']
+
+    # The zoom box is now a rotated rombus.
+    # no_wcs is the same as fits_wcs because they are linked by pixel, but gwcs is different.
+    fits_wcs_zoom_limits = imviz_helper.default_viewer._get_zoom_limits(
+        imviz_helper.app.data_collection['fits_wcs[DATA]'])
+    assert_allclose(fits_wcs_zoom_limits, ((-0.37873422, 5.62910616), (3.42315751, 11.85389963),
+                                           (13.52329142, 5.37451188), (9.72139968, -0.85028158)))
+    assert_allclose(fits_wcs_zoom_limits, imviz_helper.default_viewer._get_zoom_limits(
+        imviz_helper.app.data_collection['no_wcs']))
+    assert_allclose(imviz_helper.default_viewer._get_zoom_limits('gwcs[DATA]'), (
+        (7.60196643, 6.55912761), (10.83179746, -0.44341285),
+        (0.25848145, -4.64322363), (-2.97134959, 2.35931683)))
+
     # TODO: Test the plugin.
-    # 0. Toggle it on
-    # 1. Angle 0 should align N-up E-left, should have new WCS Data but hidden
     # 2. Try positive angle
     # 3. Add another viewer.
     # 4. Try negative angle on second viewer.
