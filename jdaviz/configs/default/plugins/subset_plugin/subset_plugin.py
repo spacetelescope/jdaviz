@@ -1,8 +1,7 @@
 from glue.core.message import EditSubsetMessage, SubsetUpdateMessage
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode)
-from glue.core.subset import (RoiSubsetState, RangeSubsetState,
-                              OrState, AndState, XorState, InvertState)
+from glue.core.subset import RoiSubsetState, RangeSubsetState, CompositeSubsetState
 from glue_jupyter.widgets.subset_mode_vuetify import SelectionModeMenu
 from traitlets import List, Unicode, Bool, observe
 
@@ -102,21 +101,21 @@ class SubsetPlugin(TemplateMixin):
     '''
 
     def _unpack_nested_subset(self, subset_state):
-        if isinstance(subset_state.state1, (RoiSubsetState, RangeSubsetState)):
-            self._get_subset_subregion_definition(subset_state.state1)
-        else:
+        '''
+        Navigate through the tree of subset states for composite
+        subsets made up of multiple regions.
+        '''
+        if isinstance(subset_state, CompositeSubsetState):
             self._unpack_nested_subset(subset_state.state1)
-        if hasattr(subset_state, "state2"):
-            self._get_subset_subregion_definition(subset_state.state1)
-            if isinstance(subset_state.state2, (RoiSubsetState, RangeSubsetState)):
-                self._get_subset_subregion_definition(subset_state.state2)
-            elif subset_state.state2 is not None:
-                self._unpack_nested_subset(subset_state.state2)
+            self._unpack_nested_subset(subset_state.state2)
+        else:
+            if subset_state is not None:
+                self._get_subset_subregion_definition(subset_state)
 
     def _get_subset_subregion_definition(self, subset_state, subset_op=""):
         """
         Get the type and parameters for a single region in the subset. Note that
-        the string type and operation (if in a compound subset) need to be stored
+        the string type and operation (if in a composite subset) need to be stored
         separately from the float parameters for display reasons.
         """
         subset_type = {}
@@ -133,13 +132,12 @@ class SubsetPlugin(TemplateMixin):
                                      "Radius": subset_state.roi.radius}
 
             elif subset_classname == "RectangularROI":
-                subset_definition = {"Subset type": subset_classname}
+                subset_definition = {}
                 for att in ("Xmin", "Xmax", "Ymin", "Ymax"):
                     subset_definition[att] = getattr(subset_state.roi, att.lower())
 
             elif subset_classname == "EllipticalROI":
-                subset_definition = {"Subset type": subset_classname,
-                                     "X Center": subset_state.roi.xc,
+                subset_definition = {"X Center": subset_state.roi.xc,
                                      "Y Center": subset_state.roi.yc,
                                      "X Radius": subset_state.roi.radius_x,
                                      "Y Radius": subset_state.roi.radius_y}
@@ -166,10 +164,7 @@ class SubsetPlugin(TemplateMixin):
                         s.label == self.subset_selected][0]
         subset_state = subset_group.subset_state
 
-        if isinstance(subset_state, (OrState, AndState, XorState, InvertState)):
-            self._unpack_nested_subset(subset_state)
-        else:
-            self._get_subset_subregion_definition(subset_state)
+        self._unpack_nested_subset(subset_state)
 
         # Trick traitlets into updating the displayed values
         subset_definitions = self.subset_definitions
