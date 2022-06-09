@@ -96,7 +96,7 @@
         :items="available_lists"
         @change="list_selected"
         label="Available Line Lists"
-        hint="Select a line list to load"
+        hint="Select a line list to load. Toggle visibility of loaded lines in section below."
         persistent-hint
       ></v-select>
     </v-row>
