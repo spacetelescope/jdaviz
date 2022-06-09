@@ -27,6 +27,8 @@ Specviz
 API Changes
 -----------
 
+- Default percentile for all image viewers is now 95%, not min/max. [#1386]
+
 Cubeviz
 ^^^^^^^
 
