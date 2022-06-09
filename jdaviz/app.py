@@ -1380,6 +1380,7 @@ class Application(VuetifyTemplate, HubListener):
             'viewer_options': "IPY_MODEL_" + viewer.viewer_options.model_id,
             'layer_viewer_open': False,
             'selected_data_items': [],
+            'rotation': 0,
             'config': self.config,  # give viewer access to app config/layout
             'data_open': False,
             'collapse': True,
