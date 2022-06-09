@@ -28,7 +28,7 @@ class SubsetPlugin(TemplateMixin):
     subset_selected = Unicode("Create new").tag(sync=True)
     mode_selected = Unicode('add').tag(sync=True)
     show_region_info = Bool(True).tag(sync=True)
-    subset_classname = Unicode('').tag(sync=True)
+    subset_types = List([]).tag(sync=True)
     subset_definitions = List([]).tag(sync=True)
     has_subset_details = Bool(False).tag(sync=True)
 
@@ -110,34 +110,47 @@ class SubsetPlugin(TemplateMixin):
             else:
                 self._unpack_nested_subset(subset_state.state2)
 
-    def _get_subset_subregion_definition(self, subset_state):
+    def _get_subset_subregion_definition(self, subset_state, subset_op=""):
+        """
+        Get the type and parameters for a single region in the subset. Note that
+        the string type and operation (if in a compound subset) need to be stored
+        separately from the float parameters for display reasons.
+        """
+        subset_type = {}
+        if subset_op:
+            subset_type["Operation"] = subset_op
         subset_definition = None
+
         if isinstance(subset_state, RoiSubsetState):
-            self.subset_classname = subset_state.roi.__class__.__name__
-            if self.subset_classname == "CircularROI":
+            subset_classname = subset_state.roi.__class__.__name__
+            if subset_classname == "CircularROI":
                 x, y = subset_state.roi.get_center()
                 subset_definition = {"X Center": x,
                                      "Y Center": y,
                                      "Radius": subset_state.roi.radius}
 
-            elif self.subset_classname == "RectangularROI":
-                subset_definition = {}
+            elif subset_classname == "RectangularROI":
+                subset_definition = {"Subset type": subset_classname}
                 for att in ("Xmin", "Xmax", "Ymin", "Ymax"):
                     subset_definition[att] = getattr(subset_state.roi, att.lower())
 
-            elif self.subset_classname == "EllipticalROI":
-                subset_definition = {"X Center": subset_state.roi.xc,
+            elif subset_classname == "EllipticalROI":
+                subset_definition = {"Subset type": subset_classname,
+                                     "X Center": subset_state.roi.xc,
                                      "Y Center": subset_state.roi.yc,
                                      "X Radius": subset_state.roi.radius_x,
                                      "Y Radius": subset_state.roi.radius_y}
+            subset_type["Subset type"] = subset_classname
 
         elif isinstance(subset_state, RangeSubsetState):
-            self.subset_classname = "Range"
             subset_definition = {"Upper bound": subset_state.hi,
                                  "Lower bound": subset_state.lo}
+            subset_type["Subset type"] = "Range"
 
         if subset_definition is not None and subset_definition not in self.subset_definitions:
             self.subset_definitions.append(subset_definition)
+            self.subset_types.append(subset_type)
+            print(self.subset_types)
 
     def _get_subset_definition(self, *args):
         """
@@ -145,6 +158,7 @@ class SubsetPlugin(TemplateMixin):
         upper and lower bounds for a simple spectral subset.
         """
         self.subset_definitions = []
+        self.subset_types = []
         subset_group = [s for s in self.app.data_collection.subset_groups if
                         s.label == self.subset_selected][0]
         subset_state = subset_group.subset_state
@@ -158,3 +172,6 @@ class SubsetPlugin(TemplateMixin):
         subset_definitions = self.subset_definitions
         self.subset_definitions = []
         self.subset_definitions = subset_definitions
+        subset_types = self.subset_types
+        self.subset_types = []
+        self.subset_types = subset_types

@@ -27,21 +27,26 @@
 
     <div v-if="show_region_info">
       <j-plugin-section-header>Subset Region Definition</j-plugin-section-header>
-      <v-row>
-        <v-col>Subset Type: </v-col>
-        <v-col>{{ subset_classname }}</v-col>
       </v-row>
       <div v-if="subset_definitions.length">
-        <v-row v-for="subset_definition in subset_definitions">
-          <v-row v-for="(val, key, index) in subset_definition">
-            <v-col>{{ key }}:</v-col>
-            <v-col>
-              <j-number-uncertainty
-                :value="val"
-                :defaultDigs="6"
-              ></j-number-uncertainty>
-            </v-col>
-          </v-row>
+        <v-row v-for="(subset_definition, index) in subset_definitions">
+          <v-col>
+            <v-row v-for="(val, key, index2) in subset_types[index]"
+             class="pt-0 pb-0 mt-0 mb-0">
+              <v-col>{{ key }}:</v-col>
+              <v-col>{{ val }}</v-col>
+            </v-row>
+            <v-row v-for="(val, key, index2) in subset_definition"
+             class="pt-0 pb-0 mt-0 mb-0">
+              <v-col>{{ key }}:</v-col>
+              <v-col>
+                <j-number-uncertainty
+                  :value="val"
+                  :defaultDigs="6"
+                ></j-number-uncertainty>
+              </v-col>
+            </v-row>
+          </v-col>
         </v-row>
       </div>
       <div v-else>
