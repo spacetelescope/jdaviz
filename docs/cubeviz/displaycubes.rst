@@ -55,10 +55,11 @@ To change the wavelength slice, use the :ref:`Slice Plugin <slice>`.
 Defining Spatial Regions
 ========================
 
-Regions can be created by first clicking the |icon-hammer-and-screwdriver| icon and
-selecting either the |icon-region-rect| icon (to draw a rectangular region) or the
-|icon-region-circ| icon (to draw a circular region), then clicking and dragging (using the mouse) until the
+Regions can be created by first clicking the |icon-region-circ| icon (to draw a circular region),
+then clicking and dragging (using the mouse) until the
 desired region is covered by a colored shape, after which you release the mouse button.
+If you want to draw other shapes, right click on the icon to see a dropdown of supported shapes
+and left click on it to choose the shape, then draw as mentioned above.
 Once you have completed the action of clicking and dragging, there is an opportunity to reposition
 the region of interest by clicking on it and moving the region to a different location in the image viewer.
 If you are satisfied with the positioning of your region of interest, simply click another part of the
@@ -109,8 +110,8 @@ Pan/Zoom
 Panning and zooming in the Cubeviz viewers works the same as described in the
 section on :ref:`Panning and Zooming in Specviz <pan-zoom>`, with the exception
 that image viewers have only the bidirectional Pan/Zoom tool and the two-dimensional
-box zoom enabled. Note that the box zoom in this case will always respect the x range
-of the selected area, but will expand or limit the y range to preserve the aspect
+box zoom enabled. Note that the box zoom in this case will always respect the X-range
+of the selected area, but will expand or limit the Y-range to preserve the aspect
 ratio of the image. The 1D spectrum viewer allows panning and zooming along a single
 axis as in Specviz.
 
@@ -131,7 +132,7 @@ Display Settings
 ================
 
 To access all of the different display settings for an image viewer, , click the 
-|icon-settings-sliders| icon in the viewer toolbar or open the :ref:`Plot Options<cubeviz-plot-options>` plugin..
+|icon-settings-sliders| icon in the viewer toolbar or open the :ref:`Plot Options <cubeviz-plot-options>` plugin.
 Changing the display settings DOES NOT change the underlying data, only the
 visualization of that data.
 
@@ -168,6 +169,8 @@ Contrast
 ^^^^^^^^
 
 Change the luminance of the color in the image.
+
+.. _bias:
 
 Bias
 ^^^^
