@@ -40,7 +40,7 @@
                       padding-bottom: 4px; padding-top: 6 px; background-color: #E3F2FD;
                       color: black">
           <span>
-            Add more datasets to this list using the "Import Data" button or the API.
+            Add more datasets using the "Import Data" button or via the API.
           </span>
         </v-row>
 
