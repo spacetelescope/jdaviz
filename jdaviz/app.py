@@ -1187,7 +1187,7 @@ class Application(VuetifyTemplate, HubListener):
 
             [data] = [x for x in self.data_collection if x.label == label]
 
-            viewer.add_data(data)
+            viewer.add_data(data, percentile=95)
 
             add_data_message = AddDataMessage(data, viewer,
                                               viewer_id=viewer_id,
