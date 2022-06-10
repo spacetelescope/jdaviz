@@ -56,11 +56,11 @@ def test_region_from_subset_3d(cubeviz_helper):
     assert_allclose(reg.height, 3.5)
 
     assert subset_plugin.subset_selected == "Subset 1"
-    assert subset_plugin.subset_classname == "RectangularROI"
-    assert subset_plugin.subset_definition["Xmin"] == 1
-    assert subset_plugin.subset_definition["Xmax"] == 3.5
-    assert subset_plugin.subset_definition["Ymin"] == -0.2
-    assert subset_plugin.subset_definition["Ymax"] == 3.3
+    assert subset_plugin.subset_types == [{"Subset type": "RectangularROI"},]
+    assert subset_plugin.subset_definitions[0]["Xmin"] == 1
+    assert subset_plugin.subset_definitions[0]["Xmax"] == 3.5
+    assert subset_plugin.subset_definitions[0]["Ymin"] == -0.2
+    assert subset_plugin.subset_definitions[0]["Ymax"] == 3.3
 
     # Circular Subset
     flux_viewer = cubeviz_helper.app.get_viewer("flux-viewer")
@@ -68,10 +68,10 @@ def test_region_from_subset_3d(cubeviz_helper):
     flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['bqplot:circle']
     cubeviz_helper.app.get_viewer('flux-viewer').apply_roi(CircularROI(xc=3, yc=4, radius=2.4))
     assert subset_plugin.subset_selected == "Subset 2"
-    assert subset_plugin.subset_classname == "CircularROI"
-    assert subset_plugin.subset_definition["X Center"] == 3
-    assert subset_plugin.subset_definition["Y Center"] == 4
-    assert subset_plugin.subset_definition["Radius"] == 2.4
+    assert subset_plugin.subset_types == [{"Subset type": "CircularROI"},]
+    assert subset_plugin.subset_definitions[0]["X Center"] == 3
+    assert subset_plugin.subset_definitions[0]["Y Center"] == 4
+    assert subset_plugin.subset_definitions[0]["Radius"] == 2.4
 
 
 def test_region_from_subset_profile(cubeviz_helper, spectral_cube_wcs):
@@ -93,9 +93,9 @@ def test_region_from_subset_profile(cubeviz_helper, spectral_cube_wcs):
     assert_quantity_allclose(reg.upper, 15.0 * u.Hz)
 
     assert subset_plugin.subset_selected == "Subset 1"
-    assert subset_plugin.subset_classname == "Range"
-    assert subset_plugin.subset_definition["Lower bound"] == 5
-    assert subset_plugin.subset_definition["Upper bound"] == 15.5
+    assert subset_plugin.subset_types == [{"Subset type": "Range"},]
+    assert subset_plugin.subset_definitions[0]["Lower bound"] == 5
+    assert subset_plugin.subset_definitions[0]["Upper bound"] == 15.5
 
 
 def test_region_spectral_spatial(cubeviz_helper, spectral_cube_wcs):
