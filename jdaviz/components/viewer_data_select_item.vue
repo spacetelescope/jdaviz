@@ -15,9 +15,10 @@
       </v-btn>
     </j-tooltip>
 
-    <span style="overflow-wrap: anywhere; font-size: 12pt; padding-top: 6px; padding-left: 6px">
+    <j-tooltip :tooltipcontent="'data label: '+item.name" span_style="font-size: 12pt; padding-top: 6px; padding-left: 6px; width: calc(100% - 80px); text-overflow: ellipsis; white-space: nowrap; overflow-x: hidden; cursor: default">
       {{item.name}}
-    </span>
+    </j-tooltip>
+
 
     <div v-if="isDeletable" style="position: absolute; right: 10px">
       <j-tooltip tipid='viewer-data-delete'>
