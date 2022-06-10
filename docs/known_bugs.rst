@@ -71,7 +71,7 @@ Lab fails to start with IndexError
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In some environments, you occasionally might not able to start Jdaviz in 
-Jupyter Lab due to this error ::
+Jupyter Lab due to this error::
 
     IndexError: pop from an empty deque
 
