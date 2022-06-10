@@ -9,6 +9,9 @@ New Features
 - Plot options are simplified and include an advanced mode to act on multiple viewers/layers
   simultaneously. [#1343]
 
+- Labels in data menus are truncated to fit in a single line but ensure visibility of extensions.
+  [#1390]
+
 Cubeviz
 ^^^^^^^
 
