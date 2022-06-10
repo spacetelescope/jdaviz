@@ -9,6 +9,7 @@ so please also consult `existing Jdaviz GitHub issues <https://github.com/spacet
 as well if you are unable to find your issue here:
 
 * :ref:`known_issues_installation`
+* :ref:`known_issues_app`
 * :ref:`known_issues_cubeviz`
 * :ref:`known_issues_imviz`
 * :ref:`known_issues_specviz`
@@ -61,6 +62,23 @@ in bottleneck trying to build numpy from source and crash, stalling the
 installation altogether. When this happens, exit the installation, install
 bottleneck with conda, and try to install jdaviz again.
 
+.. _known_issues_app:
+
+Application-wide
+----------------
+
+Lab fails to start with IndexError
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In some environments, you occasionally might not able to start Jdaviz in 
+Jupyter Lab due to this error::
+
+    IndexError: pop from an empty deque
+
+This is an upstream issue at https://github.com/jupyterlab/jupyterlab/issues/11934
+that is not related to Jdaviz. The workaround is to find another environment
+where you do not see this error or use Jupyter Notebook instead.
+
 .. _known_issues_cubeviz:
 
 Cubeviz
@@ -73,7 +91,6 @@ When trying to do a second collapse with the same spectral region, but with
 resized bounds: change to Region=None, resize the region, then reselect Region 1,
 the region bounds are correct. However, applying Collapse again, it errors out and
 the image viewer that contained the initial collapse goes blank.
-
 
 Cube viewer contrast changes when collapsing Jupyter scroll window
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
