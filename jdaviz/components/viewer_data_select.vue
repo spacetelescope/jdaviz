@@ -17,9 +17,9 @@
         </v-btn>
       </template>
   
-      <v-list style="max-height: 500px; width: 350px; padding-top: 0px" class="overflow-y-auto">
+      <v-list style="max-height: 500px; width: 430px; padding-top: 0px" class="overflow-y-auto">
         <v-row key="title" style="padding-left: 25px; margin-right: 0px; padding-bottom: 4px; background-color: #E3F2FD">
-            <span class='text--primary' style="overflow-wrap: anywhere; font-size: 12pt; padding-top: 6px; padding-left: 6px; font-weight: bold">
+            <span style="overflow-wrap: anywhere; font-size: 12pt; padding-top: 6px; padding-left: 6px; font-weight: bold; color: black">
               {{viewerTitleCase}}
             </span>
 
@@ -40,7 +40,7 @@
                       padding-bottom: 4px; padding-top: 6 px; background-color: #E3F2FD;
                       color: black">
           <span>
-            Add more datasets to this list using the "Import Data" button or the API.
+            Add more datasets using the "Import Data" button or via the API.
           </span>
         </v-row>
 
