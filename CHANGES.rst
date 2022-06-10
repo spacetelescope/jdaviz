@@ -57,6 +57,15 @@ Imviz
   linked to the data collection, resulting in Imviz unusable until
   the data are re-linked manually. [#1365]
 
+- Fixed a bug where coordinates display erroneously showing info from
+  the reference image even when it is not visible. [#1392]
+
+- Fixed a bug where Compass zoom box is wrong when the second image
+  is rotated w.r.t. the reference image and they are linked by WCS. [#1392]
+
+- Fixed a bug where Line Profile might crash when the second image
+  is rotated w.r.t. the reference image and they are linked by WCS. [#1392]
+
 Mosviz
 ^^^^^^
 

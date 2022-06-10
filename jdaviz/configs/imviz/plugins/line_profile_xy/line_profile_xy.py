@@ -67,7 +67,14 @@ class LineProfileXY(PluginTemplateMixin):
             self.reset_results()
             return
 
-        x_min, y_min, x_max, y_max = viewer._get_zoom_limits(data)
+        xy_limits = viewer._get_zoom_limits(data)
+        x_limits = xy_limits[:, 0]
+        y_limits = xy_limits[:, 1]
+        x_min = x_limits.min()
+        x_max = x_limits.max()
+        y_min = y_limits.min()
+        y_max = y_limits.max()
+
         comp = data.get_component(data.main_components[0])
         if comp.units:
             y_label = comp.units
@@ -101,8 +108,9 @@ class LineProfileXY(PluginTemplateMixin):
         y_min = max(int(y_min), 0)
         y_max = min(int(y_max), ny)
         zoomed_data_x = comp.data[y_min:y_max, x]
-        line_x.scales['y'].min = zoomed_data_x.min() * 0.95
-        line_x.scales['y'].max = zoomed_data_x.max() * 1.05
+        if zoomed_data_x.size > 0:
+            line_x.scales['y'].min = zoomed_data_x.min() * 0.95
+            line_x.scales['y'].max = zoomed_data_x.max() * 1.05
 
         fig_y.title = f'Y={y}'
         fig_y.title_style = {'font-size': '12px'}
@@ -119,8 +127,9 @@ class LineProfileXY(PluginTemplateMixin):
         x_min = max(int(x_min), 0)
         x_max = min(int(x_max), nx)
         zoomed_data_y = comp.data[y, x_min:x_max]
-        line_y.scales['y'].min = zoomed_data_y.min() * 0.95
-        line_y.scales['y'].max = zoomed_data_y.max() * 1.05
+        if zoomed_data_y.size > 0:
+            line_y.scales['y'].min = zoomed_data_y.min() * 0.95
+            line_y.scales['y'].max = zoomed_data_y.max() * 1.05
 
         self.line_plot_across_x = fig_x
         self.line_plot_across_y = fig_y
