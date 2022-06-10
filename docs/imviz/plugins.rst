@@ -45,7 +45,7 @@ via the API unless an interactive region is drawn after.
 .. seealso::
 
     :ref:`Subset Tools <specviz-subset-plugin>`
-        Specviz documentation on the Subset Tools plugin.
+    Specviz documentation on the Subset Tools plugin.
 
 .. _imviz-link-control:
 

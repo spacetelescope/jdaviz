@@ -46,7 +46,10 @@ interest.
 
 Interactive Pan/Zoom (Desktop or Notebook Interface)
 ----------------------------------------------------
-You can find the following Pan/Zoom tools available under the |icon-hammer-and-screwdriver| icon in the viewer toolbar:
+You can find the following Pan/Zoom tools available in the viewer toolbar
+on the top right of the viewer:
+
+.. _image-pan-zoom:
 
 2D Bidirectional Pan/Zoom
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -122,8 +125,8 @@ To quickly flip an axis to change to and from ascending/descending, use
 Defining Spectral Regions
 =========================
 
-Spectral regions can be defined by clicking on the |icon-hammer-and-screwdriver| icon at the right of the
-viewer toolbar. Then, click the |icon-region-horiz| icon to set the cursor dragging function in "spectral region selection" mode.
+Spectral regions can be defined by clicking on the |icon-region-horiz| icon at the right of the
+viewer toolbar.
 
 .. image:: img/spectral_region_1.png
 
@@ -131,7 +134,7 @@ Now, you can move the mouse to one of the end points (in wavelength) of the regi
 it to the other end point. The selected region background will display in light gray color, and the spectral trace
 in color, coded to subset number.
 
-You also see in the top tool bar that the region was added to the data hold, and is named "Subset 1".
+You also see in the top toolbar that the region was added to the data hold, and is named "Subset 1".
 
 .. image:: img/spectral_region_2.png
 

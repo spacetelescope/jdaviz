@@ -11,8 +11,8 @@ Selecting Data Set
 
 .. seealso::
 
-    :ref:`Selecting Data Set<cubeviz-selecting-data>`
-        Documentation on selecting data sets in the Jdaviz viewers.
+    :ref:`Selecting Data Set <cubeviz-selecting-data>`
+    Documentation on selecting data sets in the Jdaviz viewers.
 
 Adding New Viewers
 ==================
@@ -32,7 +32,7 @@ Spatial regions can be created the same way as in Cubeviz.
 .. seealso::
 
     :ref:`Defining Spatial Regions <spatial-regions>`
-        Documentation on defining spatial regions in an image viewer.
+    Documentation on defining spatial regions in an image viewer.
 
 Blinking
 ========
@@ -40,16 +40,17 @@ Blinking
 Blinking is an Imviz-specific functionality that allows a user to quickly switch
 between viewing two or more images, as long as they are linked
 (see :ref:`imviz_pan_zoom` for more on linking behavior). This can be done
-by selecting the |icon-hammer-and-screwdriver| icon and then clicking the
-:guilabel:`right arrow` icon. You can also blink by selecting the "b" key on your keyboard.
+by selecting the |icon-blink| icon and then clicking on the image.
+You can also blink by selecting the "b" key on your keyboard while moused over the image.
 
 Contrast/Bias
 =============
 
-In addition to changing contrast and bias information in the :guilabel:`layer` tab
-(see :ref:`Contrast <contrast>`), Imviz has a |icon-white-to-black| button
-under the |icon-hammer-and-screwdriver| menu that can also edit those options. After clicking
-that button, you can click and drag on the image viewer to change to change the contrast
+In addition to changing :ref:`contrast` and :ref:`bias` in the :ref:`display-settings`,
+Imviz has a |icon-white-to-black| button under the |icon-blink| menu that can also
+adjust those values.
+After right-clicking on the blink icon, left click on the constrast/bias icon to activate it.
+Now you can click and drag on the image viewer to change to change the contrast
 and bias. Moving along the X-axis will change the bias and moving along the Y-axis will change the
 contrast. If you would like to reset to the default contrast and bias settings, you can
 double-click on the display while the mode is active.
@@ -69,10 +70,10 @@ middle-right side.
 Pan/Zoom and Linked Pan/Zoom
 ============================
 
-Linked pan zoom is an Imviz-specific feature that allows the user to Pan and Zoom
+Linked Pan/Zoom is an Imviz-specific feature that allows the user to pan and zoom
 images in multiple different viewers simultaneously. This works by matching images
 based on the way they are linked together. Images are linked by pixels on load time,
-but you can re-link them via WCS using `~jdaviz.configs.imviz.helper.Imviz.link_data`.
+but you can re-link them via WCS using :ref:`imviz-link-control`.
 
 Regular Pan/Zoom is also available and is used in a similar way as other Jdaviz tools.
 
@@ -81,8 +82,8 @@ location under cursor.
 
 .. seealso::
 
-    :ref:`Pan/Zoom <cubeviz-pan-zoom>`
-        Documentation on using Pan/Zoom in the Jdaviz viewers.
+    :ref:`image-pan-zoom`
+    Documentation on using image Pan/Zoom in the Jdaviz viewers.
 
 
 Display Settings
@@ -91,4 +92,4 @@ Display Settings
 .. seealso::
 
     :ref:`Display Settings <display-settings>`
-        Documentation on various display settings in the jdaviz viewers.
+    Documentation on various display settings in the Jdaviz viewers.
