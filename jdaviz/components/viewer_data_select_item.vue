@@ -1,5 +1,6 @@
 <template>
   <div style="display: contents">
+    <div>
     <j-tooltip :tipid="multi_select ? 'viewer-data-select' : 'viewer-data-radio'">
       <v-btn 
         icon
@@ -14,6 +15,7 @@
           <v-icon v-else>{{isSelected ? "mdi-radiobox-marked" : "mdi-radiobox-blank"}}</v-icon>
       </v-btn>
     </j-tooltip>
+    </div>
 
     <j-tooltip :tooltipcontent="'data label: '+item.name" span_style="font-size: 12pt; padding-top: 6px; padding-left: 6px; width: calc(100% - 80px); cursor: default;">
       <div class="text-ellipsis-middle">
