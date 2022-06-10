@@ -49,9 +49,6 @@
           </v-col>
         </v-row>
       </div>
-      <div v-else>
-        <v-row>Could not retrieve subset parameters for this subset type</v-row>
-      </div>
     </div>
   </j-tray-plugin>
 </template>
