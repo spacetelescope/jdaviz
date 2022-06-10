@@ -147,10 +147,6 @@ Nuts and Bolts
    :no-inheritance-diagram:
    :no-inherited-members:
 
-.. automodapi:: jdaviz.configs.default.plugins.data_tools.file_chooser
-   :no-inheritance-diagram:
-   :no-inherited-members:
-
 .. automodapi:: jdaviz.configs.default.plugins.line_lists.line_list_mixin
    :no-inheritance-diagram:
    :no-inherited-members:
