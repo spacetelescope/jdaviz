@@ -8,6 +8,10 @@ The Imviz data analysis plugins are meant to aid quick-look analysis
 of 2D image data. All plugins are accessed via the :guilabel:`plugin`
 icon in the upper right corner of the Imviz application.
 
+.. image:: ../img/plugins.jpg
+    :alt: Imviz Plugins
+
+
 .. _metadata-viewer:
 
 Metadata Viewer
@@ -19,19 +23,18 @@ If the data is loaded from multi-extension FITS that contains a primary header,
 you will also see a :guilabel:`Show primary header` toggle, when enabled, would
 display just the primary header metadata.
 
-.. _imviz-export-plot:
-
-Export Plot
-===========
-
-This plugin allows exporting the plot in a given viewer to various image formats.
-
 .. _imviz-plot-options:
 
 Plot Options
 ============
 
 This plugin gives access to per-viewer and per-layer plotting options.
+
+.. seealso::
+
+    :ref:`Display Settings <display-settings>`
+        Documentation on various display settings in the Jdaviz viewers.
+
 
 .. _imviz-subset-plugin:
 
@@ -65,6 +68,10 @@ for most cases. If approximation fails, WCS linking still automatically
 falls back to full transformation.
 
 For more details on linking, see :ref:`dev_glue_linking`.
+
+From the API::
+
+    imviz.link_data(link_type='wcs')
 
 .. _imviz-compass:
 
@@ -251,3 +258,10 @@ The columns are as follow:
 
 Once you have the results in a table, you can further manipulated them as
 documented in :ref:`astropy:astropy-table`.
+
+.. _imviz-export-plot:
+
+Export Plot
+===========
+
+This plugin allows exporting the plot in a given viewer to various image formats.

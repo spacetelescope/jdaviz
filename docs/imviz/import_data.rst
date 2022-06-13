@@ -14,10 +14,21 @@ See :meth:`jdaviz.configs.imviz.helper.Imviz.load_data` for more information.
     the number of links necessary; see :ref:`glue:linking-framework`
     for more information.
 
+.. _imviz-import-commandline:
+
+Importing data through the Command Line
+---------------------------------------
+
+You can load your data into the Imviz application through the command line::
+
+    jdaviz /my/image/data.fits --layout imviz
+
+.. _imviz-import-gui:
+
 Importing data through the GUI
 ------------------------------
 
-The first way that you can load your data into the Imviz application is
+You can load your data into the Imviz application is
 by clicking the :guilabel:`Import Data` button at the top left of the application's
 user interface. This opens a dialogue where the user can select a file
 that can be parsed as a :class:`~astropy.nddata.NDData`, :class:`~astropy.io.fits.HDUList`,
@@ -30,7 +41,7 @@ tab of each viewer's options menu as described in :ref:`cubeviz-selecting-data`.
 
 .. _imviz-import-api:
 
-Importing data via the API
+Importing FITS via the API
 --------------------------
 
 Alternatively, if you are working in a coding environment like a Jupyter
@@ -47,6 +58,18 @@ The example below loads the first science extension of the given FITS file into 
     imviz.load_data("/path/to/data/image.fits")
     imviz.app
 
+Creating Your Own Array
+^^^^^^^^^^^^^^^^^^^^^^^
+
+You can create your own array to load into Imviz::
+
+    from astropy.nddata import NDData
+    from jdaviz import Imviz
+
+    ndd = NDData(array)
+    imviz.load_data(ndd)
+    imviz.app
+
 JWST datamodels
 ^^^^^^^^^^^^^^^
 
@@ -56,14 +79,36 @@ object, you can load it into Imviz as follows::
     import numpy as np
     from astropy.nddata import NDData
     from jdaviz import Imviz
+
     # mydatamodel is a jwst.datamodels object
-    ndd = NDData(np.array(mydatamodel.data), wcs=mydatamodel.wcs)
+    ndd = NDData(np.array(mydatamodel.data), wcs=mydatamodel.get_fits_wcs())
     imviz = Imviz()
     imviz.load_data(ndd)
     imviz.app
 
 There is no plan to natively load such objects until ``datamodels``
 is separated out of the ``jwst`` pipeline package.
+
+.. _imviz-import-catalogs-api:
+
+Importing catalogs via the API
+------------------------------
+
+If you have a catalog file supported by `astropy.table.Table`, you
+can load the catalog into Imviz. Markers are different than Imviz
+:ref:`spatial regions <spatial-regions>` as they are only meant to mark catalog positions.
+Loading markers can be done with the following commands::
+
+    viewer.marker = {'color': 'green', 'alpha': 0.8, 'markersize': 10, 'fill': False}
+    my_markers = Table.read('my_catalog.ecsv')
+    coord_i2d = Table({'coord': [SkyCoord(ra=my_catalog['sky_centroid'].ra.degree,
+                                          dec=my_catalog['sky_centroid'].dec.degree,
+                                          unit="deg")]})
+    viewer.add_markers(coord_i2d, use_skycoord=True, marker_name='my_markers')
+
+And to remove those markers::
+
+    viewer.remove_markers(marker_name='my_markers')
 
 .. _imviz-import-regions-api:
 
