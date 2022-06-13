@@ -53,6 +53,9 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Contrast/bias mouse-drag is now a little more responsive and
+  calculates contrast in the same way as Glue in Qt mode. [#1394]
+
 - Fixed a bug where image loaded via the "IMPORT DATA" button is not
   linked to the data collection, resulting in Imviz unusable until
   the data are re-linked manually. [#1365]

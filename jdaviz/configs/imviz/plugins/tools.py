@@ -153,7 +153,7 @@ class ContrastBias(CheckableTool):
         # Note that we throttle this to 200ms here as changing the contrast
         # and bias it expensive since it forces the whole image to be redrawn
         if event == 'dragmove':
-            if (time.time() - self._time_last) <= 0.2:
+            if (time.time() - self._time_last) <= 0.1:
                 return
 
             event_x = data['pixel']['x']
@@ -173,11 +173,12 @@ class ContrastBias(CheckableTool):
             i_top = get_top_layer_index(self.viewer)
             state = self.viewer.layers[i_top].state
 
+            # Also see glue/viewers/matplotlib/qt/toolbar_mode.py
             # bias range 0..1
             # contrast range 0..4
             with delay_callback(state, 'bias', 'contrast'):
                 state.bias = x
-                state.contrast = y * 4
+                state.contrast = (1 - y) * 4
 
             self._time_last = time.time()
 
