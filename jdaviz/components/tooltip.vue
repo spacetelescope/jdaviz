@@ -61,8 +61,9 @@ const tooltips = {
   'viewer-toolbar-more': 'More options...',
   'viewer-data-select-enabled': 'Allow multiple entries (click to enable replace)',
   'viewer-data-radio-enabled': 'Replace current entry (click to enable multi-select)',
-  'viewer-data-select': 'Toggle whether data entry is loaded in the viewer',
+  'viewer-data-select': 'Toggle visibility of all associated layers',
   'viewer-data-radio': 'Change viewer to this data entry',
+  'viewer-data-disable': 'Disable data within this viewer (will be hidden and unavailable from plugins until re-enabled)',
   'viewer-data-delete': 'Remove data entry across entire app',
 
   'table-prev': 'Select previous row in table',

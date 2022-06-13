@@ -6,10 +6,12 @@
       :key="index"
       :data_items="data_items"
       :app_settings="app_settings"
+      :viewer_data_visibility="viewer_data_visibility"
       :icons="icons"
       @resize="$emit('resize')"
       :closefn="closefn"
       @data-item-selected="$emit('data-item-selected', $event)"
+      @data-item-visibility="$emit('data-item-visibility', $event)"
       @data-item-remove="$emit('data-item-remove', $event)"
       @call-viewer-method="$emit('call-viewer-method', $event)"
     ></g-viewer-tab>
@@ -28,8 +30,10 @@
               :data_items="data_items" 
               :viewer="viewer"
               :app_settings="app_settings"
+              :viewer_data_visibility="viewer_data_visibility"
               :icons="icons"
               @data-item-selected="$emit('data-item-selected', $event)"
+              @data-item-visibility="$emit('data-item-visibility', $event)"
               @data-item-remove="$emit('data-item-remove', $event)"
             ></j-viewer-data-select>
 
@@ -63,7 +67,7 @@
 <script>
 module.exports = {
   name: "g-viewer-tab",
-  props: ["stack", "data_items", "closefn", "app_settings", "icons"],
+  props: ["stack", "data_items", "closefn", "app_settings", "viewer_data_visibility", "icons"],
   created() {
     this.$parent.childMe = () => {
       return this.$children[0];

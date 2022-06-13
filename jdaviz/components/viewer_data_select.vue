@@ -17,7 +17,7 @@
         </v-btn>
       </template>
   
-      <v-list style="max-height: 500px; width: 430px; padding-top: 0px" class="overflow-y-auto">
+      <v-list style="max-height: 500px; width: 460px; padding-top: 0px" class="overflow-y-auto">
         <v-row key="title" style="padding-left: 25px; margin-right: 0px; padding-bottom: 4px; background-color: #E3F2FD">
             <span style="overflow-wrap: anywhere; font-size: 12pt; padding-top: 6px; padding-left: 6px; font-weight: bold; color: black">
               {{viewerTitleCase}}
@@ -50,6 +50,7 @@
             :viewer="viewer"
             :multi_select="multi_select"
             @data-item-selected="$emit('data-item-selected', $event)"
+            @data-item-visibility="$emit('data-item-visibility', $event)"
             @data-item-remove="$emit('data-item-remove', $event)"
           ></j-viewer-data-select-item>
         </v-row>
@@ -85,7 +86,7 @@
 <script>
 
 module.exports = {
-  props: ['data_items', 'viewer', 'app_settings', 'icons'],
+  props: ['data_items', 'viewer', 'app_settings', 'viewer_data_visibility', 'icons'],
   data: function () {
     var multi_select = true
     if (this.$props.viewer.config === 'cubeviz') {
@@ -163,7 +164,7 @@ module.exports = {
       if (this.mosvizShowExtraItems) {
         // uncheck all checked items
         this.mosvizExtraDataItems.forEach((item) => {
-          if (this.$props.viewer.selected_data_items.includes(item.id)) {
+          if (Object.keys(this.$props.viewer.selected_data_items).includes(item.id)) {
             this.$emit('data-item-selected', {
               id: this.$props.viewer.id,
               item_id: item.id,

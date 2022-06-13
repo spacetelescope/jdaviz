@@ -82,11 +82,13 @@
                   :stack="stack"
                   :key="stack.viewers.map(v => v.id).join('-')"
                   :data_items="state.data_items"
+                  :viewer_data_visibility="state.viewer_data_visibility"
                   :app_settings="state.settings"
                   :icons="state.icons"
                   @resize="relayout"
                   :closefn="destroy_viewer_item"
                   @data-item-selected="data_item_selected($event)"
+                  @data-item-visibility="data_item_visibility($event)"
                   @data-item-remove="data_item_remove($event)"
                   @call-viewer-method="call_viewer_method($event)"
                 ></g-viewer-tab>
