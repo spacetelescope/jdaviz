@@ -17,13 +17,13 @@
         </v-btn>
       </template>
   
-      <v-list style="max-height: 500px; width: 460px; padding-top: 0px" class="overflow-y-auto">
+      <v-list style="max-height: 500px; width: 430px; padding-top: 0px" class="overflow-y-auto">
         <v-row key="title" style="padding-left: 25px; margin-right: 0px; padding-bottom: 4px; background-color: #E3F2FD">
             <span style="overflow-wrap: anywhere; font-size: 12pt; padding-top: 6px; padding-left: 6px; font-weight: bold; color: black">
               {{viewerTitleCase}}
             </span>
 
-            <span style="position: absolute; right: 10px">
+            <span style="position: absolute; right: 5px">
               <j-tooltip :tipid="multi_select ? 'viewer-data-select-enabled' : 'viewer-data-radio-enabled'">
                 <v-btn
                   icon
@@ -55,19 +55,24 @@
           ></j-viewer-data-select-item>
         </v-row>
 
-        <div v-if="viewer.config === 'mosviz' && mosvizExtraDataItems.length" style="margin-bottom: -8px">
-          <v-row key="mosviz-expand" style="padding-left: 25px; margin-right: 0px; padding-bottom: 4px; background-color: #E3F2FD"> 
+        <div v-if="extraDataItems.length" style="margin-bottom: -8px">
+          <v-row key="extra-items-expand" style="padding-left: 25px; margin-right: 0px; padding-bottom: 4px; background-color: #E3F2FD"> 
             <span 
-              @click="toggleMosvizShowExtraItems"
+              @click="toggleShowExtraItems"
               class='text--primary' 
               style="overflow-wrap: anywhere; font-size: 12pt; padding-top: 6px; padding-left: 6px; cursor: pointer"
             >
-              <v-icon>{{mosvizShowExtraItems ? 'mdi-chevron-double-up' : 'mdi-chevron-double-down'}}</v-icon>
-              {{mosvizShowExtraItems ? 'hide from other MOS rows' : 'show from other MOS rows'}}
+              <v-icon>{{showExtraItems ? 'mdi-chevron-double-up' : 'mdi-chevron-double-down'}}</v-icon>
+              <span v-if="viewer.config === 'mosviz'">
+                {{showExtraItems ? 'hide from other MOS rows' : 'show from other MOS rows'}}
+              </span>
+              <span v-else>
+                {{showExtraItems ? 'hide data not in viewer' : 'show data not in viewer'}}                
+              </span>
             </span>
           </v-row>
 
-          <v-row v-if="mosvizShowExtraItems" v-for="item in mosvizExtraDataItems"  :key="item.id" style="padding-left: 25px; margin-right: 0px">
+          <v-row v-if="showExtraItems" v-for="item in extraDataItems"  :key="item.id" style="padding-left: 25px; margin-right: 0px">
             <j-viewer-data-select-item
               :item="item"
               :viewer="viewer"
@@ -102,7 +107,7 @@ module.exports = {
       // default to passed values, whenever value or uncertainty are changed
       // updateTruncatedValues will overwrite the displayed values
       multi_select: multi_select,
-      mosvizShowExtraItems: false,
+      showExtraItems: false,
       valueTrunc: this.value,
       uncertTrunc: this.uncertainty
     }
@@ -114,7 +119,15 @@ module.exports = {
       }
       return true
     },
-    itemIsVisible(item, mosvizExtraItems) {
+    dataItemInViewer(item, returnExtraItems) {
+      const inViewer = Object.keys(this.$props.viewer.selected_data_items).includes(item.id)
+      console.log(item.name+"  "+inViewer)
+      if (returnExtraItems) {
+        return !inViewer
+      }
+      return inViewer
+    },
+    itemIsVisible(item, returnExtraItems) {
       if (this.$props.viewer.config === 'mosviz') {
         if (this.$props.viewer.reference === 'spectrum-viewer' && item.type !== '1d spectrum') {
           // filters out table, spectrum 2d, images
@@ -124,7 +137,7 @@ module.exports = {
         } else if (this.$props.viewer.reference === 'image-viewer' && item.type !== 'image') {
           return false
         } else if (item.meta.mosviz_row !== undefined) {
-          if (mosvizExtraItems) {
+          if (returnExtraItems) {
             // then show only plugin items and only those in a different row
             return item.meta.mosviz_row !== this.$props.app_settings.mosviz_row
           } else {
@@ -132,49 +145,37 @@ module.exports = {
             return item.meta.mosviz_row == this.$props.app_settings.mosviz_row
           }
         }
-        return !mosvizExtraItems
+        return !returnExtraItems
       } else if (this.$props.viewer.config === 'cubeviz') {
         if (this.$props.viewer.reference === 'spectrum-viewer') {
           if (item.meta.Plugin === undefined) {
             // then the data can be a cube (auto-collapsed) as long as its the flux data
-            return item.name.indexOf('[FLUX]') !== -1
+            return item.name.indexOf('[FLUX]') !== -1 && this.dataItemInViewer(item, returnExtraItems)
           } else if (item.meta.Plugin === 'GaussianSmooth') {
             // spectrally smoothed would still be a collapsible cube
-            return item.ndims === 3
+            return item.ndims === 3 && this.dataItemInViewer(item, returnExtraItems)
           } else {
             // filter plugin results to only those that are spectra
-            return item.ndims === 1
+            return item.ndims === 1 && this.dataItemInViewer(item, returnExtraItems)
           }
         } else {
           // then we're one of the three image viewers
           // filter out non-images (support 2d images and cubes)
-          return item.ndims >= 2
+          return item.ndims >= 2 && this.dataItemInViewer(item, returnExtraItems)
         }
       } else if (this.$props.viewer.config === 'specviz2d') {
         if (this.$props.viewer.reference === 'spectrum-viewer') {
-          return item.ndims === 1
+          return item.ndims === 1 && this.dataItemInViewer(item, returnExtraItems)
         } else if (this.$props.viewer.reference === 'spectrum-2d-viewer') {
-          return item.ndims === 2
+          return item.ndims === 2 && this.dataItemInViewer(item, returnExtraItems)
         }
       }
       // for any situation not covered above, default to showing the entry
-      return true
+      return this.dataItemInViewer(item, returnExtraItems)
     },
-    toggleMosvizShowExtraItems() {
-      if (this.mosvizShowExtraItems) {
-        // uncheck all checked items
-        this.mosvizExtraDataItems.forEach((item) => {
-          if (Object.keys(this.$props.viewer.selected_data_items).includes(item.id)) {
-            this.$emit('data-item-selected', {
-              id: this.$props.viewer.id,
-              item_id: item.id,
-              checked: false,
-              replace: false})
-          }
-        })
-      }
+    toggleShowExtraItems() {
       // toggle the visibility of the extra items in the menu
-      this.mosvizShowExtraItems = !this.mosvizShowExtraItems
+      this.showExtraItems = !this.showExtraItems
     },
   },
   computed: {
@@ -193,7 +194,7 @@ module.exports = {
     filteredDataItems() {
       return this.$props.data_items.filter((item) => this.itemIsVisible(item, false))
     },
-    mosvizExtraDataItems() {
+    extraDataItems() {
       return this.$props.data_items.filter((item) => this.itemIsVisible(item, true))
     },
   }

@@ -1,6 +1,6 @@
 <template>
   <div style="display: contents">
-    <div>
+    <div v-if="isSelected">
       <j-tooltip :tipid="multi_select ? 'viewer-data-select' : 'viewer-data-radio'">
         <v-btn 
           icon
@@ -8,6 +8,16 @@
           @click="selectClicked">
             <v-icon v-if="multi_select">{{visibleState==='visible' ? "mdi-checkbox-marked" : "mdi-checkbox-blank-outline"}}</v-icon>
             <v-icon v-else>{{visibleState==='visible' ? "mdi-radiobox-marked" : "mdi-radiobox-blank"}}</v-icon>
+        </v-btn>
+      </j-tooltip>
+    </div>
+    <div v-else>
+      <j-tooltip tipid="viewer-data-enable">
+        <v-btn 
+          icon
+          color="default"
+          @click="selectClicked">
+            <v-icon>mdi-plus</v-icon>
         </v-btn>
       </j-tooltip>
     </div>
@@ -23,7 +33,7 @@
       </div>
     </j-tooltip>
 
-    <div v-if="isSelected" style="position: absolute; right: 40px">
+    <div v-if="isSelected" style="position: absolute; right: 5px">
       <j-tooltip tipid='viewer-data-disable'>
         <v-btn
           icon
@@ -33,11 +43,11 @@
             checked: false,
             replace: false
           })"
-        ><v-icon>mdi-cancel</v-icon></v-btn>
+        ><v-icon>mdi-close</v-icon></v-btn>
       </j-tooltip>
     </div>
 
-    <div v-if="isDeletable" style="position: absolute; right: 10px">
+    <div v-if="isDeletable" style="position: absolute; right: 5px">
       <j-tooltip tipid='viewer-data-delete'>
         <v-btn
           icon
@@ -109,7 +119,7 @@ module.exports = {
         return false
       }
       // for any exceptions not above, enable deleting
-      return true
+      return !this.isSelected
     },
     selectTipId() {
       if (this.multi_select) {
