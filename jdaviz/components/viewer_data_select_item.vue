@@ -71,7 +71,7 @@ module.exports = {
         this.$emit('data-item-selected', {
           id: this.$props.viewer.id,
           item_id: this.$props.item.id,
-          checked: !this.isSelected,
+          checked: true,
           replace: false
         })
       }
@@ -82,7 +82,7 @@ module.exports = {
       this.$emit('data-item-visibility', {
         id: this.$props.viewer.id,
         item_id: this.$props.item.id,
-        visible: prevVisibleState != 'visible',
+        visible: prevVisibleState != 'visible' || !this.multi_select,
         replace: !this.multi_select
       })
 
