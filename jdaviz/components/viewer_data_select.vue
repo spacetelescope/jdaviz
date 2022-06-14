@@ -64,7 +64,7 @@
             >
               <v-icon>{{showExtraItems ? 'mdi-chevron-double-up' : 'mdi-chevron-double-down'}}</v-icon>
               <span v-if="viewer.config === 'mosviz'">
-                {{showExtraItems ? 'hide from other MOS rows' : 'show from other MOS rows'}}
+                {{showExtraItems ? 'hide data not in viewer (incl other MOS rows)' : 'show data not in viewer (incl other MOS rows)'}}
               </span>
               <span v-else>
                 {{showExtraItems ? 'hide data not in viewer' : 'show data not in viewer'}}                
@@ -137,13 +137,7 @@ module.exports = {
         } else if (this.$props.viewer.reference === 'image-viewer' && item.type !== 'image') {
           return false
         } else if (item.meta.mosviz_row !== undefined) {
-          if (returnExtraItems) {
-            // then show only plugin items and only those in a different row
-            return item.meta.mosviz_row !== this.$props.app_settings.mosviz_row
-          } else {
-            // show ONLY items from the SAME row
-            return item.meta.mosviz_row == this.$props.app_settings.mosviz_row
-          }
+          return this.dataItemInViewer(item, returnExtraItems)
         }
         return !returnExtraItems
       } else if (this.$props.viewer.config === 'cubeviz') {
