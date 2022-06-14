@@ -70,7 +70,9 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
             if layer.layer.label == label:
                 return layer
 
-    def _on_layers_update(self, *args):
+    def _on_layers_update(self, layers=None):
+        super()._on_layers_update(layers)
+
         if not len(self._expected_subset_layers):
             return
         # we'll make a deepcopy so that we can remove entries from the self._expected_subset_layers

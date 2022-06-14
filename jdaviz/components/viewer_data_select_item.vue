@@ -6,8 +6,8 @@
           icon
           :color="visibleState==='visible' ? 'accent' : 'default'"
           @click="selectClicked">
-            <v-icon v-if="multi_select">{{visibleState==='visible' ? "mdi-checkbox-marked" : "mdi-checkbox-blank-outline"}}</v-icon>
-            <v-icon v-else>{{visibleState==='visible' ? "mdi-radiobox-marked" : "mdi-radiobox-blank"}}</v-icon>
+            <v-icon v-if="multi_select">{{visibleState!=='hidden' ? "mdi-checkbox-marked" : "mdi-checkbox-blank-outline"}}</v-icon>
+            <v-icon v-else>{{visibleState!=='hidden' ? "mdi-radiobox-marked" : "mdi-radiobox-blank"}}</v-icon>
         </v-btn>
       </j-tooltip>
     </div>
