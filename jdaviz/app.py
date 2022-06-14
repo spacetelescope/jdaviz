@@ -1250,7 +1250,11 @@ class Application(VuetifyTemplate, HubListener):
 
             for layer in viewer.layers:
                 if layer.layer.data.label == label:
-                    layer.visible = visibility == 'visible'
+                    if visibility == 'visible' and not layer.visible:
+                        layer.visible = True
+                        layer.update()
+                    else:
+                        layer.visible = visibility == 'visible'
 
         # Remove any deselected data objects from viewer
         viewer_data = [layer_state.layer

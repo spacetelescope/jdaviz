@@ -65,6 +65,11 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
         # Change collapse function to sum
         self.state.function = 'sum'
 
+    def _get_layer(self, label):
+        for layer in self.state.layers:
+            if layer.layer.label == label:
+                return layer
+
     def _on_layers_update(self, *args):
         if not len(self._expected_subset_layers):
             return
@@ -79,6 +84,9 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
                     layer.linewidth = 1
                 else:
                     layer.linewidth = 3
+
+                # default visibility based on the visibility of the "parent" data layer
+                layer.visible = self._get_layer(layer.layer.data.label).visible
 
     def _on_subset_create(self, msg):
         # we don't have access to the actual subset yet to tell if its spectral or spatial, so
