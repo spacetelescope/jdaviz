@@ -16,6 +16,7 @@ from glue.core import HubListener
 from glue.core.edit_subset_mode import NewMode
 from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage
 from glue.core.subset import Subset, MaskSubsetState
+from ipywidgets.widgets import widget_serialization
 
 from jdaviz.app import Application
 from jdaviz.core.events import SnackbarMessage
@@ -71,6 +72,19 @@ class ConfigHelper(HubListener):
 
     def load_data(self, data, parser_reference=None, **kwargs):
         self.app.load_data(data, parser_reference=parser_reference, **kwargs)
+
+    @property
+    def plugins(self):
+        """
+        Access API objects for plugins in the plugin tray.
+
+        Returns
+        -------
+        plugins : dict
+            dict of plugin objects
+        """
+        return {item['label']: widget_serialization['from_json'](item['widget'], None).user_api
+                for item in self.app.state.tray_items}
 
     @property
     def fitted_models(self):

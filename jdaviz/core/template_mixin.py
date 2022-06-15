@@ -84,6 +84,34 @@ class TemplateMixin(VuetifyTemplate, HubListener):
         return self._app.session.data_collection
 
 
+class PluginUserApi:
+    """
+    Expose user-facing methods/traitlets from a plugin.
+    """
+    # TODO: show plugin in jupyter: https://github.com/widgetti/ipyvue/blob/master/ipyvue/VueWidget.py#L112
+    def __init__(self, plugin, expose):
+        self._plugin = plugin
+        self._expose = expose
+
+    def __repr__(self):
+        return f'<{self._plugin.__class__.__name__} UserAPI>'
+
+    def __dir__(self):
+        return self._expose
+
+    def __getattr__(self, attr):
+        if attr in ['_plugin', '_expose'] or attr not in self._expose:
+            return super().__getattribute__(attr)
+
+        return getattr(self._plugin, attr)
+
+    def __setattr__(self, attr, value):
+        if attr in ['_plugin', '_expose'] or attr not in self._expose:
+            return super().__setattr__(attr, value)
+
+        return setattr(self._plugin, attr, value)
+
+
 class PluginTemplateMixin(TemplateMixin):
     """
     This base class can be inherited by all sidebar/tray plugins to expose common functionality.
@@ -92,6 +120,8 @@ class PluginTemplateMixin(TemplateMixin):
     plugin_opened = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
+        self.user_api = PluginUserApi(self, kwargs.pop('expose', []))
+
         super().__init__(*args, **kwargs)
         self.app.state.add_callback('tray_items_open', self._mxn_update_plugin_opened)
         self.app.state.add_callback('drawer', self._mxn_update_plugin_opened)

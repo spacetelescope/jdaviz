@@ -87,7 +87,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     selected_line_redshift = Float(0).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs, expose=('dataset', 'spectral_subset', 'continuum',
+                                                  'width', 'show_continuum_marks', 'get_results'))
 
         self.update_results(None)
 
@@ -165,10 +166,21 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             return
         # toggle continuum lines in spectrum viewer based on whether this plugin
         # is currently open in the tray
+        self.show_continuum_marks(self.plugin_opened)
+
+    def show_continuum_marks(self, show=True):
+        """
+        Show (or hide) the marks indicating the continuum on the spectrum viewer.
+
+        Parameters
+        ----------
+        show : bool
+            Whether to show (or hide) the marks
+        """
         for pos, mark in self.marks.items():
-            mark.visible = self.plugin_opened
-        if self.plugin_opened:
-            self._calculate_statistics()
+            mark.visible = show
+        if show:
+            self._calculate_statistics(ignore_plugin_closed=True)
 
     @property
     def marks(self):
@@ -210,6 +222,12 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
 
         self.results_computing = False
 
+    def get_results(self):
+        # user-facing API call to force updating and retrieving results, even if the plugin
+        # is closed
+        self._calculate_statistics(ignore_plugin_closed=True)
+        return self.results
+
     def _on_plotted_lines_changed(self, msg):
         self.line_marks = msg.marks
         self.line_items = msg.names_rest
@@ -249,7 +267,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         else:
             full_spectrum = self.dataset.selected_obj
 
-        if full_spectrum is None or self.width == "" or not self.plugin_opened:
+        if (full_spectrum is None or self.width == "" or
+                (not self.plugin_opened and not kwargs.get('ignore_plugin_closed'))):
             # this can happen DURING a unit conversion change
             self.update_results(None)
             return
