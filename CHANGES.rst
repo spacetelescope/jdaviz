@@ -50,6 +50,8 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- Fixed bugs when loading results from the moment map plugin into a image viewer. [#1402]
+
 Imviz
 ^^^^^
 
