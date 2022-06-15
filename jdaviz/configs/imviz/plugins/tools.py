@@ -7,6 +7,7 @@ from glue.viewers.common.tool import CheckableTool
 from glue_jupyter.bqplot.common.tools import BqplotPanZoomMode
 from glue_jupyter.utils import debounced
 
+from jdaviz.configs.imviz.helper import get_top_layer_index
 from jdaviz.core.tools import BoxZoom
 
 __all__ = []
@@ -139,10 +140,21 @@ class ContrastBias(CheckableTool):
     def activate(self):
         self.viewer.add_event_callback(self.on_mouse_or_key_event,
                                        events=['dragstart', 'dragmove',
-                                               'dblclick'])
+                                               'click', 'dblclick'])
+
+        # TODO: deactivate/activate on top-layer change (blink)
+        i_top = get_top_layer_index(self.viewer)
+        self._layer_state = self.viewer.layers[i_top].state
+        self._layer_state.add_callback('bias', self._update_marker)
+        self._layer_state.add_callback('contrast', self._update_marker)
+        self._update_marker()
+        self.viewer.contrast_bias_indicator.visible = True
 
     def deactivate(self):
+        self._layer_state.remove_callback('bias', self._update_marker)
+        self._layer_state.remove_callback('contrast', self._update_marker)
         self.viewer.remove_event_callback(self.on_mouse_or_key_event)
+        self.viewer.contrast_bias_indicator.visible = False
 
     @debounced(delay_seconds=0.03, method=True)
     def _dragevent(self, data):
@@ -164,21 +176,23 @@ class ContrastBias(CheckableTool):
             self._layer_state.bias = bias
             self._layer_state.contrast = contrast
 
-    def on_mouse_or_key_event(self, data):
-        from jdaviz.configs.imviz.helper import get_top_layer_index
+    def _update_marker(self, *args):
+        contrast = self._layer_state.contrast
+        bias = self._layer_state.bias
+        mark = self.viewer.contrast_bias_indicator
+        mark.x = [bias]
+        mark.y = [1 - contrast / 4]
+        mark.labels = [f'\u00A0\u00A0contrast: {contrast:0.02f}, bias: {bias:0.02f}\u00A0\u00A0']  # noqa
 
+    def on_mouse_or_key_event(self, data):
         event = data['event']
 
-        if event == 'dragstart':
-            # When blinked, first layer might not be top layer
-            # TODO: could optimize this further by listening for changes to the layers
-            # and viewer size rather than having to set this on the dragstart event
-            i_top = get_top_layer_index(self.viewer)
-            state = self.viewer.layers[i_top].state
-            self._layer_state = state
+        if event in ['click', 'dragstart']:
+            # viewer size shouldn't change during a dragevent, but could change after activation
             self._max_x = self.viewer.shape[1]
             self._max_y = self.viewer.shape[0]
-        elif event == 'dragmove':
+
+        if event in ['click', 'dragmove', 'dragstart']:
             self._dragevent(data)
         elif event == 'dblclick':
             # Restore defaults that are applied on load

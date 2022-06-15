@@ -9,7 +9,9 @@ from jdaviz.core.events import (SliceToolStateMessage, LineIdentifyMessage,
                                 RedshiftMessage)
 
 __all__ = ['OffscreenLinesMarks', 'BaseSpectrumVerticalLine', 'SpectralLine',
-           'SliceIndicatorMarks', 'ShadowMixin', 'ShadowLine', 'ShadowLabelFixedY',
+           'SliceIndicatorMarks', 'ContrastBiasMark',
+           'ShadowMixin', 'ShadowLine',
+           'ShadowLabel',
            'LineAnalysisContinuum', 'LineAnalysisContinuumCenter',
            'LineAnalysisContinuumLeft', 'LineAnalysisContinuumRight',
            'LineUncertainties', 'ScatterMask', 'SelectedSpaxel']
@@ -207,7 +209,7 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
         # will follow the x-coordinate of the slice indicator line, with a fixed y-value
         # (in axes-units) and will flip its alignment depending on whether the line is on the
         # left or right side of the axes.
-        self.label = ShadowLabelFixedY(viewer, self, shadow_traits=[], default_size=12, y=0.95)
+        self.label = ShadowLabel(viewer, self, shadow_traits=[], default_size=12, fixed_y=0.95)
 
         # default to the initial state of the tool since we can't control if this will
         # happen before or after the initialization of the tool
@@ -316,6 +318,46 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
             self._update_label()
 
 
+class ContrastBiasMark(Lines, HubListener):
+    """Subclass on bqplot Lines to handle contrast/bias indicator.
+    """
+    def __init__(self, viewer, slice=0, **kwargs):
+        self._viewer = viewer
+        self._active = False
+
+        super().__init__(viewer=viewer,
+                         x=[0.5],
+                         y=[0.5],
+                         scales={'x': LinearScale(min=0, max=1),
+                                 'y': LinearScale(min=0, max=1)},
+                         colors=["#c75109"],
+                         marker_size=128,
+                         marker='circle',
+                         labels=[''],
+                         fill='none', close_path=False,
+                         **kwargs)
+
+        self.label = ShadowLabel(viewer, self, shadow_traits=['visible'], default_size=12)
+
+        # default to the initial state of the tool since we can't control if this will
+        # happen before or after the initialization of the tool
+        self._on_change_state({'active': True})
+
+    @property
+    def marks(self):
+        return [self, self.label]
+
+    def _on_change_state(self, msg):
+        if isinstance(msg, dict):
+            changes = msg
+        else:
+            changes = msg.change
+
+        for k, v in changes.items():
+            if k == 'active':
+                self.visible = v
+
+
 class ShadowMixin:
     """Mixin class to propagate traits from one mark object to another.
     Anything in ``sync_traits`` will be mirrored directly from
@@ -365,21 +407,29 @@ class ShadowLine(Lines, HubListener, ShadowMixin):
         return
 
 
-class ShadowLabelFixedY(Label, ShadowMixin):
+class ShadowLabel(Label, ShadowMixin):
     """Label whose position shadows that of a parent ``shadowing``
     line and will flip alignment based on whether it is left or
     right of the center of the viewer.
     """
     def __init__(self, viewer, shadowing, shadow_traits=['visible'],
-                 y=0.95, point_index=0, **kwargs):
+                 point_index=0, fixed_y=None, **kwargs):
         super().__init__(**kwargs)
         self._viewer = viewer
-        self.y = [y]
-        self.scales['y'] = LinearScale(min=0, max=1)
         self._point_index = point_index
-        self._setup_shadowing(shadowing,
-                              shadow_traits,
-                              ['x', 'scales', 'labels', 'colors'])
+
+        self._fixed_y = fixed_y is not None
+        if self._fixed_y:
+            self._setup_shadowing(shadowing,
+                                  shadow_traits,
+                                  ['x', 'scales', 'labels', 'colors'])
+
+            self.y = [fixed_y]
+            self.scales['y'] = LinearScale(min=0, max=1)
+        else:
+            self._setup_shadowing(shadowing,
+                                  shadow_traits,
+                                  ['x', 'y', 'scales', 'labels', 'colors'])
 
         viewer.state.add_callback("x_min", lambda x_min: self._update_align())
         viewer.state.add_callback("x_max", lambda x_max: self._update_align())
@@ -416,13 +466,16 @@ class ShadowLabelFixedY(Label, ShadowMixin):
         super()._on_shadowing_changed(change)
         if change['name'] == 'labels':
             self.text = [change['new'][self._point_index]]
-        elif change['name'] in ('x', 'colors'):
+        elif change['name'] in ('x', 'y', 'colors'):
             setattr(self, change['name'], [change['new'][self._point_index]])
             if change['name'] == 'colors':
                 # bqplot bug that won't notice change to colors, manually force re-draw
                 self._force_redraw()
         elif change['name'] == 'scales':
-            self.scales = {**self.scales, 'x': change['new']['x']}
+            if self._fixed_y:
+                self.scales = {**self.scales, 'x': change['new']['x']}
+            else:
+                self.scales = change['new']
 
         if change['name'] in ('x', 'scales'):
             # then the position of the label on the plot has changed, so re-determine whether

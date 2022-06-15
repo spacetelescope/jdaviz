@@ -8,6 +8,7 @@ from jdaviz.configs.imviz import wcs_utils
 from jdaviz.configs.imviz.helper import data_has_valid_wcs, layer_is_image_data, get_top_layer_index
 from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
 from jdaviz.core.events import SnackbarMessage
+from jdaviz.core.marks import ContrastBiasMark
 from jdaviz.core.registries import viewer_registry
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
 
@@ -68,6 +69,17 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
         # when the image does need to update as it will be more computationally
         # intensive.
         self.state.image_external_padding = 0.5
+
+    @property
+    def contrast_bias_indicator(self):
+        for mark in self.figure.marks:
+            if isinstance(mark, ContrastBiasMark):
+                return mark
+
+        # ContrastBiasMark does not yet exist
+        indicator = ContrastBiasMark(self)
+        self.figure.marks = self.figure.marks + indicator.marks
+        return indicator
 
     def on_mouse_or_key_event(self, data):
 
