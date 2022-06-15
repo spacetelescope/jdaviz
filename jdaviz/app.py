@@ -174,7 +174,7 @@ class Application(VuetifyTemplate, HubListener):
 
     def __init__(self, configuration=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._verbosity = 'info'
+        self._verbosity = 'warning'
         self._history_verbosity = 'info'
 
         # Generate a state object for this application to maintain the state of
@@ -271,7 +271,7 @@ class Application(VuetifyTemplate, HubListener):
     def verbosity(self):
         """
         Verbosity of the application for popup snackbars, choose from ``'debug'``,
-        ``'info'`` (default), ``'warning'``, or ``'error'``.
+        ``'info'``, ``'warning'`` (default), or ``'error'``.
         """
         return self._verbosity
 

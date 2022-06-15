@@ -51,7 +51,7 @@ CONFIGS_DIR = os.path.join(os.path.dirname(__file__), 'configs')
               help="Whether to enable hot-reloading of the UI (for development)")
 # NOTE: \f is to prevent entire docstring from appearing in CLI --help option.
 def main(filename, layout='default', browser='default', theme='light',
-         verbosity='info', history_verbosity='info',
+         verbosity='warning', history_verbosity='info',
          hotreload=False):
     """
     Start a Jdaviz application instance with data loaded from FILENAME.\f
@@ -67,7 +67,9 @@ def main(filename, layout='default', browser='default', theme='light',
     theme : {'light', 'dark'}
         Theme to use for Voila app or Jupyter Lab.
     verbosity : {'debug', 'info', 'warning', 'error'}
-        Verbosity of the application.
+        Verbosity of the popup messages in the application.
+    history_verbosity : {'debug', 'info', 'warning', 'error'}
+        Verbosity of the history logger in the application.
     hotreload: bool
         Whether to enable hot-reloading of the UI (for development)
     """
