@@ -49,7 +49,7 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
     mm.add_to_viewer_selected = 'flux-viewer'
     mm.vue_calculate_moment()
 
-    assert len(sl._watched_viewers) == 0
+    assert len(sl._watched_viewers) == 1
     assert len(sl._indicator_viewers) == 1
 
 
