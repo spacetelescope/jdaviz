@@ -2,7 +2,7 @@ import numpy as np
 import warnings
 
 from glue.core import BaseData
-from glue.core.subset import Subset
+from glue.core.subset import Subset, RoiSubsetState
 from glue.config import data_translator
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from glue.core.exceptions import IncompatibleAttribute
@@ -57,21 +57,34 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
         self.figure.marks = self.figure.marks + self._offscreen_lines_marks.marks
 
         self.state.add_callback('show_uncertainty', self._show_uncertainty_changed)
+
+        self._expected_subset_layers = []
+        self.state.add_callback('layers', self._on_layers_update)
         self.display_mask = False
 
         # Change collapse function to sum
         self.state.function = 'sum'
 
-    def _on_subset_create(self, msg):
+    def _on_layers_update(self, *args):
+        if not len(self._expected_subset_layers):
+            return
+        # we'll make a deepcopy so that we can remove entries from the self._expected_subset_layers
+        # to avoid recursion, but also handle multiple layers for the same subset
+        expected_subset_layers = self._expected_subset_layers[:]
         for layer in self.state.layers:
-            if layer.layer.label == msg.subset.label:
-                layer.linewidth = 3
+            if layer.layer.label in expected_subset_layers:
+                if layer.layer.label in self._expected_subset_layers:
+                    self._expected_subset_layers.remove(layer.layer.label)
+                if isinstance(layer.layer.subset_state, RoiSubsetState):
+                    layer.linewidth = 1
+                else:
+                    layer.linewidth = 3
 
-    def _on_add_data(self, msg):
-        data_label = msg.data.label
-        for layer in self.state.layers:
-            if "Subset" in layer.layer.label and layer.layer.data.label == data_label:
-                layer.linewidth = 3
+    def _on_subset_create(self, msg):
+        # we don't have access to the actual subset yet to tell if its spectral or spatial, so
+        # we'll store the name of this new subset and change the default linewidth when the
+        # layers are added
+        self._expected_subset_layers.append(msg.subset.label)
 
     def data(self, cls=None):
         # Grab the user's chosen statistic for collapsing data
@@ -372,6 +385,14 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
         self._plot_uncertainties()
 
         self._plot_mask()
+
+        # Set default linewidth on any created spectral subset layers
+        # NOTE: this logic will need updating if we add support for multiple cubes as this assumes
+        # that new data entries (from model fitting or gaussian smooth, etc) will only be spectra
+        # and all subsets affected will be spectral
+        for layer in self.state.layers:
+            if "Subset" in layer.layer.label and layer.layer.data.label == data.label:
+                layer.linewidth = 3
 
         return result
 
