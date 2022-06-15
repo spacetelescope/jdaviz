@@ -82,7 +82,6 @@
                   :stack="stack"
                   :key="stack.viewers.map(v => v.id).join('-')"
                   :data_items="state.data_items"
-                  :viewer_data_visibility="state.viewer_data_visibility"
                   :app_settings="state.settings"
                   :icons="state.icons"
                   @resize="relayout"

@@ -6,7 +6,6 @@
       :key="index"
       :data_items="data_items"
       :app_settings="app_settings"
-      :viewer_data_visibility="viewer_data_visibility"
       :icons="icons"
       @resize="$emit('resize')"
       :closefn="closefn"
@@ -30,7 +29,6 @@
               :data_items="data_items" 
               :viewer="viewer"
               :app_settings="app_settings"
-              :viewer_data_visibility="viewer_data_visibility"
               :icons="icons"
               @data-item-selected="$emit('data-item-selected', $event)"
               @data-item-visibility="$emit('data-item-visibility', $event)"
@@ -67,7 +65,7 @@
 <script>
 module.exports = {
   name: "g-viewer-tab",
-  props: ["stack", "data_items", "closefn", "app_settings", "viewer_data_visibility", "icons"],
+  props: ["stack", "data_items", "closefn", "app_settings", "icons"],
   created() {
     this.$parent.childMe = () => {
       return this.$children[0];

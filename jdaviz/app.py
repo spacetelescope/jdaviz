@@ -142,9 +142,6 @@ class ApplicationState(State):
         'checktoradial': read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml')
     }, docstring="Custom application icons")
 
-    viewer_data_visibility = DictCallbackProperty(
-        docstring="Visibility of data items per-viewer")
-
     data_items = ListCallbackProperty(
         docstring="List of data items parsed from the Glue data collection.")
 
