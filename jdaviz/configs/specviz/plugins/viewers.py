@@ -52,14 +52,14 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._expected_subset_layers = []
+        self._subscribe_to_layers_update()
         self._initialize_toolbar_nested(default_tool_priority=['jdaviz:selectslice'])
         self._offscreen_lines_marks = OffscreenLinesMarks(self)
         self.figure.marks = self.figure.marks + self._offscreen_lines_marks.marks
 
         self.state.add_callback('show_uncertainty', self._show_uncertainty_changed)
 
-        self._expected_subset_layers = []
-        self.state.add_callback('layers', self._on_layers_update)
         self.display_mask = False
 
         # Change collapse function to sum

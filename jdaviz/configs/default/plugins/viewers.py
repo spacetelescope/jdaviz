@@ -20,7 +20,10 @@ class JdavizViewerMixin:
     tools_nested = []
 
     def __init__(self, *args, **kwargs):
+        # NOTE: anything here most likely won't be called by viewers because of inheritance order
         super().__init__(*args, **kwargs)
+
+    def _subscribe_to_layers_update(self):
         # subscribe to new layers
         self.state.add_callback('layers', self._on_layers_update)
 

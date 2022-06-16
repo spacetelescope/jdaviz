@@ -31,6 +31,7 @@ class MosvizProfileView(BqplotProfileView, JdavizViewerMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._subscribe_to_layers_update()
         self._initialize_toolbar_nested()
 
     def data(self, cls=None):
@@ -86,6 +87,7 @@ class MosvizImageView(BqplotImageView, JdavizViewerMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._subscribe_to_layers_update()
         self._initialize_toolbar_nested()
 
     def data(self, cls=None):
@@ -134,6 +136,7 @@ class MosvizProfile2DView(BqplotImageView, JdavizViewerMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._subscribe_to_layers_update()
         self._initialize_toolbar_nested()
         # Setup viewer option defaults
         self.state.aspect = 'auto'

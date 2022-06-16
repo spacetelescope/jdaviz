@@ -42,6 +42,7 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.init_astrowidgets_api()
+        self._subscribe_to_layers_update()
         self._initialize_toolbar_nested()
 
         self.label_mouseover = None
