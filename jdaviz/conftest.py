@@ -176,7 +176,6 @@ def pytest_configure(config):
     PYTEST_HEADER_MODULES['scikit-image'] = 'skimage'
     PYTEST_HEADER_MODULES['specutils'] = 'specutils'
     PYTEST_HEADER_MODULES['asteval'] = 'asteval'
-    PYTEST_HEADER_MODULES['click'] = 'click'
     PYTEST_HEADER_MODULES['echo'] = 'echo'
     PYTEST_HEADER_MODULES['idna'] = 'idna'
     PYTEST_HEADER_MODULES['traitlets'] = 'traitlets'
