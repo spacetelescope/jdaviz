@@ -1333,6 +1333,12 @@ class Application(VuetifyTemplate, HubListener):
             viewer_item = self._viewer_item_by_id(ref_or_id)
         return viewer_item
 
+        if len(args) and isinstance(args[0], dict) and 'viewer' in args[0]:
+            # TODO: set appropriate viewer.zoom_level
+            # TODO: box-zoom to act based on overscaled canvas
+            # viewer = self._viewer_by_id(args[0]['viewer'])
+            pass
+
     def vue_destroy_viewer_item(self, cid):
         """
         Callback for when viewer area tabs are destroyed. Finds the viewer item
