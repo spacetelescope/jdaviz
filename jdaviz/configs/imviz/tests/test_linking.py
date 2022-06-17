@@ -6,7 +6,8 @@ from numpy.testing import assert_allclose
 from regions import PixCoord, CirclePixelRegion
 
 from jdaviz.configs.imviz.helper import get_reference_image_data
-from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS, BaseImviz_WCS_WCS
+from jdaviz.configs.imviz.tests.utils import (
+    BaseImviz_WCS_NoWCS, BaseImviz_WCS_WCS, BaseImviz_WCS_GWCS)
 
 
 class BaseLinkHandler:
@@ -30,24 +31,20 @@ class TestLink_WCS_NoWCS(BaseImviz_WCS_NoWCS, BaseLinkHandler):
         assert self.viewer.get_link_type('has_wcs[SCI,1]') == 'self'
         assert self.viewer.get_link_type('no_wcs[SCI,1]') == 'pixels'
 
-        # Also check the coordinates display
+        # Also check the coordinates display: Last loaded is on top.
 
         self.viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
         assert self.viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
         assert self.viewer.label_mouseover.value == '+0.00000e+00 '
-        assert self.viewer.label_mouseover.world_ra_deg == '337.5202808000'
-        assert self.viewer.label_mouseover.world_dec_deg == '-20.8333330600'
-
-        # Not sure why but need one extra blink to work properly.
-        # This does not happen when we load real data from files.
-        self.viewer.blink_once()
+        assert self.viewer.label_mouseover.world_ra_deg == ''
+        assert self.viewer.label_mouseover.world_dec_deg == ''
 
         self.viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'b',
                                            'domain': {'x': 0, 'y': 0}})
         assert self.viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
         assert self.viewer.label_mouseover.value == '+0.00000e+00 '
-        assert self.viewer.label_mouseover.world_ra_deg == ''
-        assert self.viewer.label_mouseover.world_dec_deg == ''
+        assert self.viewer.label_mouseover.world_ra_deg == '337.5202808000'
+        assert self.viewer.label_mouseover.world_dec_deg == '-20.8333330600'
 
     def test_wcslink_nofallback_noerror(self):
         self.imviz.link_data(link_type='wcs', wcs_fallback_scheme=None)
@@ -114,21 +111,17 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
         assert_allclose((self.viewer.state.x_min, self.viewer.state.y_min,
                         self.viewer.state.x_max, self.viewer.state.y_max), ans)
 
-        # Also check the coordinates display
+        # Also check the coordinates display: Last loaded is on top.
 
         self.viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
-        assert self.viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
+        assert self.viewer.label_mouseover.pixel == 'x=01.0 y=-0.0'
         assert self.viewer.label_mouseover.value == '+1.00000e+00 '
         assert self.viewer.label_mouseover.world_ra_deg == '337.5202808000'
         assert self.viewer.label_mouseover.world_dec_deg == '-20.8333330600'
 
-        # Not sure why but need one extra blink to work properly.
-        # This does not happen when we load real data from files.
-        self.viewer.blink_once()
-
         self.viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'b',
                                            'domain': {'x': 0, 'y': 0}})
-        assert self.viewer.label_mouseover.pixel == 'x=01.0 y=-0.0'
+        assert self.viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
         assert self.viewer.label_mouseover.value == '+1.00000e+00 '
         assert self.viewer.label_mouseover.world_ra_deg == '337.5202808000'
         assert self.viewer.label_mouseover.world_dec_deg == '-20.8333330600'
@@ -153,6 +146,51 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
 
         with pytest.raises(ValueError, match='not found in data collection external links'):
             self.viewer.get_link_type('foo')
+
+
+class TestLink_WCS_GWCS(BaseImviz_WCS_GWCS):
+
+    def test_wcslink_rotated(self):
+        # FITS WCS will be reference, GWCS is rotated, no_wcs linked by pixel to ref.
+        self.imviz.link_data(link_type='wcs', error_on_fail=True)
+
+        # The zoom box for GWCS is now a rotated rombus.
+        fits_wcs_zoom_limits = self.viewer._get_zoom_limits(
+            self.imviz.app.data_collection['fits_wcs[DATA]'])
+        gwcs_zoom_limits = self.viewer._get_zoom_limits(
+            self.imviz.app.data_collection['gwcs[DATA]'])
+        no_wcs_zoom_limits = self.viewer._get_zoom_limits(
+            self.imviz.app.data_collection['no_wcs'])
+        assert_allclose(fits_wcs_zoom_limits,
+                        ((-0.972136, 0.027864), (-0.972136, 8.972136),
+                         (7.972136, 8.972136), (7.972136, 0.027864)), rtol=1e-5)
+        assert_allclose(gwcs_zoom_limits,
+                        ((3.245117, 10.549265), (10.688389, 4.95208),
+                         (6.100057, -2.357782), (-1.343215, 3.239403)), rtol=1e-5)
+        assert_allclose(no_wcs_zoom_limits, fits_wcs_zoom_limits)
+
+        # Also check the coordinates display: Last loaded is on top.
+        # Cycle order: no_wcs, FITS WCS, GWCS
+
+        self.viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
+        assert self.viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
+        assert self.viewer.label_mouseover.value == '+1.00000e+00 '
+        assert self.viewer.label_mouseover.world_ra_deg == ''
+        assert self.viewer.label_mouseover.world_dec_deg == ''
+
+        self.viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'b',
+                                           'domain': {'x': 0, 'y': 0}})
+        assert self.viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
+        assert self.viewer.label_mouseover.value == '+1.00000e+00 electron / s'
+        assert self.viewer.label_mouseover.world_ra_deg == '3.5817255823'
+        assert self.viewer.label_mouseover.world_dec_deg == '-30.3920580740'
+
+        self.viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'b',
+                                           'domain': {'x': 0, 'y': 0}})
+        assert self.viewer.label_mouseover.pixel == 'x=02.7 y=09.8'
+        assert self.viewer.label_mouseover.value == ''
+        assert self.viewer.label_mouseover.world_ra_deg == '3.5817255823'
+        assert self.viewer.label_mouseover.world_dec_deg == '-30.3920580740'
 
 
 def test_imviz_no_data(imviz_helper):

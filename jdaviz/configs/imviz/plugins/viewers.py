@@ -72,10 +72,13 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
     def on_mouse_or_key_event(self, data):
 
         # Find visible layers
-        visible_layers = [layer for layer in self.state.layers if layer.visible]
+        visible_layers = [layer for layer in self.state.layers
+                          if (layer.visible and layer_is_image_data(layer.layer))]
 
         if len(visible_layers) == 0:
             return
+
+        active_layer = visible_layers[-1]
 
         if self.label_mouseover is None:
             if 'g-coords-info' in self.session.application._tools:
@@ -97,7 +100,7 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
 
             # Extract first dataset from visible layers and use this for coordinates - the choice
             # of dataset shouldn't matter if the datasets are linked correctly
-            image = visible_layers[0].layer
+            image = active_layer.layer
 
             # Extract data coordinates - these are pixels in the reference image
             x = data['domain']['x']
@@ -125,8 +128,8 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
             # of how to display values when multiple datasets are present.
             if (x > -0.5 and y > -0.5
                     and x < image.shape[1] - 0.5 and y < image.shape[0] - 0.5
-                    and hasattr(visible_layers[0], 'attribute')):
-                attribute = visible_layers[0].attribute
+                    and hasattr(active_layer, 'attribute')):
+                attribute = active_layer.attribute
                 value = image.get_data(attribute)[int(round(y)), int(round(x))]
                 unit = image.get_component(attribute).units
                 self.label_mouseover.value = f'{value:+10.5e} {unit}'
@@ -151,7 +154,7 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
 
             elif key_pressed == 'l':
                 # Same data as mousemove above.
-                image = visible_layers[0].layer
+                image = active_layer.layer
                 x = data['domain']['x']
                 y = data['domain']['y']
                 if x is None or y is None:  # Out of bounds
@@ -243,7 +246,8 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
         return x, y, coords_status
 
     def _get_zoom_limits(self, image):
-        """Return ``(x_min, y_min, x_max, y_max)`` for given image.
+        """Return a list of ``(x, y)`` that defines four corners of
+        the zoom box for a given image.
         This is needed because viewer values are only based on reference
         image, which can be inaccurate if given image is dithered and
         they are linked by WCS.
@@ -251,10 +255,14 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
         if data_has_valid_wcs(image) and self.get_link_type(image.label) == 'wcs':
             # Convert X,Y from reference data to the one we are actually seeing.
             x = image.coords.world_to_pixel(self.state.reference_data.coords.pixel_to_world(
-                    (self.state.x_min, self.state.x_max), (self.state.y_min, self.state.y_max)))
-            zoom_limits = (x[0][0], x[1][0], x[0][1], x[1][1])
+                (self.state.x_min, self.state.x_min, self.state.x_max, self.state.x_max),
+                (self.state.y_min, self.state.y_max, self.state.y_max, self.state.y_min)))
+            zoom_limits = np.array(list(zip(x[0], x[1])))
         else:
-            zoom_limits = (self.state.x_min, self.state.y_min, self.state.x_max, self.state.y_max)
+            zoom_limits = np.array(((self.state.x_min, self.state.y_min),
+                                    (self.state.x_min, self.state.y_max),
+                                    (self.state.x_max, self.state.y_max),
+                                    (self.state.x_max, self.state.y_min)))
         return zoom_limits
 
     def set_compass(self, image):

@@ -1,7 +1,13 @@
+import gwcs
 import numpy as np
 import pytest
+from astropy import units as u
+from astropy.coordinates import ICRS
 from astropy.io import fits
+from astropy.modeling import models
+from astropy.nddata import NDData
 from astropy.wcs import WCS
+from gwcs import coordinate_frames as cf
 
 __all__ = ['BaseImviz_WCS_NoWCS', 'BaseImviz_WCS_WCS']
 
@@ -82,6 +88,63 @@ class BaseImviz_WCS_WCS:
 
         self.wcs_1 = WCS(hdu1.header)
         self.wcs_2 = WCS(hdu2.header)
+        self.imviz = imviz_helper
+        self.viewer = imviz_helper.default_viewer
+
+        # Since we are not really displaying, need this to test zoom.
+        self.viewer.shape = (100, 100)
+        self.viewer.state._set_axes_aspect_ratio(1)
+
+
+class BaseImviz_WCS_GWCS:
+    @pytest.fixture(autouse=True)
+    def setup_class(self, imviz_helper):
+        arr = np.zeros((10, 8))  # (ny, nx)
+        arr[0, 0] = 1  # Bright corner for sanity check
+
+        # FITS WCS that is adapted from HST/ACS without the distortion.
+        w_fits = WCS({'WCSAXES': 2, 'NAXIS1': 8, 'NAXIS2': 10,
+                      'CRPIX1': 5.0, 'CRPIX2': 5.0,
+                      'PC1_1': -1.14852e-05, 'PC1_2': 7.01477e-06,
+                      'PC2_1': 7.75765e-06, 'PC2_2': 1.20927e-05,
+                      'CDELT1': 1.0, 'CDELT2': 1.0,
+                      'CUNIT1': 'deg', 'CUNIT2': 'deg',
+                      'CTYPE1': 'RA---TAN', 'CTYPE2': 'DEC--TAN',
+                      'CRVAL1': 3.581704851882, 'CRVAL2': -30.39197867265,
+                      'LONPOLE': 180.0, 'LATPOLE': -30.39197867265,
+                      'MJDREF': 0.0, 'RADESYS': 'ICRS'})
+
+        # GWCS that is adapted from its Getting Started.
+        shift_by_crpix = models.Shift(-(5 - 1) * u.pix) & models.Shift(-(5 - 1) * u.pix)
+        matrix = np.array([[1.290551569736E-05, 5.9525007864732E-06],
+                           [5.0226382102765E-06, -1.2644844123757E-05]])
+        rotation = models.AffineTransformation2D(matrix * u.deg, translation=[0, 0] * u.deg)
+        rotation.input_units_equivalencies = {"x": u.pixel_scale(1 * (u.deg / u.pix)),
+                                              "y": u.pixel_scale(1 * (u.deg / u.pix))}
+        rotation.inverse = models.AffineTransformation2D(np.linalg.inv(matrix) * u.pix,
+                                                         translation=[0, 0] * u.pix)
+        rotation.inverse.input_units_equivalencies = {"x": u.pixel_scale(1 * (u.pix / u.deg)),
+                                                      "y": u.pixel_scale(1 * (u.pix / u.deg))}
+        tan = models.Pix2Sky_TAN()
+        celestial_rotation = models.RotateNative2Celestial(
+            3.581704851882 * u.deg, -30.39197867265 * u.deg, 180 * u.deg)
+        det2sky = shift_by_crpix | rotation | tan | celestial_rotation
+        det2sky.name = "linear_transform"
+        detector_frame = cf.Frame2D(name="detector", axes_names=("x", "y"), unit=(u.pix, u.pix))
+        sky_frame = cf.CelestialFrame(reference_frame=ICRS(), name='icrs', unit=(u.deg, u.deg))
+        pipeline = [(detector_frame, det2sky), (sky_frame, None)]
+        w_gwcs = gwcs.WCS(pipeline)
+
+        # Load data into Imviz:
+        # 1. Data with FITS WCS and unit.
+        # 2. Data with GWCS (rotated w.r.t. FITS WCS) and no unit.
+        # 3. Data without WCS nor unit.
+        imviz_helper.load_data(NDData(arr, wcs=w_fits, unit='electron/s'), data_label='fits_wcs')
+        imviz_helper.load_data(NDData(arr, wcs=w_gwcs), data_label='gwcs')
+        imviz_helper.load_data(arr, data_label='no_wcs')
+
+        self.wcs_1 = w_fits
+        self.wcs_2 = w_gwcs
         self.imviz = imviz_helper
         self.viewer = imviz_helper.default_viewer
 
