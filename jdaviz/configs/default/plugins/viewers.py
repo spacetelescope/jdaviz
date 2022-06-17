@@ -60,12 +60,6 @@ class JdavizViewerMixin:
         """The Jdaviz configuration helper tied to the viewer."""
         return self.jdaviz_app._jdaviz_helper
 
-#    @property
-#    def viewer_id(self):
-#        for vid, viewer in self.jdaviz_app._viewer_store.items():
-#            if viewer == self:
-#                return vid
-
     @property
     def reference_id(self):
         return self._reference_id
