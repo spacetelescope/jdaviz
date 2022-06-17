@@ -73,6 +73,9 @@ Imviz
 - Fixed a bug where Line Profile might crash when the second image
   is rotated w.r.t. the reference image and they are linked by WCS. [#1392]
 
+- Contrast/bias mouse-drag is now more responsive and
+  calculates contrast in the same way as Glue in Qt mode. [#1403]
+
 Mosviz
 ^^^^^^
 

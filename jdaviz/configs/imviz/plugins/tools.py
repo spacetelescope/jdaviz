@@ -158,7 +158,7 @@ class ContrastBias(CheckableTool):
         # bias range 0..1
         # contrast range 0..4
         bias = event_x / (self._max_x - 1)
-        contrast = 4 * event_y / (self._max_y - 1)
+        contrast = 4 * (1 - (event_y / (self._max_y - 1)))
 
         with delay_callback(self._layer_state, 'bias', 'contrast'):
             self._layer_state.bias = bias
