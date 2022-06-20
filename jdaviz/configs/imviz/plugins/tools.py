@@ -1,4 +1,3 @@
-import time
 import os
 
 from echo import delay_callback
@@ -6,6 +5,7 @@ from echo import delay_callback
 from glue.config import viewer_tool
 from glue.viewers.common.tool import CheckableTool
 from glue_jupyter.bqplot.common.tools import BqplotPanZoomMode
+from glue_jupyter.utils import debounced
 
 from jdaviz.core.tools import BoxZoom
 
@@ -134,59 +134,56 @@ class ContrastBias(CheckableTool):
     tool_tip = 'Click and drag to adjust contrast and bias, double-click to reset'
 
     def __init__(self, viewer, **kwargs):
-        self._time_last = 0
         super().__init__(viewer, **kwargs)
 
     def activate(self):
         self.viewer.add_event_callback(self.on_mouse_or_key_event,
                                        events=['dragstart', 'dragmove',
-                                               'dragend', 'dblclick'])
+                                               'dblclick'])
 
     def deactivate(self):
         self.viewer.remove_event_callback(self.on_mouse_or_key_event)
+
+    @debounced(delay_seconds=0.03, method=True)
+    def _dragevent(self, data):
+        event_x = data['pixel']['x']
+        event_y = data['pixel']['y']
+
+        if ((event_x < 0) or (event_x >= self._max_x) or
+                (event_y < 0) or (event_y >= self._max_y)):
+            return
+
+        # Normalize w.r.t. viewer display from 0 to 1
+        # Also see glue/viewers/matplotlib/qt/toolbar_mode.py
+        # bias range 0..1
+        # contrast range 0..4
+        bias = event_x / (self._max_x - 1)
+        contrast = 4 * (1 - (event_y / (self._max_y - 1)))
+
+        with delay_callback(self._layer_state, 'bias', 'contrast'):
+            self._layer_state.bias = bias
+            self._layer_state.contrast = contrast
 
     def on_mouse_or_key_event(self, data):
         from jdaviz.configs.imviz.helper import get_top_layer_index
 
         event = data['event']
 
-        # Note that we throttle this to 200ms here as changing the contrast
-        # and bias it expensive since it forces the whole image to be redrawn
-        if event == 'dragmove':
-            if (time.time() - self._time_last) <= 0.2:
-                return
-
-            event_x = data['pixel']['x']
-            event_y = data['pixel']['y']
-            max_x = self.viewer.shape[1]
-            max_y = self.viewer.shape[0]
-
-            if ((event_x < 0) or (event_x >= max_x) or
-                    (event_y < 0) or (event_y >= max_y)):
-                return
-
-            # Normalize w.r.t. viewer display from 0 to 1
-            x = event_x / (max_x - 1)
-            y = event_y / (max_y - 1)
-
+        if event == 'dragstart':
             # When blinked, first layer might not be top layer
+            # TODO: could optimize this further by listening for changes to the layers
+            # and viewer size rather than having to set this on the dragstart event
             i_top = get_top_layer_index(self.viewer)
             state = self.viewer.layers[i_top].state
-
-            # bias range 0..1
-            # contrast range 0..4
-            with delay_callback(state, 'bias', 'contrast'):
-                state.bias = x
-                state.contrast = y * 4
-
-            self._time_last = time.time()
-
+            self._layer_state = state
+            self._max_x = self.viewer.shape[1]
+            self._max_y = self.viewer.shape[0]
+        elif event == 'dragmove':
+            self._dragevent(data)
         elif event == 'dblclick':
-            # When blinked, first layer might not be top layer
+            # Restore defaults that are applied on load
             i_top = get_top_layer_index(self.viewer)
             state = self.viewer.layers[i_top].state
-
-            # Restore defaults that are applied on load
             with delay_callback(state, 'bias', 'contrast'):
                 state.bias = 0.5
                 state.contrast = 1
