@@ -112,15 +112,13 @@ class SubsetPlugin(TemplateMixin):
             if subset_state is not None:
                 self._get_subset_subregion_definition(subset_state)
 
-    def _get_subset_subregion_definition(self, subset_state, subset_op=""):
+    def _get_subset_subregion_definition(self, subset_state):
         """
         Get the type and parameters for a single region in the subset. Note that
         the string type and operation (if in a composite subset) need to be stored
         separately from the float parameters for display reasons.
         """
         subset_type = {}
-        if subset_op:
-            subset_type["Operation"] = subset_op
         subset_definition = None
 
         if isinstance(subset_state, RoiSubsetState):
@@ -149,9 +147,8 @@ class SubsetPlugin(TemplateMixin):
             subset_type["Subset type"] = "Range"
 
         if subset_definition is not None and subset_definition not in self.subset_definitions:
-            self.subset_definitions.append(subset_definition)
-            self.subset_types.append(subset_type)
-            print(self.subset_types)
+            self.subset_definitions = self.subset_definitions + [subset_definition]
+            self.subset_types = self.subset_types + [subset_type]
 
     def _get_subset_definition(self, *args):
         """
@@ -165,11 +162,3 @@ class SubsetPlugin(TemplateMixin):
         subset_state = subset_group.subset_state
 
         self._unpack_nested_subset(subset_state)
-
-        # Trick traitlets into updating the displayed values
-        subset_definitions = self.subset_definitions
-        self.subset_definitions = []
-        self.subset_definitions = subset_definitions
-        subset_types = self.subset_types
-        self.subset_types = []
-        self.subset_types = subset_types
