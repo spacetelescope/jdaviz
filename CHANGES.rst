@@ -36,6 +36,9 @@ API Changes
   the history logger is still at "info" so you can see all messages
   there instead. [#1368]
 
+- In the Color Mode options under Plot Options, "One color per layer" has been
+  renamed to "Monochromatic" for all image viewers. [#1406]
+
 Cubeviz
 ^^^^^^^
 
