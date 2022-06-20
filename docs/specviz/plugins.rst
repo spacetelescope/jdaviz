@@ -63,7 +63,7 @@ in the app-level toolbar.
 If an existing subset is selected, the parameters of the subset will also be 
 shown. Note that while parameters for compound regions (e.g., a subset with 
 three disjoint regions) are displayed, the logical operations joining them
-(`OR`, `AND`, etc.) are not.
+(``OR``, ``AND``, etc.) are not.
 
 .. _gaussian-smooth:
 
