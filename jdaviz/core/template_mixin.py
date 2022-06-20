@@ -1457,7 +1457,7 @@ class PlotOptionsSyncState(BasePluginComponent):
         if self._glue_name == 'cmap':
             return [{'text': cmap[0], 'value': cmap[1].name} for cmap in colormaps.members]
         elif self._glue_name == 'color_mode':
-            return [{'text': 'Colormaps', 'value': 'Colormaps'},
+            return [{'text': 'Colormap', 'value': 'Colormaps'},
                     {'text': 'Monochromatic', 'value': 'One color per layer'}]
         else:
             values, labels = _get_glue_choices(state, self._glue_name)
