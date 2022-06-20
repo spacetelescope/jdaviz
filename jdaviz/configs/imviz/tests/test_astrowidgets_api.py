@@ -157,7 +157,8 @@ class TestCmapStretchCuts(BaseImviz_WCS_NoWCS):
     def test_colormap_options(self):
         assert self.viewer.colormap_options == [
             'BuGn', 'PRGn', 'PuBu', 'PuOr', 'RdBu', 'RdPu', 'RdYlBu', 'YlGnBu', 'YlOrRd',
-            'gray', 'hot', 'inferno', 'magma', 'plasma', 'viridis']
+            'gray', 'gray_r', 'hot', 'hot_r', 'inferno', 'inferno_r', 'magma', 'magma_r',
+            'plasma', 'plasma_r', 'viridis', 'viridis_r']
 
     def test_invalid_colormap(self):
         with pytest.raises(ValueError, match='Invalid colormap'):

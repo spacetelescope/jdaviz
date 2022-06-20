@@ -13,10 +13,11 @@ from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
 from traitlets import Dict, Bool, Unicode
 from specutils import Spectrum1D, SpectralRegion
+import matplotlib.cm as cm
 import numpy as np
 
 from glue.core.exceptions import IncompatibleAttribute
-from glue.config import data_translator
+from glue.config import colormaps, data_translator
 from glue.config import settings as glue_settings
 from glue.core import BaseData, HubListener, Data, DataCollection
 from glue.core.link_helpers import LinkSame
@@ -241,6 +242,18 @@ class Application(VuetifyTemplate, HubListener):
 
         # Add a fitted_models dictionary that the helpers (or user) can access
         self.fitted_models = {}
+
+        # Add inverse colormaps to Glue global state. Also see ColormapRegistry in
+        # https://github.com/glue-viz/glue/blob/main/glue/config.py
+        new_cms = (['Reversed: Gray', cm.gray_r],
+                   ['Reversed: Viridis', cm.viridis_r],
+                   ['Reversed: Plasma', cm.plasma_r],
+                   ['Reversed: Inferno', cm.inferno_r],
+                   ['Reversed: Magma', cm.magma_r],
+                   ['Reversed: Hot', cm.hot_r])
+        for cur_cm in new_cms:
+            if cur_cm not in colormaps.members:
+                colormaps.add(*cur_cm)
 
     @property
     def hub(self):

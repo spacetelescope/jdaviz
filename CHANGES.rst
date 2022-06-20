@@ -12,6 +12,8 @@ New Features
 - Labels in data menus are truncated to fit in a single line but ensure visibility of extensions.
   [#1390]
 
+- Several reversed version of colormaps now available for image viewers. [#1407]
+
 Cubeviz
 ^^^^^^^
 
