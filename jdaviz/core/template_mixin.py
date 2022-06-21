@@ -10,6 +10,8 @@ from glue.core.message import (DataCollectionAddMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from glue.core.subset import RoiSubsetState
+from glue.core.link_helpers import LinkSame
+from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.widgets.linked_dropdown import get_choices as _get_glue_choices
 from specutils import Spectrum1D
@@ -17,7 +19,8 @@ from traitlets import Any, Bool, HasTraits, List, Unicode, observe
 
 from jdaviz import __version__
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
-                                ViewerAddedMessage, ViewerRemovedMessage)
+                                ViewerAddedMessage, ViewerRemovedMessage,
+                                SnackbarMessage)
 
 
 __all__ = ['TemplateMixin', 'PluginTemplateMixin',
@@ -1295,10 +1298,11 @@ class AddResults(BasePluginComponent):
         self.label_invalid_msg = ''
         self.label_overwrite = False
 
-    def add_results_from_plugin(self, data_item):
+    def add_results_from_plugin(self, data_item, ref_data=None):
         """
         Add ``data_item`` to the app's data_collection according to the default or user-provided
         label and adds to any requested viewers.
+        ref_data should be Plugin.dataset.
         """
         if self.label_invalid_msg:
             raise ValueError(self.label_invalid_msg)
@@ -1314,12 +1318,77 @@ class AddResults(BasePluginComponent):
             self.app.data_collection.remove(self.app.data_collection[self.label])
 
         self.app.add_data(data_item, self.label)
+        if ref_data is not None:
+            self.link_results_from_plugin(ref_data)
 
         if self.add_to_viewer_selected != 'None':
             # replace the contents in the selected viewer with the results from this plugin
             # TODO: switch to an instance/classname check?
             self.app.add_data_to_viewer(self.viewer.selected_id,
                                         self.label, clear_other_data=replace)
+
+    def link_results_from_plugin(self, ref_data):
+        dc = self.app.data_collection
+        ref_data = dc[ref_data.selected_item['label']]
+        plugin_data = dc[self.label]
+
+        len_ref_pixel = len(ref_data.pixel_component_ids)
+        len_plugin_pixel = len(plugin_data.pixel_component_ids)
+        if ref_data.coords is not None and plugin_data.coords is not None:
+            # Link by WCS if possible
+            dc.add_link(WCSLink(ref_data, plugin_data))
+
+        elif len_ref_pixel > 0 and len_plugin_pixel > 0:
+            # If WCS does not exist in one of the data, use pixel linking instead
+            # pc_ref = _get_pixel_coordinate_axes(ref_data)
+            # pc_plugin = _get_pixel_coordinate_axes(plugin_data)
+            pc_ref = [str(id).split(" ")[-1][1] for id in ref_data.pixel_component_ids]
+            pc_plugin = [str(id).split(" ")[-1][1] for id in plugin_data.pixel_component_ids]
+
+            links = []
+
+            # This code loops through the returned locations of the x, y, and z
+            # axes in the pixel_coordinate_ids of the reference data. It matches
+            # the axes with the pixel_coordinate_ids of the plugin data and links
+            # those axes. There are special rules for linking 2D and 3D data, which
+            # is as follows: 2D y to 3D z and 2D x to 3D y, and vice versa in the
+            # case of moment map and collapse data because they need to be transposed.
+            # See github comment:
+            # https://github.com/spacetelescope/jdaviz/pull/1412#discussion_r907630682
+            for ind, pixel_coord in enumerate(pc_ref):
+                ref_index = ind
+                if (len_plugin_pixel == 2 and
+                        (plugin_data.meta.get("Plugin", None) == 'MomentMap' or
+                         plugin_data.meta.get("Plugin", None) == 'Collapse')):
+                    if pixel_coord == 'z':
+                        plugin_index = pc_plugin.index('x')
+                    elif pixel_coord == 'y':
+                        plugin_index = pc_plugin.index('y')
+                    else:
+                        continue
+                elif len_plugin_pixel == 2:
+                    if pixel_coord == 'z':
+                        plugin_index = pc_plugin.index('y')
+                    elif pixel_coord == 'y':
+                        plugin_index = pc_plugin.index('x')
+                    else:
+                        continue
+                elif pixel_coord in pc_plugin:
+                    plugin_index = pc_plugin.index(pixel_coord)
+                else:
+                    continue
+
+                links.append(LinkSame(ref_data.pixel_component_ids[ref_index],
+                                      plugin_data.pixel_component_ids[plugin_index]))
+
+            dc.add_link(links)
+        else:
+            msg = SnackbarMessage(
+                "Unable to link plugin data with reference data, please link manually.",
+                color="warning",
+                sender=self)
+            self.hub.broadcast(msg)
+            return
 
 
 class AddResultsMixin(VuetifyTemplate, HubListener):

@@ -547,7 +547,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         output_cube['flux'] = fitted_spectrum.flux.value
         output_cube.get_component('flux').units = fitted_spectrum.flux.unit.to_string()
 
-        self.add_results.add_results_from_plugin(output_cube)
+        self.add_results.add_results_from_plugin(output_cube, self.dataset)
         self._set_default_results_label()
 
         snackbar_message = SnackbarMessage(
