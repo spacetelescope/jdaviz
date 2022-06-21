@@ -126,6 +126,9 @@ Plugins
 .. automodapi:: jdaviz.configs.imviz.plugins.links_control.links_control
    :no-inheritance-diagram:
 
+.. automodapi:: jdaviz.configs.imviz.plugins.rotate_image.rotate_image
+   :no-inheritance-diagram:
+
 .. automodapi:: jdaviz.configs.mosviz.plugins.row_lock.row_lock
    :no-inheritance-diagram:
 
