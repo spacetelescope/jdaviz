@@ -7,8 +7,8 @@ Jdaviz
 
 .. note::
 
-   ``jdaviz`` is one tool that is part of STScI's larger `Data Analysis Tools Ecosystem <https://jwst-docs.stsci.edu/jwst-post-pipeline-data-analysis>`_.
-
+   ``jdaviz`` is one tool that is part of STScI's larger
+   `Data Analysis Tools Ecosystem <https://jwst-docs.stsci.edu/jwst-post-pipeline-data-analysis>`_.
 
 ``jdaviz`` is a package of astronomical data analysis visualization
 tools based on the Jupyter platform.  These GUI-based tools link data
@@ -18,16 +18,16 @@ or as embedded windows within a website -- all with nearly-identical
 user interfaces.
 
 ``jdaviz`` applications currently include tools for interactive
-visualization of spectroscopic and imaging data. :ref:`imviz` is a tool for visualization and quick-look analysis
-for 2D astronomical images. :ref:`specviz` is a tool for visualization and quick-look analysis of 1D astronomical
-spectra. :ref:`mosviz` is a visualization tool for many astronomical
-spectra, typically the output of a multi-object spectrograph (e.g.,
-JWST NIRSpec), and includes viewers for 1D and 2D spectra as well as
-contextual information like on-sky views of the spectrograph slit.
+visualization of spectroscopic and imaging data.
+:ref:`imviz` is a tool for visualization and quick-look analysis for 2D astronomical images.
+:ref:`specviz` is a tool for visualization and quick-look analysis of 1D astronomical spectra.
 :ref:`cubeviz` provides a view of spectroscopic data cubes (like those
 to be produced by JWST MIRI), along with 1D spectra extracted from the
 cube.
-
+:ref:`mosviz` is a visualization tool for many astronomical
+spectra, typically the output of a multi-object spectrograph (e.g.,
+JWST NIRSpec), and includes viewers for 1D and 2D spectra as well as
+contextual information like on-sky views of the spectrograph slit.
 
 .. _jdaviz_instrument_table:
 

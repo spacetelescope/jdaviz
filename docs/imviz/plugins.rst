@@ -11,7 +11,6 @@ icon in the upper right corner of the Imviz application.
 .. image:: ../img/plugins.jpg
     :alt: Imviz Plugins
 
-
 .. _metadata-viewer:
 
 Metadata Viewer
@@ -48,7 +47,7 @@ via the API unless an interactive region is drawn after.
 .. seealso::
 
     :ref:`Subset Tools <specviz-subset-plugin>`
-    Specviz documentation on the Subset Tools plugin.
+        Specviz documentation on the Subset Tools plugin.
 
 .. _imviz-link-control:
 
@@ -69,7 +68,7 @@ falls back to full transformation.
 
 For more details on linking, see :ref:`dev_glue_linking`.
 
-From the API::
+From the API (if linking by WCS)::
 
     imviz.link_data(link_type='wcs')
 
@@ -264,4 +263,4 @@ documented in :ref:`astropy:astropy-table`.
 Export Plot
 ===========
 
-This plugin allows exporting the plot in a given viewer to various image formats.
+This plugin allows exporting the plot in a given viewer to a PNG file.

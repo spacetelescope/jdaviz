@@ -5,8 +5,10 @@ Displaying Images
 *****************
 
 Imviz uses image viewers to visualize data from supported formats.
-Much of the functionality can be done in the tool or from within the Jupyter notebook using an API.
-The Toolbar below gives you several image display options. Right click will open a drop-down with access to different options for each button.
+Much of the functionality can be done in the tool or from within the
+Jupyter notebook using an API.
+The Toolbar below gives you several image display options.
+Right click will open a drop-down with access to different options for each button.
 
 .. image:: ../img/toolbar.jpg
     :alt: Imviz Toolbar
@@ -19,8 +21,18 @@ If you have already imported data into Imviz, you can select and deselect data w
 
 .. seealso::
 
-    :ref:`Selecting Data Set<cubeviz-selecting-data>`
-    Documentation on selecting data sets in the Jdaviz viewers.
+    :ref:`Selecting Data Set <cubeviz-selecting-data>`
+        Documentation on selecting data sets in the Jdaviz viewers.
+
+.. _imviz_cursor_info:
+
+Cursor Information
+==================
+
+By moving your cursor along the image viewer, you will be able to see information on the
+cursor's location in pixel space (X and Y), the RA and Dec at that point, and the value
+of the data there. This information is located in the top bar of the UI, on the
+middle-right side.
 
 Home
 ====
@@ -32,10 +44,10 @@ This button will reset your zoom and panning to display the entire image.
 Pan/Zoom and Linked Pan/Zoom
 ============================
 
-Linked pan zoom is an Imviz-specific feature that allows the user to Pan and Zoom
+Linked Pan/Zoom is an Imviz-specific feature that allows the user to pn and zoom
 images in multiple different viewers simultaneously. This works by matching images
 based on the way they are linked together. Images are linked by pixels on load time,
-but you can re-link them via WCS using `~jdaviz.configs.imviz.helper.Imviz.link_data`.
+but you can re-link them via WCS using :ref:`imviz-link-control`.
 
 Regular Pan/Zoom is also available and is used in a similar way as other Jdaviz tools.
 
@@ -45,14 +57,14 @@ location under cursor.
 .. seealso::
 
     :ref:`Pan/Zoom <cubeviz-pan-zoom>`
-    Documentation on using Pan/Zoom in the Jdaviz viewers.
+        Documentation on using Pan/Zoom in the Jdaviz viewers.
 
 From the API, you can programmatically zoom in and out. Zoom level:
 
     * 1 - real-pixel-size
     * 2 - zoomed in by a factor of 2
     * 0.5 - zoomed out by a factor of 2
-    * 'fit' - zoomed to fit the whole image width into display
+    * ``'fit'`` - zoomed to fit the whole image width into display
 
 For example::
 
@@ -73,15 +85,16 @@ Users can create spatial regions either in Imviz or the Jupyter notebook.
 .. seealso::
 
     :ref:`Defining Spatial Regions <spatial-regions>`
-    Documentation on defining spatial regions in an image viewer.
+        Documentation on defining spatial regions in an image viewer.
 
 .. seealso::
 
     :ref:`Importing Spatial Regions <imviz-import-regions-api>`
-    Importing spatial regions from within the Jupyter notebook.
+        Importing spatial regions from within the Jupyter notebook.
 
-You can :ref:`import regions from the API<imviz-import-regions-api>`.
-You can also retrieve the results as `regions.Regions` as follows, assuming ``imviz`` is the instance of your Imviz application::
+You can :ref:`import regions from the AP I<imviz-import-regions-api>`.
+You can also retrieve the results as `regions.Regions` as follows, assuming
+``imviz`` is the instance of your Imviz application::
 
     regions = imviz.get_interactive_regions()
     regions
@@ -119,7 +132,7 @@ Display Settings
 .. seealso::
 
     :ref:`Display Settings <display-settings>`
-    Documentation on various display settings in the jdaviz viewers.
+        Documentation on various display settings in the jdaviz viewers.
 
 From within the Jupyter notebook::
 
@@ -143,4 +156,4 @@ You can also open a new viewer from the API::
     viewer_2 = imviz.create_image_viewer(viewer_name=viewer_2_name)
     imviz.app.add_data_to_viewer(viewer_2_name, 'MyImportedData')
 
-where 'MyImportedData' is a data set that has already been imported into Imviz.
+where ``'MyImportedData'`` is a data set that has already been imported into Imviz.

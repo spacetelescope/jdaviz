@@ -17,7 +17,7 @@ For example::
 
 For more information on using Specviz in a notebook, see
 :ref:`specviz-notebook`.
-Similarly, you can open instances of :ref:`mosviz-notebook` and :ref:`cubeviz-notebook`.
+Similarly, you can open instances of :ref:`cubeviz-notebook` and :ref:`mosviz-notebook`.
 
 Using Jdaviz in a Jupyter Notebook
 ----------------------------------

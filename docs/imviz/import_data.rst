@@ -21,7 +21,7 @@ Importing data through the Command Line
 
 You can load your data into the Imviz application through the command line::
 
-    jdaviz /my/image/data.fits --layout imviz
+    jdaviz imviz /my/image/data.fits
 
 .. _imviz-import-gui:
 
@@ -63,11 +63,12 @@ Creating Your Own Array
 
 You can create your own array to load into Imviz::
 
-    from astropy.nddata import NDData
+    import numpy as np
     from jdaviz import Imviz
 
-    ndd = NDData(array)
-    imviz.load_data(ndd)
+    arr = np.arange(100).reshape((10, 10))
+    imviz = Imviz()
+    imviz.load_data(arr, data_label='my_array')
     imviz.app
 
 JWST datamodels
@@ -83,7 +84,7 @@ object, you can load it into Imviz as follows::
     # mydatamodel is a jwst.datamodels object
     ndd = NDData(np.array(mydatamodel.data), wcs=mydatamodel.get_fits_wcs())
     imviz = Imviz()
-    imviz.load_data(ndd)
+    imviz.load_data(ndd, data_label='my_data_model')
     imviz.app
 
 There is no plan to natively load such objects until ``datamodels``
