@@ -24,3 +24,7 @@ class RotateImageSimple(TemplateMixin, ViewerSelectMixin):
 
         # Rotate selected viewer canvas
         self.app._viewer_item_by_id(self.viewer_selected)['rotation'] = self._theta
+
+        # Update Compass
+        viewer = self.app._viewer_by_id(self.viewer_selected)
+        viewer.on_limits_change()
