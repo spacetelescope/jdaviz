@@ -72,6 +72,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- New Simple Image Rotation plugin to rotate the axes of images. [#1384]
+
 Mosviz
 ^^^^^^
 
