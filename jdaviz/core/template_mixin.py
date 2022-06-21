@@ -10,6 +10,8 @@ from glue.core.message import (DataCollectionAddMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from glue.core.subset import RoiSubsetState
+from glue.core.link_helpers import LinkSame
+from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.widgets.linked_dropdown import get_choices as _get_glue_choices
 from specutils import Spectrum1D
@@ -1314,12 +1316,26 @@ class AddResults(BasePluginComponent):
             self.app.data_collection.remove(self.app.data_collection[self.label])
 
         self.app.add_data(data_item, self.label)
+        self.link_results_from_plugin(data_item)
 
         if self.add_to_viewer_selected != 'None':
             # replace the contents in the selected viewer with the results from this plugin
             # TODO: switch to an instance/classname check?
             self.app.add_data_to_viewer(self.viewer.selected_id,
                                         self.label, clear_other_data=replace)
+
+    def link_results_from_plugin(self, data_item):
+        dc = self.app.data_collection
+        if dc[0].coords is not None and dc[self.label].coords is not None:
+            dc.add_link(WCSLink(dc[0], dc[self.label]))
+        elif dc[0].coords is not None:
+            pc_new = self.app.data_collection[self.label].pixel_component_ids
+            pc_old = self.app.data_collection[0].pixel_component_ids
+
+            links = [LinkSame(pc_old[1], pc_new[0]),
+                     LinkSame(pc_old[2], pc_new[1])]
+
+            dc.add_link(links)
 
 
 class AddResultsMixin(VuetifyTemplate, HubListener):
