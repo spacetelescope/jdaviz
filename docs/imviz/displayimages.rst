@@ -80,8 +80,8 @@ Defining Spatial Regions
 ========================
 
 Spatial regions allow users to select subsets of the data array for use in
-specific analysis functions in the plugin toolbar, for example in the Imviz Simple
-Aperture Photometry plugin.
+specific analysis functions in the plugin toolbar, for example in the
+:ref:`aper-phot-simple` plugin.
 Users can create spatial regions either in Imviz or the Jupyter notebook.
 
 .. seealso::
