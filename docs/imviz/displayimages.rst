@@ -5,10 +5,10 @@ Displaying Images
 *****************
 
 Imviz uses image viewers to visualize data from supported formats.
-Much of the functionality can be done in the tool or from within the
-Jupyter notebook using an API.
+Much of the functionality is available both from the application GUI and
+from the Jupyter notebook using API calls.
 The Toolbar below gives you several image display options.
-Right click will open a drop-down with access to different options for each button.
+Right-click will open a drop-down with access to different options for each button.
 
 .. image:: ../img/toolbar.jpg
     :alt: Imviz Toolbar
@@ -31,7 +31,7 @@ Cursor Information
 
 By moving your cursor along the image viewer, you will be able to see information on the
 cursor's location in pixel space (X and Y), the RA and Dec at that point, and the value
-of the data there. This information is located in the top bar of the UI, on the
+of the data there. This information is displayed in the top bar of the UI, on the
 middle-right side.
 
 Home
@@ -44,12 +44,13 @@ This button will reset your zoom and panning to display the entire image.
 Pan/Zoom and Linked Pan/Zoom
 ============================
 
-Linked Pan/Zoom is an Imviz-specific feature that allows the user to pn and zoom
+Linked Pan/Zoom is an Imviz-specific feature that allows the user to pan and zoom
 images in multiple different viewers simultaneously. This works by matching images
 based on the way they are linked together. Images are linked by pixels on load time,
 but you can re-link them via WCS using :ref:`imviz-link-control`.
 
-Regular Pan/Zoom is also available and is used in a similar way as other Jdaviz tools.
+Single-viewer Pan/Zoom is also available and is used in a similar way as in 
+other Jdaviz tools.
 
 When in either of these modes, clicking on the image will recenter the image to the
 location under cursor.
@@ -78,8 +79,9 @@ For example::
 Defining Spatial Regions
 ========================
 
-Spatial regions allow users to select subsets of the data array for
-specific analysis function in the plugin toolbar, such as aperture photometry.
+Spatial regions allow users to select subsets of the data array for use in
+specific analysis functions in the plugin toolbar, for example in the Imviz Simple
+Aperture Photometry plugin.
 Users can create spatial regions either in Imviz or the Jupyter notebook.
 
 .. seealso::
@@ -105,7 +107,7 @@ Blinking
 Blinking is an Imviz-specific functionality that allows a user to quickly switch
 between viewing two or more images, as long as they are linked (see :ref:`imviz_pan_zoom` for
 more on linking behavior). This can be done by selecting the |icon-blink| icon and
-then clicking on the image. You can also blink by selecting the "b" key on your
+then clicking on the image. You can also blink by pressing the "b" key on your
 keyboard while moused over the image.
 
 From within the Jupyter notebook::

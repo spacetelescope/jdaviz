@@ -263,4 +263,4 @@ documented in :ref:`astropy:astropy-table`.
 Export Plot
 ===========
 
-This plugin allows exporting the plot in a given viewer to a PNG file.
+This plugin allows exporting the plot in a given viewer to a PNG or SVG file.

@@ -19,7 +19,8 @@ See :meth:`jdaviz.configs.imviz.helper.Imviz.load_data` for more information.
 Importing data through the Command Line
 ---------------------------------------
 
-You can load your data into the Imviz application through the command line::
+When running the Imviz application via the command line, you must provide a path
+to a compatible file, which will be loaded into the app on initialization::
 
     jdaviz imviz /my/image/data.fits
 
@@ -28,7 +29,7 @@ You can load your data into the Imviz application through the command line::
 Importing data through the GUI
 ------------------------------
 
-You can load your data into the Imviz application is
+You can load your data into the Imviz application
 by clicking the :guilabel:`Import Data` button at the top left of the application's
 user interface. This opens a dialogue where the user can select a file
 that can be parsed as a :class:`~astropy.nddata.NDData`, :class:`~astropy.io.fits.HDUList`,
@@ -96,7 +97,8 @@ Importing catalogs via the API
 ------------------------------
 
 If you have a catalog file supported by `astropy.table.Table`, you
-can load the catalog into Imviz. Markers are different than Imviz
+can load the catalog into Imviz and add markers to Imviz viewers to show
+positions from the catalog. These markers are different than Imviz
 :ref:`spatial regions <spatial-regions>` as they are only meant to mark catalog positions.
 Loading markers can be done with the following commands::
 
