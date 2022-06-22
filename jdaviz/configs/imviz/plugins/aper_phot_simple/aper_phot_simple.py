@@ -1,8 +1,12 @@
+import os
+import warnings
 from datetime import datetime
 
 import bqplot
 import numpy as np
 from astropy import units as u
+from astropy.modeling.fitting import LevMarLSQFitter
+from astropy.modeling.models import Gaussian1D
 from astropy.table import QTable
 from astropy.time import Time
 from ipywidgets import widget_serialization
@@ -41,6 +45,7 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
     current_plot_type = Unicode().tag(sync=True)
     plot_available = Bool(False).tag(sync=True)
     radial_plot = Any('').tag(sync=True, **widget_serialization)
+    fit_radial_profile = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -329,6 +334,7 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
                 bqplot_line = bqplot.Lines(x=x_arr, y=sum_arr, marker='circle',
                                            scales={'x': line_x_sc, 'y': line_y_sc},
                                            marker_size=32, colors='gray')
+                bqplot_marks = [bqplot_line]
 
             else:  # Radial profile
                 self._fig.axes = [bqplot.Axis(scale=line_x_sc, label='pix'),
@@ -344,13 +350,38 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
                                                marker_size=32, colors='gray')
                 else:  # Radial Profile (Raw)
                     self._fig.title = 'Raw radial profile from Subset center'
-                    radial_r, radial_img = _radial_profile(
+                    x_data, y_data = _radial_profile(
                         phot_aperstats.data_cutout, phot_aperstats.bbox, aperture, raw=True)
-                    bqplot_line = bqplot.Scatter(x=radial_r, y=radial_img, marker='circle',
+                    bqplot_line = bqplot.Scatter(x=x_data, y=y_data, marker='circle',
                                                  scales={'x': line_x_sc, 'y': line_y_sc},
                                                  default_size=1, colors='gray')
 
-            self._fig.marks = [bqplot_line]
+                # Fit Gaussian1D to radial profile data.
+                if self.fit_radial_profile:
+                    fitter = LevMarLSQFitter()
+                    y_max = y_data.max()
+                    x_mean = x_data[np.where(y_data == y_max)].mean()
+                    std = 0.5 * (phot_table['semimajor_sigma'][0] +
+                                 phot_table['semiminor_sigma'][0])
+                    if isinstance(std, u.Quantity):
+                        std = std.value
+                    gs = Gaussian1D(amplitude=y_max, mean=x_mean, stddev=std)
+                    with warnings.catch_warnings(record=True) as warns:
+                        fit_model = fitter(gs, x_data, y_data)
+                    if len(warns) > 0:
+                        msg = os.linesep.join([str(w.message) for w in warns])
+                        self.hub.broadcast(SnackbarMessage(
+                            f"Radial profile fitting: {msg}", color='warning', sender=self))
+                    y_fit = fit_model(x_data)
+                    self.app.fitted_models['phot_radial_profile'] = fit_model
+                    bqplot_fit = bqplot.Lines(x=x_data, y=y_fit, marker=None,
+                                              scales={'x': line_x_sc, 'y': line_y_sc},
+                                              colors='magenta', line_style='dashed')
+                    bqplot_marks = [bqplot_line, bqplot_fit]
+                else:
+                    bqplot_marks = [bqplot_line]
+
+            self._fig.marks = bqplot_marks
 
         except Exception as e:  # pragma: no cover
             self.reset_results()

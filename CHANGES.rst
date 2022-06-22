@@ -27,6 +27,9 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Added the ability to fit Gaussian1D model to radial profile in
+  Simple Aperture Photometry plugin. [#1409]
+
 Mosviz
 ^^^^^^
 

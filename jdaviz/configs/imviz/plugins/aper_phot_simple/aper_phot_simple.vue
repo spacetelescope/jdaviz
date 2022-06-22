@@ -110,6 +110,15 @@
           ></v-select>
         </v-row>
 
+        <v-row v-if="current_plot_type != 'Curve of Growth'">
+          <v-switch
+            label="Fit Gaussian"
+            hint="Fit Gaussian1D to radial profile"
+            v-model="fit_radial_profile"
+            persistent-hint>
+          </v-switch>
+        </v-row>
+
         <v-row justify="end">
           <v-btn color="primary" text @click="do_aper_phot">Calculate</v-btn>
         </v-row>

@@ -18,6 +18,10 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
 
         phot_plugin = self.imviz.app.get_tray_item_from_name('imviz-aper-phot-simple')
 
+        # Model fitting is already tested in astropy.
+        # Here, we enable it just to make sure it does not crash.
+        phot_plugin.fit_radial_profile = True
+
         # Make sure invalid Data/Subset selection does not crash plugin.
         with pytest.raises(ValueError):
             phot_plugin.dataset_selected = 'no_such_data'
