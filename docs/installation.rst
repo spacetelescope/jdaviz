@@ -12,8 +12,8 @@ please consult :ref:`known installation issues <known_issues_installation>`.
 You may want to consider installing ``jdaviz`` in a new virtual or conda environment
 to avoid version conflicts with other packages you may have installed.
 
-Quick Installation
-------------------
+User Installation
+-----------------
 
 Installing the released version can be done using pip::
 

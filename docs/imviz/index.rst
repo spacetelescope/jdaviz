@@ -7,27 +7,16 @@
 Imviz
 #####
 
-.. image:: ../img/landing_gifs/Imviz_landing.gif
-    :alt: Introductory video tour of the Imviz configuration and its features
-
-Imviz is a tool for visualization and quick-look analysis for 2D astronomical
-images. Like the rest of Jdaviz, it is written in the Python programming
-language, and therefore can be run anywhere Python is supported
-(see :doc:`../installation`). Imviz is built on top of the
-`Glupyter <https://glue-jupyter.readthedocs.io>`_ backend, providing a visual,
-interactive interface to the analysis capabilities in that library.
-
-
-Quickstart
-----------
-
-To load a sample `HST/ACS Image <https://mast.stsci.edu/api/v0.1/Download/file?uri=mast:HST/product/jbqf03gjq_flc.fits>`_ into ``Imviz`` in the standalone app, run::
-
-    jdaviz imviz /path/to/jbqf03gjq_flc.fits
-
-
-Or to load in a Jupyter notebook, see the :gh-notebook:`ImvizExample`.
-
+Imviz is a tool for visualization and analysis of 2D astronomical images.
+It incorporates visualization tools with analysis capabilities, such as Astropy
+regions and photutils packages.
+Users can interact with their data from within the tool.
+Imviz also provides programmatic access to its viewers using
+`Astrowidgets <https://astrowidgets.readthedocs.io/en/latest/>`_ API;
+see `~jdaviz.core.astrowidgets_api.AstrowidgetsImageViewerMixin` for available functionality.
+Data can be both imported into and exported out of the tool so users can continue their
+desired workflow within the notebook.
+This documentation provides details on the various capabilities, demo videos, and example notebooks.
 
 Using Imviz
 -----------
@@ -38,4 +27,4 @@ Using Imviz
   import_data
   displayimages
   plugins
-  notebook
+  examples
