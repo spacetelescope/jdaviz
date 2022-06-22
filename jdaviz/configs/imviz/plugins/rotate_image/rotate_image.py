@@ -22,9 +22,10 @@ class RotateImageSimple(TemplateMixin, ViewerSelectMixin):
         except Exception:
             return
 
-        # Rotate selected viewer canvas
+        viewer = self.app._viewer_by_id(self.viewer_selected)
+
+        # Rotate selected viewer canvas. This changes zoom too.
         self.app._viewer_item_by_id(self.viewer_selected)['rotation'] = self._theta
 
-        # Update Compass
-        viewer = self.app._viewer_by_id(self.viewer_selected)
+        # Update Compass plugin.
         viewer.on_limits_change()
