@@ -215,6 +215,15 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
 
         return x, y, coords_status, (unreliable_world, unreliable_pixel)
 
+    # TODO: Remove if we end up not using it.
+    # def _get_zoom_center(self, image):
+    #     """Return ``(x, y)`` of the center of zoom for a given image.
+    #     Also see :meth:`_get_zoom_limits`.
+    #     """
+    #     x_cen = (self.state.x_min + self.state.x_max) * 0.5
+    #     y_cen = (self.state.y_min + self.state.y_max) * 0.5
+    #     return self._get_real_xy(image, x_cen, y_cen)[:2]
+
     def _get_zoom_limits(self, image):
         """Return a list of ``(x, y)`` that defines four corners of
         the zoom box for a given image.

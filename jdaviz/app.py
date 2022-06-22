@@ -1337,6 +1337,7 @@ class Application(VuetifyTemplate, HubListener):
             # TODO: set appropriate viewer.zoom_level
             # TODO: box-zoom to act based on overscaled canvas
             # viewer = self._viewer_by_id(args[0]['viewer'])
+            # viewer.zoom_level = 'fit'  # Did not see any difference, also tried 0.5
             pass
 
     def vue_destroy_viewer_item(self, cid):
