@@ -76,7 +76,8 @@ You also need the up-to-date tags for proper software versioning::
     git rebase upstream/main
 
 For the rest of contributing workflow, it is very similar to
-:ref:`astropy:development-workflow`, except for the change log.
+`how to make code contribution to astropy <https://docs.astropy.org/en/latest/development/workflow/development_workflow.html>`_,
+except for the change log.
 If your patch requires a change log, see ``CHANGES.rst`` for examples.
 
 To install ``jdaviz`` for development or from source in an editable mode
