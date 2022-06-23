@@ -15,33 +15,85 @@ to avoid version conflicts with other packages you may have installed.
 User Installation
 -----------------
 
-Installing the released version can be done using pip::
+Some of Jdaviz's dependencies require non-Python packages to work
+(particularly the front-end stack that is part of the Jupyter ecosystem).
+We recommend using `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`_
+to easily manage a compatible Python environment for Jdaviz; it should work
+with most modern shells, except CSH/TCSH.
 
-   pip install jdaviz --upgrade
+Once it is installed, we recommend you create a new environment rather than
+installing everything into the ``base`` environment, for example::
+
+    conda create -n jdaviz-env python=3.9
+    conda activate jdaviz-env
+
+For those using ``conda``, we recommend pulling the following from ``conda``
+instead of ``pip``. You could always try ``pip`` but sometimes the installation
+might not work properly for some people::
+
+    conda install bottleneck
+    conda install -c conda-forge notebook
+    conda install -c conda-forge jupyterlab
+    conda install -c conda-forge voila
+
+You might also want to enable ``ipywidgets`` notebook extension, as follows::
+
+    jupyter nbextension enable --py widgetsnbextension
+
+Installing the released version of Jdaviz can be done using ``pip``::
+
+    pip install jdaviz --upgrade
 
 or if you want the latest development version, you can install via GitHub::
 
-   pip install git+https://github.com/spacetelescope/jdaviz --upgrade
+    pip install git+https://github.com/spacetelescope/jdaviz --upgrade
 
-Note that ``jdaviz`` requires Python 3.8 or newer.  If your pip corresponds to an older version of 
+Note that ``jdaviz`` requires Python 3.8 or newer. If your ``pip`` corresponds to an older version of
 Python, it will state an error that it cannot find a valid package.
 
 Developer Installation
 ----------------------
 
-To install ``jdaviz`` for development or from source in editable mode::
+If you wish to contribute to Jdaviz, please fork the project to your
+own GitHub account. The following instructions assume your have forked
+the project and have connected
+`your GitHub to SSH <https://docs.github.com/en/authentication/connecting-to-github-with-ssh>`_
+and ``username`` is your GitHub username. This is a one-setup setup::
 
-   git clone https://github.com/spacetelescope/jdaviz.git
-   cd jdaviz
-   pip install -e .
+    git clone git@github.com:username/jdaviz.git
+    cd jdaviz
+    git remote add upstream git@github.com:spacetelescope/jdaviz.git
+    git fetch upstream main
+    git fetch upstream --tags
 
-To enable the hot reloading of vue templates, install watchdog::
+To work on a new feature or bug-fix, it is recommended that you build upon
+the latest dev code in a new branch (e.g., ``my-new-feature``).
+You also need the up-to-date tags for proper software versioning::
 
-   pip install watchdog
+    git checkout -b my-new-feature
+    git fetch upstream --tags
+    git fetch upstream main
+    git rebase upstream/main
 
-And to the top of a notebook add::
+For the rest of contributing workflow, it is very similar to
+:ref:`astropy:development-workflow`, except for the change log.
+If your patch requires a change log, see ``CHANGES.rst`` for examples.
 
-   from jdaviz import enable_hot_reloading
-   enable_hot_reloading()
+To install ``jdaviz`` for development or from source in an editable mode
+(i.e., changes to the locally checked out code would reflect in runtime
+after you restarted the Python kernel)::
+
+    pip install -e .
+
+Optionally, to enable the hot reloading of Vue.js templates, install
+``watchdog``::
+
+    pip install watchdog
+
+After installing ``watchdog``, to use it, add the following to the top
+of a notebook::
+
+    from jdaviz import enable_hot_reloading
+    enable_hot_reloading()
 
 See :ref:`quickstart` to learn how to run ``jdaviz``.
