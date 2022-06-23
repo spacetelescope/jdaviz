@@ -19,7 +19,8 @@ from traitlets import Any, Bool, HasTraits, List, Unicode, observe
 
 from jdaviz import __version__
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
-                                ViewerAddedMessage, ViewerRemovedMessage)
+                                ViewerAddedMessage, ViewerRemovedMessage,
+                                SnackbarMessage)
 
 
 __all__ = ['TemplateMixin', 'PluginTemplateMixin',
@@ -1297,7 +1298,7 @@ class AddResults(BasePluginComponent):
         self.label_invalid_msg = ''
         self.label_overwrite = False
 
-    def add_results_from_plugin(self, data_item):
+    def add_results_from_plugin(self, data_item, ref_data=None):
         """
         Add ``data_item`` to the app's data_collection according to the default or user-provided
         label and adds to any requested viewers.
@@ -1316,7 +1317,8 @@ class AddResults(BasePluginComponent):
             self.app.data_collection.remove(self.app.data_collection[self.label])
 
         self.app.add_data(data_item, self.label)
-        self.link_results_from_plugin(data_item)
+        if ref_data is not None:
+            self.link_results_from_plugin(ref_data)
 
         if self.add_to_viewer_selected != 'None':
             # replace the contents in the selected viewer with the results from this plugin
@@ -1324,18 +1326,29 @@ class AddResults(BasePluginComponent):
             self.app.add_data_to_viewer(self.viewer.selected_id,
                                         self.label, clear_other_data=replace)
 
-    def link_results_from_plugin(self, data_item):
+    def link_results_from_plugin(self, ref_data):
         dc = self.app.data_collection
-        if dc[0].coords is not None and dc[self.label].coords is not None:
-            dc.add_link(WCSLink(dc[0], dc[self.label]))
-        elif dc[0].coords is not None:
-            pc_new = self.app.data_collection[self.label].pixel_component_ids
-            pc_old = self.app.data_collection[0].pixel_component_ids
+        ref_data = dc[ref_data.selected_item['label']]
+        plugin_data = dc[self.label]
+
+        if ref_data.coords is not None and plugin_data.coords is not None:
+            dc.add_link(WCSLink(ref_data, plugin_data))
+        elif len(ref_data.pixel_component_ids) > 2 and len(plugin_data.pixel_component_ids) > 1:
+            pc_new = plugin_data.pixel_component_ids
+            pc_old = ref_data.pixel_component_ids
 
             links = [LinkSame(pc_old[1], pc_new[0]),
                      LinkSame(pc_old[2], pc_new[1])]
 
             dc.add_link(links)
+
+        else:
+            msg = SnackbarMessage(
+                "Unable to link plugin data with reference data, please link manually.",
+                color="warning",
+                sender=self)
+            self.hub.broadcast(msg)
+            return
 
 
 class AddResultsMixin(VuetifyTemplate, HubListener):

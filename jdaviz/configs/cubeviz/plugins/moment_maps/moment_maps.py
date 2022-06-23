@@ -2,7 +2,6 @@ import os
 
 from astropy import units as u
 from astropy.nddata import CCDData
-from glue.core.link_helpers import LinkSame
 
 from traitlets import Unicode, Bool, observe
 from specutils import Spectrum1D, manipulation, analysis
@@ -66,8 +65,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         fname_label = self.dataset_selected.replace("[", "_").replace("]", "")
         self.filename = f"moment{n_moment}_{fname_label}.fits"
 
-        self.add_results.add_results_from_plugin(self.moment)
-        # self._link_moment_data()
+        self.add_results.add_results_from_plugin(self.moment, self.dataset)
 
         self.moment_available = True
 
@@ -83,26 +81,3 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         # Let the user know where we saved the file.
         self.hub.broadcast(SnackbarMessage(
             f"Moment map saved to {os.path.abspath(self.filename)}", sender=self, color="success"))
-
-    def _link_moment_data(self):
-        new_len = len(self.app.data_collection)
-
-        # Can't link if there's no world_component_ids
-        pc_new = self.app.data_collection[-1].pixel_component_ids
-
-        # Link to the first dataset with compatible coordinates
-        for i in range(new_len - 1):
-            pc_old = self.app.data_collection[i].pixel_component_ids
-            # If data_collection[i] is also from the moment map
-            if self.app.data_collection[i].meta.get("Plugin", None) == self.__class__.__name__:
-                links = [LinkSame(pc_old[0], pc_new[0]),
-                         LinkSame(pc_old[1], pc_new[1])]
-
-            # Link moment map to cube (pc_old)
-            else:
-                links = [LinkSame(pc_old[1], pc_new[0]),
-                         LinkSame(pc_old[2], pc_new[1])]
-
-            self.app.data_collection.add_link(links)
-
-            break
