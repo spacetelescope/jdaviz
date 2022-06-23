@@ -27,19 +27,6 @@ installing everything into the ``base`` environment, for example::
     conda create -n jdaviz-env python=3.9
     conda activate jdaviz-env
 
-For those using ``conda``, we recommend pulling the following from ``conda``
-instead of ``pip``. You could always try ``pip`` but sometimes the installation
-might not work properly for some people::
-
-    conda install bottleneck
-    conda install -c conda-forge notebook
-    conda install -c conda-forge jupyterlab
-    conda install -c conda-forge voila
-
-You might also want to enable ``ipywidgets`` notebook extension, as follows::
-
-    jupyter nbextension enable --py widgetsnbextension
-
 Installing the released version of Jdaviz can be done using ``pip``::
 
     pip install jdaviz --upgrade
@@ -50,6 +37,19 @@ or if you want the latest development version, you can install via GitHub::
 
 Note that ``jdaviz`` requires Python 3.8 or newer. If your ``pip`` corresponds to an older version of
 Python, it will state an error that it cannot find a valid package.
+
+Users occasionally encounter problems running the pure ``pip`` install above. For those
+using ``conda``, some problems may be resolved by pulling the following from ``conda``
+instead of ``pip``::
+
+    conda install bottleneck
+    conda install -c conda-forge notebook
+    conda install -c conda-forge jupyterlab
+    conda install -c conda-forge voila
+
+You might also want to enable ``ipywidgets`` notebook extension, as follows::
+
+    jupyter nbextension enable --py widgetsnbextension
 
 Developer Installation
 ----------------------
