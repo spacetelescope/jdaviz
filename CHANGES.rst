@@ -38,6 +38,10 @@ API Changes
   the history logger is still at "info" so you can see all messages
   there instead. [#1368]
 
+- In the Color Mode options under Plot Options, "Colormaps" and "One color per layer"
+  have been renamed to "Colormap" and "Monochromatic," respectively, for all image
+  viewers. [#1406]
+
 Cubeviz
 ^^^^^^^
 
