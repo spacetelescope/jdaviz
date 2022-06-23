@@ -36,7 +36,7 @@ or if you want the latest development version, you can install via GitHub::
     pip install git+https://github.com/spacetelescope/jdaviz --upgrade
 
 Note that ``jdaviz`` requires Python 3.8 or newer. If your ``pip`` corresponds to an older version of
-Python, it will state an error that it cannot find a valid package.
+Python, it will raise an error that it cannot find a valid package.
 
 Users occasionally encounter problems running the pure ``pip`` install above. For those
 using ``conda``, some problems may be resolved by pulling the following from ``conda``
@@ -47,7 +47,7 @@ instead of ``pip``::
     conda install -c conda-forge jupyterlab
     conda install -c conda-forge voila
 
-You might also want to enable ``ipywidgets`` notebook extension, as follows::
+You might also want to enable the ``ipywidgets`` notebook extension, as follows::
 
     jupyter nbextension enable --py widgetsnbextension
 
