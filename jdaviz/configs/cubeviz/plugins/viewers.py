@@ -65,7 +65,8 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
 
             # Extract first dataset from visible layers and use this for coordinates - the choice
             # of dataset shouldn't matter if the datasets are linked correctly
-            image = visible_layers[0].layer
+            active_layer = visible_layers[-1]
+            image = active_layer.layer
 
             # Extract data coordinates - these are pixels in the reference image
             x = data['domain']['x']
@@ -92,17 +93,16 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
                 self.label_mouseover.reset_coords_display()
 
             # Extract data values at this position.
-            # Check if shape is [x, y, z] or [x, y] and show value accordingly.
-            if (-0.5 < x < image.shape[0] - 0.5 and -0.5 < y < image.shape[1] - 0.5
-                    and hasattr(visible_layers[0], 'attribute')):
-                attribute = visible_layers[0].attribute
-                if len(image.shape) == 3:
-                    value = image.get_data(attribute)[int(round(x)), int(round(y)),
-                                                      self.state.slices[-1]]
-                elif len(image.shape) == 2:
-                    value = image.get_data(attribute)[int(round(x)), int(round(y))]
-
-                unit = image.get_component(attribute).units
+            # Check if shape is [x, y, z] or [y, x] and show value accordingly.
+            attribute = active_layer.attribute
+            unit = image.get_component(attribute).units
+            if ((len(image.shape) == 3) and (-0.5 < x < (image.shape[0] - 0.5))
+                    and (-0.5 < y < (image.shape[1] - 0.5)) and hasattr(visible_layers[0], 'attribute')):
+                value = image.get_data(attribute)[int(round(x)), int(round(y)), self.state.slices[-1]]
+                self.label_mouseover.value = f'{value:+10.5e} {unit}'
+            elif ((len(image.shape) == 2) and (-0.5 < x < (image.shape[1] - 0.5))
+                    and (-0.5 < y < (image.shape[0] - 0.5)) and hasattr(visible_layers[0], 'attribute')):
+                value = image.get_data(attribute)[int(round(y)), int(round(x))]
                 self.label_mouseover.value = f'{value:+10.5e} {unit}'
             else:
                 self.label_mouseover.value = ''
