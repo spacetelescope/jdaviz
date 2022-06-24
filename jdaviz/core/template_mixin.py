@@ -1302,6 +1302,7 @@ class AddResults(BasePluginComponent):
         """
         Add ``data_item`` to the app's data_collection according to the default or user-provided
         label and adds to any requested viewers.
+        ref_data should be Plugin.dataset.
         """
         if self.label_invalid_msg:
             raise ValueError(self.label_invalid_msg)
@@ -1331,15 +1332,56 @@ class AddResults(BasePluginComponent):
         ref_data = dc[ref_data.selected_item['label']]
         plugin_data = dc[self.label]
 
+        def _get_pixel_coordinate_indices(data):
+            # data.pixel_component_ids should take the form of
+            # "Pixel Axis Int [axis]", for example "Pixel Axis 0 [x]".
+            # This line splits out that last chunk - [x] - and uses that
+            # to match axes between reference and plugin data in order to link
+            # them along that axis.
+            # What is returned is the location of the x, y, and z axes, with
+            # -1 being used if the axis is not in pixel_component_ids.
+            id_split = [str(id).split(" ")[-1] for id in data.pixel_component_ids]
+            x = y = z = -1
+            for index, axis in enumerate(id_split):
+                if 'x' in axis:
+                    x = index
+                elif 'y' in axis:
+                    y = index
+                elif 'z' in axis:
+                    z = index
+                else:
+                    msg = SnackbarMessage(
+                        f"{data.pixel_component_ids[index]} not in form Pixel Axis 0/1/2 [x/y/z],"
+                        " unable to link.",
+                        color="warning",
+                        sender=self)
+                    self.hub.broadcast(msg)
+            return [x, y, z]
+
         if ref_data.coords is not None and plugin_data.coords is not None:
+            # Link by WCS if possible
             dc.add_link(WCSLink(ref_data, plugin_data))
-        elif len(ref_data.pixel_component_ids) > 2 and len(plugin_data.pixel_component_ids) > 1:
-            pc_new = plugin_data.pixel_component_ids
-            pc_old = ref_data.pixel_component_ids
 
-            links = [LinkSame(pc_old[1], pc_new[0]),
-                     LinkSame(pc_old[2], pc_new[1])]
+        elif len(ref_data.pixel_component_ids) > 0 and len(plugin_data.pixel_component_ids) > 0:
+            # If WCS does not exist in one of the data, use pixel linking instead
+            pc_ref = _get_pixel_coordinate_indices(ref_data)
+            pc_plugin = _get_pixel_coordinate_indices(plugin_data)
 
+            links = []
+
+            # This code loops through the returned locations of the x, y, and z
+            # axes in the pixel_coordinate_ids of the reference data. It matches
+            # the axes with the pixel_coordinate_ids of the plugin data and links
+            # the indices of where those axes are located.
+            # For example: pc_ref = [2, 1, 0] and pc_plugin = [1, 0, -1]
+            # The second iteration would see that pc_ref[1] is equal to pc_plugin[0],
+            # thus those axes can be linked. Same with pc_ref[2] and pc_plugin[1].
+            for ind, pixel_coord in enumerate(pc_ref):
+                if pixel_coord != -1 and pixel_coord in pc_plugin:
+                    ref_index = ind
+                    plugin_index = pc_plugin.index(pixel_coord)
+                    links.append(LinkSame(ref_data.pixel_component_ids[ref_index],
+                                          plugin_data.pixel_component_ids[plugin_index]))
             dc.add_link(links)
 
         else:

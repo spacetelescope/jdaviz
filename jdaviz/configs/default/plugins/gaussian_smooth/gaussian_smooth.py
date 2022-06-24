@@ -90,7 +90,7 @@ class GaussianSmooth(TemplateMixin, DatasetSelectMixin, AddResultsMixin):
         spec_smoothed = gaussian_smooth(cube, stddev=self.stddev)
 
         # add data to the collection/viewer
-        self.add_results.add_results_from_plugin(spec_smoothed)
+        self.add_results.add_results_from_plugin(spec_smoothed, self.dataset)
 
         snackbar_message = SnackbarMessage(
             f"Data set '{self.dataset_selected}' smoothed successfully.",

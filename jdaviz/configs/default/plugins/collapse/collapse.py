@@ -54,7 +54,7 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
         data['flux'] = collapsed_spec.value
         data.get_component('flux').units = str(collapsed_spec.unit)
 
-        self.add_results.add_results_from_plugin(data)
+        self.add_results.add_results_from_plugin(data, self.dataset)
         self._link_collapse_data()
 
         snackbar_message = SnackbarMessage(
