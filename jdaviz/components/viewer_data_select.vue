@@ -18,7 +18,7 @@
       </template>
   
       <v-list style="max-height: 500px; width: 430px; padding-top: 0px" class="overflow-y-auto">
-        <v-row key="title" style="padding-left: 25px; margin-right: 0px; padding-bottom: 4px; background-color: #E3F2FD">
+        <v-row key="title" style="padding-left: 25px; margin-right: 0px; background-color: #E3F2FD">
             <span style="overflow-wrap: anywhere; font-size: 12pt; padding-top: 6px; padding-left: 6px; font-weight: bold; color: black">
               {{viewerTitleCase}}
             </span>
@@ -37,14 +37,14 @@
         </v-row>
 
         <v-row style="padding-left: 32px; margin-right: 0px; padding-right: 10px;
-                      padding-bottom: 4px; padding-top: 6 px; background-color: #E3F2FD;
+                      padding-bottom: 6px; background-color: #E3F2FD;
                       color: black">
           <span>
             Add more datasets using the "Import Data" button or via the API.
           </span>
         </v-row>
 
-        <v-row v-for="item in filteredDataItems" :key="item.id" style="padding-left: 25px; margin-right: 0px">
+        <v-row v-for="item in filteredDataItems" :key="item.id" style="padding-left: 25px; margin-right: 0px; margin-top: 4px; margin-bottom: 4px">
           <j-viewer-data-select-item
             :item="item"
             :viewer="viewer"
@@ -55,7 +55,7 @@
           ></j-viewer-data-select-item>
         </v-row>
 
-        <div v-if="extraDataItems.length" style="margin-bottom: -8px">
+        <div v-if="extraDataItems.length" style="margin-bottom: -8px;">
           <v-row key="extra-items-expand" style="padding-left: 25px; margin-right: 0px; padding-bottom: 4px; background-color: #E3F2FD"> 
             <span 
               @click="toggleShowExtraItems"
@@ -72,7 +72,7 @@
             </span>
           </v-row>
 
-          <v-row v-if="showExtraItems" v-for="item in extraDataItems"  :key="item.id" style="padding-left: 25px; margin-right: 0px">
+          <v-row v-if="showExtraItems" v-for="item in extraDataItems"  :key="item.id" style="padding-left: 25px; margin-right: 0px; margin-top: 4px; margin-bottom: 4px">
             <j-viewer-data-select-item
               :item="item"
               :viewer="viewer"
