@@ -62,7 +62,7 @@
               class='text--primary' 
               style="overflow-wrap: anywhere; font-size: 12pt; padding-top: 6px; padding-left: 6px; cursor: pointer"
             >
-              <v-icon>{{showExtraItems ? 'mdi-chevron-double-up' : 'mdi-chevron-double-down'}}</v-icon>
+              <v-icon class='invert-if-dark'>{{showExtraItems ? 'mdi-chevron-double-up' : 'mdi-chevron-double-down'}}</v-icon>
               <span v-if="viewer.config === 'mosviz'">
                 {{showExtraItems ? 'hide data not in viewer (incl other MOS rows)' : 'show data not in viewer (incl other MOS rows)'}}
               </span>
