@@ -25,7 +25,17 @@ class JdavizViewerMixin:
 
     def _subscribe_to_layers_update(self):
         # subscribe to new layers
+        self._expected_subset_layers = []
         self.state.add_callback('layers', self._on_layers_update)
+
+    def _get_layer(self, label):
+        for layer in self.state.layers:
+            if layer.layer.label == label:
+                return layer
+
+    def _expected_subset_layer_default(self, layer):
+        # default visibility based on the visibility of the "parent" data layer
+        layer.visible = self._get_layer(layer.layer.data.label).visible
 
     def _on_layers_update(self, layers=None):
         selected_data_items = self.jdaviz_app._viewer_item_by_id(self.reference_id)['selected_data_items']  # noqa
@@ -44,6 +54,24 @@ class JdavizViewerMixin:
                 selected_data_items[data_id] = 'mixed'
             else:
                 selected_data_items[data_id] = 'hidden'
+
+        if not len(self._expected_subset_layers):
+            return
+        # we'll make a deepcopy so that we can remove entries from the self._expected_subset_layers
+        # to avoid recursion, but also handle multiple layers for the same subset
+        expected_subset_layers = self._expected_subset_layers[:]
+        for layer in self.state.layers:
+            if layer.layer.label in expected_subset_layers:
+                if layer.layer.label in self._expected_subset_layers:
+                    self._expected_subset_layers.remove(layer.layer.label)
+                self._expected_subset_layer_default(layer)
+
+    def _on_subset_create(self, msg):
+        # NOTE: the subscription to this method is handled in ConfigHelper
+        # we don't have access to the actual subset yet to tell if its spectral or spatial, so
+        # we'll store the name of this new subset and change the default linewidth when the
+        # layers are added
+        self._expected_subset_layers.append(msg.subset.label)
 
     def _initialize_toolbar_nested(self, default_tool_priority=[]):
         # would be nice to call this from __init__,
