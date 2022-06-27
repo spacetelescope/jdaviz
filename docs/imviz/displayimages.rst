@@ -17,12 +17,14 @@ Right-click will open a drop-down with access to different options for each butt
 Selecting Data Set
 ==================
 
-If you have already imported data into Imviz, you can select and deselect data within a viewer.
+.. _imviz-selecting-data:
 
-.. seealso::
-
-    :ref:`Selecting Data Set <cubeviz-selecting-data>`
-        Documentation on selecting data sets in the Jdaviz viewers.
+Data can be selected and de-selected in each viewer's data menu, opened by clicking the
+|icon-viewer-data-select| button in the top left of the viewer. Here, you can click a
+checkbox next to the listed data to make the data visible (checked) or invisible (unchecked).
+The datasets available in each viewer are filtered
+to include only compatible data, so you may not see all loaded data in the menu for
+every viewer. For example, 1D spectra will not be available in the image viewers.
 
 .. _imviz_cursor_info:
 
@@ -61,7 +63,7 @@ and left-click on the second option down to select it.
     :ref:`Pan/Zoom <cubeviz-pan-zoom>`
         Documentation on using Pan/Zoom in the Jdaviz viewers.
 
-.. _imviz_pan_zoom:
+.. _imviz-pan-zoom:
 
 Pan/Zoom and Linked Pan/Zoom
 ============================
@@ -78,10 +80,8 @@ and left-click on the second option down to select it.
 When in either of these modes, clicking on the image will recenter the image to the
 location under cursor.
 
-.. seealso::
-
-    :ref:`Pan/Zoom <cubeviz-pan-zoom>`
-        Documentation on using Pan/Zoom in the Jdaviz viewers.
+From the API
+^^^^^^^^^^^^
 
 From the API, you can programmatically zoom in and out. Zoom level:
 
@@ -107,33 +107,65 @@ specific analysis functions in the plugin toolbar, for example in the
 :ref:`aper-phot-simple` plugin.
 Users can create spatial regions either in Imviz or the Jupyter notebook.
 
-.. seealso::
+Regions can be created by first clicking the |icon-region-circ| icon (to draw a circular region),
+then clicking and dragging (using the mouse) until the
+desired region is covered by a colored shape, after which you release the mouse button.
+If you want to draw other shapes, right click on the icon to see a dropdown of supported shapes
+and left click on it to choose the shape, then draw as mentioned above.
 
-    :ref:`Defining Spatial Regions <spatial-regions>`
-        Documentation on defining spatial regions in an image viewer.
+Once you have completed the action of clicking and dragging, there is an opportunity to reposition
+the region of interest by clicking on it and moving the region to a different location in the image viewer.
+If you are satisfied with the positioning of your region of interest, simply click another part of the
+viewer to lock it in place.
+
+There are other options available for region of interest. At the top of the User Interface,
+there is a section that says either "+ No selection (create new)" or "Subset n" where n is an integer
+that tells you which Subset is currently selected. To the right of this area, are red circles that allow
+you to change the method of region selection. The options are:
+
+* ``replace``: will remove the previously created selection and place the newly created subset.
+* ``add``: allows you to create another subset that extends the existing subset.
+* ``and``: only leaves behind the overlapping region between the existing subset and any additional subsets.
+* ``xor``: only leaves behind the non-overlapping region between the existing subset and any additional subsets.
+* ``remove``: will de-select any parts of the existing subset that overlaps with any additional subsets.
+
+You can use these options to further adjust the region of interest and adapt it to your use case.
 
 .. seealso::
 
     :ref:`Importing Spatial Regions <imviz-import-regions-api>`
-        Importing spatial regions from within the Jupyter notebook.
+        Importing regions from within the Jupyter notebook.
 
-You can :ref:`import regions from the AP I<imviz-import-regions-api>`.
-You can also retrieve the results as `regions.Regions` as follows, assuming
-``imviz`` is the instance of your Imviz application::
+.. seealso::
 
-    regions = imviz.get_interactive_regions()
-    regions
+    :ref:`Exporting Spatial Regions <imviz_export_regions>`
+        Exporting regions from within the Jupyter notebook.
+
+
+
+You can :ref:`import <imviz-import-regions-api>` and :ref:`export <imviz_export_regions>` regions from the API.
+
+.. seealso::
+
+    `Defining subsets using Glue <http://docs.glueviz.org/en/stable/getting_started/#defining-subsets>`_
+        Glueviz documentation on defining and refining subsets. Slightly different UI but same approach.
+
+There are options available in the :guilabel:`Layer` tab under the |icon-settings-sliders| icon
+to make subsets visible or invisible, to change their color, and to change their opacity.
 
 Blinking
 ========
 
 Blinking is an Imviz-specific functionality that allows a user to quickly switch
-between viewing two or more images, as long as they are linked (see :ref:`imviz_pan_zoom` for
+between viewing two or more images, as long as they are linked (see :ref:`imviz-pan-zoom` for
 more on linking behavior). This can be done by selecting the |icon-blink| icon and
 then clicking on the image. You can also blink by pressing the "b" key on your
 keyboard while moused over the image.
 
-From within the Jupyter notebook::
+From the API
+^^^^^^^^^^^^
+
+From the API within the Jupyter notebook::
 
     viewer = imviz.default_viewer
     viewer.blink_once()
@@ -141,7 +173,7 @@ From within the Jupyter notebook::
 Contrast/Bias
 =============
 
-In addition to changing :ref:`contrast` and :ref:`bias` in the :ref:`display-settings`,
+In addition to changing :ref:`contrast` and :ref:`bias` in the :ref:`imviz-display-settings`,
 Imviz has a |icon-white-to-black| button under the |icon-blink| menu that can also
 adjust those values.
 
@@ -151,15 +183,100 @@ and bias. Moving along the X-axis will change the bias and moving along the Y-ax
 contrast. If you would like to reset to the default contrast and bias settings, you can
 double-click on the display while the mode is active.
 
+.. _imviz-display-settings:
+
 Display Settings
 ================
 
-.. seealso::
+To access all of the different display settings for an image viewer, , click the
+|icon-settings-sliders| icon in the viewer toolbar or open the :ref:`Plot Options <cubeviz-plot-options>` plugin.
+Changing the display settings DOES NOT change the underlying data, only the
+visualization of that data.
 
-    :ref:`Display Settings <display-settings>`
-        Documentation on various display settings in the jdaviz viewers.
+Layer
+-----
 
-From within the Jupyter notebook::
+This option allows you to change which layer you are changing the settings for.
+
+Attribute
+---------
+
+This shows which extension of the data is being displayed in the current viewer.
+
+Contour
+-------
+
+This option selects whether to show or hide contours.
+
+The :guilabel:`Contours` of a second image can also be plotted over a first image or cube. Add
+the second image as data in the data drop-down tab, and select both images. To visualize the contours
+of the second image, go to the :guilabel:`Layer` tab, select the layer to be contour-mapped, and
+set its :guilabel:`Contour` to be on and its :guilabel:`Bitmap` to be off. The contours of
+the second image will appear superimposed on the first image. In the second figure below, we
+show the contours of an image generated using the Collapse plugin plotted over leftmost cube
+viewer.  If you overplot them on a cube, the contours will remain unchanged as you scrub through
+the cube.
+
+Bitmap
+------
+
+This option selects whether to show or hide the bitmap (image) in the viewer.
+
+Opacity
+^^^^^^^
+
+Change the translucence of the image.
+
+.. _contrast:
+
+Contrast
+^^^^^^^^
+
+Change the luminance of the color in the image.
+
+.. _bias:
+
+Bias
+^^^^
+
+Set a constant to subtract from every point in the data array before
+applying the conversion between data value and displayed pixel saturation.
+The :guilabel:`bias` slider center position is 0 bias, such that a user can apply negative
+bias values by sliding it left.
+
+Stretch
+^^^^^^^
+
+Change the equation that is used to convert data values between
+:guilabel:`min` and :guilabel:`max` to the 0 to 1 scale of pixel saturation on the displayed
+image.
+
+Percentile
+^^^^^^^^^^
+
+Can be used to set the :guilabel:`min` and :guilabel:`max` values based on percentiles of the data.
+
+Min
+"""
+
+If the percentile is "custom", then the data value corresponding to the
+minimum of the colormap scale (e.g. black in grayscale) can be set.
+
+Max
+"""
+
+If the percentile is "custom", then the data value corresponding to the
+maximum of the colormap scale (e.g. white in grayscale) can be set.
+
+Colormap
+^^^^^^^^
+
+The spectrum of colors used to visualize data can be changed using this drop down.
+
+From the API
+^^^^^^^^^^^^
+
+From the API within the Jupyter notebook::
 
     viewer = imviz.default_viewer
     viewer.cuts = '95%'
@@ -194,9 +311,12 @@ Adding New Viewers
 In the toolbar towards the top of the UI, there is a |icon-plus| icon
 that when clicked will add new viewers to the application. You can then select from the data
 that has been loaded into the application to be visualized in these additional viewers.
-You can then utilize some of the Imviz-specific features, like :ref:`imviz_pan_zoom`.
+You can then utilize some of the Imviz-specific features, like :ref:`imviz-pan-zoom`.
 
-You can also open a new viewer from the API::
+From the API
+^^^^^^^^^^^^
+
+From the API within the Jupyter notebook::
 
     viewer_2_name = 'Window 2'
     viewer_2 = imviz.create_image_viewer(viewer_name=viewer_2_name)

@@ -11,13 +11,26 @@ Cubeviz
 .. image:: ../img/landing_gifs/Cubeviz_landing.gif
     :alt: Introductory video tour of the Cubeviz configuration and its features
 
-Cubeviz is a visualization and analysis toolbox for data cubes from integral field units (IFUs). It is built as part of the `Glue visualization <https://glueviz.org>`_ tool. Cubeviz is designed to work with data cubes from the NIRSpec and MIRI instruments on JWST, and will work with IFU data cubes. It uses the `specutils <https://specutils.readthedocs.io/en/latest/>`_ package from `Astropy <https://www.astropy.org>`_ .
+Cubeviz is a visualization and analysis toolbox for data cubes from
+integral field units (IFUs). It is built as part of the
+`Glue visualization <https://glueviz.org>`_ tool. Cubeviz is designed to work
+with data cubes from the NIRSpec and MIRI instruments on JWST, and will work
+with IFU data cubes. It uses
+the `specutils <https://specutils.readthedocs.io/en/latest/>`_ package
+from `Astropy <https://www.astropy.org>`_ .
 
-The core functionality of Cubeviz currently includes the ability to:
+Cubeviz is a tool for visualization and quick-look analysis of 3D data cubes,
+primarily from integral field units (IFUs). It incorporates visualization tools
+with analysis capabilities, such as Astropy regions and :ref:`specutils` packages.
+Users can interact with their data from within the tool.
+Cubeviz allows spectra of regions within the cube to be easily plotted and examined,
+offering all the same capabilities as :ref:`specviz`.
 
-* view the wavelength slices (RA, DEC) in a data cube,
+In addition, Cubeviz also allows users to interacting with their cube to:
 
-* view flux, error, and data quality slices simultaneously,
+* view the wavelength slices (RA, DEC),
+
+* view flux, error, and data quality cubes simultaneously,
 
 * view spectra from selected spatial (RA, DEC) regions,
 
@@ -39,34 +52,6 @@ The core functionality of Cubeviz currently includes the ability to:
 
 * fit models to every spaxel
 
-Future functionality will include the ability to:
-
-* save and restore a session,
-
-
-* create RGB images from regions collapsed in wavelength space (i.e., linemaps),
-
-* output python scripts for making figures,
-
-* output astropy commands,
-
-* match spatial resolution among selected data cubes,
-
-* bin data into constant signal-to-noise regions
-
-Quickstart
-----------
-
-To load a sample `SDSS MaNGA IFU data cube <https://stsci.box.com/shared/static/28a88k1qfipo4yxc4p4d40v4axtlal8y.fits>`_ into ``Cubeviz`` in the standalone app, run::
-
-    jdaviz cubeviz /path/to/manga-7495-12704-LOGCUBE.fits
-
-
-Or to load in a Jupyter notebook, see the :gh-notebook:`CubevizExample`.
-
-Using Cubeviz
--------------
-
 .. toctree::
   :maxdepth: 2
 
@@ -74,4 +59,5 @@ Using Cubeviz
   displaycubes
   displayspectra
   plugins
-  notebook
+  export_data
+  examples

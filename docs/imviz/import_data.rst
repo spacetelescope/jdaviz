@@ -42,7 +42,7 @@ tab of each viewer's options menu as described in :ref:`cubeviz-selecting-data`.
 
 .. _imviz-import-api:
 
-Importing FITS via the API
+Importing data via the API
 --------------------------
 
 Alternatively, if you are working in a coding environment like a Jupyter
@@ -51,6 +51,9 @@ users can load data into the application through code using the :meth:`~jdaviz.c
 method, which takes as input either the name of a local file, an
 :class:`~astropy.nddata.NDData`, :class:`~astropy.io.fits.HDUList`,
 or :class:`~astropy.io.fits.ImageHDU` object.
+
+FITS Files
+^^^^^^^^^^
 
 The example below loads the first science extension of the given FITS file into Imviz::
 
@@ -99,7 +102,7 @@ Importing catalogs via the API
 If you have a catalog file supported by `astropy.table.Table`, you
 can load the catalog into Imviz and add markers to Imviz viewers to show
 positions from the catalog. These markers are different than Imviz
-:ref:`spatial regions <spatial-regions>` as they are only meant to mark catalog positions.
+:ref:`spatial regions <imviz_defining_spatial_regions>` as they are only meant to mark catalog positions.
 Loading markers can be done with the following commands::
 
     viewer.marker = {'color': 'green', 'alpha': 0.8, 'markersize': 10, 'fill': False}

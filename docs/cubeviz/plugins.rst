@@ -2,30 +2,30 @@
 Data Analysis Plugins
 *********************
 
-The Cubeviz data analysis plugins include operations on
-`~specutils.Spectrum1D` one dimensional datasets.
+The Cubeviz data analysis plugins are meant to aid quick-look analysis
+of 2D image data. All plugins are accessed via the :guilabel:`plugin`
+icon in the upper right corner of the Cubeviz application.
+
+.. image:: ./img/cubevizplugins.jpg
+    :alt: Cubeviz Plugins
+
+The data analysis plugins are meant to aid quick-look analysis
+of both 3D and 1D spectroscopic data. In many cases, functions can be applied to
+`~specutils.Spectrum1D` objects, which include both 3D and 1D datasets.
 Plugins that are specific to 1D spectra are described in
-more detail under :ref:`Specviz: Data Analysis Plugins <specviz-plugins>`.  All plugins
-are accessed via the :guilabel:`plugin` icon in the upper right corner
-of the Cubeviz application.
+more detail under :ref:`Specviz: Data Analysis Plugins <specviz-plugins>`.
+In many cases, these capabilities can be further applied on a per spaxel basis
+within a cube.
 
 .. _cubeviz-metadata-viewer:
 
 Metadata Viewer
 ===============
 
-This plugin allows viewing of any metadata associated with the selected data.
+.. seealso::
 
-If the data is loaded from multi-extension FITS that contains a primary header,
-you will also see a :guilabel:`Show primary header` toggle, when enabled, would
-display just the primary header metadata.
-
-.. _cubeviz-export-plot:
-
-Export Plot
-===========
-
-This plugin allows exporting the plot in a given viewer to various image formats.
+    :ref:`Metadata Viewer <imviz_metadata-viewer>`
+        Documentation on using the metadata viewer.
 
 .. _cubeviz-plot-options:
 
@@ -34,8 +34,15 @@ Plot Options
 
 This plugin gives access to per-viewer and per-layer plotting options.
 
-For more information on Specviz specific options, please see
-:ref:`Specviz: Plot options <specviz-plot-options>`.
+.. seealso::
+
+    :ref:`Image Plot Options <imviz-display-settings>`
+        Documentation on Imviz display settings in the Jdaviz viewers.
+
+.. seealso::
+
+    :ref:`Spectral Plot Options <specviz-plot-settings>`
+        Documentation on Specviz display settings in the Jdaviz viewers.
 
 .. _cubeviz-subset-plugin:
 
@@ -44,8 +51,8 @@ Subset Tools
 
 .. seealso::
 
-    :ref:`Subset Tools <specviz-subset-plugin>`
-        Specviz documentation on the Subset Tools plugin.
+    :ref:`Subset Tools <imviz-subset-plugin>`
+        Imviz documentation describing the concept of subsets in Jdaviz.
 
 .. _slice:
 
@@ -55,8 +62,6 @@ Slice
 The slice plugin provides the ability to select the slice
 of the cube currently visible in the image viewers, with the
 corresponding wavelength highlighted in the spectrum viewer.
-
-.. image:: img/slice_plugin.png
 
 The slider can be grabbed to scrub through the cube.  To choose
 a specific slice, enter a slice number (integer) or an approximate
@@ -73,14 +78,12 @@ Gaussian Smooth
 ===============
 
 Gaussian smoothing can be applied either to the spectral
-or spatial dimensions of a cube.  Spectral smoothing is
-described in more detail under :ref:`Specviz: Data Analysis
-Plugins: Gaussian Smoothing <gaussian-smooth>`.
+or spatial dimensions of a cube.
 
 .. seealso::
 
     :ref:`Gaussian Smooth <gaussian-smooth>`
-        Specviz documentation on gaussian smoothing of 1D spectra.
+        Specviz documentation on gaussian smoothing in the spectral dimension of 1D spectra.
 
 .. _collapse:
 
@@ -114,58 +117,20 @@ the above figure.
 Model Fitting
 =============
 
-The Model Fitting plugin is described in more detail by the
-:ref:`Specviz Model Fitting <specviz-model-fitting>` documentation.
-For Cubeviz, there is an additional option to fit the model over each individual spaxel by
-enabling the :guilabel:`Cube Fit` toggle before pressing :guilabel:`Fit Model`.  
-The fit parameter planes are saved in a data structure
-that can be accessed in a jupyter notebook. The best model fit (evaluated over the cube) is
-also saved to a dataset with the label specified in the :guilabel:`Output Data Label` field.
-
 .. seealso::
 
     :ref:`Model Fitting <specviz-model-fitting>`
         Specviz documentation on fitting spectral models.
 
-As mentioned in the :ref:`specviz-model-fitting` section for Specviz, models can be accessed
-in a Jupyter notebook by using the following code::
+For Cubeviz, there is an additional option to fit the model over each individual spaxel by
+enabling the :guilabel:`Cube Fit` toggle before pressing :guilabel:`Fit Model`.  
+The best-fit parameters for each spaxel are stored in planes and saved in a data structure.
+The resulting model itself is saved with the label specified in the :guilabel:`Output Data Label` field.
 
-    cubeviz.get_models(model_label="Model", x=10)
+.. seealso::
 
-Where the ``model_label`` keyword identifies which model should be returned and the ``x`` and
-``y`` keywords identify specifically which spaxel fits are to be returned, for models
-applied to every spaxel using the :guilabel:`Apply to Cube` button. Leaving ``x`` or
-``y`` as `None` will mean that the models fit to every spaxel across that axis will be
-returned. Model parameters can also be accessed using the following code::
-
-    cubeviz.get_model_parameters(model_label="Model", y=52)
-
-With the parameters following the same pattern as the
-:meth:`~jdaviz.core.helpers.ConfigHelper.get_models` method.
-
-Contours
-========
-.. image:: img/contours_activated.png
-
-Contours of an image can be generated and overplotted on that image.  Go
-to the :guilabel:`Layer` tab in the image viewer settings window under the 
-|icon-settings-sliders| icon. To activate :guilabel:`Contours`,
-click on the :guilabel:`Eye with a cross` icon and choose either the :guilabel:`Linear` icon
-for auto-contours or the :guilabel:`Custom` icon to set your own levels. The specified levels
-will appear as labeled, color-coded contours in the image viewer, on top of the image.
-
-The :guilabel:`Contours` of a second image can also be plotted over a first image or cube. Add
-the second image as data in the data drop-down tab, and select both images. To visualize the contours
-of the second image, go to the :guilabel:`Layer` tab, select the layer to be contour-mapped, and
-set its :guilabel:`Contour` to be on and its :guilabel:`Bitmap` to be off. The contours of
-the second image will appear superimposed on the first image. In the second figure below, we
-show the contours of an image generated using the Collapse plugin plotted over leftmost cube
-viewer.  If you overplot them on a cube, the contours will remain unchanged as you scrub through
-the cube.
-
-.. image:: img/data_tab_with_2_data.png
-.. image:: img/second_layer_with_contours.png
-
+    :ref:`Export Models <cubeviz-export-model>`
+        Documentation on exporting model fitting results.
 
 Unit Conversion
 ===============
@@ -236,7 +201,7 @@ converted to velocity units before running the plugin if those units are
 desired for the output moment maps.
 
 Line or Continuum Maps
-======================
+----------------------
 
 .. image:: ../img/moment0_line_map.png
 
@@ -277,3 +242,10 @@ your data cube. The resultant model parameter cube can be retrieved
 in a notebook. The line or continuum flux in each spatial pixel
 can then be computed by integrating over the line or continuum
 spectral region of interest.
+
+.. _cubeviz-export-plot:
+
+Export Plot
+===========
+
+This plugin allows exporting the plot in a given viewer to various image formats.

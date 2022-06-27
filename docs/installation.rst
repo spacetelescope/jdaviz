@@ -4,36 +4,46 @@
 Installation
 ============
 
-The following details how to install the ``jdaviz`` Python package.
+.. note::
 
-If you encounter problems while following these installation instructions,
-please consult :ref:`known installation issues <known_issues_installation>`.
-
-You may want to consider installing ``jdaviz`` in a new virtual or conda environment
-to avoid version conflicts with other packages you may have installed.
+    ``jdaviz`` is undergoing constant development. We encourage users to always update
+    to the latest version. In general, it is good practice to install the development
+    version following the instructions below as full released versions may lag behind.
 
 User Installation
 -----------------
 
+Create Your Local Environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 Some of Jdaviz's dependencies require non-Python packages to work
 (particularly the front-end stack that is part of the Jupyter ecosystem).
 We recommend using `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`_
-to easily manage a compatible Python environment for Jdaviz; it should work
+to easily manage a compatible Python environment for ``jdaviz``; it should work
 with most modern shells, except CSH/TCSH.
 
-Once it is installed, we recommend you create a new environment rather than
-installing everything into the ``base`` environment, for example::
+You may want to consider installing ``jdaviz`` in a new virtual or conda environment
+to avoid version conflicts with other packages you may have installed, for example::
 
     conda create -n jdaviz-env python=3.9
     conda activate jdaviz-env
 
-Installing the released version of Jdaviz can be done using ``pip``::
+Pip Install
+^^^^^^^^^^^
+
+As noted above, we typically recommend installing the latest development version::
+
+    pip install git+https://github.com/spacetelescope/jdaviz --upgrade
+
+A normal install will also work by installing the latest release version::
 
     pip install jdaviz --upgrade
 
-or if you want the latest development version, you can install via GitHub::
+Common Issues
+^^^^^^^^^^^^^
 
-    pip install git+https://github.com/spacetelescope/jdaviz --upgrade
+If you encounter problems while following these installation instructions,
+please consult :ref:`known installation issues <known_issues_installation>`.
 
 Note that ``jdaviz`` requires Python 3.8 or newer. If your ``pip`` corresponds to an older version of
 Python, it will raise an error that it cannot find a valid package.
@@ -97,4 +107,3 @@ of a notebook::
     from jdaviz import enable_hot_reloading
     enable_hot_reloading()
 
-See :ref:`quickstart` to learn how to run ``jdaviz``.
