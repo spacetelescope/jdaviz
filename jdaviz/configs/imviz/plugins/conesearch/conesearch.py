@@ -31,8 +31,17 @@ class ConeSearch(PluginTemplateMixin, ViewerSelectMixin):
         y_center = center_point[1]
         skycoord_center = curr_viewer.state.reference_data.coords.pixel_to_world(x_center, y_center)
 
+        # obtains the viewer's zoom limits (just one) based on the visible layer
+        zoom_limits = self.viewer.selected_obj._get_zoom_limits(data)
+        zoom_x_limit = zoom_limits[0, 0]
+        zoom_y_limit = zoom_limits[0, 1]
+        zoom_coordinate = curr_viewer.state.reference_data.coords.pixel_to_world(zoom_x_limit, zoom_y_limit)
+
+        # radius for querying the region is based on the distance between the zoom limit and the center point
+        zoom_radius = skycoord_center.separation(zoom_coordinate)
+
         # queries the region (based on the provided center point and radius) to find all the sources in that region
-        query_region_result = SDSS.query_region(skycoord_center, radius='0.1 deg', data_release=17)
+        query_region_result = SDSS.query_region(skycoord_center, radius=zoom_radius, data_release=17)
 
         # a table is created storing the 'ra' and 'dec' plottable points of each source found
         skycoord_table = SkyCoord(query_region_result['ra'], query_region_result['dec'], unit='deg')
