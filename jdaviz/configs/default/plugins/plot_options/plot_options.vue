@@ -41,12 +41,12 @@
     </div>
 
     <j-plugin-section-header v-if="layer_selected.length">Layer Visibility</j-plugin-section-header>
-    <glue-state-sync-wrapper :sync="line_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('line_visible')">
+    <glue-state-sync-wrapper :sync="layer_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('layer_visible')">
       <span>
-        <v-btn icon @click.stop="line_visible_value = !line_visible_value">
-          <v-icon>mdi-eye{{ line_visible_value ? '' : '-off' }}</v-icon>
+        <v-btn icon @click.stop="layer_visible_value = !layer_visible_value">
+          <v-icon>mdi-eye{{ layer_visible_value ? '' : '-off' }}</v-icon>
         </v-btn>
-        Show line
+        Show layer
       </span>
     </glue-state-sync-wrapper>
 
@@ -59,23 +59,6 @@
       </span>
     </glue-state-sync-wrapper>
 
-    <glue-state-sync-wrapper :sync="bitmap_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('bitmap_visible')">
-      <span>
-        <v-btn icon @click.stop="bitmap_visible_value = !bitmap_visible_value">
-          <v-icon>mdi-eye{{ bitmap_visible_value ? '' : '-off' }}</v-icon>
-        </v-btn>
-        Show image
-      </span>
-    </glue-state-sync-wrapper>
-
-    <glue-state-sync-wrapper :sync="contour_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('contour_visible')">
-      <span>
-        <v-btn icon @click.stop="contour_visible_value = !contour_visible_value">
-          <v-icon>mdi-eye{{ contour_visible_value ? '' : '-off' }}</v-icon>
-        </v-btn>
-        Show contours
-      </span>
-    </glue-state-sync-wrapper>
 
     <!-- PROFILE -->
     <j-plugin-section-header v-if="line_width_sync.in_subscribed_states || collapse_func_sync.in_subscribed_states">Profile Line</j-plugin-section-header>
@@ -155,7 +138,16 @@
     </glue-state-sync-wrapper>
 
     <!-- IMAGE:BITMAP -->
-    <j-plugin-section-header v-if="bitmap_visible_sync.in_subscribed_states && bitmap_visible_value">Image</j-plugin-section-header>
+    <j-plugin-section-header v-if="bitmap_visible_sync.in_subscribed_states">Image</j-plugin-section-header>
+    <glue-state-sync-wrapper :sync="bitmap_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('bitmap_visible')">
+      <span>
+        <v-btn icon @click.stop="bitmap_visible_value = !bitmap_visible_value">
+          <v-icon>mdi-eye{{ bitmap_visible_value ? '' : '-off' }}</v-icon>
+        </v-btn>
+        Show image
+      </span>
+    </glue-state-sync-wrapper>
+
     <div v-if="bitmap_visible_sync.in_subscribed_states && bitmap_visible_value">
       <glue-state-sync-wrapper :sync="color_mode_sync" :multiselect="multiselect" @unmix-state="unmix_state('color_mode')">
         <v-select
@@ -217,7 +209,16 @@
     </div>
 
     <!-- IMAGE:CONTOUR -->
-    <j-plugin-section-header v-if="contour_visible_sync.in_subscribed_states && contour_visible_value">Contours</j-plugin-section-header>
+    <j-plugin-section-header v-if="contour_visible_sync.in_subscribed_states">Contours</j-plugin-section-header>
+    <glue-state-sync-wrapper :sync="contour_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('contour_visible')">
+      <span>
+        <v-btn icon @click.stop="contour_visible_value = !contour_visible_value">
+          <v-icon>mdi-eye{{ contour_visible_value ? '' : '-off' }}</v-icon>
+        </v-btn>
+        Show contours
+      </span>
+    </glue-state-sync-wrapper>
+
     <div v-if="contour_visible_sync.in_subscribed_states && contour_visible_value">
       <glue-state-sync-wrapper :sync="contour_mode_sync" :multiselect="multiselect" @unmix-state="unmix_state('contour_mode')">
         <v-btn-toggle dense v-model="contour_mode_value" style="margin-right: 8px; margin-top: 8px">
