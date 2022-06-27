@@ -5,13 +5,14 @@ import uuid
 import warnings
 from inspect import isclass
 
+from ipywidgets import widget_serialization
 import ipyvue
 
 from astropy.nddata import CCDData
 from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
 from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
-from traitlets import Dict, Bool, Unicode
+from traitlets import Dict, Bool, Unicode, Any
 from specutils import Spectrum1D, SpectralRegion
 import matplotlib.cm as cm
 import numpy as np
@@ -41,6 +42,7 @@ from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registr
                                     data_parser_registry)
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import SnackbarQueue
+from ipypopout import PopoutButton
 
 __all__ = ['Application']
 
@@ -172,11 +174,13 @@ class Application(VuetifyTemplate, HubListener):
     loading = Bool(False).tag(sync=True)
     config = Unicode("").tag(sync=True)
     vdocs = Unicode("").tag(sync=True)
+    popout_button = Any().tag(sync=True, **widget_serialization)
 
     def __init__(self, configuration=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._verbosity = 'warning'
         self._history_verbosity = 'info'
+        self.popout_button = PopoutButton(self)
 
         # Generate a state object for this application to maintain the state of
         #  the user interface.

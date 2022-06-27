@@ -3,6 +3,7 @@
 
 New Features
 ------------
+- The app can be opened in a new window by clicking a button in the top right-hand corner. [#977]
 
 - Snackbar queue priority and history access. [#1352]
 
