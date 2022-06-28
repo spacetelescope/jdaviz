@@ -25,7 +25,7 @@ tray:
   - imviz-compass
   - imviz-line-profile-xy
   - imviz-aper-phot-simple
-  - imviz-conesearch
+  - imviz-catalogs
   - g-export-plot
 viewer_area:
   - container: col

@@ -6,17 +6,17 @@ from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin
 from jdaviz.configs.imviz.helper import get_top_layer_index
 
-__all__ = ['ConeSearch']
+__all__ = ['Catalogs']
 
 
-@tray_registry('imviz-conesearch', label="Imviz ConeSearch")
-class ConeSearch(PluginTemplateMixin, ViewerSelectMixin):
-    template_file = __file__, "conesearch.vue"
+@tray_registry('imviz-catalogs', label="Imviz Catalogs")
+class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
+    template_file = __file__, "catalogs.vue"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def vue_do_conesearch(self, *args, **kwargs):
+    def vue_do_catalogs(self, *args, **kwargs):
         # current viewer object
         curr_viewer = self.viewer.selected_obj
 
