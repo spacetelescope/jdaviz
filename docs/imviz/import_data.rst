@@ -110,8 +110,9 @@ Loading markers can be done with the following commands::
     viewer.add_markers(coord_i2d, use_skycoord=True, marker_name='my_markers')
 
 If you have a large catalog, you might want to filter your table to the
-marks of interest before adding them to Imviz. For instance, if your image
-has FITS WCS, you could use `astropy.wcs.WCS.footprint_contains` if you
+marks of interest before adding them to Imviz, in order to avoid performance
+issues associated with adding large numbers of markers. For instance, if your 
+image has FITS WCS, you could use `astropy.wcs.WCS.footprint_contains` if you
 only want the marks within a footprint. Alternately, you could filter by
 relevant columns in your catalogs, such as brightness, distance, etc.
 
