@@ -6,6 +6,7 @@ import bqplot
 import numpy as np
 from astropy import units as u
 from astropy.modeling.fitting import LevMarLSQFitter
+from astropy.modeling import Parameter
 from astropy.modeling.models import Gaussian1D
 from astropy.table import QTable
 from astropy.time import Time
@@ -68,6 +69,7 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
         self._fig = bqplot.Figure()
         self.plot_types = ["Curve of Growth", "Radial Profile", "Radial Profile (Raw)"]
         self.current_plot_type = self.plot_types[0]
+        self._fitted_model_name = 'phot_radial_profile'
 
     def reset_results(self):
         self.result_available = False
@@ -223,6 +225,11 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
         data = self._selected_data
         reg = self._selected_subset
 
+        # Reset last fitted model
+        fit_model = None
+        if self._fitted_model_name in self.app.fitted_models:
+            del self.app.fitted_models[self._fitted_model_name]
+
         try:
             comp = data.get_component(data.main_components[0])
             try:
@@ -373,7 +380,7 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
                         self.hub.broadcast(SnackbarMessage(
                             f"Radial profile fitting: {msg}", color='warning', sender=self))
                     y_fit = fit_model(x_data)
-                    self.app.fitted_models['phot_radial_profile'] = fit_model
+                    self.app.fitted_models[self._fitted_model_name] = fit_model
                     bqplot_fit = bqplot.Lines(x=x_data, y=y_fit, marker=None,
                                               scales={'x': line_x_sc, 'y': line_y_sc},
                                               colors='magenta', line_style='dashed')
@@ -410,6 +417,15 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
                                 f'{x:.4e} ({phot_table["aperture_sum_counts_err"][0]:.4e})'})
                 else:
                     tmp.append({'function': key, 'result': str(x)})
+            # Also display fit results
+            if fit_model is not None and isinstance(fit_model, Gaussian1D):
+                model_name = fit_model.__class__.__name__
+                for param in ('fwhm', 'mean', 'amplitude'):
+                    p_val = getattr(fit_model, param)
+                    if isinstance(p_val, Parameter):
+                        p_val = p_val.value
+                    tmp.append({'function': f'{model_name}_{param}',
+                                'result': f'{p_val:.4e}'})
             self.results = tmp
             self.result_available = True
             self.radial_plot = self._fig
