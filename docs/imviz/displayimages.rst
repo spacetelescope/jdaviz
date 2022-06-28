@@ -39,6 +39,24 @@ Home
 
 This button will reset your zoom and panning to display the entire image.
 
+.. _imviz_box_zoom:
+
+Box Zoom and Linked Box Zoom
+============================
+
+Linked Box Zoom is an Imviz-specific feature that allows the user to zoom
+images in multiple different viewers simultaneously, not unlike
+:ref:`imviz_pan_zoom`.
+
+Single-viewer Box Zoom is also available and is used in a similar way as in
+other Jdaviz tools. To access this option, right-click on the Linked Box Zoom button
+and left-click on the second option down to select it.
+
+.. seealso::
+
+    :ref:`Pan/Zoom <cubeviz-pan-zoom>`
+        Documentation on using Pan/Zoom in the Jdaviz viewers.
+
 .. _imviz_pan_zoom:
 
 Pan/Zoom and Linked Pan/Zoom
@@ -50,7 +68,8 @@ based on the way they are linked together. Images are linked by pixels on load t
 but you can re-link them via WCS using :ref:`imviz-link-control`.
 
 Single-viewer Pan/Zoom is also available and is used in a similar way as in 
-other Jdaviz tools.
+other Jdaviz tools. To access this option, right-click on the Linked Pan/Zoom button
+and left-click on the second option down to select it.
 
 When in either of these modes, clicking on the image will recenter the image to the
 location under cursor.
