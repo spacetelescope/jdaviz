@@ -3,14 +3,23 @@
     <v-row v-if="isDisabled()">
       <span> {{ getDisabledMsg() }}</span>
     </v-row>
-    <slot v-else>
-    </slot>
+    <div v-else>
+      <v-row>
+        <div style="width: calc(100% - 32px)">
+          <j-docs-link :link="link">{{ description }}</j-docs-link>
+        </div>
+        <div style="width: 32px">
+          <j-plugin-popout :popout_button="popout_button"></j-plugin-popout>
+        </div>
+      </v-row>
+      <slot></slot>
+    </div>
   </v-container>
 </template>
 
 <script>
 module.exports = {
-  props: ['disabled_msg'],
+  props: ['disabled_msg', 'description', 'link', 'popout_button'],
   methods: {
     isDisabled() {
       return this.getDisabledMsg().length > 0

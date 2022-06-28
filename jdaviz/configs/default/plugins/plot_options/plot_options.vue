@@ -1,8 +1,11 @@
 <template>
-  <j-tray-plugin>
+  <j-tray-plugin
+    description='Viewer and data/layer options.'
+    :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#plot-options'"
+    :popout_button="popout_button">
+
     <v-row>
-      <div style="width: calc(100% - 64px)">
-        <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#plot-options'">Viewer and data/layer options.</j-docs-link>
+      <div style="width: calc(100% - 32px)">
       </div>
       <div style="width: 32px">
         <j-tooltip tipid='plugin-plot-options-multiselect-toggle'>
@@ -14,9 +17,6 @@
             <img :src="multiselect ? icon_checktoradial : icon_radialtocheck" width="24" class="invert-if-dark"/>
           </v-btn>
         </j-tooltip>
-      </div>
-      <div style="width: 32px">
-        <j-plugin-popout :popout_button="popout_button"></j-plugin-popout>
       </div>
     </v-row>
 

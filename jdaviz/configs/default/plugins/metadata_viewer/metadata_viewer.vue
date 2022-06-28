@@ -1,13 +1,8 @@
 <template>
-  <j-tray-plugin>
-    <v-row>
-      <div style="width: calc(100% - 32px)">
-        <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#metadata-viewer'">View metadata.</j-docs-link>
-      </div>
-      <div style="width: 32px">
-        <j-plugin-popout :popout_button="popout_button"></j-plugin-popout>
-      </div>
-    </v-row>
+  <j-tray-plugin
+    description='View metadata.'
+    :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#metadata-viewer'"
+    :popout_button="popout_button">
 
     <!-- for specviz, we'll allow this to hide for a single entry, but since filters are being
          applied on other configs, we'll always show -->
