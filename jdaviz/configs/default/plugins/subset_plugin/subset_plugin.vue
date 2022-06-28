@@ -22,6 +22,22 @@
       </v-col>
     </v-row>
 
+    <v-row v-if="has_angle">
+      <v-col>
+        <v-text-field
+          ref="new_subset_angle"
+          label="New Angle"
+          v-model="new_subset_angle"
+          hint="New angle in degrees for subset."
+          persistent-hint
+        ></v-text-field>
+      </v-col>
+    </v-row>
+
+    <v-row v-if="has_angle" justify="end">
+      <v-btn color="primary" text @click="update_subset">Update</v-btn>
+    </v-row>
+
     <div v-if="show_region_info">
       <j-plugin-section-header>Subset Region Definition</j-plugin-section-header>
       </v-row>
