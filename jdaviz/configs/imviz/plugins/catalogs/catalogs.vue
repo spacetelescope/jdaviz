@@ -5,7 +5,7 @@
      </v-row>
 
      <v-row justify="end">
-       <v-btn color="primary" text @click="do_catalogs">Query Search</v-btn>
+       <v-btn color="primary" text @click="do_catalogs">Search</v-btn>
      </v-row>
 
    </j-tray-plugin>
