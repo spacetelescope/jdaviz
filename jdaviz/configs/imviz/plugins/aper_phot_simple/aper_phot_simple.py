@@ -446,8 +446,9 @@ def _radial_profile(radial_cutout, reg_bb, aperture, raw=False):
     radial_img = radial_cutout.compressed()  # data unit
 
     if raw:
-        x_arr = radial_r
-        y_arr = radial_img
+        i_arr = np.argsort(radial_r)
+        x_arr = radial_r[i_arr]
+        y_arr = radial_img[i_arr]
     else:
         # This algorithm is from the imexam package,
         # see licenses/IMEXAM_LICENSE.txt for more details
