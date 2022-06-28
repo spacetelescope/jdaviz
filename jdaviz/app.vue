@@ -110,7 +110,7 @@
                         {{ trayItem.label }}
                       </j-tooltip>
                     </v-expansion-panel-header>
-                    <v-expansion-panel-content style="margin-left: -12px; margin-right: -12px">
+                    <v-expansion-panel-content style="margin-left: -12px; margin-right: -12px;">
                       <jupyter-widget :widget="trayItem.widget"></jupyter-widget>
                     </v-expansion-panel-content>
                   </div>
@@ -303,6 +303,11 @@ div.output_wrapper {
   border-radius: 2px !important;
   border: 1px #003B4D solid !important;
   color: black !important;
+}
+
+.v-expansion-panel-content__wrap {
+  padding-left: 12px !important;
+  padding-right: 12px !important;
 }
 
 a:link {
