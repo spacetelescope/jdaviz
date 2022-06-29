@@ -184,6 +184,13 @@ results are displayed under the :guilabel:`CALCULATE` button.
 
     Radial profile (raw).
 
+If you opted to fit a `~astropy.modeling.functional_models.Gaussian1D`
+to the radial profile, the last fitted model parameters will be displayed
+under the radial profile plot. The model itself can be obtained by as follows.
+See :ref:`astropy:astropy-modeling` on how to manipulate the model::
+
+    my_gaussian1d = imviz.app.fitted_models['phot_radial_profile']
+
 You can also retrieve the photometry results as `~astropy.table.QTable` as follows,
 assuming ``imviz`` is the instance of your Imviz application::
 
@@ -259,12 +266,6 @@ The columns are as follow:
 
 Once you have the results in a table, you can further manipulated them as
 documented in :ref:`astropy:astropy-table`.
-
-If you opted to fit a `~astropy.modeling.functional_models.Gaussian1D`
-to the radial profile, the last fitted model can be obtained by as follows.
-See :ref:`astropy:astropy-modeling` on how to manipulate the model::
-
-    my_gaussian1d = imviz.app.fitted_models['phot_radial_profile']
 
 .. _imviz-export-plot:
 
