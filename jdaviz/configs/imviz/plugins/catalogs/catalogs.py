@@ -31,14 +31,18 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
         y_center = (curr_viewer.state.y_min + curr_viewer.state.y_max) * 0.5
         skycoord_center = curr_viewer.state.reference_data.coords.pixel_to_world(x_center, y_center)
 
-        # obtains the viewer's zoom limits (just one) based on the visible layer
-        zoom_limits = curr_viewer._get_zoom_limits(data)
-        zoom_x_limit = zoom_limits[0, 0]
-        zoom_y_limit = zoom_limits[0, 1]
-        zoom_coordinate = curr_viewer.state.reference_data.coords.pixel_to_world(zoom_x_limit, zoom_y_limit)
+        # obtains the viewer's zoom limits based on the visible layer
+        ny, nx = curr_viewer.state.reference_data.shape
+        zoom_x_min = max(0, curr_viewer.state.x_min)
+        zoom_x_max = min(nx, curr_viewer.state.x_max)
+        zoom_y_min = max(0, curr_viewer.state.y_min)
+        zoom_y_max = min(ny, curr_viewer.state.y_max)
+        zoom_coordinate = curr_viewer.state.reference_data.coords.pixel_to_world(
+            [zoom_x_min, zoom_x_min, zoom_x_max, zoom_x_max],
+            [zoom_y_min, zoom_y_max, zoom_y_max, zoom_y_min])
 
-        # radius for querying the region is based on the distance between the zoom limit and the center point
-        zoom_radius = skycoord_center.separation(zoom_coordinate)
+        # radius for querying the region is based on the distance between the longest zoom limits and the center point
+        zoom_radius = max(skycoord_center.separation(zoom_coordinate))
 
         # queries the region (based on the provided center point and radius) to find all the sources in that region
         query_region_result = SDSS.query_region(skycoord_center, radius=zoom_radius, data_release=17)
