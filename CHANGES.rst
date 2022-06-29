@@ -65,6 +65,8 @@ Specviz
 Bug Fixes
 ---------
 
+- Fixed HeI-HeII line list loading. [#1431]
+
 Cubeviz
 ^^^^^^^
 
