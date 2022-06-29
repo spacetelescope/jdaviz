@@ -288,8 +288,8 @@ class ConfigHelper(HubListener):
             Note this is functionally equivalent to displaying the cell
             ``self.app`` in the notebook.
 
-            "sidecar": Display the Jdaviz application in a separate JupyterLab window from the notebook, which
-            by default is a tab on the right side of the JupyterLab  interface.
+            "sidecar": Display the Jdaviz application in a separate JupyterLab window from the
+            notebook, which by default is a tab on the right side of the JupyterLab  interface.
 
                 Additional keywords not listed here are passed into the
                 ``sidecar.Sidecar`` constructor. See
@@ -316,7 +316,8 @@ class ConfigHelper(HubListener):
         Returns
         -------
         sidecar or None
-            The ``sidecar.Sidecar`` object used to create the tab or window, or None if no sidecar was created
+            The ``sidecar.Sidecar`` object used to create the tab or window or
+            None if no sidecar was created
 
         Notes
         -----
