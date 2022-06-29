@@ -121,7 +121,7 @@ module.exports = {
     },
     dataItemInViewer(item, returnExtraItems) {
       const inViewer = Object.keys(this.$props.viewer.selected_data_items).includes(item.id)
-      console.log(item.name+"  "+inViewer)
+      //console.log(item.name+"  "+inViewer)
       if (returnExtraItems) {
         return !inViewer
       }

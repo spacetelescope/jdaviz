@@ -33,7 +33,7 @@
       </div>
     </j-tooltip>
 
-    <div v-if="isSelected" style="position: absolute; right: 5px">
+    <div v-if="isSelected && isUnloadable" style="position: absolute; right: 5px">
       <j-tooltip tipid='viewer-data-disable'>
         <v-btn
           icon
@@ -110,6 +110,26 @@ module.exports = {
     },
     visibleState() {
       return this.$props.viewer.selected_data_items[this.$props.item.id] || 'hidden'
+    },
+    isUnloadable() {
+      if (this.$props.item.meta.Plugin !== undefined) {
+        return true
+      }
+      if (this.$props.viewer.config === 'cubeviz') {
+        // forbid unloading the original reference cube
+        // this logic might need to be generalized if supporting custom data labels
+        // per-cube or renaming data labels
+        if (this.$props.viewer.reference === 'flux-viewer') {
+          return this.$props.item.name.indexOf('[FLUX]') === -1
+        } else if (this.$props.viewer.reference === 'uncert-viewer') {
+          return this.$props.item.name.indexOf('[IVAR]') === -1
+        } else if (this.$props.viewer.reference === 'mask-viewer') {
+          return this.$props.item.name.indexOf('[MASK]') === -1
+        } else if (this.$props.viewer.reference === 'spectrum-viewer') {
+          return this.$props.item.name.indexOf('[FLUX]') === -1          
+        }
+      }
+      return true
     },
     isDeletable() {
       // only allow deleting products from plugins.  We might want to allow some non-plugin
