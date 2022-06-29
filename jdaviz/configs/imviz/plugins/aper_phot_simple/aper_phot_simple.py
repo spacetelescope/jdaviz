@@ -47,6 +47,7 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
     plot_available = Bool(False).tag(sync=True)
     radial_plot = Any('').tag(sync=True, **widget_serialization)
     fit_radial_profile = Bool(False).tag(sync=True)
+    fit_results = List().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -349,7 +350,7 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
                                               label=comp.units or 'Value')]
 
                 if self.current_plot_type == "Radial Profile":
-                    self._fig.title = 'Radial profile from Subset center'
+                    self._fig.title = 'Radial profile from source centroid'
                     x_data, y_data = _radial_profile(
                         phot_aperstats.data_cutout, phot_aperstats.bbox, phot_aperstats.centroid,
                         raw=False)
@@ -357,7 +358,7 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
                                                scales={'x': line_x_sc, 'y': line_y_sc},
                                                marker_size=32, colors='gray')
                 else:  # Radial Profile (Raw)
-                    self._fig.title = 'Raw radial profile from Subset center'
+                    self._fig.title = 'Raw radial profile from source centroid'
                     x_data, y_data = _radial_profile(
                         phot_aperstats.data_cutout, phot_aperstats.bbox, phot_aperstats.centroid,
                         raw=True)
@@ -419,16 +420,18 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
                                 f'{x:.4e} ({phot_table["aperture_sum_counts_err"][0]:.4e})'})
                 else:
                     tmp.append({'function': key, 'result': str(x)})
+
             # Also display fit results
+            fit_tmp = []
             if fit_model is not None and isinstance(fit_model, Gaussian1D):
-                model_name = fit_model.__class__.__name__
                 for param in ('fwhm', 'mean', 'amplitude'):
                     p_val = getattr(fit_model, param)
                     if isinstance(p_val, Parameter):
                         p_val = p_val.value
-                    tmp.append({'function': f'{model_name}_{param}',
-                                'result': f'{p_val:.4e}'})
+                    fit_tmp.append({'function': param, 'result': f'{p_val:.4e}'})
+
             self.results = tmp
+            self.fit_results = fit_tmp
             self.result_available = True
             self.radial_plot = self._fig
             self.bqplot_figs_resize = [self._fig]

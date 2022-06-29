@@ -133,8 +133,25 @@
       <jupyter-widget :widget="radial_plot" style="width: 100%; height: 480px" />
     </v-row>
 
+    <div v-if="plot_available && fit_radial_profile">
+      <j-plugin-section-header>Gaussian Fit Results</j-plugin-section-header>
+      <v-row no-gutters>
+        <v-col cols=6><U>Result</U></v-col>
+        <v-col cols=6><U>Value</U></v-col>
+      </v-row>
+      <v-row
+        v-for="item in fit_results"
+        :key="item.function"
+        no-gutters>
+        <v-col cols=6>
+          {{  item.function  }}
+        </v-col>
+        <v-col cols=6>{{ item.result }}</v-col>
+      </v-row>
+    </div>
+
     <div v-if="result_available">
-      <j-plugin-section-header>Results</j-plugin-section-header>
+      <j-plugin-section-header>Photometry Results</j-plugin-section-header>
       <v-row no-gutters>
         <v-col cols=6><U>Result</U></v-col>
         <v-col cols=6><U>Value</U></v-col>
