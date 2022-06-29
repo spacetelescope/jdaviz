@@ -110,7 +110,8 @@
           ></v-select>
         </v-row>
 
-        <v-row v-if="current_plot_type != 'Curve of Growth'">
+        <v-row v-if="current_plot_type.indexOf('Radial Profile') != -1">
+
           <v-switch
             label="Fit Gaussian"
             hint="Fit Gaussian1D to radial profile"
