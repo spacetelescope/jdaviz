@@ -259,13 +259,14 @@ def test_annulus_background(imviz_helper):
 class TestRadialProfile():
     def setup_class(self):
         data = np.ones((51, 51)) * u.nJy
-        self.aperture = EllipticalAperture((25, 25), 20, 15)
-        phot_aperstats = ApertureStats(data, self.aperture)
+        aperture = EllipticalAperture((25, 25), 20, 15)
+        phot_aperstats = ApertureStats(data, aperture)
         self.data_cutout = phot_aperstats.data_cutout
         self.bbox = phot_aperstats.bbox
+        self.centroid = phot_aperstats.centroid
 
     def test_profile_raw(self):
-        x_arr, y_arr = _radial_profile(self.data_cutout, self.bbox, self.aperture, raw=True)
+        x_arr, y_arr = _radial_profile(self.data_cutout, self.bbox, self.centroid, raw=True)
         # Too many data points to compare each one for X.
         assert x_arr.shape == y_arr.shape == (923, )
         assert_allclose(x_arr.min(), 0)
@@ -273,7 +274,7 @@ class TestRadialProfile():
         assert_allclose(y_arr, 1)
 
     def test_profile_imexam(self):
-        x_arr, y_arr = _radial_profile(self.data_cutout, self.bbox, self.aperture, raw=False)
+        x_arr, y_arr = _radial_profile(self.data_cutout, self.bbox, self.centroid, raw=False)
         assert_allclose(x_arr, range(20))
         assert_allclose(y_arr, 1)
 

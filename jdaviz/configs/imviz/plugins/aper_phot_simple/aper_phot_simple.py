@@ -351,14 +351,16 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
                 if self.current_plot_type == "Radial Profile":
                     self._fig.title = 'Radial profile from Subset center'
                     x_data, y_data = _radial_profile(
-                        phot_aperstats.data_cutout, phot_aperstats.bbox, aperture, raw=False)
+                        phot_aperstats.data_cutout, phot_aperstats.bbox, phot_aperstats.centroid,
+                        raw=False)
                     bqplot_line = bqplot.Lines(x=x_data, y=y_data, marker='circle',
                                                scales={'x': line_x_sc, 'y': line_y_sc},
                                                marker_size=32, colors='gray')
                 else:  # Radial Profile (Raw)
                     self._fig.title = 'Raw radial profile from Subset center'
                     x_data, y_data = _radial_profile(
-                        phot_aperstats.data_cutout, phot_aperstats.bbox, aperture, raw=True)
+                        phot_aperstats.data_cutout, phot_aperstats.bbox, phot_aperstats.centroid,
+                        raw=True)
                     bqplot_line = bqplot.Scatter(x=x_data, y=y_data, marker='circle',
                                                  scales={'x': line_x_sc, 'y': line_y_sc},
                                                  default_size=1, colors='gray')
@@ -436,7 +438,7 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
 # NOTE: These are hidden because the APIs are for internal use only
 # but we need them as a separate functions for unit testing.
 
-def _radial_profile(radial_cutout, reg_bb, aperture, raw=False):
+def _radial_profile(radial_cutout, reg_bb, centroid, raw=False):
     """Calculate radial profile.
 
     Parameters
@@ -447,8 +449,8 @@ def _radial_profile(radial_cutout, reg_bb, aperture, raw=False):
     reg_bb : obj
         Bounding box from ``ApertureStats``.
 
-    aperture : obj
-        ``photutils`` aperture object.
+    centroid : tuple of int
+        ``ApertureStats`` centroid or desired center in ``(x, y)``.
 
     raw : bool
         If `True`, returns raw data points for scatter plot.
@@ -456,8 +458,8 @@ def _radial_profile(radial_cutout, reg_bb, aperture, raw=False):
 
     """
     reg_ogrid = np.ogrid[reg_bb.iymin:reg_bb.iymax, reg_bb.ixmin:reg_bb.ixmax]
-    radial_dx = reg_ogrid[1] - aperture.positions[0]
-    radial_dy = reg_ogrid[0] - aperture.positions[1]
+    radial_dx = reg_ogrid[1] - centroid[0]
+    radial_dy = reg_ogrid[0] - centroid[1]
     radial_r = np.hypot(radial_dx, radial_dy)[~radial_cutout.mask].ravel()  # pix
     radial_img = radial_cutout.compressed()  # data unit
 
