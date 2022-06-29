@@ -1,12 +1,9 @@
 <template>
-  <j-tray-plugin>
-    <v-row>
-      <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+
-                          '/plugins.html#subset-tools'">
-        Tools for selecting and interacting with subsets.
-      </j-docs-link>
-    </v-row>
-  
+  <j-tray-plugin
+    description='Tools for selecting and interacting with subsets.'
+    :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#subset-tools'"
+    :popout_button="popout_button">
+
     <v-row align=center>
       <v-col cols=10 justify="left">
         <plugin-subset-select 

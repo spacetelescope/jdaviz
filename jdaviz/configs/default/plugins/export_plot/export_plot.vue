@@ -1,8 +1,8 @@
 <template>
-  <j-tray-plugin>
-    <v-row>
-      <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#export-plot'">Export viewer plot as an image.</j-docs-link>
-    </v-row>
+  <j-tray-plugin
+    description='Export viewer plot as an image.'
+    :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#export-plot'"
+    :popout_button="popout_button">
 
     <plugin-viewer-select
       :items="viewer_items"

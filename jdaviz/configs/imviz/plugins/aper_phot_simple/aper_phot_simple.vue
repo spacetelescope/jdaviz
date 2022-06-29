@@ -1,10 +1,8 @@
 <template>
-  <j-tray-plugin>
-    <v-row>
-      <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#simple-aperture-photometry'">
-        Perform aperture photometry for a single region.
-      </j-docs-link>
-    </v-row>
+  <j-tray-plugin
+    description='Perform aperture photometry for a single region.'
+    :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#simple-aperture-photometry'"
+    :popout_button="popout_button">
 
     <plugin-dataset-select
       :items="dataset_items"

@@ -1,8 +1,8 @@
 <template>
-  <j-tray-plugin>
-    <v-row>
-      <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#slice'">Select slice (or wavelength) of the cube to show in the image viewers and highlighted in the spectrum viewer.  The slice can also be changed interactively in the spectrum viewer by activating the slice tool.</j-docs-link>
-    </v-row>
+  <j-tray-plugin
+    description='Select slice (or wavelength) of the cube to show in the image viewers and highlighted in the spectrum viewer.  The slice can also be changed interactively in the spectrum viewer by activating the slice tool.'
+    :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#slice'"
+    :popout_button="popout_button">
 
     <v-row>
       <v-expansion-panels popout>

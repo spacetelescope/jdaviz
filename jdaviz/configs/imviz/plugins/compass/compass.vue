@@ -1,10 +1,8 @@
 <template>
-  <j-tray-plugin>
-    <v-row>
-      <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#compass'">
-        Show active data label, compass, and zoom box.
-      </j-docs-link>
-    </v-row>
+  <j-tray-plugin
+    description='Show active data label, compass, and zoom box.'
+    :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#compass'"
+    :popout_button="popout_button">
 
     <plugin-viewer-select
       :items="viewer_items"

@@ -1,11 +1,8 @@
 <template>
-  <j-tray-plugin>
-    <v-row>
-      <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#line-profiles'">
-        Press l to plot line profiles across X and Y under cursor.
-        You can also manually enter X, Y and then click PLOT.
-      </j-docs-link>
-    </v-row>
+  <j-tray-plugin
+    description='Press l to plot line profiles across X and Y under cursor. You can also manually enter X, Y and then click PLOT.'
+    :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#line-profiles'"
+    :popout_button="popout_button">
 
     <v-row>
       <v-select

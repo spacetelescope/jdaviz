@@ -1,8 +1,8 @@
 <template>
-  <j-tray-plugin>
-    <v-row>
-      <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#link-control'">Re-link images by WCS or pixels.</j-docs-link>
-    </v-row>
+  <j-tray-plugin
+    description='Re-link images by WCS or pixels.'
+    :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#link-control'"
+    :popout_button="popout_button">
 
     <v-row>
       <v-radio-group 

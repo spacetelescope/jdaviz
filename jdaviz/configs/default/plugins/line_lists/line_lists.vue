@@ -1,8 +1,9 @@
 <template>
-  <j-tray-plugin :disabled_msg="disabled_msg">
-    <v-row>
-      <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#line-lists'">Plot lines from preset or custom line lists.</j-docs-link>
-    </v-row>
+  <j-tray-plugin
+    description='Plot lines from preset or custom line lists.'
+    :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#line-lists'"
+    :disabled_msg="disabled_msg"
+    :popout_button="popout_button">
 
     <j-plugin-section-header>Identified Line</j-plugin-section-header>
     <v-row>

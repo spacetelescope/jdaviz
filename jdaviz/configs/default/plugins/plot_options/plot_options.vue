@@ -1,8 +1,11 @@
 <template>
-  <j-tray-plugin>
+  <j-tray-plugin
+    description='Viewer and data/layer options.'
+    :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#plot-options'"
+    :popout_button="popout_button">
+
     <v-row>
       <div style="width: calc(100% - 32px)">
-        <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#plot-options'">Viewer and data/layer options.</j-docs-link>
       </div>
       <div style="width: 32px">
         <j-tooltip tipid='plugin-plot-options-multiselect-toggle'>

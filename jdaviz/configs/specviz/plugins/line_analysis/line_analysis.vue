@@ -1,10 +1,8 @@
 <template>
-  <j-tray-plugin>
-    <v-row>
-      <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#line-analysis'">
-        Return statistics for a single spectral line.  See the <j-external-link link="https://specutils.readthedocs.io/en/stable/analysis.html" linktext="specutils docs"/> for more details.
-      </j-docs-link>
-    </v-row>
+  <j-tray-plugin
+    description="Return statistics for a single spectral line."
+    :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#line-analysis'"
+    :popout_button="popout_button">
 
     <j-plugin-section-header>Line</j-plugin-section-header>
     <v-row>
@@ -65,6 +63,13 @@
     </v-row>
 
     <j-plugin-section-header>Results</j-plugin-section-header>
+
+    <v-row>
+      <j-docs-link>
+        See the <j-external-link link='https://specutils.readthedocs.io/en/stable/analysis.html' linktext='specutils docs'></j-external-link> for more details on the available analysis functions.
+      </j-docs-link>
+    </v-row>
+
     <div style="display: grid"> <!-- overlay container -->
       <div style="grid-area: 1/1">
         <v-row>

@@ -1,8 +1,8 @@
 <template>
-    <j-tray-plugin>
-      <v-row>
-        <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#gaussian-smooth'">Smooth your data in xy or wavelength with a Gaussian kernel</j-docs-link>
-      </v-row>
+  <j-tray-plugin
+    description='Smooth your data in xy or wavelength with a Gaussian kernel.'
+    :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#gaussian-smooth'"
+    :popout_button="popout_button">
 
       <!-- for mosviz, the entries change on row change, so we want to always show the dropdown
            to make sure that is clear -->

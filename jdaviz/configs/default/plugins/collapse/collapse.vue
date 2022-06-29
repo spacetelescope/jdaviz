@@ -1,8 +1,8 @@
 <template>
-  <j-tray-plugin>
-    <v-row>
-      <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#collapse'">Collapse a spectral cube along one axis.</j-docs-link>
-    </v-row>
+  <j-tray-plugin
+    description='Collapse a spectral cube along one axis.'
+    :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#collapse'"
+    :popout_button="popout_button">
 
     <plugin-dataset-select
       :items="dataset_items"
