@@ -274,15 +274,15 @@ class ConfigHelper(HubListener):
 
         return parameters_cube
 
-    def show(self, mode="inline", **kwargs):
+    def show(self, loc="inline", **kwargs):
         """
         Display the Jdaviz application
 
         Parameters
         ----------
-        mode : str
-            The display mode determines how to present the viz app.
-            Supported modes:
+        loc : str
+            The display location determines where to present the viz app.
+            Supported locations:
 
             "inline": Display the Jdaviz application inline in a notebook.
             Note this is functionally equivalent to displaying the cell
@@ -325,7 +325,7 @@ class ConfigHelper(HubListener):
         to have multiple tabs.
         """
         try:
-            if mode == "sidecar":
+            if loc == "sidecar":
                 if 'title' not in kwargs:
                     kwargs['title'] = self.app.config
 
@@ -335,25 +335,25 @@ class ConfigHelper(HubListener):
 
                 return scar
 
-            elif mode == "new jupyter tab":
+            elif loc == "new jupyter tab":
                 if 'anchor' in kwargs:
                     if 'tab' not in kwargs['anchor']:
                         raise ValueError('new jupyter lab cannot have a non-tab anchor')
                 else:
                     kwargs['anchor'] = 'tab-after'
-                return self.show(mode="sidecar", **kwargs)
+                return self.show(loc="sidecar", **kwargs)
 
-            elif mode == "new browser tab":
+            elif loc == "new browser tab":
                 raise NotImplementedError
 
-            elif mode == "popout":
+            elif loc == "popout":
                 raise NotImplementedError
 
-            elif mode == "inline":
+            elif loc == "inline":
                 display(self.app)
 
             else:
-                raise ValueError("Unrecognized display mode: " + str(mode))
+                raise ValueError("Unrecognized display location: " + str(loc))
 
         except Exception as e:
             warnings.warn(f'Error detected in display: {repr(e)}. Falling back to IPython display',
