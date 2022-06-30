@@ -10,8 +10,6 @@ from glue.core.message import (DataCollectionAddMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from glue.core.subset import RoiSubsetState
-from glue.core.link_helpers import LinkSame
-from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.widgets.linked_dropdown import get_choices as _get_glue_choices
 from specutils import Spectrum1D
@@ -19,8 +17,7 @@ from traitlets import Any, Bool, HasTraits, List, Unicode, observe
 
 from jdaviz import __version__
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
-                                ViewerAddedMessage, ViewerRemovedMessage,
-                                SnackbarMessage)
+                                ViewerAddedMessage, ViewerRemovedMessage)
 
 
 __all__ = ['TemplateMixin', 'PluginTemplateMixin',
