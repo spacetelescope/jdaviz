@@ -367,4 +367,4 @@ class ConfigHelper(HubListener):
         Preserved for backwards compatibility
         Shows Jdaviz in a sidecar in a new tab to the right
         """
-        return self.show(loc="sidecar:tab-right", **kwargs)
+        return self.show(loc="sidecar:tab-after", **kwargs)
