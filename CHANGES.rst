@@ -6,7 +6,7 @@ New Features
 - The app and individual plugins can be opened in a new window by clicking a button in the top 
   right-hand corner. [#977, #1423]
 
-- Snackbar queue priority and history access. [#1352]
+- Snackbar queue priority and history access. [#1352, #1437]
 
 - Subset Tools plugin now shows information for composite subsets. [#1378]
 
