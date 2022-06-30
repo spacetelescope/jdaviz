@@ -66,7 +66,7 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
         assert self.viewer.get_link_type('has_wcs_2[SCI,1]') == 'wcs'
 
         # Customize display on second image (last loaded).
-        self.viewer.set_colormap('viridis')
+        self.viewer.set_colormap('Viridis')
         self.viewer.stretch = 'sqrt'
         self.viewer.cuts = (0, 100)
 

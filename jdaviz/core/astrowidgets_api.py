@@ -220,7 +220,8 @@ class AstrowidgetsImageViewerMixin:
     @property
     def colormap_options(self):
         """List of colormap names."""
-        return sorted(member[1].name for member in colormaps.members)
+        # Do not sort to match Plot Options order.
+        return [member[0] for member in colormaps.members]
 
     def set_colormap(self, cmap):
         """Set colormap to the given colormap name.
@@ -239,7 +240,7 @@ class AstrowidgetsImageViewerMixin:
         """
         cm = None
         for member in colormaps.members:
-            if member[1].name == cmap:
+            if member[0] == cmap:
                 cm = member[1]
                 break
 
