@@ -318,9 +318,8 @@ class ConfigHelper(HubListener):
 
         Notes
         -----
-        If "sidecar" or "new jupyter tab" modes are called in the "classic"
-        Jupyter notebook, the app will appear inline, as only lab has a mechanism
-        to have multiple tabs.
+        If "sidecar" is requested in the "classic" Jupyter notebook, the app will appear inline,
+        as only lab has a mechanism to have multiple tabs.
         """
         try:
             if loc == "inline":
