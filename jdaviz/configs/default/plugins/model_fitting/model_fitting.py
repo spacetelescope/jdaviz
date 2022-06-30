@@ -547,7 +547,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         output_cube['flux'] = fitted_spectrum.flux.value
         output_cube.get_component('flux').units = fitted_spectrum.flux.unit.to_string()
 
-        self.add_results.add_results_from_plugin(output_cube, self.dataset)
+        self.add_results.add_results_from_plugin(output_cube)
         self._set_default_results_label()
 
         snackbar_message = SnackbarMessage(
@@ -577,10 +577,3 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         self.add_results.add_results_from_plugin(spectrum)
         self._set_default_results_label()
-
-        # Link the result spectrum to the reference data of the spectrum viewer
-
-        ref_data = self.app.get_viewer('spectrum-viewer').state.reference_data
-        data_id = ref_data.world_component_ids[-1]
-        model_id = self.app.session.data_collection[self.results_label].world_component_ids[0]
-        self.app.session.data_collection.add_link(LinkSame(data_id, model_id))

@@ -22,7 +22,7 @@ from glue.config import colormaps, data_translator
 from glue.config import settings as glue_settings
 from glue.core import BaseData, HubListener, Data, DataCollection
 from glue.core.link_helpers import LinkSame
-from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink
+from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink, IncompatibleWCS
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
 from glue.core.state_objects import State
@@ -358,6 +358,8 @@ class Application(VuetifyTemplate, HubListener):
         """
         if self.config == 'imviz':  # Imviz does its own thing
             return
+        elif not self.auto_link:
+            return
 
         dc = self.data_collection
         # This will need to be changed for cubeviz to support multiple cubes
@@ -367,7 +369,7 @@ class Application(VuetifyTemplate, HubListener):
         try:
             dc.add_link(WCSLink(ref_data, linked_data))
             return
-        except AttributeError:
+        except (AttributeError, IncompatibleWCS):
             pc_ref = [str(id).split(" ")[-1][1] for id in ref_data.pixel_component_ids]
             pc_linked = [str(id).split(" ")[-1][1] for id in linked_data.pixel_component_ids]
 
