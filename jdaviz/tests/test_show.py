@@ -12,11 +12,6 @@ def test_show_sidecar(specviz_helper):
     assert isinstance(res, sidecar.Sidecar)
 
 
-def test_show_new_jupyter_tab(specviz_helper):
-    res = specviz_helper.show(loc="new jupyter tab")
-    assert isinstance(res, sidecar.Sidecar)
-
-
 def test_show_new_browser_tab(specviz_helper):
     with warns(RuntimeWarning, match='Error detected in display'):
         specviz_helper.show(loc="new browser tab")
