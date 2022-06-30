@@ -367,15 +367,17 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
                                                  default_size=1, colors='gray')
 
                 # Fit Gaussian1D to radial profile data.
+                # mean is fixed at 0 because we recentered to centroid.
                 if self.fit_radial_profile:
                     fitter = LevMarLSQFitter()
                     y_max = y_data.max()
-                    x_mean = x_data[np.where(y_data == y_max)].mean()
                     std = 0.5 * (phot_table['semimajor_sigma'][0] +
                                  phot_table['semiminor_sigma'][0])
                     if isinstance(std, u.Quantity):
                         std = std.value
-                    gs = Gaussian1D(amplitude=y_max, mean=x_mean, stddev=std)
+                    gs = Gaussian1D(amplitude=y_max, mean=0, stddev=std,
+                                    fixed={'mean': True, 'amplitude': True},
+                                    bounds={'amplitude': (y_max * 0.5, y_max)})
                     with warnings.catch_warnings(record=True) as warns:
                         fit_model = fitter(gs, x_data, y_data)
                     if len(warns) > 0:
@@ -424,7 +426,7 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
             # Also display fit results
             fit_tmp = []
             if fit_model is not None and isinstance(fit_model, Gaussian1D):
-                for param in ('fwhm', 'mean', 'amplitude'):
+                for param in ('fwhm', 'amplitude'):  # mean is fixed at 0
                     p_val = getattr(fit_model, param)
                     if isinstance(p_val, Parameter):
                         p_val = p_val.value
