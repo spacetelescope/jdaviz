@@ -367,8 +367,9 @@ class Application(VuetifyTemplate, HubListener):
         linked_data = dc[data_to_be_linked] if data_to_be_linked else dc[-1]
 
         try:
+            if linked_data.meta.get("Plugin", None) == 'GaussianSmooth':
+                raise AttributeError
             dc.add_link(WCSLink(ref_data, linked_data))
-            return
         except (AttributeError, IncompatibleWCS):
             pc_ref = [str(id).split(" ")[-1][1] for id in ref_data.pixel_component_ids]
             pc_linked = [str(id).split(" ")[-1][1] for id in linked_data.pixel_component_ids]
