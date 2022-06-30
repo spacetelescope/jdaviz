@@ -25,6 +25,7 @@ Using Jdaviz in a Jupyter Notebook
 .. toctree::
   :maxdepth: 2
 
+  display
   import_data
   export_data
   save_state
