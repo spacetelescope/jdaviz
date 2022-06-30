@@ -1299,7 +1299,6 @@ class AddResults(BasePluginComponent):
         """
         Add ``data_item`` to the app's data_collection according to the default or user-provided
         label and adds to any requested viewers.
-        ref_data should be Plugin.dataset.
         """
         if self.label_invalid_msg:
             raise ValueError(self.label_invalid_msg)
