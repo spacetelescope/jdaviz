@@ -22,14 +22,14 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
     # ones are added in glue-jupyter in future that we don't want here.
     inherit_tools = False
 
-    tools = ['bqplot:home', 'jdaviz:boxzoommatch', 'jdaviz:boxzoom',
+    tools = ['jdaviz:homezoom', 'jdaviz:boxzoommatch', 'jdaviz:boxzoom',
              'jdaviz:panzoommatch', 'jdaviz:panzoom',
              'jdaviz:contrastbias', 'jdaviz:blinkonce',
              'bqplot:rectangle', 'bqplot:circle', 'bqplot:ellipse']
 
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
-                    ['bqplot:home'],
+                    ['jdaviz:homezoom', 'jdaviz:prevzoom'],
                     ['jdaviz:boxzoommatch', 'jdaviz:boxzoom'],
                     ['jdaviz:panzoommatch', 'jdaviz:panzoom'],
                     ['bqplot:circle', 'bqplot:rectangle', 'bqplot:ellipse'],

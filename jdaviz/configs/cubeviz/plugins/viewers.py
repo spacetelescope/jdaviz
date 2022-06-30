@@ -18,7 +18,7 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
     # ones are added in glue-jupyter in future that we don't want here.
     inherit_tools = False
 
-    tools = ['bqplot:home', 'jdaviz:boxzoom',
+    tools = ['jdaviz:homezoom', 'jdaviz:boxzoom',
              'bqplot:panzoom', 'bqplot:rectangle',
              'bqplot:circle', 'jdaviz:spectrumperspaxel']
 
@@ -26,7 +26,7 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
     # NOTE: zoom and pan are merged here for space consideration and to avoid
     # overflow to second row when opening the tray
     tools_nested = [
-                    ['bqplot:home'],
+                    ['jdaviz:homezoom', 'jdaviz:prevzoom'],
                     ['jdaviz:boxzoom', 'bqplot:panzoom'],
                     ['bqplot:circle', 'bqplot:rectangle'],
                     ['jdaviz:spectrumperspaxel'],
@@ -150,7 +150,7 @@ class CubevizProfileView(SpecvizProfileView):
     # ones are added in glue-jupyter in future that we don't want here.
     inherit_tools = False
 
-    tools = ['bqplot:home',
+    tools = ['jdaviz:homezoom',
              'jdaviz:boxzoom', 'jdaviz:xrangezoom',
              'bqplot:panzoom', 'bqplot:panzoom_x',
              'bqplot:panzoom_y', 'bqplot:xrange',
@@ -158,7 +158,7 @@ class CubevizProfileView(SpecvizProfileView):
 
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
-                    ['bqplot:home'],
+                    ['jdaviz:homezoom', 'jdaviz:prevzoom'],
                     ['jdaviz:boxzoom', 'jdaviz:xrangezoom'],
                     ['bqplot:panzoom', 'bqplot:panzoom_x', 'bqplot:panzoom_y'],
                     ['bqplot:xrange'],

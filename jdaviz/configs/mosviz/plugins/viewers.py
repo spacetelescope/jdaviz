@@ -22,7 +22,7 @@ class MosvizProfileView(BqplotProfileView, JdavizViewerMixin):
 
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
-                    ['bqplot:home'],
+                    ['jdaviz:homezoom', 'jdaviz:prevzoom'],
                     ['jdaviz:boxzoom', 'jdaviz:xrangezoom'],
                     ['bqplot:panzoom', 'bqplot:panzoom_x', 'bqplot:panzoom_y'],
                     ['bqplot:xrange'],
@@ -69,13 +69,13 @@ class MosvizImageView(BqplotImageView, JdavizViewerMixin):
     # ones are added in glue-jupyter in future that we don't want here.
     inherit_tools = False
 
-    tools = ['bqplot:home', 'jdaviz:boxzoom',
+    tools = ['jdaviz:homezoom', 'jdaviz:boxzoom',
              'bqplot:panzoom', 'bqplot:rectangle',
              'bqplot:circle']
 
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
-                    ['bqplot:home'],
+                    ['jdaviz:homezoom', 'jdaviz:prevzoom'],
                     ['jdaviz:boxzoom'],
                     ['bqplot:panzoom'],
                     ['bqplot:circle', 'bqplot:rectangle'],
@@ -114,7 +114,7 @@ class MosvizProfile2DView(BqplotImageView, JdavizViewerMixin):
     # replace the default tools (which include rect and circle region)
     # with only the tools we want (likely the same as in SpecvizProfileView)
     inherit_tools = False
-    tools = ['bqplot:home',
+    tools = ['jdaviz:homezoom',
              'jdaviz:boxzoom',
              'jdaviz:xrangezoom',
              'bqplot:panzoom',
@@ -123,7 +123,7 @@ class MosvizProfile2DView(BqplotImageView, JdavizViewerMixin):
 
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
-                    ['bqplot:home'],
+                    ['jdaviz:homezoom', 'jdaviz:prevzoom'],
                     ['jdaviz:boxzoom', 'jdaviz:xrangezoom'],
                     ['bqplot:panzoom', 'bqplot:panzoom_x'],
                     ['bqplot:xrange'],

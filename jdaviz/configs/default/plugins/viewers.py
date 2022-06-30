@@ -16,6 +16,7 @@ viewer_registry.add("g-table-viewer", label="Table", cls=TableViewer)
 class JdavizViewerMixin:
     toolbar_nested = None
     tools_nested = []
+    _prev_limits = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
