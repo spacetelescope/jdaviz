@@ -42,7 +42,11 @@ class SnackbarQueue:
             else:
                 state.snackbar_history.append(new_history)
 
-        if not popup:
+        if not (popup or msg.loading):
+            if self.loading:
+                # then we still need to clear the existing loading message
+                self.loading = False
+                self.close_current_message(state)
             return
 
         if msg.loading:
