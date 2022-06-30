@@ -1,7 +1,6 @@
 import warnings
 
 from glue.core import Data
-from glue.core.link_helpers import LinkSame
 from specutils import Spectrum1D
 from specutils.manipulation import spectral_slab
 from traitlets import List, Unicode, observe
@@ -55,37 +54,9 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
         data.get_component('flux').units = str(collapsed_spec.unit)
 
         self.add_results.add_results_from_plugin(data)
-        self._link_collapse_data()
 
         snackbar_message = SnackbarMessage(
             f"Data set '{self.dataset_selected}' collapsed successfully.",
             color="success",
             sender=self)
         self.hub.broadcast(snackbar_message)
-
-    def _link_collapse_data(self):
-        """
-        Link the new dataset pixel-wise to the original dataset. In general
-        direct pixel to pixel links are the most efficient and should be
-        used in cases like this where we know there is a 1-to-1 mapping of
-        pixel coordinates.
-
-        """
-        new_len = len(self.app.data_collection)
-
-        pc_new = self.app.data_collection[-1].pixel_component_ids
-
-        # Link to the first dataset with compatible coordinates
-        for i in range(new_len - 1):
-            pc_old = self.app.data_collection[i].pixel_component_ids
-            # If data_collection[i] is also from the collapse plugin
-            if self.app.data_collection[i].meta.get("Plugin", None) == self.__class__.__name__:
-                links = [LinkSame(pc_old[0], pc_new[0]),
-                         LinkSame(pc_old[1], pc_new[1])]
-            else:
-                links = [LinkSame(pc_old[0], pc_new[1]),
-                         LinkSame(pc_old[1], pc_new[0])]
-
-            self.app.data_collection.add_link(links)
-
-            break

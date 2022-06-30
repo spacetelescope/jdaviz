@@ -27,7 +27,7 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
     assert len(mv_data) == 1
     assert mv_data[0].label == 'moment 0'
 
-    assert len(dc.links) == 8
+    assert len(dc.links) == 14
 
     # label should remain unchanged but raise overwrite warnings
     assert mm.results_label == 'moment 0'
@@ -64,7 +64,20 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
 
     assert dc[2].label == 'moment 1'
 
-    assert len(dc.links) == 10
+    assert len(dc.links) == 16
+    assert len(dc.external_links) == 5
+    # Link 3D z to 2D x and 3D y to 2D y
+
+    # Link 3:
+    # Pixel Axis 0 [z] from cube.pixel_component_ids[0]
+    # Pixel Axis 1 [x] from plugin.pixel_component_ids[1]
+    assert dc.external_links[3].cids1[0] == dc[0].pixel_component_ids[0]
+    assert dc.external_links[3].cids2[0] == dc[-1].pixel_component_ids[1]
+    # Link 4:
+    # Pixel Axis 1 [y] from cube.pixel_component_ids[1]
+    # Pixel Axis 0 [y] from plugin.pixel_component_ids[0]
+    assert dc.external_links[4].cids1[0] == dc[0].pixel_component_ids[1]
+    assert dc.external_links[4].cids2[0] == dc[-1].pixel_component_ids[0]
 
     # Coordinate display should be unaffected.
     assert flux_viewer.label_mouseover.pixel == 'x=00.0 y=00.0'

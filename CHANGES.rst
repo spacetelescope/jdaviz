@@ -73,6 +73,8 @@ Cubeviz
 - Fixed the default thickness of a subset layer in the spectral viewer to remain 1 for
   spatial subsets and 3 for spectral subsets. [#1380]
 
+- Fixed linking of plugin data to the reference data that was used to create it [#1412]
+
 Imviz
 ^^^^^
 
