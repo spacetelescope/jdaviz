@@ -13,7 +13,7 @@ For example::
     # Instantiate an instance of Specviz
     myviz = Specviz()
     # Display Specviz
-    myviz.app   #doctest: +SKIP
+    myviz.show()   #doctest: +SKIP
 
 For more information on using Specviz in a notebook, see
 :ref:`specviz-notebook`.
