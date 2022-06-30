@@ -286,32 +286,29 @@ class ConfigHelper(HubListener):
 
             "inline": Display the Jdaviz application inline in a notebook.
             Note this is functionally equivalent to displaying the cell
-            ``self.app`` in the notebook.
+            ``viz.app`` in the notebook.
 
             "sidecar": Display the Jdaviz application in a separate JupyterLab window from the
-            notebook, which by default is a tab on the right side of the JupyterLab  interface.
+            notebook, the location of which is decided by the 'anchor.' right is the default
 
-                Additional keywords not listed here are passed into the
-                ``sidecar.Sidecar`` constructor. See
-                `jupyterlab-sidecar <https://github.com/jupyter-widgets/jupyterlab-sidecar>`_
+                Other anchors:
+                sidecar:right        | The default, opens a tab to the right of display
+                sidecar:tab-before   | Full-width tab before the current notebook
+                sidecar:tab-after    | Full-width tab after the current notebook
+                sidecar:split-right  | Split-tab in the same window right of the notebook
+                sidecar:split-left   | Split-tab in the same window left of the notebook
+                sidecar:split-top    | Split-tab in the same window above the notebook
+                sidecar:split-bottom | Split-tab in the same window below the notebook
+
+                See `jupyterlab-sidecar <https://github.com/jupyter-widgets/jupyterlab-sidecar>`_
                 for the most up-to-date options.
 
-            "new jupyter tab": Display the Jdaviz application in a new tab in JupyterLab.
-
-                Additional keywords not listed here are passed into the
-                ``sidecar.Sidecar`` constructor. See
-                `jupyterlab-sidecar <https://github.com/jupyter-widgets/jupyterlab-sidecar>`_
-                for the most up-to-date options.
 
         title : str, optional
-            Only applicable to "sidecar"/"new jupyter tab" modes.
             The title of the sidecar tab.  Defaults to the name of the
             application; e.g., "specviz".
 
-        anchor : str
-            Only applicable to "sidecar" mode.
-            Where the tab should appear, by default on the right. Options are:
-            {sidecar_anchor_values}.
+            NOTE: Only applicable to a "sidecar" display.
 
         Returns
         -------
@@ -326,7 +323,15 @@ class ConfigHelper(HubListener):
         to have multiple tabs.
         """
         try:
-            if loc == "sidecar":
+            if loc == "inline":
+                display(self.app)
+
+            elif loc.startswith('sidecar'):
+                if loc != 'sidecar':
+                    anchor = loc.split(':')[1]
+                    kwargs['anchor'] = anchor
+
+                # If title unset, default to the viz config
                 if 'title' not in kwargs:
                     kwargs['title'] = self.app.config
 
@@ -336,22 +341,11 @@ class ConfigHelper(HubListener):
 
                 return scar
 
-            elif loc == "new jupyter tab":
-                if 'anchor' in kwargs:
-                    if 'tab' not in kwargs['anchor']:
-                        raise ValueError('new jupyter lab cannot have a non-tab anchor')
-                else:
-                    kwargs['anchor'] = 'tab-after'
-                return self.show(loc="sidecar", **kwargs)
-
             elif loc == "new browser tab":
                 raise NotImplementedError
 
             elif loc == "popout":
                 raise NotImplementedError
-
-            elif loc == "inline":
-                display(self.app)
 
             else:
                 raise ValueError("Unrecognized display location: " + str(loc))
