@@ -354,3 +354,17 @@ class ConfigHelper(HubListener):
             warnings.warn(f'Error detected in display: {repr(e)}. Falling back to IPython display',
                           RuntimeWarning)
             display(self.app)
+
+    def show_in_sidecar(self, **kwargs):
+        """
+        Preserved for backwards compatibility
+        Shows Jdaviz in a sidecar with the default anchor: right
+        """
+        return self.show(loc="sidecar", **kwargs)
+
+    def show_in_new_tab(self, **kwargs):
+        """
+        Preserved for backwards compatibility
+        Shows Jdaviz in a sidecar in a new tab to the right
+        """
+        return self.show(loc="sidecar:tab-right", **kwargs)
