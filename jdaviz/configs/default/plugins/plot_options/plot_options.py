@@ -122,7 +122,7 @@ class PlotOptions(TemplateMixin):
             return isinstance(state, ImageSubsetLayerState)
 
         def is_not_subset(state):
-            return not isinstance(state, (ImageSubsetLayerState, ProfileLayerState))
+            return not isinstance(state, ImageSubsetLayerState)
 
         # Spectrum viewer/layer options:
         self.layer_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'visible',

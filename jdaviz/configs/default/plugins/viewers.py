@@ -38,6 +38,11 @@ class JdavizViewerMixin:
         layer.visible = self._get_layer(layer.layer.data.label).visible
 
     def _on_layers_update(self, layers=None):
+        if self.__class__.__name__ == 'MosvizTableViewer':
+            # MosvizTableViewer uses this as a mixin, but we do not need any of this layer
+            # logic there
+            return
+
         selected_data_items = self.jdaviz_app._viewer_item_by_id(self.reference_id)['selected_data_items']  # noqa
 
         for data_id, visibility in selected_data_items.items():
@@ -67,6 +72,10 @@ class JdavizViewerMixin:
                 self._expected_subset_layer_default(layer)
 
     def _on_subset_create(self, msg):
+        if self.__class__.__name__ == 'MosvizTableViewer':
+            # MosvizTableViewer uses this as a mixin, but we do not need any of this layer
+            # logic there
+            return
         # NOTE: the subscription to this method is handled in ConfigHelper
         # we don't have access to the actual subset yet to tell if its spectral or spatial, so
         # we'll store the name of this new subset and change the default linewidth when the
