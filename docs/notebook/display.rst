@@ -1,3 +1,5 @@
+.. _display:
+
 *******************************************
 Customizing your Visualization Tool Display
 *******************************************
