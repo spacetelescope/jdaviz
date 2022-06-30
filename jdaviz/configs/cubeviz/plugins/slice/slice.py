@@ -75,9 +75,6 @@ class Slice(TemplateMixin):
             if len(msg.data.shape) == 3:
                 self.max_value = msg.data.shape[-1] - 1
                 self._watch_viewer(msg.viewer, True)
-            else:
-                # then the viewer is showing a static 2d image instead of cube data
-                self._watch_viewer(msg.viewer, False)
 
         elif isinstance(msg.viewer, BqplotProfileView):
             self._watch_viewer(msg.viewer, True)

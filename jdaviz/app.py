@@ -22,6 +22,7 @@ from glue.config import colormaps, data_translator
 from glue.config import settings as glue_settings
 from glue.core import BaseData, HubListener, Data, DataCollection
 from glue.core.link_helpers import LinkSame
+from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage)
 from glue.core.state_objects import State
@@ -349,7 +350,7 @@ class Application(VuetifyTemplate, HubListener):
                                       history=msg_level >= history_level,
                                       popup=msg_level >= popup_level)
 
-    def _link_new_data(self):
+    def _link_new_data(self, reference_data=None, data_to_be_linked=None):
         """
         When additional data is loaded, check to see if the spectral axis of
         any components are compatible with already loaded data. If so, link
@@ -358,41 +359,57 @@ class Application(VuetifyTemplate, HubListener):
         if self.config == 'imviz':  # Imviz does its own thing
             return
 
-        new_len = len(self.data_collection)
+        dc = self.data_collection
+        # This will need to be changed for cubeviz to support multiple cubes
+        ref_data = dc[reference_data] if reference_data else dc[0]
+        linked_data = dc[data_to_be_linked] if data_to_be_linked else dc[-1]
 
-        # Allow for batch linking of data in the parser rather than on
-        # data load
-        if not self.auto_link or new_len < 2:
+        try:
+            dc.add_link(WCSLink(ref_data, linked_data))
             return
+        except AttributeError as e:
+            pc_ref = [str(id).split(" ")[-1][1] for id in ref_data.pixel_component_ids]
+            pc_linked = [str(id).split(" ")[-1][1] for id in linked_data.pixel_component_ids]
 
-        # Can't link if there's no world_component_ids
-        wc_new = self.data_collection[-1].world_component_ids
-        pc_new = self.data_collection[-1].pixel_component_ids
+            links = []
 
-        # Link to the first dataset with compatible coordinates
-        for i in range(new_len - 1):
-            wc_old = self.data_collection[i].world_component_ids
-            pc_old = self.data_collection[i].pixel_component_ids
+            # This code loops through the returned locations of the x, y, and z
+            # axes in the pixel_coordinate_ids of the reference data. It matches
+            # the axes with the pixel_coordinate_ids of the linked data and links
+            # those axes. There are special rules for linking 2D and 3D data, which
+            # is as follows: 2D y to 3D z and 2D x to 3D y, and vice versa in the
+            # case of moment map and collapse data because they need to be transposed.
+            # See github comment:
+            # https://github.com/spacetelescope/jdaviz/pull/1412#discussion_r907630682
+            len_linked_pixel = len(linked_data.pixel_component_ids)
 
-            if wc_old == []:
-                continue
-            else:
-                # Link cubes to each other
-                if len(pc_old) > 2 and len(pc_new) > 2:
-                    links = [LinkSame(pc_old[1], pc_new[1]),
-                             LinkSame(pc_old[2], pc_new[2]),
-                             LinkSame(wc_old[0], wc_new[0])]
-
-                # If data is not a cube, use old linking method
-                elif len(wc_new) > 0:
-                    links = [LinkSame(wc_old[0], wc_new[0])]
-
+            for ind, pixel_coord in enumerate(pc_ref):
+                ref_index = ind
+                if (len_linked_pixel == 2 and
+                        (linked_data.meta.get("Plugin", None) in
+                         ['MomentMap', 'Collapse'])):
+                    if pixel_coord == 'z':
+                        linked_index = pc_linked.index('x')
+                    elif pixel_coord == 'y':
+                        linked_index = pc_linked.index('y')
+                    else:
+                        continue
+                elif len_linked_pixel == 2:
+                    if pixel_coord == 'z':
+                        linked_index = pc_linked.index('y')
+                    elif pixel_coord == 'y':
+                        linked_index = pc_linked.index('x')
+                    else:
+                        continue
+                elif pixel_coord in pc_linked:
+                    linked_index = pc_linked.index(pixel_coord)
                 else:
-                    break
+                    continue
 
-                self.data_collection.add_link(links)
+                links.append(LinkSame(ref_data.pixel_component_ids[ref_index],
+                                      linked_data.pixel_component_ids[linked_index]))
 
-                break
+            dc.add_link(links)
 
     def load_data(self, file_obj, parser_reference=None, **kwargs):
         """

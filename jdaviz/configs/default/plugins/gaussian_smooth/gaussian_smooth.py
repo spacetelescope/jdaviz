@@ -139,7 +139,7 @@ class GaussianSmooth(TemplateMixin, DatasetSelectMixin, AddResultsMixin):
         newcube = Spectrum1D(flux=convolved_data * flux_unit, wcs=cube.wcs)
 
         # add data to the collection/plots
-        self.add_results.add_results_from_plugin(newcube, self.dataset)
+        self.add_results.add_results_from_plugin(newcube)
         self._set_default_results_label()
 
         snackbar_message = SnackbarMessage(

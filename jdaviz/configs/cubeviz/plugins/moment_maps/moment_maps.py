@@ -65,7 +65,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         fname_label = self.dataset_selected.replace("[", "_").replace("]", "")
         self.filename = f"moment{n_moment}_{fname_label}.fits"
 
-        self.add_results.add_results_from_plugin(self.moment, self.dataset)
+        self.add_results.add_results_from_plugin(self.moment)
 
         self.moment_available = True
 
