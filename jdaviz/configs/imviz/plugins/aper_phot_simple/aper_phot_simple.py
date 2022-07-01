@@ -1,8 +1,13 @@
+import os
+import warnings
 from datetime import datetime
 
 import bqplot
 import numpy as np
 from astropy import units as u
+from astropy.modeling.fitting import LevMarLSQFitter
+from astropy.modeling import Parameter
+from astropy.modeling.models import Gaussian1D
 from astropy.table import QTable
 from astropy.time import Time
 from ipywidgets import widget_serialization
@@ -41,6 +46,8 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
     current_plot_type = Unicode().tag(sync=True)
     plot_available = Bool(False).tag(sync=True)
     radial_plot = Any('').tag(sync=True, **widget_serialization)
+    fit_radial_profile = Bool(False).tag(sync=True)
+    fit_results = List().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -63,6 +70,7 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
         self._fig = bqplot.Figure()
         self.plot_types = ["Curve of Growth", "Radial Profile", "Radial Profile (Raw)"]
         self.current_plot_type = self.plot_types[0]
+        self._fitted_model_name = 'phot_radial_profile'
 
     def reset_results(self):
         self.result_available = False
@@ -218,6 +226,11 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
         data = self._selected_data
         reg = self._selected_subset
 
+        # Reset last fitted model
+        fit_model = None
+        if self._fitted_model_name in self.app.fitted_models:
+            del self.app.fitted_models[self._fitted_model_name]
+
         try:
             comp = data.get_component(data.main_components[0])
             try:
@@ -319,16 +332,17 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
             line_y_sc = bqplot.LinearScale()
 
             if self.current_plot_type == "Curve of Growth":
-                self._fig.title = 'Curve of growth from Subset center'
+                self._fig.title = 'Curve of growth from source centroid'
                 x_arr, sum_arr, x_label, y_label = _curve_of_growth(
-                    comp_data, aperture, phot_table['sum'][0], wcs=data.coords,
-                    background=bg, pixarea_fac=pixarea_fac)
+                    comp_data, phot_aperstats.centroid, aperture, phot_table['sum'][0],
+                    wcs=data.coords, background=bg, pixarea_fac=pixarea_fac)
                 self._fig.axes = [bqplot.Axis(scale=line_x_sc, label=x_label),
                                   bqplot.Axis(scale=line_y_sc, orientation='vertical',
                                               label=y_label)]
                 bqplot_line = bqplot.Lines(x=x_arr, y=sum_arr, marker='circle',
                                            scales={'x': line_x_sc, 'y': line_y_sc},
                                            marker_size=32, colors='gray')
+                bqplot_marks = [bqplot_line]
 
             else:  # Radial profile
                 self._fig.axes = [bqplot.Axis(scale=line_x_sc, label='pix'),
@@ -336,21 +350,50 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
                                               label=comp.units or 'Value')]
 
                 if self.current_plot_type == "Radial Profile":
-                    self._fig.title = 'Radial profile from Subset center'
+                    self._fig.title = 'Radial profile from source centroid'
                     x_data, y_data = _radial_profile(
-                        phot_aperstats.data_cutout, phot_aperstats.bbox, aperture, raw=False)
+                        phot_aperstats.data_cutout, phot_aperstats.bbox, phot_aperstats.centroid,
+                        raw=False)
                     bqplot_line = bqplot.Lines(x=x_data, y=y_data, marker='circle',
                                                scales={'x': line_x_sc, 'y': line_y_sc},
                                                marker_size=32, colors='gray')
                 else:  # Radial Profile (Raw)
-                    self._fig.title = 'Raw radial profile from Subset center'
-                    radial_r, radial_img = _radial_profile(
-                        phot_aperstats.data_cutout, phot_aperstats.bbox, aperture, raw=True)
-                    bqplot_line = bqplot.Scatter(x=radial_r, y=radial_img, marker='circle',
+                    self._fig.title = 'Raw radial profile from source centroid'
+                    x_data, y_data = _radial_profile(
+                        phot_aperstats.data_cutout, phot_aperstats.bbox, phot_aperstats.centroid,
+                        raw=True)
+                    bqplot_line = bqplot.Scatter(x=x_data, y=y_data, marker='circle',
                                                  scales={'x': line_x_sc, 'y': line_y_sc},
                                                  default_size=1, colors='gray')
 
-            self._fig.marks = [bqplot_line]
+                # Fit Gaussian1D to radial profile data.
+                # mean is fixed at 0 because we recentered to centroid.
+                if self.fit_radial_profile:
+                    fitter = LevMarLSQFitter()
+                    y_max = y_data.max()
+                    std = 0.5 * (phot_table['semimajor_sigma'][0] +
+                                 phot_table['semiminor_sigma'][0])
+                    if isinstance(std, u.Quantity):
+                        std = std.value
+                    gs = Gaussian1D(amplitude=y_max, mean=0, stddev=std,
+                                    fixed={'mean': True, 'amplitude': True},
+                                    bounds={'amplitude': (y_max * 0.5, y_max)})
+                    with warnings.catch_warnings(record=True) as warns:
+                        fit_model = fitter(gs, x_data, y_data)
+                    if len(warns) > 0:
+                        msg = os.linesep.join([str(w.message) for w in warns])
+                        self.hub.broadcast(SnackbarMessage(
+                            f"Radial profile fitting: {msg}", color='warning', sender=self))
+                    y_fit = fit_model(x_data)
+                    self.app.fitted_models[self._fitted_model_name] = fit_model
+                    bqplot_fit = bqplot.Lines(x=x_data, y=y_fit, marker=None,
+                                              scales={'x': line_x_sc, 'y': line_y_sc},
+                                              colors='magenta', line_style='dashed')
+                    bqplot_marks = [bqplot_line, bqplot_fit]
+                else:
+                    bqplot_marks = [bqplot_line]
+
+            self._fig.marks = bqplot_marks
 
         except Exception as e:  # pragma: no cover
             self.reset_results()
@@ -379,7 +422,18 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
                                 f'{x:.4e} ({phot_table["aperture_sum_counts_err"][0]:.4e})'})
                 else:
                     tmp.append({'function': key, 'result': str(x)})
+
+            # Also display fit results
+            fit_tmp = []
+            if fit_model is not None and isinstance(fit_model, Gaussian1D):
+                for param in ('fwhm', 'amplitude'):  # mean is fixed at 0
+                    p_val = getattr(fit_model, param)
+                    if isinstance(p_val, Parameter):
+                        p_val = p_val.value
+                    fit_tmp.append({'function': param, 'result': f'{p_val:.4e}'})
+
             self.results = tmp
+            self.fit_results = fit_tmp
             self.result_available = True
             self.radial_plot = self._fig
             self.bqplot_figs_resize = [self._fig]
@@ -389,7 +443,7 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
 # NOTE: These are hidden because the APIs are for internal use only
 # but we need them as a separate functions for unit testing.
 
-def _radial_profile(radial_cutout, reg_bb, aperture, raw=False):
+def _radial_profile(radial_cutout, reg_bb, centroid, raw=False):
     """Calculate radial profile.
 
     Parameters
@@ -400,8 +454,8 @@ def _radial_profile(radial_cutout, reg_bb, aperture, raw=False):
     reg_bb : obj
         Bounding box from ``ApertureStats``.
 
-    aperture : obj
-        ``photutils`` aperture object.
+    centroid : tuple of int
+        ``ApertureStats`` centroid or desired center in ``(x, y)``.
 
     raw : bool
         If `True`, returns raw data points for scatter plot.
@@ -409,14 +463,15 @@ def _radial_profile(radial_cutout, reg_bb, aperture, raw=False):
 
     """
     reg_ogrid = np.ogrid[reg_bb.iymin:reg_bb.iymax, reg_bb.ixmin:reg_bb.ixmax]
-    radial_dx = reg_ogrid[1] - aperture.positions[0]
-    radial_dy = reg_ogrid[0] - aperture.positions[1]
+    radial_dx = reg_ogrid[1] - centroid[0]
+    radial_dy = reg_ogrid[0] - centroid[1]
     radial_r = np.hypot(radial_dx, radial_dy)[~radial_cutout.mask].ravel()  # pix
     radial_img = radial_cutout.compressed()  # data unit
 
     if raw:
-        x_arr = radial_r
-        y_arr = radial_img
+        i_arr = np.argsort(radial_r)
+        x_arr = radial_r[i_arr]
+        y_arr = radial_img[i_arr]
     else:
         # This algorithm is from the imexam package,
         # see licenses/IMEXAM_LICENSE.txt for more details
@@ -427,7 +482,7 @@ def _radial_profile(radial_cutout, reg_bb, aperture, raw=False):
     return x_arr, y_arr
 
 
-def _curve_of_growth(data, aperture, final_sum, wcs=None, background=0, n_datapoints=10,
+def _curve_of_growth(data, centroid, aperture, final_sum, wcs=None, background=0, n_datapoints=10,
                      pixarea_fac=None):
     """Calculate curve of growth for aperture photometry.
 
@@ -436,8 +491,14 @@ def _curve_of_growth(data, aperture, final_sum, wcs=None, background=0, n_datapo
     data : ndarray or `~astropy.units.Quantity`
         Data for the calculation.
 
+    centroid : tuple of int
+        ``ApertureStats`` centroid or desired center in ``(x, y)``.
+
     aperture : obj
-        ``photutils`` aperture object.
+        ``photutils`` aperture to use, except its center will be
+        changed to the given ``centroid``. This is because the aperture
+        might be hand-drawn and a more accurate centroid has been
+        recalculated separately.
 
     final_sum : float or `~astropy.units.Quantity`
         Aperture sum that is already calculated in the
@@ -477,20 +538,20 @@ def _curve_of_growth(data, aperture, final_sum, wcs=None, background=0, n_datapo
     if isinstance(aperture, CircularAperture):
         x_label = 'Radius (pix)'
         x_arr = np.linspace(0, aperture.r, num=n_datapoints)[1:]
-        aper_list = [CircularAperture(aperture.positions, cur_r) for cur_r in x_arr[:-1]]
+        aper_list = [CircularAperture(centroid, cur_r) for cur_r in x_arr[:-1]]
     elif isinstance(aperture, EllipticalAperture):
         x_label = 'Semimajor axis (pix)'
         x_arr = np.linspace(0, aperture.a, num=n_datapoints)[1:]
         a_arr = x_arr[:-1]
         b_arr = aperture.b * a_arr / aperture.a
-        aper_list = [EllipticalAperture(aperture.positions, cur_a, cur_b, theta=aperture.theta)
+        aper_list = [EllipticalAperture(centroid, cur_a, cur_b, theta=aperture.theta)
                      for (cur_a, cur_b) in zip(a_arr, b_arr)]
     elif isinstance(aperture, RectangularAperture):
         x_label = 'Width (pix)'
         x_arr = np.linspace(0, aperture.w, num=n_datapoints)[1:]
         w_arr = x_arr[:-1]
         h_arr = aperture.h * w_arr / aperture.w
-        aper_list = [RectangularAperture(aperture.positions, cur_w, cur_h, theta=aperture.theta)
+        aper_list = [RectangularAperture(centroid, cur_w, cur_h, theta=aperture.theta)
                      for (cur_w, cur_h) in zip(w_arr, h_arr)]
     else:
         raise TypeError(f'Unsupported aperture: {aperture}')

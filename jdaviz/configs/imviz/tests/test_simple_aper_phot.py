@@ -18,6 +18,10 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
 
         phot_plugin = self.imviz.app.get_tray_item_from_name('imviz-aper-phot-simple')
 
+        # Model fitting is already tested in astropy.
+        # Here, we enable it just to make sure it does not crash.
+        phot_plugin.fit_radial_profile = True
+
         # Make sure invalid Data/Subset selection does not crash plugin.
         with pytest.raises(ValueError):
             phot_plugin.dataset_selected = 'no_such_data'
@@ -164,7 +168,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         # Curve of growth
         phot_plugin.current_plot_type = 'Curve of Growth'
         phot_plugin.vue_do_aper_phot()
-        assert phot_plugin._fig.title == 'Curve of growth from Subset center'
+        assert phot_plugin._fig.title == 'Curve of growth from source centroid'
 
 
 class TestSimpleAperPhot_NoWCS(BaseImviz_WCS_NoWCS):
@@ -255,13 +259,14 @@ def test_annulus_background(imviz_helper):
 class TestRadialProfile():
     def setup_class(self):
         data = np.ones((51, 51)) * u.nJy
-        self.aperture = EllipticalAperture((25, 25), 20, 15)
-        phot_aperstats = ApertureStats(data, self.aperture)
+        aperture = EllipticalAperture((25, 25), 20, 15)
+        phot_aperstats = ApertureStats(data, aperture)
         self.data_cutout = phot_aperstats.data_cutout
         self.bbox = phot_aperstats.bbox
+        self.centroid = phot_aperstats.centroid
 
     def test_profile_raw(self):
-        x_arr, y_arr = _radial_profile(self.data_cutout, self.bbox, self.aperture, raw=True)
+        x_arr, y_arr = _radial_profile(self.data_cutout, self.bbox, self.centroid, raw=True)
         # Too many data points to compare each one for X.
         assert x_arr.shape == y_arr.shape == (923, )
         assert_allclose(x_arr.min(), 0)
@@ -269,7 +274,7 @@ class TestRadialProfile():
         assert_allclose(y_arr, 1)
 
     def test_profile_imexam(self):
-        x_arr, y_arr = _radial_profile(self.data_cutout, self.bbox, self.aperture, raw=False)
+        x_arr, y_arr = _radial_profile(self.data_cutout, self.bbox, self.centroid, raw=False)
         assert_allclose(x_arr, range(20))
         assert_allclose(y_arr, 1)
 
@@ -293,11 +298,12 @@ def test_curve_of_growth(with_unit):
                  RectangularAperture(cen, 20, 15))
 
     for aperture in apertures:
-        final_sum = ApertureStats(data, aperture).sum
+        astat = ApertureStats(data, aperture)
+        final_sum = astat.sum
         if pixarea_fac is not None:
             final_sum = final_sum * pixarea_fac
         x_arr, sum_arr, x_label, y_label = _curve_of_growth(
-            data, aperture, final_sum, background=bg, pixarea_fac=pixarea_fac)
+            data, astat.centroid, aperture, final_sum, background=bg, pixarea_fac=pixarea_fac)
         assert_allclose(x_arr, [2, 4, 6, 8, 10, 12, 14, 16, 18, 20])
         assert y_label == expected_ylabel
 
@@ -316,5 +322,5 @@ def test_curve_of_growth(with_unit):
             assert_allclose(sum_arr, [3, 12, 27, 48, 75, 108, 147, 192, 243, 300])
 
     with pytest.raises(TypeError, match='Unsupported aperture'):
-        _curve_of_growth(data, EllipticalAnnulus(cen, 3, 8, 5), 100,
+        _curve_of_growth(data, cen, EllipticalAnnulus(cen, 3, 8, 5), 100,
                          pixarea_fac=pixarea_fac)

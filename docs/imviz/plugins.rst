@@ -160,7 +160,9 @@ an interactively selected region. A typical workflow is as follows:
     Caution: having too many data points may cause performance issues with this feature. 
     The exact limitations depend on your hardware.
 
-10. Once all inputs are populated correctly, click on the :guilabel:`CALCULATE`
+10. Toggle :guilabel:`Fit Gaussian` on to fit a `~astropy.modeling.functional_models.Gaussian1D`
+    model to the radial profile data. This is disabled for curve-of-growth.
+11. Once all inputs are populated correctly, click on the :guilabel:`CALCULATE`
     button to perform simple aperture photometry.
 
 .. note::
@@ -169,8 +171,8 @@ an interactively selected region. A typical workflow is as follows:
     However, if NaN exists in data, it will be treated as 0.
 
 When calculation is complete, a plot would show the radial profile
-of the background subtracted data and the photometry results are displayed under the
-:guilabel:`CALCULATE` button.
+of the background subtracted data and the photometry and model fitting (if requested)
+results are displayed under the :guilabel:`CALCULATE` button.
 
 .. figure:: img/imviz_radial_profile.png
     :alt: Imviz radial profile plot.
@@ -182,7 +184,14 @@ of the background subtracted data and the photometry results are displayed under
 
     Radial profile (raw).
 
-You can also retrieve the results as `~astropy.table.QTable` as follows,
+If you opted to fit a `~astropy.modeling.functional_models.Gaussian1D`
+to the radial profile, the last fitted model parameters will be displayed
+under the radial profile plot. The model itself can be obtained by as follows.
+See :ref:`astropy:astropy-modeling` on how to manipulate the model::
+
+    my_gaussian1d = imviz.app.fitted_models['phot_radial_profile']
+
+You can also retrieve the photometry results as `~astropy.table.QTable` as follows,
 assuming ``imviz`` is the instance of your Imviz application::
 
     results = imviz.get_aperture_photometry_results()
