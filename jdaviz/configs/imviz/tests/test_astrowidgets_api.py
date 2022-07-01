@@ -156,9 +156,11 @@ class TestCmapStretchCuts(BaseImviz_WCS_NoWCS):
 
     def test_colormap_options(self):
         assert self.viewer.colormap_options == [
-            'BuGn', 'PRGn', 'PuBu', 'PuOr', 'RdBu', 'RdPu', 'RdYlBu', 'YlGnBu', 'YlOrRd',
-            'gray', 'gray_r', 'hot', 'hot_r', 'inferno', 'inferno_r', 'magma', 'magma_r',
-            'plasma', 'plasma_r', 'viridis', 'viridis_r']
+            'Gray', 'Viridis', 'Plasma', 'Inferno', 'Magma', 'Purple-Blue',
+            'Yellow-Green-Blue', 'Yellow-Orange-Red', 'Red-Purple', 'Blue-Green',
+            'Hot', 'Red-Blue', 'Red-Yellow-Blue', 'Purple-Orange', 'Purple-Green',
+            'Reversed: Gray', 'Reversed: Viridis', 'Reversed: Plasma', 'Reversed: Inferno',
+            'Reversed: Magma', 'Reversed: Hot']
 
     def test_invalid_colormap(self):
         with pytest.raises(ValueError, match='Invalid colormap'):
@@ -210,24 +212,24 @@ class TestCmapStretchCuts(BaseImviz_WCS_NoWCS):
 
     def test_cmap_stretch_cuts(self):
         # Change colormap, stretch, and cuts on one image
-        self.viewer.set_colormap('viridis')
+        self.viewer.set_colormap('Viridis')
         self.viewer.stretch = 'sqrt'
         self.viewer.cuts = '95%'
 
         self.viewer.blink_once()
 
         # Change colormap, stretch, and cuts on other image
-        self.viewer.set_colormap('RdYlBu')
+        self.viewer.set_colormap('Red-Yellow-Blue')
         self.viewer.stretch = AsinhStretch
         self.viewer.cuts = (0, 100)
 
         # Make sure settings stick on both images, second image displayed/changed first above.
-        assert self.viewer.state.layers[0].cmap.name == 'RdYlBu'
+        assert self.viewer.state.layers[0].cmap.name == 'RdYlBu'  # matplotlib name, not Glue
         assert self.viewer.state.layers[0].stretch == 'arcsinh'
         assert_allclose((self.viewer.state.layers[0].v_min, self.viewer.state.layers[0].v_max),
                         (0, 100))
 
-        assert self.viewer.state.layers[1].cmap.name == 'viridis'
+        assert self.viewer.state.layers[1].cmap.name == 'viridis'  # matplotlib name, not Glue
         assert self.viewer.state.layers[1].stretch == 'sqrt'
         assert_allclose((self.viewer.state.layers[1].v_min, self.viewer.state.layers[1].v_max),
                         (2.475, 96.525))

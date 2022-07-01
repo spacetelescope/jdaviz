@@ -56,6 +56,10 @@ Imviz
   Right-click on the respective button to access single-viewer box-zoom or
   single-viewer pan/zoom. [#1421]
 
+- ``viewer.set_colormap()`` method now takes Glue colormap name, not
+  matplotlib name. This is more consistent with colormap options under
+  Plot Options. [#1440]
+
 Mosviz
 ^^^^^^
 
@@ -93,6 +97,9 @@ Imviz
 
 - Contrast/bias mouse-drag is now more responsive and
   calculates contrast in the same way as Glue in Qt mode. [#1403]
+
+- Fixed a bug where some custom colormap added to Imviz is inaccessible
+  via ``viewer.set_colormap()`` API. [#1440]
 
 Mosviz
 ^^^^^^
