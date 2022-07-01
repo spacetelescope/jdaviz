@@ -11,11 +11,14 @@ def test_show_sidecar(specviz_helper):
     res = specviz_helper.show(loc='sidecar')
     assert isinstance(res, sidecar.Sidecar)
 
+
 def test_known_sidecar_anchors(specviz_helper):
-    anchors = ['split-right', 'split-left', 'split-top', 'split-bottom', 'tab-before', 'tab-after', 'right']
+    anchors = ['split-right', 'split-left', 'split-top', 'split-bottom',
+               'tab-before', 'tab-after', 'right']
     for anchor in anchors:
         res = specviz_helper.show(loc=':'.join(['sidecar', anchor]))
         assert isinstance(res, anchor)
+
 
 def test_show_new_browser_tab(specviz_helper):
     with warns(RuntimeWarning, match='Error detected in display'):
