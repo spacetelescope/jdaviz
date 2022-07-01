@@ -1,10 +1,12 @@
-from astropy.table import Table
+from traitlets import List, Unicode, observe
+
+from astropy.table import QTable
 from astropy.coordinates import SkyCoord
 from astroquery.sdss import SDSS
 
+from jdaviz.configs.imviz.helper import get_top_layer_index
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin
-from jdaviz.configs.imviz.helper import get_top_layer_index
 
 __all__ = ['Catalogs']
 
@@ -12,32 +14,49 @@ __all__ = ['Catalogs']
 @tray_registry('imviz-catalogs', label="Imviz Catalogs")
 class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
     template_file = __file__, "catalogs.vue"
+    viewer_items = List([]).tag(sync=True)
+    selected_viewer = Unicode("").tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._default_viewer = f'{self.app.config}-0'
 
+
+        self._on_viewers_changed()  # Populate it on start-up
+
+    def _on_viewers_changed(self, msg=None):
+        self.viewer_items = self.app.get_viewer_ids()
+
+        # Selected viewer was removed but Imviz always has a default viewer to fall back on.
+        if self.selected_viewer not in self.viewer_items:
+            self.selected_viewer = self._default_viewer
+
+    @observe("selected_viewer")
     def vue_do_catalogs(self, *args, **kwargs):
-        # current viewer object
-        curr_viewer = self.viewer.selected_obj
+        # no querying occurs while the plugin has not been opened
+        if not self.plugin_opened:
+            return
 
-        # used to obtain the current image visible in the viewer
-        viewer = self.app.get_viewer_by_id(self.viewer_selected)
-        i = get_top_layer_index(viewer)
-        data = viewer.state.layers[i].layer
+        # gets the current viewer
+        viewer = self.app.get_viewer_by_id(self.selected_viewer)
+
+        # not sure if these are necessary
+        #i = get_top_layer_index(viewer)
+        #data = viewer.state.layers[i].layer
 
         # obtains the center point of the current image and converts the point into sky coordinates
-        # note to self: need to add in logic to handle cases where curr_viewer.state.reference_data.coords is None
-        x_center = (curr_viewer.state.x_min + curr_viewer.state.x_max) * 0.5
-        y_center = (curr_viewer.state.y_min + curr_viewer.state.y_max) * 0.5
-        skycoord_center = curr_viewer.state.reference_data.coords.pixel_to_world(x_center, y_center)
+        # note to self: need to add in logic to handle cases where viewer.state.reference_data.coords is None
+        x_center = (viewer.state.x_min + viewer.state.x_max) * 0.5
+        y_center = (viewer.state.y_min + viewer.state.y_max) * 0.5
+        skycoord_center = viewer.state.reference_data.coords.pixel_to_world(x_center, y_center)
 
         # obtains the viewer's zoom limits based on the visible layer
-        ny, nx = curr_viewer.state.reference_data.shape
-        zoom_x_min = max(0, curr_viewer.state.x_min)
-        zoom_x_max = min(nx, curr_viewer.state.x_max)
-        zoom_y_min = max(0, curr_viewer.state.y_min)
-        zoom_y_max = min(ny, curr_viewer.state.y_max)
-        zoom_coordinate = curr_viewer.state.reference_data.coords.pixel_to_world(
+        ny, nx = viewer.state.reference_data.shape
+        zoom_x_min = max(0, viewer.state.x_min)
+        zoom_x_max = min(nx, viewer.state.x_max)
+        zoom_y_min = max(0, viewer.state.y_min)
+        zoom_y_max = min(ny, viewer.state.y_max)
+        zoom_coordinate = viewer.state.reference_data.coords.pixel_to_world(
             [zoom_x_min, zoom_x_min, zoom_x_max, zoom_x_max],
             [zoom_y_min, zoom_y_max, zoom_y_max, zoom_y_min])
 
@@ -49,11 +68,24 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
 
         # a table is created storing the 'ra' and 'dec' plottable points of each source found
         skycoord_table = SkyCoord(query_region_result['ra'], query_region_result['dec'], unit='deg')
-        catalog_results = Table({'coord': [skycoord_table]})
+        catalog_results = QTable({'coord': [skycoord_table]})
 
         # markers are added to the viewer based on the table
-        curr_viewer.add_markers(table=catalog_results, use_skycoord=True, marker_name='conesearch_results')
+        viewer.add_markers(table=catalog_results, use_skycoord=True, marker_name='catalog_results')
 
         # get top layer of viewer, zoom limits, work radius from that, convert that to the query
         # the radius should just be the corner of the image
         # get the data outputted?
+
+    @observe("selected_viewer")
+    def vue_do_reset(self, *args, **kwargs):
+        # no querying occurs while the plugin has not been opened
+        if not self.plugin_opened:
+            return
+
+        # gets the current viewer
+        viewer = self.app.get_viewer_by_id(self.selected_viewer)
+
+        # all markers are removed from the viewer
+        viewer.reset_markers()
+
