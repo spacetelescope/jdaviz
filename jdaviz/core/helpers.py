@@ -356,7 +356,7 @@ class ConfigHelper(HubListener):
         Preserved for backwards compatibility
         Shows Jdaviz in a sidecar with the default anchor: right
         """
-        location = 'sidecar' if anchor is None else ':'.join(['sidecar', anchor])
+        location = 'sidecar' if anchor is None else f"sidecar:{anchor}"
         return self.show(loc=location, title=title)
 
     def show_in_new_tab(self, title=None):
