@@ -292,13 +292,13 @@ class ConfigHelper(HubListener):
             notebook, the location of which is decided by the 'anchor.' right is the default
 
                 Other anchors:
-                * sidecar:right (The default, opens a tab to the right of display)
-                * sidecar:tab-before (Full-width tab before the current notebook)
-                * sidecar:tab-after (Full-width tab after the current notebook)
-                * sidecar:split-right (Split-tab in the same window right of the notebook)
-                * sidecar:split-left (Split-tab in the same window left of the notebook)
-                * sidecar:split-top (Split-tab in the same window above the notebook)
-                * sidecar:split-bottom (Split-tab in the same window below the notebook)
+                * ``sidecar:right`` (The default, opens a tab to the right of display)
+                * ``sidecar:tab-before`` (Full-width tab before the current notebook)
+                * ``sidecar:tab-after`` (Full-width tab after the current notebook)
+                * ``sidecar:split-right`` (Split-tab in the same window right of the notebook)
+                * ``sidecar:split-left`` (Split-tab in the same window left of the notebook)
+                * ``sidecar:split-top`` (Split-tab in the same window above the notebook)
+                * ``sidecar:split-bottom`` (Split-tab in the same window below the notebook)
 
                 See `jupyterlab-sidecar <https://github.com/jupyter-widgets/jupyterlab-sidecar>`_
                 for the most up-to-date options.
