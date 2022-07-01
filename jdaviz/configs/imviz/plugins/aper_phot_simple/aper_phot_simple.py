@@ -332,10 +332,10 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
             line_y_sc = bqplot.LinearScale()
 
             if self.current_plot_type == "Curve of Growth":
-                self._fig.title = 'Curve of growth from Subset center'
+                self._fig.title = 'Curve of growth from source centroid'
                 x_arr, sum_arr, x_label, y_label = _curve_of_growth(
-                    comp_data, aperture, phot_table['sum'][0], wcs=data.coords,
-                    background=bg, pixarea_fac=pixarea_fac)
+                    comp_data, phot_aperstats.centroid, aperture, phot_table['sum'][0],
+                    wcs=data.coords, background=bg, pixarea_fac=pixarea_fac)
                 self._fig.axes = [bqplot.Axis(scale=line_x_sc, label=x_label),
                                   bqplot.Axis(scale=line_y_sc, orientation='vertical',
                                               label=y_label)]
@@ -482,7 +482,7 @@ def _radial_profile(radial_cutout, reg_bb, centroid, raw=False):
     return x_arr, y_arr
 
 
-def _curve_of_growth(data, aperture, final_sum, wcs=None, background=0, n_datapoints=10,
+def _curve_of_growth(data, centroid, aperture, final_sum, wcs=None, background=0, n_datapoints=10,
                      pixarea_fac=None):
     """Calculate curve of growth for aperture photometry.
 
@@ -491,8 +491,14 @@ def _curve_of_growth(data, aperture, final_sum, wcs=None, background=0, n_datapo
     data : ndarray or `~astropy.units.Quantity`
         Data for the calculation.
 
+    centroid : tuple of int
+        ``ApertureStats`` centroid or desired center in ``(x, y)``.
+
     aperture : obj
-        ``photutils`` aperture object.
+        ``photutils`` aperture to use, except its center will be
+        changed to the given ``centroid``. This is because the aperture
+        might be hand-drawn and a more accurate centroid has been
+        recalculated separately.
 
     final_sum : float or `~astropy.units.Quantity`
         Aperture sum that is already calculated in the
@@ -532,20 +538,20 @@ def _curve_of_growth(data, aperture, final_sum, wcs=None, background=0, n_datapo
     if isinstance(aperture, CircularAperture):
         x_label = 'Radius (pix)'
         x_arr = np.linspace(0, aperture.r, num=n_datapoints)[1:]
-        aper_list = [CircularAperture(aperture.positions, cur_r) for cur_r in x_arr[:-1]]
+        aper_list = [CircularAperture(centroid, cur_r) for cur_r in x_arr[:-1]]
     elif isinstance(aperture, EllipticalAperture):
         x_label = 'Semimajor axis (pix)'
         x_arr = np.linspace(0, aperture.a, num=n_datapoints)[1:]
         a_arr = x_arr[:-1]
         b_arr = aperture.b * a_arr / aperture.a
-        aper_list = [EllipticalAperture(aperture.positions, cur_a, cur_b, theta=aperture.theta)
+        aper_list = [EllipticalAperture(centroid, cur_a, cur_b, theta=aperture.theta)
                      for (cur_a, cur_b) in zip(a_arr, b_arr)]
     elif isinstance(aperture, RectangularAperture):
         x_label = 'Width (pix)'
         x_arr = np.linspace(0, aperture.w, num=n_datapoints)[1:]
         w_arr = x_arr[:-1]
         h_arr = aperture.h * w_arr / aperture.w
-        aper_list = [RectangularAperture(aperture.positions, cur_w, cur_h, theta=aperture.theta)
+        aper_list = [RectangularAperture(centroid, cur_w, cur_h, theta=aperture.theta)
                      for (cur_w, cur_h) in zip(w_arr, h_arr)]
     else:
         raise TypeError(f'Unsupported aperture: {aperture}')

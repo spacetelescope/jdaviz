@@ -168,7 +168,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         # Curve of growth
         phot_plugin.current_plot_type = 'Curve of Growth'
         phot_plugin.vue_do_aper_phot()
-        assert phot_plugin._fig.title == 'Curve of growth from Subset center'
+        assert phot_plugin._fig.title == 'Curve of growth from source centroid'
 
 
 class TestSimpleAperPhot_NoWCS(BaseImviz_WCS_NoWCS):
@@ -298,11 +298,12 @@ def test_curve_of_growth(with_unit):
                  RectangularAperture(cen, 20, 15))
 
     for aperture in apertures:
-        final_sum = ApertureStats(data, aperture).sum
+        astat = ApertureStats(data, aperture)
+        final_sum = astat.sum
         if pixarea_fac is not None:
             final_sum = final_sum * pixarea_fac
         x_arr, sum_arr, x_label, y_label = _curve_of_growth(
-            data, aperture, final_sum, background=bg, pixarea_fac=pixarea_fac)
+            data, astat.centroid, aperture, final_sum, background=bg, pixarea_fac=pixarea_fac)
         assert_allclose(x_arr, [2, 4, 6, 8, 10, 12, 14, 16, 18, 20])
         assert y_label == expected_ylabel
 
@@ -321,5 +322,5 @@ def test_curve_of_growth(with_unit):
             assert_allclose(sum_arr, [3, 12, 27, 48, 75, 108, 147, 192, 243, 300])
 
     with pytest.raises(TypeError, match='Unsupported aperture'):
-        _curve_of_growth(data, EllipticalAnnulus(cen, 3, 8, 5), 100,
+        _curve_of_growth(data, cen, EllipticalAnnulus(cen, 3, 8, 5), 100,
                          pixarea_fac=pixarea_fac)

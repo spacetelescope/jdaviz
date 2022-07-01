@@ -28,7 +28,7 @@ Imviz
 ^^^^^
 
 - Added the ability to fit Gaussian1D model to radial profile in
-  Simple Aperture Photometry plugin. Radial profile now centers
+  Simple Aperture Photometry plugin. Radial profile and curve of growth now center
   on source centroid, not Subset center. [#1409]
 
 Mosviz
