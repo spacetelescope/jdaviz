@@ -327,7 +327,7 @@ class ConfigHelper(HubListener):
 
             elif loc.startswith('sidecar'):
                 # Use default behavior if loc is exactly 'sidecar', else split anchor from the arg
-                anchor = '' if loc == 'sidecar' else loc.split(':')[1]
+                anchor = None if loc == 'sidecar' else loc.split(':')[1]
 
                 # If title unset, default to the viz config
                 title = self.app.config if title is None else title
