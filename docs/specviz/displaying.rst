@@ -49,10 +49,21 @@ Interactive Pan/Zoom (Desktop or Notebook Interface)
 You can find the following Pan/Zoom tools available in the viewer toolbar
 on the top right of the viewer:
 
+
+Home
+^^^^
+
+This button will reset your zoom and panning to display the spectrum.
+
+Previous zoom is also available by right-clicking on the home icon and selecting
+the previous zoom icon.  This will revert to the last saved zoom state.  Zoom states
+are saved when beginning a zoom selection or when activating a pan/zoom tool.
+
 .. _image-pan-zoom:
 
 2D Bidirectional Pan/Zoom
 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
 The |icon-zoom-pan-2d| icon allows you to zoom using the scroll wheel. The window will zoom into the area around your cursor:
 
 .. image:: ../img/Specviz_2D_Zoom.gif

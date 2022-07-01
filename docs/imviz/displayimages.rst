@@ -39,6 +39,10 @@ Home
 
 This button will reset your zoom and panning to display the entire image.
 
+Previous zoom is also available by right-clicking on the home icon and selecting
+the previous zoom icon.  This will revert to the last saved zoom state.  Zoom states
+are saved when beginning a zoom selection or when activating a pan/zoom tool.
+
 .. _imviz_box_zoom:
 
 Box Zoom and Linked Box Zoom
