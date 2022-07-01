@@ -10,12 +10,13 @@ __all__ = ['NewViewerMessage', 'ViewerAddedMessage', 'ViewerRemovedMessage', 'Lo
 
 class NewViewerMessage(Message):
     """Message to trigger viewer creation in the application."""
-    def __init__(self, cls, data, x_attr=None, *args, **kwargs):
+    def __init__(self, cls, data, x_attr=None, inherit_from=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self._cls = cls
         self._data = data
         self._x_attr = x_attr
+        self._inherit_from = inherit_from
 
     @property
     def cls(self):
@@ -28,6 +29,10 @@ class NewViewerMessage(Message):
     @property
     def x_attr(self):
         return self._x_attr
+
+    @property
+    def inherit_from(self):
+        return self._inherit_from
 
 
 class ViewerAddedMessage(Message):

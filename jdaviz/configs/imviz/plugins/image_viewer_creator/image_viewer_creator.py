@@ -17,6 +17,7 @@ class ImageViewerCreator(TemplateMixin):
     def vue_create_image_viewer(self, *args, **kwargs):
 
         new_viewer_message = NewViewerMessage(
-            ImvizImageView, data=None, sender=self)
+            ImvizImageView, data=None,
+            inherit_from='imviz-0', sender=self)
 
         self.hub.broadcast(new_viewer_message)

@@ -29,8 +29,11 @@ class Imviz(ConfigHelper):
         """Default viewer instance. This is typically the first viewer (e.g., "imviz-0")."""
         return self._default_viewer
 
-    def create_image_viewer(self, viewer_name=None):
+    def create_image_viewer(self, viewer_name=None, inherit_from='imviz-0'):
         """Create a new image viewer.
+
+        The default data loaded into the viewer and visible will be
+        inherited from the default viewer.
 
         To display data in this new viewer programmatically,
         first get the new viewer ID from the small tab on the top
@@ -45,6 +48,9 @@ class Imviz(ConfigHelper):
         ----------
         viewer_name : str or `None`
             Viewer name/ID to use. If `None`, it is auto-generated.
+        inherit_from : str or `None`
+            Viewer ID to inherit loaded data and visibilities.  Will
+            default to the default_viewer ('imviz-0')
 
         Returns
         -------
@@ -57,7 +63,8 @@ class Imviz(ConfigHelper):
         # Cannot assign data to real Data because it loads but it will
         # not update checkbox in Data menu.
         return self.app._on_new_viewer(
-            NewViewerMessage(ImvizImageView, data=None, sender=self.app),
+            NewViewerMessage(ImvizImageView, data=None,
+                             inherit_from=inherit_from, sender=self.app),
             vid=viewer_name, name=viewer_name)
 
     def destroy_viewer(self, viewer_id):

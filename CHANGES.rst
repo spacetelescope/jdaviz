@@ -31,6 +31,9 @@ Cubeviz
 Imviz
 ^^^^^
 
+- New viewers now inherit the loaded data and visibility states from the 
+  default viewers. [#1441]
+
 Mosviz
 ^^^^^^
 
@@ -59,6 +62,9 @@ Imviz
 - In the toolbar, linked box-zoom and linked pan/zoom are now the defaults.
   Right-click on the respective button to access single-viewer box-zoom or
   single-viewer pan/zoom. [#1421]
+
+- `imviz.create_new_viewer` defaults to `inherit_from='imviz-0'`.  Pass
+  `inherit_from=None` to create a blank viewer. [#1441]
 
 Mosviz
 ^^^^^^

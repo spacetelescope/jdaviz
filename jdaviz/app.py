@@ -1488,6 +1488,11 @@ class Application(VuetifyTemplate, HubListener):
 
         self.session.application.viewers.append(viewer)
 
+        if msg.inherit_from is not None:
+            inherit_viewer_item = self._viewer_item_by_id(msg.inherit_from)
+            self._update_selected_data_items(viewer.reference_id,
+                                             inherit_viewer_item['selected_data_items'])
+
         # Send out a toast message
         self.hub.broadcast(ViewerAddedMessage(vid, sender=self))
 
