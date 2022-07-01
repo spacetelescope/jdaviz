@@ -16,7 +16,7 @@ def test_known_sidecar_anchors(specviz_helper):
     anchors = ['split-right', 'split-left', 'split-top', 'split-bottom',
                'tab-before', 'tab-after', 'right']
     for anchor in anchors:
-        res = specviz_helper.show(loc=f"sidecar{anchor}")
+        res = specviz_helper.show(loc=f"sidecar:{anchor}")
         assert isinstance(res, sidecar.Sidecar)
 
 
