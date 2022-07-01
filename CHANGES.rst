@@ -46,7 +46,7 @@ API Changes
   have been renamed to "Colormap" and "Monochromatic," respectively, for all image
   viewers. [#1406]
 
-- Viz tool display changed to ``viz.show()``. [#965]
+- Viz tool display changed to ``viz.show()`` to replace ``viz.app``. [#965]
 
 Cubeviz
 ^^^^^^^
