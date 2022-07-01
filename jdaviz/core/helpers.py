@@ -274,7 +274,7 @@ class ConfigHelper(HubListener):
 
         return parameters_cube
 
-    def show(self, loc="inline", **kwargs):
+    def show(self, loc="inline", title=None):
         """
         Display the Jdaviz application
 
@@ -326,15 +326,13 @@ class ConfigHelper(HubListener):
                 display(self.app)
 
             elif loc.startswith('sidecar'):
-                if loc != 'sidecar':
-                    anchor = loc.split(':')[1]
-                    kwargs['anchor'] = anchor
+                # Use default behavior if loc is exactly 'sidecar', else split anchor from the arg
+                anchor = '' if loc == 'sidecar' else loc.split(':')[1]
 
                 # If title unset, default to the viz config
-                if 'title' not in kwargs:
-                    kwargs['title'] = self.app.config
+                title = self.app.config if title is None else title
 
-                scar = Sidecar(**kwargs)
+                scar = Sidecar(anchor=anchor, title=title)
                 with scar:
                     display(self.app)
 
@@ -354,16 +352,17 @@ class ConfigHelper(HubListener):
                           RuntimeWarning)
             display(self.app)
 
-    def show_in_sidecar(self, **kwargs):
+    def show_in_sidecar(self, anchor=None, title=None):
         """
         Preserved for backwards compatibility
         Shows Jdaviz in a sidecar with the default anchor: right
         """
-        return self.show(loc="sidecar", **kwargs)
+        location = 'sidecar' if anchor is None else ':'.join(['sidecar', anchor])
+        return self.show(loc=location, title=title)
 
-    def show_in_new_tab(self, **kwargs):
+    def show_in_new_tab(self, title=None):
         """
         Preserved for backwards compatibility
         Shows Jdaviz in a sidecar in a new tab to the right
         """
-        return self.show(loc="sidecar:tab-after", **kwargs)
+        return self.show(loc="sidecar:tab-after", title=title)
