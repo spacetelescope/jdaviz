@@ -276,7 +276,7 @@ class ConfigHelper(HubListener):
 
     def show(self, loc="inline", title=None):
         """
-        Display the Jdaviz application
+        Display the Jdaviz application.
 
         Parameters
         ----------
@@ -303,7 +303,6 @@ class ConfigHelper(HubListener):
                 See `jupyterlab-sidecar <https://github.com/jupyter-widgets/jupyterlab-sidecar>`_
                 for the most up-to-date options.
 
-
         title : str, optional
             The title of the sidecar tab.  Defaults to the name of the
             application; e.g., "specviz".
@@ -312,14 +311,14 @@ class ConfigHelper(HubListener):
 
         Returns
         -------
-        sidecar or None
+        scar : sidecar or `None`
             The ``sidecar.Sidecar`` object used to create the tab or window or
-            None if no sidecar was created
+            None if no sidecar was created.
 
         Notes
         -----
         If "sidecar" is requested in the "classic" Jupyter notebook, the app will appear inline,
-        as only lab has a mechanism to have multiple tabs.
+        as only Lab has a mechanism to have multiple tabs.
         """
         try:
             if loc == "inline":
