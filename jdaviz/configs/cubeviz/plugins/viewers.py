@@ -19,7 +19,7 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
     inherit_tools = False
 
     tools = ['jdaviz:homezoom', 'jdaviz:boxzoom',
-             'bqplot:panzoom', 'bqplot:rectangle',
+             'jdaviz:panzoom', 'bqplot:rectangle',
              'bqplot:circle', 'jdaviz:spectrumperspaxel']
 
     # categories: zoom resets, (zoom, pan), subset, select tools, shortcuts
@@ -27,7 +27,7 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
     # overflow to second row when opening the tray
     tools_nested = [
                     ['jdaviz:homezoom', 'jdaviz:prevzoom'],
-                    ['jdaviz:boxzoom', 'bqplot:panzoom'],
+                    ['jdaviz:boxzoom', 'jdaviz:panzoom'],
                     ['bqplot:circle', 'bqplot:rectangle'],
                     ['jdaviz:spectrumperspaxel'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
@@ -152,15 +152,15 @@ class CubevizProfileView(SpecvizProfileView):
 
     tools = ['jdaviz:homezoom',
              'jdaviz:boxzoom', 'jdaviz:xrangezoom',
-             'bqplot:panzoom', 'bqplot:panzoom_x',
-             'bqplot:panzoom_y', 'bqplot:xrange',
+             'jdaviz:panzoom', 'jdaviz:panzoom_x',
+             'jdaviz:panzoom_y', 'bqplot:xrange',
              'jdaviz:selectslice', 'jdaviz:selectline']
 
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
                     ['jdaviz:homezoom', 'jdaviz:prevzoom'],
                     ['jdaviz:boxzoom', 'jdaviz:xrangezoom'],
-                    ['bqplot:panzoom', 'bqplot:panzoom_x', 'bqplot:panzoom_y'],
+                    ['jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
                     ['bqplot:xrange'],
                     ['jdaviz:selectslice', 'jdaviz:selectline'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']

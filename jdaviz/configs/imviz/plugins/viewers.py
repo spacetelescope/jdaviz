@@ -23,7 +23,7 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
     inherit_tools = False
 
     tools = ['jdaviz:homezoom', 'jdaviz:boxzoommatch', 'jdaviz:boxzoom',
-             'jdaviz:panzoommatch', 'jdaviz:panzoom',
+             'jdaviz:panzoommatch', 'jdaviz:imagepanzoom',
              'jdaviz:contrastbias', 'jdaviz:blinkonce',
              'bqplot:rectangle', 'bqplot:circle', 'bqplot:ellipse']
 

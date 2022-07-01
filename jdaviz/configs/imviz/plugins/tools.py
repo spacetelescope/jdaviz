@@ -4,10 +4,9 @@ from echo import delay_callback
 
 from glue.config import viewer_tool
 from glue.viewers.common.tool import CheckableTool
-from glue_jupyter.bqplot.common.tools import BqplotPanZoomMode
 from glue_jupyter.utils import debounced
 
-from jdaviz.core.tools import BoxZoom
+from jdaviz.core.tools import BoxZoom, PanZoom
 
 __all__ = []
 
@@ -15,10 +14,17 @@ ICON_DIR = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'ic
 
 
 class _MatchedZoomMixin:
+    def save_prev_zoom(self):
+        # override the behavior in core.tools._BaseZoomHistory to store viewer limits
+        # for all referenced viewers.  This enables the previous zoom button to work for
+        # a viewer whose zoom was changed by a MatchedZoom instance from another viewer
+        for viewer in self.viewer.session.application.viewers:
+            viewer._prev_limits = (viewer.state.x_min, viewer.state.x_max,
+                                   viewer.state.y_min, viewer.state.y_max)
+
     def activate(self):
 
         super().activate()
-
         self.viewer.state.add_callback('x_min', self.on_limits_change)
         self.viewer.state.add_callback('x_max', self.on_limits_change)
         self.viewer.state.add_callback('y_min', self.on_limits_change)
@@ -60,8 +66,8 @@ class _MatchedZoomMixin:
 
 
 @viewer_tool
-class JdavizPanZoomMode(BqplotPanZoomMode):
-    tool_id = 'jdaviz:panzoom'
+class ImagePanZoom(PanZoom):
+    tool_id = 'jdaviz:imagepanzoom'
     tool_tip = 'Interactively pan (click-drag), zoom (scroll), and center (click)'
 
     def activate(self):
@@ -118,7 +124,7 @@ class MatchBoxZoom(_MatchedZoomMixin, BoxZoom):
 
 
 @viewer_tool
-class MatchPanZoom(_MatchedZoomMixin, JdavizPanZoomMode):
+class MatchPanZoom(_MatchedZoomMixin, ImagePanZoom):
     icon = os.path.join(ICON_DIR, 'panzoom_match.svg')
     tool_id = 'jdaviz:panzoommatch'
     action_text = 'Pan, matching between viewers'

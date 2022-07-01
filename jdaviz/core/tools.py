@@ -21,9 +21,6 @@ ICON_DIR = os.path.join(os.path.dirname(__file__), '..', 'data', 'icons')
 
 
 # Override icons for built-in tools from glue-jupyter
-BqplotPanZoomMode.icon = os.path.join(ICON_DIR, 'pan.svg')
-BqplotPanZoomXMode.icon = os.path.join(ICON_DIR, 'pan_x.svg')
-BqplotPanZoomYMode.icon = os.path.join(ICON_DIR, 'pan_y.svg')
 BqplotRectangleMode.icon = os.path.join(ICON_DIR, 'select_xy.svg')
 BqplotCircleMode.icon = os.path.join(ICON_DIR, 'select_circle.svg')
 BqplotEllipseMode.icon = os.path.join(ICON_DIR, 'select_ellipse.svg')
@@ -39,17 +36,61 @@ class _BaseZoomHistory:
                                     self.viewer.state.y_min, self.viewer.state.y_max)
 
 
-def pan_save_prev_limits(self):
-    # pan tools will store their previous state on *activation* rather than
-    # individual drag events
-    self.viewer._prev_limits = (self.viewer.state.x_min, self.viewer.state.x_max,
-                                self.viewer.state.y_min, self.viewer.state.y_max)
-    return super(self.__class__, self).activate()
+@viewer_tool
+class PrevZoom(Tool, _BaseZoomHistory):
+    icon = os.path.join(ICON_DIR, 'zoom_back.svg')
+    tool_id = 'jdaviz:prevzoom'
+    action_text = 'Previous zoom'
+    tool_tip = 'Back to previous zoom level'
+
+    def activate(self):
+        if self.viewer._prev_limits is None:
+            return
+        prev_limits = self.viewer._prev_limits
+        self.save_prev_zoom()
+        self.viewer.state.x_min, self.viewer.state.x_max, self.viewer.state.y_min, self.viewer.state.y_max = prev_limits  # noqa
 
 
-BqplotPanZoomMode.activate = lambda self: pan_save_prev_limits(self)
-BqplotPanZoomXMode.activate = lambda self: pan_save_prev_limits(self)
-BqplotPanZoomYMode.activate = lambda self: pan_save_prev_limits(self)
+@viewer_tool
+class HomeZoom(HomeTool, _BaseZoomHistory):
+    icon = os.path.join(ICON_DIR, 'home.svg')
+    tool_id = 'jdaviz:homezoom'
+    action_text = 'Reset zoom'
+    tool_tip = 'Reset zoom to show all visible data'
+
+    def activate(self):
+        self.save_prev_zoom()
+        super().activate()
+
+
+@viewer_tool
+class PanZoom(BqplotPanZoomMode, _BaseZoomHistory):
+    icon = os.path.join(ICON_DIR, 'pan.svg')
+    tool_id = 'jdaviz:panzoom'
+
+    def activate(self):
+        self.save_prev_zoom()
+        super().activate()
+
+
+@viewer_tool
+class PanZoomX(BqplotPanZoomXMode, _BaseZoomHistory):
+    icon = os.path.join(ICON_DIR, 'pan_x.svg')
+    tool_id = 'jdaviz:panzoom_x'
+
+    def activate(self):
+        self.save_prev_zoom()
+        super().activate()
+
+
+@viewer_tool
+class PanZoomY(BqplotPanZoomYMode, _BaseZoomHistory):
+    icon = os.path.join(ICON_DIR, 'pan_y.svg')
+    tool_id = 'jdaviz:panzoom_y'
+
+    def activate(self):
+        self.save_prev_zoom()
+        super().activate()
 
 
 class _BaseSelectZoom(BqplotSelectionTool, _BaseZoomHistory):
@@ -83,33 +124,6 @@ class _BaseSelectZoom(BqplotSelectionTool, _BaseZoomHistory):
         # activate automatically activates the new interact so that another zoom is possible
         # until deselecting the zoom tool
         self.activate()
-
-
-@viewer_tool
-class PrevZoom(Tool, _BaseZoomHistory):
-    icon = os.path.join(ICON_DIR, 'zoom_back.svg')
-    tool_id = 'jdaviz:prevzoom'
-    action_text = 'Previous zoom'
-    tool_tip = 'Back to previous zoom level'
-
-    def activate(self):
-        if self.viewer._prev_limits is None:
-            return
-        prev_limits = self.viewer._prev_limits
-        self.save_prev_zoom()
-        self.viewer.state.x_min, self.viewer.state.x_max, self.viewer.state.y_min, self.viewer.state.y_max = prev_limits  # noqa
-
-
-@viewer_tool
-class HomeZoom(HomeTool, _BaseZoomHistory):
-    icon = os.path.join(ICON_DIR, 'home.svg')
-    tool_id = 'jdaviz:homezoom'
-    action_text = 'Reset zoom'
-    tool_tip = 'Reset zoom to show all visible data'
-
-    def activate(self):
-        self.save_prev_zoom()
-        super().activate()
 
 
 @viewer_tool

@@ -32,15 +32,15 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
 
     tools = ['jdaviz:homezoom',
              'jdaviz:boxzoom', 'jdaviz:xrangezoom',
-             'bqplot:panzoom', 'bqplot:panzoom_x',
-             'bqplot:panzoom_y', 'bqplot:xrange',
+             'jdaviz:panzoom', 'jdaviz:panzoom_x',
+             'jdaviz:panzoom_y', 'bqplot:xrange',
              'jdaviz:selectline']
 
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
                     ['jdaviz:homezoom', 'jdaviz:prevzoom'],
                     ['jdaviz:boxzoom', 'jdaviz:xrangezoom'],
-                    ['bqplot:panzoom', 'bqplot:panzoom_x', 'bqplot:panzoom_y'],
+                    ['jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
                     ['bqplot:xrange'],
                     ['jdaviz:selectline'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']

@@ -24,7 +24,7 @@ class MosvizProfileView(BqplotProfileView, JdavizViewerMixin):
     tools_nested = [
                     ['jdaviz:homezoom', 'jdaviz:prevzoom'],
                     ['jdaviz:boxzoom', 'jdaviz:xrangezoom'],
-                    ['bqplot:panzoom', 'bqplot:panzoom_x', 'bqplot:panzoom_y'],
+                    ['jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
                     ['bqplot:xrange'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
@@ -70,14 +70,14 @@ class MosvizImageView(BqplotImageView, JdavizViewerMixin):
     inherit_tools = False
 
     tools = ['jdaviz:homezoom', 'jdaviz:boxzoom',
-             'bqplot:panzoom', 'bqplot:rectangle',
+             'jdaviz:panzoom', 'bqplot:rectangle',
              'bqplot:circle']
 
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
                     ['jdaviz:homezoom', 'jdaviz:prevzoom'],
                     ['jdaviz:boxzoom'],
-                    ['bqplot:panzoom'],
+                    ['jdaviz:panzoom'],
                     ['bqplot:circle', 'bqplot:rectangle'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
@@ -117,15 +117,15 @@ class MosvizProfile2DView(BqplotImageView, JdavizViewerMixin):
     tools = ['jdaviz:homezoom',
              'jdaviz:boxzoom',
              'jdaviz:xrangezoom',
-             'bqplot:panzoom',
-             'bqplot:panzoom_x',
+             'jdaviz:panzoom',
+             'jdaviz:panzoom_x',
              'bqplot:xrange']
 
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
                     ['jdaviz:homezoom', 'jdaviz:prevzoom'],
                     ['jdaviz:boxzoom', 'jdaviz:xrangezoom'],
-                    ['bqplot:panzoom', 'bqplot:panzoom_x'],
+                    ['jdaviz:panzoom', 'jdaviz:panzoom_x'],
                     ['bqplot:xrange'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
