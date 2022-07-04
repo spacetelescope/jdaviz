@@ -2,6 +2,7 @@ import pytest
 import numpy as np
 from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose
+from glue.core.edit_subset_mode import ReplaceMode
 from numpy.testing import assert_allclose, assert_array_equal
 from photutils.aperture import (ApertureStats, CircularAperture, EllipticalAperture,
                                 RectangularAperture, EllipticalAnnulus)
@@ -248,6 +249,13 @@ def test_annulus_background(imviz_helper):
     # Manually change width
     phot_plugin.bg_annulus_width = 5
     assert_allclose(phot_plugin.background_value, 4.894003242594493)
+
+    # Move the last created Subset (ellipse) and make sure background updates
+    imviz_helper.app.session.edit_subset_mode.mode = ReplaceMode
+    imviz_helper._apply_interactive_region('bqplot:ellipse', (0, 30), (51, 55))
+    assert_allclose(phot_plugin.bg_annulus_inner_r, 40)
+    assert_allclose(phot_plugin.bg_annulus_width, 5)
+    assert_allclose(phot_plugin.background_value, 4.894003)
 
     # Bad annulus should not crash plugin
     phot_plugin.bg_annulus_inner_r = -1
