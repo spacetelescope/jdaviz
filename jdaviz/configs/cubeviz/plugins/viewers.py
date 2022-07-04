@@ -65,7 +65,8 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
 
             # Extract first dataset from visible layers and use this for coordinates - the choice
             # of dataset shouldn't matter if the datasets are linked correctly
-            image = visible_layers[0].layer
+            active_layer = visible_layers[-1]
+            image = active_layer.layer
 
             # Extract data coordinates - these are pixels in the reference image
             x = data['domain']['x']
@@ -94,8 +95,8 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
             # Extract data values at this position.
             # Check if shape is [x, y, z] or [x, y] and show value accordingly.
             if (-0.5 < x < image.shape[0] - 0.5 and -0.5 < y < image.shape[1] - 0.5
-                    and hasattr(visible_layers[0], 'attribute')):
-                attribute = visible_layers[0].attribute
+                    and hasattr(active_layer, 'attribute')):
+                attribute = active_layer.attribute
                 if len(image.shape) == 3:
                     value = image.get_data(attribute)[int(round(x)), int(round(y)),
                                                       self.state.slices[-1]]
