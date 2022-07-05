@@ -57,7 +57,7 @@ The example below loads a FITS file into Specviz::
     spec1d = Spectrum1D.read("/path/to/data/file") #doctest: +SKIP
     specviz = Specviz()  # doctest: +SKIP
     specviz.load_spectrum(spec1d)  # doctest: +SKIP
-    specviz.app
+    specviz.show()
 
 You can also pass the path to a file that `~specutils.Spectrum1D` understands directly to the
 :meth:`jdaviz.configs.specviz.helper.Specviz.load_spectrum` method::
@@ -79,7 +79,7 @@ You can create your own array to load into Specviz::
     spec1d = Spectrum1D(spectral_axis=wavelength, flux=flux)
     specviz = Specviz()
     specviz.load_spectrum(spec1d)  # doctest: +IGNORE_OUTPUT
-    specviz.app
+    specviz.show()
 
 JWST datamodels
 ^^^^^^^^^^^^^^^
@@ -98,7 +98,7 @@ object, you can load it into Specviz as follows::
     spec1d = Spectrum1D(flux=flux, spectral_axis=wave)
     specviz = Specviz()
     specviz.load_spectrum(spec1d)  # doctest: +IGNORE_OUTPUT
-    specviz.app
+    specviz.show()
 
 There is no plan to natively load such objects until ``datamodels``
 is separated out of the ``jwst`` pipeline package.
@@ -117,7 +117,7 @@ they can be manipulated and analyzed in the application as a single entity::
     from specutils import SpectrumList
     spec_list = SpectrumList([spec1d_1, spec1d_2]) #doctest: +SKIP
     specviz.load_spectrum(spec_list) #doctest: +SKIP
-    specviz.app
+    specviz.show()
 
 In the screenshot below, the combined spectrum is plotted in gray, and one of
 the single component spectra are also selected and plotted in red. Note that the

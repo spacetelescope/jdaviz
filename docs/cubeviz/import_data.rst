@@ -72,16 +72,16 @@ FITS Files
 The example below loads a FITS file into Cubeviz::
 
     from specutils import Spectrum1D
-    spec3d = Spectrum1D.read("/path/to/data/file") #doctest: +SKIP
+    spec3d = Spectrum1D.read("/path/to/data/file")  # doctest: +SKIP
     cubeviz = Cubeviz()
     cubeviz.load_data(spec3d)  # doctest: +SKIP
-    cubeviz.app
+    cubeviz.show()
 
 You can also pass the path to a file that `~specutils.Spectrum1D` understands directly to the
 :meth:`jdaviz.configs.cubeviz.helper.Cubeviz.load_data` method::
 
     cubeviz.load_data("/Users/demouser/data/cube_file.fits")  # doctest: +SKIP
-    cubeviz.app
+    cubeviz.show()
 
 Creating Your Own Array
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -102,7 +102,7 @@ You can create your own array to load into Cubeviz::
 
     cube = Spectrum1D(flux=flux, wcs=w)
     cubeviz.load_data(cube)
-    cubeviz.app
+    cubeviz.show()
 
 
 To then extract your data from Cubeviz, please see the :ref:`cubeviz-notebook` section.
@@ -136,9 +136,9 @@ object, you can load it into Imviz as follows::
 
     # Create your spectrum1
     spec3d = Spectrum1D(data, wcs = my_wcs)
-    Cubeviz = Cubeviz()
-    Cubeviz.load_spectrum(spec3d, data_label='My Cube')  # doctest: +IGNORE_OUTPUT
-    Cubeviz.app
+    cubeviz = Cubeviz()
+    cubeviz.load_spectrum(spec3d, data_label='My Cube')  # doctest: +IGNORE_OUTPUT
+    cubeviz.show()
 
 There is no plan to natively load such objects until ``datamodels``
 is separated out of the ``jwst`` pipeline package.

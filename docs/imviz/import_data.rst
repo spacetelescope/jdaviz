@@ -60,7 +60,7 @@ The example below loads the first science extension of the given FITS file into 
     from jdaviz import Imviz
     imviz = Imviz()
     imviz.load_data("/path/to/data/image.fits")
-    imviz.app
+    imviz.show()
 
 Creating Your Own Array
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -73,7 +73,7 @@ You can create your own array to load into Imviz::
     arr = np.arange(100).reshape((10, 10))
     imviz = Imviz()
     imviz.load_data(arr, data_label='my_array')
-    imviz.app
+    imviz.show()
 
 JWST datamodels
 ^^^^^^^^^^^^^^^
@@ -89,7 +89,7 @@ object, you can load it into Imviz as follows::
     ndd = NDData(np.array(mydatamodel.data), wcs=mydatamodel.get_fits_wcs())
     imviz = Imviz()
     imviz.load_data(ndd, data_label='my_data_model')
-    imviz.app
+    imviz.show()
 
 There is no plan to natively load such objects until ``datamodels``
 is separated out of the ``jwst`` pipeline package.

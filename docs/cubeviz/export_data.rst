@@ -30,11 +30,11 @@ Spatial Regions
 The viewer options in the Cubeviz configuration are ``flux-viewer``, ``uncert-viewer``, and ``mask-viewer``.
 For example, to list the data available in a particular viewer:::
 
-     mydata = cubeviz.app.get_data_from_viewer('flux-viewer')
+    mydata = cubeviz.app.get_data_from_viewer('flux-viewer')
 
 To extract the data you want::
 
-    mydata = myviz.app.get_data_from_viewer("uncert-viewer", "contents")
+    mydata = cubeviz.app.get_data_from_viewer("uncert-viewer", "contents")
 
 The data is returned as a ``glue-jupyter`` object.  To convert to a numpy array::
 
@@ -42,7 +42,7 @@ The data is returned as a ``glue-jupyter`` object.  To convert to a numpy array:
 
 Alternatively, you can wrap this all into a single command::
 
-    mydata = myviz.app.get_data_from_viewer("uncert-viewer", "contents[FLUX]")
+    mydata = cubeviz.app.get_data_from_viewer("uncert-viewer", "contents[FLUX]")
 
 Data can also be accessed directly from ``data_collection`` using the following code::
 

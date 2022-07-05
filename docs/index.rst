@@ -171,6 +171,7 @@ Using Jdaviz
   cubeviz/index.rst
   mosviz/index.rst
   save_state.rst
+  display.rst
   sample_notebooks.rst
 
 Reference/API

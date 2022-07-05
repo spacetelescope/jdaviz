@@ -106,7 +106,7 @@ The Specviz helper contains a set of convenience methods to programmatically def
     # Instantiate an instance of Specviz
     specviz = Specviz()
     # Display Specviz
-    specviz.app  # doctest: +SKIP
+    specviz.show()  # doctest: +SKIP
 
 Limit methods
 ^^^^^^^^^^^^^

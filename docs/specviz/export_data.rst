@@ -21,11 +21,11 @@ via the lower-level application interface that connects to the ``glue-jupyter``
 application level.  This is accessed via the ``.app`` attribute of the
 `~jdaviz.configs.specviz.helper.Specviz` helper class.  For example::
 
-     specviz.app.get_data_from_viewer('spectrum-viewer')
+    specviz.app.get_data_from_viewer('spectrum-viewer')
 
 To extract a specific spectral subset::
 
-    myviz.app.get_data_from_viewer('spectrum-viewer','Subset 1')
+    specviz.app.get_data_from_viewer('spectrum-viewer', 'Subset 1')
 
 For more on what you can do with this lower-level object, see the API sections
 and the
@@ -34,7 +34,7 @@ and the
 .. seealso::
 
     :ref:`Export From Plugins <specviz-plugins>`
-    Calculations (i.e., not spectroscopic data) from the plugins can also be exported back into the Jupyter notebook in some cases.
+        Calculations (i.e., not spectroscopic data) from the plugins can also be exported back into the Jupyter notebook in some cases.
 
 Spectral Regions
 ================
@@ -43,7 +43,7 @@ If you have spectral region subsets, you can extract the parameters of these sub
 as an Astropy `spectral region <https://specutils.readthedocs.io/en/stable/spectral_regions.html>`_.
 For a list of available spectral regions to extract, you can type::
 
-    regions = myviz.specviz.get_spectral_regions()
+    regions = specviz.get_spectral_regions()
     regions
 
 To extract the spectral region you want::
@@ -73,4 +73,3 @@ where the model_label parameter identifies which model should be returned and
 the x and y parameters identify specifically which spaxel fits are to be returned,
 for models applied to every spaxel using the Apply to Cube button.
 Leaving x or y as None will mean that the models fit to every spaxel across that axis will be returned.
-
