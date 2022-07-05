@@ -339,7 +339,7 @@ class ConfigHelper(HubListener):
                 raise ValueError(f"Unrecognized display location: {loc}")
 
         except Exception as e:
-            raise RuntimeError(f'Error in displaying Jdaviz: {repr(e)}')
+            raise RuntimeError('Error in displaying Jdaviz') from e
 
     def show_in_sidecar(self, anchor=None, title=None):
         """
