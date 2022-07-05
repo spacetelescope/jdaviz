@@ -52,7 +52,7 @@ Box Zoom and Linked Box Zoom
 
 Linked Box Zoom is an Imviz-specific feature that allows the user to zoom
 images in multiple different viewers simultaneously, not unlike
-:ref:`imviz_pan_zoom`.
+:ref:`imviz-pan-zoom`.
 
 Single-viewer Box Zoom is also available and is used in a similar way as in
 other Jdaviz tools. To access this option, right-click on the Linked Box Zoom button
@@ -81,7 +81,7 @@ When in either of these modes, clicking on the image will recenter the image to 
 location under cursor.
 
 From the API
-^^^^^^^^^^^^
+------------
 
 From the API, you can programmatically zoom in and out. Zoom level:
 
@@ -163,7 +163,7 @@ then clicking on the image. You can also blink by pressing the "b" key on your
 keyboard while moused over the image.
 
 From the API
-^^^^^^^^^^^^
+------------
 
 From the API within the Jupyter notebook::
 
@@ -223,21 +223,21 @@ Bitmap
 This option selects whether to show or hide the bitmap (image) in the viewer.
 
 Opacity
-^^^^^^^
+-------
 
 Change the translucence of the image.
 
 .. _contrast:
 
 Contrast
-^^^^^^^^
+--------
 
 Change the luminance of the color in the image.
 
 .. _bias:
 
 Bias
-^^^^
+----
 
 Set a constant to subtract from every point in the data array before
 applying the conversion between data value and displayed pixel saturation.
@@ -245,31 +245,31 @@ The :guilabel:`bias` slider center position is 0 bias, such that a user can appl
 bias values by sliding it left.
 
 Stretch
-^^^^^^^
+-------
 
 Change the equation that is used to convert data values between
 :guilabel:`min` and :guilabel:`max` to the 0 to 1 scale of pixel saturation on the displayed
 image.
 
 Percentile
-^^^^^^^^^^
+----------
 
 Can be used to set the :guilabel:`min` and :guilabel:`max` values based on percentiles of the data.
 
 Min
-"""
+^^^
 
 If the percentile is "custom", then the data value corresponding to the
 minimum of the colormap scale (e.g. black in grayscale) can be set.
 
 Max
-"""
+^^^
 
 If the percentile is "custom", then the data value corresponding to the
 maximum of the colormap scale (e.g. white in grayscale) can be set.
 
 Colormap
-^^^^^^^^
+--------
 
 The spectrum of colors used to visualize data can be changed using this drop down.
 
@@ -286,7 +286,7 @@ From the API within the Jupyter notebook::
 .. _imviz_custom_colormap:
 
 Adding Custom Colormap
-======================
+^^^^^^^^^^^^^^^^^^^^^^
 
 A custom colormap can only be added when Imviz is run in a notebook, not from the
 command line. The custom colormap must be added to Glue *before* starting Imviz.
@@ -314,7 +314,7 @@ that has been loaded into the application to be visualized in these additional v
 You can then utilize some of the Imviz-specific features, like :ref:`imviz-pan-zoom`.
 
 From the API
-^^^^^^^^^^^^
+------------
 
 From the API within the Jupyter notebook::
 

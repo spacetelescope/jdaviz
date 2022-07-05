@@ -211,7 +211,9 @@ originally loaded, with the redshift unchanged.
 Line Analysis
 =============
 
-The Line Analysis plugin returns :ref:`specutils:analysis` for a single spectral line.
+The Line Analysis plugin returns
+`specutils analysis <https://specutils.readthedocs.io/en/stable/analysis.html>`_
+for a single spectral line.
 The line is selected via the :guilabel:`region` tool in
 the spectrum viewer to select a spectral subset. Note that you can have
 multiple subsets in Specviz, but the plugin will only show statistics for the

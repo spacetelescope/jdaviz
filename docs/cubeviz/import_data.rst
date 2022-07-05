@@ -78,7 +78,7 @@ The example below loads a FITS file into Cubeviz::
     cubeviz.show()
 
 You can also pass the path to a file that `~specutils.Spectrum1D` understands directly to the
-:meth:`jdaviz.configs.cubeviz.helper.Cubeviz.load_data` method::
+:meth:`~jdaviz.core.helpers.ConfigHelper.load_data` method::
 
     cubeviz.load_data("/Users/demouser/data/cube_file.fits")  # doctest: +SKIP
     cubeviz.show()
