@@ -345,9 +345,8 @@ class ConfigHelper(HubListener):
                 raise ValueError(f"Unrecognized display location: {loc}")
 
         except Exception as e:
-            warnings.warn(f'Error detected in display: {repr(e)}. Falling back to IPython display',
-                          RuntimeWarning)
-            display(self.app)
+            raise RuntimeError(f'Error in displaying Jdaviz: {repr(e)}')
+
 
     def show_in_sidecar(self, anchor=None, title=None):
         """
