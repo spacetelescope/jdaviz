@@ -6,7 +6,6 @@ from specutils import Spectrum1D
 from specutils.utils import QuantityModel
 from traitlets import Bool, List, Unicode, observe
 from glue.core.data import Data
-from glue.core.link_helpers import LinkSame
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
