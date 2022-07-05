@@ -7,6 +7,7 @@ See also https://github.com/spacetelescope/jdaviz/issues/104 for more details
 on the motivation behind this concept.
 """
 import re
+import warnings
 
 import numpy as np
 import astropy.units as u
@@ -351,6 +352,8 @@ class ConfigHelper(HubListener):
         Preserved for backwards compatibility
         Shows Jdaviz in a sidecar with the default anchor: right
         """
+        warnings.warn('show_in_sidecar has been replaced with show(loc="sidecar")',
+                      DeprecationWarning)
         location = 'sidecar' if anchor is None else f"sidecar:{anchor}"
         return self.show(loc=location, title=title)
 
@@ -359,4 +362,6 @@ class ConfigHelper(HubListener):
         Preserved for backwards compatibility
         Shows Jdaviz in a sidecar in a new tab to the right
         """
+        warnings.warn('show_in_new_tab has been replaced with show(loc="sidecar:tab-after")',
+                      DeprecationWarning)
         return self.show(loc="sidecar:tab-after", title=title)
