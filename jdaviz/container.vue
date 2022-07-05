@@ -10,6 +10,7 @@
       @resize="$emit('resize')"
       :closefn="closefn"
       @data-item-selected="$emit('data-item-selected', $event)"
+      @data-item-visibility="$emit('data-item-visibility', $event)"
       @data-item-remove="$emit('data-item-remove', $event)"
       @call-viewer-method="$emit('call-viewer-method', $event)"
     ></g-viewer-tab>
@@ -30,6 +31,7 @@
               :app_settings="app_settings"
               :icons="icons"
               @data-item-selected="$emit('data-item-selected', $event)"
+              @data-item-visibility="$emit('data-item-visibility', $event)"
               @data-item-remove="$emit('data-item-remove', $event)"
             ></j-viewer-data-select>
 

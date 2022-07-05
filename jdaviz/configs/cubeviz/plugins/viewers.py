@@ -37,6 +37,7 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._subscribe_to_layers_update()
         self._initialize_toolbar_nested()
         self.state.add_callback('reference_data', self._initial_x_axis)
 

@@ -52,39 +52,24 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._subscribe_to_layers_update()
         self._initialize_toolbar_nested(default_tool_priority=['jdaviz:selectslice'])
         self._offscreen_lines_marks = OffscreenLinesMarks(self)
         self.figure.marks = self.figure.marks + self._offscreen_lines_marks.marks
 
         self.state.add_callback('show_uncertainty', self._show_uncertainty_changed)
 
-        self._expected_subset_layers = []
-        self.state.add_callback('layers', self._on_layers_update)
         self.display_mask = False
 
         # Change collapse function to sum
         self.state.function = 'sum'
 
-    def _on_layers_update(self, *args):
-        if not len(self._expected_subset_layers):
-            return
-        # we'll make a deepcopy so that we can remove entries from the self._expected_subset_layers
-        # to avoid recursion, but also handle multiple layers for the same subset
-        expected_subset_layers = self._expected_subset_layers[:]
-        for layer in self.state.layers:
-            if layer.layer.label in expected_subset_layers:
-                if layer.layer.label in self._expected_subset_layers:
-                    self._expected_subset_layers.remove(layer.layer.label)
-                if isinstance(layer.layer.subset_state, RoiSubsetState):
-                    layer.linewidth = 1
-                else:
-                    layer.linewidth = 3
-
-    def _on_subset_create(self, msg):
-        # we don't have access to the actual subset yet to tell if its spectral or spatial, so
-        # we'll store the name of this new subset and change the default linewidth when the
-        # layers are added
-        self._expected_subset_layers.append(msg.subset.label)
+    def _expected_subset_layer_default(self, layer):
+        super()._expected_subset_layer_default(layer)
+        if isinstance(layer.layer.subset_state, RoiSubsetState):
+            layer.linewidth = 1
+        else:
+            layer.linewidth = 3
 
     def data(self, cls=None):
         # Grab the user's chosen statistic for collapsing data

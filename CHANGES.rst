@@ -16,6 +16,10 @@ New Features
 - Labels in data menus are truncated to fit in a single line but ensure visibility of extensions.
   [#1390]
 
+- Data menus now control visibility of layers corresponding to the data entries instead of
+  loading/unloading the entries from the viewers.  Data entries that are unloaded now appear
+  in an expanded section of the menu and can be re-loaded into the viewer. [#1400]
+
 - Several reversed version of colormaps now available for image viewers. [#1407]
 
 Cubeviz

@@ -896,13 +896,13 @@ class Application(VuetifyTemplate, HubListener):
         data_id = self._data_id_from_label(data_label)
 
         if clear_other_data:
-            self._update_selected_data_items(viewer_item['id'], [])
+            self._update_selected_data_items(viewer_item['id'], {})
 
-        data_ids = viewer_item['selected_data_items']
+        selected_data_items = viewer_item['selected_data_items']
 
         if data_id is not None:
-            data_ids.append(data_id)
-            self._update_selected_data_items(viewer_item['id'], data_ids)
+            selected_data_items[data_id] = 'visible'
+            self._update_selected_data_items(viewer_item['id'], selected_data_items)
         else:
             raise ValueError(
                 f"No data item found with label '{data_label}'. Label must be one "
@@ -944,10 +944,10 @@ class Application(VuetifyTemplate, HubListener):
         selected_items = viewer_item['selected_data_items']
 
         if data_id in selected_items:
-            selected_items.remove(data_id)
+            _ = selected_items.pop(data_id)
 
-            self._update_selected_data_items(
-                viewer_item['id'], selected_items)
+        self._update_selected_data_items(
+            viewer_item['id'], selected_items)
 
     def _data_id_from_label(self, label):
         """
@@ -1175,12 +1175,24 @@ class Application(VuetifyTemplate, HubListener):
             raise ValueError(f'viewer {viewer_id} not found')
 
         if replace:
-            selected_items = [item_id]
+            selected_items = {item_id: 'visible'}
         elif checked:
-            selected_items = [*viewer_item['selected_data_items'], item_id]
+            selected_items = {**viewer_item['selected_data_items'], item_id: 'visible'}
         else:
-            selected_items = list(filter(
-                lambda id: id != item_id, viewer_item['selected_data_items']))
+            selected_items = {k: v for k, v in viewer_item['selected_data_items'].items() if k != item_id}  # noqa
+
+        self._update_selected_data_items(viewer_id, selected_items)
+
+    def vue_data_item_visibility(self, event):
+        viewer_id, item_id, visible = event['id'], event['item_id'], event['visible']
+        viewer_item = self._viewer_item_by_id(viewer_id)
+
+        replace = event.get('replace', False)
+        selected_items = viewer_item['selected_data_items']
+        if replace and visible:
+            selected_items = {id: 'visible' if id == item_id else 'hidden' for id in selected_items.keys()}  # noqa
+        else:
+            selected_items[item_id] = 'visible' if visible else 'hidden'
 
         self._update_selected_data_items(viewer_id, selected_items)
 
@@ -1205,14 +1217,15 @@ class Application(VuetifyTemplate, HubListener):
         viewer_item = self._viewer_item_by_id(viewer_id)
         viewer = self._viewer_by_id(viewer_id)
 
+        if isinstance(selected_items, list):
+            selected_items = {si: 'visible' for si in selected_items}
         # Update the stored selected data items
         viewer_item['selected_data_items'] = selected_items
-        data_ids = viewer_item['selected_data_items']
 
         active_data_labels = []
 
         # Include any selected data in the viewer
-        for data_id in data_ids:
+        for data_id, visibility in selected_items.items():
             label = next((x['name'] for x in self.state.data_items
                           if x['id'] == data_id), None)
 
@@ -1231,6 +1244,14 @@ class Application(VuetifyTemplate, HubListener):
                                               viewer_id=viewer_id,
                                               sender=self)
             self.hub.broadcast(add_data_message)
+
+            for layer in viewer.layers:
+                if layer.layer.data.label == label:
+                    if visibility == 'visible' and not layer.visible:
+                        layer.visible = True
+                        layer.update()
+                    else:
+                        layer.visible = visibility == 'visible'
 
         # Remove any deselected data objects from viewer
         viewer_data = [layer_state.layer
@@ -1254,13 +1275,7 @@ class Application(VuetifyTemplate, HubListener):
                     and active_data._preferred_translation is not None):
                 self._set_plot_axes_labels(viewer_id)
 
-            # Make everything visible again in Imviz.
             if self.config == 'imviz':
-                from jdaviz.configs.imviz.helper import layer_is_image_data
-
-                for lyr in viewer.state.layers:
-                    if layer_is_image_data(lyr.layer):
-                        lyr.visible = True
                 viewer.on_limits_change()  # Trigger compass redraw
 
     def _on_data_added(self, msg):
@@ -1417,7 +1432,7 @@ class Application(VuetifyTemplate, HubListener):
             'layer_options': "IPY_MODEL_" + viewer.layer_options.model_id,
             'viewer_options': "IPY_MODEL_" + viewer.viewer_options.model_id,
             'layer_viewer_open': False,
-            'selected_data_items': [],
+            'selected_data_items': {},
             'config': self.config,  # give viewer access to app config/layout
             'data_open': False,
             'collapse': True,

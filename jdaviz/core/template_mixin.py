@@ -1317,8 +1317,7 @@ class AddResults(BasePluginComponent):
         replace = self.viewer.selected_reference != 'spectrum-viewer'
 
         if self.label in self.app.data_collection:
-            if not replace:
-                self.app.remove_data_from_viewer(self.viewer.selected_reference, self.label)
+            self.app.remove_data_from_viewer(self.viewer.selected_reference, self.label)
             self.app.data_collection.remove(self.app.data_collection[self.label])
 
         self.app.add_data(data_item, self.label)
@@ -1327,7 +1326,15 @@ class AddResults(BasePluginComponent):
             # replace the contents in the selected viewer with the results from this plugin
             # TODO: switch to an instance/classname check?
             self.app.add_data_to_viewer(self.viewer.selected_id,
-                                        self.label, clear_other_data=replace)
+                                        self.label, clear_other_data=False)
+
+            if replace:
+                data_id = next((x['id'] for x in self.app.state.data_items
+                                if x['name'] == self.label), None)
+                self.app.vue_data_item_visibility({'id': self.viewer.selected_id,
+                                                   'item_id': data_id,
+                                                   'visible': True,
+                                                   'replace': True})
 
 
 class AddResultsMixin(VuetifyTemplate, HubListener):
