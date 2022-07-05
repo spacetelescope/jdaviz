@@ -2,7 +2,7 @@ import pytest
 
 
 def test_show_popout(specviz_helper):
-    with pytest.warns(RuntimeWarning):
+    with pytest.raises(RuntimeError, match='Error in displaying Jdaviz'):
         specviz_helper.show(loc="popout")
 
 
