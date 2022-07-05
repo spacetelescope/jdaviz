@@ -46,7 +46,7 @@ API Changes
   have been renamed to "Colormap" and "Monochromatic," respectively, for all image
   viewers. [#1406]
 
-- Viz tool display changed to ``viz.show()``. Sidecar no longer returned by 
+- Viz tool display changed to ``viz.show()`` from ``viz.app``. Sidecar no longer returned by 
   show methods. [#965]
 
 Cubeviz
