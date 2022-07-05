@@ -309,16 +309,10 @@ class ConfigHelper(HubListener):
 
             NOTE: Only applicable to a "sidecar" display.
 
-        Returns
-        -------
-        scar : sidecar or `None`
-            The ``sidecar.Sidecar`` object used to create the tab or window or
-            None if no sidecar was created.
-
         Notes
         -----
         If "sidecar" is requested in the "classic" Jupyter notebook, the app will appear inline,
-        as only Lab has a mechanism to have multiple tabs.
+        as only JupyterLab has a mechanism to have multiple tabs.
         """
         try:
             if loc == "inline":
