@@ -7,7 +7,6 @@ See also https://github.com/spacetelescope/jdaviz/issues/104 for more details
 on the motivation behind this concept.
 """
 import re
-import warnings
 
 import numpy as np
 import astropy.units as u
@@ -346,7 +345,6 @@ class ConfigHelper(HubListener):
 
         except Exception as e:
             raise RuntimeError(f'Error in displaying Jdaviz: {repr(e)}')
-
 
     def show_in_sidecar(self, anchor=None, title=None):
         """
