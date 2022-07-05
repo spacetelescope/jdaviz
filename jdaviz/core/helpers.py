@@ -335,8 +335,6 @@ class ConfigHelper(HubListener):
                 with scar:
                     display(self.app)
 
-                return scar
-
             elif loc == "new browser tab":
                 raise NotImplementedError
 
