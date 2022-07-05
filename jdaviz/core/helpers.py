@@ -275,7 +275,7 @@ class ConfigHelper(HubListener):
         return parameters_cube
 
     def show(self, loc="inline", title=None):
-        """ Display the Jdaviz application.
+        """Display the Jdaviz application.
 
         Parameters
         ----------
