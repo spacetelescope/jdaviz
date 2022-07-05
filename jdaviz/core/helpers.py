@@ -344,7 +344,7 @@ class ConfigHelper(HubListener):
                 raise NotImplementedError
 
             else:
-                raise ValueError("Unrecognized display location: " + str(loc))
+                raise ValueError(f"Unrecognized display location: {loc}")
 
         except Exception as e:
             warnings.warn(f'Error detected in display: {repr(e)}. Falling back to IPython display',
