@@ -6,6 +6,7 @@ from specutils import Spectrum1D
 from specutils.utils import QuantityModel
 from traitlets import Bool, List, Unicode, observe
 from glue.core.data import Data
+from glue.core.link_helpers import LinkSame
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
@@ -576,3 +577,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         self.add_results.add_results_from_plugin(spectrum)
         self._set_default_results_label()
+
+        # Link the result spectrum to the reference data of the spectrum viewer
+        self.app._link_new_data(self.app.get_viewer('spectrum-viewer').state.reference_data.label,
+                                self.results_label)
