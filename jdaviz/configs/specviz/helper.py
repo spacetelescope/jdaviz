@@ -185,9 +185,6 @@ class Specviz(ConfigHelper, LineListMixin):
         scale = self.app.get_viewer("spectrum-viewer").scale_y
         self.y_limits(y_min=scale.max, y_max=scale.min)
 
-    def show(self):
-        self.app
-
     def set_spectrum_tick_format(self, fmt, axis=None):
         """
         Manually set the tick format of one of the axes of the profile viewer.
