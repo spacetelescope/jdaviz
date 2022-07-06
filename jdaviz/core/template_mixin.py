@@ -1438,6 +1438,8 @@ class PlotOptionsSyncState(BasePluginComponent):
         for selected_layer_label in layer_labels:
             layer_states.append([])
             for viewer in viewers:
+                if viewer is None:
+                    continue
                 for layer in viewer.layers:
                     if layer.layer.label == selected_layer_label:
                         layer_states[-1].append(layer.state)
