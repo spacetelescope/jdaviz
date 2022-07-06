@@ -1393,7 +1393,7 @@ class Application(VuetifyTemplate, HubListener):
         last_num = int(last_vid.split('-')[-1])
         return last_num + 1
 
-    def _create_viewer_item(self, viewer, vid=None, name=None, reference=None):
+    def _create_viewer_item(self, viewer, vid=None, name=None, reference=None, index=0):
         """
         Convenience method for generating viewer item dictionaries.
 
@@ -1409,6 +1409,8 @@ class Application(VuetifyTemplate, HubListener):
         reference : str, optional
             The reference associated with this viewer as defined in the yaml
             configuration file.
+        index : int, optional
+            Index of the viewer (used for icons in the UI to identify the viewers)
 
         Returns
         -------
@@ -1432,6 +1434,7 @@ class Application(VuetifyTemplate, HubListener):
         return {
             'id': vid,
             'name': name or vid,
+            'index': index,
             'widget': "IPY_MODEL_" + viewer.figure_widget.model_id,
             'toolbar_nested': "IPY_MODEL_" + viewer.toolbar_nested.model_id if viewer.toolbar_nested else '',  # noqa
             'tools': "IPY_MODEL_" + viewer.toolbar_selection_tools.model_id,
@@ -1479,7 +1482,7 @@ class Application(VuetifyTemplate, HubListener):
         # Create the viewer item dictionary
         if name is None:
             name = viewer.__class__.__name__
-        new_viewer_item = self._create_viewer_item(viewer=viewer, vid=vid, name=name)
+        new_viewer_item = self._create_viewer_item(viewer=viewer, vid=vid, name=name, index=len(self._viewer_store)+1)
 
         new_stack_item = self._create_stack_item(
             container='gl-stack',
@@ -1558,7 +1561,8 @@ class Application(VuetifyTemplate, HubListener):
                     viewer_item = self._create_viewer_item(
                         name=view.get('name'),
                         viewer=viewer,
-                        reference=view.get('reference'))
+                        reference=view.get('reference'),
+                        index=len(self._viewer_store)+1)
 
                     self._viewer_store[viewer_item['id']] = viewer
 

@@ -55,12 +55,36 @@
 
         </div>
 
-        <v-card tile flat style="flex: 1; margin-top: -2px; overflow-y: auto;">
+        <v-card tile flat style="flex: 1; margin-top: -2px; overflow-y: auto">
+          <div class="viewer-label invert-if-dark">
+            <j-tooltip :tooltipcontent="viewer.reference+' (click to select)'" span_style="white-space: nowrap">
+              <v-icon class="invert-if-dark">mdi-numeric-{{viewer.index}}-circle-outline</v-icon>
+            </j-tooltip>
+            <span class="invert-if-dark" style="padding: 10px">{{viewer.reference || viewer.id}}</span>
+          </div>
           <jupyter-widget :widget="viewer.widget" style="width: 100%; height: 100%"></jupyter-widget>
         </v-card>
     </gl-component>
   </component>
 </template>
+
+<style>
+.viewer-label {
+  position: absolute;
+  background-color: transparent;
+  border-bottom-right-radius: 4px; 
+  z-index: 1;
+  width: 24px;
+  overflow-x: hidden;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.viewer-label:hover {
+  background-color: #e5e5e5;
+  width: auto;
+}
+</style>
 
 <script>
 module.exports = {
