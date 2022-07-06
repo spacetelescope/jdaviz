@@ -576,7 +576,3 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         self.add_results.add_results_from_plugin(spectrum)
         self._set_default_results_label()
-
-        # Link the result spectrum to the reference data of the spectrum viewer
-        self.app._link_new_data(self.app.get_viewer('spectrum-viewer').state.reference_data.label,
-                                self.results_label)
