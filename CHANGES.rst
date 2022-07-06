@@ -1,4 +1,4 @@
-2.7 (unreleased)
+2.7 (2022-07-06)
 ================
 
 New Features
@@ -37,12 +37,6 @@ Imviz
   Simple Aperture Photometry plugin. Radial profile and curve of growth now center
   on source centroid, not Subset center. [#1409]
 
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
 API Changes
 -----------
 
@@ -59,9 +53,6 @@ API Changes
 - Viz tool display changed to ``viz.show()`` from ``viz.app``. Sidecar no longer returned by 
   show methods. [#965]
 
-Cubeviz
-^^^^^^^
-
 Imviz
 ^^^^^
 
@@ -72,12 +63,6 @@ Imviz
 - ``viewer.set_colormap()`` method now takes Glue colormap name, not
   matplotlib name. This is more consistent with colormap options under
   Plot Options. [#1440]
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
 
 Bug Fixes
 ---------
@@ -129,12 +114,6 @@ Mosviz
 
 - Data dropdown in the gaussian smooth plugin is limited to data entries from the 
   spectrum-viewer (excluding images and 2d spectra). [#1452]
-
-Specviz
-^^^^^^^
-
-Other Changes and Additions
----------------------------
 
 2.6 (2022-05-25)
 ================
