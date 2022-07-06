@@ -3,6 +3,7 @@
 """
 from astropy import units as u
 from astropy.coordinates import Angle
+from glue.core.roi import CircularROI, EllipticalROI, RectangularROI
 from photutils.aperture import (CircularAperture, SkyCircularAperture,
                                 EllipticalAperture, SkyEllipticalAperture,
                                 RectangularAperture, SkyRectangularAperture,
@@ -16,7 +17,78 @@ from regions import (CirclePixelRegion, CircleSkyRegion,
                      EllipseAnnulusPixelRegion, EllipseAnnulusSkyRegion,
                      RectangleAnnulusPixelRegion, RectangleAnnulusSkyRegion, PixCoord)
 
-__all__ = ['regions2aperture', 'aperture2regions']
+__all__ = ['regions2roi', 'regions2aperture', 'aperture2regions']
+
+
+def regions2roi(region_shape, wcs=None):
+    """Convert a given ``regions`` shape to ``glue`` ROI.
+
+    This is the opposite of what is offered by
+    ``glue_astronomy.translators.regions.AstropyRegionsHandler.to_object``
+    but does not cover all the same shapes exactly.
+
+    Parameters
+    ----------
+    region_shape : `regions.Region`
+        A supported ``regions`` shape.
+
+    wcs : `~astropy.wcs.WCS` or `None`
+        A compatible WCS object, if required.
+        **This is only used for sky aperture.**
+
+    Returns
+    -------
+    roi : `glue.core.roi.Roi`
+        An equivalent ``glue`` ROI.
+
+    Raises
+    ------
+    ValueError
+        WCS is required but not provided.
+
+    NotImplementedError
+        The given ``regions`` shape is not supported.
+
+    Examples
+    --------
+    Translate a `regions.CirclePixelRegion` to `glue.core.roi.CircularROI`:
+
+    >>> from regions import CirclePixelRegion, PixCoord
+    >>> from jdaviz.core.region_translators import regions2roi
+    >>> region_shape = CirclePixelRegion(center=PixCoord(x=42, y=43), radius=4.2)
+    >>> regions2roi(region_shape)  # doctest: +ELLIPSIS
+    <glue.core.roi.CircularROI object at ...>
+
+    """
+    if isinstance(region_shape, (CircleSkyRegion, EllipseSkyRegion, RectangleSkyRegion)):
+        if wcs is None:
+            raise ValueError(f'WCS must be provided for {region_shape}')
+
+        # Convert sky to pixel region first, if necessary.
+        region_shape = region_shape.to_pixel(wcs)
+
+    if isinstance(region_shape, CirclePixelRegion):
+        roi = CircularROI(
+            xc=region_shape.center.x, yc=region_shape.center.y, radius=region_shape.radius)
+    elif isinstance(region_shape, EllipsePixelRegion):
+        roi = EllipticalROI(
+            xc=region_shape.center.x, yc=region_shape.center.y,
+            radius_x=region_shape.width * 0.5, radius_y=region_shape.height * 0.5,
+            theta=region_shape.angle.to_value(u.radian))
+    elif isinstance(region_shape, RectanglePixelRegion):
+        half_w = region_shape.width * 0.5
+        half_h = region_shape.height * 0.5
+        xmin = region_shape.center.x - half_w
+        xmax = region_shape.center.x + half_w
+        ymin = region_shape.center.y - half_h
+        ymax = region_shape.center.y + half_h
+        roi = RectangularROI(
+            xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax,
+            theta=region_shape.angle.to_value(u.radian))
+    else:
+        raise NotImplementedError(f'{region_shape.__class__.__name__} is not supported')
+
+    return roi
 
 
 def regions2aperture(region_shape):

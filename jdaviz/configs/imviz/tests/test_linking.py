@@ -102,8 +102,7 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
 
         # Add subsets, both interactive and static.
         self.imviz._apply_interactive_region('bqplot:circle', (1.5, 2.5), (3.6, 4.6))
-        self.imviz.load_static_regions({
-            'my_reg': CirclePixelRegion(center=PixCoord(x=6, y=2), radius=5)})
+        self.imviz.load_regions([CirclePixelRegion(center=PixCoord(x=6, y=2), radius=5)])
 
         # Add markers.
         tbl = Table({'x': (0, 0), 'y': (0, 1)})
@@ -120,8 +119,7 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
                         (0, 100))
 
         # Ensure subsets are still there.
-        assert 'Subset 1' in self.imviz.get_interactive_regions()
-        assert 'my_reg' in [layer.layer.label for layer in self.viewer.state.layers]
+        assert sorted(self.imviz.get_interactive_regions()) == ['Subset 1', 'Subset 2']
 
         # Ensure markers are deleted.
         # Zoom and pan will reset in this case, so we do not check those.

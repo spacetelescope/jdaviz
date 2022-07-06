@@ -23,6 +23,7 @@ class BaseRegionHandler:
         assert n == count
 
 
+@pytest.mark.filterwarnings(r'ignore:.*is deprecated and may be removed in a future version')
 class TestLoadStaticRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
 
     @pytest.mark.parametrize(('subset_label', 'warn_msg'),
@@ -38,12 +39,11 @@ class TestLoadStaticRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
 
     def test_regions_fully_out_of_bounds(self):
         my_reg = CirclePixelRegion(center=PixCoord(x=100, y=100), radius=5)
-        with pytest.warns(UserWarning, match='failed to load, skipping'):
+        with pytest.warns(UserWarning, match='Unsupported region type'):
             bad_regions = self.imviz.load_static_regions({'my_oob_reg': my_reg})
         assert len(bad_regions) == 1
 
-        # BUG: https://github.com/glue-viz/glue/issues/2275
-        self.verify_region_loaded('my_oob_reg', count=1)  # Should be: count=0
+        self.verify_region_loaded('my_oob_reg', count=0)
 
     def test_regions_mask(self):
         mask = np.zeros((10, 10), dtype=np.bool_)
@@ -125,6 +125,7 @@ class TestLoadStaticRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
         assert self.imviz.get_interactive_regions() == {}
 
 
+@pytest.mark.filterwarnings(r'ignore:.*is deprecated and may be removed in a future version')
 class TestLoadStaticRegionsFromFile(BaseRegionHandler):
 
     def setup_class(self):
@@ -138,18 +139,9 @@ class TestLoadStaticRegionsFromFile(BaseRegionHandler):
         imviz_helper.load_data(self.arr, data_label='my_image')
         with pytest.warns(UserWarning):
             bad_regions = imviz_helper.load_static_regions_from_file(self.region_file)
-        assert len(bad_regions) == 1
-        for i in (0, 1, 2, 3, 4, 5, 7, 8):  # Only these will successfully load
+        assert len(bad_regions) == 4
+        for i in (3, 4, 5, 7, 8):  # Only these will successfully load
             self.verify_region_loaded(f'region_{i}', count=1)
-
-    def test_ds9_load_two_good(self, imviz_helper):
-        self.viewer = imviz_helper.default_viewer
-        imviz_helper.load_data(self.arr, data_label='my_image')
-        bad_regions = imviz_helper.load_static_regions_from_file(
-            self.region_file, prefix='good', max_num_regions=2)
-        assert len(bad_regions) == 0
-        for i in range(2):
-            self.verify_region_loaded(f'good_{i}', count=1)
 
     def test_ds9_load_one_bad(self, imviz_helper):
         self.viewer = imviz_helper.default_viewer
@@ -171,6 +163,7 @@ class TestLoadStaticRegionsFromFile(BaseRegionHandler):
         self.verify_region_loaded('bad_0', count=0)
 
 
+@pytest.mark.filterwarnings(r'ignore:.*is deprecated and may be removed in a future version')
 class TestLoadStaticRegionsSkyNoWCS(BaseRegionHandler):
     @pytest.fixture(autouse=True)
     def setup_class(self, imviz_helper):
@@ -211,15 +204,18 @@ class TestGetInteractiveRegions(BaseImviz_WCS_NoWCS):
         assert isinstance(subsets['Subset 1'], CirclePixelRegion)
         assert isinstance(subsets['Subset 2'], CirclePixelRegion)
 
-        # Turn the inner circle (Subset 2) into annulus.
+        # Create a third subset that is an annulus.
         subset_groups = self.imviz.app.data_collection.subset_groups
         new_subset = subset_groups[0].subset_state & ~subset_groups[1].subset_state
         self.viewer.apply_subset_state(new_subset)
 
         # Annulus is no longer accessible by API but also should not crash Imviz.
         subsets = self.imviz.get_interactive_regions()
-        assert list(subsets.keys()) == ['Subset 1'], subsets
+        assert len(self.imviz.app.data_collection.subset_groups) == 3
+        assert list(subsets.keys()) == ['Subset 1', 'Subset 2'], subsets
         assert isinstance(subsets['Subset 1'], CirclePixelRegion)
+        assert isinstance(subsets['Subset 2'], CirclePixelRegion)
 
         # Clear the regions for next test.
         self.imviz._delete_all_regions()
+        assert len(self.imviz.app.data_collection.subset_groups) == 0
