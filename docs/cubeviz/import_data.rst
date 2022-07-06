@@ -28,6 +28,8 @@ In Cubeviz, three image viewers display your data:
  |   Center: ``uncert-viewer``
  |   Top Right: ``mask-viewer``
 
+There is also a fourth viewer called ``spectrum-viewer`` at the bottom that
+will display the collapsed spectrum from ``flux-viewer``.
 
 .. note::
     Only a single cube can be displayed in an instance of Cubeviz at a given time.

@@ -17,7 +17,7 @@ selecting a different spectrum for display.
 
 Much of the Specviz functionality can be handled within the tool or the
 Jupyter notebook using an API. The Toolbar below gives you several spectroscopic
-display options. Right click will open a drop-down with access to different options
+display options. Right click will open a dropdown with access to different options
 for each button.
 
 .. image:: ./img/specviztoolbar.jpg
@@ -66,7 +66,7 @@ Pan Zoom
 ========
 
 There are several ways to pan around a spectrum or zoom in on features of
-interest. Right click will open a drop-down with access to different
+interest. Right click will open a dropdown with access to different
 options described below.
 
 Interactive Pan/Zoom (Desktop or Notebook Interface)
@@ -98,7 +98,7 @@ Horizontal/Vertical Zoom
 The |icon-zoom-pan-horiz| (horizontal) and |icon-zoom-pan-vert| (vertical) Zoom tools allow you to zoom along each axis, while locking the other.  You can also zoom by scrolling.
 
 From the API
-^^^^^^^^^^^^
+------------
 
 The Specviz helper contains a set of convenience methods to programmatically define the view of the spectrum viewer. You may instantiate a Specviz Helper via::
 
@@ -177,12 +177,17 @@ line of interest.
 Plot Settings
 =============
 
-To access plot settings for a particular viewer (including the spectrum viewer), click the |icon-settings-sliders| icon in the viewer toolbar or open the :ref:`Plot Options<specviz-plot-options>` plugin.
+To access plot settings for a particular viewer (including the spectrum viewer),
+click the |icon-settings-sliders| icon in the viewer toolbar or open the
+:ref:`Plot Options <specviz-plot-options>` plugin.
 
 Layer
 -----
 
-The top section of the :guilabel:`Layer` tab contains options to change the color of the spectrum (click the |icon-color-square| icon to see a color change menu), change visibility of the spectrum (|icon-eye| icon), and a drop-down box to select which layer will have its settings changed.
+The top section of the :guilabel:`Layer` tab contains options to change the color
+of the spectrum (click the |icon-color-square| icon to see a color change menu),
+change visibility of the spectrum (|icon-eye| icon), and a dropdown box to select
+which layer will have its settings changed.
 
 Line Width
 ----------
@@ -192,9 +197,10 @@ Width of the line for the spectrum in pixels. Larger values are thicker lines on
 Vmin and Vmax
 -------------
 
-Minimum and maximum values of the y axis.
+Minimum and maximum values of the Y axis.
 
 Percentile
 ----------
 
-Sets the bounds of the plot (Vmin and Vmax) such that the selected percentage of the data is shown in the viewer. Editing either bound manually changes the "Percentile" selection to "Custom."
+Sets the bounds of the plot (Vmin and Vmax) such that the selected percentage of the
+data is shown in the viewer. Editing either bound manually changes the "Percentile" selection to "Custom."

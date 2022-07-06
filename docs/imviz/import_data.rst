@@ -17,7 +17,7 @@ See :meth:`jdaviz.configs.imviz.helper.Imviz.load_data` for more information.
 .. _imviz-import-commandline:
 
 Importing data through the Command Line
----------------------------------------
+=======================================
 
 When running the Imviz application via the command line, you must provide a path
 to a compatible file, which will be loaded into the app on initialization::
@@ -27,7 +27,7 @@ to a compatible file, which will be loaded into the app on initialization::
 .. _imviz-import-gui:
 
 Importing data through the GUI
-------------------------------
+==============================
 
 You can load your data into the Imviz application
 by clicking the :guilabel:`Import Data` button at the top left of the application's
@@ -43,17 +43,18 @@ tab of each viewer's options menu as described in :ref:`cubeviz-selecting-data`.
 .. _imviz-import-api:
 
 Importing data via the API
---------------------------
+==========================
 
 Alternatively, if you are working in a coding environment like a Jupyter
 notebook, you have access to the Imviz helper class API. Using this API,
-users can load data into the application through code using the :meth:`~jdaviz.configs.imviz.helper.Imviz.load_data`
+users can load data into the application through code using the
+:meth:`~jdaviz.configs.imviz.helper.Imviz.load_data`
 method, which takes as input either the name of a local file, an
 :class:`~astropy.nddata.NDData`, :class:`~astropy.io.fits.HDUList`,
 or :class:`~astropy.io.fits.ImageHDU` object.
 
 FITS Files
-^^^^^^^^^^
+----------
 
 The example below loads the first science extension of the given FITS file into Imviz::
 
@@ -63,7 +64,7 @@ The example below loads the first science extension of the given FITS file into 
     imviz.show()
 
 Creating Your Own Array
-^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------
 
 You can create your own array to load into Imviz::
 
@@ -76,7 +77,7 @@ You can create your own array to load into Imviz::
     imviz.show()
 
 JWST datamodels
-^^^^^^^^^^^^^^^
+---------------
 
 If you have a `jwst.datamodels <https://jwst-pipeline.readthedocs.io/en/latest/jwst/datamodels/index.html>`_
 object, you can load it into Imviz as follows::
@@ -97,7 +98,7 @@ is separated out of the ``jwst`` pipeline package.
 .. _imviz-import-catalogs-api:
 
 Importing catalogs via the API
-------------------------------
+==============================
 
 If you have a catalog file supported by `astropy.table.Table`, you
 can load the catalog into Imviz and add markers to Imviz viewers to show
@@ -126,7 +127,7 @@ And to remove those markers::
 .. _imviz-import-regions-api:
 
 Importing regions via the API
------------------------------
+=============================
 
 If you have a region file supported by :ref:`regions:regions_io`, you
 can load the regions into Imviz as follows. Any unsupported region will

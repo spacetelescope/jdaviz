@@ -106,4 +106,3 @@ of a notebook::
 
     from jdaviz import enable_hot_reloading
     enable_hot_reloading()
-

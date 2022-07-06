@@ -5,7 +5,8 @@ Importing Data Into Specviz
 ***************************
 
 By design, Specviz only supports data that can be parsed as :class:`~specutils.Spectrum1D` objects,
-as that allows the Python-level interface and parsing tools to be defined in ``specutils`` instead of being duplicated in Jdaviz.
+as that allows the Python-level interface and parsing tools to be defined in ``specutils``
+instead of being duplicated in Jdaviz.
 :class:`~specutils.Spectrum1D` objects are very flexible in their capabilities, however,
 and hence should address most astronomical spectrum use cases.
 
@@ -17,7 +18,7 @@ and hence should address most astronomical spectrum use cases.
 .. _specviz-import-commandline:
 
 Importing data through the Command Line
----------------------------------------
+=======================================
 
 You can load your data into the Specviz application through the command line::
 
@@ -26,7 +27,7 @@ You can load your data into the Specviz application through the command line::
 .. _specviz-import-gui:
 
 Importing data through the GUI
-------------------------------
+==============================
 
 You can load your data into the Specviz application
 by clicking the :guilabel:`Import Data` button at the top left of the application's
@@ -41,48 +42,49 @@ tab of each viewer's options menu as described in :ref:`cubeviz-selecting-data`.
 .. _specviz-import-api:
 
 Importing data via the API
---------------------------
+==========================
 
 Alternatively, if users are working in a coding environment like a Jupyter
 notebook, they have access to the Specviz helper class API. Using this API,
-users can load data into the application through code using the :meth:`~jdaviz.configs.specviz.helper.Specviz.load_spectrum`
+users can load data into the application through code using the
+:meth:`~jdaviz.configs.specviz.helper.Specviz.load_spectrum`
 method, which takes as input a :class:`~specutils.Spectrum1D` object.
 
 FITS Files
-^^^^^^^^^^
+----------
 
 The example below loads a FITS file into Specviz::
 
     from specutils import Spectrum1D
-    spec1d = Spectrum1D.read("/path/to/data/file") #doctest: +SKIP
-    specviz = Specviz()  # doctest: +SKIP
-    specviz.load_spectrum(spec1d)  # doctest: +SKIP
+    spec1d = Spectrum1D.read("/path/to/data/file")
+    specviz = Specviz()
+    specviz.load_spectrum(spec1d, data_label="my_spec")
     specviz.show()
 
 You can also pass the path to a file that `~specutils.Spectrum1D` understands directly to the
 :meth:`jdaviz.configs.specviz.helper.Specviz.load_spectrum` method::
 
-    specviz.load_spectrum("path/to/data/file") #doctest: +SKIP
+    specviz.load_spectrum("path/to/data/file")
 
 Creating Your Own Array
-^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------
 
 You can create your own array to load into Specviz::
 
-    from jdaviz import Specviz
     import numpy as np
     import astropy.units as u
     from specutils import Spectrum1D
+    from jdaviz import Specviz
 
-    flux = np.random.randn(200)*u.Jy
-    wavelength = np.arange(5100, 5300)*u.AA
+    flux = np.random.randn(200) * u.Jy
+    wavelength = np.arange(5100, 5300) * u.AA
     spec1d = Spectrum1D(spectral_axis=wavelength, flux=flux)
     specviz = Specviz()
-    specviz.load_spectrum(spec1d)  # doctest: +IGNORE_OUTPUT
+    specviz.load_spectrum(spec1d, data_label="my_spec")
     specviz.show()
 
 JWST datamodels
-^^^^^^^^^^^^^^^
+---------------
 
 If you have a `jwst.datamodels <https://jwst-pipeline.readthedocs.io/en/latest/jwst/datamodels/index.html>`_
 object, you can load it into Specviz as follows::
@@ -97,7 +99,7 @@ object, you can load it into Specviz as follows::
 
     spec1d = Spectrum1D(flux=flux, spectral_axis=wave)
     specviz = Specviz()
-    specviz.load_spectrum(spec1d)  # doctest: +IGNORE_OUTPUT
+    specviz.load_spectrum(spec1d, data_label="MultiSpecModel")
     specviz.show()
 
 There is no plan to natively load such objects until ``datamodels``
@@ -115,8 +117,8 @@ to stitch together the spectra into a single data object so that
 they can be manipulated and analyzed in the application as a single entity::
 
     from specutils import SpectrumList
-    spec_list = SpectrumList([spec1d_1, spec1d_2]) #doctest: +SKIP
-    specviz.load_spectrum(spec_list) #doctest: +SKIP
+    spec_list = SpectrumList([spec1d_1, spec1d_2])
+    specviz.load_spectrum(spec_list)
     specviz.show()
 
 In the screenshot below, the combined spectrum is plotted in gray, and one of

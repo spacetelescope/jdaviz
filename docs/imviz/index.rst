@@ -21,6 +21,10 @@ Data can be both imported into and exported out of the tool so users can continu
 desired workflow within the notebook.
 This documentation provides details on the various capabilities, demo videos, and example notebooks.
 
+.. We do not want a real section here so navbar shows toc directly.
+
+**Using Imviz**
+
 .. toctree::
   :maxdepth: 2
 

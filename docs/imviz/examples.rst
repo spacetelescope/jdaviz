@@ -1,12 +1,12 @@
 .. _imviz_examples:
 
-########
+********
 Examples
-########
+********
 
 Below is a quick introductory tour of the Imviz configuration and its features.
 To get started, we recommend cloning the Jdaviz repo and running the
-`Imviz sample notebook <https://github.com/spacetelescope/jdaviz/blob/main/notebooks/ImvizExample.ipynb>`_.
+:gh-notebook:`ImvizExample`.
 
 .. seealso::
 
@@ -14,35 +14,36 @@ To get started, we recommend cloning the Jdaviz repo and running the
         A number of additional example notebooks.
 
 Open Image Data
-^^^^^^^^^^^^^^^
+===============
 
 .. raw:: html
 
     <iframe width="560" height="315" src="https://www.youtube.com/embed/WPe3XCZQGxs" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-
 Overplotting a Catalog
-^^^^^^^^^^^^^^^^^^^^^^
+======================
 
 .. raw:: html
 
     <iframe width="560" height="315" src="https://www.youtube.com/embed/2OUuxxNkkbM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-
 Aligning Images
-^^^^^^^^^^^^^^^
+===============
+
 .. raw:: html
 
     <iframe width="560" height="315" src="https://www.youtube.com/embed/vZHiuDuKheQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Exploring the Plugin Toolbar
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+============================
+
 .. raw:: html
 
     <iframe width="560" height="315" src="https://www.youtube.com/embed/3GD8W6QT634" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Aperture Photometry
-^^^^^^^^^^^^^^^^^^^
+===================
+
 .. raw:: html
 
     <iframe width="560" height="315" src="https://www.youtube.com/embed/hDoGvJIHby4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>

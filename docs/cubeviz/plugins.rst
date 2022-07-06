@@ -8,6 +8,7 @@ icon in the upper right corner of the Cubeviz application.
 
 .. image:: ./img/cubevizplugins.jpg
     :alt: Cubeviz Plugins
+    :width: 200px
 
 The data analysis plugins are meant to aid quick-look analysis
 of both 3D and 1D spectroscopic data. In many cases, functions can be applied to
@@ -88,7 +89,7 @@ or spatial dimensions of a cube.
 .. _collapse:
 
 Collapse
-===============
+========
 
 .. image:: ../img/collapse_plugin.png
 

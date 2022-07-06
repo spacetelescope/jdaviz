@@ -29,7 +29,7 @@ To extract a specific spectral subset::
 
 For more on what you can do with this lower-level object, see the API sections
 and the
-`glue-jupyter documentation <https://glue-jupyter.readthedocs.io/en/latest/>`_
+`glue-jupyter documentation <https://glue-jupyter.readthedocs.io/en/latest/>`_.
 
 .. seealso::
 
@@ -40,7 +40,7 @@ Spectral Regions
 ================
 
 If you have spectral region subsets, you can extract the parameters of these subsets
-as an Astropy `spectral region <https://specutils.readthedocs.io/en/stable/spectral_regions.html>`_.
+as a `specutils spectral region <https://specutils.readthedocs.io/en/stable/spectral_regions.html>`_.
 For a list of available spectral regions to extract, you can type::
 
     regions = specviz.get_spectral_regions()

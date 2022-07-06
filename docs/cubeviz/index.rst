@@ -52,6 +52,10 @@ In addition, Cubeviz also allows users to interacting with their cube to:
 
 * fit models to every spaxel
 
+.. We do not want a real section here so navbar shows toc directly.
+
+**Using Cubeviz**
+
 .. toctree::
   :maxdepth: 2
 

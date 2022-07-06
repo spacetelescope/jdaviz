@@ -8,16 +8,15 @@ Imviz uses image viewers to visualize data from supported formats.
 Much of the functionality is available both from the application GUI and
 from the Jupyter notebook using API calls.
 The Toolbar below gives you several image display options.
-Right-click will open a drop-down with access to different options for each button.
+Right-click will open a dropdown with access to different options for each button.
 
 .. image:: ../img/toolbar.jpg
     :alt: Imviz Toolbar
 
+.. _imviz-selecting-data:
 
 Selecting Data Set
 ==================
-
-.. _imviz-selecting-data:
 
 Data can be selected and de-selected in each viewer's data menu, opened by clicking the
 |icon-viewer-data-select| button in the top left of the viewer. Here, you can click a
@@ -52,7 +51,7 @@ Box Zoom and Linked Box Zoom
 
 Linked Box Zoom is an Imviz-specific feature that allows the user to zoom
 images in multiple different viewers simultaneously, not unlike
-:ref:`imviz-pan-zoom`.
+:ref:`imviz_pan_zoom`.
 
 Single-viewer Box Zoom is also available and is used in a similar way as in
 other Jdaviz tools. To access this option, right-click on the Linked Box Zoom button
@@ -63,7 +62,7 @@ and left-click on the second option down to select it.
     :ref:`Pan/Zoom <cubeviz-pan-zoom>`
         Documentation on using Pan/Zoom in the Jdaviz viewers.
 
-.. _imviz-pan-zoom:
+.. _imviz_pan_zoom:
 
 Pan/Zoom and Linked Pan/Zoom
 ============================
@@ -141,8 +140,6 @@ You can use these options to further adjust the region of interest and adapt it 
     :ref:`Exporting Spatial Regions <imviz_export_regions>`
         Exporting regions from within the Jupyter notebook.
 
-
-
 You can :ref:`import <imviz-import-regions-api>` and :ref:`export <imviz_export_regions>` regions from the API.
 
 .. seealso::
@@ -157,7 +154,7 @@ Blinking
 ========
 
 Blinking is an Imviz-specific functionality that allows a user to quickly switch
-between viewing two or more images, as long as they are linked (see :ref:`imviz-pan-zoom` for
+between viewing two or more images, as long as they are linked (see :ref:`imviz_pan_zoom` for
 more on linking behavior). This can be done by selecting the |icon-blink| icon and
 then clicking on the image. You can also blink by pressing the "b" key on your
 keyboard while moused over the image.
@@ -188,7 +185,7 @@ double-click on the display while the mode is active.
 Display Settings
 ================
 
-To access all of the different display settings for an image viewer, , click the
+To access all of the different display settings for an image viewer, click the
 |icon-settings-sliders| icon in the viewer toolbar or open the :ref:`Plot Options <cubeviz-plot-options>` plugin.
 Changing the display settings DOES NOT change the underlying data, only the
 visualization of that data.
@@ -209,7 +206,7 @@ Contour
 This option selects whether to show or hide contours.
 
 The :guilabel:`Contours` of a second image can also be plotted over a first image or cube. Add
-the second image as data in the data drop-down tab, and select both images. To visualize the contours
+the second image as data in the data dropdown tab, and select both images. To visualize the contours
 of the second image, go to the :guilabel:`Layer` tab, select the layer to be contour-mapped, and
 set its :guilabel:`Contour` to be on and its :guilabel:`Bitmap` to be off. The contours of
 the second image will appear superimposed on the first image. In the second figure below, we
@@ -311,7 +308,7 @@ Adding New Viewers
 In the toolbar towards the top of the UI, there is a |icon-plus| icon
 that when clicked will add new viewers to the application. You can then select from the data
 that has been loaded into the application to be visualized in these additional viewers.
-You can then utilize some of the Imviz-specific features, like :ref:`imviz-pan-zoom`.
+You can then utilize some of the Imviz-specific features, like :ref:`imviz_pan_zoom`.
 
 From the API
 ------------

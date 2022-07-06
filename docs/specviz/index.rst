@@ -30,6 +30,10 @@ users can continue their desired workflow within the notebook.
 This documentation provides details on the various capabilities, demo videos,
 and example notebooks.
 
+.. We do not want a real section here so navbar shows toc directly.
+
+**Using Specviz**
+
 .. toctree::
   :maxdepth: 2
 

@@ -10,6 +10,7 @@ icon in the upper right corner of the Imviz application.
 
 .. image:: ../img/plugins.jpg
     :alt: Imviz Plugins
+    :width: 200px
 
 .. _imviz_metadata-viewer:
 
@@ -41,7 +42,7 @@ Subset Tools
 ============
 
 This plugin allows you to select an existing subset to modify, or to select
-"Create new" to create a new subset by selecting and using the region selector
+:guilabel:`Create new` to create a new subset by selecting and using the region selector
 in the spectrum viewer toolbar. You can also choose the operation that will be
 applied by the selector tool. Note that these are synched with the subset tools
 in the app-level toolbar. It does not show static regions loaded
@@ -72,7 +73,7 @@ falls back to full transformation.
 For more details on linking, see :ref:`dev_glue_linking`.
 
 From the API
-^^^^^^^^^^^^
+------------
 
 From the API within the Jupyter notebook (if linking by WCS)::
 
@@ -120,8 +121,8 @@ an interactively selected region. A typical workflow is as follows:
 
 1. Load image(s) in Imviz (see :ref:`imviz-import-data`).
 2. Draw a region over the object of interest (see :ref:`imviz_defining_spatial_regions`).
-3. Select the desired image using the :guilabel:`Data` drop-down menu.
-4. Select the desired region using the :guilabel:`Subset` drop-down menu.
+3. Select the desired image using the :guilabel:`Data` dropdown menu.
+4. Select the desired region using the :guilabel:`Subset` dropdown menu.
 5. If you want to subtract background before performing photometry,
    you have the following 3 options. Otherwise if your image is already
    background subtracted, choose "Manual" and leave the background set at 0:
@@ -132,7 +133,7 @@ an interactively selected region. A typical workflow is as follows:
     and :guilabel:`Annulus width`, respectively. Median of the pixels within
     the annulus region will be used but the annulus shape will not be shown on display.
   * Subset: Define a region for background calculation (median) using Subset draw tool
-    and select that region using the :guilabel:`Background` drop-down menu.
+    and select that region using the :guilabel:`Background` dropdown menu.
 
 6. For some JWST and HST images, pixel area in arcsec squared is automatically
    populated in the :guilabel:`Pixel area` field from image metadata. If it does
@@ -155,7 +156,7 @@ an interactively selected region. A typical workflow is as follows:
    to not applying any scaling. This field is only used if data has a valid unit.
    If this field is not applicable for you, leave it at 0.
    **This field resets every time Data selection changes.**
-9. Select the desired radial profile plot type using the :guilabel:`Plot Type` drop-down menu:
+9. Select the desired radial profile plot type using the :guilabel:`Plot Type` dropdown menu:
 
   * Curve of Growth: :attr:`~photutils.aperture.ApertureStats.sum` (sum of flux in the aperture)
     across radii from center out to the edge of the aperture. This is calculated in the same

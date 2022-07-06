@@ -8,7 +8,7 @@ After data have been manipulated or analyzed, it is possible to export
 those data currently back into your Jupyter notebook.
 
 Spatial Regions
-===============================
+===============
 
 .. seealso::
 
@@ -30,7 +30,7 @@ Spatial Regions
 The viewer options in the Cubeviz configuration are ``flux-viewer``, ``uncert-viewer``, and ``mask-viewer``.
 For example, to list the data available in a particular viewer:::
 
-    mydata = cubeviz.app.get_data_from_viewer('flux-viewer')
+    mydata = cubeviz.app.get_data_from_viewer("flux-viewer")
 
 To extract the data you want::
 
@@ -74,6 +74,5 @@ To extract all of the model parameters::
 
 where the model_label parameter identifies which model should be returned and
 the x and y parameters identify specifically which spaxel fits are to be returned,
-for models applied to every spaxel using the Apply to Cube button.
+for models applied to every spaxel using the :guilabel:`Apply to Cube` button.
 Leaving x or y as None will mean that the models fit to every spaxel across that axis will be returned.
-

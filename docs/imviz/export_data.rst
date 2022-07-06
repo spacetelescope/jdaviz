@@ -14,7 +14,6 @@ You can extract spatial regions::
     regions = imviz.get_interactive_regions()
     regions
 
-
 .. _imviz_export_photomtery:
 
 Aperture Photometry
