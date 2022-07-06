@@ -56,11 +56,11 @@
         </div>
 
         <v-card tile flat style="flex: 1; margin-top: -2px; overflow-y: auto">
-          <div class="viewer-label invert-if-dark">
+          <div :class="viewer.config==='imviz' ? 'viewer-label viewer-label-imviz invert-if-dark' : 'viewer-label invert-if-dark'">
             <j-tooltip :tooltipcontent="viewer.reference+' (click to select)'" span_style="white-space: nowrap">
-              <v-icon class="invert-if-dark">mdi-numeric-{{viewer.index}}-circle-outline</v-icon>
+              <v-icon :class="viewer.config==='imviz' ? 'invert' : 'invert-if-dark'">mdi-numeric-{{viewer.index}}-circle-outline</v-icon>
             </j-tooltip>
-            <span class="invert-if-dark" style="padding: 10px">{{viewer.reference || viewer.id}}</span>
+            <span :class="viewer.config==='imviz' ? 'invert' : 'invert-if-dark'" style="padding: 10px">{{viewer.reference || viewer.id}}</span>
           </div>
           <jupyter-widget :widget="viewer.widget" style="width: 100%; height: 100%"></jupyter-widget>
         </v-card>
@@ -75,14 +75,19 @@
   border-bottom-right-radius: 4px; 
   z-index: 1;
   width: 24px;
-  overflow-x: hidden;
+  overflow: hidden;
   white-space: nowrap;
   cursor: pointer;
 }
-
+.viewer-label-imviz {
+  background-color: #393939c2;
+}
 .viewer-label:hover {
   background-color: #e5e5e5;
   width: auto;
+}
+.viewer-label-imviz:hover {
+  background-color: #777777c2;
 }
 </style>
 

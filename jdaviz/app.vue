@@ -342,8 +342,9 @@ a:active {
   filter: invert(1) saturate(1) brightness(100);
 }
 
-.invert-if-dark.theme--dark {
+.invert, .invert-if-dark.theme--dark {
     filter: invert(1) saturate(1) brightness(100);
+    color: white;
 }
 
 .jdaviz-nested-toolbar .v-btn {
