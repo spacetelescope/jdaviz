@@ -74,15 +74,15 @@ FITS Files
 The example below loads a FITS file into Cubeviz::
 
     from specutils import Spectrum1D
-    spec3d = Spectrum1D.read("/path/to/data/file")  # doctest: +SKIP
+    spec3d = Spectrum1D.read("/path/to/data/file")
     cubeviz = Cubeviz()
-    cubeviz.load_data(spec3d)  # doctest: +SKIP
+    cubeviz.load_data(spec3d)
     cubeviz.show()
 
 You can also pass the path to a file that `~specutils.Spectrum1D` understands directly to the
 :meth:`~jdaviz.core.helpers.ConfigHelper.load_data` method::
 
-    cubeviz.load_data("/Users/demouser/data/cube_file.fits")  # doctest: +SKIP
+    cubeviz.load_data("/Users/demouser/data/cube_file.fits")
     cubeviz.show()
 
 Creating Your Own Array
@@ -139,7 +139,7 @@ object, you can load it into Imviz as follows::
     # Create your spectrum1
     spec3d = Spectrum1D(data, wcs = my_wcs)
     cubeviz = Cubeviz()
-    cubeviz.load_spectrum(spec3d, data_label='My Cube')  # doctest: +IGNORE_OUTPUT
+    cubeviz.load_spectrum(spec3d, data_label='My Cube')
     cubeviz.show()
 
 There is no plan to natively load such objects until ``datamodels``

@@ -9,7 +9,7 @@ the following code in a cell of the notebook::
 
     from jdaviz import Mosviz
     mosviz = Mosviz()
-    mosviz.show()  # doctest: +SKIP
+    mosviz.show()
 
 After running the code above, you can interact with the Mosviz application from 
 subsequent notebook cells via the API methods attached to the
