@@ -10,6 +10,7 @@ from astropy.modeling import Parameter
 from astropy.modeling.models import Gaussian1D
 from astropy.table import QTable
 from astropy.time import Time
+from glue.core.message import SubsetUpdateMessage
 from ipywidgets import widget_serialization
 from photutils.aperture import (ApertureStats, CircularAperture, EllipticalAperture,
                                 RectangularAperture)
@@ -72,6 +73,8 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
         self.current_plot_type = self.plot_types[0]
         self._fitted_model_name = 'phot_radial_profile'
 
+        self.session.hub.subscribe(self, SubsetUpdateMessage, handler=self._on_subset_update)
+
     def reset_results(self):
         self.result_available = False
         self.results = []
@@ -131,7 +134,6 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
         # Update self._selected_subset with the new self._selected_data
         # and auto-populate background, if applicable.
         self._subset_selected_changed()
-        self._bg_subset_selected_changed()
 
     def _get_region_from_subset(self, subset):
         for subset_grp in self.app.data_collection.subset_groups:
@@ -143,6 +145,16 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
                                 subset_id=subset, format='astropy-regions')
         else:
             raise ValueError(f'Subset "{subset}" not found')
+
+    def _on_subset_update(self, msg):
+        if self.dataset_selected == '' or self.subset_selected == '':
+            return
+
+        sbst = msg.subset
+        if sbst.label == self.subset_selected and sbst.data.label == self.dataset_selected:
+            self._subset_selected_changed()
+        elif sbst.label == self.bg_subset_selected and sbst.data.label == self.dataset_selected:
+            self._bg_subset_selected_changed()
 
     @observe('subset_selected')
     def _subset_selected_changed(self, event={}):
@@ -171,6 +183,9 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
             self.reset_results()
             self.hub.broadcast(SnackbarMessage(
                 f"Failed to extract {subset_selected}: {repr(e)}", color='error', sender=self))
+
+        else:
+            self._bg_subset_selected_changed()
 
     def _calc_bg_subset_median(self, reg):
         # Basically same way image stats are calculated in vue_do_aper_phot()

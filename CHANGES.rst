@@ -117,6 +117,10 @@ Imviz
 - Fixed a bug where some custom colormap added to Imviz is inaccessible
   via ``viewer.set_colormap()`` API. [#1440]
 
+- Fixed a bug where Simple Aperture Photometry plugin does not know
+  an existing Subset has been modified until it is reselected from
+  the dropdown menu. [#1447]
+
 Mosviz
 ^^^^^^
 
