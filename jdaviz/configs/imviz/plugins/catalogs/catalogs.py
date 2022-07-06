@@ -5,6 +5,7 @@ from astropy.coordinates import SkyCoord
 from astroquery.sdss import SDSS
 
 from jdaviz.configs.imviz.helper import get_top_layer_index
+from jdaviz.core.events import ViewerAddedMessage, ViewerRemovedMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin
 
@@ -21,6 +22,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
         super().__init__(*args, **kwargs)
         self._default_viewer = f'{self.app.config}-0'
 
+        self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewers_changed)
+        self.hub.subscribe(self, ViewerRemovedMessage, handler=self._on_viewers_changed)
 
         self._on_viewers_changed()  # Populate it on start-up
 
@@ -44,8 +47,10 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
         #i = get_top_layer_index(viewer)
         #data = viewer.state.layers[i].layer
 
+        # nothing happens in the case there is no image in the viewer
+        if viewer.state.reference_data is None:
+            return
         # obtains the center point of the current image and converts the point into sky coordinates
-        # note to self: need to add in logic to handle cases where viewer.state.reference_data.coords is None
         x_center = (viewer.state.x_min + viewer.state.x_max) * 0.5
         y_center = (viewer.state.y_min + viewer.state.y_max) * 0.5
         skycoord_center = viewer.state.reference_data.coords.pixel_to_world(x_center, y_center)
