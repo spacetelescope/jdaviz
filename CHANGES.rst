@@ -90,6 +90,9 @@ Cubeviz
 
 - Fixed linking of plugin data to the reference data that was used to create it [#1412]
 
+- Fixed coordinates display not showing the top layer information when multiple
+  layers are loaded into the image viewer. [#1445]
+
 Imviz
 ^^^^^
 
