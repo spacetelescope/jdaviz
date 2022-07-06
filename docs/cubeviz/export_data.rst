@@ -72,7 +72,7 @@ To extract all of the model parameters::
     myparams = cubeviz.get_model_parameters(model_label="ModelLabel", x=x, y=y)
     myparams
 
-where the model_label parameter identifies which model should be returned and
-the x and y parameters identify specifically which spaxel fits are to be returned,
+where the ``model_label`` parameter identifies which model should be returned and
+the ``x`` and ``y`` parameters identify specifically which spaxel fits are to be returned,
 for models applied to every spaxel using the :guilabel:`Apply to Cube` button.
-Leaving x or y as None will mean that the models fit to every spaxel across that axis will be returned.
+Leaving ``x`` or ``y`` as ``None`` will mean that the models fit to every spaxel across that axis will be returned.

@@ -57,19 +57,16 @@ Model Fits
 
 For a list of model labels::
 
-    models = cubeviz.get_models()
+    models = specviz.get_models()
     models
 
 Once you know the model labels, to get a specific model::
 
-    mymodel = cubeviz.get_models(model_label="ModelLabel", x=10)
+    mymodel = specviz.get_models(model_label="ModelLabel")
 
 To extract all of the model parameters::
 
-    myparams = cubeviz.get_model_parameters(model_label="ModelLabel", x=x, y=y)
+    myparams = specviz.get_model_parameters(model_label="ModelLabel")
     myparams
 
-where the model_label parameter identifies which model should be returned and
-the x and y parameters identify specifically which spaxel fits are to be returned,
-for models applied to every spaxel using the Apply to Cube button.
-Leaving x or y as None will mean that the models fit to every spaxel across that axis will be returned.
+where the ``model_label`` parameter identifies which model should be returned.
