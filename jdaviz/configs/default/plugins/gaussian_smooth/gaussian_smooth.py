@@ -36,6 +36,10 @@ class GaussianSmooth(TemplateMixin, DatasetSelectMixin, AddResultsMixin):
             self.dataset._viewers = ['flux-viewer', 'spectrum-viewer']
             # clear the cache in case the spectrum-viewer selection was already cached
             self.dataset._clear_cache()
+        elif self.config == "mosviz":
+            # only allow smoothing 1d spectra
+            self.dataset._viewers = ['spectrum-viewer']
+            self.dataset._clear_cache()
 
         # set the filter on the viewer options
         self._update_viewer_filters()

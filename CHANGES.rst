@@ -115,6 +115,9 @@ Imviz
 Mosviz
 ^^^^^^
 
+- Data dropdown in the gaussian smooth plugin is limited to data entries from the 
+  spectrum-viewer (excluding images and 2d spectra). [#1452]
+
 Specviz
 ^^^^^^^
 
