@@ -121,6 +121,9 @@ Imviz
   an existing Subset has been modified until it is reselected from
   the dropdown menu. [#1447]
 
+- Disables the "popout in new window" buttons on the image viewer tabs
+  in favor of other ways of popping out Jdaviz from notebook. [#1461]
+
 Mosviz
 ^^^^^^
 

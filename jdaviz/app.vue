@@ -291,6 +291,10 @@ div.output_wrapper {
   padding-left: 0;
 }
 
+.lm_popout {
+  display: none;
+}
+
 .v-toolbar__items .v-btn {
   /* allow v-toolbar-items styling to pass through tooltip wrapping span */
   /* css is copied from .v-toolbar__items>.v-btn */
