@@ -361,6 +361,13 @@ class Application(VuetifyTemplate, HubListener):
             return
         elif not self.auto_link:
             return
+        elif self.config == 'mosviz' and self.get_viewer('spectrum-viewer').state.reference_data:
+            # Mosviz turns auto_link to False in order to batch
+            # link the data after they have all been loaded.
+            # It then reverts auto_link to True, which means that when
+            # plugin data is added from mosviz, it can use the following line
+            # to set reference data.
+            reference_data = self.get_viewer('spectrum-viewer').state.reference_data.label
 
         dc = self.data_collection
         # This will need to be changed for cubeviz to support multiple cubes
