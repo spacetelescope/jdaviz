@@ -121,6 +121,8 @@ Imviz
   an existing Subset has been modified until it is reselected from
   the dropdown menu. [#1447]
 
+- Disables the buggy "popout in new window" buttons on the viewer tabs. [#1461]
+
 Mosviz
 ^^^^^^
 
