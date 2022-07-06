@@ -18,16 +18,16 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
     # ones are added in glue-jupyter in future that we don't want here.
     inherit_tools = False
 
-    tools = ['bqplot:home', 'jdaviz:boxzoom',
-             'bqplot:panzoom', 'bqplot:rectangle',
+    tools = ['jdaviz:homezoom', 'jdaviz:boxzoom',
+             'jdaviz:panzoom', 'bqplot:rectangle',
              'bqplot:circle', 'jdaviz:spectrumperspaxel']
 
     # categories: zoom resets, (zoom, pan), subset, select tools, shortcuts
     # NOTE: zoom and pan are merged here for space consideration and to avoid
     # overflow to second row when opening the tray
     tools_nested = [
-                    ['bqplot:home'],
-                    ['jdaviz:boxzoom', 'bqplot:panzoom'],
+                    ['jdaviz:homezoom', 'jdaviz:prevzoom'],
+                    ['jdaviz:boxzoom', 'jdaviz:panzoom'],
                     ['bqplot:circle', 'bqplot:rectangle'],
                     ['jdaviz:spectrumperspaxel'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
@@ -152,17 +152,17 @@ class CubevizProfileView(SpecvizProfileView):
     # ones are added in glue-jupyter in future that we don't want here.
     inherit_tools = False
 
-    tools = ['bqplot:home',
+    tools = ['jdaviz:homezoom',
              'jdaviz:boxzoom', 'jdaviz:xrangezoom',
-             'bqplot:panzoom', 'bqplot:panzoom_x',
-             'bqplot:panzoom_y', 'bqplot:xrange',
+             'jdaviz:panzoom', 'jdaviz:panzoom_x',
+             'jdaviz:panzoom_y', 'bqplot:xrange',
              'jdaviz:selectslice', 'jdaviz:selectline']
 
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
-                    ['bqplot:home'],
-                    ['jdaviz:xrangezoom', 'jdaviz:boxzoom'],
-                    ['bqplot:panzoom', 'bqplot:panzoom_x', 'bqplot:panzoom_y'],
+                    ['jdaviz:homezoom', 'jdaviz:prevzoom'],
+                    ['jdaviz:boxzoom', 'jdaviz:xrangezoom'],
+                    ['jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
                     ['bqplot:xrange'],
                     ['jdaviz:selectslice', 'jdaviz:selectline'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']

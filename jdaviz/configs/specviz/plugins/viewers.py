@@ -30,17 +30,17 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
     # ones are added in glue-jupyter in future that we don't want here.
     inherit_tools = False
 
-    tools = ['bqplot:home',
+    tools = ['jdaviz:homezoom',
              'jdaviz:boxzoom', 'jdaviz:xrangezoom',
-             'bqplot:panzoom', 'bqplot:panzoom_x',
-             'bqplot:panzoom_y', 'bqplot:xrange',
+             'jdaviz:panzoom', 'jdaviz:panzoom_x',
+             'jdaviz:panzoom_y', 'bqplot:xrange',
              'jdaviz:selectline']
 
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
-                    ['bqplot:home'],
-                    ['jdaviz:xrangezoom', 'jdaviz:boxzoom'],
-                    ['bqplot:panzoom', 'bqplot:panzoom_x', 'bqplot:panzoom_y'],
+                    ['jdaviz:homezoom', 'jdaviz:prevzoom'],
+                    ['jdaviz:boxzoom', 'jdaviz:xrangezoom'],
+                    ['jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
                     ['bqplot:xrange'],
                     ['jdaviz:selectline'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']

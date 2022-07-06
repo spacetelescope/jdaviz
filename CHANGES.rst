@@ -22,6 +22,8 @@ New Features
 
 - Several reversed version of colormaps now available for image viewers. [#1407]
 
+- Simple zoom "back" button in all viewers. [#1436]
+
 Cubeviz
 ^^^^^^^
 

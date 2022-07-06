@@ -22,9 +22,9 @@ class MosvizProfileView(BqplotProfileView, JdavizViewerMixin):
 
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
-                    ['bqplot:home'],
+                    ['jdaviz:homezoom', 'jdaviz:prevzoom'],
                     ['jdaviz:boxzoom', 'jdaviz:xrangezoom'],
-                    ['bqplot:panzoom', 'bqplot:panzoom_x', 'bqplot:panzoom_y'],
+                    ['jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
                     ['bqplot:xrange'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
@@ -70,15 +70,15 @@ class MosvizImageView(BqplotImageView, JdavizViewerMixin):
     # ones are added in glue-jupyter in future that we don't want here.
     inherit_tools = False
 
-    tools = ['bqplot:home', 'jdaviz:boxzoom',
-             'bqplot:panzoom', 'bqplot:rectangle',
+    tools = ['jdaviz:homezoom', 'jdaviz:boxzoom',
+             'jdaviz:panzoom', 'bqplot:rectangle',
              'bqplot:circle']
 
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
-                    ['bqplot:home'],
+                    ['jdaviz:homezoom', 'jdaviz:prevzoom'],
                     ['jdaviz:boxzoom'],
-                    ['bqplot:panzoom'],
+                    ['jdaviz:panzoom'],
                     ['bqplot:circle', 'bqplot:rectangle'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
@@ -116,18 +116,18 @@ class MosvizProfile2DView(BqplotImageView, JdavizViewerMixin):
     # replace the default tools (which include rect and circle region)
     # with only the tools we want (likely the same as in SpecvizProfileView)
     inherit_tools = False
-    tools = ['bqplot:home',
+    tools = ['jdaviz:homezoom',
              'jdaviz:boxzoom',
              'jdaviz:xrangezoom',
-             'bqplot:panzoom',
-             'bqplot:panzoom_x',
+             'jdaviz:panzoom',
+             'jdaviz:panzoom_x',
              'bqplot:xrange']
 
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
-                    ['bqplot:home'],
+                    ['jdaviz:homezoom', 'jdaviz:prevzoom'],
                     ['jdaviz:boxzoom', 'jdaviz:xrangezoom'],
-                    ['bqplot:panzoom', 'bqplot:panzoom_x'],
+                    ['jdaviz:panzoom', 'jdaviz:panzoom_x'],
                     ['bqplot:xrange'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
