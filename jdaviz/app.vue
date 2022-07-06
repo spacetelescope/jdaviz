@@ -84,6 +84,8 @@
                   :data_items="state.data_items"
                   :app_settings="state.settings"
                   :icons="state.icons"
+                  :viewer_icons="state.viewer_icons"
+                  :layer_icons="state.layer_icons"
                   @resize="relayout"
                   :closefn="destroy_viewer_item"
                   @data-item-selected="data_item_selected($event)"

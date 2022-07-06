@@ -168,20 +168,21 @@ class BasePluginComponent(HubListener):
 
     @property
     def viewer_dicts(self):
-        def _dict_from_viewer(viewer, viewer_item, index=None):
-            d = {'viewer': viewer, 'id': viewer_item['id']}
+        def _dict_from_viewer(viewer, viewer_item):
+            d = {'viewer': viewer,
+                 'id': viewer_item['id'],
+                 'icon': self.app.state.viewer_icons.get(viewer_item['id'])}
             if viewer_item.get('reference') is not None:
                 d['reference'] = viewer_item['reference']
                 d['label'] = viewer_item['reference']
             else:
                 d['reference'] = None
                 d['label'] = viewer_item['id']
-            if index is not None:
-                d['icon'] = f"mdi-numeric-{index+1}-circle-outline"
+
             return d
 
-        return [_dict_from_viewer(viewer, self.app._viewer_item_by_id(vid), index)
-                for index, (vid, viewer) in enumerate(self.app._viewer_store.items())
+        return [_dict_from_viewer(viewer, self.app._viewer_item_by_id(vid))
+                for vid, viewer in self.app._viewer_store.items()
                 if viewer.__class__.__name__ != 'MosvizTableViewer']
 
     @cached_property
@@ -453,10 +454,10 @@ class LayerSelect(BaseSelectPluginComponent):
         except TypeError:
             return self.app.get_viewer_by_id(viewer)
 
-    def _layer_to_dict(self, layer, index=None):
-        d = {"label": layer.layer.label, "color": layer.state.color}
-        if index is not None:
-            d['icon'] = f"mdi-alpha-{chr(97 + index)}-box-outline"
+    def _layer_to_dict(self, layer):
+        d = {"label": layer.layer.label,
+             "color": layer.state.color,
+             "icon": self.app.state.layer_icons.get(layer.layer.label)}
         return d
 
     def _on_viewer_changed(self, msg=None):
@@ -495,7 +496,7 @@ class LayerSelect(BaseSelectPluginComponent):
         _, inds = np.unique(layer_labels, return_index=True)
         layers = [layers[i] for i in inds]
 
-        self.items = manual_items + [self._layer_to_dict(layer, index) for index, layer in enumerate(layers)]  # noqa
+        self.items = manual_items + [self._layer_to_dict(layer) for layer in layers]
         self._apply_default_selection()
 
     @cached_property

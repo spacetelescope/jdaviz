@@ -7,6 +7,8 @@
       :data_items="data_items"
       :app_settings="app_settings"
       :icons="icons"
+      :viewer_icons="viewer_icons"
+      :layer_icons="layer_icons"
       @resize="$emit('resize')"
       :closefn="closefn"
       @data-item-selected="$emit('data-item-selected', $event)"
@@ -55,13 +57,25 @@
 
         </div>
 
-        <v-card tile flat style="flex: 1; margin-top: -2px; overflow-y: auto">
-          <div :class="viewer.config==='imviz' ? 'viewer-label viewer-label-imviz invert-if-dark' : 'viewer-label invert-if-dark'">
-            <j-tooltip :tooltipcontent="viewer.reference+' (click to select)'" span_style="white-space: nowrap">
-              <v-icon :class="viewer.config==='imviz' ? 'invert' : 'invert-if-dark'">mdi-numeric-{{viewer.index}}-circle-outline</v-icon>
-            </j-tooltip>
-            <span :class="viewer.config==='imviz' ? 'invert' : 'invert-if-dark'" style="padding: 10px">{{viewer.reference || viewer.id}}</span>
+        <v-card tile flat style="flex: 1; margin-top: -2px; overflow-y: hidden;">
+          <div v-if="app_settings.viewer_labels" class='viewer-label-container'>
+            <div :class="viewer.config==='imviz' ? 'viewer-label viewer-label-imviz invert-if-dark' : 'viewer-label invert-if-dark'">
+              <j-tooltip span_style="white-space: nowrap">
+                <v-icon :class="viewer.config==='imviz' ? 'invert' : 'invert-if-dark'" style="float: right">{{viewer_icons[[viewer.id]]}}</v-icon>
+              </j-tooltip>
+              <span :class="viewer.config==='imviz' ? 'invert' : 'invert-if-dark'" style="margin-left: 24px; margin-right: 32px; line-height: 24px">{{viewer.reference || viewer.id}}</span>
+            </div>
+
+            <div v-for="(icon, layer_name) in layer_icons" :class="viewer.config==='imviz' ? 'viewer-label viewer-label-imviz invert-if-dark' : 'viewer-label invert-if-dark'">
+              <div v-if="layer_in_viewer(viewer, data_items, layer_name)">
+                <j-tooltip span_style="white-space: nowrap">
+                  <v-icon :class="viewer.config==='imviz' ? 'invert' : 'invert-if-dark'" style="float: right">{{icon}}</v-icon>
+                </j-tooltip>
+                <span :class="viewer.config==='imviz' ? 'invert' : 'invert-if-dark'" style="margin-left: 24px; margin-right: 32px; line-height: 24px">{{layer_name}}</span>
+              </div>
+            </div>
           </div>
+
           <jupyter-widget :widget="viewer.widget" style="width: 100%; height: 100%"></jupyter-widget>
         </v-card>
     </gl-component>
@@ -69,15 +83,20 @@
 </template>
 
 <style>
-.viewer-label {
+.viewer-label-container {
   position: absolute;
-  background-color: transparent;
-  border-bottom-right-radius: 4px; 
+  right: 0;
   z-index: 1;
+  width: 24px;
+}
+.viewer-label {
+  display: block;
+  float: right;
+  background-color: white;
   width: 24px;
   overflow: hidden;
   white-space: nowrap;
-  cursor: pointer;
+  /*cursor: pointer;*/
 }
 .viewer-label-imviz {
   background-color: #393939c2;
@@ -85,6 +104,8 @@
 .viewer-label:hover {
   background-color: #e5e5e5;
   width: auto;
+  border-bottom-left-radius: 4px; 
+  border-top-left-radius: 4px;
 }
 .viewer-label-imviz:hover {
   background-color: #777777c2;
@@ -94,7 +115,7 @@
 <script>
 module.exports = {
   name: "g-viewer-tab",
-  props: ["stack", "data_items", "closefn", "app_settings", "icons"],
+  props: ["stack", "data_items", "closefn", "app_settings", "icons", "viewer_icons", "layer_icons"],
   created() {
     this.$parent.childMe = () => {
       return this.$children[0];
@@ -109,6 +130,16 @@ module.exports = {
        * between a user closing a tab or a re-render. However, when the user closes a tab, the
        * source of the event is a vue component. We can use that distinction as a close signal. */
       source.$root && this.closefn(viewerId);
+    },
+    layer_in_viewer(viewer, data_items, layer_name) {
+      for (data_item of data_items) {
+        if (data_item['name'] == layer_name) {
+          // determine if this layer is LOADED (not necessarily visible) in the selected viewer
+          return (Object.keys(viewer.selected_data_items).indexOf(data_item['id']) !== -1 && viewer.selected_data_items[data_item['id']] !== 'hidden')
+        }
+      }
+      // then layer_name is likely of a subset, so we'll only include for spectrum-viewers
+      return viewer.reference === 'spectrum-viewer';
     }
   },
   computed: {

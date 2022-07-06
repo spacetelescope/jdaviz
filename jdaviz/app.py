@@ -24,7 +24,9 @@ from glue.core import BaseData, HubListener, Data, DataCollection
 from glue.core.link_helpers import LinkSame
 from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink, IncompatibleWCS
 from glue.core.message import (DataCollectionAddMessage,
-                               DataCollectionDeleteMessage)
+                               DataCollectionDeleteMessage,
+                               SubsetCreateMessage,
+                               SubsetDeleteMessage)
 from glue.core.state_objects import State
 from glue.core.subset import Subset, RangeSubsetState, RoiSubsetState
 from glue_jupyter.app import JupyterApplication
@@ -127,6 +129,7 @@ class ApplicationState(State):
             'tray': True,
             'tab_headers': True,
         },
+        'viewer_labels': True,
         'dense_toolbar': True,
         'context': {
             'notebook': {
@@ -141,6 +144,9 @@ class ApplicationState(State):
         'radialtocheck': read_icon(os.path.join(ICON_DIR, 'radialtocheck.svg'), 'svg+xml'),
         'checktoradial': read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml')
     }, docstring="Custom application icons")
+
+    viewer_icons = DictCallbackProperty({}, docstring="Indexed icons for viewers across the app")
+    layer_icons = DictCallbackProperty({}, docstring="Indexed icons for layers across the app")
 
     data_items = ListCallbackProperty(
         docstring="List of data items parsed from the Glue data collection.")
@@ -177,6 +183,7 @@ class Application(VuetifyTemplate, HubListener):
     config = Unicode("").tag(sync=True)
     vdocs = Unicode("").tag(sync=True)
     popout_button = Any().tag(sync=True, **widget_serialization)
+    viewer_labels = Bool(True).tag(sync=True)
 
     def __init__(self, configuration=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -260,6 +267,16 @@ class Application(VuetifyTemplate, HubListener):
         for cur_cm in new_cms:
             if cur_cm not in colormaps.members:
                 colormaps.add(*cur_cm)
+
+        # Subscribe to messages that result in changes to the layers
+        self.hub.subscribe(self, AddDataMessage,
+                           handler=self._on_layers_changed)
+        self.hub.subscribe(self, RemoveDataMessage,
+                           handler=self._on_layers_changed)
+        self.hub.subscribe(self, SubsetCreateMessage,
+                           handler=self._on_layers_changed)
+        self.hub.subscribe(self, SubsetDeleteMessage,
+                           handler=self._on_layers_changed)
 
     @property
     def hub(self):
@@ -350,6 +367,16 @@ class Application(VuetifyTemplate, HubListener):
         self.state.snackbar_queue.put(self.state, msg,
                                       history=msg_level >= history_level,
                                       popup=msg_level >= popup_level)
+
+    def _on_layers_changed(self, msg):
+        if hasattr(msg, 'data'):
+            layer_name = msg.data.label
+        elif hasattr(msg, 'subset'):
+            layer_name = msg.subset.label
+        else:
+            raise NotImplementedError(f"cannot recognize new layer from {msg}")
+
+        self.state.layer_icons.setdefault(layer_name, f"mdi-alpha-{chr(97 + len(self.state.layer_icons))}-box-outline")  # noqa
 
     def _link_new_data(self, reference_data=None, data_to_be_linked=None):
         """
@@ -1393,7 +1420,7 @@ class Application(VuetifyTemplate, HubListener):
         last_num = int(last_vid.split('-')[-1])
         return last_num + 1
 
-    def _create_viewer_item(self, viewer, vid=None, name=None, reference=None, index=0):
+    def _create_viewer_item(self, viewer, vid=None, name=None, reference=None):
         """
         Convenience method for generating viewer item dictionaries.
 
@@ -1409,8 +1436,6 @@ class Application(VuetifyTemplate, HubListener):
         reference : str, optional
             The reference associated with this viewer as defined in the yaml
             configuration file.
-        index : int, optional
-            Index of the viewer (used for icons in the UI to identify the viewers)
 
         Returns
         -------
@@ -1431,17 +1456,17 @@ class Application(VuetifyTemplate, HubListener):
         # own attribute instead.
         viewer._reference_id = vid  # For reverse look-up
 
+        self.state.viewer_icons.setdefault(vid, f"mdi-numeric-{len(self.state.viewer_icons)+1}-circle-outline")  # noqa
+
         return {
             'id': vid,
             'name': name or vid,
-            'index': index,
             'widget': "IPY_MODEL_" + viewer.figure_widget.model_id,
             'toolbar_nested': "IPY_MODEL_" + viewer.toolbar_nested.model_id if viewer.toolbar_nested else '',  # noqa
             'tools': "IPY_MODEL_" + viewer.toolbar_selection_tools.model_id,
             'tools_open': False,
             'layer_options': "IPY_MODEL_" + viewer.layer_options.model_id,
             'viewer_options': "IPY_MODEL_" + viewer.viewer_options.model_id,
-            'layer_viewer_open': False,
             'selected_data_items': {},
             'config': self.config,  # give viewer access to app config/layout
             'data_open': False,
@@ -1482,7 +1507,7 @@ class Application(VuetifyTemplate, HubListener):
         # Create the viewer item dictionary
         if name is None:
             name = viewer.__class__.__name__
-        new_viewer_item = self._create_viewer_item(viewer=viewer, vid=vid, name=name, index=len(self._viewer_store)+1)
+        new_viewer_item = self._create_viewer_item(viewer=viewer, vid=vid, name=name)
 
         new_stack_item = self._create_stack_item(
             container='gl-stack',
@@ -1561,8 +1586,7 @@ class Application(VuetifyTemplate, HubListener):
                     viewer_item = self._create_viewer_item(
                         name=view.get('name'),
                         viewer=viewer,
-                        reference=view.get('reference'),
-                        index=len(self._viewer_store)+1)
+                        reference=view.get('reference'))
 
                     self._viewer_store[viewer_item['id']] = viewer
 
