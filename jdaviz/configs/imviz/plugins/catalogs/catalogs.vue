@@ -1,5 +1,5 @@
 <template>
-   <j-tray-plugin>
+   <j-tray-plugin
      description='Queries an area encompassed by the viewer and marks all the objects found within the area in the given catalog.'
     :link="'https://jdaviz.readthedocs.io/en/latest/dev/ui_plugin_components.html'"
     :popout_button="popout_button">
