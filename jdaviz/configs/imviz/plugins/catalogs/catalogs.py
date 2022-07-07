@@ -43,10 +43,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
         # gets the current viewer
         viewer = self.app.get_viewer_by_id(self.selected_viewer)
 
-        # not sure if these are necessary
-        #i = get_top_layer_index(viewer)
-        #data = viewer.state.layers[i].layer
-
         # nothing happens in the case there is no image in the viewer
         if viewer.state.reference_data is None:
             return
@@ -70,6 +66,9 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
 
         # queries the region (based on the provided center point and radius) to find all the sources in that region
         query_region_result = SDSS.query_region(skycoord_center, radius=zoom_radius, data_release=17)
+        # nothing happens in the case the query returned empty
+        if query_region_result is None:
+            return
 
         # a table is created storing the 'ra' and 'dec' plottable points of each source found
         skycoord_table = SkyCoord(query_region_result['ra'], query_region_result['dec'], unit='deg')
@@ -77,10 +76,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
 
         # markers are added to the viewer based on the table
         viewer.add_markers(table=catalog_results, use_skycoord=True, marker_name='catalog_results')
-
-        # get top layer of viewer, zoom limits, work radius from that, convert that to the query
-        # the radius should just be the corner of the image
-        # get the data outputted?
 
     @observe("selected_viewer")
     def vue_do_reset(self, *args, **kwargs):
@@ -93,4 +88,3 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
 
         # all markers are removed from the viewer
         viewer.reset_markers()
-
