@@ -9,6 +9,7 @@ __all__ = ['CoordsInfo']
 @tool_registry('g-coords-info')
 class CoordsInfo(TemplateMixin):
     template_file = __file__, "coords_info.vue"
+    icon = Unicode("").tag(sync=True)
     pixel = Unicode("").tag(sync=True)
     value = Unicode("").tag(sync=True)
     world_label_prefix = Unicode("\u00A0").tag(sync=True)

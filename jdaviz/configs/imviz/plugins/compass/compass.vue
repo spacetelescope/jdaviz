@@ -14,7 +14,10 @@
     <v-row v-if="data_label">
       <v-chip
         label=true
-      >{{ data_label }}</v-chip>
+      >
+        <v-icon>{{ icon }}</v-icon>
+        {{ data_label }}
+      </v-chip>
     </v-row>
 
     <img class='invert-in-dark' v-if="img_data" :src="`data:image/png;base64,${img_data}`" style="width: 100%; max-width: 400px" />
