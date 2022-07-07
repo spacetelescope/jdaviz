@@ -7,6 +7,9 @@
 Imviz
 #####
 
+.. image:: ../img/landing_gifs/Imviz_landing.gif
+    :alt: Introductory video tour of the Imviz configuration and its features
+
 Imviz is a tool for visualization and analysis of 2D astronomical images.
 It incorporates visualization tools with analysis capabilities, such as Astropy
 regions and photutils packages.
@@ -18,8 +21,9 @@ Data can be both imported into and exported out of the tool so users can continu
 desired workflow within the notebook.
 This documentation provides details on the various capabilities, demo videos, and example notebooks.
 
-Using Imviz
------------
+.. We do not want a real section here so navbar shows toc directly.
+
+**Using Imviz**
 
 .. toctree::
   :maxdepth: 2
@@ -27,4 +31,5 @@ Using Imviz
   import_data
   displayimages
   plugins
+  export_data
   examples

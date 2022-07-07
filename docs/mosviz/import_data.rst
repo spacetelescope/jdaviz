@@ -20,12 +20,12 @@ as such::
 
     from jdaviz import Mosviz
     mosviz = Mosviz()
-    mosviz.load_data(directory="path/to/my/data", instrument="nirspec")  # doctest: +SKIP
-    mosviz.app
+    mosviz.load_data(directory="path/to/my/data", instrument="nirspec")
+    mosviz.show()
 
 or for NIRISS::
 
-    mosviz.load_data(directory="path/to/my/data", instrument="niriss")  # doctest: +SKIP
+    mosviz.load_data(directory="path/to/my/data", instrument="niriss")
 
 If an instrument is not specified, Mosviz will default to NIRSpec parsing.
 
@@ -55,6 +55,5 @@ directory that contains all the files for the dataset to be loaded::
     spectra_1d = ['target1_1d.fits', 'target2_1d.fits']
     spectra_2d = ['target1_2d.fits', 'target2_2d.fits']
     images = ['target1_img.fits', 'target2_img.fits']
-    mosviz.load_data(spectra_1d, spectra_2d, images)  # doctest: +SKIP
-    mosviz.app
-
+    mosviz.load_data(spectra_1d, spectra_2d, images)
+    mosviz.show()

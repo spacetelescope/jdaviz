@@ -166,12 +166,12 @@ Using Jdaviz
   :maxdepth: 2
 
   installation.rst
-  quickstart.rst
   imviz/index.rst
   specviz/index.rst
   cubeviz/index.rst
   mosviz/index.rst
-  notebook/index.rst
+  save_state.rst
+  display.rst
   sample_notebooks.rst
 
 Reference/API

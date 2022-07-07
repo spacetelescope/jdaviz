@@ -1,4 +1,3 @@
-
 .. image:: ../logos/specviz.svg
    :width: 400
 
@@ -11,25 +10,29 @@ Specviz
 .. image:: ../img/landing_gifs/Specviz_landing.gif
     :alt: Introductory video tour of the Specviz configuration and its features
 
-Specviz is a tool for visualization and quick-look analysis of 1D astronomical spectra. Like the rest of Jdaviz, it is written in the Python programming language, and therefore can be run anywhere Python is supported (see :ref:`install`). Specviz is built on top of the `specutils <https://specutils.readthedocs.io/en/latest/>`_ package from `astropy <https://www.astropy.org>`_ , providing a visual, interactive interface to the analysis capabilities in that library.
+Specviz is a tool for visualization and quick-look analysis of 1D astronomical spectra.
+It incorporates visualization tools with analysis capabilities,
+such as Astropy regions and :ref:`specutils` packages.
+Users can interact with their data from within the tool.
+Specviz allows spectra to be easily plotted and examined.
+It supports flexible spectral unit conversions, custom plotting attributes,
+interactive selections, multiple plots, and other features.
+Specviz notably includes a measurement tool for spectral lines which enables
+the user, with a few mouse actions, to perform and record measurements.
+It has a model fitting capability that enables the user to create simple
+(e.g., single Gaussian) or multi-component models
+(e.g., multiple Gaussians for emission and absorption lines in addition
+to regions of flat continua). A typical data-analysis workflow might involve
+data exploration using Specviz and then scripting to create more
+complex measurements or modeling workflows using specutils.
+Data can be both imported into and exported out of the tool so
+users can continue their desired workflow within the notebook.
+This documentation provides details on the various capabilities, demo videos,
+and example notebooks.
 
-Specviz allows spectra to be easily plotted and examined. It supports flexible spectral unit conversions, custom plotting attributes, interactive selections, multiple plots, and other features.
+.. We do not want a real section here so navbar shows toc directly.
 
-Specviz notably includes a measurement tool for spectral lines which enables the user, with a few mouse actions, to perform and record measurements. It has a model fitting capability that enables the user to create simple (e.g., single Gaussian) or multi-component models (e.g., multiple Gaussians for emission and absorption lines in addition to regions of flat continua). A typical data-analysis workflow might involve data exploration using Specviz and then scripting to create more complex measurements or modeling workflows using specutils.
-
-Quickstart
-----------
-
-To load a sample `SDSS Spectrum <https://data.sdss.org/sas/dr14/sdss/spectro/redux/26/spectra/0751/spec-0751-52251-0160.fits>`_ into ``Specviz`` in the standalone app, run::
-
-    jdaviz specviz /path/to/spec-0751-52251-0160.fits
-
-
-Or to load in a Jupyter notebook, see the :gh-notebook:`SpecvizExample`.
-
-
-Using Specviz
--------------
+**Using Specviz**
 
 .. toctree::
   :maxdepth: 2
@@ -37,5 +40,5 @@ Using Specviz
   import_data
   displaying
   plugins
-  redshift
-  notebook
+  export_data
+  examples

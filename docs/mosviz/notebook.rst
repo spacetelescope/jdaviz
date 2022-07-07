@@ -9,7 +9,7 @@ the following code in a cell of the notebook::
 
     from jdaviz import Mosviz
     mosviz = Mosviz()
-    mosviz.app  # doctest: +SKIP
+    mosviz.show()
 
 After running the code above, you can interact with the Mosviz application from 
 subsequent notebook cells via the API methods attached to the
@@ -39,4 +39,3 @@ The contents of ``table-viewer`` can also be extracted to a notebook cell by
 running `~jdaviz.configs.mosviz.helper.Mosviz.to_table`::
 
     mosviz.to_table()
-

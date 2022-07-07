@@ -17,7 +17,7 @@ the `jdaviz.configs.mosviz.helper.Mosviz.specviz` attribute, e.g.,
 Pan/Zoom
 ========
 
-For an overview on general pan/zoom functionality, please see :ref:`pan-zoom`
+For an overview on general pan/zoom functionality, please see :ref:`imviz_pan_zoom`
 
 Synchronous Spectral Pan/Zoom
 -----------------------------
@@ -38,12 +38,12 @@ Plot settings for the 1d spectrum viewer can be found in the Specviz section.
 
 .. seealso::
 
-    :ref:`Plot Settings <plot-settings>`
+    :ref:`Plot Settings <specviz-plot-settings>`
         Specviz documentation on plot settings for a 1d spectrum viewer.
 
 Display settings for the 2d spectrum viewer can be found in the Cubeviz section.
 
 .. seealso::
 
-    :ref:`Display Settings <display-settings>`
+    :ref:`Display Settings <imviz-display-settings>`
         Cubeviz documentation on display settings for an image viewer (2d spectrum viewer in this case).
