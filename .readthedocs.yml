@@ -20,7 +20,6 @@ python:
       extra_requirements:
         - docs
 
-# Build PDF and zipped HTML
+# Build zipped HTML
 formats:
-    - pdf
     - htmlzip
