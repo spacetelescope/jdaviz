@@ -4,6 +4,8 @@
 New Features
 ------------
 
+- Viewer/layer labels with icons that are synced app-wide. [#1465]
+
 Cubeviz
 ^^^^^^^
 
