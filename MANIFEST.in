@@ -4,12 +4,10 @@ include setup.cfg
 include LICENSE.rst
 include pyproject.toml
 
-recursive-include docs *
 recursive-include licenses *
 recursive-include share *
 
 prune build
-prune docs/_build
-prune docs/api
+prune docs
 
 global-exclude *.pyc *.o
