@@ -1,53 +1,7 @@
-2.8 (unreleased)
-================
+2.7.0.post1 (2022-07-07)
+========================
 
-New Features
-------------
-
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-API Changes
------------
-
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Bug Fixes
----------
-
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Other Changes and Additions
----------------------------
+- Post-2.7 release to fix a PyPi distribution problem.
 
 2.7 (2022-07-06)
 ================
