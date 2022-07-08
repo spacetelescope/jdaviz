@@ -94,7 +94,7 @@ class JdavizViewerMixin:
             return '', ''
 
         visible_layers = {}
-        for layer in self.state.layers:
+        for layer in self.state.layers[::-1]:
             if layer.visible:
                 prefix_icon, suffix = _get_layer_info(layer)
                 visible_layers[layer.layer.label] = {'color': _get_layer_color(layer),

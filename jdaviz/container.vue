@@ -67,18 +67,16 @@
               <span :class="viewer.config==='imviz' ? 'invert' : 'invert-if-dark'" style="margin-left: 24px; margin-right: 32px; line-height: 24px">{{viewer.reference || viewer.id}}</span>
             </div>
 
-            <div v-for="(icon, layer_name) in layer_icons" :class="viewer.config==='imviz' ? 'viewer-label viewer-label-imviz invert-if-dark' : 'viewer-label invert-if-dark'">
-              <div v-if="Object.keys(viewer.visible_layers).indexOf(layer_name) !== -1">
-                <j-tooltip span_style="white-space: nowrap">
-                  <v-icon :class="viewer.config==='imviz' ? 'invert' : 'invert-if-dark'" style="float: right" :color="viewer.visible_layers[layer_name].color">{{icon}}</v-icon>
-                </j-tooltip>
-                <span :class="viewer.config==='imviz' ? 'invert' : 'invert-if-dark'" style="margin-left: 24px; margin-right: 32px; line-height: 24px">
-                  <v-icon v-if="viewer.visible_layers[layer_name].prefix_icon" dense>
-                    {{viewer.visible_layers[layer_name].prefix_icon}}
-                  </v-icon>
-                  {{layer_name}}{{viewer.visible_layers[layer_name].suffix_label}}
-                </span>
-              </div>
+            <div v-for="(layer_info, layer_name) in viewer.visible_layers" :class="viewer.config==='imviz' ? 'viewer-label viewer-label-imviz invert-if-dark' : 'viewer-label invert-if-dark'">
+              <j-tooltip span_style="white-space: nowrap">
+                <v-icon :class="viewer.config==='imviz' ? 'invert' : 'invert-if-dark'" style="float: right" :color="layer_info.color">{{layer_icons[layer_name]}}</v-icon>
+              </j-tooltip>
+              <span :class="viewer.config==='imviz' ? 'invert' : 'invert-if-dark'" style="margin-left: 24px; margin-right: 32px; line-height: 24px">
+                <v-icon v-if="layer_info.prefix_icon" dense>
+                  {{layer_info.prefix_icon}}
+                </v-icon>
+                {{layer_name}}{{layer_info.suffix_label}}
+              </span>
             </div>
           </div>
 
