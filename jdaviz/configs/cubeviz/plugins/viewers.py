@@ -5,6 +5,7 @@ from glue_jupyter.bqplot.image import BqplotImageView
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.marks import SliceIndicatorMarks
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
+from jdaviz.configs.cubeviz.helper import layer_is_cube_image_data
 from jdaviz.configs.imviz.helper import data_has_valid_wcs
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
 
@@ -48,7 +49,8 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
     def on_mouse_or_key_event(self, data):
 
         # Find visible layers
-        visible_layers = [layer for layer in self.state.layers if layer.visible]
+        visible_layers = [layer for layer in self.state.layers
+                          if (layer.visible and layer_is_cube_image_data(layer.layer))]
 
         if len(visible_layers) == 0:
             return

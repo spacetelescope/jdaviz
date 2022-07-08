@@ -1,5 +1,6 @@
 import numpy as np
 
+from glue.core import BaseData
 from jdaviz.core.helpers import ConfigHelper
 from jdaviz.configs.default.plugins.line_lists.line_list_mixin import LineListMixin
 from jdaviz.configs.specviz import Specviz
@@ -88,3 +89,7 @@ class Cubeviz(ConfigHelper, LineListMixin):
 class CubeViz(Cubeviz):
     """This class is pending deprecation. Please use `Cubeviz` instead."""
     pass
+
+
+def layer_is_cube_image_data(layer):
+    return isinstance(layer, BaseData) and layer.ndim in (2, 3)

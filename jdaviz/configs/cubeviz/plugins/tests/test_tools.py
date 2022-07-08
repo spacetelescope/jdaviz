@@ -48,6 +48,14 @@ def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube):
     assert len(flux_viewer.figure.marks) == 2
     assert len(spectrum_viewer.data()) == 1
 
+    # Check coordinate info panel
+    flux_viewer.on_mouse_or_key_event(
+        {'event': 'mousemove', 'domain': {'x': 1, 'y': 1}})
+    assert flux_viewer.label_mouseover.pixel == 'x=01.0 y=01.0'
+    assert flux_viewer.label_mouseover.value == '+1.30000e+01 Jy'
+    assert flux_viewer.label_mouseover.world_ra_deg == '204.9997755344'
+    assert flux_viewer.label_mouseover.world_dec_deg == '27.0001999998'
+
     # Click on spaxel location
     flux_viewer.toolbar.active_tool.on_mouse_event(
         {'event': 'click', 'domain': {'x': x, 'y': y}, 'altKey': False})
@@ -72,6 +80,14 @@ def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube):
     reg2 = subsets.get('Subset 2')
     assert len(subsets) == 2
     assert isinstance(reg2, RectanglePixelRegion)
+
+    # Make sure coordinate info panel did not change
+    flux_viewer.on_mouse_or_key_event(
+        {'event': 'mousemove', 'domain': {'x': 1, 'y': 1}})
+    assert flux_viewer.label_mouseover.pixel == 'x=01.0 y=01.0'
+    assert flux_viewer.label_mouseover.value == '+1.30000e+01 Jy'
+    assert flux_viewer.label_mouseover.world_ra_deg == '204.9997755344'
+    assert flux_viewer.label_mouseover.world_dec_deg == '27.0001999998'
 
 
 def test_spectrum_at_spaxel_with_2d(cubeviz_helper):

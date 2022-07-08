@@ -42,6 +42,9 @@ Cubeviz
 - Replaced deprecated FILETYPE header keyword with EXP_TYPE to identify JWST cubes
   for proper MJD-OBS handling. [#1471]
 
+- Fixed a bug where having Subset breaks coordinates information display
+  in image viewers. [#1472]
+
 Imviz
 ^^^^^
 
