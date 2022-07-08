@@ -70,10 +70,13 @@
             <div v-for="(icon, layer_name) in layer_icons" :class="viewer.config==='imviz' ? 'viewer-label viewer-label-imviz invert-if-dark' : 'viewer-label invert-if-dark'">
               <div v-if="Object.keys(viewer.visible_layers).indexOf(layer_name) !== -1">
                 <j-tooltip span_style="white-space: nowrap">
-                  <v-icon :class="viewer.config==='imviz' ? 'invert' : 'invert-if-dark'" style="float: right">{{icon}}</v-icon>
+                  <v-icon :class="viewer.config==='imviz' ? 'invert' : 'invert-if-dark'" style="float: right" :color="viewer.visible_layers[layer_name].color">{{icon}}</v-icon>
                 </j-tooltip>
                 <span :class="viewer.config==='imviz' ? 'invert' : 'invert-if-dark'" style="margin-left: 24px; margin-right: 32px; line-height: 24px">
-                  {{layer_name}}{{viewer.visible_layers[layer_name].label_suffix}}
+                  <v-icon v-if="viewer.visible_layers[layer_name].prefix_icon" dense>
+                    {{viewer.visible_layers[layer_name].prefix_icon}}
+                  </v-icon>
+                  {{layer_name}}{{viewer.visible_layers[layer_name].suffix_label}}
                 </span>
               </div>
             </div>

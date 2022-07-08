@@ -17,7 +17,7 @@
         </v-btn>
       </template>
   
-      <v-list style="max-height: 500px; width: 430px; padding-top: 0px" class="overflow-y-auto">
+      <v-list style="max-height: 500px; width: 460px; padding-top: 0px" class="overflow-y-auto">
         <v-row key="title" style="padding-left: 25px; margin-right: 0px; background-color: #E3F2FD">
             <span style="overflow-wrap: anywhere; font-size: 12pt; padding-top: 6px; padding-left: 6px; font-weight: bold; color: black">
               {{viewerTitleCase}}
@@ -47,6 +47,7 @@
         <v-row v-for="item in filteredDataItems" :key="item.id" style="padding-left: 25px; margin-right: 0px; margin-top: 4px; margin-bottom: 4px">
           <j-viewer-data-select-item
             :item="item"
+            :icon="layer_icons[item.name]"
             :viewer="viewer"
             :multi_select="multi_select"
             @data-item-selected="$emit('data-item-selected', $event)"
@@ -75,6 +76,7 @@
           <v-row v-if="showExtraItems" v-for="item in extraDataItems"  :key="item.id" style="padding-left: 25px; margin-right: 0px; margin-top: 4px; margin-bottom: 4px">
             <j-viewer-data-select-item
               :item="item"
+              :icon="layer_icons[item.name]"
               :viewer="viewer"
               :multi_select="multi_select"
               @data-item-selected="$emit('data-item-selected', $event)"
@@ -91,7 +93,7 @@
 <script>
 
 module.exports = {
-  props: ['data_items', 'viewer', 'app_settings', 'viewer_data_visibility', 'icons'],
+  props: ['data_items', 'viewer', 'layer_icons', 'app_settings', 'viewer_data_visibility', 'icons'],
   data: function () {
     var multi_select = true
     if (this.$props.viewer.config === 'cubeviz') {

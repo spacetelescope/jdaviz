@@ -1,5 +1,6 @@
 import numpy as np
 
+from glue.core.subset import RoiSubsetState
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.table import TableViewer
@@ -65,21 +66,40 @@ class JdavizViewerMixin:
 
         # update visible_layers (TODO: move this somewhere that can update on color change, etc)
         def _get_layer_color(layer):
+            if getattr(self.state, 'color_mode', None) == 'Colormaps':
+                for subset in self.jdaviz_app.data_collection.subset_groups:
+                    if subset.label == layer.layer.label:
+                        # then we still want to show the color for a subset
+                        return layer.color
+                # then this is a data-layer in colormap mode, so we'll ignore the color
+                return ''
             return layer.color
 
-        def _get_layer_suffix(layer):
-            #if self.__class__.__name__ == 'CubevizProfileView' and len(layer.layer.data.shape) == 3:
-            #    # then the underlying data is cube-like and we're in the profile viewer, so we
-            #    # want to include the collapse function *unless* the layer is a spectral subset
-            #    if isinstance(subset.subset_state, RoiSubsetState):
-            #        return f" (collapsed: {self.state.function})"
-            return ''
+        def _get_layer_info(layer):
+            if self.__class__.__name__ == 'CubevizProfileView' and len(layer.layer.data.shape) == 3:
+                suffix = f" (collapsed: {self.state.function})"
+            else:
+                suffix = ""
+
+            # then the underlying data is cube-like and we're in the profile viewer, so we
+            # want to include the collapse function *unless* the layer is a spectral subset
+            for subset in self.jdaviz_app.data_collection.subset_groups:
+                if subset.label == layer.layer.label:
+                    if isinstance(subset.subset_state, RoiSubsetState):
+                        return "mdi-chart-scatter-plot", suffix
+                    else:
+                        return "mdi-chart-bell-curve", ""
+            return "", suffix
+
+            return '', ''
 
         visible_layers = {}
         for layer in self.state.layers:
             if layer.visible:
+                prefix_icon, suffix = _get_layer_info(layer)
                 visible_layers[layer.layer.label] = {'color': _get_layer_color(layer),
-                                                     'label_suffix': _get_layer_suffix(layer)}
+                                                     'prefix_icon': prefix_icon,
+                                                     'suffix_label': suffix}
         viewer_item['visible_layers'] = visible_layers
 
         if not len(self._expected_subset_layers):
