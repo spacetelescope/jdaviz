@@ -111,8 +111,12 @@ class BlinkOnce(CheckableTool):
     def deactivate(self):
         self.viewer.remove_event_callback(self.on_click)
 
-    def on_click(self, *args):
+    def on_click(self, data):
         self.viewer.blink_once()
+
+        # Also update the coordinates display.
+        data['event'] = 'mousemove'
+        self.viewer.on_mouse_or_key_event(data)
 
 
 @viewer_tool
