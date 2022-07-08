@@ -2,6 +2,7 @@ import numpy as np
 
 from functools import cached_property
 from ipyvuetify import VuetifyTemplate
+from echo import add_callback
 from glue.config import colormaps
 from glue.core import HubListener
 from glue.core.message import (DataCollectionAddMessage,
@@ -443,6 +444,7 @@ class LayerSelect(BaseSelectPluginComponent):
         self.hub.subscribe(self, SubsetDeleteMessage,
                            handler=lambda _: self._on_layers_changed())
 
+        self.app.state.add_callback('layer_icons', lambda _: self._on_layers_changed())
         self.add_observe(viewer, self._on_viewer_changed)
         self._on_layers_changed()
 
@@ -1026,6 +1028,7 @@ class DatasetSelect(BaseSelectPluginComponent):
         self.hub.subscribe(self, RemoveDataMessage, handler=self._on_data_changed)
         self.hub.subscribe(self, DataCollectionDeleteMessage, handler=self._on_data_changed)
 
+        self.app.state.add_callback('layer_icons', lambda _: self._on_data_changed())
         # initialize items from original viewers
         self._on_data_changed()
 

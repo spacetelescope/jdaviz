@@ -1,6 +1,5 @@
 import os
 
-from echo import add_callback
 from traitlets import Any, Dict, Float, Bool, Int, List, Unicode, observe
 
 from glue.viewers.profile.state import ProfileViewerState, ProfileLayerState
@@ -201,7 +200,7 @@ class PlotOptions(TemplateMixin):
         # display_units
 
         self.setting_show_viewer_labels = self.app.state.settings['viewer_labels']
-        add_callback(self.app.state, 'settings', self._on_app_settings_changed)
+        self.app.state.add_callback('settings', self._on_app_settings_changed)
 
     @observe('setting_show_viewer_labels')
     def _on_show_viewer_labels_changed(self, event):

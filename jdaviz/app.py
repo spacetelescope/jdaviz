@@ -376,7 +376,9 @@ class Application(VuetifyTemplate, HubListener):
         else:
             raise NotImplementedError(f"cannot recognize new layer from {msg}")
 
-        self.state.layer_icons.setdefault(layer_name, f"mdi-alpha-{chr(97 + len(self.state.layer_icons))}-box-outline")  # noqa
+        if layer_name not in self.state.layer_icons:
+            self.state.layer_icons = {**self.state.layer_icons,
+                                      layer_name: f"mdi-alpha-{chr(97 + len(self.state.layer_icons))}-box-outline"}  # noqa
 
     def _link_new_data(self, reference_data=None, data_to_be_linked=None):
         """
