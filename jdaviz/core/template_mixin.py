@@ -2,7 +2,6 @@ import numpy as np
 
 from functools import cached_property
 from ipyvuetify import VuetifyTemplate
-from echo import add_callback
 from glue.config import colormaps
 from glue.core import HubListener
 from glue.core.message import (DataCollectionAddMessage,

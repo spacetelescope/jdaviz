@@ -31,6 +31,7 @@
               :data_items="data_items" 
               :viewer="viewer"
               :app_settings="app_settings"
+              :layer_icons="layer_icons"
               :icons="icons"
               @data-item-selected="$emit('data-item-selected', $event)"
               @data-item-visibility="$emit('data-item-visibility', $event)"
@@ -67,11 +68,13 @@
             </div>
 
             <div v-for="(icon, layer_name) in layer_icons" :class="viewer.config==='imviz' ? 'viewer-label viewer-label-imviz invert-if-dark' : 'viewer-label invert-if-dark'">
-              <div v-if="layer_in_viewer(viewer, data_items, layer_name)">
+              <div v-if="Object.keys(viewer.visible_layers).indexOf(layer_name) !== -1">
                 <j-tooltip span_style="white-space: nowrap">
                   <v-icon :class="viewer.config==='imviz' ? 'invert' : 'invert-if-dark'" style="float: right">{{icon}}</v-icon>
                 </j-tooltip>
-                <span :class="viewer.config==='imviz' ? 'invert' : 'invert-if-dark'" style="margin-left: 24px; margin-right: 32px; line-height: 24px">{{layer_name}}</span>
+                <span :class="viewer.config==='imviz' ? 'invert' : 'invert-if-dark'" style="margin-left: 24px; margin-right: 32px; line-height: 24px">
+                  {{layer_name}}{{viewer.visible_layers[layer_name].label_suffix}}
+                </span>
               </div>
             </div>
           </div>
@@ -130,19 +133,6 @@ module.exports = {
        * between a user closing a tab or a re-render. However, when the user closes a tab, the
        * source of the event is a vue component. We can use that distinction as a close signal. */
       source.$root && this.closefn(viewerId);
-    },
-    layer_in_viewer(viewer, data_items, layer_name) {
-      for (data_item of data_items) {
-        if (data_item['name'] == layer_name) {
-          // determine if this layer is LOADED (not necessarily visible) in the selected viewer
-          // NOTE: this logic doesn't work for subsets, and doesn't handle mixed-state well
-          // it should probably be replaced by accessing the direct visibility of the layer itself
-          // or by exposing more fine-grained information in viewer.selected_data_items
-          return (Object.keys(viewer.selected_data_items).indexOf(data_item['id']) !== -1 && viewer.selected_data_items[data_item['id']] === 'visible')
-        }
-      }
-      // then layer_name is likely of a subset, so we'll only include for spectrum-viewers
-      return viewer.reference === 'spectrum-viewer';
     }
   },
   computed: {

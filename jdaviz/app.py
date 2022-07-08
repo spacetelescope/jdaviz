@@ -1469,7 +1469,8 @@ class Application(VuetifyTemplate, HubListener):
             'tools_open': False,
             'layer_options': "IPY_MODEL_" + viewer.layer_options.model_id,
             'viewer_options': "IPY_MODEL_" + viewer.viewer_options.model_id,
-            'selected_data_items': {},
+            'selected_data_items': {},  # data-label: visibility state (visible, hidden, mixed)
+            'visible_layers': {},  # label: {color, label_suffix} (read-only access)
             'config': self.config,  # give viewer access to app config/layout
             'data_open': False,
             'collapse': True,

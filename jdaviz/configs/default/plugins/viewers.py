@@ -44,8 +44,10 @@ class JdavizViewerMixin:
             # logic there
             return
 
-        selected_data_items = self.jdaviz_app._viewer_item_by_id(self.reference_id)['selected_data_items']  # noqa
+        viewer_item = self.jdaviz_app._viewer_item_by_id(self.reference_id)
+        selected_data_items = viewer_item['selected_data_items']
 
+        # update selected_data_items
         for data_id, visibility in selected_data_items.items():
             label = next((x['name'] for x in self.jdaviz_app.state.data_items
                           if x['id'] == data_id), None)
@@ -60,6 +62,25 @@ class JdavizViewerMixin:
                 selected_data_items[data_id] = 'mixed'
             else:
                 selected_data_items[data_id] = 'hidden'
+
+        # update visible_layers (TODO: move this somewhere that can update on color change, etc)
+        def _get_layer_color(layer):
+            return layer.color
+
+        def _get_layer_suffix(layer):
+            #if self.__class__.__name__ == 'CubevizProfileView' and len(layer.layer.data.shape) == 3:
+            #    # then the underlying data is cube-like and we're in the profile viewer, so we
+            #    # want to include the collapse function *unless* the layer is a spectral subset
+            #    if isinstance(subset.subset_state, RoiSubsetState):
+            #        return f" (collapsed: {self.state.function})"
+            return ''
+
+        visible_layers = {}
+        for layer in self.state.layers:
+            if layer.visible:
+                visible_layers[layer.layer.label] = {'color': _get_layer_color(layer),
+                                                     'label_suffix': _get_layer_suffix(layer)}
+        viewer_item['visible_layers'] = visible_layers
 
         if not len(self._expected_subset_layers):
             return
