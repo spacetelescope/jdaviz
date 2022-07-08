@@ -53,9 +53,14 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
         with fits.open(file_obj) as hdulist:
             prihdr = hdulist[0].header
             telescop = prihdr.get('TELESCOP', '').lower()
+            exptype = prihdr.get('EXP_TYPE', '').lower()
+            # NOTE: Alerted to deprecation of FILETYPE keyword from pipeline on 2022-07-08
+            # Kept for posterity in for data processed prior to this date. Use EXP_TYPE instead
             filetype = prihdr.get('FILETYPE', '').lower()
             system = prihdr.get('SYSTEM', '').lower()
-            if telescop == 'jwst' and filetype == '3d ifu cube':
+            if telescop == 'jwst' and ('ifu' in exptype or
+                                       'mrs' in exptype or
+                                       filetype == '3d ifu cube'):
                 for ext, viewer_name in (('SCI', 'flux-viewer'),
                                          ('ERR', 'uncert-viewer'),
                                          ('DQ', 'mask-viewer')):
