@@ -135,7 +135,10 @@ module.exports = {
       for (data_item of data_items) {
         if (data_item['name'] == layer_name) {
           // determine if this layer is LOADED (not necessarily visible) in the selected viewer
-          return (Object.keys(viewer.selected_data_items).indexOf(data_item['id']) !== -1 && viewer.selected_data_items[data_item['id']] !== 'hidden')
+          // NOTE: this logic doesn't work for subsets, and doesn't handle mixed-state well
+          // it should probably be replaced by accessing the direct visibility of the layer itself
+          // or by exposing more fine-grained information in viewer.selected_data_items
+          return (Object.keys(viewer.selected_data_items).indexOf(data_item['id']) !== -1 && viewer.selected_data_items[data_item['id']] === 'visible')
         }
       }
       // then layer_name is likely of a subset, so we'll only include for spectrum-viewers

@@ -1102,7 +1102,13 @@ class DatasetSelect(BaseSelectPluginComponent):
     def _on_data_changed(self, msg=None):
         # NOTE: _on_data_changed is passed without a msg object during init
         # future improvement: don't recreate the entire list when msg is passed
-        self.items = [{"label": data.label} for data in self.app.data_collection
+        def _dc_to_dict(data):
+            d = {'label': data.label,
+                 'icon': self.app.state.layer_icons.get(data.label)}
+
+            return d
+
+        self.items = [_dc_to_dict(data) for data in self.app.data_collection
                       if self._is_valid_item(data)]
         self._apply_default_selection()
         # future improvement: only clear cache if the selected data entry was changed?
