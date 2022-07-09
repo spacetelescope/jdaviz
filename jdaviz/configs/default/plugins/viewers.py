@@ -39,31 +39,7 @@ class JdavizViewerMixin:
         # default visibility based on the visibility of the "parent" data layer
         layer.visible = self._get_layer(layer.layer.data.label).visible
 
-    def _on_layers_update(self, layers=None):
-        if self.__class__.__name__ == 'MosvizTableViewer':
-            # MosvizTableViewer uses this as a mixin, but we do not need any of this layer
-            # logic there
-            return
-
-        viewer_item = self.jdaviz_app._viewer_item_by_id(self.reference_id)
-        selected_data_items = viewer_item['selected_data_items']
-
-        # update selected_data_items
-        for data_id, visibility in selected_data_items.items():
-            label = next((x['name'] for x in self.jdaviz_app.state.data_items
-                          if x['id'] == data_id), None)
-
-            visibilities = []
-            for layer in self.state.layers:
-                if layer.layer.data.label == label:
-                    visibilities.append(layer.visible)
-            if np.all(visibilities):
-                selected_data_items[data_id] = 'visible'
-            elif np.any(visibilities):
-                selected_data_items[data_id] = 'mixed'
-            else:
-                selected_data_items[data_id] = 'hidden'
-
+    def _update_layer_icons(self):
         # update visible_layers (TODO: move this somewhere that can update on color change, etc)
         def _get_layer_color(layer):
             if getattr(self.state, 'color_mode', None) == 'Colormaps':
@@ -100,7 +76,36 @@ class JdavizViewerMixin:
                 visible_layers[layer.layer.label] = {'color': _get_layer_color(layer),
                                                      'prefix_icon': prefix_icon,
                                                      'suffix_label': suffix}
+
+        viewer_item = self.jdaviz_app._viewer_item_by_id(self.reference_id)
         viewer_item['visible_layers'] = visible_layers
+
+    def _on_layers_update(self, layers=None):
+        if self.__class__.__name__ == 'MosvizTableViewer':
+            # MosvizTableViewer uses this as a mixin, but we do not need any of this layer
+            # logic there
+            return
+
+        viewer_item = self.jdaviz_app._viewer_item_by_id(self.reference_id)
+        selected_data_items = viewer_item['selected_data_items']
+
+        # update selected_data_items
+        for data_id, visibility in selected_data_items.items():
+            label = next((x['name'] for x in self.jdaviz_app.state.data_items
+                          if x['id'] == data_id), None)
+
+            visibilities = []
+            for layer in self.state.layers:
+                if layer.layer.data.label == label:
+                    visibilities.append(layer.visible)
+            if np.all(visibilities):
+                selected_data_items[data_id] = 'visible'
+            elif np.any(visibilities):
+                selected_data_items[data_id] = 'mixed'
+            else:
+                selected_data_items[data_id] = 'hidden'
+
+        self._update_layer_icons()
 
         if not len(self._expected_subset_layers):
             return

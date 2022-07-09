@@ -1418,14 +1418,19 @@ class PlotOptionsSyncState(BasePluginComponent):
             return True
         return self._state_filter(state)
 
-    @cached_property
-    def subscribed_states(self):
-        # states object that according to the viewer selection, we *should*
-        # link if this entry is found there
+    @property
+    def subscribed_viewers(self):
         viewers = self._viewer_select.selected_obj
         if not isinstance(viewers, list):
             # which is the case for single-select
             viewers = [viewers]
+        return viewers
+
+    @cached_property
+    def subscribed_states(self):
+        # states object that according to the viewer selection, we *should*
+        # link if this entry is found there
+        viewers = self.subscribed_viewers
 
         def _state_item(item):
             if isinstance(item, list):
@@ -1567,6 +1572,14 @@ class PlotOptionsSyncState(BasePluginComponent):
         self._processing_change_to_glue = False
 
     def _on_glue_value_changed(self, value):
+        if self._glue_name == 'color_mode':
+            # then we need to force updates to the layer-icon colors
+            # NOTE: this will only trigger when the change to color_mode was handled
+            # through this plugin.  Manual changes to the glue state for viewers not
+            # currently in subscribed states will be ignored.
+            for viewer in self.subscribed_viewers:
+                viewer._update_layer_icons()
+
         if self._processing_change_to_glue:
             return
 
