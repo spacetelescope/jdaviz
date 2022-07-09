@@ -60,18 +60,18 @@
 
         <v-card tile flat style="flex: 1; margin-top: -2px; overflow-y: hidden;">
           <div v-if="app_settings.viewer_labels" class='viewer-label-container'>
-            <div :class="viewer.config==='imviz' ? 'viewer-label viewer-label-imviz invert-if-dark' : 'viewer-label invert-if-dark'">
+            <div class="viewer-label invert-if-dark">
               <j-tooltip span_style="white-space: nowrap">
-                <v-icon :class="viewer.config==='imviz' ? 'invert' : 'invert-if-dark'" style="float: right">{{viewer_icons[[viewer.id]]}}</v-icon>
+                <v-icon class="invert-if-dark" style="float: right">{{viewer_icons[[viewer.id]]}}</v-icon>
               </j-tooltip>
-              <span :class="viewer.config==='imviz' ? 'invert' : 'invert-if-dark'" style="margin-left: 24px; margin-right: 32px; line-height: 24px">{{viewer.reference || viewer.id}}</span>
+              <span class="invert-if-dark" style="margin-left: 24px; margin-right: 32px; line-height: 24px">{{viewer.reference || viewer.id}}</span>
             </div>
 
-            <div v-for="(layer_info, layer_name) in viewer.visible_layers" :class="viewer.config==='imviz' ? 'viewer-label viewer-label-imviz invert-if-dark' : 'viewer-label invert-if-dark'">
+            <div v-for="(layer_info, layer_name) in viewer.visible_layers" class="viewer-label invert-if-dark">
               <j-tooltip span_style="white-space: nowrap">
-                <v-icon :class="viewer.config==='imviz' ? 'invert' : 'invert-if-dark'" style="float: right" :color="layer_info.color">{{layer_icons[layer_name]}}</v-icon>
+                <v-icon class="invert-if-dark" style="float: right" :color="layer_info.color">{{layer_icons[layer_name]}}</v-icon>
               </j-tooltip>
-              <span :class="viewer.config==='imviz' ? 'invert' : 'invert-if-dark'" style="margin-left: 24px; margin-right: 32px; line-height: 24px">
+              <span class="invert-if-dark" style="margin-left: 24px; margin-right: 32px; line-height: 24px">
                 <v-icon v-if="layer_info.prefix_icon" dense>
                   {{layer_info.prefix_icon}}
                 </v-icon>
@@ -96,23 +96,20 @@
 .viewer-label {
   display: block;
   float: right;
-  background-color: white;
+  background-color: #c3c3c3c3;
   width: 24px;
   overflow: hidden;
   white-space: nowrap;
   /*cursor: pointer;*/
 }
-.viewer-label-imviz {
-  background-color: #393939c2;
+.viewer-label:last-child {
+  border-bottom-left-radius: 4px;
 }
 .viewer-label:hover {
   background-color: #e5e5e5;
   width: auto;
   border-bottom-left-radius: 4px; 
   border-top-left-radius: 4px;
-}
-.viewer-label-imviz:hover {
-  background-color: #777777c2;
 }
 </style>
 
