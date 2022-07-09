@@ -60,7 +60,7 @@
 
         <v-card tile flat style="flex: 1; margin-top: -2px; overflow-y: hidden;">
           <div v-if="app_settings.viewer_labels" class='viewer-label-container'>
-            <div class="viewer-label invert-if-dark">
+            <div v-if="Object.keys(viewer_icons).length > 1" class="viewer-label invert-if-dark">
               <j-tooltip span_style="white-space: nowrap">
                 <v-icon class="invert-if-dark" style="float: right">{{viewer_icons[[viewer.id]]}}</v-icon>
               </j-tooltip>
