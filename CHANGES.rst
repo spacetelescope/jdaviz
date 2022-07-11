@@ -38,7 +38,7 @@ Cubeviz
 ^^^^^^^
 
 - Replaced deprecated FILETYPE header keyword with EXP_TYPE to identify JWST cubes
-  for proper MJD_OBS handling. [#1471]
+  for proper MJD-OBS handling. [#1471]
 
 Imviz
 ^^^^^
