@@ -37,6 +37,9 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- BUGFIX: Replaced deprecated FILETYPE header keyword with EXP_TYPE to identify JWST cubes to
+  apply an MJDOBS header patch [#1471]
+
 Imviz
 ^^^^^
 
