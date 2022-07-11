@@ -39,6 +39,7 @@ class TestLink_WCS_NoWCS(BaseImviz_WCS_NoWCS, BaseLinkHandler):
         assert self.viewer.label_mouseover.world_ra_deg == ''
         assert self.viewer.label_mouseover.world_dec_deg == ''
 
+        # blink image through keypress
         self.viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'b',
                                            'domain': {'x': 0, 'y': 0}})
         assert self.viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
@@ -119,8 +120,9 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
         assert self.viewer.label_mouseover.world_ra_deg == '337.5202808000'
         assert self.viewer.label_mouseover.world_dec_deg == '-20.8333330600'
 
-        self.viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'b',
-                                           'domain': {'x': 0, 'y': 0}})
+        # blink image through clicking with blink tool
+        self.viewer.toolbar_nested.active_tool_id = 'jdaviz:blinkonce'
+        self.viewer.toolbar_nested.active_tool.on_click({'domain': {'x': 0, 'y': 0}})
         assert self.viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
         assert self.viewer.label_mouseover.value == '+1.00000e+00 '
         assert self.viewer.label_mouseover.world_ra_deg == '337.5202808000'
