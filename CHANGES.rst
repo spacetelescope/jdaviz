@@ -34,6 +34,8 @@ Specviz
 Bug Fixes
 ---------
 
+- Fix updating coordinate display when blinking via click. [#1470]
+
 Cubeviz
 ^^^^^^^
 
