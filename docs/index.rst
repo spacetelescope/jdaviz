@@ -10,12 +10,12 @@ Jdaviz
    ``jdaviz`` is one tool that is part of STScI's larger
    `Data Analysis Tools Ecosystem <https://jwst-docs.stsci.edu/jwst-post-pipeline-data-analysis>`_.
 
-``jdaviz`` is a package of astronomical data analysis visualization
-tools based on the Jupyter platform.  These GUI-based tools link data
-visualization and interactive analysis.  They are designed to work
-within a Jupyter notebook cell, as a standalone desktop application,
-or as embedded windows within a website -- all with nearly-identical
-user interfaces.
+``jdaviz`` is a package of astronomical data analysis visualization tools based
+on the `Jupyter <https://jupyter.org/>`_ platform and the `glue
+<http://glueviz.org/>`_ data visualization framework. These GUI-based tools link
+data visualization and interactive analysis.  They are designed to work within a
+Jupyter notebook cell, as a standalone desktop application, or as embedded
+windows within a website -- all with nearly-identical user interfaces.
 
 ``jdaviz`` applications currently include tools for interactive
 visualization of spectroscopic and imaging data.
@@ -28,6 +28,10 @@ cube.
 spectra, typically the output of a multi-object spectrograph (e.g.,
 JWST NIRSpec), and includes viewers for 1D and 2D spectra as well as
 contextual information like on-sky views of the spectrograph slit.
+
+For users who are interested in using glue in contexts beyond those provided by
+``jdaviz``, please visit http://glueviz.org for download links and more
+information.
 
 .. _jdaviz_instrument_table:
 
