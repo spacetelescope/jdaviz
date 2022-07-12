@@ -85,6 +85,8 @@ Cubeviz
 Other Changes and Additions
 ---------------------------
 
+- Add friendly message when trying to load Jdaviz outside of Jupyter [#1481]
+
 2.7.0.post1 (2022-07-07)
 ========================
 
