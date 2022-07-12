@@ -518,16 +518,18 @@ def _get_source_identifiers_by_hdu(hdus, filepaths=None, header_keys=['SOURCEID'
 @data_parser_registry("mosviz-niriss-parser")
 def mos_niriss_parser(app, data_dir):
     """
-    Attempts to parse all data for a NIRISS dataset in the specified
+    Attempts to parse all data for a NIRISS dataset in a single
     directory, which should include:
-    - *_direct_*_cal.fits : Direct 2D image
-    - *_direct_*_cat.ecsv : Source catalog
-    - *_WFSSR_*_cal.fits : 2D spectra in first orientation
-    - *_WFSSC_*_cal.fits : 2D spectra in second orientation
-    - *_WFSSR_*_x1d.fits : 1D spectra in first orientation
-    - *_WFSSC_*_x1d.fits : 1D spectra in second orientation
-    The spectra from the "C" files (horizontal orientation) are shown
-    in the viewers by default.
+
+    - *_i2d.fits : Direct 2D images
+    - *_cat.ecsv : Source catalog
+    - *_cal.fits : 2D spectra in vertical (R) and horizontal (C)
+        orientations. C spectra are shown first in viewers by default
+    - *_x1d.fits : 1D spectra in vertical (R) and horizontal (C)
+        orientations. C spectra are shown first in viewers by default
+
+    NOTE: For best performance, it's recommended that your directory
+    only contain one source catalog and its associated images/spectra.
 
     Parameters
     ----------
@@ -713,6 +715,7 @@ def mos_niriss_parser(app, data_dir):
 
                         filters.append(filter)
 
+    # Parse 1D spectra
     file_labels_1d = [k for k in file_lists.keys() if k.startswith("1D")]
     spec_labels_1d = []
     for f in file_labels_1d:
