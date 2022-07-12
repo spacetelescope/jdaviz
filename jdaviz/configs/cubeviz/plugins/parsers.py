@@ -88,6 +88,24 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
         raise NotImplementedError(f'Unsupported data format: {file_obj}')
 
 
+def _return_spectrum_with_correct_units(app, flux, wcs, metadata, hdulist):
+    # Upstream issue of WCS not using the correct units for data must
+    # be fixed here.
+    # Issue: https://github.com/astropy/astropy/issues/3658
+    # Check for the correct CUNIT3 value in PRIMARY and then SCI, since
+    # it can be in either.
+    uc = app.get_tray_item_from_name("g-unit-conversion")
+    sc = Spectrum1D(flux=flux, wcs=wcs, meta=metadata)
+    for ext in ['PRIMARY', 'SCI']:
+        if (ext in hdulist and 'CUNIT3' in hdulist[ext].header and
+                u.Unit(hdulist[ext].header['CUNIT3']) != sc.spectral_axis.unit):
+            sc = uc.process_unit_conversion(spectrum=sc,
+                                            new_flux=None,
+                                            new_spectral_axis=u.Unit(hdulist[ext].header['CUNIT3']))
+            break
+    return sc
+
+
 def _parse_hdulist(app, hdulist, file_name=None):
     if file_name is None:
         if hasattr(hdulist, 'file_name'):
@@ -127,12 +145,15 @@ def _parse_hdulist(app, hdulist, file_name=None):
             metadata[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
 
         try:
-            sc = Spectrum1D(flux=flux, wcs=wcs, meta=metadata)
+            sc = _return_spectrum_with_correct_units(app, flux, wcs, metadata, hdulist)
+            # sc = Spectrum1D(flux=flux, wcs=wcs, meta=metadata)
+            # sc.spectral_axis.to(u.Unit(u.um))
         except Exception as e:
             logging.warning(e)
             continue
 
         app.add_data(sc, data_label)
+        app.data_collection[-1].get_component("flux").units = flux_unit
 
         # If the data type is some kind of integer, assume it's the mask/dq
         if (hdu.data.dtype in (int, np.uint, np.uint32) or
@@ -176,13 +197,15 @@ def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI', viewer_name='flux-viewe
     if hdulist[ext].name != 'PRIMARY' and 'PRIMARY' in hdulist:
         metadata[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
 
-    data = Spectrum1D(flux, wcs=wcs, meta=metadata)
+    data = _return_spectrum_with_correct_units(app, flux, wcs, metadata, hdulist)
 
     # NOTE: Tried to only pass in sliced WCS but got error in Glue.
     # sliced_wcs = wcs[:, 0, 0]  # Only want wavelengths
     # data = Spectrum1D(flux, wcs=sliced_wcs, meta=metadata)
 
     app.add_data(data, data_label)
+    app.data_collection[-1].get_component("flux").units = flux.unit
+
     app.add_data_to_viewer(viewer_name, data_label)
     if viewer_name == 'flux-viewer':
         app.add_data_to_viewer('spectrum-viewer', data_label)
@@ -215,7 +238,8 @@ def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', viewer_name='flux-viewe
     if hdulist[ext].name != 'PRIMARY' and 'PRIMARY' in hdulist:
         metadata[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
 
-    data = Spectrum1D(flux, wcs=wcs, meta=metadata)
+    data = _return_spectrum_with_correct_units(app, flux, wcs, metadata, hdulist)
+    app.data_collection[-1].get_component("flux").units = flux.unit
 
     app.add_data(data, data_label)
     app.add_data_to_viewer(viewer_name, data_label)

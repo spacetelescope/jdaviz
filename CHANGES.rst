@@ -41,6 +41,8 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- Cubeviz parser now set the wavelength axis to what is in the CUNIT3 header [#1480]
+
 Imviz
 ^^^^^
 
