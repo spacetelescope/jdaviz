@@ -24,7 +24,7 @@
       style="display: flex; flex-flow: column; height: 100%; overflow-y: auto; overflow-x: hidden"
     >
         <div>
-          <v-row dense style="background-color: #205f76" class="jdaviz-viewer-toolbar">
+          <v-row dense style="background-color: #205f76; margin: 0px" class="jdaviz-viewer-toolbar">
             <j-viewer-data-select
               :data_items="data_items" 
               :viewer="viewer"
