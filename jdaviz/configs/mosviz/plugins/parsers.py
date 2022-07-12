@@ -624,6 +624,7 @@ def mos_niriss_parser(app, data_dir):
     # Set up a dictionary of datasets to add to glue
     add_to_glue = {}
 
+    # Parse images
     print("Loading: Images")
     for image_file in file_lists["Direct Image"]:
         im_split = image_file.split("/")[-1].split("_")
@@ -704,8 +705,9 @@ def mos_niriss_parser(app, data_dir):
                                  f"{orientation}")  # noqa
 
                         ra, dec = pupil_id_dict[filter_name][temp[sci].header["SOURCEID"]]
+                        # still needed? also defined above loop
                         # source_ids.append(f"Source Catalog: {filter_name} "
-                        #                   f"Source ID: {temp[sci].header['SOURCEID']}") # still needed?
+                        #                   f"Source ID: {temp[sci].header['SOURCEID']}")
                         ras.append(ra)
                         decs.append(dec)
                         image_add.append(image_dict[filter_name])

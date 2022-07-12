@@ -15,6 +15,13 @@ time, Mosviz supports automatic parsing for the following instruments:
 * JWST NIRSpec
 * JWST NIRISS
 
+The NIRISS parser expects a directory with the following types of files:
+
+* `*_i2d.fits` : Direct 2D images
+* `*_cat.ecsv` : Source catalog **(For best performance, it's recommended that your directory only contain one.)**
+* `*_cal.fits` : 2D spectra in vertical (R) and horizontal (C) orientations *(C spectra are shown first in 2D viewer by default.)*
+* `*_x1d.fits` : 1D spectra in vertical (R) and horizontal (C) orientations *(C spectra are shown first in 1D viewer by default.)*
+
 In a Jupyter context (notebook or Lab), you can specify the instrument with a directory
 as such::
 
@@ -42,8 +49,8 @@ Manual Loading
 
 If an automatic parser is not provided yet for your data, Mosviz provides manual loading by
 specifying which files are which, and the associations between them. This is done by
-generating three lists containing the filenames for the 1D spectra, 
-2D spectra, and images in your dataset. These three lists are taken as arguments 
+generating three lists containing the filenames for the 1D spectra,
+2D spectra, and images in your dataset. These three lists are taken as arguments
 by :meth:`~jdaviz.configs.mosviz.helper.Mosviz.load_data`. The association between files is
 assumed to be the order of each list (e.g., the first object consists of the first filename
 specified in each list, the second target is the second in each list, and so forth).
