@@ -84,6 +84,18 @@ where you do not see this error or use Jupyter Notebook instead.
 Cubeviz
 -------
 
+Spectrum does not appear when running on a Linux VM
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When running Jdaviz on a Linux virtual machine (VM), the spectrum may not appear
+in the spectrum viewer. This is a 
+`known bug <https://github.com/glue-viz/bqplot-image-gl/issues/94>`_ in an underlying
+package. Until it is fixed, the workaround is to run the following in a notebook
+cell *before* importing ``jdaviz``::
+
+    from glue_jupyter.bqplot.profile import layer_artist
+    layer_artist.USE_GL = False
+
 Collapse and Moment Maps: Spectral bounds do not match Region selection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -125,6 +137,11 @@ calculate them on dithered images linked by WCS *unless* you are on the referenc
 
 Specviz
 -------
+
+Spectrum does not appear when running on a Linux VM
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+See the identically named issue in :ref:`known_issues_cubeviz`.
 
 Line List Plugin redshift and radial velocity do not roundtrip to full precision
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
