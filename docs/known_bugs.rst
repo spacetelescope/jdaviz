@@ -89,7 +89,7 @@ Spectrum does not appear when running on a Linux VM
 
 When running Jdaviz on a Linux virtual machine (VM), the spectrum may not appear
 in the spectrum viewer. This is a 
-`known bug <https://github.com/glue-viz/bqplot-image-gl/issues/94>` in an underlying
+`known bug <https://github.com/glue-viz/bqplot-image-gl/issues/94>`_ in an underlying
 package. Until it is fixed, the workaround is to run the following in a notebook
 cell *before* importing ``jdaviz``::
 
