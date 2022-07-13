@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.ma as ma
 
-from traitlets import List, Unicode, observe
+from traitlets import List, Unicode, Bool, Int, observe
 
 from astropy.table import QTable
 from astropy.coordinates import SkyCoord
@@ -19,6 +19,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
     template_file = __file__, "catalogs.vue"
     viewer_items = List([]).tag(sync=True)
     selected_viewer = Unicode("").tag(sync=True)
+    results_available = Bool(False).tag(sync=True)
+    number_of_results = Int(0).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -70,6 +72,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
         query_region_result = SDSS.query_region(skycoord_center, radius=zoom_radius, data_release=17)
         # nothing happens in the case the query returned empty
         if query_region_result is None:
+            self.number_of_results = 0
+            self.results_available = True
             return
 
         # a table is created storing the 'ra' and 'dec' plottable points of each source found
@@ -89,17 +93,19 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
 
         # QTable stores all the filtered sky coordinate points to be marked
         catalog_results = QTable({'coord': filtered_skycoord_table})
+        self.number_of_results = len(catalog_results)
 
         # markers are added to the viewer based on the table
-        viewer.marker = {'color': 'red', 'alpha': 0.6, 'markersize': 5, 'fill': False}
+        viewer.marker = {'color': 'red', 'alpha': 0.8, 'markersize': 5, 'fill': False}
         viewer.add_markers(table=catalog_results, use_skycoord=True, marker_name='catalog_results')
 
     @observe("selected_viewer")
-    def vue_do_reset(self, *args, **kwargs):
+    def vue_do_clear(self, *args, **kwargs):
         # no querying occurs while the plugin has not been opened
         if not self.plugin_opened:
             return
 
+        self.results_available = False
         # gets the current viewer
         viewer = self.app.get_viewer_by_id(self.selected_viewer)
 
