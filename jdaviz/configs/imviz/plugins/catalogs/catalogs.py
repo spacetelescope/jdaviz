@@ -1,10 +1,12 @@
+import numpy as np
+import numpy.ma as ma
+
 from traitlets import List, Unicode, observe
 
 from astropy.table import QTable
 from astropy.coordinates import SkyCoord
 from astroquery.sdss import SDSS
 
-from jdaviz.configs.imviz.helper import get_top_layer_index
 from jdaviz.core.events import ViewerAddedMessage, ViewerRemovedMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin
@@ -72,7 +74,21 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
 
         # a table is created storing the 'ra' and 'dec' plottable points of each source found
         skycoord_table = SkyCoord(query_region_result['ra'], query_region_result['dec'], unit='deg')
-        catalog_results = QTable({'coord': [skycoord_table]})
+
+        # coordinates found are converted to pixel coordinates
+        pixel_table = viewer.state.reference_data.coords.world_to_pixel(skycoord_table)
+        # coordinates are filtered out (using a mask) if outside the zoom range
+        pair_pixel_table = np.dstack((pixel_table[0], pixel_table[1]))
+        masked_table = ma.masked_outside(pair_pixel_table, [zoom_x_min, zoom_y_min], [zoom_x_max, zoom_y_max])
+        filtered_table = ma.compress_rows(masked_table[0])
+        # coordinates are split into their respective x and y values and then converted to sky coordinates
+        filtered_pair_pixel_table = np.array(np.hsplit(filtered_table, 2))
+        x_coordinates = np.squeeze(filtered_pair_pixel_table[0])
+        y_coordinates = np.squeeze(filtered_pair_pixel_table[1])
+        filtered_skycoord_table = viewer.state.reference_data.coords.pixel_to_world(x_coordinates, y_coordinates)
+
+        # QTable stores all the filtered sky coordinate points to be marked
+        catalog_results = QTable({'coord': filtered_skycoord_table})
 
         # markers are added to the viewer based on the table
         viewer.add_markers(table=catalog_results, use_skycoord=True, marker_name='catalog_results')
