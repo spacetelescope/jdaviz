@@ -1,35 +1,5 @@
-2.8 (unreleased)
-================
-
-New Features
-------------
-
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-API Changes
------------
-
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
+2.7.1 (2022-07-12)
+==================
 
 Bug Fixes
 ---------
@@ -44,15 +14,6 @@ Cubeviz
 
 - Fixed a bug where having Subset breaks coordinates information display
   in image viewers. [#1472]
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
 
 Other Changes and Additions
 ---------------------------
