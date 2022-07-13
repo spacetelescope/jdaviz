@@ -91,6 +91,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
         catalog_results = QTable({'coord': filtered_skycoord_table})
 
         # markers are added to the viewer based on the table
+        viewer.marker = {'color': 'red', 'alpha': 0.6, 'markersize': 5, 'fill': False}
         viewer.add_markers(table=catalog_results, use_skycoord=True, marker_name='catalog_results')
 
     @observe("selected_viewer")
