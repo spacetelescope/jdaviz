@@ -84,14 +84,24 @@ where you do not see this error or use Jupyter Notebook instead.
 Cubeviz
 -------
 
+Cubeviz sometimes fails to run from command line interface
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Running Cubeviz from the command line sometimes results in a failure
+to initialize the app in the browser due to a ``RuntimeError`` in
+``tornado/ioloop.py``. We are investigating, but in the meantime
+reinstalling fresh in a new conda environment may help. Alternatively,
+running Cubeviz in a Jupyter notebook instead of from the command line
+will circumvent the problem.
+
 Spectrum does not appear when running on a Linux VM
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 When running Jdaviz on a Linux virtual machine (VM), the spectrum may not appear
 in the spectrum viewer. This is a 
 `known bug <https://github.com/glue-viz/bqplot-image-gl/issues/94>`_ in an underlying
-package. Until it is fixed, the workaround is to run the following in a notebook
-cell *before* importing ``jdaviz``::
+package. Until it is fixed, the workaround is to run the following in a Jupyter
+notebook cell *before* importing ``jdaviz``::
 
     from glue_jupyter.bqplot.profile import layer_artist
     layer_artist.USE_GL = False
