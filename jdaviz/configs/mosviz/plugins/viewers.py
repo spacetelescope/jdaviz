@@ -5,6 +5,7 @@ from glue_jupyter.table import TableViewer
 from specutils import Spectrum1D
 from astropy import units as u
 
+from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
 from jdaviz.core.events import (AddDataToViewerMessage,
                                 RemoveDataFromViewerMessage,
                                 TableClickMessage)
@@ -64,7 +65,7 @@ class MosvizProfileView(BqplotProfileView, JdavizViewerMixin):
 
 
 @viewer_registry("mosviz-image-viewer", label="Image 2D (Mosviz)")
-class MosvizImageView(BqplotImageView, JdavizViewerMixin):
+class MosvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewerMixin):
     # Whether to inherit tools from glue-jupyter automatically. Set this to
     # False to have full control here over which tools are shown in case new
     # ones are added in glue-jupyter in future that we don't want here.
