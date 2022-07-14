@@ -65,6 +65,8 @@ Specviz
 Other Changes and Additions
 ---------------------------
 
+- Add friendly message when trying to load Jdaviz outside of Jupyter [#1481]
+
 2.7.1 (2022-07-12)
 ==================
 
@@ -81,11 +83,6 @@ Cubeviz
 
 - Fixed a bug where having Subset breaks coordinates information display
   in image viewers. [#1472]
-
-Other Changes and Additions
----------------------------
-
-- Add friendly message when trying to load Jdaviz outside of Jupyter [#1481]
 
 2.7.0.post1 (2022-07-07)
 ========================
