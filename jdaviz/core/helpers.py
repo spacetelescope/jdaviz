@@ -336,7 +336,7 @@ class ConfigHelper(HubListener):
                              'To learn more, see our documentation at: '
                              'https://jdaviz.readthedocs.io\n\n'
                              'Thanks for trying out Jdaviz! :)')
-            raise boilerplate_e from orig_e
+            raise boilerplate_e
 
         if loc == "inline":
             display(self.app)
