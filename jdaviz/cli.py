@@ -95,8 +95,8 @@ def _main():
                         help='Configuration to use.')
     parser.add_argument('filename', type=str,
                         help='The path to the file to be loaded into the Jdaviz application.')
-    parser.add_argument('--instrument', type=str, default='',
-                        help='Specifies which instrument parser to use, if applicable')
+    parser.add_argument('--instrument', type=str, default='nirspec',
+                        help='Manually specifies which instrument parser to use, for Mosviz')
     parser.add_argument('--browser', type=str, default='default',
                         help='Browser to use for application.')
     parser.add_argument('--theme', choices=['light', 'dark'], default='light',
