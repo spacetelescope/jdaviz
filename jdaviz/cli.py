@@ -16,8 +16,8 @@ __all__ = ['main']
 CONFIGS_DIR = os.path.join(os.path.dirname(__file__), 'configs')
 
 
-def main(filename, layout='default', browser='default', theme='light',
-         verbosity='warning', history_verbosity='info',
+def main(filename, layout='default', instrument=None, browser='default',
+         theme='light', verbosity='warning', history_verbosity='info',
          hotreload=False):
     """
     Start a Jdaviz application instance with data loaded from FILENAME.
@@ -28,6 +28,8 @@ def main(filename, layout='default', browser='default', theme='light',
         The path to the file to be loaded into the Jdaviz application.
     layout : str, optional
         Optional specification for which configuration to use on startup.
+    instrument: str, optional
+        Specifies which instrument parser to use, if applicable
     browser : str, optional
         Path to browser executable.
     theme : {'light', 'dark'}
@@ -65,7 +67,7 @@ def main(filename, layout='default', browser='default', theme='light',
         notebook_template = notebook_template.replace("# PREFIX", "from jdaviz import enable_hot_reloading; enable_hot_reloading()")  # noqa: E501
 
     with open(os.path.join(nbdir, 'notebook.ipynb'), 'w') as nbf:
-        nbf.write(notebook_template.replace('DATA_FILENAME', filepath).replace('JDAVIZ_VERBOSITY', verbosity).replace('JDAVIZ_HISTORY_VERBOSITY', history_verbosity).strip())  # noqa: E501
+        nbf.write(notebook_template.replace('DATA_FILENAME', filepath).replace('JDAVIZ_VERBOSITY', verbosity).replace('JDAVIZ_HISTORY_VERBOSITY', history_verbosity).replace('INSTRUMENT', instrument).strip())  # noqa: E501
 
     os.chdir(nbdir)
 
@@ -93,6 +95,8 @@ def _main():
                         help='Configuration to use.')
     parser.add_argument('filename', type=str,
                         help='The path to the file to be loaded into the Jdaviz application.')
+    parser.add_argument('--instrument', type=str, default='',
+                        help='Specifies which instrument parser to use, if applicable')
     parser.add_argument('--browser', type=str, default='default',
                         help='Browser to use for application.')
     parser.add_argument('--theme', choices=['light', 'dark'], default='light',
@@ -113,4 +117,4 @@ def _main():
 
     main(args.filename, layout=args.layout, browser=args.browser, theme=args.theme,
          verbosity=args.verbosity, history_verbosity=args.history_verbosity,
-         hotreload=args.hotreload)
+         hotreload=args.hotreload, instrument=args.instrument)
