@@ -338,32 +338,28 @@ class ConfigHelper(HubListener):
                                 'Thanks for trying out Jdaviz! :)')
             raise boilerplate_e from orig_e
 
-        try:
-            if loc == "inline":
+        if loc == "inline":
+            display(self.app)
+
+        elif loc.startswith('sidecar'):
+            # Use default behavior if loc is exactly 'sidecar', else split anchor from the arg
+            anchor = None if loc == 'sidecar' else loc.split(':')[1]
+
+            # If title unset, default to the viz config
+            title = self.app.config if title is None else title
+
+            scar = Sidecar(anchor=anchor, title=title)
+            with scar:
                 display(self.app)
 
-            elif loc.startswith('sidecar'):
-                # Use default behavior if loc is exactly 'sidecar', else split anchor from the arg
-                anchor = None if loc == 'sidecar' else loc.split(':')[1]
+        elif loc == "new browser tab":
+            raise NotImplementedError
 
-                # If title unset, default to the viz config
-                title = self.app.config if title is None else title
+        elif loc == "popout":
+            raise NotImplementedError
 
-                scar = Sidecar(anchor=anchor, title=title)
-                with scar:
-                    display(self.app)
-
-            elif loc == "new browser tab":
-                raise NotImplementedError
-
-            elif loc == "popout":
-                raise NotImplementedError
-
-            else:
-                raise ValueError(f"Unrecognized display location: {loc}")
-
-        except Exception as e:
-            raise RuntimeError('Error in displaying Jdaviz') from e
+        else:
+            raise ValueError(f"Unrecognized display location: {loc}")
 
     def show_in_sidecar(self, anchor=None, title=None):
         """
