@@ -327,15 +327,16 @@ class ConfigHelper(HubListener):
                 orig_e = RuntimeError("Standard Python Interpreter not supported")
 
             boilerplate_e = \
-                RuntimeError('\nYou are currently running Jdaviz from an unsupported '
-                             'shell. Jdaviz is intended to be run within a Jupyter '
-                             'notebook, or directly from the command line.\n\nTo run '
-                             'from Jupyter, call <your viz>.show() from a notebook cell.\n'
-                             'To run from the command line, run '
-                             'jdaviz --layout=<your viz> outside of Python.\n\n'
-                             'To learn more, see our documentation at: '
-                             'https://jdaviz.readthedocs.io\n\n'
-                             'Thanks for trying out Jdaviz! :)')
+                RuntimeError("\nYou are currently running Jdaviz from an unsupported "
+                             "shell. Jdaviz is intended to be run within a Jupyter "
+                             "notebook, or directly from the command line.\n\n"
+                             "To run from Jupyter, call <your viz>.show() from a notebook cell.\n"
+                             "To see how to run from the command line, run: "
+                             "'jdaviz --help' outside of Python.\n\n"
+                             "To learn more, see our documentation at: "
+                             "https://jdaviz.readthedocs.io\n\n"
+                             "Thanks for trying out Jdaviz! :)")
+
             raise boilerplate_e
 
         if loc == "inline":
