@@ -168,20 +168,21 @@ class BasePluginComponent(HubListener):
 
     @property
     def viewer_dicts(self):
-        def _dict_from_viewer(viewer, viewer_item, index=None):
-            d = {'viewer': viewer, 'id': viewer_item['id']}
+        def _dict_from_viewer(viewer, viewer_item):
+            d = {'viewer': viewer,
+                 'id': viewer_item['id'],
+                 'icon': self.app.state.viewer_icons.get(viewer_item['id'])}
             if viewer_item.get('reference') is not None:
                 d['reference'] = viewer_item['reference']
                 d['label'] = viewer_item['reference']
             else:
                 d['reference'] = None
                 d['label'] = viewer_item['id']
-            if index is not None:
-                d['icon'] = f"mdi-numeric-{index+1}-circle-outline"
+
             return d
 
-        return [_dict_from_viewer(viewer, self.app._viewer_item_by_id(vid), index)
-                for index, (vid, viewer) in enumerate(self.app._viewer_store.items())
+        return [_dict_from_viewer(viewer, self.app._viewer_item_by_id(vid))
+                for vid, viewer in self.app._viewer_store.items()
                 if viewer.__class__.__name__ != 'MosvizTableViewer']
 
     @cached_property
@@ -442,6 +443,7 @@ class LayerSelect(BaseSelectPluginComponent):
         self.hub.subscribe(self, SubsetDeleteMessage,
                            handler=lambda _: self._on_layers_changed())
 
+        self.app.state.add_callback('layer_icons', lambda _: self._on_layers_changed())
         self.add_observe(viewer, self._on_viewer_changed)
         self._on_layers_changed()
 
@@ -453,10 +455,10 @@ class LayerSelect(BaseSelectPluginComponent):
         except TypeError:
             return self.app.get_viewer_by_id(viewer)
 
-    def _layer_to_dict(self, layer, index=None):
-        d = {"label": layer.layer.label, "color": layer.state.color}
-        if index is not None:
-            d['icon'] = f"mdi-alpha-{chr(97 + index)}-box-outline"
+    def _layer_to_dict(self, layer):
+        d = {"label": layer.layer.label,
+             "color": layer.state.color,
+             "icon": self.app.state.layer_icons.get(layer.layer.label)}
         return d
 
     def _on_viewer_changed(self, msg=None):
@@ -495,7 +497,7 @@ class LayerSelect(BaseSelectPluginComponent):
         _, inds = np.unique(layer_labels, return_index=True)
         layers = [layers[i] for i in inds]
 
-        self.items = manual_items + [self._layer_to_dict(layer, index) for index, layer in enumerate(layers)]  # noqa
+        self.items = manual_items + [self._layer_to_dict(layer) for layer in layers]
         self._apply_default_selection()
 
     @cached_property
@@ -1025,6 +1027,7 @@ class DatasetSelect(BaseSelectPluginComponent):
         self.hub.subscribe(self, RemoveDataMessage, handler=self._on_data_changed)
         self.hub.subscribe(self, DataCollectionDeleteMessage, handler=self._on_data_changed)
 
+        self.app.state.add_callback('layer_icons', lambda _: self._on_data_changed())
         # initialize items from original viewers
         self._on_data_changed()
 
@@ -1101,7 +1104,13 @@ class DatasetSelect(BaseSelectPluginComponent):
     def _on_data_changed(self, msg=None):
         # NOTE: _on_data_changed is passed without a msg object during init
         # future improvement: don't recreate the entire list when msg is passed
-        self.items = [{"label": data.label} for data in self.app.data_collection
+        def _dc_to_dict(data):
+            d = {'label': data.label,
+                 'icon': self.app.state.layer_icons.get(data.label)}
+
+            return d
+
+        self.items = [_dc_to_dict(data) for data in self.app.data_collection
                       if self._is_valid_item(data)]
         self._apply_default_selection()
         # future improvement: only clear cache if the selected data entry was changed?
@@ -1409,14 +1418,19 @@ class PlotOptionsSyncState(BasePluginComponent):
             return True
         return self._state_filter(state)
 
-    @cached_property
-    def subscribed_states(self):
-        # states object that according to the viewer selection, we *should*
-        # link if this entry is found there
+    @property
+    def subscribed_viewers(self):
         viewers = self._viewer_select.selected_obj
         if not isinstance(viewers, list):
             # which is the case for single-select
             viewers = [viewers]
+        return viewers
+
+    @cached_property
+    def subscribed_states(self):
+        # states object that according to the viewer selection, we *should*
+        # link if this entry is found there
+        viewers = self.subscribed_viewers
 
         def _state_item(item):
             if isinstance(item, list):
@@ -1438,6 +1452,8 @@ class PlotOptionsSyncState(BasePluginComponent):
         for selected_layer_label in layer_labels:
             layer_states.append([])
             for viewer in viewers:
+                if viewer is None:
+                    continue
                 for layer in viewer.layers:
                     if layer.layer.label == selected_layer_label:
                         layer_states[-1].append(layer.state)
@@ -1556,6 +1572,14 @@ class PlotOptionsSyncState(BasePluginComponent):
         self._processing_change_to_glue = False
 
     def _on_glue_value_changed(self, value):
+        if self._glue_name == 'color_mode':
+            # then we need to force updates to the layer-icon colors
+            # NOTE: this will only trigger when the change to color_mode was handled
+            # through this plugin.  Manual changes to the glue state for viewers not
+            # currently in subscribed states will be ignored.
+            for viewer in self.subscribed_viewers:
+                viewer._update_layer_icons()
+
         if self._processing_change_to_glue:
             return
 

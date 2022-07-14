@@ -1,6 +1,6 @@
 import os
 
-from traitlets import Any, Dict, Float, Bool, Int, List, Unicode
+from traitlets import Any, Dict, Float, Bool, Int, List, Unicode, observe
 
 from glue.viewers.profile.state import ProfileViewerState, ProfileLayerState
 from glue.viewers.image.state import ImageSubsetLayerState
@@ -107,6 +107,8 @@ class PlotOptions(TemplateMixin):
     icon_radialtocheck = Unicode(read_icon(os.path.join(ICON_DIR, 'radialtocheck.svg'), 'svg+xml')).tag(sync=True)  # noqa
     icon_checktoradial = Unicode(read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
+    setting_show_viewer_labels = Bool(True).tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.viewer = ViewerSelect(self, 'viewer_items', 'viewer_selected', 'multiselect')
@@ -196,6 +198,16 @@ class PlotOptions(TemplateMixin):
                                               state_filter=not_profile)
         # zoom limits
         # display_units
+
+        self.setting_show_viewer_labels = self.app.state.settings['viewer_labels']
+        self.app.state.add_callback('settings', self._on_app_settings_changed)
+
+    @observe('setting_show_viewer_labels')
+    def _on_show_viewer_labels_changed(self, event):
+        self.app.state.settings['viewer_labels'] = event['new']
+
+    def _on_app_settings_changed(self, value):
+        self.setting_show_viewer_labels = value['viewer_labels']
 
     def vue_unmix_state(self, name):
         sync_state = getattr(self, name)

@@ -84,6 +84,8 @@
                   :data_items="state.data_items"
                   :app_settings="state.settings"
                   :icons="state.icons"
+                  :viewer_icons="state.viewer_icons"
+                  :layer_icons="state.layer_icons"
                   @resize="relayout"
                   :closefn="destroy_viewer_item"
                   @data-item-selected="data_item_selected($event)"
@@ -342,8 +344,9 @@ a:active {
   filter: invert(1) saturate(1) brightness(100);
 }
 
-.invert-if-dark.theme--dark {
+.invert, .invert-if-dark.theme--dark {
     filter: invert(1) saturate(1) brightness(100);
+    color: white;
 }
 
 .jdaviz-nested-toolbar .v-btn {

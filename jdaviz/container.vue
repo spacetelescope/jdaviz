@@ -7,6 +7,8 @@
       :data_items="data_items"
       :app_settings="app_settings"
       :icons="icons"
+      :viewer_icons="viewer_icons"
+      :layer_icons="layer_icons"
       @resize="$emit('resize')"
       :closefn="closefn"
       @data-item-selected="$emit('data-item-selected', $event)"
@@ -29,6 +31,7 @@
               :data_items="data_items" 
               :viewer="viewer"
               :app_settings="app_settings"
+              :layer_icons="layer_icons"
               :icons="icons"
               @data-item-selected="$emit('data-item-selected', $event)"
               @data-item-visibility="$emit('data-item-visibility', $event)"
@@ -55,17 +58,65 @@
 
         </div>
 
-        <v-card tile flat style="flex: 1; margin-top: -2px; overflow-y: auto;">
+        <v-card tile flat style="flex: 1; margin-top: -2px; overflow-y: hidden;">
+          <div v-if="app_settings.viewer_labels" class='viewer-label-container'>
+            <div v-if="Object.keys(viewer_icons).length > 1" class="viewer-label invert-if-dark">
+              <j-tooltip span_style="white-space: nowrap">
+                <v-icon class="invert-if-dark" style="float: right">{{viewer_icons[[viewer.id]]}}</v-icon>
+              </j-tooltip>
+              <span class="invert-if-dark" style="margin-left: 24px; margin-right: 32px; line-height: 24px">{{viewer.reference || viewer.id}}</span>
+            </div>
+
+            <div v-for="(layer_info, layer_name) in viewer.visible_layers" class="viewer-label invert-if-dark">
+              <j-tooltip span_style="white-space: nowrap">
+                <v-icon class="invert-if-dark" style="float: right" :color="layer_info.color">{{layer_icons[layer_name]}}</v-icon>
+              </j-tooltip>
+              <span class="invert-if-dark" style="margin-left: 24px; margin-right: 32px; line-height: 24px">
+                <v-icon v-if="layer_info.prefix_icon" dense>
+                  {{layer_info.prefix_icon}}
+                </v-icon>
+                {{layer_name}}{{layer_info.suffix_label}}
+              </span>
+            </div>
+          </div>
+
           <jupyter-widget :widget="viewer.widget" style="width: 100%; height: 100%"></jupyter-widget>
         </v-card>
     </gl-component>
   </component>
 </template>
 
+<style>
+.viewer-label-container {
+  position: absolute;
+  right: 0;
+  z-index: 1;
+  width: 24px;
+}
+.viewer-label {
+  display: block;
+  float: right;
+  background-color: #c3c3c3c3;
+  width: 24px;
+  overflow: hidden;
+  white-space: nowrap;
+  /*cursor: pointer;*/
+}
+.viewer-label:last-child {
+  border-bottom-left-radius: 4px;
+}
+.viewer-label:hover {
+  background-color: #e5e5e5;
+  width: auto;
+  border-bottom-left-radius: 4px; 
+  border-top-left-radius: 4px;
+}
+</style>
+
 <script>
 module.exports = {
   name: "g-viewer-tab",
-  props: ["stack", "data_items", "closefn", "app_settings", "icons"],
+  props: ["stack", "data_items", "closefn", "app_settings", "icons", "viewer_icons", "layer_icons"],
   created() {
     this.$parent.childMe = () => {
       return this.$children[0];

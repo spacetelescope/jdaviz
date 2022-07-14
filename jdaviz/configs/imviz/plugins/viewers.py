@@ -102,6 +102,7 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
             # Extract first dataset from visible layers and use this for coordinates - the choice
             # of dataset shouldn't matter if the datasets are linked correctly
             image = active_layer.layer
+            self.label_mouseover.icon = self.jdaviz_app.state.layer_icons.get(active_layer.layer.label)  # noqa
 
             # Extract data coordinates - these are pixels in the reference image
             x = data['domain']['x']

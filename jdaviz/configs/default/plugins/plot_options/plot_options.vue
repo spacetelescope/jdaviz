@@ -5,6 +5,26 @@
     :popout_button="popout_button">
 
     <v-row>
+      <v-expansion-panels popout>
+        <v-expansion-panel>
+          <v-expansion-panel-header v-slot="{ open }">
+            <span style="padding: 6px">Settings</span>
+          </v-expansion-panel-header>
+          <v-expansion-panel-content>
+            <v-row>
+              <v-switch
+                v-model="setting_show_viewer_labels"
+                label="Show labels in viewers"
+                hint="Whether to show viewer/layer labels on each viewer"
+                persistent-hint
+              ></v-switch>
+            </v-row>
+          </v-expansion-panel-content>
+        </v-expansion-panel>
+      </v-expansion-panels>
+    </v-row>
+
+    <v-row>
       <div style="width: calc(100% - 32px)">
       </div>
       <div style="width: 32px">

@@ -24,7 +24,9 @@ from glue.core import BaseData, HubListener, Data, DataCollection
 from glue.core.link_helpers import LinkSame
 from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink, IncompatibleWCS
 from glue.core.message import (DataCollectionAddMessage,
-                               DataCollectionDeleteMessage)
+                               DataCollectionDeleteMessage,
+                               SubsetCreateMessage,
+                               SubsetDeleteMessage)
 from glue.core.state_objects import State
 from glue.core.subset import Subset, RangeSubsetState, RoiSubsetState
 from glue_jupyter.app import JupyterApplication
@@ -127,6 +129,7 @@ class ApplicationState(State):
             'tray': True,
             'tab_headers': True,
         },
+        'viewer_labels': True,
         'dense_toolbar': True,
         'context': {
             'notebook': {
@@ -141,6 +144,9 @@ class ApplicationState(State):
         'radialtocheck': read_icon(os.path.join(ICON_DIR, 'radialtocheck.svg'), 'svg+xml'),
         'checktoradial': read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml')
     }, docstring="Custom application icons")
+
+    viewer_icons = DictCallbackProperty({}, docstring="Indexed icons for viewers across the app")
+    layer_icons = DictCallbackProperty({}, docstring="Indexed icons for layers across the app")
 
     data_items = ListCallbackProperty(
         docstring="List of data items parsed from the Glue data collection.")
@@ -261,6 +267,16 @@ class Application(VuetifyTemplate, HubListener):
             if cur_cm not in colormaps.members:
                 colormaps.add(*cur_cm)
 
+        # Subscribe to messages that result in changes to the layers
+        self.hub.subscribe(self, AddDataMessage,
+                           handler=self._on_layers_changed)
+        self.hub.subscribe(self, RemoveDataMessage,
+                           handler=self._on_layers_changed)
+        self.hub.subscribe(self, SubsetCreateMessage,
+                           handler=self._on_layers_changed)
+        self.hub.subscribe(self, SubsetDeleteMessage,
+                           handler=self._on_layers_changed)
+
     @property
     def hub(self):
         """
@@ -350,6 +366,18 @@ class Application(VuetifyTemplate, HubListener):
         self.state.snackbar_queue.put(self.state, msg,
                                       history=msg_level >= history_level,
                                       popup=msg_level >= popup_level)
+
+    def _on_layers_changed(self, msg):
+        if hasattr(msg, 'data'):
+            layer_name = msg.data.label
+        elif hasattr(msg, 'subset'):
+            layer_name = msg.subset.label
+        else:
+            raise NotImplementedError(f"cannot recognize new layer from {msg}")
+
+        if layer_name not in self.state.layer_icons:
+            self.state.layer_icons = {**self.state.layer_icons,
+                                      layer_name: f"mdi-alpha-{chr(97 + len(self.state.layer_icons))}-box-outline"}  # noqa
 
     def _link_new_data(self, reference_data=None, data_to_be_linked=None):
         """
@@ -1429,6 +1457,8 @@ class Application(VuetifyTemplate, HubListener):
         # own attribute instead.
         viewer._reference_id = vid  # For reverse look-up
 
+        self.state.viewer_icons.setdefault(vid, f"mdi-numeric-{len(self.state.viewer_icons)+1}-circle-outline")  # noqa
+
         return {
             'id': vid,
             'name': name or vid,
@@ -1438,8 +1468,8 @@ class Application(VuetifyTemplate, HubListener):
             'tools_open': False,
             'layer_options': "IPY_MODEL_" + viewer.layer_options.model_id,
             'viewer_options': "IPY_MODEL_" + viewer.viewer_options.model_id,
-            'layer_viewer_open': False,
-            'selected_data_items': {},
+            'selected_data_items': {},  # data-label: visibility state (visible, hidden, mixed)
+            'visible_layers': {},  # label: {color, label_suffix} (read-only access)
             'config': self.config,  # give viewer access to app config/layout
             'data_open': False,
             'collapse': True,

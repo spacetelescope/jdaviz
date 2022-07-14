@@ -10,6 +10,7 @@ __all__ = ['Compass']
 @tray_registry('imviz-compass', label="Imviz Compass")
 class Compass(PluginTemplateMixin, ViewerSelectMixin):
     template_file = __file__, "compass.vue"
+    icon = Unicode("").tag(sync=True)
     data_label = Unicode("").tag(sync=True)
     img_data = Unicode("").tag(sync=True)
 
@@ -40,6 +41,7 @@ class Compass(PluginTemplateMixin, ViewerSelectMixin):
 
     def clear_compass(self):
         """Clear the content of the plugin."""
+        self.icon = ''
         self.data_label = ''
         self.img_data = ''
 
@@ -48,5 +50,6 @@ class Compass(PluginTemplateMixin, ViewerSelectMixin):
         Input is rendered buffer from Matplotlib.
 
         """
+        self.icon = self.app.state.layer_icons.get(data_label)
         self.data_label = data_label
         self.img_data = img_data

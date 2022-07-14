@@ -70,6 +70,7 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
             # of dataset shouldn't matter if the datasets are linked correctly
             active_layer = visible_layers[-1]
             image = active_layer.layer
+            self.label_mouseover.icon = self.jdaviz_app.state.layer_icons.get(active_layer.layer.label)  # noqa
 
             # Extract data coordinates - these are pixels in the reference image
             x = data['domain']['x']
