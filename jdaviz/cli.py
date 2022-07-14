@@ -28,8 +28,8 @@ def main(filename, layout='default', instrument=None, browser='default',
         The path to the file to be loaded into the Jdaviz application.
     layout : str, optional
         Optional specification for which configuration to use on startup.
-    instrument: str, optional
-        Specifies which instrument parser to use, if applicable
+    instrument : str, optional
+        Specifies which instrument parser to use for Mosviz, if applicable.
     browser : str, optional
         Path to browser executable.
     theme : {'light', 'dark'}
