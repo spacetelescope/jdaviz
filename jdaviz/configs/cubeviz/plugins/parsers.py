@@ -28,7 +28,7 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
     ----------
     app : `~jdaviz.app.Application`
         The application-level object used to reference the viewers.
-    file_path : str
+    file_obj : str
         The path to a cube-like data file.
     data_type : str, {'flux', 'mask', 'uncert'}
         The data type used to explicitly differentiate parsed data.
