@@ -2,8 +2,6 @@ from collections.abc import Iterable
 import csv
 import glob
 import os
-import re
-from collections import defaultdict
 from pathlib import Path
 import warnings
 
@@ -678,7 +676,7 @@ def mos_niriss_parser(app, data_dir):
                     if "EXTNAME" in temp[i].header:
                         if (temp[i].header["EXTNAME"] == "SCI"
                             and temp[i].header["SOURCEID"] in cat_id_dict.keys()
-                        ):
+                            ):
                             sci_hdus.append(i)
                             wav_hdus[i] = ('WAVELENGTH',
                                            temp[i].header['EXTVER'])
@@ -726,7 +724,7 @@ def mos_niriss_parser(app, data_dir):
                 for hdu in temp:
                     if ("SRCTYPE" in hdu.header
                         and (hdu.header["SRCTYPE"] in ("POINT", "EXTENDED"))
-                    ):
+                        ):
                         pass
                     else:
                         hdu.header["SRCTYPE"] = "EXTENDED"
