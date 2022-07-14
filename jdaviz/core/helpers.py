@@ -314,33 +314,31 @@ class ConfigHelper(HubListener):
         If "sidecar" is requested in the "classic" Jupyter notebook, the app will appear inline,
         as only JupyterLab has a mechanism to have multiple tabs.
         """
+        # Check if the user is running Jdaviz in the correct environments.
+        # If not, provide a friendly msg to guide them!
         try:
-            # Check if the user is running Jdaviz in the correct environments.
-            # If not, provide a friendly msg to guide them!
-            try:
-                shell = get_ipython().__class__.__name__  # noqa
-                if shell == 'TerminalInteractiveShell':
-                    raise RuntimeError("IPython shell not supported")
-                elif shell != 'ZMQInteractiveShell':
-                    raise RuntimeError("Unknown shell not supported")
-            except Exception as orig_e:
-                if type(orig_e) is NameError:
-                    orig_e = RuntimeError("Standard Python Interpreter not supported")
+            shell = get_ipython().__class__.__name__  # noqa
+            if shell == 'TerminalInteractiveShell':
+                raise RuntimeError("IPython shell not supported")
+            elif shell != 'ZMQInteractiveShell':
+                raise RuntimeError("Unknown shell not supported")
+        except Exception as orig_e:
+            if type(orig_e) is NameError:
+                orig_e = RuntimeError("Standard Python Interpreter not supported")
 
-                boilerplate_e = \
-                    RuntimeError('\nYou are currently running Jdaviz from an unsupported '
-                                 'shell. Jdaviz is intended to be run within a Jupyter '
-                                 'notebook, or directly from the command line.\n\nTo run '
-                                 'from Jupyter, call <your viz>.show() from a notebook cell.\n'
-                                 'To run from the command line, run '
-                                 'jdaviz --layout=<your viz> outside of Python.\n\n'
-                                 'To learn more, see "Importing Data" from your config docs at: '
-                                 'https://jdaviz.readthedocs.io/en/latest/index.html\n'
-                                 'For some working examples, see our sample notebooks at: '
-                                 'https://jdaviz.readthedocs.io/en/latest/sample_notebooks.html\n\n'
-                                 'Thanks for trying out Jdaviz! :)')
-                raise boilerplate_e from orig_e
+            boilerplate_e = \
+                RuntimeError('\nYou are currently running Jdaviz from an unsupported '
+                                'shell. Jdaviz is intended to be run within a Jupyter '
+                                'notebook, or directly from the command line.\n\nTo run '
+                                'from Jupyter, call <your viz>.show() from a notebook cell.\n'
+                                'To run from the command line, run '
+                                'jdaviz --layout=<your viz> outside of Python.\n\n'
+                                'To learn more, see our documentation at: '
+                                'https://jdaviz.readthedocs.io\n\n'
+                                'Thanks for trying out Jdaviz! :)')
+            raise boilerplate_e from orig_e
 
+        try:
             if loc == "inline":
                 display(self.app)
 
