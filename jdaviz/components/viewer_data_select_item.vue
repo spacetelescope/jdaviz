@@ -33,7 +33,7 @@
       </div>
     </j-tooltip>
 
-    <div v-if="isSelected && isUnloadable" style="position: absolute; right: 5px">
+    <div v-if="isSelected && isUnloadable" style="right: 2px">
       <j-tooltip tipid='viewer-data-disable'>
         <v-btn
           icon
@@ -47,7 +47,7 @@
       </j-tooltip>
     </div>
 
-    <div v-if="isDeletable" style="position: absolute; right: 5px">
+    <div v-if="isDeletable" style="right: 2px">
       <j-tooltip tipid='viewer-data-delete'>
         <v-btn
           icon
