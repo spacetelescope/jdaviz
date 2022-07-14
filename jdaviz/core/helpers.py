@@ -316,16 +316,18 @@ class ConfigHelper(HubListener):
         """
         # Check if the user is running Jdaviz in the correct environments.
         # If not, provide a friendly msg to guide them!
-        try:
+        if 'get_ipython' in globals():
             shell = get_ipython().__class__.__name__  # noqa
-            if shell == 'TerminalInteractiveShell':
-                raise RuntimeError("IPython shell not supported")
-            elif shell != 'ZMQInteractiveShell':
-                raise RuntimeError("Unknown shell not supported")
-        except Exception as orig_e:
-            if type(orig_e) is NameError:
-                orig_e = RuntimeError("Standard Python Interpreter not supported")
+            if shell == 'ZMQInteractiveShell':  # Jupyter!
+                error = None
+            elif shell == 'TerminalInteractiveShell':
+                error = "IPython shell not supported"
+            else:
+                error = "Unknown shell not supported"
+        else:
+            error = "Standard Python Interpreter not supported"
 
+        if error:
             boilerplate_e = \
                 RuntimeError("\nYou are currently running Jdaviz from an unsupported "
                              "shell. Jdaviz is intended to be run within a Jupyter "
@@ -336,7 +338,6 @@ class ConfigHelper(HubListener):
                              "To learn more, see our documentation at: "
                              "https://jdaviz.readthedocs.io\n\n"
                              "Thanks for trying out Jdaviz! :)")
-
             raise boilerplate_e
 
         if loc == "inline":
