@@ -62,21 +62,21 @@ def _check_is_file(path):
 
 def _warn_if_not_found(app, file_lists):
     """
-    Take a list of labels and associated file lists and send a snackbar
-    message if the length of any list is 0.
+    Take a list of labels and associated file lists/strings and send a
+    snackbar message if any are empty.
     """
     found = []
     not_found = []
     for key in file_lists:
-        if len(file_lists[key]) == 0:
-            not_found.append(key)
-        else:
+        if file_lists[key]:
             found.append(key)
+        else:
+            not_found.append(key)
 
     if len(found) == 0:
         raise ValueError("No valid files found in specified directory")
     if len(not_found) > 0:
-        warn_msg = "Some files not found: {}".format(", ".join(not_found))
+        warn_msg = f"Some files not found: {", ".join(not_found)}"
         print(warn_msg)
         warn_msg = SnackbarMessage(warn_msg, color="warning", sender=app)
         app.hub.broadcast(warn_msg)
@@ -85,6 +85,10 @@ def _warn_if_not_found(app, file_lists):
 
 
 def _fields_from_ecsv(fname, fields, delimiter=","):
+    """
+    Save specified field(s) from an ecsv file as a row-by-row list of
+    lists.
+    """
     parsed_fields = []
     with open(fname, "r") as f:
         reader = csv.DictReader(filter(lambda r: r[0] != "#", f),
@@ -540,16 +544,22 @@ def mos_niriss_parser(app, data_dir):
     """
     path = Path(data_dir)
     if not path.is_dir():
-        raise ValueError("{} is not a valid directory path".format(data_dir))
+        raise ValueError(f"{data_dir} is not a valid directory path")
 
-    file_lists = defaultdict(list)
+    # create dict for mapping expected file types to their DATAMODL identifiers
+    expected_labels = ['1D Spectra C', '1D Spectra R',
+                       '2D Spectra C', '2D Spectra R', 'Direct Image']
+    file_lists = {k: [] for k in expected_labels}
+
+    # there should only be one source catalog, so that key gets a string
+    cat_key = 'Source Catalog'
+    expected_labels += [cat_key]
+    file_lists[cat_key] = ''
 
     # use FITS header keywords to sort the directory's files
     for filepath in path.glob('*'):
         if filepath.is_dir():
             continue
-
-        filestr = str(filepath)
 
         if filepath.suffix in ('.fits', '.fits.gz', '.fit', '.fit.gz'):
             # eligible files will have a DATAMODL value in their primary headers
@@ -570,122 +580,114 @@ def mos_niriss_parser(app, data_dir):
             if datamodl is None:
                 continue
             if datamodl == 'MultiSpecModel' and dispersion == 'C':
-                file_lists['1D Spectra C'].append(filestr)
+                file_lists['1D Spectra C'].append(filepath)
             elif datamodl == 'MultiSpecModel' and dispersion == 'R':
-                file_lists['1D Spectra R'].append(filestr)
+                file_lists['1D Spectra R'].append(filepath)
             elif datamodl == 'MultiSlitModel' and dispersion == 'C':
-                file_lists['2D Spectra C'].append(filestr)
+                file_lists['2D Spectra C'].append(filepath)
             elif datamodl == 'MultiSlitModel' and dispersion == 'R':
-                file_lists['2D Spectra R'].append(filestr)
+                file_lists['2D Spectra R'].append(filepath)
             elif datamodl == 'ImageModel' and s_wcs is not None:
-                file_lists['Direct Image'].append(filestr)
+                file_lists['Direct Image'].append(filepath)
             else:
-                # print(f"Other case: datamodl is {datamodl}; "
-                #       f"dispersion is {dispersion}")
                 continue
 
         elif filepath.suffix == '.ecsv':
-            file_lists['Source Catalog'].append(filestr)
+            if file_lists[cat_key]:
+                raise ValueError("source directory has more "
+                                 "than one source catalog")
+            else:
+                file_lists[cat_key] = filepath
 
         else:
             continue
 
-    file_lists = dict(file_lists)
+    # validate that all expected files are present in proper amounts
     _warn_if_not_found(app, file_lists)
 
     # Parse relevant information from source catalog
-    pupil_id_dict = {}
-
-    # Retrieve source information
-    for cat_file in file_lists["Source Catalog"]:
-        try:
-            cat_fields = ['label', 'sky_centroid.ra', 'sky_centroid.dec']
-            parsed_cat_fields = _fields_from_ecsv(cat_file, cat_fields,
-                                                  delimiter=" ")
-        except KeyError:
-            # Older pipeline builds use different colname to distinguish sources
-            cat_fields[0] = 'id'
-            parsed_cat_fields = _fields_from_ecsv(cat_file, cat_fields,
-                                                  delimiter=" ")
-
-        pupil = [x
-                 for x in re.split('_|-', cat_file.split("/")[-1])
-                 if x[0] == "F" or x[0] == "f"][0].upper()
-
-        pupil_id_dict[pupil] = {}
-
-        for row in parsed_cat_fields:
-            pupil_id_dict[pupil][int(row[0])] = (row[1], row[2])
-
-    # Read in direct image filters
-    image_dict = {}
-    filter_wcs = {}
+    cat_id_dict = {}
+    cat_file = file_lists[cat_key]
+    try:
+        cat_fields = ['label', 'sky_centroid.ra', 'sky_centroid.dec']
+        parsed_cat_fields = _fields_from_ecsv(cat_file, cat_fields,
+                                              delimiter=" ")
+    except KeyError:
+        # Older pipeline builds use different colname to distinguish sources
+        cat_fields[0] = 'id'
+        parsed_cat_fields = _fields_from_ecsv(cat_file, cat_fields,
+                                              delimiter=" ")
+    for row in parsed_cat_fields:
+        cat_id_dict[int(row[0])] = (row[1], row[2])
 
     # Set up a dictionary of datasets to add to glue
     add_to_glue = {}
 
     # Parse images
+    image_dict = {}
+    filter_wcs = {} # NEEDED? HAS VALUE ASSIGNED LATER BUT NEVER USED OTHERWISE
+
     print("Loading: Images")
     for image_file in file_lists["Direct Image"]:
-        im_split = image_file.split("/")[-1].split("_")
+        # save label for table viewer
+        im_split = image_file.stem.split("_")[0]
         pupil = fits.getheader(image_file, ext=0).get('PUPIL')
 
-        image_label = f"Image {im_split[0]} {pupil}"
+        image_label = f"Image {im_split} {pupil}"
+        image_dict[pupil] = image_label
 
-        with fits.open(image_file) as file_obj:
-            data_iter = get_image_data_iterator(app, file_obj, "Image", ext=None)
-            data_obj = [d[0] for d in data_iter]  # We do not use the generated labels
-            image_data = data_obj[0]  # Grab the first one. TODO: Error if multiple found?
-
+        # save information from data file
         with fits.open(image_file) as temp:
-            filter_wcs[pupil] = temp[1].header
+            data_iter = get_image_data_iterator(app, temp, "Image", ext=None)
+            data_obj = [d[0] for d in data_iter]  # We do not use the generated labels
+            image_data = data_obj[0]  # Grab the first one.
+            # TODO: Error if multiple found?
+
+            filter_wcs[pupil] = temp[1].header # NEEDED?
 
         image_data.label = image_label
         add_to_glue[image_label] = image_data
 
-        image_dict[pupil] = image_label
-
-    # Parse 2D spectra
+    # initialize lists of data to be shown in table viewer
     source_ids = []
     ras = []
     decs = []
     image_add = []
-
-    file_labels_2d = [k for k in file_lists.keys() if k.startswith("2D")]
+    spec_labels_1d = []
     spec_labels_2d = []
     filters = []
 
-    for f in file_labels_2d:
+    # Parse 2D spectra
+    file_labels_2d = [k for k in file_lists.keys() if k.startswith("2D")]
 
-        for fname in file_lists[f]:
-            print(f"Loading: {f} sources")
-
+    for flabel in file_labels_2d:
+        for fname in file_lists[flabel]:
+            print(f"Loading: {flabel} sources")
             filter_name = fits.getheader(fname, ext=0).get('PUPIL')
 
             # Orientation denoted by "C", "R", or "C+R" for combined spectra
-            orientation = f.split()[-1]
+            orientation = flabel.split()[-1]
 
+            # save HDUs in file that correspond with sources in catalog
             with fits.open(fname, memmap=False) as temp:
                 sci_hdus = []
                 wav_hdus = {}
                 for i in range(len(temp)):
-
                     if i == 0:
                         filter = temp[0].header["FILTER"]
-
                     if "EXTNAME" in temp[i].header:
-                        if temp[i].header["EXTNAME"] == "SCI":
+                        if (temp[i].header["EXTNAME"] == "SCI"
+                            and temp[i].header["SOURCEID"] in cat_id_dict.keys()
+                        ):
                             sci_hdus.append(i)
                             wav_hdus[i] = ('WAVELENGTH',
                                            temp[i].header['EXTVER'])
 
-                # Now get a Spectrum1D object for each SCI HDU
+                # Now get a Spectrum1D object for each matching SCI HDU
                 source_ids.extend(_get_source_identifiers_by_hdu([temp[sci] for sci in sci_hdus]))
 
                 for sci in sci_hdus:
-
                     if temp[sci].header["SPORDER"] == 1:
-
                         data = temp[sci].data
                         meta = standardize_metadata(temp[sci].header)
                         meta[PRIHDR_KEY] = standardize_metadata(temp[0].header)
@@ -694,75 +696,74 @@ def mos_niriss_parser(app, data_dir):
                         # a 2D array, but in order to be able to use Spectrum1D
                         # we use the average wavelength for all image rows
                         wav = temp[wav_hdus[sci]].data.mean(axis=0) * u.micron
-
                         spec2d = Spectrum1D(data * u.one, spectral_axis=wav, meta=meta)
-
                         spec2d.meta['INSTRUME'] = 'NIRISS'
                         spec2d.meta['mosviz_row'] = len(spec_labels_2d)
 
                         label = (f"{filter_name} Source "
                                  f"{temp[sci].header['SOURCEID']} spec2d "
                                  f"{orientation}")  # noqa
+                        add_to_glue[label] = spec2d
 
-                        ra, dec = pupil_id_dict[filter_name][temp[sci].header["SOURCEID"]]
-                        # still needed? also defined above loop
-                        # source_ids.append(f"Source Catalog: {filter_name} "
-                        #                   f"Source ID: {temp[sci].header['SOURCEID']}")
+                        # update labels for table viewer
+                        ra, dec = cat_id_dict[temp[sci].header["SOURCEID"]]
                         ras.append(ra)
                         decs.append(dec)
                         image_add.append(image_dict[filter_name])
                         spec_labels_2d.append(label)
-
-                        add_to_glue[label] = spec2d
-
                         filters.append(filter)
 
     # Parse 1D spectra
     file_labels_1d = [k for k in file_lists.keys() if k.startswith("1D")]
-    spec_labels_1d = []
-    for f in file_labels_1d:
 
-        for fname in file_lists[f]:
-            print(f"Loading: {f} sources")
+    for flabel in file_labels_1d:
+        for fname in file_lists[flabel]:
+            print(f"Loading: {flabel} sources")
 
             with fits.open(fname, memmap=False) as temp:
+                # treat all HDUs missing SRCTYPE attribute as extended sources
                 # TODO: Remove this once valid SRCTYPE values are present in all headers
                 for hdu in temp:
-                    if ("SRCTYPE" in hdu.header and
-                            (hdu.header["SRCTYPE"] in ("POINT", "EXTENDED"))):
+                    if ("SRCTYPE" in hdu.header
+                        and (hdu.header["SRCTYPE"] in ("POINT", "EXTENDED"))
+                    ):
                         pass
                     else:
                         hdu.header["SRCTYPE"] = "EXTENDED"
 
+                # read all HDUs with SpectrumList, then only keep those that
+                # correspond with sources in catalog
+                # (read() is slow... would also LOVE to do this in one step!)
                 specs = SpectrumList.read(temp, format="JWST x1d multi")
+                specs_cut = [sp for sp in specs if sp.meta['header']['SOURCEID']
+                             in cat_id_dict.keys()]
+
                 filter_name = fits.getheader(fname, ext=0).get('PUPIL')
 
                 # Orientation denoted by "C", "R", or "C+R" for combined spectra
-                orientation = f.split()[-1]
+                orientation = flabel.split()[-1]
 
-                for spec in specs:
+                # update 1D labels for table viewer
+                for sp in specs_cut:
                     if (
-                        spec.meta['header']['SPORDER'] == 1
-                        and spec.meta['header']['EXTNAME'] == 'EXTRACT1D'
+                        sp.meta['header']['SPORDER'] == 1
+                        and sp.meta['header']['EXTNAME'] == 'EXTRACT1D'
                     ):
-
                         label = (f"{filter_name} Source "
-                                 f"{spec.meta['header']['SOURCEID']} spec1d "
+                                 f"{sp.meta['header']['SOURCEID']} spec1d "
                                  f"{orientation}")
 
                         spec_labels_1d.append(label)
-                        add_to_glue[label] = spec
+                        add_to_glue[label] = sp
 
     # Add the datasets to glue - we do this in one step so that we can easily
     # optimize by avoiding recomputing the full link graph at every add
-
     with app.data_collection.delay_link_manager_update():
-
         for label, data in add_to_glue.items():
             app.add_data(data, label, notify_done=False)
 
-        # We then populate the table inside this context manager as _add_to_table
-        # does operations that also trigger link manager updates.
+        # We then populate the table inside this context manager as
+        # _add_to_table does operations that also trigger link manager updates.
         _add_to_table(app, source_ids, "Identifier")
         _add_to_table(app, ras, "R.A.")
         _add_to_table(app, decs, "Dec.")

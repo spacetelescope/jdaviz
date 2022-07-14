@@ -18,7 +18,7 @@ time, Mosviz supports automatic parsing for the following instruments:
 The NIRISS parser expects a directory with the following types of files:
 
 * ``*_i2d.fits`` : Level 3 2D images from the ``calwebb_image3`` imaging pipeline
-* ``*_cat.ecsv`` : Level 3 Source catalog from the ``calwebb_image3`` imaging pipeline **(For best performance, it's recommended that your directory only contain one.)**
+* ``*_cat.ecsv`` : Level 3 source catalog from the ``calwebb_image3`` imaging pipeline **(For best performance, it's recommended that your directory only contain one.)**
 * ``*_cal.fits`` : Level 2 2D spectra in vertical (R) and horizontal (C) orientations from the ``calwebb_spec2`` spectroscopic pipeline *(C spectra are shown first in 2D viewer by default.)*
 * ``*_x1d.fits`` : Level 2 1D spectra in vertical (R) and horizontal (C) orientations from the ``calwebb_spec2`` spectroscopic pipeline *(C spectra are shown first in 1D viewer by default.)*
 
