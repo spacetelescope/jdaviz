@@ -4,6 +4,8 @@
 New Features
 ------------
 
+- Users can now load data directly through show() [#1498]
+
 Cubeviz
 ^^^^^^^
 
