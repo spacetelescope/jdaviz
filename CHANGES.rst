@@ -36,6 +36,8 @@ Specviz
 Bug Fixes
 ---------
 
+* Fix scrolling of "x" button in data menus. [#1491]
+
 Cubeviz
 ^^^^^^^
 
