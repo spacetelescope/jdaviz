@@ -16,6 +16,7 @@ from glue.core.message import SubsetCreateMessage
 
 from jdaviz.app import Application
 
+from IPython import get_ipython
 from IPython.display import display
 
 from sidecar import Sidecar
@@ -316,18 +317,7 @@ class ConfigHelper(HubListener):
         """
         # Check if the user is running Jdaviz in the correct environments.
         # If not, provide a friendly msg to guide them!
-        if 'get_ipython' in globals():
-            shell = get_ipython().__class__.__name__  # noqa
-            if shell == 'ZMQInteractiveShell':  # Jupyter!
-                error = None
-            elif shell == 'TerminalInteractiveShell':
-                error = "IPython shell not supported"
-            else:
-                error = "Unknown shell not supported"
-        else:
-            error = "Standard Python Interpreter not supported"
-
-        if error:
+        if get_ipython().__class__.__name__ != 'ZMQInteractiveShell':
             boilerplate_e = \
                 RuntimeError("\nYou are currently running Jdaviz from an unsupported "
                              "shell. Jdaviz is intended to be run within a Jupyter "
@@ -338,7 +328,7 @@ class ConfigHelper(HubListener):
                              "To learn more, see our documentation at: "
                              "https://jdaviz.readthedocs.io\n\n"
                              "Thanks for trying out Jdaviz! :)")
-            raise boilerplate_e
+            raise boilerplate_e            
 
         if loc == "inline":
             display(self.app)
