@@ -132,3 +132,11 @@ def test_spectrum1d_parse(spectrum1d, cubeviz_helper):
 def test_numpy_cube(cubeviz_helper):
     with pytest.raises(NotImplementedError, match='Unsupported data format'):
         cubeviz_helper.load_data(np.ones(27).reshape((3, 3, 3)))
+
+
+def test_multiple_load(image_hdu_obj, cubeviz_helper):
+    cubeviz_helper.load_data(image_hdu_obj)
+
+    # first load should be succesful; subsequent attempts should fail
+    with pytest.raises(RuntimeError, match=r".?only one (data)?cube.?"):
+        cubeviz_helper.load_data(image_hdu_obj)
