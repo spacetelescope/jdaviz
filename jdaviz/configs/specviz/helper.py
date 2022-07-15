@@ -63,7 +63,6 @@ class Specviz(ConfigHelper, LineListMixin):
         """Alternately named data loader helper method for Specviz"""
         self.load_data(*args, **kwargs)
 
-
     def get_spectra(self, data_label=None, apply_slider_redshift="Warn"):
         """Returns the current data loaded into the main viewer
 

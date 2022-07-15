@@ -276,7 +276,7 @@ class ConfigHelper(HubListener):
 
     def show(self, *args, loc="inline", title=None, **kwargs):
         """Display the Jdaviz application.
-        
+
         If provided data, attempts to load it directly. For details on supported data loading
         arguments, consult your configuration's load_data docstring
 
