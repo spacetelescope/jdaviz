@@ -37,12 +37,32 @@ class Specviz(ConfigHelper, LineListMixin):
         self.app.hub.subscribe(self, RedshiftMessage,
                                handler=self._redshift_listener)
 
-    def load_spectrum(self, data, data_label=None, format=None, show_in_viewer=True):
+    def load_data(self, data, data_label=None, format=None, show_in_viewer=True):
+        """Loads a data product into Specviz
+
+        Parameters
+        ----------
+        data : str, `~specutils.Spectrum1D`, or `~specutils.SpectrumList`
+            Spectrum1D, SpectrumList, or path to compatible data file.
+        data_label : str
+            The label this data is referred to as in the visualization tool
+        format : str
+            Loader format specification used to indicate data format in
+            `~specutils.Spectrum1D.read` io method.
+        show_in_viewer : bool
+            Flag that determines whether the data is immediately shown in
+            the viewer
+        """
         super().load_data(data,
                           'specviz-spectrum1d-parser',
                           data_label=data_label,
                           format=format,
                           show_in_viewer=show_in_viewer)
+
+    def load_spectrum(self, *args, **kwargs):
+        """Alternately named data loader helper method for Specviz"""
+        self.load_data(*args, **kwargs)
+
 
     def get_spectra(self, data_label=None, apply_slider_redshift="Warn"):
         """Returns the current data loaded into the main viewer
