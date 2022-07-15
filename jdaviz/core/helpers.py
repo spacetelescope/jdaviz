@@ -274,8 +274,11 @@ class ConfigHelper(HubListener):
 
         return parameters_cube
 
-    def show(self, loc="inline", title=None):
+    def show(self, *args, loc="inline", title=None, **kwargs):
         """Display the Jdaviz application.
+        
+        If provided data, attempts to load it directly. For details on supported data loading
+        arguments, consult your configuration's load_data docstring
 
         Parameters
         ----------
@@ -340,6 +343,10 @@ class ConfigHelper(HubListener):
 
         except Exception as e:
             raise RuntimeError('Error in displaying Jdaviz') from e
+
+        # If there are any leftover arguments, pass them to load data
+        if args or kwargs:
+            self.load_data(*args, **kwargs)
 
     def show_in_sidecar(self, anchor=None, title=None):
         """
