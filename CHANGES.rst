@@ -7,6 +7,8 @@ New Features
 Cubeviz
 ^^^^^^^
 
+- The "Import Data" button is hidden after a data cube is loaded into the app [#1495]
+
 Imviz
 ^^^^^
 
@@ -79,7 +81,7 @@ Other Changes and Additions
 
 New Features
 ------------
-- The app and individual plugins can be opened in a new window by clicking a button in the top 
+- The app and individual plugins can be opened in a new window by clicking a button in the top
   right-hand corner. [#977, #1423]
 
 - Snackbar queue priority and history access. [#1352, #1437]
@@ -126,7 +128,7 @@ API Changes
   have been renamed to "Colormap" and "Monochromatic," respectively, for all image
   viewers. [#1406]
 
-- Viz tool display changed to ``viz.show()`` from ``viz.app``. Sidecar no longer returned by 
+- Viz tool display changed to ``viz.show()`` from ``viz.app``. Sidecar no longer returned by
   show methods. [#965]
 
 Imviz
@@ -188,7 +190,7 @@ Imviz
 Mosviz
 ^^^^^^
 
-- Data dropdown in the gaussian smooth plugin is limited to data entries from the 
+- Data dropdown in the gaussian smooth plugin is limited to data entries from the
   spectrum-viewer (excluding images and 2d spectra). [#1452]
 
 2.6 (2022-05-25)
@@ -328,7 +330,7 @@ Other Changes and Additions
 - Help button in toolbar to open docs in a new tab. [#1240]
 - Snackbar queue handles loading interrupt more cleanly. [#1249]
 - Reported quantities are rounded/truncated to avoid showing unnecessary precision. [#1244]
-- Line analysis quantities are coerced so length units cancel and constants are removed from units. 
+- Line analysis quantities are coerced so length units cancel and constants are removed from units.
   [#1261]
 
 2.4 (2022-03-29)
@@ -371,7 +373,7 @@ Bug Fixes
 ---------
 
 - Fixed support for table scrolling by enabling scrollbar. [#1116]
-- Fixed loading additional spectra into a spectrum viewer after creating a 
+- Fixed loading additional spectra into a spectrum viewer after creating a
   spectral subset. [#1205]
 
 Cubeviz
@@ -404,7 +406,7 @@ Other Changes and Additions
 - Viewer toolbars are now nested and consolidated, with viewer and layer options
   moved to the sidebar. [#1140]
 
-- Redshifts imported with a custom line list are now ignored.  Redshift must be set app-wide via 
+- Redshifts imported with a custom line list are now ignored.  Redshift must be set app-wide via
   viz.set_redshift or the line list plugin. [#1134]
 
 - Subset selection dropdowns in plugins now show synced color indicators. [#1156, #1175]
@@ -532,7 +534,7 @@ Specviz
 Other Changes and Additions
 ---------------------------
 
-- Redshift slider and options are moved from the toolbar to the Line List 
+- Redshift slider and options are moved from the toolbar to the Line List
   plugin in the plugin tray. [#1031]
 
 - Spectral lines and redshift are refactored to improve performance. [#1036]
@@ -586,7 +588,7 @@ Imviz
 Mosviz
 ^^^^^^
 
-- New toggle button to lock/unlock viewer settings (x-limits in 1d and 2d spectrum viewers and 
+- New toggle button to lock/unlock viewer settings (x-limits in 1d and 2d spectrum viewers and
   stretch and percentile for 2d spectrum and image viewers). [#918]
 
 - Ability to add custom columns and change visibility of columns in the table. [#961]
