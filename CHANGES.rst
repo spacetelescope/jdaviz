@@ -50,6 +50,10 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Fixed coordinates info panel crashing when HDU extension with
+  non-celestial WCS is loaded into Imviz together with another
+  extension with celestial WCS. [#1499]
+
 Mosviz
 ^^^^^^
 
