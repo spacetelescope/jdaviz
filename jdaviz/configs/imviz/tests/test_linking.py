@@ -1,5 +1,6 @@
 import pytest
 from astropy.table import Table
+from astropy.wcs import WCS
 from glue.core.link_helpers import LinkSame
 from glue.plugins.wcs_autolinking.wcs_autolinking import OffsetLink, WCSLink
 from numpy.testing import assert_allclose
@@ -54,6 +55,34 @@ class TestLink_WCS_NoWCS(BaseImviz_WCS_NoWCS, BaseLinkHandler):
     def test_wcslink_nofallback_error(self):
         with pytest.raises(AttributeError, match='pixel_n_dim'):
             self.imviz.link_data(link_type='wcs', wcs_fallback_scheme=None, error_on_fail=True)
+
+
+class TestLink_WCS_FakeWCS(BaseImviz_WCS_NoWCS, BaseLinkHandler):
+
+    def test_badwcs_no_crash(self):
+        # There is WCS but it is non-celestial
+        self.imviz.app.data_collection[1].coords = WCS(naxis=2)
+
+        self.check_all_pixel_links()
+
+        assert self.viewer.get_link_type('has_wcs[SCI,1]') == 'self'
+        assert self.viewer.get_link_type('no_wcs[SCI,1]') == 'pixels'
+
+        # Also check the coordinates display: Last loaded is on top.
+
+        self.viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
+        assert self.viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
+        assert self.viewer.label_mouseover.value == '+0.00000e+00 '
+        assert self.viewer.label_mouseover.world_ra_deg == ''
+        assert self.viewer.label_mouseover.world_dec_deg == ''
+
+        # blink image through keypress
+        self.viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'b',
+                                           'domain': {'x': 0, 'y': 0}})
+        assert self.viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
+        assert self.viewer.label_mouseover.value == '+0.00000e+00 '
+        assert self.viewer.label_mouseover.world_ra_deg == '337.5202808000'
+        assert self.viewer.label_mouseover.world_dec_deg == '-20.8333330600'
 
 
 class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
