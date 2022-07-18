@@ -1,6 +1,6 @@
 import numpy as np
 
-from glue.core.subset import RoiSubsetState, RangeSubsetState
+from glue.core.subset import RoiSubsetState
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.table import TableViewer

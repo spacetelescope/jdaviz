@@ -10,7 +10,6 @@ from glue.core.message import (DataCollectionAddMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from glue.core.subset import RoiSubsetState
-from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.widgets.linked_dropdown import get_choices as _get_glue_choices
 from specutils import Spectrum1D
 from traitlets import Any, Bool, HasTraits, List, Unicode, observe
