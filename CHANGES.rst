@@ -47,6 +47,9 @@ Cubeviz
 
 - Cubeviz parser now sets the wavelength axis to what is in the CUNIT3 header [#1480]
 
+- Includes spectral subset layers in the layer dropdowns in plot options and fixes behavior when
+  toggling visibility of these layers. [#1501]
+
 Imviz
 ^^^^^
 
