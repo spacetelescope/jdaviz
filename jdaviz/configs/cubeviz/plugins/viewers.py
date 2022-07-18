@@ -100,7 +100,6 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
                 try:
                     coo = coo_data.coords.pixel_to_world(x, y, self.state.slices[-1])[-1].icrs
                 except Exception:
-                    raise
                     self.label_mouseover.reset_coords_display()
                 else:
                     self.label_mouseover.set_coords(coo)
