@@ -66,9 +66,11 @@ module.exports = {
 };
 </script>
 
-<style>
-.v-select__selections {
+<style scoped>
+  .v-select__selections {
     flex-wrap: nowrap !important;
+    display: block !important;
+    margin-bottom: -32px;
   }
   .single-line {
       white-space: nowrap;
