@@ -88,16 +88,27 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
         raise NotImplementedError(f'Unsupported data format: {file_obj}')
 
 
-def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, target_wave_unit=u.micron):
-    # Upstream issue of WCS not using the correct units for data must be fixed here.
-    # Issue: https://github.com/astropy/astropy/issues/3658
-    # TODO: We will just convert to micron but maybe user settable in the future.
+def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, target_wave_unit=None,
+                                        hdulist=None):
+    """Upstream issue of WCS not using the correct units for data must be fixed here.
+    Issue: https://github.com/astropy/astropy/issues/3658
+    """
     with warnings.catch_warnings():
         warnings.filterwarnings(
             'ignore', message='Input WCS indicates that the spectral axis is not last',
             category=UserWarning)
         sc = Spectrum1D(flux=flux, wcs=wcs)
-    if data_type == 'flux':
+
+    # TODO: Can the unit be defined in a different keyword, e.g., CUNIT1?
+    if target_wave_unit is None and hdulist is not None:
+        cunit_key = 'CUNIT3'
+        for ext in ('SCI', 'FLUX', 'PRIMARY'):  # In priority order
+            if ext in hdulist and cunit_key in hdulist[ext].header:
+                target_wave_unit = u.Unit(hdulist[ext].header[cunit_key])
+                break
+
+    if (data_type == 'flux' and target_wave_unit is not None
+            and target_wave_unit != sc.spectral_axis.unit):
         metadata['_orig_wcs'] = wcs
         with warnings.catch_warnings():
             warnings.filterwarnings(
@@ -163,11 +174,10 @@ def _parse_hdulist(app, hdulist, file_name=None):
         if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
             metadata[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
 
-        sc = _return_spectrum_with_correct_units(flux, wcs, metadata, data_type)
+        sc = _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, hdulist=hdulist)
         app.add_data(sc, data_label)
         if data_type == 'flux':  # Forced wave unit conversion made it lose stuff, so re-add
             app.data_collection[-1].get_component("flux").units = flux_unit
-            #app.data_collection[-1].coords = wcs
 
         if data_type == 'mask':
             app.add_data_to_viewer('mask-viewer', data_label)
@@ -211,11 +221,10 @@ def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI', viewer_name='flux-viewe
     if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
         metadata[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
 
-    data = _return_spectrum_with_correct_units(flux, wcs, metadata, data_type)
+    data = _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, hdulist=hdulist)
     app.add_data(data, data_label)
     if data_type == 'flux':  # Forced wave unit conversion made it lose stuff, so re-add
         app.data_collection[-1].get_component("flux").units = flux.unit
-        #app.data_collection[-1].coords = wcs
 
     app.add_data_to_viewer(viewer_name, data_label)
     if viewer_name == 'flux-viewer':
@@ -252,10 +261,9 @@ def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', viewer_name='flux-viewe
     if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
         metadata[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
 
-    data = _return_spectrum_with_correct_units(flux, wcs, metadata, data_type)
+    data = _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, hdulist=hdulist)
     if data_type == 'flux':  # Forced wave unit conversion made it lose stuff, so re-add
         app.data_collection[-1].get_component("flux").units = flux.unit
-        #app.data_collection[-1].coords = wcs
 
     app.add_data(data, data_label)
     app.add_data_to_viewer(viewer_name, data_label)
