@@ -4,6 +4,8 @@
 New Features
 ------------
 
+- New popout locations display Jdaviz in a detached popup window or browser tab [#1503]
+
 Cubeviz
 ^^^^^^^
 
