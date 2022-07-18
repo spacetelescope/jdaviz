@@ -1,5 +1,6 @@
 import logging
 import os
+import warnings
 
 import numpy as np
 from astropy import units as u
@@ -36,9 +37,8 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
         The label to be applied to the Glue data component.
     """
     if data_type is not None and data_type.lower() not in ['flux', 'mask', 'uncert']:
-        msg = "Data type must be one of 'flux', 'mask', or 'uncertainty'."
-        logging.error(msg)
-        return msg
+        msg = f"Data type must be one of 'flux', 'mask', or 'uncert' but got '{data_type}'"
+        raise TypeError(msg)
 
     # If the file object is an hdulist or a string, use the generic parser for
     #  fits files.
@@ -88,45 +88,73 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
         raise NotImplementedError(f'Unsupported data format: {file_obj}')
 
 
-def _return_spectrum_with_correct_units(app, flux, wcs, metadata, hdulist):
-    # Upstream issue of WCS not using the correct units for data must
-    # be fixed here.
-    # Issue: https://github.com/astropy/astropy/issues/3658
-    # Check for the correct CUNIT3 value in PRIMARY and then SCI, since
-    # it can be in either.
-    uc = app.get_tray_item_from_name("g-unit-conversion")
-    sc = Spectrum1D(flux=flux, wcs=wcs, meta=metadata)
-    for ext in ['PRIMARY', 'SCI']:
-        if (ext in hdulist and 'CUNIT3' in hdulist[ext].header and
-                u.Unit(hdulist[ext].header['CUNIT3']) != sc.spectral_axis.unit):
-            sc = uc.process_unit_conversion(spectrum=sc,
-                                            new_flux=None,
-                                            new_spectral_axis=u.Unit(hdulist[ext].header['CUNIT3']))
-            break
-    return sc
+def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, target_wave_unit=None,
+                                        hdulist=None):
+    """Upstream issue of WCS not using the correct units for data must be fixed here.
+    Issue: https://github.com/astropy/astropy/issues/3658
+    """
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            'ignore', message='Input WCS indicates that the spectral axis is not last',
+            category=UserWarning)
+        sc = Spectrum1D(flux=flux, wcs=wcs)
+
+    # TODO: Can the unit be defined in a different keyword, e.g., CUNIT1?
+    if target_wave_unit is None and hdulist is not None:
+        cunit_key = 'CUNIT3'
+        for ext in ('SCI', 'FLUX', 'PRIMARY'):  # In priority order
+            if ext in hdulist and cunit_key in hdulist[ext].header:
+                target_wave_unit = u.Unit(hdulist[ext].header[cunit_key])
+                break
+
+    if (data_type == 'flux' and target_wave_unit is not None
+            and target_wave_unit != sc.spectral_axis.unit):
+        metadata['_orig_wcs'] = wcs
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                'ignore', message='Input WCS indicates that the spectral axis is not last',
+                category=UserWarning)
+            new_sc = Spectrum1D(
+                flux=sc.flux,
+                spectral_axis=sc.spectral_axis.to(target_wave_unit, u.spectral()),
+                meta=metadata)
+    else:
+        sc.meta = metadata
+        new_sc = sc
+    return new_sc
 
 
 def _parse_hdulist(app, hdulist, file_name=None):
-    if file_name is None:
-        if hasattr(hdulist, 'file_name'):
-            file_name = hdulist.file_name
+    if file_name is None and hasattr(hdulist, 'file_name'):
+        file_name = hdulist.file_name
+    else:
+        file_name = file_name or "Unknown HDU object"
 
-    file_name = file_name or "Unknown HDU object"
+    is_loaded = []
+    wcs_sci = None
 
-    # Now loop through and attempt to parse the fits extensions as spectral
-    #  cube object. If the wcs fails to parse in any case, use the wcs
-    #  information we scraped above.
+    # TODO: This needs refactoring to be more robust.
+    # Current logic fails if there are multiple EXTVER.
     for hdu in hdulist:
-        data_label = f"{file_name}[{hdu.name}]"
-
         if hdu.data is None or not hdu.is_image or hdu.data.ndim != 3:
             continue
 
-        try:
+        data_type = _get_data_type_by_hdu(hdu)
+        if not data_type:
+            continue
+
+        # Only load each type once.
+        if data_type in is_loaded:
+            continue
+
+        is_loaded.append(data_type)
+        data_label = f"{file_name}[{hdu.name}]"
+
+        if data_type == 'flux':
             wcs = WCS(hdu.header, hdulist)
-        except Exception as e:  # TODO: Do we just want to fail here?
-            logging.warning(f"Invalid WCS: {repr(e)}")
-            wcs = None
+            wcs_sci = wcs
+        else:
+            wcs = wcs_sci
 
         if 'BUNIT' in hdu.header:
             try:
@@ -134,8 +162,10 @@ def _parse_hdulist(app, hdulist, file_name=None):
             except Exception:
                 logging.warning("Invalid BUNIT, using count as data unit")
                 flux_unit = u.count
+        elif data_type == 'mask':  # DQ flags have no unit
+            flux_unit = u.dimensionless_unscaled
         else:
-            logging.warning("Missing BUNIT, using count as data unit")
+            logging.warning("Invalid BUNIT, using count as data unit")
             flux_unit = u.count
 
         flux = hdu.data << flux_unit
@@ -144,27 +174,18 @@ def _parse_hdulist(app, hdulist, file_name=None):
         if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
             metadata[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
 
-        try:
-            sc = _return_spectrum_with_correct_units(app, flux, wcs, metadata, hdulist)
-            # sc = Spectrum1D(flux=flux, wcs=wcs, meta=metadata)
-            # sc.spectral_axis.to(u.Unit(u.um))
-        except Exception as e:
-            logging.warning(e)
-            continue
-
+        sc = _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, hdulist=hdulist)
         app.add_data(sc, data_label)
-        app.data_collection[-1].get_component("flux").units = flux_unit
+        if data_type == 'flux':  # Forced wave unit conversion made it lose stuff, so re-add
+            app.data_collection[-1].get_component("flux").units = flux_unit
 
-        # If the data type is some kind of integer, assume it's the mask/dq
-        if (hdu.data.dtype in (int, np.uint, np.uint32) or
-                any(x in hdu.name.lower() for x in EXT_TYPES['mask'])):
+        if data_type == 'mask':
             app.add_data_to_viewer('mask-viewer', data_label)
 
-        if ('errtype' in [x.lower() for x in hdu.header.keys()] or
-                any(x in hdu.name.lower() for x in EXT_TYPES['uncert'])):
+        elif data_type == 'uncert':
             app.add_data_to_viewer('uncert-viewer', data_label)
 
-        if any(x in hdu.name.lower() for x in EXT_TYPES['flux']):
+        else:  # flux
             # Add flux to top left image viewer
             app.add_data_to_viewer('flux-viewer', data_label)
             # Add flux to spectrum viewer
@@ -172,39 +193,38 @@ def _parse_hdulist(app, hdulist, file_name=None):
 
 
 def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI', viewer_name='flux-viewer'):
+    hdu = hdulist[ext]
+    data_type = _get_data_type_by_hdu(hdu)
+
     # Manually inject MJD-OBS until we can support GWCS, see
     # https://github.com/spacetelescope/jdaviz/issues/690 and
     # https://github.com/glue-viz/glue-astronomy/issues/59
-    if ext == 'SCI' and 'MJD-OBS' not in hdulist[ext].header:
+    if ext == 'SCI' and 'MJD-OBS' not in hdu.header:
         for key in ('MJD-BEG', 'DATE-OBS'):  # Possible alternatives
-            if key in hdulist[ext].header:
+            if key in hdu.header:
                 if key.startswith('MJD'):
-                    hdulist[ext].header['MJD-OBS'] = hdulist[ext].header[key]
+                    hdu.header['MJD-OBS'] = hdu.header[key]
                     break
                 else:
-                    t = Time(hdulist[ext].header[key])
-                    hdulist[ext].header['MJD-OBS'] = t.mjd
+                    t = Time(hdu.header[key])
+                    hdu.header['MJD-OBS'] = t.mjd
                     break
 
     if ext == 'DQ':  # DQ flags have no unit
-        flux = hdulist[ext].data << u.dimensionless_unscaled
+        flux = hdu.data << u.dimensionless_unscaled
     else:
-        unit = u.Unit(hdulist[ext].header.get('BUNIT', 'count'))
-        flux = hdulist[ext].data << unit
+        unit = u.Unit(hdu.header.get('BUNIT', 'count'))
+        flux = hdu.data << unit
     wcs = WCS(hdulist['SCI'].header, hdulist)  # Everything uses SCI WCS
 
-    metadata = standardize_metadata(hdulist[ext].header)
-    if hdulist[ext].name != 'PRIMARY' and 'PRIMARY' in hdulist:
+    metadata = standardize_metadata(hdu.header)
+    if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
         metadata[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
 
-    data = _return_spectrum_with_correct_units(app, flux, wcs, metadata, hdulist)
-
-    # NOTE: Tried to only pass in sliced WCS but got error in Glue.
-    # sliced_wcs = wcs[:, 0, 0]  # Only want wavelengths
-    # data = Spectrum1D(flux, wcs=sliced_wcs, meta=metadata)
-
+    data = _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, hdulist=hdulist)
     app.add_data(data, data_label)
-    app.data_collection[-1].get_component("flux").units = flux.unit
+    if data_type == 'flux':  # Forced wave unit conversion made it lose stuff, so re-add
+        app.data_collection[-1].get_component("flux").units = flux.unit
 
     app.add_data_to_viewer(viewer_name, data_label)
     if viewer_name == 'flux-viewer':
@@ -212,11 +232,14 @@ def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI', viewer_name='flux-viewe
 
 
 def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', viewer_name='flux-viewer'):
+    hdu = hdulist[ext]
+    data_type = _get_data_type_by_hdu(hdu)
+
     if ext == 'QUALITY':  # QUALITY flags have no unit
-        flux = hdulist[ext].data << u.dimensionless_unscaled
+        flux = hdu.data << u.dimensionless_unscaled
     else:
-        unit = u.Unit(hdulist[ext].header.get('BUNIT', 'count'))
-        flux = hdulist[ext].data << unit
+        unit = u.Unit(hdu.header.get('BUNIT', 'count'))
+        flux = hdu.data << unit
 
     hdr = hdulist[1].header
 
@@ -233,13 +256,14 @@ def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', viewer_name='flux-viewe
     flux = np.moveaxis(flux, 0, -1)
     flux = np.swapaxes(flux, 0, 1)
 
-    metadata = standardize_metadata(hdulist[ext].header)
+    metadata = standardize_metadata(hdu.header)
     metadata.update(wcs_dict)  # To be internally consistent
-    if hdulist[ext].name != 'PRIMARY' and 'PRIMARY' in hdulist:
+    if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
         metadata[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
 
-    data = _return_spectrum_with_correct_units(app, flux, wcs, metadata, hdulist)
-    app.data_collection[-1].get_component("flux").units = flux.unit
+    data = _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, hdulist=hdulist)
+    if data_type == 'flux':  # Forced wave unit conversion made it lose stuff, so re-add
+        app.data_collection[-1].get_component("flux").units = flux.unit
 
     app.add_data(data, data_label)
     app.add_data_to_viewer(viewer_name, data_label)
@@ -259,7 +283,7 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None):
             continue
 
         if attr == "mask":
-            flux = val << file_obj.flux.unit
+            flux = val << u.dimensionless_unscaled  # DQ flags have no unit
         elif attr == "uncertainty":
             if hasattr(val, "array"):
                 flux = u.Quantity(val.array, file_obj.flux.unit)
@@ -270,7 +294,12 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None):
 
         flux = np.moveaxis(flux, 1, 0)
 
-        s1d = Spectrum1D(flux=flux, wcs=file_obj.wcs, meta=standardize_metadata(file_obj.meta))
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                'ignore', message='Input WCS indicates that the spectral axis is not last',
+                category=UserWarning)
+            s1d = Spectrum1D(flux=flux, wcs=file_obj.wcs,
+                             meta=standardize_metadata(file_obj.meta))
 
         cur_data_label = f"{data_label}[{attr.upper()}]"
         app.add_data(s1d, cur_data_label)
@@ -293,3 +322,18 @@ def _parse_spectrum1d(app, file_obj, data_label=None):
 
     app.add_data(file_obj, f"{data_label}[FLUX]")
     app.add_data_to_viewer('spectrum-viewer', f"{data_label}[FLUX]")
+
+
+def _get_data_type_by_hdu(hdu):
+    # If the data type is some kind of integer, assume it's the mask/dq
+    if (hdu.data.dtype in (int, np.uint, np.uint8, np.uint16, np.uint32) or
+            any(x in hdu.name.lower() for x in EXT_TYPES['mask'])):
+        data_type = 'mask'
+    elif ('errtype' in [x.lower() for x in hdu.header.keys()] or
+            any(x in hdu.name.lower() for x in EXT_TYPES['uncert'])):
+        data_type = 'uncert'
+    elif any(x in hdu.name.lower() for x in EXT_TYPES['flux']):
+        data_type = 'flux'
+    else:
+        data_type = ''
+    return data_type
