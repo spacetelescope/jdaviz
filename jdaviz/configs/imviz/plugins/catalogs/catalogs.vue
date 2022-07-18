@@ -19,13 +19,13 @@
      </v-row>
 
      <v-row justify="end">
-       <v-btn color="accent" text @click="do_clear">Clear</v-btn>
+       <v-btn color="primary" text @click="do_clear">Clear</v-btn>
      </v-row>
 
      <v-row v-if="results_available">
-        <p class="font-weight-bold">Results:</p>
-        <span style='padding-left: 4px'>{{number_of_results}}</span>
-      <v-row>
+       <p class="font-weight-bold">Results:</p>
+       <span style='padding-left: 4px'>{{number_of_results}}</span>
+     <v-row>
 
    </j-tray-plugin>
  </template>

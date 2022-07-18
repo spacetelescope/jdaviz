@@ -70,10 +70,10 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
 
         # queries the region (based on the provided center point and radius) to find all the sources in that region
         query_region_result = SDSS.query_region(skycoord_center, radius=zoom_radius, data_release=17)
+        self.results_available = True
         # nothing happens in the case the query returned empty
         if query_region_result is None:
             self.number_of_results = 0
-            self.results_available = True
             return
 
         # a table is created storing the 'ra' and 'dec' plottable points of each source found
