@@ -473,10 +473,6 @@ class LayerSelect(BaseSelectPluginComponent):
             self._on_layers_changed()
 
     def _valid_layer(self, viewer, layer):
-        if isinstance(viewer, BqplotImageView) and self.plugin.config == 'cubeviz':
-            # exclude spectral subsets in image viewers (but not in 2d spectrum viewers)
-            if hasattr(layer.state.layer, 'subset_state') and not isinstance(layer.state.layer.subset_state, RoiSubsetState):  # noqa
-                return False
         return True
 
     @observe('filters')
