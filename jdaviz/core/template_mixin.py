@@ -1584,8 +1584,8 @@ class PlotOptionsSyncState(BasePluginComponent):
             return
 
         self._processing_change_from_glue = True
-        if "Colormap" in value.__class__.__name__:  # TODO: better logic
-            value = str(value)
+        if "Colormap" in value.__class__.__name__:
+            value = value.name
         elif isinstance(self.value, (int, float)) and self._glue_name != 'percentile':
             # glue might pass us ints for float or vice versa, but our traitlets care
             # so let's cast to the type expected by the traitlet to avoid having to

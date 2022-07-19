@@ -36,7 +36,9 @@ Specviz
 Bug Fixes
 ---------
 
-* Fix scrolling of "x" button in data menus. [#1491]
+- Fix scrolling of "x" button in data menus. [#1491]
+
+- Fix plot options colormap when setting colormap manually through API. [#1507]
 
 Cubeviz
 ^^^^^^^
