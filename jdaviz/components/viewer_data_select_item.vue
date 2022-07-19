@@ -22,7 +22,7 @@
       </j-tooltip>
     </div>
 
-    <j-tooltip :tooltipcontent="'data label: '+item.name" span_style="font-size: 12pt; padding-top: 6px; padding-left: 6px; width: calc(100% - 140px); white-space: nowrap; cursor: default;">
+    <j-tooltip :tooltipcontent="'data label: '+item.name" span_style="font-size: 12pt; padding-top: 6px; padding-left: 6px; width: calc(100% - 80px); white-space: nowrap; cursor: default;">
       <v-icon class='invert-if-dark' style='color: #000000DE; margin-left: 4px; margin-right: -2px'>{{icon}}</v-icon>
       <div class="text-ellipsis-middle" style="font-weight: 500">
         <span>

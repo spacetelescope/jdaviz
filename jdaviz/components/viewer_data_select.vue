@@ -129,6 +129,10 @@ module.exports = {
       }
       return inViewer
     },
+    dataItemFromPlugin(item, plugin_name) {
+      const plugin = item.meta['Plugin'] || null
+      return plugin === plugin_name
+    },
     itemIsVisible(item, returnExtraItems) {
       if (this.$props.viewer.config === 'mosviz') {
         if (this.$props.viewer.reference === 'spectrum-viewer' && item.type !== '1d spectrum') {
@@ -161,9 +165,9 @@ module.exports = {
         }
       } else if (this.$props.viewer.config === 'specviz2d') {
         if (this.$props.viewer.reference === 'spectrum-viewer') {
-          return item.ndims === 1 && this.dataItemInViewer(item, returnExtraItems)
+          return item.ndims === 1 && !this.dataItemFromPlugin(item, 'SpectralExtraction') && this.dataItemInViewer(item, returnExtraItems)
         } else if (this.$props.viewer.reference === 'spectrum-2d-viewer') {
-          return item.ndims === 2 && this.dataItemInViewer(item, returnExtraItems)
+          return (item.ndims === 2 || this.dataItemFromPlugin(item, 'SpectralExtraction')) && this.dataItemInViewer(item, returnExtraItems)
         }
       }
       // for any situation not covered above, default to showing the entry

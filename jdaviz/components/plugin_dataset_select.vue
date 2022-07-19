@@ -15,7 +15,7 @@
     <template slot="selection" slot-scope="data">
       <div class="single-line">
         <span>
-          <v-icon style='margin-right: 2px'>{{ data.item.icon }}</v-icon>
+          <v-icon v-if="data.item.icon" style='margin-right: 2px'>{{ data.item.icon }}</v-icon>
           {{ data.item.label }}
         </span>
       </div>
@@ -23,7 +23,7 @@
     <template slot="item" slot-scope="data">
       <div class="single-line">
         <span>
-          <v-icon style='margin-right: 2px'>{{ data.item.icon }}</v-icon>
+          <v-icon v-if="data.item.icon" style='margin-right: 2px'>{{ data.item.icon }}</v-icon>
           {{ data.item.label }}
         </span>
       </div>
