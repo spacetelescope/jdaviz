@@ -4,6 +4,8 @@ from astropy import units as u
 from astropy.io import fits
 from astropy.wcs import WCS
 from specutils import Spectrum1D
+from glue.core.roi import XRangeROI
+from numpy.testing import assert_allclose
 
 from jdaviz.utils import PRIHDR_KEY
 
@@ -112,6 +114,35 @@ def test_fits_image_hdu_with_microns(image_hdu_obj_microns, cubeviz_helper):
     mask_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 9, 'y': 0}})
     assert mask_viewer.label_mouseover.pixel == 'x=09.0 y=00.0'
     assert mask_viewer.label_mouseover.value == '+1.00000e+00 '  # Mask should be unitless
+
+
+def test_spectrum1d_with_fake_fixed_units(spectrum1d, cubeviz_helper):
+    header = {
+        'WCSAXES': 1,
+        'CRPIX1': 0.0,
+        'CDELT1': 1E-06,
+        'CUNIT1': 'm',
+        'CTYPE1': 'WAVE',
+        'CRVAL1': 0.0,
+        'RADESYS': 'ICRS'}
+    wcs = WCS(header)
+    cubeviz_helper.app.add_data(spectrum1d, "test")
+
+    dc = cubeviz_helper.app.data_collection
+    dc[0].meta["_orig_wcs"] = wcs
+    dc[0].meta["_orig_spec"] = spectrum1d
+
+    cubeviz_helper.app.add_data_to_viewer('spectrum-viewer', 'test')
+    cubeviz_helper.app.get_viewer('spectrum-viewer').apply_roi(XRangeROI(6600, 7400))
+
+    subsets = cubeviz_helper.app.get_subsets_from_viewer("spectrum-viewer")
+    reg = subsets.get('Subset 1')
+
+    assert len(subsets) == 1
+    assert_allclose(reg.lower.value, 6666.666666666667)
+    assert_allclose(reg.upper.value, 7333.333333333334)
+    assert reg.lower.unit == 'Angstrom'
+    assert reg.upper.unit == 'Angstrom'
 
 
 @pytest.mark.filterwarnings('ignore')
