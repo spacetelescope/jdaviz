@@ -377,7 +377,7 @@ class Mosviz(ConfigHelper, LineListMixin):
                   spectra_1d_label=None, spectra_2d_label=None,
                   images_label=None, *args, **kwargs):
         """
-        Load and parse a set of MOS spectra and images
+        Load and parse a set of MOS spectra and images.
 
         Parameters
         ----------

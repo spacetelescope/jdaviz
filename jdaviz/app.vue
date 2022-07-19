@@ -20,14 +20,14 @@
                     'padding-left': '15%',
                     'padding-top': '20px'}"
             @click="state.logger_overlay = false">
-        <v-row 
-            dense 
+        <v-row
+            dense
             @click="(e) => {e.stopImmediatePropagation()}"
             v-for="history in state.snackbar_history.slice().reverse()"
             style="width: 80%">
-          <v-alert 
-            dense 
-            :type="history.color" 
+          <v-alert
+            dense
+            :type="history.color"
             style="width: 100%; margin: 6px 0px 0px; text-align: left">
               [{{history.time}}]: {{history.text}}
           </v-alert>
@@ -38,7 +38,8 @@
       <v-toolbar-items v-for="item in state.tool_items">
         <v-divider v-if="['g-data-tools', 'g-subset-tools'].indexOf(item.name) === -1" vertical style="margin: 0px 10px"></v-divider>
         <v-divider v-else-if="item.name === 'g-subset-tools'" vertical style="margin: 0px 10px; border-width: 0"></v-divider>
-        <j-tooltip :tipid="item.name">
+        <j-tooltip v-if="config == 'cubeviz' && item.name == 'g-data-tools' && state.data_items.length !== 0"></j-tooltip>
+        <j-tooltip v-else :tipid="item.name">
           <jupyter-widget :widget="item.widget" :key="item.name"></jupyter-widget>
         </j-tooltip>
       </v-toolbar-items>
@@ -378,7 +379,7 @@ a:active {
 
 .color-to-accent {
   /* https://codepen.io/sosuke/pen/Pjoqqp for #C75109 */
-  filter: brightness(0) saturate(100%) invert(31%) sepia(84%) saturate(1402%) hue-rotate(1deg) brightness(95%) contrast(94%);  
+  filter: brightness(0) saturate(100%) invert(31%) sepia(84%) saturate(1402%) hue-rotate(1deg) brightness(95%) contrast(94%);
 }
 
 .v-overlay__content {

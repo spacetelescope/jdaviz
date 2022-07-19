@@ -14,7 +14,8 @@
         <v-card-text>
           Select a file with data you want to load into this instance of Jdaviz
           and click "IMPORT". Imported data can be shown in any compatible
-          viewer. Note that single clicks navigate into directories.
+          viewer{{ config == 'cubeviz' ? ', though only one data cube may be loaded per instance' : ''}}.
+          Note that single clicks navigate into directories.
           <v-container>
             <v-row>
               <v-col>
