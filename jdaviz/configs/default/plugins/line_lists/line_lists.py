@@ -376,8 +376,8 @@ class LineListTool(PluginTemplateMixin):
 
     def _on_spectrum_viewer_limits_changed(self, event=None):
         sv = self.app.get_viewer('spectrum-viewer')
-        self.spectrum_viewer_min = sv.state.x_min
-        self.spectrum_viewer_max = sv.state.x_max
+        self.spectrum_viewer_min = float(sv.state.x_min)
+        self.spectrum_viewer_max = float(sv.state.x_max)
 
         # Also update the slider range
         self._auto_slider_range()

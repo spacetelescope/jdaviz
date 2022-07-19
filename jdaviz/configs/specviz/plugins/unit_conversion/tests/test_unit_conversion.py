@@ -254,3 +254,19 @@ def test_spec_flux_uncert_unit_exp(specviz_helper, spectrum1d):
                              RESULT_FLUX, atol=1e-5*u.Unit(new_flux))
     assert_quantity_allclose(converted_spectrum.uncertainty.quantity.value,
                              RESULT_UNCERTAINTY, atol=1e-11)
+
+
+def test_converted_spec_is_none(specviz_helper, spectrum1d):
+    label = "Test 1D Spectrum"
+    specviz_helper.load_spectrum(spectrum1d, data_label=label)
+
+    new_spectral_axis = "feet"
+
+    unit_conversion = specviz_helper.app.get_tray_item_from_name("g-unit-conversion")
+    unit_conversion.new_spectral_axis_unit = new_spectral_axis
+    converted_spectrum = unit_conversion.vue_unit_conversion(specviz_helper.app,
+                                                             spectrum=spectrum1d,
+                                                             new_flux=None,
+                                                             new_spectral_axis=new_spectral_axis)
+
+    assert converted_spectrum is None

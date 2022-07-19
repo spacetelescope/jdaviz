@@ -59,8 +59,8 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
     flux_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
     assert flux_viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
     assert flux_viewer.label_mouseover.value == '+8.00000e+00 Jy'  # Slice 0 has 8 pixels, this is Slice 1  # noqa
-    assert flux_viewer.label_mouseover.world_ra_deg == ''
-    assert flux_viewer.label_mouseover.world_dec_deg == ''
+    assert flux_viewer.label_mouseover.world_ra_deg == '204.9997755346'
+    assert flux_viewer.label_mouseover.world_dec_deg == '27.0000999998'
 
     assert mm.filename == 'moment0_test_FLUX.fits'  # Auto-populated on calculate.
     mm.filename = str(tmpdir.join(mm.filename))  # But we want it in tmpdir for testing.
@@ -96,5 +96,5 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
     # Coordinate display should be unaffected.
     assert flux_viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
     assert flux_viewer.label_mouseover.value == '+8.00000e+00 Jy'  # Slice 0 has 8 pixels, this is Slice 1  # noqa
-    assert flux_viewer.label_mouseover.world_ra_deg == ''
-    assert flux_viewer.label_mouseover.world_dec_deg == ''
+    assert flux_viewer.label_mouseover.world_ra_deg == '204.9997755346'
+    assert flux_viewer.label_mouseover.world_dec_deg == '27.0000999998'

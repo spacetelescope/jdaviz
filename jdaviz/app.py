@@ -773,9 +773,14 @@ class Application(VuetifyTemplate, HubListener):
                     # TODO: this needs to be much simpler; i.e. data units in
                     #  the glue component objects
                     # Cases where there is a single subset
+                    if '_orig_wcs' in value.data.meta:  # Hack for Cubeviz WCS propagation
+                        data_wcs = value.data.meta['_orig_spec']
+                    else:
+                        data_wcs = value.data.coords
+
                     subregions_in_subset = _get_all_subregions(
                             np.where(value.to_mask() == True)[0], # noqa
-                            value.data.coords.spectral_axis)
+                            data_wcs.spectral_axis)
 
                     regions[key] = subregions_in_subset
                     continue

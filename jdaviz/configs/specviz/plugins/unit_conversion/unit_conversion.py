@@ -92,6 +92,8 @@ class UnitConversion(PluginTemplateMixin, DatasetSelectMixin):
         converted_spec = self.process_unit_conversion(spectrum,
                                                       self.new_flux_unit,
                                                       self.new_spectral_axis_unit)
+        if converted_spec is None:
+            return
 
         label = f"_units_copy_Flux:{converted_spec.flux.unit}_" +\
                 f"SpectralAxis:{converted_spec.spectral_axis.unit}"
@@ -187,10 +189,10 @@ class UnitConversion(PluginTemplateMixin, DatasetSelectMixin):
                 and new_spectral_axis != current_spectral_axis_unit:
             try:
                 set_spectral_axis_unit = spectrum.spectral_axis.to(u.Unit(new_spectral_axis))
-            except ValueError:
+            except ValueError as e:
                 snackbar_message = SnackbarMessage(
                     "Unable to convert spectral axis units for selected data. "
-                    "Try different units.",
+                    f"Try different units: {repr(e)}",
                     color="error",
                     sender=self)
                 self.hub.broadcast(snackbar_message)
@@ -205,9 +207,10 @@ class UnitConversion(PluginTemplateMixin, DatasetSelectMixin):
                 equivalencies = u.spectral_density(set_spectral_axis_unit)
                 set_flux_unit = spectrum.flux.to(u.Unit(new_flux),
                                                  equivalencies=equivalencies)
-            except ValueError:
+            except ValueError as e:
                 snackbar_message = SnackbarMessage(
-                    "Unable to convert flux units for selected data. Try different units.",
+                    "Unable to convert flux units for selected data. "
+                    f"Try different units: {repr(e)}",
                     color="error",
                     sender=self)
                 self.hub.broadcast(snackbar_message)

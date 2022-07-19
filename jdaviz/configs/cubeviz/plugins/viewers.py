@@ -86,9 +86,22 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
             fmt = 'x={0:0' + str(maxsize) + '.1f} y={1:0' + str(maxsize) + '.1f}'
             self.label_mouseover.pixel = (fmt.format(x, y))
 
-            if data_has_valid_wcs(image):
+            # TODO: This assumes data_collection[0] is the main reference
+            #  data for this application. This section will need to be updated
+            #  when that is no longer true.
+            # Hack to insert WCS for generated 2D and 3D images using FLUX cube WCS.
+            if 'Plugin' in image.meta:
+                coo_data = self.jdaviz_app.data_collection[0]
+            else:
+                coo_data = image
+
+            # Hack around various WCS propagation issues in Cubeviz.
+            if '_orig_wcs' in coo_data.meta:
+                coo = coo_data.meta['_orig_wcs'].pixel_to_world(x, y, self.state.slices[-1])[0].icrs
+                self.label_mouseover.set_coords(coo)
+            elif data_has_valid_wcs(coo_data):
                 try:
-                    coo = image.coords.pixel_to_world(x, y, self.state.slices[-1])[-1].icrs
+                    coo = coo_data.coords.pixel_to_world(x, y, self.state.slices[-1])[-1].icrs
                 except Exception:
                     self.label_mouseover.reset_coords_display()
                 else:
@@ -97,17 +110,25 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
                 self.label_mouseover.reset_coords_display()
 
             # Extract data values at this position.
-            # Check if shape is [x, y, z] or [x, y] and show value accordingly.
-            if (-0.5 < x < image.shape[0] - 0.5 and -0.5 < y < image.shape[1] - 0.5
+            # Check if shape is [x, y, z] or [y, x] and show value accordingly.
+            if image.ndim == 3:
+                ix_shape = 0
+                iy_shape = 1
+            elif image.ndim == 2:
+                ix_shape = 1
+                iy_shape = 0
+            else:  # pragma: no cover
+                raise ValueError(f'Cubeviz does not support ndim={image.ndim}')
+
+            if (-0.5 < x < image.shape[ix_shape] - 0.5 and -0.5 < y < image.shape[iy_shape] - 0.5
                     and hasattr(active_layer, 'attribute')):
                 attribute = active_layer.attribute
-                if len(image.shape) == 3:
-                    value = image.get_data(attribute)[int(round(x)), int(round(y)),
-                                                      self.state.slices[-1]]
-                elif len(image.shape) == 2:
-                    value = image.get_data(attribute)[int(round(x)), int(round(y))]
-
+                arr = image.get_component(attribute).data
                 unit = image.get_component(attribute).units
+                if image.ndim == 3:
+                    value = arr[int(round(x)), int(round(y)), self.state.slices[-1]]
+                else:  # 2
+                    value = arr[int(round(y)), int(round(x))]
                 self.label_mouseover.value = f'{value:+10.5e} {unit}'
             else:
                 self.label_mouseover.value = ''
