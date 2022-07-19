@@ -1,3 +1,5 @@
+import warnings
+from astropy.units import UnitsWarning
 import numpy as np
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.bqplot.profile import BqplotProfileView
@@ -113,7 +115,9 @@ class Slice(TemplateMixin):
     def _on_select_slice_message(self, msg):
         # NOTE: by setting the slice index, the observer (_on_slider_updated)
         # will sync across all viewers and update the wavelength
-        self.slider = msg.slice
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', category=UnitsWarning)
+            self.slider = msg.slice
 
     def vue_change_wavelength(self, event):
         # convert to float (JS handles stripping any invalid characters)
