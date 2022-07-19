@@ -263,10 +263,12 @@ def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', viewer_name='flux-viewe
         metadata[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
 
     data = _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, hdulist=hdulist)
+
+    app.add_data(data, data_label)
+
     if data_type == 'flux':  # Forced wave unit conversion made it lose stuff, so re-add
         app.data_collection[-1].get_component("flux").units = flux.unit
 
-    app.add_data(data, data_label)
     app.add_data_to_viewer(viewer_name, data_label)
     if viewer_name == 'flux-viewer':
         app.add_data_to_viewer('spectrum-viewer', data_label)

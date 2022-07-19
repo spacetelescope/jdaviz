@@ -86,6 +86,9 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
             fmt = 'x={0:0' + str(maxsize) + '.1f} y={1:0' + str(maxsize) + '.1f}'
             self.label_mouseover.pixel = (fmt.format(x, y))
 
+            # TODO: This assumes data_collection[0] is the main reference
+            #  data for this application. This section will need to be updated
+            #  when that is no longer true.
             # Hack to insert WCS for generated 2D and 3D images using FLUX cube WCS.
             if 'Plugin' in image.meta:
                 coo_data = self.jdaviz_app.data_collection[0]
