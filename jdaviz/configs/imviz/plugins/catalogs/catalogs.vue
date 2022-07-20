@@ -4,15 +4,13 @@
     :link="'https://jdaviz.readthedocs.io/en/latest/dev/ui_plugin_components.html'"
     :popout_button="popout_button">
 
-     <v-row>
-       <v-select
-         :items="viewer_items"
-         v-model="viewer_selected"
-         label="Viewer"
-         hint="Select a viewer to search."
-         persistent-hint
-       ></v-select>
-     </v-row>
+     <plugin-viewer-select
+       :items="viewer_items"
+       :selected.sync="viewer_selected"
+       label="Viewer"
+       :show_if_single_entry="false"
+       hint="Select a viewer to search"
+     />
 
      <v-row>
        <v-select

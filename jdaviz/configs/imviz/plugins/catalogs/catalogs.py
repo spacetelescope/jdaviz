@@ -64,7 +64,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
         zoom_radius = max(skycoord_center.separation(zoom_coordinate))
 
         # conducts search based on SDSS
-        if self.selected_catalog == "SDSS":
+        if self.catalog_selected == "SDSS":
             # queries the region (based on the provided center point and radius) to find all the sources in that region
             query_region_result = SDSS.query_region(skycoord_center, radius=zoom_radius, data_release=17)
         self.results_available = True
