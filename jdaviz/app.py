@@ -629,7 +629,9 @@ class Application(VuetifyTemplate, HubListener):
                     if cls is not None:
                         # If data is one-dimensional, assume that it can be
                         #  collapsed via the defined statistic
-                        if cls == Spectrum1D:
+                        if 'Trace' in layer_data.meta:
+                            layer_data = layer_data.get_object()
+                        elif cls == Spectrum1D:
                             layer_data = layer_data.get_object(cls=cls,
                                                                statistic=statistic)
                         else:

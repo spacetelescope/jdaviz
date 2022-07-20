@@ -10,68 +10,91 @@
     </v-row>
 
     <plugin-dataset-select
-      :items="trace_dataset_items"
-      :selected.sync="trace_dataset_selected"
+      :items="trace_trace_items"
+      :selected.sync="trace_trace_selected"
       :show_if_single_entry="false"
-      label="2D Spectrum"
-      hint="Select the data used to create the trace."
+      label="Trace"
+      hint="Existing trace to offset or create a new trace"
     />
 
-    <v-row>
-      <v-select
-        :items="trace_type_items"
-        v-model="trace_type_selected"
-        label="Trace Type"
-        hint="Method to use for creating trace"
-        persistent-hint
-      ></v-select>
-    </v-row>
+    <div v-if="trace_trace_selected !== 'New Trace'">
+      <v-row>
+        <v-text-field
+          label="Offset"
+          type="number"
+          v-model.number="trace_offset"
+          :rules="[() => trace_offset!=='' || 'This field is required']"
+          hint="Offset to apply to existing trace, in pixels."
+          persistent-hint
+        >
+        </v-text-field>
+      </v-row>
+    </div>
+    <div v-else>
+      <plugin-dataset-select
+        :items="trace_dataset_items"
+        :selected.sync="trace_dataset_selected"
+        :show_if_single_entry="false"
+        label="2D Spectrum"
+        hint="Select the data used to create the trace."
+      />
 
-    <v-row>
-      <v-text-field
-        label="Pixel"
-        type="number"
-        v-model.number="trace_pixel"
-        :rules="[() => trace_pixel!=='' || 'This field is required']"
-        hint="Pixel number/column to start the trace."
-        persistent-hint
-      >
-      </v-text-field>
-    </v-row>
+      <v-row>
+        <v-select
+          :items="trace_type_items"
+          v-model="trace_type_selected"
+          label="Trace Type"
+          hint="Method to use for creating trace"
+          persistent-hint
+        ></v-select>
+      </v-row>
 
-    <v-row v-if="trace_type_selected==='AutoTrace'">
-      <v-text-field
-        label="Bins"
-        type="number"
-        v-model.number="trace_bins"
-        :rules="[() => trace_bins!=='' || 'This field is required']"
-        hint="Number of bins in the dispersion direction."
-        persistent-hint
-      >
-      </v-text-field>
-    </v-row>
+      <v-row>
+        <v-text-field
+          label="Pixel"
+          type="number"
+          v-model.number="trace_pixel"
+          :rules="[() => trace_pixel!=='' || 'This field is required']"
+          hint="Pixel number/column to start the trace."
+          persistent-hint
+        >
+        </v-text-field>
+      </v-row>
 
-    <v-row v-if="trace_type_selected==='AutoTrace'">
-      <v-text-field
-        label="Window Width"
-        type="number"
-        v-model.number="trace_window"
-        :rules="[() => trace_window!=='' || 'This field is required']"
-        hint="Width of window to consider for peak finding."
-        persistent-hint
-      >
-      </v-text-field>
-    </v-row>
+      <v-row v-if="trace_type_selected==='AutoTrace'">
+        <v-text-field
+          label="Bins"
+          type="number"
+          v-model.number="trace_bins"
+          :rules="[() => trace_bins!=='' || 'This field is required']"
+          hint="Number of bins in the dispersion direction."
+          persistent-hint
+        >
+        </v-text-field>
+      </v-row>
 
-    <v-row v-if="trace_type_selected==='AutoTrace'">
-      <v-select
-        :items="trace_peak_method_items"
-        v-model="trace_peak_method_selected"
-        label="Peak Method"
-        hint="Method to use for identifying the peak in each bin"
-        persistent-hint
-      ></v-select>
-    </v-row>
+      <v-row v-if="trace_type_selected==='AutoTrace'">
+        <v-text-field
+          label="Window Width"
+          type="number"
+          v-model.number="trace_window"
+          :rules="[() => trace_window!=='' || 'This field is required']"
+          hint="Width of window to consider for peak finding."
+          persistent-hint
+        >
+        </v-text-field>
+      </v-row>
+
+      <v-row v-if="trace_type_selected==='AutoTrace'">
+        <v-select
+          :items="trace_peak_method_items"
+          v-model="trace_peak_method_selected"
+          label="Peak Method"
+          hint="Method to use for identifying the peak in each bin"
+          persistent-hint
+        ></v-select>
+      </v-row>
+    </div>
 
     <plugin-add-results
       :label.sync="trace_results_label"

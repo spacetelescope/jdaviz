@@ -20,6 +20,11 @@ class SpectralExtraction(PluginTemplateMixin):
     template_file = __file__, "spectral_extraction.vue"
 
     # TRACE
+    trace_trace_items = List().tag(sync=True)
+    trace_trace_selected = Unicode().tag(sync=True)
+
+    trace_offset = IntHandleEmpty(0).tag(sync=True)
+
     trace_dataset_items = List().tag(sync=True)
     trace_dataset_selected = Unicode().tag(sync=True)
 
@@ -94,6 +99,12 @@ class SpectralExtraction(PluginTemplateMixin):
         super().__init__(*args, **kwargs)
 
         # TRACE
+        self.trace_trace = DatasetSelect(self,
+                                         'trace_trace_items',
+                                         'trace_trace_selected',
+                                         default_text='New Trace',
+                                         filters=['is_trace'])
+
         self.trace_dataset = DatasetSelect(self,
                                            'trace_dataset_items',
                                            'trace_dataset_selected',
@@ -194,20 +205,28 @@ class SpectralExtraction(PluginTemplateMixin):
             self.ext_trace_pixel = half_pixel
 
     def create_trace(self, add_data=True):
-        if self.trace_type_selected == 'FlatTrace':
+        if self.trace_trace_selected != 'New Trace':
+            # then we're offsetting an existing trace
+            trace = self.trace_trace.selected_obj
+            trace.shift(self.trace_offset)
+
+        elif self.trace_type_selected == 'FlatTrace':
             trace = tracing.FlatTrace(self.trace_dataset.selected_obj.data,
                                       self.trace_pixel)
+
         elif self.trace_type_selected == 'AutoTrace':
             trace = tracing.KosmosTrace(self.trace_dataset.selected_obj.data,
                                         guess=self.trace_pixel,
                                         bins=self.trace_bins,
                                         window=self.trace_window,
                                         peak_method=self.trace_peak_method_selected.lower())
+
         else:
             raise NotImplementedError(f"trace_type={self.trace_type_selected} not implemented")
 
         if add_data:
             self.trace_add_results.add_results_from_plugin(trace, replace=False)
+            self.trace_trace.selected = self.trace_results_label
         return trace
 
     def vue_create_trace(self, *args):
