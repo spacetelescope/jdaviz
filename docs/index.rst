@@ -174,6 +174,7 @@ Using Jdaviz
   imviz/index.rst
   specviz/index.rst
   cubeviz/index.rst
+  specviz2d/index.rst
   mosviz/index.rst
   save_state.rst
   display.rst
