@@ -174,19 +174,6 @@ class SpectralExtraction(PluginTemplateMixin):
         self.ext_add_results.viewer.filters = ['is_spectrum_viewer']
         self.ext_results_label_default = 'extracted spectrum'
 
-    @observe('plugin_opened')
-    def _on_plugin_opened_changed(self, *args):
-        # toggle continuum lines in spectrum viewer based on whether this plugin
-        # is currently open in the tray
-        for pos, mark in self.marks.items():
-            mark.visible = self.plugin_opened
-#        if self.plugin_opened:
-#            self._calculate_statistics()
-
-    @property
-    def marks(self):
-        return {}
-
     @observe('trace_dataset_selected')
     def _trace_dataset_selected(self, msg):
         width = self.trace_dataset.selected_obj.shape[0]
