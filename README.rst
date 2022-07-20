@@ -98,8 +98,8 @@ If you uncover any issues or bugs, you can
 if they are not already reported. For faster responses, however, we encourage you to
 submit a `JWST Help Desk Ticket <https://jwsthelp.stsci.edu>`_.
 
-License
--------
+License & Attribution
+---------------------
 
 This project is Copyright (c) JDADF Developers and licensed under
 the terms of the BSD 3-Clause license. This package is based upon
@@ -108,6 +108,7 @@ which is licensed under the BSD 3-clause licence. See the
 `licenses <https://github.com/spacetelescope/jdaviz/tree/main/licenses>`_
 folder for more information.
 
+Cite ``jdaviz`` via our Zenodo record: https://doi.org/10.5281/zenodo.6824713.
 
 Contributing
 ------------
