@@ -115,6 +115,6 @@ def _main():
     parser.add_argument('--version', action='version', version=f'%(prog)s {__version__}')
     args = parser.parse_args()
 
-    main(args.filename, layout=args.layout, browser=args.browser, theme=args.theme,
-         verbosity=args.verbosity, history_verbosity=args.history_verbosity,
-         hotreload=args.hotreload, instrument=args.instrument)
+    main(args.filename, layout=args.layout, instrument=args.instrument, browser=args.browser,
+         theme=args.theme, verbosity=args.verbosity, history_verbosity=args.history_verbosity,
+         hotreload=args.hotreload)
