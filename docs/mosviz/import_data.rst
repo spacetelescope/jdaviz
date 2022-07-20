@@ -27,7 +27,15 @@ or for NIRISS::
 
     mosviz.load_data(directory="path/to/my/data", instrument="niriss")
 
-If an instrument is not specified, Mosviz will default to NIRSpec parsing.
+Similarly, an instrument keyword can be specified by the command line. For NIRSpec::
+
+    jdaviz mosviz /path/to/my/data --instrument=nirspec
+
+and for NIRISS::
+
+    jdaviz mosviz /path/to/my/data --instrument=niriss
+
+If an instrument is not specified in either case, Mosviz will default to NIRSpec parsing.
 
 Specifying an instrument from the command line is not supported yet, and will default to
 NIRSpec parsing as if an instrument wasn't provided::
