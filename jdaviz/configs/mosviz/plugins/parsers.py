@@ -623,7 +623,6 @@ def mos_niriss_parser(app, data_dir):
 
     # Parse images
     image_dict = {}
-    filter_wcs = {} # NEEDED? HAS VALUE ASSIGNED LATER BUT NEVER USED OTHERWISE
 
     print("Loading: Images")
     for image_file in file_lists["Direct Image"]:
@@ -640,8 +639,6 @@ def mos_niriss_parser(app, data_dir):
             data_obj = [d[0] for d in data_iter]  # We do not use the generated labels
             image_data = data_obj[0]  # Grab the first one.
             # TODO: Error if multiple found?
-
-            filter_wcs[pupil] = temp[1].header # NEEDED?
 
         image_data.label = image_label
         add_to_glue[image_label] = image_data
