@@ -20,6 +20,11 @@ Mosviz
 Specviz
 ^^^^^^^
 
+Specviz2d
+^^^^^^^^^
+
+- Spectral extraction plugin (currently only trace support). [#1514]
+
 API Changes
 -----------
 
