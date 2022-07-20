@@ -17,6 +17,8 @@ Imviz
 Mosviz
 ^^^^^^
 
+- Added ``--instrument`` CLI option to support NIRISS data loading in Mosviz. [#1488]
+
 Specviz
 ^^^^^^^
 
