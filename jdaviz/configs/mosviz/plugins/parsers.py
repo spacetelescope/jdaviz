@@ -672,8 +672,8 @@ def mos_niriss_parser(app, data_dir):
                         filter = temp[0].header["FILTER"]
                     if "EXTNAME" in temp[i].header:
                         if (temp[i].header["EXTNAME"] == "SCI"
-                            and temp[i].header["SOURCEID"] in cat_id_dict.keys()
-                            ):
+                                and (temp[i].header["SOURCEID"]
+                                     in cat_id_dict.keys())):
                             sci_hdus.append(i)
                             wav_hdus[i] = ('WAVELENGTH',
                                            temp[i].header['EXTVER'])
@@ -720,8 +720,7 @@ def mos_niriss_parser(app, data_dir):
                 # TODO: Remove this once valid SRCTYPE values are present in all headers
                 for hdu in temp:
                     if ("SRCTYPE" in hdu.header
-                        and (hdu.header["SRCTYPE"] in ("POINT", "EXTENDED"))
-                        ):
+                            and (hdu.header["SRCTYPE"] in ("POINT", "EXTENDED"))):
                         pass
                     else:
                         hdu.header["SRCTYPE"] = "EXTENDED"
