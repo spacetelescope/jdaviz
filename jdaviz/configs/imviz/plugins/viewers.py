@@ -120,8 +120,12 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
             self.label_mouseover.pixel = (fmt.format(x, y))
 
             if coords_status:
-                coo = image.coords.pixel_to_world(x, y).icrs
-                self.label_mouseover.set_coords(coo)
+                try:
+                    coo = image.coords.pixel_to_world(x, y).icrs
+                except Exception:  # WCS might not be celestial
+                    self.label_mouseover.reset_coords_display()
+                else:
+                    self.label_mouseover.set_coords(coo)
             else:
                 self.label_mouseover.reset_coords_display()
 
