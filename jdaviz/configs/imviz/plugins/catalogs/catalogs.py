@@ -23,17 +23,12 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        #self._default_viewer = f'{self.app.config}-0'
         self.catalog_items = ["SDSS"]
-
-        # selected viewer was removed but Imviz always has a default viewer to fall back on.
-        #if self.viewer_selected not in self.viewer_items:
-            #self.viewer_selected = self._default_viewer
 
         if self.catalog_selected not in self.catalog_items:
             self.catalog_selected = self.catalog_items[0]
 
-    #@observe("viewer_selected", "catalog_selected")
+    @observe("catalog_selected")
     def vue_do_catalogs(self, *args, **kwargs):
         # no querying occurs while the plugin has not been opened
         if not self.plugin_opened:
@@ -96,7 +91,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
         viewer.marker = {'color': 'red', 'alpha': 0.8, 'markersize': 5, 'fill': False}
         viewer.add_markers(table=catalog_results, use_skycoord=True, marker_name='catalog_results')
 
-    #@observe("viewer_selected")
     def vue_do_clear(self, *args, **kwargs):
         # no querying occurs while the plugin has not been opened
         if not self.plugin_opened:

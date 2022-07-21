@@ -9,7 +9,7 @@
        :selected.sync="viewer_selected"
        label="Viewer"
        :show_if_single_entry="false"
-       hint="Select a viewer to search"
+       hint="Select a viewer to search."
      />
 
      <v-row>
