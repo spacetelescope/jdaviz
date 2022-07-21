@@ -198,6 +198,23 @@ results are displayed under the :guilabel:`CALCULATE` button.
 
 .. _imviz-export-plot:
 
+Catalog Search
+===========
+
+This plugin queries a specified region of the image, marks the sources from the results of the query, and
+provides the number of sources found. After zooming into a specific region of the image, the query uses the center point of the region with a
+radius determined by the farthest edge point of the region. Clicking on :guilabel:`CLEAR` will remove all
+markers on the active viewer.
+
+When you have multiple viewers created in Imviz, the Viewer dropdown menu becomes visible to change the
+active viewer so the query can be based on the image's coordinates.
+
+There is a dropdown menu that allows for selection of a catalog to conduct the source search.
+
+This plugin is still under active development. As a result, the search only uses the SDSS DR17 catalog.
+Additionally, the query starts anew everytime :guilabel:`SEARCH` is clicked, so previous results and marks
+are not stored.
+
 Export Plot
 ===========
 

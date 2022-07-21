@@ -27,7 +27,7 @@
          <v-btn color="primary" text @click="do_clear">Clear</v-btn>
        </v-col>
        <v-col>
-         <v-btn color="primary" text @click="do_catalogs">Search</v-btn>
+         <v-btn color="primary" text @click="do_search">Search</v-btn>
        </v-col>
      </v-row>
 

@@ -29,7 +29,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
             self.catalog_selected = self.catalog_items[0]
 
     @observe("catalog_selected")
-    def vue_do_catalogs(self, *args, **kwargs):
+    def vue_do_search(self, *args, **kwargs):
         # no querying occurs while the plugin has not been opened
         if not self.plugin_opened:
             return
