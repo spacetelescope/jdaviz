@@ -100,7 +100,7 @@
       <v-expansion-panels popout>
         <v-expansion-panel>
           <v-expansion-panel-header v-slot="{ open }">
-            <span style="padding: 6px">Export Results</span>
+            <span style="padding: 6px">Export Trace</span>
           </v-expansion-panel-header>
           <v-expansion-panel-content>
             <plugin-add-results
@@ -192,7 +192,7 @@
       <v-expansion-panels popout>
         <v-expansion-panel>
           <v-expansion-panel-header v-slot="{ open }">
-            <span style="padding: 6px">Export Results</span>
+            <span style="padding: 6px">Export Background</span>
           </v-expansion-panel-header>
           <v-expansion-panel-content>
             <plugin-add-results
@@ -208,7 +208,17 @@
               action_tooltip="Create Background Image"
               @click:action="create_bg"
             ></plugin-add-results>
-
+          </v-expansion-panel-content>
+        </v-expansion-panel>
+      </v-expansion-panels>
+    </v-row>
+    <v-row>
+      <v-expansion-panels popout>
+        <v-expansion-panel>
+          <v-expansion-panel-header v-slot="{ open }">
+            <span style="padding: 6px">Export Subtracted</span>
+          </v-expansion-panel-header>
+          <v-expansion-panel-content>
             <plugin-add-results
               :label.sync="bg_sub_results_label"
               :label_default="bg_sub_results_label_default"
@@ -226,7 +236,6 @@
         </v-expansion-panel>
       </v-expansion-panels>
     </v-row>
-
 
 
 

@@ -10,6 +10,7 @@ from jdaviz.core.events import (SliceToolStateMessage, LineIdentifyMessage,
 
 __all__ = ['OffscreenLinesMarks', 'BaseSpectrumVerticalLine', 'SpectralLine',
            'SliceIndicatorMarks', 'ShadowMixin', 'ShadowLine', 'ShadowLabelFixedY',
+           'PluginLine', 'TraceLine',
            'LineAnalysisContinuum', 'LineAnalysisContinuumCenter',
            'LineAnalysisContinuumLeft', 'LineAnalysisContinuumRight',
            'LineUncertainties', 'ScatterMask', 'SelectedSpaxel']
@@ -430,18 +431,22 @@ class ShadowLabelFixedY(Label, ShadowMixin):
             self._update_align()
 
 
-class LineAnalysisContinuum(Lines, HubListener):
+class PluginLine(Lines, HubListener):
     def __init__(self, viewer, x=[], y=[], **kwargs):
-        # we do not need to worry about the x-units changing since the stats
-        # need to be re-computed on unit conversion anyways (which will
-        # trigger updates to x and y from the line analysis plugin)
-
         # color is same blue as import button
         super().__init__(x=x, y=y, colors=["#007BA1"], scales=viewer.scales, **kwargs)
 
     def update_xy(self, x, y):
         self.x = x
         self.y = y
+
+
+class TraceLine(PluginLine):
+    pass
+
+
+class LineAnalysisContinuum(PluginLine):
+    pass
 
 
 class LineAnalysisContinuumCenter(LineAnalysisContinuum):

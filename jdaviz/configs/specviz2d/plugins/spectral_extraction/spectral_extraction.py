@@ -8,6 +8,8 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         DatasetSelect,
                                         AddResults)
 from jdaviz.core.custom_traitlets import IntHandleEmpty
+from jdaviz.core.marks import (TraceLine,
+                               ShadowLine)
 
 from specreduce import tracing
 
@@ -18,6 +20,8 @@ __all__ = ['SpectralExtraction']
 class SpectralExtraction(PluginTemplateMixin):
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "spectral_extraction.vue"
+
+    active_step = Unicode().tag(sync=True)
 
     # TRACE
     trace_trace_items = List().tag(sync=True)
@@ -98,6 +102,7 @@ class SpectralExtraction(PluginTemplateMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._marks = {}
 
         # TRACE
         self.trace_trace = DatasetSelect(self,
@@ -197,6 +202,121 @@ class SpectralExtraction(PluginTemplateMixin):
         if self.ext_width == 0:
             self.ext_width = int(np.ceil(width / 10))
 
+    @observe('plugin_opened')
+    def _update_plugin_marks(self, *args):
+        if self.active_step == '':
+            # on load, default to 'trace' (this will then trigger the observe to update the marks)
+            self.active_step = 'trace'
+            self._interaction_in_trace_step()
+            return
+
+        display_marks = {'trace': ['trace'],
+                         'bg': ['trace',
+                                'bg1_center', 'bg1_lower', 'bg1_upper',
+                                'bg2_center', 'bg2_lower', 'bg2_upper'],
+                         'ext': ['trace', 'ext_upper', 'ext_lower']}
+        for step, mark in self.marks.items():
+            mark.visible = self.plugin_opened and step in display_marks.get(self.active_step, [])
+
+    @property
+    def marks(self):
+        if self._marks:
+            # TODO: replace with cache property?
+            return self._marks
+
+        viewer = self.app.get_viewer('spectrum-2d-viewer')
+        if not viewer.state.reference_data:
+            # we don't have data yet for scales, defer initializing
+            return {}
+
+        # then haven't been initialized yet, so initialize with empty
+        # marks that will be populated once the first analysis is done.
+        self._marks = {'trace': TraceLine(viewer, visible=self.plugin_opened),
+                       'ext_lower': TraceLine(viewer, visible=self.plugin_opened),
+                       'ext_upper': TraceLine(viewer, visible=self.plugin_opened),
+                       'bg1_center': TraceLine(viewer, visible=self.plugin_opened,
+                                               line_style='dotted'),
+                       'bg1_lower': TraceLine(viewer, visible=self.plugin_opened),
+                       'bg1_upper': TraceLine(viewer, visible=self.plugin_opened),
+                       'bg2_center': TraceLine(viewer, visible=self.plugin_opened,
+                                               line_style='dotted'),
+                       'bg2_lower': TraceLine(viewer, visible=self.plugin_opened),
+                       'bg2_upper': TraceLine(viewer, visible=self.plugin_opened)}
+        shadows = [ShadowLine(mark, shadow_width=2) for mark in self._marks.values()]
+        # NOTE: += won't trigger the figure to notice new marks
+        viewer.figure.marks = viewer.figure.marks + shadows + list(self._marks.values())
+
+        return self._marks
+
+    @observe('trace_trace_selected', 'trace_offset', 'trace_dataset_selected', 'trace_type_selected',
+             'trace_pixel', 'trace_peak_method_selected', 'trace_bins', 'trace_window')
+    def _interaction_in_trace_step(self, *args):
+        if not self.plugin_opened:
+            return
+        trace = self.create_trace(add_data=False)
+        # TODO: range(len(...)) is a temporary hack for this data displaying in meters instead of pixels
+        self.marks['trace'].update_xy(range(len(trace.trace)),
+                                      trace.trace)
+        self.marks['trace'].line_style = 'solid'
+        self.active_step = 'trace'
+        self._update_plugin_marks()
+
+    @observe('bg_dataset_selected', 'bg_type_selected', 'bg_trace_selected', 'bg_trace_pixel',
+             'bg_separation', 'bg_width')
+    def _interaction_in_bg_step(self, *args):
+        if not self.plugin_opened:
+            return
+        trace = self._get_bg_trace()
+        # TODO: range(len(...)) is a temporary hack for this data displaying in meters instead of pixels
+        self.marks['trace'].update_xy(range(len(trace.trace)),
+                                      trace.trace)
+        self.marks['trace'].line_style = 'dashed'
+
+        if self.bg_type_selected in ['OneSided', 'TwoSided']:
+            self.marks['bg1_center'].update_xy(range(len(trace.trace)),
+                                               trace.trace+self.bg_separation)
+            self.marks['bg1_lower'].update_xy(range(len(trace.trace)),
+                                              trace.trace+self.bg_separation-self.bg_width/2)
+            self.marks['bg1_upper'].update_xy(range(len(trace.trace)),
+                                              trace.trace+self.bg_separation+self.bg_width/2)
+        else:
+            self.marks['bg1_center'].update_xy([], [])
+            self.marks['bg1_lower'].update_xy(range(len(trace.trace)),
+                                              trace.trace-self.bg_width/2)
+            self.marks['bg1_upper'].update_xy(range(len(trace.trace)),
+                                              trace.trace+self.bg_width/2)
+
+        if self.bg_type_selected == 'TwoSided':
+            self.marks['bg2_center'].update_xy(range(len(trace.trace)),
+                                               trace.trace-self.bg_separation)
+            self.marks['bg2_lower'].update_xy(range(len(trace.trace)),
+                                              trace.trace-self.bg_separation-self.bg_width/2)
+            self.marks['bg2_upper'].update_xy(range(len(trace.trace)),
+                                              trace.trace-self.bg_separation+self.bg_width/2)
+        else:
+            self.marks['bg2_center'].update_xy([], [])
+            self.marks['bg2_lower'].update_xy([], [])
+            self.marks['bg2_upper'].update_xy([], [])
+
+        self.active_step = 'bg'
+        self._update_plugin_marks()
+
+    @observe('ext_dataset_selected', 'ext_trace_selected', 'ext_trace_pixel', 'ext_width')
+    def _interaction_in_ext_step(self, *args):
+        if not self.plugin_opened:
+            return
+        trace = self._get_ext_trace()
+        # TODO: range(len(...)) is a temporary hack for this data displaying in meters instead of pixels
+        self.marks['trace'].update_xy(range(len(trace.trace)),
+                                      trace.trace)
+        self.marks['trace'].line_style = 'dashed'
+        self.marks['ext_lower'].update_xy(range(len(trace.trace)),
+                                          trace.trace-self.ext_width/2)
+        self.marks['ext_upper'].update_xy(range(len(trace.trace)),
+                                          trace.trace+self.ext_width/2)
+        self.active_step = 'ext'
+        self._update_plugin_marks()
+
     def create_trace(self, add_data=True):
         if self.trace_trace_selected != 'New Trace':
             # then we're offsetting an existing trace
@@ -220,15 +340,49 @@ class SpectralExtraction(PluginTemplateMixin):
         if add_data:
             self.trace_add_results.add_results_from_plugin(trace, replace=False)
             self.trace_trace.selected = self.trace_results_label
+
         return trace
 
     def vue_create_trace(self, *args):
         _ = self.create_trace(add_data=True)
 
+    def _get_bg_trace(self):
+        if self.bg_trace_selected == 'From Plugin':
+            trace = self.create_trace(add_data=False)
+        elif self.bg_trace_selected == 'Manual':
+            trace = tracing.FlatTrace(self.bg_dataset.selected_obj.data,
+                                      self.bg_trace_pixel)
+        else:
+            trace = self.bg_trace.selected_obj
+
+        return trace
+
+    def create_bg(self, add_data=False):
+        trace = self._get_bg_trace()
+        raise NotImplementedError()
+
     def vue_create_bg(self, *args):
         raise NotImplementedError()
 
     def vue_create_bg_sub(self, *args):
+        raise NotImplementedError()
+
+    def _get_ext_trace(self):
+        if self.ext_trace_selected == 'From Plugin':
+            trace = self.create_trace(add_data=False)
+        elif self.ext_trace_selected == 'Manual':
+            # NOTE: we use trace_dataset here assuming its the same shape,
+            # to avoid needing to create the background-subtracted image
+            # if self.trace_dataset_selected == 'From Plugin'
+            trace = tracing.FlatTrace(self.trace_dataset.selected_obj.data,
+                                      self.ext_trace_pixel)
+        else:
+            trace = self.ext_trace.get_selected_obj
+
+        return trace
+
+    def create_extract(self, add_data=False):
+        trace = self._get_ext_trace()
         raise NotImplementedError()
 
     def vue_extract(self, *args):
