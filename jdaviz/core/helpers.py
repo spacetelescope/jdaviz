@@ -318,17 +318,14 @@ class ConfigHelper(HubListener):
         # Check if the user is running Jdaviz in the correct environments.
         # If not, provide a friendly msg to guide them!
         if get_ipython().__class__.__name__ != 'ZMQInteractiveShell':
-            boilerplate_e = \
-                RuntimeError("\nYou are currently running Jdaviz from an unsupported "
-                             "shell. Jdaviz is intended to be run within a Jupyter "
-                             "notebook, or directly from the command line.\n\n"
-                             "To run from Jupyter, call <your viz>.show() from a notebook cell.\n"
-                             "To see how to run from the command line, run: "
-                             "'jdaviz --help' outside of Python.\n\n"
-                             "To learn more, see our documentation at: "
-                             "https://jdaviz.readthedocs.io\n\n"
-                             "Thanks for trying out Jdaviz! :)")
-            raise boilerplate_e
+            raise RuntimeError("\nYou are currently running Jdaviz from an unsupported "
+                               f"shell ({cur_shell_name}). Jdaviz is intended to be run within a Jupyter "
+                               "notebook, or directly from the command line.\n\n"
+                               "To run from Jupyter, call <your viz>.show() from a notebook cell.\n"
+                               "To see how to run from the command line, run: "
+                               "'jdaviz --help' outside of Python.\n\n"
+                               "To learn more, see our documentation at: "
+                               "https://jdaviz.readthedocs.io")
 
         if loc == "inline":
             display(self.app)

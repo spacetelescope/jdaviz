@@ -65,7 +65,7 @@ Specviz
 Other Changes and Additions
 ---------------------------
 
-- Add friendly message when trying to load Jdaviz outside of Jupyter [#1481]
+- Added a more informative error message when trying to load Jdaviz outside of Jupyter. [#1481]
 
 2.7.1 (2022-07-12)
 ==================
