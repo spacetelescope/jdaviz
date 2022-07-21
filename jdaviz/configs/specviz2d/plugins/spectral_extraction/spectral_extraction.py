@@ -130,7 +130,8 @@ class SpectralExtraction(PluginTemplateMixin):
         self.bg_trace = DatasetSelect(self,
                                       'bg_trace_items',
                                       'bg_trace_selected',
-                                      default_text='Manual',
+                                      default_text='From Plugin',
+                                      manual_options=['Manual'],
                                       filters=['is_trace'])
 
         self.bg_add_results = AddResults(self, 'bg_results_label',
@@ -157,12 +158,14 @@ class SpectralExtraction(PluginTemplateMixin):
         self.ext_dataset = DatasetSelect(self,
                                          'ext_dataset_items',
                                          'ext_dataset_selected',
+                                         default_text='From Plugin',
                                          filters=['layer_in_spectrum_2d_viewer', 'not_trace'])
 
         self.ext_trace = DatasetSelect(self,
                                        'ext_trace_items',
                                        'ext_trace_selected',
-                                       default_text='Manual',
+                                       default_text='From Plugin',
+                                       manual_options=['Manual'],
                                        filters=['is_trace'])
 
         self.ext_add_results = AddResults(self, 'ext_results_label',

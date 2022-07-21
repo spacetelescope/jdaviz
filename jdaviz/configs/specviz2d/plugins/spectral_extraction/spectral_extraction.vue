@@ -96,19 +96,30 @@
       </v-row>
     </div>
 
-    <plugin-add-results
-      :label.sync="trace_results_label"
-      :label_default="trace_results_label_default"
-      :label_auto.sync="trace_results_label_auto"
-      :label_invalid_msg="trace_results_label_invalid_msg"
-      :label_overwrite="trace_results_label_overwrite"
-      label_hint="Label for the trace"
-      :add_to_viewer_items="trace_add_to_viewer_items"
-      :add_to_viewer_selected.sync="trace_add_to_viewer_selected"
-      action_label="Create"
-      action_tooltip="Create Trace"
-      @click:action="create_trace"
-    ></plugin-add-results>
+    <v-row>
+      <v-expansion-panels popout>
+        <v-expansion-panel>
+          <v-expansion-panel-header v-slot="{ open }">
+            <span style="padding: 6px">Export Results</span>
+          </v-expansion-panel-header>
+          <v-expansion-panel-content>
+            <plugin-add-results
+              :label.sync="trace_results_label"
+              :label_default="trace_results_label_default"
+              :label_auto.sync="trace_results_label_auto"
+              :label_invalid_msg="trace_results_label_invalid_msg"
+              :label_overwrite="trace_results_label_overwrite"
+              label_hint="Label for the trace"
+              :add_to_viewer_items="trace_add_to_viewer_items"
+              :add_to_viewer_selected.sync="trace_add_to_viewer_selected"
+              action_label="Create"
+              action_tooltip="Create Trace"
+              @click:action="create_trace"
+            ></plugin-add-results>
+          </v-expansion-panel-content>
+        </v-expansion-panel>
+      </v-expansion-panels>
+    </v-row>
 
     <j-plugin-section-header>Background</j-plugin-section-header>
     <v-row>
@@ -138,7 +149,7 @@
       :selected.sync="bg_trace_selected"
       :show_if_single_entry="true"
       label="Trace"
-      hint="Trace to use for determining the background region."
+      hint="Trace to use for determining the background region.  'From Plugin' uses trace defined in Trace section above."
     />
 
     <v-row v-if="bg_trace_selected === 'Manual'">
@@ -177,33 +188,46 @@
       </v-text-field>
     </v-row>
 
-    <plugin-add-results
-      :label.sync="bg_results_label"
-      :label_default="bg_results_label_default"
-      :label_auto.sync="bg_results_label_auto"
-      :label_invalid_msg="bg_results_label_invalid_msg"
-      :label_overwrite="bg_results_label_overwrite"
-      label_hint="Label for the background image"
-      :add_to_viewer_items="bg_add_to_viewer_items"
-      :add_to_viewer_selected.sync="bg_add_to_viewer_selected"
-      action_label="Background"
-      action_tooltip="Create Background Image"
-      @click:action="create_bg"
-    ></plugin-add-results>
+    <v-row>
+      <v-expansion-panels popout>
+        <v-expansion-panel>
+          <v-expansion-panel-header v-slot="{ open }">
+            <span style="padding: 6px">Export Results</span>
+          </v-expansion-panel-header>
+          <v-expansion-panel-content>
+            <plugin-add-results
+              :label.sync="bg_results_label"
+              :label_default="bg_results_label_default"
+              :label_auto.sync="bg_results_label_auto"
+              :label_invalid_msg="bg_results_label_invalid_msg"
+              :label_overwrite="bg_results_label_overwrite"
+              label_hint="Label for the background image"
+              :add_to_viewer_items="bg_add_to_viewer_items"
+              :add_to_viewer_selected.sync="bg_add_to_viewer_selected"
+              action_label="Background"
+              action_tooltip="Create Background Image"
+              @click:action="create_bg"
+            ></plugin-add-results>
 
-    <plugin-add-results
-      :label.sync="bg_sub_results_label"
-      :label_default="bg_sub_results_label_default"
-      :label_auto.sync="bg_sub_results_label_auto"
-      :label_invalid_msg="bg_sub_results_label_invalid_msg"
-      :label_overwrite="bg_sub_results_label_overwrite"
-      label_hint="Label for the background-subtracted image"
-      :add_to_viewer_items="bg_sub_add_to_viewer_items"
-      :add_to_viewer_selected.sync="bg_sub_add_to_viewer_selected"
-      action_label="Subtract"
-      action_tooltip="Create Background Subtracted Image"
-      @click:action="create_bg_sub"
-    ></plugin-add-results>
+            <plugin-add-results
+              :label.sync="bg_sub_results_label"
+              :label_default="bg_sub_results_label_default"
+              :label_auto.sync="bg_sub_results_label_auto"
+              :label_invalid_msg="bg_sub_results_label_invalid_msg"
+              :label_overwrite="bg_sub_results_label_overwrite"
+              label_hint="Label for the background-subtracted image"
+              :add_to_viewer_items="bg_sub_add_to_viewer_items"
+              :add_to_viewer_selected.sync="bg_sub_add_to_viewer_selected"
+              action_label="Subtract"
+              action_tooltip="Create Background Subtracted Image"
+              @click:action="create_bg_sub"
+            ></plugin-add-results>
+          </v-expansion-panel-content>
+        </v-expansion-panel>
+      </v-expansion-panels>
+    </v-row>
+
+
 
 
     <j-plugin-section-header>Extraction</j-plugin-section-header>
@@ -216,7 +240,7 @@
       :selected.sync="ext_dataset_selected"
       :show_if_single_entry="false"
       label="2D Spectrum"
-      hint="Select the data used to extract the spectrum."
+      hint="Select the data used to extract the spectrum.  'From Plugin' uses background-subtraced image defined in Background section above."
     />
 
     <plugin-dataset-select
@@ -224,7 +248,7 @@
       :selected.sync="ext_trace_selected"
       :show_if_single_entry="true"
       label="Trace"
-      hint="Trace to use for extracting the spectrum."
+      hint="Trace to use for extracting the spectrum.  'From Plugin' uses trace defined in Trace section above."
     />
 
     <v-row v-if="ext_trace_selected === 'Manual'">
