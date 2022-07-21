@@ -40,7 +40,7 @@ produced by JWST MIRI), along with 1D spectra extracted from the cube.
 **Imviz** provides visualization and quick-look analysis for 2D astronomical
 images.
 
-This tool is designed with instrument modes from the James Webb Space Telescope (JWST) in mind, but 
+This tool is designed with instrument modes from the James Webb Space Telescope (JWST) in mind, but
 the tool should be flexible enough to read in data from many astronomical telescopes.  The documentation provides a complete `table of all supported modes <https://jdaviz.readthedocs.io/en/latest/#jwst-instrument-modes-in-jdaviz>`_.
 
 Installing
@@ -98,15 +98,17 @@ If you uncover any issues or bugs, you can
 if they are not already reported. For faster responses, however, we encourage you to
 submit a `JWST Help Desk Ticket <https://jwsthelp.stsci.edu>`_.
 
-License
--------
+License & Attribution
+---------------------
 
 This project is Copyright (c) JDADF Developers and licensed under
 the terms of the BSD 3-Clause license. This package is based upon
 the `Astropy package template <https://github.com/astropy/package-template>`_
-which is licensed under the BSD 3-clause licence. See the licenses folder for
-more information.
+which is licensed under the BSD 3-clause licence. See the
+`licenses <https://github.com/spacetelescope/jdaviz/tree/main/licenses>`_
+folder for more information.
 
+Cite ``jdaviz`` via our Zenodo record: https://doi.org/10.5281/zenodo.6824713.
 
 Contributing
 ------------

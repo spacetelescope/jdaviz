@@ -9,7 +9,7 @@ Jdaviz
 tools based on the Jupyter platform.  These GUI-based tools link data
 visualization and interactive analysis.  They are designed to work
 within a Jupyter notebook cell, as a standalone desktop application,
-or as embedded windows within a website -- all with nearly-identical
+or as embedded windows within a website -- all with nearly identical
 user interfaces.
 
 ``jdaviz`` applications currently include tools for interactive
@@ -31,7 +31,7 @@ contextual information like on-sky views of the spectrograph slit.
 
 .. note::
 
-   Offline version of this documentation can be downloaded from
+   The offline version of this documentation can be downloaded from
    `Jdaviz zipped HTML downloads page <https://readthedocs.org/projects/jdaviz/downloads/>`_.
 
 .. _jdaviz_instrument_table:
@@ -195,3 +195,17 @@ Additional documentation
    :maxdepth: 1
 
    known_bugs.rst
+
+License & Attribution
+=====================
+
+This project is Copyright (c) JDADF Developers and licensed under
+the terms of the BSD 3-Clause license.
+
+This package is based upon
+the `Astropy package template <https://github.com/astropy/package-template>`_
+which is licensed under the BSD 3-clause licence. See the
+`licenses <https://github.com/spacetelescope/jdaviz/tree/main/licenses>`_
+folder for more information.
+
+Cite ``jdaviz`` via our Zenodo record: https://doi.org/10.5281/zenodo.6824713.
