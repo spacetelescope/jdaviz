@@ -16,6 +16,7 @@ from glue.core.message import SubsetCreateMessage
 
 from jdaviz.app import Application
 
+from IPython import get_ipython
 from IPython.display import display
 
 from sidecar import Sidecar
@@ -314,32 +315,41 @@ class ConfigHelper(HubListener):
         If "sidecar" is requested in the "classic" Jupyter notebook, the app will appear inline,
         as only JupyterLab has a mechanism to have multiple tabs.
         """
-        try:
-            if loc == "inline":
+        # Check if the user is running Jdaviz in the correct environments.
+        # If not, provide a friendly msg to guide them!
+        cur_shell_name = get_ipython().__class__.__name__
+        if cur_shell_name != 'ZMQInteractiveShell':
+            raise RuntimeError("\nYou are currently running Jdaviz from an unsupported "
+                               f"shell ({cur_shell_name}). Jdaviz is intended to be run within a "
+                               "Jupyter notebook, or directly from the command line.\n\n"
+                               "To run from Jupyter, call <your viz>.show() from a notebook cell.\n"
+                               "To see how to run from the command line, run: "
+                               "'jdaviz --help' outside of Python.\n\n"
+                               "To learn more, see our documentation at: "
+                               "https://jdaviz.readthedocs.io")
+
+        if loc == "inline":
+            display(self.app)
+
+        elif loc.startswith('sidecar'):
+            # Use default behavior if loc is exactly 'sidecar', else split anchor from the arg
+            anchor = None if loc == 'sidecar' else loc.split(':')[1]
+
+            # If title unset, default to the viz config
+            title = self.app.config if title is None else title
+
+            scar = Sidecar(anchor=anchor, title=title)
+            with scar:
                 display(self.app)
 
-            elif loc.startswith('sidecar'):
-                # Use default behavior if loc is exactly 'sidecar', else split anchor from the arg
-                anchor = None if loc == 'sidecar' else loc.split(':')[1]
+        elif loc == "new browser tab":
+            raise NotImplementedError
 
-                # If title unset, default to the viz config
-                title = self.app.config if title is None else title
+        elif loc == "popout":
+            raise NotImplementedError
 
-                scar = Sidecar(anchor=anchor, title=title)
-                with scar:
-                    display(self.app)
-
-            elif loc == "new browser tab":
-                raise NotImplementedError
-
-            elif loc == "popout":
-                raise NotImplementedError
-
-            else:
-                raise ValueError(f"Unrecognized display location: {loc}")
-
-        except Exception as e:
-            raise RuntimeError('Error in displaying Jdaviz') from e
+        else:
+            raise ValueError(f"Unrecognized display location: {loc}")
 
     def show_in_sidecar(self, anchor=None, title=None):
         """
