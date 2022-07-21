@@ -239,6 +239,18 @@
       </v-text-field>
     </v-row>
 
+    <v-row>
+      <v-text-field
+        label="Width"
+        type="number"
+        v-model.number="ext_width"
+        :rules="[() => ext_width!=='' || 'This field is required']"
+        hint="Width of extraction window, in pixels."
+        persistent-hint
+      >
+      </v-text-field>
+    </v-row>
+
     <plugin-add-results
       :label.sync="ext_results_label"
       :label_default="ext_results_label_default"

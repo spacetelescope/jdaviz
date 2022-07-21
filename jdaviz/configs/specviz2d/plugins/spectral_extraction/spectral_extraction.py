@@ -86,6 +86,7 @@ class SpectralExtraction(PluginTemplateMixin):
     ext_trace_selected = Unicode().tag(sync=True)
 
     ext_trace_pixel = IntHandleEmpty(0).tag(sync=True)
+    ext_width = IntHandleEmpty(0).tag(sync=True)
 
     ext_results_label = Unicode().tag(sync=True)
     ext_results_label_default = Unicode().tag(sync=True)
@@ -190,6 +191,8 @@ class SpectralExtraction(PluginTemplateMixin):
             self.bg_width = int(np.ceil(width / 10))
         if self.ext_trace_pixel == 0:
             self.ext_trace_pixel = half_pixel
+        if self.ext_width == 0:
+            self.ext_width = int(np.ceil(width / 10))
 
     def create_trace(self, add_data=True):
         if self.trace_trace_selected != 'New Trace':
