@@ -308,7 +308,7 @@ class ConfigHelper(HubListener):
             window will open. Browser popup permissions required
 
                 Other anchors:
-                
+
                 * ``popout:window`` (The default, opens Jdaviz in a new, detached popout)
                 * ``popout:tab`` (Opens Jdaviz in a new, detached tab in your browser)
 
