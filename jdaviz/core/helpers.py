@@ -320,8 +320,8 @@ class ConfigHelper(HubListener):
         cur_shell_name = get_ipython().__class__.__name__
         if cur_shell_name != 'ZMQInteractiveShell':
             raise RuntimeError("\nYou are currently running Jdaviz from an unsupported "
-                               f"shell ({cur_shell_name}). Jdaviz is intended to be run within a Jupyter "
-                               "notebook, or directly from the command line.\n\n"
+                               f"shell ({cur_shell_name}). Jdaviz is intended to be run within a "
+                               "Jupyter notebook, or directly from the command line.\n\n"
                                "To run from Jupyter, call <your viz>.show() from a notebook cell.\n"
                                "To see how to run from the command line, run: "
                                "'jdaviz --help' outside of Python.\n\n"
