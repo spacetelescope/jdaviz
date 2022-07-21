@@ -84,6 +84,9 @@ Cubeviz
 - Fixed a bug where having Subset breaks coordinates information display
   in image viewers. [#1472]
 
+Other Changes and Additions
+---------------------------
+
 2.7.0.post1 (2022-07-07)
 ========================
 
