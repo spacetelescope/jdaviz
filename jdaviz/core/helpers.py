@@ -317,7 +317,8 @@ class ConfigHelper(HubListener):
         """
         # Check if the user is running Jdaviz in the correct environments.
         # If not, provide a friendly msg to guide them!
-        if get_ipython().__class__.__name__ != 'ZMQInteractiveShell':
+        cur_shell_name = get_ipython().__class__.__name__
+        if cur_shell_name != 'ZMQInteractiveShell':
             raise RuntimeError("\nYou are currently running Jdaviz from an unsupported "
                                f"shell ({cur_shell_name}). Jdaviz is intended to be run within a Jupyter "
                                "notebook, or directly from the command line.\n\n"
