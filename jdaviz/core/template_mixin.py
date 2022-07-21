@@ -10,7 +10,6 @@ from glue.core.message import (DataCollectionAddMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from glue.core.subset import RoiSubsetState
-from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.widgets.linked_dropdown import get_choices as _get_glue_choices
 from specutils import Spectrum1D
 from traitlets import Any, Bool, HasTraits, List, Unicode, observe
@@ -472,13 +471,6 @@ class LayerSelect(BaseSelectPluginComponent):
             self._clear_cache()
             self._on_layers_changed()
 
-    def _valid_layer(self, viewer, layer):
-        if isinstance(viewer, BqplotImageView) and self.plugin.config == 'cubeviz':
-            # exclude spectral subsets in image viewers (but not in 2d spectrum viewers)
-            if hasattr(layer.state.layer, 'subset_state') and not isinstance(layer.state.layer.subset_state, RoiSubsetState):  # noqa
-                return False
-        return True
-
     @observe('filters')
     def _on_layers_changed(self, msg=None):
         # NOTE: _on_layers_changed is passed without a msg object during init
@@ -489,7 +481,7 @@ class LayerSelect(BaseSelectPluginComponent):
         viewers = [self._get_viewer(viewer) for viewer in viewer_names]
 
         manual_items = [{'label': label} for label in self.manual_options]
-        layers = [layer for viewer in viewers for layer in viewer.layers if self._valid_layer(viewer, layer)]  # noqa
+        layers = [layer for viewer in viewers for layer in viewer.layers]
         # remove duplicates - NOTE: by doing this, any color-mismatch between layers with the
         # same name in different viewers will be randomly assigned within plot_options
         # based on which was found _first.
@@ -514,7 +506,7 @@ class LayerSelect(BaseSelectPluginComponent):
         viewers = [self._get_viewer(viewer_name) for viewer_name in viewer_names]
 
         layers = [[layer for layer in viewer.layers
-                   if layer.layer.label in selected and self._valid_layer(viewer, layer)]
+                   if layer.layer.label in selected]
                   for viewer in viewers]
 
         if not self.multiselect and len(layers) == 1:

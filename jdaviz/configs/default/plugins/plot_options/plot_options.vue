@@ -49,16 +49,14 @@
       :hint="multiselect ? 'Select viewers to set options simultaneously' : 'Select the viewer to set options.'"
     />
 
-    <div>
-      <plugin-layer-select
-        :items="layer_items"
-        :selected.sync="layer_selected"
-        :multiselect="multiselect"
-        :show_if_single_entry="true"
-        :label="multiselect ? 'Layers': 'Layer'"
-        :hint="multiselect ? 'Select layers to set options simultaneously' : 'Select the data or subset to set options.'"
-      />
-    </div>
+    <plugin-layer-select
+      :items="layer_items"
+      :selected.sync="layer_selected"
+      :multiselect="multiselect"
+      :show_if_single_entry="true"
+      :label="multiselect ? 'Layers': 'Layer'"
+      :hint="multiselect ? 'Select layers to set options simultaneously' : 'Select the data or subset to set options.'"
+    />
 
     <j-plugin-section-header v-if="layer_selected.length">Layer Visibility</j-plugin-section-header>
     <glue-state-sync-wrapper :sync="layer_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('layer_visible')">

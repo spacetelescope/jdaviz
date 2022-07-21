@@ -35,9 +35,15 @@ class JdavizViewerMixin:
             if layer.layer.label == label:
                 return layer
 
-    def _expected_subset_layer_default(self, layer):
+    def _expected_subset_layer_default(self, layer_state):
+        if self.__class__.__name__ == 'CubevizImageView':
+            # Do not override default for subsets as for some reason
+            # this isn't getting called when they're first added, but rather when
+            # the next state change is made (for example: manually changing the visibility)
+            return
+
         # default visibility based on the visibility of the "parent" data layer
-        layer.visible = self._get_layer(layer.layer.data.label).visible
+        layer_state.visible = self._get_layer(layer_state.layer.data.label).visible
 
     def _update_layer_icons(self):
         # update visible_layers (TODO: move this somewhere that can update on color change, etc)
@@ -123,11 +129,13 @@ class JdavizViewerMixin:
             # MosvizTableViewer uses this as a mixin, but we do not need any of this layer
             # logic there
             return
+
         # NOTE: the subscription to this method is handled in ConfigHelper
         # we don't have access to the actual subset yet to tell if its spectral or spatial, so
         # we'll store the name of this new subset and change the default linewidth when the
         # layers are added
-        self._expected_subset_layers.append(msg.subset.label)
+        if msg.subset.label not in self._expected_subset_layers and msg.subset.label:
+            self._expected_subset_layers.append(msg.subset.label)
 
     def _initialize_toolbar_nested(self, default_tool_priority=[]):
         # would be nice to call this from __init__,
