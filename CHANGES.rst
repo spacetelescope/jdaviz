@@ -1,41 +1,20 @@
-2.8 (unreleased)
+2.8 (2022-07-21)
 ================
 
 New Features
 ------------
 
-- Viewer/layer labels with icons that are synced app-wide. [#1465]
+- Added viewer/layer labels with icons that are synced app-wide. [#1465]
 
 Cubeviz
 ^^^^^^^
 
 - The "Import Data" button is hidden after a data cube is loaded into the app [#1495]
 
-Imviz
-^^^^^
-
 Mosviz
 ^^^^^^
 
 - Added ``--instrument`` CLI option to support NIRISS data loading in Mosviz. [#1488]
-
-Specviz
-^^^^^^^
-
-API Changes
------------
-
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
 
 Bug Fixes
 ---------
@@ -58,12 +37,6 @@ Imviz
 - Fixed coordinates info panel crashing when HDU extension with
   non-celestial WCS is loaded into Imviz together with another
   extension with celestial WCS. [#1499]
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
 
 Other Changes and Additions
 ---------------------------
