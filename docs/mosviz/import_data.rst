@@ -4,8 +4,8 @@
 Importing Data into Mosviz
 **************************
 
-Mosviz provides two different ways to load data: Auto-recognition directory loading
-or manual loading:
+Mosviz provides two different ways to load data: auto-recognition directory
+loading and manual loading.
 
 Automatic Directory Loading
 ---------------------------
