@@ -440,6 +440,9 @@ class PluginLine(Lines, HubListener):
         self.x = x
         self.y = y
 
+    def clear(self):
+        self.update_xy([], [])
+
 
 class TraceLine(PluginLine):
     pass

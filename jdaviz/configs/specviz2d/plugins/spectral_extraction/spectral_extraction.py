@@ -251,16 +251,23 @@ class SpectralExtraction(PluginTemplateMixin):
 
         return self._marks
 
-    @observe('trace_trace_selected', 'trace_offset', 'trace_dataset_selected', 'trace_type_selected',
-             'trace_pixel', 'trace_peak_method_selected', 'trace_bins', 'trace_window')
+    @observe('trace_trace_selected', 'trace_offset', 'trace_dataset_selected',
+             'trace_type_selected', 'trace_pixel', 'trace_peak_method_selected',
+             'trace_bins', 'trace_window')
     def _interaction_in_trace_step(self, *args):
         if not self.plugin_opened:
             return
-        trace = self.create_trace(add_data=False)
-        # TODO: range(len(...)) is a temporary hack for this data displaying in meters instead of pixels
-        self.marks['trace'].update_xy(range(len(trace.trace)),
-                                      trace.trace)
-        self.marks['trace'].line_style = 'solid'
+        try:
+            trace = self.create_trace(add_data=False)
+        except Exception:
+            # NOTE: ignore error, but will be raised when clicking ANY of the export buttons
+            self.marks['trace'].clear()
+        else:
+            # TODO: range(len(...)) is a temporary hack for this data displaying
+            # in meters instead of pixels
+            self.marks['trace'].update_xy(range(len(trace.trace)),
+                                          trace.trace)
+            self.marks['trace'].line_style = 'solid'
         self.active_step = 'trace'
         self._update_plugin_marks()
 
@@ -269,37 +276,44 @@ class SpectralExtraction(PluginTemplateMixin):
     def _interaction_in_bg_step(self, *args):
         if not self.plugin_opened:
             return
-        trace = self._get_bg_trace()
-        # TODO: range(len(...)) is a temporary hack for this data displaying in meters instead of pixels
-        self.marks['trace'].update_xy(range(len(trace.trace)),
-                                      trace.trace)
-        self.marks['trace'].line_style = 'dashed'
-
-        if self.bg_type_selected in ['OneSided', 'TwoSided']:
-            self.marks['bg1_center'].update_xy(range(len(trace.trace)),
-                                               trace.trace+self.bg_separation)
-            self.marks['bg1_lower'].update_xy(range(len(trace.trace)),
-                                              trace.trace+self.bg_separation-self.bg_width/2)
-            self.marks['bg1_upper'].update_xy(range(len(trace.trace)),
-                                              trace.trace+self.bg_separation+self.bg_width/2)
+        try:
+            trace = self._get_bg_trace()
+        except Exception:
+            # NOTE: ignore error, but will be raised when clicking ANY of the export buttons
+            for mark in ['trace', 'bg1_center', 'bg1_lower', 'bg1_upper',
+                         'bg2_center', 'bg2_lower', 'bg2_upper']:
+                self.marks[mark].clear()
         else:
-            self.marks['bg1_center'].update_xy([], [])
-            self.marks['bg1_lower'].update_xy(range(len(trace.trace)),
-                                              trace.trace-self.bg_width/2)
-            self.marks['bg1_upper'].update_xy(range(len(trace.trace)),
-                                              trace.trace+self.bg_width/2)
+            # TODO: range(len(...)) is a temporary hack for this data displaying
+            # in meters instead of pixels
+            self.marks['trace'].update_xy(range(len(trace.trace)),
+                                          trace.trace)
+            self.marks['trace'].line_style = 'dashed'
 
-        if self.bg_type_selected == 'TwoSided':
-            self.marks['bg2_center'].update_xy(range(len(trace.trace)),
-                                               trace.trace-self.bg_separation)
-            self.marks['bg2_lower'].update_xy(range(len(trace.trace)),
-                                              trace.trace-self.bg_separation-self.bg_width/2)
-            self.marks['bg2_upper'].update_xy(range(len(trace.trace)),
-                                              trace.trace-self.bg_separation+self.bg_width/2)
-        else:
-            self.marks['bg2_center'].update_xy([], [])
-            self.marks['bg2_lower'].update_xy([], [])
-            self.marks['bg2_upper'].update_xy([], [])
+            if self.bg_type_selected in ['OneSided', 'TwoSided']:
+                self.marks['bg1_center'].update_xy(range(len(trace.trace)),
+                                                   trace.trace+self.bg_separation)
+                self.marks['bg1_lower'].update_xy(range(len(trace.trace)),
+                                                  trace.trace+self.bg_separation-self.bg_width/2)
+                self.marks['bg1_upper'].update_xy(range(len(trace.trace)),
+                                                  trace.trace+self.bg_separation+self.bg_width/2)
+            else:
+                self.marks['bg1_center'].clear()
+                self.marks['bg1_lower'].update_xy(range(len(trace.trace)),
+                                                  trace.trace-self.bg_width/2)
+                self.marks['bg1_upper'].update_xy(range(len(trace.trace)),
+                                                  trace.trace+self.bg_width/2)
+
+            if self.bg_type_selected == 'TwoSided':
+                self.marks['bg2_center'].update_xy(range(len(trace.trace)),
+                                                   trace.trace-self.bg_separation)
+                self.marks['bg2_lower'].update_xy(range(len(trace.trace)),
+                                                  trace.trace-self.bg_separation-self.bg_width/2)
+                self.marks['bg2_upper'].update_xy(range(len(trace.trace)),
+                                                  trace.trace-self.bg_separation+self.bg_width/2)
+            else:
+                for mark in ['bg2_center', 'bg2_lower', 'bg2_upper']:
+                    self.marks[mark].clear()
 
         self.active_step = 'bg'
         self._update_plugin_marks()
@@ -308,15 +322,24 @@ class SpectralExtraction(PluginTemplateMixin):
     def _interaction_in_ext_step(self, *args):
         if not self.plugin_opened:
             return
-        trace = self._get_ext_trace()
-        # TODO: range(len(...)) is a temporary hack for this data displaying in m instead of pixels
-        self.marks['trace'].update_xy(range(len(trace.trace)),
-                                      trace.trace)
-        self.marks['trace'].line_style = 'dashed'
-        self.marks['ext_lower'].update_xy(range(len(trace.trace)),
-                                          trace.trace-self.ext_width/2)
-        self.marks['ext_upper'].update_xy(range(len(trace.trace)),
-                                          trace.trace+self.ext_width/2)
+
+        try:
+            trace = self._get_ext_trace()
+        except Exception:
+            # NOTE: ignore error, but will be raised when clicking ANY of the export buttons
+            for mark in ['trace', 'ext_lower', 'ext_upper']:
+                self.marks[mark].clear()
+        else:
+            # TODO: range(len(...)) is a temporary hack for this data displaying
+            # in meters instead of pixels
+            self.marks['trace'].update_xy(range(len(trace.trace)),
+                                          trace.trace)
+            self.marks['trace'].line_style = 'dashed'
+            self.marks['ext_lower'].update_xy(range(len(trace.trace)),
+                                              trace.trace-self.ext_width/2)
+            self.marks['ext_upper'].update_xy(range(len(trace.trace)),
+                                              trace.trace+self.ext_width/2)
+
         self.active_step = 'ext'
         self._update_plugin_marks()
 
