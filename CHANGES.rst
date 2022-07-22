@@ -49,6 +49,8 @@ Specviz
 Other Changes and Additions
 ---------------------------
 
+- Added a UV Galactic linelist. [#1522]
+
 2.8 (2022-07-21)
 ================
 

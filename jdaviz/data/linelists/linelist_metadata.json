@@ -73,5 +73,11 @@
     "units": "micron",
     "filename_base": "PAH",
     "Citations/Notes": " PAH features (Galaxies)\n\"ISO-SWS spectra of galaxies: Continuum and features\"\nSturm, E. et al. 2000, A&A, 358, 481\nTable 2  (features at  < 4 microns from ISO)\nand\n\"The Mid-Infrared Spectrum of Star-Forming Galaxies:\nGlobal Properties of Polycyclic Aromatic Hydrocarbon Emission\"\nSmith, J. D. T. et al. 2007, ApJ, 656, 770\nTable 3 (features at > 5 microns from Spitzer"
+  },
+  "UV Galactic": {
+    "units": "Angstrom",
+    "filename_base": "UV_linelist_vacuum",
+    "Citations/Notes": "Taken from Lietherer+2011: https://ui.adsabs.harvard.edu/abs/2011AJ....141...37L/abstract",
+    "medium": "vacuum"
   }
 }
