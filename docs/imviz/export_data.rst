@@ -9,7 +9,7 @@ Exporting Data from Imviz
 Spatial Regions
 ===============
 
-You can extract spatial regions::
+You can extract supported spatial regions as follows::
 
     regions = imviz.get_interactive_regions()
     regions
