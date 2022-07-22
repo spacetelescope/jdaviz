@@ -2,8 +2,8 @@ cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 authors:
 - family-names: "JDADF Developers"
-- family-names: "@brechmos"
-  given-names: "@brechmos"
+- family-names: "Jones"
+  given-names: "Craig"
 - family-names: "Averbukh"
   given-names: "Jesse"
 - family-names: "Bradley"
