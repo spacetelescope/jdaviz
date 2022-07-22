@@ -106,6 +106,7 @@ class SpectralExtraction(PluginTemplateMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._marks = {}
+        self._do_marks = kwargs.get('interactive', True)
 
         # TRACE
         self.trace_trace = DatasetSelect(self,
@@ -189,7 +190,11 @@ class SpectralExtraction(PluginTemplateMixin):
         self.ext_results_label_default = 'Spectrum 1D'
 
     @observe('trace_dataset_selected')
-    def _trace_dataset_selected(self, msg):
+    def _trace_dataset_selected(self, msg=None):
+        if not hasattr(self, 'trace_dataset'):
+            # happens when first initializing plugin outside of tray
+            return
+
         width = self.trace_dataset.selected_obj.shape[0]
         # estimate the pixel number by taking the median of the brightest pixel index in each column
         brightest_pixel = int(np.median(np.argmax(self.trace_dataset.selected_obj.flux, axis=0)))
@@ -212,10 +217,12 @@ class SpectralExtraction(PluginTemplateMixin):
 
     @observe('plugin_opened')
     def _update_plugin_marks(self, *args):
+        if not self.plugin_opened or not self._do_marks:
+            return
+
         if self.active_step == '':
-            # on load, default to 'trace' (this will then trigger the observe to update the marks)
-            self.active_step = 'trace'
-            self._interaction_in_trace_step()
+            # on load, default to 'extract' (this will then trigger the observe to update the marks)
+            self._interaction_in_ext_step()
             return
 
         # update extracted 1d spectrum preview
@@ -246,6 +253,9 @@ class SpectralExtraction(PluginTemplateMixin):
         if self._marks:
             # TODO: replace with cache property?
             return self._marks
+
+        if not self._do_marks:
+            return {}
 
         viewer2d = self.app.get_viewer('spectrum-2d-viewer')
         viewer1d = self.app.get_viewer('spectrum-viewer')
@@ -284,7 +294,7 @@ class SpectralExtraction(PluginTemplateMixin):
              'trace_type_selected', 'trace_pixel', 'trace_peak_method_selected',
              'trace_bins', 'trace_window')
     def _interaction_in_trace_step(self, *args):
-        if not self.plugin_opened:
+        if not self.plugin_opened or not self._do_marks:
             return
         try:
             trace = self.create_trace(add_data=False)
@@ -303,7 +313,7 @@ class SpectralExtraction(PluginTemplateMixin):
     @observe('bg_dataset_selected', 'bg_type_selected', 'bg_trace_selected', 'bg_trace_pixel',
              'bg_separation', 'bg_width')
     def _interaction_in_bg_step(self, *args):
-        if not self.plugin_opened:
+        if not self.plugin_opened or not self._do_marks:
             return
         try:
             trace = self._get_bg_trace()
@@ -349,7 +359,7 @@ class SpectralExtraction(PluginTemplateMixin):
 
     @observe('ext_dataset_selected', 'ext_trace_selected', 'ext_trace_pixel', 'ext_width')
     def _interaction_in_ext_step(self, *args):
-        if not self.plugin_opened:
+        if not self.plugin_opened or not self._do_marks:
             return
 
         try:
