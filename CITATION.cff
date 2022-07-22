@@ -2,8 +2,6 @@ cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 authors:
 - family-names: "JDADF Developers"
-- family-names: "Jones"
-  given-names: "Craig"
 - family-names: "Averbukh"
   given-names: "Jesse"
 - family-names: "Bradley"
@@ -28,6 +26,8 @@ authors:
 - family-names: "Geda"
   given-names: "Robel"
   orcid: "https://orcid.org/0000-0003-1509-9966"
+- family-names: "Jones"
+  given-names: "Craig"
 - family-names: "Lim"
   given-names: "Pey Lian"
   orcid: "https://orcid.org/0000-0003-0079-4114"
