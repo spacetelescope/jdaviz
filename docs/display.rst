@@ -18,6 +18,25 @@ For example, ``inline`` can be specified manually with::
 
     imviz.show(loc='inline')
 
+Detached Popout
+---------------
+Jdaviz can also be displayed in a detached window, separate from your working Jupyter interface.
+
+.. note:: Popups must be allowed in your browser to display properly.
+
+The following shows ``jdaviz`` in a new popout window::
+
+    imviz.show(loc='popout')
+
+To manually specify the anchor location, append the anchor to popout, separated by a colon::
+    
+    imviz.show(loc='popout:window')
+
+You can also popout to a new browser tab by specifying a ``tab`` anchor::
+
+    imviz.show(loc='popout:tab')
+
+
 Sidecar (Jupyter Lab)
 ---------------------
 

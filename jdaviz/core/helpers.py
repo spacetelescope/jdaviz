@@ -304,6 +304,14 @@ class ConfigHelper(HubListener):
                 See `jupyterlab-sidecar <https://github.com/jupyter-widgets/jupyterlab-sidecar>`_
                 for the most up-to-date options.
 
+            "popout": Display the Jdaviz application in a detached display. By default, a new
+            window will open. Browser popup permissions required.
+
+                Other anchors:
+
+                * ``popout:window`` (The default, opens Jdaviz in a new, detached popout)
+                * ``popout:tab`` (Opens Jdaviz in a new, detached tab in your browser)
+
         title : str, optional
             The title of the sidecar tab.  Defaults to the name of the
             application; e.g., "specviz".
@@ -342,11 +350,16 @@ class ConfigHelper(HubListener):
             with scar:
                 display(self.app)
 
-        elif loc == "new browser tab":
-            raise NotImplementedError
+        elif loc.startswith('popout'):
+            anchor = None if loc == 'popout' else loc.split(':')[1]
 
-        elif loc == "popout":
-            raise NotImplementedError
+            # Default behavior (no anchor specified): display popout in new window
+            if anchor in (None, 'window'):
+                self.app.popout_button.open_window()
+            elif anchor == "tab":
+                self.app.popout_button.open_tab()
+            else:
+                raise ValueError("Unrecognized popout anchor")
 
         else:
             raise ValueError(f"Unrecognized display location: {loc}")
