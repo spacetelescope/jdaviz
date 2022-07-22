@@ -202,14 +202,13 @@ Catalog Search
 ===========
 
 This plugin queries a specified region of the image, marks the sources from the results of the query, and
-provides the number of sources found. After zooming into a specific region of the image, the query uses the center point of the region with a
-radius determined by the farthest edge point of the region. Clicking on :guilabel:`CLEAR` will remove all
-markers on the active viewer.
+provides the number of sources found. After zooming into a specific region of the image, the query uses the center
+point of the region with a radius determined by the farthest edge point of the region. Clicking on :guilabel:`CLEAR`
+will remove all markers on the active viewer.
 
-When you have multiple viewers created in Imviz, the Viewer dropdown menu becomes visible to change the
-active viewer so the query can be based on the image's coordinates.
-
-There is a dropdown menu that allows for selection of a catalog to conduct the source search.
+To select which catalog you would like to use for the search, please pick one of the available options from the
+catalog dropdown menu. If you have multiple viewers open, you will see another dropdown menu to select the active
+viewer. The query will be based on the coordinates of the image in the active viewer.
 
 This plugin is still under active development. As a result, the search only uses the SDSS DR17 catalog.
 Additionally, the query starts anew everytime :guilabel:`SEARCH` is clicked, so previous results and marks
