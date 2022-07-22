@@ -57,9 +57,14 @@ You can create a clean checkout as follows (requires
 
 #. Update the ``CHANGES.rst`` file to make sure that all the user-facing changes are listed,
    and update the release date from ``unreleased`` to current date in the ``yyyy-mm-dd`` format.
-   Remove any empty subsections. Do not forget to commit your changes::
+   Remove any empty subsections.
+
+#. Update the ``CITATION.cff`` file's ``date-released`` and ``version`` fields.
+   If there are new contributors to the project, add them in the ``authors``
+   section. Do not forget to commit your changes from the last two steps::
 
      git add CHANGES.rst
+     git add CITATION.cff
      git commit -m "Preparing release vX.Y.Z"
 
 #. Remove any untracked files. (WARNING: This will
@@ -210,8 +215,8 @@ Congratulations, you have just released a new version of Jdaviz!
 The short way
 =============
 
-This way is for when you are in a rush, is very familiar with the process already,
-and is deploying on a proven automated process. It is faster but also has a higher
+This way is for when you are in a rush, are very familiar with the process already,
+and are deploying on a proven automated process. It is faster but also has a higher
 risk factor. If you choose this way wrongly, you will end up doing hotfix releases
 anyway, which will not save you any time in the end. Only go this way if you know
 what you are doing.
@@ -230,9 +235,14 @@ You can do a release from your fork directly without a clean code check-out.
 
 #. Update the ``CHANGES.rst`` file to make sure that all the user-facing changes are listed,
    and update the release date from ``unreleased`` to current date in the ``yyyy-mm-dd`` format.
-   Remove any empty subsections. Do not forget to commit your changes::
+   Remove any empty subsections.
+
+#. Update the ``CITATION.cff`` file's ``date-released`` and ``version`` fields.
+   If there are new contributors to the project, add them in the ``authors``
+   section. Do not forget to commit your changes from the last two steps::
 
      git add CHANGES.rst
+     git add CITATION.cff
      git commit -m "Preparing release vX.Y.Z"
 
 #. Push the ``release-vX.Y.Z`` branch out and create a new pull request with it.
