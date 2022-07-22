@@ -232,7 +232,9 @@ class Imviz(ConfigHelper):
 
     def load_regions(self, regions, max_num_regions=None, refdata_label=None, **kwargs):
         """Load given region(s) into the viewer.
-        Region(s) is relative to the reference image defined by ``refdata_label``.
+        WCS-to-pixel translation and mask creation, if needed, is relative
+        to the image defined by ``refdata_label``. Meanwhile, the rest of
+        the Subset operations are based on reference image as defined by Glue.
 
         .. note:: Loading too many regions will affect Imviz performance.
 
@@ -261,10 +263,11 @@ class Imviz(ConfigHelper):
             Default is to load everything.
 
         refdata_label : str or `None`
-            Label of reference data to use. Data must already be loaded into
-            Imviz. If `None`, defaults to the reference data in the default viewer.
-            Choice of reference data is important when sky region or
-            WCS linking is involved.
+            Label of data to use for sky-to-pixel conversion for a region, or
+            mask creation. Data must already be loaded into Imviz.
+            If `None`, defaults to the reference data in the default viewer.
+            Choice of this data is particularly important when sky or masked
+            region is involved.
 
         kwargs : dict
             Extra keywords to be passed into the region's ``to_mask`` method.
@@ -382,7 +385,7 @@ class Imviz(ConfigHelper):
 
         return bad_regions
 
-    @deprecated('2.8', alternative='load_regions_from_file')
+    @deprecated('2.9', alternative='load_regions_from_file')
     def load_static_regions_from_file(self, region_file, region_format='ds9', prefix='region',
                                       max_num_regions=20, **kwargs):
         """Load regions defined in the given file.
@@ -422,7 +425,7 @@ class Imviz(ConfigHelper):
             bad_regions = self.load_static_regions(my_regions, **kwargs)
         return bad_regions
 
-    @deprecated('2.8', alternative='load_regions')
+    @deprecated('2.9', alternative='load_regions')
     def load_static_regions(self, regions, **kwargs):
         """Load given region(s) into the viewer.
         Region(s) is relative to the reference image.
