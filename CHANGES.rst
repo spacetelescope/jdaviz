@@ -5,7 +5,7 @@ New Features
 ------------
 
 - New popout locations display Jdaviz in a detached popup window (``popout:window``)
-  or browser tab (``popout:tab``) [#1503]
+  or browser tab (``popout:tab``). [#1503]
 
 Cubeviz
 ^^^^^^^

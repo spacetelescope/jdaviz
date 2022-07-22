@@ -305,7 +305,7 @@ class ConfigHelper(HubListener):
                 for the most up-to-date options.
 
             "popout": Display the Jdaviz application in a detached display. By default, a new
-            window will open. Browser popup permissions required
+            window will open. Browser popup permissions required.
 
                 Other anchors:
 
