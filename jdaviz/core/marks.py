@@ -10,7 +10,7 @@ from jdaviz.core.events import (SliceToolStateMessage, LineIdentifyMessage,
 
 __all__ = ['OffscreenLinesMarks', 'BaseSpectrumVerticalLine', 'SpectralLine',
            'SliceIndicatorMarks', 'ShadowMixin', 'ShadowLine', 'ShadowLabelFixedY',
-           'PluginLine', 'TraceLine',
+           'PluginLine',
            'LineAnalysisContinuum', 'LineAnalysisContinuumCenter',
            'LineAnalysisContinuumLeft', 'LineAnalysisContinuumRight',
            'LineUncertainties', 'ScatterMask', 'SelectedSpaxel']
@@ -442,10 +442,6 @@ class PluginLine(Lines, HubListener):
 
     def clear(self):
         self.update_xy([], [])
-
-
-class TraceLine(PluginLine):
-    pass
 
 
 class LineAnalysisContinuum(PluginLine):

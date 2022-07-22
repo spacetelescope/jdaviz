@@ -147,8 +147,8 @@ class Specviz2d(ConfigHelper, LineListMixin):
 
                 # Warn that this shouldn't be used for science
                 msg = ("The collapsed 1D spectrum is for quicklook"
-                       " purposes only. A robust extraction should be used for"
-                       " scientific use cases.")
+                       " purposes only. Use the spectral extraction plugin"
+                       " for custom extraction.")
                 msg = SnackbarMessage(msg, color='warning', sender=self,
                                       timeout=10000)
                 self.app.hub.broadcast(msg)

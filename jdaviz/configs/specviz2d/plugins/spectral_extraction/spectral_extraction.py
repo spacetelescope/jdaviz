@@ -8,7 +8,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         DatasetSelect,
                                         AddResults)
 from jdaviz.core.custom_traitlets import IntHandleEmpty
-from jdaviz.core.marks import (TraceLine,
+from jdaviz.core.marks import (PluginLine,
                                ShadowLine)
 
 from specutils import Spectrum1D
@@ -184,26 +184,31 @@ class SpectralExtraction(PluginTemplateMixin):
                                           'ext_add_to_viewer_items',
                                           'ext_add_to_viewer_selected')
         self.ext_add_results.viewer.filters = ['is_spectrum_viewer']
-        self.ext_results_label_default = 'extracted spectrum'
+        # NOTE: defaults to overwriting original spectrum
+        self.ext_add_results.label_whitelist_overwrite = ['Spectrum 1D']
+        self.ext_results_label_default = 'Spectrum 1D'
 
     @observe('trace_dataset_selected')
     def _trace_dataset_selected(self, msg):
         width = self.trace_dataset.selected_obj.shape[0]
-        half_pixel = int(np.floor(width / 2))
+        # estimate the pixel number by taking the median of the brightest pixel index in each column
+        brightest_pixel = int(np.median(np.argmax(self.trace_dataset.selected_obj.flux, axis=0)))
+        # default width will be 10% of cross-dispersion "height"
+        default_width = int(np.ceil(width / 10))
         if self.trace_pixel == 0:
-            self.trace_pixel = half_pixel
+            self.trace_pixel = brightest_pixel
         if self.trace_window == 0:
-            self.trace_window = int(np.ceil(width / 10))
+            self.trace_window = default_width
         if self.bg_trace_pixel == 0:
-            self.bg_trace_pixel = half_pixel
+            self.bg_trace_pixel = brightest_pixel
         if self.bg_separation == 0:
-            self.bg_separation = int(np.ceil(width / 10))
+            self.bg_separation = default_width * 2
         if self.bg_width == 0:
-            self.bg_width = int(np.ceil(width / 10))
+            self.bg_width = default_width
         if self.ext_trace_pixel == 0:
-            self.ext_trace_pixel = half_pixel
+            self.ext_trace_pixel = brightest_pixel
         if self.ext_width == 0:
-            self.ext_width = int(np.ceil(width / 10))
+            self.ext_width = default_width
 
     @observe('plugin_opened')
     def _update_plugin_marks(self, *args):
@@ -213,11 +218,26 @@ class SpectralExtraction(PluginTemplateMixin):
             self._interaction_in_trace_step()
             return
 
-        display_marks = {'trace': ['trace'],
+        # update extracted 1d spectrum preview
+        try:
+            sp1d = self.create_extract(add_data=False)
+        except Exception:
+            # NOTE: ignore error, but will be raised when clicking ANY of the export buttons
+            self.marks['extract'].clear()
+        else:
+            # TODO: range(len(...)) is a temporary hack for this data displaying
+            # in meters instead of pixels
+            self.marks['extract'].update_xy(range(len(sp1d.spectral_axis.value)),
+                                            sp1d.flux.value)
+
+        display_marks = {'trace': ['trace', 'extract'],
                          'bg': ['trace',
                                 'bg1_center', 'bg1_lower', 'bg1_upper',
-                                'bg2_center', 'bg2_lower', 'bg2_upper'],
-                         'ext': ['trace', 'ext_upper', 'ext_lower']}
+                                'bg2_center', 'bg2_lower', 'bg2_upper',
+                                'extract'],
+                         'ext': ['trace',
+                                 'ext_upper', 'ext_lower',
+                                 'extract']}
         for step, mark in self.marks.items():
             mark.visible = self.plugin_opened and step in display_marks.get(self.active_step, [])
 
@@ -227,27 +247,36 @@ class SpectralExtraction(PluginTemplateMixin):
             # TODO: replace with cache property?
             return self._marks
 
-        viewer = self.app.get_viewer('spectrum-2d-viewer')
-        if not viewer.state.reference_data:
+        viewer2d = self.app.get_viewer('spectrum-2d-viewer')
+        viewer1d = self.app.get_viewer('spectrum-viewer')
+        if not viewer2d.state.reference_data or not viewer1d.state.reference_data:
             # we don't have data yet for scales, defer initializing
             return {}
 
         # then haven't been initialized yet, so initialize with empty
         # marks that will be populated once the first analysis is done.
-        self._marks = {'trace': TraceLine(viewer, visible=self.plugin_opened),
-                       'ext_lower': TraceLine(viewer, visible=self.plugin_opened),
-                       'ext_upper': TraceLine(viewer, visible=self.plugin_opened),
-                       'bg1_center': TraceLine(viewer, visible=self.plugin_opened,
-                                               line_style='dotted'),
-                       'bg1_lower': TraceLine(viewer, visible=self.plugin_opened),
-                       'bg1_upper': TraceLine(viewer, visible=self.plugin_opened),
-                       'bg2_center': TraceLine(viewer, visible=self.plugin_opened,
-                                               line_style='dotted'),
-                       'bg2_lower': TraceLine(viewer, visible=self.plugin_opened),
-                       'bg2_upper': TraceLine(viewer, visible=self.plugin_opened)}
+        self._marks = {'trace': PluginLine(viewer2d, visible=self.plugin_opened),
+                       'ext_lower': PluginLine(viewer2d, visible=self.plugin_opened),
+                       'ext_upper': PluginLine(viewer2d, visible=self.plugin_opened),
+                       'bg1_center': PluginLine(viewer2d, visible=self.plugin_opened,
+                                                line_style='dotted'),
+                       'bg1_lower': PluginLine(viewer2d, visible=self.plugin_opened),
+                       'bg1_upper': PluginLine(viewer2d, visible=self.plugin_opened),
+                       'bg2_center': PluginLine(viewer2d, visible=self.plugin_opened,
+                                                line_style='dotted'),
+                       'bg2_lower': PluginLine(viewer2d, visible=self.plugin_opened),
+                       'bg2_upper': PluginLine(viewer2d, visible=self.plugin_opened)}
         shadows = [ShadowLine(mark, shadow_width=2) for mark in self._marks.values()]
         # NOTE: += won't trigger the figure to notice new marks
-        viewer.figure.marks = viewer.figure.marks + shadows + list(self._marks.values())
+        viewer2d.figure.marks = viewer2d.figure.marks + shadows + list(self._marks.values())
+
+        mark1d = PluginLine(viewer1d, visible=self.plugin_opened)
+        shadow1d = ShadowLine(mark1d, shadow_width=2)
+
+        self._marks['extract'] = mark1d
+
+        # NOTE: += won't trigger the figure to notice new marks
+        viewer1d.figure.marks = viewer1d.figure.marks + [shadow1d, mark1d]
 
         return self._marks
 

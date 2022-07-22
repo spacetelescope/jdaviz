@@ -1291,7 +1291,8 @@ class AddResults(BasePluginComponent):
     """
     def __init__(self, plugin, label, label_default, label_auto,
                  label_invalid_msg, label_overwrite,
-                 add_to_viewer_items, add_to_viewer_selected):
+                 add_to_viewer_items, add_to_viewer_selected,
+                 label_whitelist_overwrite=[]):
         super().__init__(plugin, label=label,
                          label_default=label_default, label_auto=label_auto,
                          label_invalid_msg=label_invalid_msg, label_overwrite=label_overwrite,
@@ -1303,6 +1304,9 @@ class AddResults(BasePluginComponent):
                            handler=lambda _: self._on_label_changed())
         self.hub.subscribe(self, DataCollectionDeleteMessage,
                            handler=lambda _: self._on_label_changed())
+
+        # allows overwriting specific data entries not from the same plugin
+        self.label_whitelist_overwrite = label_whitelist_overwrite
 
         self.viewer = ViewerSelect(plugin, add_to_viewer_items, add_to_viewer_selected,
                                    manual_options=['None'],
@@ -1327,7 +1331,8 @@ class AddResults(BasePluginComponent):
 
         for data in self.app.data_collection:
             if self.label == data.label:
-                if data.meta.get('Plugin', None) == self._plugin.__class__.__name__:
+                if data.meta.get('Plugin', None) == self._plugin.__class__.__name__ or\
+                        data.label in self.label_whitelist_overwrite:
                     self.label_invalid_msg = ''
                     self.label_overwrite = True
                     return
