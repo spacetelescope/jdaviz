@@ -8,6 +8,7 @@ from astropy.utils.decorators import deprecated
 from astropy.utils.exceptions import AstropyDeprecationWarning
 from astropy.wcs.wcsapi import BaseHighLevelWCS
 from glue.core import BaseData
+from glue.core.edit_subset_mode import NewMode
 from glue.core.link_helpers import LinkSame
 from glue.core.subset import Subset, MaskSubsetState
 from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink, NoAffineApproximation
@@ -277,10 +278,6 @@ class Imviz(ConfigHelper):
             If all the regions loaded successfully, this will be empty.
 
         """
-        # TODO:
-        # Need to write new tests
-        # Need to update notebooks/docs
-
         from photutils.aperture import (CircularAperture, SkyCircularAperture,
                                         EllipticalAperture, SkyEllipticalAperture,
                                         RectangularAperture, SkyRectangularAperture)
@@ -288,6 +285,10 @@ class Imviz(ConfigHelper):
                              EllipsePixelRegion, EllipseSkyRegion,
                              RectanglePixelRegion, RectangleSkyRegion)
         from jdaviz.core.region_translators import regions2roi, aperture2regions
+
+        # If user passes in one region obj instead of list, try to be smart.
+        if not isinstance(regions, (list, tuple, Regions)):
+            regions = [regions]
 
         n_loaded = 0
         bad_regions = []
@@ -316,18 +317,21 @@ class Imviz(ConfigHelper):
                                    RectangularAperture, SkyRectangularAperture)):
                 region = aperture2regions(region)
 
-            # regions: Convert to ROI
+            # regions: Convert to ROI.
+            # NOTE: Out-of-bounds ROI will succeed; this is native glue behavior.
             if isinstance(region, (CirclePixelRegion, CircleSkyRegion,
                                    EllipsePixelRegion, EllipseSkyRegion,
                                    RectanglePixelRegion, RectangleSkyRegion)):
                 state = regions2roi(region, wcs=data.coords)
 
                 # TODO: Do we want user to specify viewer? Does it matter?
+                self.app.session.edit_subset_mode._mode = NewMode
                 self.default_viewer.apply_roi(state)
                 self.default_viewer.session.edit_subset_mode.edit_subset = None  # No overwrite next iteration # noqa
 
             # Last resort: Masked Subset that is static
             else:
+                im = None
                 if hasattr(region, 'to_pixel'):  # Sky region: Convert to pixel region
                     if not has_wcs:
                         bad_regions.append((region, 'Sky region provided but data has no WCS'))
@@ -338,16 +342,17 @@ class Imviz(ConfigHelper):
                     try:
                         mask = region.to_mask(**kwargs)
                         im = mask.to_image(data.shape)  # Can be None
-                    except Exception as e:
-                        bad_regions.append(region, f'Failed to load: {repr(e)}')
-                        continue
-                    if im is None:
-                        bad_regions.append(region, 'Mask creation failed')
+                    except Exception as e:  # pragma: no cover
+                        bad_regions.append((region, f'Failed to load: {repr(e)}'))
                         continue
 
                 elif (isinstance(region, np.ndarray) and region.shape == data.shape
                         and region.dtype == np.bool_):
                     im = region
+
+                if im is None:
+                    bad_regions.append((region, 'Mask creation failed'))
+                    continue
 
                 # NOTE: Region creation info is thus lost.
                 try:
@@ -355,8 +360,8 @@ class Imviz(ConfigHelper):
                     state = MaskSubsetState(im, data.pixel_component_ids)
                     self.app.data_collection.new_subset_group(subset_label, state)
                     msg_count += 1
-                except Exception as e:
-                    bad_regions.append(region, f'Failed to load: {repr(e)}')
+                except Exception as e:  # pragma: no cover
+                    bad_regions.append((region, f'Failed to load: {repr(e)}'))
                     continue
 
             n_loaded += 1
@@ -579,8 +584,6 @@ class Imviz(ConfigHelper):
         """Mimic interactive region drawing.
         This is for internal testing only.
         """
-        from glue.core.edit_subset_mode import NewMode
-
         self.app.session.edit_subset_mode._mode = NewMode
         tool = self.default_viewer.toolbar.tools[toolname]
         tool.activate()
