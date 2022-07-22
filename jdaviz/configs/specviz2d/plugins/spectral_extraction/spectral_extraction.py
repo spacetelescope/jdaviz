@@ -323,8 +323,8 @@ class SpectralExtraction(PluginTemplateMixin):
     def create_trace(self, add_data=True):
         if self.trace_trace_selected != 'New Trace':
             # then we're offsetting an existing trace
-            trace = self.trace_trace.selected_obj
-            trace.shift(self.trace_offset)
+            trace = tracing.ArrayTrace(self.trace_dataset.selected_obj.data,
+                                       self.trace_trace.selected_obj.trace+self.trace_offset)
 
         elif self.trace_type_selected == 'FlatTrace':
             trace = tracing.FlatTrace(self.trace_dataset.selected_obj.data,
