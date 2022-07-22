@@ -736,14 +736,15 @@ def mos_niriss_parser(app, data_dir):
                 # Orientation denoted by "C", "R", or "C+R" for combined spectra
                 orientation = flabel.split()[-1]
 
-                # update 1D labels for table viewer
+                # update 1D labels and standardize metadata for table viewer
                 for sp in specs_cut:
                     if (
                         sp.meta['header']['SPORDER'] == 1
                         and sp.meta['header']['EXTNAME'] == 'EXTRACT1D'
                     ):
+                        sp.meta = standardize_metadata(sp.meta)
                         label = (f"{filter_name} Source "
-                                 f"{sp.meta['header']['SOURCEID']} spec1d "
+                                 f"{sp.meta['SOURCEID']} spec1d "
                                  f"{orientation}")
 
                         spec_labels_1d.append(label)
