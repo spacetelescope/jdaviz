@@ -21,8 +21,9 @@ For example, ``inline`` can be specified manually with::
 Detached Popout
 ---------------
 Jdaviz can also be displayed in a detached window, separate from your working Jupyter interface.
-DO NOTE: Popups must be allowed in your browser to display properly. The following shows ``jdaviz``
-in a new popout window::
+.. note:: Popups must be allowed in your browser to display properly.
+
+The following shows ``jdaviz`` in a new popout window::
 
     imviz.show(loc='popout')
 
