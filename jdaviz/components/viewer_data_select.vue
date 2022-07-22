@@ -104,6 +104,10 @@ module.exports = {
       if (['image-viewer', 'spectrum-2d-viewer'].indexOf(this.$props.viewer.reference) !== -1) {
         multi_select = false
       }
+    } else if (this.$props.viewer.config === 'specviz2d') {
+      if (this.$props.viewer.reference === 'spectrum-2d-viewer') {
+        multi_select = false
+      }
     }
     return {
       // default to passed values, whenever value or uncertainty are changed

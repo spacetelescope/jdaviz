@@ -1246,8 +1246,13 @@ class Application(VuetifyTemplate, HubListener):
 
         replace = event.get('replace', False)
         selected_items = viewer_item['selected_data_items']
+
         if replace and visible:
-            selected_items = {id: 'visible' if id == item_id else 'hidden' for id in selected_items.keys()}  # noqa
+            # trace items remain selected, even if the mode is in replace
+            keep_selected = [k for k, v in viewer_item['selected_data_items'].items()
+                             if v != 'hidden' and
+                             self._get_data_item_by_id(k).get('type') == 'trace']
+            selected_items = {id: 'visible' if id == item_id or id in keep_selected else 'hidden' for id in selected_items.keys()}  # noqa
         else:
             selected_items[item_id] = 'visible' if visible else 'hidden'
 
@@ -1269,6 +1274,10 @@ class Application(VuetifyTemplate, HubListener):
         kwargs = event.get('kwargs', {})
         return getattr(self._viewer_store[viewer_id], method)(*args, **kwargs)
 
+    def _get_data_item_by_id(self, data_id):
+        return next((x for x in self.state.data_items
+                     if x['id'] == data_id), None)
+
     def _update_selected_data_items(self, viewer_id, selected_items):
         # Find the active viewer
         viewer_item = self._viewer_item_by_id(viewer_id)
@@ -1283,8 +1292,7 @@ class Application(VuetifyTemplate, HubListener):
 
         # Include any selected data in the viewer
         for data_id, visibility in selected_items.items():
-            label = next((x['name'] for x in self.state.data_items
-                          if x['id'] == data_id), None)
+            label = self._get_data_item_by_id(data_id)['name']
 
             if label is None:
                 warnings.warn(f"No data item with id '{data_id}' found in "

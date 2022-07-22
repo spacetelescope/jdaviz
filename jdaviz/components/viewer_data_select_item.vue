@@ -6,7 +6,7 @@
           icon
           :color="visibleState==='visible' ? 'accent' : 'default'"
           @click="selectClicked">
-            <v-icon v-if="multi_select">{{visibleState!=='hidden' ? "mdi-checkbox-marked" : "mdi-checkbox-blank-outline"}}</v-icon>
+            <v-icon v-if="multi_select || item.type==='trace'">{{visibleState!=='hidden' ? "mdi-checkbox-marked" : "mdi-checkbox-blank-outline"}}</v-icon>
             <v-icon v-else>{{visibleState!=='hidden' ? "mdi-radiobox-marked" : "mdi-radiobox-blank"}}</v-icon>
         </v-btn>
       </j-tooltip>
@@ -80,11 +80,12 @@ module.exports = {
       // checkboxes control VISIBILITY of layers not loaded state
       // if we just loaded the data, its probably already visible, but we'll still make sure all
       // appropriate layers are visible and properly handle replace for non-multiselect
+      // NOTE: replace=True will exclude removing trace items
       this.$emit('data-item-visibility', {
         id: this.$props.viewer.id,
         item_id: this.$props.item.id,
-        visible: prevVisibleState != 'visible' || !this.multi_select,
-        replace: !this.multi_select
+        visible: prevVisibleState != 'visible' || (!this.multi_select && this.$props.item.type !== 'trace'),
+        replace: !this.multi_select && this.$props.item.type !== 'trace'
       })
 
     }
