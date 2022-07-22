@@ -58,15 +58,15 @@ def _check_is_file(path):
     return isinstance(path, str) and Path(path).is_file()
 
 
-def _warn_if_not_found(app, file_lists):
+def _warn_if_not_found(app, files_by_labels):
     """
     Take a list of labels and associated file lists/strings and send a
     snackbar message if any are empty.
     """
     found = []
     not_found = []
-    for key in file_lists:
-        if file_lists[key]:
+    for key in files_by_labels:
+        if files_by_labels[key]:
             found.append(key)
         else:
             not_found.append(key)
@@ -468,7 +468,8 @@ def mos_meta_parser(app, data_obj, ids=None, spectra=False, sp1d=False):
             _add_to_table(app, dec, "Dec.")
 
 
-def _get_source_identifiers_by_hdu(hdus, filepaths=None, header_keys=['SOURCEID', 'OBJECT']):
+def _get_source_identifiers_by_hdu(hdus, filepaths=None,
+                                   header_keys=['SOURCEID', 'OBJECT']):
     """
     Attempts to extract a list of source identifiers via different header values.
 
@@ -516,6 +517,66 @@ def _get_source_identifiers_by_hdu(hdus, filepaths=None, header_keys=['SOURCEID'
     return src_names
 
 
+def _id_files_by_datamodl(label_dict, filepaths, catalog_key=None):
+    '''
+    Given a dictionary of expected file labels, sort a directory of files into
+    their matching categories using their DATAMODL values. The key corresponding
+    with the source catalog file must be provided as well.
+
+    Specific to JWST generally (through datamodels) and NIRISS specifically for
+    the time, though the eventual plan is to add support for the NIRSpec parser.
+    '''
+    if catalog_key is None:
+        raise ValueError("cat_key must be identified before parsing directory")
+
+    for fp in filepaths:
+        if fp.is_dir():
+            continue
+
+        if fp.suffix in ('.fits', '.fits.gz', '.fit', '.fit.gz'):
+            # eligible files will have a DATAMODL value in their primary headers
+            header = fits.getheader(fp, ext=0)
+            datamodl = header.get('DATAMODL')
+
+            # infer the dispersion direction of 1D and 2D spectra by the last
+            # letter of their filter values (e.g., "C" from "GR150C")
+            try:
+                dispersion = header.get('FILTER')[-1]
+            except TypeError:
+                dispersion = None
+
+            # distinguish image files from counts files -- only the former go
+            # through the "Assign World Coordinate System" calibration step
+            s_wcs = header.get('S_WCS')
+
+            if datamodl is None:
+                continue
+            if datamodl == 'MultiSpecModel' and dispersion == 'C':
+                label_dict['1D Spectra C'].append(fp)
+            elif datamodl == 'MultiSpecModel' and dispersion == 'R':
+                label_dict['1D Spectra R'].append(fp)
+            elif datamodl == 'MultiSlitModel' and dispersion == 'C':
+                label_dict['2D Spectra C'].append(fp)
+            elif datamodl == 'MultiSlitModel' and dispersion == 'R':
+                label_dict['2D Spectra R'].append(fp)
+            elif datamodl == 'ImageModel' and s_wcs is not None:
+                label_dict['Direct Image'].append(fp)
+            else:
+                continue
+
+        elif fp.suffix == '.ecsv':
+            if label_dict[catalog_key]:
+                raise ValueError("source directory has more "
+                                 "than one source catalog")
+            else:
+                label_dict[catalog_key] = fp
+
+        else:
+            continue
+
+    return label_dict
+
+
 @data_parser_registry("mosviz-niriss-parser")
 def mos_niriss_parser(app, data_dir):
     """
@@ -546,65 +607,23 @@ def mos_niriss_parser(app, data_dir):
     # create dict for mapping expected file types to their DATAMODL identifiers
     expected_labels = ['1D Spectra C', '1D Spectra R',
                        '2D Spectra C', '2D Spectra R', 'Direct Image']
-    file_lists = {k: [] for k in expected_labels}
+    files_by_labels = {k: [] for k in expected_labels}
 
     # there should only be one source catalog, so that key gets a string
     cat_key = 'Source Catalog'
     expected_labels += [cat_key]
-    file_lists[cat_key] = ''
+    files_by_labels[cat_key] = ''
 
     # use FITS header keywords to sort the directory's files
-    for filepath in path.glob('*'):
-        if filepath.is_dir():
-            continue
-
-        if filepath.suffix in ('.fits', '.fits.gz', '.fit', '.fit.gz'):
-            # eligible files will have a DATAMODL value in their primary headers
-            header = fits.getheader(filepath, ext=0)
-            datamodl = header.get('DATAMODL')
-
-            # infer the dispersion direction of 1D and 2D spectra by the last
-            # letter of their filter values (e.g., "C" from GR150C")
-            try:
-                dispersion = header.get('FILTER')[-1]
-            except TypeError:
-                dispersion = None
-
-            # distinguish image files from counts files -- only the former go
-            # through the "Assign World Coordinate System" calibration step
-            s_wcs = header.get('S_WCS')
-
-            if datamodl is None:
-                continue
-            if datamodl == 'MultiSpecModel' and dispersion == 'C':
-                file_lists['1D Spectra C'].append(filepath)
-            elif datamodl == 'MultiSpecModel' and dispersion == 'R':
-                file_lists['1D Spectra R'].append(filepath)
-            elif datamodl == 'MultiSlitModel' and dispersion == 'C':
-                file_lists['2D Spectra C'].append(filepath)
-            elif datamodl == 'MultiSlitModel' and dispersion == 'R':
-                file_lists['2D Spectra R'].append(filepath)
-            elif datamodl == 'ImageModel' and s_wcs is not None:
-                file_lists['Direct Image'].append(filepath)
-            else:
-                continue
-
-        elif filepath.suffix == '.ecsv':
-            if file_lists[cat_key]:
-                raise ValueError("source directory has more "
-                                 "than one source catalog")
-            else:
-                file_lists[cat_key] = filepath
-
-        else:
-            continue
+    files_by_labels = _id_files_by_datamodl(files_by_labels, path.glob('*'),
+                                            catalog_key=cat_key)
 
     # validate that all expected files are present in proper amounts
-    _warn_if_not_found(app, file_lists)
+    _warn_if_not_found(app, files_by_labels)
 
-    # Parse relevant information from source catalog
+    # parse relevant information from source catalog
     cat_id_dict = {}
-    cat_file = file_lists[cat_key]
+    cat_file = files_by_labels[cat_key]
     try:
         cat_fields = ['label', 'sky_centroid.ra', 'sky_centroid.dec']
         parsed_cat_fields = _fields_from_ecsv(cat_file, cat_fields,
@@ -617,14 +636,14 @@ def mos_niriss_parser(app, data_dir):
     for row in parsed_cat_fields:
         cat_id_dict[int(row[0])] = (row[1], row[2])
 
-    # Set up a dictionary of datasets to add to glue
+    # set up a dictionary of datasets to add to glue
     add_to_glue = {}
 
     # Parse images
     image_dict = {}
 
     print("Loading: Images")
-    for image_file in file_lists["Direct Image"]:
+    for image_file in files_by_labels["Direct Image"]:
         # save label for table viewer
         im_split = image_file.stem.split("_")[0]
         pupil = fits.getheader(image_file, ext=0).get('PUPIL')
@@ -652,10 +671,10 @@ def mos_niriss_parser(app, data_dir):
     filters = []
 
     # Parse 2D spectra
-    file_labels_2d = [k for k in file_lists.keys() if k.startswith("2D")]
+    file_labels_2d = [k for k in files_by_labels.keys() if k.startswith("2D")]
 
     for flabel in file_labels_2d:
-        for fname in file_lists[flabel]:
+        for fname in files_by_labels[flabel]:
             print(f"Loading: {flabel} sources")
             filter_name = fits.getheader(fname, ext=0).get('PUPIL')
 
@@ -708,10 +727,10 @@ def mos_niriss_parser(app, data_dir):
                         filters.append(filter)
 
     # Parse 1D spectra
-    file_labels_1d = [k for k in file_lists.keys() if k.startswith("1D")]
+    file_labels_1d = [k for k in files_by_labels.keys() if k.startswith("1D")]
 
     for flabel in file_labels_1d:
-        for fname in file_lists[flabel]:
+        for fname in files_by_labels[flabel]:
             print(f"Loading: {flabel} sources")
 
             with fits.open(fname, memmap=False) as temp:
