@@ -1378,6 +1378,8 @@ class Application(VuetifyTemplate, HubListener):
             component_ids = [str(c) for c in data.component_ids()]
         if data.label == 'MOS Table':
             typ = 'table'
+        elif 'Trace' in data.meta:
+            typ = 'trace'
         elif ndims == 1:
             typ = '1d spectrum'
         elif ndims == 2 and wcsaxes is not None:

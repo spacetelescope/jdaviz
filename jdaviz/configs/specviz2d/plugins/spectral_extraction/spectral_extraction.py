@@ -11,7 +11,10 @@ from jdaviz.core.custom_traitlets import IntHandleEmpty
 from jdaviz.core.marks import (TraceLine,
                                ShadowLine)
 
+from specutils import Spectrum1D
 from specreduce import tracing
+from specreduce import background
+from specreduce import extract
 
 __all__ = ['SpectralExtraction']
 
@@ -306,7 +309,7 @@ class SpectralExtraction(PluginTemplateMixin):
         if not self.plugin_opened:
             return
         trace = self._get_ext_trace()
-        # TODO: range(len(...)) is a temporary hack for this data displaying in meters instead of pixels
+        # TODO: range(len(...)) is a temporary hack for this data displaying in m instead of pixels
         self.marks['trace'].update_xy(range(len(trace.trace)),
                                       trace.trace)
         self.marks['trace'].line_style = 'dashed'
@@ -339,7 +342,6 @@ class SpectralExtraction(PluginTemplateMixin):
 
         if add_data:
             self.trace_add_results.add_results_from_plugin(trace, replace=False)
-            self.trace_trace.selected = self.trace_results_label
 
         return trace
 
@@ -357,15 +359,54 @@ class SpectralExtraction(PluginTemplateMixin):
 
         return trace
 
-    def create_bg(self, add_data=False):
+    def _get_bg(self):
         trace = self._get_bg_trace()
-        raise NotImplementedError()
+
+        if self.bg_type_selected == 'Trace':
+            bg = background.Background(self.bg_dataset.selected_obj.data,
+                                       trace, width=self.bg_width)
+        elif self.bg_type_selected == 'OneSided':
+            bg = background.Background.one_sided(self.bg_dataset.selected_obj.data,
+                                                 trace,
+                                                 self.bg_separation,
+                                                 width=self.bg_width)
+        elif self.bg_type_selected == 'TwoSided':
+            bg = background.Background.one_sided(self.bg_dataset.selected_obj.data,
+                                                 trace,
+                                                 self.bg_separation,
+                                                 width=self.bg_width)
+        else:
+            raise NotImplementedError(f"bg_type={self.bg_type_selected} not implemented")
+
+        return bg
+
+    def create_bg(self, add_data=True):
+        bg = self._get_bg()
+
+        bg_spec = Spectrum1D(spectral_axis=self.bg_dataset.selected_obj.spectral_axis,
+                             flux=bg.bkg_image()*self.bg_dataset.selected_obj.flux.unit)
+
+        if add_data:
+            self.bg_add_results.add_results_from_plugin(bg_spec, replace=True)
+
+        return bg_spec
 
     def vue_create_bg(self, *args):
-        raise NotImplementedError()
+        _ = self.create_bg(add_data=True)
+
+    def create_bg_sub(self, add_data=True):
+        bg = self._get_bg()
+
+        bg_sub_spec = Spectrum1D(spectral_axis=self.bg_dataset.selected_obj.spectral_axis,
+                                 flux=bg.sub_image()*self.bg_dataset.selected_obj.flux.unit)
+
+        if add_data:
+            self.bg_sub_add_results.add_results_from_plugin(bg_sub_spec, replace=True)
+
+        return bg_sub_spec
 
     def vue_create_bg_sub(self, *args):
-        raise NotImplementedError()
+        _ = self.create_bg_sub(add_data=True)
 
     def _get_ext_trace(self):
         if self.ext_trace_selected == 'From Plugin':
@@ -382,8 +423,20 @@ class SpectralExtraction(PluginTemplateMixin):
         return trace
 
     def create_extract(self, add_data=False):
+        if self.ext_dataset_selected == 'From Plugin':
+            inp_image = self.create_bg_sub(add_data=False).data
+        else:
+            inp_image = self.ext_dataset.selected_obj.data
+
         trace = self._get_ext_trace()
-        raise NotImplementedError()
+
+        boxcar = extract.BoxcarExtract()
+        spectrum = boxcar(inp_image, trace, width=self.ext_width)
+
+        if add_data:
+            self.ext_add_results.add_results_from_plugin(spectrum, replace=False)
+
+        return spectrum
 
     def vue_extract(self, *args):
-        raise NotImplementedError()
+        _ = self.create_extract(add_data=True)
