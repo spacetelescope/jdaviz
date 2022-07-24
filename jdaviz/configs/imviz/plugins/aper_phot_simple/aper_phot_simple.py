@@ -143,9 +143,19 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin):
             if subset_grp.label == subset:
                 for sbst in subset_grp.subsets:
                     if sbst.data.label == self.dataset_selected:
-                        # TODO: https://github.com/glue-viz/glue-astronomy/issues/52
-                        return sbst.data.get_selection_definition(
-                                subset_id=subset, format='astropy-regions')
+                        reg = sbst.data.get_selection_definition(
+                            subset_id=subset, format='astropy-regions')
+                        # Works around https://github.com/glue-viz/glue-astronomy/issues/52
+                        # Assume it is always pixel region, not sky region. Even with multiple
+                        # viewers, they all seem to share the same reference image even when it is
+                        # not loaded in all the viewers, so use default viewer.
+                        viewer = self.session.jdaviz_app._jdaviz_helper.default_viewer
+                        x, y, _ = viewer._get_real_xy(
+                            self.app.data_collection[self.dataset_selected],
+                            reg.center.x, reg.center.y)
+                        reg.center.x = x
+                        reg.center.y = y
+                        return reg
         else:
             raise ValueError(f'Subset "{subset}" not found')
 

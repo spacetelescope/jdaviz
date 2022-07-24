@@ -114,12 +114,6 @@ This plugin only considers pixel locations, not sky coordinates.
 Simple Aperture Photometry
 ==========================
 
-.. warning::
-
-    Results for dithered data linked by WCS might be inaccurate unless the selected
-    data is the reference data. See https://github.com/glue-viz/glue-astronomy/issues/52
-    for more details.
-
 This plugin performs simple aperture photometry
 and plots a radial profile for one object within
 an interactively selected region. A typical workflow is as follows:

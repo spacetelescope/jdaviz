@@ -99,15 +99,14 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert_array_equal(tbl['subset_label'], ['Subset 1', 'Subset 1'])
         assert tbl['timestamp'].scale == 'utc'
 
-        # BUG: https://github.com/glue-viz/glue-astronomy/issues/52
-        # Sky should have been the same and the pix different, but not until bug is fixed.
-        # The aperture sum might be different too if mask is off limit in second image.
-        assert_quantity_allclose(tbl['xcentroid'], 4.5 * u.pix)
+        # Sky is the same but xcentroid different due to dithering.
+        # The aperture sum is different too because mask is a little off limit in second image.
+        assert_quantity_allclose(tbl['xcentroid'], [4.5, 5.5] * u.pix)
         assert_quantity_allclose(tbl['ycentroid'], 4.5 * u.pix)
         sky = tbl['sky_centroid']
-        assert_allclose(sky.ra.deg, [337.518943, 337.519241])
-        assert_allclose(sky.dec.deg, [-20.832083, -20.832083])
-        assert_allclose(tbl['sum'], 63.61725123519332)
+        assert_allclose(sky.ra.deg, 337.518943)
+        assert_allclose(sky.dec.deg, -20.832083)
+        assert_allclose(tbl['sum'], 62.22684693104279)
 
         # Make sure it also works on an ellipse subset.
         self.imviz._apply_interactive_region('bqplot:ellipse', (0, 0), (9, 4))
