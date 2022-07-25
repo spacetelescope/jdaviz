@@ -292,10 +292,13 @@ class SpectralExtraction(PluginTemplateMixin):
 
     @observe('trace_trace_selected', 'trace_offset', 'trace_dataset_selected',
              'trace_type_selected', 'trace_pixel', 'trace_peak_method_selected',
-             'trace_bins', 'trace_window')
-    def _interaction_in_trace_step(self, *args):
+             'trace_bins', 'trace_window', 'active_step')
+    def _interaction_in_trace_step(self, event={}):
         if not self.plugin_opened or not self._do_marks:
             return
+        if event.get('name', '') == 'active_step' and event.get('new') != 'trace':
+            return
+
         try:
             trace = self.create_trace(add_data=False)
         except Exception:
@@ -311,10 +314,13 @@ class SpectralExtraction(PluginTemplateMixin):
         self._update_plugin_marks()
 
     @observe('bg_dataset_selected', 'bg_type_selected', 'bg_trace_selected', 'bg_trace_pixel',
-             'bg_separation', 'bg_width')
-    def _interaction_in_bg_step(self, *args):
+             'bg_separation', 'bg_width', 'active_step')
+    def _interaction_in_bg_step(self, event={}):
         if not self.plugin_opened or not self._do_marks:
             return
+        if event.get('name', '') == 'active_step' and event.get('new') != 'bg':
+            return
+
         try:
             trace = self._get_bg_trace()
         except Exception:
@@ -357,9 +363,12 @@ class SpectralExtraction(PluginTemplateMixin):
         self.active_step = 'bg'
         self._update_plugin_marks()
 
-    @observe('ext_dataset_selected', 'ext_trace_selected', 'ext_trace_pixel', 'ext_width')
-    def _interaction_in_ext_step(self, *args):
+    @observe('ext_dataset_selected', 'ext_trace_selected', 'ext_trace_pixel', 'ext_width',
+             'active_step')
+    def _interaction_in_ext_step(self, event={}):
         if not self.plugin_opened or not self._do_marks:
+            return
+        if event.get('name', '') == 'active_step' and event.get('new') != 'ext':
             return
 
         try:
