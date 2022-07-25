@@ -416,7 +416,6 @@ class Application(VuetifyTemplate, HubListener):
                 raise AttributeError
             dc.add_link(WCSLink(ref_data, linked_data))
         except (AttributeError, IncompatibleWCS):
-            raise
             pc_ref = [str(id).split(" ")[-1][1] for id in ref_data.pixel_component_ids]
             pc_linked = [str(id).split(" ")[-1][1] for id in linked_data.pixel_component_ids]
 
