@@ -115,6 +115,12 @@ module.exports = {
     },
     isUnloadable() {
       if (this.$props.item.meta.Plugin !== undefined) {
+        // (almost) always allow unloading plugin exports
+        if (this.$props.viewer.config === 'specviz2d' && this.$props.item.name === 'Spectrum 1D') {
+          // the "Spectrum 1D" object is auto-generated from a plugin, but since its the default
+          // reference data, we don't want to allow unloading it
+          return false
+        }
         return true
       }
       if (this.$props.viewer.config === 'cubeviz') {
@@ -129,6 +135,12 @@ module.exports = {
           return this.$props.item.name.indexOf('[MASK]') === -1
         } else if (this.$props.viewer.reference === 'spectrum-viewer') {
           return this.$props.item.name.indexOf('[FLUX]') === -1          
+        }
+      } else if (this.$props.viewer.config === 'specviz2d') {
+        if (this.$props.viewer.reference === 'spectrum-2d-viewer') {
+          return this.$props.item.name !== 'Spectrum 2D'
+        } else if (this.$props.viewer.reference === 'spectrum-viewer') {
+          return this.$props.item.name !== 'Spectrum 1D'
         }
       }
       return true
