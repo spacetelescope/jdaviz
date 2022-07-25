@@ -46,14 +46,21 @@ authors:
 - family-names: "Otor"
   given-names: "O. Justin"
   orcid: "https://orcid.org/0000-0002-4679-5692"
+- family-names: "Pacifici"
+  given-names: "Camilla"
+  orcid: "https://orcid.org/0000-0003-4196-0617"
 - family-names: "Robitaille"
   given-names: "Thomas"
   orcid: "https://orcid.org/0000-0002-8642-1329"
 - family-names: "Tollerud"
   given-names: "Erik"
   orcid: "https://orcid.org/0000-0002-9599-310X"
+- family-names: "Volfman"
+  given-names: "Sabrina"
 title: "Jdaviz"
 version: 2.8.0
 doi: https://doi.org/10.5281/zenodo.5513927
 date-released: 2022-07-21
 url: "https://github.com/spacetelescope/jdaviz"
+
+# see a full list of contributors here: https://github.com/spacetelescope/jdaviz/graphs/contributors
