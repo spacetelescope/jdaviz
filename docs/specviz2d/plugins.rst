@@ -53,6 +53,9 @@ The first section of the plugin allows for creating and visualizing
 `specreduce Trace <https://specreduce.readthedocs.io/en/latest/#module-specreduce.tracing>`_
 objects.
 
+Once interacting with any of the inputs in the extract step, the live visualization will change
+to show the trace as a solid line.
+
 To create a new trace in the plugin, choose the desired "Trace Type" and edit any input arguments.
 A preview of the trace will update in real time in the 2D spectrum viewer.
 
@@ -78,12 +81,9 @@ The background step of the plugin allows for creating background and background-
 images via `specreduce.background <https://specreduce.readthedocs.io/en/latest/#module-specreduce.background>`_.
 
 Once interacting with any of the inputs in the background step, the live visualization will change
-from showing just the trace to showing the center (dotted) and edges (solid) of the background 
-region(s).  Choosing "From Plugin" for the trace will use the trace defined in the Trace section,
-without needing to export the trace to a data entry.  Choosing "Manual" allows for creating a simple
-flat trace for the background (perhaps different than the trace used for extraction).  If a trace
-was loaded into the app (either through the API or by exporting it), those traces can also be selected
-as input from the dropdown.
+to showing the center (dotted) and edges (solid) of the background 
+region(s).  Choose between creating the background around the trace defined in the Trace section,
+or around a "Manual" flat trace.
 
 To visualize the resulting background or background-subtracted image, click on the respective panel,
 and choose a label for the new data entry.  The exported images will now appear in the data dropdown
@@ -102,11 +102,8 @@ to show the center (dotted) and edges (solid) of the extraction region.
 The input 2D spectrum default to "From Plugin" which will use the settings defined in the Background
 step to create a background-subtracted image without needing to export it into the app itself.
 To use a different 2D spectrum loaded in the app (or exported from the Background step), choose
-that from the dropdown instead.
-
-As in the Background step, the central trace of the extraction region can either be adopted from the
-settings in the Trace step (with "From Plugin"), an independent flat trace ("Manual"), or by selecting
-the label of a Trace loaded into the app.
+that from the dropdown instead.  To skip background subtraction, choose the original 2D spectrum
+as input.
 
 To visualize or export the resulting 2D spectrum, provide a data label and click "Extract".  The 
 resulting spectrum object can be accessed from the API as any other data product in the spectrum 

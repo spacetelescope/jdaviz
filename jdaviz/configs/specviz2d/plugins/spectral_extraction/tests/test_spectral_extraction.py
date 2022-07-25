@@ -28,6 +28,7 @@ def test_plugin(specviz2d_helper):
     assert len(pext.marks['trace'].x) > 0
 
     # create FlatTrace
+    pext.trace_type_selected = 'Flat'
     pext.trace_pixel = 28
     trace = pext.create_trace()
     assert isinstance(trace, tracing.FlatTrace)
@@ -40,7 +41,7 @@ def test_plugin(specviz2d_helper):
 
     # create KosmosTrace
     pext.trace_trace_selected = 'New Trace'
-    pext.trace_type_selected = 'AutoTrace'
+    pext.trace_type_selected = 'Auto'
     trace = pext.create_trace()
     assert isinstance(trace, tracing.KosmosTrace)
 
@@ -48,13 +49,14 @@ def test_plugin(specviz2d_helper):
     assert len(sp2dv.figure.marks) == 23
 
     # interact with background section, check marks
-    pext.bg_separation = 3
-    pext.bg_width = 1
+    pext.trace_type_selected = 'Flat'
+    pext.bg_separation = 5
+    pext.bg_width = 3
     pext.bg_type_selected = 'TwoSided'
     for mark in ['bg1_center', 'bg2_center']:
         assert pext.marks[mark].visible is True
         assert len(pext.marks[mark].x) > 0
-    pext.bg_type_selected = 'Trace'
+    pext.bg_type_selected = 'Manual'
     assert len(pext.marks['bg1_center'].x) == 0
     assert len(pext.marks['bg2_center'].x) == 0
     assert len(pext.marks['bg1_lower'].x) > 0
@@ -64,9 +66,6 @@ def test_plugin(specviz2d_helper):
     assert len(pext.marks['bg2_center'].x) == 0
 
     # create background image
-    pext.bg_trace_selected = 'Manual'
-    pext.bg_trace_pixel = 20
-    pext.bg_separation = -8
     bg = pext.create_bg()
     assert isinstance(bg, Spectrum1D)
     bg_sub = pext.create_bg_sub()

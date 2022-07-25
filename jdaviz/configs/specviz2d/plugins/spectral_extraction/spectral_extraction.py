@@ -25,6 +25,7 @@ class SpectralExtraction(PluginTemplateMixin):
     template_file = __file__, "spectral_extraction.vue"
 
     active_step = Unicode().tag(sync=True)
+    setting_interactive_extract = Bool(True).tag(sync=True)
 
     # TRACE
     trace_trace_items = List().tag(sync=True)
@@ -35,8 +36,8 @@ class SpectralExtraction(PluginTemplateMixin):
     trace_dataset_items = List().tag(sync=True)
     trace_dataset_selected = Unicode().tag(sync=True)
 
-    trace_type_items = List(['FlatTrace', 'AutoTrace']).tag(sync=True)
-    trace_type_selected = Unicode('FlatTrace').tag(sync=True)
+    trace_type_items = List(['Flat', 'Auto']).tag(sync=True)
+    trace_type_selected = Unicode('Flat').tag(sync=True)
 
     trace_pixel = IntHandleEmpty(0).tag(sync=True)
 
@@ -58,11 +59,8 @@ class SpectralExtraction(PluginTemplateMixin):
     bg_dataset_items = List().tag(sync=True)
     bg_dataset_selected = Unicode().tag(sync=True)
 
-    bg_type_items = List(['TwoSided', 'OneSided', 'Trace']).tag(sync=True)
+    bg_type_items = List(['TwoSided', 'OneSided', 'Manual']).tag(sync=True)
     bg_type_selected = Unicode('TwoSided').tag(sync=True)
-
-    bg_trace_items = List().tag(sync=True)
-    bg_trace_selected = Unicode().tag(sync=True)
 
     bg_trace_pixel = IntHandleEmpty(0).tag(sync=True)
 
@@ -89,10 +87,6 @@ class SpectralExtraction(PluginTemplateMixin):
     ext_dataset_items = List().tag(sync=True)
     ext_dataset_selected = Unicode().tag(sync=True)
 
-    ext_trace_items = List().tag(sync=True)
-    ext_trace_selected = Unicode().tag(sync=True)
-
-    ext_trace_pixel = IntHandleEmpty(0).tag(sync=True)
     ext_width = IntHandleEmpty(0).tag(sync=True)
 
     ext_results_label = Unicode().tag(sync=True)
@@ -136,13 +130,6 @@ class SpectralExtraction(PluginTemplateMixin):
                                         'bg_dataset_selected',
                                         filters=['layer_in_spectrum_2d_viewer', 'not_trace'])
 
-        self.bg_trace = DatasetSelect(self,
-                                      'bg_trace_items',
-                                      'bg_trace_selected',
-                                      default_text='From Plugin',
-                                      manual_options=['Manual'],
-                                      filters=['is_trace'])
-
         self.bg_add_results = AddResults(self, 'bg_results_label',
                                          'bg_results_label_default',
                                          'bg_results_label_auto',
@@ -169,13 +156,6 @@ class SpectralExtraction(PluginTemplateMixin):
                                          'ext_dataset_selected',
                                          default_text='From Plugin',
                                          filters=['layer_in_spectrum_2d_viewer', 'not_trace'])
-
-        self.ext_trace = DatasetSelect(self,
-                                       'ext_trace_items',
-                                       'ext_trace_selected',
-                                       default_text='From Plugin',
-                                       manual_options=['Manual'],
-                                       filters=['is_trace'])
 
         self.ext_add_results = AddResults(self, 'ext_results_label',
                                           'ext_results_label_default',
@@ -210,14 +190,17 @@ class SpectralExtraction(PluginTemplateMixin):
             self.bg_separation = default_width * 2
         if self.bg_width == 0:
             self.bg_width = default_width
-        if self.ext_trace_pixel == 0:
-            self.ext_trace_pixel = brightest_pixel
         if self.ext_width == 0:
             self.ext_width = default_width
 
-    @observe('plugin_opened')
+    @observe('plugin_opened', 'setting_interactive_extract')
     def _update_plugin_marks(self, *args):
-        if not self.plugin_opened or not self._do_marks:
+        if not self._do_marks:
+            return
+
+        if not self.plugin_opened:
+            for step, mark in self.marks.items():
+                mark.visible = False
             return
 
         if self.active_step == '':
@@ -225,17 +208,22 @@ class SpectralExtraction(PluginTemplateMixin):
             self._interaction_in_ext_step()
             return
 
-        # update extracted 1d spectrum preview
-        try:
-            sp1d = self.create_extract(add_data=False)
-        except Exception:
-            # NOTE: ignore error, but will be raised when clicking ANY of the export buttons
-            self.marks['extract'].clear()
+        # update extracted 1d spectrum preview, regardless of the step
+        if self.setting_interactive_extract:
+            try:
+                sp1d = self.create_extract(add_data=False)
+            except Exception:
+                # NOTE: ignore error, but will be raised when clicking ANY of the export buttons
+                # NOTE: KosmosTrace or manual background are often giving a
+                # "background regions overlapped" error from specreduce
+                self.marks['extract'].clear()
+            else:
+                # TODO: range(len(...)) is a temporary hack for this data displaying
+                # in meters instead of pixels
+                self.marks['extract'].update_xy(range(len(sp1d.spectral_axis.value)),
+                                                sp1d.flux.value)
         else:
-            # TODO: range(len(...)) is a temporary hack for this data displaying
-            # in meters instead of pixels
-            self.marks['extract'].update_xy(range(len(sp1d.spectral_axis.value)),
-                                            sp1d.flux.value)
+            self.marks['extract'].clear()
 
         display_marks = {'trace': ['trace', 'extract'],
                          'bg': ['trace',
@@ -246,10 +234,13 @@ class SpectralExtraction(PluginTemplateMixin):
                                  'ext_upper', 'ext_lower',
                                  'extract']}
         for step, mark in self.marks.items():
-            mark.visible = self.plugin_opened and step in display_marks.get(self.active_step, [])
+            mark.visible = step in display_marks.get(self.active_step, [])
 
     @property
     def marks(self):
+        """
+        Access the marks created by this plugin in both the spectrum-viewer and spectrum-2d-viewer.
+        """
         if self._marks:
             # TODO: replace with cache property?
             return self._marks
@@ -291,7 +282,7 @@ class SpectralExtraction(PluginTemplateMixin):
         return self._marks
 
     @observe('trace_trace_selected', 'trace_offset', 'trace_dataset_selected',
-             'trace_type_selected', 'trace_pixel', 'trace_peak_method_selected',
+             'trace_pixel', 'trace_peak_method_selected',
              'trace_bins', 'trace_window', 'active_step')
     def _interaction_in_trace_step(self, event={}):
         if not self.plugin_opened or not self._do_marks:
@@ -305,15 +296,13 @@ class SpectralExtraction(PluginTemplateMixin):
             # NOTE: ignore error, but will be raised when clicking ANY of the export buttons
             self.marks['trace'].clear()
         else:
-            # TODO: range(len(...)) is a temporary hack for this data displaying
-            # in meters instead of pixels
             self.marks['trace'].update_xy(range(len(trace.trace)),
                                           trace.trace)
             self.marks['trace'].line_style = 'solid'
         self.active_step = 'trace'
         self._update_plugin_marks()
 
-    @observe('bg_dataset_selected', 'bg_type_selected', 'bg_trace_selected', 'bg_trace_pixel',
+    @observe('bg_dataset_selected', 'bg_type_selected', 'bg_trace_pixel',
              'bg_separation', 'bg_width', 'active_step')
     def _interaction_in_bg_step(self, event={}):
         if not self.plugin_opened or not self._do_marks:
@@ -329,32 +318,31 @@ class SpectralExtraction(PluginTemplateMixin):
                          'bg2_center', 'bg2_lower', 'bg2_upper']:
                 self.marks[mark].clear()
         else:
-            # TODO: range(len(...)) is a temporary hack for this data displaying
-            # in meters instead of pixels
-            self.marks['trace'].update_xy(range(len(trace.trace)),
+            xs = range(len(trace.trace))
+            self.marks['trace'].update_xy(xs,
                                           trace.trace)
             self.marks['trace'].line_style = 'dashed'
 
             if self.bg_type_selected in ['OneSided', 'TwoSided']:
-                self.marks['bg1_center'].update_xy(range(len(trace.trace)),
+                self.marks['bg1_center'].update_xy(xs,
                                                    trace.trace+self.bg_separation)
-                self.marks['bg1_lower'].update_xy(range(len(trace.trace)),
+                self.marks['bg1_lower'].update_xy(xs,
                                                   trace.trace+self.bg_separation-self.bg_width/2)
-                self.marks['bg1_upper'].update_xy(range(len(trace.trace)),
+                self.marks['bg1_upper'].update_xy(xs,
                                                   trace.trace+self.bg_separation+self.bg_width/2)
             else:
                 self.marks['bg1_center'].clear()
-                self.marks['bg1_lower'].update_xy(range(len(trace.trace)),
+                self.marks['bg1_lower'].update_xy(xs,
                                                   trace.trace-self.bg_width/2)
-                self.marks['bg1_upper'].update_xy(range(len(trace.trace)),
+                self.marks['bg1_upper'].update_xy(xs,
                                                   trace.trace+self.bg_width/2)
 
             if self.bg_type_selected == 'TwoSided':
-                self.marks['bg2_center'].update_xy(range(len(trace.trace)),
+                self.marks['bg2_center'].update_xy(xs,
                                                    trace.trace-self.bg_separation)
-                self.marks['bg2_lower'].update_xy(range(len(trace.trace)),
+                self.marks['bg2_lower'].update_xy(xs,
                                                   trace.trace-self.bg_separation-self.bg_width/2)
-                self.marks['bg2_upper'].update_xy(range(len(trace.trace)),
+                self.marks['bg2_upper'].update_xy(xs,
                                                   trace.trace-self.bg_separation+self.bg_width/2)
             else:
                 for mark in ['bg2_center', 'bg2_lower', 'bg2_upper']:
@@ -363,8 +351,7 @@ class SpectralExtraction(PluginTemplateMixin):
         self.active_step = 'bg'
         self._update_plugin_marks()
 
-    @observe('ext_dataset_selected', 'ext_trace_selected', 'ext_trace_pixel', 'ext_width',
-             'active_step')
+    @observe('ext_dataset_selected', 'ext_width', 'active_step')
     def _interaction_in_ext_step(self, event={}):
         if not self.plugin_opened or not self._do_marks:
             return
@@ -378,30 +365,38 @@ class SpectralExtraction(PluginTemplateMixin):
             for mark in ['trace', 'ext_lower', 'ext_upper']:
                 self.marks[mark].clear()
         else:
-            # TODO: range(len(...)) is a temporary hack for this data displaying
-            # in meters instead of pixels
-            self.marks['trace'].update_xy(range(len(trace.trace)),
+            xs = range(len(trace.trace))
+            self.marks['trace'].update_xy(xs,
                                           trace.trace)
             self.marks['trace'].line_style = 'dashed'
-            self.marks['ext_lower'].update_xy(range(len(trace.trace)),
+            self.marks['ext_lower'].update_xy(xs,
                                               trace.trace-self.ext_width/2)
-            self.marks['ext_upper'].update_xy(range(len(trace.trace)),
+            self.marks['ext_upper'].update_xy(xs,
                                               trace.trace+self.ext_width/2)
 
         self.active_step = 'ext'
         self._update_plugin_marks()
 
     def create_trace(self, add_data=True):
+        """
+        Create a trace object from the input parameters defined in the plugin.
+
+        Parameters
+        ----------
+        add_data : bool
+            Whether to add the resulting trace to the application, according to the options
+            defined in the plugin.
+        """
         if self.trace_trace_selected != 'New Trace':
             # then we're offsetting an existing trace
             trace = tracing.ArrayTrace(self.trace_dataset.selected_obj.data,
                                        self.trace_trace.selected_obj.trace+self.trace_offset)
 
-        elif self.trace_type_selected == 'FlatTrace':
+        elif self.trace_type_selected == 'Flat':
             trace = tracing.FlatTrace(self.trace_dataset.selected_obj.data,
                                       self.trace_pixel)
 
-        elif self.trace_type_selected == 'AutoTrace':
+        elif self.trace_type_selected == 'Auto':
             trace = tracing.KosmosTrace(self.trace_dataset.selected_obj.data,
                                         guess=self.trace_pixel,
                                         bins=self.trace_bins,
@@ -420,20 +415,18 @@ class SpectralExtraction(PluginTemplateMixin):
         _ = self.create_trace(add_data=True)
 
     def _get_bg_trace(self):
-        if self.bg_trace_selected == 'From Plugin':
-            trace = self.create_trace(add_data=False)
-        elif self.bg_trace_selected == 'Manual':
-            trace = tracing.FlatTrace(self.bg_dataset.selected_obj.data,
+        if self.bg_type_selected == 'Manual':
+            trace = tracing.FlatTrace(self.trace_dataset.selected_obj.data,
                                       self.bg_trace_pixel)
         else:
-            trace = self.bg_trace.selected_obj
+            trace = self.create_trace(add_data=False)
 
         return trace
 
     def _get_bg(self):
         trace = self._get_bg_trace()
 
-        if self.bg_type_selected == 'Trace':
+        if self.bg_type_selected == 'Manual':
             bg = background.Background(self.bg_dataset.selected_obj.data,
                                        trace, width=self.bg_width)
         elif self.bg_type_selected == 'OneSided':
@@ -452,6 +445,15 @@ class SpectralExtraction(PluginTemplateMixin):
         return bg
 
     def create_bg(self, add_data=True):
+        """
+        Create a background 2D spectrum from the input parameters defined in the plugin.
+
+        Parameters
+        ----------
+        add_data : bool
+            Whether to add the resulting image to the application, according to the options
+            defined in the plugin.
+        """
         bg = self._get_bg()
 
         bg_spec = Spectrum1D(spectral_axis=self.bg_dataset.selected_obj.spectral_axis,
@@ -466,6 +468,15 @@ class SpectralExtraction(PluginTemplateMixin):
         _ = self.create_bg(add_data=True)
 
     def create_bg_sub(self, add_data=True):
+        """
+        Create a background-subtracted 2D spectrum from the input parameters defined in the plugin.
+
+        Parameters
+        ----------
+        add_data : bool
+            Whether to add the resulting image to the application, according to the options
+            defined in the plugin.
+        """
         bg = self._get_bg()
 
         bg_sub_spec = Spectrum1D(spectral_axis=self.bg_dataset.selected_obj.spectral_axis,
@@ -480,20 +491,18 @@ class SpectralExtraction(PluginTemplateMixin):
         _ = self.create_bg_sub(add_data=True)
 
     def _get_ext_trace(self):
-        if self.ext_trace_selected == 'From Plugin':
-            trace = self.create_trace(add_data=False)
-        elif self.ext_trace_selected == 'Manual':
-            # NOTE: we use trace_dataset here assuming its the same shape,
-            # to avoid needing to create the background-subtracted image
-            # if self.trace_dataset_selected == 'From Plugin'
-            trace = tracing.FlatTrace(self.trace_dataset.selected_obj.data,
-                                      self.ext_trace_pixel)
-        else:
-            trace = self.ext_trace.get_selected_obj
-
-        return trace
+        return self.create_trace(add_data=False)
 
     def create_extract(self, add_data=False):
+        """
+        Create an extracted 1D spectrum from the input parameters defined in the plugin.
+
+        Parameters
+        ----------
+        add_data : bool
+            Whether to add the resulting spectrum to the application, according to the options
+            defined in the plugin.
+        """
         if self.ext_dataset_selected == 'From Plugin':
             inp_image = self.create_bg_sub(add_data=False).data
         else:

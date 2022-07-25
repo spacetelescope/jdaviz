@@ -4,6 +4,27 @@
     :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#spectral-extraction'"
     :popout_button="popout_button">
 
+    <v-row>
+      <v-expansion-panels popout>
+        <v-expansion-panel>
+          <v-expansion-panel-header v-slot="{ open }">
+            <span style="padding: 6px">Settings</span>
+          </v-expansion-panel-header>
+          <v-expansion-panel-content>
+            <v-row>
+              <v-switch
+                v-model="setting_interactive_extract"
+                label="Show live-extraction"
+                hint="Whether to compute/show extraction when making changes to input parameters.  Disable if live-preview becomes laggy."
+                persistent-hint
+              ></v-switch>
+            </v-row>
+          </v-expansion-panel-content>
+        </v-expansion-panel>
+      </v-expansion-panels>
+    </v-row>
+
+
     <div @mouseover="() => active_step='trace'">
       <j-plugin-section-header>Trace</j-plugin-section-header>
       <v-row>
@@ -62,7 +83,7 @@
           </v-text-field>
         </v-row>
 
-        <v-row v-if="trace_type_selected==='AutoTrace'">
+        <v-row v-if="trace_type_selected==='Auto'">
           <v-text-field
             label="Bins"
             type="number"
@@ -74,7 +95,7 @@
           </v-text-field>
         </v-row>
 
-        <v-row v-if="trace_type_selected==='AutoTrace'">
+        <v-row v-if="trace_type_selected==='Auto'">
           <v-text-field
             label="Window Width"
             type="number"
@@ -86,7 +107,7 @@
           </v-text-field>
         </v-row>
 
-        <v-row v-if="trace_type_selected==='AutoTrace'">
+        <v-row v-if="trace_type_selected==='Auto'">
           <v-select
             :items="trace_peak_method_items"
             v-model="trace_peak_method_selected"
@@ -147,15 +168,7 @@
         ></v-select>
       </v-row>
 
-      <plugin-dataset-select
-        :items="bg_trace_items"
-        :selected.sync="bg_trace_selected"
-        :show_if_single_entry="true"
-        label="Trace"
-        hint="Trace to use for determining the background region.  'From Plugin' uses trace defined in Trace section above."
-      />
-
-      <v-row v-if="bg_trace_selected === 'Manual'">
+      <v-row v-if="bg_type_selected === 'Manual'">
         <v-text-field
           label="Pixel"
           type="number"
@@ -254,26 +267,6 @@
         label="2D Spectrum"
         hint="Select the data used to extract the spectrum.  'From Plugin' uses background-subtraced image defined in Background section above."
       />
-
-      <plugin-dataset-select
-        :items="ext_trace_items"
-        :selected.sync="ext_trace_selected"
-        :show_if_single_entry="true"
-        label="Trace"
-        hint="Trace to use for extracting the spectrum.  'From Plugin' uses trace defined in Trace section above."
-      />
-
-      <v-row v-if="ext_trace_selected === 'Manual'">
-        <v-text-field
-          label="Pixel"
-          type="number"
-          v-model.number="ext_trace_pixel"
-          :rules="[() => ext_trace_pixel!=='' || 'This field is required']"
-          hint="Pixel number/column to use for the trace."
-          persistent-hint
-        >
-        </v-text-field>
-      </v-row>
 
       <v-row>
         <v-text-field
