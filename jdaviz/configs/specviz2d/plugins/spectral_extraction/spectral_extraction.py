@@ -218,9 +218,7 @@ class SpectralExtraction(PluginTemplateMixin):
                 # "background regions overlapped" error from specreduce
                 self.marks['extract'].clear()
             else:
-                # TODO: range(len(...)) is a temporary hack for this data displaying
-                # in meters instead of pixels
-                self.marks['extract'].update_xy(range(len(sp1d.spectral_axis.value)),
+                self.marks['extract'].update_xy(sp1d.spectral_axis.value,
                                                 sp1d.flux.value)
         else:
             self.marks['extract'].clear()
@@ -493,6 +491,12 @@ class SpectralExtraction(PluginTemplateMixin):
     def _get_ext_trace(self):
         return self.create_trace(add_data=False)
 
+    def _get_ext_input_spectrum(self):
+        if self.ext_dataset_selected == 'From Plugin':
+            return self.create_bg_sub(add_data=False)
+        else:
+            return self.ext_dataset.selected_obj
+
     def create_extract(self, add_data=False):
         """
         Create an extracted 1D spectrum from the input parameters defined in the plugin.
@@ -503,15 +507,13 @@ class SpectralExtraction(PluginTemplateMixin):
             Whether to add the resulting spectrum to the application, according to the options
             defined in the plugin.
         """
-        if self.ext_dataset_selected == 'From Plugin':
-            inp_image = self.create_bg_sub(add_data=False).data
-        else:
-            inp_image = self.ext_dataset.selected_obj.data
-
+        inp_sp2d = self._get_ext_input_spectrum()
         trace = self._get_ext_trace()
 
         boxcar = extract.BoxcarExtract()
-        spectrum = boxcar(inp_image, trace, width=self.ext_width)
+        spectrum = boxcar(inp_sp2d.data, trace, width=self.ext_width)
+        # specreduce returns a spectral axis in pixels, so we'll replace with the input
+        spectrum = Spectrum1D(spectral_axis=inp_sp2d.spectral_axis, flux=spectrum.flux)
 
         if add_data:
             self.ext_add_results.add_results_from_plugin(spectrum, replace=False)
