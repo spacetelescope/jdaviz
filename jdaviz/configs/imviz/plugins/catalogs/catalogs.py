@@ -96,9 +96,10 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
         if not self.plugin_opened:
             return
 
-        self.results_available = False
-        # gets the current viewer
-        viewer = self.viewer.selected_obj
+        if self.results_available:
+            self.results_available = False
+            # gets the current viewer
+            viewer = self.viewer.selected_obj
 
-        # all markers are removed from the viewer
-        viewer.reset_markers()
+            # all markers are removed from the viewer
+            viewer.reset_markers()
