@@ -29,6 +29,7 @@ from glue.core.message import (DataCollectionAddMessage,
                                SubsetDeleteMessage)
 from glue.core.state_objects import State
 from glue.core.subset import Subset, RangeSubsetState, RoiSubsetState
+from glue_astronomy.spectral_coordinates import SpectralCoordinates
 from glue_jupyter.app import JupyterApplication
 from glue_jupyter.common.toolbar_vuetify import read_icon
 from glue_jupyter.state_traitlets_helpers import GlueState
@@ -401,6 +402,14 @@ class Application(VuetifyTemplate, HubListener):
         # This will need to be changed for cubeviz to support multiple cubes
         ref_data = dc[reference_data] if reference_data else dc[0]
         linked_data = dc[data_to_be_linked] if data_to_be_linked else dc[-1]
+
+        # The glue-astronomy SpectralCoordinates currently seems incompatible with glue
+        # WCSLink. This gets around it until there's an upstream fix.
+        if isinstance(linked_data.coords, SpectralCoordinates):
+            wc_old = ref_data.world_component_ids[0]
+            wc_new = linked_data.world_component_ids[0]
+            self.data_collection.add_link(LinkSame(wc_old, wc_new))
+            return
 
         try:
             if linked_data.meta.get("Plugin", None) == 'GaussianSmooth':
@@ -1330,7 +1339,9 @@ class Application(VuetifyTemplate, HubListener):
             The Glue data collection add message containing information about
             the new data.
         """
-        self._link_new_data()
+        # We don't need to link the first data to itself
+        if len(self.data_collection) > 1:
+            self._link_new_data()
         data_item = self._create_data_item(msg.data)
         self.state.data_items.append(data_item)
 

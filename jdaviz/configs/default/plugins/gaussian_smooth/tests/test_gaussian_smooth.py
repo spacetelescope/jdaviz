@@ -13,7 +13,6 @@ def test_linking_after_spectral_smooth(spectrum1d_cube):
     app.add_data_to_viewer('flux-viewer', 'test')
 
     assert len(dc) == 1
-    assert len(dc.external_links) == 3
 
     gs = GaussianSmooth(app=app)
     gs.dataset_selected = 'test'
@@ -38,27 +37,27 @@ def test_linking_after_spectral_smooth(spectrum1d_cube):
 
     assert len(dc) == 2
     assert dc[1].label == 'spectral-smooth stddev-3.2'
-    assert len(dc.external_links) == 6
+    assert len(dc.external_links) == 3
 
     # Link cube 3D x, y, z to plugin 3D x, y, z
 
     # Link 2:
     # Pixel Axis 0 [z] from cube.pixel_component_ids[0]
     # Pixel Axis 0 [z] from plugin.pixel_component_ids[0]
-    assert dc.external_links[3].cids1[0] == dc[0].pixel_component_ids[0]
-    assert dc.external_links[3].cids2[0] == dc[-1].pixel_component_ids[0]
+    assert dc.external_links[0].cids1[0] == dc[0].pixel_component_ids[0]
+    assert dc.external_links[0].cids2[0] == dc[-1].pixel_component_ids[0]
 
     # Link 3:
     # Pixel Axis 1 [y] from cube.pixel_component_ids[1]
     # Pixel Axis 1 [y] from plugin.pixel_component_ids[1]
-    assert dc.external_links[4].cids1[0] == dc[0].pixel_component_ids[1]
-    assert dc.external_links[4].cids2[0] == dc[-1].pixel_component_ids[1]
+    assert dc.external_links[1].cids1[0] == dc[0].pixel_component_ids[1]
+    assert dc.external_links[1].cids2[0] == dc[-1].pixel_component_ids[1]
 
     # Link 4:
     # Pixel Axis 2 [x] from cube.pixel_component_ids[2]
     # Pixel Axis 2 [x] from plugin.pixel_component_ids[2]
-    assert dc.external_links[5].cids1[0] == dc[0].pixel_component_ids[2]
-    assert dc.external_links[5].cids2[0] == dc[-1].pixel_component_ids[2]
+    assert dc.external_links[2].cids1[0] == dc[0].pixel_component_ids[2]
+    assert dc.external_links[2].cids2[0] == dc[-1].pixel_component_ids[2]
 
 
 @pytest.mark.filterwarnings("ignore::UserWarning")
