@@ -1,3 +1,5 @@
+import numpy as np
+
 from astropy import units as u
 from bqplot import LinearScale
 from bqplot.marks import Lines, Label, Scatter
@@ -437,8 +439,8 @@ class PluginLine(Lines, HubListener):
         super().__init__(x=x, y=y, colors=["#007BA1"], scales=viewer.scales, **kwargs)
 
     def update_xy(self, x, y):
-        self.x = x
-        self.y = y
+        self.x = np.asarray(x)
+        self.y = np.asarray(y)
 
     def clear(self):
         self.update_xy([], [])
