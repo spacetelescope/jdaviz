@@ -507,8 +507,12 @@ class SpectralExtraction(PluginTemplateMixin):
 
         boxcar = extract.BoxcarExtract()
         spectrum = boxcar(inp_sp2d.data, trace, width=self.ext_width)
-        # specreduce returns a spectral axis in pixels, so we'll replace with the input
-        spectrum = Spectrum1D(spectral_axis=inp_sp2d.spectral_axis, flux=spectrum.flux)
+        # Specreduce returns a spectral axis in pixels, so we'll replace with input spectral_axis
+        # NOTE: this is currently disabled until proper handling of axes-limit linking between
+        # the 2D spectrum image (plotted in pixels) and a 1D spectrum (plotted in freq or
+        # wavelength) is implemented.
+
+        # spectrum = Spectrum1D(spectral_axis=inp_sp2d.spectral_axis, flux=spectrum.flux)
 
         if add_data:
             self.ext_add_results.add_results_from_plugin(spectrum, replace=False)
