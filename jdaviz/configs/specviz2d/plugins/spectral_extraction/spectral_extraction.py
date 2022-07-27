@@ -41,9 +41,6 @@ class SpectralExtraction(PluginTemplateMixin):
 
     trace_pixel = IntHandleEmpty(0).tag(sync=True)
 
-    trace_peak_method_items = List(['Gaussian', 'Centroid', 'Max']).tag(sync=True)
-    trace_peak_method_selected = Unicode('Gaussian').tag(sync=True)
-
     trace_bins = IntHandleEmpty(20).tag(sync=True)
     trace_window = IntHandleEmpty(0).tag(sync=True)
 
@@ -280,8 +277,7 @@ class SpectralExtraction(PluginTemplateMixin):
         return self._marks
 
     @observe('trace_trace_selected', 'trace_offset', 'trace_dataset_selected',
-             'trace_pixel', 'trace_peak_method_selected',
-             'trace_bins', 'trace_window', 'active_step')
+             'trace_pixel', 'trace_bins', 'trace_window', 'active_step')
     def _interaction_in_trace_step(self, event={}):
         if not self.plugin_opened or not self._do_marks:
             return
@@ -398,8 +394,7 @@ class SpectralExtraction(PluginTemplateMixin):
             trace = tracing.KosmosTrace(self.trace_dataset.selected_obj.data,
                                         guess=self.trace_pixel,
                                         bins=self.trace_bins,
-                                        window=self.trace_window,
-                                        peak_method=self.trace_peak_method_selected.lower())
+                                        window=self.trace_window)
 
         else:
             raise NotImplementedError(f"trace_type={self.trace_type_selected} not implemented")
