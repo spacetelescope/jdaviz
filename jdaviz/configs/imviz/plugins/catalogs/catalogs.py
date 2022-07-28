@@ -98,9 +98,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
         viewer.add_markers(table=catalog_results, use_skycoord=True, marker_name='catalog_results')
 
     def vue_do_clear(self, *args, **kwargs):
-        # no querying occurs while the plugin has not been opened
-        if not self.plugin_opened:
-            return
 
         if self.results_available:
             self.results_available = False
