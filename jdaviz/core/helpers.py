@@ -12,7 +12,7 @@ import warnings
 import numpy as np
 import astropy.units as u
 from glue.core import HubListener
-from glue.core.message import SubsetCreateMessage
+from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage
 
 from jdaviz.app import Application
 
@@ -59,6 +59,8 @@ class ConfigHelper(HubListener):
 
         self.app.hub.subscribe(self, SubsetCreateMessage,
                                handler=lambda msg: self._propagate_callback_to_viewers('_on_subset_create', msg)) # noqa
+        self.app.hub.subscribe(self, SubsetDeleteMessage,
+                               handler=lambda msg: self._propagate_callback_to_viewers('_on_subset_delete', msg)) # noqa
 
     def _propagate_callback_to_viewers(self, method, msg):
         # viewers don't have access to the app/hub to subscribe to messages, so we'll
