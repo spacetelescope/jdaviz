@@ -197,7 +197,7 @@ results are displayed under the :guilabel:`CALCULATE` button.
         Documentation on exporting photometry results.
 
 Catalog Search
-===========
+==============
 
 This plugin queries a specified region of the image, marks the sources from the results of the query, and
 provides the number of sources found. After zooming into a specific region of the image, the query uses the center
