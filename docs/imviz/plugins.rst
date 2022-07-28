@@ -196,6 +196,8 @@ results are displayed under the :guilabel:`CALCULATE` button.
     :ref:`Export Photometry <imviz_export_photomtery>`
         Documentation on exporting photometry results.
 
+.. _imviz-catalogs:
+
 Catalog Search
 ==============
 
