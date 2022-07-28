@@ -4,8 +4,8 @@
 Importing Data into Mosviz
 **************************
 
-Mosviz provides two different ways to load data: Auto-recognition directory loading
-or manual loading:
+Mosviz provides two different ways to load data: auto-recognition directory
+loading and manual loading.
 
 Automatic Directory Loading
 ---------------------------
@@ -14,6 +14,13 @@ time, Mosviz supports automatic parsing for the following instruments:
 
 * JWST NIRSpec
 * JWST NIRISS
+
+The NIRISS parser expects a directory with the following types of files:
+
+* ``*_i2d.fits`` : Level 3 2D images from the ``calwebb_image3`` imaging pipeline
+* ``*_cat.ecsv`` : Level 3 source catalog from the ``calwebb_image3`` imaging pipeline **(For best performance, it's recommended that your directory only contain one.)**
+* ``*_cal.fits`` : Level 2 2D spectra in vertical (R) and horizontal (C) orientations from the ``calwebb_spec2`` spectroscopic pipeline *(C spectra are shown first in 2D viewer by default.)*
+* ``*_x1d.fits`` : Level 2 1D spectra in vertical (R) and horizontal (C) orientations from the ``calwebb_spec2`` spectroscopic pipeline *(C spectra are shown first in 1D viewer by default.)*
 
 In a Jupyter context (notebook or Lab), you can specify the instrument with a directory
 as such::
@@ -42,8 +49,8 @@ Manual Loading
 
 If an automatic parser is not provided yet for your data, Mosviz provides manual loading by
 specifying which files are which, and the associations between them. This is done by
-generating three lists containing the filenames for the 1D spectra, 
-2D spectra, and images in your dataset. These three lists are taken as arguments 
+generating three lists containing the filenames for the 1D spectra,
+2D spectra, and images in your dataset. These three lists are taken as arguments
 by :meth:`~jdaviz.configs.mosviz.helper.Mosviz.load_data`. The association between files is
 assumed to be the order of each list (e.g., the first object consists of the first filename
 specified in each list, the second target is the second in each list, and so forth).
