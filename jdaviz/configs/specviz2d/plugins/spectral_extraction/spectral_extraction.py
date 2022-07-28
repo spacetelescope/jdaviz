@@ -371,7 +371,7 @@ class SpectralExtraction(PluginTemplateMixin):
         self.active_step = 'ext'
         self._update_plugin_marks()
 
-    def create_trace(self, add_data=True):
+    def create_trace(self, add_data=False):
         """
         Create a trace object from the input parameters defined in the plugin.
 
@@ -437,7 +437,7 @@ class SpectralExtraction(PluginTemplateMixin):
 
         return bg
 
-    def create_bg(self, add_data=True):
+    def create_bg(self, add_data=False):
         """
         Create a background 2D spectrum from the input parameters defined in the plugin.
 
@@ -460,7 +460,7 @@ class SpectralExtraction(PluginTemplateMixin):
     def vue_create_bg(self, *args):
         _ = self.create_bg(add_data=True)
 
-    def create_bg_sub(self, add_data=True):
+    def create_bg_sub(self, add_data=False):
         """
         Create a background-subtracted 2D spectrum from the input parameters defined in the plugin.
 
