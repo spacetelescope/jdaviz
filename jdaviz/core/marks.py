@@ -326,19 +326,32 @@ class ShadowMixin:
 
     Can manually override ``_on_shadowing_changed`` for more advanced logic cases.
     """
+    def _get_id(self, mark):
+        return getattr(mark, '_model_id', None)
+
     def _setup_shadowing(self, shadowing, sync_traits=[], other_traits=[]):
-        self._shadowing = shadowing
-        self._sync_traits = sync_traits
+        """
+        sync_traits: traits to set now, and mirror any changes to shadowing in the future
+        other_trait: traits to set now, but not mirror in the future
+        """
+        if not hasattr(self, '_shadowing'):
+            self._shadowing = {}
+            self._sync_traits = {}
+        shadowing_id = self._get_id(shadowing)
+        self._shadowing[shadowing_id] = shadowing
+        self._sync_traits[shadowing_id] = sync_traits
 
         # sync initial values
         for attr in sync_traits + other_traits:
-            self._on_shadowing_changed({'name': attr, 'new': getattr(shadowing, attr)})
+            self._on_shadowing_changed({'name': attr,
+                                        'new': getattr(shadowing, attr),
+                                        'owner': shadowing})
 
         # subscribe to future changes
         shadowing.observe(self._on_shadowing_changed)
 
     def _on_shadowing_changed(self, change):
-        if change['name'] in self._sync_traits:
+        if change['name'] in self._sync_traits.get(self._get_id(change.get('owner')), []):
             setattr(self, change['name'], change['new'])
         return
 
