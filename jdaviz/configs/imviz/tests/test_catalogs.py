@@ -3,26 +3,26 @@ import numpy as np
 from astropy.io import fits
 
 '''
-This file tests four tasks of the catalogs.py plugin in Imviz. 
+This file tests four tasks of the catalogs.py plugin in Imviz.
 1. When no image/data is provided, the search does not crash
 - Additionally there are no results available as the search did not occur
 2. When an image/data is provided, specifically with no results being found,
-results are available and are set to 0 
+results are available and are set to 0
 3. When an image/data is provided, specifically with results being found,
 results are available and are set to > 0
-4. When the markers are cleared, there are no results available 
+4. When the markers are cleared, there are no results available
 
 The data used for testing are provided in the comments below.
 
 Currently, these tests are driven by an SDSS search.
 As more catalogs are added to the plugin, each test will need to be
-specific based on the respective catalog. 
+specific based on the respective catalog.
 
-Additionally, tests that check for results > 0 are correct as the data was 
+Additionally, tests that check for results > 0 are correct as the data was
 found from an SDSS server (and therefore should have results).
-However, the number of results is determined on the belief that the search 
-is correct and the removal of the points outside the zoom limits is correctly done. 
-This may need to instead be tested for in the future. 
+However, the number of results is determined on the belief that the search
+is correct and the removal of the points outside the zoom limits is correctly done.
+This may need to instead be tested for in the future.
 '''
 
 
