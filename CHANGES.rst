@@ -79,6 +79,8 @@ Cubeviz
 
 - Increased spectral slider performance considerably. [#1550]
 
+- Fixed the spectral subset highlighting of spatial subsets in the profile viewer. [#1528]
+
 Imviz
 ^^^^^
 
