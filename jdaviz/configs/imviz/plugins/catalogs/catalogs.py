@@ -55,13 +55,16 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
             [zoom_x_min, zoom_x_min, zoom_x_max, zoom_x_max],
             [zoom_y_min, zoom_y_max, zoom_y_max, zoom_y_min])
 
-        # radius for querying the region is based on the distance between the longest zoom limits and the center point
+        # radius for querying the region is based on:
+        # the distance between the longest zoom limits and the center point
         zoom_radius = max(skycoord_center.separation(zoom_coordinate))
 
         # conducts search based on SDSS
         if self.catalog_selected == "SDSS":
-            # queries the region (based on the provided center point and radius) to find all the sources in that region
-            query_region_result = SDSS.query_region(skycoord_center, radius=zoom_radius, data_release=17)
+            # queries the region (based on the provided center point and radius)
+            # finds all the sources in that region
+            query_region_result = SDSS.query_region(skycoord_center, radius=zoom_radius,
+                                                    data_release=17)
         self.results_available = True
         # nothing happens in the case the query returned empty
         if query_region_result is None:
@@ -75,13 +78,16 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
         pixel_table = viewer.state.reference_data.coords.world_to_pixel(skycoord_table)
         # coordinates are filtered out (using a mask) if outside the zoom range
         pair_pixel_table = np.dstack((pixel_table[0], pixel_table[1]))
-        masked_table = ma.masked_outside(pair_pixel_table, [zoom_x_min, zoom_y_min], [zoom_x_max, zoom_y_max])
+        masked_table = ma.masked_outside(pair_pixel_table, [zoom_x_min, zoom_y_min],
+                                         [zoom_x_max, zoom_y_max])
         filtered_table = ma.compress_rows(masked_table[0])
-        # coordinates are split into their respective x and y values and then converted to sky coordinates
+        # coordinates are split into their respective x and y values
+        # then they are converted to sky coordinates
         filtered_pair_pixel_table = np.array(np.hsplit(filtered_table, 2))
         x_coordinates = np.squeeze(filtered_pair_pixel_table[0])
         y_coordinates = np.squeeze(filtered_pair_pixel_table[1])
-        filtered_skycoord_table = viewer.state.reference_data.coords.pixel_to_world(x_coordinates, y_coordinates)
+        filtered_skycoord_table = viewer.state.reference_data.coords.pixel_to_world(x_coordinates,
+                                                                                    y_coordinates)
 
         # QTable stores all the filtered sky coordinate points to be marked
         catalog_results = QTable({'coord': filtered_skycoord_table})
