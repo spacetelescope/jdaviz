@@ -196,8 +196,6 @@ results are displayed under the :guilabel:`CALCULATE` button.
     :ref:`Export Photometry <imviz_export_photomtery>`
         Documentation on exporting photometry results.
 
-.. _imviz-export-plot:
-
 Catalog Search
 ===========
 
@@ -213,6 +211,8 @@ viewer. The query will be based on the coordinates of the image in the active vi
 This plugin is still under active development. As a result, the search only uses the SDSS DR17 catalog.
 Additionally, the query starts anew everytime :guilabel:`SEARCH` is clicked, so previous results and marks
 are not stored.
+
+.. _imviz-export-plot:
 
 Export Plot
 ===========

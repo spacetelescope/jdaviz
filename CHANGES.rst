@@ -13,6 +13,9 @@ Cubeviz
 Imviz
 ^^^^^
 
+- New Catalogs plugin that uses a specified catalog to search for sources in an image
+  and mark the sources found. [#1455]
+
 Mosviz
 ^^^^^^
 - NIRISS parser now sorts FITS files by header instead of file name. [#819]
