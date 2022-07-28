@@ -190,6 +190,28 @@ class SpectralExtraction(PluginTemplateMixin):
         if self.ext_width == 0:
             self.ext_width = default_width
 
+    def update_marks(self, step=None):
+        """
+        Manually update the live-preview marks for a given step in spectral extraction.  This API
+        mimics opening the plugin and interacting with one of the steps.
+
+        Parameters
+        ----------
+        step : str
+            Step in the extraction process to visualize.  Must be one of: 'trace', 'bg', 'ext'.
+        """
+        if step is not None:
+            if step not in ['trace', 'bg', 'ext']:
+                raise ValueError("step must be one of: trace, bg, ext")
+            self.active_step = step
+        self.plugin_opened = True
+
+    def clear_marks(self):
+        """
+        Manually clear the live-preview marks.
+        """
+        self.plugin_opened = False
+
     @observe('plugin_opened', 'setting_interactive_extract')
     def _update_plugin_marks(self, *args):
         if not self._do_marks:
