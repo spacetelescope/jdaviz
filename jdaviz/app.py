@@ -406,7 +406,7 @@ class Application(VuetifyTemplate, HubListener):
         # The glue-astronomy SpectralCoordinates currently seems incompatible with glue
         # WCSLink. This gets around it until there's an upstream fix.
         if isinstance(linked_data.coords, SpectralCoordinates):
-            wc_old = ref_data.world_component_ids[0]
+            wc_old = ref_data.world_component_ids[-1]
             wc_new = linked_data.world_component_ids[0]
             self.data_collection.add_link(LinkSame(wc_old, wc_new))
             return
