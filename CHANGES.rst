@@ -38,6 +38,8 @@ Specviz
 Bug Fixes
 ---------
 
+- Fixes subset mode to reset to "Replace" when choosing to "Create New" subset. [#1532]
+
 Cubeviz
 ^^^^^^^
 
