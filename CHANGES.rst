@@ -50,7 +50,7 @@ Mosviz
 Specviz
 ^^^^^^^
 
-- Fixed a bug where spectra with different spectral axes were not properly linked. [#1526]
+- Fixed a bug where spectra with different spectral axes were not properly linked. [#1526, #1531]
 
 Other Changes and Additions
 ---------------------------
