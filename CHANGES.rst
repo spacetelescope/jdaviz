@@ -13,7 +13,7 @@ Cubeviz
 Imviz
 ^^^^^
 
-- New Catalogs plugin that uses a specified catalog to search for sources in an image
+- New "Catalog Search" plugin that uses a specified catalog (currently SDSS) to search for sources in an image
   and mark the sources found. [#1455]
 
 Mosviz

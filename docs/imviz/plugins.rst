@@ -201,7 +201,7 @@ results are displayed under the :guilabel:`CALCULATE` button.
 Catalog Search
 ==============
 
-This plugin queries a specified region of the image, marks the sources from the results of the query, and
+This plugin queries a catalog around the coordinates of the active image, marks the sources from the results of the query, and
 provides the number of sources found. After zooming into a specific region of the image, the query uses the center
 point of the region with a radius determined by the farthest edge point of the region. Clicking on :guilabel:`CLEAR`
 will remove all markers on the active viewer.
