@@ -101,6 +101,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
 
         if self.results_available:
             self.results_available = False
+            self.number_of_results = 0
             # gets the current viewer
             viewer = self.viewer.selected_obj
 
