@@ -28,11 +28,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
         if self.catalog_selected not in self.catalog_items:
             self.catalog_selected = self.catalog_items[0]
 
-    @observe("catalog_selected")
-    def vue_do_search(self, *args, **kwargs):
-        # no querying occurs while the plugin has not been opened
-        if not self.plugin_opened:
-            return
+    def search(self):
+        # note to self: should I call clear before searching?
 
         # gets the current viewer
         viewer = self.viewer.selected_obj
@@ -96,6 +93,9 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
         # markers are added to the viewer based on the table
         viewer.marker = {'color': 'red', 'alpha': 0.8, 'markersize': 5, 'fill': False}
         viewer.add_markers(table=catalog_results, use_skycoord=True, marker_name='catalog_results')
+
+    def vue_do_search(self, *args, **kwargs):
+        self.search()
 
     def vue_do_clear(self, *args, **kwargs):
 
