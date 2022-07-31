@@ -13,7 +13,7 @@ from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin
 __all__ = ['Catalogs']
 
 
-@tray_registry('imviz-catalogs', label="Imviz Catalogs")
+@tray_registry('imviz-catalogs', label="Catalog Search")
 class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
     template_file = __file__, "catalogs.vue"
     catalog_items = List([]).tag(sync=True)
