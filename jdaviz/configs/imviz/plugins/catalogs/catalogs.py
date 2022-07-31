@@ -36,6 +36,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
 
         # nothing happens in the case there is no image in the viewer
         if viewer.state.reference_data is None:
+            self.results_available = False
+            self.number_of_results = 0
             return
         # obtains the center point of the current image and converts the point into sky coordinates
         x_center = (viewer.state.x_min + viewer.state.x_max) * 0.5
@@ -62,7 +64,13 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
             # finds all the sources in that region
             query_region_result = SDSS.query_region(skycoord_center, radius=zoom_radius,
                                                     data_release=17)
-        self.results_available = True
+            self.results_available = True
+
+        else:
+            self.results_available = False
+            self.number_of_results = 0
+            raise ValueError(f"{self.catalog_selected} not a supported catalog")
+
         # nothing happens in the case the query returned empty
         if query_region_result is None:
             self.number_of_results = 0
