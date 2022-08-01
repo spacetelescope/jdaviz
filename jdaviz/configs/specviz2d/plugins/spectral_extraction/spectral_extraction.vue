@@ -85,6 +85,16 @@
           >
           </v-text-field>
         </v-row>
+
+        <v-row v-if="trace_type_selected==='Auto'">
+          <v-select
+            :items="trace_peak_method_items"
+            v-model="trace_peak_method_selected"
+            label="Peak Method"
+            hint="Method to use for identifying the peak in each bin"
+            persistent-hint
+          ></v-select>
+        </v-row>
       </div>
     </div>
 
