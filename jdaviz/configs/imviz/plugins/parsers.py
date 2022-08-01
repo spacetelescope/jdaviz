@@ -333,4 +333,4 @@ def _ndarray_to_glue_data(arr, data_label):
     data = Data(label=data_label)
     component = Component.autotyped(arr)
     data.add_component(component=component, label='DATA')
-    yield data, data_label
+    yield (data, data_label)
