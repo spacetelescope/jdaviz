@@ -406,7 +406,7 @@ class Application(VuetifyTemplate, HubListener):
 
         if linked_data.meta.get('Plugin', None) == 'SpectralExtraction':
             if 'Trace' in linked_data.meta:
-                links = [LinkSame(linked_data.components[2], ref_data.components[0]),
+                links = [LinkSame(linked_data.components[1], ref_data.components[0]),
                          LinkSame(linked_data.components[0], ref_data.components[1])]
                 dc.add_link(links)
                 return
