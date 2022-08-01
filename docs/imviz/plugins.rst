@@ -201,18 +201,24 @@ results are displayed under the :guilabel:`CALCULATE` button.
 Catalog Search
 ==============
 
-This plugin queries a catalog around the coordinates of the active image, marks the sources from the results of the query, and
+This plugin queries a catalog around the zoom window of the active image, marks the sources from the results of the query, and
 provides the number of sources found. After zooming into a specific region of the image, the query uses the center
 point of the region with a radius determined by the farthest edge point of the region. Clicking on :guilabel:`CLEAR`
 will remove all markers on the active viewer.
 
 To select which catalog you would like to use for the search, please pick one of the available options from the
-catalog dropdown menu. If you have multiple viewers open, you will see another dropdown menu to select the active
-viewer. The query will be based on the coordinates of the image in the active viewer.
+catalog dropdown menu.
 
-This plugin is still under active development. As a result, the search only uses the SDSS DR17 catalog.
+.. note::
+
+    This plugin is still under active development. As a result, the search only uses the SDSS DR17 catalog
+    and works best when you only have a single image loaded in a viewer.
+
+If you have multiple viewers open, you will see another dropdown menu to select the active
+viewer.
+
 Additionally, the query starts anew everytime :guilabel:`SEARCH` is clicked, so previous results and marks
-are not stored.
+are not stored. To save the current result before submitting a new query, you can... (insert API instructions here).
 
 .. _imviz-export-plot:
 

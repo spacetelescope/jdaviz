@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.ma as ma
 
-from traitlets import List, Unicode, Bool, Int, observe
+from traitlets import List, Unicode, Bool, Int
 
 from astropy.table import QTable
 from astropy.coordinates import SkyCoord
@@ -86,7 +86,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
         # ma.masked_outside removes the coordinates outside the zoom range
         # ma.compress_rows removes any row that has a mask mark
         filtered_table = ma.compress_rows(
-            ma.masked_outside(pair_pixel_table, [zoom_x_min, zoom_y_min], [zoom_x_max, zoom_y_max])[0])
+            ma.masked_outside(pair_pixel_table, [zoom_x_min, zoom_y_min], [zoom_x_max, zoom_y_max])
+            [0])
         # coordinates are split into their respective x and y values
         # then they are converted to sky coordinates
         filtered_pair_pixel_table = np.array(np.hsplit(filtered_table, 2))
