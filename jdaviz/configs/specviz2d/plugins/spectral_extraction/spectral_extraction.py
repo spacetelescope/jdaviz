@@ -192,10 +192,15 @@ class SpectralExtraction(PluginTemplateMixin):
             Step in the extraction process to visualize.  Must be one of: 'trace', 'bg', 'ext'.
         """
         if step is not None:
-            if step not in ['trace', 'bg', 'ext']:
+            self.plugin_opened = True
+            if step == 'trace':
+                self._interaction_in_trace_step()
+            elif step == 'bg':
+                self._interaction_in_bg_step()
+            elif step == 'ext':
+                self._interaction_in_ext_step()
+            else:
                 raise ValueError("step must be one of: trace, bg, ext")
-            self.active_step = step
-        self.plugin_opened = True
 
     def clear_marks(self):
         """
@@ -384,7 +389,15 @@ class SpectralExtraction(PluginTemplateMixin):
         self.active_step = 'ext'
         self._update_plugin_marks()
 
-    def create_trace(self, add_data=False):
+    def _set_create_kwargs(self, **kwargs):
+        invalid_kwargs = [k for k in kwargs.keys() if not hasattr(self, k)]
+        if len(invalid_kwargs):
+            raise ValueError(f"{invalid_kwargs} are not valid attributes to pass as a kwargs")
+
+        for k,v in kwargs.items():
+            setattr(self, k, v)
+
+    def create_trace(self, add_data=False, **kwargs):
         """
         Create a trace object from the input parameters defined in the plugin.
 
@@ -394,6 +407,10 @@ class SpectralExtraction(PluginTemplateMixin):
             Whether to add the resulting trace to the application, according to the options
             defined in the plugin.
         """
+        self._set_create_kwargs(**kwargs)
+        if len(kwargs) and self.active_step != 'trace':
+            self.update_marks(step='trace')
+
         if self.trace_type_selected == 'Flat':
             trace = tracing.FlatTrace(self.trace_dataset.selected_obj.data,
                                       self.trace_pixel)
@@ -446,7 +463,7 @@ class SpectralExtraction(PluginTemplateMixin):
 
         return bg
 
-    def create_bg(self, add_data=False):
+    def create_bg(self, add_data=False, **kwargs):
         """
         Create a background 2D spectrum from the input parameters defined in the plugin.
 
@@ -456,6 +473,10 @@ class SpectralExtraction(PluginTemplateMixin):
             Whether to add the resulting image to the application, according to the options
             defined in the plugin.
         """
+        self._set_create_kwargs(**kwargs)
+        if len(kwargs) and self.active_step != 'bg':
+            self.update_marks(step='bg')
+
         bg = self._get_bg()
 
         bg_spec = Spectrum1D(spectral_axis=self.bg_dataset.selected_obj.spectral_axis,
@@ -475,7 +496,7 @@ class SpectralExtraction(PluginTemplateMixin):
                                 color='error', sender=self)
             )
 
-    def create_bg_sub(self, add_data=False):
+    def create_bg_sub(self, add_data=False, **kwargs):
         """
         Create a background-subtracted 2D spectrum from the input parameters defined in the plugin.
 
@@ -485,6 +506,10 @@ class SpectralExtraction(PluginTemplateMixin):
             Whether to add the resulting image to the application, according to the options
             defined in the plugin.
         """
+        self._set_create_kwargs(**kwargs)
+        if len(kwargs) and self.active_step != 'bg':
+            self.update_marks(step='bg')
+
         bg = self._get_bg()
 
         bg_sub_spec = Spectrum1D(spectral_axis=self.bg_dataset.selected_obj.spectral_axis,
@@ -507,7 +532,7 @@ class SpectralExtraction(PluginTemplateMixin):
         else:
             return self.ext_dataset.selected_obj
 
-    def create_extract(self, add_data=False):
+    def create_extract(self, add_data=False, **kwargs):
         """
         Create an extracted 1D spectrum from the input parameters defined in the plugin.
 
@@ -517,6 +542,10 @@ class SpectralExtraction(PluginTemplateMixin):
             Whether to add the resulting spectrum to the application, according to the options
             defined in the plugin.
         """
+        self._set_create_kwargs(**kwargs)
+        if len(kwargs) and self.active_step != 'ext':
+            self.update_marks(step='ext')
+
         inp_sp2d = self._get_ext_input_spectrum()
         trace = self._get_ext_trace()
 
