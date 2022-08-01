@@ -30,7 +30,8 @@
         v-model.number="n_moment"
         hint="The desired moment."
         persistent-hint
-        :rules="[() => !!n_moment || 'This field is required']"
+        :rules="[() => n_moment !== '' || 'This field is required',
+                 () => n_moment >=0 || 'Moment must be positive']"
       ></v-text-field>
     </v-row>
 

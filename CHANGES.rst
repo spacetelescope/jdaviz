@@ -41,6 +41,8 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- Fixed validation message of moment number in moment map plugin. [#1536]
+
 Imviz
 ^^^^^
 
