@@ -813,7 +813,7 @@ class LineListTool(PluginTemplateMixin):
         if erase:
             try:
                 self._viewer.erase_spectral_lines(name_rest=name_rest)
-                del(self.line_mark_dict[name_rest])
+                del self.line_mark_dict[name_rest]
             except KeyError:
                 raise KeyError("line marks: {}".format(self._viewer.figure.marks))
         else:

@@ -395,7 +395,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     def vue_remove_model(self, event):
         self.component_models = [x for x in self.component_models
                                  if x["id"] != event]
-        del(self._initialized_models[event])
+        del self._initialized_models[event]
         self._update_comp_label_default()
         self._update_model_equation_default()
 
