@@ -31,9 +31,9 @@
        </v-col>
      </v-row>
 
-     <v-row v-if="results_available">
+     <v-row>
        <p class="font-weight-bold">Results:</p>
-       <span style='padding-left: 4px'>{{number_of_results}}</span>
+       <span style='padding-left: 4px' v-if="results_available">{{number_of_results}}</span>
      <v-row>
 
    </j-tray-plugin>
