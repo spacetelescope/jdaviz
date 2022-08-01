@@ -28,11 +28,6 @@ class SpectralExtraction(PluginTemplateMixin):
     setting_interactive_extract = Bool(True).tag(sync=True)
 
     # TRACE
-    trace_trace_items = List().tag(sync=True)
-    trace_trace_selected = Unicode().tag(sync=True)
-
-    trace_offset = IntHandleEmpty(0).tag(sync=True)
-
     trace_dataset_items = List().tag(sync=True)
     trace_dataset_selected = Unicode().tag(sync=True)
 
@@ -43,14 +38,6 @@ class SpectralExtraction(PluginTemplateMixin):
 
     trace_bins = IntHandleEmpty(20).tag(sync=True)
     trace_window = IntHandleEmpty(0).tag(sync=True)
-
-    trace_results_label = Unicode().tag(sync=True)
-    trace_results_label_default = Unicode().tag(sync=True)
-    trace_results_label_auto = Bool(True).tag(sync=True)
-    trace_results_label_invalid_msg = Unicode('').tag(sync=True)
-    trace_results_label_overwrite = Bool().tag(sync=True)
-    trace_add_to_viewer_items = List().tag(sync=True)
-    trace_add_to_viewer_selected = Unicode().tag(sync=True)
 
     # BACKGROUND
     bg_dataset_items = List().tag(sync=True)
@@ -100,26 +87,10 @@ class SpectralExtraction(PluginTemplateMixin):
         self._do_marks = kwargs.get('interactive', True)
 
         # TRACE
-        self.trace_trace = DatasetSelect(self,
-                                         'trace_trace_items',
-                                         'trace_trace_selected',
-                                         default_text='New Trace',
-                                         filters=['is_trace'])
-
         self.trace_dataset = DatasetSelect(self,
                                            'trace_dataset_items',
                                            'trace_dataset_selected',
                                            filters=['layer_in_spectrum_2d_viewer', 'not_trace'])
-
-        self.trace_add_results = AddResults(self, 'trace_results_label',
-                                            'trace_results_label_default',
-                                            'trace_results_label_auto',
-                                            'trace_results_label_invalid_msg',
-                                            'trace_results_label_overwrite',
-                                            'trace_add_to_viewer_items',
-                                            'trace_add_to_viewer_selected')
-        self.trace_add_results.viewer.filters = ['is_spectrum_2d_viewer']
-        self.trace_results_label_default = 'trace'
 
         # BACKGROUND
         self.bg_dataset = DatasetSelect(self,
@@ -298,7 +269,7 @@ class SpectralExtraction(PluginTemplateMixin):
 
         return self._marks
 
-    @observe('trace_trace_selected', 'trace_offset', 'trace_dataset_selected',
+    @observe('trace_dataset_selected',
              'trace_pixel', 'trace_bins', 'trace_window', 'active_step')
     def _interaction_in_trace_step(self, event={}):
         if not self.plugin_opened or not self._do_marks:
@@ -403,12 +374,7 @@ class SpectralExtraction(PluginTemplateMixin):
             Whether to add the resulting trace to the application, according to the options
             defined in the plugin.
         """
-        if self.trace_trace_selected != 'New Trace':
-            # then we're offsetting an existing trace
-            trace = tracing.ArrayTrace(self.trace_dataset.selected_obj.data,
-                                       self.trace_trace.selected_obj.trace+self.trace_offset)
-
-        elif self.trace_type_selected == 'Flat':
+        if self.trace_type_selected == 'Flat':
             trace = tracing.FlatTrace(self.trace_dataset.selected_obj.data,
                                       self.trace_pixel)
 
@@ -422,7 +388,7 @@ class SpectralExtraction(PluginTemplateMixin):
             raise NotImplementedError(f"trace_type={self.trace_type_selected} not implemented")
 
         if add_data:
-            self.trace_add_results.add_results_from_plugin(trace, replace=False)
+            raise NotImplementedError("exporting trace to data entry not yet supported")
 
         return trace
 

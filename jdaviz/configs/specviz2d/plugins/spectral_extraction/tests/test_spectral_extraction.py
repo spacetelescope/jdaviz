@@ -33,20 +33,10 @@ def test_plugin(specviz2d_helper):
     trace = pext.create_trace()
     assert isinstance(trace, tracing.FlatTrace)
 
-    # offset existing trace
-    pext.trace_trace_selected = 'trace'
-    pext.trace_offset = 2
-    trace = pext.create_trace()
-    assert isinstance(trace, tracing.ArrayTrace)
-
     # create KosmosTrace
-    pext.trace_trace_selected = 'New Trace'
     pext.trace_type_selected = 'Auto'
     trace = pext.create_trace()
     assert isinstance(trace, tracing.KosmosTrace)
-
-    # 3 new trace objects should have been loaded and plotted in the spectrum-2d-viewer
-    assert len(sp2dv.figure.marks) == 23
 
     # interact with background section, check marks
     pext.trace_type_selected = 'Flat'
