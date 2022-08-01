@@ -83,9 +83,10 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
         pixel_table = viewer.state.reference_data.coords.world_to_pixel(skycoord_table)
         # coordinates are filtered out (using a mask) if outside the zoom range
         pair_pixel_table = np.dstack((pixel_table[0], pixel_table[1]))
-        masked_table = ma.masked_outside(pair_pixel_table, [zoom_x_min, zoom_y_min],
-                                         [zoom_x_max, zoom_y_max])
-        filtered_table = ma.compress_rows(masked_table[0])
+        # ma.masked_outside removes the coordinates outside the zoom range
+        # ma.compress_rows removes any row that has a mask mark
+        filtered_table = ma.compress_rows(
+            ma.masked_outside(pair_pixel_table, [zoom_x_min, zoom_y_min], [zoom_x_max, zoom_y_max])[0])
         # coordinates are split into their respective x and y values
         # then they are converted to sky coordinates
         filtered_pair_pixel_table = np.array(np.hsplit(filtered_table, 2))
@@ -103,11 +104,13 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
         viewer.add_markers(table=catalog_results, use_skycoord=True, marker_name='catalog_results')
 
     def vue_do_search(self, *args, **kwargs):
+        # calls self.search() which handles all of the searching logic
         self.search()
 
     def vue_do_clear(self, *args, **kwargs):
 
         if self.results_available:
+            # resetting values
             self.results_available = False
             self.number_of_results = 0
             # gets the current viewer
