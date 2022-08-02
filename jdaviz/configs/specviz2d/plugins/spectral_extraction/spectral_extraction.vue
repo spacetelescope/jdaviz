@@ -164,7 +164,7 @@
                 label_hint="Label for the background image"
                 :add_to_viewer_items="bg_add_to_viewer_items"
                 :add_to_viewer_selected.sync="bg_add_to_viewer_selected"
-                action_label="Background"
+                action_label="Export"
                 action_tooltip="Create Background Image"
                 @click:action="create_bg"
               ></plugin-add-results>
@@ -188,7 +188,7 @@
                 label_hint="Label for the background-subtracted image"
                 :add_to_viewer_items="bg_sub_add_to_viewer_items"
                 :add_to_viewer_selected.sync="bg_sub_add_to_viewer_selected"
-                action_label="Subtract"
+                action_label="Export"
                 action_tooltip="Create Background Subtracted Image"
                 @click:action="create_bg_sub"
               ></plugin-add-results>
