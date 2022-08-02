@@ -53,6 +53,7 @@ distribute-*.tar.gz
 .tox
 .*.sw[op]
 *~
+._*
 .project
 .pydevproject
 .settings
