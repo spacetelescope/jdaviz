@@ -241,7 +241,7 @@ class SpectralExtraction(PluginTemplateMixin):
             # we don't have data yet for scales, defer initializing
             return {}
 
-        # then haven't been initialized yet, so initialize with empty
+        # the marks haven't been initialized yet, so initialize with empty
         # marks that will be populated once the first analysis is done.
         self._marks = {'trace': PluginLine(viewer2d, visible=self.plugin_opened),
                        'ext_lower': PluginLine(viewer2d, visible=self.plugin_opened),
