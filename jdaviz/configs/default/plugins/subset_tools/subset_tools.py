@@ -1,3 +1,4 @@
+from glue.core.message import EditSubsetMessage
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode)
 from glue_jupyter.widgets.subset_mode_vuetify import SelectionModeMenu
@@ -32,11 +33,12 @@ class SubsetTools(TemplateMixin):
             'g-subset-mode': SelectionModeMenu(session=self.session)
         }
 
-        # self.hub.subscribe(self, EditSubsetMessage,
-        #                    handler=self.vue_subset_mode_changed)
+        self.hub.subscribe(self, EditSubsetMessage,
+                           handler=self._subset_edit_event)
 
-    # def vue_subset_mode_changed(self, index):
-    #     mode = list(SUBSET_MODES.values())[index]
-
-    #     if self.session.edit_subset_mode.mode != mode:
-    #         self.session.edit_subset_mode.mode = mode
+    def _subset_edit_event(self, msg):
+        # NOTE: here we'll assume that only a single subset is selected (glue supports
+        # multiple subsets being selected, but jdaviz doesn't)
+        if not (len(msg.subset)):
+            # then changed to "Create New", we want to revert the mode to ReplaceMode
+            self.session.edit_subset_mode.mode = ReplaceMode
