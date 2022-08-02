@@ -269,7 +269,7 @@ class SpectralExtraction(PluginTemplateMixin):
 
         return self._marks
 
-    @observe('trace_dataset_selected',
+    @observe('trace_dataset_selected', 'trace_type_selected',
              'trace_pixel', 'trace_bins', 'trace_window', 'active_step')
     def _interaction_in_trace_step(self, event={}):
         if not self.plugin_opened or not self._do_marks:
