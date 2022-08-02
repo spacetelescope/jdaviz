@@ -833,7 +833,7 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_u
 
 def _next_subset_num(label_prefix, subset_groups):
     """Assumes ``prefix i`` format.
-    Does not go back an fill in lower but available numbers. This is consistent with Glue.
+    Does not go back and fill in lower but available numbers. This is consistent with Glue.
     """
     labels = [sg.label.split(' ')[1] for sg in subset_groups
               if sg.label.startswith(label_prefix)]

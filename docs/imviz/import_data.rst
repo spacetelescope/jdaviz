@@ -131,7 +131,7 @@ Importing regions via the API
 
 If you have a region file supported by :ref:`regions:regions_io`, you
 can load the regions into Imviz as follows. Any unsupported region will
-be skipped with warning and a list of ``(region, reason)`` that failed to load
+be skipped with a warning and a list of ``(region, reason)`` that failed to load
 will be returned, if any::
 
     bad_regions = imviz.load_regions_from_file("/path/to/data/myregions.reg")
