@@ -23,7 +23,7 @@ def test_plugin(specviz2d_helper):
     tray_names = [ti['name'] for ti in specviz2d_helper.app.state.tray_items]
     plugin_index = tray_names.index('spectral-extraction')
     specviz2d_helper.app.state.tray_items_open = [plugin_index]
-    assert len(sp2dv.figure.marks) == 20
+    assert len(sp2dv.figure.marks) == 11
     assert pext.marks['trace'].visible is True
     assert len(pext.marks['trace'].x) > 0
 

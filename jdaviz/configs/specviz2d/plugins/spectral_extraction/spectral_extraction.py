@@ -8,8 +8,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         DatasetSelect,
                                         AddResults)
 from jdaviz.core.custom_traitlets import IntHandleEmpty
-from jdaviz.core.marks import (PluginLine,
-                               ShadowLine)
+from jdaviz.core.marks import PluginLine
 
 from specutils import Spectrum1D
 from specreduce import tracing
@@ -255,17 +254,14 @@ class SpectralExtraction(PluginTemplateMixin):
                                                 line_style='dotted'),
                        'bg2_lower': PluginLine(viewer2d, visible=self.plugin_opened),
                        'bg2_upper': PluginLine(viewer2d, visible=self.plugin_opened)}
-        shadows = [ShadowLine(mark, shadow_width=2) for mark in self._marks.values()]
         # NOTE: += won't trigger the figure to notice new marks
-        viewer2d.figure.marks = viewer2d.figure.marks + shadows + list(self._marks.values())
+        viewer2d.figure.marks = viewer2d.figure.marks + list(self._marks.values())
 
         mark1d = PluginLine(viewer1d, visible=self.plugin_opened)
-        shadow1d = ShadowLine(mark1d, shadow_width=2)
-
         self._marks['extract'] = mark1d
 
         # NOTE: += won't trigger the figure to notice new marks
-        viewer1d.figure.marks = viewer1d.figure.marks + [shadow1d, mark1d]
+        viewer1d.figure.marks = viewer1d.figure.marks + [mark1d]
 
         return self._marks
 
