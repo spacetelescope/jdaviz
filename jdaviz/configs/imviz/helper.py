@@ -330,7 +330,7 @@ class Imviz(ConfigHelper):
                 # TODO: Do we want user to specify viewer? Does it matter?
                 self.app.session.edit_subset_mode._mode = NewMode
                 self.default_viewer.apply_roi(state)
-                self.default_viewer.session.edit_subset_mode.edit_subset = None  # No overwrite next iteration # noqa
+                self.app.session.edit_subset_mode.edit_subset = None  # No overwrite next iteration # noqa
 
             # Last resort: Masked Subset that is static
             else:
@@ -593,6 +593,7 @@ class Imviz(ConfigHelper):
         tool.interact.brushing = True
         tool.interact.selected = [from_pix, to_pix]
         tool.interact.brushing = False
+        self.app.session.edit_subset_mode.edit_subset = None  # No overwrite next iteration
 
     # TODO: Make this public API?
     def _delete_region(self, subset_label):
