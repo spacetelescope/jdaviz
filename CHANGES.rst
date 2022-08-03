@@ -40,6 +40,10 @@ Bug Fixes
 
 - Fixes subset mode to reset to "Replace" when choosing to "Create New" subset. [#1532]
 
+- Fixes behavior of adding results from a plugin that overwrite an existing entry.  The loaded
+  and visibility states are now always adopted from the existing entry that would be overwritten.
+  [#1538]
+
 Cubeviz
 ^^^^^^^
 

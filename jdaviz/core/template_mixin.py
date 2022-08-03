@@ -1317,25 +1317,42 @@ class AddResults(BasePluginComponent):
 
         replace = self.viewer.selected_reference != 'spectrum-viewer'
 
+        if self.label_overwrite and len(self.add_to_viewer_items) <= 2:
+            # the switch for add_to_viewer is hidden, and so the loaded state of the overwritten
+            # entry should be the same as the original entry (to avoid deleting reference data)
+            viewer_reference = self.add_to_viewer_items[-1]['reference']
+            viewer_item = self.app._viewer_item_by_reference(viewer_reference)
+            viewer = self.app.get_viewer(viewer_reference)
+            viewer_loaded_labels = [layer.layer.label for layer in viewer.layers]
+            add_to_viewer_selected = viewer_reference if self.label in viewer_loaded_labels else 'None'  # noqa
+            visible = self.label in viewer_item['visible_layers']
+        else:
+            add_to_viewer_selected = self.add_to_viewer_selected
+            visible = True
+
         if self.label in self.app.data_collection:
-            self.app.remove_data_from_viewer(self.viewer.selected_reference, self.label)
+            if add_to_viewer_selected != 'None':
+                self.app.remove_data_from_viewer(self.viewer.selected_reference, self.label)
             self.app.data_collection.remove(self.app.data_collection[self.label])
 
         self.app.add_data(data_item, self.label)
 
-        if self.add_to_viewer_selected != 'None':
+        if add_to_viewer_selected != 'None':
             # replace the contents in the selected viewer with the results from this plugin
             # TODO: switch to an instance/classname check?
             self.app.add_data_to_viewer(self.viewer.selected_id,
                                         self.label, clear_other_data=False)
 
-            if replace:
+            if replace or not visible:
                 data_id = next((x['id'] for x in self.app.state.data_items
                                 if x['name'] == self.label), None)
                 self.app.vue_data_item_visibility({'id': self.viewer.selected_id,
                                                    'item_id': data_id,
-                                                   'visible': True,
+                                                   'visible': visible,
                                                    'replace': True})
+
+        # update overwrite warnings, etc
+        self._on_label_changed()
 
 
 class AddResultsMixin(VuetifyTemplate, HubListener):
