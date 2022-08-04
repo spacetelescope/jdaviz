@@ -30,7 +30,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
             self.catalog_selected = self.catalog_items[0]
 
     def search(self):
-        # note to self: should I call clear before searching?
+        # calling clear in the case the user forgot after searching
+        self.vue_do_clear()
 
         # gets the current viewer
         viewer = self.viewer.selected_obj
@@ -66,12 +67,14 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
             # finds all the sources in that region
             query_region_result = SDSS.query_region(skycoord_center, radius=zoom_radius,
                                                     data_release=17)
+            # attach the table to the app for Python extraction
+            self.app._catalog_source_table = query_region_result
             self.results_available = True
 
         else:
             self.results_available = False
             self.number_of_results = 0
-            raise ValueError(f"{self.catalog_selected} not a supported catalog")
+            raise NotImplementedError(f"{self.catalog_selected} not a supported catalog")
 
         # nothing happens in the case the query returned empty
         if query_region_result is None:

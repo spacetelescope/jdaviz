@@ -218,7 +218,9 @@ If you have multiple viewers open, you will see another dropdown menu to select 
 viewer.
 
 Additionally, the query starts anew everytime :guilabel:`SEARCH` is clicked, so previous results and marks
-are not stored. To save the current result before submitting a new query, you can... (insert API instructions here).
+are not stored. To save the current result before submitting a new query, you can save the table to a variable::
+
+    results = imviz.get_catalog_source_results()
 
 .. _imviz-export-plot:
 

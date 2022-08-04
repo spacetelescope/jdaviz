@@ -27,6 +27,7 @@ import pytest
 from astropy.io import fits
 from astropy.nddata import NDData
 
+
 @pytest.mark.remote_data
 class TestCatalogs:
 
@@ -41,7 +42,7 @@ class TestCatalogs:
 
         assert not catalogs_plugin.results_available
 
-    # testing that every variable updates correctly when the image/data provided does not have results
+    # testing that variables update correctly when the image/data provided does not have results
     def test_plugin_image_no_result(self, imviz_helper, image_2d_wcs):
         arr = np.ones((10, 10))
         ndd = NDData(arr, wcs=image_2d_wcs)

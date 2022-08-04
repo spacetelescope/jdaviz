@@ -425,6 +425,17 @@ class Imviz(ConfigHelper):
         """
         return getattr(self.app, '_aper_phot_results', None)
 
+    def get_catalog_source_results(self):
+        """Return table of sources given by querying from a catalog, if any.
+        Results are calculated using :ref:`imviz-catalogs` plugin.
+
+        Returns
+        -------
+        results : `~astropy.table.QTable` or `None`
+            Table of sources if available or `None` otherwise.
+
+        """
+        return getattr(self.app, '_catalog_source_table', None)
 
 def split_filename_with_fits_ext(filename):
     """Split a ``filename[ext]`` input into filename and FITS extension.
