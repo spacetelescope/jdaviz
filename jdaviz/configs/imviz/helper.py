@@ -437,6 +437,7 @@ class Imviz(ConfigHelper):
         """
         return getattr(self.app, '_catalog_source_table', None)
 
+
 def split_filename_with_fits_ext(filename):
     """Split a ``filename[ext]`` input into filename and FITS extension.
 
