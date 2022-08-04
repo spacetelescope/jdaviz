@@ -22,7 +22,15 @@
     ></plugin-viewer-select>
 
     <v-row v-else>
-      <v-switch
+      <v-switch v-if="label_overwrite"
+        class="hide-input"
+        :label="'Show in '+add_to_viewer_items[1].label"
+        :disabled="true"
+        :hint="'Visibility of the modified entry will be adopted from the current \''+label+'\' data entry.'"
+        persistent-hint
+      >
+      </v-switch>
+      <v-switch v-else
         v-model="add_to_viewer_selected == this.add_to_viewer_items[1].label"
         @change="(e) => {$emit('update:add_to_viewer_selected', this.$props.add_to_viewer_items[Number(e)].label)}"
         :label="'Show in '+add_to_viewer_items[1].label"
@@ -43,6 +51,13 @@
     </v-row>
   </div>
 </template>
+
+<style scoped>
+  .hide-input .v-input--selection-controls__input {
+    opacity: 0;
+  }
+</style>
+
 <script>
 module.exports = {
   props: ['label', 'label_default', 'label_auto', 'label_invalid_msg', 'label_overwrite', 'label_label', 'label_hint',

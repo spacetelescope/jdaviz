@@ -26,6 +26,15 @@ def test_linking_after_spectral_smooth(spectrum1d_cube):
     assert gs.results_label_overwrite is True
     gs.add_to_viewer_selected = 'spectrum-viewer'
     gs.vue_apply()
+    # but since we're overwriting, add_to_viewer_selected is ignored (and hidden in the UI)
+    # so will still be hidden
+    assert len(gs.dataset_items) == 1
+    # by removing the data entry, the overwrite will no longer apply
+    app.remove_data_from_viewer('spectrum-viewer', 'spectral-smooth stddev-3.2')
+    app.data_collection.remove(app.data_collection['spectral-smooth stddev-3.2'])
+
+    gs.add_to_viewer_selected = 'spectrum-viewer'
+    gs.vue_apply()
     # since we now plotted the results, the dataset should be fixed,
     # but the dataset dropdown contains multiple choices, so the dataset
     # itself is prepended to the default label, and there is no longer
