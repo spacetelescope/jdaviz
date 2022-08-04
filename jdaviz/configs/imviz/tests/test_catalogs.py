@@ -1,7 +1,3 @@
-import numpy as np
-
-from astropy.io import fits
-
 '''
 This file tests four tasks of the catalogs.py plugin in Imviz.
 1. When no image/data is provided, the search does not crash
@@ -25,11 +21,17 @@ is correct and the removal of the points outside the zoom limits is correctly do
 This may need to instead be tested for in the future.
 '''
 
+import numpy as np
+import pytest
 
-# testing that the plugin search does not crash when no data/image is provided
-class TestCatalogs_NoImage():
+from astropy.io import fits
+from astropy.nddata import NDData
 
-    def test_plugin(self, imviz_helper):
+@pytest.mark.remote_data
+class TestCatalogs:
+
+    # testing that the plugin search does not crash when no data/image is provided
+    def test_plugin_no_image(self, imviz_helper):
         self.imviz = imviz_helper
 
         catalogs_plugin = self.imviz.app.get_tray_item_from_name('imviz-catalogs')
@@ -39,32 +41,12 @@ class TestCatalogs_NoImage():
 
         assert not catalogs_plugin.results_available
 
+    # testing that every variable updates correctly when the image/data provided does not have results
+    def test_plugin_image_no_result(self, imviz_helper, image_2d_wcs):
+        arr = np.ones((10, 10))
+        ndd = NDData(arr, wcs=image_2d_wcs)
 
-# testing that every variable updates correctly when the image/data provided does not have results
-# data used: information based on the Imviz example notebook, variable "acs_47tuc_1"
-# https://github.com/spacetelescope/jdaviz/blob/main/notebooks/ImvizExample.ipynb
-class TestCatalogs_NoResults():
-
-    def test_plugin(self, imviz_helper):
-        arr = np.ones((2048, 4096))
-
-        # header is based on the data provided above
-        hdu1 = fits.ImageHDU(arr, name='SCI')
-        hdu1.header.update({'CTYPE1': 'RA---TAN-SIP',
-                            'CUNIT1': 'deg',
-                            'CD1_1': 1.0548878548304e-05,
-                            'CD1_2': 9.763832242379e-06,
-                            'CRPIX1': 2048.0,
-                            'CRVAL1': 6.0705364649855,
-                            'NAXIS1': 4096,
-                            'CTYPE2': 'DEC--TAN-SIP',
-                            'CUNIT2': 'deg',
-                            'CD2_1': 8.9680807000521e-06,
-                            'CD2_2': -9.9965364544771e-06,
-                            'CRPIX2': 1024.0,
-                            'CRVAL2': -71.880349631403,
-                            'NAXIS2': 2048})
-        imviz_helper.load_data(hdu1, data_label='no_results_data')
+        imviz_helper.load_data(ndd, data_label='no_results_data')
 
         self.imviz = imviz_helper
 
@@ -76,14 +58,11 @@ class TestCatalogs_NoResults():
         assert catalogs_plugin.results_available
         assert catalogs_plugin.number_of_results == 0
 
-
-# testing that every variable updates correctly when the image/data provided does have results
-# data used: information based on this image -
-# https://dr12.sdss.org/fields/runCamcolField?field=76&camcol=5&run=7674
-# the z-band FITS image was downloaded and used
-class TestCatalogs_Results():
-
-    def test_plugin(self, imviz_helper):
+    # testing that every variable updates correctly when the image/data provided does have results
+    # data used: information based on this image -
+    # https://dr12.sdss.org/fields/runCamcolField?field=76&camcol=5&run=7674
+    # the z-band FITS image was downloaded and used
+    def test_plugin_image_with_result(self, imviz_helper):
         arr = np.ones((1489, 2048))
 
         # header is based on the data provided above
