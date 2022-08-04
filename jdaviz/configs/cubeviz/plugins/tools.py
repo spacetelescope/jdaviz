@@ -41,8 +41,7 @@ class SelectSlice(CheckableTool):
             # throttle to 200ms
             return
 
-        msg = SliceSelectWavelengthMessage(wavelength=data['domain']['x'], sender=self)
-        self.viewer.session.hub.broadcast(msg)
+        self.viewer.jdaviz_helper.select_wavelength(data['domain']['x'])
 
         self._time_last = time.time()
 
