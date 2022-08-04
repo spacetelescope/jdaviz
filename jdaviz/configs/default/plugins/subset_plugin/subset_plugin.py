@@ -1,10 +1,10 @@
 from glue.core.message import EditSubsetMessage, SubsetUpdateMessage
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode)
-from glue.core.roi import EllipticalROI, RectangularROI
+from glue.core.roi import CircularROI, EllipticalROI, RectangularROI
 from glue.core.subset import RoiSubsetState, RangeSubsetState, CompositeSubsetState
 from glue_jupyter.widgets.subset_mode_vuetify import SelectionModeMenu
-from traitlets import List, Unicode, Bool, Any, observe
+from traitlets import List, Unicode, Bool, observe
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
@@ -33,8 +33,7 @@ class SubsetPlugin(TemplateMixin):
     subset_definitions = List([]).tag(sync=True)
     has_subset_details = Bool(False).tag(sync=True)
 
-    has_angle = Bool(False).tag(sync=True)
-    new_subset_angle = Any(0).tag(sync=True)
+    is_editable = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -85,6 +84,10 @@ class SubsetPlugin(TemplateMixin):
 
     @observe('subset_selected')
     def _sync_selected_from_ui(self, change):
+        self.subset_definitions = []
+        self.subset_types = []
+        self.is_editable = False
+
         if not hasattr(self, 'subset_select'):
             # during initial init, this can trigger before the component is initialized
             return
@@ -113,7 +116,7 @@ class SubsetPlugin(TemplateMixin):
         if isinstance(subset_state, CompositeSubsetState):
             self._unpack_nested_subset(subset_state.state1)
             self._unpack_nested_subset(subset_state.state2)
-            self.has_angle = False
+            self.is_editable = False
         else:
             if subset_state is not None:
                 self._get_subset_subregion_definition(subset_state)
@@ -124,41 +127,56 @@ class SubsetPlugin(TemplateMixin):
         the string type and operation (if in a composite subset) need to be stored
         separately from the float parameters for display reasons.
         """
-        subset_type = {}
-        subset_definition = None
-        self.has_angle = False
+        subset_type = ''
+        subset_definition = []
+        self.is_editable = False
 
         if isinstance(subset_state, RoiSubsetState):
-            subset_classname = subset_state.roi.__class__.__name__
-            if subset_classname == "CircularROI":
+            if isinstance(subset_state.roi, CircularROI):
                 x, y = subset_state.roi.get_center()
-                subset_definition = {"X Center": x,
-                                     "Y Center": y,
-                                     "Radius": subset_state.roi.radius}
+                r = subset_state.roi.radius
+                subset_definition = [{"name": "X Center", "att": "xc", "value": x, "orig": x},
+                                     {"name": "Y Center", "att": "yc", "value": y, "orig": y},
+                                     {"name": "Radius", "att": "radius", "value": r, "orig": r}]
+                self.is_editable = True
 
-            elif subset_classname == "RectangularROI":
-                subset_definition = {}
+            elif isinstance(subset_state.roi, RectangularROI):
                 for att in ("Xmin", "Xmax", "Ymin", "Ymax"):
-                    subset_definition[att] = getattr(subset_state.roi, att.lower())
-                subset_definition["Angle"] = subset_state.roi.theta
-                self.has_angle = True
+                    real_att = att.lower()
+                    val = getattr(subset_state.roi, real_att)
+                    subset_definition.append(
+                        {"name": att, "att": real_att, "value": val, "orig": val})
+                theta = subset_state.roi.theta
+                subset_definition.append(
+                    {"name": "Angle", "att": "theta", "value": theta, "orig": theta})
+                self.is_editable = True
 
-            elif subset_classname == "EllipticalROI":
-                subset_definition = {"X Center": subset_state.roi.xc,
-                                     "Y Center": subset_state.roi.yc,
-                                     "X Radius": subset_state.roi.radius_x,
-                                     "Y Radius": subset_state.roi.radius_y,
-                                     "Angle": subset_state.roi.theta}
-                self.has_angle = True
+            elif isinstance(subset_state.roi, EllipticalROI):
+                xc = subset_state.roi.xc
+                yc = subset_state.roi.yc
+                rx = subset_state.roi.radius_x
+                ry = subset_state.roi.radius_y
+                theta = subset_state.roi.theta
+                subset_definition = [
+                    {"name": "X Center", "att": "xc", "value": xc, "orig": xc},
+                    {"name": "Y Center", "att": "yc", "value": yc, "orig": yc},
+                    {"name": "X Radius", "att": "radius_x", "value": rx, "orig": rx},
+                    {"name": "Y Radius", "att": "radius_y", "value": ry, "orig": ry},
+                    {"name": "Angle", "att": "theta", "value": theta, "orig": theta}]
+                self.is_editable = True
 
-            subset_type["Subset type"] = subset_classname
+            subset_type = subset_state.roi.__class__.__name__
 
         elif isinstance(subset_state, RangeSubsetState):
-            subset_definition = {"Upper bound": subset_state.hi,
-                                 "Lower bound": subset_state.lo}
-            subset_type["Subset type"] = "Range"
+            lo = subset_state.lo
+            hi = subset_state.hi
+            subset_definition = [{"name": "Lower bound", "att": "lo", "value": lo, "orig": lo},
+                                 {"name": "Upper bound", "att": "hi", "value": hi, "orig": hi}]
+            self.is_editable = True
+            subset_type = "Range"
 
-        if subset_definition is not None and subset_definition not in self.subset_definitions:
+        if len(subset_definition) > 0 and subset_definition not in self.subset_definitions:
+            # Note: .append() does not work for List traitlet.
             self.subset_definitions = self.subset_definitions + [subset_definition]
             self.subset_types = self.subset_types + [subset_type]
 
@@ -176,15 +194,26 @@ class SubsetPlugin(TemplateMixin):
         self._unpack_nested_subset(subset_state)
 
     def vue_update_subset(self, *args):
+        if not self.is_editable:  # no-op
+            return
+
         subset_group = [s for s in self.app.data_collection.subset_groups if
                         s.label == self.subset_selected][0]
         subset_state = subset_group.subset_state
 
-        if not isinstance(subset_state.roi, (EllipticalROI, RectangularROI)):  # no-op
-            return
+        # Composite region cannot be edited, so just grab first element.
+        subset_type = self.subset_types[0]
+        subset_definition = self.subset_definitions[0]
 
         try:
-            subset_state.roi.theta = float(self.new_subset_angle)
+            if subset_type == "Range":
+                sbst_obj = subset_state
+            else:
+                sbst_obj = subset_state.roi
+
+            for d_att in subset_definition:
+                setattr(sbst_obj, d_att["att"], d_att["value"])
+
             self.session.edit_subset_mode._combine_data(subset_state, override_mode=ReplaceMode)
         except Exception as err:
             self.hub.broadcast(SnackbarMessage(
