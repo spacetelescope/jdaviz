@@ -7,4 +7,4 @@ from .links_control import *  # noqa
 from .compass import *  # noqa
 from .aper_phot_simple import *  # noqa
 from .line_profile_xy import *  # noqa
-from .catalogs import * # noqa
+from .catalogs import *  # noqa

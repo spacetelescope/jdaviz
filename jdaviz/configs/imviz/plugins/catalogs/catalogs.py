@@ -23,6 +23,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # TODO: Add more catalogs.
         self.catalog_items = ["SDSS"]
 
         if self.catalog_selected not in self.catalog_items:
@@ -35,7 +36,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
         viewer = self.viewer.selected_obj
 
         # nothing happens in the case there is no image in the viewer
-        if viewer.state.reference_data is None:
+        # additionally if the data does not have WCS
+        if viewer.state.reference_data is None or viewer.state.reference_data.coords is None:
             self.results_available = False
             self.number_of_results = 0
             return
@@ -76,6 +78,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
             self.number_of_results = 0
             return
 
+        # TODO: Column names are catalog-dependent. Need to consider this when adding new catalogs.
         # a table is created storing the 'ra' and 'dec' plottable points of each source found
         skycoord_table = SkyCoord(query_region_result['ra'], query_region_result['dec'], unit='deg')
 
