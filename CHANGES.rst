@@ -44,6 +44,9 @@ Bug Fixes
   and visibility states are now always adopted from the existing entry that would be overwritten.
   [#1538]
 
+- The top-level config will now always be returned via ``app._jdaviz_helper`` and any associated
+  callthroughs [#1546]
+
 Cubeviz
 ^^^^^^^
 
