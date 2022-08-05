@@ -1,6 +1,3 @@
-from jdaviz import Cubeviz
-
-
 def test_nested_helper(cubeviz_helper):
     '''Ensures the Cubeviz helper is always returned, even after the Specviz helper is called'''
     # Force Specviz helper to instantiate
