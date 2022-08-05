@@ -13,6 +13,9 @@ Cubeviz
 Imviz
 ^^^^^
 
+- New "Catalog Search" plugin that uses a specified catalog (currently SDSS) to search for sources in an image
+  and mark the sources found. [#1455]
+
 Mosviz
 ^^^^^^
 - NIRISS parser now sorts FITS files by header instead of file name. [#819]
@@ -64,6 +67,8 @@ Other Changes and Additions
 ---------------------------
 
 - Added a UV Galactic linelist. [#1522]
+
+- astroquery is now a required dependency of Jdaviz. [#1455]
 
 2.8 (2022-07-21)
 ================

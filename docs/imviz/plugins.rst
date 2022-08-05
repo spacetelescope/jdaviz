@@ -196,6 +196,37 @@ results are displayed under the :guilabel:`CALCULATE` button.
     :ref:`Export Photometry <imviz_export_photomtery>`
         Documentation on exporting photometry results.
 
+.. _imviz-catalogs:
+
+Catalog Search
+==============
+
+This plugin queries a catalog around the zoom window of the active image, marks the sources from the results of the query, and
+provides the number of sources found. After zooming into a specific region of the image, the query uses the center
+point of the region with a radius determined by the farthest edge point of the region. Clicking on :guilabel:`CLEAR`
+will remove all markers on the active viewer.
+
+To select which catalog you would like to use for the search, please pick one of the available options from the
+catalog dropdown menu.
+
+.. note::
+
+    This plugin is still under active development. As a result, the search only uses the SDSS DR17 catalog
+    and works best when you only have a single image loaded in a viewer.
+
+If you have multiple viewers open, you will see another dropdown menu to select the active
+viewer.
+
+Additionally, the query starts anew every time :guilabel:`SEARCH` is clicked, so previous results and marks
+are not stored. To save the current result before submitting a new query, you can save the table to a variable::
+
+    results = imviz.get_catalog_source_results()
+
+.. note::
+
+    The table returned from the API above may cover more sources than shown in the currently zoomed-in
+    portion of the image. Additional steps will be needed to filter out these points, if necessary.
+
 .. _imviz-export-plot:
 
 Export Plot
