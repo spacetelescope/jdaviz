@@ -30,6 +30,7 @@
             :label="item.name"
             v-model.number="item.value"
             type="number"
+            :disabled="item.name=='Angle'"
           ></v-text-field>
         </v-col>
       </v-row>
