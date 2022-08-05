@@ -35,7 +35,6 @@ This plugin gives access to per-viewer and per-layer plotting options.
     :ref:`Display Settings <imviz-display-settings>`
         Documentation on various display settings in the Jdaviz viewers.
 
-
 .. _imviz-subset-plugin:
 
 Subset Tools
@@ -50,8 +49,15 @@ via the API unless an interactive region is drawn after.
 
 If an existing subset is selected, the parameters of the subset will also be
 shown. Note that while parameters for compound regions (e.g., a subset with
-three disjoint regions) are displayed, the logical operations joining them
-(``OR``, ``AND``, etc.) are not.
+multiple disjoint regions) are displayed, the logical operations joining them
+(``OR``, ``AND``, etc.) are not shown.
+
+For a simple subset, you can edit its parameters by changing the values
+in the corresponding editable text fields. Once you have entered the new
+value(s), click :guilabel:`Update` to apply. You should see the subset
+parameters and shape both update concurrently.
+
+.. note:: Angle is currently uneditable.
 
 .. _imviz-link-control:
 
