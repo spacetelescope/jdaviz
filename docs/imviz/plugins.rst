@@ -222,6 +222,12 @@ are not stored. To save the current result before submitting a new query, you ca
 
     results = imviz.get_catalog_source_results()
 
+
+.. note::
+
+    The radius chosen results in a table returned with sources found outside the active viewers current zoomed-in
+    portion of the image. Additional steps will be needed to filter out these points if necessary.
+
 .. _imviz-export-plot:
 
 Export Plot
