@@ -53,7 +53,9 @@ class ConfigHelper(HubListener):
 
         # give a reference from the app back to this config helper.  These can be accessed from a
         # viewer via viewer.jdaviz_app and viewer.jdaviz_helper
-        self.app._jdaviz_helper = self
+        # if the helper has already been set, this is probably a nested viz tool. Don't overwrite
+        if not hasattr(self.app, '_jdaviz_helper'):
+            self.app._jdaviz_helper = self
 
         self.app.hub.subscribe(self, SubsetCreateMessage,
                                handler=lambda msg: self._propagate_callback_to_viewers('_on_subset_create', msg)) # noqa
