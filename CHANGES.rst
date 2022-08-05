@@ -44,13 +44,13 @@ Bug Fixes
   and visibility states are now always adopted from the existing entry that would be overwritten.
   [#1538]
 
-- The top-level config will now always be returned via ``app._jdaviz_helper`` and any associated
-  callthroughs [#1546]
-
 Cubeviz
 ^^^^^^^
 
 - Fixed validation message of moment number in moment map plugin. [#1536]
+
+- Fixed ``app._jdaviz_helper`` returning Specviz helper instead of Cubeviz helper when Specviz
+  helper is called. ``app._jdaviz_helper`` always returns Cubeviz helper [#1546]
 
 Imviz
 ^^^^^
