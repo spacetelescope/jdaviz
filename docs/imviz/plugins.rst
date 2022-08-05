@@ -217,16 +217,15 @@ catalog dropdown menu.
 If you have multiple viewers open, you will see another dropdown menu to select the active
 viewer.
 
-Additionally, the query starts anew everytime :guilabel:`SEARCH` is clicked, so previous results and marks
+Additionally, the query starts anew every time :guilabel:`SEARCH` is clicked, so previous results and marks
 are not stored. To save the current result before submitting a new query, you can save the table to a variable::
 
     results = imviz.get_catalog_source_results()
 
-
 .. note::
 
-    The radius chosen results in a table returned with sources found outside the active viewers current zoomed-in
-    portion of the image. Additional steps will be needed to filter out these points if necessary.
+    The table returned from the API above may cover more sources than shown in the currently zoomed-in
+    portion of the image. Additional steps will be needed to filter out these points, if necessary.
 
 .. _imviz-export-plot:
 

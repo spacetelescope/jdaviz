@@ -68,6 +68,8 @@ Other Changes and Additions
 
 - Added a UV Galactic linelist. [#1522]
 
+- astroquery is now a required dependency of Jdaviz. [#1455]
+
 2.8 (2022-07-21)
 ================
 

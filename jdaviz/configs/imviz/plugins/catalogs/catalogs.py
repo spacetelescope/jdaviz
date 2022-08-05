@@ -67,6 +67,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
             # finds all the sources in that region
             query_region_result = SDSS.query_region(skycoord_center, radius=zoom_radius,
                                                     data_release=17)
+            # TODO: Filter this table the same way as the actual displayed markers.
             # attach the table to the app for Python extraction
             self.app._catalog_source_table = query_region_result
             self.results_available = True
