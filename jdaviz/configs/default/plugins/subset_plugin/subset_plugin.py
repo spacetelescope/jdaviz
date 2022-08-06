@@ -26,7 +26,7 @@ class SubsetPlugin(TemplateMixin):
     template_file = __file__, "subset_plugin.vue"
     select = List([]).tag(sync=True)
     subset_items = List([]).tag(sync=True)
-    subset_selected = Unicode("Create new").tag(sync=True)
+    subset_selected = Unicode("Create New").tag(sync=True)
     mode_selected = Unicode('add').tag(sync=True)
     show_region_info = Bool(True).tag(sync=True)
     subset_types = List([]).tag(sync=True)
@@ -215,6 +215,24 @@ class SubsetPlugin(TemplateMixin):
                 setattr(sbst_obj, d_att["att"], d_att["value"])
 
             self.session.edit_subset_mode._combine_data(subset_state, override_mode=ReplaceMode)
-        except Exception as err:
+        except Exception as err:  # pragma: no cover
             self.hub.broadcast(SnackbarMessage(
                 f"Failed to rotate Subset: {repr(err)}", color='error', sender=self))
+
+    # List of JSON-like dict is nice for front-end but a pain to look up,
+    # so we use these helper functions.
+
+    def _get_value_from_subset_definition(self, index, name, desired_key):
+        subset_definition = self.subset_definitions[index]
+        value = None
+        for item in subset_definition:
+            if item['name'] == name:
+                value = item[desired_key]
+                break
+        return value
+
+    def _set_value_in_subset_definition(self, index, name, desired_key, new_value):
+        for i in range(len(self.subset_definitions[index])):
+            if self.subset_definitions[index][i]['name'] == name:
+                self.subset_definitions[index][i]['value'] = new_value
+                break
