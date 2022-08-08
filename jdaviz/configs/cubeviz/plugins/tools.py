@@ -6,7 +6,7 @@ from glue.viewers.common.tool import CheckableTool
 from glue.core.roi import RectangularROI
 from glue.core.edit_subset_mode import NewMode
 
-from jdaviz.core.events import SliceSelectWavelengthMessage, SliceToolStateMessage
+from jdaviz.core.events import SliceToolStateMessage
 
 __all__ = []
 
