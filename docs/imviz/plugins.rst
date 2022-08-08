@@ -97,6 +97,25 @@ data label, the X and Y directions, and the zoom box.
 When you have multiple viewers created in Imviz, use the Viewer dropdown menu
 to change the active viewer that it tracks.
 
+.. _rotate-image-simple:
+
+Simple Image Rotation
+=====================
+
+.. warning::
+
+    Distortion is ignored, so using this plugin on distorted data is
+    not recommended.
+
+.. note::
+
+    Zoom box in :ref:`imviz-compass` will not show when rotation mode is on.
+
+This plugins rotates image(s) by the given angle.
+You can select viewer but that option only shows when applicable.
+You can enter the desired rotation angle in degrees clockwise.
+Click on the :guilabel:`ROTATE` button to finalize.
+
 .. _line-profile-xy:
 
 Line Profiles

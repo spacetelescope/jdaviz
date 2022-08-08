@@ -23,6 +23,7 @@ tray:
   - g-subset-plugin
   - imviz-links-control
   - imviz-compass
+  - imviz-rotate-image
   - imviz-line-profile-xy
   - imviz-aper-phot-simple
   - imviz-catalogs

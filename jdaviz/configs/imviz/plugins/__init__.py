@@ -5,6 +5,7 @@ from .parsers import *  # noqa
 from .coords_info import *  # noqa
 from .links_control import *  # noqa
 from .compass import *  # noqa
+from .rotate_image import *  # noqa
 from .aper_phot_simple import *  # noqa
 from .line_profile_xy import *  # noqa
 from .catalogs import *  # noqa

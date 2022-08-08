@@ -1118,7 +1118,7 @@ class Application(VuetifyTemplate, HubListener):
 
         Returns
         -------
-        `~glue_jupyter.bqplot.common.BqplotBaseView`
+        viewer : `~glue_jupyter.bqplot.common.BqplotBaseView`
             The viewer class instance.
         """
         viewer_item = self._viewer_item_by_reference(reference)
