@@ -105,6 +105,9 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
             if telescope == 'JWST':
                 if 'photometry' in meta and 'pixelarea_arcsecsq' in meta['photometry']:
                     self.pixel_area = meta['photometry']['pixelarea_arcsecsq']
+                if 'bunit_data' in meta and meta['bunit_data'] == u.Unit("MJy/sr"):
+                    # Hardcode the flux conversion factor from MJy to ABmag
+                    self.flux_scaling = 3631
             elif telescope == 'HST':
                 # TODO: Add more HST support, as needed.
                 # HST pixel scales are from instrument handbooks.

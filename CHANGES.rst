@@ -16,6 +16,8 @@ Imviz
 - New "Catalog Search" plugin that uses a specified catalog (currently SDSS) to search for sources in an image
   and mark the sources found. [#1455]
 
+- Auto-populate simple aperture photometry values if JWST data is loaded into viewer. [#1549]
+
 Mosviz
 ^^^^^^
 - NIRISS parser now sorts FITS files by header instead of file name. [#819]
