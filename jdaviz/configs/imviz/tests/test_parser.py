@@ -270,6 +270,7 @@ class TestParseImage:
         phot_plugin.counts_factor = (data.meta['photometry']['conversion_megajanskys'] /
                                      data.meta['exposure']['exposure_time'])
         assert_allclose(phot_plugin.counts_factor, 0.0036385915646798953)
+        assert_quantity_allclose(phot_plugin.flux_scaling, 3.631e-3, rtol=1e-3)
         phot_plugin.flux_scaling = 1  # Simple mag, no zeropoint
         phot_plugin.vue_do_aper_phot()
         tbl = imviz_helper.get_aperture_photometry_results()
