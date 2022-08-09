@@ -24,6 +24,12 @@ An example without accessing Specviz::
 
     subset1_spec1d = cubeviz.app.get_data_from_viewer("flux-viewer", data_label="Subset 1")
 
+To access to spatial region itself::
+
+    dc = cubeviz.app.data_collection
+    subset1 = dc.subset_groups[0]
+    subset1.label
+
 1D Spectra and Spectral Regions
 ===============================
 
@@ -36,10 +42,10 @@ The following line of code can be used to extract a spectral subset named "Subse
 
     subset2_spec1d = cubeviz.specviz.get_spectra("Subset 2")
 
-2D and 3D Data Cubes
-====================
+2D images and 3D Data Cubes
+===========================
 
-2D and 3D data cubes can be extracted from their respective :ref:`viewers <cubeviz-viewers>`.
+2D images and 3D data cubes can be extracted from their respective :ref:`viewers <cubeviz-viewers>`.
 The viewer options in the Cubeviz configuration are ``flux-viewer``, ``uncert-viewer``, and ``mask-viewer``.
 For example, to list the data available in a particular viewer:::
 
