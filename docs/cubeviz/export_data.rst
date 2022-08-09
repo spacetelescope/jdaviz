@@ -16,7 +16,7 @@ Spatial Regions
         Documentation on how to export spatial regions.
 
 Since Specviz can be accessed from Cubeviz, the following line of code
-can be used to extract a spatial subset named "Subset 1"::
+can be used to extract the spectrum of a spatial subset named "Subset 1"::
 
     subset1_spec1d = cubeviz.specviz.get_spectra("Subset 1")
 
