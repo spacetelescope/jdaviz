@@ -149,7 +149,11 @@ an interactively selected region. A typical workflow is as follows:
    If this field is not applicable for you, leave it at 0.
    **This field resets every time Data selection changes.**
 8. If you also want photometry result in magnitude unit, you can enter a flux
-   scaling factor in the :guilabel:`Flux scaling` field. The value must be in the
+   scaling factor in the :guilabel:`Flux scaling` field.
+   :guilabel:`Flux scaling` is populated for JWST images
+   if "bunit_data" is a key in the `meta` attribute of the image. The value used
+   if this is the case is ``3631e-6`` and the resulting sum will be in AB magnitude.
+   Otherwise, the value must be in the
    same unit as display data unit. A magnitude is then calculated using
    ``-2.5 * log(flux / flux_scaling)``. This calculation only makes sense if your
    display data unit is already in linear flux unit. Setting this to 1 is equivalent
