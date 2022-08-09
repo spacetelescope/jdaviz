@@ -412,7 +412,7 @@ class SpectralExtraction(PluginTemplateMixin):
                                                  self.bg_separation,
                                                  width=self.bg_width)
         elif self.bg_type_selected == 'TwoSided':
-            bg = background.Background.one_sided(self.bg_dataset.selected_obj.data,
+            bg = background.Background.two_sided(self.bg_dataset.selected_obj.data,
                                                  trace,
                                                  self.bg_separation,
                                                  width=self.bg_width)
