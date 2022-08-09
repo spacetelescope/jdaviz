@@ -226,7 +226,7 @@ class SpectralExtraction(PluginTemplateMixin):
         # update extracted 1d spectrum preview, regardless of the step
         if self.setting_interactive_extract:
             try:
-                sp1d = self.create_extract(add_data=False)
+                sp1d = self.export_extract_spectrum(add_data=False)
             except Exception as e:
                 # NOTE: ignore error, but will be raised when clicking ANY of the export buttons
                 # NOTE: KosmosTrace or manual background are often giving a
@@ -303,7 +303,7 @@ class SpectralExtraction(PluginTemplateMixin):
             return
 
         try:
-            trace = self.create_trace(add_data=False)
+            trace = self.export_trace(add_data=False)
         except Exception:
             # NOTE: ignore error, but will be raised when clicking ANY of the export buttons
             self.marks['trace'].clear()
@@ -394,10 +394,33 @@ class SpectralExtraction(PluginTemplateMixin):
         if len(invalid_kwargs):
             raise ValueError(f"{invalid_kwargs} are not valid attributes to pass as a kwargs")
 
-        for k,v in kwargs.items():
+        for k, v in kwargs.items():
             setattr(self, k, v)
 
-    def create_trace(self, add_data=False, **kwargs):
+    def import_trace(self, trace):
+        """
+        Import the input parameters from an existing specreduce trace object into the plugin.
+
+        Parameters
+        ----------
+        trace : specreduce.tracing.Trace
+            Trace object to import
+        """
+        if not isinstance(trace, tracing.Trace):
+            raise TypeError("trace must be a specreduce.tracing.Trace object")
+
+        if isinstance(trace, tracing.FlatTrace):
+            self.trace_type_selected = 'Flat'
+            self.trace_pixel = trace.trace_pos
+        elif isinstance(trace, tracing.KosmosTrace):
+            self.trace_type_selected = 'Auto'
+            self.trace_pixel = trace.guess
+            self.trace_window = trace.window
+            self.trace_bins = trace.bins
+        else:
+            raise NotImplementedError(f"trace of type {trace.__class__.__name__} not supported")
+
+    def export_trace(self, add_data=False, **kwargs):
         """
         Create a trace object from the input parameters defined in the plugin.
 
@@ -431,18 +454,67 @@ class SpectralExtraction(PluginTemplateMixin):
         return trace
 
     def vue_create_trace(self, *args):
-        _ = self.create_trace(add_data=True)
+        _ = self.export_trace(add_data=True)
 
     def _get_bg_trace(self):
         if self.bg_type_selected == 'Manual':
             trace = tracing.FlatTrace(self.trace_dataset.selected_obj.data,
                                       self.bg_trace_pixel)
         else:
-            trace = self.create_trace(add_data=False)
+            trace = self.export_trace(add_data=False)
 
         return trace
 
-    def _get_bg(self):
+    def import_bg(self, bg):
+        """
+        Import the input parameters from an existing specreduce background object into the plugin.
+
+        Parameters
+        ----------
+        bg : specreduce.background.Background
+            Background object to import
+        """
+        if not isinstance(bg, background.Background):
+            raise TypeError("bg must be a specreduce.background.Background object")
+
+        # TODO: should we detect/set the referenced dataset?
+        trace = self._get_bg_trace()
+        if len(bg.traces) == 2:
+            # try to detect constant separation
+            seps1 = bg.traces[0].trace - trace.trace
+            seps2 = trace.trace - bg.traces[1].trace
+            if np.all(seps1 == seps1[0]) and np.all(seps2 == seps1[0]):
+                self.bg_type_selected = 'TwoSided'
+                self.bg_separation = int(seps1[0])
+            else:
+                raise NotImplementedError("backgrounds with custom traces not supported (could not detect common separation)")  # noqa
+        elif len(bg.traces) == 1:
+            # either one_sided or trace, let's see if its constant offset from the trace
+            seps = bg.traces[0].trace - trace.trace
+            if np.all(seps == seps[0]):
+                self.bg_type_selected = 'OneSided'
+                self.bg_separation = int(seps[0])
+            else:
+                raise NotImplementedError("backgrounds with custom traces not supported (could not detect common separation)")  # noqa
+        else:
+            raise NotImplementedError("backgrounds with more than 2 traces not supported")
+
+        self.bg_width = bg.width
+
+    def export_bg(self, **kwargs):
+        """
+        Create a specreduce background object from the input parameters defined in the plugin.
+
+        Parameters
+        ----------
+        add_data : bool
+            Whether to add the resulting image to the application, according to the options
+            defined in the plugin.
+        """
+        self._set_create_kwargs(**kwargs)
+        if len(kwargs) and self.active_step != 'bg':
+            self.update_marks(step='bg')
+
         trace = self._get_bg_trace()
 
         if self.bg_type_selected == 'Manual':
@@ -463,7 +535,7 @@ class SpectralExtraction(PluginTemplateMixin):
 
         return bg
 
-    def create_bg(self, add_data=False, **kwargs):
+    def export_bg_img(self, add_data=False, **kwargs):
         """
         Create a background 2D spectrum from the input parameters defined in the plugin.
 
@@ -473,11 +545,7 @@ class SpectralExtraction(PluginTemplateMixin):
             Whether to add the resulting image to the application, according to the options
             defined in the plugin.
         """
-        self._set_create_kwargs(**kwargs)
-        if len(kwargs) and self.active_step != 'bg':
-            self.update_marks(step='bg')
-
-        bg = self._get_bg()
+        bg = self.export_bg(**kwargs)
 
         bg_spec = Spectrum1D(spectral_axis=self.bg_dataset.selected_obj.spectral_axis,
                              flux=bg.bkg_image()*self.bg_dataset.selected_obj.flux.unit)
@@ -489,14 +557,14 @@ class SpectralExtraction(PluginTemplateMixin):
 
     def vue_create_bg(self, *args):
         try:
-            self.create_bg(add_data=True)
+            self.export_bg_img(add_data=True)
         except Exception as e:
             self.app.hub.broadcast(
                 SnackbarMessage(f"Specreduce background failed with the following error: {repr(e)}",
                                 color='error', sender=self)
             )
 
-    def create_bg_sub(self, add_data=False, **kwargs):
+    def export_bg_sub(self, add_data=False, **kwargs):
         """
         Create a background-subtracted 2D spectrum from the input parameters defined in the plugin.
 
@@ -506,11 +574,7 @@ class SpectralExtraction(PluginTemplateMixin):
             Whether to add the resulting image to the application, according to the options
             defined in the plugin.
         """
-        self._set_create_kwargs(**kwargs)
-        if len(kwargs) and self.active_step != 'bg':
-            self.update_marks(step='bg')
-
-        bg = self._get_bg()
+        bg = self.export_bg(**kwargs)
 
         bg_sub_spec = Spectrum1D(spectral_axis=self.bg_dataset.selected_obj.spectral_axis,
                                  flux=bg.sub_image()*self.bg_dataset.selected_obj.flux.unit)
@@ -521,18 +585,47 @@ class SpectralExtraction(PluginTemplateMixin):
         return bg_sub_spec
 
     def vue_create_bg_sub(self, *args):
-        _ = self.create_bg_sub(add_data=True)
+        _ = self.export_bg_sub(add_data=True)
 
     def _get_ext_trace(self):
-        return self.create_trace(add_data=False)
+        return self.export_trace(add_data=False)
 
     def _get_ext_input_spectrum(self):
         if self.ext_dataset_selected == 'From Plugin':
-            return self.create_bg_sub(add_data=False)
+            return self.export_bg_sub(add_data=False)
         else:
             return self.ext_dataset.selected_obj
 
-    def create_extract(self, add_data=False, **kwargs):
+    def import_extract(self, ext):
+        """
+        Import the input parameters from an existing specreduce extract object into the plugin.
+
+        Parameters
+        ----------
+        ext : specreduce.extract.BoxcarExtract
+            Extract object to import
+        """
+        if not isinstance(ext, extract.BoxcarExtract):
+            # TODO: add support for Optimal/Horne
+            raise TypeError("ext must be a specreduce.extract.BoxcarExtract object")
+
+        # TODO: should we detect/set the referenced dataset?
+        self.ext_width = ext.width
+
+    def export_extract(self, **kwargs):
+        """
+        Create a specreduce.extract object from the input parameters defined in the plugin.
+        """
+        self._set_create_kwargs(**kwargs)
+        if len(kwargs) and self.active_step != 'ext':
+            self.update_marks(step='ext')
+
+        trace = self._get_ext_trace()
+        inp_sp2d = self._get_ext_input_spectrum().flux.value
+
+        return extract.BoxcarExtract(inp_sp2d, trace, width=self.ext_width)
+
+    def export_extract_spectrum(self, add_data=False, **kwargs):
         """
         Create an extracted 1D spectrum from the input parameters defined in the plugin.
 
@@ -542,15 +635,9 @@ class SpectralExtraction(PluginTemplateMixin):
             Whether to add the resulting spectrum to the application, according to the options
             defined in the plugin.
         """
-        self._set_create_kwargs(**kwargs)
-        if len(kwargs) and self.active_step != 'ext':
-            self.update_marks(step='ext')
-
-        inp_sp2d = self._get_ext_input_spectrum()
-        trace = self._get_ext_trace()
-
-        boxcar = extract.BoxcarExtract(inp_sp2d.data, trace)
-        spectrum = boxcar(width=self.ext_width)
+        # TODO: update to call self.export_extract(**kwargs)
+        extract = self.export_extract(**kwargs)
+        spectrum = extract.spectrum
         # Specreduce returns a spectral axis in pixels, so we'll replace with input spectral_axis
         # NOTE: this is currently disabled until proper handling of axes-limit linking between
         # the 2D spectrum image (plotted in pixels) and a 1D spectrum (plotted in freq or
@@ -563,5 +650,5 @@ class SpectralExtraction(PluginTemplateMixin):
 
         return spectrum
 
-    def vue_extract(self, *args):
-        _ = self.create_extract(add_data=True)
+    def vue_extract_spectrum(self, *args):
+        _ = self.export_extract_spectrum(add_data=True)

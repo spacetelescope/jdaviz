@@ -182,7 +182,7 @@
                 :add_to_viewer_selected.sync="bg_add_to_viewer_selected"
                 action_label="Export"
                 action_tooltip="Create Background Image"
-                @click:action="create_bg"
+                @click:action="create_bg_img"
               ></plugin-add-results>
             </v-expansion-panel-content>
           </v-expansion-panel>
@@ -252,7 +252,7 @@
         action_label="Extract"
         action_tooltip="Extract 1D Spectrum"
         :action_disabled="ext_specreduce_err.length"
-        @click:action="extract"
+        @click:action="extract_spectrum"
       ></plugin-add-results>
     </div>
 

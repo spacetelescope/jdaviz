@@ -27,12 +27,12 @@ def test_plugin(specviz2d_helper):
     # create FlatTrace
     pext.trace_type_selected = 'Flat'
     pext.trace_pixel = 28
-    trace = pext.create_trace()
+    trace = pext.export_trace()
     assert isinstance(trace, tracing.FlatTrace)
 
     # create KosmosTrace
     pext.trace_type_selected = 'Auto'
-    trace = pext.create_trace()
+    trace = pext.export_trace()
     assert isinstance(trace, tracing.KosmosTrace)
 
     # interact with background section, check marks
@@ -53,9 +53,9 @@ def test_plugin(specviz2d_helper):
     assert len(pext.marks['bg2_center'].x) == 0
 
     # create background image
-    bg = pext.create_bg()
+    bg = pext.export_bg()
     assert isinstance(bg, Spectrum1D)
-    bg_sub = pext.create_bg_sub()
+    bg_sub = pext.export_bg_sub()
     assert isinstance(bg_sub, Spectrum1D)
 
     # interact with extraction section, check marks
@@ -67,7 +67,7 @@ def test_plugin(specviz2d_helper):
         assert len(pext.marks[mark].x) > 0
 
     # create subtracted spectrum
-    sp_ext = pext.create_extract()
+    sp_ext = pext.export_extract()
     assert isinstance(sp_ext, Spectrum1D)
 
     # test exception handling
