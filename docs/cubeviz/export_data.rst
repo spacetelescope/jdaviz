@@ -15,6 +15,15 @@ Spatial Regions
     :ref:`Export Spatial Regions <imviz_export>`
         Documentation on how to export spatial regions.
 
+Since Specviz can be accessed from Cubeviz, the following line of code
+can be used to extract a spatial subset named "Subset 1"::
+
+    subset1_spec1d = cubeviz.specviz.get_spectra("Subset 1")
+
+An example without accessing Specviz::
+
+    subset1_spec1d = cubeviz.app.get_data_from_viewer("flux-viewer", data_label="Subset 1")
+
 1D Spectra and Spectral Regions
 ===============================
 
@@ -22,6 +31,10 @@ Spatial Regions
 
     :ref:`Export Spectra <specviz-export-data>`
         Documentation on how to export data from the ``spectrum-viewer``.
+
+The following line of code can be used to extract a spectral subset named "Subset 2"::
+
+    subset2_spec1d = cubeviz.specviz.get_spectra("Subset 2")
 
 2D and 3D Data Cubes
 ====================
@@ -39,6 +52,11 @@ To extract the data you want::
 The data is returned as a ``glue-jupyter`` object.  To convert to a numpy array::
 
     mydata_flux = mydata["flux"]
+
+To retrieve the data as a `specutils.Spectrum1D` object, you can do the following::
+
+    from specutils import Spectrum1D
+    mydata.get_object(cls=Spectrum1D, statistic=None)
 
 Alternatively, you can wrap this all into a single command::
 
