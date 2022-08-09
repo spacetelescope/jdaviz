@@ -4,6 +4,7 @@ from traitlets import Any, Dict, Float, Bool, Int, List, Unicode, observe
 
 from glue.viewers.profile.state import ProfileViewerState, ProfileLayerState
 from glue.viewers.image.state import ImageSubsetLayerState
+from glue_jupyter.bqplot.image.state import BqplotImageLayerState
 from glue_jupyter.common.toolbar_vuetify import read_icon
 
 from jdaviz.core.registries import tray_registry
@@ -26,7 +27,7 @@ class PlotOptions(TemplateMixin):
     layer_items = List().tag(sync=True)
     layer_selected = Any().tag(sync=True)  # Any needed for multiselect
 
-    # spectrum viewer/layer options:
+    # profile/line viewer/layer options:
     layer_visible_value = Bool().tag(sync=True)
     layer_visible_sync = Dict().tag(sync=True)
 
@@ -114,19 +115,25 @@ class PlotOptions(TemplateMixin):
         self.viewer = ViewerSelect(self, 'viewer_items', 'viewer_selected', 'multiselect')
         self.layer = LayerSelect(self, 'layer_items', 'layer_selected', 'viewer_selected', 'multiselect')  # noqa
 
-        def not_profile(state):
-            return not isinstance(state, (ProfileViewerState, ProfileLayerState))
-
         def is_profile(state):
             return isinstance(state, (ProfileViewerState, ProfileLayerState))
+
+        def not_profile(state):
+            return not is_profile(state)
+
+        def is_image(state):
+            return isinstance(state, BqplotImageLayerState)
+
+        def not_image(state):
+            return not is_image(state)
 
         def is_spatial_subset(state):
             return isinstance(state, ImageSubsetLayerState)
 
         def is_not_subset(state):
-            return not isinstance(state, ImageSubsetLayerState)
+            return not is_spatial_subset(state)
 
-        # Spectrum viewer/layer options:
+        # Profile/line viewer/layer options:
         self.layer_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'visible',
                                                   'layer_visible_value', 'layer_visible_sync',
                                                   state_filter=is_not_subset)
@@ -134,7 +141,7 @@ class PlotOptions(TemplateMixin):
                                                       'collapse_func_value', 'collapse_func_sync')
         self.line_color = PlotOptionsSyncState(self, self.viewer, self.layer, 'color',
                                                'line_color_value', 'line_color_sync',
-                                               state_filter=is_profile)
+                                               state_filter=not_image)
         self.line_width = PlotOptionsSyncState(self, self.viewer, self.layer, 'linewidth',
                                                'line_width_value', 'line_width_sync')
         self.line_opacity = PlotOptionsSyncState(self, self.viewer, self.layer, 'alpha',
@@ -146,33 +153,33 @@ class PlotOptions(TemplateMixin):
         # Image viewer/layer options:
         self.stretch = PlotOptionsSyncState(self, self.viewer, self.layer, 'stretch',
                                             'stretch_value', 'stretch_sync',
-                                            state_filter=not_profile)
+                                            state_filter=is_image)
         self.stretch_perc = PlotOptionsSyncState(self, self.viewer, self.layer, 'percentile',
                                                  'stretch_perc_value', 'stretch_perc_sync',
-                                                 state_filter=not_profile)
+                                                 state_filter=is_image)
         self.stretch_min = PlotOptionsSyncState(self, self.viewer, self.layer, 'v_min',
                                                 'stretch_min_value', 'stretch_min_sync',
-                                                state_filter=not_profile)
+                                                state_filter=is_image)
         self.stretch_max = PlotOptionsSyncState(self, self.viewer, self.layer, 'v_max',
                                                 'stretch_max_value', 'stretch_max_sync',
-                                                state_filter=not_profile)
+                                                state_filter=is_image)
 
         self.subset_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'visible',
                                                    'subset_visible_value', 'subset_visible_sync',
                                                    state_filter=is_spatial_subset)
         self.bitmap_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'bitmap_visible',
                                                    'bitmap_visible_value', 'bitmap_visible_sync',
-                                                   state_filter=not_profile)
+                                                   state_filter=is_image)
         self.color_mode = PlotOptionsSyncState(self, self.viewer, self.layer, 'color_mode',
                                                'color_mode_value', 'color_mode_sync')
         self.bitmap_color = PlotOptionsSyncState(self, self.viewer, self.layer, 'color',
                                                  'bitmap_color_value', 'bitmap_color_sync',
-                                                 state_filter=not_profile)
+                                                 state_filter=is_image)
         self.bitmap_cmap = PlotOptionsSyncState(self, self.viewer, self.layer, 'cmap',
                                                 'bitmap_cmap_value', 'bitmap_cmap_sync')
         self.bitmap_opacity = PlotOptionsSyncState(self, self.viewer, self.layer, 'alpha',
                                                    'bitmap_opacity_value', 'bitmap_opacity_sync',
-                                                   state_filter=not_profile)
+                                                   state_filter=is_image)
         self.bitmap_contrast = PlotOptionsSyncState(self, self.viewer, self.layer, 'contrast',
                                                     'bitmap_contrast_value', 'bitmap_contrast_sync')
         self.bitmap_bias = PlotOptionsSyncState(self, self.viewer, self.layer, 'bias',

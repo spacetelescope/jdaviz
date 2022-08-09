@@ -925,6 +925,9 @@ class ViewerSelect(BaseSelectPluginComponent):
         def is_spectrum_viewer(viewer):
             return 'ProfileView' in viewer.__class__.__name__
 
+        def is_spectrum_2d_viewer(viewer):
+            return 'Profile2DView' in viewer.__class__.__name__
+
         def is_image_viewer(viewer):
             return 'ImageView' in viewer.__class__.__name__
 
@@ -1010,8 +1013,27 @@ class DatasetSelect(BaseSelectPluginComponent):
     """
     def __init__(self, plugin, items, selected,
                  filters=['not_from_plugin_model_fitting', 'layer_in_viewers'],
+                 default_text=None, manual_options=[],
                  default_mode='first'):
+        """
+        Parameters
+        ----------
+        plugin
+            the parent plugin object
+        items : str
+            the name of the items traitlet defined in ``plugin``
+        selected : str
+            the name of the selected traitlet defined in ``plugin``
+        default_text : str or None
+            the text to show for no selection.  If not provided or None, no entry will be provided
+            in the dropdown for no selection.
+        manual_options: list
+            list of options to provide that are not automatically populated by subsets.  If
+            ``default`` text is provided but not in ``manual_options`` it will still be included as
+            the first item in the list.
+        """
         super().__init__(plugin, items=items, selected=selected, filters=filters,
+                         default_text=default_text, manual_options=manual_options,
                          default_mode=default_mode)
         self._cached_properties += ["selected_dc_item"]
         # Add/Remove Data are triggered when checked/unchecked from viewers
@@ -1083,9 +1105,21 @@ class DatasetSelect(BaseSelectPluginComponent):
 
         def layer_in_spectrum_viewer(data):
             if not len(self.app.get_viewer_reference_names()):
-                # then this is a bar Application object, so ignore this filter
+                # then this is a bare Application object, so ignore this filter
                 return True
             return data.label in [l.layer.label for l in self.spectrum_viewer.layers] # noqa E741
+
+        def layer_in_spectrum_2d_viewer(data):
+            if not len(self.app.get_viewer_reference_names()):
+                # then this is a bare Application object, so ignore this filter
+                return True
+            return data.label in [l.layer.label for l in self.app.get_viewer('spectrum-2d-viewer').layers]  # noqa
+
+        def is_trace(data):
+            return hasattr(data, 'meta') and 'Trace' in data.meta
+
+        def not_trace(data):
+            return not is_trace(data)
 
         def is_image(data):
             return len(data.shape) == 3
@@ -1102,8 +1136,9 @@ class DatasetSelect(BaseSelectPluginComponent):
 
             return d
 
-        self.items = [_dc_to_dict(data) for data in self.app.data_collection
-                      if self._is_valid_item(data)]
+        manual_items = [{'label': label} for label in self.manual_options]
+        self.items = manual_items + [_dc_to_dict(data) for data in self.app.data_collection
+                                     if self._is_valid_item(data)]
         self._apply_default_selection()
         # future improvement: only clear cache if the selected data entry was changed?
         self._clear_cache(*self._cached_properties)
@@ -1256,7 +1291,8 @@ class AddResults(BasePluginComponent):
     """
     def __init__(self, plugin, label, label_default, label_auto,
                  label_invalid_msg, label_overwrite,
-                 add_to_viewer_items, add_to_viewer_selected):
+                 add_to_viewer_items, add_to_viewer_selected,
+                 label_whitelist_overwrite=[]):
         super().__init__(plugin, label=label,
                          label_default=label_default, label_auto=label_auto,
                          label_invalid_msg=label_invalid_msg, label_overwrite=label_overwrite,
@@ -1268,6 +1304,9 @@ class AddResults(BasePluginComponent):
                            handler=lambda _: self._on_label_changed())
         self.hub.subscribe(self, DataCollectionDeleteMessage,
                            handler=lambda _: self._on_label_changed())
+
+        # allows overwriting specific data entries not from the same plugin
+        self.label_whitelist_overwrite = label_whitelist_overwrite
 
         self.viewer = ViewerSelect(plugin, add_to_viewer_items, add_to_viewer_selected,
                                    manual_options=['None'],
@@ -1292,7 +1331,8 @@ class AddResults(BasePluginComponent):
 
         for data in self.app.data_collection:
             if self.label == data.label:
-                if data.meta.get('Plugin', None) == self._plugin.__class__.__name__:
+                if data.meta.get('Plugin', None) == self._plugin.__class__.__name__ or\
+                        data.label in self.label_whitelist_overwrite:
                     self.label_invalid_msg = ''
                     self.label_overwrite = True
                     return
@@ -1304,18 +1344,16 @@ class AddResults(BasePluginComponent):
         self.label_invalid_msg = ''
         self.label_overwrite = False
 
-    def add_results_from_plugin(self, data_item):
+    def add_results_from_plugin(self, data_item, replace=None):
         """
         Add ``data_item`` to the app's data_collection according to the default or user-provided
         label and adds to any requested viewers.
         """
         if self.label_invalid_msg:
             raise ValueError(self.label_invalid_msg)
-        data_item.meta['Plugin'] = self._plugin.__class__.__name__
-        if self.app.config == 'mosviz':
-            data_item.meta['mosviz_row'] = self.app.state.settings['mosviz_row']
 
-        replace = self.viewer.selected_reference != 'spectrum-viewer'
+        if replace is None:
+            replace = self.viewer.selected_reference != 'spectrum-viewer'
 
         if self.label_overwrite and len(self.add_to_viewer_items) <= 2:
             # the switch for add_to_viewer is hidden, and so the loaded state of the overwritten
@@ -1335,6 +1373,11 @@ class AddResults(BasePluginComponent):
                 self.app.remove_data_from_viewer(self.viewer.selected_reference, self.label)
             self.app.data_collection.remove(self.app.data_collection[self.label])
 
+        if not hasattr(data_item, 'meta'):
+            data_item.meta = {}
+        data_item.meta['Plugin'] = self._plugin.__class__.__name__
+        if self.app.config == 'mosviz':
+            data_item.meta['mosviz_row'] = self.app.state.settings['mosviz_row']
         self.app.add_data(data_item, self.label)
 
         if add_to_viewer_selected != 'None':

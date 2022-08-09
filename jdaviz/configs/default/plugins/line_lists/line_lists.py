@@ -152,6 +152,14 @@ class LineListTool(PluginTemplateMixin):
         if viewer_data is None:
             return
 
+        if viewer_data.spectral_axis.unit == u.pix:
+            # disable the plugin until we can address this properly (either using the wavelength
+            # solution to support pixels in line-lists, or properly displaying the extracted
+            # 1d spectrum in wavelength-space)
+            self.disabled_msg = 'Line Lists unavailable when x-axis is in pixels'
+        else:
+            self.disabled_msg = ''
+
         self._units["x"] = str(viewer_data.spectral_axis.unit)
         self._units["y"] = str(viewer_data.flux.unit)
 

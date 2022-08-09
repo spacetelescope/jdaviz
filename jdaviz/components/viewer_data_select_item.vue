@@ -6,7 +6,7 @@
           icon
           :color="visibleState==='visible' ? 'accent' : 'default'"
           @click="selectClicked">
-            <v-icon v-if="multi_select">{{visibleState!=='hidden' ? "mdi-checkbox-marked" : "mdi-checkbox-blank-outline"}}</v-icon>
+            <v-icon v-if="multi_select || item.type==='trace'">{{visibleState!=='hidden' ? "mdi-checkbox-marked" : "mdi-checkbox-blank-outline"}}</v-icon>
             <v-icon v-else>{{visibleState!=='hidden' ? "mdi-radiobox-marked" : "mdi-radiobox-blank"}}</v-icon>
         </v-btn>
       </j-tooltip>
@@ -22,7 +22,7 @@
       </j-tooltip>
     </div>
 
-    <j-tooltip :tooltipcontent="'data label: '+item.name" span_style="font-size: 12pt; padding-top: 6px; padding-left: 6px; width: calc(100% - 140px); white-space: nowrap; cursor: default;">
+    <j-tooltip :tooltipcontent="'data label: '+item.name" span_style="font-size: 12pt; padding-top: 6px; padding-left: 6px; width: calc(100% - 80px); white-space: nowrap; cursor: default;">
       <v-icon class='invert-if-dark' style='color: #000000DE; margin-left: 4px; margin-right: -2px'>{{icon}}</v-icon>
       <div class="text-ellipsis-middle" style="font-weight: 500">
         <span>
@@ -80,11 +80,12 @@ module.exports = {
       // checkboxes control VISIBILITY of layers not loaded state
       // if we just loaded the data, its probably already visible, but we'll still make sure all
       // appropriate layers are visible and properly handle replace for non-multiselect
+      // NOTE: replace=True will exclude removing trace items
       this.$emit('data-item-visibility', {
         id: this.$props.viewer.id,
         item_id: this.$props.item.id,
-        visible: prevVisibleState != 'visible' || !this.multi_select,
-        replace: !this.multi_select
+        visible: prevVisibleState != 'visible' || (!this.multi_select && this.$props.item.type !== 'trace'),
+        replace: !this.multi_select && this.$props.item.type !== 'trace'
       })
 
     }
@@ -114,6 +115,12 @@ module.exports = {
     },
     isUnloadable() {
       if (this.$props.item.meta.Plugin !== undefined) {
+        // (almost) always allow unloading plugin exports
+        if (this.$props.viewer.config === 'specviz2d' && this.$props.item.name === 'Spectrum 1D') {
+          // the "Spectrum 1D" object is auto-generated from a plugin, but since its the default
+          // reference data, we don't want to allow unloading it
+          return false
+        }
         return true
       }
       if (this.$props.viewer.config === 'cubeviz') {
@@ -128,6 +135,12 @@ module.exports = {
           return this.$props.item.name.indexOf('[MASK]') === -1
         } else if (this.$props.viewer.reference === 'spectrum-viewer') {
           return this.$props.item.name.indexOf('[FLUX]') === -1          
+        }
+      } else if (this.$props.viewer.config === 'specviz2d') {
+        if (this.$props.viewer.reference === 'spectrum-2d-viewer') {
+          return this.$props.item.name !== 'Spectrum 2D'
+        } else if (this.$props.viewer.reference === 'spectrum-viewer') {
+          return this.$props.item.name !== 'Spectrum 1D'
         }
       }
       return true

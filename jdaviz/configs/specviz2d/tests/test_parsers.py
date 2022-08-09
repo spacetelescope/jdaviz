@@ -22,7 +22,6 @@ def test_2d_parser(specviz2d_helper):
     dc_1 = specviz2d_helper.app.data_collection[1]
     assert dc_1.label == 'Spectrum 1D'
     assert 'header' not in dc_1.meta
-    assert dc_1.meta['NAXIS'] == 2
 
 
 def test_1d_parser(specviz2d_helper, spectrum1d):

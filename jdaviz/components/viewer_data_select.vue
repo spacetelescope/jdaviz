@@ -104,6 +104,10 @@ module.exports = {
       if (['image-viewer', 'spectrum-2d-viewer'].indexOf(this.$props.viewer.reference) !== -1) {
         multi_select = false
       }
+    } else if (this.$props.viewer.config === 'specviz2d') {
+      if (this.$props.viewer.reference === 'spectrum-2d-viewer') {
+        multi_select = false
+      }
     }
     return {
       // default to passed values, whenever value or uncertainty are changed
@@ -161,9 +165,9 @@ module.exports = {
         }
       } else if (this.$props.viewer.config === 'specviz2d') {
         if (this.$props.viewer.reference === 'spectrum-viewer') {
-          return item.ndims === 1 && this.dataItemInViewer(item, returnExtraItems)
+          return item.ndims === 1 && item.type!=='trace' && this.dataItemInViewer(item, returnExtraItems)
         } else if (this.$props.viewer.reference === 'spectrum-2d-viewer') {
-          return item.ndims === 2 && this.dataItemInViewer(item, returnExtraItems)
+          return (item.ndims === 2 || item.type==='trace') && this.dataItemInViewer(item, returnExtraItems)
         }
       }
       // for any situation not covered above, default to showing the entry

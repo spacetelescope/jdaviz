@@ -11,7 +11,9 @@ from specutils import analysis
 from specutils.manipulation import extract_region
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
-from jdaviz.core.events import (SpectralMarksChangedMessage,
+from jdaviz.core.events import (AddDataMessage,
+                                RemoveDataMessage,
+                                SpectralMarksChangedMessage,
                                 LineIdentifyMessage,
                                 RedshiftMessage)
 from jdaviz.core.marks import (LineAnalysisContinuum,
@@ -95,6 +97,11 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         # require entries to be in spectrum-viewer (not other cubeviz images, etc)
         self.dataset.add_filter('layer_in_spectrum_viewer')
 
+        self.hub.subscribe(self, AddDataMessage,
+                           handler=self._on_viewer_data_changed)
+        self.hub.subscribe(self, RemoveDataMessage,
+                           handler=self._on_viewer_data_changed)
+
         self.hub.subscribe(self, SubsetDeleteMessage,
                            handler=self._on_viewer_subsets_changed)
         self.hub.subscribe(self, SubsetUpdateMessage,
@@ -103,6 +110,25 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                            handler=self._on_plotted_lines_changed)
         self.hub.subscribe(self, LineIdentifyMessage,
                            handler=self._on_identified_line_changed)
+
+    def _on_viewer_data_changed(self, msg):
+        viewer_id = self.app._viewer_item_by_reference('spectrum-viewer').get('id')
+        if msg is None or msg.viewer_id != viewer_id or msg.data is None:
+            return
+
+        viewer_data = self.app.get_data_from_viewer('spectrum-viewer').get(msg.data.label)
+
+        # If no data is currently plotted, don't attempt to update
+        if viewer_data is None:
+            return
+
+        if viewer_data.spectral_axis.unit == u.pix:
+            # disable the plugin until we can address this properly (either using the wavelength
+            # solution to support pixels in line-lists, or properly displaying the extracted
+            # 1d spectrum in wavelength-space)
+            self.disabled_msg = 'Line Analysis unavailable when x-axis is in pixels'
+        else:
+            self.disabled_msg = ''
 
     def _on_viewer_subsets_changed(self, msg):
         """
@@ -119,6 +145,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
 
     @observe('plugin_opened')
     def _on_plugin_opened_changed(self, *args):
+        if self.disabled_msg:
+            return
         # toggle continuum lines in spectrum viewer based on whether this plugin
         # is currently open in the tray
         for pos, mark in self.marks.items():

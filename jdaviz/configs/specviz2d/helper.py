@@ -3,6 +3,7 @@ import numpy as np
 from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.configs.default.plugins.line_lists.line_list_mixin import LineListMixin
+from jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction import SpectralExtraction  # noqa
 
 __all__ = ['Specviz2d']
 
@@ -140,15 +141,20 @@ class Specviz2d(ConfigHelper, LineListMixin):
 
             # Collapse the 2D spectrum to 1D if no 1D spectrum provided
             if spectrum_1d is None:
-                self.app.load_data(spectrum_2d,
-                                   parser_reference="spec2d-1d-parser",
-                                   data_label=spectrum_1d_label,
-                                   show_in_viewer=show_in_viewer)
+                # create a non-interactive (so that it does not create duplicate marks with the
+                # plugin-instance created later) instance of the SpectralExtraction plugin,
+                # and use the defaults to generate the initial 1D extracted spectrum
+                spext = SpectralExtraction(app=self.app, interactive=False)
+                # for some reason, the trailets are resetting to their default values even
+                # though _trace_dataset_selected was called internally to set them to reasonable
+                # new defaults.  We'll just call it again manually.
+                spext._trace_dataset_selected()
+                _ = spext.create_extract(add_data=True)
 
                 # Warn that this shouldn't be used for science
-                msg = ("The collapsed 1D spectrum is for quicklook"
-                       " purposes only. A robust extraction should be used for"
-                       " scientific use cases.")
+                msg = ("The extracted 1D spectrum was generated automatically."
+                       " See the spectral extraction plugin for details or to"
+                       " perform a custom extraction.")
                 msg = SnackbarMessage(msg, color='warning', sender=self,
                                       timeout=10000)
                 self.app.hub.broadcast(msg)

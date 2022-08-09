@@ -138,6 +138,9 @@ Plugins
 .. automodapi:: jdaviz.configs.specviz.plugins.unit_conversion.unit_conversion
    :no-inheritance-diagram:
 
+.. automodapi:: jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction
+   :no-inheritance-diagram:
+
 .. _jdaviz-api-nuts-bolts:
 
 Nuts and Bolts

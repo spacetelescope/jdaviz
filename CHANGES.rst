@@ -23,6 +23,11 @@ Mosviz
 Specviz
 ^^^^^^^
 
+Specviz2d
+^^^^^^^^^
+
+- Spectral extraction plugin. [#1514]
+
 API Changes
 -----------
 
