@@ -151,8 +151,8 @@ an interactively selected region. A typical workflow is as follows:
 8. If you also want photometry result in magnitude unit, you can enter a flux
    scaling factor in the :guilabel:`Flux scaling` field.
    :guilabel:`Flux scaling` is populated for JWST images
-   if MJy/sr data unit is detected and pixel area is given to factor out the per-steradian unit. The value used
-   if this is the case is ``3631e-6`` and the resulting sum will be in AB magnitude.
+   if MJy/sr data unit is detected and pixel area is given to factor out the per-steradian unit.
+   The value used, if this is the case, is the scaling to convert MJy to AB magnitude.
    Otherwise, the value must be in the
    same unit as display data unit. A magnitude is then calculated using
    ``-2.5 * log(flux / flux_scaling)``. This calculation only makes sense if your
