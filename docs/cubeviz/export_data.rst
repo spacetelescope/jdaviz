@@ -53,7 +53,7 @@ The data is returned as a ``glue-jupyter`` object.  To convert to a numpy array:
 
     mydata_flux = mydata["flux"]
 
-To retrieve the data as a `specutils.Spectrum1D` object, you can do the following::
+To retrieve the data cube as a `specutils.Spectrum1D` object, you can do the following::
 
     from specutils import Spectrum1D
     mydata.get_object(cls=Spectrum1D, statistic=None)
