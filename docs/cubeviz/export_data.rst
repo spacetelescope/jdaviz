@@ -24,11 +24,25 @@ An example without accessing Specviz::
 
     subset1_spec1d = cubeviz.app.get_data_from_viewer("flux-viewer", data_label="Subset 1")
 
+To get all subsets from a viewer::
+
+    subset1_spec1d = cubeviz.app.get_subsets_from_viewer("spectrum-viewer")
+
 To access the spatial region itself::
 
     dc = cubeviz.app.data_collection
     subset1 = dc.subset_groups[0]
-    subset1.label
+    x, y = subset1.subset_state.roi.get_center()
+    radius = subset1.subset_state.roi.radius
+
+The syntax to output a subset as an astropy region looks like::
+
+    dc.subset_groups[0].subsets[0].data.get_selection_definition(subset_id="Subset 1", format='astropy-regions')  # noqa
+
+Where the first `0` corresponds to what number subset it is and the second `0` corresponds
+to which data the subset is being applied to (flux, variance, data quality, etc.).
+If you have multiple subsets present in the application, you need to fill out the
+`subset_id` parameter.
 
 1D Spectra and Spectral Regions
 ===============================
@@ -45,15 +59,16 @@ The following line of code can be used to extract a spectral subset named "Subse
 2D images and 3D Data Cubes
 ===========================
 
-2D images and 3D data cubes can be extracted from their respective :ref:`viewers <cubeviz-viewers>`.
-The viewer options in the Cubeviz configuration are ``flux-viewer``, ``uncert-viewer``, and ``mask-viewer``.
+2D images and 3D data cubes can be extracted from their respective
+:ref:`viewers <cubeviz-viewers>`. The viewer options in the Cubeviz configuration are
+``flux-viewer``, ``uncert-viewer``, and ``mask-viewer``.
 For example, to list the data available in a particular viewer:::
 
     mydata = cubeviz.app.get_data_from_viewer("flux-viewer")
 
 To extract the data you want::
 
-    mydata = cubeviz.app.get_data_from_viewer("uncert-viewer", "contents")
+    mydata = cubeviz.app.get_data_from_viewer("uncert-viewer", "data_name")
 
 The data is returned as a ``glue-jupyter`` object.  To convert to a numpy array::
 
@@ -66,7 +81,7 @@ To retrieve the data cube as a `specutils.Spectrum1D` object, you can do the fol
 
 Alternatively, you can wrap this all into a single command::
 
-    mydata = cubeviz.app.get_data_from_viewer("uncert-viewer", "contents[FLUX]")
+    mydata = cubeviz.app.get_data_from_viewer("uncert-viewer", "data_name")
 
 Data can also be accessed directly from ``data_collection`` using the following code::
 
