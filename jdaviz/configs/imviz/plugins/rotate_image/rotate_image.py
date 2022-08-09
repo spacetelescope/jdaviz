@@ -13,7 +13,7 @@ class RotateImageSimple(TemplateMixin, ViewerSelectMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._theta = 0  # degrees, clockwise
+        self._theta = 0  # degrees, counter-clockwise
 
     def vue_rotate_image(self, *args, **kwargs):
         # We only grab the value here to avoid constantly updating as
@@ -25,8 +25,8 @@ class RotateImageSimple(TemplateMixin, ViewerSelectMixin):
 
         viewer = self.app._viewer_by_id(self.viewer_selected)
 
-        # TODO: Is this really clockwise? Does it take negative angle?
-        # Rotate selected viewer canvas. This changes zoom too.
+        # Rotate selected viewer canvas.
+        # TODO: This changes zoom too? astrofrog will fix translation issue?
         affine_transform = Affine2D().rotate_deg(self._theta)
         viewer.state.affine_matrix = affine_transform
 
