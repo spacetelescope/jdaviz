@@ -86,9 +86,9 @@ class Cubeviz(ConfigHelper, LineListMixin):
         if not isinstance(wavelength, (int, float)):
             raise TypeError("wavelength must be a float or int")
         # Retrieve the x slices from the spectrum viewer's marks
-        x_all = [m for m in self.app.get_viewer('spectrum-viewer').figure.marks 
-                    if m.__class__.__name__ in ['Lines','LinesGL']
-                ][0].x
+        x_all = [m for m in self.app.get_viewer('spectrum-viewer').figure.marks
+                 if m.__class__.__name__ in ['Lines', 'LinesGL']
+                 ][0].x
         index = np.argmin(abs(x_all - wavelength))
         return self.select_slice(int(index))
 
