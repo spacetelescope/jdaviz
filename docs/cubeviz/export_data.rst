@@ -24,7 +24,7 @@ An example without accessing Specviz::
 
     subset1_spec1d = cubeviz.app.get_data_from_viewer("flux-viewer", data_label="Subset 1")
 
-To access to spatial region itself::
+To access the spatial region itself::
 
     dc = cubeviz.app.data_collection
     subset1 = dc.subset_groups[0]
