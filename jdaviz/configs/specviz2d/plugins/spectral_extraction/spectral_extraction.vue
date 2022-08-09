@@ -229,6 +229,16 @@
       />
 
       <v-row>
+        <v-select
+          :items="ext_type_items"
+          v-model="ext_type_selected"
+          label="Extraction Type"
+          hint="Method to use for extracting the spectrum"
+          persistent-hint
+        ></v-select>
+      </v-row>
+
+      <v-row v-if="ext_type_selected === 'Boxcar'">
         <v-text-field
           label="Width"
           type="number"

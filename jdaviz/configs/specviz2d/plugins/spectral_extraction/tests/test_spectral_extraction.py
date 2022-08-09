@@ -101,6 +101,10 @@ def test_plugin(specviz2d_helper):
     sp_ext = pext.export_extract_spectrum()
     assert isinstance(sp_ext, Spectrum1D)
 
+    pext.ext_type_selected = 'Optimal'
+    sp_ext = pext.export_extract_spectrum()
+    assert isinstance(sp_ext, Spectrum1D)
+
     # test exception handling
     pext.trace_type = 'Auto'
     pext.bg_type_selected = 'TwoSided'
