@@ -5,7 +5,6 @@ from jdaviz.core.helpers import ConfigHelper
 from jdaviz.configs.default.plugins.line_lists.line_list_mixin import LineListMixin
 from jdaviz.configs.specviz import Specviz
 from jdaviz.core.events import (AddDataMessage,
-                                SliceSelectWavelengthMessage,
                                 SliceSelectSliceMessage)
 
 __all__ = ['Cubeviz', 'CubeViz']
@@ -17,8 +16,6 @@ class Cubeviz(ConfigHelper, LineListMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.app.hub.subscribe(self, SliceSelectWavelengthMessage,
-                               handler=self.select_wavelength)
         self.app.hub.subscribe(self, AddDataMessage,
                                handler=self._set_spectrum_x_axis)
 
@@ -80,12 +77,12 @@ class Cubeviz(ConfigHelper, LineListMixin):
             Wavelength to select in units of the x-axis of the spectrum.  The nearest slice will
             be selected.
         """
-        if isinstance(wavelength, SliceSelectWavelengthMessage):
-            # SliceSelectWavelengthMessage is broadcasted by the spectrum-viewer slice tool
-            wavelength = float(wavelength.wavelength)
         if not isinstance(wavelength, (int, float)):
             raise TypeError("wavelength must be a float or int")
-        x_all = self.app.get_viewer('spectrum-viewer').data()[0].spectral_axis.value
+        # Retrieve the x slices from the spectrum viewer's marks
+        x_all = [m for m in self.app.get_viewer('spectrum-viewer').figure.marks
+                 if m.__class__.__name__ in ['Lines', 'LinesGL']
+                 ][0].x
         index = np.argmin(abs(x_all - wavelength))
         return self.select_slice(int(index))
 

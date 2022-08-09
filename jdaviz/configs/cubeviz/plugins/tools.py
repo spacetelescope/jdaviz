@@ -6,7 +6,7 @@ from glue.viewers.common.tool import CheckableTool
 from glue.core.roi import RectangularROI
 from glue.core.edit_subset_mode import NewMode
 
-from jdaviz.core.events import SliceSelectWavelengthMessage, SliceToolStateMessage
+from jdaviz.core.events import SliceToolStateMessage
 
 __all__ = []
 
@@ -41,8 +41,7 @@ class SelectSlice(CheckableTool):
             # throttle to 200ms
             return
 
-        msg = SliceSelectWavelengthMessage(wavelength=data['domain']['x'], sender=self)
-        self.viewer.session.hub.broadcast(msg)
+        self.viewer.jdaviz_helper.select_wavelength(data['domain']['x'])
 
         self._time_last = time.time()
 

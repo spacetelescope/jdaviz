@@ -60,6 +60,8 @@ Cubeviz
 - Fixed ``viewer.jdaviz_helper`` returning Specviz helper instead of Cubeviz helper after Specviz
   helper is called via ``Cubeviz.specviz``. Now ``viewer.jdaviz_helper`` always returns the Cubeviz helper. [#1546]
 
+- Increased spectral slider performance considerably. [#1550]
+
 Imviz
 ^^^^^
 
