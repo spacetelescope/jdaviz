@@ -24,15 +24,14 @@
 
     <!-- Composite region cannot be edited, so just grab first element. -->
     <div v-if="is_editable">
-      <v-row v-for="(item, index2) in subset_definitions[0]" no-gutters>
-        <v-col>
-          <v-text-field
-            :label="item.name"
-            v-model.number="item.value"
-            type="number"
-            :disabled="item.name=='Angle'"
-          ></v-text-field>
-        </v-col>
+      <v-row v-for="(item, index2) in subset_definitions[0]"
+       class="pt-0 pb-0 mt-0 mb-0">
+        <v-text-field
+          :label="item.name"
+          v-model.number="item.value"
+          type="number"
+          :disabled="item.name=='Angle'"
+        ></v-text-field>
       </v-row>
 
       <v-row justify="end" no-gutters>
