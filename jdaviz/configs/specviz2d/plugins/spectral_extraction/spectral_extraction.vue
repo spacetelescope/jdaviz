@@ -56,7 +56,7 @@
             type="number"
             v-model.number="trace_pixel"
             :rules="[() => trace_pixel!=='' || 'This field is required']"
-            hint="Pixel number/column to start the trace."
+            :hint="trace_type_selected === 'Flat' ? 'Pixel number/column for the trace.' : 'Pixel number/column guess'"
             persistent-hint
           >
           </v-text-field>
@@ -130,7 +130,7 @@
           type="number"
           v-model.number="bg_separation"
           :rules="[() => bg_separation!=='' || 'This field is required']"
-          hint="Separation between trace and background window(s), in pixels."
+          hint="Separation between trace and center of the background window(s), in pixels."
           persistent-hint
         >
         </v-text-field>
