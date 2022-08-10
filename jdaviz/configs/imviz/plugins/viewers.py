@@ -152,11 +152,7 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
             key_pressed = data['key']
 
             if key_pressed in ('b', 'B'):
-                if key_pressed == 'B':
-                    blink_kwargs = {'reversed': True}
-                else:
-                    blink_kwargs = {'reversed': False}
-                self.blink_once(**blink_kwargs)
+                self.blink_once(reversed=key_pressed=='B')
 
                 # Also update the coordinates display.
                 data['event'] = 'mousemove'
