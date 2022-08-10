@@ -270,7 +270,7 @@ class TestParseImage:
         phot_plugin.counts_factor = (data.meta['photometry']['conversion_megajanskys'] /
                                      data.meta['exposure']['exposure_time'])
         assert_allclose(phot_plugin.counts_factor, 0.0036385915646798953)
-        phot_plugin.flux_scaling = 1  # Simple mag, no zeropoint
+        assert_allclose(phot_plugin.flux_scaling, 0.003631)
         phot_plugin.vue_do_aper_phot()
         tbl = imviz_helper.get_aperture_photometry_results()
         assert_quantity_allclose(tbl[0]['xcentroid'], 970.935492 * u.pix)
@@ -286,8 +286,8 @@ class TestParseImage:
         assert_quantity_allclose(tbl[0]['aperture_sum_counts'], 132061.576643 * u.count, rtol=1e-6)
         assert_quantity_allclose(tbl[0]['aperture_sum_counts_err'], 363.402775 * u.count)
         assert_quantity_allclose(tbl[0]['counts_fac'], 0.0036385915646798953 * (data_unit / u.ct))
-        assert_quantity_allclose(tbl[0]['aperture_sum_mag'], -6.704274 * u.mag)
-        assert_quantity_allclose(tbl[0]['flux_scaling'], 1 * data_unit)
+        assert_quantity_allclose(tbl[0]['aperture_sum_mag'], 19.770299 * u.mag)
+        assert_quantity_allclose(tbl[0]['flux_scaling'], 3631 * u.Jy)
         assert_quantity_allclose(tbl[0]['min'], 0.041017 * data_unit, atol=1e-5 * data_unit)
         assert_quantity_allclose(tbl[0]['max'], 138.923752 * data_unit, rtol=1e-5)
         assert_quantity_allclose(tbl[0]['mean'], 4.391718 * data_unit)

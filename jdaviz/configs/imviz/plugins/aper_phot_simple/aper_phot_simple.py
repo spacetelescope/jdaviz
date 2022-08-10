@@ -105,6 +105,9 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
             if telescope == 'JWST':
                 if 'photometry' in meta and 'pixelarea_arcsecsq' in meta['photometry']:
                     self.pixel_area = meta['photometry']['pixelarea_arcsecsq']
+                    if 'bunit_data' in meta and meta['bunit_data'] == u.Unit("MJy/sr"):
+                        # Hardcode the flux conversion factor from MJy to ABmag
+                        self.flux_scaling = 0.003631
             elif telescope == 'HST':
                 # TODO: Add more HST support, as needed.
                 # HST pixel scales are from instrument handbooks.
@@ -310,8 +313,8 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
                 sum_ct_err = None
 
             if include_flux_scale:
-                flux_scale = flux_scale * rawsum.unit
-                sum_mag = -2.5 * np.log10(rawsum / flux_scale) * u.mag
+                flux_scale = flux_scale * phot_table['sum'][0].unit
+                sum_mag = -2.5 * np.log10(phot_table['sum'][0] / flux_scale) * u.mag
             else:
                 flux_scale = None
                 sum_mag = None
@@ -425,7 +428,7 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
                 x = phot_table[key][0]
                 if (isinstance(x, (int, float, u.Quantity)) and
                         key not in ('xcentroid', 'ycentroid', 'sky_centroid', 'sum_aper_area',
-                                    'aperture_sum_counts')):
+                                    'aperture_sum_counts', 'aperture_sum_mag')):
                     tmp.append({'function': key, 'result': f'{x:.4e}'})
                 elif key == 'sky_centroid' and x is not None:
                     tmp.append({'function': 'RA centroid', 'result': f'{x.ra.deg:.4f} deg'})
@@ -435,6 +438,8 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
                 elif key == 'aperture_sum_counts' and x is not None:
                     tmp.append({'function': key, 'result':
                                 f'{x:.4e} ({phot_table["aperture_sum_counts_err"][0]:.4e})'})
+                elif key == 'aperture_sum_mag' and x is not None:
+                    tmp.append({'function': key, 'result': f'{x:.3f}'})
                 else:
                     tmp.append({'function': key, 'result': str(x)})
 
