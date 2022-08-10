@@ -428,7 +428,7 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
                 x = phot_table[key][0]
                 if (isinstance(x, (int, float, u.Quantity)) and
                         key not in ('xcentroid', 'ycentroid', 'sky_centroid', 'sum_aper_area',
-                                    'aperture_sum_counts')):
+                                    'aperture_sum_counts', 'aperture_sum_mag')):
                     tmp.append({'function': key, 'result': f'{x:.4e}'})
                 elif key == 'sky_centroid' and x is not None:
                     tmp.append({'function': 'RA centroid', 'result': f'{x.ra.deg:.4f} deg'})
@@ -438,6 +438,8 @@ class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
                 elif key == 'aperture_sum_counts' and x is not None:
                     tmp.append({'function': key, 'result':
                                 f'{x:.4e} ({phot_table["aperture_sum_counts_err"][0]:.4e})'})
+                elif key == 'aperture_sum_mag' and x is not None:
+                    tmp.append({'function': key, 'result': f'{x:.3f}'})
                 else:
                     tmp.append({'function': key, 'result': str(x)})
 
