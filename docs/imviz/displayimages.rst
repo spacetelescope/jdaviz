@@ -156,8 +156,10 @@ Blinking
 Blinking is an Imviz-specific functionality that allows a user to quickly switch
 between viewing two or more images, as long as they are linked (see :ref:`imviz_pan_zoom` for
 more on linking behavior). This can be done by selecting the |icon-blink| icon and
-then clicking on the image. You can also blink by pressing the "b" key on your
-keyboard while moused over the image.
+then clicking on the image.
+
+You can also blink by pressing the "b" key on your keyboard while moused over the image.
+If you press Shift + "b", you may blink backwards.
 
 From the API
 ------------
@@ -166,6 +168,10 @@ From the API within the Jupyter notebook::
 
     viewer = imviz.default_viewer
     viewer.blink_once()
+
+And to blink backwards::
+
+    viewer.blink_once(reversed=True)
 
 Contrast/Bias
 =============
