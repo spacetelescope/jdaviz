@@ -72,7 +72,7 @@ For example, to list the data available in a particular viewer:::
 
     mydata = cubeviz.app.get_data_from_viewer("flux-viewer")
 
-To extract the data you want::
+To extract the data you want (replace "data_name" with the name of your data)::
 
     mydata = cubeviz.app.get_data_from_viewer("uncert-viewer", "data_name")
 
