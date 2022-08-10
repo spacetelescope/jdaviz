@@ -42,6 +42,8 @@ Specviz2d
 API Changes
 -----------
 
+- New plugin-level ``show_in_tray`` method. [#1559]
+
 Cubeviz
 ^^^^^^^
 
