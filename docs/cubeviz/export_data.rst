@@ -45,10 +45,10 @@ The syntax to output a subset as an astropy region looks like::
 
     dc.subset_groups[0].subsets[0].data.get_selection_definition(subset_id="Subset 1", format='astropy-regions')  # noqa
 
-Where the first `0` corresponds to what number subset it is and the second `0` corresponds
+Where the first ``0`` corresponds to what number subset it is and the second ``0`` corresponds
 to which data the subset is being applied to (flux, variance, data quality, etc.).
 If you have multiple subsets present in the application, you need to fill out the
-`subset_id` parameter.
+``subset_id`` parameter.
 
 1D Spectra and Spectral Regions
 ===============================
