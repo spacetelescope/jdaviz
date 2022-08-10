@@ -103,7 +103,8 @@ class BlinkOnce(CheckableTool):
     tool_id = 'jdaviz:blinkonce'
     action_text = 'Go to next image'
     tool_tip = ('Click on the viewer to display the next image, '
-                'or you can also press the "b" key anytime')
+                'or you can also press the "b" key anytime; '
+                'Press "B" to go backwards.')
 
     def activate(self):
         self.viewer.add_event_callback(self.on_click, events=['click'])
