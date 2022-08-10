@@ -102,18 +102,17 @@ class BlinkOnce(CheckableTool):
     icon = os.path.join(ICON_DIR, 'blink.svg')
     tool_id = 'jdaviz:blinkonce'
     action_text = 'Go to next image'
-    tool_tip = ('Click on the viewer to display the next image, '
-                'or you can also press the "b" key anytime; '
-                'Press "B" to go backwards.')
+    tool_tip = ('Click on the viewer or press "b" to display the next image, '
+                'or right-click or press "B" to display the previous')
 
     def activate(self):
-        self.viewer.add_event_callback(self.on_click, events=['click'])
+        self.viewer.add_event_callback(self.on_click, events=['click', 'contextmenu'])
 
     def deactivate(self):
         self.viewer.remove_event_callback(self.on_click)
 
     def on_click(self, data):
-        self.viewer.blink_once()
+        self.viewer.blink_once(reversed=data['event']=='contextmenu')  # noqa: E225
 
         # Also update the coordinates display.
         data['event'] = 'mousemove'
