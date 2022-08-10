@@ -32,8 +32,14 @@ To access the spatial region itself::
 
     dc = cubeviz.app.data_collection
     subset1 = dc.subset_groups[0]
+
+    # Circular ROI
     x, y = subset1.subset_state.roi.get_center()
     radius = subset1.subset_state.roi.radius
+
+    # Rectangular ROI
+    rectangular_roi = subset1.subset_state.roi
+    rectangular_roi.xmin, rectangular_roi.xmax, rectangular_roi.ymin, rectangular_roi.ymax
 
 The syntax to output a subset as an astropy region looks like::
 
