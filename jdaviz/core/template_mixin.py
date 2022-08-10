@@ -102,6 +102,9 @@ class PluginTemplateMixin(TemplateMixin):
         self.plugin_opened = app_state.drawer and self._registry_name in tray_names_open
 
     def open_in_tray(self):
+        """
+        Open the plugin in the sidebar/tray (and open the sidebar if it is not already).
+        """
         app_state = self.app.state
         app_state.drawer = True
         index = [ti['name'] for ti in app_state.tray_items].index(self._registry_name)
