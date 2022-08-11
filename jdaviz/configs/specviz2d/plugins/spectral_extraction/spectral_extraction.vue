@@ -94,6 +94,12 @@
         <j-docs-link>Create a background and/or background-subtracted image.</j-docs-link>
       </v-row>
 
+      <v-row v-if="ext_dataset_selected !== 'From Plugin'">
+        <span class="v-messages v-messages__message text--secondary">
+          <b>NOTE:</b> extracted spectrum is using "{{ext_dataset_selected}}" as input data, so will not update in real-time.  Switch to "From Plugin" to use the background subtraction defined here.
+        </span>
+      </v-row>
+
       <plugin-dataset-select
         :items="bg_dataset_items"
         :selected.sync="bg_dataset_selected"
