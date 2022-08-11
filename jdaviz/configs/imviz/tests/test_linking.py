@@ -151,7 +151,8 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
 
         # blink image through clicking with blink tool
         self.viewer.toolbar_nested.active_tool_id = 'jdaviz:blinkonce'
-        self.viewer.toolbar_nested.active_tool.on_click({'domain': {'x': 0, 'y': 0}})
+        self.viewer.toolbar_nested.active_tool.on_click(
+            {'event': 'click', 'domain': {'x': 0, 'y': 0}})
         assert self.viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
         assert self.viewer.label_mouseover.value == '+1.00000e+00 '
         assert self.viewer.label_mouseover.world_ra_deg == '337.5202808000'

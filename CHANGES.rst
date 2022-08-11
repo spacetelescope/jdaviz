@@ -18,8 +18,12 @@ Imviz
 
 - Auto-populate simple aperture photometry values if JWST data is loaded into viewer. [#1549]
 
+- Pressing Shift+b now blinks backwards. Right-clicking on the image while Blink tool
+  is active on the toolbar also blinks backwards. [#1558]
+
 Mosviz
 ^^^^^^
+
 - NIRISS parser now sorts FITS files by header instead of file name. [#819]
 
 Specviz

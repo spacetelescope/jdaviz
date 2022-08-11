@@ -151,8 +151,8 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
         elif data['event'] == 'keydown':
             key_pressed = data['key']
 
-            if key_pressed == 'b':
-                self.blink_once()
+            if key_pressed in ('b', 'B'):
+                self.blink_once(reversed=key_pressed=='B')  # noqa: E225
 
                 # Also update the coordinates display.
                 data['event'] = 'mousemove'
@@ -171,7 +171,7 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
                 self.line_profile_xy.selected_viewer = self.reference_id
                 self.line_profile_xy.vue_draw_plot()
 
-    def blink_once(self):
+    def blink_once(self, reversed=False):
         # Simple blinking of images - this will make it so that only one
         # layer is visible at a time and cycles through the layers.
 
@@ -198,7 +198,11 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
                                       color='warning', sender=self)
                 self.session.hub.broadcast(msg)
             elif n_visible > 0:
-                next_layer = valid[(valid.index(visible[-1]) + 1) % n_layers]
+                if not reversed:
+                    delta = 1
+                else:
+                    delta = -1
+                next_layer = valid[(valid.index(visible[-1]) + delta) % n_layers]
                 self.state.layers[next_layer].visible = True
 
                 for ilayer in (set(valid) - set([next_layer])):
