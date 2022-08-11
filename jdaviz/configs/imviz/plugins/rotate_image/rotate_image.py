@@ -27,7 +27,9 @@ class RotateImageSimple(TemplateMixin, ViewerSelectMixin):
 
         # Rotate selected viewer canvas.
         # TODO: This changes zoom too? astrofrog will fix translation issue?
-        affine_transform = Affine2D().rotate_deg(self._theta)
+        y_hub = (viewer.scales['y'].min + viewers.scales['y'].max) / 2
+        x_hub = (viewer.scales['x'].min + viewer.scales['x'].max) / 2
+        affine_transform = Affine2D().rotate_deg_around(y_hub, x_hub, self._theta)
         viewer.state.affine_matrix = affine_transform
 
         # TODO: Does the zoom box behave? If not, we need to disable it.
