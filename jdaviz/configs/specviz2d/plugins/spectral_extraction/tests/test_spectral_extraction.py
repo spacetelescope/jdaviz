@@ -82,3 +82,14 @@ def test_plugin(specviz2d_helper):
     pext.bg_results_label = 'should not be created'
     pext.vue_create_bg()
     assert 'should not be created' not in [d.label for d in specviz2d_helper.app.data_collection]
+
+
+@pytest.mark.remote_data
+def test_spectrum_on_top(specviz2d_helper):
+    fn = download_file('https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:jwst/product/jw01529-c1002_t002_miri_p750l_s2d.fits', cache=True)  # noqa
+
+    specviz2d_helper.load_data(spectrum_2d=fn)
+
+    pext = specviz2d_helper.app.get_tray_item_from_name('spectral-extraction')
+    assert pext.bg_type_selected == 'OneSided'
+    assert pext.bg_separation < 0

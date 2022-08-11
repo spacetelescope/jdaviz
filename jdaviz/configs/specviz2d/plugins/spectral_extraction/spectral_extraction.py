@@ -148,8 +148,17 @@ class SpectralExtraction(PluginTemplateMixin):
         width = self.trace_dataset.selected_obj.shape[0]
         # estimate the pixel number by taking the median of the brightest pixel index in each column
         brightest_pixel = int(np.median(np.argmax(self.trace_dataset.selected_obj.flux, axis=0)))
-        # default width will be 10% of cross-dispersion "height"
-        default_width = int(np.ceil(width / 10))
+        # do not allow to be an edge pixel
+        if brightest_pixel < 1:
+            brightest_pixel = 1
+        if brightest_pixel > width - 1:
+            brightest_pixel = width - 1
+        distance_from_edge = min(brightest_pixel, width-brightest_pixel)
+        # default width will be 10% of cross-dispersion "height",
+        # but no larger than distance from the edge
+        default_bg_width = int(np.ceil(width / 10))
+        default_width = min(default_bg_width, distance_from_edge * 2)
+
         if self.trace_pixel == 0:
             self.trace_pixel = brightest_pixel
         if self.trace_window == 0:
@@ -157,9 +166,15 @@ class SpectralExtraction(PluginTemplateMixin):
         if self.bg_trace_pixel == 0:
             self.bg_trace_pixel = brightest_pixel
         if self.bg_separation == 0:
-            self.bg_separation = default_width * 2
+            if default_bg_width * 2 > distance_from_edge:
+                self.bg_type_selected = 'OneSided'
+                # we want positive separation if brightest_pixel near bottom
+                sign = 1 if (brightest_pixel < width / 2) else -1
+                self.bg_separation = sign * default_bg_width * 2
+            else:
+                self.bg_separation = default_bg_width * 2
         if self.bg_width == 0:
-            self.bg_width = default_width
+            self.bg_width = default_bg_width
         if self.ext_width == 0:
             self.ext_width = default_width
 
