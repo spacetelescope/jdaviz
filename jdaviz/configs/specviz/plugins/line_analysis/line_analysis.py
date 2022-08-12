@@ -7,7 +7,7 @@ from glue.core.message import (SubsetDeleteMessage,
 from glue_jupyter.common.toolbar_vuetify import read_icon
 from traitlets import Bool, List, Float, Unicode, observe
 from astropy import units as u
-from specutils import analysis
+from specutils import analysis, Spectrum1D
 from specutils.manipulation import extract_region
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
@@ -332,7 +332,25 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         for function in FUNCTIONS:
             # TODO: update specutils to allow ALL analysis to take regions and continuum so we
             # don't need these if statements
-            if function == "Equivalent Width":
+            if function == "Line Flux":
+                meta = self.dataset.selected_dc_item.meta
+                telescope = meta.get('telescope', meta.get('TELESCOP', ''))
+                if telescope == 'JWST':
+                    # Perform integration in frequency space
+                    freq_spec = Spectrum1D(spectral_axis=spec_subtracted.spectral_axis.to(u.Hz),
+                                           flux=spec_subtracted.flux)
+                    temp_result = analysis.line_flux(freq_spec)
+
+                    # Convert result to Watts/meter^2 if in the right units (don't forget the angle if it was provided)
+                    flux_unit = spec_subtracted.flux.unit.decompose()
+                    flux_unit_decompose = set(unit**power for unit, power in zip(flux_unit.bases, flux_unit.powers))
+                    if flux_unit_decompose == {u.Unit("1 / s2"), u.Unit("1 / rad2"), u.Unit("kg")}:
+                        temp_result = temp_result.to(u.Unit('W/(m2*sr)'))
+                    elif flux_unit_decompose == {u.Unit("1 / s2"), u.Unit("kg")}:
+                        temp_result = temp_result.to(u.Unit('W/m2'))
+                else:
+                    temp_result = analysis.line_flux(freq_spec)
+            elif function == "Equivalent Width":
                 if np.any(continuum <= 0):
                     temp_results.append({'function': function,
                                          'result': '',
