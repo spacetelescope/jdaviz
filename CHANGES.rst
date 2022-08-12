@@ -88,6 +88,9 @@ New Features
 
 - New plugin-level ``open_in_tray`` method to programmatically show the plugin. [#1559]
 
+- For JWST products, line flux in the Line Analysis plugin are reported 
+  in base units of W/m2 [#1564]
+
 Cubeviz
 ^^^^^^^
 
