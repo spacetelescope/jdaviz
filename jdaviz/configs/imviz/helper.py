@@ -283,9 +283,9 @@ class Imviz(ConfigHelper):
         -------
         bad_regions : list of (obj, str) or `None`
             If requested (see ``return_bad_regions`` option), return a
-            list of ``(region, reason)`` tuple for region objects that failed to load.
+            list of ``(region, reason)`` tuples for region objects that failed to load.
             If all the regions loaded successfully, this list will be empty.
-            If not requested, this will always be `None` regardless.
+            If not requested, return `None`.
 
         """
         from photutils.aperture import (CircularAperture, SkyCircularAperture,
