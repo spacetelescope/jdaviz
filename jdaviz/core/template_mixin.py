@@ -722,6 +722,12 @@ class SubsetSelect(BaseSelectPluginComponent):
             if match is not None:
                 return match
 
+    @property
+    def selected_subset_state(self):
+        subset_group = [s for s in self.app.data_collection.subset_groups if
+                        s.label == self.selected][0]
+        return subset_group.subset_state
+
     def selected_min_max(self, spectrum1d):
         if self.selected_obj is None:
             return np.nanmin(spectrum1d.spectral_axis), np.nanmax(spectrum1d.spectral_axis)

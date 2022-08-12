@@ -187,19 +187,14 @@ class SubsetPlugin(TemplateMixin):
         """
         self.subset_definitions = []
         self.subset_types = []
-        subset_group = [s for s in self.app.data_collection.subset_groups if
-                        s.label == self.subset_selected][0]
-        subset_state = subset_group.subset_state
 
-        self._unpack_nested_subset(subset_state)
+        self._unpack_nested_subset(self.subset_select.selected_subset_state)
 
     def vue_update_subset(self, *args):
         if not self.is_editable:  # no-op
             return
 
-        subset_group = [s for s in self.app.data_collection.subset_groups if
-                        s.label == self.subset_selected][0]
-        subset_state = subset_group.subset_state
+        subset_state = self.subset_select.selected_subset_state
 
         # Composite region cannot be edited, so just grab first element.
         subset_type = self.subset_types[0]
@@ -214,10 +209,13 @@ class SubsetPlugin(TemplateMixin):
             for d_att in subset_definition:
                 setattr(sbst_obj, d_att["att"], d_att["value"])
 
+            # Force glue to update the Subset. This is the same call used in
+            # glue.core.edit_subset_mode.EditSubsetMode.update() but we do not
+            # want to deal with all the contract stuff tied to the update() method.
             self.session.edit_subset_mode._combine_data(subset_state, override_mode=ReplaceMode)
         except Exception as err:  # pragma: no cover
             self.hub.broadcast(SnackbarMessage(
-                f"Failed to rotate Subset: {repr(err)}", color='error', sender=self))
+                f"Failed to update Subset: {repr(err)}", color='error', sender=self))
 
     # List of JSON-like dict is nice for front-end but a pain to look up,
     # so we use these helper functions.
