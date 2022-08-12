@@ -208,7 +208,7 @@ class SpectralExtraction(PluginTemplateMixin):
                 # NOTE: ignore error, but will be raised when clicking ANY of the export buttons
                 # NOTE: KosmosTrace or manual background are often giving a
                 # "background regions overlapped" error from specreduce
-                self.ext_specreduce_err = str(e)
+                self.ext_specreduce_err = repr(e)
                 self.marks['extract'].clear()
             else:
                 self.ext_specreduce_err = ''
@@ -448,11 +448,12 @@ class SpectralExtraction(PluginTemplateMixin):
 
     def vue_create_bg(self, *args):
         try:
-            _ = self.create_bg(add_data=True)
+            self.create_bg(add_data=True)
         except Exception as e:
-            msg = (f"Specreduce background failed with the following error: {str(e)}")
-            msg = SnackbarMessage(msg, color='error', sender=self)
-            self.app.hub.broadcast(msg)
+            self.app.hub.broadcast(
+                SnackbarMessage(f"Specreduce background failed with the following error: {repr(e)}",
+                                color='error', sender=self)
+            )
 
     def create_bg_sub(self, add_data=False):
         """
