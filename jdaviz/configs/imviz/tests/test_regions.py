@@ -31,33 +31,40 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
 
     def test_regions_invalid(self):
         # Wrong object
-        bad_regions = self.imviz.load_regions([self.imviz])
+        bad_regions = self.imviz.load_regions([self.imviz], return_bad_regions=True)
         assert len(bad_regions) == 1 and bad_regions[0][1] == 'Mask creation failed'
 
         # Sky region on image without WCS
         sky = SkyCoord(337.51894337, -20.83208305, unit='deg')
         reg = CircleSkyRegion(center=sky, radius=0.0004 * u.deg)
-        bad_regions = self.imviz.load_regions([reg], refdata_label='no_wcs[SCI,1]')
+        bad_regions = self.imviz.load_regions([reg], refdata_label='no_wcs[SCI,1]',
+                                              return_bad_regions=True)
         assert len(bad_regions) == 1 and bad_regions[0][1] == 'Sky region provided but data has no WCS'  # noqa
 
         reg = SkyCircularAperture(sky, 0.5 * u.arcsec)
-        bad_regions = self.imviz.load_regions([reg], refdata_label='no_wcs[SCI,1]')
+        bad_regions = self.imviz.load_regions([reg], refdata_label='no_wcs[SCI,1]',
+                                              return_bad_regions=True)
         assert len(bad_regions) == 1 and bad_regions[0][1] == 'Sky region provided but data has no WCS'  # noqa
 
         reg = CircleAnnulusSkyRegion(center=sky, inner_radius=0.0004 * u.deg,
                                      outer_radius=0.0005 * u.deg)
-        bad_regions = self.imviz.load_regions([reg], refdata_label='no_wcs[SCI,1]')
+        bad_regions = self.imviz.load_regions([reg], refdata_label='no_wcs[SCI,1]',
+                                              return_bad_regions=True)
         assert len(bad_regions) == 1 and bad_regions[0][1] == 'Sky region provided but data has no WCS'  # noqa
 
         # Unsupported functionality from outside load_regions
         reg = PointSkyRegion(center=sky)
-        bad_regions = self.imviz.load_regions(reg)
+        bad_regions = self.imviz.load_regions(reg, return_bad_regions=True)
         assert len(bad_regions) == 1 and bad_regions[0][1] == 'Failed to load: NotImplementedError()'  # noqa
 
         # Out-of-bounds masked subset (pix)
         reg = PolygonPixelRegion(vertices=PixCoord(x=[11, 12, 12], y=[11, 11, 12]))
-        bad_regions = self.imviz.load_regions(reg)
+        bad_regions = self.imviz.load_regions(reg, return_bad_regions=True)
         assert len(bad_regions) == 1 and bad_regions[0][1] == 'Mask creation failed'
+
+        # Make sure nothing is returned when not requested even on failure
+        bad_regions = self.imviz.load_regions(reg)
+        assert bad_regions is None
 
         # Make sure nothing is actually loaded
         self.verify_region_loaded('MaskedSubset 1', count=0)
@@ -66,7 +73,7 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
     def test_regions_fully_out_of_bounds(self):
         """Unlike load_static_regions, glue ROI will not error when out of bounds."""
         my_reg = CirclePixelRegion(center=PixCoord(x=100, y=100), radius=5)
-        bad_regions = self.imviz.load_regions([my_reg])
+        bad_regions = self.imviz.load_regions([my_reg], return_bad_regions=True)
         assert len(bad_regions) == 0
         self.verify_region_loaded('Subset 1')
         assert len(self.imviz.get_interactive_regions()) == 1
@@ -74,7 +81,7 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
     def test_regions_mask(self):
         mask = np.zeros((10, 10), dtype=np.bool_)
         mask[0, 0] = True
-        bad_regions = self.imviz.load_regions([mask])
+        bad_regions = self.imviz.load_regions([mask], return_bad_regions=True)
         assert len(bad_regions) == 0
         self.verify_region_loaded('MaskedSubset 1')
         assert self.imviz.get_interactive_regions() == {}
@@ -89,7 +96,7 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
     def test_regions_pixel(self):
         # A little out-of-bounds should still overlay the overlapped part.
         my_reg = CirclePixelRegion(center=PixCoord(x=6, y=2), radius=5)
-        bad_regions = self.imviz.load_regions([my_reg])
+        bad_regions = self.imviz.load_regions([my_reg], return_bad_regions=True)
         assert len(bad_regions) == 0
         self.verify_region_loaded('Subset 1')
         assert len(self.imviz.get_interactive_regions()) == 1
@@ -105,7 +112,7 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
         my_reg_sky_2 = CircleAnnulusSkyRegion(center=sky, inner_radius=0.0004 * u.deg,
                                               outer_radius=0.0005 * u.deg)
         # Add them both.
-        bad_regions = self.imviz.load_regions([my_reg_sky_1, my_reg_sky_2])
+        bad_regions = self.imviz.load_regions([my_reg_sky_1, my_reg_sky_2], return_bad_regions=True)
         assert len(bad_regions) == 0
 
         # Mimic interactive regions (after)
@@ -127,7 +134,7 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
 
     def test_photutils_pixel(self):
         my_aper = CircularAperture((5, 5), r=2)
-        bad_regions = self.imviz.load_regions([my_aper])
+        bad_regions = self.imviz.load_regions([my_aper], return_bad_regions=True)
         assert len(bad_regions) == 0
         self.verify_region_loaded('Subset 1')
         assert len(self.imviz.get_interactive_regions()) == 1
@@ -135,7 +142,7 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
     def test_photutils_sky_has_wcs(self):
         sky = SkyCoord(ra=337.5202808, dec=-20.833333059999998, unit='deg')
         my_aper_sky = SkyCircularAperture(sky, 0.5 * u.arcsec)
-        bad_regions = self.imviz.load_regions([my_aper_sky])
+        bad_regions = self.imviz.load_regions([my_aper_sky], return_bad_regions=True)
         assert len(bad_regions) == 0
         self.verify_region_loaded('Subset 1')
         assert len(self.imviz.get_interactive_regions()) == 1
@@ -251,7 +258,7 @@ class TestLoadRegionsFromFile(BaseRegionHandler):
     def test_ds9_load_all(self, imviz_helper):
         self.viewer = imviz_helper.default_viewer
         imviz_helper.load_data(self.arr, data_label='my_image')
-        bad_regions = imviz_helper.load_regions_from_file(self.region_file)
+        bad_regions = imviz_helper.load_regions_from_file(self.region_file, return_bad_regions=True)
         assert len(bad_regions) == 1
 
         # Will load 8/9 and 6 of that become ROIs.
@@ -265,7 +272,8 @@ class TestLoadRegionsFromFile(BaseRegionHandler):
     def test_ds9_load_two_good(self, imviz_helper):
         self.viewer = imviz_helper.default_viewer
         imviz_helper.load_data(self.arr, data_label='my_image')
-        bad_regions = imviz_helper.load_regions_from_file(self.region_file, max_num_regions=2)
+        bad_regions = imviz_helper.load_regions_from_file(
+            self.region_file, max_num_regions=2, return_bad_regions=True)
         assert len(bad_regions) == 0
         subsets = imviz_helper.get_interactive_regions()
         assert list(subsets.keys()) == ['Subset 1', 'Subset 2'], subsets
@@ -274,7 +282,7 @@ class TestLoadRegionsFromFile(BaseRegionHandler):
     def test_ds9_load_one_bad(self, imviz_helper):
         self.viewer = imviz_helper.default_viewer
         imviz_helper.load_data(self.arr, data_label='my_image')
-        bad_regions = imviz_helper.load_regions(self.raw_regions[6])
+        bad_regions = imviz_helper.load_regions(self.raw_regions[6], return_bad_regions=True)
         assert len(bad_regions) == 1
         assert imviz_helper.get_interactive_regions() == {}
         self.verify_region_loaded('MaskedSubset 1', count=0)
@@ -282,7 +290,8 @@ class TestLoadRegionsFromFile(BaseRegionHandler):
     def test_ds9_load_one_good_one_bad(self, imviz_helper):
         self.viewer = imviz_helper.default_viewer
         imviz_helper.load_data(self.arr, data_label='my_image')
-        bad_regions = imviz_helper.load_regions([self.raw_regions[3], self.raw_regions[6]])
+        bad_regions = imviz_helper.load_regions(
+            [self.raw_regions[3], self.raw_regions[6]], return_bad_regions=True)
         assert len(bad_regions) == 1
 
         subsets = imviz_helper.get_interactive_regions()

@@ -223,14 +223,15 @@ class Imviz(ConfigHelper):
 
         Returns
         -------
-        bad_regions : list of (obj, str)
+        bad_regions : list of (obj, str) or `None`
             See :meth:`load_regions`.
 
         """
         raw_regs = Regions.read(region_file, format=region_format)
         return self.load_regions(raw_regs, max_num_regions=max_num_regions, **kwargs)
 
-    def load_regions(self, regions, max_num_regions=None, refdata_label=None, **kwargs):
+    def load_regions(self, regions, max_num_regions=None, refdata_label=None,
+                     return_bad_regions=False, **kwargs):
         """Load given region(s) into the viewer.
         WCS-to-pixel translation and mask creation, if needed, is relative
         to the image defined by ``refdata_label``. Meanwhile, the rest of
@@ -269,6 +270,10 @@ class Imviz(ConfigHelper):
             Choice of this data is particularly important when sky or masked
             region is involved.
 
+        return_bad_regions : bool
+            If `True`, return the regions that failed to load (see ``bad_regions``);
+            This is useful for debugging. If `False`, do not return anything (`None`).
+
         kwargs : dict
             Extra keywords to be passed into the region's ``to_mask`` method.
             **This is ignored if the region can be made interactive or
@@ -276,9 +281,11 @@ class Imviz(ConfigHelper):
 
         Returns
         -------
-        bad_regions : list of (obj, str)
-            List of ``(region, reason)`` tuple for region objects that failed to load.
-            If all the regions loaded successfully, this will be empty.
+        bad_regions : list of (obj, str) or `None`
+            If requested (see ``return_bad_regions`` option), return a
+            list of ``(region, reason)`` tuple for region objects that failed to load.
+            If all the regions loaded successfully, this list will be empty.
+            If not requested, this will always be `None` regardless.
 
         """
         from photutils.aperture import (CircularAperture, SkyCircularAperture,
@@ -383,7 +390,8 @@ class Imviz(ConfigHelper):
             f"Loaded {n_loaded}/{n_reg_in} regions, max_num_regions={max_num_regions}, "
             f"bad={n_reg_bad}", color=snack_color, timeout=8000, sender=self.app))
 
-        return bad_regions
+        if return_bad_regions:
+            return bad_regions
 
     @deprecated('2.9', alternative='load_regions_from_file')
     def load_static_regions_from_file(self, region_file, region_format='ds9', prefix='region',
