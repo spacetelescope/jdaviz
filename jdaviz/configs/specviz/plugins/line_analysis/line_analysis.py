@@ -351,7 +351,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                     elif flux_unit_decompose == {u.Unit("1 / s2"), u.Unit("kg")}:
                         temp_result = temp_result.to(u.Unit('W/m2'))
                 else:
-                    temp_result = analysis.line_flux(spec_normalized)
+                    temp_result = analysis.line_flux(spec_subtracted)
             elif function == "Equivalent Width":
                 if np.any(continuum <= 0):
                     temp_results.append({'function': function,
