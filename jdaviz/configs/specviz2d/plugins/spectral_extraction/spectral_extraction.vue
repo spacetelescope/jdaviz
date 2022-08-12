@@ -96,7 +96,7 @@
 
       <v-row v-if="ext_dataset_selected !== 'From Plugin'">
         <span class="v-messages v-messages__message text--secondary">
-          <b>NOTE:</b> extracted spectrum is using "{{ext_dataset_selected}}" as input data, so will not update in real-time.  Switch to "From Plugin" to use the background subtraction defined here.
+          <b style="color: red !important">NOTE:</b> extracted spectrum is using "{{ext_dataset_selected}}" as input data, so will not update in real-time.  Switch to "From Plugin" to use the background subtraction defined here.
         </span>
       </v-row>
 
@@ -241,9 +241,16 @@
         :add_to_viewer_selected.sync="ext_add_to_viewer_selected"
         action_label="Extract"
         action_tooltip="Extract 1D Spectrum"
+        :action_disabled="ext_specreduce_err.length"
         @click:action="extract"
       ></plugin-add-results>
     </div>
+
+    <v-row v-if="ext_specreduce_err">
+      <span class="v-messages v-messages__message text--secondary">
+        <b style="color: red !important">ERROR from specreduce:</b> {{ext_specreduce_err}}
+      </span>
+    </v-row>
 
     </div>
   </j-tray-plugin>
