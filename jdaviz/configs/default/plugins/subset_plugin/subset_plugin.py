@@ -1,10 +1,12 @@
 from glue.core.message import EditSubsetMessage, SubsetUpdateMessage
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode)
+from glue.core.roi import CircularROI, EllipticalROI, RectangularROI
 from glue.core.subset import RoiSubsetState, RangeSubsetState, CompositeSubsetState
 from glue_jupyter.widgets.subset_mode_vuetify import SelectionModeMenu
 from traitlets import List, Unicode, Bool, observe
 
+from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import TemplateMixin, SubsetSelect
 
@@ -24,12 +26,14 @@ class SubsetPlugin(TemplateMixin):
     template_file = __file__, "subset_plugin.vue"
     select = List([]).tag(sync=True)
     subset_items = List([]).tag(sync=True)
-    subset_selected = Unicode("Create new").tag(sync=True)
+    subset_selected = Unicode("Create New").tag(sync=True)
     mode_selected = Unicode('add').tag(sync=True)
     show_region_info = Bool(True).tag(sync=True)
     subset_types = List([]).tag(sync=True)
     subset_definitions = List([]).tag(sync=True)
     has_subset_details = Bool(False).tag(sync=True)
+
+    is_editable = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -80,6 +84,10 @@ class SubsetPlugin(TemplateMixin):
 
     @observe('subset_selected')
     def _sync_selected_from_ui(self, change):
+        self.subset_definitions = []
+        self.subset_types = []
+        self.is_editable = False
+
         if not hasattr(self, 'subset_select'):
             # during initial init, this can trigger before the component is initialized
             return
@@ -108,6 +116,7 @@ class SubsetPlugin(TemplateMixin):
         if isinstance(subset_state, CompositeSubsetState):
             self._unpack_nested_subset(subset_state.state1)
             self._unpack_nested_subset(subset_state.state2)
+            self.is_editable = False
         else:
             if subset_state is not None:
                 self._get_subset_subregion_definition(subset_state)
@@ -118,35 +127,56 @@ class SubsetPlugin(TemplateMixin):
         the string type and operation (if in a composite subset) need to be stored
         separately from the float parameters for display reasons.
         """
-        subset_type = {}
-        subset_definition = None
+        subset_type = ''
+        subset_definition = []
+        self.is_editable = False
 
         if isinstance(subset_state, RoiSubsetState):
-            subset_classname = subset_state.roi.__class__.__name__
-            if subset_classname == "CircularROI":
+            if isinstance(subset_state.roi, CircularROI):
                 x, y = subset_state.roi.get_center()
-                subset_definition = {"X Center": x,
-                                     "Y Center": y,
-                                     "Radius": subset_state.roi.radius}
+                r = subset_state.roi.radius
+                subset_definition = [{"name": "X Center", "att": "xc", "value": x, "orig": x},
+                                     {"name": "Y Center", "att": "yc", "value": y, "orig": y},
+                                     {"name": "Radius", "att": "radius", "value": r, "orig": r}]
+                self.is_editable = True
 
-            elif subset_classname == "RectangularROI":
-                subset_definition = {}
+            elif isinstance(subset_state.roi, RectangularROI):
                 for att in ("Xmin", "Xmax", "Ymin", "Ymax"):
-                    subset_definition[att] = getattr(subset_state.roi, att.lower())
+                    real_att = att.lower()
+                    val = getattr(subset_state.roi, real_att)
+                    subset_definition.append(
+                        {"name": att, "att": real_att, "value": val, "orig": val})
+                theta = subset_state.roi.theta
+                subset_definition.append(
+                    {"name": "Angle", "att": "theta", "value": theta, "orig": theta})
+                self.is_editable = True
 
-            elif subset_classname == "EllipticalROI":
-                subset_definition = {"X Center": subset_state.roi.xc,
-                                     "Y Center": subset_state.roi.yc,
-                                     "X Radius": subset_state.roi.radius_x,
-                                     "Y Radius": subset_state.roi.radius_y}
-            subset_type["Subset type"] = subset_classname
+            elif isinstance(subset_state.roi, EllipticalROI):
+                xc = subset_state.roi.xc
+                yc = subset_state.roi.yc
+                rx = subset_state.roi.radius_x
+                ry = subset_state.roi.radius_y
+                theta = subset_state.roi.theta
+                subset_definition = [
+                    {"name": "X Center", "att": "xc", "value": xc, "orig": xc},
+                    {"name": "Y Center", "att": "yc", "value": yc, "orig": yc},
+                    {"name": "X Radius", "att": "radius_x", "value": rx, "orig": rx},
+                    {"name": "Y Radius", "att": "radius_y", "value": ry, "orig": ry},
+                    {"name": "Angle", "att": "theta", "value": theta, "orig": theta}]
+                self.is_editable = True
+
+            subset_type = subset_state.roi.__class__.__name__
 
         elif isinstance(subset_state, RangeSubsetState):
-            subset_definition = {"Upper bound": subset_state.hi,
-                                 "Lower bound": subset_state.lo}
-            subset_type["Subset type"] = "Range"
+            lo = subset_state.lo
+            hi = subset_state.hi
+            subset_definition = [{"name": "Lower bound", "att": "lo", "value": lo, "orig": lo},
+                                 {"name": "Upper bound", "att": "hi", "value": hi, "orig": hi}]
+            self.is_editable = True
+            subset_type = "Range"
 
-        if subset_definition is not None and subset_definition not in self.subset_definitions:
+        if len(subset_definition) > 0 and subset_definition not in self.subset_definitions:
+            # Note: .append() does not work for List traitlet.
             self.subset_definitions = self.subset_definitions + [subset_definition]
             self.subset_types = self.subset_types + [subset_type]
 
@@ -157,8 +187,50 @@ class SubsetPlugin(TemplateMixin):
         """
         self.subset_definitions = []
         self.subset_types = []
-        subset_group = [s for s in self.app.data_collection.subset_groups if
-                        s.label == self.subset_selected][0]
-        subset_state = subset_group.subset_state
 
-        self._unpack_nested_subset(subset_state)
+        self._unpack_nested_subset(self.subset_select.selected_subset_state)
+
+    def vue_update_subset(self, *args):
+        if not self.is_editable:  # no-op
+            return
+
+        subset_state = self.subset_select.selected_subset_state
+
+        # Composite region cannot be edited, so just grab first element.
+        subset_type = self.subset_types[0]
+        subset_definition = self.subset_definitions[0]
+
+        try:
+            if subset_type == "Range":
+                sbst_obj = subset_state
+            else:
+                sbst_obj = subset_state.roi
+
+            for d_att in subset_definition:
+                setattr(sbst_obj, d_att["att"], d_att["value"])
+
+            # Force glue to update the Subset. This is the same call used in
+            # glue.core.edit_subset_mode.EditSubsetMode.update() but we do not
+            # want to deal with all the contract stuff tied to the update() method.
+            self.session.edit_subset_mode._combine_data(subset_state, override_mode=ReplaceMode)
+        except Exception as err:  # pragma: no cover
+            self.hub.broadcast(SnackbarMessage(
+                f"Failed to update Subset: {repr(err)}", color='error', sender=self))
+
+    # List of JSON-like dict is nice for front-end but a pain to look up,
+    # so we use these helper functions.
+
+    def _get_value_from_subset_definition(self, index, name, desired_key):
+        subset_definition = self.subset_definitions[index]
+        value = None
+        for item in subset_definition:
+            if item['name'] == name:
+                value = item[desired_key]
+                break
+        return value
+
+    def _set_value_in_subset_definition(self, index, name, desired_key, new_value):
+        for i in range(len(self.subset_definitions[index])):
+            if self.subset_definitions[index][i]['name'] == name:
+                self.subset_definitions[index][i]['value'] = new_value
+                break
