@@ -9,6 +9,9 @@ New Features
 
 - Subset Tools plugin now allows basic editing and also shows rotation for certain shapes. [#1427]
 
+- New ``jdaviz.core.region_translators.regions2roi()`` function to convert certain
+  ``regions`` shapes into ``glue`` ROIs. [#1463]
+
 Cubeviz
 ^^^^^^^
 
@@ -44,6 +47,12 @@ Cubeviz
 
 Imviz
 ^^^^^
+
+- ``Imviz.load_static_regions_from_file()`` and ``Imviz.load_static_regions()`` are
+  deprecated in favor of ``Imviz.load_regions_from_file()`` and ``Imviz.load_regions()``,
+  respectively. This is because some region shapes can be made interactive now even though
+  they are loaded from API. The new methods have slightly different API signatures, please
+  read the API documentation carefully before use. [#1463]
 
 Mosviz
 ^^^^^^

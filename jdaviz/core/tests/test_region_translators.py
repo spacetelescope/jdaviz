@@ -2,6 +2,7 @@ import pytest
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.tests.helper import assert_quantity_allclose
+from glue.core.roi import CircularROI, EllipticalROI, RectangularROI
 from numpy.testing import assert_allclose
 from photutils.aperture import (CircularAperture, SkyCircularAperture,
                                 EllipticalAperture, SkyEllipticalAperture,
@@ -13,7 +14,7 @@ from regions import (CirclePixelRegion, EllipsePixelRegion, RectanglePixelRegion
                      CircleAnnulusPixelRegion, EllipseAnnulusPixelRegion,
                      RectangleAnnulusPixelRegion, PolygonPixelRegion, PixCoord)
 
-from jdaviz.core.region_translators import regions2aperture, aperture2regions
+from jdaviz.core.region_translators import regions2roi, regions2aperture, aperture2regions
 
 
 # TODO: Use proper method from upstream when that is available.
@@ -60,6 +61,22 @@ def test_translation_circle(image_2d_wcs):
         CirclePixelRegion(center=PixCoord(x=42, y=43), radius=[1, 4.2])
 
 
+def test_translation_circle_roi(image_2d_wcs):
+    region_shape = CirclePixelRegion(center=PixCoord(x=42, y=43), radius=4.2)
+    roi_pix = regions2roi(region_shape)
+    assert isinstance(roi_pix, CircularROI)
+    assert_allclose((roi_pix.xc, roi_pix.yc, roi_pix.radius), (42, 43, 4.2))
+
+    region_sky = region_shape.to_sky(image_2d_wcs)
+    roi_sky = regions2roi(region_sky, wcs=image_2d_wcs)
+    assert isinstance(roi_sky, CircularROI)
+    assert_allclose((roi_sky.xc, roi_sky.yc, roi_sky.radius),
+                    (roi_pix.xc, roi_pix.yc, roi_pix.radius))
+
+    with pytest.raises(ValueError, match='WCS must be provided'):
+        regions2roi(region_sky)
+
+
 def test_translation_ellipse(image_2d_wcs):
     region_shape = EllipsePixelRegion(
         center=PixCoord(x=42, y=43), width=16, height=10, angle=Angle(30, 'deg'))
@@ -98,6 +115,21 @@ def test_translation_ellipse(image_2d_wcs):
             center=PixCoord(x=42, y=43), width=16, height=10, angle=Angle([0, 30], 'deg'))
 
 
+def test_translation_ellipse_roi(image_2d_wcs):
+    region_shape = EllipsePixelRegion(
+        center=PixCoord(x=42, y=43), width=16, height=10, angle=Angle(30, 'deg'))
+    roi_pix = regions2roi(region_shape)
+    assert isinstance(roi_pix, EllipticalROI)
+    assert_allclose((roi_pix.xc, roi_pix.yc, roi_pix.radius_x, roi_pix.radius_y, roi_pix.theta),
+                    (42, 43, 8.0, 5.0, 0.5235987755982988))
+
+    region_sky = region_shape.to_sky(image_2d_wcs)
+    roi_sky = regions2roi(region_sky, wcs=image_2d_wcs)
+    assert isinstance(roi_sky, EllipticalROI)
+    assert_allclose((roi_sky.xc, roi_sky.yc, roi_sky.radius_x, roi_sky.radius_y, roi_sky.theta),
+                    (roi_pix.xc, roi_pix.yc, roi_pix.radius_x, roi_pix.radius_y, roi_pix.theta))
+
+
 def test_translation_rectangle(image_2d_wcs):
     region_shape = RectanglePixelRegion(
         center=PixCoord(x=42, y=43), width=16, height=10, angle=Angle(30, 'deg'))
@@ -134,6 +166,21 @@ def test_translation_rectangle(image_2d_wcs):
     with pytest.raises(ValueError, match=r'must be .* scalar'):
         RectanglePixelRegion(
             center=PixCoord(x=42, y=43), width=16, height=10, angle=Angle([0, 30], 'deg'))
+
+
+def test_translation_rectangle_roi(image_2d_wcs):
+    region_shape = RectanglePixelRegion(
+        center=PixCoord(x=42, y=43), width=16, height=10, angle=Angle(30, 'deg'))
+    roi_pix = regions2roi(region_shape)
+    assert isinstance(roi_pix, RectangularROI)
+    assert_allclose((roi_pix.xmin, roi_pix.xmax, roi_pix.ymin, roi_pix.ymax, roi_pix.theta),
+                    (34, 50, 38, 48, 0.5235987755982988))
+
+    region_sky = region_shape.to_sky(image_2d_wcs)
+    roi_sky = regions2roi(region_sky, wcs=image_2d_wcs)
+    assert isinstance(roi_sky, RectangularROI)
+    assert_allclose((roi_sky.xmin, roi_sky.xmax, roi_sky.ymin, roi_sky.ymax, roi_sky.theta),
+                    (roi_pix.xmin, roi_pix.xmax, roi_pix.ymin, roi_pix.ymax, roi_pix.theta))
 
 
 def test_translation_circle_annulus(image_2d_wcs):
@@ -283,3 +330,5 @@ def test_translation_polygon():
     region_shape = PolygonPixelRegion(vertices=PixCoord(x=[1, 2, 2], y=[1, 1, 2]))
     with pytest.raises(NotImplementedError, match='is not supported'):
         regions2aperture(region_shape)
+    with pytest.raises(NotImplementedError, match='is not supported'):
+        regions2roi(region_shape)

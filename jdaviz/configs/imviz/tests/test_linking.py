@@ -4,7 +4,7 @@ from astropy.wcs import WCS
 from glue.core.link_helpers import LinkSame
 from glue.plugins.wcs_autolinking.wcs_autolinking import OffsetLink, WCSLink
 from numpy.testing import assert_allclose
-from regions import PixCoord, CirclePixelRegion
+from regions import PixCoord, CirclePixelRegion, PolygonPixelRegion
 
 from jdaviz.configs.imviz.helper import get_reference_image_data
 from jdaviz.configs.imviz.tests.utils import (
@@ -102,8 +102,9 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
 
         # Add subsets, both interactive and static.
         self.imviz._apply_interactive_region('bqplot:circle', (1.5, 2.5), (3.6, 4.6))
-        self.imviz.load_static_regions({
-            'my_reg': CirclePixelRegion(center=PixCoord(x=6, y=2), radius=5)})
+        self.imviz.load_regions([CirclePixelRegion(center=PixCoord(x=6, y=2), radius=5),
+                                 PolygonPixelRegion(vertices=PixCoord(x=[1, 2, 2], y=[1, 1, 2])),
+                                 PolygonPixelRegion(vertices=PixCoord(x=[2, 3, 3], y=[2, 2, 3]))])
 
         # Add markers.
         tbl = Table({'x': (0, 0), 'y': (0, 1)})
@@ -120,8 +121,10 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
                         (0, 100))
 
         # Ensure subsets are still there.
-        assert 'Subset 1' in self.imviz.get_interactive_regions()
-        assert 'my_reg' in [layer.layer.label for layer in self.viewer.state.layers]
+        all_labels = [layer.layer.label for layer in self.viewer.state.layers]
+        assert sorted(self.imviz.get_interactive_regions()) == ['Subset 1', 'Subset 2']
+        assert 'MaskedSubset 1' in all_labels
+        assert 'MaskedSubset 2' in all_labels
 
         # Ensure markers are deleted.
         # Zoom and pan will reset in this case, so we do not check those.

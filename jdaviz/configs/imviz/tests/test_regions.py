@@ -5,7 +5,8 @@ from astropy.coordinates import SkyCoord, Angle
 from astropy.utils.data import get_pkg_data_filename
 from photutils import CircularAperture, SkyCircularAperture
 from regions import (PixCoord, CircleSkyRegion, RectanglePixelRegion, CirclePixelRegion,
-                     EllipsePixelRegion, PointPixelRegion, PointSkyRegion, Regions)
+                     EllipsePixelRegion, PointPixelRegion, PointSkyRegion, PolygonPixelRegion,
+                     CircleAnnulusSkyRegion, Regions)
 
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS
 
@@ -23,6 +24,131 @@ class BaseRegionHandler:
         assert n == count
 
 
+class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
+    def teardown_method(self, method):
+        """Clear all the subsets for the next test method."""
+        self.imviz._delete_all_regions()
+
+    def test_regions_invalid(self):
+        # Wrong object
+        bad_regions = self.imviz.load_regions([self.imviz], return_bad_regions=True)
+        assert len(bad_regions) == 1 and bad_regions[0][1] == 'Mask creation failed'
+
+        # Sky region on image without WCS
+        sky = SkyCoord(337.51894337, -20.83208305, unit='deg')
+        reg = CircleSkyRegion(center=sky, radius=0.0004 * u.deg)
+        bad_regions = self.imviz.load_regions([reg], refdata_label='no_wcs[SCI,1]',
+                                              return_bad_regions=True)
+        assert len(bad_regions) == 1 and bad_regions[0][1] == 'Sky region provided but data has no WCS'  # noqa
+
+        reg = SkyCircularAperture(sky, 0.5 * u.arcsec)
+        bad_regions = self.imviz.load_regions([reg], refdata_label='no_wcs[SCI,1]',
+                                              return_bad_regions=True)
+        assert len(bad_regions) == 1 and bad_regions[0][1] == 'Sky region provided but data has no WCS'  # noqa
+
+        reg = CircleAnnulusSkyRegion(center=sky, inner_radius=0.0004 * u.deg,
+                                     outer_radius=0.0005 * u.deg)
+        bad_regions = self.imviz.load_regions([reg], refdata_label='no_wcs[SCI,1]',
+                                              return_bad_regions=True)
+        assert len(bad_regions) == 1 and bad_regions[0][1] == 'Sky region provided but data has no WCS'  # noqa
+
+        # Unsupported functionality from outside load_regions
+        reg = PointSkyRegion(center=sky)
+        bad_regions = self.imviz.load_regions(reg, return_bad_regions=True)
+        assert len(bad_regions) == 1 and bad_regions[0][1] == 'Failed to load: NotImplementedError()'  # noqa
+
+        # Out-of-bounds masked subset (pix)
+        reg = PolygonPixelRegion(vertices=PixCoord(x=[11, 12, 12], y=[11, 11, 12]))
+        bad_regions = self.imviz.load_regions(reg, return_bad_regions=True)
+        assert len(bad_regions) == 1 and bad_regions[0][1] == 'Mask creation failed'
+
+        # Make sure nothing is returned when not requested even on failure
+        bad_regions = self.imviz.load_regions(reg)
+        assert bad_regions is None
+
+        # Make sure nothing is actually loaded
+        self.verify_region_loaded('MaskedSubset 1', count=0)
+        assert self.imviz.get_interactive_regions() == {}
+
+    def test_regions_fully_out_of_bounds(self):
+        """Unlike load_static_regions, glue ROI will not error when out of bounds."""
+        my_reg = CirclePixelRegion(center=PixCoord(x=100, y=100), radius=5)
+        bad_regions = self.imviz.load_regions([my_reg], return_bad_regions=True)
+        assert len(bad_regions) == 0
+        self.verify_region_loaded('Subset 1')
+        assert len(self.imviz.get_interactive_regions()) == 1
+
+    def test_regions_mask(self):
+        mask = np.zeros((10, 10), dtype=np.bool_)
+        mask[0, 0] = True
+        bad_regions = self.imviz.load_regions([mask], return_bad_regions=True)
+        assert len(bad_regions) == 0
+        self.verify_region_loaded('MaskedSubset 1')
+        assert self.imviz.get_interactive_regions() == {}
+
+        # Also test deletion by label here.
+        self.imviz._delete_region('MaskedSubset 1')
+        self.verify_region_loaded('MaskedSubset 1', count=0)
+
+        # Deletion of non-existent label is silent no-op.
+        self.imviz._delete_region('foo')
+
+    def test_regions_pixel(self):
+        # A little out-of-bounds should still overlay the overlapped part.
+        my_reg = CirclePixelRegion(center=PixCoord(x=6, y=2), radius=5)
+        bad_regions = self.imviz.load_regions([my_reg], return_bad_regions=True)
+        assert len(bad_regions) == 0
+        self.verify_region_loaded('Subset 1')
+        assert len(self.imviz.get_interactive_regions()) == 1
+
+    def test_regions_sky_has_wcs(self):
+        # Mimic interactive region (before)
+        self.imviz._apply_interactive_region('bqplot:circle', (1.5, 2.5), (3.6, 4.6))
+
+        sky = SkyCoord(ra=337.5202808, dec=-20.833333059999998, unit='deg')
+        # This will become indistinguishable from normal Subset.
+        my_reg_sky_1 = CircleSkyRegion(sky, Angle(0.5, u.arcsec))
+        # Masked subset.
+        my_reg_sky_2 = CircleAnnulusSkyRegion(center=sky, inner_radius=0.0004 * u.deg,
+                                              outer_radius=0.0005 * u.deg)
+        # Add them both.
+        bad_regions = self.imviz.load_regions([my_reg_sky_1, my_reg_sky_2], return_bad_regions=True)
+        assert len(bad_regions) == 0
+
+        # Mimic interactive regions (after)
+        self.imviz._apply_interactive_region('bqplot:ellipse', (-2, 0), (5, 4.5))
+        self.imviz._apply_interactive_region('bqplot:rectangle', (0, 0), (10, 10))
+
+        # Check interactive regions. We do not check if the translation is correct,
+        # that check hopefully is already done in glue-astronomy.
+        # Apparently, static region ate up one number...
+        subsets = self.imviz.get_interactive_regions()
+        assert list(subsets.keys()) == ['Subset 1', 'Subset 2', 'Subset 4', 'Subset 5'], subsets
+        assert isinstance(subsets['Subset 1'], CirclePixelRegion)
+        assert isinstance(subsets['Subset 2'], CirclePixelRegion)
+        assert isinstance(subsets['Subset 4'], EllipsePixelRegion)
+        assert isinstance(subsets['Subset 5'], RectanglePixelRegion)
+
+        # Check static region
+        self.verify_region_loaded('MaskedSubset 1')
+
+    def test_photutils_pixel(self):
+        my_aper = CircularAperture((5, 5), r=2)
+        bad_regions = self.imviz.load_regions([my_aper], return_bad_regions=True)
+        assert len(bad_regions) == 0
+        self.verify_region_loaded('Subset 1')
+        assert len(self.imviz.get_interactive_regions()) == 1
+
+    def test_photutils_sky_has_wcs(self):
+        sky = SkyCoord(ra=337.5202808, dec=-20.833333059999998, unit='deg')
+        my_aper_sky = SkyCircularAperture(sky, 0.5 * u.arcsec)
+        bad_regions = self.imviz.load_regions([my_aper_sky], return_bad_regions=True)
+        assert len(bad_regions) == 0
+        self.verify_region_loaded('Subset 1')
+        assert len(self.imviz.get_interactive_regions()) == 1
+
+
+@pytest.mark.filterwarnings(r'ignore:.*is deprecated and may be removed in a future version')
 class TestLoadStaticRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
 
     @pytest.mark.parametrize(('subset_label', 'warn_msg'),
@@ -38,12 +164,11 @@ class TestLoadStaticRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
 
     def test_regions_fully_out_of_bounds(self):
         my_reg = CirclePixelRegion(center=PixCoord(x=100, y=100), radius=5)
-        with pytest.warns(UserWarning, match='failed to load, skipping'):
+        with pytest.warns(UserWarning, match='Unsupported region type'):
             bad_regions = self.imviz.load_static_regions({'my_oob_reg': my_reg})
         assert len(bad_regions) == 1
 
-        # BUG: https://github.com/glue-viz/glue/issues/2275
-        self.verify_region_loaded('my_oob_reg', count=1)  # Should be: count=0
+        self.verify_region_loaded('my_oob_reg', count=0)
 
     def test_regions_mask(self):
         mask = np.zeros((10, 10), dtype=np.bool_)
@@ -56,9 +181,6 @@ class TestLoadStaticRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
         # Also test deletion by label here.
         self.imviz._delete_region('my_mask')
         self.verify_region_loaded('my_mask', count=0)
-
-        # Deletion of non-existent label is silent no-op.
-        self.imviz._delete_region('foo')
 
     def test_regions_pixel(self):
         # A little out-of-bounds should still overlay the overlapped part.
@@ -125,6 +247,59 @@ class TestLoadStaticRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
         assert self.imviz.get_interactive_regions() == {}
 
 
+class TestLoadRegionsFromFile(BaseRegionHandler):
+
+    def setup_class(self):
+        self.region_file = get_pkg_data_filename(
+            'data/ds9.fits.reg', package='regions.io.ds9.tests')
+        self.arr = np.ones((1024, 1024))
+        self.raw_regions = Regions.read(self.region_file, format='ds9')
+
+    def test_ds9_load_all(self, imviz_helper):
+        self.viewer = imviz_helper.default_viewer
+        imviz_helper.load_data(self.arr, data_label='my_image')
+        bad_regions = imviz_helper.load_regions_from_file(self.region_file, return_bad_regions=True)
+        assert len(bad_regions) == 1
+
+        # Will load 8/9 and 6 of that become ROIs.
+        subsets = imviz_helper.get_interactive_regions()
+        assert list(subsets.keys()) == ['Subset 1', 'Subset 2', 'Subset 3',
+                                        'Subset 4', 'Subset 5', 'Subset 6'], subsets
+
+        for i in (1, 2):  # The other 2 are MaskedSubset
+            self.verify_region_loaded(f'MaskedSubset {i}', count=1)
+
+    def test_ds9_load_two_good(self, imviz_helper):
+        self.viewer = imviz_helper.default_viewer
+        imviz_helper.load_data(self.arr, data_label='my_image')
+        bad_regions = imviz_helper.load_regions_from_file(
+            self.region_file, max_num_regions=2, return_bad_regions=True)
+        assert len(bad_regions) == 0
+        subsets = imviz_helper.get_interactive_regions()
+        assert list(subsets.keys()) == ['Subset 1', 'Subset 2'], subsets
+        self.verify_region_loaded('MaskedSubset 1', count=0)
+
+    def test_ds9_load_one_bad(self, imviz_helper):
+        self.viewer = imviz_helper.default_viewer
+        imviz_helper.load_data(self.arr, data_label='my_image')
+        bad_regions = imviz_helper.load_regions(self.raw_regions[6], return_bad_regions=True)
+        assert len(bad_regions) == 1
+        assert imviz_helper.get_interactive_regions() == {}
+        self.verify_region_loaded('MaskedSubset 1', count=0)
+
+    def test_ds9_load_one_good_one_bad(self, imviz_helper):
+        self.viewer = imviz_helper.default_viewer
+        imviz_helper.load_data(self.arr, data_label='my_image')
+        bad_regions = imviz_helper.load_regions(
+            [self.raw_regions[3], self.raw_regions[6]], return_bad_regions=True)
+        assert len(bad_regions) == 1
+
+        subsets = imviz_helper.get_interactive_regions()
+        assert list(subsets.keys()) == ['Subset 1'], subsets
+        self.verify_region_loaded('MaskedSubset 1', count=0)
+
+
+@pytest.mark.filterwarnings(r'ignore:.*is deprecated and may be removed in a future version')
 class TestLoadStaticRegionsFromFile(BaseRegionHandler):
 
     def setup_class(self):
@@ -138,18 +313,9 @@ class TestLoadStaticRegionsFromFile(BaseRegionHandler):
         imviz_helper.load_data(self.arr, data_label='my_image')
         with pytest.warns(UserWarning):
             bad_regions = imviz_helper.load_static_regions_from_file(self.region_file)
-        assert len(bad_regions) == 1
-        for i in (0, 1, 2, 3, 4, 5, 7, 8):  # Only these will successfully load
+        assert len(bad_regions) == 4
+        for i in (3, 4, 5, 7, 8):  # Only these will successfully load
             self.verify_region_loaded(f'region_{i}', count=1)
-
-    def test_ds9_load_two_good(self, imviz_helper):
-        self.viewer = imviz_helper.default_viewer
-        imviz_helper.load_data(self.arr, data_label='my_image')
-        bad_regions = imviz_helper.load_static_regions_from_file(
-            self.region_file, prefix='good', max_num_regions=2)
-        assert len(bad_regions) == 0
-        for i in range(2):
-            self.verify_region_loaded(f'good_{i}', count=1)
 
     def test_ds9_load_one_bad(self, imviz_helper):
         self.viewer = imviz_helper.default_viewer
@@ -171,6 +337,7 @@ class TestLoadStaticRegionsFromFile(BaseRegionHandler):
         self.verify_region_loaded('bad_0', count=0)
 
 
+@pytest.mark.filterwarnings(r'ignore:.*is deprecated and may be removed in a future version')
 class TestLoadStaticRegionsSkyNoWCS(BaseRegionHandler):
     @pytest.fixture(autouse=True)
     def setup_class(self, imviz_helper):
@@ -211,15 +378,18 @@ class TestGetInteractiveRegions(BaseImviz_WCS_NoWCS):
         assert isinstance(subsets['Subset 1'], CirclePixelRegion)
         assert isinstance(subsets['Subset 2'], CirclePixelRegion)
 
-        # Turn the inner circle (Subset 2) into annulus.
+        # Create a third subset that is an annulus.
         subset_groups = self.imviz.app.data_collection.subset_groups
         new_subset = subset_groups[0].subset_state & ~subset_groups[1].subset_state
         self.viewer.apply_subset_state(new_subset)
 
         # Annulus is no longer accessible by API but also should not crash Imviz.
         subsets = self.imviz.get_interactive_regions()
-        assert list(subsets.keys()) == ['Subset 1'], subsets
+        assert len(self.imviz.app.data_collection.subset_groups) == 3
+        assert list(subsets.keys()) == ['Subset 1', 'Subset 2'], subsets
         assert isinstance(subsets['Subset 1'], CirclePixelRegion)
+        assert isinstance(subsets['Subset 2'], CirclePixelRegion)
 
         # Clear the regions for next test.
         self.imviz._delete_all_regions()
+        assert len(self.imviz.app.data_collection.subset_groups) == 0

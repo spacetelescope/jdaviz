@@ -4,11 +4,15 @@ import warnings
 from copy import deepcopy
 
 import numpy as np
+from astropy.utils.decorators import deprecated
+from astropy.utils.exceptions import AstropyDeprecationWarning
 from astropy.wcs.wcsapi import BaseHighLevelWCS
 from glue.core import BaseData
+from glue.core.edit_subset_mode import NewMode
 from glue.core.link_helpers import LinkSame
 from glue.core.subset import Subset, MaskSubsetState
 from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink, NoAffineApproximation
+from regions import Regions
 
 from jdaviz.core.events import SnackbarMessage, NewViewerMessage
 from jdaviz.core.helpers import ConfigHelper
@@ -195,6 +199,201 @@ class Imviz(ConfigHelper):
         """
         link_image_data(self.app, **kwargs)
 
+    def load_regions_from_file(self, region_file, region_format='ds9', max_num_regions=20,
+                               **kwargs):
+        """Load regions defined in the given file.
+        See :ref:`regions:regions_io` for supported file formats.
+        See :meth:`load_regions` for how regions are loaded.
+
+        Parameters
+        ----------
+        region_file : str
+            Path to region file.
+
+        region_format : {'crtf', 'ds9', 'fits'}
+            See :meth:`regions.Regions.get_formats`.
+
+        max_num_regions : int or `None`
+            Maximum number of regions to read from the file, starting
+            from top of the file. Default is first 20 regions that
+            can be successfully loaded. If `None`, it will load everything.
+
+        kwargs : dict
+            See :meth:`load_regions`.
+
+        Returns
+        -------
+        bad_regions : list of (obj, str) or `None`
+            See :meth:`load_regions`.
+
+        """
+        raw_regs = Regions.read(region_file, format=region_format)
+        return self.load_regions(raw_regs, max_num_regions=max_num_regions, **kwargs)
+
+    def load_regions(self, regions, max_num_regions=None, refdata_label=None,
+                     return_bad_regions=False, **kwargs):
+        """Load given region(s) into the viewer.
+        WCS-to-pixel translation and mask creation, if needed, is relative
+        to the image defined by ``refdata_label``. Meanwhile, the rest of
+        the Subset operations are based on reference image as defined by Glue.
+
+        .. note:: Loading too many regions will affect Imviz performance.
+
+        A valid region can be loaded into one of the following categories:
+
+        * An interactive Subset, as if it was drawn by hand. This is
+          always done for supported shapes. Its label will be
+          ``'Subset N'``, where ``N`` is an integer.
+        * A masked Subset that will display on the image but cannot be
+          modified once loaded. This is done if the shape cannot be
+          made interactive. Its label will be ``'MaskedSubset N'``,
+          where ``N`` is an integer.
+
+        Parameters
+        ----------
+        regions : list of obj
+            A list of region objects. A region object can be one of the following:
+
+            * Astropy ``regions`` object
+            * ``photutils`` apertures (limited support until ``photutils``
+              fully supports ``regions``)
+            * Numpy boolean array (shape must match data)
+
+        max_num_regions : int or `None`
+            Maximum number of regions to load, starting from top of the list.
+            Default is to load everything.
+
+        refdata_label : str or `None`
+            Label of data to use for sky-to-pixel conversion for a region, or
+            mask creation. Data must already be loaded into Imviz.
+            If `None`, defaults to the reference data in the default viewer.
+            Choice of this data is particularly important when sky or masked
+            region is involved.
+
+        return_bad_regions : bool
+            If `True`, return the regions that failed to load (see ``bad_regions``);
+            This is useful for debugging. If `False`, do not return anything (`None`).
+
+        kwargs : dict
+            Extra keywords to be passed into the region's ``to_mask`` method.
+            **This is ignored if the region can be made interactive or
+            if a Numpy array is given.**
+
+        Returns
+        -------
+        bad_regions : list of (obj, str) or `None`
+            If requested (see ``return_bad_regions`` option), return a
+            list of ``(region, reason)`` tuples for region objects that failed to load.
+            If all the regions loaded successfully, this list will be empty.
+            If not requested, return `None`.
+
+        """
+        from photutils.aperture import (CircularAperture, SkyCircularAperture,
+                                        EllipticalAperture, SkyEllipticalAperture,
+                                        RectangularAperture, SkyRectangularAperture)
+        from regions import (CirclePixelRegion, CircleSkyRegion,
+                             EllipsePixelRegion, EllipseSkyRegion,
+                             RectanglePixelRegion, RectangleSkyRegion)
+        from jdaviz.core.region_translators import regions2roi, aperture2regions
+
+        # If user passes in one region obj instead of list, try to be smart.
+        if not isinstance(regions, (list, tuple, Regions)):
+            regions = [regions]
+
+        n_loaded = 0
+        bad_regions = []
+
+        # To keep track of masked subsets.
+        msg_prefix = 'MaskedSubset'
+        msg_count = _next_subset_num(msg_prefix, self.app.data_collection.subset_groups)
+
+        # Subset is global but reference data is viewer-dependent.
+        if refdata_label is None:
+            data = self.default_viewer.state.reference_data
+        else:
+            data = self.app.data_collection[refdata_label]
+        has_wcs = data_has_valid_wcs(data)
+
+        for region in regions:
+            if isinstance(region, (SkyCircularAperture, SkyEllipticalAperture,
+                                   SkyRectangularAperture, CircleSkyRegion,
+                                   EllipseSkyRegion, RectangleSkyRegion)) and not has_wcs:
+                bad_regions.append((region, 'Sky region provided but data has no WCS'))
+                continue
+
+            # photutils: Convert to regions shape first
+            if isinstance(region, (CircularAperture, SkyCircularAperture,
+                                   EllipticalAperture, SkyEllipticalAperture,
+                                   RectangularAperture, SkyRectangularAperture)):
+                region = aperture2regions(region)
+
+            # regions: Convert to ROI.
+            # NOTE: Out-of-bounds ROI will succeed; this is native glue behavior.
+            if isinstance(region, (CirclePixelRegion, CircleSkyRegion,
+                                   EllipsePixelRegion, EllipseSkyRegion,
+                                   RectanglePixelRegion, RectangleSkyRegion)):
+                state = regions2roi(region, wcs=data.coords)
+
+                # TODO: Do we want user to specify viewer? Does it matter?
+                self.app.session.edit_subset_mode._mode = NewMode
+                self.default_viewer.apply_roi(state)
+                self.app.session.edit_subset_mode.edit_subset = None  # No overwrite next iteration # noqa
+
+            # Last resort: Masked Subset that is static
+            else:
+                im = None
+                if hasattr(region, 'to_pixel'):  # Sky region: Convert to pixel region
+                    if not has_wcs:
+                        bad_regions.append((region, 'Sky region provided but data has no WCS'))
+                        continue
+                    region = region.to_pixel(data.coords)
+
+                if hasattr(region, 'to_mask'):
+                    try:
+                        mask = region.to_mask(**kwargs)
+                        im = mask.to_image(data.shape)  # Can be None
+                    except Exception as e:  # pragma: no cover
+                        bad_regions.append((region, f'Failed to load: {repr(e)}'))
+                        continue
+
+                elif (isinstance(region, np.ndarray) and region.shape == data.shape
+                        and region.dtype == np.bool_):
+                    im = region
+
+                if im is None:
+                    bad_regions.append((region, 'Mask creation failed'))
+                    continue
+
+                # NOTE: Region creation info is thus lost.
+                try:
+                    subset_label = f'{msg_prefix} {msg_count}'
+                    state = MaskSubsetState(im, data.pixel_component_ids)
+                    self.app.data_collection.new_subset_group(subset_label, state)
+                    msg_count += 1
+                except Exception as e:  # pragma: no cover
+                    bad_regions.append((region, f'Failed to load: {repr(e)}'))
+                    continue
+
+            n_loaded += 1
+            if max_num_regions is not None and n_loaded >= max_num_regions:
+                break
+
+        n_reg_in = len(regions)
+        n_reg_bad = len(bad_regions)
+        if n_loaded == 0:
+            snack_color = "error"
+        elif n_reg_bad > 0:
+            snack_color = "warning"
+        else:
+            snack_color = "success"
+        self.app.hub.broadcast(SnackbarMessage(
+            f"Loaded {n_loaded}/{n_reg_in} regions, max_num_regions={max_num_regions}, "
+            f"bad={n_reg_bad}", color=snack_color, timeout=8000, sender=self.app))
+
+        if return_bad_regions:
+            return bad_regions
+
+    @deprecated('2.9', alternative='load_regions_from_file')
     def load_static_regions_from_file(self, region_file, region_format='ds9', prefix='region',
                                       max_num_regions=20, **kwargs):
         """Load regions defined in the given file.
@@ -226,13 +425,15 @@ class Imviz(ConfigHelper):
             See :meth:`load_static_regions`.
 
         """
-        from regions import Regions
-
         raw_regs = Regions.read(region_file, format=region_format)
         my_regions = dict([(f'{prefix}_{i}', reg) for i, reg in
                            enumerate(raw_regs[:max_num_regions])])
-        return self.load_static_regions(my_regions, **kwargs)
+        with warnings.catch_warnings():  # No need to emit deprecation again.
+            warnings.filterwarnings('ignore', category=AstropyDeprecationWarning)
+            bad_regions = self.load_static_regions(my_regions, **kwargs)
+        return bad_regions
 
+    @deprecated('2.9', alternative='load_regions')
     def load_static_regions(self, regions, **kwargs):
         """Load given region(s) into the viewer.
         Region(s) is relative to the reference image.
@@ -285,6 +486,8 @@ class Imviz(ConfigHelper):
             #                  'Consider using a different region name.')
             #    continue
 
+            im = None
+
             if hasattr(region, 'to_pixel'):
                 if data_has_valid_wcs(data):
                     try:
@@ -312,7 +515,8 @@ class Imviz(ConfigHelper):
             elif (isinstance(region, np.ndarray) and region.shape == data.shape
                     and region.dtype == np.bool_):
                 im = region
-            else:
+
+            if im is None:
                 bad_regions[subset_label] = region
                 warnings.warn(f'{subset_label}: Unsupported region type for {region}, skipping')
                 continue
@@ -341,8 +545,8 @@ class Imviz(ConfigHelper):
         return bad_regions
 
     def get_interactive_regions(self):
-        """Return regions interactively drawn in the viewer.
-        This does not return regions added via :meth:`load_static_regions`.
+        """Return regions that can be interacted with in the viewer.
+        This does not return masked regions added via :meth:`load_regions`.
 
         Unsupported region shapes will be skipped. When that happens,
         a red snackbar message will appear on display.
@@ -391,11 +595,13 @@ class Imviz(ConfigHelper):
         """Mimic interactive region drawing.
         This is for internal testing only.
         """
+        self.app.session.edit_subset_mode._mode = NewMode
         tool = self.default_viewer.toolbar.tools[toolname]
         tool.activate()
         tool.interact.brushing = True
         tool.interact.selected = [from_pix, to_pix]
         tool.interact.brushing = False
+        self.app.session.edit_subset_mode.edit_subset = None  # No overwrite next iteration
 
     # TODO: Make this public API?
     def _delete_region(self, subset_label):
@@ -632,3 +838,14 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_u
             app.data_collection.set_links(links_list)
         app.hub.broadcast(SnackbarMessage(
             'Images successfully relinked', color='success', timeout=8000, sender=app))
+
+
+def _next_subset_num(label_prefix, subset_groups):
+    """Assumes ``prefix i`` format.
+    Does not go back and fill in lower but available numbers. This is consistent with Glue.
+    """
+    labels = [sg.label.split(' ')[1] for sg in subset_groups
+              if sg.label.startswith(label_prefix)]
+    if len(labels) == 0:
+        return 1
+    return max(map(int, labels)) + 1
