@@ -38,7 +38,7 @@ will display the collapsed spectrum from ``flux-viewer``.
 .. _cubeviz-import-commandline:
 
 Importing data through the Command Line
----------------------------------------
+=======================================
 
 You can load your data into the Cubeviz application through the command line::
 
@@ -47,7 +47,7 @@ You can load your data into the Cubeviz application through the command line::
 .. _cubeviz-import-gui:
 
 Importing data through the GUI
-------------------------------
+==============================
 
 You can load your data into the Cubeviz application
 by clicking the :guilabel:`Import Data` button at the top left of the application's
@@ -62,7 +62,7 @@ tab of each viewer's options menu as described in :ref:`cubeviz-selecting-data`.
 .. _cubeviz-import-api:
 
 Importing data via the API
---------------------------
+==========================
 
 Alternatively, if users are working in a coding environment like a Jupyter
 notebook, they have access to the Cubeviz helper class API. Using this API,
@@ -70,7 +70,7 @@ users can load data into the application through code using the :meth:`~jdaviz.c
 method, which takes as input a :class:`~specutils.Spectrum1D` object.
 
 FITS Files
-^^^^^^^^^^
+----------
 The example below loads a FITS file into Cubeviz::
 
     from specutils import Spectrum1D
@@ -86,7 +86,7 @@ You can also pass the path to a file that `~specutils.Spectrum1D` understands di
     cubeviz.show()
 
 Creating Your Own Array
-^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------
 
 You can create your own array to load into Cubeviz::
 
@@ -110,7 +110,7 @@ You can create your own array to load into Cubeviz::
 To then extract your data from Cubeviz, please see the :ref:`cubeviz-notebook` section.
 
 JWST datamodels
-^^^^^^^^^^^^^^^
+---------------
 
 If you have a `jwst.datamodels <https://jwst-pipeline.readthedocs.io/en/latest/jwst/datamodels/index.html>`_
 object, you can load it into Imviz as follows::
@@ -144,3 +144,26 @@ object, you can load it into Imviz as follows::
 
 There is no plan to natively load such objects until ``datamodels``
 is separated out of the ``jwst`` pipeline package.
+
+.. _cubeviz-import-regions-api:
+
+Importing regions via the API
+=============================
+
+If you have a region file supported by :ref:`regions:regions_io`, you
+can load the regions into Cubeviz as follows::
+
+    cubeviz.load_regions_from_file("/path/to/data/myregions.reg")
+
+Unsupported regions will be skipped and trigger a warning. Those that
+failed to load, if any, will be returned as a list of tuples of the
+form ``(region, reason)`` if requested, as follows::
+
+    bad_regions = cubeviz.load_regions_from_file("/path/to/data/myregions.reg", return_bad_regions=True)
+
+.. note:: Sky regions are currently unsupported in Cubeviz, unlike Imviz.
+
+For more details on the API, please see
+:meth:`~jdaviz.core.helpers.ImageConfigHelper.load_regions_from_file`
+and :meth:`~jdaviz.core.helpers.ImageConfigHelper.load_regions` methods
+in Cubeviz.

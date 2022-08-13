@@ -625,8 +625,8 @@ class Application(VuetifyTemplate, HubListener):
         for layer_state in viewer.state.layers:
             label = layer_state.layer.label
 
-            if hasattr(layer_state, 'layer') and \
-                    (data_label is None or label == data_label):
+            if (hasattr(layer_state, 'layer') and
+                    (data_label is None or label == data_label)):
 
                 # For raw data, just include the data itself
                 if isinstance(layer_state.layer, BaseData):

@@ -141,6 +141,6 @@ form ``(region, reason)`` if requested, as follows::
     bad_regions = imviz.load_regions_from_file("/path/to/data/myregions.reg", return_bad_regions=True)
 
 For more details on the API, please see
-:meth:`~jdaviz.configs.imviz.helper.Imviz.load_regions_from_file`
-and :meth:`~jdaviz.configs.imviz.helper.Imviz.load_regions` methods
+:meth:`~jdaviz.core.helpers.ImageConfigHelper.load_regions_from_file`
+and :meth:`~jdaviz.core.helpers.ImageConfigHelper.load_regions` methods
 in Imviz.

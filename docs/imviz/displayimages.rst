@@ -57,11 +57,6 @@ Single-viewer Box Zoom is also available and is used in a similar way as in
 other Jdaviz tools. To access this option, right-click on the Linked Box Zoom button
 and left-click on the second option down to select it.
 
-.. seealso::
-
-    :ref:`Pan/Zoom <cubeviz-pan-zoom>`
-        Documentation on using Pan/Zoom in the Jdaviz viewers.
-
 .. _imviz_pan_zoom:
 
 Pan/Zoom and Linked Pan/Zoom

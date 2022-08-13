@@ -39,18 +39,18 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
         reg = CircleSkyRegion(center=sky, radius=0.0004 * u.deg)
         bad_regions = self.imviz.load_regions([reg], refdata_label='no_wcs[SCI,1]',
                                               return_bad_regions=True)
-        assert len(bad_regions) == 1 and bad_regions[0][1] == 'Sky region provided but data has no WCS'  # noqa
+        assert len(bad_regions) == 1 and bad_regions[0][1] == 'Sky region provided but data has no valid WCS'  # noqa
 
         reg = SkyCircularAperture(sky, 0.5 * u.arcsec)
         bad_regions = self.imviz.load_regions([reg], refdata_label='no_wcs[SCI,1]',
                                               return_bad_regions=True)
-        assert len(bad_regions) == 1 and bad_regions[0][1] == 'Sky region provided but data has no WCS'  # noqa
+        assert len(bad_regions) == 1 and bad_regions[0][1] == 'Sky region provided but data has no valid WCS'  # noqa
 
         reg = CircleAnnulusSkyRegion(center=sky, inner_radius=0.0004 * u.deg,
                                      outer_radius=0.0005 * u.deg)
         bad_regions = self.imviz.load_regions([reg], refdata_label='no_wcs[SCI,1]',
                                               return_bad_regions=True)
-        assert len(bad_regions) == 1 and bad_regions[0][1] == 'Sky region provided but data has no WCS'  # noqa
+        assert len(bad_regions) == 1 and bad_regions[0][1] == 'Sky region provided but data has no valid WCS'  # noqa
 
         # Unsupported functionality from outside load_regions
         reg = PointSkyRegion(center=sky)

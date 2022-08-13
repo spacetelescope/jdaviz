@@ -7,6 +7,8 @@ Exporting Data from Cubeviz
 After data have been manipulated or analyzed, it is possible to export
 those data currently back into your Jupyter notebook.
 
+.. _cubeviz_export_regions:
+
 Spatial Regions
 ===============
 
@@ -16,7 +18,7 @@ Spatial Regions
         Documentation on how to export spatial regions.
 
 Since Specviz can be accessed from Cubeviz, the following line of code
-can be used to extract the spectrum of a spatial subset named "Subset 1"::
+can be used to extract the *spectrum* of a spatial subset named "Subset 1"::
 
     subset1_spec1d = cubeviz.specviz.get_spectra("Subset 1")
 
@@ -24,31 +26,14 @@ An example without accessing Specviz::
 
     subset1_spec1d = cubeviz.app.get_data_from_viewer("flux-viewer", data_label="Subset 1")
 
-To get all subsets from a viewer::
+To get all subsets from the spectrum viewer::
 
     subset1_spec1d = cubeviz.app.get_subsets_from_viewer("spectrum-viewer")
 
-To access the spatial region itself::
+To access the spatial regions themselves::
 
-    dc = cubeviz.app.data_collection
-    subset1 = dc.subset_groups[0]
-
-    # Circular ROI
-    x, y = subset1.subset_state.roi.get_center()
-    radius = subset1.subset_state.roi.radius
-
-    # Rectangular ROI
-    rectangular_roi = subset1.subset_state.roi
-    rectangular_roi.xmin, rectangular_roi.xmax, rectangular_roi.ymin, rectangular_roi.ymax
-
-The syntax to output a subset as an astropy region looks like::
-
-    dc.subset_groups[0].subsets[0].data.get_selection_definition(subset_id="Subset 1", format='astropy-regions')  # noqa
-
-Where the first ``0`` corresponds to what number subset it is and the second ``0`` corresponds
-to which data the subset is being applied to (flux, variance, data quality, etc.).
-If you have multiple subsets present in the application, you need to fill out the
-``subset_id`` parameter.
+    regions = cubeviz.get_interactive_regions()
+    regions
 
 1D Spectra and Spectral Regions
 ===============================
@@ -62,7 +47,7 @@ The following line of code can be used to extract a spectral subset named "Subse
 
     subset2_spec1d = cubeviz.specviz.get_spectra("Subset 2")
 
-2D images and 3D Data Cubes
+2D Images and 3D Data Cubes
 ===========================
 
 2D images and 3D data cubes can be extracted from their respective
@@ -120,4 +105,5 @@ To extract all of the model parameters::
 where the ``model_label`` parameter identifies which model should be returned and
 the ``x`` and ``y`` parameters identify specifically which spaxel fits are to be returned,
 for models applied to every spaxel using the :guilabel:`Apply to Cube` button.
-Leaving ``x`` or ``y`` as ``None`` will mean that the models fit to every spaxel across that axis will be returned.
+Leaving ``x`` or ``y`` as ``None`` will mean that the models fit to every spaxel
+across that axis will be returned.
