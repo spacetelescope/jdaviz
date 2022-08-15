@@ -334,7 +334,9 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             # don't need these if statements
             if function == "Line Flux":
                 meta = self.dataset.selected_dc_item.meta
-                telescope = meta.get('TELESCOP', meta.get('telescope', ''))
+                telescope = meta.get('TELESCOP',
+                                     meta.get('telescope',
+                                              meta.get('_primary_header', {}).get('TELESCOP', '')))
                 if telescope == 'JWST':
                     # Perform integration in frequency space
                     freq_spec = Spectrum1D(spectral_axis=spec_subtracted.spectral_axis.to(u.Hz),
@@ -349,10 +351,12 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                     if flux_unit_decompose == {u.Unit("1 / s2"), u.Unit("1 / rad2"), u.Unit("kg")}:
                         # Multiply by PIXAR_SR if available
                         viewer = self.app.get_viewer('spectrum-viewer')
-                        if (hasattr(viewer.state, 'function') and
-                                viewer.state.function not in ('Median', 'Mean') and
-                                meta.get('PIXAR_SR', '')):
-                            pixar_sr = meta.get('PIXAR_SR')
+                        pixar_sr = meta.get('_primary_header', {}).get('PIXAR_SR', '')
+                        if (hasattr(viewer.state, 'function') and pixar_sr and
+                                # We can rely on the viewer's function because Cubeviz only allows
+                                # one cube per instance. If this changes, this loop will need to be
+                                # modified to look at the specific data entry's collapse function
+                                viewer.state.function.lower() in ('minimum', 'maxium', 'sum')):
                             temp_result = temp_result * (float(pixar_sr) * u.Unit('sr'))
                             # Multiplying by PIXAR_SR removes the steradian
                             temp_result = temp_result.to(u.Unit('W/m2'))
