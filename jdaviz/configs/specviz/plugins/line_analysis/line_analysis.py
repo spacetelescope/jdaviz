@@ -349,10 +349,11 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                     if flux_unit_decompose == {u.Unit("1 / s2"), u.Unit("1 / rad2"), u.Unit("kg")}:
                         # Multiply by PIXAR_SR if available
                         viewer = self.app.get_viewer('spectrum-viewer')
-                        if (hasattr(viewer.state, 'function') and 
+                        if (hasattr(viewer.state, 'function') and
+                                viewer.state.function not in ('Median', 'Mean') and
                             viewer.state.function not in ('Median', 'Mean') and 
-                            meta.get('PIXAR_SR', '')
-                            ):
+                                viewer.state.function not in ('Median', 'Mean') and
+                                meta.get('PIXAR_SR', '')):
                             pixar_sr = meta.get('PIXAR_SR')
                             temp_result = temp_result * (float(pixar_sr) * u.Unit('sr'))
                             # Multiplying by PIXAR_SR removes the steradian
