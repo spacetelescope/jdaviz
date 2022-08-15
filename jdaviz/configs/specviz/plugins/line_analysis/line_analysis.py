@@ -334,7 +334,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             # don't need these if statements
             if function == "Line Flux":
                 meta = self.dataset.selected_dc_item.meta
-                telescope = meta.get('telescope', meta.get('TELESCOP', ''))
+                telescope = meta.get('TELESCOP', meta.get('telescope', ''))
                 if telescope == 'JWST':
                     # Perform integration in frequency space
                     freq_spec = Spectrum1D(spectral_axis=spec_subtracted.spectral_axis.to(u.Hz),
