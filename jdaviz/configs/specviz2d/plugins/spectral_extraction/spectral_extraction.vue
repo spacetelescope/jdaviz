@@ -124,7 +124,7 @@
           type="number"
           v-model.number="bg_trace_pixel"
           :rules="[() => bg_trace_pixel!=='' || 'This field is required']"
-          hint="Pixel number/column to use for the trace."
+          hint="Pixel number/column to use for the center of the manual background window."
           persistent-hint
         >
         </v-text-field>
