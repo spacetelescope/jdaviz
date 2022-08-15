@@ -351,8 +351,6 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                         viewer = self.app.get_viewer('spectrum-viewer')
                         if (hasattr(viewer.state, 'function') and
                                 viewer.state.function not in ('Median', 'Mean') and
-                            viewer.state.function not in ('Median', 'Mean') and 
-                                viewer.state.function not in ('Median', 'Mean') and
                                 meta.get('PIXAR_SR', '')):
                             pixar_sr = meta.get('PIXAR_SR')
                             temp_result = temp_result * (float(pixar_sr) * u.Unit('sr'))
