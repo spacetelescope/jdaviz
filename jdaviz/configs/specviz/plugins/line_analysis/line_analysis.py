@@ -347,7 +347,19 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                     flux_unit_decompose = set(unit**power for unit, power in zip(flux_unit.bases,
                                                                                  flux_unit.powers))
                     if flux_unit_decompose == {u.Unit("1 / s2"), u.Unit("1 / rad2"), u.Unit("kg")}:
-                        temp_result = temp_result.to(u.Unit('W/(m2*sr)'))
+                        # Multiply by PIXAR_SR if available
+                        viewer = self.app.get_viewer('spectrum-viewer')
+                        if (hasattr(viewer.state, 'function') and 
+                            viewer.state.function not in ('Median', 'Mean') and 
+                            meta.get('PIXAR_SR', '')
+                            ):
+                            pixar_sr = meta.get('PIXAR_SR')
+                            temp_result = temp_result * (float(pixar_sr) * u.Unit('sr'))
+                            # Multiplying by PIXAR_SR removes the steradian
+                            temp_result = temp_result.to(u.Unit('W/m2'))
+                        else:
+                            # If PIXAR_SR wasn't provided, keep the steradian unit
+                            temp_result = temp_result.to(u.Unit('W/(m2*sr)'))
                     elif flux_unit_decompose == {u.Unit("1 / s2"), u.Unit("kg")}:
                         temp_result = temp_result.to(u.Unit('W/m2'))
                 else:
