@@ -234,6 +234,9 @@ secondary region can be created and selected as the region to fit the linear con
 The statistics returned include the line centroid, gaussian sigma width, gaussian FWHM,
 total flux, and equivalent width.
 
+The line flux of JWST data are automatically converted to Watts/meter^2 and multiplied by
+PIXAR_SR if availble.
+
 Redshift from Centroid
 ----------------------
 
