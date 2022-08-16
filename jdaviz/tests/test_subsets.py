@@ -8,6 +8,8 @@ from numpy.testing import assert_allclose
 from regions import EllipsePixelRegion, RectanglePixelRegion
 from specutils import SpectralRegion
 
+from jdaviz.core.marks import ShadowSpatialSpectral
+
 
 def test_region_from_subset_2d(cubeviz_helper):
     data = Data(flux=np.ones((128, 128)), label='Test 2D Flux')
@@ -162,12 +164,18 @@ def test_region_spectral_spatial(cubeviz_helper, spectral_cube_wcs):
     cubeviz_helper.app.add_data_to_viewer('spectrum-viewer', 'Test Flux')
     cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'Test Flux')
 
-    cubeviz_helper.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(5, 15.5))
+    spectrum_viewer = cubeviz_helper.app.get_viewer("spectrum-viewer")
+    spectrum_viewer.apply_roi(XRangeROI(5, 15.5))
+
+    # should be no spatial-spectral intersection marks yet
+    assert len([m for m in spectrum_viewer.figure.marks if isinstance(m, ShadowSpatialSpectral)]) == 0  # noqa
 
     flux_viewer = cubeviz_helper.app.get_viewer("flux-viewer")
     # We set the active tool here to trigger a reset of the Subset state to "Create New"
     flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['bqplot:rectangle']
     flux_viewer.apply_roi(RectangularROI(1, 3.5, -0.2, 3.3))
+
+    assert len([m for m in spectrum_viewer.figure.marks if isinstance(m, ShadowSpatialSpectral)]) == 1  # noqa
 
     subsets = cubeviz_helper.app.get_subsets_from_viewer('spectrum-viewer', subset_type='spectral')
     reg = subsets.get('Subset 1')
@@ -187,6 +195,14 @@ def test_region_spectral_spatial(cubeviz_helper, spectral_cube_wcs):
     assert_allclose(reg.center.y, 1.55)
     assert_allclose(reg.width, 2.5)
     assert_allclose(reg.height, 3.5)
+
+    # add another spectral subset to ensure the spatial-spectral intersection marks are created as
+    # expected
+    # reset the tool to force a new selection instead of the default "replace"
+    spectrum_viewer.toolbar.active_tool = spectrum_viewer.toolbar.tools['jdaviz:panzoom']
+    spectrum_viewer.toolbar.active_tool = spectrum_viewer.toolbar.tools['bqplot:xrange']
+    spectrum_viewer.apply_roi(XRangeROI(3, 16))
+    assert len([m for m in spectrum_viewer.figure.marks if isinstance(m, ShadowSpatialSpectral)]) == 2  # noqa
 
 
 def test_disjoint_spectral_subset(cubeviz_helper, spectral_cube_wcs):

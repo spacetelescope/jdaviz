@@ -2,7 +2,7 @@ import pytest
 
 
 @pytest.mark.filterwarnings('ignore:No observer defined on WCS')
-def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
+def test_data_selection(cubeviz_helper, spectrum1d_cube, tmpdir):
     app = cubeviz_helper.app
     # NOTE: these are the same underlying data.  This works fine for the current scope
     # of the tests (to make sure checking/unchecking operations change the data exposed
