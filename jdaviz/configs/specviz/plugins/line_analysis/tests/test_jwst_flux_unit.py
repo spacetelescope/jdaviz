@@ -77,6 +77,11 @@ def primary_header_collapse_test(data, metadata, expected_flux_units):
     '''
     for function in expected_flux_units:
         cubeviz_helper = _initialize_cubeviz_with_collapse(function, data, cube_label)
+        # Force primary_header to exist if it doesn't already
+        if '_primary_header' not in cubeviz_helper.app.data_collection[(str(cube_label) +
+                                                                        str('[FLUX]'))].meta:
+            cubeviz_helper.app.data_collection[(str(cube_label) +
+                                                str('[FLUX]'))].meta['_primary_header'] = dict()
         # Manually inject metadata
         for key in metadata:
             cubeviz_helper.app.data_collection[str(cube_label) + str('[FLUX]')
