@@ -17,7 +17,7 @@
           v-model="angle"
           type="number"
           label="Angle"
-          hint="Rotation angle in degrees counter-clockwise"
+          hint="Rotation angle in degrees clockwise"
         ></v-text-field>
       </v-col>
     </v-row>

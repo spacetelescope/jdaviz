@@ -1,4 +1,5 @@
-from matplotlib.transforms import Affine2D
+import math
+
 from traitlets import Any
 
 from jdaviz.core.registries import tray_registry
@@ -13,7 +14,7 @@ class RotateImageSimple(TemplateMixin, ViewerSelectMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._theta = 0  # degrees, counter-clockwise
+        self._theta = 0  # degrees, clockwise
 
     def vue_rotate_image(self, *args, **kwargs):
         # We only grab the value here to avoid constantly updating as
@@ -26,12 +27,9 @@ class RotateImageSimple(TemplateMixin, ViewerSelectMixin):
         viewer = self.app._viewer_by_id(self.viewer_selected)
 
         # Rotate selected viewer canvas.
-        # TODO: This changes zoom too? astrofrog will fix translation issue?
-        y_hub = (viewer.scales['y'].min + viewers.scales['y'].max) / 2
-        x_hub = (viewer.scales['x'].min + viewer.scales['x'].max) / 2
-        affine_transform = Affine2D().rotate_deg_around(y_hub, x_hub, self._theta)
-        viewer.state.affine_matrix = affine_transform
+        # TODO: Translation still a bit broken if zoomed in.
+        viewer.state.rotation = math.radians(self._theta)
 
-        # TODO: Does the zoom box behave? If not, we need to disable it.
+        # TODO: Zoom box in Compass still broken, how to fix? If not, we need to disable it.
         # Update Compass plugin.
         viewer.on_limits_change()

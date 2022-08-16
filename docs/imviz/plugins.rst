@@ -113,7 +113,8 @@ Simple Image Rotation
 
 This plugins rotates image(s) by the given angle.
 You can select viewer but that option only shows when applicable.
-You can enter the desired rotation angle in degrees counter-clockwise.
+You can enter the desired rotation angle in degrees clockwise.
+This angle is absolute, i.e., relative to original image orientation, not the current rotation.
 Click on the :guilabel:`ROTATE` button to finalize.
 
 .. _line-profile-xy:
