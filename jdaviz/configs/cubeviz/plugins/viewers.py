@@ -226,6 +226,11 @@ class CubevizProfileView(SpecvizProfileView):
                                       m.spectral_subset_mark in spectral_marks))]
 
     def _expected_subset_layer_default(self, layer_state):
+        """
+        This gets called whenever the layer of an expected new subset is added, we want to set the
+        default for the linewidth depending on whether it is spatial or spectral, and handle
+        creating any necessary marks for spatial-spectral subset intersections.
+        """
         super()._expected_subset_layer_default(layer_state)
 
         this_mark = self._get_marks_for_layers([layer_state])[0]
