@@ -3,6 +3,7 @@ import numpy as np
 from astropy import units as u
 from bqplot import LinearScale
 from bqplot.marks import Lines, Label, Scatter
+from copy import deepcopy
 from glue.core import HubListener
 from specutils import Spectrum1D
 
@@ -326,19 +327,32 @@ class ShadowMixin:
 
     Can manually override ``_on_shadowing_changed`` for more advanced logic cases.
     """
+    def _get_id(self, mark):
+        return getattr(mark, '_model_id', None)
+
     def _setup_shadowing(self, shadowing, sync_traits=[], other_traits=[]):
-        self._shadowing = shadowing
-        self._sync_traits = sync_traits
+        """
+        sync_traits: traits to set now, and mirror any changes to shadowing in the future
+        other_trait: traits to set now, but not mirror in the future
+        """
+        if not hasattr(self, '_shadowing'):
+            self._shadowing = {}
+            self._sync_traits = {}
+        shadowing_id = self._get_id(shadowing)
+        self._shadowing[shadowing_id] = shadowing
+        self._sync_traits[shadowing_id] = sync_traits
 
         # sync initial values
         for attr in sync_traits + other_traits:
-            self._on_shadowing_changed({'name': attr, 'new': getattr(shadowing, attr)})
+            self._on_shadowing_changed({'name': attr,
+                                        'new': getattr(shadowing, attr),
+                                        'owner': shadowing})
 
         # subscribe to future changes
         shadowing.observe(self._on_shadowing_changed)
 
     def _on_shadowing_changed(self, change):
-        if change['name'] in self._sync_traits:
+        if change['name'] in self._sync_traits.get(self._get_id(change.get('owner')), []):
             setattr(self, change['name'], change['new'])
         return
 
@@ -359,13 +373,48 @@ class ShadowLine(Lines, HubListener, ShadowMixin):
                               ['scales', 'x', 'y', 'visible', 'line_style', 'marker'],
                               ['stroke_width', 'marker_size'])
 
+
+class ShadowSpatialSpectral(Lines, HubListener, ShadowMixin):
+    """
+    Shadow the mark of a spatial subset collapsed spectrum, with the mask from a spectral subset,
+    and the styling from the spatial subset.
+    """
+    def __init__(self, spatial_spectrum_mark, spectral_subset_mark):
+        # spatial_spectrum_mark: Lines mark corresponding to the spatially-collapsed spectrum
+        # from a spatial subset
+        # spectral_subset_mark: Lines mark on the FULL cube corresponding to the glue-highlight
+        # of the spectral subset
+        super().__init__(scales=spatial_spectrum_mark.scales, marker=None)
+
+        self._spatial_mark_id = self._get_id(spatial_spectrum_mark)
+        self._setup_shadowing(spatial_spectrum_mark,
+                              ['scales', 'y', 'visible', 'line_style'],
+                              ['x'])
+
+        self._spectral_mark_id = self._get_id(spectral_subset_mark)
+        self._setup_shadowing(spectral_subset_mark,
+                              ['stroke_width', 'x', 'y', 'visible', 'opacities', 'colors'])
+
+    @property
+    def spatial_spectrum_mark(self):
+        return self._shadowing[self._spatial_mark_id]
+
+    @property
+    def spectral_subset_mark(self):
+        return self._shadowing[self._spectral_mark_id]
+
     def _on_shadowing_changed(self, change):
-        super()._on_shadowing_changed(change)
-        if change['name'] in ['stroke_width', 'marker_size']:
-            # apply the same, but increased by the shadow width
-            setattr(self, change['name'],
-                    change['new'] + self._shadow_width if change['new'] else 0)
-        return
+        if hasattr(self, '_spectral_mark_id'):
+            if change['name'] == 'y':
+                # force a copy or else we'll overwrite the mask to the spatial mark!
+                change['new'] = deepcopy(self.spatial_spectrum_mark.y)
+                change['new'][np.isnan(self.spectral_subset_mark.y)] = np.nan
+
+            elif change['name'] == 'visible':
+                # only show if BOTH shadowing marks are set to visible
+                change['new'] = self.spectral_subset_mark.visible and self.spatial_spectrum_mark.visible  # noqa
+
+        return super()._on_shadowing_changed(change)
 
 
 class ShadowLabelFixedY(Label, ShadowMixin):

@@ -1,9 +1,10 @@
 import numpy as np
 from glue.core import BaseData
+from glue.core.subset import RoiSubsetState, RangeSubsetState
 from glue_jupyter.bqplot.image import BqplotImageView
 
 from jdaviz.core.registries import viewer_registry
-from jdaviz.core.marks import SliceIndicatorMarks
+from jdaviz.core.marks import SliceIndicatorMarks, ShadowSpatialSpectral
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
 from jdaviz.configs.cubeviz.helper import layer_is_cube_image_data
 from jdaviz.configs.imviz.helper import data_has_valid_wcs
@@ -196,6 +197,63 @@ class CubevizProfileView(SpecvizProfileView):
         # NOTE: super will initialize nested toolbar with
         # default_tool_priority=['jdaviz:selectslice']
         super().__init__(*args, **kwargs)
+
+    def _get_spatial_subset_layers(self):
+        return [ls for ls in self.state.layers
+                if isinstance(getattr(ls.layer, 'subset_state', None), RoiSubsetState)]
+
+    def _get_spectral_subset_layers(self):
+        return [ls for ls in self.state.layers
+                if isinstance(getattr(ls.layer, 'subset_state', None), RangeSubsetState)]
+
+    def _get_marks_for_layers(self, layers):
+        layers_list = list(self.state.layers)
+        # here we'll assume that all custom marks are subclasses of Lines/GL but don't directly
+        # use Lines/LinesGL (so an isinstance check won't be sufficient here)
+        layer_marks = self.native_marks
+        # and now we'll assume that the marks are in the same order as the layers, this should
+        # be the case as long as the order isn't manually resorted
+        return [layer_marks[layers_list.index(layer)] for layer in layers]
+
+    def _on_subset_delete(self, msg):
+        # delete any ShadowSpatialSpectral mark for which either of the spectral or spatial marks
+        # no longer exists
+        spectral_marks = self._get_marks_for_layers(self._get_spectral_subset_layers())
+        spatial_marks = self._get_marks_for_layers(self._get_spatial_subset_layers())
+        self.figure.marks = [m for m in self.figure.marks
+                             if not (isinstance(m, ShadowSpatialSpectral) and
+                                     (m.spatial_spectrum_mark in spatial_marks or
+                                      m.spectral_subset_mark in spectral_marks))]
+
+    def _expected_subset_layer_default(self, layer_state):
+        """
+        This gets called whenever the layer of an expected new subset is added, we want to set the
+        default for the linewidth depending on whether it is spatial or spectral, and handle
+        creating any necessary marks for spatial-spectral subset intersections.
+        """
+        super()._expected_subset_layer_default(layer_state)
+
+        this_mark = self._get_marks_for_layers([layer_state])[0]
+        new_marks = []
+
+        if isinstance(layer_state.layer.subset_state, RoiSubsetState):
+            layer_state.linewidth = 1
+
+            # need to add marks for every intersection between THIS spatial subset and ALL spectral
+            spectral_marks = self._get_marks_for_layers(self._get_spectral_subset_layers())
+            for spectral_mark in spectral_marks:
+                new_marks += [ShadowSpatialSpectral(this_mark, spectral_mark)]
+
+        else:
+            layer_state.linewidth = 3
+
+            # need to add marks for every intersection between THIS spectral subset and ALL spatial
+            spatial_marks = self._get_marks_for_layers(self._get_spatial_subset_layers())
+            for spatial_mark in spatial_marks:
+                new_marks += [ShadowSpatialSpectral(spatial_mark, this_mark)]
+
+        # NOTE: += or append won't pick up on change
+        self.figure.marks = self.figure.marks + new_marks
 
     @property
     def slice_indicator(self):

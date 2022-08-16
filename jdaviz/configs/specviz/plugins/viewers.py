@@ -2,7 +2,7 @@ import numpy as np
 import warnings
 
 from glue.core import BaseData
-from glue.core.subset import Subset, RoiSubsetState
+from glue.core.subset import Subset
 from glue.config import data_translator
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from glue.core.exceptions import IncompatibleAttribute
@@ -64,12 +64,10 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
         # Change collapse function to sum
         self.state.function = 'sum'
 
-    def _expected_subset_layer_default(self, layer):
-        super()._expected_subset_layer_default(layer)
-        if isinstance(layer.layer.subset_state, RoiSubsetState):
-            layer.linewidth = 1
-        else:
-            layer.linewidth = 3
+    def _expected_subset_layer_default(self, layer_state):
+        super()._expected_subset_layer_default(layer_state)
+
+        layer_state.linewidth = 3
 
     def data(self, cls=None):
         # Grab the user's chosen statistic for collapsing data
