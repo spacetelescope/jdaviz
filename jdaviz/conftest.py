@@ -158,7 +158,23 @@ def spectrum_collection(spectrum1d):
 
 @pytest.fixture
 def spectrum1d_cube():
+    # NOTE: Line Analysis tests depend on the flux unit being Jy
     flux = np.arange(16).reshape((2, 2, 4)) * u.Jy
+    wcs_dict = {"CTYPE1": "RA---TAN", "CTYPE2": "DEC--TAN", "CTYPE3": "WAVE-LOG",
+                "CRVAL1": 205, "CRVAL2": 27, "CRVAL3": 4.622e-7,
+                "CDELT1": -0.0001, "CDELT2": 0.0001, "CDELT3": 8e-11,
+                "CRPIX1": 0, "CRPIX2": 0, "CRPIX3": 0}
+    w = WCS(wcs_dict)
+
+    return Spectrum1D(flux=flux, wcs=w)
+
+
+@pytest.fixture
+def spectrum1d_cube_MJy_sr():
+    '''
+    A specific cube with flux units of MJy/sr
+    '''
+    flux = np.arange(16).reshape((2, 2, 4)) * u.Unit('MJy/sr')
     wcs_dict = {"CTYPE1": "RA---TAN", "CTYPE2": "DEC--TAN", "CTYPE3": "WAVE-LOG",
                 "CRVAL1": 205, "CRVAL2": 27, "CRVAL3": 4.622e-7,
                 "CDELT1": -0.0001, "CDELT2": 0.0001, "CDELT3": 8e-11,
