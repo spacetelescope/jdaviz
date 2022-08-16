@@ -72,3 +72,13 @@ def test_plugin(specviz2d_helper):
     # create subtracted spectrum
     sp_ext = pext.create_extract()
     assert isinstance(sp_ext, Spectrum1D)
+
+    # test exception handling
+    pext.trace_type = 'Auto'
+    pext.bg_type_selected = 'TwoSided'
+    pext.bg_separation = 1
+    pext.bg_width = 5
+    assert len(pext.ext_specreduce_err) > 0
+    pext.bg_results_label = 'should not be created'
+    pext.vue_create_bg()
+    assert 'should not be created' not in [d.label for d in specviz2d_helper.app.data_collection]

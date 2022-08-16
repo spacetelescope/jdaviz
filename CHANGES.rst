@@ -37,7 +37,7 @@ Specviz
 Specviz2d
 ^^^^^^^^^
 
-- Spectral extraction plugin. [#1514]
+- Spectral extraction plugin. [#1514, #1562]
 
 API Changes
 -----------

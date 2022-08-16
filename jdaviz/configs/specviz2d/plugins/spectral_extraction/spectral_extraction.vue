@@ -56,7 +56,7 @@
             type="number"
             v-model.number="trace_pixel"
             :rules="[() => trace_pixel!=='' || 'This field is required']"
-            hint="Pixel number/column to start the trace."
+            :hint="trace_type_selected === 'Flat' ? 'Pixel number/column for the trace.' : 'Pixel number/column guess'"
             persistent-hint
           >
           </v-text-field>
@@ -94,6 +94,12 @@
         <j-docs-link>Create a background and/or background-subtracted image.</j-docs-link>
       </v-row>
 
+      <v-row v-if="ext_dataset_selected !== 'From Plugin'">
+        <span class="v-messages v-messages__message text--secondary">
+          <b style="color: red !important">NOTE:</b> extracted spectrum is using "{{ext_dataset_selected}}" as input data, so will not update in real-time.  Switch to "From Plugin" to use the background subtraction defined here.
+        </span>
+      </v-row>
+
       <plugin-dataset-select
         :items="bg_dataset_items"
         :selected.sync="bg_dataset_selected"
@@ -118,7 +124,7 @@
           type="number"
           v-model.number="bg_trace_pixel"
           :rules="[() => bg_trace_pixel!=='' || 'This field is required']"
-          hint="Pixel number/column to use for the trace."
+          hint="Pixel number/column to use for the center of the manual background window."
           persistent-hint
         >
         </v-text-field>
@@ -130,7 +136,7 @@
           type="number"
           v-model.number="bg_separation"
           :rules="[() => bg_separation!=='' || 'This field is required']"
-          hint="Separation between trace and background window(s), in pixels."
+          hint="Separation between trace and center of the background window(s), in pixels."
           persistent-hint
         >
         </v-text-field>
@@ -235,9 +241,16 @@
         :add_to_viewer_selected.sync="ext_add_to_viewer_selected"
         action_label="Extract"
         action_tooltip="Extract 1D Spectrum"
+        :action_disabled="ext_specreduce_err.length"
         @click:action="extract"
       ></plugin-add-results>
     </div>
+
+    <v-row v-if="ext_specreduce_err">
+      <span class="v-messages v-messages__message text--secondary">
+        <b style="color: red !important">ERROR from specreduce:</b> {{ext_specreduce_err}}
+      </span>
+    </v-row>
 
     </div>
   </j-tray-plugin>

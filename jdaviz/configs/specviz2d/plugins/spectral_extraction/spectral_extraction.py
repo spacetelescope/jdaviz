@@ -3,6 +3,7 @@ import numpy as np
 from traitlets import Bool, List, Unicode, observe
 
 
+from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         DatasetSelect,
@@ -71,6 +72,8 @@ class SpectralExtraction(PluginTemplateMixin):
     ext_dataset_selected = Unicode().tag(sync=True)
 
     ext_width = IntHandleEmpty(0).tag(sync=True)
+
+    ext_specreduce_err = Unicode().tag(sync=True)
 
     ext_results_label = Unicode().tag(sync=True)
     ext_results_label_default = Unicode().tag(sync=True)
@@ -201,12 +204,14 @@ class SpectralExtraction(PluginTemplateMixin):
         if self.setting_interactive_extract:
             try:
                 sp1d = self.create_extract(add_data=False)
-            except Exception:
+            except Exception as e:
                 # NOTE: ignore error, but will be raised when clicking ANY of the export buttons
                 # NOTE: KosmosTrace or manual background are often giving a
                 # "background regions overlapped" error from specreduce
+                self.ext_specreduce_err = repr(e)
                 self.marks['extract'].clear()
             else:
+                self.ext_specreduce_err = ''
                 self.marks['extract'].update_xy(sp1d.spectral_axis.value,
                                                 sp1d.flux.value)
         else:
@@ -442,7 +447,13 @@ class SpectralExtraction(PluginTemplateMixin):
         return bg_spec
 
     def vue_create_bg(self, *args):
-        _ = self.create_bg(add_data=True)
+        try:
+            self.create_bg(add_data=True)
+        except Exception as e:
+            self.app.hub.broadcast(
+                SnackbarMessage(f"Specreduce background failed with the following error: {repr(e)}",
+                                color='error', sender=self)
+            )
 
     def create_bg_sub(self, add_data=False):
         """
