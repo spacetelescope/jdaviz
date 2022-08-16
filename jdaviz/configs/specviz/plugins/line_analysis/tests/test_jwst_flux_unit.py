@@ -63,7 +63,8 @@ def main_meta_collapse_test(data, metadata, expected_flux_units):
         cubeviz_helper = _initialize_cubeviz_with_collapse(function, data, cube_label)
         # Manually inject metadata
         for key in metadata:
-            cubeviz_helper.app.data_collection[cube_label].meta[key] = metadata[key]
+            cubeviz_helper.app.data_collection[str(cube_label) + str('[FLUX]')
+                                               ].meta[key] = metadata[key]
 
         flux_results = _calculate_line_flux(cubeviz_helper)
         assert u.Unit(flux_results['unit']) == expected_flux_units[function]
@@ -78,7 +79,7 @@ def primary_header_collapse_test(data, metadata, expected_flux_units):
         cubeviz_helper = _initialize_cubeviz_with_collapse(function, data, cube_label)
         # Manually inject metadata
         for key in metadata:
-            cubeviz_helper.app.data_collection[cube_label
+            cubeviz_helper.app.data_collection[str(cube_label) + str('[FLUX]')
                                                ].meta['_primary_header'][key] = metadata[key]
 
         flux_results = _calculate_line_flux(cubeviz_helper)
