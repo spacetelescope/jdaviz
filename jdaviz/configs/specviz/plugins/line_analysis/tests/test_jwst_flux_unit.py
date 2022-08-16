@@ -91,12 +91,12 @@ def test_MJy_sr_main_meta(spectrum1d_cube_MJy_sr, test_case):
     ''' Tests line flux units when Flux units are MJy/sr '''
     # Tests flux calculation units when the metadata is stored in the main meta
     main_meta_collapse_test(spectrum1d_cube_MJy_sr,
-                            MJy_sr_test_cases['metadata'],
-                            MJy_sr_test_cases['expected_flux_units'])
+                            test_case['metadata'],
+                            test_case['expected_flux_units'])
     # Tests flux calculation units when the metadata is stored in the primary header
     primary_header_collapse_test(spectrum1d_cube_MJy_sr,
-                                 MJy_sr_test_cases['metadata'],
-                                 MJy_sr_test_cases['expected_flux_units'])
+                                 test_case['metadata'],
+                                 test_case['expected_flux_units'])
 
 
 def test_asdf_metadata(spectrum1d_cube_MJy_sr):
@@ -111,7 +111,9 @@ def test_asdf_metadata(spectrum1d_cube_MJy_sr):
                                               'mean': u.Unit('W/(m2*sr)'),
                                               'median': u.Unit('W/(m2*sr)')}
                       }
-    main_meta_collapse_test(spectrum1d_cube_MJy_sr, asdf_test_case)
+    main_meta_collapse_test(spectrum1d_cube_MJy_sr,
+                            asdf_test_case['metadata'],
+                            asdf_test_case['expected_flux_units'])
 
 
 def test_Jy(spectrum1d_cube):
