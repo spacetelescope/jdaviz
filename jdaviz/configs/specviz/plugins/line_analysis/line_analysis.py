@@ -339,8 +339,10 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                                               meta.get('_primary_header', {}).get('TELESCOP', '')))
                 if telescope == 'JWST':
                     # Perform integration in frequency space
-                    freq_spec = Spectrum1D(spectral_axis=spec_subtracted.spectral_axis.to(u.Hz),
-                                           flux=spec_subtracted.flux)
+                    freq_spec = Spectrum1D(
+                        spectral_axis=spec_subtracted.spectral_axis.to(u.Hz,
+                                                                       equivalencies=u.spectral()),
+                        flux=spec_subtracted.flux)
                     temp_result = analysis.line_flux(freq_spec)
 
                     # Convert result to Watts/meter^2 if in the right units
