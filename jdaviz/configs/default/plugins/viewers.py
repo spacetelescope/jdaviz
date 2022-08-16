@@ -25,6 +25,20 @@ class JdavizViewerMixin:
         # NOTE: anything here most likely won't be called by viewers because of inheritance order
         super().__init__(*args, **kwargs)
 
+    @property
+    def native_marks(self):
+        """
+        Return all marks that are Lines/LinesGL objects (and not subclasses)
+        """
+        return [m for m in self.figure.marks if m.__class__.__name__ in ['Lines', 'LinesGL']]
+
+    @property
+    def custom_marks(self):
+        """
+        Return all marks that are not Lines/LinesGL objects (but can be subclasses)
+        """
+        return [m for m in self.figure.marks if m.__class__.__name__ not in ['Lines', 'LinesGL']]
+
     def _subscribe_to_layers_update(self):
         # subscribe to new layers
         self._expected_subset_layers = []

@@ -210,7 +210,7 @@ class CubevizProfileView(SpecvizProfileView):
         layers_list = list(self.state.layers)
         # here we'll assume that all custom marks are subclasses of Lines/GL but don't directly
         # use Lines/LinesGL (so an isinstance check won't be sufficient here)
-        layer_marks = [m for m in self.figure.marks if m.__class__.__name__ in ['Lines', 'LinesGL']]
+        layer_marks = self.native_marks
         # and now we'll assume that the marks are in the same order as the layers, this should
         # be the case as long as the order isn't manually resorted
         return [layer_marks[layers_list.index(layer)] for layer in layers]
