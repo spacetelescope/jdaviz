@@ -150,18 +150,19 @@ class Specviz2d(ConfigHelper, LineListMixin):
                 # new defaults.  We'll just call it again manually.
                 spext._trace_dataset_selected()
                 try:
-                    _ = spext.create_extract(add_data=True)
+                    spext.create_extract(add_data=True)
                 except Exception:
-                    msg = ("Automatic spectrum extraction failed.  See the spectral extraction"
-                           " plugin to perform a custom extraction")
-                    msg = SnackbarMessage(msg, color='error', sender=self, timeout=10000)
+                    msg = SnackbarMessage(
+                        "Automatic spectrum extraction failed.  See the spectral extraction"
+                        " plugin to perform a custom extraction",
+                        color='error', sender=self, timeout=10000)
                 else:
                     # Warn that this shouldn't be used for science
-                    msg = ("The extracted 1D spectrum was generated automatically."
-                           " See the spectral extraction plugin for details or to"
-                           " perform a custom extraction.")
-                    msg = SnackbarMessage(msg, color='warning', sender=self,
-                                          timeout=10000)
+                    msg = SnackbarMessage(
+                        "The extracted 1D spectrum was generated automatically."
+                        " See the spectral extraction plugin for details or to"
+                        " perform a custom extraction.",
+                        color='warning', sender=self, timeout=10000)
                 self.app.hub.broadcast(msg)
 
         else:
