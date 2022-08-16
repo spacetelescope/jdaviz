@@ -1,11 +1,11 @@
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import TemplateMixin, ViewerSelectMixin
+from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin
 
 __all__ = ['ExportViewer']
 
 
 @tray_registry('g-export-plot', label="Export Plot")
-class ExportViewer(TemplateMixin, ViewerSelectMixin):
+class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
     template_file = __file__, "export_plot.vue"
 
     def __init__(self, *args, **kwargs):

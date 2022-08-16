@@ -86,7 +86,7 @@ class TemplateMixin(VuetifyTemplate, HubListener):
 
 class PluginTemplateMixin(TemplateMixin):
     """
-    This base class can be inherited by all sidebar plugins to expose common functionality.
+    This base class can be inherited by all sidebar/tray plugins to expose common functionality.
     """
     disabled_msg = Unicode("").tag(sync=True)
     plugin_opened = Bool(False).tag(sync=True)
@@ -100,6 +100,16 @@ class PluginTemplateMixin(TemplateMixin):
         app_state = self.app.state
         tray_names_open = [app_state.tray_items[i]['name'] for i in app_state.tray_items_open]
         self.plugin_opened = app_state.drawer and self._registry_name in tray_names_open
+
+    def open_in_tray(self):
+        """
+        Open the plugin in the sidebar/tray (and open the sidebar if it is not already).
+        """
+        app_state = self.app.state
+        app_state.drawer = True
+        index = [ti['name'] for ti in app_state.tray_items].index(self._registry_name)
+        if index not in app_state.tray_items_open:
+            app_state.tray_items_open = app_state.tray_items_open + [index]
 
 
 class BasePluginComponent(HubListener):

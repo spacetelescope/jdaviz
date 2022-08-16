@@ -22,14 +22,14 @@ from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.region_translators import regions2aperture
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import TemplateMixin, DatasetSelectMixin, SubsetSelect
+from jdaviz.core.template_mixin import PluginTemplateMixin, DatasetSelectMixin, SubsetSelect
 from jdaviz.utils import bqplot_clear_figure, PRIHDR_KEY
 
 __all__ = ['SimpleAperturePhotometry']
 
 
 @tray_registry('imviz-aper-phot-simple', label="Imviz Simple Aperture Photometry")
-class SimpleAperturePhotometry(TemplateMixin, DatasetSelectMixin):
+class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin):
     template_file = __file__, "aper_phot_simple.vue"
     subset_items = List([]).tag(sync=True)
     subset_selected = Unicode("").tag(sync=True)

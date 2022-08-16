@@ -8,7 +8,7 @@ from traitlets import List, Unicode, Bool, observe
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import TemplateMixin, SubsetSelect
+from jdaviz.core.template_mixin import PluginTemplateMixin, SubsetSelect
 
 __all__ = ['SubsetPlugin']
 
@@ -22,7 +22,7 @@ SUBSET_MODES = {
 
 
 @tray_registry('g-subset-plugin', label="Subset Tools")
-class SubsetPlugin(TemplateMixin):
+class SubsetPlugin(PluginTemplateMixin):
     template_file = __file__, "subset_plugin.vue"
     select = List([]).tag(sync=True)
     subset_items = List([]).tag(sync=True)

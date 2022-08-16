@@ -8,13 +8,13 @@ from specutils.spectra.spectrum1d import Spectrum1D
 
 from jdaviz.core.events import AddDataMessage, SliceToolStateMessage, SliceSelectSliceMessage
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import TemplateMixin
+from jdaviz.core.template_mixin import PluginTemplateMixin
 
 __all__ = ['Slice']
 
 
 @tray_registry('cubeviz-slice', label="Slice")
-class Slice(TemplateMixin):
+class Slice(PluginTemplateMixin):
     template_file = __file__, "slice.vue"
     slider = Any(0).tag(sync=True)
     wavelength = Any(-1).tag(sync=True)

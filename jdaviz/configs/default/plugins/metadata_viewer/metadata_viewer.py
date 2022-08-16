@@ -1,14 +1,14 @@
 from traitlets import Bool, List, observe
 
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import TemplateMixin, DatasetSelectMixin
+from jdaviz.core.template_mixin import PluginTemplateMixin, DatasetSelectMixin
 from jdaviz.utils import PRIHDR_KEY, COMMENTCARD_KEY
 
 __all__ = ['MetadataViewer']
 
 
 @tray_registry('g-metadata-viewer', label="Metadata Viewer")
-class MetadataViewer(TemplateMixin, DatasetSelectMixin):
+class MetadataViewer(PluginTemplateMixin, DatasetSelectMixin):
     template_file = __file__, "metadata_viewer.vue"
     has_metadata = Bool(False).tag(sync=True)
     has_primary = Bool(False).tag(sync=True)

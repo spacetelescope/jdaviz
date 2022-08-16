@@ -3,7 +3,6 @@ from astropy.table import QTable
 import numpy as np
 from glue.core.roi import XRangeROI
 from glue.core.edit_subset_mode import NewMode
-from ipywidgets.widgets import widget_serialization
 
 from jdaviz.configs.specviz.plugins.line_analysis.line_analysis import _coerce_unit
 from jdaviz.core.events import LineIdentifyMessage
@@ -14,10 +13,8 @@ def test_plugin(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
     specviz_helper.load_spectrum(spectrum1d, data_label=label)
 
-    specviz_helper.app.state.drawer = True
-    tray_names = [ti['name'] for ti in specviz_helper.app.state.tray_items]
-    plugin_index = tray_names.index('specviz-line-analysis')
-    specviz_helper.app.state.tray_items_open = [plugin_index]
+    plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
+    plugin.open_in_tray()
 
     # continuum should be created, plotted, and visible
     sv = specviz_helper.app.get_viewer('spectrum-viewer')
@@ -33,8 +30,6 @@ def test_plugin(specviz_helper, spectrum1d):
     sv.apply_roi(XRangeROI(6500, 7400))
     specviz_helper.app.state.drawer = True
 
-    ipy_model_id = specviz_helper.app.state.tray_items[plugin_index]['widget']
-    plugin = widget_serialization['from_json'](ipy_model_id, None)
     assert 'Subset 1' in plugin.spectral_subset.labels
     plugin.selected_subset = 'Subset 1'
     plugin.selected_continuum = 'Surrounding'
@@ -121,10 +116,8 @@ def test_continuum_surrounding_spectral_subset(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
     specviz_helper.load_spectrum(spectrum1d, data_label=label)
 
-    specviz_helper.app.state.drawer = True
-    tray_names = [ti['name'] for ti in specviz_helper.app.state.tray_items]
-    plugin_index = tray_names.index('specviz-line-analysis')
-    specviz_helper.app.state.tray_items_open = [plugin_index]
+    plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
+    plugin.open_in_tray()
 
     # continuum should be created, plotted, and visible
     sv = specviz_helper.app.get_viewer('spectrum-viewer')
@@ -150,10 +143,8 @@ def test_continuum_spectral_same_value(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
     specviz_helper.load_spectrum(spectrum1d, data_label=label)
 
-    specviz_helper.app.state.drawer = True
-    tray_names = [ti['name'] for ti in specviz_helper.app.state.tray_items]
-    plugin_index = tray_names.index('specviz-line-analysis')
-    specviz_helper.app.state.tray_items_open = [plugin_index]
+    plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
+    plugin.open_in_tray()
 
     # continuum should be created, plotted, and visible
     sv = specviz_helper.app.get_viewer('spectrum-viewer')
@@ -179,10 +170,8 @@ def test_continuum_surrounding_invalid_width(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
     specviz_helper.load_spectrum(spectrum1d, data_label=label)
 
-    specviz_helper.app.state.drawer = True
-    tray_names = [ti['name'] for ti in specviz_helper.app.state.tray_items]
-    plugin_index = tray_names.index('specviz-line-analysis')
-    specviz_helper.app.state.tray_items_open = [plugin_index]
+    plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
+    plugin.open_in_tray()
 
     # continuum should be created, plotted, and visible
     sv = specviz_helper.app.get_viewer('spectrum-viewer')
@@ -206,10 +195,8 @@ def test_continuum_subset_spectral_entire(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
     specviz_helper.load_spectrum(spectrum1d, data_label=label)
 
-    specviz_helper.app.state.drawer = True
-    tray_names = [ti['name'] for ti in specviz_helper.app.state.tray_items]
-    plugin_index = tray_names.index('specviz-line-analysis')
-    specviz_helper.app.state.tray_items_open = [plugin_index]
+    plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
+    plugin.open_in_tray()
 
     # continuum should be created, plotted, and visible
     sv = specviz_helper.app.get_viewer('spectrum-viewer')
@@ -235,10 +222,8 @@ def test_continuum_subset_spectral_subset2(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
     specviz_helper.load_spectrum(spectrum1d, data_label=label)
 
-    specviz_helper.app.state.drawer = True
-    tray_names = [ti['name'] for ti in specviz_helper.app.state.tray_items]
-    plugin_index = tray_names.index('specviz-line-analysis')
-    specviz_helper.app.state.tray_items_open = [plugin_index]
+    plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
+    plugin.open_in_tray()
 
     # continuum should be created, plotted, and visible
     sv = specviz_helper.app.get_viewer('spectrum-viewer')
@@ -270,10 +255,8 @@ def test_continuum_surrounding_no_right(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
     specviz_helper.load_spectrum(spectrum1d, data_label=label)
 
-    specviz_helper.app.state.drawer = True
-    tray_names = [ti['name'] for ti in specviz_helper.app.state.tray_items]
-    plugin_index = tray_names.index('specviz-line-analysis')
-    specviz_helper.app.state.tray_items_open = [plugin_index]
+    plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
+    plugin.open_in_tray()
 
     # continuum should be created, plotted, and visible
     sv = specviz_helper.app.get_viewer('spectrum-viewer')
@@ -300,10 +283,8 @@ def test_continuum_surrounding_no_left(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
     specviz_helper.load_spectrum(spectrum1d, data_label=label)
 
-    specviz_helper.app.state.drawer = True
-    tray_names = [ti['name'] for ti in specviz_helper.app.state.tray_items]
-    plugin_index = tray_names.index('specviz-line-analysis')
-    specviz_helper.app.state.tray_items_open = [plugin_index]
+    plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
+    plugin.open_in_tray()
 
     # continuum should be created, plotted, and visible
     sv = specviz_helper.app.get_viewer('spectrum-viewer')
@@ -330,10 +311,8 @@ def test_subset_changed(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
     specviz_helper.load_spectrum(spectrum1d, data_label=label)
 
-    specviz_helper.app.state.drawer = True
-    tray_names = [ti['name'] for ti in specviz_helper.app.state.tray_items]
-    plugin_index = tray_names.index('specviz-line-analysis')
-    specviz_helper.app.state.tray_items_open = [plugin_index]
+    plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
+    plugin.open_in_tray()
 
     # continuum should be created, plotted, and visible
     sv = specviz_helper.app.get_viewer('spectrum-viewer')

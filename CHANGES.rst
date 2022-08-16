@@ -13,6 +13,8 @@ New Features
 - New ``jdaviz.core.region_translators.regions2roi()`` function to convert certain
   ``regions`` shapes into ``glue`` ROIs. [#1463]
 
+- New plugin-level ``open_in_tray`` method to programmatically show the plugin. [#1559]
+
 Cubeviz
 ^^^^^^^
 

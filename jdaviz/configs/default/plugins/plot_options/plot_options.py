@@ -8,7 +8,7 @@ from glue_jupyter.bqplot.image.state import BqplotImageLayerState
 from glue_jupyter.common.toolbar_vuetify import read_icon
 
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import (TemplateMixin, ViewerSelect, LayerSelect,
+from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelect, LayerSelect,
                                         PlotOptionsSyncState)
 from jdaviz.core.tools import ICON_DIR
 
@@ -16,7 +16,7 @@ __all__ = ['PlotOptions']
 
 
 @tray_registry('g-plot-options', label="Plot Options")
-class PlotOptions(TemplateMixin):
+class PlotOptions(PluginTemplateMixin):
     template_file = __file__, "plot_options.vue"
 
     # multiselect is shared between viewer and layer
