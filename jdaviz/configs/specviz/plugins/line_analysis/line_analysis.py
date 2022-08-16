@@ -358,7 +358,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                                 # We can rely on the viewer's function because Cubeviz only allows
                                 # one cube per instance. If this changes, this loop will need to be
                                 # modified to look at the specific data entry's collapse function
-                                viewer.state.function.lower() in ('minimum', 'maxium', 'sum')):
+                                viewer.state.function.lower() in ('minimum', 'maximum', 'sum')):
                             temp_result = temp_result * (float(pixar_sr) * u.Unit('sr'))
                             # Multiplying by PIXAR_SR removes the steradian
                             temp_result = temp_result.to(u.Unit('W/m2'))
