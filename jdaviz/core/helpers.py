@@ -553,8 +553,8 @@ class ImageConfigHelper(ConfigHelper):
                 self.default_viewer.apply_roi(state)
                 self.app.session.edit_subset_mode.edit_subset = None  # No overwrite next iteration # noqa
 
-            # Last resort: Masked Subset that is static
-            else:
+            # Last resort: Masked Subset that is static (if data is not a cube)
+            elif data.ndim == 2:
                 im = None
                 if hasattr(region, 'to_pixel'):  # Sky region: Convert to pixel region
                     if not has_wcs:
@@ -588,6 +588,10 @@ class ImageConfigHelper(ConfigHelper):
                     bad_regions.append((region, f'Failed to load: {repr(e)}'))
                     continue
 
+            else:
+                bad_regions.append((region, 'Mask creation failed'))
+                continue
+
             n_loaded += 1
             if max_num_regions is not None and n_loaded >= max_num_regions:
                 break
@@ -608,7 +612,7 @@ class ImageConfigHelper(ConfigHelper):
             return bad_regions
 
     def get_interactive_regions(self):
-        """Return regions that can be interacted with in the viewer.
+        """Return spatial regions that can be interacted with in the viewer.
         This does not return masked regions added via :meth:`load_regions`.
 
         Unsupported region shapes will be skipped. When that happens,
@@ -641,14 +645,14 @@ class ImageConfigHelper(ConfigHelper):
             try:
                 region = subset_data.data.get_selection_definition(
                     subset_id=subset_label, format='astropy-regions')
-            except NotImplementedError:
+            except (NotImplementedError, ValueError):
                 failed_regs.add(subset_label)
             else:
                 regions[subset_label] = region
 
         if len(failed_regs) > 0:
             self.app.hub.broadcast(SnackbarMessage(
-                f"Failed to get regions: {', '.join(failed_regs)}",
+                f"Failed to get regions: {', '.join(sorted(failed_regs))}",
                 color="error", timeout=8000, sender=self.app))
 
         return regions
