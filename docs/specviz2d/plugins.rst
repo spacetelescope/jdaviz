@@ -59,20 +59,6 @@ of the plugin, the live visualization will change to show the trace as a solid l
 To create a new trace in the plugin, choose the desired "Trace Type" and edit any input arguments.
 A preview of the trace will update in real time in the 2D spectrum viewer.
 
-To export the trace as a data object into the 2D spectrum viewer (to access via the API or to 
-adjust plotting options), open the "Export Trace" panel, choose a label for the new data entry,
-and click "Create".  Note that this step is not required to create an extraction with simple
-workflows.
-
-Trace objects created outside of jdaviz can be loaded into the app via::
-
-    viz.app.add_data(my_trace)
-
-and then added to the viewer through the data menu.
-
-Once trace objects are loaded into the app, they can be offset (in the cross-dispersion direction)
-by selecting the trace label, entering an offset, and overwriting the existing data entry (or
-creating a new one) with the modified trace.
 
 Background
 ----------
