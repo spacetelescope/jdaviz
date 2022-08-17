@@ -1,5 +1,6 @@
 import numpy as np
 
+from jdaviz.configs.specviz import Specviz
 from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.configs.default.plugins.line_lists.line_list_mixin import LineListMixin
@@ -21,6 +22,16 @@ class Specviz2d(ConfigHelper, LineListMixin):
 
         spec2d = self.app.get_viewer("spectrum-2d-viewer")
         spec2d.scales['x'].observe(self._update_spec1d_x_axis)
+
+    @property
+    def specviz(self):
+        """
+        A Specviz helper (`~jdaviz.configs.specviz.helper.Specviz`) for the Jdaviz
+        application that is wrapped by Specviz2d.
+        """
+        if not hasattr(self, '_specviz'):
+            self._specviz = Specviz(app=self.app)
+        return self._specviz
 
     def _extend_world(self, spec1d, ext):
         # Extend 1D spectrum world axis to enable panning (within reason) past
