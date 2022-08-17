@@ -27,4 +27,6 @@ mosviz:
 
 specviz:
   - jdaviz/configs/specviz/**/*
+
+specviz2d:
   - jdaviz/configs/specviz2d/**/*
