@@ -1,4 +1,5 @@
 import astropy.units as u
+from glue.viewers.profile.state import FUNCTIONS as COLLAPSE_FUNCTIONS
 import pytest
 
 from jdaviz import Cubeviz
@@ -6,24 +7,12 @@ from jdaviz import Cubeviz
 
 cube_label = "Test Cube"
 
-MJy_sr_test_cases = [
-    # If TELESCOP and PIXAR_SR exists in main meta, Line Flux should be multiplied by this value
-    # in units of steradians which should drop the steradian from the unit
-    # BUT when summed over spaxels (i.e. min, max, and sum, NOT median nor mode)
-    {'metadata': {'TELESCOP': 'JWST', 'PIXAR_SR': '1'},
-     'expected_flux_units': {'maximum': u.Unit('W/m2'),
-                             'minimum': u.Unit('W/m2'),
-                             'sum': u.Unit('W/m2'),
-                             'mean': u.Unit('W/(m2*sr)'),
-                             'median': u.Unit('W/(m2*sr)')}
+test_cases = [
+    {'data_fixture': 'spectrum1d_cube_MJy_sr',
+     'expected_lineflux_unit': u.Unit('W/(m2*sr)')
      },
-    # If there is no PIXAR_SR in the meta, it the flux unit should preserve the steradian unit
-    {'metadata': {'TELESCOP': 'JWST'},
-     'expected_flux_units': {'maximum': u.Unit('W/(m2*sr)'),
-                             'minimum': u.Unit('W/(m2*sr)'),
-                             'sum': u.Unit('W/(m2*sr)'),
-                             'mean': u.Unit('W/(m2*sr)'),
-                             'median': u.Unit('W/(m2*sr)')}
+    {'data_fixture': 'spectrum1d_cube',
+     'expected_lineflux_unit': u.Unit('W/m2')
      }
 ]
 
@@ -59,7 +48,7 @@ def main_meta_collapse_test(data, metadata, expected_flux_units):
     Embeds metadata in the main meta, calculates line flux,
     and checks the units for each collapse function
     '''
-    for function in expected_flux_units:
+    for function in COLLAPSE_FUNCTIONS:
         cubeviz_helper = _initialize_cubeviz_with_collapse(function, data, cube_label)
         # Manually inject metadata
         for key in metadata:
@@ -75,7 +64,7 @@ def primary_header_collapse_test(data, metadata, expected_flux_units):
     Embeds metadata in the primary header, calculates line flux,
     and checks the units for each collapse function
     '''
-    for function in expected_flux_units:
+    for function in COLLAPSE_FUNCTIONS:
         cubeviz_helper = _initialize_cubeviz_with_collapse(function, data, cube_label)
         # Force primary_header to exist if it doesn't already
         if '_primary_header' not in cubeviz_helper.app.data_collection[(str(cube_label) +
@@ -91,45 +80,18 @@ def primary_header_collapse_test(data, metadata, expected_flux_units):
         assert u.Unit(flux_results['unit']) == expected_flux_units[function]
 
 
-@pytest.mark.parametrize('test_case', MJy_sr_test_cases)
-def test_MJy_sr_main_meta(spectrum1d_cube_MJy_sr, test_case):
+@pytest.mark.parametrize('test_case', test_cases)
+def test_MJy_sr_main_meta(test_case, request):
     ''' Tests line flux units when Flux units are MJy/sr '''
-    # Tests flux calculation units when the metadata is stored in the main meta
-    main_meta_collapse_test(spectrum1d_cube_MJy_sr,
-                            test_case['metadata'],
+    # Tests flux calculation units when the telescope is stored in the main meta
+    main_meta_collapse_test(request.getfixturevalue(test_case['data_fixture']),
+                            {'TELESCOP': 'JWST'},
                             test_case['expected_flux_units'])
-    # Tests flux calculation units when the metadata is stored in the primary header
-    primary_header_collapse_test(spectrum1d_cube_MJy_sr,
-                                 test_case['metadata'],
+    # Also make sure Line Analysis can find the telescope if it's stored as an ASDF keyword
+    main_meta_collapse_test(request.getfixturevalue(test_case['data_fixture']),
+                            {'telescope': 'JWST'},
+                            test_case['expected_flux_units'])
+    # Lastly, test flux calculation units when the telescope is stored in the primary header
+    primary_header_collapse_test(request.getfixturevalue(test_case['data_fixture']),
+                                 {'TELESCOP': 'JWST'},
                                  test_case['expected_flux_units'])
-
-
-def test_asdf_metadata(spectrum1d_cube_MJy_sr):
-    '''
-    Test that Line analysis can find the JWST telescope if it's given in the ASDF meta,
-    ignoring the PIXAR_SR value
-    '''
-    asdf_test_case = {'metadata': {'telescope': 'JWST', 'PIXAR_SR': '1'},
-                      'expected_flux_units': {'maximum': u.Unit('W/m2'),
-                                              'minimum': u.Unit('W/m2'),
-                                              'sum': u.Unit('W/m2'),
-                                              'mean': u.Unit('W/(m2*sr)'),
-                                              'median': u.Unit('W/(m2*sr)')}
-                      }
-    main_meta_collapse_test(spectrum1d_cube_MJy_sr,
-                            asdf_test_case['metadata'],
-                            asdf_test_case['expected_flux_units'])
-
-
-def test_Jy(spectrum1d_cube):
-    ''' If the Flux Unit has no steradians to begin with, Line Flux should be reported in W/m2 '''
-    Jy_test_case = {'metadata': {'TELESCOP': 'JWST', 'PIXAR_SR': '1'},
-                    'expected_flux_units': {'maximum': u.Unit('W/m2'),
-                                            'minimum': u.Unit('W/m2'),
-                                            'sum': u.Unit('W/m2'),
-                                            'mean': u.Unit('W/m2'),
-                                            'median': u.Unit('W/m2')}
-                    }
-    main_meta_collapse_test(spectrum1d_cube,
-                            Jy_test_case['metadata'],
-                            Jy_test_case['expected_flux_units'])

@@ -351,21 +351,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                     flux_unit_decompose = set(unit**power for unit, power in zip(flux_unit.bases,
                                                                                  flux_unit.powers))
                     if flux_unit_decompose == {u.Unit("1 / s2"), u.Unit("1 / rad2"), u.Unit("kg")}:
-                        # Multiply by PIXAR_SR if available
-                        viewer = self.app.get_viewer('spectrum-viewer')
-                        pixar_sr = meta.get('PIXAR_SR',
-                                            meta.get('_primary_header', {}).get('PIXAR_SR', ''))
-                        if (hasattr(viewer.state, 'function') and pixar_sr and
-                                # We can rely on the viewer's function because Cubeviz only allows
-                                # one cube per instance. If this changes, this loop will need to be
-                                # modified to look at the specific data entry's collapse function
-                                viewer.state.function.lower() in ('minimum', 'maximum', 'sum')):
-                            temp_result = temp_result * (float(pixar_sr) * u.Unit('sr'))
-                            # Multiplying by PIXAR_SR removes the steradian
-                            temp_result = temp_result.to(u.Unit('W/m2'))
-                        else:
-                            # If PIXAR_SR wasn't provided, keep the steradian unit
-                            temp_result = temp_result.to(u.Unit('W/(m2*sr)'))
+                        temp_result = temp_result.to(u.Unit('W/(m2*sr)'))
                     elif flux_unit_decompose == {u.Unit("1 / s2"), u.Unit("kg")}:
                         temp_result = temp_result.to(u.Unit('W/m2'))
                 else:
