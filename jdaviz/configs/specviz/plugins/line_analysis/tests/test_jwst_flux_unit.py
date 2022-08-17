@@ -43,7 +43,7 @@ def _calculate_line_flux(cubeviz_helper):
             return result
 
 
-def main_meta_collapse_test(data, metadata, expected_flux_units):
+def main_meta_collapse_test(data, metadata, expected_lineflux_unit):
     '''
     Embeds metadata in the main meta, calculates line flux,
     and checks the units for each collapse function
@@ -56,10 +56,10 @@ def main_meta_collapse_test(data, metadata, expected_flux_units):
                                                ].meta[key] = metadata[key]
 
         flux_results = _calculate_line_flux(cubeviz_helper)
-        assert u.Unit(flux_results['unit']) == expected_flux_units[function]
+        assert u.Unit(flux_results['unit']) == expected_lineflux_unit
 
 
-def primary_header_collapse_test(data, metadata, expected_flux_units):
+def primary_header_collapse_test(data, metadata, expected_lineflux_unit):
     '''
     Embeds metadata in the primary header, calculates line flux,
     and checks the units for each collapse function
@@ -77,7 +77,7 @@ def primary_header_collapse_test(data, metadata, expected_flux_units):
                                                ].meta['_primary_header'][key] = metadata[key]
 
         flux_results = _calculate_line_flux(cubeviz_helper)
-        assert u.Unit(flux_results['unit']) == expected_flux_units[function]
+        assert u.Unit(flux_results['unit']) == expected_lineflux_unit
 
 
 @pytest.mark.parametrize('test_case', test_cases)
@@ -86,12 +86,12 @@ def test_MJy_sr_main_meta(test_case, request):
     # Tests flux calculation units when the telescope is stored in the main meta
     main_meta_collapse_test(request.getfixturevalue(test_case['data_fixture']),
                             {'TELESCOP': 'JWST'},
-                            test_case['expected_flux_units'])
+                            test_case['expected_lineflux_unit'])
     # Also make sure Line Analysis can find the telescope if it's stored as an ASDF keyword
     main_meta_collapse_test(request.getfixturevalue(test_case['data_fixture']),
                             {'telescope': 'JWST'},
-                            test_case['expected_flux_units'])
+                            test_case['expected_lineflux_unit'])
     # Lastly, test flux calculation units when the telescope is stored in the primary header
     primary_header_collapse_test(request.getfixturevalue(test_case['data_fixture']),
                                  {'TELESCOP': 'JWST'},
-                                 test_case['expected_flux_units'])
+                                 test_case['expected_lineflux_unit'])
