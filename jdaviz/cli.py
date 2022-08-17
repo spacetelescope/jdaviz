@@ -91,7 +91,7 @@ def _main():
 
     parser = argparse.ArgumentParser(description='Start a Jdaviz application instance with data '
                                      'loaded from FILENAME.')
-    parser.add_argument('layout', choices=['cubeviz', 'specviz', 'mosviz', 'imviz'],
+    parser.add_argument('layout', choices=['cubeviz', 'specviz', 'specviz2d', 'mosviz', 'imviz'],
                         help='Configuration to use.')
     parser.add_argument('filename', type=str,
                         help='The path to the file to be loaded into the Jdaviz application.')
