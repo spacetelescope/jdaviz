@@ -42,6 +42,8 @@ Specviz2d
 
 - Spectral extraction plugin. [#1514, #1560, #1562]
 
+- Expose ``specviz2d.specviz`` helper. [#1577]
+
 API Changes
 -----------
 
