@@ -42,6 +42,8 @@ Specviz2d
 
 - Spectral extraction plugin. [#1514, #1560, #1562]
 
+- CLI support for launching Specviz2d (2D spectrum only). [#1576]
+
 - New ``specviz2d.specviz`` helper property to directly access Specviz functionality from Specviz2d. [#1577]
 
 API Changes
