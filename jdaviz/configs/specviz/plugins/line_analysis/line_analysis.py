@@ -66,6 +66,9 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "line_analysis.vue"
 
+    spatial_subset_items = List().tag(sync=True)
+    collapsed_spectrum_selected = Unicode().tag(sync=True)
+
     continuum_subset_items = List().tag(sync=True)
     continuum_subset_selected = Unicode().tag(sync=True)
 
@@ -96,6 +99,15 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         self.dataset._viewers = ['spectrum-viewer']
         # require entries to be in spectrum-viewer (not other cubeviz images, etc)
         self.dataset.add_filter('layer_in_spectrum_viewer')
+
+        if self.app.state.settings.get("configuration") == "cubeviz":
+            self.spatial_subset = SubsetSelect(self,
+                                               'spatial_subset_items',
+                                               'collapsed_spectrum_selected',
+                                               default_text='Entire Cube Spectrum',
+                                               allowed_type='spatial')
+        else:
+            self.spatial_subset = None
 
         self.hub.subscribe(self, AddDataMessage,
                            handler=self._on_viewer_data_changed)
@@ -139,7 +151,9 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         msg : `glue.core.Message`
             The glue message passed to this callback method.
         """
-        if (msg.subset.label in [self.spectral_subset_selected, self.continuum_subset_selected]
+        if (msg.subset.label in [self.spectral_subset_selected,
+                                 self.collapsed_spectrum_selected,
+                                 self.continuum_subset_selected]
                 and self.plugin_opened):
             self._calculate_statistics()
 
@@ -210,7 +224,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             # in which case we'll default to the identified line
             self.selected_line = self.identified_line
 
-    @observe("spectral_subset_selected", "dataset_selected", "continuum_subset_selected", "width")
+    @observe("collapsed_spectrum_selected", "spectral_subset_selected", "dataset_selected",
+             "continuum_subset_selected", "width")
     def _calculate_statistics(self, *args, **kwargs):
         """
         Run the line analysis functions on the selected data/subset and
@@ -222,7 +237,16 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         # show spinner with overlay
         self.results_computing = True
 
-        full_spectrum = self.dataset.selected_obj
+        if self.config == 'cubeviz' and self.collapsed_spectrum_selected != 'Entire Cube':
+            # then we're acting on the auto-collapsed data in the spectrum-viewer
+            # of a spatial subset.  In the future, we may want to expose on-the-fly
+            # collapse options... but right now these will follow the settings of the
+            # spectrum-viewer itself
+            full_spectrum = self.app.get_data_from_viewer('spectrum-viewer',
+                                                          self.collapsed_spectrum_selected)
+        else:
+            full_spectrum = self.dataset.selected_obj
+
         if full_spectrum is None or self.width == "" or not self.plugin_opened:
             # this can happen DURING a unit conversion change
             self.update_results(None)
