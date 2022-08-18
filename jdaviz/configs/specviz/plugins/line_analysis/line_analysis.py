@@ -333,29 +333,22 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             # TODO: update specutils to allow ALL analysis to take regions and continuum so we
             # don't need these if statements
             if function == "Line Flux":
-                meta = self.dataset.selected_dc_item.meta
-                telescope = meta.get('TELESCOP',
-                                     meta.get('telescope',
-                                              meta.get('_primary_header', {}).get('TELESCOP', '')))
-                if telescope == 'JWST':
-                    # Perform integration in frequency space
-                    freq_spec = Spectrum1D(
-                        spectral_axis=spec_subtracted.spectral_axis.to(u.Hz,
-                                                                       equivalencies=u.spectral()),
-                        flux=spec_subtracted.flux)
-                    temp_result = analysis.line_flux(freq_spec)
+                # Perform integration in frequency space
+                freq_spec = Spectrum1D(
+                    spectral_axis=spec_subtracted.spectral_axis.to(u.Hz,
+                                                                    equivalencies=u.spectral()),
+                    flux=spec_subtracted.flux)
+                temp_result = analysis.line_flux(freq_spec)
 
-                    # Convert result to Watts/meter^2 if in the right units
-                    # (don't forget the angle if it was provided)
-                    flux_unit = spec_subtracted.flux.unit.decompose()
-                    flux_unit_decompose = set(unit**power for unit, power in zip(flux_unit.bases,
-                                                                                 flux_unit.powers))
-                    if flux_unit_decompose == {u.Unit("1 / s2"), u.Unit("1 / rad2"), u.Unit("kg")}:
-                        temp_result = temp_result.to(u.Unit('W/(m2*sr)'))
-                    elif flux_unit_decompose == {u.Unit("1 / s2"), u.Unit("kg")}:
-                        temp_result = temp_result.to(u.Unit('W/m2'))
-                else:
-                    temp_result = analysis.line_flux(spec_subtracted)
+                # Convert result to Watts/meter^2 if in the right units
+                # (don't forget the angle if it was provided)
+                flux_unit = spec_subtracted.flux.unit.decompose()
+                flux_unit_decompose = set(unit**power for unit, power in zip(flux_unit.bases,
+                                                                                flux_unit.powers))
+                if flux_unit_decompose == {u.Unit("1 / s2"), u.Unit("1 / rad2"), u.Unit("kg")}:
+                    temp_result = temp_result.to(u.Unit('W/(m2*sr)'))
+                elif flux_unit_decompose == {u.Unit("1 / s2"), u.Unit("kg")}:
+                    temp_result = temp_result.to(u.Unit('W/m2'))
             elif function == "Equivalent Width":
                 if np.any(continuum <= 0):
                     temp_results.append({'function': function,
