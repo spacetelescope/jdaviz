@@ -71,6 +71,10 @@ class JdavizViewerMixin:
                 return ''
             return layer.color
 
+        def _get_layer_linewidth(layer):
+            linewidth = getattr(layer, 'linewidth', 0)
+            return min(linewidth, 6)
+
         def _get_layer_info(layer):
             if self.__class__.__name__ == 'CubevizProfileView' and len(layer.layer.data.shape) == 3:
                 suffix = f" (collapsed: {self.state.function})"
@@ -94,6 +98,7 @@ class JdavizViewerMixin:
             if layer.visible:
                 prefix_icon, suffix = _get_layer_info(layer)
                 visible_layers[layer.layer.label] = {'color': _get_layer_color(layer),
+                                                     'linewidth': _get_layer_linewidth(layer),
                                                      'prefix_icon': prefix_icon,
                                                      'suffix_label': suffix}
 

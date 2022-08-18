@@ -1,7 +1,7 @@
 <template>
   <div v-if="pixel">
     <span style="position: absolute; top: 50%; transform: translateY(-50%); -ms-transform: translateY(-50%);">
-      <v-icon>{{icon}}</v-icon>
+      <j-layer-viewer-icon :icon="icon" color="white" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
     </span>
     <div style="display: inline-block; white-space: nowrap; line-height: 14pt; margin: 0; position: absolute; margin-left: 26px; top: 50%; transform: translateY(-50%); -ms-transform: translateY(-50%);">
       <table>

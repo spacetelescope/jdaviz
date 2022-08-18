@@ -15,7 +15,7 @@
       <v-chip
         label=true
       >
-        <v-icon>{{ icon }}</v-icon>
+        <j-layer-viewer-icon :icon="icon" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
         {{ data_label }}
       </v-chip>
     </v-row>
