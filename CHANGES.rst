@@ -40,7 +40,7 @@ Specviz
 Specviz2d
 ^^^^^^^^^
 
-- Spectral extraction plugin. [#1514, #1560, #1562]
+- Spectral extraction plugin. [#1514, #1555, #1560, #1562]
 
 - CLI support for launching Specviz2d for a single 2D spectrum file input.
   Use notebook version if you want to open separate 2D and 1D spectra in Specviz2d. [#1576]

@@ -520,8 +520,8 @@ class SpectralExtraction(PluginTemplateMixin):
         inp_sp2d = self._get_ext_input_spectrum()
         trace = self._get_ext_trace()
 
-        boxcar = extract.BoxcarExtract()
-        spectrum = boxcar(inp_sp2d.data, trace, width=self.ext_width)
+        boxcar = extract.BoxcarExtract(inp_sp2d.data, trace)
+        spectrum = boxcar(width=self.ext_width)
         # Specreduce returns a spectral axis in pixels, so we'll replace with input spectral_axis
         # NOTE: this is currently disabled until proper handling of axes-limit linking between
         # the 2D spectrum image (plotted in pixels) and a 1D spectrum (plotted in freq or
