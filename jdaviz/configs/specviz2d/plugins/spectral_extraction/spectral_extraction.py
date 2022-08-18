@@ -401,7 +401,7 @@ class SpectralExtraction(PluginTemplateMixin):
         elif self.trace_type_selected == 'Auto':
             trace = tracing.KosmosTrace(self.trace_dataset.selected_obj.data,
                                         guess=self.trace_pixel,
-                                        bins=self.trace_bins,
+                                        bins=int(self.trace_bins),
                                         window=self.trace_window,
                                         peak_method=self.trace_peak_method_selected.lower())
 
