@@ -136,7 +136,7 @@ def test_continuum_surrounding_spectral_subset(specviz_helper, spectrum1d):
     plugin.width = 3
 
     # Values have not yet been validated
-    np.testing.assert_allclose(float(plugin.results[0]['result']), 350.89288537581467, atol=1e-5)
+    np.testing.assert_allclose(float(plugin.results[0]['result']), 2.153181e-13, atol=1e-15)
 
 
 def test_continuum_spectral_same_value(specviz_helper, spectrum1d):
@@ -215,7 +215,7 @@ def test_continuum_subset_spectral_entire(specviz_helper, spectrum1d):
     plugin.width = 3
 
     # Values have not yet been validated
-    np.testing.assert_allclose(float(plugin.results[0]['result']), -467.6854635447396, atol=1e-5)
+    np.testing.assert_allclose(float(plugin.results[0]['result']), -2.79572e-13, atol=1e-15)
 
 
 def test_continuum_subset_spectral_subset2(specviz_helper, spectrum1d):
@@ -248,7 +248,7 @@ def test_continuum_subset_spectral_subset2(specviz_helper, spectrum1d):
     plugin.width = 3
 
     # Values have not yet been validated
-    np.testing.assert_allclose(float(plugin.results[0]['result']), 32.520521, atol=1e-5)
+    np.testing.assert_allclose(float(plugin.results[0]['result']), 1.482418e-14, atol=1e-16)
 
 
 def test_continuum_surrounding_no_right(specviz_helper, spectrum1d):
@@ -276,7 +276,7 @@ def test_continuum_surrounding_no_right(specviz_helper, spectrum1d):
     plugin.width = 3
 
     # Values have not yet been validated
-    np.testing.assert_allclose(float(plugin.results[0]['result']), 39.76685499263615, atol=1e-5)
+    np.testing.assert_allclose(float(plugin.results[0]['result']), 4.204513e-14, atol=1e-16)
 
 
 def test_continuum_surrounding_no_left(specviz_helper, spectrum1d):
@@ -304,7 +304,7 @@ def test_continuum_surrounding_no_left(specviz_helper, spectrum1d):
     plugin.width = 3
 
     # Values have not yet been validated
-    np.testing.assert_allclose(float(plugin.results[0]['result']), 146.67186446784513, atol=1e-5)
+    np.testing.assert_allclose(float(plugin.results[0]['result']), 7.570859e-14, atol=1e-16)
 
 
 def test_subset_changed(specviz_helper, spectrum1d):
@@ -335,4 +335,4 @@ def test_subset_changed(specviz_helper, spectrum1d):
     specviz_helper.app.state.drawer = True
 
     # Values have not yet been validated
-    np.testing.assert_allclose(float(plugin.results[0]['result']), 350.89288537581467, atol=1e-5)
+    np.testing.assert_allclose(float(plugin.results[0]['result']), 2.153181e-13, atol=1e-15)
