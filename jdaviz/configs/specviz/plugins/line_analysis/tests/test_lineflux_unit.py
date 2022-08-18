@@ -14,6 +14,7 @@ test_cases = [
      }
 ]
 
+
 def _calculate_line_flux(function, dataset):
     '''
     Returns the line flux calculation for a particular collapse function
