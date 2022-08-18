@@ -38,7 +38,6 @@ An instance of Specviz can also be accessed, which exposes some helper methods f
 
     specviz2d.specviz.get_spectra()
 
-
 .. seealso::
 
     :ref:`Specviz: Export Data <specviz-export-data>`

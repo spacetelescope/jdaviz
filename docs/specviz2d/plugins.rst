@@ -135,8 +135,9 @@ Unit Conversion
 Line Lists
 ==========
 
-NOTE: the line lists plugin is currently disabled if the 1D spectrum was automatically extracted
-and/or the 1D spectrum's x-axis is in pixels.
+.. note::
+    The line lists plugin is currently disabled if the 1D spectrum was automatically extracted
+    and/or the 1D spectrum's x-axis is in pixels.
 
 .. seealso::
 
@@ -149,8 +150,9 @@ and/or the 1D spectrum's x-axis is in pixels.
 Line Analysis
 =============
 
-NOTE: the line analysis plugin is currently disabled if the 1D spectrum was automatically extracted
-and/or the 1D spectrum's x-axis is in pixels.
+.. note::
+    The line analysis plugin is currently disabled if the 1D spectrum was automatically extracted
+    and/or the 1D spectrum's x-axis is in pixels.
 
 .. seealso::
 
