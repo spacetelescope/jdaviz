@@ -209,7 +209,7 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
                     self.state.layers[ilayer].visible = False
 
                 # We can display the active data label in Compass plugin.
-                self.set_compass(self.state.layers[next_layer].layer)
+                self.set_compass(self.state.layers[next_layer].layer, transform=self.state._affine_pretransform._transform if self.state._affine_pretransform else None)
 
                 # Update line profile plots too.
                 if self.line_profile_xy is None:
@@ -228,7 +228,7 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
             if self.compass is not None:
                 self.compass.clear_compass()
             return
-        self.set_compass(self.state.layers[i].layer)
+        self.set_compass(self.state.layers[i].layer, transform=self.state._affine_pretransform._transform if self.state._affine_pretransform else None)
 
     def _get_real_xy(self, image, x, y):
         """Return real (X, Y) position and status in case of dithering.
@@ -275,7 +275,7 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
                                     (self.state.x_max, self.state.y_min)))
         return zoom_limits
 
-    def set_compass(self, image):
+    def set_compass(self, image, transform=None):
         """Update the Compass plugin with info from the given image Data object."""
         if self.compass is None:  # Maybe another viewer has it
             return
@@ -290,7 +290,7 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
         norm = ImageNormalize(vmin=vmin, vmax=vmax, stretch=LinearStretch())
         self.compass.draw_compass(image.label, wcs_utils.draw_compass_mpl(
             arr, orig_shape=image.shape, wcs=image.coords, show=False, zoom_limits=zoom_limits,
-            norm=norm))
+            norm=norm, transform=transform))
 
     def set_plot_axes(self):
         self.figure.axes[1].tick_format = None

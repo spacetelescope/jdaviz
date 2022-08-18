@@ -164,7 +164,7 @@ def get_compass_info(image_wcs, image_shape, r_fac=0.4):
     return x, y, xn, yn, xe, ye, degn, dege, xflip
 
 
-def draw_compass_mpl(image, orig_shape=None, wcs=None, show=True, zoom_limits=None, **kwargs):
+def draw_compass_mpl(image, orig_shape=None, wcs=None, show=True, zoom_limits=None, transform=None, **kwargs):
     """Visualize the compass using Matplotlib.
 
     Parameters
@@ -204,7 +204,7 @@ def draw_compass_mpl(image, orig_shape=None, wcs=None, show=True, zoom_limits=No
 
     fig, ax = plt.subplots()
     ax.imshow(image, extent=[-0.5, orig_shape[1] - 0.5, -0.5, orig_shape[0] - 0.5],
-              origin='lower', cmap='gray', **kwargs)
+              origin='lower', cmap='gray', transform=transform + ax.transData, **kwargs)
 
     if wcs is not None:
         try:
