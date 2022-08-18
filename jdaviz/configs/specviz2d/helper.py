@@ -161,7 +161,7 @@ class Specviz2d(ConfigHelper, LineListMixin):
                 # new defaults.  We'll just call it again manually.
                 spext._trace_dataset_selected()
                 try:
-                    spext.export_extract(add_data=True)
+                    spext.export_extract_spectrum(add_data=True)
                 except Exception:
                     msg = SnackbarMessage(
                         "Automatic spectrum extraction failed.  See the spectral extraction"

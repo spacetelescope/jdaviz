@@ -1,17 +1,16 @@
 import pytest
-from asdf.asdf import AsdfWarning
 from astropy.utils.data import download_file
 
-from specreduce import tracing
+from specreduce import tracing, background, extract
 from specutils import Spectrum1D
 
 
 @pytest.mark.remote_data
+@pytest.mark.filterwarnings('ignore')
 def test_plugin(specviz2d_helper):
     fn = download_file('https://stsci.box.com/shared/static/exnkul627fcuhy5akf2gswytud5tazmw.fits', cache=True)  # noqa
 
-    with pytest.warns(AsdfWarning, match='jwextension'):
-        specviz2d_helper.load_data(spectrum_2d=fn)
+    specviz2d_helper.load_data(spectrum_2d=fn)
 
     pext = specviz2d_helper.app.get_tray_item_from_name('spectral-extraction')
 
@@ -54,7 +53,9 @@ def test_plugin(specviz2d_helper):
 
     # create background image
     bg = pext.export_bg()
-    assert isinstance(bg, Spectrum1D)
+    assert isinstance(bg, background.Background)
+    bg_img = pext.export_bg_img()
+    assert isinstance(bg_img, Spectrum1D)
     bg_sub = pext.export_bg_sub()
     assert isinstance(bg_sub, Spectrum1D)
 
@@ -67,7 +68,9 @@ def test_plugin(specviz2d_helper):
         assert len(pext.marks[mark].x) > 0
 
     # create subtracted spectrum
-    sp_ext = pext.export_extract()
+    ext = pext.export_extract()
+    assert isinstance(ext, extract.BoxcarExtract)
+    sp_ext = pext.export_extract_spectrum()
     assert isinstance(sp_ext, Spectrum1D)
 
     # test exception handling
@@ -77,7 +80,7 @@ def test_plugin(specviz2d_helper):
     pext.bg_width = 5
     assert len(pext.ext_specreduce_err) > 0
     pext.bg_results_label = 'should not be created'
-    pext.vue_create_bg()
+    pext.vue_create_bg_img()
     assert 'should not be created' not in [d.label for d in specviz2d_helper.app.data_collection]
 
 

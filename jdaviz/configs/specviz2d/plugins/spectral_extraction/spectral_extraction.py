@@ -454,7 +454,7 @@ class SpectralExtraction(PluginTemplateMixin):
         return trace
 
     def vue_create_trace(self, *args):
-        _ = self.export_trace(add_data=True)
+        self.export_trace(add_data=True)
 
     def _get_bg_trace(self):
         if self.bg_type_selected == 'Manual':
@@ -555,7 +555,7 @@ class SpectralExtraction(PluginTemplateMixin):
 
         return bg_spec
 
-    def vue_create_bg(self, *args):
+    def vue_create_bg_img(self, *args):
         try:
             self.export_bg_img(add_data=True)
         except Exception as e:
@@ -585,7 +585,7 @@ class SpectralExtraction(PluginTemplateMixin):
         return bg_sub_spec
 
     def vue_create_bg_sub(self, *args):
-        _ = self.export_bg_sub(add_data=True)
+        self.export_bg_sub(add_data=True)
 
     def _get_ext_trace(self):
         return self.export_trace(add_data=False)
@@ -651,4 +651,4 @@ class SpectralExtraction(PluginTemplateMixin):
         return spectrum
 
     def vue_extract_spectrum(self, *args):
-        _ = self.export_extract_spectrum(add_data=True)
+        self.export_extract_spectrum(add_data=True)
