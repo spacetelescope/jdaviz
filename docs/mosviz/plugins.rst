@@ -41,8 +41,8 @@ Subset Tools
 
 .. seealso::
 
-    :ref:`Subset Tools <specviz-subset-plugin>`
-        Specviz documentation on the Subset Tools plugin.
+    :ref:`Subset Tools <imviz-subset-plugin>`
+        Imviz documentation describing the concept of subsets in Jdaviz.
 
 Gaussian Smooth
 ===============

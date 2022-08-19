@@ -55,9 +55,9 @@ multiple disjoint regions) are displayed, the logical operations joining them
 For a simple subset, you can edit its parameters by changing the values
 in the corresponding editable text fields. Once you have entered the new
 value(s), click :guilabel:`Update` to apply. You should see the subset
-parameters and shape both update concurrently.
+parameters, shape, and orientation (if applicable) all update concurrently.
 
-.. note:: Angle is currently uneditable.
+Angle is counter-clockwise rotation around the center in degrees.
 
 .. _imviz-link-control:
 
