@@ -51,9 +51,12 @@ def test_spatial_subset(cubeviz_helper, spectrum1d_cube):
     cubeviz_helper.load_data(spectrum1d_cube, data_label=label)
 
     # add a region and rerun stats for that region
-    cubeviz_helper.app.get_viewer('flux-viewer').apply_roi(RectangularROI(1, 3.5, -0.2, 3.3))
+    cubeviz_helper.app.get_viewer('flux-viewer').apply_roi(RectangularROI(-0.5, 0.5, 0.5, 2.5))
     cubeviz_helper.app.get_viewer('flux-viewer').session.edit_subset_mode._mode = NewMode
-    cubeviz_helper.app.get_viewer('spectrum-viewer').apply_roi(XRangeROI(6500, 7400))
+    # The cube only has one slice, so we have to grab the entire viewer's range to create a region
+    cubeviz_helper.app.get_viewer('spectrum-viewer').apply_roi(
+        XRangeROI(cubeviz_helper.app.get_viewer('spectrum-viewer').state.x_min,
+                  cubeviz_helper.app.get_viewer('spectrum-viewer').state.x_max))
 
     cubeviz_helper.app.state.drawer = True
 
