@@ -1,7 +1,7 @@
 import astropy.units as u
 from astropy.table import QTable
 import numpy as np
-from glue.core.roi import XRangeROI
+from glue.core.roi import XRangeROI, RectangularROI
 from glue.core.edit_subset_mode import NewMode
 
 from jdaviz.configs.specviz.plugins.line_analysis.line_analysis import _coerce_unit
@@ -39,6 +39,36 @@ def test_plugin(specviz_helper, spectrum1d):
         if result_dict in ['Line Flux']:
             # should have an assigned uncertainty (with min required version of specutils)
             assert len(result_dict.get('uncertainty')) > 0
+
+
+def test_spatial_subset(cubeviz_helper, spectrum1d_cube):
+    """
+    Tests that the spatial selection returns any valid result, DOES NOT VALIDATE THE VALUE
+    Not checking the value attempts to circumvent the issue we ran into here:
+    https://github.com/spacetelescope/jdaviz/pull/1564#discussion_r949427663
+    """
+    label = "Test Cube"
+    cubeviz_helper.load_data(spectrum1d_cube, data_label=label)
+
+    # add a region and rerun stats for that region
+    cubeviz_helper.app.get_viewer('flux-viewer').apply_roi(RectangularROI(1, 3.5, -0.2, 3.3))
+    cubeviz_helper.app.get_viewer('spectrum-viewer').apply_roi(XRangeROI(6500, 7400))
+
+    cubeviz_helper.app.state.drawer = True
+
+    plugin = cubeviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
+    plugin.open_in_tray()
+
+    plugin.collapsed_spectrum_selected = "Subset 1"
+    plugin.spectral_subset_selected = 'Subset 2'
+    plugin.continuum_subset_selected = 'Surrounding'
+    plugin.width = 3
+
+    for result in plugin.results:
+        # Check that there exists a value
+        assert not np.isnan(result['value'])
+        # Check the unit is not nan or dimensionless
+        assert u.Unit(result['unit']) != u.Unit('nan')
 
 
 def test_line_identify(specviz_helper, spectrum1d):
