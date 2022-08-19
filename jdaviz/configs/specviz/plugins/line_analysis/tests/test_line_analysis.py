@@ -84,8 +84,8 @@ def test_spatial_subset(cubeviz_helper):
     for result in plugin.results:
         # Check that there exists a value
         assert not np.isnan(float(result['result']))
-        # Check the unit is not nan or dimensionless
-        assert u.Unit(result['unit']) != u.Unit('nan')
+        # Check the unit is not dimensionless
+        assert u.Unit(result['unit']) != u.dimensionless_unscaled
 
 
 def test_line_identify(specviz_helper, spectrum1d):
