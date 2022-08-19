@@ -1,8 +1,10 @@
 import astropy.units as u
 from astropy.table import QTable
+from astropy.wcs import WCS
 import numpy as np
 from glue.core.roi import XRangeROI, RectangularROI
 from glue.core.edit_subset_mode import NewMode
+from specutils import Spectrum1D
 
 from jdaviz.configs.specviz.plugins.line_analysis.line_analysis import _coerce_unit
 from jdaviz.core.events import LineIdentifyMessage
