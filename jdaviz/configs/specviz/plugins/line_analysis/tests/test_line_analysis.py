@@ -52,6 +52,7 @@ def test_spatial_subset(cubeviz_helper, spectrum1d_cube):
 
     # add a region and rerun stats for that region
     cubeviz_helper.app.get_viewer('flux-viewer').apply_roi(RectangularROI(1, 3.5, -0.2, 3.3))
+    cubeviz_helper.app.get_viewer('flux-viewer').session.edit_subset_mode._mode = NewMode
     cubeviz_helper.app.get_viewer('spectrum-viewer').apply_roi(XRangeROI(6500, 7400))
 
     cubeviz_helper.app.state.drawer = True
