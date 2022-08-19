@@ -47,8 +47,17 @@ def test_spatial_subset(cubeviz_helper, spectrum1d_cube):
     Not checking the value attempts to circumvent the issue we ran into here:
     https://github.com/spacetelescope/jdaviz/pull/1564#discussion_r949427663
     """
+
+    flux = np.arange(250).reshape((5, 5, 10)) * u.Jy
+    wcs_dict = {"CTYPE1": "RA---TAN", "CTYPE2": "DEC--TAN", "CTYPE3": "WAVE-LOG",
+                "CRVAL1": 205, "CRVAL2": 27, "CRVAL3": 4.622e-7,
+                "CDELT1": -0.0001, "CDELT2": 0.0001, "CDELT3": 8e-11,
+                "CRPIX1": 0, "CRPIX2": 0, "CRPIX3": 0}
+    w = WCS(wcs_dict)
+    large_cube = Spectrum1D(flux=flux, wcs=w)
+
     label = "Test Cube"
-    cubeviz_helper.load_data(spectrum1d_cube, data_label=label)
+    cubeviz_helper.load_data(large_cube, data_label=label)
 
     # add a region and rerun stats for that region
     cubeviz_helper.app.get_viewer('flux-viewer').apply_roi(RectangularROI(-0.5, 0.5, 0.5, 2.5))
