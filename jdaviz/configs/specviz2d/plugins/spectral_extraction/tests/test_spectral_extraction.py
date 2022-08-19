@@ -28,11 +28,19 @@ def test_plugin(specviz2d_helper):
     pext.trace_pixel = 28
     trace = pext.export_trace()
     assert isinstance(trace, tracing.FlatTrace)
+    assert trace.trace_pos == 28
+    trace.trace_pos = 27
+    pext.import_trace(trace)
+    assert pext.trace_pixel == 27
 
     # create KosmosTrace
     pext.trace_type_selected = 'Auto'
     trace = pext.export_trace()
     assert isinstance(trace, tracing.KosmosTrace)
+    assert trace.guess == 27
+    trace.guess = 28
+    pext.import_trace(trace)
+    assert pext.trace_pixel == 28
 
     # interact with background section, check marks
     pext.trace_type_selected = 'Flat'
@@ -54,6 +62,12 @@ def test_plugin(specviz2d_helper):
     # create background image
     bg = pext.export_bg()
     assert isinstance(bg, background.Background)
+    assert len(bg.traces) == 1
+    assert bg.traces[0].trace[0] == 28 + 5
+    assert bg.width == 3
+    bg.width = 4
+    pext.import_bg(bg)
+    assert pext.bg_width == 4
     bg_img = pext.export_bg_img()
     assert isinstance(bg_img, Spectrum1D)
     bg_sub = pext.export_bg_sub()
@@ -68,8 +82,12 @@ def test_plugin(specviz2d_helper):
         assert len(pext.marks[mark].x) > 0
 
     # create subtracted spectrum
-    ext = pext.export_extract()
+    ext = pext.export_extract(ext_width=3)
     assert isinstance(ext, extract.BoxcarExtract)
+    assert ext.width == 3
+    ext.width = 2
+    pext.import_extract(ext)
+    assert pext.ext_width == 2
     sp_ext = pext.export_extract_spectrum()
     assert isinstance(sp_ext, Spectrum1D)
 
@@ -82,6 +100,13 @@ def test_plugin(specviz2d_helper):
     pext.bg_results_label = 'should not be created'
     pext.vue_create_bg_img()
     assert 'should not be created' not in [d.label for d in specviz2d_helper.app.data_collection]
+
+    # test API calls
+    for step in ['trace', 'bg', 'ext']:
+        pext.update_marks(step)
+
+    with pytest.raises(ValueError):
+        pext.export_extract(invalid_kwarg=5)
 
 
 @pytest.mark.remote_data
