@@ -208,7 +208,7 @@ def draw_compass_mpl(image, orig_shape=None, wcs=None, show=True, zoom_limits=No
     else:
         transform = ax.transData
     ax.imshow(image, extent=[-0.5, orig_shape[1] - 0.5, -0.5, orig_shape[0] - 0.5],
-              origin='lower', cmap='gray', transform=transform + ax.transData, **kwargs)
+              origin='lower', cmap='gray', transform=transform, **kwargs)
 
     if wcs is not None:
         try:
