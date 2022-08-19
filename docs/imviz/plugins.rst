@@ -141,7 +141,7 @@ an interactively selected region. A typical workflow is as follows:
   * Subset: Define a region for background calculation (median) using Subset draw tool
     and select that region using the :guilabel:`Background` dropdown menu. Only regions
     created with the :guilabel:`replace` option are acceptable as background regions
-    (see :ref:`defining-spatial-regions`).
+    (see :ref:`imviz_defining_spatial_regions`).
 
 6. For some JWST and HST images, pixel area in arcsec squared is automatically
    populated in the :guilabel:`Pixel area` field from image metadata. If it does
