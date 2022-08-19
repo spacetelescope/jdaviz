@@ -1,9 +1,10 @@
 import astropy.units as u
 from astropy.table import QTable
 from astropy.wcs import WCS
-import numpy as np
 from glue.core.roi import XRangeROI, RectangularROI
 from glue.core.edit_subset_mode import NewMode
+import numpy as np
+import pytest
 from specutils import Spectrum1D
 
 from jdaviz.configs.specviz.plugins.line_analysis.line_analysis import _coerce_unit
@@ -43,6 +44,7 @@ def test_plugin(specviz_helper, spectrum1d):
             assert len(result_dict.get('uncertainty')) > 0
 
 
+@pytest.mark.filterwarnings('ignore:No observer defined on WCS')
 def test_spatial_subset(cubeviz_helper):
     """
     Tests that the spatial selection returns any valid result, DOES NOT VALIDATE THE VALUE
