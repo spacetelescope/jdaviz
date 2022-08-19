@@ -41,7 +41,7 @@ def test_plugin(specviz_helper, spectrum1d):
             assert len(result_dict.get('uncertainty')) > 0
 
 
-def test_spatial_subset(cubeviz_helper, spectrum1d_cube):
+def test_spatial_subset(cubeviz_helper):
     """
     Tests that the spatial selection returns any valid result, DOES NOT VALIDATE THE VALUE
     Not checking the value attempts to circumvent the issue we ran into here:
