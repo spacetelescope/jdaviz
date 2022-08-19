@@ -135,8 +135,8 @@ can load the regions into Imviz as follows::
     imviz.load_regions_from_file("/path/to/data/myregions.reg")
 
 Unsupported regions will be skipped and trigger a warning. Those that
-failed to load, if any, will be returned as a list of tuples of the
-form ``(region, reason)`` if requested, as follows::
+failed to load, if any, can be returned as a list of tuples of the
+form ``(region, reason)``::
 
     bad_regions = imviz.load_regions_from_file("/path/to/data/myregions.reg", return_bad_regions=True)
 
