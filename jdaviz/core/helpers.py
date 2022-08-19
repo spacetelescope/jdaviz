@@ -278,7 +278,7 @@ class ConfigHelper(HubListener):
 
         return parameters_cube
 
-    def show(self, loc="inline", title=None):
+    def show(self, loc="inline", title=None):  # pragma: no cover
         """Display the Jdaviz application.
 
         Parameters
@@ -372,7 +372,7 @@ class ConfigHelper(HubListener):
         else:
             raise ValueError(f"Unrecognized display location: {loc}")
 
-    def show_in_sidecar(self, anchor=None, title=None):
+    def show_in_sidecar(self, anchor=None, title=None):  # pragma: no cover
         """
         Preserved for backwards compatibility
         Shows Jdaviz in a sidecar with the default anchor: right
@@ -382,7 +382,7 @@ class ConfigHelper(HubListener):
         location = 'sidecar' if anchor is None else f"sidecar:{anchor}"
         return self.show(loc=location, title=title)
 
-    def show_in_new_tab(self, title=None):
+    def show_in_new_tab(self, title=None):  # pragma: no cover
         """
         Preserved for backwards compatibility
         Shows Jdaviz in a sidecar in a new tab to the right

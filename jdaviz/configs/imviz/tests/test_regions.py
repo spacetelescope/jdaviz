@@ -86,9 +86,22 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
         self.verify_region_loaded('MaskedSubset 1')
         assert self.imviz.get_interactive_regions() == {}
 
+        mask[1, 1] = True
+        bad_regions = self.imviz.load_regions([mask], return_bad_regions=True)
+        assert len(bad_regions) == 0
+        self.verify_region_loaded('MaskedSubset 2')
+        assert self.imviz.get_interactive_regions() == {}
+
         # Also test deletion by label here.
         self.imviz._delete_region('MaskedSubset 1')
         self.verify_region_loaded('MaskedSubset 1', count=0)
+
+        # Adding another mask will increment from 2 even when 1 is now available.
+        mask[2, 2] = True
+        bad_regions = self.imviz.load_regions([mask], return_bad_regions=True)
+        assert len(bad_regions) == 0
+        self.verify_region_loaded('MaskedSubset 3')
+        assert self.imviz.get_interactive_regions() == {}
 
         # Deletion of non-existent label is silent no-op.
         self.imviz._delete_region('foo')
