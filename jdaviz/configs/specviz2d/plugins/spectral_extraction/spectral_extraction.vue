@@ -91,7 +91,7 @@
             :items="trace_peak_method_items"
             v-model="trace_peak_method_selected"
             label="Peak Method"
-            hint="Method to use for identifying the peak in each bin"
+            hint="Method to use for identifying the peak cross-dispersion pixel in each bin"
             persistent-hint
           ></v-select>
         </v-row>
