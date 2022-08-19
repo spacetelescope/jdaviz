@@ -139,7 +139,9 @@ an interactively selected region. A typical workflow is as follows:
     and :guilabel:`Annulus width`, respectively. Median of the pixels within
     the annulus region will be used but the annulus shape will not be shown on display.
   * Subset: Define a region for background calculation (median) using Subset draw tool
-    and select that region using the :guilabel:`Background` dropdown menu.
+    and select that region using the :guilabel:`Background` dropdown menu. Only regions
+    created with the :guilabel:`replace` option are acceptable as background regions
+    (see :ref:`imviz_defining_spatial_regions`).
 
 6. For some JWST and HST images, pixel area in arcsec squared is automatically
    populated in the :guilabel:`Pixel area` field from image metadata. If it does
@@ -174,7 +176,7 @@ an interactively selected region. A typical workflow is as follows:
     this page.
   * Radial Profile: Binned average as a function of radius from the center of the region.
   * Radial Profile (Raw): Raw image data points as a function of radius from the center of the region.
-    Caution: having too many data points may cause performance issues with this feature. 
+    Caution: having too many data points may cause performance issues with this feature.
     The exact limitations depend on your hardware.
 
 10. Toggle :guilabel:`Fit Gaussian` on to fit a `~astropy.modeling.functional_models.Gaussian1D`
