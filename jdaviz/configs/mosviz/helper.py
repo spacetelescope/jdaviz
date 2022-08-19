@@ -929,7 +929,7 @@ class Mosviz(ConfigHelper, LineListMixin):
                 warnings.warn("Warning: Applying the value from the redshift "
                               "slider to the output spectra. To avoid seeing this "
                               "warning, explicitly set the apply_slider_redshift "
-                              "argument to True or False.")
+                              "keyword option to True or False.")
 
             return _apply_redshift_to_spectra(spectra, redshift)
 
