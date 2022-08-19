@@ -175,6 +175,7 @@ def pytest_configure(config):
     PYTEST_HEADER_MODULES['pyyaml'] = 'yaml'
     PYTEST_HEADER_MODULES['scikit-image'] = 'skimage'
     PYTEST_HEADER_MODULES['specutils'] = 'specutils'
+    PYTEST_HEADER_MODULES['specreduce'] = 'specreduce'
     PYTEST_HEADER_MODULES['asteval'] = 'asteval'
     PYTEST_HEADER_MODULES['echo'] = 'echo'
     PYTEST_HEADER_MODULES['idna'] = 'idna'
