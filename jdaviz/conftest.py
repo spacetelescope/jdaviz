@@ -4,9 +4,11 @@
 # packagename.test
 
 import warnings
+
 import numpy as np
 import pytest
 from astropy import units as u
+from astropy.io import fits
 from astropy.nddata import CCDData, StdDevUncertainty
 from astropy.wcs import WCS
 from specutils import Spectrum1D, SpectrumCollection
@@ -42,7 +44,7 @@ def specviz2d_helper():
 
 
 @pytest.fixture
-def image_2d_wcs(request):
+def image_2d_wcs():
     return WCS({'CTYPE1': 'RA---TAN', 'CUNIT1': 'deg', 'CDELT1': -0.0002777777778,
                 'CRPIX1': 1, 'CRVAL1': 337.5202808,
                 'CTYPE2': 'DEC--TAN', 'CUNIT2': 'deg', 'CDELT2': 0.0002777777778,
@@ -50,7 +52,7 @@ def image_2d_wcs(request):
 
 
 @pytest.fixture
-def spectral_cube_wcs(request):
+def spectral_cube_wcs():
     # A simple spectral cube WCS used by some tests
     wcs = WCS(naxis=3)
     wcs.wcs.ctype = 'FREQ', 'DEC--TAN', 'RA---TAN'
@@ -59,7 +61,71 @@ def spectral_cube_wcs(request):
 
 
 @pytest.fixture
-def spectrum1d_cube_wcs(request):
+def image_cube_hdu_obj():
+    flux_hdu = fits.ImageHDU(np.ones((10, 10, 10)))
+    flux_hdu.name = 'FLUX'
+
+    mask_hdu = fits.ImageHDU(np.zeros((10, 10, 10)))
+    mask_hdu.name = 'MASK'
+
+    uncert_hdu = fits.ImageHDU(np.ones((10, 10, 10)))
+    uncert_hdu.name = 'ERR'
+
+    wcs = {
+        'WCSAXES': 3, 'CRPIX1': 38.0, 'CRPIX2': 38.0, 'CRPIX3': 1.0,
+        'PC1_1 ': -0.000138889, 'PC2_2 ': 0.000138889,
+        'PC3_3 ': 8.33903304339E-11, 'CDELT1': 1.0, 'CDELT2': 1.0,
+        'CDELT3': 1.0, 'CUNIT1': 'deg', 'CUNIT2': 'deg', 'CUNIT3': 'm',
+        'CTYPE1': 'RA---TAN', 'CTYPE2': 'DEC--TAN', 'CTYPE3': 'WAVE-LOG',
+        'CRVAL1': 205.4384, 'CRVAL2': 27.004754, 'CRVAL3': 3.62159598486E-07,
+        'LONPOLE': 180.0, 'LATPOLE': 27.004754, 'MJDREFI': 0.0,
+        'MJDREFF': 0.0, 'DATE-OBS': '2014-03-30',
+        'RADESYS': 'FK5', 'EQUINOX': 2000.0
+    }
+
+    flux_hdu.header.update(wcs)
+    flux_hdu.header['BUNIT'] = '1E-17 erg*s^-1*cm^-2*Angstrom^-1'
+
+    uncert_hdu.header['BUNIT'] = '1E-17 erg*s^-1*cm^-2*Angstrom^-1'
+
+    return fits.HDUList([fits.PrimaryHDU(), flux_hdu, uncert_hdu, mask_hdu])
+
+
+@pytest.fixture
+def image_cube_hdu_obj_microns():
+    flux_hdu = fits.ImageHDU(np.ones((8, 9, 10)).astype(np.float32))
+    flux_hdu.name = 'FLUX'
+
+    uncert_hdu = fits.ImageHDU(np.zeros((8, 9, 10)).astype(np.float32))
+    uncert_hdu.name = 'ERR'
+
+    mask_hdu = fits.ImageHDU(np.ones((8, 9, 10)).astype(np.uint16))
+    mask_hdu.name = 'MASK'
+
+    wcs = {
+        'WCSAXES': 3, 'CRPIX1': 38.0, 'CRPIX2': 38.0, 'CRPIX3': 1.0,
+        'CRVAL1': 205.4384, 'CRVAL2': 27.004754, 'CRVAL3': 4.890499866509344,
+        'CTYPE1': 'RA---TAN', 'CTYPE2': 'DEC--TAN', 'CTYPE3': 'WAVE',
+        'CUNIT1': 'deg', 'CUNIT2': 'deg', 'CUNIT3': 'um',
+        'CDELT1': 3.61111097865634E-05, 'CDELT2': 3.61111097865634E-05, 'CDELT3': 0.001000000047497451,  # noqa
+        'PC1_1 ': -1.0, 'PC1_2 ': 0.0, 'PC1_3 ': 0,
+        'PC2_1 ': 0.0, 'PC2_2 ': 1.0, 'PC2_3 ': 0,
+        'PC3_1 ': 0, 'PC3_2 ': 0, 'PC3_3 ': 1,
+        'DISPAXIS': 2, 'VELOSYS': -2538.02,
+        'SPECSYS': 'BARYCENT', 'RADESYS': 'ICRS', 'EQUINOX': 2000.0,
+        'LONPOLE': 180.0, 'LATPOLE': 27.004754,
+        'MJDREFI': 0.0, 'MJDREFF': 0.0, 'DATE-OBS': '2014-03-30'}
+
+    flux_hdu.header.update(wcs)
+    flux_hdu.header['BUNIT'] = '1E-17 erg*s^-1*cm^-2*Angstrom^-1'
+
+    uncert_hdu.header['BUNIT'] = '1E-17 erg*s^-1*cm^-2*Angstrom^-1'
+
+    return fits.HDUList([fits.PrimaryHDU(), flux_hdu, uncert_hdu, mask_hdu])
+
+
+@pytest.fixture
+def spectrum1d_cube_wcs():
     # A simple spectrum1D WCS used by some tests
     wcs = WCS(naxis=3)
     wcs.wcs.ctype = 'WAVE-LOG', 'DEC--TAN', 'RA---TAN'

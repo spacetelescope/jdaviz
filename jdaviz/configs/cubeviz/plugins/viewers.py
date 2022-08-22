@@ -20,9 +20,11 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
     # ones are added in glue-jupyter in future that we don't want here.
     inherit_tools = False
 
+    # TODO: 'jdaviz:boxzoommatch' and 'jdaviz:panzoommatch' would be nice
+    # but they break spectrum collapse in Cubeviz if used as-is from Imviz.
     tools = ['jdaviz:homezoom', 'jdaviz:boxzoom',
              'jdaviz:panzoom', 'bqplot:rectangle',
-             'bqplot:circle', 'jdaviz:spectrumperspaxel']
+             'bqplot:circle', 'bqplot:ellipse', 'jdaviz:spectrumperspaxel']
 
     # categories: zoom resets, (zoom, pan), subset, select tools, shortcuts
     # NOTE: zoom and pan are merged here for space consideration and to avoid
@@ -30,7 +32,7 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
     tools_nested = [
                     ['jdaviz:homezoom', 'jdaviz:prevzoom'],
                     ['jdaviz:boxzoom', 'jdaviz:panzoom'],
-                    ['bqplot:circle', 'bqplot:rectangle'],
+                    ['bqplot:circle', 'bqplot:rectangle', 'bqplot:ellipse'],
                     ['jdaviz:spectrumperspaxel'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]

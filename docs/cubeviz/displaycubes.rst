@@ -42,7 +42,7 @@ for each button.
 Selecting Data Set
 ==================
 
-If you have already imported data into Imviz, you can select and deselect data within a viewer.
+If you have already imported data into Cubeviz, you can select and deselect data within a viewer.
 
 .. seealso::
 
@@ -54,6 +54,16 @@ Home
 
 This button will reset your zoom and panning to display the entire image.
 
+.. _cubeviz-box-zoom:
+
+Box Zoom
+========
+
+.. seealso::
+
+    :ref:`Box Zoom in Imviz <imviz_box_zoom>`
+        Documentation on panning and zooming in Imviz.
+
 .. _cubeviz-pan-zoom:
 
 Pan/Zoom
@@ -63,6 +73,8 @@ Pan/Zoom
 
     :ref:`Pan/Zoom in Imviz <imviz_pan_zoom>`
         Documentation on panning and zooming in Imviz.
+
+.. note:: Pan/Zoom API in Imviz is not yet available on Cubeviz.
 
 .. _cubeviz_defining_spatial_regions:
 
@@ -75,9 +87,9 @@ Defining Spatial Regions
         Documentation on defining spatial regions in an image viewer.
 
 Spatial regions allow users to select subsets of the data array for
-specific analysis function in the plugin toolbar. Users can create spatial regions either in Imviz or
+specific analysis function in the plugin toolbar. Users can create spatial regions either in Cubeviz or
 the Jupyter notebook. Once a region is selected, the cube will be collapsed in wavelength space
-over the region, and the resulting spectrum will be displayed in the 1d spectrum viewer at
+over the region, and the resulting spectrum will be displayed in the 1D spectrum viewer at
 the bottom of the UI.
 
 .. image:: img/subset_creation.png

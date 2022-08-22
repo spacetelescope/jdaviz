@@ -1,7 +1,7 @@
 import numpy as np
 
 from glue.core import BaseData
-from jdaviz.core.helpers import ConfigHelper
+from jdaviz.core.helpers import ImageConfigHelper
 from jdaviz.configs.default.plugins.line_lists.line_list_mixin import LineListMixin
 from jdaviz.configs.specviz import Specviz
 from jdaviz.core.events import (AddDataMessage,
@@ -10,7 +10,7 @@ from jdaviz.core.events import (AddDataMessage,
 __all__ = ['Cubeviz', 'CubeViz']
 
 
-class Cubeviz(ConfigHelper, LineListMixin):
+class Cubeviz(ImageConfigHelper, LineListMixin):
     """Cubeviz Helper class"""
     _default_configuration = 'cubeviz'
 

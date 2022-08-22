@@ -18,6 +18,10 @@ New Features
 Cubeviz
 ^^^^^^^
 
+- Cubeviz now has ellipse spatial Subset selection tool. [#1571]
+
+- Cubeviz now has ``load_regions_from_file()`` and ``load_regions()`` like Imviz. [#1571]
+
 Imviz
 ^^^^^
 
