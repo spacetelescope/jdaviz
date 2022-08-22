@@ -350,3 +350,8 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
             raise ValueError(f'{data_label} not found in data collection external links')
 
         return link_type
+
+    def iter_image_layer_indices(self):
+        for i, lyr in enumerate(self.layers):
+            if layer_is_image_data(lyr.layer):
+                yield i

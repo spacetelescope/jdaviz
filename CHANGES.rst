@@ -10,6 +10,9 @@ Cubeviz
 Imviz
 ^^^^^
 
+- You can now set ``viewer.apply_to_all_layers = True`` to apply stretch, cuts, or colormap
+  changes to all layers in the given viewer at once. [#1594]
+
 Mosviz
 ^^^^^^
 

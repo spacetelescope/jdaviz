@@ -37,6 +37,10 @@ class AstrowidgetsImageViewerMixin:
         # marker shape not settable: https://github.com/glue-viz/glue/issues/2202
         self.marker = {'color': 'red', 'alpha': 1.0, 'markersize': 5}
 
+        # NOTE: This is not from Astrowidgets but specific to glue implementation.
+        # TODO: Turn this into a property with strict setter?
+        self.apply_to_all_layers = False
+
     def save(self, filename):
         """Save out the current image view to given PNG filename."""
         if not filename.lower().endswith('.png'):
@@ -247,8 +251,12 @@ class AstrowidgetsImageViewerMixin:
         if cm is None:
             raise ValueError(f"Invalid colormap '{cmap}', must be one of {self.colormap_options}")
 
-        i_top = get_top_layer_index(self)
-        self.state.layers[i_top].cmap = cm
+        if not self.apply_to_all_layers:
+            i_top = get_top_layer_index(self)
+            self.state.layers[i_top].cmap = cm
+        else:
+            for i in self.iter_image_layer_indices():
+                self.state.layers[i].cmap = cm
 
     @property
     def stretch_options(self):
@@ -291,8 +299,12 @@ class AstrowidgetsImageViewerMixin:
         elif val not in valid_vals:
             raise ValueError(f"Invalid stretch '{val}', must be one of {valid_vals}")
 
-        i_top = get_top_layer_index(self)
-        self.state.layers[i_top].stretch = val
+        if not self.apply_to_all_layers:
+            i_top = get_top_layer_index(self)
+            self.state.layers[i_top].stretch = val
+        else:
+            for i in self.iter_image_layer_indices():
+                self.state.layers[i].stretch = val
 
     @property
     def autocut_options(self):
@@ -314,8 +326,6 @@ class AstrowidgetsImageViewerMixin:
     # TODO: Support astropy.visualization, see https://github.com/glue-viz/glue/issues/2218
     @cuts.setter
     def cuts(self, val):
-        i_top = get_top_layer_index(self)
-
         if isinstance(val, str):  # autocut
             if val == 'minmax':
                 val = 100
@@ -329,13 +339,27 @@ class AstrowidgetsImageViewerMixin:
                 val = 90
             else:
                 raise ValueError(f"Invalid autocut '{val}', must be one of {self.autocut_options}")
-            self.state.layers[i_top].percentile = val
+
+            if not self.apply_to_all_layers:
+                i_top = get_top_layer_index(self)
+                self.state.layers[i_top].percentile = val
+            else:
+                for i in self.iter_image_layer_indices():
+                    self.state.layers[i].percentile = val
+
         else:  # (low, high)
             if (not isinstance(val, (list, tuple)) or len(val) != 2
                     or not np.all([isinstance(x, (int, float)) for x in val])):
                 raise ValueError(f"Invalid cut levels {val}, must be (low, high)")
-            self.state.layers[i_top].v_min = val[0]
-            self.state.layers[i_top].v_max = val[1]
+
+            if not self.apply_to_all_layers:
+                i_top = get_top_layer_index(self)
+                self.state.layers[i_top].v_min = val[0]
+                self.state.layers[i_top].v_max = val[1]
+            else:
+                for i in self.iter_image_layer_indices():
+                    self.state.layers[i].v_min = val[0]
+                    self.state.layers[i].v_max = val[1]
 
     @property
     def marker(self):
