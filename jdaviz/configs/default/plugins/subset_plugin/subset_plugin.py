@@ -1,5 +1,4 @@
-import math
-
+import numpy as np
 from glue.core.message import EditSubsetMessage, SubsetUpdateMessage
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode)
@@ -132,6 +131,7 @@ class SubsetPlugin(PluginTemplateMixin):
         subset_type = ''
         subset_definition = []
         self.is_editable = False
+        _around_decimals = 6  # Avoid 30 degrees from coming back as 29.999999999999996
 
         if isinstance(subset_state, RoiSubsetState):
             if isinstance(subset_state.roi, CircularROI):
@@ -148,7 +148,7 @@ class SubsetPlugin(PluginTemplateMixin):
                     val = getattr(subset_state.roi, real_att)
                     subset_definition.append(
                         {"name": att, "att": real_att, "value": val, "orig": val})
-                theta = math.degrees(subset_state.roi.theta)
+                theta = np.around(np.degrees(subset_state.roi.theta), decimals=_around_decimals)
                 subset_definition.append(
                     {"name": "Angle", "att": "theta", "value": theta, "orig": theta})
                 self.is_editable = True
@@ -158,7 +158,7 @@ class SubsetPlugin(PluginTemplateMixin):
                 yc = subset_state.roi.yc
                 rx = subset_state.roi.radius_x
                 ry = subset_state.roi.radius_y
-                theta = math.degrees(subset_state.roi.theta)
+                theta = np.around(np.degrees(subset_state.roi.theta), decimals=_around_decimals)
                 subset_definition = [
                     {"name": "X Center", "att": "xc", "value": xc, "orig": xc},
                     {"name": "Y Center", "att": "yc", "value": yc, "orig": yc},
@@ -210,7 +210,7 @@ class SubsetPlugin(PluginTemplateMixin):
 
             for d_att in subset_definition:
                 if d_att["att"] == 'theta':  # Humans use degrees but glue uses radians
-                    d_val = math.radians(d_att["value"])
+                    d_val = np.radians(d_att["value"])
                 else:
                     d_val = d_att["value"]
 
