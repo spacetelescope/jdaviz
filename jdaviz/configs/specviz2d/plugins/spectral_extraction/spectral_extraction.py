@@ -392,14 +392,14 @@ class SpectralExtraction(PluginTemplateMixin):
     def _set_create_kwargs(self, **kwargs):
         invalid_kwargs = [k for k in kwargs.keys() if not hasattr(self, k)]
         if len(invalid_kwargs):
-            raise ValueError(f"{invalid_kwargs} are not valid attributes to pass as a kwargs")
+            raise ValueError(f"{invalid_kwargs} are not valid attributes to pass as kwargs")
 
         for k, v in kwargs.items():
             setattr(self, k, v)
 
     def import_trace(self, trace):
         """
-        Import the input parameters from an existing specreduce trace object into the plugin.
+        Import the input parameters from an existing specreduce Trace object into the plugin.
 
         Parameters
         ----------
@@ -422,7 +422,8 @@ class SpectralExtraction(PluginTemplateMixin):
 
     def export_trace(self, add_data=False, **kwargs):
         """
-        Create a trace object from the input parameters defined in the plugin.
+        Create a specreduce Trace object from the input parameters
+        defined in the plugin.
 
         Parameters
         ----------
@@ -467,7 +468,7 @@ class SpectralExtraction(PluginTemplateMixin):
 
     def import_bg(self, bg):
         """
-        Import the input parameters from an existing specreduce background object into the plugin.
+        Import the input parameters from an existing specreduce Background object into the plugin.
 
         Parameters
         ----------
@@ -503,7 +504,7 @@ class SpectralExtraction(PluginTemplateMixin):
 
     def export_bg(self, **kwargs):
         """
-        Create a specreduce background object from the input parameters defined in the plugin.
+        Create a specreduce Background object from the input parameters defined in the plugin.
 
         Parameters
         ----------
@@ -614,7 +615,7 @@ class SpectralExtraction(PluginTemplateMixin):
 
     def export_extract(self, **kwargs):
         """
-        Create a specreduce.extract object from the input parameters defined in the plugin.
+        Create a specreduce extraction object from the input parameters defined in the plugin.
         """
         self._set_create_kwargs(**kwargs)
         if len(kwargs) and self.active_step != 'ext':
@@ -635,7 +636,6 @@ class SpectralExtraction(PluginTemplateMixin):
             Whether to add the resulting spectrum to the application, according to the options
             defined in the plugin.
         """
-        # TODO: update to call self.export_extract(**kwargs)
         extract = self.export_extract(**kwargs)
         spectrum = extract.spectrum
         # Specreduce returns a spectral axis in pixels, so we'll replace with input spectral_axis
