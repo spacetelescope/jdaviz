@@ -1179,7 +1179,7 @@ class Application(VuetifyTemplate, HubListener):
         # resize tray items
         for tray_item in self.state.tray_items:
             # access the actual plugin object (there is no store for plugins)
-            tray_obj = self.widgets.get(tray_item['widget'].split('IPY_MODEL_')[1])
+            tray_obj = widget_serialization['from_json'](tray_item['widget'], None)
             for bqplot_fig in tray_obj.bqplot_figs_resize:
                 bqplot_fig.layout.height = '99.9%'
                 bqplot_fig.layout.height = '100%'
