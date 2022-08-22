@@ -11,7 +11,9 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
 from jdaviz.core.custom_traitlets import IntHandleEmpty
 from jdaviz.core.marks import PluginLine
 
+from astropy.nddata import VarianceUncertainty
 from specutils import Spectrum1D
+from specutils.analysis.uncertainty import _convert_uncertainty
 from specreduce import tracing
 from specreduce import background
 from specreduce import extract
@@ -623,10 +625,10 @@ class SpectralExtraction(PluginTemplateMixin):
         if self.ext_type_selected == 'Boxcar':
             ext = extract.BoxcarExtract(inp_sp2d.data, trace, width=self.ext_width)
         elif self.ext_type_selected == 'Optimal':
-            # TODO: convert uncertainty depending on type?
-            variance = inp_sp2d.uncertainty
-            if variance is None:
+            if inp_sp2d.uncertainty is None:
                 variance = np.ones_like(inp_sp2d.data)
+            else:
+                variance = _convert_uncertainty(inp_sp2d.uncertainty, VarianceUncertainty)
             ext = extract.OptimalExtract(inp_sp2d.data, trace, variance=variance)
         else:
             raise NotImplementedError(f"extraction type '{self.ext_type_selected}' not supported")  # noqa
