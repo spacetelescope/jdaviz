@@ -1162,6 +1162,9 @@ class Application(VuetifyTemplate, HubListener):
         """
         Forces any rendered ``Bqplot`` instances to resize themselves.
         """
+        def get_widget(ipymodel):
+            return getattr(self, '_active_widgets', self.widgets).get(ipymodel)
+
         def resize(stack_items):
             for stack in stack_items:
                 for viewer_item in stack.get('viewers'):
@@ -1179,7 +1182,7 @@ class Application(VuetifyTemplate, HubListener):
         # resize tray items
         for tray_item in self.state.tray_items:
             # access the actual plugin object (there is no store for plugins)
-            tray_obj = self.widgets.get(tray_item['widget'].split('IPY_MODEL_')[1])
+            tray_obj = get_widget(tray_item['widget'].split('IPY_MODEL_')[1])
             for bqplot_fig in tray_obj.bqplot_figs_resize:
                 bqplot_fig.layout.height = '99.9%'
                 bqplot_fig.layout.height = '100%'

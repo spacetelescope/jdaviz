@@ -77,6 +77,8 @@ Bug Fixes
   and visibility states are now always adopted from the existing entry that would be overwritten.
   [#1538]
 
+- Fix support for ipywidgets 8 (while maintaining support for ipywidgets 7). [#1592]
+
 Cubeviz
 ^^^^^^^
 
