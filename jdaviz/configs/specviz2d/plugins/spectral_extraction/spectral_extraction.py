@@ -474,7 +474,7 @@ class SpectralExtraction(PluginTemplateMixin):
             seps2 = trace.trace - bg.traces[1].trace
             if np.all(seps1 == seps1[0]) and np.all(seps2 == seps1[0]):
                 self.bg_type_selected = 'TwoSided'
-                self.bg_separation = int(seps1[0])
+                self.bg_separation = abs(int(seps1[0]))
             else:  # pragma: no cover
                 raise NotImplementedError("backgrounds with custom traces not supported (could not detect common separation)")  # noqa
         elif len(bg.traces) == 1:
