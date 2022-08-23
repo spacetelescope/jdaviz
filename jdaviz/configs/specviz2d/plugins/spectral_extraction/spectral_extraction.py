@@ -406,7 +406,7 @@ class SpectralExtraction(PluginTemplateMixin):
         trace : specreduce.tracing.Trace
             Trace object to import
         """
-        if not isinstance(trace, tracing.Trace):
+        if not isinstance(trace, tracing.Trace):  # pragma: no cover
             raise TypeError("trace must be a specreduce.tracing.Trace object")
 
         if isinstance(trace, tracing.FlatTrace):
@@ -417,7 +417,7 @@ class SpectralExtraction(PluginTemplateMixin):
             self.trace_pixel = trace.guess
             self.trace_window = trace.window
             self.trace_bins = trace.bins
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(f"trace of type {trace.__class__.__name__} not supported")
 
     def export_trace(self, add_data=False, **kwargs):
@@ -475,7 +475,7 @@ class SpectralExtraction(PluginTemplateMixin):
         bg : specreduce.background.Background
             Background object to import
         """
-        if not isinstance(bg, background.Background):
+        if not isinstance(bg, background.Background):  # pragma: no cover
             raise TypeError("bg must be a specreduce.background.Background object")
 
         # TODO: should we detect/set the referenced dataset?
@@ -487,7 +487,7 @@ class SpectralExtraction(PluginTemplateMixin):
             if np.all(seps1 == seps1[0]) and np.all(seps2 == seps1[0]):
                 self.bg_type_selected = 'TwoSided'
                 self.bg_separation = int(seps1[0])
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError("backgrounds with custom traces not supported (could not detect common separation)")  # noqa
         elif len(bg.traces) == 1:
             # either one_sided or trace, let's see if its constant offset from the trace
@@ -495,9 +495,9 @@ class SpectralExtraction(PluginTemplateMixin):
             if np.all(seps == seps[0]):
                 self.bg_type_selected = 'OneSided'
                 self.bg_separation = int(seps[0])
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError("backgrounds with custom traces not supported (could not detect common separation)")  # noqa
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError("backgrounds with more than 2 traces not supported")
 
         self.bg_width = bg.width
@@ -531,7 +531,7 @@ class SpectralExtraction(PluginTemplateMixin):
                                                  trace,
                                                  self.bg_separation,
                                                  width=self.bg_width)
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(f"bg_type={self.bg_type_selected} not implemented")
 
         return bg
@@ -606,7 +606,7 @@ class SpectralExtraction(PluginTemplateMixin):
         ext : specreduce.extract.BoxcarExtract
             Extract object to import
         """
-        if not isinstance(ext, extract.BoxcarExtract):
+        if not isinstance(ext, extract.BoxcarExtract):  # pragma: no cover
             # TODO: add support for Optimal/Horne
             raise TypeError("ext must be a specreduce.extract.BoxcarExtract object")
 

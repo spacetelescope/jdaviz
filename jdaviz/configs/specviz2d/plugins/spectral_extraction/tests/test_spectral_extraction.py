@@ -38,6 +38,8 @@ def test_plugin(specviz2d_helper):
     trace = pext.export_trace()
     assert isinstance(trace, tracing.KosmosTrace)
     assert trace.guess == 27
+    trace = pext.export_trace(trace_pixel=26)
+    assert trace.guess == 26
     trace.guess = 28
     pext.import_trace(trace)
     assert pext.trace_pixel == 28
@@ -50,21 +52,29 @@ def test_plugin(specviz2d_helper):
     for mark in ['bg1_center', 'bg2_center']:
         assert pext.marks[mark].visible is True
         assert len(pext.marks[mark].x) > 0
+    bg = pext.export_bg()
+    pext.import_bg(bg)
+    assert pext.bg_type_selected == 'TwoSided'
+
     pext.bg_type_selected = 'Manual'
     assert len(pext.marks['bg1_center'].x) == 0
     assert len(pext.marks['bg2_center'].x) == 0
     assert len(pext.marks['bg1_lower'].x) > 0
+
     pext.bg_type_selected = 'OneSided'
     # only bg1 is populated for OneSided
     assert len(pext.marks['bg1_center'].x) > 0
     assert len(pext.marks['bg2_center'].x) == 0
 
     # create background image
+    pext.bg_separation = 4
     bg = pext.export_bg()
     assert isinstance(bg, background.Background)
     assert len(bg.traces) == 1
-    assert bg.traces[0].trace[0] == 28 + 5
+    assert bg.traces[0].trace[0] == 28 + 4
     assert bg.width == 3
+    bg = pext.export_bg(bg_width=5)
+    assert bg.width == 5
     bg.width = 4
     pext.import_bg(bg)
     assert pext.bg_width == 4
