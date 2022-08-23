@@ -36,6 +36,9 @@ class SpectralExtraction(PluginTemplateMixin):
 
     trace_pixel = IntHandleEmpty(0).tag(sync=True)
 
+    trace_peak_method_items = List(['Gaussian', 'Centroid', 'Max']).tag(sync=True)
+    trace_peak_method_selected = Unicode('Gaussian').tag(sync=True)
+
     trace_bins = IntHandleEmpty(20).tag(sync=True)
     trace_window = IntHandleEmpty(0).tag(sync=True)
 
@@ -286,7 +289,8 @@ class SpectralExtraction(PluginTemplateMixin):
         return self._marks
 
     @observe('trace_dataset_selected', 'trace_type_selected',
-             'trace_pixel', 'trace_bins', 'trace_window', 'active_step')
+             'trace_pixel', 'trace_peak_method_selected',
+             'trace_bins', 'trace_window', 'active_step')
     def _interaction_in_trace_step(self, event={}):
         if not self.plugin_opened or not self._do_marks:
             return
@@ -397,8 +401,9 @@ class SpectralExtraction(PluginTemplateMixin):
         elif self.trace_type_selected == 'Auto':
             trace = tracing.KosmosTrace(self.trace_dataset.selected_obj.data,
                                         guess=self.trace_pixel,
-                                        bins=self.trace_bins,
-                                        window=self.trace_window)
+                                        bins=int(self.trace_bins),
+                                        window=self.trace_window,
+                                        peak_method=self.trace_peak_method_selected.lower())
 
         else:
             raise NotImplementedError(f"trace_type={self.trace_type_selected} not implemented")
@@ -515,8 +520,8 @@ class SpectralExtraction(PluginTemplateMixin):
         inp_sp2d = self._get_ext_input_spectrum()
         trace = self._get_ext_trace()
 
-        boxcar = extract.BoxcarExtract()
-        spectrum = boxcar(inp_sp2d.data, trace, width=self.ext_width)
+        boxcar = extract.BoxcarExtract(inp_sp2d.data, trace)
+        spectrum = boxcar(width=self.ext_width)
         # Specreduce returns a spectral axis in pixels, so we'll replace with input spectral_axis
         # NOTE: this is currently disabled until proper handling of axes-limit linking between
         # the 2D spectrum image (plotted in pixels) and a 1D spectrum (plotted in freq or
