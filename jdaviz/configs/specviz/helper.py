@@ -63,7 +63,7 @@ class Specviz(ConfigHelper, LineListMixin):
                 warnings.warn("Applying the value from the redshift "
                               "slider to the output spectra. To avoid seeing this "
                               "warning, explicitly set the apply_slider_redshift "
-                              "argument to True or False.")
+                              "keyword option to True or False.")
 
             if data_label is not None:
                 output_spectra = output_spectra[data_label]
