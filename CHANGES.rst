@@ -7,8 +7,8 @@ New Features
 - New popout locations display Jdaviz in a detached popup window (``popout:window``)
   or browser tab (``popout:tab``). [#1503]
 
-- Subset Tools plugin now allows basic editing and also shows rotation for certain shapes. 
-  [#1427, #1574]
+- Subset Tools plugin now allows basic editing, including rotation for certain shapes.
+  [#1427, #1574, #1587]
 
 - New ``jdaviz.core.region_translators.regions2roi()`` function to convert certain
   ``regions`` shapes into ``glue`` ROIs. [#1463]

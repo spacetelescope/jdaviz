@@ -80,18 +80,18 @@ def test_region_from_subset_3d(cubeviz_helper):
     # Mimic user changing something in Subset Tool GUI.
     subset_plugin._set_value_in_subset_definition(0, "Xmin", "value", 2)
     subset_plugin._set_value_in_subset_definition(0, "Ymin", "value", 0)
+    subset_plugin._set_value_in_subset_definition(0, "Angle", "value", 45)  # ccw deg
     # "orig" is unchanged until user clicks Update button.
     assert subset_plugin._get_value_from_subset_definition(0, "Xmin", "orig") == 1
     assert subset_plugin._get_value_from_subset_definition(0, "Ymin", "orig") == -0.2
+    assert subset_plugin._get_value_from_subset_definition(0, "Angle", "orig") == 0
     subset_plugin.vue_update_subset()
     for key in ("orig", "value"):
         assert subset_plugin._get_value_from_subset_definition(0, "Xmin", key) == 2
         assert subset_plugin._get_value_from_subset_definition(0, "Xmax", key) == 3.5
         assert subset_plugin._get_value_from_subset_definition(0, "Ymin", key) == 0
         assert subset_plugin._get_value_from_subset_definition(0, "Ymax", key) == 3.3
-        # TODO: Modify angle too when upstream is fixed.
-        # https://github.com/glue-viz/glue-astronomy/issues/74
-        assert subset_plugin._get_value_from_subset_definition(0, "Angle", key) == 0
+        assert subset_plugin._get_value_from_subset_definition(0, "Angle", key) == 45
 
     subsets = cubeviz_helper.app.get_subsets_from_viewer('flux-viewer')
     reg = subsets.get('Subset 1')
@@ -100,7 +100,7 @@ def test_region_from_subset_3d(cubeviz_helper):
     assert_allclose(reg.center.y, 1.65)
     assert_allclose(reg.width, 1.5)
     assert_allclose(reg.height, 3.3)
-    assert_allclose(reg.angle.value, 0)
+    assert_allclose(reg.angle.to_value(u.deg), 45)  # Might be stored in radians
 
     # Circular Subset
     flux_viewer = cubeviz_helper.app.get_viewer("flux-viewer")
