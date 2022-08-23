@@ -103,7 +103,7 @@
   /*cursor: pointer;*/
 }
 .viewer-label:last-child {
-  border-bottom-left-radius: 4px;
+  padding-bottom: 2px;
 }
 .viewer-label:hover {
   background-color: #e5e5e5;
