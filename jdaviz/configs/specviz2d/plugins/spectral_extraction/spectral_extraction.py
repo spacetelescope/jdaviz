@@ -303,7 +303,7 @@ class SpectralExtraction(PluginTemplateMixin):
             return
 
         try:
-            trace = self.export_trace(add_data=False)
+            trace = self.export_trace()
         except Exception:
             # NOTE: ignore error, but will be raised when clicking ANY of the export buttons
             self.marks['trace'].clear()
@@ -420,16 +420,10 @@ class SpectralExtraction(PluginTemplateMixin):
         else:  # pragma: no cover
             raise NotImplementedError(f"trace of type {trace.__class__.__name__} not supported")
 
-    def export_trace(self, add_data=False, **kwargs):
+    def export_trace(self, **kwargs):
         """
         Create a specreduce Trace object from the input parameters
         defined in the plugin.
-
-        Parameters
-        ----------
-        add_data : bool
-            Whether to add the resulting trace to the application, according to the options
-            defined in the plugin.
         """
         self._set_create_kwargs(**kwargs)
         if len(kwargs) and self.active_step != 'trace':
@@ -449,20 +443,14 @@ class SpectralExtraction(PluginTemplateMixin):
         else:
             raise NotImplementedError(f"trace_type={self.trace_type_selected} not implemented")
 
-        if add_data:
-            raise NotImplementedError("exporting trace to data entry not yet supported")
-
         return trace
-
-    def vue_create_trace(self, *args):
-        self.export_trace(add_data=True)
 
     def _get_bg_trace(self):
         if self.bg_type_selected == 'Manual':
             trace = tracing.FlatTrace(self.trace_dataset.selected_obj.data,
                                       self.bg_trace_pixel)
         else:
-            trace = self.export_trace(add_data=False)
+            trace = self.export_trace()
 
         return trace
 
@@ -589,7 +577,7 @@ class SpectralExtraction(PluginTemplateMixin):
         self.export_bg_sub(add_data=True)
 
     def _get_ext_trace(self):
-        return self.export_trace(add_data=False)
+        return self.export_trace()
 
     def _get_ext_input_spectrum(self):
         if self.ext_dataset_selected == 'From Plugin':
