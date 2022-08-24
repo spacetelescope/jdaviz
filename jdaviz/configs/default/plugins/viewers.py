@@ -58,6 +58,8 @@ class JdavizViewerMixin:
             else:
                 # default to not plotting with as_steps (despite glue defaulting to True)
                 layer_state.as_steps = False
+            # whenever as_steps changes, we need to redraw the uncertainties (if enabled)
+            layer_state.add_callback('as_steps', self._show_uncertainty_changed)
 
     def _expected_subset_layer_default(self, layer_state):
         if self.__class__.__name__ == 'CubevizImageView':

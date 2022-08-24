@@ -265,8 +265,18 @@ def test_plot_uncertainties(specviz_helper, spectrum1d):
     assert len([m for m in specviz_viewer.figure.marks if isinstance(m, LineUncertainties)]) == 0
 
     specviz_viewer.state.show_uncertainty = True
+    uncert_marks = [m for m in specviz_viewer.figure.marks if isinstance(m, LineUncertainties)]
+    assert len(uncert_marks) == 1
+    # mark has a lower and upper boundary, but each should have the same length as the spectrum
+    assert len(uncert_marks[0].x[0]) == len(spectrum1d.flux)
 
-    assert len([m for m in specviz_viewer.figure.marks if isinstance(m, LineUncertainties)]) == 1
+    # enable as-steps and make sure doesn't crash (won't change the number of marks)
+    specviz_viewer.state.layers[0].as_steps = True
+    specviz_viewer._plot_uncertainties()
+    uncert_marks = [m for m in specviz_viewer.figure.marks if isinstance(m, LineUncertainties)]
+    assert len(uncert_marks) == 1
+    # now the mark should have double the length as its drawn on the bin edges
+    assert len(uncert_marks[0].x[0]) == len(spectrum1d.flux) * 2
 
     specviz_viewer.state.show_uncertainty = False
 
