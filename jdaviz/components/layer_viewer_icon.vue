@@ -1,5 +1,5 @@
 <template>
-  <span :class="prevent_invert_if_dark ? '' : 'invert-if-dark'" :style="span_style+'; color: '+color+'; '+borderStyle">
+  <span v-if="icon !== undefined" :class="prevent_invert_if_dark ? '' : 'invert-if-dark'" :style="span_style+'; color: '+color+'; '+borderStyle">
         {{String(icon).toUpperCase()}}
   </span>
 </template>
