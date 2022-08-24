@@ -1,4 +1,4 @@
-2.9 (unreleased)
+2.9 (2022-08-24)
 ================
 
 New Features
@@ -38,9 +38,6 @@ Mosviz
 
 - NIRISS parser now sorts FITS files by header instead of file name. [#819]
 
-Specviz
-^^^^^^^
-
 Specviz2d
 ^^^^^^^^^
 
@@ -54,9 +51,6 @@ Specviz2d
 API Changes
 -----------
 
-Cubeviz
-^^^^^^^
-
 Imviz
 ^^^^^
 
@@ -65,12 +59,6 @@ Imviz
   respectively. This is because some region shapes can be made interactive now even though
   they are loaded from API. The new methods have slightly different API signatures, please
   read the API documentation carefully before use. [#1463]
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
 
 Bug Fixes
 ---------
@@ -94,12 +82,6 @@ Cubeviz
 - Increased spectral slider performance considerably. [#1550]
 
 - Fixed the spectral subset highlighting of spatial subsets in the profile viewer. [#1528]
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
 
 Specviz
 ^^^^^^^
