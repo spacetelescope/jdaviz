@@ -31,7 +31,7 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
     tools_nested = [
                     ['jdaviz:homezoom', 'jdaviz:prevzoom'],
                     ['jdaviz:boxzoommatch', 'jdaviz:boxzoom'],
-                    ['jdaviz:panzoommatch', 'jdaviz:panzoom'],
+                    ['jdaviz:panzoommatch', 'jdaviz:imagepanzoom'],
                     ['bqplot:circle', 'bqplot:rectangle', 'bqplot:ellipse'],
                     ['jdaviz:blinkonce', 'jdaviz:contrastbias'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export', 'jdaviz:sidebar_compass']

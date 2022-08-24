@@ -4,6 +4,7 @@ from echo import delay_callback
 
 from glue.config import viewer_tool
 from glue.viewers.common.tool import CheckableTool
+from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.utils import debounced
 
 from jdaviz.core.tools import BoxZoom, PanZoom
@@ -14,11 +15,16 @@ ICON_DIR = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'ic
 
 
 class _MatchedZoomMixin:
+    def _iter_image_viewers(self):
+        for viewer in self.viewer.session.application.viewers:
+            if isinstance(viewer, BqplotImageView):
+                yield viewer
+
     def save_prev_zoom(self):
         # override the behavior in core.tools._BaseZoomHistory to store viewer limits
         # for all referenced viewers.  This enables the previous zoom button to work for
         # a viewer whose zoom was changed by a MatchedZoom instance from another viewer
-        for viewer in self.viewer.session.application.viewers:
+        for viewer in self._iter_image_viewers():
             viewer._prev_limits = (viewer.state.x_min, viewer.state.x_max,
                                    viewer.state.y_min, viewer.state.y_max)
 
@@ -30,18 +36,20 @@ class _MatchedZoomMixin:
         self.viewer.state.add_callback('y_min', self.on_limits_change)
         self.viewer.state.add_callback('y_max', self.on_limits_change)
 
+        # NOTE: For Imviz only.
         # Set the reference data in other viewers to be the same as the current viewer.
         # If adding the data to the viewer, make sure it is not actually shown since the
         # user didn't request it.
-        for viewer in self.viewer.session.application.viewers:
-            if viewer is not self.viewer:
-                if self.viewer.state.reference_data not in viewer.state.layers_data:
-                    viewer.add_data(self.viewer.state.reference_data)
-                    for layer in viewer.state.layers:
-                        if layer.layer is self.viewer.state.reference_data:
-                            layer.visible = False
-                            break
-                viewer.state.reference_data = self.viewer.state.reference_data
+        if self.viewer.jdaviz_app.config == 'imviz':
+            for viewer in self._iter_image_viewers():
+                if viewer is not self.viewer:
+                    if self.viewer.state.reference_data not in viewer.state.layers_data:
+                        viewer.add_data(self.viewer.state.reference_data)
+                        for layer in viewer.state.layers:
+                            if layer.layer is self.viewer.state.reference_data:
+                                layer.visible = False
+                                break
+                    viewer.state.reference_data = self.viewer.state.reference_data
 
         # Trigger a sync so the initial limits match
         self.on_limits_change()
@@ -56,7 +64,7 @@ class _MatchedZoomMixin:
         super().deactivate()
 
     def on_limits_change(self, *args):
-        for viewer in self.viewer.session.application.viewers:
+        for viewer in self._iter_image_viewers():
             if viewer is not self.viewer:
                 with delay_callback(viewer.state, 'x_min', 'x_max', 'y_min', 'y_max'):
                     viewer.state.x_min = self.viewer.state.x_min
@@ -132,7 +140,7 @@ class MatchPanZoom(_MatchedZoomMixin, ImagePanZoom):
     icon = os.path.join(ICON_DIR, 'panzoom_match.svg')
     tool_id = 'jdaviz:panzoommatch'
     action_text = 'Pan, matching between viewers'
-    tool_tip = 'Pan (click-drag) and Zoom (scroll) in this viewer to see the same regions in other viewers'  # noqa
+    tool_tip = 'Pan (click-drag), zoom (scroll), and center (click) in this viewer to see the same regions in other viewers'  # noqa
 
 
 @viewer_tool
