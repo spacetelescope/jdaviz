@@ -8,7 +8,7 @@
           </div>
         </v-col>
         <v-col v-if="multiselect" cols="4" style="text-align: center; padding: 0">
-          <v-icon v-for="icon in sync.icons">{{icon}}</v-icon>
+          <j-layer-viewer-icon v-for="icon in sync.icons" :icon="icon" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
         </v-col>
       </v-row>
     </div>

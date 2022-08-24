@@ -62,14 +62,14 @@
           <div v-if="app_settings.viewer_labels" class='viewer-label-container'>
             <div v-if="Object.keys(viewer_icons).length > 1" class="viewer-label invert-if-dark">
               <j-tooltip span_style="white-space: nowrap">
-                <v-icon class="invert-if-dark" style="float: right">{{viewer_icons[[viewer.id]]}}</v-icon>
+                <j-layer-viewer-icon span_style="float: right;" :icon="viewer_icons[viewer.id]"></j-layer-viewer-icon>
               </j-tooltip>
               <span class="invert-if-dark" style="margin-left: 24px; margin-right: 32px; line-height: 24px">{{viewer.reference || viewer.id}}</span>
             </div>
 
             <div v-for="(layer_info, layer_name) in viewer.visible_layers" class="viewer-label invert-if-dark">
               <j-tooltip span_style="white-space: nowrap">
-                <v-icon class="invert-if-dark" style="float: right" :color="layer_info.color">{{layer_icons[layer_name]}}</v-icon>
+                <j-layer-viewer-icon span_style="float: right;" :icon="layer_icons[layer_name]" :linewidth="layer_info.linewidth" :linestyle="'solid'" :color="layer_info.color"></j-layer-viewer-icon>
               </j-tooltip>
               <span class="invert-if-dark" style="margin-left: 24px; margin-right: 32px; line-height: 24px">
                 <v-icon v-if="layer_info.prefix_icon" dense>
@@ -103,7 +103,7 @@
   /*cursor: pointer;*/
 }
 .viewer-label:last-child {
-  border-bottom-left-radius: 4px;
+  padding-bottom: 2px;
 }
 .viewer-label:hover {
   background-color: #e5e5e5;

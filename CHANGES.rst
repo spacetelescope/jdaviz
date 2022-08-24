@@ -4,6 +4,8 @@
 New Features
 ------------
 
+- Layer icons now show indication of linewidth. [#1593]
+
 Cubeviz
 ^^^^^^^
 

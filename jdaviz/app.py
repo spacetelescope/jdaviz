@@ -68,6 +68,7 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'j-docs-link': 'components/docs_link.vue',
                      'j-viewer-data-select': 'components/viewer_data_select.vue',
                      'j-viewer-data-select-item': 'components/viewer_data_select_item.vue',
+                     'j-layer-viewer-icon': 'components/layer_viewer_icon.vue',
                      'j-tray-plugin': 'components/tray_plugin.vue',
                      'j-play-pause-widget': 'components/play_pause_widget.vue',
                      'j-plugin-section-header': 'components/plugin_section_header.vue',
@@ -146,8 +147,8 @@ class ApplicationState(State):
         'checktoradial': read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml')
     }, docstring="Custom application icons")
 
-    viewer_icons = DictCallbackProperty({}, docstring="Indexed icons for viewers across the app")
-    layer_icons = DictCallbackProperty({}, docstring="Indexed icons for layers across the app")
+    viewer_icons = DictCallbackProperty({}, docstring="Indexed icons (numbers) for viewers across the app")  # noqa
+    layer_icons = DictCallbackProperty({}, docstring="Indexed icons (letters) for layers across the app")  # noqa
 
     data_items = ListCallbackProperty(
         docstring="List of data items parsed from the Glue data collection.")
@@ -378,7 +379,7 @@ class Application(VuetifyTemplate, HubListener):
 
         if layer_name not in self.state.layer_icons:
             self.state.layer_icons = {**self.state.layer_icons,
-                                      layer_name: f"mdi-alpha-{chr(97 + len(self.state.layer_icons))}-box-outline"}  # noqa
+                                      layer_name: chr(97 + len(self.state.layer_icons))}
 
     def _link_new_data(self, reference_data=None, data_to_be_linked=None):
         """
@@ -1497,7 +1498,7 @@ class Application(VuetifyTemplate, HubListener):
         # own attribute instead.
         viewer._reference_id = vid  # For reverse look-up
 
-        self.state.viewer_icons.setdefault(vid, f"mdi-numeric-{len(self.state.viewer_icons)+1}-circle-outline")  # noqa
+        self.state.viewer_icons.setdefault(vid, len(self.state.viewer_icons)+1)
 
         return {
             'id': vid,
