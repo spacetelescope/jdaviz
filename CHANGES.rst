@@ -10,6 +10,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- New Simple Image Rotation plugin to rotate the axes of images. [#1551]
+
 Mosviz
 ^^^^^^
 
@@ -83,8 +85,6 @@ Imviz
 
 - Pressing Shift+b now blinks backwards. Right-clicking on the image while Blink tool
   is active on the toolbar also blinks backwards. [#1558]
-
-- New Simple Image Rotation plugin to rotate the axes of images. [#1551]
 
 Mosviz
 ^^^^^^
