@@ -2,6 +2,7 @@ import os
 import warnings
 from datetime import datetime
 
+import astropy
 import bqplot
 import numpy as np
 from astropy import units as u
@@ -12,6 +13,7 @@ from astropy.table import QTable
 from astropy.time import Time
 from glue.core.message import SubsetUpdateMessage
 from ipywidgets import widget_serialization
+from packaging.version import Version
 from photutils.aperture import (ApertureStats, CircularAperture, EllipticalAperture,
                                 RectangularAperture)
 from regions import (CircleAnnulusPixelRegion, CirclePixelRegion, EllipsePixelRegion,
@@ -406,8 +408,12 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin):
                     gs = Gaussian1D(amplitude=y_max, mean=0, stddev=std,
                                     fixed={'mean': True, 'amplitude': True},
                                     bounds={'amplitude': (y_max * 0.5, y_max)})
+                    if Version(astropy.__version__) <= Version('5.1'):
+                        fitter_kw = {}
+                    else:
+                        fitter_kw = {'filter_non_finite': True}
                     with warnings.catch_warnings(record=True) as warns:
-                        fit_model = fitter(gs, x_data, y_data)
+                        fit_model = fitter(gs, x_data, y_data, **fitter_kw)
                     if len(warns) > 0:
                         msg = os.linesep.join([str(w.message) for w in warns])
                         self.hub.broadcast(SnackbarMessage(
@@ -495,7 +501,13 @@ def _radial_profile(radial_cutout, reg_bb, centroid, raw=False):
     reg_ogrid = np.ogrid[reg_bb.iymin:reg_bb.iymax, reg_bb.ixmin:reg_bb.ixmax]
     radial_dx = reg_ogrid[1] - centroid[0]
     radial_dy = reg_ogrid[0] - centroid[1]
-    radial_r = np.hypot(radial_dx, radial_dy)[~radial_cutout.mask].ravel()  # pix
+    radial_r = np.hypot(radial_dx, radial_dy)
+
+    # Sometimes the mask is smaller than radial_r
+    if radial_cutout.shape != reg_bb.shape:
+        radial_r = radial_r[:radial_cutout.shape[0], :radial_cutout.shape[1]]
+
+    radial_r = radial_r[~radial_cutout.mask].ravel()  # pix
     radial_img = radial_cutout.compressed()  # data unit
 
     if raw:
@@ -505,7 +517,7 @@ def _radial_profile(radial_cutout, reg_bb, centroid, raw=False):
     else:
         # This algorithm is from the imexam package,
         # see licenses/IMEXAM_LICENSE.txt for more details
-        radial_r = list(radial_r)
+        radial_r = np.rint(radial_r).astype(int)
         y_arr = np.bincount(radial_r, radial_img) / np.bincount(radial_r)
         x_arr = np.arange(y_arr.size)
 
