@@ -75,7 +75,7 @@ class SpectralExtraction(PluginTemplateMixin):
     ext_dataset_items = List().tag(sync=True)
     ext_dataset_selected = Unicode().tag(sync=True)
 
-    ext_type_items = List(['Boxcar', 'Optimal']).tag(sync=True)
+    ext_type_items = List(['Boxcar', 'Horne']).tag(sync=True)
     ext_type_selected = Unicode('Boxcar').tag(sync=True)
 
     ext_width = IntHandleEmpty(0).tag(sync=True)
@@ -623,12 +623,12 @@ class SpectralExtraction(PluginTemplateMixin):
 
         if self.ext_type_selected == 'Boxcar':
             ext = extract.BoxcarExtract(inp_sp2d.data, trace, width=self.ext_width)
-        elif self.ext_type_selected == 'Optimal':
+        elif self.ext_type_selected == 'Horne':
             uncert = inp_sp2d.uncertainty if inp_sp2d.uncertainty is not None else VarianceUncertainty(np.ones_like(inp_sp2d.data))  # noqa
             if not hasattr(uncert, 'uncertainty_type'):
                 uncert = StdDevUncertainty(uncert)
             image = NDData(inp_sp2d.data, uncertainty=uncert)
-            ext = extract.OptimalExtract(image, trace)
+            ext = extract.HorneExtract(image, trace)
         else:
             raise NotImplementedError(f"extraction type '{self.ext_type_selected}' not supported")  # noqa
 

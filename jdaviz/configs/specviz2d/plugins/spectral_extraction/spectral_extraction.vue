@@ -28,7 +28,9 @@
     <div @mouseover="() => active_step='trace'">
       <j-plugin-section-header>Trace</j-plugin-section-header>
       <v-row>
-        <j-docs-link>Create a trace for the spectrum.</j-docs-link>
+        <j-docs-link>
+          Create a trace for the spectrum.  See the <j-external-link link='https://specreduce.readthedocs.io/en/latest/#module-specreduce.tracing' linktext='specreduce docs'></j-external-link> for more details on the available trace types.
+        </j-docs-link>
       </v-row>
 
       <div>
@@ -217,7 +219,9 @@
     <div @mouseover="() => active_step='ext'">
       <j-plugin-section-header>Extraction</j-plugin-section-header>
       <v-row>
-        <j-docs-link>Extract a 1D spectrum from a 2D spectrum.</j-docs-link>
+        <j-docs-link>
+          Extract a 1D spectrum from a 2D spectrum.  See the <j-external-link link='https://specreduce.readthedocs.io/en/latest/#module-specreduce.extract' linktext='specreduce docs'></j-external-link> for more details on the available extraction methods.
+        </j-docs-link>
       </v-row>
 
       <plugin-dataset-select
@@ -233,7 +237,7 @@
           :items="ext_type_items"
           v-model="ext_type_selected"
           label="Extraction Type"
-          hint="Method to use for extracting the spectrum"
+          hint="Method to use for extracting the spectrum."
           persistent-hint
         ></v-select>
       </v-row>
