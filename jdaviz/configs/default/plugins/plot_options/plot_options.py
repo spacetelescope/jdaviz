@@ -43,6 +43,9 @@ class PlotOptions(PluginTemplateMixin):
     line_opacity_value = Float().tag(sync=True)
     line_opacity_sync = Dict().tag(sync=True)
 
+    as_steps_value = Bool().tag(sync=True)
+    as_steps_sync = Dict().tag(sync=True)
+
     uncertainty_value = Int().tag(sync=True)
     uncertainty_sync = Dict().tag(sync=True)
 
@@ -147,6 +150,8 @@ class PlotOptions(PluginTemplateMixin):
         self.line_opacity = PlotOptionsSyncState(self, self.viewer, self.layer, 'alpha',
                                                  'line_opacity_value', 'line_opacity_sync',
                                                  state_filter=is_profile)
+        self.as_steps = PlotOptionsSyncState(self, self.viewer, self.layer, 'as_steps',
+                                             'as_steps_value', 'as_steps_sync')
         self.uncertainty = PlotOptionsSyncState(self, self.viewer, self.layer, 'show_uncertainty',
                                                 'uncertainty_value', 'uncertainty_sync')
 
