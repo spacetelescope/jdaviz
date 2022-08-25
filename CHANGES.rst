@@ -12,6 +12,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Changing link options now updates immediately without needing to press "Link" button. [#1598]
+
 Mosviz
 ^^^^^^
 
