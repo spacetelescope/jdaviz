@@ -151,7 +151,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin):
                         # Assume it is always pixel region, not sky region. Even with multiple
                         # viewers, they all seem to share the same reference image even when it is
                         # not loaded in all the viewers, so use default viewer.
-                        viewer = self.session.jdaviz_app._jdaviz_helper.default_viewer
+                        viewer = self.app._jdaviz_helper.default_viewer
+
                         x, y, _ = viewer._get_real_xy(
                             self.app.data_collection[self.dataset_selected],
                             reg.center.x, reg.center.y)
