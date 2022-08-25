@@ -111,46 +111,44 @@
               >
                 <span><b>{{ item.id }}</b> model component not in equation</span>
               </v-row>
-              <v-row
-                justify="left"
-                align="center"
-                class="row-no-outside-padding"
-              >
-                <v-col cols=4>
-                  <p class="font-weight-bold">Param</p>
-                </v-col>
-                <v-col cols=8> <!-- covers value and unit in rows -->
-                  <p class="font-weight-bold">Value</p>
-                </v-col>
-              </v-row>
-              <v-row
-                justify="left"
-                align="center"
-                class="row-no-outside-padding"
+              <v-div
                 v-for="param in item.parameters"
                 :style="componentInEquation(item.id) ? '': 'opacity: 0.3'"
               >
-                <v-col cols=4>
+                <v-row
+                  justify="left"
+                  align="center"
+                  class="py-my-0">
+                <v-col cols=12 class="py-my-0">
                   <j-tooltip tipid='plugin-model-fitting-param-fixed'>
                     <v-checkbox v-model="param.fixed" :disabled="!componentInEquation(item.id)">
                       <template v-slot:label>
-                        <span class="text--primary" style="overflow-wrap: anywhere; font-size: 10pt">
+                        <span class="font-weight-bold" style="overflow-wrap: anywhere; font-size: 10pt">
                           {{param.name}}
                         </span>
                       </template>
                     </v-checkbox>
                   </j-tooltip>
                 </v-col>
-                <v-col cols=4>
-                  <v-text-field
-                    v-model="param.value"
-                  >
-                  </v-text-field>
-                </v-col>
-                <v-col cols=4 style="font-size: 10pt">
-                  {{ param.unit.replace("Angstrom", "&#8491;") }}
-                </v-col>
-              </v-row>
+                </v-row>
+                <v-row
+                  justify="left"
+                  align="center"
+                  class="py-my-0">
+                  <v-col cols=4 class="py-my-0">
+                    <v-text-field
+                      v-model="param.value"
+                    >
+                    </v-text-field>
+                  </v-col>
+                  <v-col cols=4 v-if="param.std">
+                    +/- {{param.std}}
+                  </v-col>
+                  <v-col cols=8 style="font-size: 10pt" class="py-my-0">
+                    {{ param.unit.replace("Angstrom", "&#8491;") }}
+                  </v-col>
+                </v-row>
+              </v-div>
             </v-expansion-panel-content>
           </v-expansion-panel>
         </v-expansion-panels>
