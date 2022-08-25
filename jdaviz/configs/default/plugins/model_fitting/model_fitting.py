@@ -117,23 +117,35 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     def _update_parameters_from_fit(self):
         """Insert the results of the model fit into the component_models"""
         for m in self.component_models:
+            submodel_index = None
             name = m["id"]
             if hasattr(self._fitted_model, "submodel_names"):
-                if name in self._fitted_model.submodel_names:
-                    m_fit = self._fitted_model[name]
-                else:
+                for i in range(len(self._fitted_model.submodel_names)):
+                    if name == self._fitted_model.submodel_names[i]:
+                        m_fit = self._fitted_model[name]
+                        submodel_index = i
+                if submodel_index is None:
                     continue
             elif self._fitted_model.name == name:
                 m_fit = self._fitted_model
             else:
                 # then the component was not in the fitted model
                 continue
+
             temp_params = []
             for i in range(0, len(m_fit.parameters)):
                 temp_param = [x for x in m["parameters"] if x["name"] ==
                               m_fit.param_names[i]]
                 temp_param[0]["value"] = m_fit.parameters[i]
+                # The submodels don't have uncertainties attached, only the compound model
+                if self._fitted_model.stds is not None:
+                    std_name = temp_param[0]["name"]
+                    if submodel_index is not None:
+                        std_name = f"{std_name}_{submodel_index}"
+                    temp_param[0]["std"] = self._fitted_model.stds[std_name]
+
                 temp_params += temp_param
+
             m["parameters"] = temp_params
 
         # Trick traitlets into updating the displayed values
@@ -465,6 +477,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                                   color="error", sender=self)
             self.hub.broadcast(msg)
             return
+
         self._fitted_model = fitted_model
         self._fitted_spectrum = fitted_spectrum
 
@@ -472,7 +485,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self.vue_register_spectrum({"spectrum": fitted_spectrum})
 
         # Update component model parameters with fitted values
-        if type(self._fitted_model) == QuantityModel:
+        if isinstance(self._fitted_model, QuantityModel):
             self._update_parameters_from_QM()
         else:
             self._update_parameters_from_fit()
