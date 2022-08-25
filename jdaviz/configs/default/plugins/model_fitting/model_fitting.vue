@@ -118,10 +118,10 @@
                 <v-row
                   justify="left"
                   align="center"
-                  class="py-my-0">
+                  class="py-0 my-0">
                 <v-col cols=12 class="py-my-0">
                   <j-tooltip tipid='plugin-model-fitting-param-fixed'>
-                    <v-checkbox v-model="param.fixed" :disabled="!componentInEquation(item.id)">
+                    <v-checkbox v-model="param.fixed" :disabled="!componentInEquation(item.id)" dense>
                       <template v-slot:label>
                         <span class="font-weight-bold" style="overflow-wrap: anywhere; font-size: 10pt">
                           {{param.name}}
@@ -134,17 +134,18 @@
                 <v-row
                   justify="left"
                   align="center"
-                  class="py-my-0">
-                  <v-col cols=4 class="py-my-0">
+                  class="py-0 my-0">
+                  <v-col class="py-my-0">
                     <v-text-field
+                      dense
                       v-model="param.value"
                     >
                     </v-text-field>
                   </v-col>
-                  <v-col cols=4 v-if="param.std">
-                    +/- {{param.std}}
+                  <v-col v-if="param.std">
+                    +/- {{roundUncertainty(param.std)}}
                   </v-col>
-                  <v-col cols=8 style="font-size: 10pt" class="py-my-0">
+                  <v-col style="font-size: 10pt" class="py-my-0">
                     {{ param.unit.replace("Angstrom", "&#8491;") }}
                   </v-col>
                 </v-row>
@@ -210,6 +211,9 @@
     methods: {
       componentInEquation(componentId) {
         return this.model_equation.split(/[+*\/-]/).indexOf(componentId) !== -1
+      },
+      roundUncertainty(uncertainty) {
+        return uncertainty.toPrecision(2)
       }
     }
   }
