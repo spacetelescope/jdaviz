@@ -10,7 +10,7 @@ See :meth:`jdaviz.configs.imviz.helper.Imviz.load_data` for more information.
 
 .. note::
 
-    Loading too many datasets will cause performance problem due to
+    Loading too many datasets will cause performance problems due to
     the number of links necessary; see :ref:`glue:linking-framework`
     for more information.
 
@@ -115,7 +115,7 @@ Loading markers can be done with the following commands::
 
 If you have a large catalog, you might want to filter your table to the
 marks of interest before adding them to Imviz, in order to avoid performance
-issues associated with adding large numbers of markers. For instance, if your 
+issues associated with adding large numbers of markers. For instance, if your
 image has FITS WCS, you could use `astropy.wcs.WCS.footprint_contains` if you
 only want the marks within a footprint. Alternately, you could filter by
 relevant columns in your catalogs, such as brightness, distance, etc.
