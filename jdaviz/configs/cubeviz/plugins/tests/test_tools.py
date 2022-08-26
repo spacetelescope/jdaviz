@@ -1,6 +1,6 @@
 import pytest
 from astropy.nddata import CCDData
-
+from echo import delay_callback
 from regions import RectanglePixelRegion
 
 
@@ -39,6 +39,8 @@ def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube):
     cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
 
     flux_viewer = cubeviz_helper.app.get_viewer("flux-viewer")
+    uncert_viewer = cubeviz_helper.app.get_viewer("uncert-viewer")
+    mask_viewer = cubeviz_helper.app.get_viewer("mask-viewer")
     spectrum_viewer = cubeviz_helper.app.get_viewer("spectrum-viewer")
 
     # Set the active tool to spectrumperspaxel
@@ -88,6 +90,19 @@ def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube):
     assert flux_viewer.label_mouseover.value == '+1.30000e+01 Jy'
     assert flux_viewer.label_mouseover.world_ra_deg == '204.9997755344'
     assert flux_viewer.label_mouseover.world_dec_deg == '27.0001999998'
+
+    # Make sure linked pan mode works on all image viewers
+    t_linkedpan = flux_viewer.toolbar_nested.tools['jdaviz:simplepanzoommatch']
+    t_linkedpan.activate()
+    # TODO: When Cubeviz uses Astrowidgets, can just use center_on() for this part.
+    with delay_callback(flux_viewer.state, 'x_min', 'x_max', 'y_min', 'y_max'):
+        flux_viewer.state.x_min = 20
+        flux_viewer.state.y_min = 15
+        flux_viewer.state.x_max = 40
+        flux_viewer.state.y_max = 35
+    for v in (uncert_viewer, mask_viewer):
+        assert (v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max) == (20, 40, 15, 35)
+    t_linkedpan.deactivate()
 
 
 def test_spectrum_at_spaxel_with_2d(cubeviz_helper):
