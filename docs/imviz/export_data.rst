@@ -21,7 +21,7 @@ Aperture Photometry
 
 If you opted to fit a `~astropy.modeling.functional_models.Gaussian1D`
 to the radial profile, the last fitted model parameters will be displayed
-under the radial profile plot. The model itself can be obtained by as follows.
+under the radial profile plot. The model itself can be obtained as follows.
 See :ref:`astropy:astropy-modeling` on how to manipulate the model::
 
     my_gaussian1d = imviz.app.fitted_models['phot_radial_profile']
