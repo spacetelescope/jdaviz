@@ -142,8 +142,8 @@
                     >
                     </v-text-field>
                   </v-col>
-                  <v-col v-if="param.std">
-                    +/- {{roundUncertainty(param.std)}}
+                  <v-col v-if="param.std" style="padding-bottom: 22px">
+                    &#177; {{roundUncertainty(param.std)}}
                   </v-col>
                   <v-col style="font-size: 10pt" class="py-my-0">
                     {{ param.unit.replace("Angstrom", "&#8491;") }}
