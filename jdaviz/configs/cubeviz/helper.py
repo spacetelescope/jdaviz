@@ -1,5 +1,4 @@
 import numpy as np
-from astropy.utils.introspection import minversion
 
 from glue.core import BaseData
 from jdaviz.core.helpers import ImageConfigHelper
@@ -8,9 +7,6 @@ from jdaviz.configs.specviz import Specviz
 from jdaviz.core.events import (AddDataMessage,
                                 SliceSelectSliceMessage)
 
-# NOTE: this and the if-statement that uses it can be removed if/once
-# the version of glue-jupyter with as_steps support is pinned as min-version
-GLUEJUPYTER_GE_0_13 = minversion('glue_jupyter', '0.13.0')
 
 __all__ = ['Cubeviz', 'CubeViz']
 
@@ -87,7 +83,7 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
         # Retrieve the x slices from the spectrum viewer's marks
         sv = self.app.get_viewer('spectrum-viewer')
         x_all = sv.native_marks[0].x
-        if sv.state.layers[0].as_steps and GLUEJUPYTER_GE_0_13:
+        if sv.state.layers[0].as_steps:
             # then the marks have been doubled in length (each point duplicated)
             x_all = x_all[::2]
         index = np.argmin(abs(x_all - wavelength))
