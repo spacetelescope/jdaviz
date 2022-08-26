@@ -52,6 +52,16 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
     assert len(sl._watched_viewers) == 1
     assert len(sl._indicator_viewers) == 1
 
+    # test in conjunction with as_steps
+    sv = app.get_viewer('spectrum-viewer')
+    orig_len = len(sv.native_marks[0].x)
+
+    sv.state.layers[0].as_steps = True
+    new_len = len(sv.native_marks[0].x)
+    assert new_len == 2*orig_len
+    cubeviz_helper.select_wavelength(4.62360028e-07)
+    assert sl.slider == 1
+
 
 @pytest.mark.filterwarnings('ignore:No observer defined on WCS')
 def test_indicator_settings(cubeviz_helper, spectrum1d_cube):
