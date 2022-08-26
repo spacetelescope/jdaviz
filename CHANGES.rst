@@ -6,6 +6,8 @@ New Features
 
 - Layer icons now show indication of linewidth. [#1593]
 
+- Model Fitting plugin now displays parameter uncertainties after fitting. [#1597]
+
 Cubeviz
 ^^^^^^^
 

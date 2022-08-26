@@ -111,46 +111,46 @@
               >
                 <span><b>{{ item.id }}</b> model component not in equation</span>
               </v-row>
-              <v-row
-                justify="left"
-                align="center"
-                class="row-no-outside-padding"
-              >
-                <v-col cols=4>
-                  <p class="font-weight-bold">Param</p>
-                </v-col>
-                <v-col cols=8> <!-- covers value and unit in rows -->
-                  <p class="font-weight-bold">Value</p>
-                </v-col>
-              </v-row>
-              <v-row
-                justify="left"
-                align="center"
-                class="row-no-outside-padding"
+              <v-div
                 v-for="param in item.parameters"
                 :style="componentInEquation(item.id) ? '': 'opacity: 0.3'"
               >
-                <v-col cols=4>
+                <v-row
+                  justify="left"
+                  align="center"
+                  class="py-0 my-0">
+                <v-col cols=12 class="py-my-0">
                   <j-tooltip tipid='plugin-model-fitting-param-fixed'>
-                    <v-checkbox v-model="param.fixed" :disabled="!componentInEquation(item.id)">
+                    <v-checkbox v-model="param.fixed" :disabled="!componentInEquation(item.id)" dense>
                       <template v-slot:label>
-                        <span class="text--primary" style="overflow-wrap: anywhere; font-size: 10pt">
+                        <span class="font-weight-bold" style="overflow-wrap: anywhere; font-size: 12pt">
                           {{param.name}}
                         </span>
                       </template>
                     </v-checkbox>
                   </j-tooltip>
                 </v-col>
-                <v-col cols=4>
-                  <v-text-field
-                    v-model="param.value"
-                  >
-                  </v-text-field>
-                </v-col>
-                <v-col cols=4 style="font-size: 10pt">
-                  {{ param.unit.replace("Angstrom", "&#8491;") }}
-                </v-col>
-              </v-row>
+                </v-row>
+                <v-row
+                  justify="left"
+                  align="center"
+                  class="py-0 my-0">
+                  <v-col class="py-my-0">
+                    <v-text-field
+                      dense
+                      v-model="param.value"
+                    >
+                    </v-text-field>
+                  </v-col>
+                  <v-col v-if="param.std" style="padding-bottom: 22px">
+                    &#177; {{roundUncertainty(param.std)}}
+                  </v-col>
+                  <v-col style="font-size: 10pt" class="py-my-0">
+                    {{ param.unit.replace("Angstrom", "&#8491;") }}
+                  </v-col>
+                </v-row>
+                <v-divider></v-divider>
+              </v-div>
             </v-expansion-panel-content>
           </v-expansion-panel>
         </v-expansion-panels>
@@ -212,6 +212,9 @@
     methods: {
       componentInEquation(componentId) {
         return this.model_equation.split(/[+*\/-]/).indexOf(componentId) !== -1
+      },
+      roundUncertainty(uncertainty) {
+        return uncertainty.toPrecision(2)
       }
     }
   }

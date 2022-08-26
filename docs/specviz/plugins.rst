@@ -90,6 +90,11 @@ defaults to the sum of all created components, but can be modified to
 exclude some of components without needing to delete them entirely
 or to change to subtraction, for example.
 
+After fitting, the expandable menu for each component model will update to
+show the fitted value of each parameter rather than the initial value, and
+will additionally show the standard deviation uncertainty of the fitted
+parameter value if the parameter was not set to be fixed to the initial value.
+
 .. seealso::
 
     :ref:`Export Models <specviz-export-model>`
