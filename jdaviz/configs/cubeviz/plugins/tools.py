@@ -6,12 +6,24 @@ from glue.viewers.common.tool import CheckableTool
 from glue.core.roi import RectangularROI
 from glue.core.edit_subset_mode import NewMode
 
+from jdaviz.configs.imviz.plugins.tools import _MatchedZoomMixin
 from jdaviz.core.events import SliceToolStateMessage
+from jdaviz.core.tools import PanZoom
 
 __all__ = []
 
-
 ICON_DIR = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'icons')
+
+
+@viewer_tool
+class SimpleMatchPanZoom(_MatchedZoomMixin, PanZoom):
+    """Like MatchPanZoom in Imviz but without complicated
+    WCS linking logic because it is not needed for Cubeviz.
+    """
+    icon = os.path.join(ICON_DIR, 'panzoom_match.svg')
+    tool_id = 'jdaviz:simplepanzoommatch'
+    action_text = 'Pan, matching between viewers'
+    tool_tip = 'Pan (click-drag) and zoom (scroll) in this viewer to see the same regions in other viewers'  # noqa
 
 
 @viewer_tool

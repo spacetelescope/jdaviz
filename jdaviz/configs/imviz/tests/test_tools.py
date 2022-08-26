@@ -3,8 +3,8 @@ import numpy as np
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS
 
 
-class TestSimpleAperPhot(BaseImviz_WCS_WCS):
-    def test_zoom_tools(self):
+class TestPanZoomTools(BaseImviz_WCS_WCS):
+    def test_panzoom_tools(self):
         v = self.imviz.default_viewer
         v2 = self.imviz.create_image_viewer()
         self.imviz.app.add_data_to_viewer('imviz-1', 'has_wcs_1[SCI,1]')
@@ -34,6 +34,30 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         v.toolbar_nested.tools['jdaviz:prevzoom'].activate()
         assert (v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max) == (1, 8, 1, 8)
         assert (v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max) == (1, 8, 1, 8)
+        t.deactivate()
+
+        t_linkedpan = v.toolbar_nested.tools['jdaviz:panzoommatch']
+        t_linkedpan.activate()
+        v.center_on((0, 0))
+        # make sure both viewers moved to the new center
+        assert (v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max) == (-3.5, 3.5, -3.5, 3.5)  # noqa
+        assert (v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max) == (-3.5, 3.5, -3.5, 3.5)  # noqa
+        t_linkedpan.deactivate()
+
+        t_normpan = v.toolbar_nested.tools['jdaviz:imagepanzoom']
+        t_normpan.activate()
+        t_normpan.on_click({'event': 'click', 'domain': {'x': 1, 'y': 1}})
+        # make sure only first viewer re-centered since this mode is not linked mode
+        assert (v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max) == (-2.5, 4.5, -2.5, 4.5)  # noqa
+        assert (v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max) == (-3.5, 3.5, -3.5, 3.5)  # noqa
+        t_normpan.deactivate()
+
+        t_linkedpan.activate()
+        t_linkedpan.on_click({'event': 'click', 'domain': {'x': 2, 'y': 2}})
+        # make sure both viewers moved to the new center
+        assert (v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max) == (-1.5, 5.5, -1.5, 5.5)  # noqa
+        assert (v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max) == (-1.5, 5.5, -1.5, 5.5)  # noqa
+        t_linkedpan.deactivate()
 
 
 def test_blink(imviz_helper):

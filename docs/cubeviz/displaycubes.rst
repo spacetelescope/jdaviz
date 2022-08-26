@@ -56,25 +56,25 @@ This button will reset your zoom and panning to display the entire image.
 
 .. _cubeviz-box-zoom:
 
-Box Zoom
-========
+Box Zoom and Linked Box Zoom
+============================
 
 .. seealso::
 
-    :ref:`Box Zoom in Imviz <imviz_box_zoom>`
+    :ref:`Box Zoom and Linked Box Zoom in Imviz <imviz_box_zoom>`
         Documentation on panning and zooming in Imviz.
 
 .. _cubeviz-pan-zoom:
 
-Pan/Zoom
-========
+Pan/Zoom and Linked Pan/Zoom
+============================
 
 .. seealso::
 
-    :ref:`Pan/Zoom in Imviz <imviz_pan_zoom>`
+    :ref:`Pan/Zoom and Linked Pan/Zoom in Imviz <imviz_pan_zoom>`
         Documentation on panning and zooming in Imviz.
 
-.. note:: Pan/Zoom API in Imviz is not yet available on Cubeviz.
+.. note:: Pan/Zoom API and click-to-center feature in Imviz is not yet available on Cubeviz.
 
 .. _cubeviz_defining_spatial_regions:
 

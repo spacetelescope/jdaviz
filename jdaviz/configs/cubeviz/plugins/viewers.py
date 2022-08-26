@@ -22,8 +22,8 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
 
     # TODO: 'jdaviz:boxzoommatch' and 'jdaviz:panzoommatch' would be nice
     # but they break spectrum collapse in Cubeviz if used as-is from Imviz.
-    tools = ['jdaviz:homezoom', 'jdaviz:boxzoom',
-             'jdaviz:panzoom', 'bqplot:rectangle',
+    tools = ['jdaviz:homezoom', 'jdaviz:boxzoommatch', 'jdaviz:boxzoom',
+             'jdaviz:simplepanzoommatch', 'jdaviz:panzoom', 'bqplot:rectangle',
              'bqplot:circle', 'bqplot:ellipse', 'jdaviz:spectrumperspaxel']
 
     # categories: zoom resets, (zoom, pan), subset, select tools, shortcuts
@@ -31,7 +31,8 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
     # overflow to second row when opening the tray
     tools_nested = [
                     ['jdaviz:homezoom', 'jdaviz:prevzoom'],
-                    ['jdaviz:boxzoom', 'jdaviz:panzoom'],
+                    ['jdaviz:boxzoommatch', 'jdaviz:boxzoom',
+                     'jdaviz:simplepanzoommatch', 'jdaviz:panzoom'],
                     ['bqplot:circle', 'bqplot:rectangle', 'bqplot:ellipse'],
                     ['jdaviz:spectrumperspaxel'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']

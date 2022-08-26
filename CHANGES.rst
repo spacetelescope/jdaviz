@@ -7,6 +7,8 @@ New Features
 Cubeviz
 ^^^^^^^
 
+- Image viewers now have linked pan/zoom and linked box zoom. [#1596]
+
 Imviz
 ^^^^^
 
