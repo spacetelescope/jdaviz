@@ -1,4 +1,4 @@
-2.10 (unreleased)
+2.10 (2022-08-26)
 =================
 
 New Features
@@ -8,52 +8,13 @@ New Features
 
 - Model Fitting plugin now displays parameter uncertainties after fitting. [#1597]
 
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-API Changes
------------
-
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
 Bug Fixes
 ---------
 
 Cubeviz
 ^^^^^^^
 
-- Future proof slicing logic for as_steps implementation in upcoming glue-jupyter release. [#1599]
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Other Changes and Additions
----------------------------
+- Future proof slicing logic for ``as_steps`` implementation in glue-jupyter 0.13 or later. [#1599]
 
 2.9 (2022-08-24)
 ================
