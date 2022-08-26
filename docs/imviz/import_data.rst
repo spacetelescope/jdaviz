@@ -45,11 +45,11 @@ tab of each viewer's options menu as described in :ref:`cubeviz-selecting-data`.
 Importing data via the API
 ==========================
 
-Alternatively, if you are working in a coding environment like a Jupyter
-notebook, you have access to the Imviz helper class API. Using this API,
-users can load data into the application through code using the
+Alternatively, users who work in a coding environment like a Jupyter
+notebook can access the Imviz helper class API. Using this API, users can
+load data into the application through code with the
 :meth:`~jdaviz.configs.imviz.helper.Imviz.load_data`
-method, which takes as input either the name of a local file, an
+method, which takes as input either the name of a local file or an
 :class:`~astropy.nddata.NDData`, :class:`~astropy.io.fits.HDUList`,
 or :class:`~astropy.io.fits.ImageHDU` object.
 
@@ -93,7 +93,7 @@ object, you can load it into Imviz as follows::
     imviz.show()
 
 There is no plan to natively load such objects until ``datamodels``
-is separated out of the ``jwst`` pipeline package.
+is separated from the ``jwst`` pipeline package.
 
 .. _imviz-import-catalogs-api:
 

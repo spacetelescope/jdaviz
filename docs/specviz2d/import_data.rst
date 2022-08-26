@@ -16,7 +16,7 @@ and hence should address most astronomical spectrum use cases.
         Specutils documentation on loading data as :class:`~specutils.Spectrum1D` objects.
 
 Specviz2D can either take both a 2D and 1D spectrum as input, or can automatically extract a 1D
-spectrum if only a 2D spectrum is provided.  To view the extraction parameters and override the 
+spectrum if only a 2D spectrum is provided.  To view the extraction parameters and override the
 extraction, see the :ref:`spectral extraction plugin <specviz2d-spectral-extraction>`.
 
 .. _specviz2d-import-commandline:
@@ -48,9 +48,9 @@ application.
 Importing data via the API
 ==========================
 
-Alternatively, if users are working in a coding environment like a Jupyter
-notebook, they have access to the Specviz2D helper class API. Using this API,
-users can load data into the application through code using the
+Alternatively, users who work in a coding environment like a Jupyter
+notebook can access the Specviz2D helper class API. Using this API, users can
+load data into the application through code with the
 :meth:`~jdaviz.configs.specviz2d.helper.Specviz2d.load_data`
-method, which takes as input a :class:`~specutils.Spectrum1D` object or filename for the 
+method, which takes as input a :class:`~specutils.Spectrum1D` object or filename for the
 2D spectrum and (optionally) the 1D spectrum.
