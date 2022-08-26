@@ -39,6 +39,8 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- Future proof slicing logic for as_steps implementation in upcoming glue-jupyter release. [#1599]
+
 Imviz
 ^^^^^
 
