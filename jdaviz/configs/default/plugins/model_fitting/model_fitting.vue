@@ -123,7 +123,7 @@
                   <j-tooltip tipid='plugin-model-fitting-param-fixed'>
                     <v-checkbox v-model="param.fixed" :disabled="!componentInEquation(item.id)" dense>
                       <template v-slot:label>
-                        <span class="font-weight-bold" style="overflow-wrap: anywhere; font-size: 10pt">
+                        <span class="font-weight-bold" style="overflow-wrap: anywhere; font-size: 12pt">
                           {{param.name}}
                         </span>
                       </template>
@@ -149,6 +149,7 @@
                     {{ param.unit.replace("Angstrom", "&#8491;") }}
                   </v-col>
                 </v-row>
+                <v-divider></v-divider>
               </v-div>
             </v-expansion-panel-content>
           </v-expansion-panel>
