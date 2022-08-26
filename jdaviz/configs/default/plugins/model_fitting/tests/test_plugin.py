@@ -3,6 +3,7 @@ Tests the features of the Model Fitting Plugin (Selecting model parameters, addi
 This does NOT test the actual fitting self (see test_fitting.py for that)
 """
 
+import numpy as np
 import pytest
 
 from jdaviz.configs.default.plugins.model_fitting.initializers import MODELS
@@ -73,6 +74,12 @@ def test_register_model(specviz_helper, spectrum1d):
     modelfit_plugin.results_label = test_label
     modelfit_plugin.vue_model_fitting()
     assert test_label in specviz_helper.app.data_collection
+
+    # Test that the parameter uncertainties were updated
+    expected_uncertainties = {'slope': 0.00038, 'intercept': 2.67}
+    result_model = modelfit_plugin.component_models[0]
+    for param in result_model["parameters"]:
+        assert np.allclose(param["std"], expected_uncertainties[param["name"]], rtol= 0.01)
 
 
 @pytest.mark.filterwarnings('ignore')
