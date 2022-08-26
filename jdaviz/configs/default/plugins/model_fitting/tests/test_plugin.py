@@ -79,7 +79,7 @@ def test_register_model(specviz_helper, spectrum1d):
     expected_uncertainties = {'slope': 0.00038, 'intercept': 2.67}
     result_model = modelfit_plugin.component_models[0]
     for param in result_model["parameters"]:
-        assert np.allclose(param["std"], expected_uncertainties[param["name"]], rtol= 0.01)
+        assert np.allclose(param["std"], expected_uncertainties[param["name"]], rtol=0.01)
 
 
 @pytest.mark.filterwarnings('ignore')
