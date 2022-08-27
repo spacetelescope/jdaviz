@@ -75,6 +75,10 @@ performant at the cost of accuracy but should be accurate to within a pixel
 for most cases. If approximation fails, WCS linking still automatically
 falls back to full transformation.
 
+For the best experience, it is recommended that you decide what kind of
+link you want and set it at the beginning of your Imviz session,
+rather than later.
+
 For more details on linking, see :ref:`dev_glue_linking`.
 
 From the API
@@ -124,7 +128,11 @@ an interactively selected region. A typical workflow is as follows:
 4. Select the desired region using the :guilabel:`Subset` dropdown menu.
 5. If you want to subtract background before performing photometry,
    you have the following 3 options. Otherwise if your image is already
-   background subtracted, choose "Manual" and leave the background set at 0:
+   background subtracted, choose "Manual" and leave the background set at 0.
+   If you change the linking (see :ref:`imviz-link-control`) after you have
+   a background calculated from Annulus or Subset, you need to re-select
+   the aperture or background subset, respectively, to have it properly
+   recalculated:
 
   * Manual: Enter the background value in the :guilabel:`Background value` field.
     This value must be in the same unit as display data, if applicable.
