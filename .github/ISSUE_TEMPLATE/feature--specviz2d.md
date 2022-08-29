@@ -1,8 +1,8 @@
 ---
-name: 'Feature request: Mosviz'
-about: Suggest an idea to improve Mosviz
-title: "[FEAT] Mosviz:"
-labels: feature, mosviz
+name: 'Feature request: Specviz2D'
+about: Suggest an idea to improve Specviz2D
+title: "[FEAT] Specviz2D:"
+labels: feature, specviz2d
 assignees: ''
 
 ---
