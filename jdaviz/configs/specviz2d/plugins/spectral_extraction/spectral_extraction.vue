@@ -265,7 +265,7 @@
         :add_to_viewer_selected.sync="ext_add_to_viewer_selected"
         action_label="Extract"
         action_tooltip="Extract 1D Spectrum"
-        :action_disabled="ext_specreduce_err.length"
+        :action_disabled="ext_specreduce_err.length > 0"
         @click:action="extract_spectrum"
       ></plugin-add-results>
     </div>
