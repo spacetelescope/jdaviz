@@ -19,6 +19,17 @@ class CoordsInfo(TemplateMixin):
     world_dec = Unicode("").tag(sync=True)
     world_ra_deg = Unicode("").tag(sync=True)
     world_dec_deg = Unicode("").tag(sync=True)
+    coords_type = Unicode("Pixel").tag(sync=True)  # pixel, world_icrs, world_deg
+
+    def next_coords_type(self):
+        coords_type_cycle = ['Pixel', 'World (ICRS)', 'World (deg)']
+        curr_ind = coords_type_cycle.index(self.coords_type)
+        if curr_ind >= len(coords_type_cycle) - 1:
+            curr_ind = -1
+        self.coords_type = coords_type_cycle[curr_ind + 1]
+
+    def vue_next_coords_type(self, *args, **kwargs):
+        self.next_coords_type()
 
     def reset_coords_display(self):
         self.world_label_prefix = '\u00A0'

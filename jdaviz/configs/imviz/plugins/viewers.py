@@ -143,7 +143,6 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
                 self.label_mouseover.value = ''
 
         elif data['event'] == 'mouseleave' or data['event'] == 'mouseenter':
-
             self.label_mouseover.pixel = ""
             self.label_mouseover.reset_coords_display()
             self.label_mouseover.value = ""
@@ -170,6 +169,11 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
                 self.line_profile_xy.selected_y = y
                 self.line_profile_xy.selected_viewer = self.reference_id
                 self.line_profile_xy.vue_draw_plot()
+
+            elif key_pressed == 'i':
+                self.label_mouseover.next_coords_type()
+                #data['event'] = 'mousemove'
+                #self.on_mouse_or_key_event(data)
 
     def blink_once(self, reversed=False):
         # Simple blinking of images - this will make it so that only one
