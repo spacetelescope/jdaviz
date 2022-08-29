@@ -146,6 +146,9 @@ You can create a clean checkout as follows (requires
      Specviz
      ^^^^^^^
 
+     Specviz2d
+     ^^^^^^^^^
+
      API Changes
      -----------
 
@@ -161,6 +164,9 @@ You can create a clean checkout as follows (requires
      Specviz
      ^^^^^^^
 
+     Specviz2d
+     ^^^^^^^^^
+
      Bug Fixes
      ---------
 
@@ -175,6 +181,9 @@ You can create a clean checkout as follows (requires
 
      Specviz
      ^^^^^^^
+
+     Specviz2d
+     ^^^^^^^^^
 
      Other Changes and Additions
      ---------------------------
@@ -292,6 +301,9 @@ You can do a release from your fork directly without a clean code check-out.
      Specviz
      ^^^^^^^
 
+     Specviz2d
+     ^^^^^^^^^
+
      API Changes
      -----------
 
@@ -307,6 +319,9 @@ You can do a release from your fork directly without a clean code check-out.
      Specviz
      ^^^^^^^
 
+     Specviz2d
+     ^^^^^^^^^
+
      Bug Fixes
      ---------
 
@@ -321,6 +336,9 @@ You can do a release from your fork directly without a clean code check-out.
 
      Specviz
      ^^^^^^^
+
+     Specviz2d
+     ^^^^^^^^^
 
      Other Changes and Additions
      ---------------------------
