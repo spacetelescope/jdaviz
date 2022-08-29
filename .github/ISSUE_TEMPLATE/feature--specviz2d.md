@@ -7,7 +7,7 @@ assignees: ''
 
 ---
 
-<!-- This comments are hidden when you submit the issue,
+<!-- These comments are hidden when you submit the issue,
 so you do not need to remove them! -->
 
 <!-- Please have a search on our GitHub repository to see if a similar
