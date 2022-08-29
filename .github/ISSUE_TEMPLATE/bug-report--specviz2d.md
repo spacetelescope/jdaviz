@@ -1,8 +1,8 @@
 ---
-name: 'Bug report: Mosviz'
-about: Bug report for Mosviz
-title: "[BUG] Mosviz:"
-labels: bug, mosviz
+name: 'Bug report: Specviz2D'
+about: Bug report for Specviz2D
+title: "[BUG] Specviz2D:"
+labels: bug, specviz2d
 assignees: ''
 
 ---

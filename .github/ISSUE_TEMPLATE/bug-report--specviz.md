@@ -53,9 +53,10 @@ import asdf; print("asdf", asdf.__version__)
 import gwcs; print("gwcs", gwcs.__version__)
 import regions; print("regions", regions.__version__)
 import specutils; print("specutils", specutils.__version__)
+import specreduce; print("specreduce", specreduce.__version__)
 import photutils; print("photutils", photutils.__version__)
+import astroquery; print("astroquery", astroquery.__version__)
 import yaml; print("pyyaml", yaml.__version__)
-import click; print("click", click.__version__)
 import asteval; print("asteval", asteval.__version__)
 import idna; print("idna", idna.__version__)
 import traitlets; print("traitlets", traitlets.__version__)
@@ -75,7 +76,6 @@ import vispy; print("vispy", vispy.__version__)
 import sidecar; print("sidecar", sidecar.__version__)
 import jdaviz; print("Jdaviz", jdaviz.__version__)
 -->
-
 
 **Additional context (e.g. data files)**
 Add any other context about the problem here.
