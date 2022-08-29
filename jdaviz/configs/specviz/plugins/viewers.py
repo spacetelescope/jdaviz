@@ -446,10 +446,19 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
 
                 # The shaded band around the spectrum trace is bounded by
                 # two lines, above and below the spectrum trace itself.
-                x = np.array([np.ndarray.tolist(data_x),
-                              np.ndarray.tolist(data_x)])
-                y = np.array([np.ndarray.tolist(data_y - error),
-                              np.ndarray.tolist(data_y + error)])
+                x = [np.ndarray.tolist(data_x),
+                     np.ndarray.tolist(data_x)]
+                y = [np.ndarray.tolist(data_y - error),
+                     np.ndarray.tolist(data_y + error)]
+
+                if layer_state.as_steps:
+                    for i in (0, 1):
+                        a = np.insert(x[i], 0, 2*x[i][0] - x[i][1])
+                        b = np.append(x[i], 2*x[i][-1] - x[i][-2])
+                        edges = (a + b) / 2
+                        x[i] = np.concatenate((edges[:1], np.repeat(edges[1:-1], 2), edges[-1:]))
+                        y[i] = np.repeat(y[i], 2)
+                x, y = np.asarray(x), np.asarray(y)
 
                 # A subclass of the bqplot Lines object, LineUncertainties keeps
                 # track of uncertainties plotted in the viewer. LineUncertainties

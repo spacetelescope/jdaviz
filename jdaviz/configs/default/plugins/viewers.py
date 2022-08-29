@@ -42,12 +42,24 @@ class JdavizViewerMixin:
     def _subscribe_to_layers_update(self):
         # subscribe to new layers
         self._expected_subset_layers = []
+        self._layers_with_defaults_applied = []
         self.state.add_callback('layers', self._on_layers_update)
 
     def _get_layer(self, label):
         for layer in self.state.layers:
             if layer.layer.label == label:
                 return layer
+
+    def _apply_layer_defaults(self, layer_state):
+        if hasattr(layer_state, 'as_steps'):
+            if layer_state.layer.label != layer_state.layer.data.label:
+                # then this is a subset, so default based on the parent data layer
+                layer_state.as_steps = self._get_layer(layer_state.layer.data.label).as_steps
+            else:
+                # default to not plotting with as_steps (despite glue defaulting to True)
+                layer_state.as_steps = False
+            # whenever as_steps changes, we need to redraw the uncertainties (if enabled)
+            layer_state.add_callback('as_steps', self._show_uncertainty_changed)
 
     def _expected_subset_layer_default(self, layer_state):
         if self.__class__.__name__ == 'CubevizImageView':
@@ -132,12 +144,14 @@ class JdavizViewerMixin:
 
         self._update_layer_icons()
 
-        if not len(self._expected_subset_layers):
-            return
         # we'll make a deepcopy so that we can remove entries from the self._expected_subset_layers
         # to avoid recursion, but also handle multiple layers for the same subset
         expected_subset_layers = self._expected_subset_layers[:]
         for layer in self.state.layers:
+            if layer.layer.label not in self._layers_with_defaults_applied:
+                self._layers_with_defaults_applied.append(layer.layer.label)
+                self._apply_layer_defaults(layer)
+
             if layer.layer.label in expected_subset_layers:
                 if layer.layer.label in self._expected_subset_layers:
                     self._expected_subset_layers.remove(layer.layer.label)

@@ -119,6 +119,13 @@
       </div>
     </glue-state-sync-wrapper>
 
+    <glue-state-sync-wrapper :sync="as_steps_sync" :multiselect="multiselect" @unmix-state="unmix_state('as_steps')">
+      <v-switch
+        v-model="as_steps_value"
+        label="Plot profile as steps"
+        />
+    </glue-state-sync-wrapper>
+
     <glue-state-sync-wrapper v-if="config !== 'cubeviz'" :sync="uncertainty_sync" :multiselect="multiselect" @unmix-state="unmix_state('uncertainty')">
       <v-switch
         v-model="uncertainty_value"
