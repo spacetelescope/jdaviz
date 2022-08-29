@@ -725,7 +725,9 @@ class SpectralExtraction(PluginTemplateMixin):
             self.update_marks(step='ext')
 
         trace = self._get_ext_trace()
-        inp_sp2d = self._get_ext_input_spectrum()
+
+        # FIXME: Passing in Quantity turns MJy into MJy2. But not passing it in gives DN.
+        inp_sp2d = self._get_ext_input_spectrum().flux
 
         if self.ext_type_selected == 'Boxcar':
             ext = extract.BoxcarExtract(inp_sp2d.data, trace, width=self.ext_width)
