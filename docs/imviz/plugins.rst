@@ -67,8 +67,7 @@ Link Control
 This plugin is used to re-link images by pixels or WCS using
 :func:`~jdaviz.configs.imviz.helper.link_image_data`.
 All images are automatically linked by pixels on load but you can use
-it to re-link by pixels or WCS as needed. Once you have set your
-options, click :guilabel:`LINK` to perform the linking.
+it to re-link by pixels or WCS as needed.
 
 For WCS linking, the "fast approximation" option uses an affine transform
 to represent the offset between images, if possible. It is much more

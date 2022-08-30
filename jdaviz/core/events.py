@@ -5,7 +5,7 @@ __all__ = ['NewViewerMessage', 'ViewerAddedMessage', 'ViewerRemovedMessage', 'Lo
            'AddLineListMessage', 'RowLockMessage',
            'SliceSelectSliceMessage',
            'SliceToolStateMessage',
-           'TableClickMessage']
+           'TableClickMessage', 'LinkUpdatedMessage']
 
 
 class NewViewerMessage(Message):
@@ -277,3 +277,24 @@ class SliceToolStateMessage(Message):
     @property
     def change(self):
         return self._change
+
+
+class LinkUpdatedMessage(Message):
+    '''Message generated when the WCS/pixel linking is changed'''
+    def __init__(self, link_type, wcs_use_fallback, wcs_use_affine, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._link_type = link_type
+        self._wcs_use_fallback = wcs_use_fallback
+        self._wcs_use_affine = wcs_use_affine
+
+    @property
+    def link_type(self):
+        return self._link_type
+
+    @property
+    def wcs_use_fallback(self):
+        return self._wcs_use_fallback
+
+    @property
+    def wcs_use_affine(self):
+        return self._wcs_use_affine

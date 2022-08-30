@@ -10,7 +10,7 @@ from glue.core import BaseData
 from glue.core.link_helpers import LinkSame
 from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink, NoAffineApproximation
 
-from jdaviz.core.events import SnackbarMessage, NewViewerMessage
+from jdaviz.core.events import SnackbarMessage, NewViewerMessage, LinkUpdatedMessage
 from jdaviz.core.helpers import ImageConfigHelper, data_has_valid_wcs
 
 __all__ = ['Imviz', 'link_image_data']
@@ -440,7 +440,7 @@ def get_reference_image_data(app):
 
 
 def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_use_affine=True,
-                    error_on_fail=False):
+                    error_on_fail=False, update_plugin=True):
     """(Re)link loaded data in Imviz with the desired link type.
     All existing links will be replaced.
 
@@ -477,6 +477,9 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_u
         When only warnings are emitted and no links are assigned,
         some Imviz functionality may not work properly.
 
+    update_plugin : bool
+        Whether to update the state of the "Links Control" plugin, if available.
+
     Raises
     ------
     ValueError
@@ -491,6 +494,18 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_u
     if link_type == 'wcs' and wcs_fallback_scheme not in (None, 'pixels'):
         raise ValueError("wcs_fallback_scheme must be None or 'pixels', "
                          f"got {wcs_fallback_scheme}")
+
+    # if the plugin exists, send a message so that the plugin's state is updated and spinner
+    # is shown (the plugin will make a call back here)
+    if update_plugin and 'imviz-links-control' in [item['name'] for item in app.state.tray_items]:
+        link_plugin = app.get_tray_item_from_name('imviz-links-control')
+        link_plugin.linking_in_progress = True
+        app.hub.broadcast(LinkUpdatedMessage(link_type,
+                                             wcs_fallback_scheme == 'pixels',
+                                             wcs_use_affine,
+                                             sender=app))
+    else:
+        link_plugin = None
 
     # TODO: If different viewers have the same _marktags key, the key actually
     #       points to the same Data table. Subsequent attempt to remove the
@@ -553,5 +568,10 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_u
     if len(links_list) > 0:
         with app.data_collection.delay_link_manager_update():
             app.data_collection.set_links(links_list)
+
         app.hub.broadcast(SnackbarMessage(
             'Images successfully relinked', color='success', timeout=8000, sender=app))
+
+    if link_plugin is not None:
+        # reset the progress spinner
+        link_plugin.linking_in_progress = False

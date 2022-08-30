@@ -4,45 +4,57 @@
     :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#link-control'"
     :popout_button="popout_button">
 
-    <v-row>
-      <v-radio-group 
-        label="Link type"
-        hint="Type of linking to be done."
-        v-model="link_type"
-        persistent-hint
-        row>
-        <v-radio
-          v-for="item in link_types"
-          :key="item"
-          :label="item"
-          :value="item"
-        ></v-radio>
-       </v-radio-group>
-    </v-row>
+    <div style="display: grid"> <!-- overlay container -->
+      <div style="grid-area: 1/1">
+        <v-row>
+          <v-radio-group 
+            label="Link type"
+            hint="Type of linking to be done."
+            v-model="link_type"
+            persistent-hint
+            row>
+            <v-radio
+              v-for="item in link_types"
+              :key="item"
+              :label="item"
+              :value="item"
+            ></v-radio>
+           </v-radio-group>
+        </v-row>
 
-    <v-row v-if="false">
-      <v-switch
-        label="Fallback on Pixels"
-        hint="If WCS linking fails, fallback to linking by pixels."
-        v-model="wcs_use_fallback"
-        persistent-hint>
-      </v-switch>
-    </v-row>
+        <v-row v-if="false">
+          <v-switch
+            label="Fallback on Pixels"
+            hint="If WCS linking fails, fallback to linking by pixels."
+            v-model="wcs_use_fallback"
+            persistent-hint>
+          </v-switch>
+        </v-row>
 
-    <v-row v-if="link_type == 'WCS'">
-      <v-switch
-        label="Fast approximation"
-        hint="Use fast approximation for image alignment if possible (accurate to <1 pixel)."
-        v-model="wcs_use_affine"
-        persistent-hint>
-      </v-switch>
-    </v-row>
-
-    <v-row justify="end">
-      <j-tooltip tipid='plugin-link-apply'>
-        <v-btn color="accent" text @click="do_link">Link</v-btn>
-      </j-tooltip>
-    </v-row>
+        <v-row v-if="link_type == 'WCS'">
+          <v-switch
+            label="Fast approximation"
+            hint="Use fast approximation for image alignment if possible (accurate to <1 pixel)."
+            v-model="wcs_use_affine"
+            persistent-hint>
+          </v-switch>
+        </v-row>
+      </div>
+      <div v-if="linking_in_progress"
+           class="text-center"
+           style="grid-area: 1/1; 
+                  z-index:2;
+                  margin-left: -24px;
+                  margin-right: -24px;
+                  padding-top: 60px;
+                  background-color: rgb(0 0 0 / 20%)">
+        <v-progress-circular
+          indeterminate
+          color="spinner"
+          size="50"
+          width="6"
+        ></v-progress-circular>
+      </div>
   </j-tray-plugin>
 </template>
 
