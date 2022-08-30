@@ -1,4 +1,6 @@
-.. image:: docs/logos/jdaviz_1.svg
+.. image:: docs/logos/jdaviz.svg
+   :width: 400
+   :alt: Jdaviz logo
 
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.5513927.svg
    :target: https://doi.org/10.5281/zenodo.5513927
