@@ -128,11 +128,7 @@ an interactively selected region. A typical workflow is as follows:
 4. Select the desired region using the :guilabel:`Subset` dropdown menu.
 5. If you want to subtract background before performing photometry,
    you have the following 3 options. Otherwise if your image is already
-   background subtracted, choose "Manual" and leave the background set at 0.
-   If you change the linking (see :ref:`imviz-link-control`) after you have
-   a background calculated from Annulus or Subset, you need to re-select
-   the aperture or background subset, respectively, to have it properly
-   recalculated:
+   background subtracted, choose "Manual" and leave the background set at 0:
 
   * Manual: Enter the background value in the :guilabel:`Background value` field.
     This value must be in the same unit as display data, if applicable.

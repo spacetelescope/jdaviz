@@ -21,7 +21,7 @@ from regions import (CircleAnnulusPixelRegion, CirclePixelRegion, EllipsePixelRe
 from traitlets import Any, Bool, List, Unicode, observe
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
-from jdaviz.core.events import SnackbarMessage
+from jdaviz.core.events import SnackbarMessage, LinkUpdatedMessage
 from jdaviz.core.region_translators import regions2aperture
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, DatasetSelectMixin, SubsetSelect
@@ -76,6 +76,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin):
         self._fitted_model_name = 'phot_radial_profile'
 
         self.session.hub.subscribe(self, SubsetUpdateMessage, handler=self._on_subset_update)
+        self.session.hub.subscribe(self, LinkUpdatedMessage, handler=self._on_link_update)
 
     def reset_results(self):
         self.result_available = False
@@ -171,6 +172,13 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin):
             self._subset_selected_changed()
         elif sbst.label == self.bg_subset_selected and sbst.data.label == self.dataset_selected:
             self._bg_subset_selected_changed()
+
+    def _on_link_update(self, msg):
+        if self.dataset_selected == '' or self.subset_selected == '':
+            return
+
+        # Force background auto-calculation to update when linking has changed.
+        self._bg_subset_selected_changed()
 
     @observe('subset_selected')
     def _subset_selected_changed(self, event={}):
