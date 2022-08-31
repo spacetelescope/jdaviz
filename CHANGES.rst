@@ -49,6 +49,8 @@ Imviz
 Mosviz
 ^^^^^^
 
+- R-grism 2D spectrum data are now loaded with the correct orientation. [#1619]
+
 Specviz
 ^^^^^^^
 
