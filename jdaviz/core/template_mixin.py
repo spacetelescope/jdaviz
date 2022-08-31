@@ -22,13 +22,58 @@ from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage)
 
 
-__all__ = ['TemplateMixin', 'PluginTemplateMixin',
+__all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'BasePluginComponent', 'BaseSelectPluginComponent',
            'SubsetSelect', 'SpatialSubsetSelectMixin', 'SpectralSubsetSelectMixin',
            'ViewerSelect', 'ViewerSelectMixin',
            'DatasetSelect', 'DatasetSelectMixin',
            'AutoLabel', 'AutoLabelMixin',
            'AddResults', 'AddResultsMixin']
+
+
+def show_widget(widget, loc, title):
+    from IPython import get_ipython
+    from IPython.display import display
+
+    # Check if the user is running Jdaviz in the correct environments.
+    # If not, provide a friendly msg to guide them!
+    cur_shell_name = get_ipython().__class__.__name__
+    if cur_shell_name != 'ZMQInteractiveShell':
+        raise RuntimeError("\nYou are currently running Jdaviz from an unsupported "
+                           f"shell ({cur_shell_name}). Jdaviz is intended to be run within a "
+                           "Jupyter notebook, or directly from the command line.\n\n"
+                           "To run from Jupyter, call <your viz>.show() from a notebook cell.\n"
+                           "To see how to run from the command line, run: "
+                           "'jdaviz --help' outside of Python.\n\n"
+                           "To learn more, see our documentation at: "
+                           "https://jdaviz.readthedocs.io")
+
+    if loc == "inline":
+        display(widget)
+
+    elif loc.startswith('sidecar'):
+        from sidecar import Sidecar
+
+        # Use default behavior if loc is exactly 'sidecar', else split anchor from the arg
+        anchor = None if loc == 'sidecar' else loc.split(':')[1]
+
+        scar = Sidecar(anchor=anchor, title=title)
+        with scar:
+            display(widget)
+
+    elif loc.startswith('popout'):
+        anchor = None if loc == 'popout' else loc.split(':')[1]
+
+        # Default behavior (no anchor specified): display popout in new window
+        if anchor in (None, 'window'):
+            widget.popout_button.open_window()
+        elif anchor == "tab":
+            widget.popout_button.open_tab()
+        else:
+            raise ValueError("Unrecognized popout anchor")
+
+    else:
+        raise ValueError(f"Unrecognized display location: {loc}")
 
 
 class TemplateMixin(VuetifyTemplate, HubListener):
@@ -87,17 +132,21 @@ class TemplateMixin(VuetifyTemplate, HubListener):
 class PluginUserApi:
     """
     Expose user-facing methods/traitlets from a plugin.
+
+    In addition to the methods exposed below directly here, see dir(plugin) for a list of
+    exposed attributes and methods from the underlying plugin object.
     """
-    # TODO: show plugin in jupyter: https://github.com/widgetti/ipyvue/blob/master/ipyvue/VueWidget.py#L112
     def __init__(self, plugin, expose):
         self._plugin = plugin
-        self._expose = expose
+        self._expose = list(expose) + ['open_in_tray', 'show']
+
+        self.__doc__ = self.__doc__ + "ADDED IN INIT"
 
     def __repr__(self):
         return f'<{self._plugin.__class__.__name__} UserAPI>'
 
     def __dir__(self):
-        return self._expose
+        return self._expose + ['show']
 
     def __getattr__(self, attr):
         if attr in ['_plugin', '_expose'] or attr not in self._expose:
@@ -140,6 +189,54 @@ class PluginTemplateMixin(TemplateMixin):
         index = [ti['name'] for ti in app_state.tray_items].index(self._registry_name)
         if index not in app_state.tray_items_open:
             app_state.tray_items_open = app_state.tray_items_open + [index]
+
+    def show(self, loc="inline", title=None):  # pragma: no cover
+        """Display the plugin UI.
+
+        Parameters
+        ----------
+        loc : str
+            The display location determines where to present the viz app.
+            Supported locations:
+
+            "inline": Display the plugin inline in a notebook.
+
+            "sidecar": Display the plugin in a separate JupyterLab window from the
+            notebook, the location of which is decided by the 'anchor.' right is the default
+
+                Other anchors:
+
+                * ``sidecar:right`` (The default, opens a tab to the right of display)
+                * ``sidecar:tab-before`` (Full-width tab before the current notebook)
+                * ``sidecar:tab-after`` (Full-width tab after the current notebook)
+                * ``sidecar:split-right`` (Split-tab in the same window right of the notebook)
+                * ``sidecar:split-left`` (Split-tab in the same window left of the notebook)
+                * ``sidecar:split-top`` (Split-tab in the same window above the notebook)
+                * ``sidecar:split-bottom`` (Split-tab in the same window below the notebook)
+
+                See `jupyterlab-sidecar <https://github.com/jupyter-widgets/jupyterlab-sidecar>`_
+                for the most up-to-date options.
+
+            "popout": Display the plugin in a detached display. By default, a new
+            window will open. Browser popup permissions required.
+
+                Other anchors:
+
+                * ``popout:window`` (The default, opens Jdaviz in a new, detached popout)
+                * ``popout:tab`` (Opens Jdaviz in a new, detached tab in your browser)
+
+        title : str, optional
+            The title of the sidecar tab.  Defaults to the name of the plugin.
+
+            NOTE: Only applicable to a "sidecar" display.
+
+        Notes
+        -----
+        If "sidecar" is requested in the "classic" Jupyter notebook, the plugin will appear inline,
+        as only JupyterLab has a mechanism to have multiple tabs.
+        """
+        title = title if title is not None else self._registry_label
+        show_widget(self, loc=loc, title=title)
 
 
 class BasePluginComponent(HubListener):

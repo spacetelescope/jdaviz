@@ -20,6 +20,7 @@ from ipywidgets.widgets import widget_serialization
 
 from jdaviz.app import Application
 from jdaviz.core.events import SnackbarMessage
+from jdaviz.core.template_mixin import show_widget
 
 __all__ = ['ConfigHelper', 'ImageConfigHelper']
 
@@ -340,51 +341,8 @@ class ConfigHelper(HubListener):
         If "sidecar" is requested in the "classic" Jupyter notebook, the app will appear inline,
         as only JupyterLab has a mechanism to have multiple tabs.
         """
-        from IPython import get_ipython
-        from IPython.display import display
-
-        # Check if the user is running Jdaviz in the correct environments.
-        # If not, provide a friendly msg to guide them!
-        cur_shell_name = get_ipython().__class__.__name__
-        if cur_shell_name != 'ZMQInteractiveShell':
-            raise RuntimeError("\nYou are currently running Jdaviz from an unsupported "
-                               f"shell ({cur_shell_name}). Jdaviz is intended to be run within a "
-                               "Jupyter notebook, or directly from the command line.\n\n"
-                               "To run from Jupyter, call <your viz>.show() from a notebook cell.\n"
-                               "To see how to run from the command line, run: "
-                               "'jdaviz --help' outside of Python.\n\n"
-                               "To learn more, see our documentation at: "
-                               "https://jdaviz.readthedocs.io")
-
-        if loc == "inline":
-            display(self.app)
-
-        elif loc.startswith('sidecar'):
-            from sidecar import Sidecar
-
-            # Use default behavior if loc is exactly 'sidecar', else split anchor from the arg
-            anchor = None if loc == 'sidecar' else loc.split(':')[1]
-
-            # If title unset, default to the viz config
-            title = self.app.config if title is None else title
-
-            scar = Sidecar(anchor=anchor, title=title)
-            with scar:
-                display(self.app)
-
-        elif loc.startswith('popout'):
-            anchor = None if loc == 'popout' else loc.split(':')[1]
-
-            # Default behavior (no anchor specified): display popout in new window
-            if anchor in (None, 'window'):
-                self.app.popout_button.open_window()
-            elif anchor == "tab":
-                self.app.popout_button.open_tab()
-            else:
-                raise ValueError("Unrecognized popout anchor")
-
-        else:
-            raise ValueError(f"Unrecognized display location: {loc}")
+        title = self.app.config if title is None else title
+        show_widget(self.app, loc=loc, title=title)
 
     def show_in_sidecar(self, anchor=None, title=None):  # pragma: no cover
         """
