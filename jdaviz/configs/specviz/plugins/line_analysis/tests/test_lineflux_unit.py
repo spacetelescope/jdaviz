@@ -4,6 +4,9 @@ import pytest
 
 from jdaviz import Cubeviz
 
+import warnings
+warnings.filterwarnings('ignore')
+
 # Maps input spectrum flux unit to expected line analysis flux unit
 expected_lineflux_results = {
     u.Jy/u.sr: u.Unit('W/(m2*sr)'),
