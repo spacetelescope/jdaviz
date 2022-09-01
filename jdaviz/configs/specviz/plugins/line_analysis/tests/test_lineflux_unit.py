@@ -4,46 +4,41 @@ import pytest
 
 from jdaviz import Cubeviz
 
+# Maps input spectrum flux unit to expected line analysis flux unit
+expected_lineflux_results = {
+    u.Jy/u.sr: u.Unit('W/(m2*sr)'),
+    u.Jy: u.Unit('W/m2'),
+    u.Unit('W/m2/m')/u.sr: u.Unit('W/(m2*sr)'),
+    u.Unit('W/m2/m'): u.Unit('W/m2')
+}
 
-test_cases = [
-    {'data_fixture': 'spectrum1d_cube_MJy_sr',
-     'expected_lineflux_unit': u.Unit('W/(m2*sr)')
-     },
-    {'data_fixture': 'spectrum1d_cube',
-     'expected_lineflux_unit': u.Unit('W/m2')
-     }
-]
-
-
-def _calculate_line_flux(function, dataset):
-    '''
-    Returns the line flux calculation for a particular collapse function
-    by opening the Line Analysis Plugin
-    '''
-
-    # Initialize Cubeviz with specific data and collapse function
-    cubeviz_helper = Cubeviz()
-    cubeviz_helper.load_data(dataset)
-    cubeviz_helper.app.get_viewer('spectrum-viewer').state.function = function
-
-    # Open the plugin and force the calculation
-    cubeviz_helper.app.state.drawer = True
-    plugin_index = [ti['name'] for ti in cubeviz_helper.app.state.tray_items
-                    ].index('specviz-line-analysis')
-    cubeviz_helper.app.state.tray_items_open = [plugin_index]
-
-    # Retrieve Results
-    plugin = cubeviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
-    for result in plugin.results:
-        if result['function'] == 'Line Flux':
-            return result
+test_cases = list(expected_lineflux_results.keys())
 
 
-@pytest.mark.parametrize('test_case', test_cases)
-def test_flux_collapse_units(test_case, request):
+@pytest.mark.parametrize('spectra_fluxunit', test_cases)
+def test_flux_collapse_units(spectrum1d_cube_custom_fluxunit, spectra_fluxunit):
     ''' Calculates line flux and checks the units for each collapse function '''
-    data = request.getfixturevalue(test_case['data_fixture'])
-    expected_lineflux_unit = test_case['expected_lineflux_unit']
+    data = spectrum1d_cube_custom_fluxunit(spectra_fluxunit)
     for function in COLLAPSE_FUNCTIONS:
-        flux_results = _calculate_line_flux(function, data)
-        assert u.Unit(flux_results['unit']) == expected_lineflux_unit
+        # Initialize Cubeviz with specific data and collapse function
+        cubeviz_helper = Cubeviz()
+        data_label = "Test Cube"
+        cubeviz_helper.load_data(data)
+        cubeviz_helper.app.get_viewer('spectrum-viewer').state.function = function
+
+        # Open the plugin and force the calculation
+        cubeviz_helper.app.state.drawer = True
+        line_analysis_plugin = cubeviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
+        line_analysis_plugin.open_in_tray()
+
+        # Retrieve Results
+        for result in line_analysis_plugin.results:
+            if result['function'] == 'Line Flux':
+                autocollapsed_spectrum_unit = cubeviz_helper.specviz.get_spectra()[(data_label +
+                                                                                    " [FLUX]")
+                                                                                   ].flux.unit
+                # Futureproofing: Eventually Cubeviz autocollapse will change the flux units of the
+                # spectra depending on whether the spectrum was collapsed OVER SPAXELS or not. Only
+                # do the assertion check if we KNOW what the expected lineflux results should be
+                if autocollapsed_spectrum_unit in expected_lineflux_results.keys():
+                    assert u.Unit(result['unit']) == expected_lineflux_results[spectra_fluxunit]
