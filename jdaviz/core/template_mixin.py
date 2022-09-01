@@ -1353,6 +1353,13 @@ class AutoLabel(BasePluginComponent):
         self.add_observe(default, self._on_set_to_default)
         self.add_observe(auto, self._on_set_to_default)
 
+    def __repr__(self):
+        return f"<AutoLabel label='{self.value}' auto={self.auto}>"
+
+    @property
+    def user_api(self):
+        return UserApiWrapper(self, ('value', 'auto'))
+
     def _on_set_to_default(self, msg={}):
         if self.auto:
             self.value = self.default
@@ -1458,7 +1465,39 @@ class AddResults(BasePluginComponent):
                                    default_mode=self._handle_default_viewer_selected)
 
         self.auto_label = AutoLabel(plugin, label, label_default, label_auto, label_invalid_msg)
+        self.auto = self.auto_label.auto
         self.add_observe(label, self._on_label_changed)
+
+    def __repr__(self):
+        return f"<AddResults label='{self.label}', auto={self.auto}, viewer={self.viewer.selected}>"
+
+    @property
+    def user_api(self):
+        return UserApiWrapper(self, ('label', 'auto', 'viewer'))
+
+    @property
+    def label(self):
+        """
+        Access the value of the ``AutoLabel`` object.  Changing the value manually will also disable
+        the ``auto`` option.
+        """
+        return self.auto_label.value
+
+    @label.setter
+    def label(self, label):
+        self.auto_label.value = label
+
+    @property
+    def auto(self):
+        """
+        Access the ``auto`` property of the ``AutoLabel`` object.  If enabling, the ``label`` will
+        automatically be changed and kept in sync with the default label.
+        """
+        return self.auto_label.auto
+
+    @auto.setter
+    def auto(self, auto):
+        self.auto_label.auto = auto
 
     def _handle_default_viewer_selected(self, viewer_comp, is_valid):
         if len(viewer_comp.items) == 2:
@@ -1611,11 +1650,21 @@ class PlotOptionsSyncState(BasePluginComponent):
         self._on_viewer_layer_changed()
 
     def __repr__(self):
+        choices = self.choices
+        if len(choices):
+            return f"<PlotOptionsSyncState {self._glue_name}={self.value} choices={self.choices} (linked_states: {len(self.subscribed_states)})>"  # noqa
         return f"<PlotOptionsSyncState {self._glue_name}={self.value} (linked_states: {len(self.subscribed_states)})>"  # noqa
 
     @property
     def user_api(self):
-        return UserApiWrapper(self, expose=('value', 'unmix_state', 'linked_states'))
+        expose = ['value', 'unmix_state', 'linked_states']
+        if len(self.choices):
+            expose += ['choices']
+        return UserApiWrapper(self, expose=expose)
+
+    @property
+    def choices(self):
+        return [choice['text'] for choice in self.sync.get('choices', {})]
 
     def state_filter(self, state):
         if self._state_filter is None:

@@ -30,11 +30,20 @@ class UserApiWrapper:
             return super().__setattr__(attr, value)
 
         exp_obj = getattr(self._obj, attr)
-        from jdaviz.core.template_mixin import BaseSelectPluginComponent, PlotOptionsSyncState
+        from jdaviz.core.template_mixin import (BaseSelectPluginComponent,
+                                                PlotOptionsSyncState,
+                                                AddResults,
+                                                AutoLabel)
         if isinstance(exp_obj, BaseSelectPluginComponent):
             # this allows setting the selection directly without needing to access the underlying
             # .selected traitlet
             exp_obj.selected = value
+            return
+        elif isinstance(exp_obj, AddResults):
+            exp_obj.auto_label.value = value
+            return
+        elif isinstance(exp_obj, AutoLabel):
+            exp_obj.value = value
             return
         elif isinstance(exp_obj, PlotOptionsSyncState):
             # this allows setting the value immediately, and unmixing state, if appropriate,
@@ -42,7 +51,10 @@ class UserApiWrapper:
             if value == exp_obj.value:
                 exp_obj.unmix_state()
             else:
-                exp_obj.value = value
+                # if there are choices, allow either passing the text or value
+                text_to_value = {choice['text']: choice['value']
+                                 for choice in exp_obj.sync.get('choices', [])}
+                exp_obj.value = text_to_value.get(value, value)
             return
 
         return setattr(self._obj, attr, value)
@@ -51,7 +63,8 @@ class UserApiWrapper:
 class PluginUserApi(UserApiWrapper):
     """
     This is an API wrapper around an internal plugin.  For a full list of attributes/methods,
-    call dir(plugin_object) and for help on any of those methods, call help(plugin_object.attribute).
+    call dir(plugin_object) and for help on any of those methods,
+    call help(plugin_object.attribute).
 
     For example::
       help(plugin_object.show)

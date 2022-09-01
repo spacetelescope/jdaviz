@@ -221,13 +221,15 @@ class PlotOptions(PluginTemplateMixin):
                   'layer_visible', 'subset_visible', 'show_axes']
         if self.app.state.settings.get("configuration") == "cubeviz":
             expose += ['collapse_function']
-        if self.app.state.settings.get("configuration") != "imviz":  # TODO: actually check viewers/layers
+        if self.app.state.settings.get("configuration") != "imviz":
             expose += ['line_color', 'line_width', 'line_opacity', 'as_steps', 'uncertainty']
-        if self.app.state.settings.get("configuration") != "specviz":  # TODO: actually check viewers/layers
+        if self.app.state.settings.get("configuration") != "specviz":
             expose += ['stretch', 'stretch_perc', 'stretch_min', 'stretch_max',
                        'bitmap_visible', 'color_mode',
-                       'bitmap_color', 'bitmap_cmap', 'bitmap_opacity', 'bitmap_contrast', 'bitmap_bias',
-                       'contour_visible', 'contour_mode', 'contour_min', 'contour_max', 'contour_nlevels', 'contour_custom_levels']
+                       'bitmap_color', 'bitmap_cmap', 'bitmap_opacity',
+                       'bitmap_contrast', 'bitmap_bias',
+                       'contour_visible', 'contour_mode',
+                       'contour_min', 'contour_max', 'contour_nlevels', 'contour_custom_levels']
 
         return PluginUserApi(self, expose)
 
