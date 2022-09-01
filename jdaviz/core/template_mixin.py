@@ -369,6 +369,13 @@ class BaseSelectPluginComponent(BasePluginComponent, HasTraits):
         self.add_observe(kwargs.get('selected'), self._selected_changed, first=True)
         self.filters = filters
 
+    def __repr__(self):
+        return f"<selected={self.selected} choices={self.choices}>"
+
+    @property
+    def choices(self):
+        return self.labels
+
     @property
     def is_multiselect(self):
         if not hasattr(self, 'multiselect'):
