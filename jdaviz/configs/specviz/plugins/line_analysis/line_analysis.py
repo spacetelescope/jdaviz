@@ -70,7 +70,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     The Line Analysis plugin returns specutils analysis for a single spectral line.
     See the :ref:`Line Analysis Plugin Documentation <line-analysis>` for more details.
 
-    Only the following attributes and methods are available through the public plugin API:
+    Only the following attributes and methods are available through the
+    :ref:`public plugin API <plugin-apis>`:
 
     - ``dataset``
     - ``spectral_subset``
