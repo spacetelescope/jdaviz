@@ -175,9 +175,7 @@ def spectrum1d_cube():
 
 @pytest.fixture
 def spectrum1d_cube_custom_fluxunit():
-    def _create_cube(fluxunit):
-        _create_spectrum1d_cube_with_fluxunit(fluxunit)
-    return _create_cube
+    return _create_spectrum1d_cube_with_fluxunit
 
 
 @pytest.fixture
