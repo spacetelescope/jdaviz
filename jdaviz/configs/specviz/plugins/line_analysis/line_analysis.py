@@ -66,6 +66,12 @@ def _coerce_unit(quantity):
 
 @tray_registry('specviz-line-analysis', label="Line Analysis")
 class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin):
+    """
+    The Line Analysis plugin returns specutils analysis for a single spectral line.
+    The line is selected via the region tool in the spectrum viewer to select a spectral subset.
+    Note that you can have multiple subsets in Specviz,
+    but the plugin will only show statistics for the selected subset.
+    """
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "line_analysis.vue"
 
