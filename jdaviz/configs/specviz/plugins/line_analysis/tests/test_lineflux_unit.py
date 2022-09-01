@@ -15,6 +15,7 @@ expected_lineflux_results = {
 test_cases = list(expected_lineflux_results.keys())
 
 
+@pytest.mark.filterwarnings('ignore:contains multiple slashes, which is discouraged by the FITS')
 @pytest.mark.parametrize('spectra_fluxunit', test_cases)
 def test_flux_collapse_units(spectrum1d_cube_custom_fluxunit, spectra_fluxunit):
     ''' Calculates line flux and checks the units for each collapse function '''
