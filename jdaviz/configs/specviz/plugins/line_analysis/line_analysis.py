@@ -26,6 +26,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         DatasetSelectMixin,
                                         SpectralSubsetSelectMixin,
                                         SubsetSelect)
+from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
 
 __all__ = ['LineAnalysis']
@@ -87,8 +88,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     selected_line_redshift = Float(0).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs, expose=('dataset', 'spectral_subset', 'continuum',
-                                                  'width', 'show_continuum_marks', 'get_results'))
+        super().__init__(**kwargs)
 
         self.update_results(None)
 
@@ -125,6 +125,11 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                            handler=self._on_plotted_lines_changed)
         self.hub.subscribe(self, LineIdentifyMessage,
                            handler=self._on_identified_line_changed)
+
+    @property
+    def user_api(self):
+        return PluginUserApi(self, expose=('dataset', 'spectral_subset', 'continuum',
+                                           'width', 'show_continuum_marks', 'get_results'))
 
     def _on_viewer_data_changed(self, msg):
         viewer_id = self.app._viewer_item_by_reference('spectrum-viewer').get('id')

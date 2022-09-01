@@ -10,6 +10,7 @@ from glue_jupyter.common.toolbar_vuetify import read_icon
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelect, LayerSelect,
                                         PlotOptionsSyncState)
+from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
 
 __all__ = ['PlotOptions']
@@ -213,6 +214,22 @@ class PlotOptions(PluginTemplateMixin):
 
         self.setting_show_viewer_labels = self.app.state.settings['viewer_labels']
         self.app.state.add_callback('settings', self._on_app_settings_changed)
+
+    @property
+    def user_api(self):
+        expose = ['multiselect', 'viewer', 'layer',
+                  'layer_visible', 'subset_visible', 'show_axes']
+        if self.app.state.settings.get("configuration") == "cubeviz":
+            expose += ['collapse_function']
+        if self.app.state.settings.get("configuration") != "imviz":  # TODO: actually check viewers/layers
+            expose += ['line_color', 'line_width', 'line_opacity', 'as_steps', 'uncertainty']
+        if self.app.state.settings.get("configuration") != "specviz":  # TODO: actually check viewers/layers
+            expose += ['stretch', 'stretch_perc', 'stretch_min', 'stretch_max',
+                       'bitmap_visible', 'color_mode',
+                       'bitmap_color', 'bitmap_cmap', 'bitmap_opacity', 'bitmap_contrast', 'bitmap_bias',
+                       'contour_visible', 'contour_mode', 'contour_min', 'contour_max', 'contour_nlevels', 'contour_custom_levels']
+
+        return PluginUserApi(self, expose)
 
     @observe('setting_show_viewer_labels')
     def _on_show_viewer_labels_changed(self, event):

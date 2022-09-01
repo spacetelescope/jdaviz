@@ -20,6 +20,7 @@ from ipypopout import PopoutButton
 from jdaviz import __version__
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage)
+from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
 
 
 __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
@@ -129,38 +130,6 @@ class TemplateMixin(VuetifyTemplate, HubListener):
         return self._app.session.data_collection
 
 
-class PluginUserApi:
-    """
-    Expose user-facing methods/traitlets from a plugin.
-
-    In addition to the methods exposed below directly here, see dir(plugin) for a list of
-    exposed attributes and methods from the underlying plugin object.
-    """
-    def __init__(self, plugin, expose):
-        self._plugin = plugin
-        self._expose = list(expose) + ['open_in_tray', 'show']
-
-        self.__doc__ = self.__doc__ + "ADDED IN INIT"
-
-    def __repr__(self):
-        return f'<{self._plugin.__class__.__name__} UserAPI>'
-
-    def __dir__(self):
-        return self._expose + ['show']
-
-    def __getattr__(self, attr):
-        if attr in ['_plugin', '_expose'] or attr not in self._expose:
-            return super().__getattribute__(attr)
-
-        return getattr(self._plugin, attr)
-
-    def __setattr__(self, attr, value):
-        if attr in ['_plugin', '_expose'] or attr not in self._expose:
-            return super().__setattr__(attr, value)
-
-        return setattr(self._plugin, attr, value)
-
-
 class PluginTemplateMixin(TemplateMixin):
     """
     This base class can be inherited by all sidebar/tray plugins to expose common functionality.
@@ -168,12 +137,16 @@ class PluginTemplateMixin(TemplateMixin):
     disabled_msg = Unicode("").tag(sync=True)
     plugin_opened = Bool(False).tag(sync=True)
 
-    def __init__(self, *args, **kwargs):
-        self.user_api = PluginUserApi(self, kwargs.pop('expose', []))
-
-        super().__init__(*args, **kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.app.state.add_callback('tray_items_open', self._mxn_update_plugin_opened)
         self.app.state.add_callback('drawer', self._mxn_update_plugin_opened)
+
+    @property
+    def user_api(self):
+        # plugins should override this to pass their own list of expose functionality, which
+        # can even be dependent on config, etc.
+        return PluginUserApi(self, expose=[])
 
     def _mxn_update_plugin_opened(self, new_value):
         app_state = self.app.state
@@ -1614,6 +1587,13 @@ class PlotOptionsSyncState(BasePluginComponent):
         self.add_observe(layer_select._plugin_traitlets['selected'], self._on_viewer_layer_changed)
         self.add_observe(value, self._on_value_changed)
         self._on_viewer_layer_changed()
+
+    def __repr__(self):
+        return f"<PlotOptionsSyncState {self._glue_name}={self.value} (linked_states: {len(self.subscribed_states)})>"  # noqa
+
+    @property
+    def user_api(self):
+        return UserApiWrapper(self, expose=('value', 'unmix_state', 'linked_states'))
 
     def state_filter(self, state):
         if self._state_filter is None:
