@@ -27,7 +27,7 @@ def test_flux_collapse_units(spectrum1d_cube_custom_fluxunit, spectra_fluxunit):
         # Initialize Cubeviz with specific data and collapse function
         cubeviz_helper = Cubeviz()
         data_label = "Test Cube"
-        cubeviz_helper.load_data(data)
+        cubeviz_helper.load_data(data, data_label=data_label)
         cubeviz_helper.app.get_viewer('spectrum-viewer').state.function = function
 
         # Open the plugin and force the calculation
@@ -39,7 +39,7 @@ def test_flux_collapse_units(spectrum1d_cube_custom_fluxunit, spectra_fluxunit):
         for result in line_analysis_plugin.results:
             if result['function'] == 'Line Flux':
                 autocollapsed_spectrum_unit = cubeviz_helper.specviz.get_spectra()[(data_label +
-                                                                                    " [FLUX]")
+                                                                                    "[FLUX]")
                                                                                    ].flux.unit
                 # Futureproofing: Eventually Cubeviz autocollapse will change the flux units of the
                 # spectra depending on whether the spectrum was collapsed OVER SPAXELS or not. Only
