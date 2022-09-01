@@ -343,7 +343,16 @@ class BaseSelectPluginComponent(BasePluginComponent, HasTraits):
         self.filters = filters
 
     def __repr__(self):
+        if hasattr(self, 'multiselect'):
+            return f"<selected={self.selected} multiselect={self.multiselect} choices={self.choices}>"  # noqa
         return f"<selected={self.selected} choices={self.choices}>"
+
+    @property
+    def user_api(self):
+        expose = ['selected', 'choices', 'selected_item', 'selected_obj', 'select_default']
+        if hasattr(self, 'multiselect'):
+            expose += ['multiselect', 'select_all', 'select_none']
+        return UserApiWrapper(self, expose)
 
     @property
     def choices(self):
@@ -355,6 +364,19 @@ class BaseSelectPluginComponent(BasePluginComponent, HasTraits):
             return False
         else:
             return self.multiselect
+
+    def select_default(self):
+        self._apply_default_selection()
+
+    def select_all(self):
+        if not self.multiselect:
+            raise ValueError("not currently in multiselect mode")
+        self.selected = self.choices
+
+    def select_none(self):
+        if not self.multiselect:
+            raise ValueError("not currently in multiselect mode")
+        self.selected = []
 
     @property
     def default_text(self):
