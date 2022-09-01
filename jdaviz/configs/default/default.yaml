@@ -12,6 +12,7 @@ toolbar:
   - g-viewer-creator
   - g-subset-tools
 tray:
+  - g-metadata-viewer
+  - g-plot-options
   - g-subset-plugin
-  - g-gaussian-smooth
   - g-export-plot

@@ -685,7 +685,8 @@ class LayerSelect(SelectPluginComponent):
         try:
             return self.app.get_viewer(viewer)
         except TypeError:
-            return self.app.get_viewer_by_id(viewer)
+            if viewer not in (None, ''):
+                return self.app.get_viewer_by_id(viewer)
 
     def _layer_to_dict(self, layer):
         d = {"label": layer.layer.label,
@@ -714,13 +715,17 @@ class LayerSelect(SelectPluginComponent):
         viewers = [self._get_viewer(viewer) for viewer in viewer_names]
 
         manual_items = [{'label': label} for label in self.manual_options]
-        layers = [layer for viewer in viewers for layer in getattr(viewer, 'layers', [])]
-        # remove duplicates - NOTE: by doing this, any color-mismatch between layers with the
-        # same name in different viewers will be randomly assigned within plot_options
-        # based on which was found _first.
-        layer_labels = [layer.layer.label for layer in layers]
-        _, inds = np.unique(layer_labels, return_index=True)
-        layers = [layers[i] for i in inds]
+
+        if viewers == [None]:
+            layers = []
+        else:
+            layers = [layer for viewer in viewers for layer in getattr(viewer, 'layers', [])]
+            # remove duplicates - NOTE: by doing this, any color-mismatch between layers with the
+            # same name in different viewers will be randomly assigned within plot_options
+            # based on which was found _first.
+            layer_labels = [layer.layer.label for layer in layers]
+            _, inds = np.unique(layer_labels, return_index=True)
+            layers = [layers[i] for i in inds]
 
         self.items = manual_items + [self._layer_to_dict(layer) for layer in layers]
         self._apply_default_selection()
@@ -1209,10 +1214,14 @@ class ViewerSelect(SelectPluginComponent):
 
     @property
     def selected_id(self):
+        if self.selected_item is None:
+            return None
         return self.selected_item.get('id', None)
 
     @property
     def selected_reference(self):
+        if self.selected_item is None:
+            return None
         return self.selected_item.get('reference', None)
 
     def _get_selected_obj(self, selected, selected_id):
@@ -1970,11 +1979,17 @@ class PlotOptionsSyncState(BasePluginComponent):
     @cached_property
     def subscribed_icons(self):
         # dictionary items giving information about the entries in subscribed_states
-        viewer_icons = self._viewer_select.selected_item.get('icon', [])
+        if self._viewer_select.selected_item is None:
+            viewer_icons = []
+        else:
+            viewer_icons = self._viewer_select.selected_item.get('icon', [])
         if not isinstance(viewer_icons, list):
             viewer_icons = [viewer_icons]
 
-        layer_icons = self._layer_select.selected_item.get('icon', [])
+        if self._layer_select.selected_item is None:
+            layer_icons = []
+        else:
+            layer_icons = self._layer_select.selected_item.get('icon', [])
         if not isinstance(layer_icons, list):
             layer_icons = [layer_icons]
 
