@@ -6,6 +6,9 @@ New Features
 
 - Profile viewers now support plotting with profiles "as steps". [#1595]
 
+- For JWST products, line flux in the Line Analysis plugin are reported 
+  in base units of W/m2. [#1564]
+
 Cubeviz
 ^^^^^^^
 
@@ -87,9 +90,6 @@ New Features
   ``regions`` shapes into ``glue`` ROIs. [#1463]
 
 - New plugin-level ``open_in_tray`` method to programmatically show the plugin. [#1559]
-
-- For JWST products, line flux in the Line Analysis plugin are reported 
-  in base units of W/m2. [#1564]
 
 Cubeviz
 ^^^^^^^
