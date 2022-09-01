@@ -68,9 +68,17 @@ def _coerce_unit(quantity):
 class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin):
     """
     The Line Analysis plugin returns specutils analysis for a single spectral line.
-    The line is selected via the region tool in the spectrum viewer to select a spectral subset.
-    Note that you can have multiple subsets in Specviz,
-    but the plugin will only show statistics for the selected subset.
+    See the :ref:`Line Analysis Plugin Documentation <line-analysis>` for more details.
+
+    Only the following attributes and methods are available through the public plugin API:
+
+    - ``dataset``
+    - ``spectral_subset``
+    - ``continuum``
+    - :attr:`width`
+    - :meth:`show_continuum_marks`
+    - :meth:`get_results`
+
     """
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "line_analysis.vue"
