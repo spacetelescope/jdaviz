@@ -217,7 +217,7 @@ class PlotOptions(PluginTemplateMixin):
 
     @property
     def user_api(self):
-        expose = ['multiselect', 'viewer', 'layer',
+        expose = ['multiselect', 'viewer', 'layer', 'select_all',
                   'layer_visible', 'subset_visible', 'show_axes']
         if self.app.state.settings.get("configuration") == "cubeviz":
             expose += ['collapse_function']
@@ -237,6 +237,24 @@ class PlotOptions(PluginTemplateMixin):
 
     def _on_app_settings_changed(self, value):
         self.setting_show_viewer_labels = value['viewer_labels']
+
+    def select_all(self, viewers=True, layers=True):
+        """
+        Enable multiselect mode and select all viewers and/or layers.
+
+        Parameters
+        ----------
+        viewers : bool
+            Whether to select all viewers (default: True)
+
+        layers: bool
+            Whether to select all layers (default: True)
+        """
+        self.multiselect = True
+        if viewers:
+            self.viewer.select_all()
+        if layers:
+            self.layer.select_all()
 
     def vue_unmix_state(self, name):
         sync_state = getattr(self, name)
