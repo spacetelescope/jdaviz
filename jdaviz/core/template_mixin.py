@@ -491,12 +491,12 @@ class BaseSelectPluginComponent(BasePluginComponent, HasTraits):
                 self.selected = [event['new']]
                 return
             if not np.all([item in self.labels + [''] for item in event['new']]):
-                self._apply_default_selection()
-                raise ValueError(f"not all items in {event['new']} are one of {self.labels}")
+                self.selected = event['old']
+                raise ValueError(f"not all items in {event['new']} are one of {self.labels}, reverting selection to {event['old']}")  # noqa
         else:
             if event['new'] not in self.labels + ['']:
-                self._apply_default_selection()
-                raise ValueError(f"{event['new']} not one of {self.labels}")
+                self.selected = event['old']
+                raise ValueError(f"{event['new']} not one of {self.labels}, reverting selection to {event['old']}")  # noqa
 
 
 class LayerSelect(BaseSelectPluginComponent):
