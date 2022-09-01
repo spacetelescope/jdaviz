@@ -333,7 +333,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             # TODO: update specutils to allow ALL analysis to take regions and continuum so we
             # don't need these if statements
             if function == "Line Flux":
-                flux_unit = spec_subtracted.flux.unit()
+                flux_unit = spec_subtracted.flux.unit
                 # If the flux unit is equivalent to Jy, or Jy per spaxel for Cubeviz,
                 # enforce integration in frequency space
                 if (flux_unit.is_equivalent(u.Jy) or
