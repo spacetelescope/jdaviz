@@ -30,11 +30,11 @@ class UserApiWrapper:
             return super().__setattr__(attr, value)
 
         exp_obj = getattr(self._obj, attr)
-        from jdaviz.core.template_mixin import (BaseSelectPluginComponent,
+        from jdaviz.core.template_mixin import (SelectPluginComponent,
                                                 PlotOptionsSyncState,
                                                 AddResults,
                                                 AutoLabel)
-        if isinstance(exp_obj, BaseSelectPluginComponent):
+        if isinstance(exp_obj, SelectPluginComponent):
             # this allows setting the selection directly without needing to access the underlying
             # .selected traitlet
             exp_obj.selected = value

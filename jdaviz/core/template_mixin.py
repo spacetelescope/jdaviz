@@ -24,7 +24,7 @@ from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
 
 
 __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
-           'BasePluginComponent', 'BaseSelectPluginComponent',
+           'BasePluginComponent', 'SelectPluginComponent',
            'SubsetSelect', 'SpatialSubsetSelectMixin', 'SpectralSubsetSelectMixin',
            'ViewerSelect', 'ViewerSelectMixin',
            'DatasetSelect', 'DatasetSelectMixin',
@@ -299,19 +299,32 @@ class BasePluginComponent(HubListener):
         return self._plugin.app.get_viewer("spectrum-viewer")
 
 
-class BaseSelectPluginComponent(BasePluginComponent, HasTraits):
+class SelectPluginComponent(BasePluginComponent, HasTraits):
     """
-    This base class extends BasePluginComponent for common functionality for a select/dropdown
-    component.  The subclasses MUST have an ``items`` traitlet as a list of dictionaries, with
-    'label' as the selection entry (and any other optional entries for styling, etc) and a
-    ``selected`` string traitlet.  The subclasses should also override ``selected_obj`` and may
-    choose to override ``_selected_changed`` (likely with a super call to keep the base logic).
+    Plugin select, with support for single or multi-selection.
+
+    Useful API methods/attributes:
+
+    - :attr:`choices`
+    - ``selected``
+    - :attr:`is_multiselect`
+    - :meth:`select_default`
+    - :meth:`select_all` (only if ``is_multiselect``)
+    - :meth:`select_none` (only if ``is_multiselect``)
     """
     filters = List([]).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
+        """
+        This extends BasePluginComponent for common functionality for a select/dropdown
+        component.  The subclasses MUST have an ``items`` traitlet as a list of dictionaries, with
+        'label' as the selection entry (and any other optional entries for styling, etc) and a
+        ``selected`` string traitlet.  The subclasses should also override ``selected_obj`` and may
+        choose to override ``_selected_changed`` (likely with a super call to keep the base logic).
+        """
+
         # default_mode can be one of empty, first, default_text (requires default_text to be set)
-        default_mode = kwargs.pop('default_mode', 'empty')
+        default_mode = kwargs.pop('default_mode', 'empty' if kwargs.get('multiselect', False) else 'first')  # noqa
         default_text = kwargs.pop('default_text', None)
         manual_options = kwargs.pop('manual_options', [])
         self._viewers = kwargs.pop('viewers', None)
@@ -342,17 +355,20 @@ class BaseSelectPluginComponent(BasePluginComponent, HasTraits):
         self.add_observe(kwargs.get('selected'), self._selected_changed, first=True)
         self.filters = filters
 
+        if default_mode != 'empty' and self.selected == '':
+            self._apply_default_selection()
+
     def __repr__(self):
         if hasattr(self, 'multiselect'):
             return f"<selected={self.selected} multiselect={self.multiselect} choices={self.choices}>"  # noqa
         return f"<selected={self.selected} choices={self.choices}>"
 
-    @property
-    def user_api(self):
-        expose = ['selected', 'choices', 'selected_item', 'selected_obj', 'select_default']
-        if hasattr(self, 'multiselect'):
-            expose += ['multiselect', 'select_all', 'select_none']
-        return UserApiWrapper(self, expose)
+#    @property
+#    def user_api(self):
+#        expose = ['selected', 'choices', 'selected_item', 'selected_obj', 'select_default']
+#        if hasattr(self, 'multiselect'):
+#            expose += ['multiselect', 'select_all', 'select_none']
+#        return UserApiWrapper(self, expose)
 
     @property
     def choices(self):
@@ -366,17 +382,29 @@ class BaseSelectPluginComponent(BasePluginComponent, HasTraits):
             return self.multiselect
 
     def select_default(self):
+        """
+        Apply and return the default selection.
+        """
         self._apply_default_selection()
+        return self.selected
 
     def select_all(self):
-        if not self.multiselect:
+        """
+        Select (and return) all available options.  Raises an error if not :attr:`is_multiselect`
+        """
+        if not self.is_multiselect:
             raise ValueError("not currently in multiselect mode")
         self.selected = self.choices
+        return self.selected
 
     def select_none(self):
-        if not self.multiselect:
+        """
+        Select (and return) and empty list.  Raises an error if not :attr:`is_multiselect`
+        """
+        if not self.is_multiselect:
             raise ValueError("not currently in multiselect mode")
         self.selected = []
+        return self.selected
 
     @property
     def default_text(self):
@@ -501,7 +529,7 @@ class BaseSelectPluginComponent(BasePluginComponent, HasTraits):
                 raise ValueError(f"{event['new']} not one of {self.labels}, reverting selection to {event['old']}")  # noqa
 
 
-class LayerSelect(BaseSelectPluginComponent):
+class LayerSelect(SelectPluginComponent):
     """
     Traitlets (in the object, custom traitlets in the plugin):
 
@@ -692,7 +720,7 @@ class LayerSelectMixin(VuetifyTemplate, HubListener):
                                  'layer_multiselect')
 
 
-class SubsetSelect(BaseSelectPluginComponent):
+class SubsetSelect(SelectPluginComponent):
     """
     Traitlets (in the object, custom traitlets in the plugin):
 
@@ -952,7 +980,7 @@ class SpatialSubsetSelectMixin(VuetifyTemplate, HubListener):
                                            allowed_type='spatial')
 
 
-class ViewerSelect(BaseSelectPluginComponent):
+class ViewerSelect(SelectPluginComponent):
     """
     Traitlets (in the object, custom traitlets in the plugin):
 
@@ -1120,7 +1148,7 @@ class ViewerSelectMixin(VuetifyTemplate, HubListener):
         self.viewer = ViewerSelect(self, 'viewer_items', 'viewer_selected', 'viewer_multiselect')
 
 
-class DatasetSelect(BaseSelectPluginComponent):
+class DatasetSelect(SelectPluginComponent):
     """
     Traitlets (in the object, custom traitlets in the plugin):
 
