@@ -1,3 +1,4 @@
+from astropy.tests.helper import assert_quantity_allclose
 import astropy.units as u
 from glue.viewers.profile.state import FUNCTIONS as COLLAPSE_FUNCTIONS
 import numpy as np
@@ -77,5 +78,5 @@ def test_unit_gaussian_lineflux(specviz_helper):
     specviz_helper.load_data(Spectrum1D(spectral_axis=freq, flux=flux))
 
     lineflux_result = _calculate_line_flux(specviz_helper)
-    assert np.allclose(float(lineflux_result['result']), 1e-26, rtol=1e-10)
-    assert u.Unit(lineflux_result['unit']) == u.Unit('W/m2')
+    assert_quantity_allclose(float(lineflux_result['result']) * u.Unit(lineflux_result['unit']),
+                             1e-26*u.Unit('W/m2'))
