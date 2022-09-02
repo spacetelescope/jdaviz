@@ -4,7 +4,7 @@
 New Features
 ------------
 
-- Profile viewers now support plotting with profiles "as steps". [#1595]
+- Profile viewers now support plotting with profiles "as steps". [#1595, #1624]
 
 Cubeviz
 ^^^^^^^

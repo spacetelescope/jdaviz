@@ -1334,6 +1334,7 @@ class Application(VuetifyTemplate, HubListener):
         for data in viewer_data:
             if data.label not in active_data_labels:
                 viewer.remove_data(data)
+                viewer._layers_with_defaults_applied.remove(data.label)
                 remove_data_message = RemoveDataMessage(data, viewer,
                                                         viewer_id=viewer_id,
                                                         sender=self)
