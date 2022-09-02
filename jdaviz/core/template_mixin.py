@@ -27,9 +27,11 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'BasePluginComponent', 'SelectPluginComponent',
            'SubsetSelect', 'SpatialSubsetSelectMixin', 'SpectralSubsetSelectMixin',
            'ViewerSelect', 'ViewerSelectMixin',
+           'LayerSelect', 'LayerSelectMixin',
            'DatasetSelect', 'DatasetSelectMixin',
            'AutoLabel', 'AutoLabelMixin',
-           'AddResults', 'AddResultsMixin']
+           'AddResults', 'AddResultsMixin',
+           'PlotOptionsSyncState']
 
 
 def show_widget(widget, loc, title):
@@ -305,12 +307,12 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
     Useful API methods/attributes:
 
-    - :attr:`choices`
-    - ``selected``
-    - :attr:`is_multiselect`
-    - :meth:`select_default`
-    - :meth:`select_all` (only if ``is_multiselect``)
-    - :meth:`select_none` (only if ``is_multiselect``)
+    * :meth:`choices`
+    * ``selected``
+    * :meth:`~SelectPluginComponent.is_multiselect`
+    * :meth:`select_default`
+    * :meth:`select_all` (only if ``is_multiselect``)
+    * :meth:`select_none` (only if ``is_multiselect``)
     """
     filters = List([]).tag(sync=True)
 
@@ -390,7 +392,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
     def select_all(self):
         """
-        Select (and return) all available options.  Raises an error if not :attr:`is_multiselect`
+        Select (and return) all available options.  Raises an error if not :meth:`is_multiselect`
         """
         if not self.is_multiselect:
             raise ValueError("not currently in multiselect mode")
@@ -399,7 +401,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
     def select_none(self):
         """
-        Select (and return) and empty list.  Raises an error if not :attr:`is_multiselect`
+        Select (and return) and empty list.  Raises an error if not :meth:`is_multiselect`
         """
         if not self.is_multiselect:
             raise ValueError("not currently in multiselect mode")
@@ -531,7 +533,21 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
 class LayerSelect(SelectPluginComponent):
     """
-    Traitlets (in the object, custom traitlets in the plugin):
+    Plugin select for layers, with support for single or multi-selection.
+
+    Useful API methods/attributes:
+
+    * :meth:`~SelectPluginComponent.choices`
+    * ``selected``
+    * :meth:`~SelectPluginComponent.is_multiselect`
+    * :meth:`~SelectPluginComponent.select_default`
+    * :meth:`~SelectPluginComponent.select_all` (only if ``is_multiselect``)
+    * :meth:`~SelectPluginComponent.select_none` (only if ``is_multiselect``)
+    * :attr:`selected_obj`
+    """
+
+    """
+    Traitlets (in the object, custom traitlets in the plugin
 
     * ``items`` (list of dicts with keys: label, color)
     * ``selected`` (string)
@@ -562,7 +578,6 @@ class LayerSelect(SelectPluginComponent):
         label="Layer"
         hint="Select layer."
       />
-
     """
     def __init__(self, plugin, items, selected, viewer,
                  multiselect=None,
@@ -721,6 +736,22 @@ class LayerSelectMixin(VuetifyTemplate, HubListener):
 
 
 class SubsetSelect(SelectPluginComponent):
+    """
+    Plugin select for subsets, with support for single or multi-selection.
+
+    Useful API methods/attributes:
+
+    * :meth:`~SelectPluginComponent.choices`
+    * ``selected``
+    * :meth:`~SelectPluginComponent.is_multiselect`
+    * :meth:`~SelectPluginComponent.select_default`
+    * :meth:`~SelectPluginComponent.select_all` (only if ``is_multiselect``)
+    * :meth:`~SelectPluginComponent.select_none` (only if ``is_multiselect``)
+    * :attr:`selected_obj`
+    * :attr:`selected_subset_state`
+    * :meth:`selected_min_max`
+    """
+
     """
     Traitlets (in the object, custom traitlets in the plugin):
 
@@ -982,6 +1013,21 @@ class SpatialSubsetSelectMixin(VuetifyTemplate, HubListener):
 
 class ViewerSelect(SelectPluginComponent):
     """
+    Plugin select for viewers, with support for single or multi-selection.
+
+    Useful API methods/attributes:
+
+    * :meth:`~SelectPluginComponent.choices`
+    * ``selected``
+    * :attr:`selected_id`
+    * :attr:`selected_obj`
+    * :meth:`~SelectPluginComponent.is_multiselect`
+    * :meth:`~SelectPluginComponent.select_default`
+    * :meth:`~SelectPluginComponent.select_all` (only if ``is_multiselect``)
+    * :meth:`~SelectPluginComponent.select_none` (only if ``is_multiselect``)
+    """
+
+    """
     Traitlets (in the object, custom traitlets in the plugin):
 
     * ``items`` (list of dicts with keys: id, reference, label)
@@ -1149,6 +1195,21 @@ class ViewerSelectMixin(VuetifyTemplate, HubListener):
 
 
 class DatasetSelect(SelectPluginComponent):
+    """
+    Plugin select for data entries, with support for single or multi-selection.
+
+    Useful API methods/attributes:
+
+    * :meth:`~SelectPluginComponent.choices`
+    * ``selected``
+    * :attr:`selected_obj`
+    * :attr:`selected_dc_item`
+    * :meth:`~SelectPluginComponent.is_multiselect`
+    * :meth:`~SelectPluginComponent.select_default`
+    * :meth:`~SelectPluginComponent.select_all` (only if ``is_multiselect``)
+    * :meth:`~SelectPluginComponent.select_none` (only if ``is_multiselect``)
+    """
+
     """
     Traitlets (in the object, custom traitlets in the plugin):
 
@@ -1351,6 +1412,17 @@ class DatasetSelectMixin(VuetifyTemplate, HubListener):
 
 class AutoLabel(BasePluginComponent):
     """
+    Label component with the ability to synchronize to a plugin-provided default value or override
+    with a custom value.  Setting ``value`` will set ``auto`` to False.  Setting ``auto`` to True,
+    will set ``value`` to the default value.
+
+    Useful API methods/attributes:
+
+    * ``value``
+    * ``auto``
+    """
+
+    """
     Traitlets (in the object, custom traitlets in the plugin):
 
     * ``value`` (string: user-provided label for the results data-entry.  If ``auto``, changes
@@ -1384,9 +1456,9 @@ class AutoLabel(BasePluginComponent):
     def __repr__(self):
         return f"<AutoLabel label='{self.value}' auto={self.auto}>"
 
-    @property
-    def user_api(self):
-        return UserApiWrapper(self, ('value', 'auto'))
+#    @property
+#    def user_api(self):
+#        return UserApiWrapper(self, ('value', 'auto'))
 
     def _on_set_to_default(self, msg={}):
         if self.auto:
@@ -1429,6 +1501,21 @@ class AutoLabelMixin(VuetifyTemplate, HubListener):
 
 
 class AddResults(BasePluginComponent):
+    """
+    Plugin component for providing a data-label and selecting a viewer to add the results from
+    the plugin.
+
+    Useful API methods/attributes:
+
+    * :attr:`label` (`AutoLabel`):
+        the label component.  Setting will redirect to setting ``label.value``.
+    * :attr:`auto`
+        shortcut to ``label.auto``.  Setting will redirect to setting ``label.auto``.
+    * ``viewer`` (`ViewerSelect`):
+        the viewer to add the results, or None to add the results to the data-collection but
+        not load into a viewer.
+    """
+
     """
     Traitlets (in the object, custom traitlets in the plugin):
 
@@ -1659,6 +1746,14 @@ class AddResultsMixin(VuetifyTemplate, HubListener):
 
 class PlotOptionsSyncState(BasePluginComponent):
     """
+    Plugin component for syncing with glue state objects.
+
+    Useful API methods/attributes:
+
+    * ``value``
+    * :meth:`choices` (only when applicable)
+    * :attr:`linked_states`
+    * :meth:`unmix_state`
     """
     def __init__(self, plugin, viewer_select, layer_select, glue_name,
                  value, sync, state_filter=None):

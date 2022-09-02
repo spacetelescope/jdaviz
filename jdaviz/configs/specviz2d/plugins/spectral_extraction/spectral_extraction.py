@@ -32,6 +32,8 @@ class SpectralExtraction(PluginTemplateMixin):
     Only the following attributes and methods are available through the
     :ref:`public plugin API <plugin-apis>`:
 
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :attr:`setting_interactive_extract`
     * ``trace_dataset`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
         controls the input dataset for generating the trace.
@@ -59,7 +61,7 @@ class SpectralExtraction(PluginTemplateMixin):
         Separation from the referenced trace for the center of each of the background window(s).
     * :attr:`bg_width` :
         full width of each background window(s).
-    * ``bg_add_results``
+    * ``bg_add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
     * ``bg_sub_add_results``
     * :meth:`import_bg`
     * :meth:`export_bg`
@@ -71,7 +73,7 @@ class SpectralExtraction(PluginTemplateMixin):
         background extraction, select the original input 2D spectrum.
     * :attr:`ext_width` :
         full width of the extraction window.
-    * ``ext_add_results``
+    * ``ext_add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
     * :meth:`import_extract`
     * :meth:`export_extract`
     * :meth:`export_extract_spectrum`

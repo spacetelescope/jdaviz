@@ -73,12 +73,21 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     Only the following attributes and methods are available through the
     :ref:`public plugin API <plugin-apis>`:
 
-    - ``dataset``
-    - ``spectral_subset``
-    - ``continuum``
-    - :attr:`width`
-    - :meth:`show_continuum_marks`
-    - :meth:`get_results`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
+    * ``dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`):
+        Dataset to use for computing line statistics.
+    * ``spectral_subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
+        Subset to use for the line, or ``Entire Spectrum``.
+    * ``continuum`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
+        Subset to use for the continuum, or ``Surrounding`` to use a region surrounding the
+        subset set in ``spectral_subset``.
+    * :attr:`width`:
+        Width, relative to the overall line spectral region, to fit the linear continuum
+        (excluding the region containing the line). If 1, will use endpoints within line region
+        only.
+    * :meth:`show_continuum_marks`
+    * :meth:`get_results`
 
     """
     dialog = Bool(False).tag(sync=True)

@@ -18,6 +18,70 @@ __all__ = ['PlotOptions']
 
 @tray_registry('g-plot-options', label="Plot Options")
 class PlotOptions(PluginTemplateMixin):
+    """
+    The Plot Options Plugin gives access to per-viewer and per-layer options and enables
+    setting across multiple viewers/layers simultaneously.
+
+    Only the following attributes and methods are available through the
+    :ref:`public plugin API <plugin-apis>`:
+
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
+    * ``multiselect``:
+        whether ``viewer`` and ``layer`` should both be in multiselect mode.
+    * ``viewer`` (:class:`~jdaviz.core.template_mixin.ViewerSelect`):
+    * ``layer`` (:class:`~jdaviz.core.template_mixin.LayerSelect`):
+    * :meth:`select_all`
+    * ``layer_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`)
+    * ``subset_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`)
+    * ``show_axes`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`)
+    * ``collapse_function`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+        only avilable for Cubeviz
+    * ``line_color`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+        not available for Imviz
+    * ``line_width`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+        not available for Imviz
+    * ``line_opacity`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+        not available for Imviz
+    * ``as_steps`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+        not available for Imviz
+    * ``uncertainty`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+        not available for Imviz
+    * ``stretch`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+        not available for Specviz
+    * ``stretch_perc`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+        not available for Specviz
+    * ``stretch_min`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+        not available for Specviz
+    * ``stretch_max`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+        not available for Specviz
+    * ``bitmap_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+        not available for Specviz
+    * ``color_mode`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+        not available for Specviz
+    * ``bitmap_color`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+        not available for Specviz
+    *  ``bitmap_cmap`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+        not available for Specviz
+    * ``bitmap_opacity`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+        not available for Specviz
+    * ``bitmap_contrast`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+        not available for Specviz
+    * ``bitmap_bias`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+        not available for Specviz
+    * ``contour_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+        not available for Specviz
+    * ``contour_mode`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+        not available for Specviz
+    * ``contour_min`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+        not available for Specviz
+    * ``contour_max`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+        not available for Specviz
+    * ``contour_nlevels`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+        not available for Specviz
+    * ``contour_custom_levels`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+        not available for Specviz
+    """
     template_file = __file__, "plot_options.vue"
 
     # multiselect is shared between viewer and layer
