@@ -6,8 +6,8 @@ New Features
 
 - Profile viewers now support plotting with profiles "as steps". [#1595]
 
-- For JWST products, line flux in the Line Analysis plugin are reported 
-  in base units of W/m2. [#1564]
+- Line flux in the Line Analysis plugin are reported in W/m2 if Spectral Flux is given
+  in Jy [#1564]
 
 Cubeviz
 ^^^^^^^
