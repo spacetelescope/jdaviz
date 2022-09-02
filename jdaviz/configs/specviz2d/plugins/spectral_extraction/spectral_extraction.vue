@@ -242,6 +242,12 @@
         ></v-select>
       </v-row>
 
+      <v-row v-if="ext_uncert_warn">
+        <span class="v-messages v-messages__message text--secondary">
+          <b style="color: red !important">WARNING:</b> uncertainties do not have assigned type, assuming standard deviation.
+        </span>
+      </v-row>
+
       <v-row v-if="ext_type_selected === 'Boxcar'">
         <v-text-field
           label="Width"

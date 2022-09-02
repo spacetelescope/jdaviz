@@ -80,6 +80,7 @@ class SpectralExtraction(PluginTemplateMixin):
 
     ext_width = IntHandleEmpty(0).tag(sync=True)
 
+    ext_uncert_warn = Bool(False).tag(sync=True)
     ext_specreduce_err = Unicode().tag(sync=True)
 
     ext_results_label = Unicode().tag(sync=True)
@@ -396,6 +397,14 @@ class SpectralExtraction(PluginTemplateMixin):
 
         self.active_step = 'ext'
         self._update_plugin_marks()
+
+        # TODO: remove this, the traitlet, and the row in spectral_extraction.vue
+        # when specutils handles the warning/exception
+        if self.ext_type_selected == 'Horne':
+            inp_sp2d = self._get_ext_input_spectrum()
+            self.ext_uncert_warn = inp_sp2d.uncertainty is not None and not hasattr(inp_sp2d.uncertainty, 'uncertainty_type')  # noqa
+        else:
+            self.ext_uncert_warn = False
 
     def _set_create_kwargs(self, **kwargs):
         invalid_kwargs = [k for k in kwargs.keys() if not hasattr(self, k)]
