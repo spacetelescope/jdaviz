@@ -708,7 +708,15 @@ def mos_niriss_parser(app, data_dir):
                         # The wavelength is stored in a WAVELENGTH HDU. This is
                         # a 2D array, but in order to be able to use Spectrum1D
                         # we use the average wavelength for all image rows
-                        wav = temp[wav_hdus[sci]].data.mean(axis=0) * u.micron
+
+                        if data.shape[0] > data.shape[1]:
+                            # then the input data needs to be transposed, and wavelength
+                            # needs to be averaged over axis=1 instead of axis=0
+                            data = data.T
+                            wav = temp[wav_hdus[sci]].data.mean(axis=1) * u.micron
+                        else:
+                            wav = temp[wav_hdus[sci]].data.mean(axis=0) * u.micron
+
                         spec2d = Spectrum1D(data * u.one, spectral_axis=wav, meta=meta)
                         spec2d.meta['INSTRUME'] = 'NIRISS'
                         spec2d.meta['mosviz_row'] = len(spec_labels_2d)
