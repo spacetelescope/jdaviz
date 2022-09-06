@@ -148,8 +148,10 @@ class JdavizViewerMixin:
         # to avoid recursion, but also handle multiple layers for the same subset
         expected_subset_layers = self._expected_subset_layers[:]
         for layer in self.state.layers:
-            if layer.layer.label not in self._layers_with_defaults_applied:
-                self._layers_with_defaults_applied.append(layer.layer.label)
+            layer_info = {'data_label': layer.layer.data.label,
+                          'layer_label': layer.layer.label}
+            if layer_info not in self._layers_with_defaults_applied:
+                self._layers_with_defaults_applied.append(layer_info)
                 self._apply_layer_defaults(layer)
 
             if layer.layer.label in expected_subset_layers:
