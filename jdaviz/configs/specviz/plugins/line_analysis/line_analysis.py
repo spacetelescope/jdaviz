@@ -77,6 +77,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * ``dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`):
         Dataset to use for computing line statistics.
+    * ``spatial_subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
+      Select which region's collapsed spectrum to analyze or ``Entire Cube``.
     * ``spectral_subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
         Subset to use for the line, or ``Entire Spectrum``.
     * ``continuum`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):

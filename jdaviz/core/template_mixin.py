@@ -34,7 +34,7 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'PlotOptionsSyncState']
 
 
-def show_widget(widget, loc, title):
+def show_widget(widget, loc, title):  # pragma: no cover
     from IPython import get_ipython
     from IPython.display import display
 
@@ -1129,7 +1129,8 @@ class ViewerSelect(SelectPluginComponent):
                 elif entry in self.ids:
                     new_selected.append(self.labels[self.ids.index(entry)])
                 else:
-                    raise ValueError(f"could not map {entry} to valid choice")
+                    self.selected = event['old']
+                    raise ValueError(f"could not map {entry} to valid choice, reverting selection to {event['old']}")  # noqa
             self.selected = new_selected
             return
         else:

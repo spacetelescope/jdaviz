@@ -76,6 +76,36 @@ def test_spatial_subset(cubeviz_helper, image_cube_hdu_obj):
         assert u.Unit(result['unit']) != u.dimensionless_unscaled
 
 
+def test_user_api(specviz_helper, spectrum1d):
+    label = "Test 1D Spectrum"
+    specviz_helper.load_spectrum(spectrum1d, data_label=label)
+
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+    sv.apply_roi(XRangeROI(6500, 7400))
+
+    la = specviz_helper.plugins['Line Analysis']
+    la.open_in_tray()
+
+    # spectral subset does not support multiselect
+    assert "multiselect" not in la.spectral_subset.__repr__()
+    with pytest.raises(ValueError):
+        la.spectral_subset.select_all()
+    with pytest.raises(ValueError):
+        la.spectral_subset.select_none()
+
+    # test that setting a string to a Selection component redirects to the selected traitlet
+    la.spectral_subset = 'Subset 1'
+    assert la.spectral_subset.selected == 'Subset 1'
+
+    # test that invalid strings are caught and reverted to the original selection
+    with pytest.raises(ValueError):
+        la.spectral_subset = 'invalid'
+
+    assert la.spectral_subset.selected == 'Subset 1'
+
+    la.get_results()
+
+
 def test_line_identify(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
     specviz_helper.load_spectrum(spectrum1d, data_label=label)
