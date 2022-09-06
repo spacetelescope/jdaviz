@@ -21,6 +21,21 @@ u.add_enabled_units([spaxel])
 
 @tray_registry('g-gaussian-smooth', label="Gaussian Smooth")
 class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
+    """
+    See the :ref:`Gaussian Smooth Plugin Documentation <gaussian-smooth>` for more details.
+
+    Only the following attributes and methods are available through the
+    :ref:`public plugin API <plugin-apis>`:
+
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
+    * ``dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`):
+        Dataset to use for computing line statistics.
+    * :attr:`stddev`:
+        Standard deviation of the gaussian to use for smoothing.
+    * ``add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
+    * :meth:`apply_spectral_smooth`
+    """
     template_file = __file__, "gaussian_smooth.vue"
     stddev = FloatHandleEmpty(1).tag(sync=True)
     selected_data_is_1d = Bool(True).tag(sync=True)
