@@ -21,6 +21,39 @@ expected_lineflux_results = {
 test_cases = list(expected_lineflux_results.keys())
 
 
+# Test cases for unit gaussian tests
+def _gauss_with_unity_area(x, mean, sigma):
+    ''' Gaussian function with area = 1 unit '''
+    dx = x - mean
+    n = 1/(sigma*np.sqrt(2*np.pi))
+    g = n * np.exp(-dx**2/(2*sigma**2))
+    return g
+
+
+mn = 1.5
+sig = 0.01
+
+# 5 cases: replace fl_wave with fnu_freq, fnu_wave, flam_wave, flam_freq, or fl_wave
+# to try the different cases here
+unit_flux_gaussian_test_cases = []
+
+# unit-flux gaussian in frequency space
+freq = np.arange(1, 2, 0.001)*u.Hz
+flux_freq = _gauss_with_unity_area(freq.value, mn, sig)*1.0E26*u.Jy
+fnu_freq = Spectrum1D(spectral_axis=freq, flux=flux_freq)
+unit_flux_gaussian_test_cases.append(fnu_freq)
+fnu_wave = Spectrum1D(spectral_axis=fnu_freq.wavelength, flux=flux_freq)
+unit_flux_gaussian_test_cases.append(fnu_wave)
+
+# unit-flux gaussian in wavelength space
+lam = np.arange(1, 2, 0.001)*u.m
+flux_wave = _gauss_with_unity_area(lam.value, mn, sig)*1.0*u.W/u.m**2/u.m
+flam_wave = Spectrum1D(spectral_axis=lam, flux=flux_wave)
+unit_flux_gaussian_test_cases.append(flam_wave)
+flam_freq = Spectrum1D(spectral_axis=flam_wave.frequency, flux=flux_wave)
+unit_flux_gaussian_test_cases.append(flam_freq)
+
+
 def _calculate_line_flux(viz_helper):
     '''
     Returns the line flux calculation by opening the Line Analysis Plugin
@@ -59,24 +92,32 @@ def test_cubeviz_collapse_fluxunits(spectrum1d_cube_custom_fluxunit, spectra_flu
             assert u.Unit(lineflux_result['unit']) == expected_lineflux_results[spectra_fluxunit]
 
 
-def test_unit_gaussian_lineflux(specviz_helper):
+@pytest.mark.filterwarnings('ignore')
+@pytest.mark.parametrize('test_case', unit_flux_gaussian_test_cases)
+def test_unit_gaussian(specviz_helper, test_case):
     '''
     Test an Area 1 Gaussian and ensure the result returns in W/m2
     Test provided by Patrick Ogle
     '''
-    # Gaussian function with area = 1 Jy*Hz
-    def gauss_with_unity_area(x, mean, sigma):
-        dx = x - mean
-        n = 1/(sigma*np.sqrt(2*np.pi))
-        g = n * np.exp(-dx**2/(2*sigma**2))
-        return g
-    # unit-flux gaussian in frequency space
-    freq = np.arange(1, 2, 0.001)*u.Hz
-    mn = 1.5
-    sig = 0.01
-    flux = gauss_with_unity_area(freq.value, mn, sig)*u.Jy
-    specviz_helper.load_data(Spectrum1D(spectral_axis=freq, flux=flux))
+    specviz_helper.load_data(test_case)
 
     lineflux_result = _calculate_line_flux(specviz_helper)
     assert_quantity_allclose(float(lineflux_result['result']) * u.Unit(lineflux_result['unit']),
-                             1e-26*u.Unit('W/m2'))
+                             1*u.Unit('W/m2'))
+
+
+@pytest.mark.filterwarnings('ignore')
+def test_unit_gaussian_mixed_units_per_steradian(specviz_helper):
+    '''
+    A special unit test of Area 1 with mixed units. Should return W/m2sr
+    Test provided by Patrick Ogle
+    '''
+    # unit-flux gaussian in wavelength space, mixed units, per steradian
+    lam_a = np.arange(1, 2, 0.001)*u.Angstrom
+    flx_wave = _gauss_with_unity_area(lam_a.value, mn, sig)*1E3*u.erg/u.s/u.cm**2/u.Angstrom/u.sr
+    fl_wave = Spectrum1D(spectral_axis=lam_a, flux=flx_wave)
+
+    specviz_helper.load_data(fl_wave)
+    lineflux_result = _calculate_line_flux(specviz_helper)
+    assert_quantity_allclose(float(lineflux_result['result']) * u.Unit(lineflux_result['unit']),
+                             1*u.Unit('W/(m2sr)'))
