@@ -9,6 +9,8 @@ New Features
 - Line flux in the Line Analysis plugin are reported in W/m2 if Spectral Flux is given
   in Jy [#1564]
 
+- User-friendly API access to plugins. [#1401]
+
 Cubeviz
 ^^^^^^^
 

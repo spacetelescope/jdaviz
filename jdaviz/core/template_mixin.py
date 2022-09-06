@@ -365,13 +365,6 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
             return f"<selected={self.selected} multiselect={self.multiselect} choices={self.choices}>"  # noqa
         return f"<selected={self.selected} choices={self.choices}>"
 
-#    @property
-#    def user_api(self):
-#        expose = ['selected', 'choices', 'selected_item', 'selected_obj', 'select_default']
-#        if hasattr(self, 'multiselect'):
-#            expose += ['multiselect', 'select_all', 'select_none']
-#        return UserApiWrapper(self, expose)
-
     @property
     def choices(self):
         return self.labels
@@ -1456,10 +1449,6 @@ class AutoLabel(BasePluginComponent):
 
     def __repr__(self):
         return f"<AutoLabel label='{self.value}' auto={self.auto}>"
-
-#    @property
-#    def user_api(self):
-#        return UserApiWrapper(self, ('value', 'auto'))
 
     def _on_set_to_default(self, msg={}):
         if self.auto:
