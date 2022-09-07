@@ -353,7 +353,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                 # If the flux unit is instead equivalent to power density
                 # (Jy, but defined in wavelength), enforce integration in wavelength space
                 elif (flux_unit.is_equivalent(u.Unit('W/m2/m')) or
-                        flux_unit.is_equivalent(u.Unit('W/m2/m')/u.sr)):
+                        flux_unit.is_equivalent(u.Unit('W/m2/m/sr'))):
                     # Perform integration in wavelength space using MKS unit (meters)
                     wave_spec = Spectrum1D(
                         spectral_axis=spec_subtracted.spectral_axis.to(u.m,
