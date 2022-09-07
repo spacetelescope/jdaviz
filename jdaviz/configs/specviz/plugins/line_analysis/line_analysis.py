@@ -342,7 +342,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                     freq_spec = Spectrum1D(
                         spectral_axis=spec_subtracted.spectral_axis.to(u.Hz,
                                                                        equivalencies=u.spectral()),
-                        flux=spec_subtracted.flux)
+                        flux=spec_subtracted.flux,
+                        uncertainty=spec_subtracted.uncertainty)
 
                     # When flux is equivalent to Jy, lineflux result should be shown in W/m2
                     if flux_unit.is_equivalent(u.Jy/u.sr):
@@ -358,7 +359,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                     wave_spec = Spectrum1D(
                         spectral_axis=spec_subtracted.spectral_axis.to(u.m,
                                                                        equivalencies=u.spectral()),
-                        flux=spec_subtracted.flux)
+                        flux=spec_subtracted.flux,
+                        uncertainty=spec_subtracted.uncertainty)
                     # When flux is equivalent to Jy, lineflux result should be shown in W/m2
                     if flux_unit.is_equivalent(u.Unit('W/m2/m'/u.sr)):
                         temp_result = analysis.line_flux(wave_spec).to('W/(m2sr)')
