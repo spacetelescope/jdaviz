@@ -34,7 +34,7 @@
 
     <v-row>
       <v-slider
-        :value="slider"
+        :value="slice"
         @input="throttledSetValue"
         class="align-center"
         :max="max_value"
@@ -46,7 +46,7 @@
     <v-row class="row-no-outside-padding row-min-bottom-padding">
       <v-col>
         <v-text-field
-          v-model="slider"
+          v-model="slice"
           class="mt-0 pt-0"
           type="number"
           label="Slice"
@@ -63,7 +63,6 @@
         <v-text-field
           v-model="wavelength"
           class="mt-0 pt-0"
-          @change="change_wavelength"
           label="Wavelength"
           hint="Wavelength corresponding to slice, in units of spectrum"
         ></v-text-field>
@@ -79,7 +78,7 @@
   module.exports = {
     created() {
       this.throttledSetValue = _.throttle(
-        (v) => { this.slider = v; },
+        (v) => { this.slice = v; },
         this.wait);
     },
   }
