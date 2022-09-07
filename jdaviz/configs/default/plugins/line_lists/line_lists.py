@@ -546,7 +546,7 @@ class LineListTool(PluginTemplateMixin):
                                                  show=False)
 
         metadata = get_linelist_metadata()
-        list_medium = metadata[self.list_to_load].get('medium', 'Unknown')
+        list_medium = metadata[self.list_to_load].get('medium', 'Unknown').capitalize()
 
         line_list_dict = {"lines": [], "color": "#FF000080", "medium": list_medium}
         # extra_fields = [x for x in temp_table.colnames if x not in

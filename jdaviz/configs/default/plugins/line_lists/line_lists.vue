@@ -248,9 +248,9 @@
                 ></v-text-field>
               </v-row>
 
-              <v-row class="row-no-vertical-padding-margin" style="margin: 0px">
-                <span class='text--primary' style="overflow-wrap: anywhere; font-size: 8pt; padding-top: 3px;">
-                  {{list_contents[item].medium}}
+              <v-row class="row-no-vertical-padding-margin" style="margin: 0px" justify="end">
+                <span class='text--primary' style="overflow-wrap: anywhere; font-size: 8pt;">
+                  Medium: {{list_contents[item].medium}}
                 </span>                    
               </v-row>
 
