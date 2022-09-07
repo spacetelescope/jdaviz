@@ -11,7 +11,7 @@ Cubeviz
 
 - Image viewers now have linked pan/zoom and linked box zoom. [#1596]
 
-- Added ability to select spatial subset collasped spectrum for Line Analysis [#1583]
+- Added ability to select spatial subset collapsed spectrum for Line Analysis. [#1583]
 
 Imviz
 ^^^^^
