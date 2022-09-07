@@ -345,11 +345,16 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                         flux=spec_subtracted.flux,
                         uncertainty=spec_subtracted.uncertainty)
 
+                    raw_result = analysis.line_flux(freq_spec)
                     # When flux is equivalent to Jy, lineflux result should be shown in W/m2
                     if flux_unit.is_equivalent(u.Jy/u.sr):
-                        temp_result = analysis.line_flux(freq_spec).to('W/(m2sr)')
+                        final_unit = u.Unit('W/m2/sr')
                     else:
-                        temp_result = analysis.line_flux(freq_spec).to('W/m2')
+                        final_unit = u.Unit('W/m2')
+
+                    temp_result = raw_result.to(final_unit)
+                    if getattr(raw_result, 'uncertainty', None) is not None:
+                        temp_result.uncertainty = raw_result.uncertainty.to(final_unit)
 
                 # If the flux unit is instead equivalent to power density
                 # (Jy, but defined in wavelength), enforce integration in wavelength space
@@ -361,11 +366,16 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                                                                        equivalencies=u.spectral()),
                         flux=spec_subtracted.flux,
                         uncertainty=spec_subtracted.uncertainty)
+                    raw_result = analysis.line_flux(wave_spec)
                     # When flux is equivalent to Jy, lineflux result should be shown in W/m2
                     if flux_unit.is_equivalent(u.Unit('W/m2/m'/u.sr)):
-                        temp_result = analysis.line_flux(wave_spec).to('W/(m2sr)')
+                        final_unit = u.Unit('W/m2/sr')
                     else:
-                        temp_result = analysis.line_flux(wave_spec).to('W/m2')
+                        final_unit = u.Unit('W/m2')
+
+                    temp_result = raw_result.to(final_unit)
+                    if getattr(raw_result, 'uncertainty', None) is not None:
+                        temp_result.uncertainty = raw_result.uncertainty.to(final_unit)
 
                 # Otherwise, just rely on the default specutils line_flux result
                 else:
