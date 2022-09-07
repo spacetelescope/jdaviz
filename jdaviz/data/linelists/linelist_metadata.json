@@ -58,11 +58,13 @@
   },
   "H2-ISO": {
     "units": "micron",
+    "medium": "vacuum",
     "filename_base": "H2-ISO",
     "Citations/Notes": " J.H.Black, E.F.vanDishoeck, ApJ 322: 412-449, 1988. https://old.ipac.caltech.edu/iso//lws/HII.html"
   },
   "CO": {
     "units": "micron",
+    "medium": "vacuum",
     "filename_base": "CO",
     "Citations/Notes": " CARBON MONOXIDE (12C16O) VIBRATION ROTATION BANDS\n Compilation CO band head, fundamental and overtone wavelengths for Gemini.\n T. Geballe http://www.gemini.edu/sciops/instruments/nir/wavecal/colines.dat"
   },
