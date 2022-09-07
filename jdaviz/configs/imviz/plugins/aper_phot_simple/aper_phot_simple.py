@@ -177,8 +177,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin):
         if self.dataset_selected == '' or self.subset_selected == '':
             return
 
-        # Force background auto-calculation to update when linking has changed.
-        self._bg_subset_selected_changed()
+        # Force background auto-calculation (including annulus) to update when linking has changed.
+        self._subset_selected_changed()
 
     @observe('subset_selected')
     def _subset_selected_changed(self, event={}):
