@@ -41,19 +41,19 @@ jobs:
             python: 3.9
             toxenv: py39-test-alldeps-cov
             toxposargs: --remote-data
-            allow_failure: false
+            allow_failure: true
 
           - name: OS X - Python 3.9
             os: macos-latest
             python: 3.9
             toxenv: py39-test
-            allow_failure: false
+            allow_failure: true
 
           - name: Windows - Python 3.8
             os: windows-latest
             python: 3.8
             toxenv: py38-test
-            allow_failure: false
+            allow_failure: true
 
           # This also runs on cron but we want to make sure new changes
           # won't break this job at the PR stage.
@@ -69,7 +69,7 @@ jobs:
       with:
         fetch-depth: 0
     - name: Set up python ${{ matrix.python }} on ${{ matrix.os }}
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python }}
     - name: Install base dependencies
