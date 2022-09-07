@@ -23,7 +23,7 @@
     <plugin-subset-select
       v-if="config=='cubeviz'"
       :items="spatial_subset_items"
-      :selected.sync="collapsed_spectrum_selected"
+      :selected.sync="spatial_subset_selected"
       :show_if_single_entry="true"
       label="Collapsed Spectrum"
       hint="Select collapsed spectrum to analyze."
