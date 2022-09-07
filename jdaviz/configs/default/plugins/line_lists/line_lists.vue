@@ -248,6 +248,12 @@
                 ></v-text-field>
               </v-row>
 
+              <v-row class="row-no-vertical-padding-margin" style="margin: 0px">
+                <span class='text--primary' style="overflow-wrap: anywhere; font-size: 8pt; padding-top: 3px;">
+                  {{list_contents[item].medium}}
+                </span>                    
+              </v-row>
+
               <v-row v-for="(line, line_ind) in list_contents[item].lines" style="margin-bottom: 0px !important;">
                 <div v-if="lineItemVisible(line, lines_filter, filter_range)">
                   
