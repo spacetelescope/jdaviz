@@ -2,6 +2,7 @@ import os
 import warnings
 from datetime import datetime
 
+import astropy
 import bqplot
 import numpy as np
 from astropy import units as u
@@ -12,6 +13,7 @@ from astropy.table import QTable
 from astropy.time import Time
 from glue.core.message import SubsetUpdateMessage
 from ipywidgets import widget_serialization
+from packaging.version import Version
 from photutils.aperture import (ApertureStats, CircularAperture, EllipticalAperture,
                                 RectangularAperture)
 from regions import (CircleAnnulusPixelRegion, CirclePixelRegion, EllipsePixelRegion,
@@ -19,7 +21,7 @@ from regions import (CircleAnnulusPixelRegion, CirclePixelRegion, EllipsePixelRe
 from traitlets import Any, Bool, List, Unicode, observe
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
-from jdaviz.core.events import SnackbarMessage
+from jdaviz.core.events import SnackbarMessage, LinkUpdatedMessage
 from jdaviz.core.region_translators import regions2aperture
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, DatasetSelectMixin, SubsetSelect
@@ -74,6 +76,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin):
         self._fitted_model_name = 'phot_radial_profile'
 
         self.session.hub.subscribe(self, SubsetUpdateMessage, handler=self._on_subset_update)
+        self.session.hub.subscribe(self, LinkUpdatedMessage, handler=self._on_link_update)
 
     def reset_results(self):
         self.result_available = False
@@ -143,9 +146,20 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin):
             if subset_grp.label == subset:
                 for sbst in subset_grp.subsets:
                     if sbst.data.label == self.dataset_selected:
-                        # TODO: https://github.com/glue-viz/glue-astronomy/issues/52
-                        return sbst.data.get_selection_definition(
-                                subset_id=subset, format='astropy-regions')
+                        reg = sbst.data.get_selection_definition(
+                            subset_id=subset, format='astropy-regions')
+                        # Works around https://github.com/glue-viz/glue-astronomy/issues/52
+                        # Assume it is always pixel region, not sky region. Even with multiple
+                        # viewers, they all seem to share the same reference image even when it is
+                        # not loaded in all the viewers, so use default viewer.
+                        viewer = self.app._jdaviz_helper.default_viewer
+
+                        x, y, _ = viewer._get_real_xy(
+                            self.app.data_collection[self.dataset_selected],
+                            reg.center.x, reg.center.y)
+                        reg.center.x = x
+                        reg.center.y = y
+                        return reg
         else:
             raise ValueError(f'Subset "{subset}" not found')
 
@@ -158,6 +172,13 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin):
             self._subset_selected_changed()
         elif sbst.label == self.bg_subset_selected and sbst.data.label == self.dataset_selected:
             self._bg_subset_selected_changed()
+
+    def _on_link_update(self, msg):
+        if self.dataset_selected == '' or self.subset_selected == '':
+            return
+
+        # Force background auto-calculation (including annulus) to update when linking has changed.
+        self._subset_selected_changed()
 
     @observe('subset_selected')
     def _subset_selected_changed(self, event={}):
@@ -396,8 +417,12 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin):
                     gs = Gaussian1D(amplitude=y_max, mean=0, stddev=std,
                                     fixed={'mean': True, 'amplitude': True},
                                     bounds={'amplitude': (y_max * 0.5, y_max)})
+                    if Version(astropy.__version__) <= Version('5.1'):
+                        fitter_kw = {}
+                    else:
+                        fitter_kw = {'filter_non_finite': True}
                     with warnings.catch_warnings(record=True) as warns:
-                        fit_model = fitter(gs, x_data, y_data)
+                        fit_model = fitter(gs, x_data, y_data, **fitter_kw)
                     if len(warns) > 0:
                         msg = os.linesep.join([str(w.message) for w in warns])
                         self.hub.broadcast(SnackbarMessage(
@@ -485,7 +510,13 @@ def _radial_profile(radial_cutout, reg_bb, centroid, raw=False):
     reg_ogrid = np.ogrid[reg_bb.iymin:reg_bb.iymax, reg_bb.ixmin:reg_bb.ixmax]
     radial_dx = reg_ogrid[1] - centroid[0]
     radial_dy = reg_ogrid[0] - centroid[1]
-    radial_r = np.hypot(radial_dx, radial_dy)[~radial_cutout.mask].ravel()  # pix
+    radial_r = np.hypot(radial_dx, radial_dy)
+
+    # Sometimes the mask is smaller than radial_r
+    if radial_cutout.shape != reg_bb.shape:
+        radial_r = radial_r[:radial_cutout.shape[0], :radial_cutout.shape[1]]
+
+    radial_r = radial_r[~radial_cutout.mask].ravel()  # pix
     radial_img = radial_cutout.compressed()  # data unit
 
     if raw:
@@ -495,7 +526,7 @@ def _radial_profile(radial_cutout, reg_bb, centroid, raw=False):
     else:
         # This algorithm is from the imexam package,
         # see licenses/IMEXAM_LICENSE.txt for more details
-        radial_r = list(radial_r)
+        radial_r = np.rint(radial_r).astype(int)
         y_arr = np.bincount(radial_r, radial_img) / np.bincount(radial_r)
         x_arr = np.arange(y_arr.size)
 

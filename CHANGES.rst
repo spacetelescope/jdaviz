@@ -51,6 +51,9 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Fixed inaccurate aperture photometry results when aperture photometry is done on
+  a non-reference image if images are linked by WCS. [#1524]
+
 Mosviz
 ^^^^^^
 

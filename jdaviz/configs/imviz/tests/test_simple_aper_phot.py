@@ -73,7 +73,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
             'data_label', 'subset_label', 'timestamp']
         assert_array_equal(tbl['id'], [1, 2])
         assert_allclose(tbl['background'], 0)
-        assert_quantity_allclose(tbl['sum_aper_area'], 63.617251 * (u.pix * u.pix))
+        assert_quantity_allclose(tbl['sum_aper_area'], [63.617251, 62.22684693104279] * (u.pix * u.pix))  # noqa
         assert_array_equal(tbl['pixarea_tot'], None)
         assert_array_equal(tbl['aperture_sum_counts'], None)
         assert_array_equal(tbl['aperture_sum_counts_err'], None)
@@ -99,15 +99,14 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert_array_equal(tbl['subset_label'], ['Subset 1', 'Subset 1'])
         assert tbl['timestamp'].scale == 'utc'
 
-        # BUG: https://github.com/glue-viz/glue-astronomy/issues/52
-        # Sky should have been the same and the pix different, but not until bug is fixed.
-        # The aperture sum might be different too if mask is off limit in second image.
-        assert_quantity_allclose(tbl['xcentroid'], 4.5 * u.pix)
+        # Sky is the same but xcentroid different due to dithering.
+        # The aperture sum is different too because mask is a little off limit in second image.
+        assert_quantity_allclose(tbl['xcentroid'], [4.5, 5.5] * u.pix)
         assert_quantity_allclose(tbl['ycentroid'], 4.5 * u.pix)
         sky = tbl['sky_centroid']
-        assert_allclose(sky.ra.deg, [337.518943, 337.519241])
-        assert_allclose(sky.dec.deg, [-20.832083, -20.832083])
-        assert_allclose(tbl['sum'], 63.61725123519332)
+        assert_allclose(sky.ra.deg, 337.518943)
+        assert_allclose(sky.dec.deg, -20.832083)
+        assert_allclose(tbl['sum'], [63.617251, 62.22684693104279])
 
         # Make sure it also works on an ellipse subset.
         self.imviz._apply_interactive_region('bqplot:ellipse', (0, 0), (9, 4))
