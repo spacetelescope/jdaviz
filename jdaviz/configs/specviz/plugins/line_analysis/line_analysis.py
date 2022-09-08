@@ -36,6 +36,8 @@ FUNCTIONS = {"Line Flux": analysis.line_flux,
              "Gaussian FWHM": analysis.gaussian_fwhm,
              "Centroid": analysis.centroid}
 
+SPATIAL_DEFAULT_TEXT = "Entire Cube"
+
 
 def _coerce_unit(quantity):
     """
@@ -68,7 +70,6 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
 
     spatial_subset_items = List().tag(sync=True)
     spatial_subset_selected = Unicode().tag(sync=True)
-    SPATIAL_DEFAULT_TEXT = "Entire Cube"
 
     continuum_subset_items = List().tag(sync=True)
     continuum_subset_selected = Unicode().tag(sync=True)
