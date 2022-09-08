@@ -43,7 +43,7 @@ def test_plugin(specviz_helper, spectrum1d):
             assert len(result_dict.get('uncertainty')) > 0
 
 
-@pytest.mark.filterwarnings('ignore', match="'W/m2/m' contains multiple slashes")
+@pytest.mark.filterwarnings(r"ignore:'W/m2/m' contains multiple slashes")
 @pytest.mark.filterwarnings('ignore:No observer defined on WCS')
 def test_spatial_subset(cubeviz_helper, image_cube_hdu_obj):
     """
