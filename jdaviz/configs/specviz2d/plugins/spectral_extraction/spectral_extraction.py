@@ -11,7 +11,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
 from jdaviz.core.custom_traitlets import IntHandleEmpty
 from jdaviz.core.marks import PluginLine
 
-from astropy.nddata import NDData, StdDevUncertainty, VarianceUncertainty
+from astropy.nddata import NDData, StdDevUncertainty, VarianceUncertainty, UnknownUncertainty
 from specutils import Spectrum1D
 from specreduce import tracing
 from specreduce import background
@@ -402,7 +402,7 @@ class SpectralExtraction(PluginTemplateMixin):
         # when specutils handles the warning/exception
         if self.ext_type_selected == 'Horne':
             inp_sp2d = self._get_ext_input_spectrum()
-            self.ext_uncert_warn = inp_sp2d.uncertainty is not None and not hasattr(inp_sp2d.uncertainty, 'uncertainty_type')  # noqa
+            self.ext_uncert_warn = isinstance(inp_sp2d.uncertainty, UnknownUncertainty)
         else:
             self.ext_uncert_warn = False
 
