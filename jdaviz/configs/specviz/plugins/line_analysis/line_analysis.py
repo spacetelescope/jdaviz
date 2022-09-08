@@ -7,7 +7,7 @@ from glue.core.message import (SubsetDeleteMessage,
 from glue_jupyter.common.toolbar_vuetify import read_icon
 from traitlets import Bool, List, Float, Unicode, observe
 from astropy import units as u
-from specutils import analysis
+from specutils import analysis, Spectrum1D
 from specutils.manipulation import extract_region
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
@@ -358,7 +358,56 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         for function in FUNCTIONS:
             # TODO: update specutils to allow ALL analysis to take regions and continuum so we
             # don't need these if statements
-            if function == "Equivalent Width":
+            if function == "Line Flux":
+                flux_unit = spec_subtracted.flux.unit
+                # If the flux unit is equivalent to Jy, or Jy per spaxel for Cubeviz,
+                # enforce integration in frequency space
+                if (flux_unit.is_equivalent(u.Jy) or
+                        flux_unit.is_equivalent(u.Jy/u.sr)):
+                    # Perform integration in frequency space
+                    freq_spec = Spectrum1D(
+                        spectral_axis=spec_subtracted.spectral_axis.to(u.Hz,
+                                                                       equivalencies=u.spectral()),
+                        flux=spec_subtracted.flux,
+                        uncertainty=spec_subtracted.uncertainty)
+
+                    raw_result = analysis.line_flux(freq_spec)
+                    # When flux is equivalent to Jy, lineflux result should be shown in W/m2
+                    if flux_unit.is_equivalent(u.Jy/u.sr):
+                        final_unit = u.Unit('W/m2/sr')
+                    else:
+                        final_unit = u.Unit('W/m2')
+
+                    temp_result = raw_result.to(final_unit)
+                    if getattr(raw_result, 'uncertainty', None) is not None:
+                        temp_result.uncertainty = raw_result.uncertainty.to(final_unit)
+
+                # If the flux unit is instead equivalent to power density
+                # (Jy, but defined in wavelength), enforce integration in wavelength space
+                elif (flux_unit.is_equivalent(u.Unit('W/m2/m')) or
+                        flux_unit.is_equivalent(u.Unit('W/m2/m/sr'))):
+                    # Perform integration in wavelength space using MKS unit (meters)
+                    wave_spec = Spectrum1D(
+                        spectral_axis=spec_subtracted.spectral_axis.to(u.m,
+                                                                       equivalencies=u.spectral()),
+                        flux=spec_subtracted.flux,
+                        uncertainty=spec_subtracted.uncertainty)
+                    raw_result = analysis.line_flux(wave_spec)
+                    # When flux is equivalent to Jy, lineflux result should be shown in W/m2
+                    if flux_unit.is_equivalent(u.Unit('W/m2/m'/u.sr)):
+                        final_unit = u.Unit('W/m2/sr')
+                    else:
+                        final_unit = u.Unit('W/m2')
+
+                    temp_result = raw_result.to(final_unit)
+                    if getattr(raw_result, 'uncertainty', None) is not None:
+                        temp_result.uncertainty = raw_result.uncertainty.to(final_unit)
+
+                # Otherwise, just rely on the default specutils line_flux result
+                else:
+                    temp_result = analysis.line_flux(spec_subtracted)
+
+            elif function == "Equivalent Width":
                 if np.any(continuum <= 0):
                     temp_results.append({'function': function,
                                          'result': '',
