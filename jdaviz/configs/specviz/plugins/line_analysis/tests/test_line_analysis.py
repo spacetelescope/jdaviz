@@ -1,8 +1,10 @@
-import astropy.units as u
-from astropy.table import QTable
 import numpy as np
+import pytest
+from astropy import units as u
+from astropy.table import QTable
 from glue.core.roi import XRangeROI
 from glue.core.edit_subset_mode import NewMode
+from regions import RectanglePixelRegion, PixCoord
 
 from jdaviz.configs.specviz.plugins.line_analysis.line_analysis import _coerce_unit
 from jdaviz.core.events import LineIdentifyMessage
@@ -39,6 +41,38 @@ def test_plugin(specviz_helper, spectrum1d):
         if result_dict in ['Line Flux']:
             # should have an assigned uncertainty (with min required version of specutils)
             assert len(result_dict.get('uncertainty')) > 0
+
+
+@pytest.mark.filterwarnings('ignore:No observer defined on WCS')
+def test_spatial_subset(cubeviz_helper, image_cube_hdu_obj):
+    """
+    Tests that the spatial selection returns any valid result, DOES NOT VALIDATE THE VALUE
+    Not checking the value attempts to circumvent the issue we ran into here:
+    https://github.com/spacetelescope/jdaviz/pull/1564#discussion_r949427663
+    """
+    cubeviz_helper.load_data(image_cube_hdu_obj, data_label="Test Cube")
+
+    # add a spatial region
+    cubeviz_helper.load_regions(RectanglePixelRegion(center=PixCoord(x=3, y=5), width=4, height=6))
+
+    # create a spectral region
+    spectrum_viewer = cubeviz_helper.app.get_viewer('spectrum-viewer')
+    spectrum_viewer.apply_roi(XRangeROI(3.623e-7, 3.627e-7))  # meters
+    cubeviz_helper.app.state.drawer = True
+
+    plugin = cubeviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
+    plugin.open_in_tray()
+
+    plugin.spatial_subset_selected = 'Subset 1'
+    plugin.spectral_subset_selected = 'Subset 2'
+    plugin.continuum_subset_selected = 'Surrounding'
+    plugin.width = 1
+
+    for result in plugin.results:
+        # Check that there exists a value
+        assert not np.isnan(float(result['result']))
+        # Check the unit is not dimensionless
+        assert u.Unit(result['unit']) != u.dimensionless_unscaled
 
 
 def test_line_identify(specviz_helper, spectrum1d):
