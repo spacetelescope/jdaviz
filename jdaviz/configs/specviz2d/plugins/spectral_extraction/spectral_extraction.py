@@ -222,7 +222,7 @@ class SpectralExtraction(PluginTemplateMixin):
                                            'import_trace',
                                            'export_trace',
                                            'bg_dataset', 'bg_type',
-                                           'bg_trace_pixel', 'bg_separation', 'bg_width'
+                                           'bg_trace_pixel', 'bg_separation', 'bg_width',
                                            'bg_add_results', 'bg_sub_add_results',
                                            'import_bg',
                                            'export_bg', 'export_bg_img', 'export_bg_sub',
