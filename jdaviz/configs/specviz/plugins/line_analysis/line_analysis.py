@@ -68,6 +68,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
 
     spatial_subset_items = List().tag(sync=True)
     spatial_subset_selected = Unicode().tag(sync=True)
+    SPATIAL_DEFAULT_TEXT = "Entire Cube"
 
     continuum_subset_items = List().tag(sync=True)
     continuum_subset_selected = Unicode().tag(sync=True)
@@ -104,7 +105,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             self.spatial_subset = SubsetSelect(self,
                                                'spatial_subset_items',
                                                'spatial_subset_selected',
-                                               default_text='Entire Cube',
+                                               default_text=SPATIAL_DEFAULT_TEXT,
                                                allowed_type='spatial')
         else:
             self.spatial_subset = None
@@ -237,7 +238,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         # show spinner with overlay
         self.results_computing = True
 
-        if self.config == 'cubeviz' and self.spatial_subset_selected != 'Entire Cube Spectrum':
+        if self.config == 'cubeviz' and self.spatial_subset_selected != SPATIAL_DEFAULT_TEXT:
             # then we're acting on the auto-collapsed data in the spectrum-viewer
             # of a spatial subset.  In the future, we may want to expose on-the-fly
             # collapse options... but right now these will follow the settings of the
