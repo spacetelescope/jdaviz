@@ -69,7 +69,8 @@ def _calculate_line_flux(viz_helper):
             return result
 
 
-@pytest.mark.filterwarnings('ignore', match="'W/m2/m' contains multiple slashes")
+@pytest.mark.filterwarnings(r"ignore:.* contains multiple slashes")
+@pytest.mark.filterwarnings(r"ignore:.* apply_slider_redshift")
 @pytest.mark.parametrize('spectra_fluxunit', test_cases)
 def test_cubeviz_collapse_fluxunits(spectrum1d_cube_custom_fluxunit, spectra_fluxunit):
     ''' Calculates line flux and checks the units for each collapse function '''
@@ -92,7 +93,7 @@ def test_cubeviz_collapse_fluxunits(spectrum1d_cube_custom_fluxunit, spectra_flu
             assert u.Unit(lineflux_result['unit']) == expected_lineflux_results[spectra_fluxunit]
 
 
-@pytest.mark.filterwarnings('ignore', match="'W/m2/m' contains multiple slashes")
+@pytest.mark.filterwarnings(r"ignore:.* contains multiple slashes")
 @pytest.mark.parametrize('test_case', unit_flux_gaussian_test_cases)
 def test_unit_gaussian(specviz_helper, test_case):
     '''
@@ -106,7 +107,7 @@ def test_unit_gaussian(specviz_helper, test_case):
                              1*u.Unit('W/m2'))
 
 
-@pytest.mark.filterwarnings('ignore', match="'W/m2/m' contains multiple slashes")
+@pytest.mark.filterwarnings(r"ignore:.* contains multiple slashes")
 def test_unit_gaussian_mixed_units_per_steradian(specviz_helper):
     '''
     A special unit test of Area 1 with mixed units. Should return W/m2sr
