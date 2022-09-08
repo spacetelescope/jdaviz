@@ -1737,6 +1737,13 @@ class AddResultsMixin(VuetifyTemplate, HubListener):
 class PlotOptionsSyncState(BasePluginComponent):
     """
     Plugin component for syncing with glue state objects.
+
+    Useful API methods/attributes:
+
+    * ``value``
+    * :meth:`choices` (only when applicable)
+    * :attr:`linked_states`
+    * :meth:`unmix_state`
     """
     def __init__(self, plugin, viewer_select, layer_select, glue_name,
                  value, sync, state_filter=None):
@@ -1754,6 +1761,23 @@ class PlotOptionsSyncState(BasePluginComponent):
         self.add_observe(layer_select._plugin_traitlets['selected'], self._on_viewer_layer_changed)
         self.add_observe(value, self._on_value_changed)
         self._on_viewer_layer_changed()
+
+    def __repr__(self):
+        choices = self.choices
+        if len(choices):
+            return f"<PlotOptionsSyncState {self._glue_name}={self.value} choices={self.choices} (linked_states: {len(self.subscribed_states)})>"  # noqa
+        return f"<PlotOptionsSyncState {self._glue_name}={self.value} (linked_states: {len(self.subscribed_states)})>"  # noqa
+
+    @property
+    def user_api(self):
+        expose = ['value', 'unmix_state', 'linked_states']
+        if len(self.choices):
+            expose += ['choices']
+        return UserApiWrapper(self, expose=expose)
+
+    @property
+    def choices(self):
+        return [choice['text'] for choice in self.sync.get('choices', {})]
 
     def state_filter(self, state):
         if self._state_filter is None:

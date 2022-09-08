@@ -10,6 +10,7 @@ from glue_jupyter.common.toolbar_vuetify import read_icon
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelect, LayerSelect,
                                         PlotOptionsSyncState)
+from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
 
 __all__ = ['PlotOptions']
@@ -17,6 +18,70 @@ __all__ = ['PlotOptions']
 
 @tray_registry('g-plot-options', label="Plot Options")
 class PlotOptions(PluginTemplateMixin):
+    """
+    The Plot Options Plugin gives access to per-viewer and per-layer options and enables
+    setting across multiple viewers/layers simultaneously.
+
+    Only the following attributes and methods are available through the
+    :ref:`public plugin API <plugin-apis>`:
+
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
+    * ``multiselect``:
+      whether ``viewer`` and ``layer`` should both be in multiselect mode.
+    * ``viewer`` (:class:`~jdaviz.core.template_mixin.ViewerSelect`):
+    * ``layer`` (:class:`~jdaviz.core.template_mixin.LayerSelect`):
+    * :meth:`select_all`
+    * ``layer_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`)
+    * ``subset_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`)
+    * ``show_axes`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`)
+    * ``collapse_function`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      only avilable for Cubeviz
+    * ``line_color`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not available for Imviz
+    * ``line_width`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not available for Imviz
+    * ``line_opacity`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not available for Imviz
+    * ``as_steps`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not available for Imviz
+    * ``uncertainty`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not available for Imviz
+    * ``stretch`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not available for Specviz
+    * ``stretch_perc`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not available for Specviz
+    * ``stretch_min`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not available for Specviz
+    * ``stretch_max`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not available for Specviz
+    * ``bitmap_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not available for Specviz
+    * ``color_mode`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not available for Specviz
+    * ``bitmap_color`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not available for Specviz
+    * ``bitmap_cmap`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not available for Specviz
+    * ``bitmap_opacity`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not available for Specviz
+    * ``bitmap_contrast`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not available for Specviz
+    * ``bitmap_bias`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not available for Specviz
+    * ``contour_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not available for Specviz
+    * ``contour_mode`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not available for Specviz
+    * ``contour_min`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not available for Specviz
+    * ``contour_max`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not available for Specviz
+    * ``contour_nlevels`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not available for Specviz
+    * ``contour_custom_levels`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not available for Specviz
+    """
     template_file = __file__, "plot_options.vue"
 
     # multiselect is shared between viewer and layer
@@ -214,12 +279,48 @@ class PlotOptions(PluginTemplateMixin):
         self.setting_show_viewer_labels = self.app.state.settings['viewer_labels']
         self.app.state.add_callback('settings', self._on_app_settings_changed)
 
+    @property
+    def user_api(self):
+        expose = ['multiselect', 'viewer', 'layer', 'select_all',
+                  'layer_visible', 'subset_visible', 'show_axes']
+        if self.config == "cubeviz":
+            expose += ['collapse_function']
+        if self.config != "imviz":
+            expose += ['line_color', 'line_width', 'line_opacity', 'as_steps', 'uncertainty']
+        if self.config != "specviz":
+            expose += ['stretch', 'stretch_perc', 'stretch_min', 'stretch_max',
+                       'bitmap_visible', 'color_mode',
+                       'bitmap_color', 'bitmap_cmap', 'bitmap_opacity',
+                       'bitmap_contrast', 'bitmap_bias',
+                       'contour_visible', 'contour_mode',
+                       'contour_min', 'contour_max', 'contour_nlevels', 'contour_custom_levels']
+
+        return PluginUserApi(self, expose)
+
     @observe('setting_show_viewer_labels')
     def _on_show_viewer_labels_changed(self, event):
         self.app.state.settings['viewer_labels'] = event['new']
 
     def _on_app_settings_changed(self, value):
         self.setting_show_viewer_labels = value['viewer_labels']
+
+    def select_all(self, viewers=True, layers=True):
+        """
+        Enable multiselect mode and select all viewers and/or layers.
+
+        Parameters
+        ----------
+        viewers : bool
+            Whether to select all viewers (default: True)
+
+        layers: bool
+            Whether to select all layers (default: True)
+        """
+        self.multiselect = True
+        if viewers:
+            self.viewer.select_all()
+        if layers:
+            self.layer.select_all()
 
     def vue_unmix_state(self, name):
         sync_state = getattr(self, name)

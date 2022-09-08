@@ -56,3 +56,44 @@ def test_multiselect(cubeviz_helper, spectrum1d_cube):
     po.viewer.selected = 'spectrum-viewer'
     assert po.show_axes.sync['in_subscribed_states'] is False
     assert len(po.show_axes.linked_states) == 0
+
+
+@pytest.mark.filterwarnings('ignore')
+def test_user_api(cubeviz_helper, spectrum1d_cube):
+    cubeviz_helper.load_data(spectrum1d_cube)
+    po = cubeviz_helper.plugins['Plot Options']
+
+    assert po.multiselect is False
+    assert "multiselect" in po.viewer.__repr__()
+
+    po.select_all()
+    assert po.multiselect is True
+    assert len(po.viewer.selected) == 4
+
+    po.viewer.select_none()
+    assert len(po.viewer.selected) == 0
+
+    po.viewer.select_default()
+    po.layer.select_default()
+    assert po.multiselect is True
+    assert len(po.viewer.selected) == 1
+    assert len(po.layer.selected) == 1
+
+    with pytest.raises(ValueError):
+        po.viewer = ['flux-viewer', 'invalid-viewer']
+
+    assert len(po.viewer.selected) == 1
+
+    po.viewer = 'flux-viewer'
+    po.layer.select_all()
+
+    # check a plot option with and without choices
+    assert hasattr(po.stretch_perc, 'choices')
+    assert len(po.stretch_perc.choices) > 1
+    assert "choices" in po.stretch_perc.__repr__()
+    assert not hasattr(po.bitmap_contrast, 'choices')
+    assert "choices" not in po.bitmap_contrast.__repr__()
+
+    # try setting with both label and value
+    po.stretch_perc = 90
+    po.stretch_perc = 'Min/Max'
