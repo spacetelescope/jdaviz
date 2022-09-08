@@ -14,7 +14,7 @@
 
      <v-row>
        <v-select
-         :items="catalog_items"
+         :items="catalog_items.map(i => i.label)"
          v-model="catalog_selected"
          label="Catalog"
          hint="Select a catalog to search with."
