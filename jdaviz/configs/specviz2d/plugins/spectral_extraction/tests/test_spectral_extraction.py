@@ -141,6 +141,30 @@ def test_plugin(specviz2d_helper):
 
 
 @pytest.mark.remote_data
+@pytest.mark.filterwarnings('ignore')
+def test_user_api(specviz2d_helper):
+    fn = download_file('https://stsci.box.com/shared/static/exnkul627fcuhy5akf2gswytud5tazmw.fits', cache=True)  # noqa
+
+    specviz2d_helper.load_data(spectrum_2d=fn)
+
+    pext = specviz2d_helper.plugins['Spectral Extraction']
+    pext.open_in_tray()
+
+    # test that setting a string to an AddResults object redirects to the label
+    pext.bg_sub_add_results = 'override label'
+    assert pext.bg_sub_add_results.label == 'override label'
+    pext.bg_sub_add_results.label = 'override label 2'
+    assert "override label 2" in pext.bg_sub_add_results.__repr__()
+    assert "override label 2" in pext.bg_sub_add_results._obj.auto_label.__repr__()
+
+    pext.export_bg_sub(add_data=True)
+    assert 'override label 2' in pext.ext_dataset.choices
+
+    # test setting auto label
+    pext.bg_sub_add_results.auto = True
+
+
+@pytest.mark.remote_data
 def test_spectrum_on_top(specviz2d_helper):
     fn = download_file('https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:jwst/product/jw01529-c1002_t002_miri_p750l_s2d.fits', cache=True)  # noqa
 

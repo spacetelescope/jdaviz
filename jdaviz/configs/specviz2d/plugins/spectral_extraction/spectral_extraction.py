@@ -9,6 +9,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SelectPluginComponent,
                                         DatasetSelect,
                                         AddResults)
+from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.custom_traitlets import IntHandleEmpty
 from jdaviz.core.marks import PluginLine
 
@@ -23,6 +24,63 @@ __all__ = ['SpectralExtraction']
 
 @tray_registry('spectral-extraction', label="Spectral Extraction")
 class SpectralExtraction(PluginTemplateMixin):
+    """
+    The Spectral Extraction plugin exposes specreduce methods for tracing, background subtraction,
+    and spectral extraction from 2D spectra.
+    See the :ref:`Spectral Extraction Plugin Documentation <specviz2d-spectral-extraction>`
+    for more details.
+
+    Only the following attributes and methods are available through the
+    :ref:`public plugin API <plugin-apis>`:
+
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
+    * :attr:`setting_interactive_extract`
+    * ``trace_dataset`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
+      controls the input dataset for generating the trace.
+    * ``trace_type`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
+      controls the type of trace to be generated.
+    * ``trace_peak_method`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
+      only applicable if ``trace_type`` is set to ``Auto``.
+    * :attr:`trace_pixel` :
+      pixel of the trace.  If ``trace_type`` is set to ``Auto``, then this
+      is the "guess" for the automated trace.
+    * :attr:`trace_bins` :
+      only applicable if ``trace_type`` is set to ``Auto``.
+    * :attr:`trace_window` :
+      full width of the trace.
+    * :meth:`import_trace`
+    * :meth:`export_trace`
+    * ``bg_dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`):
+      controls the input dataset for generating the background.
+    * ``bg_type`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
+      controls the type of background to be generated.
+    * :attr:`bg_trace_pixel` :
+      only applicable if ``bg_type`` is set to ``Manual``
+    * :attr:`bg_separation` :
+      only applicable if ``bg_type`` set set to ``OneSided`` or ``TwoSided``.
+      Separation from the referenced trace for the center of each of the background window(s).
+    * :attr:`bg_width` :
+      full width of each background window(s).
+    * ``bg_add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
+    * ``bg_sub_add_results``
+    * :meth:`import_bg`
+    * :meth:`export_bg`
+    * :meth:`export_bg_img`
+    * :meth:`export_bg_sub`
+    * ``ext_dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`):
+      controls the input dataset for generating the extracted spectrum.  "From Plugin" will
+      use the background-subtracted image as defined by the background options above.  To skip
+      background extraction, select the original input 2D spectrum.
+    * ``ext_trace`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`)
+    * ``ext_type`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
+    * :attr:`ext_width` :
+      full width of the extraction window.
+    * ``ext_add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
+    * :meth:`import_extract`
+    * :meth:`export_extract`
+    * :meth:`export_extract_spectrum`
+    """
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "spectral_extraction.vue"
 
@@ -95,8 +153,8 @@ class SpectralExtraction(PluginTemplateMixin):
     ext_trace_items = List().tag(sync=True)
     ext_trace_selected = Unicode().tag(sync=True)
 
-    ext_type_items = List(['Boxcar', 'Horne']).tag(sync=True)
-    ext_type_selected = Unicode('Boxcar').tag(sync=True)
+    ext_type_items = List().tag(sync=True)
+    ext_type_selected = Unicode().tag(sync=True)
 
     ext_width = IntHandleEmpty(0).tag(sync=True)
 
@@ -198,6 +256,11 @@ class SpectralExtraction(PluginTemplateMixin):
                                        default_text='From Plugin',
                                        filters=['is_trace'])
 
+        self.ext_type = SelectPluginComponent(self,
+                                              items='ext_type_items',
+                                              selected='ext_type_selected',
+                                              manual_options=['Boxcar', 'Horne'])
+
         self.ext_add_results = AddResults(self, 'ext_results_label',
                                           'ext_results_label_default',
                                           'ext_results_label_auto',
@@ -209,6 +272,23 @@ class SpectralExtraction(PluginTemplateMixin):
         # NOTE: defaults to overwriting original spectrum
         self.ext_add_results.label_whitelist_overwrite = ['Spectrum 1D']
         self.ext_results_label_default = 'Spectrum 1D'
+
+    @property
+    def user_api(self):
+        return PluginUserApi(self, expose=('setting_interactive_extract',
+                                           'trace_dataset', 'trace_type', 'trace_peak_method',
+                                           'trace_pixel', 'trace_bins', 'trace_window',
+                                           'import_trace',
+                                           'export_trace',
+                                           'bg_dataset', 'bg_type',
+                                           'bg_trace_pixel', 'bg_separation', 'bg_width',
+                                           'bg_add_results', 'bg_sub_add_results',
+                                           'import_bg',
+                                           'export_bg', 'export_bg_img', 'export_bg_sub',
+                                           'ext_dataset', 'ext_trace', 'ext_type',
+                                           'ext_width', 'ext_add_results',
+                                           'import_extract',
+                                           'export_extract', 'export_extract_spectrum'))
 
     @observe('trace_dataset_selected')
     def _trace_dataset_selected(self, msg=None):
