@@ -25,8 +25,8 @@
       :items="spatial_subset_items"
       :selected.sync="spatial_subset_selected"
       :show_if_single_entry="true"
-      label="Collapsed Spectrum"
-      hint="Select collapsed spectrum to analyze."
+      label="Spatial region"
+      hint="Select which region's collapsed spectrum to analyze."
     />
 
     <plugin-subset-select 

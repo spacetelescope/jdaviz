@@ -104,7 +104,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             self.spatial_subset = SubsetSelect(self,
                                                'spatial_subset_items',
                                                'spatial_subset_selected',
-                                               default_text='Entire Cube Spectrum',
+                                               default_text='Entire Cube',
                                                allowed_type='spatial')
         else:
             self.spatial_subset = None
