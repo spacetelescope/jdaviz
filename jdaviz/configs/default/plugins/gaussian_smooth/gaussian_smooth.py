@@ -30,9 +30,9 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * ``dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`):
-        Dataset to use for computing line statistics.
+      Dataset to use for computing line statistics.
     * :attr:`stddev`:
-        Standard deviation of the gaussian to use for smoothing.
+      Standard deviation of the gaussian to use for smoothing.
     * ``add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
     * :meth:`apply_spectral_smooth`
     """

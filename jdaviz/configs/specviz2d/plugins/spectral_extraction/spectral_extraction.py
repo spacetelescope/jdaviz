@@ -36,31 +36,31 @@ class SpectralExtraction(PluginTemplateMixin):
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :attr:`setting_interactive_extract`
     * ``trace_dataset`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
-        controls the input dataset for generating the trace.
+      controls the input dataset for generating the trace.
     * ``trace_type`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
-        controls the type of trace to be generated.
+      controls the type of trace to be generated.
     * ``trace_peak_method`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
-        only applicable if ``trace_type`` is set to ``Auto``.
+      only applicable if ``trace_type`` is set to ``Auto``.
     * :attr:`trace_pixel` :
-        pixel of the trace.  If ``trace_type`` is set to ``Auto``, then this
-        is the "guess" for the automated trace.
+      pixel of the trace.  If ``trace_type`` is set to ``Auto``, then this
+      is the "guess" for the automated trace.
     * :attr:`trace_bins` :
-        only applicable if ``trace_type`` is set to ``Auto``.
+      only applicable if ``trace_type`` is set to ``Auto``.
     * :attr:`trace_window` :
-        full width of the trace.
+      full width of the trace.
     * :meth:`import_trace`
     * :meth:`export_trace`
     * ``bg_dataset`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
-        controls the input dataset for generating the background.
+      controls the input dataset for generating the background.
     * ``bg_type`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
-        controls the type of background to be generated.
+      controls the type of background to be generated.
     * :attr:`bg_trace_pixel` :
-        only applicable if ``bg_type`` is set to ``Manual``
+      only applicable if ``bg_type`` is set to ``Manual``
     * :attr:`bg_separation` :
-        only applicable if ``bg_type`` set set to ``OneSided`` or ``TwoSided``.
-        Separation from the referenced trace for the center of each of the background window(s).
+      only applicable if ``bg_type`` set set to ``OneSided`` or ``TwoSided``.
+      Separation from the referenced trace for the center of each of the background window(s).
     * :attr:`bg_width` :
-        full width of each background window(s).
+      full width of each background window(s).
     * ``bg_add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
     * ``bg_sub_add_results``
     * :meth:`import_bg`
@@ -68,11 +68,11 @@ class SpectralExtraction(PluginTemplateMixin):
     * :meth:`export_bg_img`
     * :meth:`export_bg_sub`
     * ``ext_dataset`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
-        controls the input dataset for generating the extracted spectrum.  "From Plugin" will
-        use the background-subtracted image as defined by the background options above.  To skip
-        background extraction, select the original input 2D spectrum.
+      controls the input dataset for generating the extracted spectrum.  "From Plugin" will
+      use the background-subtracted image as defined by the background options above.  To skip
+      background extraction, select the original input 2D spectrum.
     * :attr:`ext_width` :
-        full width of the extraction window.
+      full width of the extraction window.
     * ``ext_add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
     * :meth:`import_extract`
     * :meth:`export_extract`
