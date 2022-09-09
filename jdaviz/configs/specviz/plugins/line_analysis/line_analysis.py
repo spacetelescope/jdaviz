@@ -26,6 +26,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         DatasetSelectMixin,
                                         SpectralSubsetSelectMixin,
                                         SubsetSelect)
+from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
 
 __all__ = ['LineAnalysis']
@@ -65,6 +66,32 @@ def _coerce_unit(quantity):
 
 @tray_registry('specviz-line-analysis', label="Line Analysis")
 class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin):
+    """
+    The Line Analysis plugin returns specutils analysis for a single spectral line.
+    See the :ref:`Line Analysis Plugin Documentation <line-analysis>` for more details.
+
+    Only the following attributes and methods are available through the
+    :ref:`public plugin API <plugin-apis>`:
+
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
+    * ``dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`):
+      Dataset to use for computing line statistics.
+    * ``spatial_subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
+      Select which region's collapsed spectrum to analyze or ``Entire Cube``.
+    * ``spectral_subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
+      Subset to use for the line, or ``Entire Spectrum``.
+    * ``continuum`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
+      Subset to use for the continuum, or ``Surrounding`` to use a region surrounding the
+      subset set in ``spectral_subset``.
+    * :attr:`width`:
+      Width, relative to the overall line spectral region, to fit the linear continuum
+      (excluding the region containing the line). If 1, will use endpoints within line region
+      only.
+    * :meth:`show_continuum_marks`
+    * :meth:`get_results`
+
+    """
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "line_analysis.vue"
 
@@ -87,7 +114,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     selected_line_redshift = Float(0).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
 
         self.update_results(None)
 
@@ -124,6 +151,12 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                            handler=self._on_plotted_lines_changed)
         self.hub.subscribe(self, LineIdentifyMessage,
                            handler=self._on_identified_line_changed)
+
+    @property
+    def user_api(self):
+        return PluginUserApi(self, expose=('dataset', 'spatial_subset', 'spectral_subset',
+                                           'continuum', 'width',
+                                           'show_continuum_marks', 'get_results'))
 
     def _on_viewer_data_changed(self, msg):
         viewer_id = self.app._viewer_item_by_reference('spectrum-viewer').get('id')
@@ -165,10 +198,21 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             return
         # toggle continuum lines in spectrum viewer based on whether this plugin
         # is currently open in the tray
+        self.show_continuum_marks(self.plugin_opened)
+
+    def show_continuum_marks(self, show=True):
+        """
+        Show (or hide) the marks indicating the continuum on the spectrum viewer.
+
+        Parameters
+        ----------
+        show : bool
+            Whether to show (or hide) the marks
+        """
         for pos, mark in self.marks.items():
-            mark.visible = self.plugin_opened
-        if self.plugin_opened:
-            self._calculate_statistics()
+            mark.visible = show
+        if show:
+            self._calculate_statistics(ignore_plugin_closed=True)
 
     @property
     def marks(self):
@@ -210,6 +254,12 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
 
         self.results_computing = False
 
+    def get_results(self):
+        # user-facing API call to force updating and retrieving results, even if the plugin
+        # is closed
+        self._calculate_statistics(ignore_plugin_closed=True)
+        return self.results
+
     def _on_plotted_lines_changed(self, msg):
         self.line_marks = msg.marks
         self.line_items = msg.names_rest
@@ -249,7 +299,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         else:
             full_spectrum = self.dataset.selected_obj
 
-        if full_spectrum is None or self.width == "" or not self.plugin_opened:
+        if (full_spectrum is None or self.width == "" or
+                (not self.plugin_opened and not kwargs.get('ignore_plugin_closed'))):
             # this can happen DURING a unit conversion change
             self.update_results(None)
             return

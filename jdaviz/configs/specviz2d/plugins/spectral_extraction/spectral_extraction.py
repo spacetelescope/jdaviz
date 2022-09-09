@@ -6,6 +6,7 @@ from traitlets import Bool, List, Unicode, observe
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
+                                        SelectPluginComponent,
                                         DatasetSelect,
                                         AddResults)
 from jdaviz.core.custom_traitlets import IntHandleEmpty
@@ -31,13 +32,13 @@ class SpectralExtraction(PluginTemplateMixin):
     trace_dataset_items = List().tag(sync=True)
     trace_dataset_selected = Unicode().tag(sync=True)
 
-    trace_type_items = List(['Flat', 'Auto']).tag(sync=True)
-    trace_type_selected = Unicode('Flat').tag(sync=True)
+    trace_type_items = List().tag(sync=True)
+    trace_type_selected = Unicode().tag(sync=True)
 
     trace_pixel = IntHandleEmpty(0).tag(sync=True)
 
-    trace_peak_method_items = List(['Gaussian', 'Centroid', 'Max']).tag(sync=True)
-    trace_peak_method_selected = Unicode('Gaussian').tag(sync=True)
+    trace_peak_method_items = List().tag(sync=True)
+    trace_peak_method_selected = Unicode().tag(sync=True)
 
     trace_bins = IntHandleEmpty(20).tag(sync=True)
     trace_window = IntHandleEmpty(0).tag(sync=True)
@@ -46,8 +47,8 @@ class SpectralExtraction(PluginTemplateMixin):
     bg_dataset_items = List().tag(sync=True)
     bg_dataset_selected = Unicode().tag(sync=True)
 
-    bg_type_items = List(['TwoSided', 'OneSided', 'Manual']).tag(sync=True)
-    bg_type_selected = Unicode('TwoSided').tag(sync=True)
+    bg_type_items = List().tag(sync=True)
+    bg_type_selected = Unicode().tag(sync=True)
 
     bg_trace_pixel = IntHandleEmpty(0).tag(sync=True)
 
@@ -97,11 +98,26 @@ class SpectralExtraction(PluginTemplateMixin):
                                            'trace_dataset_selected',
                                            filters=['layer_in_spectrum_2d_viewer', 'not_trace'])
 
+        self.trace_type = SelectPluginComponent(self,
+                                                items='trace_type_items',
+                                                selected='trace_type_selected',
+                                                manual_options=['Flat', 'Auto'])
+
+        self.trace_peak_method = SelectPluginComponent(self,
+                                                       items='trace_peak_method_items',
+                                                       selected='trace_peak_method_selected',
+                                                       manual_options=['Gaussian', 'Centroid' 'Max'])  # noqa
+
         # BACKGROUND
         self.bg_dataset = DatasetSelect(self,
                                         'bg_dataset_items',
                                         'bg_dataset_selected',
                                         filters=['layer_in_spectrum_2d_viewer', 'not_trace'])
+
+        self.bg_type = SelectPluginComponent(self,
+                                             items='bg_type_items',
+                                             selected='bg_type_selected',
+                                             manual_options=['TwoSided', 'OneSided', 'Manual'])
 
         self.bg_add_results = AddResults(self, 'bg_results_label',
                                          'bg_results_label_default',

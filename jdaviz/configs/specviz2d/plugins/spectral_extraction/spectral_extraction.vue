@@ -42,7 +42,7 @@
 
         <v-row>
           <v-select
-            :items="trace_type_items"
+            :items="trace_type_items.map(i => i.label)"
             v-model="trace_type_selected"
             label="Trace Type"
             hint="Method to use for creating trace"
@@ -88,7 +88,7 @@
 
         <v-row v-if="trace_type_selected==='Auto'">
           <v-select
-            :items="trace_peak_method_items"
+            :items="trace_peak_method_items.map(i => i.label)"
             v-model="trace_peak_method_selected"
             label="Peak Method"
             hint="Method to use for identifying the peak cross-dispersion pixel in each bin"
@@ -120,7 +120,7 @@
 
       <v-row>
         <v-select
-          :items="bg_type_items"
+          :items="bg_type_items.map(i => i.label)"
           v-model="bg_type_selected"
           label="Background Type"
           hint="Method to use for creating background"

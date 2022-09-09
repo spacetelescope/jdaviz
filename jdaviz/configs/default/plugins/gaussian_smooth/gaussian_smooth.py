@@ -10,6 +10,7 @@ from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin
+from jdaviz.core.user_api import PluginUserApi
 
 __all__ = ['GaussianSmooth']
 
@@ -20,6 +21,21 @@ u.add_enabled_units([spaxel])
 
 @tray_registry('g-gaussian-smooth', label="Gaussian Smooth")
 class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
+    """
+    See the :ref:`Gaussian Smooth Plugin Documentation <gaussian-smooth>` for more details.
+
+    Only the following attributes and methods are available through the
+    :ref:`public plugin API <plugin-apis>`:
+
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
+    * ``dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`):
+      Dataset to use for computing line statistics.
+    * :attr:`stddev`:
+      Standard deviation of the gaussian to use for smoothing.
+    * ``add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
+    * :meth:`apply_spectral_smooth`
+    """
     template_file = __file__, "gaussian_smooth.vue"
     stddev = FloatHandleEmpty(1).tag(sync=True)
     selected_data_is_1d = Bool(True).tag(sync=True)
@@ -43,6 +59,11 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
 
         # set the filter on the viewer options
         self._update_viewer_filters()
+
+    @property
+    def user_api(self):
+        return PluginUserApi(self, expose=('dataset', 'stddev',
+                                           'add_results', 'apply_spectral_smooth'))
 
     @observe("dataset_selected", "dataset_items", "stddev", "selected_mode")
     def _set_default_results_label(self, event={}):
@@ -81,7 +102,7 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
         else:
             self.apply_spectral_smooth()
 
-    def apply_spectral_smooth(self):
+    def apply_spectral_smooth(self, add_data=True):
         # Testing inputs to make sure putting smoothed spectrum into
         # datacollection works
         # input_flux = Quantity(np.array([0.2, 0.3, 2.2, 0.3]), u.Jy)
@@ -93,14 +114,17 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
         cube = self.dataset.get_object(cls=Spectrum1D, statistic=None)
         spec_smoothed = gaussian_smooth(cube, stddev=self.stddev)
 
-        # add data to the collection/viewer
-        self.add_results.add_results_from_plugin(spec_smoothed)
+        if add_data:
+            # add data to the collection/viewer
+            self.add_results.add_results_from_plugin(spec_smoothed)
 
-        snackbar_message = SnackbarMessage(
-            f"Data set '{self.dataset_selected}' smoothed successfully.",
-            color="success",
-            sender=self)
-        self.hub.broadcast(snackbar_message)
+            snackbar_message = SnackbarMessage(
+                f"Data set '{self.dataset_selected}' smoothed successfully.",
+                color="success",
+                sender=self)
+            self.hub.broadcast(snackbar_message)
+
+        return spec_smoothed
 
     def apply_spatial_convolution(self):
         """
