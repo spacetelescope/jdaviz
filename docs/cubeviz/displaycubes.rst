@@ -21,7 +21,7 @@ converted to lower case):
       ``hdu.name`` is in the set ``['mask', 'dq']``
 
 The next section describes how to manually select data in cases where a viewer
-fails to populate automatically or a user wants to change the data displayed.
+is not automatically populated or a user wants to change the data displayed.
 Different statistics for collapsing the spectrum displayed in the spectrum
 viewer can be chosen as described in
 :ref:`Display Settings <imviz-display-settings>`. Note that any spatial subsets will

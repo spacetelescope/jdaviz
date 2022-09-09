@@ -49,13 +49,13 @@ You can load your data into the Cubeviz application through the command line::
 Importing data through the GUI
 ==============================
 
-You can load your data into the Cubeviz application
+Users may load data into the Cubeviz application
 by clicking the :guilabel:`Import Data` button at the top left of the application's
-user interface. This opens a dialogue where you can select a file
-that can be parsed as a :class:`~specutils.Spectrum1D`.
+user interface. This opens a dialogue with a prompt to select a file
+that can be parsed as a :class:`~specutils.Spectrum1D` object.
 
 After clicking :guilabel:`Import`, the data file will be parsed and loaded into the
-application. A notification will appear to let users know if the data import
+application. A notification will appear to confirm whether the data import
 was successful. Afterward, the new data set can be found in the :guilabel:`Data`
 tab of each viewer's options menu as described in :ref:`cubeviz-selecting-data`.
 
