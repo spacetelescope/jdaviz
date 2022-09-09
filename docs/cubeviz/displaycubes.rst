@@ -5,12 +5,12 @@ Displaying Cubes
 ****************
 
 The Cubeviz layout includes three image viewers (at the top of the app)
-and one spectrum viewer (at the bottom of the app), which it attempts to 
+and one spectrum viewer (at the bottom of the app), which it attempts to
 populate automatically when the first dataset is loaded. By default, Cubeviz
 attempts to parse and display the flux in the top left viewer, the uncertainty
 in the top middle viewer, and the mask into the top right viewer. The spectrum
 viewer is populated by default by collapsing the spatial axes using the `max`
-function. The indicators that the load machinery looks for in each HDU to 
+function. The indicators that the load machinery looks for in each HDU to
 populate the viewers are below (note that in all cases, header values are
 converted to lower case):
 
@@ -20,12 +20,12 @@ converted to lower case):
     - Mask viewer: ``hdu.data.dtype`` is `int`, `numpy.uint` or `numpy.uint32`, or
       ``hdu.name`` is in the set ``['mask', 'dq']``
 
-If any viewer fails to populate automatically, or if displaying 
-different data is desired, the user can manually select data for each viewer
-as described in the next section. Different statistics for collapsing the 
-spectrum displayed in the spectrum viewer can be chosen as described in 
+The next section describes how to manually select data in cases where a viewer
+is not automatically populated or a user wants to change the data displayed.
+Different statistics for collapsing the spectrum displayed in the spectrum
+viewer can be chosen as described in
 :ref:`Display Settings <imviz-display-settings>`. Note that any spatial subsets will
-also be collapsed into a spectrum using the same statistic and displayed in 
+also be collapsed into a spectrum using the same statistic and displayed in
 the spectrum viewer along with the spectrum resulting from collapsing all the
 data in each spectral slice.
 
@@ -39,14 +39,14 @@ for each button.
 
 .. _cubeviz-selecting-data:
 
-Selecting Data Set
-==================
+Selecting a Data Set
+====================
 
 If you have already imported data into Cubeviz, you can select and deselect data within a viewer.
 
 .. seealso::
 
-    :ref:`Selecting Data Set <imviz-selecting-data>`
+    :ref:`Selecting a Data Set <imviz-selecting-data>`
         Documentation on selecting data sets in the Jdaviz viewers.
 
 Home
@@ -118,5 +118,5 @@ Display Settings
 
 To access all of the different display settings for an image viewer, click the
 |icon-settings-sliders| icon in the viewer toolbar or open the :ref:`Plot Options <cubeviz-plot-options>` plugin.
-Changing the display settings DOES NOT change the underlying data, only the
+Changing the display settings **does not** change the underlying data, only the
 visualization of that data.
