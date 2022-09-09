@@ -57,11 +57,19 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- Calling ``cubeviz.load_data(data, data_label)``, where ``data_label`` is passed in
+  as second positional argument instead of keyword, is now allowed. [#1644]
+
 Imviz
 ^^^^^
 
 - Fixed inaccurate aperture photometry results when aperture photometry is done on
   a non-reference image if images are linked by WCS. [#1524]
+
+- Calling ``imviz.load_data(data, data_label)``, where ``data_label`` is passed in
+  as second positional argument instead of keyword, is now allowed. Previously,
+  this will crash because second positional argument is actually a
+  ``parser_reference`` that is meant for internal use. [#1644]
 
 Mosviz
 ^^^^^^

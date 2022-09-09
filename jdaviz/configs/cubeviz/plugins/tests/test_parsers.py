@@ -23,10 +23,11 @@ def test_fits_image_hdu_parse(image_cube_hdu_obj, cubeviz_helper):
 
 @pytest.mark.filterwarnings('ignore')
 def test_fits_image_hdu_with_microns(image_cube_hdu_obj_microns, cubeviz_helper):
-    cubeviz_helper.load_data(image_cube_hdu_obj_microns, data_label='has_microns')
+    # Passing in data_label keyword as posarg.
+    cubeviz_helper.load_data(image_cube_hdu_obj_microns, 'has_microns')
 
     assert len(cubeviz_helper.app.data_collection) == 3
-    assert cubeviz_helper.app.data_collection[0].label.endswith('[FLUX]')
+    assert cubeviz_helper.app.data_collection[0].label == 'has_microns[FLUX]'
 
     flux_cube = cubeviz_helper.app.data_collection[0].get_object(Spectrum1D, statistic=None)
     assert flux_cube.spectral_axis.unit == u.um

@@ -80,7 +80,8 @@ class TestParseImage:
         with pytest.raises(ValueError, match='Imviz cannot load this array with ndim=1'):
             parse_data(imviz_helper.app, np.zeros(2))
 
-        imviz_helper.load_data(np.zeros((2, 2)), data_label='some_array', show_in_viewer=False)
+        # Passing in data_label keyword as posarg.
+        imviz_helper.load_data(np.zeros((2, 2)), 'some_array', show_in_viewer=False)
         data = imviz_helper.app.data_collection[0]
         comp = data.get_component('DATA')
         assert data.label == 'some_array'
