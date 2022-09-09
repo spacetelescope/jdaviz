@@ -62,6 +62,12 @@ Mosviz
 Specviz
 ^^^^^^^
 
+Specviz2d
+^^^^^^^^^
+
+- Fixed default spectral extraction parameters when the background separation otherwise would have
+  fallen directly on the edge of the image. [#1633]
+
 Other Changes and Additions
 ---------------------------
 

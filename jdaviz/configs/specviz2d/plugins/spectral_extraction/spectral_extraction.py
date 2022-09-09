@@ -169,7 +169,7 @@ class SpectralExtraction(PluginTemplateMixin):
         if self.bg_trace_pixel == 0:
             self.bg_trace_pixel = brightest_pixel
         if self.bg_separation == 0:
-            if default_bg_width * 2 > distance_from_edge:
+            if default_bg_width * 2 >= distance_from_edge:
                 self.bg_type_selected = 'OneSided'
                 # we want positive separation if brightest_pixel near bottom
                 sign = 1 if (brightest_pixel < width / 2) else -1
