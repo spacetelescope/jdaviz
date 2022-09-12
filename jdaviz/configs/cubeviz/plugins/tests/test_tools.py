@@ -40,7 +40,6 @@ def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube):
 
     flux_viewer = cubeviz_helper.app.get_viewer("flux-viewer")
     uncert_viewer = cubeviz_helper.app.get_viewer("uncert-viewer")
-    mask_viewer = cubeviz_helper.app.get_viewer("mask-viewer")
     spectrum_viewer = cubeviz_helper.app.get_viewer("spectrum-viewer")
 
     # Set the active tool to spectrumperspaxel
@@ -100,8 +99,8 @@ def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube):
         flux_viewer.state.y_min = 15
         flux_viewer.state.x_max = 40
         flux_viewer.state.y_max = 35
-    for v in (uncert_viewer, mask_viewer):
-        assert (v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max) == (20, 40, 15, 35)
+    v = uncert_viewer
+    assert (v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max) == (20, 40, 15, 35)
     t_linkedpan.deactivate()
 
 
