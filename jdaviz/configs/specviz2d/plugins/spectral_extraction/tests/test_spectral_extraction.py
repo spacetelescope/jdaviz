@@ -101,6 +101,14 @@ def test_plugin(specviz2d_helper):
     sp_ext = pext.export_extract_spectrum()
     assert isinstance(sp_ext, Spectrum1D)
 
+    pext.ext_type_selected = 'Horne'
+    sp_ext = pext.export_extract_spectrum()
+    assert isinstance(sp_ext, Spectrum1D)
+
+    # test API calls
+    for step in ['trace', 'bg', 'ext']:
+        pext.update_marks(step)
+
     # test exception handling
     pext.trace_type = 'Auto'
     pext.bg_type_selected = 'TwoSided'
@@ -110,10 +118,6 @@ def test_plugin(specviz2d_helper):
     pext.bg_results_label = 'should not be created'
     pext.vue_create_bg_img()
     assert 'should not be created' not in [d.label for d in specviz2d_helper.app.data_collection]
-
-    # test API calls
-    for step in ['trace', 'bg', 'ext']:
-        pext.update_marks(step)
 
     with pytest.raises(ValueError):
         pext.export_extract(invalid_kwarg=5)

@@ -131,6 +131,13 @@ To import the parameters from a specreduce extraction object (either a new objec
   sp_ext.import_extract(ext)
 
 
+.. note::
+
+    Horne extraction uses uncertainties on the input 2D spectrum. If the
+    spectrum uncertainties are not explicitly assigned a type, they are assumed
+    to be standard deviation uncertainties.
+
+
 .. _specviz2d-gaussian-smooth:
 
 Gaussian Smooth
