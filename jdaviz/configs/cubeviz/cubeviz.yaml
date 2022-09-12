@@ -7,7 +7,7 @@ settings:
     menu_bar: false
     toolbar: true
     tray: true
-    tab_headers: false
+    tab_headers: true
   dense_toolbar: false
   context:
     notebook:
@@ -40,9 +40,6 @@ viewer_area:
           - name: Uncertainty
             plot: cubeviz-image-viewer
             reference: uncert-viewer
-          - name: Mask
-            plot: cubeviz-image-viewer
-            reference: mask-viewer
       - container: row
         viewers:
           - name: Spectrum
