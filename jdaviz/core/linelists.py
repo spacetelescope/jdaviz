@@ -18,7 +18,7 @@ def get_linelist_metadata():
 def get_available_linelists():
     """
     Return all available line lists.
-    
+
     Filters out all entries that do not explicitly contain medium information, as to not
     mislead users
     """
