@@ -40,6 +40,8 @@ Imviz
 
 - Changing link options now updates immediately without needing to press "Link" button. [#1598]
 
+- Alt-clicking will now create a single-pixel spatial region on the image. [#1647]
+
 Mosviz
 ^^^^^^
 

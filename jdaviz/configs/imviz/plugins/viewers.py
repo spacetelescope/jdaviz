@@ -50,7 +50,8 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
         self.line_profile_xy = None
 
         self.add_event_callback(self.on_mouse_or_key_event, events=['mousemove', 'mouseenter',
-                                                                    'mouseleave', 'keydown'])
+                                                                    'mouseleave', 'keydown',
+                                                                    'click'])
         self.state.add_callback('x_min', self.on_limits_change)
         self.state.add_callback('x_max', self.on_limits_change)
         self.state.add_callback('y_min', self.on_limits_change)
@@ -170,6 +171,22 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
                 self.line_profile_xy.selected_y = y
                 self.line_profile_xy.selected_viewer = self.reference_id
                 self.line_profile_xy.vue_draw_plot()
+
+        elif data['event'] == 'click' and data['altKey'] is True:
+            from regions import RectanglePixelRegion, PixCoord
+
+            image = active_layer.layer
+
+            # Extract data coordinates - these are pixels in the reference image
+            x = data['domain']['x']
+            y = data['domain']['y']
+
+            # NOTE: We always use the reference image pixel coordinates because
+            # Subset is defined w.r.t. reference image.
+            x, y = np.rint([x, y])
+
+            reg = RectanglePixelRegion(center=PixCoord(x=x, y=y), width=1, height=1)
+            self.jdaviz_helper.load_regions(reg)
 
     def blink_once(self, reversed=False):
         # Simple blinking of images - this will make it so that only one

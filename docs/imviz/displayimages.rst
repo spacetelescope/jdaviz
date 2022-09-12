@@ -145,6 +145,30 @@ You can :ref:`import <imviz-import-regions-api>` and :ref:`export <imviz_export_
 There are options available in the :guilabel:`Layer` tab under the |icon-settings-sliders| icon
 to make subsets visible or invisible, to change their color, and to change their opacity.
 
+.. _imviz_defining_spatial_regions_single_pixel:
+
+Single-Pixel Selection
+----------------------
+
+In Imviz, you can create a single-pixel spatial region by alt-clicking
+on the pixel of interest.
+
+When you have multiple images loaded and linked by WCS
+(see :ref:`imviz-link-control`), the region defined is with respect to
+the reference image, which might not be the image you are viewing.
+This behavior is consistent with glue.
+
+.. warning::
+
+    Region created might not accurately represent area you think you are
+    clicking under the mouse if you click on an image that is zoomed out
+    too much. It is recommended that you zoom in sufficiently to see the
+    individual pixels to use this feature.
+
+.. note::
+
+    Creating too many single-pixel regions may affect performance.
+
 Blinking
 ========
 
