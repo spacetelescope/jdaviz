@@ -25,24 +25,23 @@ def test_multiselect(cubeviz_helper, spectrum1d_cube):
     for viewer_name in ['flux-viewer', 'uncert-viewer']:
         assert cubeviz_helper.app.get_viewer(viewer_name).state.show_axes is False
 
-    for viewer_name in ['mask-viewer', 'spectrum-viewer']:
-        assert cubeviz_helper.app.get_viewer(viewer_name).state.show_axes is True
+    assert cubeviz_helper.app.get_viewer('spectrum-viewer').state.show_axes is True
 
     assert po.show_axes.sync['mixed'] is False
 
     # adding another viewer should show a mixed-state
-    po.viewer.selected = ['flux-viewer', 'uncert-viewer', 'mask-viewer', 'spectrum-viewer']
+    po.viewer.selected = ['flux-viewer', 'uncert-viewer', 'spectrum-viewer']
     # spectrum viewer is excluded from the show_axes logic
-    assert len(po.show_axes.linked_states) == 3
-    assert len(po.show_axes.sync['icons']) == 3
-    assert po.show_axes.sync['mixed'] is True
+    assert len(po.show_axes.linked_states) == 2
+    assert len(po.show_axes.sync['icons']) == 2
+    assert po.show_axes.sync['mixed'] is False
 
     # from API could call po.show_axes.unmix_state, but we'll also test the vue-level wrapper
     po.vue_unmix_state('show_axes')
     assert po.show_axes.sync['mixed'] is False
     assert po.show_axes.value is False
 
-    for viewer_name in ['flux-viewer', 'uncert-viewer', 'mask-viewer']:
+    for viewer_name in ['flux-viewer', 'uncert-viewer']:
         assert cubeviz_helper.app.get_viewer(viewer_name).state.show_axes is False
 
     for viewer_name in ['spectrum-viewer']:

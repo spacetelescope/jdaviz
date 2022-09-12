@@ -22,12 +22,12 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
     mm.n_moment = 0  # Collapsed sum, will get back 2D spatial image
     assert mm.results_label == 'moment 0'
 
-    mm.add_results.viewer.selected = 'mask-viewer'
+    mm.add_results.viewer.selected = 'uncert-viewer'
     mm.vue_calculate_moment()
 
     assert mm.moment_available
     assert dc[1].label == 'moment 0'
-    mv_data = cubeviz_helper.app.get_viewer('mask-viewer').data()
+    mv_data = cubeviz_helper.app.get_viewer('uncert-viewer').data()
     # by default, will overwrite the previous entry (so only one data entry)
     assert len(mv_data) == 1
     assert mv_data[0].label == 'moment 0'

@@ -11,9 +11,9 @@ def test_default_viewer_ids_default():
 
 def test_default_viewer_ids_cubeviz(cubeviz_helper):
     x = cubeviz_helper.app
-    assert x.get_viewer_reference_names() == ['flux-viewer', 'uncert-viewer', 'mask-viewer',
+    assert x.get_viewer_reference_names() == ['flux-viewer', 'uncert-viewer',
                                               'spectrum-viewer']
-    assert x.get_viewer_ids() == ['cubeviz-0', 'cubeviz-1', 'cubeviz-2', 'cubeviz-3']
+    assert x.get_viewer_ids() == ['cubeviz-0', 'cubeviz-1', 'cubeviz-2']
 
 
 def test_default_viewer_ids_imviz(imviz_helper):
