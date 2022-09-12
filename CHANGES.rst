@@ -18,7 +18,7 @@ Mosviz
 Specviz
 ^^^^^^^
 
-Specviz2D
+Specviz2d
 ^^^^^^^^^
 
 - Support for Horne/Optimal extraction. [#1572]

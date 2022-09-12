@@ -244,7 +244,7 @@
 
       <v-row v-if="ext_uncert_warn">
         <span class="v-messages v-messages__message text--secondary">
-          <b style="color: red !important">WARNING:</b> uncertainties do not have assigned type, assuming standard deviation.
+          <b style="color: red !important">WARNING:</b> uncertainties on input 2D spectrum have unclear units; assuming standard deviation.
         </span>
       </v-row>
 
