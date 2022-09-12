@@ -6,6 +6,8 @@ New Features
 
 - Profile viewers now support plotting with profiles "as steps". [#1595]
 
+- Use spectrum's uncertainty as weight when doing model fitting. [#1630]
+
 Cubeviz
 ^^^^^^^
 
