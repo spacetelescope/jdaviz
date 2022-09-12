@@ -176,6 +176,14 @@
         ></v-select>
       </v-row>
 
+      <plugin-dataset-select
+        :items="bg_trace_items"
+        :selected.sync="bg_trace_selected"
+        :show_if_single_entry="false"
+        label="Background Trace"
+        hint="Trace to use as reference for background window(s).  'From Plugin' uses trace defined in Trace section above."
+      />
+
       <v-row v-if="bg_type_selected === 'Manual'">
         <v-text-field
           label="Pixel"
@@ -276,6 +284,14 @@
         :show_if_single_entry="false"
         label="2D Spectrum"
         hint="Select the data used to extract the spectrum.  'From Plugin' uses background-subtraced image defined in Background section above."
+      />
+
+      <plugin-dataset-select
+        :items="ext_trace_items"
+        :selected.sync="ext_trace_selected"
+        :show_if_single_entry="false"
+        label="Extraction Trace"
+        hint="Trace to use as center of extraction window.  'From Plugin' uses trace defined in Trace section above."
       />
 
       <v-row>

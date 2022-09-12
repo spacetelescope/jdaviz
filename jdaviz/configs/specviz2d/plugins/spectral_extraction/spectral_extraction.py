@@ -64,6 +64,9 @@ class SpectralExtraction(PluginTemplateMixin):
     bg_type_items = List().tag(sync=True)
     bg_type_selected = Unicode().tag(sync=True)
 
+    bg_trace_items = List().tag(sync=True)
+    bg_trace_selected = Unicode().tag(sync=True)
+
     bg_trace_pixel = IntHandleEmpty(0).tag(sync=True)
 
     bg_separation = IntHandleEmpty(0).tag(sync=True)
@@ -88,6 +91,9 @@ class SpectralExtraction(PluginTemplateMixin):
     # EXTRACT
     ext_dataset_items = List().tag(sync=True)
     ext_dataset_selected = Unicode().tag(sync=True)
+
+    ext_trace_items = List().tag(sync=True)
+    ext_trace_selected = Unicode().tag(sync=True)
 
     ext_type_items = List(['Boxcar', 'Horne']).tag(sync=True)
     ext_type_selected = Unicode('Boxcar').tag(sync=True)
@@ -153,6 +159,12 @@ class SpectralExtraction(PluginTemplateMixin):
                                              selected='bg_type_selected',
                                              manual_options=['TwoSided', 'OneSided', 'Manual'])
 
+        self.bg_trace = DatasetSelect(self,
+                                      items='bg_trace_items',
+                                      selected='bg_trace_selected',
+                                      default_text='From Plugin',
+                                      filters=['is_trace'])
+
         self.bg_add_results = AddResults(self, 'bg_results_label',
                                          'bg_results_label_default',
                                          'bg_results_label_auto',
@@ -179,6 +191,12 @@ class SpectralExtraction(PluginTemplateMixin):
                                          'ext_dataset_selected',
                                          default_text='From Plugin',
                                          filters=['layer_in_spectrum_2d_viewer', 'not_trace'])
+
+        self.ext_trace = DatasetSelect(self,
+                                       items='ext_trace_items',
+                                       selected='ext_trace_selected',
+                                       default_text='From Plugin',
+                                       filters=['is_trace'])
 
         self.ext_add_results = AddResults(self, 'ext_results_label',
                                           'ext_results_label_default',
@@ -365,7 +383,8 @@ class SpectralExtraction(PluginTemplateMixin):
         self.active_step = 'trace'
         self._update_plugin_marks()
 
-    @observe('bg_dataset_selected', 'bg_type_selected', 'bg_trace_pixel',
+    @observe('bg_dataset_selected', 'bg_type_selected',
+             'bg_trace_selected', 'bg_trace_pixel',
              'bg_separation', 'bg_width', 'active_step')
     def _interaction_in_bg_step(self, event={}):
         if not self.plugin_opened or not self._do_marks:
@@ -414,7 +433,8 @@ class SpectralExtraction(PluginTemplateMixin):
         self.active_step = 'bg'
         self._update_plugin_marks()
 
-    @observe('ext_dataset_selected', 'ext_type_selected', 'ext_width', 'active_step')
+    @observe('ext_dataset_selected', 'ext_trace_selected',
+             'ext_type_selected', 'ext_width', 'active_step')
     def _interaction_in_ext_step(self, event={}):
         if not self.plugin_opened or not self._do_marks:
             return
@@ -529,8 +549,10 @@ class SpectralExtraction(PluginTemplateMixin):
         if self.bg_type_selected == 'Manual':
             trace = tracing.FlatTrace(self.trace_dataset.selected_obj.data,
                                       self.bg_trace_pixel)
-        else:
+        elif self.bg_trace_selected == 'From Plugin':
             trace = self.export_trace(add_data=False)
+        else:
+            trace = self.bg_trace.selected_obj
 
         return trace
 
@@ -657,7 +679,10 @@ class SpectralExtraction(PluginTemplateMixin):
         self.export_bg_sub(add_data=True)
 
     def _get_ext_trace(self):
-        return self.export_trace(add_data=False)
+        if self.ext_trace_selected == 'From Plugin':
+            return self.export_trace(add_data=False)
+        else:
+            return self.ext_trace.selected_obj
 
     def _get_ext_input_spectrum(self):
         if self.ext_dataset_selected == 'From Plugin':
