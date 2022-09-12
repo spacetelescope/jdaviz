@@ -183,7 +183,6 @@ def _parse_hdulist(app, hdulist, file_name=None):
         if data_type == 'mask':
             # We no longer auto-populate the mask cube into a viewer
             pass
-            #app.add_data_to_viewer('mask-viewer', data_label)
 
         elif data_type == 'uncert':
             app.add_data_to_viewer('uncert-viewer', data_label)
@@ -317,7 +316,6 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None):
         elif attr == 'mask':
             # We no longer auto-populate the mask cube into a viewer
             pass
-            #app.add_data_to_viewer('mask-viewer', cur_data_label)
         else:  # 'uncertainty'
             app.add_data_to_viewer('uncert-viewer', cur_data_label)
 
