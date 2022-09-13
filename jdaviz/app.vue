@@ -301,6 +301,14 @@ div.output_wrapper {
   display: none;
 }
 
+.lm_close {
+  display: none;
+}
+
+.lm_close_tab {
+  display: None
+}
+
 .v-toolbar__items .v-btn {
   /* allow v-toolbar-items styling to pass through tooltip wrapping span */
   /* css is copied from .v-toolbar__items>.v-btn */
