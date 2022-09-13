@@ -81,7 +81,7 @@ def test_register_model_with_uncertainty_weighting(specviz_helper, spectrum1d):
     expected_uncertainties = {'slope': 0.0003657, 'intercept': 2.529}
     result_model = modelfit_plugin.component_models[0]
     for param in result_model["parameters"]:
-        assert np.allclose(param["std"], expected_uncertainties[param["name"]], atol=0.01)
+        assert np.allclose(param["std"], expected_uncertainties[param["name"]], rtol=0.01)
 
 
 @pytest.mark.filterwarnings('ignore')
@@ -111,7 +111,7 @@ def test_register_model_uncertainty_is_none(specviz_helper, spectrum1d):
     expected_uncertainties = {'slope': 0.00038, 'intercept': 2.67}
     result_model = modelfit_plugin.component_models[0]
     for param in result_model["parameters"]:
-        assert np.allclose(param["std"], expected_uncertainties[param["name"]], atol=0.01)
+        assert np.allclose(param["std"], expected_uncertainties[param["name"]], rtol=0.01)
 
 
 @pytest.mark.filterwarnings('ignore')
