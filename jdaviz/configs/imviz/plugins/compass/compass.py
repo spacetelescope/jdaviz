@@ -20,6 +20,7 @@ class Compass(PluginTemplateMixin, ViewerSelectMixin):
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * ``viewer`` (:class:`~jdaviz.core.template_mixin.ViewerSelect`):
       Viewer to show orientation/compass information.
+    * ``data_label``: label of the top-layer shown in the compass (read-only)
     """
     template_file = __file__, "compass.vue"
     icon = Unicode("").tag(sync=True)
@@ -34,7 +35,7 @@ class Compass(PluginTemplateMixin, ViewerSelectMixin):
 
     @property
     def user_api(self):
-        return PluginUserApi(self, expose=('viewer',))
+        return PluginUserApi(self, expose=('viewer',), readonly=('data_label',))
 
     def show(self, *args, **kwargs):
         super().show(*args, **kwargs)
