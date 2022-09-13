@@ -1309,7 +1309,11 @@ class Application(VuetifyTemplate, HubListener):
 
         # Include any selected data in the viewer
         for data_id, visibility in selected_items.items():
-            label = self._get_data_item_by_id(data_id)['name']
+            data_item = self._get_data_item_by_id(data_id)
+            if data_item is None:
+                label = None
+            else:
+                label = data_item['name']
 
             if label is None:
                 warnings.warn(f"No data item with id '{data_id}' found in "

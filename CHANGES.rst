@@ -77,6 +77,9 @@ Imviz
   this will crash because second positional argument is actually a
   ``parser_reference`` that is meant for internal use. [#1644]
 
+- Fixed crashing for when data is accidentally loaded multiple times or when
+  subset is deleted after a viewer is deleted. [#1649]
+
 Mosviz
 ^^^^^^
 
