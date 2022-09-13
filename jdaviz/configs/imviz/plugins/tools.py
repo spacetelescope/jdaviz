@@ -205,3 +205,33 @@ class ContrastBias(CheckableTool):
             with delay_callback(state, 'bias', 'contrast'):
                 state.bias = 0.5
                 state.contrast = 1
+
+
+@viewer_tool
+class SinglePixelRegion(CheckableTool):
+
+    icon = os.path.join(ICON_DIR, 'pixelspectra.svg')  # FIXME: Update icon
+    tool_id = 'jdaviz:singlepixelregion'
+    action_text = 'Create single-pixel spatial region'
+    tool_tip = 'Click on the viewer to create single-pixel spatial region'
+
+    def activate(self):
+        self.viewer.add_event_callback(self.on_mouse_event, events=['click'])
+
+    def deactivate(self):
+        self.viewer.remove_event_callback(self.on_mouse_event)
+
+    def on_mouse_event(self, data):
+        import numpy as np
+        from regions import RectanglePixelRegion, PixCoord
+
+        # Extract data coordinates - these are pixels in the reference image
+        x = data['domain']['x']
+        y = data['domain']['y']
+
+        # NOTE: We always use the reference image pixel coordinates because
+        # Subset is defined w.r.t. reference image.
+        x, y = np.rint([x, y])
+
+        reg = RectanglePixelRegion(center=PixCoord(x=x, y=y), width=1, height=1)
+        self.viewer.jdaviz_helper.load_regions(reg)

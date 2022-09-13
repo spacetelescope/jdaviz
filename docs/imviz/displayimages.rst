@@ -150,8 +150,9 @@ to make subsets visible or invisible, to change their color, and to change their
 Single-Pixel Selection
 ----------------------
 
-In Imviz, you can create a single-pixel spatial region by alt-clicking
-on the pixel of interest.
+This tool allows the user to create a single-pixel spatial region
+in an image viewer. Activate this tool and then left-click to create
+the new region.
 
 When you have multiple images loaded and linked by WCS
 (see :ref:`imviz-link-control`), the region defined is with respect to
