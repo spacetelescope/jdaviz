@@ -75,6 +75,10 @@ performant at the cost of accuracy but should be accurate to within a pixel
 for most cases. If approximation fails, WCS linking still automatically
 falls back to full transformation.
 
+For the best experience, it is recommended that you decide what kind of
+link you want and set it at the beginning of your Imviz session,
+rather than later.
+
 For more details on linking, see :ref:`dev_glue_linking`.
 
 From the API
@@ -89,7 +93,7 @@ From the API within the Jupyter notebook (if linking by WCS)::
 Compass
 =======
 
-For an image with a valid WCS, the compass would show directions to North (N)
+For an image with a valid WCS, the compass will show directions to North (N)
 and East (E) for ICRS sky coordinates. It also shows the currently displayed
 data label, the X and Y directions, and the zoom box.
 
@@ -113,12 +117,6 @@ This plugin only considers pixel locations, not sky coordinates.
 
 Simple Aperture Photometry
 ==========================
-
-.. warning::
-
-    Results for dithered data linked by WCS might be inaccurate unless the selected
-    data is the reference data. See https://github.com/glue-viz/glue-astronomy/issues/52
-    for more details.
 
 This plugin performs simple aperture photometry
 and plots a radial profile for one object within

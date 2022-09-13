@@ -1726,7 +1726,7 @@ class Application(VuetifyTemplate, HubListener):
 
         tray_item = None
         for item in self.state.tray_items:
-            if item['name'] == name:
+            if item['name'] == name or item['label'] == name:
                 ipy_model_id = item['widget']
                 tray_item = widget_serialization['from_json'](ipy_model_id, None)
                 break

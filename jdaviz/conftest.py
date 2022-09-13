@@ -156,9 +156,9 @@ def spectrum_collection(spectrum1d):
     return result
 
 
-@pytest.fixture
-def spectrum1d_cube():
-    flux = np.arange(16).reshape((2, 2, 4)) * u.Jy
+def _create_spectrum1d_cube_with_fluxunit(fluxunit=u.Jy):
+
+    flux = np.arange(16).reshape((2, 2, 4)) * fluxunit
     wcs_dict = {"CTYPE1": "RA---TAN", "CTYPE2": "DEC--TAN", "CTYPE3": "WAVE-LOG",
                 "CRVAL1": 205, "CRVAL2": 27, "CRVAL3": 4.622e-7,
                 "CDELT1": -0.0001, "CDELT2": 0.0001, "CDELT3": 8e-11,
@@ -166,6 +166,16 @@ def spectrum1d_cube():
     w = WCS(wcs_dict)
 
     return Spectrum1D(flux=flux, wcs=w)
+
+
+@pytest.fixture
+def spectrum1d_cube():
+    return _create_spectrum1d_cube_with_fluxunit(u.Jy)
+
+
+@pytest.fixture
+def spectrum1d_cube_custom_fluxunit():
+    return _create_spectrum1d_cube_with_fluxunit
 
 
 @pytest.fixture

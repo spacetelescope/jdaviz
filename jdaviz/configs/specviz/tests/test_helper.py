@@ -281,3 +281,10 @@ def test_plot_uncertainties(specviz_helper, spectrum1d):
     specviz_viewer.state.show_uncertainty = False
 
     assert len([m for m in specviz_viewer.figure.marks if isinstance(m, LineUncertainties)]) == 0
+
+
+def test_plugin_user_apis(specviz_helper):
+    for plugin_name, plugin_api in specviz_helper.plugins.items():
+        plugin = plugin_api._obj
+        for attr in plugin_api._expose:
+            assert hasattr(plugin, attr)

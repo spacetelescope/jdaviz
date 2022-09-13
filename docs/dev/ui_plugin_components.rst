@@ -21,7 +21,7 @@ in the same way as any other traitlet in the plugin). Within this class, it is n
 :meth:`~jdaviz.core.template_mixin.BasePluginComponent.add_observe` in the constructor
 instead of the ``@observe`` decorator on the callback method for all traitlets, so that the callback
 can reference the traitlet in the plugin properly.
-For example implementation, see `~jdaviz.core.template_mixin.BaseSelectPluginComponent`.
+For example implementation, see `~jdaviz.core.template_mixin.SelectPluginComponent`.
 
 2. Python mixin class in the `~jdaviz.core.template_mixin` module, which inherits from ``VuetifyTemplate`` and
 `~glue.core.hub.HubListener`. This class defines default traitlets as well as the attribute for the component

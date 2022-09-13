@@ -28,7 +28,9 @@
     <div @mouseover="() => active_step='trace'">
       <j-plugin-section-header>Trace</j-plugin-section-header>
       <v-row>
-        <j-docs-link>Create a trace for the spectrum.</j-docs-link>
+        <j-docs-link>
+          Create a trace for the spectrum.  See the <j-external-link link='https://specreduce.readthedocs.io/en/latest/#module-specreduce.tracing' linktext='specreduce docs'></j-external-link> for more details on the available trace types.
+        </j-docs-link>
       </v-row>
 
       <div>
@@ -42,7 +44,7 @@
 
         <v-row>
           <v-select
-            :items="trace_type_items"
+            :items="trace_type_items.map(i => i.label)"
             v-model="trace_type_selected"
             label="Trace Type"
             hint="Method to use for creating trace"
@@ -88,7 +90,7 @@
 
         <v-row v-if="trace_type_selected==='Auto'">
           <v-select
-            :items="trace_peak_method_items"
+            :items="trace_peak_method_items.map(i => i.label)"
             v-model="trace_peak_method_selected"
             label="Peak Method"
             hint="Method to use for identifying the peak cross-dispersion pixel in each bin"
@@ -120,7 +122,7 @@
 
       <v-row>
         <v-select
-          :items="bg_type_items"
+          :items="bg_type_items.map(i => i.label)"
           v-model="bg_type_selected"
           label="Background Type"
           hint="Method to use for creating background"
@@ -217,7 +219,9 @@
     <div @mouseover="() => active_step='ext'">
       <j-plugin-section-header>Extraction</j-plugin-section-header>
       <v-row>
-        <j-docs-link>Extract a 1D spectrum from a 2D spectrum.</j-docs-link>
+        <j-docs-link>
+          Extract a 1D spectrum from a 2D spectrum.  See the <j-external-link link='https://specreduce.readthedocs.io/en/latest/#module-specreduce.extract' linktext='specreduce docs'></j-external-link> for more details on the available extraction methods.
+        </j-docs-link>
       </v-row>
 
       <plugin-dataset-select
@@ -229,6 +233,22 @@
       />
 
       <v-row>
+        <v-select
+          :items="ext_type_items"
+          v-model="ext_type_selected"
+          label="Extraction Type"
+          hint="Method to use for extracting the spectrum."
+          persistent-hint
+        ></v-select>
+      </v-row>
+
+      <v-row v-if="ext_uncert_warn">
+        <span class="v-messages v-messages__message text--secondary">
+          <b style="color: red !important">WARNING:</b> uncertainties on input 2D spectrum have unclear units; assuming standard deviation.
+        </span>
+      </v-row>
+
+      <v-row v-if="ext_type_selected === 'Boxcar'">
         <v-text-field
           label="Width"
           type="number"
@@ -251,7 +271,7 @@
         :add_to_viewer_selected.sync="ext_add_to_viewer_selected"
         action_label="Extract"
         action_tooltip="Extract 1D Spectrum"
-        :action_disabled="ext_specreduce_err.length"
+        :action_disabled="ext_specreduce_err.length > 0"
         @click:action="extract_spectrum"
       ></plugin-add-results>
     </div>

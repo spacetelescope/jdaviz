@@ -14,10 +14,10 @@ Mosviz
 Mosviz is a quick-look analysis and visualization tool for multi-object spectroscopy (MOS).
 It is designed to work with pipeline output: spectra and associated images, or just with spectra.
 Mosviz is created to work with data from any telescope/instrument,
-but is built with the micro-shutter array (MSA) on the JWST/NIRSpec spectrograph
+but is built with the micro-shutter assembly (MSA) on the JWST/NIRSpec spectrograph
 and the JWST/NIRCam imager in mind. As such, Mosviz has some features specific to NIRSpec and NIRCam data.
 
-The NIRSpec micro-shutter array (MSA) will produce ~100 spectra per pointing.
+The NIRSpec MSA can produce ~100 spectra per pointing.
 Many users will perform surveys with the MSA that will result in data sets containing many spectra.
 This tool allows users to inspect the locations of astronomical sources within shutters,
 the location of background apertures in the observed field, the quality of the 2D spectra,

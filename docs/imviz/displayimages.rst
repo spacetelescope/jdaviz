@@ -15,8 +15,8 @@ Right-click will open a dropdown with access to different options for each butto
 
 .. _imviz-selecting-data:
 
-Selecting Data Set
-==================
+Selecting a Data Set
+====================
 
 Data can be selected and de-selected in each viewer's data menu, opened by clicking the
 |icon-viewer-data-select| button in the top left of the viewer. Here, you can click a
@@ -67,7 +67,7 @@ images in multiple different viewers simultaneously. This works by matching imag
 based on the way they are linked together. Images are linked by pixels on load time,
 but you can re-link them via WCS using :ref:`imviz-link-control`.
 
-Single-viewer Pan/Zoom is also available and is used in a similar way as in 
+Single-viewer Pan/Zoom is also available and is used in a similar way as in
 other Jdaviz tools. To access this option, right-click on the Linked Pan/Zoom button
 and left-click on the second option down to select it.
 
@@ -112,7 +112,7 @@ the region of interest by clicking on it and moving the region to a different lo
 If you are satisfied with the positioning of your region of interest, simply click another part of the
 viewer to lock it in place.
 
-There are other options available for region of interest. At the top of the User Interface,
+There are other options available for region of interest. At the top of the user interface,
 there is a section that says either "+ No selection (create new)" or "Subset n" where n is an integer
 that tells you which Subset is currently selected. To the right of this area, are red circles that allow
 you to change the method of region selection. The options are:

@@ -135,3 +135,10 @@ def test_redshift_column(mosviz_helper, mos_image, spectrum1d, mos_spectrum2d):
     assert_allclose(mosviz_helper.get_spectrum_1d().redshift.value, 0.1)
     assert_allclose(mosviz_helper.get_spectrum_2d().redshift.value, 0.1)
     assert_allclose(mosviz_helper.get_spectrum_1d(row=1).redshift.value, 0.0)
+
+
+def test_plugin_user_apis(mosviz_helper):
+    for plugin_name, plugin_api in mosviz_helper.plugins.items():
+        plugin = plugin_api._obj
+        for attr in plugin_api._expose:
+            assert hasattr(plugin, attr)

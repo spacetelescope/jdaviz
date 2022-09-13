@@ -191,17 +191,17 @@ The plugin also contains a redshift slider which shifts all of the plotted
 lines according to the provided redshift/RV.  The slider applies a delta-redshift,
 snaps back to the center when releasing, and has limits that default based
 on the x-limits of the spectrum viewer.  This provides a convenient method
-to fine-tune the position of the redshifted lines to the observed lines in 
+to fine-tune the position of the redshifted lines to the observed lines in
 the spectrum.
 
 From the API
 ^^^^^^^^^^^^
 
-The range of the slider, as well as the resolution of a single
-step in the slider, can be set from a notebook cell using the
+The range and step size of the slider can be set from a notebook cell using the
 :meth:`~jdaviz.configs.default.plugins.line_lists.line_list_mixin.LineListMixin.set_redshift_slider_bounds`
-method in ``specviz`` by specifying the ``range`` and/or ``step`` keywords.  By setting either or both
-of these to 'auto', they will default based on the x-limits of the spectrum plot.
+method in Specviz by specifying the ``range`` or ``step`` keywords, respectively.
+Setting either keyword to ``'auto'`` means its value will be calculated
+automatically based on the x-limits of the spectrum plot.
 
 The redshift itself can be set from the notebook using the ``set_redshift`` method.
 
@@ -225,7 +225,7 @@ multiple subsets in Specviz, but the plugin will only show statistics for the
 selected subset.
 
 A linear continuum is fitted and subtracted (divided for the case of equivalenth width) before
-computing the line statistics.  By default, the continuum is fitted to a region surrounding 
+computing the line statistics.  By default, the continuum is fitted to a region surrounding
 the select line.  The width of this region can be adjusted, with a visual indicator shown
 in the spectrum plot while the plugin is open.  The thick line shows the linear fit which
 is then interpolated into the line region as shown by a thin line.  Alternatively, a custom
@@ -233,6 +233,8 @@ secondary region can be created and selected as the region to fit the linear con
 
 The statistics returned include the line centroid, gaussian sigma width, gaussian FWHM,
 total flux, and equivalent width.
+
+The line flux results are automatically converted to Watts/meter^2, when appropriate.
 
 Redshift from Centroid
 ----------------------
@@ -247,4 +249,4 @@ using the |icon-line-select| (line selector) tool in the spectrum viewer.
 Export Plot
 ===========
 
-This plugin allows exporting the plot in a given viewer to various image formats.
+This plugin allows a given viewer's plot to be exported to various image formats.

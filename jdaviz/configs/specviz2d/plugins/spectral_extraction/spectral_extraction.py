@@ -6,11 +6,13 @@ from traitlets import Bool, List, Unicode, observe
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
+                                        SelectPluginComponent,
                                         DatasetSelect,
                                         AddResults)
 from jdaviz.core.custom_traitlets import IntHandleEmpty
 from jdaviz.core.marks import PluginLine
 
+from astropy.nddata import NDData, StdDevUncertainty, VarianceUncertainty, UnknownUncertainty
 from specutils import Spectrum1D
 from specreduce import tracing
 from specreduce import background
@@ -31,13 +33,13 @@ class SpectralExtraction(PluginTemplateMixin):
     trace_dataset_items = List().tag(sync=True)
     trace_dataset_selected = Unicode().tag(sync=True)
 
-    trace_type_items = List(['Flat', 'Auto']).tag(sync=True)
-    trace_type_selected = Unicode('Flat').tag(sync=True)
+    trace_type_items = List().tag(sync=True)
+    trace_type_selected = Unicode().tag(sync=True)
 
     trace_pixel = IntHandleEmpty(0).tag(sync=True)
 
-    trace_peak_method_items = List(['Gaussian', 'Centroid', 'Max']).tag(sync=True)
-    trace_peak_method_selected = Unicode('Gaussian').tag(sync=True)
+    trace_peak_method_items = List().tag(sync=True)
+    trace_peak_method_selected = Unicode().tag(sync=True)
 
     trace_bins = IntHandleEmpty(20).tag(sync=True)
     trace_window = IntHandleEmpty(0).tag(sync=True)
@@ -46,8 +48,8 @@ class SpectralExtraction(PluginTemplateMixin):
     bg_dataset_items = List().tag(sync=True)
     bg_dataset_selected = Unicode().tag(sync=True)
 
-    bg_type_items = List(['TwoSided', 'OneSided', 'Manual']).tag(sync=True)
-    bg_type_selected = Unicode('TwoSided').tag(sync=True)
+    bg_type_items = List().tag(sync=True)
+    bg_type_selected = Unicode().tag(sync=True)
 
     bg_trace_pixel = IntHandleEmpty(0).tag(sync=True)
 
@@ -74,8 +76,12 @@ class SpectralExtraction(PluginTemplateMixin):
     ext_dataset_items = List().tag(sync=True)
     ext_dataset_selected = Unicode().tag(sync=True)
 
+    ext_type_items = List(['Boxcar', 'Horne']).tag(sync=True)
+    ext_type_selected = Unicode('Boxcar').tag(sync=True)
+
     ext_width = IntHandleEmpty(0).tag(sync=True)
 
+    ext_uncert_warn = Bool(False).tag(sync=True)
     ext_specreduce_err = Unicode().tag(sync=True)
 
     ext_results_label = Unicode().tag(sync=True)
@@ -97,11 +103,26 @@ class SpectralExtraction(PluginTemplateMixin):
                                            'trace_dataset_selected',
                                            filters=['layer_in_spectrum_2d_viewer', 'not_trace'])
 
+        self.trace_type = SelectPluginComponent(self,
+                                                items='trace_type_items',
+                                                selected='trace_type_selected',
+                                                manual_options=['Flat', 'Auto'])
+
+        self.trace_peak_method = SelectPluginComponent(self,
+                                                       items='trace_peak_method_items',
+                                                       selected='trace_peak_method_selected',
+                                                       manual_options=['Gaussian', 'Centroid' 'Max'])  # noqa
+
         # BACKGROUND
         self.bg_dataset = DatasetSelect(self,
                                         'bg_dataset_items',
                                         'bg_dataset_selected',
                                         filters=['layer_in_spectrum_2d_viewer', 'not_trace'])
+
+        self.bg_type = SelectPluginComponent(self,
+                                             items='bg_type_items',
+                                             selected='bg_type_selected',
+                                             manual_options=['TwoSided', 'OneSided', 'Manual'])
 
         self.bg_add_results = AddResults(self, 'bg_results_label',
                                          'bg_results_label_default',
@@ -169,7 +190,7 @@ class SpectralExtraction(PluginTemplateMixin):
         if self.bg_trace_pixel == 0:
             self.bg_trace_pixel = brightest_pixel
         if self.bg_separation == 0:
-            if default_bg_width * 2 > distance_from_edge:
+            if default_bg_width * 2 >= distance_from_edge:
                 self.bg_type_selected = 'OneSided'
                 # we want positive separation if brightest_pixel near bottom
                 sign = 1 if (brightest_pixel < width / 2) else -1
@@ -363,7 +384,7 @@ class SpectralExtraction(PluginTemplateMixin):
         self.active_step = 'bg'
         self._update_plugin_marks()
 
-    @observe('ext_dataset_selected', 'ext_width', 'active_step')
+    @observe('ext_dataset_selected', 'ext_type_selected', 'ext_width', 'active_step')
     def _interaction_in_ext_step(self, event={}):
         if not self.plugin_opened or not self._do_marks:
             return
@@ -381,13 +402,25 @@ class SpectralExtraction(PluginTemplateMixin):
             self.marks['trace'].update_xy(xs,
                                           trace.trace)
             self.marks['trace'].line_style = 'dashed'
-            self.marks['ext_lower'].update_xy(xs,
-                                              trace.trace-self.ext_width/2)
-            self.marks['ext_upper'].update_xy(xs,
-                                              trace.trace+self.ext_width/2)
+            if self.ext_type_selected == 'Boxcar':
+                self.marks['ext_lower'].update_xy(xs,
+                                                  trace.trace-self.ext_width/2)
+                self.marks['ext_upper'].update_xy(xs,
+                                                  trace.trace+self.ext_width/2)
+            else:
+                for mark in ['ext_lower', 'ext_upper']:
+                    self.marks[mark].clear()
 
         self.active_step = 'ext'
         self._update_plugin_marks()
+
+        # TODO: remove this, the traitlet, and the row in spectral_extraction.vue
+        # when specutils handles the warning/exception
+        if self.ext_type_selected == 'Horne':
+            inp_sp2d = self._get_ext_input_spectrum()
+            self.ext_uncert_warn = isinstance(inp_sp2d.uncertainty, UnknownUncertainty)
+        else:
+            self.ext_uncert_warn = False
 
     def _set_create_kwargs(self, **kwargs):
         invalid_kwargs = [k for k in kwargs.keys() if not hasattr(self, k)]
@@ -594,12 +627,13 @@ class SpectralExtraction(PluginTemplateMixin):
         ext : specreduce.extract.BoxcarExtract
             Extract object to import
         """
-        if not isinstance(ext, extract.BoxcarExtract):  # pragma: no cover
-            # TODO: add support for Optimal/Horne
-            raise TypeError("ext must be a specreduce.extract.BoxcarExtract object")
-
-        # TODO: should we detect/set the referenced dataset?
-        self.ext_width = ext.width
+        if isinstance(ext, extract.BoxcarExtract):
+            self.ext_type_selected = 'Boxcar'
+            self.ext_width = ext.width
+        elif isinstance(ext, extract.HorneExtract):
+            self.ext_type_selected = 'Horne'
+        else:  # pragma: no cover
+            raise TypeError("ext must be a specreduce.extract.BoxcarExtract or specreduce.extract.HorneExtract object")  # noqa
 
     def export_extract(self, **kwargs):
         """
@@ -610,9 +644,20 @@ class SpectralExtraction(PluginTemplateMixin):
             self.update_marks(step='ext')
 
         trace = self._get_ext_trace()
-        inp_sp2d = self._get_ext_input_spectrum().flux.value
+        inp_sp2d = self._get_ext_input_spectrum()
 
-        return extract.BoxcarExtract(inp_sp2d, trace, width=self.ext_width)
+        if self.ext_type_selected == 'Boxcar':
+            ext = extract.BoxcarExtract(inp_sp2d.data, trace, width=self.ext_width)
+        elif self.ext_type_selected == 'Horne':
+            uncert = inp_sp2d.uncertainty if inp_sp2d.uncertainty is not None else VarianceUncertainty(np.ones_like(inp_sp2d.data))  # noqa
+            if not hasattr(uncert, 'uncertainty_type'):
+                uncert = StdDevUncertainty(uncert)
+            image = NDData(inp_sp2d.data, uncertainty=uncert)
+            ext = extract.HorneExtract(image, trace)
+        else:
+            raise NotImplementedError(f"extraction type '{self.ext_type_selected}' not supported")  # noqa
+
+        return ext
 
     def export_extract_spectrum(self, add_data=False, **kwargs):
         """
@@ -626,6 +671,7 @@ class SpectralExtraction(PluginTemplateMixin):
         """
         extract = self.export_extract(**kwargs)
         spectrum = extract.spectrum
+
         # Specreduce returns a spectral axis in pixels, so we'll replace with input spectral_axis
         # NOTE: this is currently disabled until proper handling of axes-limit linking between
         # the 2D spectrum image (plotted in pixels) and a 1D spectrum (plotted in freq or

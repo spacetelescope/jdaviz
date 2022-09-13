@@ -44,9 +44,9 @@ tab of each viewer's options menu as described in :ref:`cubeviz-selecting-data`.
 Importing data via the API
 ==========================
 
-Alternatively, if users are working in a coding environment like a Jupyter
-notebook, they have access to the Specviz helper class API. Using this API,
-users can load data into the application through code using the
+Alternatively, users who work in a coding environment like a Jupyter
+notebook can access the Specviz helper class API. Using this API, users can
+load data into the application through code with the
 :meth:`~jdaviz.configs.specviz.helper.Specviz.load_spectrum`
 method, which takes as input a :class:`~specutils.Spectrum1D` object.
 
@@ -103,7 +103,7 @@ object, you can load it into Specviz as follows::
     specviz.show()
 
 There is no plan to natively load such objects until ``datamodels``
-is separated out of the ``jwst`` pipeline package.
+is separated from the ``jwst`` pipeline package.
 
 .. _specviz-multiple-spectra:
 

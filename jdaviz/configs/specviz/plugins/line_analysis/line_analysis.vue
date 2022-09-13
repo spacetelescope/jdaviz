@@ -20,6 +20,15 @@
       hint="Select the data set to be analysed."
     />
 
+    <plugin-subset-select
+      v-if="config=='cubeviz'"
+      :items="spatial_subset_items"
+      :selected.sync="spatial_subset_selected"
+      :show_if_single_entry="true"
+      label="Spatial region"
+      hint="Select which region's collapsed spectrum to analyze."
+    />
+
     <plugin-subset-select 
       :items="spectral_subset_items"
       :selected.sync="spectral_subset_selected"

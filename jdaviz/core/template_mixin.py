@@ -20,15 +20,63 @@ from ipypopout import PopoutButton
 from jdaviz import __version__
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage)
+from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
 
 
-__all__ = ['TemplateMixin', 'PluginTemplateMixin',
-           'BasePluginComponent', 'BaseSelectPluginComponent',
+__all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
+           'BasePluginComponent', 'SelectPluginComponent',
            'SubsetSelect', 'SpatialSubsetSelectMixin', 'SpectralSubsetSelectMixin',
            'ViewerSelect', 'ViewerSelectMixin',
+           'LayerSelect', 'LayerSelectMixin',
            'DatasetSelect', 'DatasetSelectMixin',
            'AutoLabel', 'AutoLabelMixin',
-           'AddResults', 'AddResultsMixin']
+           'AddResults', 'AddResultsMixin',
+           'PlotOptionsSyncState']
+
+
+def show_widget(widget, loc, title):  # pragma: no cover
+    from IPython import get_ipython
+    from IPython.display import display
+
+    # Check if the user is running Jdaviz in the correct environments.
+    # If not, provide a friendly msg to guide them!
+    cur_shell_name = get_ipython().__class__.__name__
+    if cur_shell_name != 'ZMQInteractiveShell':
+        raise RuntimeError("\nYou are currently running Jdaviz from an unsupported "
+                           f"shell ({cur_shell_name}). Jdaviz is intended to be run within a "
+                           "Jupyter notebook, or directly from the command line.\n\n"
+                           "To run from Jupyter, call <your viz>.show() from a notebook cell.\n"
+                           "To see how to run from the command line, run: "
+                           "'jdaviz --help' outside of Python.\n\n"
+                           "To learn more, see our documentation at: "
+                           "https://jdaviz.readthedocs.io")
+
+    if loc == "inline":
+        display(widget)
+
+    elif loc.startswith('sidecar'):
+        from sidecar import Sidecar
+
+        # Use default behavior if loc is exactly 'sidecar', else split anchor from the arg
+        anchor = None if loc == 'sidecar' else loc.split(':')[1]
+
+        scar = Sidecar(anchor=anchor, title=title)
+        with scar:
+            display(widget)
+
+    elif loc.startswith('popout'):
+        anchor = None if loc == 'popout' else loc.split(':')[1]
+
+        # Default behavior (no anchor specified): display popout in new window
+        if anchor in (None, 'window'):
+            widget.popout_button.open_window()
+        elif anchor == "tab":
+            widget.popout_button.open_tab()
+        else:
+            raise ValueError("Unrecognized popout anchor")
+
+    else:
+        raise ValueError(f"Unrecognized display location: {loc}")
 
 
 class TemplateMixin(VuetifyTemplate, HubListener):
@@ -91,10 +139,16 @@ class PluginTemplateMixin(TemplateMixin):
     disabled_msg = Unicode("").tag(sync=True)
     plugin_opened = Bool(False).tag(sync=True)
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.app.state.add_callback('tray_items_open', self._mxn_update_plugin_opened)
         self.app.state.add_callback('drawer', self._mxn_update_plugin_opened)
+
+    @property
+    def user_api(self):
+        # plugins should override this to pass their own list of expose functionality, which
+        # can even be dependent on config, etc.
+        return PluginUserApi(self, expose=[])
 
     def _mxn_update_plugin_opened(self, new_value):
         app_state = self.app.state
@@ -110,6 +164,54 @@ class PluginTemplateMixin(TemplateMixin):
         index = [ti['name'] for ti in app_state.tray_items].index(self._registry_name)
         if index not in app_state.tray_items_open:
             app_state.tray_items_open = app_state.tray_items_open + [index]
+
+    def show(self, loc="inline", title=None):  # pragma: no cover
+        """Display the plugin UI.
+
+        Parameters
+        ----------
+        loc : str
+            The display location determines where to present the viz app.
+            Supported locations:
+
+            "inline": Display the plugin inline in a notebook.
+
+            "sidecar": Display the plugin in a separate JupyterLab window from the
+            notebook, the location of which is decided by the 'anchor.' right is the default
+
+                Other anchors:
+
+                * ``sidecar:right`` (The default, opens a tab to the right of display)
+                * ``sidecar:tab-before`` (Full-width tab before the current notebook)
+                * ``sidecar:tab-after`` (Full-width tab after the current notebook)
+                * ``sidecar:split-right`` (Split-tab in the same window right of the notebook)
+                * ``sidecar:split-left`` (Split-tab in the same window left of the notebook)
+                * ``sidecar:split-top`` (Split-tab in the same window above the notebook)
+                * ``sidecar:split-bottom`` (Split-tab in the same window below the notebook)
+
+                See `jupyterlab-sidecar <https://github.com/jupyter-widgets/jupyterlab-sidecar>`_
+                for the most up-to-date options.
+
+            "popout": Display the plugin in a detached display. By default, a new
+            window will open. Browser popup permissions required.
+
+                Other anchors:
+
+                * ``popout:window`` (The default, opens Jdaviz in a new, detached popout)
+                * ``popout:tab`` (Opens Jdaviz in a new, detached tab in your browser)
+
+        title : str, optional
+            The title of the sidecar tab.  Defaults to the name of the plugin.
+
+            NOTE: Only applicable to a "sidecar" display.
+
+        Notes
+        -----
+        If "sidecar" is requested in the "classic" Jupyter notebook, the plugin will appear inline,
+        as only JupyterLab has a mechanism to have multiple tabs.
+        """
+        title = title if title is not None else self._registry_label
+        show_widget(self, loc=loc, title=title)
 
 
 class BasePluginComponent(HubListener):
@@ -199,19 +301,32 @@ class BasePluginComponent(HubListener):
         return self._plugin.app.get_viewer("spectrum-viewer")
 
 
-class BaseSelectPluginComponent(BasePluginComponent, HasTraits):
+class SelectPluginComponent(BasePluginComponent, HasTraits):
     """
-    This base class extends BasePluginComponent for common functionality for a select/dropdown
-    component.  The subclasses MUST have an ``items`` traitlet as a list of dictionaries, with
-    'label' as the selection entry (and any other optional entries for styling, etc) and a
-    ``selected`` string traitlet.  The subclasses should also override ``selected_obj`` and may
-    choose to override ``_selected_changed`` (likely with a super call to keep the base logic).
+    Plugin select, with support for single or multi-selection.
+
+    Useful API methods/attributes:
+
+    * :meth:`choices`
+    * ``selected``
+    * :meth:`~SelectPluginComponent.is_multiselect`
+    * :meth:`select_default`
+    * :meth:`select_all` (only if ``is_multiselect``)
+    * :meth:`select_none` (only if ``is_multiselect``)
     """
     filters = List([]).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
+        """
+        This extends BasePluginComponent for common functionality for a select/dropdown
+        component.  The subclasses MUST have an ``items`` traitlet as a list of dictionaries, with
+        'label' as the selection entry (and any other optional entries for styling, etc) and a
+        ``selected`` string traitlet.  The subclasses should also override ``selected_obj`` and may
+        choose to override ``_selected_changed`` (likely with a super call to keep the base logic).
+        """
+
         # default_mode can be one of empty, first, default_text (requires default_text to be set)
-        default_mode = kwargs.pop('default_mode', 'empty')
+        default_mode = kwargs.pop('default_mode', 'empty' if kwargs.get('multiselect', False) else 'first')  # noqa
         default_text = kwargs.pop('default_text', None)
         manual_options = kwargs.pop('manual_options', [])
         self._viewers = kwargs.pop('viewers', None)
@@ -242,12 +357,49 @@ class BaseSelectPluginComponent(BasePluginComponent, HasTraits):
         self.add_observe(kwargs.get('selected'), self._selected_changed, first=True)
         self.filters = filters
 
+        if default_mode != 'empty' and self.selected == '':
+            self._apply_default_selection()
+
+    def __repr__(self):
+        if hasattr(self, 'multiselect'):
+            return f"<selected={self.selected} multiselect={self.multiselect} choices={self.choices}>"  # noqa
+        return f"<selected={self.selected} choices={self.choices}>"
+
+    @property
+    def choices(self):
+        return self.labels
+
     @property
     def is_multiselect(self):
         if not hasattr(self, 'multiselect'):
             return False
         else:
             return self.multiselect
+
+    def select_default(self):
+        """
+        Apply and return the default selection.
+        """
+        self._apply_default_selection()
+        return self.selected
+
+    def select_all(self):
+        """
+        Select (and return) all available options.  Raises an error if not :meth:`is_multiselect`
+        """
+        if not self.is_multiselect:
+            raise ValueError("not currently in multiselect mode")
+        self.selected = self.choices
+        return self.selected
+
+    def select_none(self):
+        """
+        Select (and return) and empty list.  Raises an error if not :meth:`is_multiselect`
+        """
+        if not self.is_multiselect:
+            raise ValueError("not currently in multiselect mode")
+        self.selected = []
+        return self.selected
 
     @property
     def default_text(self):
@@ -364,17 +516,31 @@ class BaseSelectPluginComponent(BasePluginComponent, HasTraits):
                 self.selected = [event['new']]
                 return
             if not np.all([item in self.labels + [''] for item in event['new']]):
-                self._apply_default_selection()
-                raise ValueError(f"not all items in {event['new']} are one of {self.labels}")
+                self.selected = event['old']
+                raise ValueError(f"not all items in {event['new']} are one of {self.labels}, reverting selection to {event['old']}")  # noqa
         else:
             if event['new'] not in self.labels + ['']:
-                self._apply_default_selection()
-                raise ValueError(f"{event['new']} not one of {self.labels}")
+                self.selected = event['old']
+                raise ValueError(f"{event['new']} not one of {self.labels}, reverting selection to {event['old']}")  # noqa
 
 
-class LayerSelect(BaseSelectPluginComponent):
+class LayerSelect(SelectPluginComponent):
     """
-    Traitlets (in the object, custom traitlets in the plugin):
+    Plugin select for layers, with support for single or multi-selection.
+
+    Useful API methods/attributes:
+
+    * :meth:`~SelectPluginComponent.choices`
+    * ``selected``
+    * :meth:`~SelectPluginComponent.is_multiselect`
+    * :meth:`~SelectPluginComponent.select_default`
+    * :meth:`~SelectPluginComponent.select_all` (only if ``is_multiselect``)
+    * :meth:`~SelectPluginComponent.select_none` (only if ``is_multiselect``)
+    * :attr:`selected_obj`
+    """
+
+    """
+    Traitlets (in the object, custom traitlets in the plugin
 
     * ``items`` (list of dicts with keys: label, color)
     * ``selected`` (string)
@@ -405,7 +571,6 @@ class LayerSelect(BaseSelectPluginComponent):
         label="Layer"
         hint="Select layer."
       />
-
     """
     def __init__(self, plugin, items, selected, viewer,
                  multiselect=None,
@@ -563,7 +728,23 @@ class LayerSelectMixin(VuetifyTemplate, HubListener):
                                  'layer_multiselect')
 
 
-class SubsetSelect(BaseSelectPluginComponent):
+class SubsetSelect(SelectPluginComponent):
+    """
+    Plugin select for subsets, with support for single or multi-selection.
+
+    Useful API methods/attributes:
+
+    * :meth:`~SelectPluginComponent.choices`
+    * ``selected``
+    * :meth:`~SelectPluginComponent.is_multiselect`
+    * :meth:`~SelectPluginComponent.select_default`
+    * :meth:`~SelectPluginComponent.select_all` (only if ``is_multiselect``)
+    * :meth:`~SelectPluginComponent.select_none` (only if ``is_multiselect``)
+    * :attr:`selected_obj`
+    * :attr:`selected_subset_state`
+    * :meth:`selected_min_max`
+    """
+
     """
     Traitlets (in the object, custom traitlets in the plugin):
 
@@ -823,7 +1004,22 @@ class SpatialSubsetSelectMixin(VuetifyTemplate, HubListener):
                                            allowed_type='spatial')
 
 
-class ViewerSelect(BaseSelectPluginComponent):
+class ViewerSelect(SelectPluginComponent):
+    """
+    Plugin select for viewers, with support for single or multi-selection.
+
+    Useful API methods/attributes:
+
+    * :meth:`~SelectPluginComponent.choices`
+    * ``selected``
+    * :attr:`selected_id`
+    * :attr:`selected_obj`
+    * :meth:`~SelectPluginComponent.is_multiselect`
+    * :meth:`~SelectPluginComponent.select_default`
+    * :meth:`~SelectPluginComponent.select_all` (only if ``is_multiselect``)
+    * :meth:`~SelectPluginComponent.select_none` (only if ``is_multiselect``)
+    """
+
     """
     Traitlets (in the object, custom traitlets in the plugin):
 
@@ -926,7 +1122,8 @@ class ViewerSelect(BaseSelectPluginComponent):
                 elif entry in self.ids:
                     new_selected.append(self.labels[self.ids.index(entry)])
                 else:
-                    raise ValueError(f"could not map {entry} to valid choice")
+                    self.selected = event['old']
+                    raise ValueError(f"could not map {entry} to valid choice, reverting selection to {event['old']}")  # noqa
             self.selected = new_selected
             return
         else:
@@ -991,7 +1188,22 @@ class ViewerSelectMixin(VuetifyTemplate, HubListener):
         self.viewer = ViewerSelect(self, 'viewer_items', 'viewer_selected', 'viewer_multiselect')
 
 
-class DatasetSelect(BaseSelectPluginComponent):
+class DatasetSelect(SelectPluginComponent):
+    """
+    Plugin select for data entries, with support for single or multi-selection.
+
+    Useful API methods/attributes:
+
+    * :meth:`~SelectPluginComponent.choices`
+    * ``selected``
+    * :attr:`selected_obj`
+    * :attr:`selected_dc_item`
+    * :meth:`~SelectPluginComponent.is_multiselect`
+    * :meth:`~SelectPluginComponent.select_default`
+    * :meth:`~SelectPluginComponent.select_all` (only if ``is_multiselect``)
+    * :meth:`~SelectPluginComponent.select_none` (only if ``is_multiselect``)
+    """
+
     """
     Traitlets (in the object, custom traitlets in the plugin):
 
@@ -1194,6 +1406,17 @@ class DatasetSelectMixin(VuetifyTemplate, HubListener):
 
 class AutoLabel(BasePluginComponent):
     """
+    Label component with the ability to synchronize to a plugin-provided default value or override
+    with a custom value.  Setting ``value`` will set ``auto`` to False.  Setting ``auto`` to True,
+    will set ``value`` to the default value.
+
+    Useful API methods/attributes:
+
+    * ``value``
+    * ``auto``
+    """
+
+    """
     Traitlets (in the object, custom traitlets in the plugin):
 
     * ``value`` (string: user-provided label for the results data-entry.  If ``auto``, changes
@@ -1223,6 +1446,9 @@ class AutoLabel(BasePluginComponent):
 
         self.add_observe(default, self._on_set_to_default)
         self.add_observe(auto, self._on_set_to_default)
+
+    def __repr__(self):
+        return f"<AutoLabel label='{self.value}' auto={self.auto}>"
 
     def _on_set_to_default(self, msg={}):
         if self.auto:
@@ -1265,6 +1491,21 @@ class AutoLabelMixin(VuetifyTemplate, HubListener):
 
 
 class AddResults(BasePluginComponent):
+    """
+    Plugin component for providing a data-label and selecting a viewer to add the results from
+    the plugin.
+
+    Useful API methods/attributes:
+
+    * :attr:`label` (`AutoLabel`):
+        the label component.  Setting will redirect to setting ``label.value``.
+    * :attr:`auto`
+        shortcut to ``label.auto``.  Setting will redirect to setting ``label.auto``.
+    * ``viewer`` (`ViewerSelect`):
+        the viewer to add the results, or None to add the results to the data-collection but
+        not load into a viewer.
+    """
+
     """
     Traitlets (in the object, custom traitlets in the plugin):
 
@@ -1329,7 +1570,39 @@ class AddResults(BasePluginComponent):
                                    default_mode=self._handle_default_viewer_selected)
 
         self.auto_label = AutoLabel(plugin, label, label_default, label_auto, label_invalid_msg)
+        self.auto = self.auto_label.auto
         self.add_observe(label, self._on_label_changed)
+
+    def __repr__(self):
+        return f"<AddResults label='{self.label}', auto={self.auto}, viewer={self.viewer.selected}>"
+
+    @property
+    def user_api(self):
+        return UserApiWrapper(self, ('label', 'auto', 'viewer'))
+
+    @property
+    def label(self):
+        """
+        Access the value of the ``AutoLabel`` object.  Changing the value manually will also disable
+        the ``auto`` option.
+        """
+        return self.auto_label.value
+
+    @label.setter
+    def label(self, label):
+        self.auto_label.value = label
+
+    @property
+    def auto(self):
+        """
+        Access the ``auto`` property of the ``AutoLabel`` object.  If enabling, the ``label`` will
+        automatically be changed and kept in sync with the default label.
+        """
+        return self.auto_label.auto
+
+    @auto.setter
+    def auto(self, auto):
+        self.auto_label.auto = auto
 
     def _handle_default_viewer_selected(self, viewer_comp, is_valid):
         if len(viewer_comp.items) == 2:
@@ -1463,6 +1736,7 @@ class AddResultsMixin(VuetifyTemplate, HubListener):
 
 class PlotOptionsSyncState(BasePluginComponent):
     """
+    Plugin component for syncing with glue state objects.
     """
     def __init__(self, plugin, viewer_select, layer_select, glue_name,
                  value, sync, state_filter=None):

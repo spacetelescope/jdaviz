@@ -176,6 +176,7 @@ Using Jdaviz
   cubeviz/index.rst
   specviz2d/index.rst
   mosviz/index.rst
+  plugin_api.rst
   save_state.rst
   display.rst
   sample_notebooks.rst

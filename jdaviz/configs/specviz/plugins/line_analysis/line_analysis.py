@@ -7,7 +7,7 @@ from glue.core.message import (SubsetDeleteMessage,
 from glue_jupyter.common.toolbar_vuetify import read_icon
 from traitlets import Bool, List, Float, Unicode, observe
 from astropy import units as u
-from specutils import analysis
+from specutils import analysis, Spectrum1D
 from specutils.manipulation import extract_region
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
@@ -26,6 +26,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         DatasetSelectMixin,
                                         SpectralSubsetSelectMixin,
                                         SubsetSelect)
+from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
 
 __all__ = ['LineAnalysis']
@@ -35,6 +36,8 @@ FUNCTIONS = {"Line Flux": analysis.line_flux,
              "Gaussian Sigma Width": analysis.gaussian_sigma_width,
              "Gaussian FWHM": analysis.gaussian_fwhm,
              "Centroid": analysis.centroid}
+
+SPATIAL_DEFAULT_TEXT = "Entire Cube"
 
 
 def _coerce_unit(quantity):
@@ -63,8 +66,37 @@ def _coerce_unit(quantity):
 
 @tray_registry('specviz-line-analysis', label="Line Analysis")
 class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin):
+    """
+    The Line Analysis plugin returns specutils analysis for a single spectral line.
+    See the :ref:`Line Analysis Plugin Documentation <line-analysis>` for more details.
+
+    Only the following attributes and methods are available through the
+    :ref:`public plugin API <plugin-apis>`:
+
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
+    * ``dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`):
+      Dataset to use for computing line statistics.
+    * ``spatial_subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
+      Select which region's collapsed spectrum to analyze or ``Entire Cube``.
+    * ``spectral_subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
+      Subset to use for the line, or ``Entire Spectrum``.
+    * ``continuum`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
+      Subset to use for the continuum, or ``Surrounding`` to use a region surrounding the
+      subset set in ``spectral_subset``.
+    * :attr:`width`:
+      Width, relative to the overall line spectral region, to fit the linear continuum
+      (excluding the region containing the line). If 1, will use endpoints within line region
+      only.
+    * :meth:`show_continuum_marks`
+    * :meth:`get_results`
+
+    """
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "line_analysis.vue"
+
+    spatial_subset_items = List().tag(sync=True)
+    spatial_subset_selected = Unicode().tag(sync=True)
 
     continuum_subset_items = List().tag(sync=True)
     continuum_subset_selected = Unicode().tag(sync=True)
@@ -82,7 +114,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     selected_line_redshift = Float(0).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
 
         self.update_results(None)
 
@@ -97,6 +129,15 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         # require entries to be in spectrum-viewer (not other cubeviz images, etc)
         self.dataset.add_filter('layer_in_spectrum_viewer')
 
+        if self.app.state.settings.get("configuration") == "cubeviz":
+            self.spatial_subset = SubsetSelect(self,
+                                               'spatial_subset_items',
+                                               'spatial_subset_selected',
+                                               default_text=SPATIAL_DEFAULT_TEXT,
+                                               allowed_type='spatial')
+        else:
+            self.spatial_subset = None
+
         self.hub.subscribe(self, AddDataMessage,
                            handler=self._on_viewer_data_changed)
         self.hub.subscribe(self, RemoveDataMessage,
@@ -110,6 +151,12 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                            handler=self._on_plotted_lines_changed)
         self.hub.subscribe(self, LineIdentifyMessage,
                            handler=self._on_identified_line_changed)
+
+    @property
+    def user_api(self):
+        return PluginUserApi(self, expose=('dataset', 'spatial_subset', 'spectral_subset',
+                                           'continuum', 'width',
+                                           'show_continuum_marks', 'get_results'))
 
     def _on_viewer_data_changed(self, msg):
         viewer_id = self.app._viewer_item_by_reference('spectrum-viewer').get('id')
@@ -139,7 +186,9 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         msg : `glue.core.Message`
             The glue message passed to this callback method.
         """
-        if (msg.subset.label in [self.spectral_subset_selected, self.continuum_subset_selected]
+        if (msg.subset.label in [self.spectral_subset_selected,
+                                 self.spatial_subset_selected,
+                                 self.continuum_subset_selected]
                 and self.plugin_opened):
             self._calculate_statistics()
 
@@ -149,10 +198,21 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             return
         # toggle continuum lines in spectrum viewer based on whether this plugin
         # is currently open in the tray
+        self.show_continuum_marks(self.plugin_opened)
+
+    def show_continuum_marks(self, show=True):
+        """
+        Show (or hide) the marks indicating the continuum on the spectrum viewer.
+
+        Parameters
+        ----------
+        show : bool
+            Whether to show (or hide) the marks
+        """
         for pos, mark in self.marks.items():
-            mark.visible = self.plugin_opened
-        if self.plugin_opened:
-            self._calculate_statistics()
+            mark.visible = show
+        if show:
+            self._calculate_statistics(ignore_plugin_closed=True)
 
     @property
     def marks(self):
@@ -194,6 +254,12 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
 
         self.results_computing = False
 
+    def get_results(self):
+        # user-facing API call to force updating and retrieving results, even if the plugin
+        # is closed
+        self._calculate_statistics(ignore_plugin_closed=True)
+        return self.results
+
     def _on_plotted_lines_changed(self, msg):
         self.line_marks = msg.marks
         self.line_items = msg.names_rest
@@ -210,7 +276,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             # in which case we'll default to the identified line
             self.selected_line = self.identified_line
 
-    @observe("spectral_subset_selected", "dataset_selected", "continuum_subset_selected", "width")
+    @observe("spatial_subset_selected", "spectral_subset_selected", "dataset_selected",
+             "continuum_subset_selected", "width")
     def _calculate_statistics(self, *args, **kwargs):
         """
         Run the line analysis functions on the selected data/subset and
@@ -222,8 +289,18 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         # show spinner with overlay
         self.results_computing = True
 
-        full_spectrum = self.dataset.selected_obj
-        if full_spectrum is None or self.width == "" or not self.plugin_opened:
+        if self.config == 'cubeviz' and self.spatial_subset_selected != SPATIAL_DEFAULT_TEXT:
+            # then we're acting on the auto-collapsed data in the spectrum-viewer
+            # of a spatial subset.  In the future, we may want to expose on-the-fly
+            # collapse options... but right now these will follow the settings of the
+            # spectrum-viewer itself
+            full_spectrum = self.app.get_data_from_viewer('spectrum-viewer',
+                                                          self.spatial_subset_selected)
+        else:
+            full_spectrum = self.dataset.selected_obj
+
+        if (full_spectrum is None or self.width == "" or
+                (not self.plugin_opened and not kwargs.get('ignore_plugin_closed'))):
             # this can happen DURING a unit conversion change
             self.update_results(None)
             return
@@ -332,7 +409,56 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         for function in FUNCTIONS:
             # TODO: update specutils to allow ALL analysis to take regions and continuum so we
             # don't need these if statements
-            if function == "Equivalent Width":
+            if function == "Line Flux":
+                flux_unit = spec_subtracted.flux.unit
+                # If the flux unit is equivalent to Jy, or Jy per spaxel for Cubeviz,
+                # enforce integration in frequency space
+                if (flux_unit.is_equivalent(u.Jy) or
+                        flux_unit.is_equivalent(u.Jy/u.sr)):
+                    # Perform integration in frequency space
+                    freq_spec = Spectrum1D(
+                        spectral_axis=spec_subtracted.spectral_axis.to(u.Hz,
+                                                                       equivalencies=u.spectral()),
+                        flux=spec_subtracted.flux,
+                        uncertainty=spec_subtracted.uncertainty)
+
+                    raw_result = analysis.line_flux(freq_spec)
+                    # When flux is equivalent to Jy, lineflux result should be shown in W/m2
+                    if flux_unit.is_equivalent(u.Jy/u.sr):
+                        final_unit = u.Unit('W/m2/sr')
+                    else:
+                        final_unit = u.Unit('W/m2')
+
+                    temp_result = raw_result.to(final_unit)
+                    if getattr(raw_result, 'uncertainty', None) is not None:
+                        temp_result.uncertainty = raw_result.uncertainty.to(final_unit)
+
+                # If the flux unit is instead equivalent to power density
+                # (Jy, but defined in wavelength), enforce integration in wavelength space
+                elif (flux_unit.is_equivalent(u.Unit('W/m2/m')) or
+                        flux_unit.is_equivalent(u.Unit('W/m2/m/sr'))):
+                    # Perform integration in wavelength space using MKS unit (meters)
+                    wave_spec = Spectrum1D(
+                        spectral_axis=spec_subtracted.spectral_axis.to(u.m,
+                                                                       equivalencies=u.spectral()),
+                        flux=spec_subtracted.flux,
+                        uncertainty=spec_subtracted.uncertainty)
+                    raw_result = analysis.line_flux(wave_spec)
+                    # When flux is equivalent to Jy, lineflux result should be shown in W/m2
+                    if flux_unit.is_equivalent(u.Unit('W/m2/m'/u.sr)):
+                        final_unit = u.Unit('W/m2/sr')
+                    else:
+                        final_unit = u.Unit('W/m2')
+
+                    temp_result = raw_result.to(final_unit)
+                    if getattr(raw_result, 'uncertainty', None) is not None:
+                        temp_result.uncertainty = raw_result.uncertainty.to(final_unit)
+
+                # Otherwise, just rely on the default specutils line_flux result
+                else:
+                    temp_result = analysis.line_flux(spec_subtracted)
+
+            elif function == "Equivalent Width":
                 if np.any(continuum <= 0):
                     temp_results.append({'function': function,
                                          'result': '',

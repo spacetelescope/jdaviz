@@ -500,10 +500,6 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_u
     if update_plugin and 'imviz-links-control' in [item['name'] for item in app.state.tray_items]:
         link_plugin = app.get_tray_item_from_name('imviz-links-control')
         link_plugin.linking_in_progress = True
-        app.hub.broadcast(LinkUpdatedMessage(link_type,
-                                             wcs_fallback_scheme == 'pixels',
-                                             wcs_use_affine,
-                                             sender=app))
     else:
         link_plugin = None
 
@@ -573,5 +569,10 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_u
             'Images successfully relinked', color='success', timeout=8000, sender=app))
 
     if link_plugin is not None:
+        # Only broadcast after success.
+        app.hub.broadcast(LinkUpdatedMessage(link_type,
+                                             wcs_fallback_scheme == 'pixels',
+                                             wcs_use_affine,
+                                             sender=app))
         # reset the progress spinner
         link_plugin.linking_in_progress = False

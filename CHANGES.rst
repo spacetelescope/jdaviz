@@ -18,6 +18,8 @@ Cubeviz
 
 - Image viewers now have linked pan/zoom and linked box zoom. [#1596]
 
+- Added ability to select spatial subset collapsed spectrum for Line Analysis. [#1583]
+
 Imviz
 ^^^^^
 
@@ -28,6 +30,11 @@ Mosviz
 
 Specviz
 ^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+- Support for Horne/Optimal extraction. [#1572]
 
 API Changes
 -----------
@@ -53,6 +60,9 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Fixed inaccurate aperture photometry results when aperture photometry is done on
+  a non-reference image if images are linked by WCS. [#1524]
+
 Mosviz
 ^^^^^^
 
@@ -60,6 +70,12 @@ Mosviz
 
 Specviz
 ^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+- Fixed default spectral extraction parameters when the background separation otherwise would have
+  fallen directly on the edge of the image. [#1633]
 
 Other Changes and Additions
 ---------------------------

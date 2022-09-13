@@ -22,10 +22,10 @@ section below.
 
 .. _cubeviz-viewers:
 
-In Cubeviz, three image viewers display your data:
+In Cubeviz, three image viewers at the top display your data:
 
  |   Top Left: ``flux-viewer``
- |   Center: ``uncert-viewer``
+ |   Top Center: ``uncert-viewer``
  |   Top Right: ``mask-viewer``
 
 There is also a fourth viewer called ``spectrum-viewer`` at the bottom that
@@ -49,13 +49,13 @@ You can load your data into the Cubeviz application through the command line::
 Importing data through the GUI
 ==============================
 
-You can load your data into the Cubeviz application
+Users may load data into the Cubeviz application
 by clicking the :guilabel:`Import Data` button at the top left of the application's
-user interface. This opens a dialogue where the user can select a file
-that can be parsed as a :class:`~specutils.Spectrum1D`.
+user interface. This opens a dialogue with a prompt to select a file
+that can be parsed as a :class:`~specutils.Spectrum1D` object.
 
 After clicking :guilabel:`Import`, the data file will be parsed and loaded into the
-application. A notification will appear to let users know if the data import
+application. A notification will appear to confirm whether the data import
 was successful. Afterward, the new data set can be found in the :guilabel:`Data`
 tab of each viewer's options menu as described in :ref:`cubeviz-selecting-data`.
 
@@ -64,9 +64,9 @@ tab of each viewer's options menu as described in :ref:`cubeviz-selecting-data`.
 Importing data via the API
 ==========================
 
-Alternatively, if users are working in a coding environment like a Jupyter
-notebook, they have access to the Cubeviz helper class API. Using this API,
-users can load data into the application through code using the :meth:`~jdaviz.configs.specviz.helper.Specviz.load_spectrum`
+Alternatively, users who work in a coding environment like a Jupyter
+notebook can access the Cubeviz helper class API. Using this API, users can
+load data into the application through code with the :meth:`~jdaviz.configs.specviz.helper.Specviz.load_spectrum`
 method, which takes as input a :class:`~specutils.Spectrum1D` object.
 
 FITS Files
@@ -143,7 +143,7 @@ object, you can load it into Imviz as follows::
     cubeviz.show()
 
 There is no plan to natively load such objects until ``datamodels``
-is separated out of the ``jwst`` pipeline package.
+is separated from the ``jwst`` pipeline package.
 
 .. _cubeviz-import-regions-api:
 
