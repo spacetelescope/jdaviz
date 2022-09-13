@@ -78,9 +78,9 @@ def test_register_model(specviz_helper, spectrum1d):
     # Test that the parameter uncertainties were updated
     expected_uncertainties = {'slope': 0.00038, 'intercept': 2.67}
     result_model = modelfit_plugin.component_models[0]
-    for param in result_model["parameters"]:
-        # print(param["std"], expected_uncertainties[param["name"]])
-        # assert np.allclose(param["std"], expected_uncertainties[param["name"]], atol=0.01)
+    # for param in result_model["parameters"]:
+    #     print(param["std"], expected_uncertainties[param["name"]])
+    #     # assert np.allclose(param["std"], expected_uncertainties[param["name"]], atol=0.01)
 
 
 @pytest.mark.filterwarnings('ignore')
