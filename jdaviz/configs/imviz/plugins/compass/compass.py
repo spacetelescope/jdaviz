@@ -8,7 +8,7 @@ from jdaviz.core.user_api import PluginUserApi
 __all__ = ['Compass']
 
 
-@tray_registry('imviz-compass', label="Imviz Compass")
+@tray_registry('imviz-compass', label="Compass")
 class Compass(PluginTemplateMixin, ViewerSelectMixin):
     """
     See the :ref:`Compass Plugin Documentation <imviz-compass>` for more details.
