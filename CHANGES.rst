@@ -78,6 +78,8 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
+- Suppressed astropy.units warnings in Line Analysis plugin. [#1648]
+
 2.10 (2022-08-26)
 =================
 
