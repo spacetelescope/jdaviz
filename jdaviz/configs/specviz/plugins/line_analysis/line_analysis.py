@@ -276,6 +276,11 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             # in which case we'll default to the identified line
             self.selected_line = self.identified_line
 
+    def _unit_ignore_warnings(self, unit):
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            return u.Unit(unit)
+
     @observe("spatial_subset_selected", "spectral_subset_selected", "dataset_selected",
              "continuum_subset_selected", "width")
     def _calculate_statistics(self, *args, **kwargs):
@@ -425,7 +430,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                     raw_result = analysis.line_flux(freq_spec)
                     # When flux is equivalent to Jy, lineflux result should be shown in W/m2
                     if flux_unit.is_equivalent(u.Jy/u.sr):
-                        final_unit = u.Unit('W/m2/sr')
+
+                        final_unit = self._unit_ignore_warnings('W/m2/sr')
                     else:
                         final_unit = u.Unit('W/m2')
 
@@ -446,7 +452,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                     raw_result = analysis.line_flux(wave_spec)
                     # When flux is equivalent to Jy, lineflux result should be shown in W/m2
                     if flux_unit.is_equivalent(u.Unit('W/m2/m'/u.sr)):
-                        final_unit = u.Unit('W/m2/sr')
+                        final_unit = self._unit_ignore_warnings('W/m2/sr')
                     else:
                         final_unit = u.Unit('W/m2')
 
