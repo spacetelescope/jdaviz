@@ -9,7 +9,7 @@ from jdaviz.core.user_api import PluginUserApi
 __all__ = ['LinksControl']
 
 
-@tray_registry('imviz-links-control', label="Imviz Links Control")
+@tray_registry('imviz-links-control', label="Links Control")
 class LinksControl(PluginTemplateMixin):
     """
     See the :ref:`Links Control Plugin Documentation <imviz-link-control>` for more details.
