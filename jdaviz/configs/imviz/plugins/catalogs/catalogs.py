@@ -10,7 +10,6 @@ from astroquery.sdss import SDSS
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
                                         SelectPluginComponent)
-from jdaviz.core.user_api import PluginUserApi
 
 __all__ = ['Catalogs']
 
@@ -25,9 +24,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
 
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
-    * ``viewer`` (`~jdaviz.core.template_mixin.ViewerSelect`)
-    * ``catalog`` (`~jdaviz.core.template_mixin.SelectPluginComponent`)
-    * :meth:`search`
     """
     template_file = __file__, "catalogs.vue"
     catalog_items = List([]).tag(sync=True)
@@ -42,10 +38,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
                                              items='catalog_items',
                                              selected='catalog_selected',
                                              manual_options=['SDSS'])
-
-    @property
-    def user_api(self):
-        return PluginUserApi(self, expose=('viewer', 'catalog', 'search', 'clear'))
 
     def search(self):
         """
