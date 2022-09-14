@@ -6,9 +6,10 @@ class UserApiWrapper:
     This is an API wrapper around an internal object.  For a full list of attributes/methods,
     call dir(object).
     """
-    def __init__(self, obj, expose=[]):
+    def __init__(self, obj, expose=[], readonly=[]):
         self._obj = obj
-        self._expose = expose
+        self._expose = list(expose) + list(readonly)
+        self._readonly = readonly
         if obj.__doc__ is not None:
             self.__doc__ = self.__doc__ + "\n\n\n" + obj.__doc__
 
@@ -19,15 +20,18 @@ class UserApiWrapper:
         return self._obj.__repr__()
 
     def __getattr__(self, attr):
-        if attr in ['_obj', '_expose', '__doc__'] or attr not in self._expose:
+        if attr in ['_obj', '_expose', '_readonly', '__doc__'] or attr not in self._expose:
             return super().__getattribute__(attr)
 
         exp_obj = getattr(self._obj, attr)
         return getattr(exp_obj, 'user_api', exp_obj)
 
     def __setattr__(self, attr, value):
-        if attr in ['_obj', '_expose', '__doc__'] or attr not in self._expose:
+        if attr in ['_obj', '_expose', '_readonly', '__doc__'] or attr not in self._expose:
             return super().__setattr__(attr, value)
+
+        if attr in self._readonly:
+            raise AttributeError("cannot set read-only item")
 
         exp_obj = getattr(self._obj, attr)
         from jdaviz.core.template_mixin import (SelectPluginComponent,
@@ -57,9 +61,9 @@ class PluginUserApi(UserApiWrapper):
     For example::
       help(plugin_object.show)
     """
-    def __init__(self, plugin, expose=[]):
+    def __init__(self, plugin, expose=[], readonly=[]):
         expose = list(set(list(expose) + ['open_in_tray', 'show']))
-        super().__init__(plugin, expose)
+        super().__init__(plugin, expose, readonly)
 
     def __repr__(self):
         return f'<{self._obj._registry_label} API>'
