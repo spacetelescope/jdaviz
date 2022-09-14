@@ -33,6 +33,7 @@
   },
   "H-Paschen-Brackett": {
     "units": "micron",
+    "medium": "vacuum",
     "filename_base": "H-Paschen-Brackett",
     "Citations/Notes": " https://www.stsci.edu/itt/review/ihb_cy16/NICMOS/Appendix_B6.html"
   },
