@@ -9,22 +9,41 @@ from specutils.spectra.spectrum1d import Spectrum1D
 from jdaviz.core.events import AddDataMessage, SliceToolStateMessage, SliceSelectSliceMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin
+from jdaviz.core.user_api import PluginUserApi
 
 __all__ = ['Slice']
 
 
 @tray_registry('cubeviz-slice', label="Slice")
 class Slice(PluginTemplateMixin):
+    """
+    See the :ref:`Slice Plugin Documentation <slice>` for more details.
+
+    Only the following attributes and methods are available through the
+    :ref:`public plugin API <plugin-apis>`:
+
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
+    * ``slice``
+      Current slice number.
+    * ``wavelength``
+      Wavelength of the current slice.  When setting this directly, it will update automatically to
+      the wavelength corresponding to the nearest slice.
+    * ``show_indicator``
+      Whether to show indicator in spectral viewer when slice tool is inactive.
+    * ``show_wavelength``
+      Whether to show slice wavelength in label to right of indicator.
+    """
     template_file = __file__, "slice.vue"
-    slider = Any(0).tag(sync=True)
+    slice = Any(0).tag(sync=True)
     wavelength = Any(-1).tag(sync=True)
     wavelength_unit = Any("").tag(sync=True)
     min_value = Float(0).tag(sync=True)
     max_value = Float(100).tag(sync=True)
     wait = Int(200).tag(sync=True)
 
-    setting_show_indicator = Bool(True).tag(sync=True)
-    setting_show_wavelength = Bool(True).tag(sync=True)
+    show_indicator = Bool(True).tag(sync=True)
+    show_wavelength = Bool(True).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -50,6 +69,11 @@ class Slice(PluginTemplateMixin):
         #  in _all_ viewers should be uniform.
         self.session.hub.subscribe(self, AddDataMessage,
                                    handler=self._on_data_added)
+
+    @property
+    def user_api(self):
+        return PluginUserApi(self, expose=('slice', 'wavelength',
+                                           'show_indicator', 'show_wavelength'))
 
     def _watch_viewer(self, viewer, watch=True):
         if isinstance(viewer, BqplotImageView):
@@ -96,13 +120,13 @@ class Slice(PluginTemplateMixin):
         if self.wavelength == -1:
             if len(x_all):
                 # initialize at middle of cube
-                self.slider = int(len(x_all)/2)
+                self.slice = int(len(x_all)/2)
             else:
-                # leave in the pre-init state and don't update the wavelength/slider
+                # leave in the pre-init state and don't update the wavelength/slice
                 return
 
         # force wavelength to update from the current slider value
-        self._on_slider_updated({'new': self.slider})
+        self._on_slider_updated({'new': self.slice})
 
     def _viewer_slices_changed(self, value):
         # the slices attribute on the viewer state was changed,
@@ -110,37 +134,38 @@ class Slice(PluginTemplateMixin):
         # the slider observer (_on_slider_updated) and sync across
         # any other applicable viewers
         if len(value) == 3:
-            self.slider = float(value[-1])
+            self.slice = float(value[-1])
 
     def _on_select_slice_message(self, msg):
         # NOTE: by setting the slice index, the observer (_on_slider_updated)
         # will sync across all viewers and update the wavelength
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', category=UnitsWarning)
-            self.slider = msg.slice
+            self.slice = msg.slice
 
-    def vue_change_wavelength(self, event):
+    @observe('wavelength')
+    def _on_wavelength_updated(self, event):
         # convert to float (JS handles stripping any invalid characters)
         try:
-            value = float(event)
+            value = float(event.get('new'))
         except ValueError:
             # do not accept changes, we'll revert via the slider
             # since this @change event doesn't have access to
             # the old value, and self.wavelength already updated
             # via the v-model
-            self._on_slider_updated({'new': self.slider})
+            self._on_slider_updated({'new': self.slice})
             return
 
         # NOTE: by setting the index, this should recursively update the
         # wavelength to the nearest applicable value in _on_slider_updated
-        self.slider = int(np.argmin(abs(value - self._x_all)))
+        self.slice = int(np.argmin(abs(value - self._x_all)))
 
-    @observe('setting_show_indicator', 'setting_show_wavelength')
+    @observe('show_indicator', 'show_wavelength')
     def _on_setting_changed(self, event):
         msg = SliceToolStateMessage({event['name']: event['new']}, sender=self)
         self.session.hub.broadcast(msg)
 
-    @observe('slider')
+    @observe('slice')
     def _on_slider_updated(self, event):
         value = int(event.get('new', int(len(self._x_all)/2)))
 

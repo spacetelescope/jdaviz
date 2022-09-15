@@ -10,7 +10,8 @@ New Features
   in Jy [#1564]
 
 - User-friendly API access to plugins, with exposed functionality for:  line analysis, gaussian
-  smooth, moment maps, compass, collapse, and metadata. [#1401, #1642, #1643, #1636, #1641, #1634]
+  smooth, moment maps, compass, collapse, metadata, and slice.
+  [#1401, #1642, #1643, #1636, #1641, #1634, #1635]
 
 Cubeviz
 ^^^^^^^
