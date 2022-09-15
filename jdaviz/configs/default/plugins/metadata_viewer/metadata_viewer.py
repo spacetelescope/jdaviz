@@ -22,7 +22,11 @@ class MetadataViewer(PluginTemplateMixin, DatasetSelectMixin):
       Dataset to expose the metadata.
     * :attr:`show_primary`:
       Whether to show MEF primary header metadata instead.
-    * :attr:`metadata`
+    * :attr:`metadata`:
+      Read-only metadata. If the data is loaded from a multi-extension FITS file,
+      this can be the extension header or the primary header, depending on
+      ``show_primary`` setting.
+
     """
     template_file = __file__, "metadata_viewer.vue"
     has_metadata = Bool(False).tag(sync=True)
