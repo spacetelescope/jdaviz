@@ -13,7 +13,7 @@
           <v-expansion-panel-content>
             <v-row>
               <v-switch
-                v-model="setting_show_viewer_labels"
+                v-model="show_viewer_labels"
                 label="Show labels in viewers"
                 hint="Whether to show viewer/layer labels on each viewer"
                 persistent-hint

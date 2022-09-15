@@ -176,7 +176,7 @@ class PlotOptions(PluginTemplateMixin):
     icon_radialtocheck = Unicode(read_icon(os.path.join(ICON_DIR, 'radialtocheck.svg'), 'svg+xml')).tag(sync=True)  # noqa
     icon_checktoradial = Unicode(read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
-    setting_show_viewer_labels = Bool(True).tag(sync=True)
+    show_viewer_labels = Bool(True).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -276,7 +276,7 @@ class PlotOptions(PluginTemplateMixin):
         # zoom limits
         # display_units
 
-        self.setting_show_viewer_labels = self.app.state.settings['viewer_labels']
+        self.show_viewer_labels = self.app.state.settings['viewer_labels']
         self.app.state.add_callback('settings', self._on_app_settings_changed)
 
     @property
@@ -297,12 +297,12 @@ class PlotOptions(PluginTemplateMixin):
 
         return PluginUserApi(self, expose)
 
-    @observe('setting_show_viewer_labels')
+    @observe('show_viewer_labels')
     def _on_show_viewer_labels_changed(self, event):
         self.app.state.settings['viewer_labels'] = event['new']
 
     def _on_app_settings_changed(self, value):
-        self.setting_show_viewer_labels = value['viewer_labels']
+        self.show_viewer_labels = value['viewer_labels']
 
     def select_all(self, viewers=True, layers=True):
         """
