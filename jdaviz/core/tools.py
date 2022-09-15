@@ -1,7 +1,7 @@
-import numpy as np
 import os
-from echo import delay_callback
 
+import numpy as np
+from echo import delay_callback
 from glue.config import viewer_tool
 from glue.core import HubListener
 from glue.viewers.common.tool import Tool
@@ -249,3 +249,39 @@ class SidebarShortcutCompass(_BaseSidebarShortcut):
     tool_id = 'jdaviz:sidebar_compass'
     action_text = 'Compass'
     tool_tip = 'Open compass plugin in sidebar'
+
+
+@viewer_tool
+class SinglePixelRegion(CheckableTool):
+
+    icon = os.path.join(ICON_DIR, 'pixelspectra.svg')  # FIXME: Update icon
+    tool_id = 'jdaviz:singlepixelregion'
+    action_text = 'Create single-pixel spatial region'
+    tool_tip = 'Click on the viewer to create single-pixel spatial region'
+
+    def activate(self):
+        self.viewer.add_event_callback(self.on_mouse_event, events=['click'])
+
+    def deactivate(self):
+        self.viewer.remove_event_callback(self.on_mouse_event)
+
+    def on_mouse_event(self, data):
+        # Extract data coordinates - these are pixels in the reference image.
+        # NOTE: We always use the reference image pixel coordinates because
+        # Subset is defined w.r.t. reference image.
+        x = data['domain']['x']
+        y = data['domain']['y']
+        reg = self.get_subset(x, y, as_roi=False)
+        self.viewer.jdaviz_helper.load_regions(reg)
+
+    def get_subset(self, x, y, as_roi=False):
+        from regions import RectanglePixelRegion, PixCoord
+        x, y = np.rint([x, y])  # Center on nearest pixel
+        reg = RectanglePixelRegion(center=PixCoord(x=x, y=y), width=1, height=1)
+
+        if as_roi:
+            from jdaviz.core.region_translators import regions2roi
+            roi = regions2roi(reg)
+            return roi
+
+        return reg
