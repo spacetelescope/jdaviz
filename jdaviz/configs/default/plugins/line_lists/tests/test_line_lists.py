@@ -4,7 +4,6 @@ import pytest
 
 import astropy.units as u
 from astropy.table import QTable
-from jdaviz import Specviz
 from specutils import Spectrum1D
 
 
@@ -37,8 +36,10 @@ def test_line_lists(specviz_helper):
 
     assert np.all(specviz_helper.spectral_lines["show"])
 
-    assert specviz_helper.plugins['Line Lists']._obj.list_contents['Custom']['medium'
-        ] == 'Unknown (Custom)'
+    assert (
+        specviz_helper.plugins["Line Lists"]._obj.list_contents["Custom"]["medium"]
+        == "Unknown (Custom)"
+    )
 
 
 def test_redshift(specviz_helper, spectrum1d):
