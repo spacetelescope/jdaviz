@@ -8,35 +8,37 @@ from jdaviz import Specviz
 from specutils import Spectrum1D
 
 
-def test_line_lists():
-    viz = Specviz()
+def test_line_lists(specviz_helper):
     spec = Spectrum1D(flux=np.random.rand(100)*u.Jy,
                       spectral_axis=np.arange(6000, 7000, 10)*u.AA)
-    viz.load_spectrum(spec)
+    specviz_helper.load_spectrum(spec)
 
     lt = QTable()
     lt['linename'] = ['O III', 'Halpha']
     lt['rest'] = [0, 6563]*u.AA
     with pytest.raises(ValueError, match='all rest values must be positive'):
-        viz.load_line_list(lt)
+        specviz_helper.load_line_list(lt)
 
     lt = QTable()
     lt['linename'] = ['O III', 'Halpha']
     lt['rest'] = [5007, 6563]*u.AA
-    viz.load_line_list(lt)
+    specviz_helper.load_line_list(lt)
 
-    assert len(viz.spectral_lines) == 2
-    assert viz.spectral_lines.loc["linename", "Halpha"]["listname"] == "Custom"
-    assert np.all(viz.spectral_lines["show"])
+    assert len(specviz_helper.spectral_lines) == 2
+    assert specviz_helper.spectral_lines.loc["linename", "Halpha"]["listname"] == "Custom"
+    assert np.all(specviz_helper.spectral_lines["show"])
 
-    viz.erase_spectral_lines()
+    specviz_helper.erase_spectral_lines()
 
-    assert np.all(viz.spectral_lines["show"] == False)  # noqa
+    assert np.all(specviz_helper.spectral_lines["show"] == False)  # noqa
 
-    viz.plot_spectral_line("Halpha")
-    viz.plot_spectral_line("O III 5007.0")
+    specviz_helper.plot_spectral_line("Halpha")
+    specviz_helper.plot_spectral_line("O III 5007.0")
 
-    assert np.all(viz.spectral_lines["show"])
+    assert np.all(specviz_helper.spectral_lines["show"])
+
+    assert specviz_helper.plugins['Line Lists']._obj.list_contents['Custom']['medium'
+        ] == 'Unknown (Custom)'
 
 
 def test_redshift(specviz_helper, spectrum1d):
