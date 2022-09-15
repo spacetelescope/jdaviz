@@ -27,8 +27,8 @@ class Slice(PluginTemplateMixin):
     * ``slice``
       Current slice number.
     * ``wavelength``
-      Wavelength of the current slice.  If setting, will update automatically to the nearest
-      slice.
+      Wavelength of the current slice.  When setting this directly, it will update automatically to
+      the wavelength corresponding to the nearest slice.
     * ``show_indicator``
       Whether to show indicator in spectral viewer when slice tool is inactive.
     * ``show_wavelength``
