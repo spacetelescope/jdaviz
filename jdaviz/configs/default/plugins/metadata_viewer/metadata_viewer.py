@@ -2,13 +2,32 @@ from traitlets import Bool, List, observe
 
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, DatasetSelectMixin
+from jdaviz.core.user_api import PluginUserApi
 from jdaviz.utils import PRIHDR_KEY, COMMENTCARD_KEY
 
 __all__ = ['MetadataViewer']
 
 
-@tray_registry('g-metadata-viewer', label="Metadata Viewer")
+@tray_registry('g-metadata-viewer', label="Metadata")
 class MetadataViewer(PluginTemplateMixin, DatasetSelectMixin):
+    """
+    See the :ref:`Metadata Viewer Plugin Documentation <imviz_metadata-viewer>` for more details.
+
+    Only the following attributes and methods are available through the
+    :ref:`public plugin API <plugin-apis>`:
+
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
+    * ``dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`):
+      Dataset to expose the metadata.
+    * :attr:`show_primary`:
+      Whether to show MEF primary header metadata instead.
+    * :attr:`metadata`:
+      Read-only metadata. If the data is loaded from a multi-extension FITS file,
+      this can be the extension header or the primary header, depending on
+      ``show_primary`` setting.
+
+    """
     template_file = __file__, "metadata_viewer.vue"
     has_metadata = Bool(False).tag(sync=True)
     has_primary = Bool(False).tag(sync=True)
@@ -20,6 +39,10 @@ class MetadataViewer(PluginTemplateMixin, DatasetSelectMixin):
         super().__init__(*args, **kwargs)
         # override the default filters on dataset entries to require metadata in entries
         self.dataset.add_filter('not_from_plugin')
+
+    @property
+    def user_api(self):
+        return PluginUserApi(self, expose=('dataset', 'show_primary'), readonly=('metadata',))
 
     def reset(self):
         self.has_metadata = False
