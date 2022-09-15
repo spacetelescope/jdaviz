@@ -8,7 +8,7 @@ from jdaviz.utils import PRIHDR_KEY, COMMENTCARD_KEY
 __all__ = ['MetadataViewer']
 
 
-@tray_registry('g-metadata-viewer', label="Metadata Viewer")
+@tray_registry('g-metadata-viewer', label="Metadata")
 class MetadataViewer(PluginTemplateMixin, DatasetSelectMixin):
     """
     See the :ref:`Metadata Viewer Plugin Documentation <imviz_metadata-viewer>` for more details.
