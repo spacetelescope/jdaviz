@@ -35,7 +35,7 @@ class SpectralExtraction(PluginTemplateMixin):
 
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
-    * :attr:`setting_interactive_extract`
+    * :attr:`interactive_extract`
     * ``trace_dataset`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
       controls the input dataset for generating the trace.
     * ``trace_type`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
@@ -85,7 +85,7 @@ class SpectralExtraction(PluginTemplateMixin):
     template_file = __file__, "spectral_extraction.vue"
 
     active_step = Unicode().tag(sync=True)
-    setting_interactive_extract = Bool(True).tag(sync=True)
+    interactive_extract = Bool(True).tag(sync=True)
 
     # TRACE
     trace_trace_items = List().tag(sync=True)
@@ -275,7 +275,7 @@ class SpectralExtraction(PluginTemplateMixin):
 
     @property
     def user_api(self):
-        return PluginUserApi(self, expose=('setting_interactive_extract',
+        return PluginUserApi(self, expose=('interactive_extract',
                                            'trace_dataset', 'trace_type', 'trace_peak_method',
                                            'trace_pixel', 'trace_bins', 'trace_window',
                                            'import_trace',
@@ -356,7 +356,7 @@ class SpectralExtraction(PluginTemplateMixin):
         """
         self.plugin_opened = False
 
-    @observe('plugin_opened', 'setting_interactive_extract')
+    @observe('plugin_opened', 'interactive_extract')
     def _update_plugin_marks(self, *args):
         if not self._do_marks:
             return
@@ -372,7 +372,7 @@ class SpectralExtraction(PluginTemplateMixin):
             return
 
         # update extracted 1d spectrum preview, regardless of the step
-        if self.setting_interactive_extract:
+        if self.interactive_extract:
             try:
                 sp1d = self.export_extract_spectrum(add_data=False)
             except Exception as e:

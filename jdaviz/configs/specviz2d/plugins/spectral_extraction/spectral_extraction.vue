@@ -13,7 +13,7 @@
           <v-expansion-panel-content>
             <v-row>
               <v-switch
-                v-model="setting_interactive_extract"
+                v-model="interactive_extract"
                 label="Show live-extraction"
                 hint="Whether to compute/show extraction when making changes to input parameters.  Disable if live-preview becomes laggy."
                 persistent-hint
