@@ -90,8 +90,8 @@ def test_plugin(specviz2d_helper):
     assert len(bg.traces) == 1
     assert bg.traces[0].trace[0] == 28 + 4
     assert bg.width == 3
-    bg = pext.export_bg(bg_width=5)
-    assert bg.width == 5
+    bg = pext.export_bg(bg_width=3.3)
+    assert bg.width == 3.3
     bg.width = 4
     pext.import_bg(bg)
     assert pext.bg_width == 4

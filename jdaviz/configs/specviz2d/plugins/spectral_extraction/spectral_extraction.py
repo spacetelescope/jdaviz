@@ -10,7 +10,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         DatasetSelect,
                                         AddResults)
 from jdaviz.core.user_api import PluginUserApi
-from jdaviz.core.custom_traitlets import IntHandleEmpty
+from jdaviz.core.custom_traitlets import IntHandleEmpty, FloatHandleEmpty
 from jdaviz.core.marks import PluginLine
 
 from astropy.nddata import NDData, StdDevUncertainty, VarianceUncertainty, UnknownUncertainty
@@ -99,7 +99,7 @@ class SpectralExtraction(PluginTemplateMixin):
     trace_type_items = List().tag(sync=True)
     trace_type_selected = Unicode().tag(sync=True)
 
-    trace_pixel = IntHandleEmpty(0).tag(sync=True)
+    trace_pixel = FloatHandleEmpty(0).tag(sync=True)
 
     trace_peak_method_items = List().tag(sync=True)
     trace_peak_method_selected = Unicode().tag(sync=True)
@@ -125,10 +125,10 @@ class SpectralExtraction(PluginTemplateMixin):
     bg_trace_items = List().tag(sync=True)
     bg_trace_selected = Unicode().tag(sync=True)
 
-    bg_trace_pixel = IntHandleEmpty(0).tag(sync=True)
+    bg_trace_pixel = FloatHandleEmpty(0).tag(sync=True)
 
-    bg_separation = IntHandleEmpty(0).tag(sync=True)
-    bg_width = IntHandleEmpty(0).tag(sync=True)
+    bg_separation = FloatHandleEmpty(0).tag(sync=True)
+    bg_width = FloatHandleEmpty(0).tag(sync=True)
 
     bg_results_label = Unicode().tag(sync=True)
     bg_results_label_default = Unicode().tag(sync=True)
@@ -156,7 +156,7 @@ class SpectralExtraction(PluginTemplateMixin):
     ext_type_items = List().tag(sync=True)
     ext_type_selected = Unicode().tag(sync=True)
 
-    ext_width = IntHandleEmpty(0).tag(sync=True)
+    ext_width = FloatHandleEmpty(0).tag(sync=True)
 
     ext_uncert_warn = Bool(False).tag(sync=True)
     ext_specreduce_err = Unicode().tag(sync=True)
