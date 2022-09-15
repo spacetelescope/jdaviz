@@ -20,6 +20,11 @@ the following line. -->
 
 Fixes #<Issue Number>
 
+### Change log entry
+
+- [ ] Is a change log needed? If yes, is it added to `CHANGES.rst`? If you want to avoid merge conflicts,
+  list the proposed change log here for review and add to `CHANGES.rst` before merge.
+
 ### Checklist for package maintainer(s)
 <!-- This section is to be filled by package maintainer(s) who will
 review this pull request. -->
@@ -32,6 +37,5 @@ This checklist is meant to remind the package maintainer(s) who will review this
 - [ ] Are tests added/updated as required? If so, do they follow the [STScI Style Guides](https://github.com/spacetelescope/style-guides)?
 - [ ] Are docs added/updated as required? If so, do they follow the [STScI Style Guides](https://github.com/spacetelescope/style-guides)?
 - [ ] Did the CI pass? If not, are the failures related?
-- [ ] Is a change log needed? If yes, is it added to `CHANGES.rst`? If you want to avoid conflict, you can wait till PR is close to merge before adding it.
 - [ ] Is a milestone set?
 - [ ] After merge, any internal documentations need updating (e.g., JIRA, Innerspace)?
