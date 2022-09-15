@@ -73,13 +73,13 @@ def test_indicator_settings(cubeviz_helper, spectrum1d_cube):
     sv = app.get_viewer('spectrum-viewer')
     indicator = sv.slice_indicator
 
-    assert sl.setting_show_indicator is True
+    assert sl.show_indicator is True
     assert indicator._show_if_inactive is True
-    assert sl.setting_show_wavelength is True
+    assert sl.show_wavelength is True
     assert indicator.label.visible is True
 
-    sl.setting_show_indicator = False
+    sl.show_indicator = False
     assert indicator._show_if_inactive is False
 
-    sl.setting_show_wavelength = False
+    sl.show_wavelength = False
     assert indicator.label.visible is False

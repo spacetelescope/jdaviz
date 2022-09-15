@@ -29,9 +29,9 @@ class Slice(PluginTemplateMixin):
     * ``wavelength``
       Wavelength of the current slice.  If setting, will update automatically to the nearest
       slice.
-    * ``setting_show_indicator``
+    * ``show_indicator``
       Whether to show indicator in spectral viewer when slice tool is inactive.
-    * ``setting_show_wavelength``
+    * ``show_wavelength``
       Whether to show slice wavelength in label to right of indicator.
     """
     template_file = __file__, "slice.vue"
@@ -42,8 +42,8 @@ class Slice(PluginTemplateMixin):
     max_value = Float(100).tag(sync=True)
     wait = Int(200).tag(sync=True)
 
-    setting_show_indicator = Bool(True).tag(sync=True)
-    setting_show_wavelength = Bool(True).tag(sync=True)
+    show_indicator = Bool(True).tag(sync=True)
+    show_wavelength = Bool(True).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -73,7 +73,7 @@ class Slice(PluginTemplateMixin):
     @property
     def user_api(self):
         return PluginUserApi(self, expose=('slice', 'wavelength',
-                                           'setting_show_indicator', 'setting_show_wavelength'))
+                                           'show_indicator', 'show_wavelength'))
 
     def _watch_viewer(self, viewer, watch=True):
         if isinstance(viewer, BqplotImageView):
@@ -160,7 +160,7 @@ class Slice(PluginTemplateMixin):
         # wavelength to the nearest applicable value in _on_slider_updated
         self.slice = int(np.argmin(abs(value - self._x_all)))
 
-    @observe('setting_show_indicator', 'setting_show_wavelength')
+    @observe('show_indicator', 'show_wavelength')
     def _on_setting_changed(self, event):
         msg = SliceToolStateMessage({event['name']: event['new']}, sender=self)
         self.session.hub.broadcast(msg)

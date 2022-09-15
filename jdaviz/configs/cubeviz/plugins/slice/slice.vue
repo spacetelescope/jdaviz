@@ -15,7 +15,7 @@
               <v-switch
                 label="Show Indicator"
                 hint="Show indicator in spectral viewer even when slice tool is inactive."
-                v-model="setting_show_indicator"
+                v-model="show_indicator"
                 persistent-hint>
               </v-switch>
             </v-row>
@@ -23,7 +23,7 @@
               <v-switch
                 label="Show Wavelength"
                 hint="Show slice wavelength in label to right of indicator."
-                v-model="setting_show_wavelength"
+                v-model="show_wavelength"
                 persistent-hint>
               </v-switch>
             </v-row>

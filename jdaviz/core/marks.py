@@ -277,9 +277,9 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
         for k, v in changes.items():
             if k == 'active':
                 self._active = v
-            elif k == 'setting_show_indicator':
+            elif k == 'show_indicator':
                 self._show_if_inactive = v
-            elif k == 'setting_show_wavelength':
+            elif k == 'show_wavelength':
                 self._show_wavelength = v
 
         self._update_colors_opacities()
