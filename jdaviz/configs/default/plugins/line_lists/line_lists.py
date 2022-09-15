@@ -70,7 +70,9 @@ class LineListTool(PluginTemplateMixin):
         self.available_lists = self._viewer.available_linelists()
         self.list_to_load = None
         self.loaded_lists = ["Custom"]
-        self.list_contents = {"Custom": {"lines": [], "color": "#FF0000FF"}}
+        self.list_contents = {"Custom": {"lines": [],
+                                         "color": "#FF0000FF",
+                                         "medium": "Unknown (Custom)"}}
         self.line_mark_dict = {}
         self._units = {}
         self._bounds = {}
