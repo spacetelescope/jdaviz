@@ -495,7 +495,6 @@ class Application(VuetifyTemplate, HubListener):
 
         """
         self.loading = True
-
         try:
             try:
                 # Properly form path and check if a valid file
@@ -519,7 +518,6 @@ class Application(VuetifyTemplate, HubListener):
             data = self.state.settings.get('data', None)
             if parser_reference:
                 parser = data_parser_registry.members.get(parser_reference)
-
             elif data and isinstance(data, dict):
                 data_parser = data.get('parser', None)
                 if data_parser:
