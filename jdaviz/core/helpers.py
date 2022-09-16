@@ -682,7 +682,7 @@ def _next_subset_num(label_prefix, subset_groups):
                 i_str = sub_label[-1]
                 try:
                     i = int(i_str)
-                except Exception:
+                except Exception:  # nosec
                     continue
                 else:
                     if i > max_i:
