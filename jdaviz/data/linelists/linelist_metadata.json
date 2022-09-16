@@ -9,13 +9,13 @@
     "filename_base": "Common_nebular",
     "Citations/Notes": " Common nebular lines.\n\n Copyright (C) 1999-2004 by Christian Buil\n http://www.astrosurf.com/buil/us/spe2/hresol5.htm"
   },
-  "Common Galactic(700A-2000A)": {
+  "Common Galactic 700A-2000A": {
     "units": "Angstrom",
     "medium": "vacuum",
     "filename_base": "Common_Galactic_700A-2000A",
     "Citations/Notes": "http://astronomy.nmsu.edu/drewski/tableofemissionlines.html"
   },
-  "Common Galactic(2000A-11000A)": {
+  "Common Galactic 2000A-11000A": {
     "units": "Angstrom",
     "medium": "vacuum",
     "filename_base": "Common_Galactic_2000A-11000A",
