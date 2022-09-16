@@ -152,7 +152,12 @@ Single-Pixel Selection
 
 This tool allows the user to create a single-pixel spatial region
 in an image viewer. Activate this tool and then left-click to create
-the new region.
+the new region. Click again to move it to a new location under the cursor.
+Users can hold down the alt key (Alt key on Windows, Option key on Mac)
+while clicking on a pixel to create a new region at that point instead
+of moving it. Users can also utilize the different subset modes that are
+explained in the :ref:`Spatial Regions <imviz_defining_spatial_regions>`
+section above.
 
 When you have multiple images loaded and linked by WCS
 (see :ref:`imviz-link-control`), the region defined is with respect to

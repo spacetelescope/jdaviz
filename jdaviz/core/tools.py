@@ -271,8 +271,13 @@ class SinglePixelRegion(CheckableTool):
         # Subset is defined w.r.t. reference image.
         x = data['domain']['x']
         y = data['domain']['y']
-        reg = self.get_subset(x, y, as_roi=False)
-        self.viewer.jdaviz_helper.load_regions(reg)
+
+        if data['altKey'] is True:
+            reg = self.get_subset(x, y, as_roi=False)
+            self.viewer.jdaviz_helper.load_regions(reg)
+        else:
+            roi = self.get_subset(x, y, as_roi=True)
+            self.viewer.apply_roi(roi)
 
     def get_subset(self, x, y, as_roi=False):
         from regions import RectanglePixelRegion, PixCoord

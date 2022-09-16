@@ -63,14 +63,3 @@ class SpectrumPerSpaxel(SinglePixelRegion):
     tool_id = 'jdaviz:spectrumperspaxel'
     action_text = 'See spectrum at a single spaxel'
     tool_tip = 'Click on the viewer and see the spectrum at that spaxel in the spectrum viewer'
-
-    def on_mouse_event(self, data):
-        x = data['domain']['x']
-        y = data['domain']['y']
-
-        if data['altKey'] is True:
-            reg = self.get_subset(x, y, as_roi=False)
-            self.viewer.jdaviz_helper.load_regions(reg)
-        else:
-            roi = self.get_subset(x, y, as_roi=True)
-            self.viewer.apply_roi(roi)

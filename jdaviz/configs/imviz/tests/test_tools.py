@@ -70,17 +70,25 @@ class TestSinglePixelRegion(BaseImviz_WCS_WCS):
         t.activate()
 
         # Create a region while viewing reference data.
-        t.on_mouse_event({'event': 'click', 'domain': {'x': 1, 'y': 2}})
+        t.on_mouse_event({'event': 'click', 'altKey': False, 'domain': {'x': 1, 'y': 2}})
         regions = self.imviz.get_interactive_regions()
         assert len(regions) == 1
         reg = regions['Subset 1']
         assert (isinstance(reg, RectanglePixelRegion) and reg.center.x == 1 and reg.center.y == 2
                 and reg.width == 1 and reg.height == 1)
 
-        # Create a region while viewing dithered data.
+        # Clicking again will move the region, not creating a new one.
+        t.on_mouse_event({'event': 'click', 'altKey': False, 'domain': {'x': 2, 'y': 3}})
+        regions = self.imviz.get_interactive_regions()
+        assert len(regions) == 1
+        reg = regions['Subset 1']
+        assert (isinstance(reg, RectanglePixelRegion) and reg.center.x == 2 and reg.center.y == 3
+                and reg.width == 1 and reg.height == 1)
+
+        # Create a new region while viewing dithered data.
         # Region will still be w.r.t. reference data, that is, x and y from domain stay the same.
         self.imviz.default_viewer.blink_once()
-        t.on_mouse_event({'event': 'click', 'domain': {'x': 3, 'y': 4}})
+        t.on_mouse_event({'event': 'click', 'altKey': True, 'domain': {'x': 3, 'y': 4}})
         regions = self.imviz.get_interactive_regions()
         assert len(regions) == 2
         reg = regions['Subset 2']
