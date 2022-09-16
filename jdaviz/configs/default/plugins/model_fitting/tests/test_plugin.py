@@ -4,6 +4,7 @@ This does NOT test the actual fitting self (see test_fitting.py for that)
 """
 
 import numpy as np
+from astropy.nddata import StdDevUncertainty
 import pytest
 
 from jdaviz.configs.default.plugins.model_fitting.initializers import MODELS
@@ -55,7 +56,38 @@ def test_custom_model_labels(specviz_helper, spectrum1d):
 
 
 @pytest.mark.filterwarnings('ignore')
-def test_register_model(specviz_helper, spectrum1d):
+def test_register_model_with_uncertainty_weighting(specviz_helper, spectrum1d):
+    spectrum1d.uncertainty = StdDevUncertainty(spectrum1d.flux * 0.1)
+    specviz_helper.load_data(spectrum1d)
+    modelfit_plugin = specviz_helper.app.get_tray_item_from_name('g-model-fitting')
+
+    # Test registering a simple linear fit
+    modelfit_plugin.comp_selected = 'Linear1D'
+    modelfit_plugin.vue_add_model()
+    modelfit_plugin.vue_model_fitting()
+    assert len(specviz_helper.app.data_collection) == 2
+
+    # Test fitting again overwrites original fit
+    modelfit_plugin.vue_model_fitting()
+    assert len(specviz_helper.app.data_collection) == 2
+
+    # Test custom model label
+    test_label = 'my_Linear1D'
+    modelfit_plugin.results_label = test_label
+    modelfit_plugin.vue_model_fitting()
+    assert test_label in specviz_helper.app.data_collection
+
+    # Test that the parameter uncertainties were updated
+    expected_uncertainties = {'slope': 0.0003657, 'intercept': 2.529}
+    result_model = modelfit_plugin.component_models[0]
+    for param in result_model["parameters"]:
+        assert np.allclose(param["std"], expected_uncertainties[param["name"]], rtol=0.01)
+
+
+@pytest.mark.filterwarnings('ignore')
+def test_register_model_uncertainty_is_none(specviz_helper, spectrum1d):
+    # Set uncertainty to None
+    spectrum1d.uncertainty = None
     specviz_helper.load_data(spectrum1d)
     modelfit_plugin = specviz_helper.app.get_tray_item_from_name('g-model-fitting')
 
