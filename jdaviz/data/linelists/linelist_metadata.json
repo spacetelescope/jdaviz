@@ -49,8 +49,9 @@
   },
   "H2": {
     "units": "micron",
+    "medium": "vacuum",
     "filename_base": "H2",
-    "Citations/Notes": " Gemini H2 lines\n Compilation of Important H2 Lines (for Gemini)\n T. Geballe, 1995. http://www.gemini.edu/sciops/instruments/nir/wavecal/h2lines.dat\n Based on energy levels calculated using Dabrowski & Herzberg, Can J Phys 62, 1639 (1984)\n and Einstein coefficients from Turner et al. ApJS, 35, 281 (1977)."
+    "Citations/Notes": " Gemini H2 lines\n Compilation of Important H2 Lines (for Gemini)\n T. Geballe, 1995. http://www.gemini.edu/sciops/instruments/nir/wavecal/h2lines.dat\n Based on energy levels calculated using Dabrowski & Herzberg, Can J Phys 62, 1639 (1984)\n and Einstein coefficients from Turner et al. ApJS, 35, 281 (1977).\nMedium information crosschecked with https://www.mpe.mpg.de/ir/ISO/linelists/H2.html and https://iopscience.iop.org/article/10.3847/1538-4357/aa619e/pdf. See JDAT-2747 for full H2 Investigation Report"
   },
   "H2-alt": {
     "units": "micron",
