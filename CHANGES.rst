@@ -12,7 +12,8 @@ New Features
 - User-friendly API access to plugins. [#1401]
 
 - Line Lists show which medium the catalog wavelengths were measured in,
-  in accordance to the metadata entry [#1626]
+  in accordance to the metadata entry. Lists without medium information
+  are removed, until such information can be verified [#1626]
 
 Cubeviz
 ^^^^^^^
