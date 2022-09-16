@@ -673,8 +673,19 @@ def _next_subset_num(label_prefix, subset_groups):
     """Assumes ``prefix i`` format.
     Does not go back and fill in lower but available numbers. This is consistent with Glue.
     """
-    labels = [sg.label.split(' ')[1] for sg in subset_groups
-              if sg.label.startswith(label_prefix)]
-    if len(labels) == 0:
-        return 1
-    return max(map(int, labels)) + 1
+    max_i = 0
+
+    for sg in subset_groups:
+        if sg.label.startswith(label_prefix):
+            sub_label = sg.label.split(' ')
+            if len(sub_label) > 1:
+                i_str = sub_label[-1]
+                try:
+                    i = int(i_str)
+                except Exception:
+                    continue
+                else:
+                    if i > max_i:
+                        max_i = i
+
+    return max_i + 1
