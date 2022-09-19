@@ -12,7 +12,7 @@
   "Atomic/Ionic": {
     "units": "micron",
     "filename_base": "Atomic-Ionic",
-    "Citations/Notes": " JWST Line Lists: The lists and suggested means of implementing them in JWST data analysis software\n A.P.Marston, 30 March 2017\n https://stsci.slack.com/files/anmarston/F4UR94WUX/jwst_line_list.pdf"
+    "Citations/Notes": "https://www.mpe.mpg.de/ir/ISO/linelists/FSlines.html. JWST Line Lists: The lists and suggested means of implementing them in JWST data analysis software\n A.P.Marston, 30 March 2017\n https://stsci.slack.com/files/anmarston/F4UR94WUX/jwst_line_list.pdf"
   },
   "Atomic-ISO": {
     "units": "micron",
@@ -21,16 +21,19 @@
   },
   "SDSS": {
     "units": "Angstrom",
+    "medium": "air",
     "filename_base": "SDSS",
     "Citations/Notes": " Table of Spectral Lines Used in SDSS\n\n http://classic.sdss.org/dr6/algorithms/linestable.html\n Vacuum wavelengths"
   },
   "SDSS-IV": {
     "units": "Angstrom",
+    "medium": "vacuum",
     "filename_base": "SDSS-IV",
     "Citations/Notes": " Lines used by the SDSS-IV Science Archive Webapp (SAW).\n https://dr14.sdss.org/static/js/optical/markedLines.js\n\n See also the emlines.par file in the idlspec2d package.\n\n Wavelengths are in air for lambda > 2000 vacuum for lambda < 2000."
   },
   "H-Paschen-Brackett": {
     "units": "micron",
+    "medium": "vacuum",
     "filename_base": "H-Paschen-Brackett",
     "Citations/Notes": " https://www.stsci.edu/itt/review/ihb_cy16/NICMOS/Appendix_B6.html"
   },
@@ -46,8 +49,9 @@
   },
   "H2": {
     "units": "micron",
+    "medium": "vacuum",
     "filename_base": "H2",
-    "Citations/Notes": " Gemini H2 lines\n Compilation of Important H2 Lines (for Gemini)\n T. Geballe, 1995. http://www.gemini.edu/sciops/instruments/nir/wavecal/h2lines.dat\n Based on energy levels calculated using Dabrowski & Herzberg, Can J Phys 62, 1639 (1984)\n and Einstein coefficients from Turner et al. ApJS, 35, 281 (1977)."
+    "Citations/Notes": " Gemini H2 lines\n Compilation of Important H2 Lines (for Gemini)\n T. Geballe, 1995. http://www.gemini.edu/sciops/instruments/nir/wavecal/h2lines.dat\n Based on energy levels calculated using Dabrowski & Herzberg, Can J Phys 62, 1639 (1984)\n and Einstein coefficients from Turner et al. ApJS, 35, 281 (1977).\nMedium information crosschecked with https://www.mpe.mpg.de/ir/ISO/linelists/H2.html and https://iopscience.iop.org/article/10.3847/1538-4357/aa619e/pdf. See JDAT-2747 for full H2 Investigation Report"
   },
   "H2-alt": {
     "units": "micron",
@@ -56,16 +60,19 @@
   },
   "H2-ISO": {
     "units": "micron",
+    "medium": "vacuum",
     "filename_base": "H2-ISO",
     "Citations/Notes": " J.H.Black, E.F.vanDishoeck, ApJ 322: 412-449, 1988. https://old.ipac.caltech.edu/iso//lws/HII.html"
   },
   "CO": {
     "units": "micron",
+    "medium": "vacuum",
     "filename_base": "CO",
     "Citations/Notes": " CARBON MONOXIDE (12C16O) VIBRATION ROTATION BANDS\n Compilation CO band head, fundamental and overtone wavelengths for Gemini.\n T. Geballe http://www.gemini.edu/sciops/instruments/nir/wavecal/colines.dat"
   },
   "CO-band-heads": {
     "units": "micron",
+    "medium": "vacuum",
     "filename_base": "CO-band-heads",
     "Citations/Notes": " https://www.stsci.edu/itt/review/ihb_cy16/NICMOS/Appendix_B6.html"
   },

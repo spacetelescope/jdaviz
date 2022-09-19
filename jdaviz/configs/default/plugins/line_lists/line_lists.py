@@ -17,7 +17,7 @@ from jdaviz.core.events import (AddDataMessage,
                                 LineIdentifyMessage,
                                 SnackbarMessage,
                                 RedshiftMessage)
-from jdaviz.core.linelists import load_preset_linelist
+from jdaviz.core.linelists import load_preset_linelist, get_linelist_metadata
 from jdaviz.core.marks import SpectralLine
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin
@@ -70,7 +70,9 @@ class LineListTool(PluginTemplateMixin):
         self.available_lists = self._viewer.available_linelists()
         self.list_to_load = None
         self.loaded_lists = ["Custom"]
-        self.list_contents = {"Custom": {"lines": [], "color": "#FF0000FF"}}
+        self.list_contents = {"Custom": {"lines": [],
+                                         "color": "#FF0000FF",
+                                         "medium": "Unknown (Custom)"}}
         self.line_mark_dict = {}
         self._units = {}
         self._bounds = {}
@@ -545,7 +547,10 @@ class LineListTool(PluginTemplateMixin):
         temp_table = self._viewer.load_line_list(temp_table, return_table=True,
                                                  show=False)
 
-        line_list_dict = {"lines": [], "color": "#FF000080"}
+        metadata = get_linelist_metadata()
+        list_medium = metadata[self.list_to_load].get('medium', 'Unknown').capitalize()
+
+        line_list_dict = {"lines": [], "color": "#FF000080", "medium": list_medium}
         # extra_fields = [x for x in temp_table.colnames if x not in
         #                ("linename", "rest", "name_rest")]
 

@@ -16,8 +16,14 @@ def get_linelist_metadata():
 
 
 def get_available_linelists():
-    """Return all available line lists."""
-    return list(get_linelist_metadata().keys())
+    """
+    Return all available line lists.
+
+    Filters out all entries that do not explicitly contain medium information, as to not
+    mislead users
+    """
+    metadata = get_linelist_metadata()
+    return [list for list in list(metadata.keys()) if 'medium' in metadata[list]]
 
 
 def load_preset_linelist(name):

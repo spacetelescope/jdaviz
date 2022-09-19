@@ -15,6 +15,10 @@ New Features
   smooth, moment maps, compass, collapse, metadata, and slice.
   [#1401, #1642, #1643, #1636, #1641, #1634, #1635]
 
+- Line Lists show which medium the catalog wavelengths were measured in,
+  in accordance to the metadata entry. Lists without medium information
+  are removed, until such information can be verified [#1626]
+
 Cubeviz
 ^^^^^^^
 
