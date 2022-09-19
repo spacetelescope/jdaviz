@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from regions import CirclePixelRegion, PixCoord
 
 from jdaviz.app import Application
 from jdaviz.core.config import get_configuration
@@ -32,6 +33,28 @@ def test_destroy_viewer_invalid(imviz_helper):
     with pytest.raises(ValueError, match='cannot be destroyed'):
         imviz_helper.destroy_viewer('imviz-0')
     assert imviz_helper.app.get_viewer_ids() == ['imviz-0']
+
+
+def test_destroy_viewer_with_subset(imviz_helper):
+    """Regression test for https://github.com/spacetelescope/jdaviz/issues/1614"""
+    arr = np.ones((10, 10))
+    imviz_helper.load_data(arr, data_label='my_array')
+
+    # Create a second viewer.
+    imviz_helper.create_image_viewer(viewer_name='second')
+
+    # Add existing data to second viewer.
+    imviz_helper.app.add_data_to_viewer('second', 'my_array')
+
+    # Create a Subset.
+    reg = CirclePixelRegion(center=PixCoord(x=4, y=4), radius=2)
+    imviz_helper.load_regions(reg)
+
+    # Remove the second viewer.
+    imviz_helper.destroy_viewer('second')
+
+    # Delete the Subset: Should have no traceback.
+    imviz_helper._delete_region('Subset 1')
 
 
 def test_mastviz_config():

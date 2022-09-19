@@ -336,7 +336,7 @@ class TestParseImage:
 
             imviz_helper.load_data(pf, ext='SCI', data_label='TEST', show_in_viewer=False)
             data = imviz_helper.app.data_collection[1]
-            assert data.label.endswith('[DATA]_2')
+            assert data.label.endswith('[DATA] 1')
 
             # Load all extensions
             imviz_helper.app.data_collection.clear()
