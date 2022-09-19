@@ -65,25 +65,25 @@ class PlotOptions(PluginTemplateMixin):
     * ``image_color`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Specviz.  This only applies when ``image_color_mode`` is "Monochromatic".
     * ``image_colormap`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      not exposed for Specviz
+      not exposed for Specviz. This only applies when ``image_color_mode`` is "Colormap".
     * ``image_opacity`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      not exposed for Specviz
+      not exposed for Specviz. Valid values are between 0 and 1, inclusive. Default is 1.
     * ``image_contrast`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      not exposed for Specviz
+      not exposed for Specviz. Valid values are between 0 and 4, inclusive. Default is 1.
     * ``image_bias`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      not exposed for Specviz
+      not exposed for Specviz. Valid values are between 0 and 1, inclusive. Default is 0.5.
     * ``contour_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Specviz
     * ``contour_mode`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Specviz
     * ``contour_min`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      not exposed for Specviz
+      not exposed for Specviz. This only applies when ``contour_mode`` is "Linear".
     * ``contour_max`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      not exposed for Specviz
+      not exposed for Specviz. This only applies when ``contour_mode`` is "Linear".
     * ``contour_nlevels`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      not exposed for Specviz
+      not exposed for Specviz. This only applies when ``contour_mode`` is "Linear".
     * ``contour_custom_levels`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      not exposed for Specviz
+      not exposed for Specviz. This only applies when ``contour_mode`` is "Custom".
     """
     template_file = __file__, "plot_options.vue"
 
