@@ -50,6 +50,9 @@ class UserApiWrapper:
             exp_obj.value = value
             return
         elif isinstance(exp_obj, PlotOptionsSyncState):
+            if not len(exp_obj.linked_states):
+                raise ValueError("there are currently no synced glue states to set")
+
             # this allows setting the value immediately, and unmixing state, if appropriate,
             # even if the value matches the current value
             if value == exp_obj.value:

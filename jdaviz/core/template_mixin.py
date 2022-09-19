@@ -1765,8 +1765,8 @@ class PlotOptionsSyncState(BasePluginComponent):
     def __repr__(self):
         choices = self.choices
         if len(choices):
-            return f"<PlotOptionsSyncState {self._glue_name}={self.value} choices={self.choices} (linked_states: {len(self.subscribed_states)})>"  # noqa
-        return f"<PlotOptionsSyncState {self._glue_name}={self.value} (linked_states: {len(self.subscribed_states)})>"  # noqa
+            return f"<PlotOptionsSyncState {self._glue_name}={self.value} choices={self.choices} (linked_states: {len(self.linked_states)}/{len(self.subscribed_states)})>"  # noqa
+        return f"<PlotOptionsSyncState {self._glue_name}={self.value} (linked_states: {len(self.linked_states)}/{len(self.subscribed_states)})>"  # noqa
 
     @property
     def user_api(self):
