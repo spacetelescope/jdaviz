@@ -33,54 +33,57 @@ class PlotOptions(PluginTemplateMixin):
     * ``layer`` (:class:`~jdaviz.core.template_mixin.LayerSelect`):
     * :meth:`select_all`
     * ``layer_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`)
-    * ``subset_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`)
-    * ``show_axes`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`)
+    * ``subset_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      whether a subset should be visible.
+    * ``subset_color`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not exposed for Specviz
+    * ``axes_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`)
     * ``collapse_function`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      only avilable for Cubeviz
+      only exposed for Cubeviz
     * ``line_color`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      not available for Imviz
+      not exposed for Imviz
     * ``line_width`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      not available for Imviz
+      not exposed for Imviz
     * ``line_opacity`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      not available for Imviz
+      not exposed for Imviz
     * ``as_steps`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      not available for Imviz
+      not exposed for Imviz
     * ``uncertainty`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      not available for Imviz
-    * ``stretch`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      not available for Specviz
-    * ``stretch_perc`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      not available for Specviz
-    * ``stretch_min`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      not available for Specviz
-    * ``stretch_max`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      not available for Specviz
-    * ``bitmap_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      not available for Specviz
-    * ``color_mode`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      not available for Specviz
-    * ``bitmap_color`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      not available for Specviz
-    * ``bitmap_cmap`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      not available for Specviz
-    * ``bitmap_opacity`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      not available for Specviz
-    * ``bitmap_contrast`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      not available for Specviz
-    * ``bitmap_bias`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      not available for Specviz
+      not exposed for Imviz
+    * ``stretch_func`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not exposed for Specviz
+    * ``stretch_preset`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not exposed for Specviz
+    * ``stretch_vmin`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not exposed for Specviz
+    * ``stretch_vmax`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not exposed for Specviz
+    * ``image_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not exposed for Specviz
+    * ``image_color_mode`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not exposed for Specviz
+    * ``image_color`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not exposed for Specviz.  This only applies when ``image_color_mode`` is "Monochromatic".
+    * ``image_colormap`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not exposed for Specviz
+    * ``image_opacity`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not exposed for Specviz
+    * ``image_contrast`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not exposed for Specviz
+    * ``image_bias`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not exposed for Specviz
     * ``contour_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      not available for Specviz
+      not exposed for Specviz
     * ``contour_mode`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      not available for Specviz
+      not exposed for Specviz
     * ``contour_min`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      not available for Specviz
+      not exposed for Specviz
     * ``contour_max`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      not available for Specviz
+      not exposed for Specviz
     * ``contour_nlevels`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      not available for Specviz
+      not exposed for Specviz
     * ``contour_custom_levels`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      not available for Specviz
+      not exposed for Specviz
     """
     template_file = __file__, "plot_options.vue"
 
@@ -115,41 +118,44 @@ class PlotOptions(PluginTemplateMixin):
     uncertainty_sync = Dict().tag(sync=True)
 
     # image viewer/layer options
-    stretch_value = Unicode().tag(sync=True)
-    stretch_sync = Dict().tag(sync=True)
+    stretch_func_value = Unicode().tag(sync=True)
+    stretch_func_sync = Dict().tag(sync=True)
 
-    stretch_perc_value = Any().tag(sync=True)  # glue will pass either a float or string
-    stretch_perc_sync = Dict().tag(sync=True)
+    stretch_preset_value = Any().tag(sync=True)  # glue will pass either a float or string
+    stretch_preset_sync = Dict().tag(sync=True)
 
-    stretch_min_value = Float().tag(sync=True)
-    stretch_min_sync = Dict().tag(sync=True)
+    stretch_vmin_value = Float().tag(sync=True)
+    stretch_vmin_sync = Dict().tag(sync=True)
 
-    stretch_max_value = Float().tag(sync=True)
-    stretch_max_sync = Dict().tag(sync=True)
+    stretch_vmax_value = Float().tag(sync=True)
+    stretch_vmax_sync = Dict().tag(sync=True)
 
     subset_visible_value = Bool().tag(sync=True)
     subset_visible_sync = Dict().tag(sync=True)
 
-    bitmap_visible_value = Bool().tag(sync=True)
-    bitmap_visible_sync = Dict().tag(sync=True)
+    subset_color_value = Unicode().tag(sync=True)
+    subset_color_sync = Dict().tag(sync=True)
 
-    color_mode_value = Unicode().tag(sync=True)
-    color_mode_sync = Dict().tag(sync=True)
+    image_visible_value = Bool().tag(sync=True)
+    image_visible_sync = Dict().tag(sync=True)
 
-    bitmap_color_value = Any().tag(sync=True)
-    bitmap_color_sync = Dict().tag(sync=True)
+    image_color_mode_value = Unicode().tag(sync=True)
+    image_color_mode_sync = Dict().tag(sync=True)
 
-    bitmap_cmap_value = Unicode().tag(sync=True)
-    bitmap_cmap_sync = Dict().tag(sync=True)
+    image_color_value = Any().tag(sync=True)
+    image_color_sync = Dict().tag(sync=True)
 
-    bitmap_opacity_value = Float().tag(sync=True)
-    bitmap_opacity_sync = Dict().tag(sync=True)
+    image_colormap_value = Unicode().tag(sync=True)
+    image_colormap_sync = Dict().tag(sync=True)
 
-    bitmap_contrast_value = Float().tag(sync=True)
-    bitmap_contrast_sync = Dict().tag(sync=True)
+    image_opacity_value = Float().tag(sync=True)
+    image_opacity_sync = Dict().tag(sync=True)
 
-    bitmap_bias_value = Float().tag(sync=True)
-    bitmap_bias_sync = Dict().tag(sync=True)
+    image_contrast_value = Float().tag(sync=True)
+    image_contrast_sync = Dict().tag(sync=True)
+
+    image_bias_value = Float().tag(sync=True)
+    image_bias_sync = Dict().tag(sync=True)
 
     contour_visible_value = Bool().tag(sync=True)
     contour_visible_sync = Dict().tag(sync=True)
@@ -170,8 +176,8 @@ class PlotOptions(PluginTemplateMixin):
     contour_custom_levels_txt = Unicode().tag(sync=True)   # controlled by vue
     contour_custom_levels_sync = Dict().tag(sync=True)
 
-    show_axes_value = Bool().tag(sync=True)
-    show_axes_sync = Dict().tag(sync=True)
+    axes_visible_value = Bool().tag(sync=True)
+    axes_visible_sync = Dict().tag(sync=True)
 
     icon_radialtocheck = Unicode(read_icon(os.path.join(ICON_DIR, 'radialtocheck.svg'), 'svg+xml')).tag(sync=True)  # noqa
     icon_checktoradial = Unicode(read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml')).tag(sync=True)  # noqa
@@ -195,6 +201,9 @@ class PlotOptions(PluginTemplateMixin):
         def not_image(state):
             return not is_image(state)
 
+        def not_image_or_spatial_subset(state):
+            return not is_image(state) and not is_spatial_subset(state)
+
         def is_spatial_subset(state):
             return isinstance(state, ImageSubsetLayerState)
 
@@ -209,7 +218,7 @@ class PlotOptions(PluginTemplateMixin):
                                                       'collapse_func_value', 'collapse_func_sync')
         self.line_color = PlotOptionsSyncState(self, self.viewer, self.layer, 'color',
                                                'line_color_value', 'line_color_sync',
-                                               state_filter=not_image)
+                                               state_filter=not_image_or_spatial_subset)
         self.line_width = PlotOptionsSyncState(self, self.viewer, self.layer, 'linewidth',
                                                'line_width_value', 'line_width_sync')
         self.line_opacity = PlotOptionsSyncState(self, self.viewer, self.layer, 'alpha',
@@ -221,39 +230,42 @@ class PlotOptions(PluginTemplateMixin):
                                                 'uncertainty_value', 'uncertainty_sync')
 
         # Image viewer/layer options:
-        self.stretch = PlotOptionsSyncState(self, self.viewer, self.layer, 'stretch',
-                                            'stretch_value', 'stretch_sync',
-                                            state_filter=is_image)
-        self.stretch_perc = PlotOptionsSyncState(self, self.viewer, self.layer, 'percentile',
-                                                 'stretch_perc_value', 'stretch_perc_sync',
+        self.stretch_func = PlotOptionsSyncState(self, self.viewer, self.layer, 'stretch',
+                                                 'stretch_func_value', 'stretch_func_sync',
                                                  state_filter=is_image)
-        self.stretch_min = PlotOptionsSyncState(self, self.viewer, self.layer, 'v_min',
-                                                'stretch_min_value', 'stretch_min_sync',
-                                                state_filter=is_image)
-        self.stretch_max = PlotOptionsSyncState(self, self.viewer, self.layer, 'v_max',
-                                                'stretch_max_value', 'stretch_max_sync',
-                                                state_filter=is_image)
+        self.stretch_preset = PlotOptionsSyncState(self, self.viewer, self.layer, 'percentile',
+                                                   'stretch_preset_value', 'stretch_preset_sync',
+                                                   state_filter=is_image)
+        self.stretch_vmin = PlotOptionsSyncState(self, self.viewer, self.layer, 'v_min',
+                                                 'stretch_vmin_value', 'stretch_vmin_sync',
+                                                 state_filter=is_image)
+        self.stretch_vmax = PlotOptionsSyncState(self, self.viewer, self.layer, 'v_max',
+                                                 'stretch_vmax_value', 'stretch_vmax_sync',
+                                                 state_filter=is_image)
 
         self.subset_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'visible',
                                                    'subset_visible_value', 'subset_visible_sync',
                                                    state_filter=is_spatial_subset)
-        self.bitmap_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'bitmap_visible',
-                                                   'bitmap_visible_value', 'bitmap_visible_sync',
-                                                   state_filter=is_image)
-        self.color_mode = PlotOptionsSyncState(self, self.viewer, self.layer, 'color_mode',
-                                               'color_mode_value', 'color_mode_sync')
-        self.bitmap_color = PlotOptionsSyncState(self, self.viewer, self.layer, 'color',
-                                                 'bitmap_color_value', 'bitmap_color_sync',
-                                                 state_filter=is_image)
-        self.bitmap_cmap = PlotOptionsSyncState(self, self.viewer, self.layer, 'cmap',
-                                                'bitmap_cmap_value', 'bitmap_cmap_sync')
-        self.bitmap_opacity = PlotOptionsSyncState(self, self.viewer, self.layer, 'alpha',
-                                                   'bitmap_opacity_value', 'bitmap_opacity_sync',
-                                                   state_filter=is_image)
-        self.bitmap_contrast = PlotOptionsSyncState(self, self.viewer, self.layer, 'contrast',
-                                                    'bitmap_contrast_value', 'bitmap_contrast_sync')
-        self.bitmap_bias = PlotOptionsSyncState(self, self.viewer, self.layer, 'bias',
-                                                'bitmap_bias_value', 'bitmap_bias_sync')
+        self.subset_color = PlotOptionsSyncState(self, self.viewer, self.layer, 'color',
+                                                 'subset_color_value', 'subset_color_sync',
+                                                 state_filter=is_spatial_subset)
+        self.image_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'bitmap_visible',
+                                                  'image_visible_value', 'image_visible_sync',
+                                                  state_filter=is_image)
+        self.image_color_mode = PlotOptionsSyncState(self, self.viewer, self.layer, 'color_mode',  # noqa
+                                                     'image_color_mode_value', 'image_color_mode_sync')  # noqa
+        self.image_color = PlotOptionsSyncState(self, self.viewer, self.layer, 'color',
+                                                'image_color_value', 'image_color_sync',
+                                                state_filter=is_image)
+        self.image_colormap = PlotOptionsSyncState(self, self.viewer, self.layer, 'cmap',
+                                                   'image_colormap_value', 'image_colormap_sync')
+        self.image_opacity = PlotOptionsSyncState(self, self.viewer, self.layer, 'alpha',
+                                                  'image_opacity_value', 'image_opacity_sync',
+                                                  state_filter=is_image)
+        self.image_contrast = PlotOptionsSyncState(self, self.viewer, self.layer, 'contrast',
+                                                   'image_contrast_value', 'image_contrast_sync')
+        self.image_bias = PlotOptionsSyncState(self, self.viewer, self.layer, 'bias',
+                                               'image_bias_value', 'image_bias_sync')
 
         self.contour_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'contour_visible',  # noqa
                                                     'contour_visible_value', 'contour_visible_sync')
@@ -269,10 +281,10 @@ class PlotOptions(PluginTemplateMixin):
                                                           'contour_custom_levels_value', 'contour_custom_levels_sync')  # noqa
 
         # Axes options:
-        # show_axes hidden for imviz in plot_options.vue
-        self.show_axes = PlotOptionsSyncState(self, self.viewer, self.layer, 'show_axes',
-                                              'show_axes_value', 'show_axes_sync',
-                                              state_filter=not_profile)
+        # axes_visible hidden for imviz in plot_options.vue
+        self.axes_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'show_axes',
+                                                 'axes_visible_value', 'axes_visible_sync',
+                                                 state_filter=not_profile)
         # zoom limits
         # display_units
 
@@ -282,16 +294,17 @@ class PlotOptions(PluginTemplateMixin):
     @property
     def user_api(self):
         expose = ['multiselect', 'viewer', 'layer', 'select_all',
-                  'layer_visible', 'subset_visible', 'show_axes']
+                  'layer_visible', 'subset_visible', 'axes_visible']
         if self.config == "cubeviz":
             expose += ['collapse_function']
         if self.config != "imviz":
             expose += ['line_color', 'line_width', 'line_opacity', 'as_steps', 'uncertainty']
         if self.config != "specviz":
-            expose += ['stretch', 'stretch_perc', 'stretch_min', 'stretch_max',
-                       'bitmap_visible', 'color_mode',
-                       'bitmap_color', 'bitmap_cmap', 'bitmap_opacity',
-                       'bitmap_contrast', 'bitmap_bias',
+            expose += ['subset_color',
+                       'stretch_func', 'stretch_preset', 'stretch_vmin', 'stretch_vmax',
+                       'image_visible', 'image_color_mode',
+                       'image_color', 'image_colormap', 'image_opacity',
+                       'image_contrast', 'image_bias',
                        'contour_visible', 'contour_mode',
                        'contour_min', 'contour_max', 'contour_nlevels', 'contour_custom_levels']
 
