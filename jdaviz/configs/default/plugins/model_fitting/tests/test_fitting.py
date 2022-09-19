@@ -61,13 +61,13 @@ def test_model_ids(cubeviz_helper, spectral_cube_wcs):
 
     with pytest.raises(
             ValueError,
-            match="model component ID valid_string_already_exists already in use"):
+            match="model component label 'valid_string_already_exists' already in use"):
         plugin.comp_label = 'valid_string_already_exists'
         plugin.vue_add_model({})
 
     with pytest.raises(
             ValueError,
-            match="invalid model component ID invalid-string"):
+            match="invalid model component label 'invalid-string'"):
         plugin.comp_label = 'invalid-string'
         plugin.vue_add_model({})
 
