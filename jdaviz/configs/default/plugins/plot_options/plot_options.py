@@ -294,11 +294,12 @@ class PlotOptions(PluginTemplateMixin):
     @property
     def user_api(self):
         expose = ['multiselect', 'viewer', 'layer', 'select_all',
-                  'layer_visible', 'subset_visible', 'axes_visible']
+                  'layer_visible', 'subset_visible']
         if self.config == "cubeviz":
             expose += ['collapse_function']
         if self.config != "imviz":
-            expose += ['line_color', 'line_width', 'line_opacity', 'as_steps', 'uncertainty']
+            expose += ['axes_visible', 'line_color', 'line_width', 'line_opacity', 'as_steps',
+                       'uncertainty']
         if self.config != "specviz":
             expose += ['subset_color',
                        'stretch_func', 'stretch_preset', 'stretch_vmin', 'stretch_vmax',
