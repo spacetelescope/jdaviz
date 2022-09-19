@@ -1,5 +1,5 @@
 <template>
-  <v-app id="web-app" class="jdaviz" ref="mainapp">
+  <v-app id="web-app" :class="'jdaviz ' + config" ref="mainapp">
     <v-overlay v-if="state.logger_overlay"
       absolute
       opacity="0.7">
@@ -298,12 +298,12 @@ div.output_wrapper {
   display: none;
 }
 
-.lm_close {
-  display: none;
+.cubeviz .lm_close {
+  display: none !important;
 }
 
-.lm_close_tab {
-  display: None
+.cubeviz .lm_close_tab {
+  display: none;
 }
 
 .v-toolbar__items .v-btn {
