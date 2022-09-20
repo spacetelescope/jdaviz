@@ -36,7 +36,8 @@ class PlotOptions(PluginTemplateMixin):
       whether a subset should be visible.
     * ``subset_color`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Specviz
-    * ``axes_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`)
+    * ``axes_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not exposed for Imviz
     * ``collapse_function`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       only exposed for Cubeviz
     * ``line_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
@@ -60,7 +61,7 @@ class PlotOptions(PluginTemplateMixin):
     * ``stretch_vmax`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Specviz
     * ``image_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      not exposed for Specviz
+      whether the image bitmap is visible; not exposed for Specviz.
     * ``image_color_mode`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Specviz
     * ``image_color`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
@@ -74,7 +75,7 @@ class PlotOptions(PluginTemplateMixin):
     * ``image_bias`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Specviz. Valid values are between 0 and 1, inclusive. Default is 0.5.
     * ``contour_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      not exposed for Specviz
+      whether the contour is visible; not exposed for Specviz
     * ``contour_mode`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Specviz
     * ``contour_min`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
