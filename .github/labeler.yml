@@ -2,7 +2,7 @@ documentation:
   - docs/**/*
   - licenses/*
   - notebooks/**/*
-  - .readthedocs.yml
+  - .readthedocs.yaml
   - README.rst
 
 testing:
