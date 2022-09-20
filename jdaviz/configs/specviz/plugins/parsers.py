@@ -81,7 +81,6 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
             current_unit = current_spec[spec_key].spectral_axis.unit
 
     with app.data_collection.delay_link_manager_update():
-
         # these are used to build a combined spectrum with all
         # input spectra included (taken from https://github.com/spacetelescope/
         # dat_pyinthesky/blob/main/jdat_notebooks/MRS_Mstar_analysis/
@@ -118,33 +117,81 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
                     app.add_data_to_viewer(spectrum_viewer_reference_name, data_label[i])
 
         if isinstance(data, SpectrumList):
-            if data[0].meta.get("INSTRUME") == "MIRI":
-                # reset display ranges, or build combined spectrum,
-                # when input is a SpectrumList instance and the
-                # observations were produced by MIRI
-                wlallarr = np.array(wlallorig)
-                fnuallarr = np.array(fnuallorig)
-                dfnuallarr = np.array(dfnuallorig)
-                srtind = np.argsort(wlallarr)
-                wlall = wlallarr[srtind]
-                fnuall = fnuallarr[srtind]
-                fnuallerr = dfnuallarr[srtind]
+            # If >1 spectra in the list were opened from the same FITS file,
+            # group them by their original FITS filenames and add their combined
+            # 1D spectrum to the DataCollection.
+            unique_files = group_spectra_by_filename(app.data_collection)
+            for filename, datasets in unique_files.items():
+                if len(datasets) > 1:
+                    spec = combine_lists_to_1d_spectrum(wlallorig, fnuallorig, dfnuallorig,
+                                                        wave_units, flux_units)
 
-                # units are not being handled properly yet.
-                unc = StdDevUncertainty(fnuallerr * flux_units)
-                spec = Spectrum1D(flux=fnuall * flux_units, spectral_axis=wlall * wave_units,
-                                  uncertainty=unc)
+                    # Make metadata layout conform with other viz.
+                    spec.meta = standardize_metadata(spec.meta)
 
-                # Make metadata layout conform with other viz.
-                spec.meta = standardize_metadata(spec.meta)
+                    label = f"Combined [{filename}]"
+                    app.add_data(spec, label)
 
-                # needs perhaps a better way to label the combined spectrum
-                label = "Combined " + data_label[0]
-                app.add_data(spec, label)
-                if show_in_viewer:
-                    app.add_data_to_viewer(spectrum_viewer_reference_name, label)
-            else:
-                # show only the first FITS extension if the observations
-                # were produced by instrument other than MIRI
-                if show_in_viewer:
-                    app.add_data_to_viewer(spectrum_viewer_reference_name, data_label[0])
+                    if show_in_viewer:
+                        app.add_data_to_viewer(spectrum_viewer_reference_name, label)
+
+
+def group_spectra_by_filename(datasets):
+    """
+    Organize the elements of a `~glue.core.data_collection.DataCollection` by the name of
+    the FITS file they came from, if available via the header card "FILENAME".
+
+    Parameters
+    ----------
+    dataset : `~glue.core.data_collection.DataCollection`
+        Collection of datasets
+
+    Returns
+    -------
+    spectra_to_combine : dict
+        Datasets of spectra organized by their filename.
+    """
+    spectra_to_combine = dict()
+
+    for data in datasets:
+        filename = data.meta.get("FILENAME")
+
+        if filename not in spectra_to_combine:
+            spectra_to_combine[filename] = []
+
+        spectra_to_combine[filename].append(data)
+
+    return spectra_to_combine
+
+
+def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
+    """
+    Combine lists of 1D spectra into a composite `~specutils.Spectrum1D` object.
+
+    Parameters
+    ----------
+    wl : list of `~astropy.units.Quantity`s
+        Wavelength in each spectral channel
+    fnu : list of `~astropy.units.Quantity`s
+        Flux in each spectral channel
+    dfnu : list of `~astropy.units.Quantity`s
+        Uncertainty on each flux
+
+    Returns
+    -------
+    spec : `~specutils.Spectrum1D`
+        Composite 1D spectrum.
+    """
+    wlallarr = np.array(wl)
+    fnuallarr = np.array(fnu)
+    dfnuallarr = np.array(dfnu)
+    srtind = np.argsort(wlallarr)
+    wlall = wlallarr[srtind]
+    fnuall = fnuallarr[srtind]
+    fnuallerr = dfnuallarr[srtind]
+
+    # units are not being handled properly yet.
+    unc = StdDevUncertainty(fnuallerr * flux_units)
+    spec = Spectrum1D(flux=fnuall * flux_units, spectral_axis=wlall * wave_units,
+                      uncertainty=unc)
+    return spec

@@ -18,10 +18,11 @@ from jdaviz import Specviz
 
 class TestSpecvizHelper:
     @pytest.fixture(autouse=True)
-    def setup_class(self, specviz_helper, spectrum1d):
+    def setup_class(self, specviz_helper, spectrum1d, multi_order_spectrum_list):
         self.spec_app = specviz_helper
         self.spec = spectrum1d
         self.spec_list = SpectrumList([spectrum1d] * 3)
+        self.multi_order_spectrum_list = multi_order_spectrum_list
 
         self.label = "Test 1D Spectrum"
         self.spec_app.load_spectrum(spectrum1d, data_label=self.label)
@@ -39,14 +40,19 @@ class TestSpecvizHelper:
 
     def test_load_spectrum_list_no_labels(self):
         self.spec_app.load_spectrum(self.spec_list)
-        assert len(self.spec_app.app.data_collection) == 4
+        assert len(self.spec_app.app.data_collection) == 5
         for i in (1, 2, 3):
             assert "specviz_data" in self.spec_app.app.data_collection[i].label
 
     def test_load_spectrum_list_with_labels(self):
         labels = ["List test 1", "List test 2", "List test 3"]
         self.spec_app.load_spectrum(self.spec_list, data_label=labels)
-        assert len(self.spec_app.app.data_collection) == 4
+        assert len(self.spec_app.app.data_collection) == 5
+
+    def test_load_multi_order_spectrum_list(self):
+        assert len(self.spec_app.app.data_collection) == 1
+        self.spec_app.load_spectrum(self.multi_order_spectrum_list)
+        assert len(self.spec_app.app.data_collection) == 12
 
     def test_mismatched_label_length(self):
         with pytest.raises(ValueError, match='Length'):

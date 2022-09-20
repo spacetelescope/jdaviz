@@ -11,7 +11,7 @@ from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import CCDData, StdDevUncertainty
 from astropy.wcs import WCS
-from specutils import Spectrum1D, SpectrumCollection
+from specutils import Spectrum1D, SpectrumCollection, SpectrumList
 
 from jdaviz import __version__, Cubeviz, Imviz, Mosviz, Specviz, Specviz2d
 
@@ -143,7 +143,9 @@ def spectrum1d():
             spec_axis.value/500) * u.Jy
     uncertainty = StdDevUncertainty(np.abs(np.random.randn(len(spec_axis.value))) * u.Jy)
 
-    return Spectrum1D(spectral_axis=spec_axis, flux=flux, uncertainty=uncertainty)
+    meta = dict(header=dict(FILENAME="jdaviz-test-file.fits"))
+
+    return Spectrum1D(spectral_axis=spec_axis, flux=flux, uncertainty=uncertainty, meta=meta)
 
 
 @pytest.fixture
@@ -153,6 +155,30 @@ def spectrum_collection(spectrum1d):
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
         result = SpectrumCollection.from_spectra(sc)
+    return result
+
+
+@pytest.fixture
+def multi_order_spectrum_list(spectrum1d, spectral_orders=10):
+    sc = []
+
+    for i in range(spectral_orders):
+        np.random.seed(42)
+
+        spec_axis = (np.arange(SPECTRUM_SIZE) + 6000 + i * SPECTRUM_SIZE) * u.AA
+        flux = (np.random.randn(len(spec_axis.value)) +
+                10 * np.exp(-0.002 * (spec_axis.value - 6563) ** 2) +
+                spec_axis.value / 500) * u.Jy
+        uncertainty = StdDevUncertainty(np.abs(np.random.randn(len(spec_axis.value))) * u.Jy)
+        meta = dict(header=dict(FILENAME="jdaviz-test-multi-order-file.fits"))
+        spectrum1d = Spectrum1D(spectral_axis=spec_axis, flux=flux,
+                                uncertainty=uncertainty, meta=meta)
+
+        sc.append(spectrum1d)
+
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        result = SpectrumList(sc)
     return result
 
 
