@@ -337,7 +337,8 @@ class ConfigHelper(HubListener):
             NOTE: Only applicable to a "sidecar" display.
 
         height: int, optional
-            The height of the top-level application widget, in pixels.
+            The height of the top-level application widget, in pixels. Applies to all
+            instances of the same application in the notebook.
 
         Notes
         -----
