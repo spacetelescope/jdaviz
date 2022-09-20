@@ -11,6 +11,8 @@ New Features
 
 - User-friendly API access to plugins. [#1401]
 
+- Added ability to set height of application widget using `show` method. [#1646]
+
 Cubeviz
 ^^^^^^^
 
@@ -77,6 +79,13 @@ Specviz2d
 
 Other Changes and Additions
 ---------------------------
+
+Cubeviz
+^^^^^^^
+
+- Changed the default layout to have only two image viewers, and enabled tabbing
+  and dragging the viewers. [#1646]
+
 
 2.10 (2022-08-26)
 =================
