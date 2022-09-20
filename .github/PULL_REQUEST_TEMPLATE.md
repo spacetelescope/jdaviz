@@ -23,7 +23,8 @@ Fixes #<Issue Number>
 ### Change log entry
 
 - [ ] Is a change log needed? If yes, is it added to `CHANGES.rst`? If you want to avoid merge conflicts,
-  list the proposed change log here for review and add to `CHANGES.rst` before merge.
+  list the proposed change log here for review and add to `CHANGES.rst` before merge. If no, maintainer
+  should add a `no-changelog-entry-needed` label.
 
 ### Checklist for package maintainer(s)
 <!-- This section is to be filled by package maintainer(s) who will
