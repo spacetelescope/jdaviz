@@ -323,15 +323,11 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             spectral_min, spectral_max = self.spectral_subset.selected_min_max(self._spectrum1d)
             self._window = u.Quantity([spectral_min, spectral_max])
 
-    @observe('model_comp_selected', 'poly_order')
-    def _update_comp_label_default(self, event={}):
+    def _default_comp_label(self, model, poly_order=None):
         abbrevs = {'BlackBody': 'BB', 'PowerLaw': 'PL', 'Lorentz1D': 'Lo'}
-        abbrev = abbrevs.get(self.model_comp_selected, self.model_comp_selected[0].upper())
-        if self.model_comp_selected == "Polynomial1D":
-            self.display_order = True
-            abbrev += f'{self.poly_order}'
-        else:
-            self.display_order = False
+        abbrev = abbrevs.get(model, model[0].upper())
+        if model == "Polynomial1D":
+            abbrev += f'{poly_order}'
 
         # append a number suffix to avoid any duplicates
         ind = 1
@@ -339,7 +335,13 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             abbrev = f'{abbrev.split("_")[0]}_{ind}'
             ind += 1
 
-        self.comp_label_default = abbrev
+        return abbrev
+
+    @observe('model_comp_selected', 'poly_order')
+    def _update_comp_label_default(self, event={}):
+        self.display_order = self.model_comp_selected == "Polynomial1D"
+        self.comp_label_default = self._default_comp_label(self.model_comp_selected,
+                                                           self.poly_order)
 
     @observe('comp_label')
     def _comp_label_changed(self, event={}):
@@ -392,7 +394,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             ``model_component``.
         model_component_label : str
             Name of the model component to add.  If not provided, will default according to
-            ``model_component_label``.
+            ``model_component_label`` (if ``model_component_label.auto`` is True and
+            ``model_component`` is passed as an argument, then the default label will be recomputed
+            rather than applying the current value).
         poly_order : int
             Order of the polynomial if ``model_component`` is (or defaults to) "Polynomial1D".
             Will raise an error if provided and ``model_component`` is not "Polynomial1D".
@@ -402,11 +406,18 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             self._dataset_selected_changed()
 
         model_comp = model_component if model_component is not None else self.model_comp_selected
-        comp_label = model_component_label if model_component_label is not None else self.comp_label
-        # TODO: should comp_label default based on model_comp override??
+
         if model_comp != "Polynomial1D" and poly_order is not None:
             raise ValueError("poly_order should only be passed if model_component is Polynomial1D")
         poly_order = poly_order if poly_order is not None else self.poly_order
+
+        # if model_component was passed and different than the one set in the traitlet, AND
+        # model_component_label is not passed, AND the auto is enabled on the label, then
+        # recompute a temporary default model label rather than use the value set in the traitlet
+        if model_comp != self.model_comp_selected and model_component_label is None and self.model_component_label.auto:  # noqa
+            comp_label = self._default_comp_label(model_comp, poly_order)
+        else:
+            comp_label = model_component_label if model_component_label is not None else self.comp_label  # noqa
 
         # validate provided label (only allow "word characters").   These should already be
         # stripped by JS in the UI element, but we'll confirm here (especially if this is ever
