@@ -54,6 +54,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     * ``poly_order``
     * ``model_component_label`` (:class:`~jdaviz.core.template_mixin.AutoLabel`)
     * :meth:`create_model_component`
+    * :meth:`remove_model_component`
     * ``equation`` (:class:`~jdaviz.core.template_mixin.AutoLabel`)
     * ``add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
     * ``cube_fit``
@@ -137,7 +138,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         if self.config == "cubeviz":
             expose += ['spatial_subset']
         expose += ['spectral_subset', 'model_component', 'poly_order', 'model_component_label',
-                   'create_model_component', 'equation', 'add_results']
+                   'create_model_component', 'remove_model_component', 'equation', 'add_results']
         if self.config == "cubeviz":
             expose += ['cube_fit']
         expose += ['calculate_fit']
@@ -484,15 +485,29 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self._update_comp_label_default()
         self._update_model_equation_default()
 
+    def remove_model_component(self, model_component_label):
+        """
+        Remove an existing model component.
+
+        Parameters
+        ----------
+        model_component_label : str
+            The label given to the existing model component
+        """
+        if model_component_label not in [x["id"] for x in self.component_models]:
+            raise ValueError(f"model component with label '{model_component_label}' does not exist")
+
+        self.component_models = [x for x in self.component_models
+                                 if x["id"] != model_component_label]
+        del self._initialized_models[model_component_label]
+        self._update_comp_label_default()
+        self._update_model_equation_default()
+
     def vue_add_model(self, event):
         self.create_model_component()
 
     def vue_remove_model(self, event):
-        self.component_models = [x for x in self.component_models
-                                 if x["id"] != event]
-        del self._initialized_models[event]
-        self._update_comp_label_default()
-        self._update_model_equation_default()
+        self.remove_model_component(event)
 
     @observe('model_equation')
     def _model_equation_changed(self, event):
