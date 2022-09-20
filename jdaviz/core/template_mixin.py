@@ -34,7 +34,7 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'PlotOptionsSyncState']
 
 
-def show_widget(widget, loc, title):  # pragma: no cover
+def show_widget(widget, loc, title, height=None):  # pragma: no cover
     from IPython import get_ipython
     from IPython.display import display
 
@@ -50,6 +50,12 @@ def show_widget(widget, loc, title):  # pragma: no cover
                            "'jdaviz --help' outside of Python.\n\n"
                            "To learn more, see our documentation at: "
                            "https://jdaviz.readthedocs.io")
+
+    if height is not None:
+        if isinstance(height, int):
+            height = f"{height}px"
+        widget.layout.height = height
+        widget.state.settings['context']['notebook']['max_height'] = height
 
     if loc == "inline":
         display(widget)
