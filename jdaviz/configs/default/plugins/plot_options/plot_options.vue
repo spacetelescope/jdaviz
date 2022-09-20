@@ -58,13 +58,13 @@
       :hint="multiselect ? 'Select layers to set options simultaneously' : 'Select the data or subset to set options.'"
     />
 
-    <j-plugin-section-header v-if="layer_selected.length">Layer Visibility</j-plugin-section-header>
-    <glue-state-sync-wrapper :sync="layer_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('layer_visible')">
+    <j-plugin-section-header v-if="layer_selected.length && (line_visible_sync.in_subscribed_states || subset_visible_sync.in_subscribed_states)">Layer Visibility</j-plugin-section-header>
+    <glue-state-sync-wrapper :sync="line_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('line_visible')">
       <span>
-        <v-btn icon @click.stop="layer_visible_value = !layer_visible_value">
-          <v-icon>mdi-eye{{ layer_visible_value ? '' : '-off' }}</v-icon>
+        <v-btn icon @click.stop="line_visible_value = !line_visible_value">
+          <v-icon>mdi-eye{{ line_visible_value ? '' : '-off' }}</v-icon>
         </v-btn>
-        Show Layer
+        Show Line
       </span>
     </glue-state-sync-wrapper>
 
@@ -109,7 +109,7 @@
       ></v-select>
     </glue-state-sync-wrapper>
 
-    <glue-state-sync-wrapper v-if="layer_visible_value" :sync="line_color_sync" :multiselect="multiselect" @unmix-state="unmix_state('line_color')">
+    <glue-state-sync-wrapper v-if="line_visible_value" :sync="line_color_sync" :multiselect="multiselect" @unmix-state="unmix_state('line_color')">
       <div>
         <v-subheader class="pl-0 slider-label" style="height: 12px">Line Color</v-subheader>
         <v-menu>
@@ -127,25 +127,25 @@
       </div>
     </glue-state-sync-wrapper>
     
-    <glue-state-sync-wrapper v-if="layer_visible_value" :sync="line_width_sync" :multiselect="multiselect" @unmix-state="unmix_state('line_width')">
+    <glue-state-sync-wrapper v-if="line_visible_value" :sync="line_width_sync" :multiselect="multiselect" @unmix-state="unmix_state('line_width')">
       <glue-float-field label="Line Width" :value.sync="line_width_value" />
     </glue-state-sync-wrapper>
 
-    <glue-state-sync-wrapper v-if="layer_visible_value" :sync="line_opacity_sync" :multiselect="multiselect" @unmix-state="unmix_state('line_opacity')">
+    <glue-state-sync-wrapper v-if="line_visible_value" :sync="line_opacity_sync" :multiselect="multiselect" @unmix-state="unmix_state('line_opacity')">
       <div>
         <v-subheader class="pl-0 slider-label" style="height: 12px">Line Opacity</v-subheader>
         <glue-throttled-slider wait="300" max="1" step="0.01" :value.sync="line_opacity_value" hide-details class="no-hint" />
       </div>
     </glue-state-sync-wrapper>
 
-    <glue-state-sync-wrapper v-if="layer_visible_value" :sync="as_steps_sync" :multiselect="multiselect" @unmix-state="unmix_state('as_steps')">
+    <glue-state-sync-wrapper v-if="line_visible_value" :sync="as_steps_sync" :multiselect="multiselect" @unmix-state="unmix_state('as_steps')">
       <v-switch
         v-model="as_steps_value"
         label="Plot profile as steps"
         />
     </glue-state-sync-wrapper>
 
-    <glue-state-sync-wrapper v-if="config !== 'cubeviz' && layer_visible_value" :sync="uncertainty_sync" :multiselect="multiselect" @unmix-state="unmix_state('uncertainty')">
+    <glue-state-sync-wrapper v-if="config !== 'cubeviz' && line_visible_value" :sync="uncertainty_sync" :multiselect="multiselect" @unmix-state="unmix_state('uncertainty')">
       <v-switch
         v-model="uncertainty_value"
         label="Plot uncertainties"

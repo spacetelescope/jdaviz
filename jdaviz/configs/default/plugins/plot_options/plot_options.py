@@ -32,7 +32,6 @@ class PlotOptions(PluginTemplateMixin):
     * ``viewer`` (:class:`~jdaviz.core.template_mixin.ViewerSelect`):
     * ``layer`` (:class:`~jdaviz.core.template_mixin.LayerSelect`):
     * :meth:`select_all`
-    * ``layer_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`)
     * ``subset_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       whether a subset should be visible.
     * ``subset_color`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
@@ -40,6 +39,8 @@ class PlotOptions(PluginTemplateMixin):
     * ``axes_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`)
     * ``collapse_function`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       only exposed for Cubeviz
+    * ``line_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not exposed for Imviz
     * ``line_color`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Imviz
     * ``line_width`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
@@ -96,8 +97,8 @@ class PlotOptions(PluginTemplateMixin):
     layer_selected = Any().tag(sync=True)  # Any needed for multiselect
 
     # profile/line viewer/layer options:
-    layer_visible_value = Bool().tag(sync=True)
-    layer_visible_sync = Dict().tag(sync=True)
+    line_visible_value = Bool().tag(sync=True)
+    line_visible_sync = Dict().tag(sync=True)
 
     collapse_func_value = Unicode().tag(sync=True)
     collapse_func_sync = Dict().tag(sync=True)
@@ -211,9 +212,9 @@ class PlotOptions(PluginTemplateMixin):
             return not is_spatial_subset(state)
 
         # Profile/line viewer/layer options:
-        self.layer_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'visible',
-                                                  'layer_visible_value', 'layer_visible_sync',
-                                                  state_filter=is_not_subset)
+        self.line_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'visible',
+                                                 'line_visible_value', 'line_visible_sync',
+                                                 state_filter=is_profile)
         self.collapse_function = PlotOptionsSyncState(self, self.viewer, self.layer, 'function',
                                                       'collapse_func_value', 'collapse_func_sync')
         self.line_color = PlotOptionsSyncState(self, self.viewer, self.layer, 'color',
@@ -293,13 +294,12 @@ class PlotOptions(PluginTemplateMixin):
 
     @property
     def user_api(self):
-        expose = ['multiselect', 'viewer', 'layer', 'select_all',
-                  'layer_visible', 'subset_visible']
+        expose = ['multiselect', 'viewer', 'layer', 'select_all', 'subset_visible']
         if self.config == "cubeviz":
             expose += ['collapse_function']
         if self.config != "imviz":
-            expose += ['axes_visible', 'line_color', 'line_width', 'line_opacity', 'as_steps',
-                       'uncertainty']
+            expose += ['axes_visible', 'line_visible', 'line_color', 'line_width', 'line_opacity',
+                       'as_steps', 'uncertainty']
         if self.config != "specviz":
             expose += ['subset_color',
                        'stretch_func', 'stretch_preset', 'stretch_vmin', 'stretch_vmax',
