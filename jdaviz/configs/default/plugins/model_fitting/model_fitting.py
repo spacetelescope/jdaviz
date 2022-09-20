@@ -55,6 +55,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     * ``model_component_label`` (:class:`~jdaviz.core.template_mixin.AutoLabel`)
     * :meth:`create_model_component`
     * :meth:`remove_model_component`
+    * :meth:`model_components`
+    * :meth:`get_model_component`
+    * :meth:`set_model_component`
     * ``equation`` (:class:`~jdaviz.core.template_mixin.AutoLabel`)
     * ``add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
     * ``cube_fit``
@@ -138,7 +141,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         if self.config == "cubeviz":
             expose += ['spatial_subset']
         expose += ['spectral_subset', 'model_component', 'poly_order', 'model_component_label',
-                   'create_model_component', 'remove_model_component', 'equation', 'add_results']
+                   'model_components', 'create_model_component', 'remove_model_component',
+                   'get_model_component', 'set_model_component',
+                   'equation', 'add_results']
         if self.config == "cubeviz":
             expose += ['cube_fit']
         expose += ['calculate_fit']
@@ -502,6 +507,85 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         del self._initialized_models[model_component_label]
         self._update_comp_label_default()
         self._update_model_equation_default()
+
+    def get_model_component(self, model_component_label, parameter=None):
+        """
+        Get a (read-only) dictionary representation of an existing model component.
+
+        Parameters
+        ----------
+        model_component_label : str
+            The label given to the existing model component
+        parameter : str
+            Optional.  The name of a valid parameter in the model component, in which case only
+            the information on that parameter is returned.
+        """
+        try:
+            model_component = [x for x in self.component_models
+                               if x["id"] == model_component_label][0]
+        except IndexError:
+            raise ValueError(f"'{model_component_label}' is not a label of an existing model component")  # noqa
+
+        comp = {"model_type": model_component['model_type'],
+                "parameters": {p['name']: {'value': p['value'],
+                                           'unit': p['unit'],
+                                           'fixed': p['fixed']} for p in model_component['parameters']}}  # noqa
+
+        if parameter is not None:
+            return comp['parameters'].get(parameter)
+        return comp
+
+    def set_model_component(self, model_component_label, parameter, value=None, fixed=None):
+        """
+        Set the value or fixed attribute of a parameter in an existing model component.
+
+        Parameters
+        ----------
+        model_component_label : str
+            The label given to the existing model component
+        parameter : str
+            The name of a valid parameter in the model component.
+        value : float
+            Optional.  The new initial value of the parameter.  If not provided or None, will
+            remain unchanged.
+        fixed : bool
+            Optional.  The new state of the fixed attribute of the parameter.  If not provided
+            or None, will remain unchanged.
+
+        Returns
+        -------
+        updated dictionary of the parameter representation
+        """
+        cms = self.component_models
+        try:
+            model_component = [x for x in cms if x["id"] == model_component_label][0]
+        except IndexError:
+            raise ValueError(f"'{model_component_label}' is not a label of an existing model component")  # noqa
+        try:
+            parameter = [p for p in model_component['parameters'] if p['name'] == parameter][0]
+        except IndexError:
+            raise ValueError(f"'{parameter}' is not the name of a parameter in the '{model_component_label}' model component")  # noqa
+
+        if value is not None:
+            if not isinstance(value, (int, float)):
+                raise TypeError("value must be a float")
+            parameter['value'] = value
+        if fixed is not None:
+            if not isinstance(fixed, bool):
+                raise TypeError("fixed must be a boolean")
+            parameter['fixed'] = fixed
+
+        self.component_models = []
+        self.component_models = cms
+
+        return parameter
+
+    @property
+    def model_components(self):
+        """
+        List of the labels of existing model components
+        """
+        return [x["id"] for x in self.component_models]
 
     def vue_add_model(self, event):
         self.create_model_component()
