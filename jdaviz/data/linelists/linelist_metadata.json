@@ -30,7 +30,7 @@
   "Atomic/Ionic": {
     "units": "micron",
     "filename_base": "Atomic-Ionic",
-    "Citations/Notes": "Split from Atomic/Ionic Fine STructure. JWST Line Lists: The lists and suggested means of implementing them in JWST data analysis software\n A.P.Marston, 30 March 2017\n https://stsci.slack.com/files/anmarston/F4UR94WUX/jwst_line_list.pdf"
+    "Citations/Notes": "Split from Atomic/Ionic Fine Structure. JWST Line Lists: The lists and suggested means of implementing them in JWST data analysis software\n A.P.Marston, 30 March 2017\n https://stsci.slack.com/files/anmarston/F4UR94WUX/jwst_line_list.pdf"
   },
   "Atomic-ISO": {
     "units": "micron",
