@@ -26,6 +26,8 @@ Cubeviz
 
 - Added ability to select spatial subset collapsed spectrum for Line Analysis. [#1583]
 
+- Increased size of Cubeviz configuration from 600px to 860px. [#1638]
+
 Imviz
 ^^^^^
 
