@@ -130,3 +130,38 @@ def test_register_cube_model(cubeviz_helper, spectrum1d_cube):
     assert modelfit_plugin.results_label == test_label
     modelfit_plugin.calculate_fit()
     assert test_label in cubeviz_helper.app.data_collection
+
+
+@pytest.mark.filterwarnings('ignore')
+def test_user_api(specviz_helper, spectrum1d):
+    specviz_helper.load_data(spectrum1d)
+    p = specviz_helper.plugins['Model Fitting']
+
+    # even though the default label is set to C, adding Linear1D should default to its automatic
+    # default label of 'L'
+    assert p.model_component_label.value == 'C'
+    p.create_model_component('Linear1D')
+    assert p.model_components == ['L']
+
+    with pytest.raises(ValueError, match='poly_order should only be passed if model_component is Polynomial1D'):  # noqa
+        p.create_model_component('Linear1D', poly_order=2)
+
+    with pytest.raises(ValueError, match="model component label 'L' already in use"):
+        p.create_model_component('Linear1D', 'L')
+
+    with pytest.raises(ValueError, match="model component with label 'dne' does not exist"):
+        p.remove_model_component('dne')
+
+    p.remove_model_component('L')
+    assert len(p.model_components) == 0
+
+    p.create_model_component('Polynomial1D', poly_order=2)
+    assert p.model_components == ['P2']
+
+    with pytest.raises(ValueError, match="'dne' is not a label of an existing model component"):
+        p.get_model_component('dne')
+
+    p.get_model_component('P2')
+    p.set_model_component('P2', 'c0', value=0.2, fixed=True)
+    assert p.get_model_component('P2', 'c0')['value'] == 0.2
+    assert p.get_model_component('P2', 'c0')['fixed'] is True
