@@ -142,7 +142,7 @@
                 </j-tooltip>
               </v-col>
               <v-col cols=8>
-                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ item }}</div>
+                <div>{{ item }}</div>
               </v-col>
 
 
