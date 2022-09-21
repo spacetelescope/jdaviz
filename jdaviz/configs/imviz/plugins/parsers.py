@@ -15,8 +15,10 @@ from jdaviz.core.registries import data_parser_registry
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.utils import standardize_metadata, PRIHDR_KEY
 
-from roman_datamodels import datamodels as rdd
-
+try:
+    from roman_datamodels import datamodels as rdd
+except ImportError:
+    rdd = None
 
 __all__ = ['parse_data']
 
@@ -44,9 +46,10 @@ def parse_data(app, file_obj, ext=None, data_label=None):
 
     """
     if isinstance(file_obj, str):
+        file_obj_lower = file_obj.lower()
         if data_label is None:
             data_label = os.path.splitext(os.path.basename(file_obj))[0]
-        if file_obj.lower().endswith(('.jpg', '.jpeg', '.png')):
+        if file_obj_lower.endswith(('.jpg', '.jpeg', '.png')):
             from skimage.io import imread
             from skimage.color import rgb2gray, rgba2rgb
             im = imread(file_obj)
@@ -56,18 +59,18 @@ def parse_data(app, file_obj, ext=None, data_label=None):
                 pf = rgb2gray(im)
             pf = pf[::-1, :]  # Flip it
             _parse_image(app, pf, data_label, ext=ext)
-        elif file_obj.lower().endswith('.fits'):
+        elif file_obj_lower.endswith('.fits'):
             with fits.open(file_obj) as pf:
                 _parse_image(app, pf, data_label, ext=ext)
-        elif file_obj.lower().endswith('.asdf'):
-            try:
+        elif file_obj_lower.endswith('.asdf'):
+            if rdd is not None:
                 pf = rdd.open(file_obj)
                 _parse_image(app, pf, data_label, ext=ext)
-            except:
+            else:
                 with asdf.open(file_obj) as pf:
                     _parse_image(app, pf, data_label, ext=ext)
         else:
-            raise NotImplementedError('File extension is not implemented.')
+            raise NotImplementedError(f'File extension is not implemented: {file_obj}')
     else:
         _parse_image(app, file_obj, data_label, ext=ext)
 
@@ -76,8 +79,6 @@ def get_image_data_iterator(app, file_obj, data_label, ext=None):
     """This function is for internal use, so other viz can also extract image data
     like Imviz does.
     """
-
-    print(type(file_obj))
 
     if isinstance(file_obj, fits.HDUList):
         if 'ASDF' in file_obj:  # JWST ASDF-in-FITS
@@ -123,10 +124,7 @@ def get_image_data_iterator(app, file_obj, data_label, ext=None):
         data_iter = _hdu_to_glue_data(file_obj, data_label)
 
     # Roman 2-D datamodels
-    elif isinstance(file_obj, (rdd.ImageModel, rdd.RampModel, rdd.RampFitOutputModel, rdd.FlatRefModel,
-                               rdd.GainRefModel, rdd.LinearityRefModel,
-                               rdd.MaskRefModel, rdd.PixelareaRefModel, rdd.ReadnoiseRefModel,
-                               rdd.SaturationRefModel, rdd.SuperbiasRefModel)):
+    elif rdd is not None and issubclass(file_obj, rdd.DataModel):
         data_iter = _roman_2d_asdf_to_glue_data(file_obj, data_label)
 
     elif isinstance(file_obj, NDData):
@@ -302,11 +300,13 @@ def _roman_2d_asdf_to_glue_data(file_obj, data_label):
         bunit = ''
         component = Component.autotyped(np.array(getattr(file_obj, ext)), units=bunit)
         data.add_component(component=component, label=comp_label)
-        data.coords = getattr(getattr(file_obj, 'meta'), 'wcs')
+        meta = getattr(file_obj, 'meta')
+        data.coords = getattr(meta, 'wcs')
+        data.meta.update(dict(meta))
 
         yield data, new_data_label
 
-# ---- Functions that handle input from non-Roman ASDF files -----
+# ---- Functions that handle input from non-JWST and non-Roman files -----
 
 
 # ---- Functions that handle input from non-JWST FITS files -----
