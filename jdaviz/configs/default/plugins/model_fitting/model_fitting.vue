@@ -35,6 +35,7 @@
     <v-form v-model="form_valid_model_component">
       <v-row v-if="model_comp_items">
         <v-select
+          attach
           :menu-props="{ left: true }"
           :items="model_comp_items.map(i => i.label)"
           v-model="model_comp_selected"

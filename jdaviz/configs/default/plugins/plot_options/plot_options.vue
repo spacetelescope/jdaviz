@@ -101,6 +101,7 @@
     <glue-state-sync-wrapper v-if="config === 'cubeviz'" :sync="collapse_func_sync" :multiselect="multiselect" @unmix-state="unmix_state('function')">
       <v-select
         :menu-props="{ left: true }"
+        attach
         :items="collapse_func_sync.choices"
         v-model="collapse_func_value"
         label="Collapse Function"
@@ -157,6 +158,7 @@
     <j-plugin-section-header v-if="stretch_function_sync.in_subscribed_states">Stretch</j-plugin-section-header>
     <glue-state-sync-wrapper :sync="stretch_function_sync" :multiselect="multiselect" @unmix-state="unmix_state('stretch_function')">
       <v-select
+        attach
         :menu-props="{ left: true }"
         :items="stretch_function_sync.choices"
         v-model="stretch_function_value"
@@ -167,6 +169,7 @@
 
     <glue-state-sync-wrapper :sync="stretch_preset_sync" :multiselect="multiselect" @unmix-state="unmix_state('stretch_preset')">
       <v-select
+        attach
         :menu-props="{ left: true }"
         :items="stretch_preset_sync.choices"
         v-model="stretch_preset_value"
@@ -197,6 +200,7 @@
     <div v-if="image_visible_sync.in_subscribed_states && image_visible_value">
       <glue-state-sync-wrapper :sync="image_color_mode_sync" :multiselect="multiselect" @unmix-state="unmix_state('image_color_mode')">
         <v-select
+          attach
           :menu-props="{ left: true }"
           :items="image_color_mode_sync.choices"
           v-model="image_color_mode_value"
@@ -209,6 +213,7 @@
 
       <glue-state-sync-wrapper v-if="image_color_mode_value === 'Colormaps'" :sync="image_colormap_sync" :multiselect="multiselect" @unmix-state="unmix_state('image_colormap')">
         <v-select
+          attach
           :menu-props="{ left: true }"
           :items="image_colormap_sync.choices"
           v-model="image_colormap_value"

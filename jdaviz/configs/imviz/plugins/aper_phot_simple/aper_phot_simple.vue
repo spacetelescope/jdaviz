@@ -103,6 +103,7 @@
         <v-row>
           <v-select
             :menu-props="{ left: true }"
+            attach
             :items="plot_types"
             v-model="current_plot_type"
             label="Plot Type"
