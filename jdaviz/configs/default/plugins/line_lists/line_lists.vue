@@ -94,6 +94,7 @@
     <j-plugin-section-header>Preset Line Lists</j-plugin-section-header>
     <v-row>
       <v-select
+        :menu-props="{ left: true }"
         :items="available_lists"
         @change="list_selected"
         label="Available Line Lists"
