@@ -93,13 +93,13 @@
   
     <j-plugin-section-header>Preset Line Lists</j-plugin-section-header>
     <v-row>
-      <v-combobox
+      <v-select
         :items="available_lists"
         @change="list_selected"
         label="Available Line Lists"
         hint="Select a line list to load. Toggle visibility of loaded lines in section below."
         persistent-hint
-      ></v-combobox>
+      ></v-select>
     </v-row>
 
     <v-row justify="end">
