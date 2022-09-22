@@ -124,7 +124,7 @@ def get_image_data_iterator(app, file_obj, data_label, ext=None):
         data_iter = _hdu_to_glue_data(file_obj, data_label)
 
     # Roman 2-D datamodels
-    elif rdd is not None and issubclass(file_obj, rdd.DataModel):
+    elif rdd is not None and issubclass(file_obj.__class__, rdd.DataModel):
         data_iter = _roman_2d_asdf_to_glue_data(file_obj, data_label)
 
     elif isinstance(file_obj, NDData):
