@@ -74,7 +74,7 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
                 for ext, viewer_name in (('SCI', flux_viewer_reference_name),
                                          ('ERR', uncert_viewer_reference_name),
                                          ('DQ', None)):
-                    data_label = f'{file_name}[{ext}]'
+                    data_label = app.return_data_label(file_name, ext)
                     _parse_jwst_s3d(
                         app, hdulist, data_label, ext=ext, viewer_name=viewer_name,
                         flux_viewer_reference_name=flux_viewer_reference_name,
@@ -84,13 +84,12 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
                 for ext, viewer_name in (('DATA', flux_viewer_reference_name),
                                          ('ERR', uncert_viewer_reference_name),
                                          ('QUALITY', None)):
-                    data_label = f'{file_name}[{ext}]'
+                    data_label = app.return_data_label(file_name, ext)
                     _parse_esa_s3d(
                         app, hdulist, data_label, ext=ext, viewer_name=viewer_name,
                         flux_viewer_reference_name=flux_viewer_reference_name,
                         spectrum_viewer_reference_name=spectrum_viewer_reference_name
                     )
-
             else:
                 _parse_hdulist(
                     app, hdulist, file_name=data_label or file_name,
@@ -183,7 +182,7 @@ def _parse_hdulist(app, hdulist, file_name=None,
             continue
 
         is_loaded.append(data_type)
-        data_label = f"{file_name}[{hdu.name}]"
+        data_label = app.return_data_label(file_name, hdu.name)
 
         if data_type == 'flux':
             wcs = WCS(hdu.header, hdulist)
@@ -346,7 +345,7 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None,
             s1d = Spectrum1D(flux=flux, wcs=file_obj.wcs,
                              meta=standardize_metadata(file_obj.meta))
 
-        cur_data_label = f"{data_label}[{attr.upper()}]"
+        cur_data_label = app.return_data_label(data_label, attr.upper())
         app.add_data(s1d, cur_data_label)
 
         if attr == 'flux':
@@ -361,13 +360,13 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None,
 
 def _parse_spectrum1d(app, file_obj, data_label=None, spectrum_viewer_reference_name=None):
     if data_label is None:
-        data_label = "Unknown spectrum object"
+        data_label = app.return_data_label(file_obj)
 
     # TODO: glue-astronomy translators only look at the flux property of
     #  specutils Spectrum1D objects. Fix to support uncertainties and masks.
 
-    app.add_data(file_obj, f"{data_label}[FLUX]")
-    app.add_data_to_viewer(spectrum_viewer_reference_name, f"{data_label}[FLUX]")
+    app.add_data(file_obj, data_label)
+    app.add_data_to_viewer(spectrum_viewer_reference_name, data_label)
 
 
 def _get_data_type_by_hdu(hdu):
