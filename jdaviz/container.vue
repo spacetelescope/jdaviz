@@ -19,7 +19,7 @@
     <gl-component
       v-for="(viewer, index) in stack.viewers"
       :key="viewer.id"
-      :title="viewer.id"
+      :title="viewer.config === 'cubeviz' ? viewer.name : viewer.id"
       :tab-id="viewer.id"
       @resize="$emit('resize')"
       @destroy="destroy($event, viewer.id)"
