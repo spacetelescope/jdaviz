@@ -48,6 +48,12 @@ the tool should be flexible enough to read in data from many astronomical telesc
 Installing
 ----------
 
+You may want to consider installing ``jdaviz`` in a new virtual or conda environment to avoid 
+version conflicts with other packages you may have installed, for example::
+
+   conda create -n jdaviz-env python=3.9
+   conda activate jdaviz-env
+
 Installing the released version can be done using pip::
 
    pip install jdaviz --upgrade
