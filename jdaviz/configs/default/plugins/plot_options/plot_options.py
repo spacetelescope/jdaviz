@@ -48,9 +48,9 @@ class PlotOptions(PluginTemplateMixin):
       not exposed for Imviz
     * ``line_opacity`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Imviz
-    * ``as_steps`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+    * ``line_as_steps`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Imviz
-    * ``uncertainty`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+    * ``uncertainty_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Imviz
     * ``stretch_function`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Specviz
@@ -113,11 +113,11 @@ class PlotOptions(PluginTemplateMixin):
     line_opacity_value = Float().tag(sync=True)
     line_opacity_sync = Dict().tag(sync=True)
 
-    as_steps_value = Bool().tag(sync=True)
-    as_steps_sync = Dict().tag(sync=True)
+    line_as_steps_value = Bool().tag(sync=True)
+    line_as_steps_sync = Dict().tag(sync=True)
 
-    uncertainty_value = Int().tag(sync=True)
-    uncertainty_sync = Dict().tag(sync=True)
+    uncertainty_visible_value = Int().tag(sync=True)
+    uncertainty_visible_sync = Dict().tag(sync=True)
 
     # image viewer/layer options
     stretch_function_value = Unicode().tag(sync=True)
@@ -226,10 +226,10 @@ class PlotOptions(PluginTemplateMixin):
         self.line_opacity = PlotOptionsSyncState(self, self.viewer, self.layer, 'alpha',
                                                  'line_opacity_value', 'line_opacity_sync',
                                                  state_filter=is_profile)
-        self.as_steps = PlotOptionsSyncState(self, self.viewer, self.layer, 'as_steps',
-                                             'as_steps_value', 'as_steps_sync')
-        self.uncertainty = PlotOptionsSyncState(self, self.viewer, self.layer, 'show_uncertainty',
-                                                'uncertainty_value', 'uncertainty_sync')
+        self.line_as_steps = PlotOptionsSyncState(self, self.viewer, self.layer, 'as_steps',
+                                                  'line_as_steps_value', 'line_as_steps_sync')
+        self.uncertainty_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'show_uncertainty',  # noqa
+                                                        'uncertainty_visible_value', 'uncertainty_visible_sync')  # noqa
 
         # Image viewer/layer options:
         self.stretch_function = PlotOptionsSyncState(self, self.viewer, self.layer, 'stretch',
@@ -300,7 +300,7 @@ class PlotOptions(PluginTemplateMixin):
             expose += ['collapse_function']
         if self.config != "imviz":
             expose += ['axes_visible', 'line_visible', 'line_color', 'line_width', 'line_opacity',
-                       'as_steps', 'uncertainty']
+                       'line_as_steps', 'uncertainty_visible']
         if self.config != "specviz":
             expose += ['subset_color',
                        'stretch_function', 'stretch_preset', 'stretch_vmin', 'stretch_vmax',

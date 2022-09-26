@@ -138,16 +138,16 @@
       </div>
     </glue-state-sync-wrapper>
 
-    <glue-state-sync-wrapper v-if="line_visible_value" :sync="as_steps_sync" :multiselect="multiselect" @unmix-state="unmix_state('as_steps')">
+    <glue-state-sync-wrapper v-if="line_visible_value" :sync="line_as_steps_sync" :multiselect="multiselect" @unmix-state="unmix_state('line_as_steps')">
       <v-switch
-        v-model="as_steps_value"
+        v-model="line_as_steps_value"
         label="Plot profile as steps"
         />
     </glue-state-sync-wrapper>
 
-    <glue-state-sync-wrapper v-if="config !== 'cubeviz' && line_visible_value" :sync="uncertainty_sync" :multiselect="multiselect" @unmix-state="unmix_state('uncertainty')">
+    <glue-state-sync-wrapper v-if="config !== 'cubeviz' && line_visible_value" :sync="uncertainty_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('uncertainty_visible')">
       <v-switch
-        v-model="uncertainty_value"
+        v-model="uncertainty_visible_value"
         label="Plot uncertainties"
         />
     </glue-state-sync-wrapper>
