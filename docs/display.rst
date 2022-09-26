@@ -13,6 +13,11 @@ that is the tool will show underneath the notebook cell it was called from::
     imviz.show()
     imviz.load_data('filename.fits')
 
+The height of the application in the notebook can be changed by passing an integer
+specifying the height in pixels to the ``height`` argument of ``show``, for example::
+
+    imviz.show(height=800)
+
 You can additionally specify the location with the ``loc`` argument.
 For example, ``inline`` can be specified manually with::
 
