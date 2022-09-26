@@ -35,6 +35,7 @@
     <v-form v-model="form_valid_model_component">
       <v-row v-if="available_comps">
         <v-select
+          :menu-props="{ left: true }"
           :items="available_comps"
           v-model="comp_selected"
           label="Model Component"

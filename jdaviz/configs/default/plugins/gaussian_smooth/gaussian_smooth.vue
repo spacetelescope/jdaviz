@@ -16,6 +16,7 @@
 
       <v-row v-if="show_modes">
         <v-select
+          :menu-props="{ left: true }"
           :items="smooth_modes"
           v-model="selected_mode"
           label="Smoothing Type"

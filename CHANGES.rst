@@ -19,6 +19,8 @@ New Features
   in accordance to the metadata entry. Lists without medium information
   are removed, until such information can be verified [#1626]
 
+- Add Common Galactic line lists, split Atomic/Ionic list with verified medium info [#1656]
+
 Cubeviz
 ^^^^^^^
 

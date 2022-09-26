@@ -9,10 +9,28 @@
     "filename_base": "Common_nebular",
     "Citations/Notes": " Common nebular lines.\n\n Copyright (C) 1999-2004 by Christian Buil\n http://www.astrosurf.com/buil/us/spe2/hresol5.htm"
   },
+  "Common Galactic 700A-2000A": {
+    "units": "Angstrom",
+    "medium": "vacuum",
+    "filename_base": "Common_Galactic_700A-2000A",
+    "Citations/Notes": "http://astronomy.nmsu.edu/drewski/tableofemissionlines.html"
+  },
+  "Common Galactic 2000A-11000A": {
+    "units": "Angstrom",
+    "medium": "air",
+    "filename_base": "Common_Galactic_2000A-11000A",
+    "Citations/Notes": "http://astronomy.nmsu.edu/drewski/tableofemissionlines.html"
+  },
+  "Atomic/Ionic Fine Structure": {
+    "units": "micron",
+    "medium": "vacuum",
+    "filename_base": "Atomic-Ionic_FineStructure",
+    "Citations/Notes": "https://www.mpe.mpg.de/ir/ISO/linelists/FSlines.html"
+  },
   "Atomic/Ionic": {
     "units": "micron",
     "filename_base": "Atomic-Ionic",
-    "Citations/Notes": "https://www.mpe.mpg.de/ir/ISO/linelists/FSlines.html. JWST Line Lists: The lists and suggested means of implementing them in JWST data analysis software\n A.P.Marston, 30 March 2017\n https://stsci.slack.com/files/anmarston/F4UR94WUX/jwst_line_list.pdf"
+    "Citations/Notes": "Split from Atomic/Ionic Fine Structure. JWST Line Lists: The lists and suggested means of implementing them in JWST data analysis software\n A.P.Marston, 30 March 2017\n https://stsci.slack.com/files/anmarston/F4UR94WUX/jwst_line_list.pdf"
   },
   "Atomic-ISO": {
     "units": "micron",
