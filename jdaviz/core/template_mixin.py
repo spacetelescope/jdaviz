@@ -281,14 +281,14 @@ class BasePluginComponent(HubListener):
     def viewer_dicts(self):
         def _dict_from_viewer(viewer, viewer_item):
             d = {'viewer': viewer,
-                 'id': viewer_item['id'],
-                 'icon': self.app.state.viewer_icons.get(viewer_item['id'])}
+                 'id': viewer_item.get('id'),
+                 'icon': self.app.state.viewer_icons.get(viewer_item.get('id'))}
             if viewer_item.get('reference') is not None:
-                d['reference'] = viewer_item['reference']
-                d['label'] = viewer_item['reference']
+                d['reference'] = viewer_item.get('reference')
+                d['label'] = viewer_item.get('reference')
             else:
                 d['reference'] = None
-                d['label'] = viewer_item['id']
+                d['label'] = viewer_item.get('id')
 
             return d
 
@@ -663,7 +663,13 @@ class LayerSelect(SelectPluginComponent):
         viewers = [self._get_viewer(viewer) for viewer in viewer_names]
 
         manual_items = [{'label': label} for label in self.manual_options]
-        layers = [layer for viewer in viewers for layer in viewer.layers]
+        # layers = [layer for viewer in viewers for layer in viewer.layers]
+        layers = []
+        for viewer in viewers:
+            if hasattr(viewer, "layers"):
+                for layer in viewer.layers:
+                    layers.append(layer)
+
         # remove duplicates - NOTE: by doing this, any color-mismatch between layers with the
         # same name in different viewers will be randomly assigned within plot_options
         # based on which was found _first.

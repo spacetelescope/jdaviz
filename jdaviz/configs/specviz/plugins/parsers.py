@@ -76,10 +76,12 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
 
     # If there's already data in the viewer, convert units if needed
     current_unit = None
-    current_spec = app.get_data_from_viewer("spectrum-viewer")
-    if current_spec != {} and current_spec is not None:
-        spec_key = list(current_spec.keys())[0]
-        current_unit = current_spec[spec_key].spectral_axis.unit
+    if "spectrum-viewer" in app.get_viewer_reference_names():
+        current_spec = app.get_data_from_viewer("spectrum-viewer")
+        if current_spec != {} and current_spec is not None:
+            spec_key = list(current_spec.keys())[0]
+            current_unit = current_spec[spec_key].spectral_axis.unit
+
     with app.data_collection.delay_link_manager_update():
 
         # these are used to build a combined spectrum with all

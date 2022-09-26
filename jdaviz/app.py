@@ -574,7 +574,7 @@ class Application(VuetifyTemplate, HubListener):
         """Like :meth:`get_viewer` but use ID instead of reference name.
         This is useful when reference name is `None`.
         """
-        return self._viewer_store[vid]
+        return self._viewer_store.get(vid)
 
     def get_data_from_viewer(self, viewer_reference, data_label=None,
                              cls='default', include_subsets=True):
@@ -1112,6 +1112,7 @@ class Application(VuetifyTemplate, HubListener):
                     result = find_viewer_item(stack_item.get('children'))
                     if result is not None:
                         return result
+            return dict()
 
         viewer_item = find_viewer_item(self.state.stack_items)
 
