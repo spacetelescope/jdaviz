@@ -14,10 +14,10 @@
 
     <v-row>
       <v-select
-        :items="funcs"
-        v-model="selected_func"
+        :items="method_items.map(i => i.label)"
+        v-model="method_selected"
         label="Method"
-        hint="Select the method to use in the collapse."
+        hint="Method to use in the collapse."
         persistent-hint
       ></v-select>
     </v-row>

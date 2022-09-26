@@ -475,14 +475,24 @@ class Application(VuetifyTemplate, HubListener):
     def load_data(self, file_obj, parser_reference=None, **kwargs):
         """
         Provided a path to a data file, open and parse the data into the
-        `~glue.core.data_collection.DataCollection` for this session. This also attempts to
-        find WCS links that exist between data components. Extra key word
-        arguments are passed to the parsing functions.
+        `~glue.core.data_collection.DataCollection` for this session.
+
+        For some parsers, this also attempts to find WCS links that exist
+        between data components.
 
         Parameters
         ----------
         file_obj : str or file-like
             File object for the data to be loaded.
+
+        parser_reference : str or `None`
+            The actual data parser to use. It must already be registered
+            to glue's data parser registry. This is mainly for internal use.
+
+        **kwargs : dict
+            Additional keywords to be passed into the parser defined by
+            ``parser_reference``.
+
         """
         self.loading = True
         try:
@@ -1334,6 +1344,8 @@ class Application(VuetifyTemplate, HubListener):
         for data in viewer_data:
             if data.label not in active_data_labels:
                 viewer.remove_data(data)
+                viewer._layers_with_defaults_applied= [layer_info for layer_info in viewer._layers_with_defaults_applied  # noqa
+                                                       if layer_info['data_label'] != data.label]
                 remove_data_message = RemoveDataMessage(data, viewer,
                                                         viewer_id=viewer_id,
                                                         sender=self)

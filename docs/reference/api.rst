@@ -111,6 +111,9 @@ Plugins
 .. automodapi:: jdaviz.configs.imviz.plugins.aper_phot_simple.aper_phot_simple
    :no-inheritance-diagram:
 
+.. automodapi:: jdaviz.configs.imviz.plugins.catalogs.catalogs
+   :no-inheritance-diagram:
+
 .. automodapi:: jdaviz.configs.imviz.plugins.compass.compass
    :no-inheritance-diagram:
 

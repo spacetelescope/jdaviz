@@ -121,6 +121,8 @@ def get_image_data_iterator(app, file_obj, data_label, ext=None):
 
 
 def _parse_image(app, file_obj, data_label, ext=None):
+    from jdaviz.core.helpers import _next_subset_num
+
     if data_label is None:
         raise NotImplementedError('data_label should be set by now')
 
@@ -130,7 +132,8 @@ def _parse_image(app, file_obj, data_label, ext=None):
 
         # avoid duplicate data labels in collection
         if data_label in app.data_collection.labels:
-            data_label = data_label + "_2"  # 0th-order solution as proposed in issue #600
+            i = _next_subset_num(data_label, app.data_collection)
+            data_label = f'{data_label} {i}'
 
         app.add_data(data, data_label)
 

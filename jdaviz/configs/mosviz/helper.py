@@ -425,7 +425,7 @@ class Mosviz(ConfigHelper, LineListMixin):
                 warnings.warn(msg)
                 instrument = "nirspec"
             if instrument.lower() == "nirspec":
-                super().load_data(directory, "mosviz-nirspec-directory-parser")
+                super().load_data(directory, parser_reference="mosviz-nirspec-directory-parser")
             elif instrument.lower() == "niriss":
                 self.load_niriss_data(directory)
         elif directory is not None and is_zipfile(str(directory)):

@@ -36,7 +36,7 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
             else:
                 viewer.state.x_att_pixel = ref_data.id["Pixel Axis 2 [x]"]
 
-    def load_data(self, data, **kwargs):
+    def load_data(self, data, data_label=None, **kwargs):
         """
         Load and parse a data cube with Cubeviz.
         (Note that only one cube may be loaded per Cubeviz instance.)
@@ -49,7 +49,8 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
         """
         if len(self.app.state.data_items) != 0:
             raise RuntimeError('only one cube may be loaded per Cubeviz instance')
-
+        if data_label:
+            kwargs['data_label'] = data_label
         super().load_data(data, parser_reference="cubeviz-data-parser", **kwargs)
 
     def select_slice(self, slice):

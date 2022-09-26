@@ -11,7 +11,7 @@ settings:
   dense_toolbar: false
   context:
     notebook:
-      max_height: 600px
+      max_height: 750px
 toolbar:
   - g-data-tools
   - g-subset-tools

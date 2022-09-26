@@ -39,7 +39,7 @@ class Specviz(ConfigHelper, LineListMixin):
 
     def load_spectrum(self, data, data_label=None, format=None, show_in_viewer=True):
         super().load_data(data,
-                          'specviz-spectrum1d-parser',
+                          parser_reference='specviz-spectrum1d-parser',
                           data_label=data_label,
                           format=format,
                           show_in_viewer=show_in_viewer)

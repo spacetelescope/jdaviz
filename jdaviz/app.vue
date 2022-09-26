@@ -213,7 +213,10 @@ export default {
   mounted() {
     /* Workaround for https://github.com/jupyter-widgets/ipywidgets/issues/2499, can be removed when ipywidgets 8 is
      * released */
-    this.$refs.mainapp.$el.closest('.jp-OutputArea-output').classList.remove('jupyter-widgets');
+    const jpOutputElem = this.$refs.mainapp.$el.closest('.jp-OutputArea-output');
+    if (jpOutputElem) {
+      jpOutputElem.classList.remove('jupyter-widgets');
+    }
   }
 };
 </script>

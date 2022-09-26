@@ -4,12 +4,20 @@
 New Features
 ------------
 
-- Profile viewers now support plotting with profiles "as steps". [#1595]
+- Profile viewers now support plotting with profiles "as steps". [#1595, #1624]
+
+- Use spectrum's uncertainty as weight when doing model fitting. [#1630]
 
 - Line flux in the Line Analysis plugin are reported in W/m2 if Spectral Flux is given
   in Jy [#1564]
 
-- User-friendly API access to plugins. [#1401]
+- User-friendly API access to plugins, with exposed functionality for:  line analysis, gaussian
+  smooth, moment maps, compass, collapse, metadata, and slice.
+  [#1401, #1642, #1643, #1636, #1641, #1634, #1635]
+
+- Line Lists show which medium the catalog wavelengths were measured in,
+  in accordance to the metadata entry. Lists without medium information
+  are removed, until such information can be verified [#1626]
 
 - Added ability to set height of application widget using `show` method. [#1646]
 
@@ -19,6 +27,8 @@ Cubeviz
 - Image viewers now have linked pan/zoom and linked box zoom. [#1596]
 
 - Added ability to select spatial subset collapsed spectrum for Line Analysis. [#1583]
+
+- Increased size of Cubeviz configuration from 600px to 860px. [#1638]
 
 Imviz
 ^^^^^
@@ -57,11 +67,22 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- Calling ``cubeviz.load_data(data, data_label)``, where ``data_label`` is passed in
+  as second positional argument instead of keyword, is now allowed. [#1644]
+
 Imviz
 ^^^^^
 
 - Fixed inaccurate aperture photometry results when aperture photometry is done on
   a non-reference image if images are linked by WCS. [#1524]
+
+- Calling ``imviz.load_data(data, data_label)``, where ``data_label`` is passed in
+  as second positional argument instead of keyword, is now allowed. Previously,
+  this will crash because second positional argument is actually a
+  ``parser_reference`` that is meant for internal use. [#1644]
+
+- Fixed crashing for when data is accidentally loaded multiple times or when
+  subset is deleted after a viewer is deleted. [#1649]
 
 Mosviz
 ^^^^^^
@@ -80,12 +101,14 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
+
 Cubeviz
 ^^^^^^^
 
+- Changed unit formatting to avoid astropy.units warnings in Line Analysis plugin. [#1648]
+
 - Changed the default layout to have only two image viewers, and enabled tabbing
   and dragging the viewers. [#1646]
-
 
 2.10 (2022-08-26)
 =================

@@ -425,7 +425,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                     raw_result = analysis.line_flux(freq_spec)
                     # When flux is equivalent to Jy, lineflux result should be shown in W/m2
                     if flux_unit.is_equivalent(u.Jy/u.sr):
-                        final_unit = u.Unit('W/m2/sr')
+
+                        final_unit = u.Unit('W/(m2 sr)')
                     else:
                         final_unit = u.Unit('W/m2')
 
@@ -435,8 +436,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
 
                 # If the flux unit is instead equivalent to power density
                 # (Jy, but defined in wavelength), enforce integration in wavelength space
-                elif (flux_unit.is_equivalent(u.Unit('W/m2/m')) or
-                        flux_unit.is_equivalent(u.Unit('W/m2/m/sr'))):
+                elif (flux_unit.is_equivalent(u.Unit('W/(m2 m)')) or
+                        flux_unit.is_equivalent(u.Unit('W/(m2 m sr)'))):
                     # Perform integration in wavelength space using MKS unit (meters)
                     wave_spec = Spectrum1D(
                         spectral_axis=spec_subtracted.spectral_axis.to(u.m,
@@ -445,8 +446,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                         uncertainty=spec_subtracted.uncertainty)
                     raw_result = analysis.line_flux(wave_spec)
                     # When flux is equivalent to Jy, lineflux result should be shown in W/m2
-                    if flux_unit.is_equivalent(u.Unit('W/m2/m'/u.sr)):
-                        final_unit = u.Unit('W/m2/sr')
+                    if flux_unit.is_equivalent(u.Unit('W/(m2 m)'/u.sr)):
+                        final_unit = u.Unit('W/(m2 sr)')
                     else:
                         final_unit = u.Unit('W/m2')
 

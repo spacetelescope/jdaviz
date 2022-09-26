@@ -66,7 +66,7 @@ class Imviz(ImageConfigHelper):
             raise ValueError(f"Default viewer '{viewer_id}' cannot be destroyed")
         self.app.vue_destroy_viewer_item(viewer_id)
 
-    def load_data(self, data, parser_reference=None, do_link=True, show_in_viewer=True, **kwargs):
+    def load_data(self, data, data_label=None, do_link=True, show_in_viewer=True, **kwargs):
         """Load data into Imviz.
 
         Parameters
@@ -93,8 +93,11 @@ class Imviz(ImageConfigHelper):
               loading too many slices will cause performance issue,
               so consider using Cubeviz instead.
 
-        parser_reference
-            This is used internally by the app.
+        data_label : str or `None`
+            Data label to go with the given data. If not given, this is
+            automatically determined from filename or randomly generated.
+            The final label shown in Imviz may have additional information
+            appended for clarity.
 
         do_link : bool
             Link the data after parsing. Set this to `False` if you want to
@@ -124,24 +127,25 @@ class Imviz(ImageConfigHelper):
         if isinstance(data, str):
             filelist = data.split(',')
 
-            if len(filelist) > 1 and 'data_label' in kwargs:
+            if len(filelist) > 1 and data_label:
                 raise ValueError('Do not manually overwrite data_label for '
                                  'a list of images')
 
             for data in filelist:
                 kw = deepcopy(kwargs)
-                filepath, ext, data_label = split_filename_with_fits_ext(data)
+                filepath, ext, cur_data_label = split_filename_with_fits_ext(data)
 
                 # This, if valid, will overwrite input.
                 if ext is not None:
                     kw['ext'] = ext
 
                 # This will only overwrite if not provided.
-                if 'data_label' not in kw:
+                if not data_label:
+                    kw['data_label'] = cur_data_label
+                else:
                     kw['data_label'] = data_label
 
-                self.app.load_data(
-                    filepath, parser_reference=parser_reference, **kw)
+                self.app.load_data(filepath, parser_reference='imviz-data-parser', **kw)
 
         elif isinstance(data, np.ndarray) and data.ndim >= 3:
             if data.ndim > 3:
@@ -159,14 +163,15 @@ class Imviz(ImageConfigHelper):
                 kw = deepcopy(kwargs)
 
                 # This will only append index to data label if provided.
-                if 'data_label' in kw:
-                    kw['data_label'] = f'{kwargs["data_label"]}_{i}'
+                if data_label:
+                    kw['data_label'] = f'{data_label}_{i}'
 
-                self.app.load_data(data[i, :, :], parser_reference=parser_reference, **kw)
+                self.app.load_data(data[i, :, :], parser_reference='imviz-data-parser', **kw)
 
         else:
-            self.app.load_data(
-                data, parser_reference=parser_reference, **kwargs)
+            if data_label:
+                kwargs['data_label'] = data_label
+            self.app.load_data(data, parser_reference='imviz-data-parser', **kwargs)
 
         if do_link:
             self.link_data(link_type='pixels', error_on_fail=False)

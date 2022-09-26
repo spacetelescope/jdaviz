@@ -8,13 +8,23 @@ from astropy.coordinates import SkyCoord
 from astroquery.sdss import SDSS
 
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin
+from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
+                                        SelectPluginComponent)
 
 __all__ = ['Catalogs']
 
 
 @tray_registry('imviz-catalogs', label="Catalog Search")
 class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
+    """
+    See the :ref:`Catalog Search Plugin Documentation <imviz-catalogs>` for more details.
+
+    Only the following attributes and methods are available through the
+    :ref:`public plugin API <plugin-apis>`:
+
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
+    """
     template_file = __file__, "catalogs.vue"
     catalog_items = List([]).tag(sync=True)
     catalog_selected = Unicode("").tag(sync=True)
@@ -24,12 +34,16 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # TODO: Add more catalogs.
-        self.catalog_items = ["SDSS"]
-
-        if self.catalog_selected not in self.catalog_items:
-            self.catalog_selected = self.catalog_items[0]
+        self.catalog = SelectPluginComponent(self,
+                                             items='catalog_items',
+                                             selected='catalog_selected',
+                                             manual_options=['SDSS'])
 
     def search(self):
+        """
+        Search the catalog, display markers on the viewer, and return a table of results (or None
+        if no results available)
+        """
         # calling clear in the case the user forgot after searching
         self.vue_do_clear()
 
@@ -111,12 +125,13 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
         viewer.marker = {'color': 'red', 'alpha': 0.8, 'markersize': 5, 'fill': False}
         viewer.add_markers(table=catalog_results, use_skycoord=True, marker_name='catalog_results')
 
+        return skycoord_table
+
     def vue_do_search(self, *args, **kwargs):
         # calls self.search() which handles all of the searching logic
         self.search()
 
-    def vue_do_clear(self, *args, **kwargs):
-
+    def clear(self):
         if self.results_available:
             # resetting values
             self.results_available = False
@@ -126,3 +141,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
 
             # all markers are removed from the viewer
             viewer.reset_markers()
+
+    def vue_do_clear(self, *args, **kwargs):
+        self.clear()
