@@ -136,6 +136,10 @@ class PlotOptions(PluginTemplateMixin):
         def is_not_subset(state):
             return not is_spatial_subset(state)
 
+        def line_visible(state):
+            # exclude for scatter layers where the marker is shown instead of the line
+            return getattr(state, 'line_visible', True)
+
         # Profile/line viewer/layer options:
         self.layer_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'visible',
                                                   'layer_visible_value', 'layer_visible_sync',
@@ -146,7 +150,8 @@ class PlotOptions(PluginTemplateMixin):
                                                'line_color_value', 'line_color_sync',
                                                state_filter=not_image)
         self.line_width = PlotOptionsSyncState(self, self.viewer, self.layer, 'linewidth',
-                                               'line_width_value', 'line_width_sync')
+                                               'line_width_value', 'line_width_sync',
+                                               state_filter=line_visible)
         self.line_opacity = PlotOptionsSyncState(self, self.viewer, self.layer, 'alpha',
                                                  'line_opacity_value', 'line_opacity_sync',
                                                  state_filter=is_profile)
