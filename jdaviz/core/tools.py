@@ -254,7 +254,7 @@ class SidebarShortcutCompass(_BaseSidebarShortcut):
 @viewer_tool
 class SinglePixelRegion(CheckableTool):
 
-    icon = os.path.join(ICON_DIR, 'pixelspectra.svg')  # FIXME: Update icon
+    icon = os.path.join(ICON_DIR, 'select_single_pixel.svg')
     tool_id = 'jdaviz:singlepixelregion'
     action_text = 'Create single-pixel spatial region'
     tool_tip = 'Click on the viewer to create single-pixel spatial region'
