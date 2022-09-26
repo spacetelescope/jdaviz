@@ -82,6 +82,7 @@
     <j-plugin-section-header v-if="line_width_sync.in_subscribed_states || collapse_func_sync.in_subscribed_states">Line</j-plugin-section-header>
     <glue-state-sync-wrapper v-if="config === 'cubeviz'" :sync="collapse_func_sync" :multiselect="multiselect" @unmix-state="unmix_state('function')">
       <v-select
+        :menu-props="{ left: true }"
         :items="collapse_func_sync.choices"
         v-model="collapse_func_value"
         label="Collapse Function"
@@ -138,6 +139,7 @@
     <j-plugin-section-header v-if="stretch_sync.in_subscribed_states">Stretch</j-plugin-section-header>
     <glue-state-sync-wrapper :sync="stretch_sync" :multiselect="multiselect" @unmix-state="unmix_state('stretch')">
       <v-select
+        :menu-props="{ left: true }"
         :items="stretch_sync.choices"
         v-model="stretch_value"
         label="Stretch"
@@ -147,6 +149,7 @@
 
     <glue-state-sync-wrapper :sync="stretch_perc_sync" :multiselect="multiselect" @unmix-state="unmix_state('stretch_perc')">
       <v-select
+        :menu-props="{ left: true }"
         :items="stretch_perc_sync.choices"
         v-model="stretch_perc_value"
         label="Stretch Percentile"
@@ -176,6 +179,7 @@
     <div v-if="bitmap_visible_sync.in_subscribed_states && bitmap_visible_value">
       <glue-state-sync-wrapper :sync="color_mode_sync" :multiselect="multiselect" @unmix-state="unmix_state('color_mode')">
         <v-select
+          :menu-props="{ left: true }"
           :items="color_mode_sync.choices"
           v-model="color_mode_value"
           label="Color Mode"
@@ -187,6 +191,7 @@
 
       <glue-state-sync-wrapper v-if="color_mode_value === 'Colormaps'" :sync="bitmap_cmap_sync" :multiselect="multiselect" @unmix-state="unmix_state('bitmap_cmap')">
         <v-select
+          :menu-props="{ left: true }"
           :items="bitmap_cmap_sync.choices"
           v-model="bitmap_cmap_value"
           label="Colormap"

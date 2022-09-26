@@ -177,6 +177,7 @@
               <v-row class="row-min-bottom-padding" style="display: block">
                 <j-tooltip tipid='plugin-line-lists-custom-unit'>
                     <v-select
+                      :menu-props="{ left: true }"
                       :items="custom_unit_choices"
                       v-model="custom_unit"
                       label="Unit"

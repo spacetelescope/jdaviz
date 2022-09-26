@@ -44,6 +44,7 @@
 
         <v-row>
           <v-select
+            :menu-props="{ left: true }"
             :items="trace_type_items.map(i => i.label)"
             v-model="trace_type_selected"
             label="Trace Type"
@@ -90,6 +91,7 @@
 
         <v-row v-if="trace_type_selected==='Auto'">
           <v-select
+            :menu-props="{ left: true }"
             :items="trace_peak_method_items.map(i => i.label)"
             v-model="trace_peak_method_selected"
             label="Peak Method"
@@ -122,6 +124,7 @@
 
       <v-row>
         <v-select
+          :menu-props="{ left: true }"
           :items="bg_type_items.map(i => i.label)"
           v-model="bg_type_selected"
           label="Background Type"
@@ -234,6 +237,7 @@
 
       <v-row>
         <v-select
+          :menu-props="{ left: true }"
           :items="ext_type_items"
           v-model="ext_type_selected"
           label="Extraction Type"
