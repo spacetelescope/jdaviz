@@ -404,17 +404,16 @@ class Application(VuetifyTemplate, HubListener):
         ref_data = dc[reference_data] if reference_data else dc[0]
         linked_data = dc[data_to_be_linked] if data_to_be_linked else dc[-1]
 
-        if linked_data.meta.get('Plugin', None) == 'SpectralExtraction':
-            if 'Trace' in linked_data.meta:
-                links = [LinkSame(linked_data.components[1], ref_data.components[0]),
-                         LinkSame(linked_data.components[0], ref_data.components[1])]
-                dc.add_link(links)
-                return
-            else:
-                links = [LinkSame(linked_data.components[0], ref_data.components[0]),
-                         LinkSame(linked_data.components[1], ref_data.components[1])]
-                dc.add_link(links)
-                return
+        if 'Trace' in linked_data.meta:
+            links = [LinkSame(linked_data.components[1], ref_data.components[0]),
+                     LinkSame(linked_data.components[0], ref_data.components[1])]
+            dc.add_link(links)
+            return
+        elif linked_data.meta.get('Plugin', None) == 'SpectralExtraction':
+            links = [LinkSame(linked_data.components[0], ref_data.components[0]),
+                     LinkSame(linked_data.components[1], ref_data.components[1])]
+            dc.add_link(links)
+            return
 
         # The glue-astronomy SpectralCoordinates currently seems incompatible with glue
         # WCSLink. This gets around it until there's an upstream fix.
