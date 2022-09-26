@@ -257,7 +257,7 @@ class SinglePixelRegion(CheckableTool):
     icon = os.path.join(ICON_DIR, 'select_single_pixel.svg')
     tool_id = 'jdaviz:singlepixelregion'
     action_text = 'Create single-pixel spatial region'
-    tool_tip = 'Click on the viewer to create single-pixel spatial region'
+    tool_tip = 'Define a single-pixel spatial region of interest'
 
     def activate(self):
         self.viewer.add_event_callback(self.on_mouse_event, events=['click'])
