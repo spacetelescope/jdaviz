@@ -69,9 +69,9 @@ adjust plotting options), open the "Export Trace" panel, choose a label for the 
 and click "Create".  Note that this step is not required to create an extraction with simple
 workflows.
 
-Trace objects created outside of jdaviz can be loaded into the app via::
+Trace objects created outside of jdaviz can be loaded into the app via :meth:`~jdaviz.configs.specviz2d.helper.Specviz2d.load_trace`:
 
-    viz.app.add_data(my_trace)
+  viz.load_trace(my_trace, data_label="my trace")
 
 and then added to the viewer through the data menu.
 
