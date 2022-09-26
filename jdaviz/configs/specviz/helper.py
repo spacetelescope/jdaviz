@@ -99,7 +99,6 @@ class Specviz(ConfigHelper, LineListMixin):
 
         # Retrieve the spectral axis
         ref_index = getattr(self.app.get_viewer("spectrum-viewer").state.reference_data, "label", None)
-        print(ref_index)
         ref_spec = self.get_spectra(ref_index, apply_slider_redshift=False)
         self._set_scale(scale, ref_spec.spectral_axis, x_min, x_max)
 
