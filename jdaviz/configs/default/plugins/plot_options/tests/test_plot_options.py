@@ -26,15 +26,14 @@ def test_multiselect(cubeviz_helper, spectrum1d_cube):
         assert cubeviz_helper.app.get_viewer(viewer_name).state.show_axes is False
 
     assert cubeviz_helper.app.get_viewer('spectrum-viewer').state.show_axes is True
-
     assert po.axes_visible.sync['mixed'] is False
 
     # adding another viewer should show a mixed-state
     po.viewer.selected = ['flux-viewer', 'uncert-viewer', 'spectrum-viewer']
     # spectrum viewer is excluded from the axes_visible/show_axes logic
-    assert len(po.show_axes.linked_states) == 2
-    assert len(po.show_axes.sync['icons']) == 2
-    assert po.show_axes.sync['mixed'] is False
+    assert len(po.axes_visible.linked_states) == 2
+    assert len(po.axes_visible.sync['icons']) == 2
+    assert po.axes_visible.sync['mixed'] is False
 
     # from API could call po.axes_visible.unmix_state, but we'll also test the vue-level wrapper
     po.vue_unmix_state('axes_visible')
@@ -68,7 +67,7 @@ def test_user_api(cubeviz_helper, spectrum1d_cube):
 
     po.select_all()
     assert po.multiselect is True
-    assert len(po.viewer.selected) == 4
+    assert len(po.viewer.selected) == 3
 
     po.viewer.select_none()
     assert len(po.viewer.selected) == 0
