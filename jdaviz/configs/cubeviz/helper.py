@@ -21,9 +21,9 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
                                handler=self._set_spectrum_x_axis)
 
     def _set_spectrum_x_axis(self, msg):
-        if msg.viewer_id != "cubeviz-2":
-            return
         viewer = self.app.get_viewer("spectrum-viewer")
+        if msg.viewer_id != viewer.reference_id:
+            return
         ref_data = viewer.state.reference_data
         if ref_data and ref_data.ndim == 3:
             for att_name in ["Wave", "Wavelength", "Freq", "Frequency",

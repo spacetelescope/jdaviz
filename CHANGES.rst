@@ -21,6 +21,8 @@ New Features
 
 - Added ability to set height of application widget using `show` method. [#1646]
 
+- Added ability to set height of application widget using `show` method. [#1646]
+
 Cubeviz
 ^^^^^^^
 

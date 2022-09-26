@@ -339,7 +339,8 @@ class ConfigHelper(HubListener):
             NOTE: Only applicable to a "sidecar" display.
 
         height: int, optional
-            The height of the top-level application widget, in pixels.
+            The height of the top-level application widget, in pixels. Applies to all
+            instances of the same application in the notebook.
 
         Notes
         -----
@@ -347,7 +348,13 @@ class ConfigHelper(HubListener):
         as only JupyterLab has a mechanism to have multiple tabs.
         """
         title = self.app.config if title is None else title
-        show_widget(self.app, loc=loc, title=title, height=height)
+        if height is not None:
+            if isinstance(height, int):
+                height = f"{height}px"
+            self.app.layout.height = height
+            self.app.state.settings['context']['notebook']['max_height'] = height
+
+        show_widget(self.app, loc=loc, title=title)
 
     def show_in_sidecar(self, anchor=None, title=None):  # pragma: no cover
         """
