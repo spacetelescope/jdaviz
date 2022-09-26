@@ -52,7 +52,7 @@ class PlotOptions(PluginTemplateMixin):
       not exposed for Imviz
     * ``uncertainty`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Imviz
-    * ``stretch_func`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+    * ``stretch_function`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Specviz
     * ``stretch_preset`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Specviz
@@ -120,8 +120,8 @@ class PlotOptions(PluginTemplateMixin):
     uncertainty_sync = Dict().tag(sync=True)
 
     # image viewer/layer options
-    stretch_func_value = Unicode().tag(sync=True)
-    stretch_func_sync = Dict().tag(sync=True)
+    stretch_function_value = Unicode().tag(sync=True)
+    stretch_function_sync = Dict().tag(sync=True)
 
     stretch_preset_value = Any().tag(sync=True)  # glue will pass either a float or string
     stretch_preset_sync = Dict().tag(sync=True)
@@ -232,9 +232,9 @@ class PlotOptions(PluginTemplateMixin):
                                                 'uncertainty_value', 'uncertainty_sync')
 
         # Image viewer/layer options:
-        self.stretch_func = PlotOptionsSyncState(self, self.viewer, self.layer, 'stretch',
-                                                 'stretch_func_value', 'stretch_func_sync',
-                                                 state_filter=is_image)
+        self.stretch_function = PlotOptionsSyncState(self, self.viewer, self.layer, 'stretch',
+                                                     'stretch_function_value', 'stretch_function_sync',  # noqa
+                                                     state_filter=is_image)
         self.stretch_preset = PlotOptionsSyncState(self, self.viewer, self.layer, 'percentile',
                                                    'stretch_preset_value', 'stretch_preset_sync',
                                                    state_filter=is_image)
@@ -303,7 +303,7 @@ class PlotOptions(PluginTemplateMixin):
                        'as_steps', 'uncertainty']
         if self.config != "specviz":
             expose += ['subset_color',
-                       'stretch_func', 'stretch_preset', 'stretch_vmin', 'stretch_vmax',
+                       'stretch_function', 'stretch_preset', 'stretch_vmin', 'stretch_vmax',
                        'image_visible', 'image_color_mode',
                        'image_color', 'image_colormap', 'image_opacity',
                        'image_contrast', 'image_bias',

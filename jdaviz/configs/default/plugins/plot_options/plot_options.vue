@@ -154,12 +154,12 @@
 
     <!-- IMAGE -->
     <!-- IMAGE:STRETCH -->
-    <j-plugin-section-header v-if="stretch_func_sync.in_subscribed_states">Stretch</j-plugin-section-header>
-    <glue-state-sync-wrapper :sync="stretch_func_sync" :multiselect="multiselect" @unmix-state="unmix_state('stretch_func')">
+    <j-plugin-section-header v-if="stretch_function_sync.in_subscribed_states">Stretch</j-plugin-section-header>
+    <glue-state-sync-wrapper :sync="stretch_function_sync" :multiselect="multiselect" @unmix-state="unmix_state('stretch_function')">
       <v-select
         :menu-props="{ left: true }"
-        :items="stretch_func_sync.choices"
-        v-model="stretch_func_value"
+        :items="stretch_function_sync.choices"
+        v-model="stretch_function_value"
         label="Stretch Function"
         class="no-hint"
       ></v-select>
