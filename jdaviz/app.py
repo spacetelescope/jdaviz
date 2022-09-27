@@ -969,13 +969,13 @@ class Application(VuetifyTemplate, HubListener):
         data_id = self._data_id_from_label(data_label)
 
         if clear_other_data:
-            self._update_selected_data_items(viewer_item['id'], {})
+            self._update_selected_data_items(viewer_item.get('id'), {})
 
-        selected_data_items = viewer_item['selected_data_items']
+        selected_data_items = viewer_item.get('selected_data_items', {})
 
         if data_id is not None:
             selected_data_items[data_id] = 'visible'
-            self._update_selected_data_items(viewer_item['id'], selected_data_items)
+            self._update_selected_data_items(viewer_item.get('id'), selected_data_items)
         else:
             raise ValueError(
                 f"No data item found with label '{data_label}'. Label must be one "
@@ -1069,7 +1069,7 @@ class Application(VuetifyTemplate, HubListener):
     def get_viewer_reference_names(self):
         """Return a list of available viewer reference names."""
         # Cannot sort because of None
-        return [self._viewer_item_by_id(vid)['reference'] for vid in self._viewer_store]
+        return [self._viewer_item_by_id(vid).get('reference') for vid in self._viewer_store]
 
     def _viewer_by_id(self, vid):
         """
@@ -1105,14 +1105,13 @@ class Application(VuetifyTemplate, HubListener):
         def find_viewer_item(stack_items):
             for stack_item in stack_items:
                 for viewer_item in stack_item.get('viewers'):
-                    if viewer_item['id'] == vid:
+                    if viewer_item.get('id') == vid:
                         return viewer_item
 
                 if len(stack_item.get('children')) > 0:
                     result = find_viewer_item(stack_item.get('children'))
                     if result is not None:
                         return result
-            return dict()
 
         viewer_item = find_viewer_item(self.state.stack_items)
 
@@ -1300,34 +1299,35 @@ class Application(VuetifyTemplate, HubListener):
         viewer_item = self._viewer_item_by_id(viewer_id)
         viewer = self._viewer_by_id(viewer_id)
 
-        if isinstance(selected_items, list):
-            selected_items = {si: 'visible' for si in selected_items}
-        # Update the stored selected data items
-        viewer_item['selected_data_items'] = selected_items
+        if viewer is not None:
+            if isinstance(selected_items, list):
+                selected_items = {si: 'visible' for si in selected_items}
+            # Update the stored selected data items
+            viewer_item['selected_data_items'] = selected_items
 
-        active_data_labels = []
+            active_data_labels = []
 
-        color_cycler = ColorCycler()
+            color_cycler = ColorCycler()
 
-        # Include any selected data in the viewer
-        for data_id, visibility in selected_items.items():
-            label = self._get_data_item_by_id(data_id)['name']
+            # Include any selected data in the viewer
+            for data_id, visibility in selected_items.items():
+                label = self._get_data_item_by_id(data_id)['name']
 
-            if label is None:
-                warnings.warn(f"No data item with id '{data_id}' found in "
-                              f"viewer '{viewer_id}'.")
-                continue
+                if label is None:
+                    warnings.warn(f"No data item with id '{data_id}' found in "
+                                  f"viewer '{viewer_id}'.")
+                    continue
 
-            active_data_labels.append(label)
+                active_data_labels.append(label)
 
-            [data] = [x for x in self.data_collection if x.label == label]
+                [data] = [x for x in self.data_collection if x.label == label]
 
-            viewer.add_data(data, percentile=95, color=color_cycler())
+                viewer.add_data(data, percentile=95, color=color_cycler())
 
-            add_data_message = AddDataMessage(data, viewer,
-                                              viewer_id=viewer_id,
-                                              sender=self)
-            self.hub.broadcast(add_data_message)
+                add_data_message = AddDataMessage(data, viewer,
+                                                  viewer_id=viewer_id,
+                                                  sender=self)
+                self.hub.broadcast(add_data_message)
 
             for layer in viewer.layers:
                 if layer.layer.data.label == label:
