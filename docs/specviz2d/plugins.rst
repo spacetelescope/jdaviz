@@ -83,7 +83,7 @@ To export and access the specreduce Trace object defined in the plugin, call :me
 
   trace = sp_ext.export_trace()
 
-To import the parameters from a specreduce Trace object, whether it's new or was exported and modified in the notebook, call:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.import_trace`::
+To import the parameters from a specreduce Trace object, whether it's new or was exported and modified in the notebook, call :meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.import_trace`::
 
   sp_ext.import_trace(trace)
 
