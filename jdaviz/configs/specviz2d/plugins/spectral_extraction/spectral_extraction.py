@@ -500,6 +500,8 @@ class SpectralExtraction(PluginTemplateMixin):
             self.trace_pixel = trace.guess
             self.trace_window = trace.window
             self.trace_bins = trace.bins
+        elif isinstance(trace, tracing.ArrayTrace):  # pragma: no cover
+            raise NotImplementedError(f"cannot import ArrayTrace into plugin.  Use viz.load_trace instead")  # noqa
         else:  # pragma: no cover
             raise NotImplementedError(f"trace of type {trace.__class__.__name__} not supported")
 
@@ -520,8 +522,15 @@ class SpectralExtraction(PluginTemplateMixin):
 
         if self.trace_trace_selected != 'New Trace':
             # then we're offsetting an existing trace
-            trace = tracing.ArrayTrace(self.trace_dataset.selected_obj.data,
-                                       self.trace_trace.selected_obj.trace+self.trace_offset)
+            # for FlatTrace, we can keep and expose a new FlatTrace (which has the advantage of
+            # being able to load back into the plugin)
+            orig_trace = self.trace_trace.selected_obj
+            if isinstance(orig_trace, tracing.FlatTrace):
+                trace = tracing.FlatTrace(self.trace_dataset.selected_obj.data,
+                                          orig_trace.trace_pos+self.trace_offset)
+            else:
+                trace = tracing.ArrayTrace(self.trace_dataset.selected_obj.data,
+                                           self.trace_trace.selected_obj.trace+self.trace_offset)
 
         elif self.trace_type_selected == 'Flat':
             trace = tracing.FlatTrace(self.trace_dataset.selected_obj.data,
