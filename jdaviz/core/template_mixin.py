@@ -29,7 +29,7 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'ViewerSelect', 'ViewerSelectMixin',
            'LayerSelect', 'LayerSelectMixin',
            'DatasetSelect', 'DatasetSelectMixin',
-           'AutoLabel', 'AutoLabelMixin',
+           'AutoTextField', 'AutoTextFieldMixin',
            'AddResults', 'AddResultsMixin',
            'PlotOptionsSyncState']
 
@@ -1404,7 +1404,7 @@ class DatasetSelectMixin(VuetifyTemplate, HubListener):
         self.dataset = DatasetSelect(self, 'dataset_items', 'dataset_selected')
 
 
-class AutoLabel(BasePluginComponent):
+class AutoTextField(BasePluginComponent):
     """
     Label component with the ability to synchronize to a plugin-provided default value or override
     with a custom value.  Setting ``value`` will set ``auto`` to False.  Setting ``auto`` to True,
@@ -1448,23 +1448,23 @@ class AutoLabel(BasePluginComponent):
         self.add_observe(auto, self._on_set_to_default)
 
     def __repr__(self):
-        return f"<AutoLabel label='{self.value}' auto={self.auto}>"
+        return f"<AutoTextField label='{self.value}' auto={self.auto}>"
 
     def _on_set_to_default(self, msg={}):
         if self.auto:
             self.value = self.default
 
 
-class AutoLabelMixin(VuetifyTemplate, HubListener):
+class AutoTextFieldMixin(VuetifyTemplate, HubListener):
     """
-    Applies the AutoLabel component as a mixin in the base plugin.  This
+    Applies the AutoTextField component as a mixin in the base plugin.  This
     automatically adds traitlets as well as new properties to the plugin with minimal
     extra code.  For multiple instances or custom traitlet names/defaults, use the
     component instead.
 
     To use in a plugin:
 
-    * add ``AutoLabelMixin`` as a mixin to the class
+    * add ``AutoTextFieldMixin`` as a mixin to the class
     * use the traitlets available from the plugin or properties/methods available from
       ``plugin.auto_label``.
 
@@ -1497,7 +1497,7 @@ class AddResults(BasePluginComponent):
 
     Useful API methods/attributes:
 
-    * :attr:`label` (`AutoLabel`):
+    * :attr:`label` (`AutoTextField`):
         the label component.  Setting will redirect to setting ``label.value``.
     * :attr:`auto`
         shortcut to ``label.auto``.  Setting will redirect to setting ``label.auto``.
@@ -1569,7 +1569,7 @@ class AddResults(BasePluginComponent):
                                    manual_options=['None'],
                                    default_mode=self._handle_default_viewer_selected)
 
-        self.auto_label = AutoLabel(plugin, label, label_default, label_auto, label_invalid_msg)
+        self.auto_label = AutoTextField(plugin, label, label_default, label_auto, label_invalid_msg)
         self.auto = self.auto_label.auto
         self.add_observe(label, self._on_label_changed)
 
@@ -1583,8 +1583,8 @@ class AddResults(BasePluginComponent):
     @property
     def label(self):
         """
-        Access the value of the ``AutoLabel`` object.  Changing the value manually will also disable
-        the ``auto`` option.
+        Access the value of the ``AutoTextField`` object.  Changing the value manually will also
+        disable the ``auto`` option.
         """
         return self.auto_label.value
 
@@ -1595,8 +1595,8 @@ class AddResults(BasePluginComponent):
     @property
     def auto(self):
         """
-        Access the ``auto`` property of the ``AutoLabel`` object.  If enabling, the ``label`` will
-        automatically be changed and kept in sync with the default label.
+        Access the ``auto`` property of the ``AutoTextField`` object.  If enabling, the ``label``
+        will automatically be changed and kept in sync with the default label.
         """
         return self.auto_label.auto
 

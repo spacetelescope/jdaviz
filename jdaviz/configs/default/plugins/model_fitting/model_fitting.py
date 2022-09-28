@@ -14,7 +14,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SpectralSubsetSelectMixin,
                                         SubsetSelect,
                                         DatasetSelectMixin,
-                                        AutoLabel,
+                                        AutoTextField,
                                         AddResultsMixin)
 from jdaviz.core.custom_traitlets import IntHandleEmpty
 from jdaviz.core.user_api import PluginUserApi
@@ -52,13 +52,13 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     * ``spectral_subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`)
     * ``model_component`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
     * ``poly_order``
-    * ``model_component_label`` (:class:`~jdaviz.core.template_mixin.AutoLabel`)
+    * ``model_component_label`` (:class:`~jdaviz.core.template_mixin.AutoTextField`)
     * :meth:`create_model_component`
     * :meth:`remove_model_component`
     * :meth:`model_components`
     * :meth:`get_model_component`
     * :meth:`set_model_component`
-    * ``equation`` (:class:`~jdaviz.core.template_mixin.AutoLabel`)
+    * ``equation`` (:class:`~jdaviz.core.template_mixin.AutoTextField`)
     * ``add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
     * ``cube_fit``
       Only exposed for Cubeviz.  Whether to fit the model to the cube instead of to the
@@ -116,8 +116,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         # create the label first so that when model_component defaults to the first selection,
         # the label automatically defaults as well
-        self.model_component_label = AutoLabel(self, 'comp_label', 'comp_label_default',
-                                               'comp_label_auto', 'comp_label_invalid_msg')
+        self.model_component_label = AutoTextField(self, 'comp_label', 'comp_label_default',
+                                                   'comp_label_auto', 'comp_label_invalid_msg')
 
         self.model_component = SelectPluginComponent(self,
                                                      items='model_comp_items',
@@ -129,8 +129,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # require entries to be in spectrum-viewer (not other cubeviz images, etc)
         self.dataset.add_filter('layer_in_spectrum_viewer')
 
-        self.equation = AutoLabel(self, 'model_equation', 'model_equation_default',
-                                  'model_equation_auto', 'model_equation_invalid_msg')
+        self.equation = AutoTextField(self, 'model_equation', 'model_equation_default',
+                                      'model_equation_auto', 'model_equation_invalid_msg')
 
         # set the filter on the viewer options
         self._update_viewer_filters()
