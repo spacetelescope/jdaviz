@@ -139,6 +139,14 @@ class SpectralExtraction(PluginTemplateMixin):
     bg_add_to_viewer_items = List().tag(sync=True)
     bg_add_to_viewer_selected = Unicode().tag(sync=True)
 
+    bg_spec_results_label = Unicode().tag(sync=True)
+    bg_spec_results_label_default = Unicode().tag(sync=True)
+    bg_spec_results_label_auto = Bool(True).tag(sync=True)
+    bg_spec_results_label_invalid_msg = Unicode('').tag(sync=True)
+    bg_spec_results_label_overwrite = Bool().tag(sync=True)
+    bg_spec_add_to_viewer_items = List().tag(sync=True)
+    bg_spec_add_to_viewer_selected = Unicode().tag(sync=True)
+
     bg_sub_results_label = Unicode().tag(sync=True)
     bg_sub_results_label_default = Unicode().tag(sync=True)
     bg_sub_results_label_auto = Bool(True).tag(sync=True)
@@ -240,6 +248,16 @@ class SpectralExtraction(PluginTemplateMixin):
                                          'bg_add_to_viewer_selected')
         self.bg_add_results.viewer.filters = ['is_spectrum_2d_viewer']
         self.bg_results_label_default = 'background'
+
+        self.bg_spec_add_results = AddResults(self, 'bg_spec_results_label',
+                                              'bg_spec_results_label_default',
+                                              'bg_spec_results_label_auto',
+                                              'bg_spec_results_label_invalid_msg',
+                                              'bg_spec_results_label_overwrite',
+                                              'bg_spec_add_to_viewer_items',
+                                              'bg_spec_add_to_viewer_selected')
+        self.bg_spec_add_results.viewer.filters = ['is_spectrum_viewer']
+        self.bg_spec_results_label_default = 'background-spectrum'
 
         self.bg_sub_add_results = AddResults(self, 'bg_sub_results_label',
                                              'bg_sub_results_label_default',
@@ -404,7 +422,7 @@ class SpectralExtraction(PluginTemplateMixin):
                          'bg': ['trace',
                                 'bg1_center', 'bg1_lower', 'bg1_upper',
                                 'bg2_center', 'bg2_lower', 'bg2_upper',
-                                'extract'],
+                                'bg_spec', 'extract'],
                          'ext': ['trace',
                                  'ext_upper', 'ext_lower',
                                  'extract']}
@@ -445,11 +463,12 @@ class SpectralExtraction(PluginTemplateMixin):
         # NOTE: += won't trigger the figure to notice new marks
         viewer2d.figure.marks = viewer2d.figure.marks + list(self._marks.values())
 
-        mark1d = PluginLine(viewer1d, visible=self.plugin_opened)
-        self._marks['extract'] = mark1d
+        self._marks['extract'] = PluginLine(viewer1d, visible=self.plugin_opened)
+        self._marks['bg_spec'] = PluginLine(viewer1d, visible=self.plugin_opened, line_style='dotted')  # noqa
 
         # NOTE: += won't trigger the figure to notice new marks
-        viewer1d.figure.marks = viewer1d.figure.marks + [mark1d]
+        viewer1d.figure.marks = viewer1d.figure.marks + [self._marks['extract'],
+                                                         self._marks['bg_spec']]
 
         return self._marks
 
@@ -489,7 +508,7 @@ class SpectralExtraction(PluginTemplateMixin):
         except Exception:
             # NOTE: ignore error, but will be raised when clicking ANY of the export buttons
             for mark in ['trace', 'bg1_center', 'bg1_lower', 'bg1_upper',
-                         'bg2_center', 'bg2_lower', 'bg2_upper']:
+                         'bg2_center', 'bg2_lower', 'bg2_upper', 'bg_spec']:
                 self.marks[mark].clear()
         else:
             xs = range(len(trace.trace))
@@ -521,6 +540,13 @@ class SpectralExtraction(PluginTemplateMixin):
             else:
                 for mark in ['bg2_center', 'bg2_lower', 'bg2_upper']:
                     self.marks[mark].clear()
+
+        try:
+            spec = self.export_bg_spectrum()
+        except Exception:
+            self.marks['bg_spec'].clear()
+        else:
+            self.marks['bg_spec'].update_xy(spec.spectral_axis, spec.flux)
 
         self.active_step = 'bg'
         self._update_plugin_marks()
@@ -755,6 +781,27 @@ class SpectralExtraction(PluginTemplateMixin):
                 SnackbarMessage(f"Specreduce background failed with the following error: {repr(e)}",
                                 color='error', sender=self)
             )
+
+    def export_bg_spectrum(self, add_data=False, **kwargs):
+        """
+        Create a background 1D spectrum from the input parameters defined in the plugin.
+
+        Parameters
+        ----------
+        add_data : bool
+            Whether to add the resulting spectrum to the application, according to the options
+            defined in the plugin.
+        """
+        bg = self.export_bg(**kwargs)
+        spec = bg.bkg_spectrum()
+
+        if add_data:
+            self.bg_spec_add_results.add_results_from_plugin(spec, replace=False)
+
+        return spec
+
+    def vue_create_bg_spec(self, *args):
+        self.export_bg_spectrum(add_data=True)
 
     def export_bg_sub(self, add_data=False, **kwargs):
         """

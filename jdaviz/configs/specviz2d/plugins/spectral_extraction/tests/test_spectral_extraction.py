@@ -97,6 +97,8 @@ def test_plugin(specviz2d_helper):
     assert pext.bg_width == 4
     bg_img = pext.export_bg_img()
     assert isinstance(bg_img, Spectrum1D)
+    bg_spec = pext.export_bg_spectrum()
+    assert isinstance(bg_spec, Spectrum1D)
     bg_sub = pext.export_bg_sub()
     assert isinstance(bg_sub, Spectrum1D)
 

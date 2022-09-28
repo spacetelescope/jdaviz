@@ -230,7 +230,7 @@
         <v-expansion-panels popout>
           <v-expansion-panel>
             <v-expansion-panel-header v-slot="{ open }">
-              <span style="padding: 6px">Export Background</span>
+              <span style="padding: 6px">Export Background Image</span>
             </v-expansion-panel-header>
             <v-expansion-panel-content>
               <plugin-add-results
@@ -254,7 +254,31 @@
         <v-expansion-panels popout>
           <v-expansion-panel>
             <v-expansion-panel-header v-slot="{ open }">
-              <span style="padding: 6px">Export Subtracted</span>
+              <span style="padding: 6px">Export Background Spectrum</span>
+            </v-expansion-panel-header>
+            <v-expansion-panel-content>
+              <plugin-add-results
+                :label.sync="bg_spec_results_label"
+                :label_default="bg_spec_results_label_default"
+                :label_auto.sync="bg_spec_results_label_auto"
+                :label_invalid_msg="bg_spec_results_label_invalid_msg"
+                :label_overwrite="bg_spec_results_label_overwrite"
+                label_hint="Label for the background spectrum"
+                :add_to_viewer_items="bg_spec_add_to_viewer_items"
+                :add_to_viewer_selected.sync="bg_spec_add_to_viewer_selected"
+                action_label="Export"
+                action_tooltip="Create Background Spectrum"
+                @click:action="create_bg_spec"
+              ></plugin-add-results>
+            </v-expansion-panel-content>
+          </v-expansion-panel>
+        </v-expansion-panels>
+      </v-row>
+      <v-row>
+        <v-expansion-panels popout>
+          <v-expansion-panel>
+            <v-expansion-panel-header v-slot="{ open }">
+              <span style="padding: 6px">Export Background-Subtracted Image</span>
             </v-expansion-panel-header>
             <v-expansion-panel-content>
               <plugin-add-results
