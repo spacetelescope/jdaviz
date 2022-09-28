@@ -49,7 +49,6 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
     moment_available = Bool(False).tag(sync=True)
     overwrite_warn = Bool(False).tag(sync=True)
 
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
