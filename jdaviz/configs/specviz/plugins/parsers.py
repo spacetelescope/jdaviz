@@ -14,7 +14,8 @@ __all__ = ["specviz_spectrum1d_parser"]
 
 
 @data_parser_registry("specviz-spectrum1d-parser")
-def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_viewer=True):
+def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_viewer=True,
+                              viewer_reference_name="spectrum-viewer"):
     """
     Loads a data file or `~specutils.Spectrum1D` object into Specviz.
 
@@ -27,6 +28,8 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
     format : str
         Loader format specification used to indicate data format in
         `~specutils.Spectrum1D.read` io method.
+    viewer_reference_name : str
+        Reference name for the viewer
     """
 
     # If no data label is assigned, give it a unique identifier
@@ -76,8 +79,8 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
 
     # If there's already data in the viewer, convert units if needed
     current_unit = None
-    if "spectrum-viewer" in app.get_viewer_reference_names():
-        current_spec = app.get_data_from_viewer("spectrum-viewer")
+    if viewer_reference_name in app.get_viewer_reference_names():
+        current_spec = app.get_data_from_viewer(viewer_reference_name)
         if current_spec != {} and current_spec is not None:
             spec_key = list(current_spec.keys())[0]
             current_unit = current_spec[spec_key].spectral_axis.unit
@@ -117,7 +120,7 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
                         dfnuallorig.append(spec.uncertainty[wlind].array)
 
                 elif i == 0:
-                    app.add_data_to_viewer("spectrum-viewer", data_label[i])
+                    app.add_data_to_viewer(viewer_reference_name, data_label[i])
 
         # reset display ranges, or build combined spectrum, when input is a SpectrumList instance
         if isinstance(data, SpectrumList):
@@ -143,4 +146,4 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
             label = "Combined " + data_label[0]
             app.add_data(spec, label)
             if show_in_viewer:
-                app.add_data_to_viewer("spectrum-viewer", label)
+                app.add_data_to_viewer(viewer_reference_name, label)

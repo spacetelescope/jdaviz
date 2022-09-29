@@ -29,6 +29,7 @@ class Specviz(ConfigHelper, LineListMixin):
     """Specviz Helper class."""
 
     _default_configuration = "specviz"
+    _default_viewer_reference_name = "spectrum-viewer"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -37,18 +38,31 @@ class Specviz(ConfigHelper, LineListMixin):
         self.app.hub.subscribe(self, RedshiftMessage,
                                handler=self._redshift_listener)
 
-    def load_spectrum(self, data, data_label=None, format=None, show_in_viewer=True):
+    def load_spectrum(self, data, data_label=None, format=None, show_in_viewer=True,
+                      viewer_reference_name=None):
+
+        if viewer_reference_name is None:
+            # If viewer reference name is not specified and the default viewer is available, use default
+            if self._default_viewer_reference_name in self.app.get_viewer_reference_names():
+                viewer_reference_name = self._default_viewer_reference_name
+
+            # If viewer reference name is not specified and default is unavailable,
+            # use first viewer without loaded data:
+            else:
+                viewer_reference_name = self.app.get_first_empty_viewer_reference_name()
+
         super().load_data(data,
                           parser_reference='specviz-spectrum1d-parser',
                           data_label=data_label,
                           format=format,
-                          show_in_viewer=show_in_viewer)
+                          show_in_viewer=show_in_viewer,
+                          viewer_reference_name=viewer_reference_name)
 
     def get_spectra(self, data_label=None, apply_slider_redshift="Warn"):
         """Returns the current data loaded into the main viewer
 
         """
-        spectra = self.app.get_data_from_viewer("spectrum-viewer", data_label=data_label)
+        spectra = self.app.get_data_from_viewer(self._default_viewer_reference_name, data_label=data_label)
         if not apply_slider_redshift:
             return spectra
         else:
@@ -81,7 +95,7 @@ class Specviz(ConfigHelper, LineListMixin):
             Mapping from the names of the subsets to the subsets expressed
             as `specutils.SpectralRegion` objects.
         """
-        return self.app.get_subsets_from_viewer("spectrum-viewer", subset_type="spectral")
+        return self.app.get_subsets_from_viewer(self._default_viewer_reference_name, subset_type="spectral")
 
     def x_limits(self, x_min=None, x_max=None):
         """Sets the limits of the x-axis
@@ -93,13 +107,13 @@ class Specviz(ConfigHelper, LineListMixin):
         x_max
             The upper bound of the axis
         """
-        scale = self.app.get_viewer("spectrum-viewer").scale_x
+        scale = self.app.get_viewer(self._default_viewer_reference_name).scale_x
         if x_min is None and x_max is None:
             return scale
 
         # Retrieve the spectral axis
         ref_index = getattr(
-            self.app.get_viewer("spectrum-viewer").state.reference_data, "label", None
+            self.app.get_viewer(self._default_viewer_reference_name).state.reference_data, "label", None
         )
         ref_spec = self.get_spectra(ref_index, apply_slider_redshift=False)
         self._set_scale(scale, ref_spec.spectral_axis, x_min, x_max)
@@ -114,12 +128,12 @@ class Specviz(ConfigHelper, LineListMixin):
         y_max
             The upper bound of the axis
         """
-        scale = self.app.get_viewer("spectrum-viewer").scale_y
+        scale = self.app.get_viewer(self._default_viewer_reference_name).scale_y
         if y_min is None and y_max is None:
             return scale
 
         # Retrieve the flux axis
-        ref_index = self.app.get_viewer("spectrum-viewer").state.reference_data.label
+        ref_index = self.app.get_viewer(self._default_viewer_reference_name).state.reference_data.label
         flux_axis = self.get_spectra(ref_index).flux
         self._set_scale(scale, flux_axis, y_min, y_max)
 
@@ -177,14 +191,14 @@ class Specviz(ConfigHelper, LineListMixin):
         """Flips the current limits of the x-axis
 
         """
-        scale = self.app.get_viewer("spectrum-viewer").scale_x
+        scale = self.app.get_viewer(self._default_viewer_reference_name).scale_x
         self.x_limits(x_min=scale.max, x_max=scale.min)
 
     def flip_y(self):
         """Flips the current limits of the y-axis
 
         """
-        scale = self.app.get_viewer("spectrum-viewer").scale_y
+        scale = self.app.get_viewer(self._default_viewer_reference_name).scale_y
         self.y_limits(y_min=scale.max, y_max=scale.min)
 
     def set_spectrum_tick_format(self, fmt, axis=None):
@@ -206,7 +220,7 @@ class Specviz(ConfigHelper, LineListMixin):
             return
 
         # Examples of values for fmt are '0.1e' or '0.2f'
-        self.app.get_viewer("spectrum-viewer").figure.axes[axis].tick_format = fmt
+        self.app.get_viewer(self._default_viewer_reference_name).figure.axes[axis].tick_format = fmt
 
 
 # TODO: Officially deprecate this with coordination with JDAT notebooks team.

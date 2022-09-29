@@ -1071,6 +1071,16 @@ class Application(VuetifyTemplate, HubListener):
         # Cannot sort because of None
         return [self._viewer_item_by_id(vid).get('reference') for vid in self._viewer_store]
 
+    def get_first_empty_viewer_reference_name(self):
+        """
+        Return the viewer reference name of the first available viewer
+        that has not yet loaded data
+        """
+        for vid in self._viewer_store:
+            viewer_item = self._viewer_item_by_id(vid)
+            if not len(viewer_item['selected_data_items']):
+                return viewer_item['reference']
+
     def _viewer_by_id(self, vid):
         """
         Viewer instance by id.
