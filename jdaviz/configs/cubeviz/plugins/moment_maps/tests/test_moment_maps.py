@@ -1,9 +1,9 @@
 import os
-from pathlib import Path
 
-from numpy.testing import assert_allclose
 import pytest
+from astropy.io import fits
 from astropy.nddata import CCDData
+from numpy.testing import assert_allclose
 
 from jdaviz.configs.cubeviz.plugins.moment_maps.moment_maps import MomentMap
 
@@ -99,14 +99,14 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
 
 
 @pytest.mark.filterwarnings('ignore:No observer defined on WCS')
-def test_write_momentmap(cubeviz_helper, spectrum1d_cube):
+def test_write_momentmap(cubeviz_helper, spectrum1d_cube, tmp_path):
     ''' Test writing a moment map out to a FITS file on disk '''
 
     # Simulate an existing file on disk to check for overwrite warning
-    test_file = Path("test_file.fits")
+    test_file = tmp_path / "test_file.fits"
+    test_file_str = str(test_file)
     existing_sentinel_text = "This is a simulated, existing file on disk"
-    with open(str(test_file.resolve()), 'w') as f:
-        f.write(existing_sentinel_text)
+    test_file.write_text(existing_sentinel_text)
 
     cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
     plugin = cubeviz_helper.plugins['Moment Maps']
@@ -116,20 +116,16 @@ def test_write_momentmap(cubeviz_helper, spectrum1d_cube):
     assert plugin._obj.overwrite_warn is False
 
     # Attempt to write the moment map to the same file we created earlier.
-    plugin._obj.filename = str(test_file)
+    plugin._obj.filename = test_file_str
     plugin._obj.vue_save_as_fits()
 
     # We should get an overwrite warning
     assert plugin._obj.overwrite_warn is True
     # and shouldn't have written anything (the file should be in tact)
-    with open(str(test_file.resolve()), 'r') as f:
-        assert existing_sentinel_text in f.read()
+    assert test_file.read_text() == existing_sentinel_text
 
     # Force overwrite the existing file
     plugin._obj.vue_overwrite_fits()
 
     # Read back in the file and check that it is equal to the one we calculated
-    assert_allclose(moment.data, CCDData.read(str(test_file)).data)
-
-    # Cleanup
-    test_file.unlink()
+    assert_allclose(moment.data, fits.getdata(test_file_str))

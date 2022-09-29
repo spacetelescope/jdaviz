@@ -119,22 +119,22 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         self._write_moment_to_fits()
 
     def vue_overwrite_fits(self, *args):
-        """ Attempt to force writing the moment map if the user confirms the desire to overwrite """
+        """Attempt to force writing the moment map if the user confirms the desire to overwrite."""
         self.overwrite_warn = False
-        self._write_moment_to_fits(force_overwrite=True)
+        self._write_moment_to_fits(overwrite=True)
 
-    def _write_moment_to_fits(self, force_overwrite=False, *args):
+    def _write_moment_to_fits(self, overwrite=False, *args):
         if self.moment is None or not self.filename:  # pragma: no cover
             return
 
         path = Path(self.filename).resolve()
         if path.exists():
-            if force_overwrite:
+            if overwrite:
                 # Try to delete the file
                 path.unlink()
                 if path.exists():
                     # Warn the user if the file still exists
-                    raise FileExistsError("Unable to delete existing file. Check user permissions")
+                    raise FileExistsError(f"Unable to delete {path}. Check user permissions.")
             else:
                 self.overwrite_warn = True
                 return
