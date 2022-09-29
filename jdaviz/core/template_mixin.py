@@ -1267,6 +1267,7 @@ class DatasetSelect(SelectPluginComponent):
         # Add/Remove Data are triggered when checked/unchecked from viewers
         self.hub.subscribe(self, AddDataMessage, handler=self._on_data_changed)
         self.hub.subscribe(self, RemoveDataMessage, handler=self._on_data_changed)
+        self.hub.subscribe(self, DataCollectionAddMessage, handler=self._on_data_changed)
         self.hub.subscribe(self, DataCollectionDeleteMessage, handler=self._on_data_changed)
 
         self.app.state.add_callback('layer_icons', lambda _: self._on_data_changed())
@@ -1276,6 +1277,8 @@ class DatasetSelect(SelectPluginComponent):
     @property
     def default_data_cls(self):
         if self.app.config == 'imviz':
+            return None
+        if 'is_trace' in self.filters:
             return None
         return Spectrum1D
 

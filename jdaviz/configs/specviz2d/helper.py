@@ -180,3 +180,20 @@ class Specviz2d(ConfigHelper, LineListMixin):
             self.app.load_data(spectrum_1d, data_label=spectrum_1d_label,
                                parser_reference="specviz-spectrum1d-parser",
                                show_in_viewer=show_in_viewer)
+
+    def load_trace(self, trace, data_label, show_in_viewer=True):
+        """
+        Load a trace object and load into the spectrum-2d-viewer
+
+        Parameters
+        ----------
+        trace : Trace
+            A specreduce trace object
+        data_label : str
+            String representing the label
+        show_in_viewer : bool
+            Whether to load into the spectrum-2d-viewer.
+        """
+        self.app.add_data(trace, data_label=data_label)
+        if show_in_viewer:
+            self.app.add_data_to_viewer('spectrum-2d-viewer', data_label)

@@ -30,6 +30,11 @@ class SpectralExtraction(PluginTemplateMixin):
     setting_interactive_extract = Bool(True).tag(sync=True)
 
     # TRACE
+    trace_trace_items = List().tag(sync=True)
+    trace_trace_selected = Unicode().tag(sync=True)
+
+    trace_offset = IntHandleEmpty(0).tag(sync=True)
+
     trace_dataset_items = List().tag(sync=True)
     trace_dataset_selected = Unicode().tag(sync=True)
 
@@ -44,12 +49,23 @@ class SpectralExtraction(PluginTemplateMixin):
     trace_bins = IntHandleEmpty(20).tag(sync=True)
     trace_window = IntHandleEmpty(0).tag(sync=True)
 
+    trace_results_label = Unicode().tag(sync=True)
+    trace_results_label_default = Unicode().tag(sync=True)
+    trace_results_label_auto = Bool(True).tag(sync=True)
+    trace_results_label_invalid_msg = Unicode('').tag(sync=True)
+    trace_results_label_overwrite = Bool().tag(sync=True)
+    trace_add_to_viewer_items = List().tag(sync=True)
+    trace_add_to_viewer_selected = Unicode().tag(sync=True)
+
     # BACKGROUND
     bg_dataset_items = List().tag(sync=True)
     bg_dataset_selected = Unicode().tag(sync=True)
 
     bg_type_items = List().tag(sync=True)
     bg_type_selected = Unicode().tag(sync=True)
+
+    bg_trace_items = List().tag(sync=True)
+    bg_trace_selected = Unicode().tag(sync=True)
 
     bg_trace_pixel = IntHandleEmpty(0).tag(sync=True)
 
@@ -76,6 +92,9 @@ class SpectralExtraction(PluginTemplateMixin):
     ext_dataset_items = List().tag(sync=True)
     ext_dataset_selected = Unicode().tag(sync=True)
 
+    ext_trace_items = List().tag(sync=True)
+    ext_trace_selected = Unicode().tag(sync=True)
+
     ext_type_items = List(['Boxcar', 'Horne']).tag(sync=True)
     ext_type_selected = Unicode('Boxcar').tag(sync=True)
 
@@ -98,6 +117,12 @@ class SpectralExtraction(PluginTemplateMixin):
         self._do_marks = kwargs.get('interactive', True)
 
         # TRACE
+        self.trace_trace = DatasetSelect(self,
+                                         'trace_trace_items',
+                                         'trace_trace_selected',
+                                         default_text='New Trace',
+                                         filters=['is_trace'])
+
         self.trace_dataset = DatasetSelect(self,
                                            'trace_dataset_items',
                                            'trace_dataset_selected',
@@ -113,6 +138,16 @@ class SpectralExtraction(PluginTemplateMixin):
                                                        selected='trace_peak_method_selected',
                                                        manual_options=['Gaussian', 'Centroid' 'Max'])  # noqa
 
+        self.trace_add_results = AddResults(self, 'trace_results_label',
+                                            'trace_results_label_default',
+                                            'trace_results_label_auto',
+                                            'trace_results_label_invalid_msg',
+                                            'trace_results_label_overwrite',
+                                            'trace_add_to_viewer_items',
+                                            'trace_add_to_viewer_selected')
+        self.trace_add_results.viewer.filters = ['is_spectrum_2d_viewer']
+        self.trace_results_label_default = 'trace'
+
         # BACKGROUND
         self.bg_dataset = DatasetSelect(self,
                                         'bg_dataset_items',
@@ -123,6 +158,12 @@ class SpectralExtraction(PluginTemplateMixin):
                                              items='bg_type_items',
                                              selected='bg_type_selected',
                                              manual_options=['TwoSided', 'OneSided', 'Manual'])
+
+        self.bg_trace = DatasetSelect(self,
+                                      items='bg_trace_items',
+                                      selected='bg_trace_selected',
+                                      default_text='From Plugin',
+                                      filters=['is_trace'])
 
         self.bg_add_results = AddResults(self, 'bg_results_label',
                                          'bg_results_label_default',
@@ -150,6 +191,12 @@ class SpectralExtraction(PluginTemplateMixin):
                                          'ext_dataset_selected',
                                          default_text='From Plugin',
                                          filters=['layer_in_spectrum_2d_viewer', 'not_trace'])
+
+        self.ext_trace = DatasetSelect(self,
+                                       items='ext_trace_items',
+                                       selected='ext_trace_selected',
+                                       default_text='From Plugin',
+                                       filters=['is_trace'])
 
         self.ext_add_results = AddResults(self, 'ext_results_label',
                                           'ext_results_label_default',
@@ -315,6 +362,7 @@ class SpectralExtraction(PluginTemplateMixin):
         return self._marks
 
     @observe('trace_dataset_selected', 'trace_type_selected',
+             'trace_trace_selected', 'trace_offset',
              'trace_pixel', 'trace_peak_method_selected',
              'trace_bins', 'trace_window', 'active_step')
     def _interaction_in_trace_step(self, event={}):
@@ -324,7 +372,7 @@ class SpectralExtraction(PluginTemplateMixin):
             return
 
         try:
-            trace = self.export_trace()
+            trace = self.export_trace(add_data=False)
         except Exception:
             # NOTE: ignore error, but will be raised when clicking ANY of the export buttons
             self.marks['trace'].clear()
@@ -335,7 +383,8 @@ class SpectralExtraction(PluginTemplateMixin):
         self.active_step = 'trace'
         self._update_plugin_marks()
 
-    @observe('bg_dataset_selected', 'bg_type_selected', 'bg_trace_pixel',
+    @observe('bg_dataset_selected', 'bg_type_selected',
+             'bg_trace_selected', 'bg_trace_pixel',
              'bg_separation', 'bg_width', 'active_step')
     def _interaction_in_bg_step(self, event={}):
         if not self.plugin_opened or not self._do_marks:
@@ -384,7 +433,8 @@ class SpectralExtraction(PluginTemplateMixin):
         self.active_step = 'bg'
         self._update_plugin_marks()
 
-    @observe('ext_dataset_selected', 'ext_type_selected', 'ext_width', 'active_step')
+    @observe('ext_dataset_selected', 'ext_trace_selected',
+             'ext_type_selected', 'ext_width', 'active_step')
     def _interaction_in_ext_step(self, event={}):
         if not self.plugin_opened or not self._do_marks:
             return
@@ -450,19 +500,39 @@ class SpectralExtraction(PluginTemplateMixin):
             self.trace_pixel = trace.guess
             self.trace_window = trace.window
             self.trace_bins = trace.bins
+        elif isinstance(trace, tracing.ArrayTrace):  # pragma: no cover
+            raise NotImplementedError(f"cannot import ArrayTrace into plugin.  Use viz.load_trace instead")  # noqa
         else:  # pragma: no cover
             raise NotImplementedError(f"trace of type {trace.__class__.__name__} not supported")
 
-    def export_trace(self, **kwargs):
+    def export_trace(self, add_data=False, **kwargs):
         """
         Create a specreduce Trace object from the input parameters
         defined in the plugin.
+
+        Parameters
+        ----------
+        add_data : bool
+            Whether to add the resulting trace to the application, according to the options
+            defined in the plugin.
         """
         self._set_create_kwargs(**kwargs)
         if len(kwargs) and self.active_step != 'trace':
             self.update_marks(step='trace')
 
-        if self.trace_type_selected == 'Flat':
+        if self.trace_trace_selected != 'New Trace':
+            # then we're offsetting an existing trace
+            # for FlatTrace, we can keep and expose a new FlatTrace (which has the advantage of
+            # being able to load back into the plugin)
+            orig_trace = self.trace_trace.selected_obj
+            if isinstance(orig_trace, tracing.FlatTrace):
+                trace = tracing.FlatTrace(self.trace_dataset.selected_obj.data,
+                                          orig_trace.trace_pos+self.trace_offset)
+            else:
+                trace = tracing.ArrayTrace(self.trace_dataset.selected_obj.data,
+                                           self.trace_trace.selected_obj.trace+self.trace_offset)
+
+        elif self.trace_type_selected == 'Flat':
             trace = tracing.FlatTrace(self.trace_dataset.selected_obj.data,
                                       self.trace_pixel)
 
@@ -476,14 +546,22 @@ class SpectralExtraction(PluginTemplateMixin):
         else:
             raise NotImplementedError(f"trace_type={self.trace_type_selected} not implemented")
 
+        if add_data:
+            self.trace_add_results.add_results_from_plugin(trace, replace=False)
+
         return trace
+
+    def vue_create_trace(self, *args):
+        self.export_trace(add_data=True)
 
     def _get_bg_trace(self):
         if self.bg_type_selected == 'Manual':
             trace = tracing.FlatTrace(self.trace_dataset.selected_obj.data,
                                       self.bg_trace_pixel)
+        elif self.bg_trace_selected == 'From Plugin':
+            trace = self.export_trace(add_data=False)
         else:
-            trace = self.export_trace()
+            trace = self.bg_trace.selected_obj
 
         return trace
 
@@ -610,7 +688,10 @@ class SpectralExtraction(PluginTemplateMixin):
         self.export_bg_sub(add_data=True)
 
     def _get_ext_trace(self):
-        return self.export_trace()
+        if self.ext_trace_selected == 'From Plugin':
+            return self.export_trace(add_data=False)
+        else:
+            return self.ext_trace.selected_obj
 
     def _get_ext_input_spectrum(self):
         if self.ext_dataset_selected == 'From Plugin':

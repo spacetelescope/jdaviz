@@ -51,6 +51,8 @@ Specviz2d
 
 - Support for Horne/Optimal extraction. [#1572]
 
+- Support for importing/exporting Trace objects as data entries. [#1556]
+
 API Changes
 -----------
 

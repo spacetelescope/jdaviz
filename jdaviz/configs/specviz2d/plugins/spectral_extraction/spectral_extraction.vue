@@ -33,7 +33,28 @@
         </j-docs-link>
       </v-row>
 
-      <div>
+      <plugin-dataset-select
+        :items="trace_trace_items"
+        :selected.sync="trace_trace_selected"
+        :show_if_single_entry="false"
+        label="Trace"
+        hint="Existing trace to offset or create a new trace"
+      />
+
+      <div v-if="trace_trace_selected !== 'New Trace'">
+        <v-row>
+          <v-text-field
+            label="Offset"
+            type="number"
+            v-model.number="trace_offset"
+            :rules="[() => trace_offset!=='' || 'This field is required']"
+            hint="Offset to apply to existing trace, in pixels."
+            persistent-hint
+          >
+          </v-text-field>
+        </v-row>
+      </div>
+      <div v-else>
         <plugin-dataset-select
           :items="trace_dataset_items"
           :selected.sync="trace_dataset_selected"
@@ -100,6 +121,31 @@
           ></v-select>
         </v-row>
       </div>
+
+      <v-row>
+        <v-expansion-panels popout>
+          <v-expansion-panel>
+            <v-expansion-panel-header v-slot="{ open }">
+              <span style="padding: 6px">Export Trace</span>
+            </v-expansion-panel-header>
+            <v-expansion-panel-content>
+              <plugin-add-results
+                :label.sync="trace_results_label"
+                :label_default="trace_results_label_default"
+                :label_auto.sync="trace_results_label_auto"
+                :label_invalid_msg="trace_results_label_invalid_msg"
+                :label_overwrite="trace_results_label_overwrite"
+                label_hint="Label for the trace"
+                :add_to_viewer_items="trace_add_to_viewer_items"
+                :add_to_viewer_selected.sync="trace_add_to_viewer_selected"
+                action_label="Create"
+                action_tooltip="Create Trace"
+                @click:action="create_trace"
+              ></plugin-add-results>
+            </v-expansion-panel-content>
+          </v-expansion-panel>
+        </v-expansion-panels>
+      </v-row>
     </div>
 
     <div @mouseover="() => active_step='bg'">
@@ -132,6 +178,14 @@
           persistent-hint
         ></v-select>
       </v-row>
+
+      <plugin-dataset-select
+        :items="bg_trace_items"
+        :selected.sync="bg_trace_selected"
+        :show_if_single_entry="false"
+        label="Background Trace"
+        hint="Trace to use as reference for background window(s).  'From Plugin' uses trace defined in Trace section above."
+      />
 
       <v-row v-if="bg_type_selected === 'Manual'">
         <v-text-field
@@ -233,6 +287,14 @@
         :show_if_single_entry="false"
         label="2D Spectrum"
         hint="Select the data used to extract the spectrum.  'From Plugin' uses background-subtraced image defined in Background section above."
+      />
+
+      <plugin-dataset-select
+        :items="ext_trace_items"
+        :selected.sync="ext_trace_selected"
+        :show_if_single_entry="false"
+        label="Extraction Trace"
+        hint="Trace to use as center of extraction window.  'From Plugin' uses trace defined in Trace section above."
       />
 
       <v-row>

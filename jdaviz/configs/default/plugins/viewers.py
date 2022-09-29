@@ -3,6 +3,7 @@ import numpy as np
 from glue.core.subset import RoiSubsetState
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from glue_jupyter.bqplot.image import BqplotImageView
+from glue_jupyter.bqplot.scatter.layer_artist import BqplotScatterLayerState
 from glue_jupyter.table import TableViewer
 
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
@@ -74,6 +75,10 @@ class JdavizViewerMixin:
     def _update_layer_icons(self):
         # update visible_layers (TODO: move this somewhere that can update on color change, etc)
         def _get_layer_color(layer):
+            if isinstance(layer, BqplotScatterLayerState):
+                # then this could be a scatter layer in an image viewer,
+                # so we'll ignore the color_mode
+                return layer.color
             if getattr(self.state, 'color_mode', None) == 'Colormaps':
                 for subset in self.jdaviz_app.data_collection.subset_groups:
                     if subset.label == layer.layer.label:
@@ -92,6 +97,9 @@ class JdavizViewerMixin:
                 suffix = f" (collapsed: {self.state.function})"
             else:
                 suffix = ""
+
+            if 'Trace' in layer.layer.data.meta:
+                return "mdi-chart-line-stacked", ""
 
             # then the underlying data is cube-like and we're in the profile viewer, so we
             # want to include the collapse function *unless* the layer is a spectral subset
