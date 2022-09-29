@@ -73,6 +73,9 @@ Specviz
 Bug Fixes
 ---------
 
+- Fixed loading data via the Import Data button on top-left of the application.
+  [#1608]
+
 Cubeviz
 ^^^^^^^
 
@@ -110,7 +113,7 @@ Specviz2d
 - Fixed default spectral extraction parameters when the background separation otherwise would have
   fallen directly on the edge of the image. [#1633]
 
-- Fix parser for Level 2 NIRSpec ``s2d`` files. [#1608]
+- Fixed parser for Level 2 NIRSpec ``s2d`` files. [#1608]
 
 Other Changes and Additions
 ---------------------------

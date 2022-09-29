@@ -1,5 +1,4 @@
 from jdaviz.core.template_mixin import TemplateMixin
-from jdaviz.core.events import LoadDataMessage
 from traitlets import Unicode, Bool
 import os
 from jdaviz.configs.default.plugins.data_tools.file_chooser import FileChooser
@@ -41,14 +40,9 @@ class DataTools(TemplateMixin):
             self.error_message = "No file selected"
         elif os.path.exists(self._file_upload.file_path):
             try:
-                load_data_message = LoadDataMessage(self._file_upload.file_path, sender=self)
-                self.hub.broadcast(load_data_message)
+                # NOTE: Helper loader does more stuff than native Application loader.
+                self.app._jdaviz_helper.load_data(self._file_upload.file_path)
             except Exception as err:
                 self.error_message = f"An error occurred when loading the file: {repr(err)}"
             else:
                 self.dialog = False
-
-            if self.config == 'imviz':
-                # Do this like what Imviz does at the end of loading sequence from helper.
-                from jdaviz.configs.imviz.helper import link_image_data
-                link_image_data(self._app, link_type='pixels', error_on_fail=False)
