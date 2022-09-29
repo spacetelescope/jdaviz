@@ -35,6 +35,7 @@ class UserApiWrapper:
 
         exp_obj = getattr(self._obj, attr)
         from jdaviz.core.template_mixin import (SelectPluginComponent,
+                                                PlotOptionsSyncState,
                                                 AddResults,
                                                 AutoLabel)
         if isinstance(exp_obj, SelectPluginComponent):
@@ -47,6 +48,20 @@ class UserApiWrapper:
             return
         elif isinstance(exp_obj, AutoLabel):
             exp_obj.value = value
+            return
+        elif isinstance(exp_obj, PlotOptionsSyncState):
+            if not len(exp_obj.linked_states):
+                raise ValueError("there are currently no synced glue states to set")
+
+            # this allows setting the value immediately, and unmixing state, if appropriate,
+            # even if the value matches the current value
+            if value == exp_obj.value:
+                exp_obj.unmix_state()
+            else:
+                # if there are choices, allow either passing the text or value
+                text_to_value = {choice['text']: choice['value']
+                                 for choice in exp_obj.sync.get('choices', [])}
+                exp_obj.value = text_to_value.get(value, value)
             return
 
         return setattr(self._obj, attr, value)

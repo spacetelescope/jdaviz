@@ -1737,6 +1737,13 @@ class AddResultsMixin(VuetifyTemplate, HubListener):
 class PlotOptionsSyncState(BasePluginComponent):
     """
     Plugin component for syncing with glue state objects.
+
+    Useful API methods/attributes:
+
+    * ``value``
+    * :meth:`choices` (only when applicable)
+    * :attr:`linked_states`
+    * :meth:`unmix_state`
     """
     def __init__(self, plugin, viewer_select, layer_select, glue_name,
                  value, sync, state_filter=None):
@@ -1754,6 +1761,23 @@ class PlotOptionsSyncState(BasePluginComponent):
         self.add_observe(layer_select._plugin_traitlets['selected'], self._on_viewer_layer_changed)
         self.add_observe(value, self._on_value_changed)
         self._on_viewer_layer_changed()
+
+    def __repr__(self):
+        choices = self.choices
+        if len(choices):
+            return f"<PlotOptionsSyncState {self._glue_name}={self.value} choices={self.choices} (linked_states: {len(self.linked_states)}/{len(self.subscribed_states)})>"  # noqa
+        return f"<PlotOptionsSyncState {self._glue_name}={self.value} (linked_states: {len(self.linked_states)}/{len(self.subscribed_states)})>"  # noqa
+
+    @property
+    def user_api(self):
+        expose = ['value', 'unmix_state', 'linked_states']
+        if len(self.choices):
+            expose += ['choices']
+        return UserApiWrapper(self, expose=expose)
+
+    @property
+    def choices(self):
+        return [choice['text'] for choice in self.sync.get('choices', {})]
 
     def state_filter(self, state):
         if self._state_filter is None:
@@ -1824,6 +1848,10 @@ class PlotOptionsSyncState(BasePluginComponent):
     def _get_glue_value(self, state):
         if self._glue_name == 'cmap':
             return getattr(state, self._glue_name).name
+        if self._glue_name in ['contour_visible', 'bitmap_visible']:
+            # return False if the layer itself is not visible.  Setting this object
+            # to True will then set both glue_name and visible to True.
+            return getattr(state, self._glue_name) and getattr(state, 'visible')
         return getattr(state, self._glue_name)
 
     def _get_glue_choices(self, state):
@@ -1842,6 +1870,8 @@ class PlotOptionsSyncState(BasePluginComponent):
         # clear existing callbacks - we'll re-create those we need later
         for state in self.linked_states:
             state.remove_callback(self._glue_name, self._on_glue_value_changed)
+            if self._glue_name in ['contour_visible', 'bitmap_visible']:
+                state.remove_callback('visible', self._on_glue_layer_visible_changed)
 
         in_subscribed_states = False
         icons = []
@@ -1863,6 +1893,8 @@ class PlotOptionsSyncState(BasePluginComponent):
                 current_glue_values.append(self._get_glue_value(state))
                 self._linked_states.append(state)  # these will be iterated when value is set
                 state.add_callback(self._glue_name, self._on_glue_value_changed)
+                if self._glue_name in ['contour_visible', 'bitmap_visible']:
+                    state.add_callback('visible', self._on_glue_layer_visible_changed)
 
                 if self.sync.get('choices') is None and \
                         (hasattr(getattr(type(state), self._glue_name), 'get_display_func')
@@ -1909,9 +1941,27 @@ class PlotOptionsSyncState(BasePluginComponent):
                 setattr(glue_state, self._glue_name, cmap)
             else:
                 setattr(glue_state, self._glue_name, msg['new'])
+
+            if self._glue_name in ['bitmap_visible', 'contour_visible'] and msg['new'] is True:
+                # ensure that the layer is also visible
+                setattr(glue_state, 'visible', msg['new'])
+
         # need to recompute mixed state
         self._update_mixed_state()
         self._processing_change_to_glue = False
+
+    def _on_glue_layer_visible_changed(self, value):
+        # this is only triggered for glue_name contour_visible or bitmap_visible
+        self._processing_change_from_glue = True
+        if value is False:
+            self.value = False
+        elif len(self.linked_states):
+            # then this is a little tricky since we don't have the calling state object,
+            # instead we'll set the value based on the first state object and will still
+            # make a call to update the mixed state
+            self.value = self._get_glue_value(self.linked_states[0])
+        self._processing_change_from_glue = False
+        self._update_mixed_state()
 
     def _on_glue_value_changed(self, value):
         if self._glue_name == 'color_mode':
