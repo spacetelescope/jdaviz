@@ -82,8 +82,8 @@ Cubeviz
 - Calling ``cubeviz.load_data(data, data_label)``, where ``data_label`` is passed in
   as second positional argument instead of keyword, is now allowed. [#1644]
 
-- A warning will be presented with a warnning when overwriting a moment map on
-  an existing file on disk [#1683]
+- A warning will be presented when overwriting a moment map to
+  an existing file on disk. [#1683]
 
 Imviz
 ^^^^^
