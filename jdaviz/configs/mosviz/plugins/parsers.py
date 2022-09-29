@@ -24,7 +24,7 @@ __all__ = ['mos_spec1d_parser', 'mos_spec2d_parser', 'mos_image_parser']
 FALLBACK_NAME = "Unspecified"
 
 
-def _add_to_table(app, data, comp_label):
+def _add_to_table(app, data, comp_label, viewer_reference_name='table-viewer'):
     """
     Creates a mos table instance in the application data collection is none
     currently exists.
@@ -46,7 +46,7 @@ def _add_to_table(app, data, comp_label):
         mos_table = app.data_collection['MOS Table']
         mos_table.add_component(data, comp_label)
 
-        viewer = app.get_viewer("table-viewer")
+        viewer = app.get_viewer(viewer_reference_name)
         viewer.add_data(table_data)
     else:
         mos_table = app.data_collection['MOS Table']
@@ -236,7 +236,7 @@ def mos_spec1d_parser(app, data_obj, data_labels=None):
 
 @data_parser_registry("mosviz-spec2d-parser")
 def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
-                      show_in_viewer=False):
+                      show_in_viewer=False, viewer_reference_name="spectrum-2d-viewer"):
     """
     Attempts to parse a 2D spectrum object.
 
@@ -326,7 +326,7 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
         if len(data_labels) > 1:
             raise ValueError("More than one data label provided, unclear " +
                              "which to show in viewer")
-        app.add_data_to_viewer("spectrum-2d-viewer", data_labels[0])
+        app.add_data_to_viewer(viewer_reference_name, data_labels[0])
 
 
 def _load_fits_image_from_filename(filename, app):
@@ -337,7 +337,8 @@ def _load_fits_image_from_filename(filename, app):
 
 
 @data_parser_registry("mosviz-image-parser")
-def mos_image_parser(app, data_obj, data_labels=None, share_image=0):
+def mos_image_parser(app, data_obj, data_labels=None, share_image=0,
+                     viewer_reference_name="image-viewer"):
     """
     Attempts to parse an image-like object or list of images.
 
@@ -407,7 +408,7 @@ def mos_image_parser(app, data_obj, data_labels=None, share_image=0):
             # Associate this image with multiple spectra
             data_labels *= share_image
             # Show it on viewer
-            app.add_data_to_viewer("image-viewer", data_labels[0])
+            app.add_data_to_viewer(viewer_reference_name, data_labels[0])
 
         _add_to_table(app, data_labels, 'Images')
 
@@ -591,7 +592,7 @@ def _id_files_by_datamodl(label_dict, filepaths, catalog_key=None):
 
 
 @data_parser_registry("mosviz-niriss-parser")
-def mos_niriss_parser(app, data_dir):
+def mos_niriss_parser(app, data_dir, viewer_reference_name='table-viewer'):
     """
     Attempts to parse all data for a NIRISS dataset in a single
     directory, which should include:
@@ -810,4 +811,4 @@ def mos_niriss_parser(app, data_dir):
         _add_to_table(app, spec_labels_2d, "2D Spectra")
         _add_to_table(app, filters, "Filter/Grating")
 
-    app.get_viewer('table-viewer')._shared_image = True
+    app.get_viewer(viewer_reference_name)._shared_image = True

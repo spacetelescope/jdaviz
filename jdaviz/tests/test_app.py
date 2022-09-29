@@ -1,6 +1,6 @@
 import pytest
 
-from jdaviz import Application
+from jdaviz import Application, Specviz
 from jdaviz.configs.default.plugins.gaussian_smooth.gaussian_smooth import GaussianSmooth
 
 
@@ -34,6 +34,8 @@ def test_nonstandard_specviz_viewer_name():
                        'g-gaussian-smooth',
                        'g-model-fitting',
                        'g-unit-conversion',
+                       # 'g-line-list' and 'specviz-line-analysis' are not
+                       # supported by the custom config adaptations for now
                        'g-export-plot'],
               'viewer_area': [{'container': 'col',
                                'children': [{'container': 'row',
@@ -43,5 +45,9 @@ def test_nonstandard_specviz_viewer_name():
                                                          {'name': 'K',
                                                           'plot': 'specviz-profile-viewer',
                                                           'reference': 'k'}]}]}]}
-    app = Application(configuration=config)
-    assert app.get_viewer_reference_names() == ['h', 'k']
+
+    class Customviz(Specviz):
+        _default_configuration = config
+
+    viz = Customviz()
+    assert viz.app.get_viewer_reference_names() == ['h', 'k']

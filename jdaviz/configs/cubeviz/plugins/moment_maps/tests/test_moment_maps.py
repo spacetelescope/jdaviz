@@ -12,7 +12,7 @@ from jdaviz.configs.cubeviz.plugins.moment_maps.moment_maps import MomentMap
 def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
     dc = cubeviz_helper.app.data_collection
     cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
-    flux_viewer = cubeviz_helper.app.get_viewer('flux-viewer')
+    flux_viewer = cubeviz_helper.app.get_viewer(cubeviz_helper._default_flux_viewer_reference_name)
 
     # Since we are not really displaying, need this to trigger GUI stuff.
     flux_viewer.shape = (100, 100)
@@ -24,12 +24,14 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
     mm.n_moment = 0  # Collapsed sum, will get back 2D spatial image
     assert mm.results_label == 'moment 0'
 
-    mm.add_results.viewer.selected = 'uncert-viewer'
+    mm.add_results.viewer.selected = cubeviz_helper._default_uncert_viewer_reference_name
     mm.vue_calculate_moment()
 
     assert mm.moment_available
     assert dc[1].label == 'moment 0'
-    mv_data = cubeviz_helper.app.get_viewer('uncert-viewer').data()
+    mv_data = cubeviz_helper.app.get_viewer(
+        cubeviz_helper._default_uncert_viewer_reference_name
+    ).data()
     # by default, will overwrite the previous entry (so only one data entry)
     assert len(mv_data) == 1
     assert mv_data[0].label == 'moment 0'
@@ -49,7 +51,9 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
     assert flux_viewer.label_mouseover.world_dec_deg == '27.0000999998'
 
     # Make sure adding it to viewer does not crash.
-    cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'moment 0')
+    cubeviz_helper.app.add_data_to_viewer(
+        cubeviz_helper._default_flux_viewer_reference_name, 'moment 0'
+    )
 
     result = dc[1].get_object(cls=CCDData)
     assert result.shape == (4, 2)  # Cube shape is (2, 2, 4)

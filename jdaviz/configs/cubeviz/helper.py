@@ -14,6 +14,9 @@ __all__ = ['Cubeviz', 'CubeViz']
 class Cubeviz(ImageConfigHelper, LineListMixin):
     """Cubeviz Helper class"""
     _default_configuration = 'cubeviz'
+    _default_spectrum_viewer_reference_name = "spectrum-viewer"
+    _default_uncert_viewer_reference_name = "uncert-viewer"
+    _default_flux_viewer_reference_name = "flux-viewer"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -21,7 +24,7 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
                                handler=self._set_spectrum_x_axis)
 
     def _set_spectrum_x_axis(self, msg):
-        viewer = self.app.get_viewer("spectrum-viewer")
+        viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
         if msg.viewer_id != viewer.reference_id:
             return
         ref_data = viewer.state.reference_data

@@ -26,17 +26,21 @@ class Mosviz(ConfigHelper, LineListMixin):
     """Mosviz Helper class"""
 
     _default_configuration = "mosviz"
+    _default_image_viewer_reference_name = "image-viewer"
+    _default_spectrum_viewer_reference_name = "spectrum-viewer"
+    _default_spectrum_2d_viewer_reference_name = "spectrum-2d-viewer"
+    _default_table_viewer_reference_name = "table-viewer"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        spec1d = self.app.get_viewer("spectrum-viewer")
+        spec1d = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
         spec1d.scales['x'].observe(self._update_spec2d_x_axis, names=['min', 'max'])
 
-        spec2d = self.app.get_viewer("spectrum-2d-viewer")
+        spec2d = self.app.get_viewer(self._default_spectrum_2d_viewer_reference_name)
         spec2d.scales['x'].observe(self._update_spec1d_x_axis, names=['min', 'max'])
 
-        image_viewer = self.app.get_viewer("image-viewer")
+        image_viewer = self.app.get_viewer(self._default_image_viewer_reference_name)
 
         # Choose which viewers will have state frozen during a row change.
         # This should be a list of tuples, where each entry has the state as the
@@ -53,7 +57,7 @@ class Mosviz(ConfigHelper, LineListMixin):
         self._freeze_states_on_row_change = False
 
         # Add callbacks to table-viewer to enable/disable the state freeze
-        table = self.app.get_viewer("table-viewer")
+        table = self.app.get_viewer(self._default_table_viewer_reference_name)
         table._on_row_selected_begin = self._on_row_selected_begin
         table._on_row_selected_end = self._on_row_selected_end
 
@@ -133,7 +137,7 @@ class Mosviz(ConfigHelper, LineListMixin):
     def _update_spec2d_x_axis(self, change=None):
         # This assumes the two spectrum viewers have the same x-axis shape and
         # wavelength solution, which should always hold
-        table_viewer = self.app.get_viewer('table-viewer')
+        table_viewer = self.app.get_viewer(self._default_table_viewer_reference_name)
 
         if self._update_in_progress or table_viewer.row_selection_in_progress:
             return
@@ -141,7 +145,7 @@ class Mosviz(ConfigHelper, LineListMixin):
         min_1d = self._scales1d.min
         max_1d = self._scales1d.max
 
-        spec1d = table_viewer._selected_data["spectrum-viewer"]
+        spec1d = table_viewer._selected_data[self._default_spectrum_viewer_reference_name]
         extend_by = int(self.app.data_collection[spec1d]["World 0"].shape[0])
         world = self._extend_world(spec1d, extend_by)
 
@@ -170,7 +174,7 @@ class Mosviz(ConfigHelper, LineListMixin):
     def _update_spec1d_x_axis(self, change=None):
         # This assumes the two spectrum viewers have the same x-axis shape and
         # wavelength solution, which should always hold
-        table_viewer = self.app.get_viewer('table-viewer')
+        table_viewer = self.app.get_viewer(self._default_table_viewer_reference_name)
 
         if self._update_in_progress or table_viewer.row_selection_in_progress:
             return
@@ -178,7 +182,7 @@ class Mosviz(ConfigHelper, LineListMixin):
         min_2d = self._scales2d.min
         max_2d = self._scales2d.max
 
-        spec1d = table_viewer._selected_data["spectrum-viewer"]
+        spec1d = table_viewer._selected_data[self._default_spectrum_viewer_reference_name]
         extend_by = int(self.app.data_collection[spec1d]["World 0"].shape[0])
         world = self._extend_world(spec1d, extend_by)
 
@@ -210,7 +214,7 @@ class Mosviz(ConfigHelper, LineListMixin):
             return
 
         if msg.param == "redshift":
-            row = self.app.get_viewer('table-viewer').current_row
+            row = self.app.get_viewer(self._default_table_viewer_reference_name).current_row
             # NOTE: this updates the value in the table for the current row.  This
             # in turn will feedback to call _apply_redshift_from_table and set
             # the internal value.
@@ -245,7 +249,11 @@ class Mosviz(ConfigHelper, LineListMixin):
             self.app.hub.broadcast(msg)
 
     def _is_world_flipped(self):
-        spec1d = self.app.get_viewer('table-viewer')._selected_data.get("spectrum-viewer")
+        spec1d = self.app.get_viewer(
+            self._default_table_viewer_reference_name
+        )._selected_data.get(
+            self._default_spectrum_viewer_reference_name
+        )
         if not spec1d:
             return False
         world = self.app.data_collection[spec1d]["World 0"]
@@ -275,7 +283,7 @@ class Mosviz(ConfigHelper, LineListMixin):
                 # Can't zoom if we couldn't figure out where to zoom (e.g. if RA/Dec not in table)
                 return
 
-            imview = self.app.get_viewer("image-viewer")
+            imview = self.app.get_viewer(self._default_image_viewer_reference_name)
 
             image_axis_ratio = ((imview.axis_x.scale.max - imview.axis_x.scale.min) /
                                 (imview.axis_y.scale.max - imview.axis_y.scale.min))
@@ -297,8 +305,8 @@ class Mosviz(ConfigHelper, LineListMixin):
     def _zoom_to_object_params(self, msg):
 
         table_data = self.app.data_collection['MOS Table']
-        imview = self.app.get_viewer("image-viewer")
-        specview = self.app.get_viewer("spectrum-2d-viewer")
+        imview = self.app.get_viewer(self._default_image_viewer_reference_name)
+        specview = self.app.get_viewer(self._default_spectrum_2d_viewer_reference_name)
 
         if ("R.A." not in table_data.component_ids() or
                 "Dec." not in table_data.component_ids()):
@@ -315,8 +323,8 @@ class Mosviz(ConfigHelper, LineListMixin):
         return pix, pixel_height
 
     def _zoom_to_slit_params(self, msg):
-        imview = self.app.get_viewer("image-viewer")
-        specview = self.app.get_viewer("spectrum-2d-viewer")
+        imview = self.app.get_viewer(self._default_image_viewer_reference_name)
+        specview = self.app.get_viewer(self._default_spectrum_2d_viewer_reference_name)
 
         try:
             sky_region = jwst_header_to_skyregion(specview.layers[0].layer.meta)
@@ -436,7 +444,7 @@ class Mosviz(ConfigHelper, LineListMixin):
             # If we have a single image for multiple spectra, tell the table viewer
             if not isinstance(images, (list, tuple)) and isinstance(spectra_1d, (list, tuple)):
                 self._shared_image = True
-                self.app.get_viewer('table-viewer')._shared_image = True
+                self.app.get_viewer(self._default_table_viewer_reference_name)._shared_image = True
                 self.load_images(images, images_label, share_image=len(spectra_1d))
             else:
                 self.load_images(images, images_label)
@@ -470,11 +478,15 @@ class Mosviz(ConfigHelper, LineListMixin):
         self.app.auto_link = True
 
         # Manually set viewer options
-        self.app.get_viewer("spectrum-viewer").figure.axes[1].tick_format = '0.1e'
-        self.app.get_viewer("image-viewer").figure.axes[1].label_offset = "-50"
+        self.app.get_viewer(
+            self._default_spectrum_viewer_reference_name
+        ).figure.axes[1].tick_format = '0.1e'
+        self.app.get_viewer(
+            self._default_image_viewer_reference_name
+        ).figure.axes[1].label_offset = "-50"
 
         # Load the first object into the viewers automatically
-        self.app.get_viewer("table-viewer").figure_widget.highlighted = 0
+        self.app.get_viewer(self._default_table_viewer_reference_name).figure_widget.highlighted = 0
 
         # Notify the user that this all loaded successfully
         loaded_msg = SnackbarMessage("MOS data loaded successfully", color="success", sender=self)
@@ -635,7 +647,9 @@ class Mosviz(ConfigHelper, LineListMixin):
         if visible is None:
             return [c.label for c in self.app.data_collection['MOS Table'].components]
         elif visible is True:
-            return [h['value'] for h in self.app.get_viewer('table-viewer').widget_table.headers]
+            return [h['value'] for h in self.app.get_viewer(
+                self._default_table_viewer_reference_name
+            ).widget_table.headers]
         elif visible is False:
             return [cn for cn in self.get_column_names() if cn not in self.get_column_names(True)]
         else:
@@ -660,7 +674,7 @@ class Mosviz(ConfigHelper, LineListMixin):
             raise ValueError("not all entries of column_names are valid")
         is_sortable = ['Redshift']
         headers = [{'text': cn, 'value': cn, 'sortable': cn in is_sortable} for cn in column_names]
-        wt = self.app.get_viewer('table-viewer').widget_table
+        wt = self.app.get_viewer(self._default_table_viewer_reference_name).widget_table
         wt.set_state({'headers': headers})
         wt.send_state()
 
@@ -751,7 +765,7 @@ class Mosviz(ConfigHelper, LineListMixin):
 
         if column_name == 'Redshift':
             # apply the value in the current row to the specviz object
-            row = self.app.get_viewer('table-viewer').current_row
+            row = self.app.get_viewer(self._default_table_viewer_reference_name).current_row
             if row is not None:
                 self._apply_redshift_from_table(value=data[row], row=row)
 
@@ -881,7 +895,9 @@ class Mosviz(ConfigHelper, LineListMixin):
 
         # Restrict to only checked rows if desired
         if selected:
-            checked_rows = self.app.get_viewer("table-viewer").widget_table.checked
+            checked_rows = self.app.get_viewer(
+                self._default_table_viewer_reference_name
+            ).widget_table.checked
             table_df = table_df.iloc[checked_rows]
 
         # This column is an artifact of the table widget construction with no meaning
@@ -911,7 +927,7 @@ class Mosviz(ConfigHelper, LineListMixin):
 
     def _get_spectrum(self, column, row=None, apply_slider_redshift="Warn"):
         if row is None:
-            row = self.app.get_viewer('table-viewer').current_row
+            row = self.app.get_viewer(self._default_table_viewer_reference_name).current_row
         if not isinstance(row, (int, np.int64)):
             raise TypeError("row not of type int")
 
