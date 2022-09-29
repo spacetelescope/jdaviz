@@ -37,7 +37,7 @@ class UserApiWrapper:
         from jdaviz.core.template_mixin import (SelectPluginComponent,
                                                 PlotOptionsSyncState,
                                                 AddResults,
-                                                AutoLabel)
+                                                AutoTextField)
         if isinstance(exp_obj, SelectPluginComponent):
             # this allows setting the selection directly without needing to access the underlying
             # .selected traitlet
@@ -46,7 +46,7 @@ class UserApiWrapper:
         elif isinstance(exp_obj, AddResults):
             exp_obj.auto_label.value = value
             return
-        elif isinstance(exp_obj, AutoLabel):
+        elif isinstance(exp_obj, AutoTextField):
             exp_obj.value = value
             return
         elif isinstance(exp_obj, PlotOptionsSyncState):

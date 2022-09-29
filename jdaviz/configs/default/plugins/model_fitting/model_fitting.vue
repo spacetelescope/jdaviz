@@ -33,11 +33,11 @@
 
     <j-plugin-section-header>Model Components</j-plugin-section-header>
     <v-form v-model="form_valid_model_component">
-      <v-row v-if="available_comps">
+      <v-row v-if="model_comp_items">
         <v-select
           :menu-props="{ left: true }"
-          :items="available_comps"
-          v-model="comp_selected"
+          :items="model_comp_items.map(i => i.label)"
+          v-model="model_comp_selected"
           label="Model Component"
           hint="Select a model component to add."
           persistent-hint
