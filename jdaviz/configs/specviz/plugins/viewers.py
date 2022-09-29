@@ -377,27 +377,6 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
             if "Subset" in layer.layer.label and layer.layer.data.label == data.label:
                 layer.linewidth = 3
 
-        # This default color cycle was retrieved from matplotlib with the following lines:
-        #   import matplotlib.pyplot as plt
-        #   plt.rcParams['axes.prop_cycle'].by_key()['color']
-
-        color_cycle = [
-            '#1f77b4',
-            '#ff7f0e',
-            '#2ca02c',
-            '#d62728',
-            '#9467bd',
-            '#8c564b',
-            '#e377c2',
-            '#7f7f7f',
-            '#bcbd22',
-            '#17becf'
-        ]
-
-        # we want to edit the color of the LATEST NON-SUBSET entry in layers
-        datalayers = [layer for layer in self.state.layers if isinstance(layer.layer, BaseData)]
-        datalayers[-1].color = color_cycle[(len(datalayers) - 1) % len(color_cycle)]
-
         return result
 
     def _plot_mask(self):

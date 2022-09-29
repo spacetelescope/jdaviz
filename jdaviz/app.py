@@ -45,7 +45,7 @@ from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessag
 from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registry,
                                     data_parser_registry)
 from jdaviz.core.tools import ICON_DIR
-from jdaviz.utils import SnackbarQueue
+from jdaviz.utils import SnackbarQueue, ColorCycler
 from ipypopout import PopoutButton
 
 __all__ = ['Application']
@@ -1307,6 +1307,8 @@ class Application(VuetifyTemplate, HubListener):
 
         active_data_labels = []
 
+        color_cycler = ColorCycler()
+
         # Include any selected data in the viewer
         for data_id, visibility in selected_items.items():
             label = self._get_data_item_by_id(data_id)['name']
@@ -1320,7 +1322,7 @@ class Application(VuetifyTemplate, HubListener):
 
             [data] = [x for x in self.data_collection if x.label == label]
 
-            viewer.add_data(data, percentile=95)
+            viewer.add_data(data, percentile=95, color=color_cycler())
 
             add_data_message = AddDataMessage(data, viewer,
                                               viewer_id=viewer_id,
@@ -1332,6 +1334,7 @@ class Application(VuetifyTemplate, HubListener):
                     if visibility == 'visible' and not layer.visible:
                         layer.visible = True
                         layer.update()
+
                     else:
                         layer.visible = visibility == 'visible'
 
