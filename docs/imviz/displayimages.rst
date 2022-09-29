@@ -164,7 +164,6 @@ tools.
 When you have multiple images loaded and linked by WCS
 (see :ref:`imviz-link-control`), the region defined is with respect to
 the reference image, which might not be the image you are viewing.
-This behavior is consistent with glue.
 
 .. warning::
 
