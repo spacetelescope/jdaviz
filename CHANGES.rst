@@ -83,7 +83,7 @@ Cubeviz
   as second positional argument instead of keyword, is now allowed. [#1644]
 
 - A warning will be presented when overwriting a moment map to
-  an existing file on disk. [#1683]
+  an existing file on disk. [#1683, #1684]
 
 Imviz
 ^^^^^
