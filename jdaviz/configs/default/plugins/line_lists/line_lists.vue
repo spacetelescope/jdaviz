@@ -94,6 +94,7 @@
     <j-plugin-section-header>Preset Line Lists</j-plugin-section-header>
     <v-row>
       <v-select
+        :menu-props="{ left: true }"
         :items="available_lists"
         @change="list_selected"
         label="Available Line Lists"
@@ -142,7 +143,7 @@
                 </j-tooltip>
               </v-col>
               <v-col cols=8>
-                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ item }}</div>
+                <div>{{ item }}</div>
               </v-col>
 
 
@@ -176,6 +177,7 @@
               <v-row class="row-min-bottom-padding" style="display: block">
                 <j-tooltip tipid='plugin-line-lists-custom-unit'>
                     <v-select
+                      :menu-props="{ left: true }"
                       :items="custom_unit_choices"
                       v-model="custom_unit"
                       label="Unit"

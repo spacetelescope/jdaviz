@@ -50,11 +50,6 @@ def test_fits_image_hdu_with_microns(image_cube_hdu_obj_microns, cubeviz_helper)
     assert unc_viewer.label_mouseover.pixel == 'x=-1.0 y=00.0'
     assert unc_viewer.label_mouseover.value == ''  # Out of bounds
 
-    mask_viewer = cubeviz_helper.app.get_viewer('mask-viewer')
-    mask_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 9, 'y': 0}})
-    assert mask_viewer.label_mouseover.pixel == 'x=09.0 y=00.0'
-    assert mask_viewer.label_mouseover.value == '+1.00000e+00 '  # Mask should be unitless
-
 
 def test_spectrum1d_with_fake_fixed_units(spectrum1d, cubeviz_helper):
     header = {
@@ -117,13 +112,6 @@ def test_fits_image_hdu_parse_from_file(tmpdir, image_cube_hdu_obj, cubeviz_help
     assert unc_viewer.label_mouseover.world_ra_deg == '205.4441642302'
     assert unc_viewer.label_mouseover.world_dec_deg == '26.9996148973'
 
-    mask_viewer = cubeviz_helper.app.get_viewer('mask-viewer')
-    mask_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 9, 'y': 0}})
-    assert mask_viewer.label_mouseover.pixel == 'x=09.0 y=00.0'
-    assert mask_viewer.label_mouseover.value == '+0.00000e+00 '  # Mask should be unitless
-    assert mask_viewer.label_mouseover.world_ra_deg == '205.4441642302'
-    assert mask_viewer.label_mouseover.world_dec_deg == '26.9996148973'
-
 
 @pytest.mark.filterwarnings('ignore')
 def test_spectrum3d_parse(image_cube_hdu_obj, cubeviz_helper):
@@ -148,10 +136,6 @@ def test_spectrum3d_parse(image_cube_hdu_obj, cubeviz_helper):
     unc_viewer = cubeviz_helper.app.get_viewer('uncert-viewer')
     unc_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': -1, 'y': 0}})
     assert unc_viewer.label_mouseover is None
-
-    mask_viewer = cubeviz_helper.app.get_viewer('mask-viewer')
-    mask_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 9, 'y': 0}})
-    assert mask_viewer.label_mouseover is None
 
 
 def test_spectrum1d_parse(spectrum1d, cubeviz_helper):

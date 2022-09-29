@@ -63,13 +63,13 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
                                        filetype == '3d ifu cube'):
                 for ext, viewer_name in (('SCI', 'flux-viewer'),
                                          ('ERR', 'uncert-viewer'),
-                                         ('DQ', 'mask-viewer')):
+                                         ('DQ', None)):
                     data_label = f'{file_name}[{ext}]'
                     _parse_jwst_s3d(app, hdulist, data_label, ext=ext, viewer_name=viewer_name)
             elif telescop == 'jwst' and filetype == 'r3d' and system == 'esa-pipeline':
                 for ext, viewer_name in (('DATA', 'flux-viewer'),
                                          ('ERR', 'uncert-viewer'),
-                                         ('QUALITY', 'mask-viewer')):
+                                         ('QUALITY', None)):
                     data_label = f'{file_name}[{ext}]'
                     _parse_esa_s3d(app, hdulist, data_label, ext=ext, viewer_name=viewer_name)
 
@@ -181,7 +181,8 @@ def _parse_hdulist(app, hdulist, file_name=None):
             app.data_collection[-1].get_component("flux").units = flux_unit
 
         if data_type == 'mask':
-            app.add_data_to_viewer('mask-viewer', data_label)
+            # We no longer auto-populate the mask cube into a viewer
+            pass
 
         elif data_type == 'uncert':
             app.add_data_to_viewer('uncert-viewer', data_label)
@@ -227,7 +228,9 @@ def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI', viewer_name='flux-viewe
     if data_type == 'flux':  # Forced wave unit conversion made it lose stuff, so re-add
         app.data_collection[-1].get_component("flux").units = flux.unit
 
-    app.add_data_to_viewer(viewer_name, data_label)
+    if viewer_name is not None:
+        app.add_data_to_viewer(viewer_name, data_label)
+    # Also add the collapsed flux to the spectrum viewer
     if viewer_name == 'flux-viewer':
         app.add_data_to_viewer('spectrum-viewer', data_label)
 
@@ -311,7 +314,8 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None):
             app.add_data_to_viewer('flux-viewer', cur_data_label)
             app.add_data_to_viewer('spectrum-viewer', cur_data_label)
         elif attr == 'mask':
-            app.add_data_to_viewer('mask-viewer', cur_data_label)
+            # We no longer auto-populate the mask cube into a viewer
+            pass
         else:  # 'uncertainty'
             app.add_data_to_viewer('uncert-viewer', cur_data_label)
 

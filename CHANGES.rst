@@ -21,6 +21,10 @@ New Features
 
 - Cycle through colors when multiple datasets are added to the same viewer [#1674]
 
+- Added ability to set height of application widget using `show` method. [#1646]
+
+- Add Common Galactic line lists, split Atomic/Ionic list with verified medium info [#1656]
+
 Cubeviz
 ^^^^^^^
 
@@ -100,6 +104,14 @@ Specviz2d
 
 Other Changes and Additions
 ---------------------------
+
+- Changed unit formatting to avoid astropy.units warnings in Line Analysis plugin. [#1648]
+
+Cubeviz
+^^^^^^^
+
+- Changed the default layout to have only two image viewers, and enabled tabbing
+  and dragging the viewers. [#1646]
 
 2.10 (2022-08-26)
 =================

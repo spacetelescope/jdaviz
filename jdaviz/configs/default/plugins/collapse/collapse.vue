@@ -14,6 +14,7 @@
 
     <v-row>
       <v-select
+        :menu-props="{ left: true }"
         :items="method_items.map(i => i.label)"
         v-model="method_selected"
         label="Method"

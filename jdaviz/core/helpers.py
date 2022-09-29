@@ -295,7 +295,7 @@ class ConfigHelper(HubListener):
 
         return parameters_cube
 
-    def show(self, loc="inline", title=None):  # pragma: no cover
+    def show(self, loc="inline", title=None, height=None):  # pragma: no cover
         """Display the Jdaviz application.
 
         Parameters
@@ -338,12 +338,22 @@ class ConfigHelper(HubListener):
 
             NOTE: Only applicable to a "sidecar" display.
 
+        height: int, optional
+            The height of the top-level application widget, in pixels. Applies to all
+            instances of the same application in the notebook.
+
         Notes
         -----
         If "sidecar" is requested in the "classic" Jupyter notebook, the app will appear inline,
         as only JupyterLab has a mechanism to have multiple tabs.
         """
         title = self.app.config if title is None else title
+        if height is not None:
+            if isinstance(height, int):
+                height = f"{height}px"
+            self.app.layout.height = height
+            self.app.state.settings['context']['notebook']['max_height'] = height
+
         show_widget(self.app, loc=loc, title=title)
 
     def show_in_sidecar(self, anchor=None, title=None):  # pragma: no cover
