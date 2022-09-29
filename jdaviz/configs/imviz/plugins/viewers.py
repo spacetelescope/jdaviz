@@ -25,14 +25,15 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
     tools = ['jdaviz:homezoom', 'jdaviz:boxzoommatch', 'jdaviz:boxzoom',
              'jdaviz:panzoommatch', 'jdaviz:imagepanzoom',
              'jdaviz:contrastbias', 'jdaviz:blinkonce',
-             'bqplot:rectangle', 'bqplot:circle', 'bqplot:ellipse']
+             'bqplot:rectangle', 'bqplot:circle', 'bqplot:ellipse', 'jdaviz:singlepixelregion']
 
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
                     ['jdaviz:homezoom', 'jdaviz:prevzoom'],
                     ['jdaviz:boxzoommatch', 'jdaviz:boxzoom'],
                     ['jdaviz:panzoommatch', 'jdaviz:imagepanzoom'],
-                    ['bqplot:circle', 'bqplot:rectangle', 'bqplot:ellipse'],
+                    ['bqplot:circle', 'bqplot:rectangle', 'bqplot:ellipse',
+                     'jdaviz:singlepixelregion'],
                     ['jdaviz:blinkonce', 'jdaviz:contrastbias'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export', 'jdaviz:sidebar_compass']
                 ]
