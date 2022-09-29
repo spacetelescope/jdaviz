@@ -100,11 +100,15 @@ Spectrum At Spaxel
 ==================
 
 This tool allows the user to create a one spaxel subset in an image viewer. This subset will then be
-visualized in the spectrum viewer by showing the spectrum at that spaxel. Users can hold down the
-alt key (Alt key on Windows, Option key on Mac) while clicking on a spaxel to create a new subset at
-that point. Users can then compare spectra at different spaxels using the spectrum viewer. Users can
-also utilize the different subset modes that are explained in the
-:ref:`Spatial Regions <imviz_defining_spatial_regions>` section.
+visualized in the spectrum viewer by showing the spectrum at that spaxel.
+Activate this tool and then left-click to create the new region.
+Click again to move the region to a new location under the cursor. Holding down the
+alt key (Alt key on Windows, Option key on Mac) while clicking on a spaxel creates a new subset at
+that point instead of moving the previously created region.
+You can then compare spectra at different spaxels using the spectrum viewer.
+You can also use the subset modes that are explained in the
+:ref:`Spatial Regions <imviz_defining_spatial_regions>`
+section above in the same way you would with the other subset selection tools.
 
 .. _cubeviz-display-settings:
 
