@@ -1,5 +1,7 @@
 import os
+from pathlib import Path
 
+from numpy.testing import assert_allclose
 import pytest
 from astropy.nddata import CCDData
 
@@ -67,10 +69,6 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
     mm.vue_save_as_fits()
     assert os.path.isfile(mm.filename)
 
-    # Does not allow overwrite.
-    with pytest.raises(OSError, match='already exists'):
-        mm.vue_save_as_fits()
-
     mm.n_moment = 1
     assert mm.results_label == 'moment 1'
     assert mm.results_label_overwrite is False
@@ -98,3 +96,40 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
     assert flux_viewer.label_mouseover.value == '+8.00000e+00 Jy'  # Slice 0 has 8 pixels, this is Slice 1  # noqa
     assert flux_viewer.label_mouseover.world_ra_deg == '204.9997755346'
     assert flux_viewer.label_mouseover.world_dec_deg == '27.0000999998'
+
+
+@pytest.mark.filterwarnings('ignore:No observer defined on WCS')
+def test_write_momentmap(cubeviz_helper, spectrum1d_cube):
+    ''' Test writing a moment map out to a FITS file on disk '''
+
+    # Simulate an existing file on disk to check for overwrite warning
+    test_file = Path("test_file.fits")
+    existing_sentinel_text = "This is a simulated, existing file on disk"
+    with open(str(test_file.resolve()), 'w') as f:
+        f.write(existing_sentinel_text)
+
+    cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
+    plugin = cubeviz_helper.plugins['Moment Maps']
+    moment = plugin.calculate_moment()
+
+    # By default, we shouldn't be warning the user of anything
+    assert plugin._obj.overwrite_warn is False
+
+    # Attempt to write the moment map to the same file we created earlier.
+    plugin._obj.filename = str(test_file)
+    plugin._obj.vue_save_as_fits()
+
+    # We should get an overwrite warning
+    assert plugin._obj.overwrite_warn is True
+    # and shouldn't have written anything (the file should be in tact)
+    with open(str(test_file.resolve()), 'r') as f:
+        assert existing_sentinel_text in f.read()
+
+    # Force overwrite the existing file
+    plugin._obj.vue_overwrite_fits()
+
+    # Read back in the file and check that it is equal to the one we calculated
+    assert_allclose(moment.data, CCDData.read(str(test_file)).data)
+
+    # Cleanup
+    test_file.unlink()

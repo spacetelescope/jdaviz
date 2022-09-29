@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 from astropy import units as u
 from astropy.nddata import CCDData
@@ -46,6 +47,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
     n_moment = IntHandleEmpty(0).tag(sync=True)
     filename = Unicode().tag(sync=True)
     moment_available = Bool(False).tag(sync=True)
+    overwrite_warn = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -114,10 +116,31 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         self.calculate_moment(add_data=True)
 
     def vue_save_as_fits(self, *args):
+        self._write_moment_to_fits()
+
+    def vue_overwrite_fits(self, *args):
+        """ Attempt to force writing the moment map if the user confirms the desire to overwrite """
+        self.overwrite_warn = False
+        self._write_moment_to_fits(force_overwrite=True)
+
+    def _write_moment_to_fits(self, force_overwrite=False, *args):
         if self.moment is None or not self.filename:  # pragma: no cover
             return
 
-        self.moment.write(self.filename)
+        path = Path(self.filename).resolve()
+        if path.exists():
+            if force_overwrite:
+                # Try to delete the file
+                path.unlink()
+                if path.exists():
+                    # Warn the user if the file still exists
+                    raise FileExistsError("Unable to delete existing file. Check user permissions")
+            else:
+                self.overwrite_warn = True
+                return
+
+        self.moment.write(str(path))
+
         # Let the user know where we saved the file.
         self.hub.broadcast(SnackbarMessage(
             f"Moment map saved to {os.path.abspath(self.filename)}", sender=self, color="success"))

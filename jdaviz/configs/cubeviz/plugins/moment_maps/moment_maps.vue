@@ -48,23 +48,59 @@
       action_tooltip="Calculate moment map"
       @click:action="calculate_moment"
     ></plugin-add-results>
+    
+    <j-plugin-section-header>Results</j-plugin-section-header>
 
-    <div v-if="moment_available">
-      <j-plugin-section-header>Results</j-plugin-section-header>
-      <v-row>
-          <v-text-field
-           v-model="filename"
-           label="Filename"
-           hint="Export the latest calculated moment map"
-           :rules="[() => !!filename || 'This field is required']"
-           persistent-hint>
-          </v-text-field>
-      </v-row>
-      <v-row justify="end">
-        <j-tooltip tipid='plugin-moment-save-fits'>
-          <v-btn color="primary" text @click="save_as_fits">Save as FITS</v-btn>
-        </j-tooltip>
-      </v-row>
+    <div style="display: grid; position: relative"> <!-- overlay container -->
+      <div style="grid-area: 1/1">
+        <div v-if="moment_available">
+          <v-row>
+              <v-text-field
+              v-model="filename"
+              label="Filename"
+              hint="Export the latest calculated moment map"
+              :rules="[() => !!filename || 'This field is required']"
+              persistent-hint>
+              </v-text-field>
+          </v-row>
+
+          <v-row justify="end">
+            <j-tooltip tipid='plugin-moment-save-fits'>
+              <v-btn color="primary" text @click="save_as_fits">Save as FITS</v-btn>
+
+            </j-tooltip>
+          </v-row>
+
+        </div>
+      </div>
+
+      <v-overlay
+        absolute
+        opacity=1.0
+        :value="overwrite_warn"
+        :zIndex=3
+        style="grid-area: 1/1; 
+               margin-left: -24px;
+               margin-right: -24px">
+      
+      <v-card color="transparent" elevation=0 >
+        <v-card-text width="100%">
+          <div class="white--text">
+            A file with this name is already on disk. Overwrite?
+          </div>
+        </v-card-text>
+
+        <v-card-actions>
+          <v-row justify="end">
+            <v-btn tile small color="primary" class="mr-2" @click="overwrite_warn=false">Cancel</v-btn>
+            <v-btn tile small color="accent" class="mr-4" @click="overwrite_fits" >Overwrite</v-btn>
+          </v-row>
+        </v-card-actions>
+      </v-card>
+
+      </v-overlay>
+
+
     </div>
   </j-tray-plugin>
 </template>
