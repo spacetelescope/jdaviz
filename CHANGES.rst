@@ -87,6 +87,8 @@ New Features
 
 - Add Common Galactic line lists, split Atomic/Ionic list with verified medium info [#1656]
 
+- Add support for nonstandard viewer reference names [#1681]
+
 Cubeviz
 ^^^^^^^
 
