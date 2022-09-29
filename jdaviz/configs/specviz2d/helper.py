@@ -61,10 +61,9 @@ class Specviz2d(ConfigHelper, LineListMixin):
             # Warn the user if they've panned far enough away from the data
             # that the viewers will desync
             if new_val > world[-1] or new_val < world[0]:
-                msg = "Warning: panning too far away from the data may desync\
-                      the 1D and 2D spectrum viewers"
-                msg = SnackbarMessage(msg, color='warning', sender=self)
-                self.app.hub.broadcast(msg)
+                self.app.hub.broadcast(SnackbarMessage(
+                    "Panning too far away from the data may desync the 1D and 2D spectrum viewers.",
+                    color='warning', sender=self))
 
             idx = float((np.abs(world - new_val)).argmin()) - extend_by
             scales = self.app.get_viewer('spectrum-2d-viewer').scales
@@ -98,27 +97,26 @@ class Specviz2d(ConfigHelper, LineListMixin):
                 val = world[new_idx+extend_by]
             except IndexError:
                 val = old_val
-                msg = "Warning: panning too far away from the data may desync \
-                       the 1D and 2D spectrum viewers"
-                msg = SnackbarMessage(msg, color='warning', sender=self)
-                self.app.hub.broadcast(msg)
+                self.app.hub.broadcast(SnackbarMessage(
+                    "Panning too far away from the data may desync the 1D and 2D spectrum viewers.",
+                    color='warning', sender=self))
             if val != old_val:
                 setattr(scales['x'], name, val)
 
     def load_data(self, spectrum_2d=None, spectrum_1d=None, spectrum_1d_label=None,
                   spectrum_2d_label=None, show_in_viewer=True):
         """
-        Load and parse a pair of corresponding 1D and 2D spectra
+        Load and parse a pair of corresponding 1D and 2D spectra.
 
         Parameters
         ----------
-        spectrum_1d: str or Spectrum1D
-            A spectrum as translatable container objects (e.g.
+        spectrum_2d: str
+            A spectrum as translatable container objects (e.g.,
             ``Spectrum1D``) that can be read by glue-jupyter. Alternatively,
             can be a string file path.
 
-        spectrum_2d: str
-            A spectrum as translatable container objects (e.g.
+        spectrum_1d: str or Spectrum1D
+            A spectrum as translatable container objects (e.g.,
             ``Spectrum1D``) that can be read by glue-jupyter. Alternatively,
             can be a string file path.
 
@@ -129,6 +127,9 @@ class Specviz2d(ConfigHelper, LineListMixin):
         spectrum_2d_label : str
             String representing the label for the data item loaded via
             ``spectrum_2d``.
+
+        show_in_viewer : bool
+            Show data in viewer(s).
 
         """
         if spectrum_2d_label is None:
@@ -164,7 +165,7 @@ class Specviz2d(ConfigHelper, LineListMixin):
                     spext.export_extract_spectrum(add_data=True)
                 except Exception:
                     msg = SnackbarMessage(
-                        "Automatic spectrum extraction failed.  See the spectral extraction"
+                        "Automatic spectrum extraction failed. See the spectral extraction"
                         " plugin to perform a custom extraction",
                         color='error', sender=self, timeout=10000)
                 else:

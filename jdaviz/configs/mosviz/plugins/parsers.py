@@ -255,15 +255,28 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
     data_labels : str, optional
         The label applied to the glue data component.
     """
+    # Note: This is also used by Specviz2D
     def _parse_as_spectrum1d(path):
         # Parse as a FITS file and assume the WCS is correct
         with fits.open(path) as hdulist:
             data = hdulist[1].data
             header = hdulist[1].header
-            wcs = WCS(header)
             metadata = standardize_metadata(header)
             metadata[PRIHDR_KEY] = standardize_metadata(hdulist[0].header)
-        return Spectrum1D(data, wcs=wcs, meta=metadata)
+            wcs = WCS(header)
+
+            try:
+                data_unit = u.Unit(header['BUNIT'])
+            except Exception:
+                data_unit = u.count
+
+            # FITS WCS is invalid, so ignore it.
+            if wcs.spectral.naxis == 0:
+                kw = {}
+            else:
+                kw = {'wcs': wcs}
+
+        return Spectrum1D(flux=data * data_unit, meta=metadata, **kw)
 
     # Coerce into list-like object
     if not isinstance(data_obj, (list, tuple, SpectrumCollection)):

@@ -53,6 +53,8 @@ Specviz2d
 
 - Support for importing/exporting Trace objects as data entries. [#1556]
 
+- 2D spectrum viewer now has info panel for pixel coordinates and value. [#1608]
+
 API Changes
 -----------
 
@@ -71,13 +73,16 @@ Specviz
 Bug Fixes
 ---------
 
+- Fixed loading data via the Import Data button on top-left of the application.
+  [#1608]
+
 Cubeviz
 ^^^^^^^
 
 - Calling ``cubeviz.load_data(data, data_label)``, where ``data_label`` is passed in
   as second positional argument instead of keyword, is now allowed. [#1644]
 
-- A warning will be presented with a warnning when overwriting a moment map on 
+- A warning will be presented with a warnning when overwriting a moment map on
   an existing file on disk [#1683]
 
 Imviz
@@ -107,6 +112,8 @@ Specviz2d
 
 - Fixed default spectral extraction parameters when the background separation otherwise would have
   fallen directly on the edge of the image. [#1633]
+
+- Fixed parser for Level 2 NIRSpec ``s2d`` files. [#1608]
 
 Other Changes and Additions
 ---------------------------
