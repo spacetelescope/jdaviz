@@ -19,6 +19,8 @@ New Features
   in accordance to the metadata entry. Lists without medium information
   are removed, until such information can be verified [#1626]
 
+- Cycle through colors when multiple datasets are added to the same viewer [#1674]
+
 Cubeviz
 ^^^^^^^
 
