@@ -19,7 +19,8 @@ New Features
   in accordance to the metadata entry. Lists without medium information
   are removed, until such information can be verified [#1626]
 
-- Cycle through colors when multiple datasets are added to the same viewer [#1674]
+- Cycle through colors applied to data when multiple datasets are loaded to
+  the same viewer [#1674]
 
 - Added ability to set height of application widget using `show` method. [#1646]
 
