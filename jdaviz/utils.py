@@ -3,11 +3,14 @@ import time
 import threading
 from collections import deque
 
+import matplotlib.pyplot as plt
+
 from astropy.io import fits
 from ipyvue import watch
+from glue.config import settings
 
 __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
-           'standardize_metadata']
+           'standardize_metadata', 'ColorCycler']
 
 # For Metadata Viewer plugin internal use only.
 PRIHDR_KEY = '_primary_header'
@@ -194,3 +197,28 @@ def standardize_metadata(metadata):
         raise TypeError('metadata must be dictionary or FITS header')
 
     return out_meta
+
+
+class ColorCycler:
+    """
+    Cycles through matplotlib's default color palette after first
+    using the Glue default data color.
+    """
+    # default color cycle starts with the Glue default data color
+    # followed by the matplotlib default color cycle
+    default_dark_gray = settings._defaults['DATA_COLOR']
+    default_color_palette = (
+        [default_dark_gray] + plt.rcParams['axes.prop_cycle'].by_key()['color']
+    )
+
+    def __init__(self, counter=-1, complement=False):
+        self.counter = counter
+        self.complement = complement
+
+    def __call__(self):
+        self.counter += 1
+
+        cycle_index = self.counter % len(self.default_color_palette)
+        color = self.default_color_palette[cycle_index]
+
+        return color
