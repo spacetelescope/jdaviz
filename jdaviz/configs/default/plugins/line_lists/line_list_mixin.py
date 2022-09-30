@@ -18,9 +18,11 @@ class LineListMixin:
         loaded via the notebook.
         """
 
-        lt = self.app.get_viewer('spectrum-viewer').load_line_list(line_table,
-                                                                   replace=replace,
-                                                                   return_table=True)
+        lt = self.app.get_viewer(
+            self._default_spectrum_viewer_reference_name
+        ).load_line_list(
+            line_table, replace=replace, return_table=True
+        )
 
         # TODO: why is the rest of this logic here and not in viewer.load_line_list?
 
@@ -36,23 +38,33 @@ class LineListMixin:
 
     def erase_spectral_lines(self, name=None):
         """Convenience function to get to the viewer function"""
-        self.app.get_viewer('spectrum-viewer').erase_spectral_lines(name=name)
+        self.app.get_viewer(
+            self._default_spectrum_viewer_reference_name
+        ).erase_spectral_lines(name=name)
 
     def plot_spectral_line(self, line):
         """Convenience function to get to the viewer function"""
-        self.app.get_viewer('spectrum-viewer').plot_spectral_line(line)
+        self.app.get_viewer(
+            self._default_spectrum_viewer_reference_name
+        ).plot_spectral_line(line)
 
     def plot_spectral_lines(self):
         """Convenience function to get to the viewer function"""
-        self.app.get_viewer('spectrum-viewer').plot_spectral_lines()
+        self.app.get_viewer(
+            self._default_spectrum_viewer_reference_name
+        ).plot_spectral_lines()
 
     @property
     def spectral_lines(self):
-        return self.app.get_viewer('spectrum-viewer').spectral_lines
+        return self.app.get_viewer(
+            self._default_spectrum_viewer_reference_name
+        ).spectral_lines
 
     @property
     def available_linelists(self):
-        return self.app.get_viewer('spectrum-viewer').available_linelists()
+        return self.app.get_viewer(
+            self._default_spectrum_viewer_reference_name
+        ).available_linelists()
 
     def set_redshift_slider_bounds(self, range=None, step=None):
         '''

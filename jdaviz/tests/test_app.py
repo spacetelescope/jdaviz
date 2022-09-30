@@ -34,8 +34,8 @@ def test_nonstandard_specviz_viewer_name():
                        'g-gaussian-smooth',
                        'g-model-fitting',
                        'g-unit-conversion',
-                       # 'g-line-list' and 'specviz-line-analysis' are not
-                       # supported by the custom config adaptations for now
+                       'g-line-list',
+                       'specviz-line-analysis',
                        'g-export-plot'],
               'viewer_area': [{'container': 'col',
                                'children': [{'container': 'row',

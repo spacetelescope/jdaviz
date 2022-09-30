@@ -89,6 +89,20 @@ class MosvizImageView(BqplotImageView, JdavizViewerMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self._default_spectrum_viewer_reference_name = kwargs.get(
+            "spectrum_viewer_reference_name", "spectrum-viewer"
+        )
+        self._default_flux_viewer_reference_name = kwargs.get(
+            "flux_viewer_reference_name", "flux-viewer"
+        )
+        self._default_spectrum_2d_viewer_reference_name = kwargs.get(
+            "spectrum_2d_viewer_reference_name", "spectrum-2d-viewer"
+        )
+        self._default_table_viewer_reference_name = kwargs.get(
+            "table_viewer_reference_name", "table-viewer"
+        )
+
         self._subscribe_to_layers_update()
         self._initialize_toolbar_nested()
 
@@ -138,6 +152,20 @@ class MosvizProfile2DView(BqplotImageView, JdavizViewerMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self._default_spectrum_viewer_reference_name = kwargs.get(
+            "spectrum_viewer_reference_name", "spectrum-viewer"
+        )
+        self._default_flux_viewer_reference_name = kwargs.get(
+            "flux_viewer_reference_name", "flux-viewer"
+        )
+        self._default_spectrum_2d_viewer_reference_name = kwargs.get(
+            "spectrum_2d_viewer_reference_name", "spectrum-2d-viewer"
+        )
+        self._default_table_viewer_reference_name = kwargs.get(
+            "table_viewer_reference_name", "table-viewer"
+        )
+
         self._subscribe_to_layers_update()
         self._initialize_toolbar_nested()
         # Setup viewer option defaults
@@ -234,6 +262,19 @@ class MosvizTableViewer(TableViewer, JdavizViewerMixin):
     def __init__(self, session, *args, **kwargs):
         super().__init__(session, *args, **kwargs)
 
+        self._default_spectrum_viewer_reference_name = kwargs.get(
+            "spectrum_viewer_reference_name", "spectrum-viewer"
+        )
+        self._default_image_viewer_reference_name = kwargs.get(
+            "image_viewer_reference_name", "image-viewer"
+        )
+        self._default_spectrum_2d_viewer_reference_name = kwargs.get(
+            "spectrum_2d_viewer_reference_name", "spectrum-2d-viewer"
+        )
+        self._default_table_viewer_reference_name = kwargs.get(
+            "table_viewer_reference_name", "table-viewer"
+        )
+
         self.figure_widget.observe(self._on_row_selected, names=['highlighted'])
         # enable scrolling: # https://github.com/glue-viz/glue-jupyter/pull/287
         self.widget_table.scrollable = True
@@ -309,17 +350,17 @@ class MosvizTableViewer(TableViewer, JdavizViewerMixin):
             if data_item.meta.get('Plugin') is not None:
                 if data_item.meta.get('mosviz_row') == selected_index:
                     self.session.hub.broadcast(AddDataToViewerMessage(
-                        'spectrum-viewer', data_item.label, sender=self))
+                        self._default_spectrum_viewer_reference_name, data_item.label, sender=self))
                 else:
                     self.session.hub.broadcast(RemoveDataFromViewerMessage(
-                        'spectrum-viewer', data_item.label, sender=self))
+                        self._default_spectrum_viewer_reference_name, data_item.label, sender=self))
 
         for component in mos_data.components:
             comp_data = mos_data.get_component(component).data
             selected_data = comp_data[selected_index]
 
             if component.label == '1D Spectra':
-                prev_data = self._selected_data.get('spectrum-viewer')
+                prev_data = self._selected_data.get(self._default_spectrum_viewer_reference_name)
                 if prev_data != selected_data:
                     if prev_data:
                         # This covers the cases where data is unit converted
@@ -330,42 +371,54 @@ class MosvizTableViewer(TableViewer, JdavizViewerMixin):
                         for modified_prev_data in all_prev_data:
                             if modified_prev_data:
                                 remove_data_from_viewer_message = RemoveDataFromViewerMessage(
-                                    'spectrum-viewer', modified_prev_data, sender=self)
+                                    self._default_spectrum_viewer_reference_name,
+                                    modified_prev_data, sender=self
+                                )
                                 self.session.hub.broadcast(remove_data_from_viewer_message)
 
                     add_data_to_viewer_message = AddDataToViewerMessage(
-                        'spectrum-viewer', selected_data, sender=self)
+                        self._default_spectrum_viewer_reference_name,
+                        selected_data, sender=self
+                    )
                     self.session.hub.broadcast(add_data_to_viewer_message)
 
-                    self._selected_data['spectrum-viewer'] = selected_data
+                    self._selected_data[
+                        self._default_spectrum_viewer_reference_name
+                    ] = selected_data
 
             if component.label == '2D Spectra':
-                prev_data = self._selected_data.get('spectrum-2d-viewer')
+                prev_data = self._selected_data.get(self._default_spectrum_2d_viewer_reference_name)
                 if prev_data != selected_data:
                     if prev_data:
                         remove_data_from_viewer_message = RemoveDataFromViewerMessage(
-                            'spectrum-2d-viewer', prev_data, sender=self)
+                            self._default_spectrum_2d_viewer_reference_name,
+                            prev_data, sender=self
+                        )
                         self.session.hub.broadcast(remove_data_from_viewer_message)
 
                     add_data_to_viewer_message = AddDataToViewerMessage(
-                        'spectrum-2d-viewer', selected_data, sender=self)
+                        self._default_spectrum_2d_viewer_reference_name,
+                        selected_data, sender=self
+                    )
                     self.session.hub.broadcast(add_data_to_viewer_message)
 
-                    self._selected_data['spectrum-2d-viewer'] = selected_data
+                    self._selected_data[
+                        self._default_spectrum_2d_viewer_reference_name
+                    ] = selected_data
 
             if component.label == 'Images':
-                prev_data = self._selected_data.get('image-viewer')
+                prev_data = self._selected_data.get(self._default_image_viewer_reference_name)
                 if prev_data != selected_data:
                     if prev_data:
                         remove_data_from_viewer_message = RemoveDataFromViewerMessage(
-                            'image-viewer', prev_data, sender=self)
+                            self._default_image_viewer_reference_name, prev_data, sender=self)
                         self.session.hub.broadcast(remove_data_from_viewer_message)
 
                     add_data_to_viewer_message = AddDataToViewerMessage(
-                        'image-viewer', selected_data, sender=self)
+                        self._default_image_viewer_reference_name, selected_data, sender=self)
                     self.session.hub.broadcast(add_data_to_viewer_message)
 
-                    self._selected_data['image-viewer'] = selected_data
+                    self._selected_data[self._default_image_viewer_reference_name] = selected_data
 
         message = TableClickMessage(selected_index=selected_index,
                                     shared_image=self._shared_image,

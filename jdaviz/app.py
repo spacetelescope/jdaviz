@@ -92,6 +92,19 @@ for name, path in custom_components.items():
 
 ipyvue.register_component_from_file('g-viewer-tab', "container.vue", __file__)
 
+# Define argument requirements for tray plugins. Keys are plugin names and values are
+# dictionaries containing the class attributes required on the helper, and the corresponding
+# constructor argument that defines the default value of that class attribute.
+_tray_cls_kwargs = {
+    "g-line-list": {
+        "_default_flux_viewer_reference_name": "flux_viewer_reference_name",
+        "_default_spectrum_viewer_reference_name": "spectrum_viewer_reference_name",
+    },
+    "specviz-line-analysis": {
+        "_default_spectrum_viewer_reference_name": "spectrum_viewer_reference_name",
+    },
+}
+
 
 class ApplicationState(State):
     """
@@ -1071,15 +1084,33 @@ class Application(VuetifyTemplate, HubListener):
         # Cannot sort because of None
         return [self._viewer_item_by_id(vid).get('reference') for vid in self._viewer_store]
 
-    def get_first_empty_viewer_reference_name(self):
+    def get_first_viewer_reference_name(
+            self, require_no_selected_data=False, require_spectrum_viewer=False
+    ):
         """
-        Return the viewer reference name of the first available viewer
-        that has not yet loaded data
+        Return the viewer reference name of the first available viewer.
+        Optionally use ``require_no_selected_data`` to require that the
+        viewer has not yet loaded data, or ``require_spectrum_viewer``
+        to require that the viewer supports spectrum visualization.
         """
+        from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
+        from jdaviz.configs.cubeviz.plugins.viewers import CubevizProfileView
+        from jdaviz.configs.mosviz.plugins.viewers import MosvizProfileView
+        spectral_viewers = (SpecvizProfileView, CubevizProfileView, MosvizProfileView)
+
         for vid in self._viewer_store:
             viewer_item = self._viewer_item_by_id(vid)
-            if not len(viewer_item['selected_data_items']):
-                return viewer_item['reference']
+            if require_spectrum_viewer:
+                if isinstance(self._viewer_store[vid], spectral_viewers):
+                    if require_no_selected_data and not len(viewer_item['selected_data_items']):
+                        return viewer_item['reference']
+                    elif not require_no_selected_data:
+                        return viewer_item['reference']
+            else:
+                if require_no_selected_data and not len(viewer_item['selected_data_items']):
+                    return viewer_item['reference']
+                elif not require_no_selected_data:
+                    return viewer_item['reference']
 
     def _viewer_by_id(self, vid):
         """
@@ -1684,7 +1715,21 @@ class Application(VuetifyTemplate, HubListener):
 
         for name in config.get('tray', []):
             tray = tray_registry.members.get(name)
-            tray_item_instance = tray.get('cls')(app=self)
+
+            # If optional kwargs are necessary to initialize this
+            # tray item's class, add the necessary kwargs and their
+            # values to a dictionary that will be passed to the
+            # tray item's constructor:
+            optional_tray_kwargs = dict()
+
+            if name in _tray_cls_kwargs:
+                for opt_attr, opt_kwarg in _tray_cls_kwargs[name].items():
+                    optional_tray_kwargs[opt_kwarg] = getattr(
+                        self, opt_attr, self.get_first_viewer_reference_name(
+                            require_spectrum_viewer=True
+                        )
+                    )
+            tray_item_instance = tray.get('cls')(app=self, **optional_tray_kwargs)
             tray_item_label = tray.get('label')
 
             self.state.tray_items.append({

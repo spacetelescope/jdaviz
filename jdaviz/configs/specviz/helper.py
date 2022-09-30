@@ -51,7 +51,9 @@ class Specviz(ConfigHelper, LineListMixin):
             # If viewer reference name is not specified and default is unavailable,
             # use first viewer without loaded data:
             else:
-                viewer_reference_name = self.app.get_first_empty_viewer_reference_name()
+                viewer_reference_name = self.app.get_first_viewer_reference_name(
+                    require_no_selected_data=True
+                )
 
         super().load_data(data,
                           parser_reference='specviz-spectrum1d-parser',
