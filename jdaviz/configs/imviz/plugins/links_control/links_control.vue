@@ -10,14 +10,14 @@
           <v-radio-group 
             label="Link type"
             hint="Type of linking to be done."
-            v-model="link_type"
+            v-model="link_type_selected"
             persistent-hint
             row>
             <v-radio
-              v-for="item in link_types"
-              :key="item"
-              :label="item"
-              :value="item"
+              v-for="item in link_type_items"
+              :key="item.label"
+              :label="item.label"
+              :value="item.label"
             ></v-radio>
            </v-radio-group>
         </v-row>
@@ -31,7 +31,7 @@
           </v-switch>
         </v-row>
 
-        <v-row v-if="link_type == 'WCS'">
+        <v-row v-if="link_type_selected == 'WCS'">
           <v-switch
             label="Fast approximation"
             hint="Use fast approximation for image alignment if possible (accurate to <1 pixel)."
