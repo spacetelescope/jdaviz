@@ -114,6 +114,9 @@ Mosviz
 Specviz
 ^^^^^^^
 
+- Line Lists plugin now disabled if no data is loaded instead of letting user
+  load a list list and crash. [#1691]
+
 Specviz2d
 ^^^^^^^^^
 

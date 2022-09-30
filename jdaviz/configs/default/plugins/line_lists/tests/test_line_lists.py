@@ -45,8 +45,14 @@ def test_line_lists(specviz_helper):
 
 
 def test_redshift(specviz_helper, spectrum1d):
+    # Also test that plugin is disabled before data is loaded.
+    plg = specviz_helper.plugins['Line Lists']
+    assert plg._obj.disabled_msg
+
     label = "Test 1D Spectrum"
     specviz_helper.load_spectrum(spectrum1d, data_label=label)
+
+    assert not plg._obj.disabled_msg
 
     lt = QTable()
     lt['linename'] = ['O III', 'Halpha']
