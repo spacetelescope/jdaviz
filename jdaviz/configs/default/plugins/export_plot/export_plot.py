@@ -39,7 +39,7 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
 
         """
         if filetype is None:
-            if filename is not None:
+            if filename is not None and '.' in filename:
                 filetype = filename.split('.')[-1]
             else:
                 # default to png
