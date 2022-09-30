@@ -93,16 +93,34 @@ for name, path in custom_components.items():
 ipyvue.register_component_from_file('g-viewer-tab', "container.vue", __file__)
 
 # Define argument requirements for tray plugins. Keys are plugin names and values are
-# dictionaries containing the class attributes required on the helper, and the corresponding
-# constructor argument that defines the default value of that class attribute.
+# dictionaries containing the class attributes required on the helper, the corresponding
+# constructor argument that defines the default value of that class attribute, and
+# any kwargs needed in the call to `Application.get_first_viewer_reference_name`
 _tray_cls_kwargs = {
     "g-line-list": {
-        "_default_flux_viewer_reference_name": "flux_viewer_reference_name",
-        "_default_spectrum_viewer_reference_name": "spectrum_viewer_reference_name",
+        "_default_flux_viewer_reference_name":
+            ["image_viewer_reference_name", {"require_image_viewer": True}],
+        "_default_spectrum_viewer_reference_name":
+            ["spectrum_viewer_reference_name", {"require_spectrum_viewer": True}],
     },
     "specviz-line-analysis": {
-        "_default_spectrum_viewer_reference_name": "spectrum_viewer_reference_name",
+        "_default_spectrum_viewer_reference_name":
+            ["spectrum_viewer_reference_name", {"require_spectrum_viewer": True}],
     },
+    "g-gaussian-smooth": {
+        "_default_spectrum_viewer_reference_name":
+            ["spectrum_viewer_reference_name", {"require_spectrum_viewer": True}],
+    },
+    "g-model-fitting": {
+        "_default_spectrum_viewer_reference_name":
+            ["spectrum_viewer_reference_name", {"require_spectrum_viewer": True}],
+    },
+    "g-slit-overlay": {
+        "_default_table_viewer_reference_name":
+            ["table_viewer_reference_name", {"require_table_viewer": True}],
+        "_default_flux_viewer_reference_name":
+            ["flux_viewer_reference_name", {"require_flux_viewer": True}],
+    }
 }
 
 
@@ -1085,23 +1103,51 @@ class Application(VuetifyTemplate, HubListener):
         return [self._viewer_item_by_id(vid).get('reference') for vid in self._viewer_store]
 
     def get_first_viewer_reference_name(
-            self, require_no_selected_data=False, require_spectrum_viewer=False
+            self, require_no_selected_data=False,
+            require_spectrum_viewer=False,
+            require_table_viewer=False,
+            require_flux_viewer=False,
+            require_image_viewer=False
     ):
         """
         Return the viewer reference name of the first available viewer.
         Optionally use ``require_no_selected_data`` to require that the
-        viewer has not yet loaded data, or ``require_spectrum_viewer``
+        viewer has not yet loaded data, or e.g. ``require_spectrum_viewer``
         to require that the viewer supports spectrum visualization.
         """
         from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
-        from jdaviz.configs.cubeviz.plugins.viewers import CubevizProfileView
-        from jdaviz.configs.mosviz.plugins.viewers import MosvizProfileView
+        from jdaviz.configs.cubeviz.plugins.viewers import CubevizProfileView, CubevizImageView
+        from jdaviz.configs.mosviz.plugins.viewers import (
+            MosvizProfileView, MosvizTableViewer, MosvizProfile2DView
+        )
+
         spectral_viewers = (SpecvizProfileView, CubevizProfileView, MosvizProfileView)
+        table_viewers = (MosvizTableViewer, )
+        image_viewers = (MosvizProfile2DView, )
+        flux_viewers = (CubevizImageView, )
 
         for vid in self._viewer_store:
             viewer_item = self._viewer_item_by_id(vid)
             if require_spectrum_viewer:
                 if isinstance(self._viewer_store[vid], spectral_viewers):
+                    if require_no_selected_data and not len(viewer_item['selected_data_items']):
+                        return viewer_item['reference']
+                    elif not require_no_selected_data:
+                        return viewer_item['reference']
+            elif require_table_viewer:
+                if isinstance(self._viewer_store[vid], table_viewers):
+                    if require_no_selected_data and not len(viewer_item['selected_data_items']):
+                        return viewer_item['reference']
+                    elif not require_no_selected_data:
+                        return viewer_item['reference']
+            elif require_image_viewer:
+                if isinstance(self._viewer_store[vid], image_viewers):
+                    if require_no_selected_data and not len(viewer_item['selected_data_items']):
+                        return viewer_item['reference']
+                    elif not require_no_selected_data:
+                        return viewer_item['reference']
+            elif require_flux_viewer:
+                if isinstance(self._viewer_store[vid], flux_viewers):
                     if require_no_selected_data and not len(viewer_item['selected_data_items']):
                         return viewer_item['reference']
                     elif not require_no_selected_data:
@@ -1723,20 +1769,29 @@ class Application(VuetifyTemplate, HubListener):
             optional_tray_kwargs = dict()
 
             if name in _tray_cls_kwargs:
-                for opt_attr, opt_kwarg in _tray_cls_kwargs[name].items():
+                for opt_attr, [opt_kwarg, get_name_kwargs] in _tray_cls_kwargs[name].items():
                     optional_tray_kwargs[opt_kwarg] = getattr(
-                        self, opt_attr, self.get_first_viewer_reference_name(
-                            require_spectrum_viewer=True
-                        )
+                        self, opt_attr, self.get_first_viewer_reference_name(**get_name_kwargs)
                     )
-            tray_item_instance = tray.get('cls')(app=self, **optional_tray_kwargs)
-            tray_item_label = tray.get('label')
+            # If the plugin constructor call below is not called with the correct kwargs,
+            # we would get a cryptic TypeError because the expected viewer reference
+            # name cannot be found. This `try` warns the user if the plugin can't be
+            # initialized, and continues onto loading the next plugin.
+            try:
+                tray_item_instance = tray.get('cls')(app=self, **optional_tray_kwargs)
+                tray_item_label = tray.get('label')
 
-            self.state.tray_items.append({
-                'name': name,
-                'label': tray_item_label,
-                'widget': "IPY_MODEL_" + tray_item_instance.model_id
-            })
+                self.state.tray_items.append({
+                    'name': name,
+                    'label': tray_item_label,
+                    'widget': "IPY_MODEL_" + tray_item_instance.model_id
+                })
+            except TypeError:
+                warnings.warn(
+                    f'Could not initialize "{tray.get("cls").__name__}" '
+                    f'within plugin "{name}" with keyword arguments: '
+                    f'{optional_tray_kwargs}. Skipping plugin "{name}".'
+                )
 
     def _reset_state(self):
         """ Resets the application state """

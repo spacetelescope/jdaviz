@@ -71,6 +71,9 @@ class LineListTool(PluginTemplateMixin):
         self._default_flux_viewer_reference_name = kwargs.get(
             "flux_viewer_reference_name", "flux-viewer"
         )
+        self._default_image_viewer_reference_name = kwargs.get(
+            "image_viewer_reference_name", "image-viewer"
+        )
         self._viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
         self._spectrum1d = None
         self.available_lists = self._viewer.available_linelists()

@@ -67,4 +67,6 @@ def spec2d_1d_parser(app, data_obj, data_label=None, show_in_viewer=True):
     app.data_collection[data_label] = data_obj
 
     if show_in_viewer:
-        app.add_data_to_viewer("spectrum-viewer", data_label)
+        app.add_data_to_viewer(
+            app._default_spectrum_viewer_reference_name, data_label
+        )

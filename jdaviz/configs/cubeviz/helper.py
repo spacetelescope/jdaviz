@@ -17,6 +17,7 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
     _default_spectrum_viewer_reference_name = "spectrum-viewer"
     _default_uncert_viewer_reference_name = "uncert-viewer"
     _default_flux_viewer_reference_name = "flux-viewer"
+    _default_image_viewer_reference_name = "image-viewer"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -54,6 +55,12 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
             raise RuntimeError('only one cube may be loaded per Cubeviz instance')
         if data_label:
             kwargs['data_label'] = data_label
+
+        kwargs.update({
+            "flux_viewer_reference_name": self._default_flux_viewer_reference_name,
+            "uncert_viewer_reference_name": self._default_uncert_viewer_reference_name,
+            "spectrum_viewer_reference_name": self._default_spectrum_viewer_reference_name,
+        })
         super().load_data(data, parser_reference="cubeviz-data-parser", **kwargs)
 
     def select_slice(self, slice):
@@ -85,7 +92,7 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
         if not isinstance(wavelength, (int, float)):
             raise TypeError("wavelength must be a float or int")
         # Retrieve the x slices from the spectrum viewer's marks
-        sv = self.app.get_viewer('spectrum-viewer')
+        sv = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
         x_all = sv.native_marks[0].x
         if sv.state.layers[0].as_steps:
             # then the marks have been doubled in length (each point duplicated)

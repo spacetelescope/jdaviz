@@ -225,6 +225,12 @@ class BasePluginComponent(HubListener):
         self._plugin = plugin
         self._cached_properties = []
         super().__init__()
+        self._default_spectrum_viewer_reference_name = kwargs.get(
+            "spectrum_viewer_reference_name", "spectrum-viewer"
+        )
+        self._default_spectrum_2d_viewer_reference_name = kwargs.get(
+            "spectrum_2d_viewer_reference_name", "spectrum-2d-viewer"
+        )
 
     def __getattr__(self, attr):
         if attr[0] == '_' or attr not in self._plugin_traitlets.keys():
@@ -298,7 +304,9 @@ class BasePluginComponent(HubListener):
 
     @cached_property
     def spectrum_viewer(self):
-        return self._plugin.app.get_viewer("spectrum-viewer")
+        return self._plugin.app.get_viewer(
+            self._default_spectrum_viewer_reference_name
+        )
 
 
 class SelectPluginComponent(BasePluginComponent, HasTraits):
@@ -965,11 +973,16 @@ class SpectralSubsetSelectMixin(VuetifyTemplate, HubListener):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self._default_spectrum_viewer_reference_name = kwargs.get(
+            "spectrum_viewer_reference_name", "spectrum-viewer"
+        )
+
         self.spectral_subset = SubsetSelect(self,
                                             'spectral_subset_items',
                                             'spectral_subset_selected',
                                             'spectral_subset_selected_has_subregions',
-                                            viewers=['spectrum-viewer'],
+                                            viewers=[self._default_spectrum_viewer_reference_name],
                                             default_text='Entire Spectrum',
                                             allowed_type='spectral')
 
@@ -1351,7 +1364,9 @@ class DatasetSelect(SelectPluginComponent):
             if not len(self.app.get_viewer_reference_names()):
                 # then this is a bare Application object, so ignore this filter
                 return True
-            return data.label in [l.layer.label for l in self.app.get_viewer('spectrum-2d-viewer').layers]  # noqa
+            return data.label in [l.layer.label for l in self.app.get_viewer(  # noqa E741
+                self._default_spectrum_2d_viewer_reference_name
+            ).layers]
 
         def is_trace(data):
             return hasattr(data, 'meta') and 'Trace' in data.meta

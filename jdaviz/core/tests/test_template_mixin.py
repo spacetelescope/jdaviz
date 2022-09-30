@@ -47,6 +47,7 @@ def test_viewer_select(cubeviz_helper, spectrum1d_cube):
 
     # export plot uses the mixin
     p = app.get_tray_item_from_name('g-export-plot')
+    print(p.viewer.ids)
     assert len(p.viewer.ids) == 3
     assert len(p.viewer.references) == 3
     assert len(p.viewer.labels) == 3

@@ -134,7 +134,10 @@ class UnitConversion(PluginTemplateMixin, DatasetSelectMixin):
             else:
                 # Add spectrum with converted units to app.
                 self.app.add_data(converted_spec, new_label)
-                self.app.add_data_to_viewer("spectrum-viewer", new_label, clear_other_data=True)
+                self.app.add_data_to_viewer(
+                    self.app._default_spectrum_viewer_reference_name,
+                    new_label, clear_other_data=True
+                )
 
         else:
             new_label = self.dataset_selected + label
@@ -153,7 +156,10 @@ class UnitConversion(PluginTemplateMixin, DatasetSelectMixin):
                 # Replace old spectrum with new one with updated units.
                 self.app.add_data(converted_spec, new_label)
 
-        self.app.add_data_to_viewer("spectrum-viewer", new_label, clear_other_data=True)
+        self.app.add_data_to_viewer(
+            self.app._default_spectrum_viewer_reference_name,
+            new_label, clear_other_data=True
+        )
         snackbar_message = SnackbarMessage(
             f"Data set '{label}' units converted successfully.",
             color="success",

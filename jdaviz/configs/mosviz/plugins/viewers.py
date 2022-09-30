@@ -33,6 +33,20 @@ class MosvizProfileView(BqplotProfileView, JdavizViewerMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self._default_spectrum_viewer_reference_name = kwargs.get(
+            "spectrum_viewer_reference_name", "spectrum-viewer"
+        )
+        self._default_image_viewer_reference_name = kwargs.get(
+            "image_viewer_reference_name", "image-viewer"
+        )
+        self._default_spectrum_2d_viewer_reference_name = kwargs.get(
+            "spectrum_2d_viewer_reference_name", "spectrum-2d-viewer"
+        )
+        self._default_table_viewer_reference_name = kwargs.get(
+            "table_viewer_reference_name", "table-viewer"
+        )
+
         self._subscribe_to_layers_update()
         self._initialize_toolbar_nested()
 
@@ -93,8 +107,8 @@ class MosvizImageView(BqplotImageView, JdavizViewerMixin):
         self._default_spectrum_viewer_reference_name = kwargs.get(
             "spectrum_viewer_reference_name", "spectrum-viewer"
         )
-        self._default_flux_viewer_reference_name = kwargs.get(
-            "flux_viewer_reference_name", "flux-viewer"
+        self._default_image_viewer_reference_name = kwargs.get(
+            "image_viewer_reference_name", "image-viewer"
         )
         self._default_spectrum_2d_viewer_reference_name = kwargs.get(
             "spectrum_2d_viewer_reference_name", "spectrum-2d-viewer"
@@ -156,8 +170,8 @@ class MosvizProfile2DView(BqplotImageView, JdavizViewerMixin):
         self._default_spectrum_viewer_reference_name = kwargs.get(
             "spectrum_viewer_reference_name", "spectrum-viewer"
         )
-        self._default_flux_viewer_reference_name = kwargs.get(
-            "flux_viewer_reference_name", "flux-viewer"
+        self._default_image_viewer_reference_name = kwargs.get(
+            "image_viewer_reference_name", "image-viewer"
         )
         self._default_spectrum_2d_viewer_reference_name = kwargs.get(
             "spectrum_2d_viewer_reference_name", "spectrum-2d-viewer"

@@ -411,8 +411,8 @@ class SpectralExtraction(PluginTemplateMixin):
         if not self._do_marks:
             return {}
 
-        viewer2d = self.app.get_viewer('spectrum-2d-viewer')
-        viewer1d = self.app.get_viewer('spectrum-viewer')
+        viewer2d = self.app.get_viewer(self.app._default_spectrum_2d_viewer_reference_name)
+        viewer1d = self.app.get_viewer(self.app._default_spectrum_viewer_reference_name)
         if not viewer2d.state.reference_data:
             # we don't have data yet for scales, defer initializing
             return {}

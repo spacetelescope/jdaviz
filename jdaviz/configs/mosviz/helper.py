@@ -559,7 +559,7 @@ class Mosviz(ConfigHelper, LineListMixin):
         self.app.load_data(data_obj, ids=ids, spectra=spectra, sp1d=sp1d,
                            parser_reference="mosviz-metadata-parser")
 
-    def load_1d_spectra(self, data_obj, data_labels=None):
+    def load_1d_spectra(self, data_obj, data_labels=None, **kwargs):
         """
         Load and parse a set of 1D spectra objects.
 
@@ -574,11 +574,14 @@ class Mosviz(ConfigHelper, LineListMixin):
             ``data_obj``. Can be a list of strings representing data labels
             for each item in ``data_obj`` if  ``data_obj`` is a list.
         """
+        kwargs.update({
+            "table_viewer_reference_name": self._default_table_viewer_reference_name,
+        })
         super().load_data(data_obj, parser_reference="mosviz-spec1d-parser",
-                          data_labels=data_labels)
+                          data_labels=data_labels, **kwargs)
         self._add_redshift_column()
 
-    def load_2d_spectra(self, data_obj, data_labels=None):
+    def load_2d_spectra(self, data_obj, data_labels=None, **kwargs):
         """
         Load and parse a set of 2D spectra objects.
 
@@ -593,21 +596,28 @@ class Mosviz(ConfigHelper, LineListMixin):
             ``data_obj``. Can be a list of strings representing data labels
             for each item in ``data_obj`` if  ``data_obj`` is a list.
         """
+        kwargs.update({
+            "spectrum_2d_viewer_reference_name": self._default_spectrum_2d_viewer_reference_name,
+        })
         super().load_data(data_obj, parser_reference="mosviz-spec2d-parser",
-                          data_labels=data_labels)
+                          data_labels=data_labels, **kwargs)
         self._add_redshift_column()
 
-    def load_niriss_data(self, data_obj, data_labels=None):
+    def load_niriss_data(self, data_obj, data_labels=None, **kwargs):
         self.app.auto_link = False
 
-        super().load_data(data_obj, parser_reference="mosviz-niriss-parser")
+        kwargs.update({
+            "table_viewer_reference_name": self._default_table_viewer_reference_name,
+        })
+
+        super().load_data(data_obj, parser_reference="mosviz-niriss-parser", **kwargs)
 
         self.link_table_data(data_obj)
         self._add_redshift_column()
 
         self.app.auto_link = True
 
-    def load_images(self, data_obj, data_labels=None, share_image=0):
+    def load_images(self, data_obj, data_labels=None, share_image=0, **kwargs):
         """
         Load and parse a set of image objects. If providing a file path, it
         must be readable by ``astropy.io.fits``.
@@ -629,8 +639,11 @@ class Mosviz(ConfigHelper, LineListMixin):
             Currently, if non-zero, the provided number must match the number of
             spectra.
         """
+        kwargs.update({
+            "image_viewer_reference_name": self._default_image_viewer_reference_name,
+        })
         super().load_data(data_obj, parser_reference="mosviz-image-parser",
-                          data_labels=data_labels, share_image=share_image)
+                          data_labels=data_labels, share_image=share_image, **kwargs)
         self._add_redshift_column()
 
     def get_column_names(self, visible=None):

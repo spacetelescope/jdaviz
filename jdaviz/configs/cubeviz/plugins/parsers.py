@@ -20,7 +20,9 @@ EXT_TYPES = dict(flux=['flux', 'sci', 'data'],
 
 
 @data_parser_registry("cubeviz-data-parser")
-def parse_data(app, file_obj, data_type=None, data_label=None):
+def parse_data(app, file_obj, data_type=None, data_label=None,
+               flux_viewer_reference_name=None, uncert_viewer_reference_name=None,
+               spectrum_viewer_reference_name=None):
     """
     Attempts to parse a data file and auto-populate available viewers in
     cubeviz.
@@ -46,7 +48,12 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
     #  generic enough to work with other file types (e.g. ASDF). For now, this
     #  supports MaNGA and JWST data.
     if isinstance(file_obj, fits.hdu.hdulist.HDUList):
-        _parse_hdulist(app, file_obj, file_name=data_label)
+        _parse_hdulist(
+            app, file_obj, file_name=data_label,
+            flux_viewer_reference_name=flux_viewer_reference_name,
+            spectrum_viewer_reference_name=spectrum_viewer_reference_name,
+            uncert_viewer_reference_name=uncert_viewer_reference_name
+        )
     elif isinstance(file_obj, str) and os.path.exists(file_obj):
         file_name = os.path.basename(file_obj)
 
@@ -61,29 +68,50 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
             if telescop == 'jwst' and ('ifu' in exptype or
                                        'mrs' in exptype or
                                        filetype == '3d ifu cube'):
-                for ext, viewer_name in (('SCI', 'flux-viewer'),
-                                         ('ERR', 'uncert-viewer'),
+                for ext, viewer_name in (('SCI', flux_viewer_reference_name),
+                                         ('ERR', uncert_viewer_reference_name),
                                          ('DQ', None)):
                     data_label = f'{file_name}[{ext}]'
-                    _parse_jwst_s3d(app, hdulist, data_label, ext=ext, viewer_name=viewer_name)
+                    _parse_jwst_s3d(
+                        app, hdulist, data_label, ext=ext, viewer_name=viewer_name,
+                        flux_viewer_reference_name=flux_viewer_reference_name,
+                        spectrum_viewer_reference_name=spectrum_viewer_reference_name
+                    )
             elif telescop == 'jwst' and filetype == 'r3d' and system == 'esa-pipeline':
-                for ext, viewer_name in (('DATA', 'flux-viewer'),
-                                         ('ERR', 'uncert-viewer'),
+                for ext, viewer_name in (('DATA', flux_viewer_reference_name),
+                                         ('ERR', uncert_viewer_reference_name),
                                          ('QUALITY', None)):
                     data_label = f'{file_name}[{ext}]'
-                    _parse_esa_s3d(app, hdulist, data_label, ext=ext, viewer_name=viewer_name)
+                    _parse_esa_s3d(
+                        app, hdulist, data_label, ext=ext, viewer_name=viewer_name,
+                        flux_viewer_reference_name=flux_viewer_reference_name,
+                        spectrum_viewer_reference_name=spectrum_viewer_reference_name
+                    )
 
             else:
-                _parse_hdulist(app, hdulist, file_name=data_label or file_name)
+                _parse_hdulist(
+                    app, hdulist, file_name=data_label or file_name,
+                    flux_viewer_reference_name=flux_viewer_reference_name,
+                    spectrum_viewer_reference_name=spectrum_viewer_reference_name,
+                    uncert_viewer_reference_name=uncert_viewer_reference_name
+                )
 
     # If the data types are custom data objects, use explicit parsers. Note
     #  that this relies on the glue-astronomy machinery to turn the data object
     #  into something glue can understand.
     elif isinstance(file_obj, Spectrum1D):
         if file_obj.flux.ndim == 3:
-            _parse_spectrum1d_3d(app, file_obj, data_label=data_label)
+            _parse_spectrum1d_3d(
+                app, file_obj, data_label=data_label,
+                flux_viewer_reference_name=flux_viewer_reference_name,
+                spectrum_viewer_reference_name=spectrum_viewer_reference_name,
+                uncert_viewer_reference_name=uncert_viewer_reference_name
+            )
         else:
-            _parse_spectrum1d(app, file_obj, data_label=data_label)
+            _parse_spectrum1d(
+                app, file_obj, data_label=data_label,
+                spectrum_viewer_reference_name=spectrum_viewer_reference_name
+            )
     else:
         raise NotImplementedError(f'Unsupported data format: {file_obj}')
 
@@ -125,7 +153,10 @@ def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, target_w
     return new_sc
 
 
-def _parse_hdulist(app, hdulist, file_name=None):
+def _parse_hdulist(app, hdulist, file_name=None,
+                   flux_viewer_reference_name=None,
+                   spectrum_viewer_reference_name=None,
+                   uncert_viewer_reference_name=None):
     if file_name is None and hasattr(hdulist, 'file_name'):
         file_name = hdulist.file_name
     else:
@@ -185,16 +216,18 @@ def _parse_hdulist(app, hdulist, file_name=None):
             pass
 
         elif data_type == 'uncert':
-            app.add_data_to_viewer('uncert-viewer', data_label)
+            app.add_data_to_viewer(uncert_viewer_reference_name, data_label)
 
         else:  # flux
             # Add flux to top left image viewer
-            app.add_data_to_viewer('flux-viewer', data_label)
+            app.add_data_to_viewer(flux_viewer_reference_name, data_label)
             # Add flux to spectrum viewer
-            app.add_data_to_viewer('spectrum-viewer', data_label)
+            app.add_data_to_viewer(spectrum_viewer_reference_name, data_label)
 
 
-def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI', viewer_name='flux-viewer'):
+def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI',
+                    viewer_name=None, flux_viewer_reference_name=None,
+                    spectrum_viewer_reference_name=None):
     hdu = hdulist[ext]
     data_type = _get_data_type_by_hdu(hdu)
 
@@ -231,11 +264,12 @@ def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI', viewer_name='flux-viewe
     if viewer_name is not None:
         app.add_data_to_viewer(viewer_name, data_label)
     # Also add the collapsed flux to the spectrum viewer
-    if viewer_name == 'flux-viewer':
-        app.add_data_to_viewer('spectrum-viewer', data_label)
+    if viewer_name == flux_viewer_reference_name:
+        app.add_data_to_viewer(spectrum_viewer_reference_name, data_label)
 
 
-def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', viewer_name='flux-viewer'):
+def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', viewer_name='flux-viewer',
+                   flux_viewer_reference_name=None, spectrum_viewer_reference_name=None):
     hdu = hdulist[ext]
     data_type = _get_data_type_by_hdu(hdu)
 
@@ -273,11 +307,13 @@ def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', viewer_name='flux-viewe
         app.data_collection[-1].get_component("flux").units = flux.unit
 
     app.add_data_to_viewer(viewer_name, data_label)
-    if viewer_name == 'flux-viewer':
-        app.add_data_to_viewer('spectrum-viewer', data_label)
+    if viewer_name == flux_viewer_reference_name:
+        app.add_data_to_viewer(spectrum_viewer_reference_name, data_label)
 
 
-def _parse_spectrum1d_3d(app, file_obj, data_label=None):
+def _parse_spectrum1d_3d(app, file_obj, data_label=None,
+                         flux_viewer_reference_name=None, spectrum_viewer_reference_name=None,
+                         uncert_viewer_reference_name=None):
     """Load spectrum1d as a cube."""
 
     if data_label is None:
@@ -311,16 +347,16 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None):
         app.add_data(s1d, cur_data_label)
 
         if attr == 'flux':
-            app.add_data_to_viewer('flux-viewer', cur_data_label)
-            app.add_data_to_viewer('spectrum-viewer', cur_data_label)
+            app.add_data_to_viewer(flux_viewer_reference_name, cur_data_label)
+            app.add_data_to_viewer(spectrum_viewer_reference_name, cur_data_label)
         elif attr == 'mask':
             # We no longer auto-populate the mask cube into a viewer
             pass
         else:  # 'uncertainty'
-            app.add_data_to_viewer('uncert-viewer', cur_data_label)
+            app.add_data_to_viewer(uncert_viewer_reference_name, cur_data_label)
 
 
-def _parse_spectrum1d(app, file_obj, data_label=None):
+def _parse_spectrum1d(app, file_obj, data_label=None, spectrum_viewer_reference_name=None):
     if data_label is None:
         data_label = "Unknown spectrum object"
 
@@ -328,7 +364,7 @@ def _parse_spectrum1d(app, file_obj, data_label=None):
     #  specutils Spectrum1D objects. Fix to support uncertainties and masks.
 
     app.add_data(file_obj, f"{data_label}[FLUX]")
-    app.add_data_to_viewer('spectrum-viewer', f"{data_label}[FLUX]")
+    app.add_data_to_viewer(spectrum_viewer_reference_name, f"{data_label}[FLUX]")
 
 
 def _get_data_type_by_hdu(hdu):
