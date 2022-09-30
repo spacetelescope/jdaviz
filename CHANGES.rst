@@ -78,6 +78,8 @@ Bug Fixes
 - Fixed loading data via the Import Data button on top-left of the application.
   [#1608]
 
+- Floating dropdowns are now attached to their menus [#1673]
+
 Cubeviz
 ^^^^^^^
 
