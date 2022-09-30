@@ -13,7 +13,7 @@
           <v-expansion-panel-content>
             <v-row>
               <v-switch
-                v-model="setting_interactive_extract"
+                v-model="interactive_extract"
                 label="Show live-extraction"
                 hint="Whether to compute/show extraction when making changes to input parameters.  Disable if live-preview becomes laggy."
                 persistent-hint
@@ -304,7 +304,7 @@
         <v-select
           attach
           :menu-props="{ left: true }"
-          :items="ext_type_items"
+          :items="ext_type_items.map(i => i.label)"
           v-model="ext_type_selected"
           label="Extraction Type"
           hint="Method to use for extracting the spectrum."
