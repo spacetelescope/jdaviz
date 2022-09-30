@@ -12,9 +12,9 @@ New Features
   in Jy [#1564]
 
 - User-friendly API access to plugins, with exposed functionality for:  line analysis, gaussian
-  smooth, moment maps, compass, collapse, metadata, slice, plot options, model fitting, and links
-  control.
-  [#1401, #1642, #1643, #1636, #1641, #1634, #1635, #1637, #1658, #1640]
+  smooth, moment maps, compass, collapse, metadata, slice, plot options, model fitting, links
+  control, and export plot.
+  [#1401, #1642, #1643, #1636, #1641, #1634, #1635, #1637, #1658, #1640, #1657]
 
 - Line Lists show which medium the catalog wavelengths were measured in,
   in accordance to the metadata entry. Lists without medium information
