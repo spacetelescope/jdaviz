@@ -81,6 +81,8 @@ Bug Fixes
 
 - Floating menus are now attached to their selector element. [#1673]
 
+- Remove model fitting equation length restriction. [#1685]
+
 Cubeviz
 ^^^^^^^
 

@@ -599,9 +599,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         if len(self.model_equation) == 0:
             self.model_equation_invalid_msg = 'model equation is required'
             return
-        if len(self.model_equation) > 20:
-            self.model_equation_invalid_msg = 'model equation too long'
-            return
         self.model_equation_invalid_msg = ''
 
     @observe("dataset_selected", "dataset_items", "cube_fit")
