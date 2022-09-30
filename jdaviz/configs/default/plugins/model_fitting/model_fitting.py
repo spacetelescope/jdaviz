@@ -194,7 +194,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                     std_name = temp_param[0]["name"]
                     if submodel_index is not None:
                         std_name = f"{std_name}_{submodel_index}"
-                    temp_param[0]["std"] = self._fitted_model.stds[std_name]
+                    if std_name in self._fitted_model.stds.param_names:
+                        temp_param[0]["std"] = self._fitted_model.stds[std_name]
 
                 temp_params += temp_param
 
