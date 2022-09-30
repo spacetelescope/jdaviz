@@ -95,6 +95,7 @@
     <v-row>
       <v-select
         :menu-props="{ left: true }"
+        attach
         :items="available_lists"
         @change="list_selected"
         label="Available Line Lists"
@@ -178,6 +179,7 @@
                 <j-tooltip tipid='plugin-line-lists-custom-unit'>
                     <v-select
                       :menu-props="{ left: true }"
+                      attach
                       :items="custom_unit_choices"
                       v-model="custom_unit"
                       label="Unit"

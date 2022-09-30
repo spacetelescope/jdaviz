@@ -6,6 +6,7 @@
 
     <v-row>
       <v-select
+        attach
         :menu-props="{ left: true }"
         :items="viewer_items"
         v-model="selected_viewer"

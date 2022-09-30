@@ -3,6 +3,7 @@
   <v-row v-if="items.length > 1 || show_if_single_entry">
     <v-select
       :menu-props="{ left: true }"
+      attach
       :items="items"
       v-model="selected"
       @change="$emit('update:selected', $event)"

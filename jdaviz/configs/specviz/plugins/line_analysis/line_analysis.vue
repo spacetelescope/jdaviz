@@ -142,6 +142,7 @@
         <v-col cols=10>
           <v-select
             :menu-props="{ left: true }"
+            attach
             :items="line_items"
             v-model="selected_line"
             label="Line"
