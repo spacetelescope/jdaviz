@@ -1,12 +1,20 @@
 import numpy as np
-from numpy.testing import assert_allclose
 import pytest
+from numpy.testing import assert_allclose
 
-import astropy.units as u
+from astropy import units as u
 from astropy.table import QTable
 from specutils import Spectrum1D
 
 from jdaviz.core.linelists import get_available_linelists
+
+
+def test_line_lists_no_data(specviz_helper):
+    """Loading line lists without data should succeed."""
+    plg = specviz_helper.plugins['Line Lists']
+    plg._obj.list_to_load = 'Galactic 700A-2000A'
+    plg._obj.vue_load_list({})
+    assert plg._obj.loaded_lists == ['Custom', 'Galactic 700A-2000A']
 
 
 def test_line_lists(specviz_helper):

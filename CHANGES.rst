@@ -114,6 +114,8 @@ Mosviz
 Specviz
 ^^^^^^^
 
+- Fixed viewer crashing when a line list is loaded before the data. [#1690]
+
 Specviz2d
 ^^^^^^^^^
 

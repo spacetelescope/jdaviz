@@ -542,6 +542,11 @@ class LineListTool(PluginTemplateMixin):
         # Adds line style parameters that can be changed on the front end
         temp_table["colors"] = "#FF0000FF"
 
+        if len(self.app.data_collection) == 0:
+            viewer_has_data = False
+        else:
+            viewer_has_data = True
+
         # Load the table into the main astropy table and get it back, to make
         # sure all values match between the main table and local plugin
         temp_table = self._viewer.load_line_list(temp_table, return_table=True,
@@ -575,14 +580,15 @@ class LineListTool(PluginTemplateMixin):
         self.loaded_lists = []
         self.loaded_lists = loaded_lists
 
-        self._viewer.plot_spectral_lines()
-        self.update_line_mark_dict()
+        if viewer_has_data:
+            self._viewer.plot_spectral_lines()
+            self.update_line_mark_dict()
 
-        msg_text = ("Spectral lines loaded from preset. Lines can be shown/hidden"
-                    f" in the {self.list_to_load} dropdown in the Line Lists plugin")
-        lines_loaded_message = SnackbarMessage(msg_text, sender=self,
-                                               color="success", timeout=15000)
-        self.hub.broadcast(lines_loaded_message)
+            msg_text = ("Spectral lines loaded from preset. Lines can be shown/hidden"
+                        f" in the {self.list_to_load} dropdown in the Line Lists plugin")
+            lines_loaded_message = SnackbarMessage(msg_text, sender=self,
+                                                   color="success", timeout=15000)
+            self.hub.broadcast(lines_loaded_message)
 
     def vue_add_custom_line(self, event):
         """
