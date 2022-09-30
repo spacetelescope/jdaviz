@@ -32,10 +32,11 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
 
         Parameters
         ----------
-        filename : str or None
+        filename : str or `None`
             Filename to autopopulate the save dialog.
-        filetype : str or None
-            Filetype (png or svg).  If None, will default based on ``filename`` or to 'png'.
+        filetype : {'png', 'svg', `None`}
+            Filetype (PNG or SVG).  If `None`, will default based on filename or to PNG.
+
         """
         if filetype is None:
             if filename is not None:
