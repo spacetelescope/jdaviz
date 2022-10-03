@@ -116,7 +116,7 @@ class TrayRegistry(UniqueDictRegistry):
             and values are dictionaries containing the class attributes required
             on the helper, the corresponding constructor argument that defines
             the default value of that class attribute, and any kwargs needed in
-            the call to `Application.get_first_viewer_reference_name`
+            the call to `~jdaviz.app.Application.get_first_viewer_reference_name`
 
         Examples
         --------
