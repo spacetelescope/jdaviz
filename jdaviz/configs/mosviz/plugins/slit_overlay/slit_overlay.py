@@ -42,7 +42,15 @@ def jwst_header_to_skyregion(header):
     return skyregion
 
 
-@tray_registry('g-slit-overlay', label="Slit Overlay")
+@tray_registry(
+    'g-slit-overlay', label="Slit Overlay",
+    viewer_reference_name_kwargs={
+        "_default_table_viewer_reference_name":
+            ["table_viewer_reference_name", {"require_table_viewer": True}],
+        "_default_flux_viewer_reference_name":
+            ["flux_viewer_reference_name", {"require_flux_viewer": True}],
+    }
+)
 class SlitOverlay(PluginTemplateMixin):
     template_file = __file__, "slit_overlay.vue"
     visible = Bool(True).tag(sync=True)

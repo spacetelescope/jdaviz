@@ -27,7 +27,15 @@ from jdaviz.core.validunits import create_spectral_equivalencies_list
 __all__ = ['LineListTool']
 
 
-@tray_registry('g-line-list', label="Line Lists")
+@tray_registry(
+    'g-line-list', label="Line Lists",
+    viewer_reference_name_kwargs={
+        "_default_flux_viewer_reference_name":
+            ["image_viewer_reference_name", {"require_image_viewer": True}],
+        "_default_spectrum_viewer_reference_name":
+            ["spectrum_viewer_reference_name", {"require_spectrum_viewer": True}],
+    }
+)
 class LineListTool(PluginTemplateMixin):
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "line_lists.vue"

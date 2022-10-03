@@ -92,37 +92,6 @@ for name, path in custom_components.items():
 
 ipyvue.register_component_from_file('g-viewer-tab', "container.vue", __file__)
 
-# Define argument requirements for tray plugins. Keys are plugin names and values are
-# dictionaries containing the class attributes required on the helper, the corresponding
-# constructor argument that defines the default value of that class attribute, and
-# any kwargs needed in the call to `Application.get_first_viewer_reference_name`
-_tray_cls_kwargs = {
-    "g-line-list": {
-        "_default_flux_viewer_reference_name":
-            ["image_viewer_reference_name", {"require_image_viewer": True}],
-        "_default_spectrum_viewer_reference_name":
-            ["spectrum_viewer_reference_name", {"require_spectrum_viewer": True}],
-    },
-    "specviz-line-analysis": {
-        "_default_spectrum_viewer_reference_name":
-            ["spectrum_viewer_reference_name", {"require_spectrum_viewer": True}],
-    },
-    "g-gaussian-smooth": {
-        "_default_spectrum_viewer_reference_name":
-            ["spectrum_viewer_reference_name", {"require_spectrum_viewer": True}],
-    },
-    "g-model-fitting": {
-        "_default_spectrum_viewer_reference_name":
-            ["spectrum_viewer_reference_name", {"require_spectrum_viewer": True}],
-    },
-    "g-slit-overlay": {
-        "_default_table_viewer_reference_name":
-            ["table_viewer_reference_name", {"require_table_viewer": True}],
-        "_default_flux_viewer_reference_name":
-            ["flux_viewer_reference_name", {"require_flux_viewer": True}],
-    }
-}
-
 
 class ApplicationState(State):
     """
@@ -1763,24 +1732,24 @@ class Application(VuetifyTemplate, HubListener):
 
         for name in config.get('tray', []):
             tray = tray_registry.members.get(name)
+            tray_registry_options = tray.get('viewer_reference_name_kwargs', {})
 
-            # If optional kwargs are necessary to initialize this
-            # tray item's class, add the necessary kwargs and their
-            # values to a dictionary that will be passed to the
-            # tray item's constructor:
             optional_tray_kwargs = dict()
 
-            if name in _tray_cls_kwargs:
-                for opt_attr, [opt_kwarg, get_name_kwargs] in _tray_cls_kwargs[name].items():
+            if tray_registry_options is not None:
+                for opt_attr, [opt_kwarg, get_name_kwargs] in tray_registry_options.items():
                     optional_tray_kwargs[opt_kwarg] = getattr(
                         self, opt_attr, self.get_first_viewer_reference_name(**get_name_kwargs)
                     )
+
             # If the plugin constructor call below is not called with the correct kwargs,
             # we would get a cryptic TypeError because the expected viewer reference
             # name cannot be found. This `try` warns the user if the plugin can't be
             # initialized, and continues onto loading the next plugin.
             try:
-                tray_item_instance = tray.get('cls')(app=self, **optional_tray_kwargs)
+                tray_item_instance = tray.get('cls')(
+                    app=self, **optional_tray_kwargs
+                )
                 tray_item_label = tray.get('label')
 
                 self.state.tray_items.append({

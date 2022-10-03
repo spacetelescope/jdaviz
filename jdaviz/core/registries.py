@@ -80,7 +80,8 @@ class TrayRegistry(UniqueDictRegistry):
     """Registry containing references to plugins that will be added to the sidebar
     tray tabs.
     """
-    def __call__(self, name=None, label=None, icon=None):
+    def __call__(self, name=None, label=None, icon=None,
+                 viewer_reference_name_kwargs=None):
         def decorator(cls):
             # The class must inherit from `VuetifyTemplate` in order to be
             # ingestible by the component initialization.
@@ -90,11 +91,12 @@ class TrayRegistry(UniqueDictRegistry):
                     f"registered components must inherit from "
                     f"`ipyvuetify.VuetifyTemplate`.")
 
-            self.add(name, cls, label, icon)
+            self.add(name, cls, label, icon, viewer_reference_name_kwargs)
             return cls
         return decorator
 
-    def add(self, name, cls, label=None, icon=None):
+    def add(self, name, cls, label=None, icon=None,
+            viewer_reference_name_kwargs=None):
         """Add an item to the registry.
 
         Parameters
@@ -109,6 +111,31 @@ class TrayRegistry(UniqueDictRegistry):
             The label displayed in the tooltip when hovering over the tray tab.
         icon : str, optional
             The name of the icon to render in the tray tab.
+        viewer_reference_name_kwargs : dict
+            Define argument requirements for tray plugins. Keys are plugin names
+            and values are dictionaries containing the class attributes required
+            on the helper, the corresponding constructor argument that defines
+            the default value of that class attribute, and any kwargs needed in
+            the call to `Application.get_first_viewer_reference_name`
+
+        Examples
+        --------
+        Let's take a look at the Specviz line analysis plugin for an example of how the
+        decorator's ``viewer_reference_name_kwargs`` keyword argument works:
+        >>> @tray_registry(
+        ...     'specviz-line-analysis', label="Line Analysis",
+        ...     viewer_reference_name_kwargs={
+        ...         "_default_spectrum_viewer_reference_name":
+        ...             ["spectrum_viewer_reference_name", {"require_spectrum_viewer": True}],
+        ...     }
+        ... )
+        The ``viewer_reference_name_kwargs`` dictionary contains string keys which
+        correspond to the attribute on the viewer which will be required by the
+        plugin being wrapped by this decorator. The entry associated with this key is
+        a list containing (1) the optional keyword argument to the plugin constructor which
+        specifies the viewer reference name, and (2) a dictionary with the requirements
+        for the type of viewer that should be requested by the constructor. In this example,
+        the line analysis constructor requires a viewer for spectra to be available.
         """
         if name in self.members:
             raise ValueError(f"Viewer with the name {name} already exists, "
@@ -118,7 +145,8 @@ class TrayRegistry(UniqueDictRegistry):
             # objects (when determining if a specific plugin is open, for example)
             cls._registry_name = name
             cls._registry_label = label
-            self.members[name] = {'label': label, 'icon': icon, 'cls': cls}
+            self.members[name] = {'label': label, 'icon': icon, 'cls': cls,
+                                  'viewer_reference_name_kwargs': viewer_reference_name_kwargs}
 
 
 class ToolRegistry(UniqueDictRegistry):

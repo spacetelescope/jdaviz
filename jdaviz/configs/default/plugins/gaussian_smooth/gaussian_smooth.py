@@ -20,7 +20,13 @@ spaxel = u.def_unit('spaxel', 1 * u.Unit(""))
 u.add_enabled_units([spaxel])
 
 
-@tray_registry('g-gaussian-smooth', label="Gaussian Smooth")
+@tray_registry(
+    'g-gaussian-smooth', label="Gaussian Smooth",
+    viewer_reference_name_kwargs={
+        "_default_spectrum_viewer_reference_name":
+            ["spectrum_viewer_reference_name", {"require_spectrum_viewer": True}],
+    }
+)
 class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
     """
     See the :ref:`Gaussian Smooth Plugin Documentation <gaussian-smooth>` for more details.

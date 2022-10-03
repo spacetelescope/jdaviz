@@ -64,7 +64,13 @@ def _coerce_unit(quantity):
     return coerced_quantity
 
 
-@tray_registry('specviz-line-analysis', label="Line Analysis")
+@tray_registry(
+    'specviz-line-analysis', label="Line Analysis",
+    viewer_reference_name_kwargs={
+        "_default_spectrum_viewer_reference_name":
+            ["spectrum_viewer_reference_name", {"require_spectrum_viewer": True}],
+    }
+)
 class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin):
     """
     The Line Analysis plugin returns specutils analysis for a single spectral line.
