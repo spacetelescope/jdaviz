@@ -83,6 +83,9 @@ Bug Fixes
 
 - Remove model fitting equation length restriction. [#1685]
 
+- Fixed crashing of model fitting when a parameter is fixed before fitting
+  is done. [#1689]
+
 Cubeviz
 ^^^^^^^
 
