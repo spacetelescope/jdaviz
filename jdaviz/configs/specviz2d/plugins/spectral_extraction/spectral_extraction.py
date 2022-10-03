@@ -13,6 +13,7 @@ from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.custom_traitlets import IntHandleEmpty, FloatHandleEmpty
 from jdaviz.core.marks import PluginLine
 
+from astropy.modeling import models
 from astropy.nddata import NDData, StdDevUncertainty, VarianceUncertainty, UnknownUncertainty
 from specutils import Spectrum1D
 from specreduce import tracing
@@ -20,6 +21,10 @@ from specreduce import background
 from specreduce import extract
 
 __all__ = ['SpectralExtraction']
+
+_model_cls = {'Spline': models.Spline1D,
+              'Polynomial': models.Polynomial1D,
+              'Legendre': models.Legendre1D}
 
 
 @tray_registry('spectral-extraction', label="Spectral Extraction",
@@ -101,6 +106,7 @@ class SpectralExtraction(PluginTemplateMixin):
     trace_type_selected = Unicode().tag(sync=True)
 
     trace_pixel = FloatHandleEmpty(0).tag(sync=True)
+    trace_order = IntHandleEmpty(3).tag(sync=True)
 
     trace_peak_method_items = List().tag(sync=True)
     trace_peak_method_selected = Unicode().tag(sync=True)
@@ -205,7 +211,8 @@ class SpectralExtraction(PluginTemplateMixin):
         self.trace_type = SelectPluginComponent(self,
                                                 items='trace_type_items',
                                                 selected='trace_type_selected',
-                                                manual_options=['Flat', 'Auto'])
+                                                manual_options=['Flat', 'Polynomial',
+                                                                'Legendre', 'Spline'])
 
         self.trace_peak_method = SelectPluginComponent(self,
                                                        items='trace_peak_method_items',
@@ -302,7 +309,8 @@ class SpectralExtraction(PluginTemplateMixin):
     @property
     def user_api(self):
         return PluginUserApi(self, expose=('interactive_extract',
-                                           'trace_dataset', 'trace_type', 'trace_peak_method',
+                                           'trace_dataset', 'trace_type',
+                                           'trace_order', 'trace_peak_method',
                                            'trace_pixel', 'trace_bins', 'trace_window',
                                            'import_trace',
                                            'export_trace',
@@ -407,7 +415,7 @@ class SpectralExtraction(PluginTemplateMixin):
                 sp1d = self.export_extract_spectrum(add_data=False)
             except Exception as e:
                 # NOTE: ignore error, but will be raised when clicking ANY of the export buttons
-                # NOTE: KosmosTrace or manual background are often giving a
+                # NOTE: AutoTrace or manual background are often giving a
                 # "background regions overlapped" error from specreduce
                 self.ext_specreduce_err = repr(e)
                 self.marks['extract'].clear()
@@ -473,7 +481,7 @@ class SpectralExtraction(PluginTemplateMixin):
         return self._marks
 
     @observe('trace_dataset_selected', 'trace_type_selected',
-             'trace_trace_selected', 'trace_offset',
+             'trace_trace_selected', 'trace_offset', 'trace_order',
              'trace_pixel', 'trace_peak_method_selected',
              'trace_bins', 'trace_window', 'active_step')
     def _interaction_in_trace_step(self, event={}):
@@ -613,7 +621,7 @@ class SpectralExtraction(PluginTemplateMixin):
         if isinstance(trace, tracing.FlatTrace):
             self.trace_type_selected = 'Flat'
             self.trace_pixel = trace.trace_pos
-        elif isinstance(trace, tracing.KosmosTrace):
+        elif isinstance(trace, tracing.AutoTrace):
             self.trace_type_selected = 'Auto'
             self.trace_pixel = trace.guess
             self.trace_window = trace.window
@@ -654,12 +662,14 @@ class SpectralExtraction(PluginTemplateMixin):
             trace = tracing.FlatTrace(self.trace_dataset.selected_obj.data,
                                       self.trace_pixel)
 
-        elif self.trace_type_selected == 'Auto':
-            trace = tracing.KosmosTrace(self.trace_dataset.selected_obj.data,
-                                        guess=self.trace_pixel,
-                                        bins=int(self.trace_bins),
-                                        window=self.trace_window,
-                                        peak_method=self.trace_peak_method_selected.lower())
+        elif self.trace_type_selected in _model_cls:
+            trace_model = _model_cls[self.trace_type_selected](degree=self.trace_order)
+            trace = tracing.AutoTrace(self.trace_dataset.selected_obj.data,
+                                      guess=self.trace_pixel,
+                                      bins=int(self.trace_bins),
+                                      window=self.trace_window,
+                                      peak_method=self.trace_peak_method_selected.lower(),
+                                      trace_model=trace_model)
 
         else:
             raise NotImplementedError(f"trace_type={self.trace_type_selected} not implemented")

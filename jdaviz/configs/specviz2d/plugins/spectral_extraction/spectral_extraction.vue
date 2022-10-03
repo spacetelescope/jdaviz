@@ -75,6 +75,20 @@
           ></v-select>
         </v-row>
 
+        <v-row v-if="trace_type_selected!=='Flat'">
+          <v-text-field
+            label="Order"
+            type="number"
+            v-model.number="trace_order"
+            :rules="[() => trace_order!=='' || 'This field is required',
+                     () => trace_order>=0 || 'Order must be positive',
+                     () => (trace_type_selected!=='Spline' || (trace_order > 0 && trace_order <= 5)) || 'Spline order must be between 1 and 5']"
+            hint="Order of the trace model."
+            persistent-hint
+          >
+          </v-text-field>
+        </v-row>
+
         <v-row>
           <v-text-field
             label="Pixel"
@@ -87,7 +101,7 @@
           </v-text-field>
         </v-row>
 
-        <v-row v-if="trace_type_selected==='Auto'">
+        <v-row v-if="trace_type_selected!=='Flat'">
           <v-text-field
             label="Bins"
             type="number"
