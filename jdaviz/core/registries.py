@@ -121,14 +121,16 @@ class TrayRegistry(UniqueDictRegistry):
         Examples
         --------
         Let's take a look at the Specviz line analysis plugin for an example of how the
-        decorator's ``viewer_reference_name_kwargs`` keyword argument works:
-        >>> @tray_registry(
-        ...     'specviz-line-analysis', label="Line Analysis",
-        ...     viewer_reference_name_kwargs={
-        ...         "_default_spectrum_viewer_reference_name":
-        ...             ["spectrum_viewer_reference_name", {"require_spectrum_viewer": True}],
-        ...     }
-        ... )
+        decorator's ``viewer_reference_name_kwargs`` keyword argument works::
+
+            @tray_registry(
+                'specviz-line-analysis', label="Line Analysis",
+                viewer_reference_name_kwargs={
+                    "_default_spectrum_viewer_reference_name":
+                        ["spectrum_viewer_reference_name", {"require_spectrum_viewer": True}],
+                }
+            )
+
         The ``viewer_reference_name_kwargs`` dictionary contains string keys which
         correspond to the attribute on the viewer which will be required by the
         plugin being wrapped by this decorator. The entry associated with this key is
