@@ -756,6 +756,12 @@ def mos_niriss_parser(app, data_dir):
 
             with fits.open(fname, memmap=False) as temp:
                 filtered_hdul = fits.HDUList()
+
+                # Manually copy over known extensions if they exist
+                for metahdu in ('PRIMARY', 'ASDF'):
+                    if metahdu in temp:
+                        filtered_hdul.append(temp[metahdu])
+
                 for hdu in temp:
                     # Only load the SOURCEIDs the user specified in the target catalog
                     if hdu.header.get('SOURCEID', None) in cat_id_dict.keys():
