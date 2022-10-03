@@ -27,14 +27,21 @@ def jdaviz_app():
 @pytest.mark.filterwarnings('ignore')
 @pytest.mark.remote_data
 def test_data_retrieval(jdaviz_app):
-
+    spectrum_viewer_reference_name = "spectrum-viewer"
+    flux_viewer_reference_name = "flux-viewer"
+    uncert_viewer_reference_name = "uncert-viewer"
     fn = download_file(URL, cache=True)
-    jdaviz_app.load_data(fn)
+    jdaviz_app.load_data(
+        fn,
+        spectrum_viewer_reference_name=spectrum_viewer_reference_name,
+        flux_viewer_reference_name=flux_viewer_reference_name,
+        uncert_viewer_reference_name=uncert_viewer_reference_name
+    )
 
     # two ways of retrieving data from the viewer.
     # They should return the same spectral values
-    a1 = jdaviz_app.get_viewer('spectrum-viewer').data()
-    a2 = jdaviz_app.get_data_from_viewer("spectrum-viewer")
+    a1 = jdaviz_app.get_viewer(spectrum_viewer_reference_name).data()
+    a2 = jdaviz_app.get_data_from_viewer(spectrum_viewer_reference_name)
 
     test_value_1 = a1[0].data
     test_value_2 = list(a2.values())[0].data

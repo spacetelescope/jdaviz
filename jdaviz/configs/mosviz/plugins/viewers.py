@@ -33,20 +33,6 @@ class MosvizProfileView(BqplotProfileView, JdavizViewerMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        self._default_spectrum_viewer_reference_name = kwargs.get(
-            "spectrum_viewer_reference_name", "spectrum-viewer"
-        )
-        self._default_image_viewer_reference_name = kwargs.get(
-            "image_viewer_reference_name", "image-viewer"
-        )
-        self._default_spectrum_2d_viewer_reference_name = kwargs.get(
-            "spectrum_2d_viewer_reference_name", "spectrum-2d-viewer"
-        )
-        self._default_table_viewer_reference_name = kwargs.get(
-            "table_viewer_reference_name", "table-viewer"
-        )
-
         self._subscribe_to_layers_update()
         self._initialize_toolbar_nested()
 
@@ -103,20 +89,6 @@ class MosvizImageView(BqplotImageView, JdavizViewerMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        self._default_spectrum_viewer_reference_name = kwargs.get(
-            "spectrum_viewer_reference_name", "spectrum-viewer"
-        )
-        self._default_image_viewer_reference_name = kwargs.get(
-            "image_viewer_reference_name", "image-viewer"
-        )
-        self._default_spectrum_2d_viewer_reference_name = kwargs.get(
-            "spectrum_2d_viewer_reference_name", "spectrum-2d-viewer"
-        )
-        self._default_table_viewer_reference_name = kwargs.get(
-            "table_viewer_reference_name", "table-viewer"
-        )
-
         self._subscribe_to_layers_update()
         self._initialize_toolbar_nested()
 
@@ -166,26 +138,20 @@ class MosvizProfile2DView(BqplotImageView, JdavizViewerMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        self._default_spectrum_viewer_reference_name = kwargs.get(
-            "spectrum_viewer_reference_name", "spectrum-viewer"
-        )
-        self._default_image_viewer_reference_name = kwargs.get(
-            "image_viewer_reference_name", "image-viewer"
-        )
-        self._default_spectrum_2d_viewer_reference_name = kwargs.get(
-            "spectrum_2d_viewer_reference_name", "spectrum-2d-viewer"
-        )
-        self._default_table_viewer_reference_name = kwargs.get(
-            "table_viewer_reference_name", "table-viewer"
-        )
-
         self._subscribe_to_layers_update()
         self._initialize_toolbar_nested()
         # Setup viewer option defaults
         self.state.aspect = 'auto'
 
+        self._default_spectrum_viewer_reference_name = kwargs.get(
+            "spectrum_viewer_reference_name", "spectrum-viewer"
+        )
+        self._default_spectrum_viewer_reference_name = kwargs.get(
+            "spectrum_2d_viewer_reference_name", "spectrum-2d-viewer"
+        )
+
         if self.jdaviz_app.config == 'specviz2d':
+            # pass
             self.label_mouseover = None
             self.add_event_callback(self.on_mouse_or_key_event,
                                     events=['mousemove', 'mouseenter', 'mouseleave'])
@@ -276,19 +242,6 @@ class MosvizTableViewer(TableViewer, JdavizViewerMixin):
     def __init__(self, session, *args, **kwargs):
         super().__init__(session, *args, **kwargs)
 
-        self._default_spectrum_viewer_reference_name = kwargs.get(
-            "spectrum_viewer_reference_name", "spectrum-viewer"
-        )
-        self._default_image_viewer_reference_name = kwargs.get(
-            "image_viewer_reference_name", "image-viewer"
-        )
-        self._default_spectrum_2d_viewer_reference_name = kwargs.get(
-            "spectrum_2d_viewer_reference_name", "spectrum-2d-viewer"
-        )
-        self._default_table_viewer_reference_name = kwargs.get(
-            "table_viewer_reference_name", "table-viewer"
-        )
-
         self.figure_widget.observe(self._on_row_selected, names=['highlighted'])
         # enable scrolling: # https://github.com/glue-viz/glue-jupyter/pull/287
         self.widget_table.scrollable = True
@@ -299,6 +252,19 @@ class MosvizTableViewer(TableViewer, JdavizViewerMixin):
 
         self._on_row_selected_begin = None
         self._on_row_selected_end = None
+
+        self._default_table_viewer_reference_name = kwargs.get(
+            "table_viewer_reference_name", "table-viewer"
+        )
+        self._default_spectrum_viewer_reference_name = kwargs.get(
+            "spectrum_viewer_reference_name", "spectrum-viewer"
+        )
+        self._default_spectrum_2d_viewer_reference_name = kwargs.get(
+            "spectrum_2d_viewer_reference_name", "spectrum-2d-viewer"
+        )
+        self._default_image_viewer_reference_name = kwargs.get(
+            "image_viewer_reference_name", "image-viewer"
+        )
 
     def redraw(self):
 
@@ -421,7 +387,7 @@ class MosvizTableViewer(TableViewer, JdavizViewerMixin):
                     ] = selected_data
 
             if component.label == 'Images':
-                prev_data = self._selected_data.get(self._default_image_viewer_reference_name)
+                prev_data = self._selected_data.get(self._default_table_viewer_reference_name)
                 if prev_data != selected_data:
                     if prev_data:
                         remove_data_from_viewer_message = RemoveDataFromViewerMessage(

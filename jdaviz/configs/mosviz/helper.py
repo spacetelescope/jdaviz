@@ -598,6 +598,7 @@ class Mosviz(ConfigHelper, LineListMixin):
         """
         kwargs.update({
             "spectrum_2d_viewer_reference_name": self._default_spectrum_2d_viewer_reference_name,
+            "table_viewer_reference_name": self._default_table_viewer_reference_name,
         })
         super().load_data(data_obj, parser_reference="mosviz-spec2d-parser",
                           data_labels=data_labels, **kwargs)

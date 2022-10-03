@@ -1074,6 +1074,7 @@ class Application(VuetifyTemplate, HubListener):
     def get_first_viewer_reference_name(
             self, require_no_selected_data=False,
             require_spectrum_viewer=False,
+            require_spectrum_2d_viewer=False,
             require_table_viewer=False,
             require_flux_viewer=False,
             require_image_viewer=False
@@ -1085,6 +1086,7 @@ class Application(VuetifyTemplate, HubListener):
         to require that the viewer supports spectrum visualization.
         """
         from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
+        from jdaviz.configs.specviz2d.plugins import SpectralExtraction
         from jdaviz.configs.cubeviz.plugins.viewers import CubevizProfileView, CubevizImageView
         from jdaviz.configs.mosviz.plugins.viewers import (
             MosvizProfileView, MosvizTableViewer, MosvizProfile2DView
@@ -1092,7 +1094,7 @@ class Application(VuetifyTemplate, HubListener):
 
         spectral_viewers = (SpecvizProfileView, CubevizProfileView, MosvizProfileView)
         table_viewers = (MosvizTableViewer, )
-        image_viewers = (MosvizProfile2DView, )
+        image_viewers = (MosvizProfile2DView, CubevizImageView, SpectralExtraction)
         flux_viewers = (CubevizImageView, )
 
         for vid in self._viewer_store:

@@ -21,7 +21,13 @@ unit_exponents = {StdDevUncertainty: 1,
 SPECUTILS_GT_1_7_0 = Version(specutils.__version__) > Version('1.7.0')
 
 
-@tray_registry('g-unit-conversion', label="Unit Conversion")
+@tray_registry(
+    'g-unit-conversion', label="Unit Conversion",
+    viewer_reference_name_kwargs={
+        "_default_spectrum_viewer_reference_name":
+            ["spectrum_viewer_reference_name", {"require_spectrum_viewer": True}]
+    }
+)
 class UnitConversion(PluginTemplateMixin, DatasetSelectMixin):
 
     template_file = __file__, "unit_conversion.vue"
@@ -43,10 +49,14 @@ class UnitConversion(PluginTemplateMixin, DatasetSelectMixin):
         self._redshift = None
         self.app.hub.subscribe(self, RedshiftMessage, handler=self._redshift_listener)
 
+        self._default_spectrum_viewer_reference_name = kwargs.get(
+            "spectrum_viewer_reference_name", "spectrum-viewer"
+        )
+
         # when accessing the selected data, access the spectrum-viewer version
         # TODO: we'll probably want to update unit-conversion to be able to act on cubes directly
         # in the future
-        self.dataset._viewers = ['spectrum-viewer']
+        self.dataset._viewers = [self._default_spectrum_viewer_reference_name]
         # require entries to be in spectrum-viewer (not other cubeviz images, etc)
         self.dataset.add_filter('layer_in_spectrum_viewer')
 

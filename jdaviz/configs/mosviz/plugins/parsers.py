@@ -238,7 +238,10 @@ def mos_spec1d_parser(app, data_obj, data_labels=None,
 
 @data_parser_registry("mosviz-spec2d-parser")
 def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
-                      show_in_viewer=False, spectrum_2d_viewer_reference_name="spectrum-2d-viewer"):
+                      show_in_viewer=False,
+                      spectrum_2d_viewer_reference_name="spectrum-2d-viewer",
+                      spectrum_viewer_reference_name="spectrum-viewer",
+                      table_viewer_reference_name="table-viewer"):
     """
     Attempts to parse a 2D spectrum object.
 
@@ -297,7 +300,6 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
             data_labels = ['2D Spectrum']
 
     with app.data_collection.delay_link_manager_update():
-
         for index, data in enumerate(data_obj):
             # If we got a filepath, first try and parse using the Spectrum1D and
             # SpectrumList parsers, and then fall back to parsing it as a generic
@@ -307,7 +309,6 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
                     data = Spectrum1D.read(data)
                 except IORegistryError:
                     data = _parse_as_spectrum1d(data)
-
             # Make metadata layout conform with other viz.
             data.meta = standardize_metadata(data.meta)
 
@@ -318,11 +319,13 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
             data.meta['mosviz_row'] = index
             # Get the corresponding label for this data product
             label = data_labels[index]
-
             app.data_collection[label] = data
 
         if add_to_table:
-            _add_to_table(app, data_labels, '2D Spectra')
+            _add_to_table(
+                app, data_labels, '2D Spectra',
+                table_viewer_reference_name=table_viewer_reference_name
+            )
 
     if show_in_viewer:
         if len(data_labels) > 1:
