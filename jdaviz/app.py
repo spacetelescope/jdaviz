@@ -1386,35 +1386,37 @@ class Application(VuetifyTemplate, HubListener):
         viewer_item = self._viewer_item_by_id(viewer_id)
         viewer = self._viewer_by_id(viewer_id)
 
-        if viewer is not None:
-            if isinstance(selected_items, list):
-                selected_items = {si: 'visible' for si in selected_items}
-            # Update the stored selected data items
-            viewer_item['selected_data_items'] = selected_items
+        if viewer is None:
+            return
 
-            active_data_labels = []
+        if isinstance(selected_items, list):
+            selected_items = {si: 'visible' for si in selected_items}
+        # Update the stored selected data items
+        viewer_item['selected_data_items'] = selected_items
 
-            color_cycler = ColorCycler()
+        active_data_labels = []
 
-            # Include any selected data in the viewer
-            for data_id, visibility in selected_items.items():
-                label = self._get_data_item_by_id(data_id)['name']
+        color_cycler = ColorCycler()
 
-                if label is None:
-                    warnings.warn(f"No data item with id '{data_id}' found in "
-                                  f"viewer '{viewer_id}'.")
-                    continue
+        # Include any selected data in the viewer
+        for data_id, visibility in selected_items.items():
+            label = self._get_data_item_by_id(data_id)['name']
 
-                active_data_labels.append(label)
+            if label is None:
+                warnings.warn(f"No data item with id '{data_id}' found in "
+                              f"viewer '{viewer_id}'.")
+                continue
 
-                [data] = [x for x in self.data_collection if x.label == label]
+            active_data_labels.append(label)
 
-                viewer.add_data(data, percentile=95, color=color_cycler())
+            [data] = [x for x in self.data_collection if x.label == label]
 
-                add_data_message = AddDataMessage(data, viewer,
-                                                  viewer_id=viewer_id,
-                                                  sender=self)
-                self.hub.broadcast(add_data_message)
+            viewer.add_data(data, percentile=95, color=color_cycler())
+
+            add_data_message = AddDataMessage(data, viewer,
+                                              viewer_id=viewer_id,
+                                              sender=self)
+            self.hub.broadcast(add_data_message)
 
             for layer in viewer.layers:
                 if layer.layer.data.label == label:
@@ -1435,7 +1437,7 @@ class Application(VuetifyTemplate, HubListener):
             if data.label not in active_data_labels:
                 viewer.remove_data(data)
                 viewer._layers_with_defaults_applied= [layer_info for layer_info in viewer._layers_with_defaults_applied  # noqa
-                                                       if layer_info['data_label'] != data.label]
+                                                       if layer_info['data_label'] != data.label]  # noqa
                 remove_data_message = RemoveDataMessage(data, viewer,
                                                         viewer_id=viewer_id,
                                                         sender=self)
