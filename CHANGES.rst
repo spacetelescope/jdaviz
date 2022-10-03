@@ -214,6 +214,8 @@ Other Changes and Additions
 
 - Changed unit formatting to avoid astropy.units warnings in Line Analysis plugin. [#1648]
 
+- Updated example notebooks (except MosvizExample) to use in-flight JWST data. [#1680]
+
 Cubeviz
 ^^^^^^^
 
