@@ -34,6 +34,8 @@ Cubeviz
 
 - Added ability to select spatial subset collapsed spectrum for Line Analysis. [#1583]
 
+- Added ability to load plain Numpy array cube. [#1698]
+
 - Increased size of Cubeviz configuration from 600px to 750px. [#1638]
 
 Imviz

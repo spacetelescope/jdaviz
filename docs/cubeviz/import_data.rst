@@ -12,7 +12,7 @@ be defined in ``specutils`` instead of being duplicated in Jdaviz.
 and hence should address most astronomical spectrum use cases.
 
 Cubeviz will automatically parse the data into the multiple viewers as described in
-:ref:`cubeviz-display-cubes`. Data loaded into Cubeviz MUST contain valid WCS
+:ref:`cubeviz-display-cubes`. For the best experience, data loaded into Cubeviz should contain valid WCS
 keywords. For more information on how :class:`~specutils.Spectrum1D`
 uses WCS, please go to the `Spectrum1D defining WCS section <https://specutils.readthedocs.io/en/stable/spectrum1d.html#defining-wcs>`_.
 To check if your FITS file contains valid WCS keywords, please use
@@ -20,20 +20,24 @@ To check if your FITS file contains valid WCS keywords, please use
 For an example on loading a cube with valid WCS keywords, please see the :ref:`cubeviz-import-api`
 section below.
 
+Loading data without WCS is also possible as long as they are compatible
+with :class:`~specutils.Spectrum1D`. However, not all plugins will work with this data.
+
 .. _cubeviz-viewers:
 
-In Cubeviz, three image viewers at the top display your data:
+In Cubeviz, two image viewers at the top display your data:
 
  |   Top Left: ``flux-viewer``
- |   Top Center: ``uncert-viewer``
- |   Top Right: ``mask-viewer``
+ |   Top Right: ``uncert-viewer``
 
-There is also a fourth viewer called ``spectrum-viewer`` at the bottom that
+There is also a third viewer called ``spectrum-viewer`` at the bottom that
 will display the collapsed spectrum from ``flux-viewer``.
 
 .. note::
     Only a single cube can be displayed in an instance of Cubeviz at a given time.
     To open a second cube, you must first initiate a second instance of Cubeviz.
+
+To then extract your data from Cubeviz, please see the :ref:`cubeviz-notebook` section.
 
 .. _cubeviz-import-commandline:
 
@@ -59,6 +63,9 @@ application. A notification will appear to confirm whether the data import
 was successful. Afterward, the new data set can be found in the :guilabel:`Data`
 tab of each viewer's options menu as described in :ref:`cubeviz-selecting-data`.
 
+Due to the limitations of GUI interactions, only filenames are accepted as inputs.
+If you wish to load native Python objects, see :ref:`cubeviz-import-api`.
+
 .. _cubeviz-import-api:
 
 Importing data via the API
@@ -71,29 +78,38 @@ method, which takes as input a :class:`~specutils.Spectrum1D` object.
 
 FITS Files
 ----------
+
 The example below loads a FITS file into Cubeviz::
 
-    from specutils import Spectrum1D
-    spec3d = Spectrum1D.read("/path/to/data/file")
+    from jdaviz import Cubeviz
     cubeviz = Cubeviz()
-    cubeviz.load_data(spec3d)
+    cubeviz.load_data("/path/to/data/file.fits")
     cubeviz.show()
 
-You can also pass the path to a file that `~specutils.Spectrum1D` understands directly to the
+Spectrum1D (from file)
+----------------------
+
+For cases where the built-in parser is unable to understand your file format,
+you can try the `~specutils.Spectrum1D` parser directly and then pass the object to the
 :meth:`~jdaviz.core.helpers.ConfigHelper.load_data` method::
 
-    cubeviz.load_data("/Users/demouser/data/cube_file.fits")
+    from specutils import Spectrum1D
+    from jdaviz import Cubeviz
+    spec3d = Spectrum1D.read("/path/to/data/file.fits")
+    cubeviz = Cubeviz()
+    cubeviz.load_data(spec3d, data_label='My Cube')
     cubeviz.show()
 
-Creating Your Own Array
+Spectrum1D (from array)
 -----------------------
 
-You can create your own array to load into Cubeviz::
+You can create your own `~specutils.Spectrum1D` object by hand to load into Cubeviz::
 
     import numpy as np
     from astropy import units as u
     from astropy.wcs import WCS
     from specutils import Spectrum1D
+    from jdaviz import Cubeviz
 
     flux = np.arange(16).reshape((2, 2, 4)) * u.Jy
     wcs_dict = {"CTYPE1": "WAVE-LOG, "CTYPE2": "DEC--TAN", "CTYPE3": "RA---TAN",
@@ -103,21 +119,18 @@ You can create your own array to load into Cubeviz::
     w = WCS(wcs_dict)
 
     cube = Spectrum1D(flux=flux, wcs=w)
-    cubeviz.load_data(cube)
+    cubeviz.load_data(cube, data_label='My Cube')
     cubeviz.show()
-
-
-To then extract your data from Cubeviz, please see the :ref:`cubeviz-notebook` section.
 
 JWST datamodels
 ---------------
 
 If you have a `jwst.datamodels <https://jwst-pipeline.readthedocs.io/en/latest/jwst/datamodels/index.html>`_
-object, you can load it into Imviz as follows::
+object, you can load it into Cubeviz as follows::
 
     import numpy as np
-    from jdaviz import Cubeviz
     import astropy.wcs as fitswcs
+    from jdaviz import Cubeviz
 
     # mydatamodel is a jwst.datamodels object
     # Due to current schema in jwst.datamodels, you'll need to create your own WCS object before you create your Spectrum1D object
@@ -137,13 +150,24 @@ object, you can load it into Imviz as follows::
     data = np.swapaxes(data, 1, 2)
 
     # Create your spectrum1
-    spec3d = Spectrum1D(data, wcs = my_wcs)
+    spec3d = Spectrum1D(data, wcs=my_wcs)
     cubeviz = Cubeviz()
     cubeviz.load_spectrum(spec3d, data_label='My Cube')
     cubeviz.show()
 
 There is no plan to natively load such objects until ``datamodels``
 is separated from the ``jwst`` pipeline package.
+
+Numpy array
+-----------
+
+To load a plain Numpy array without WCS::
+
+    import numpy as np
+    from jdaviz import Cubeviz
+    flux = np.arange(16).reshape((4, 2, 2))  # z, y, x
+    cubeviz.load_data(flux, data_label='My Cube')
+    cubeviz.show()
 
 .. _cubeviz-import-regions-api:
 

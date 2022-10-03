@@ -157,7 +157,8 @@ def spectrum_collection(spectrum1d):
 
 
 def _create_spectrum1d_cube_with_fluxunit(fluxunit=u.Jy):
-
+    # WCS assumes (x, y, z) but numpy is (z, y, x).
+    # Spectrum1D sees nx=4, ny=2, nz=2 because it swaps WAVE to last.
     flux = np.arange(16).reshape((2, 2, 4)) * fluxunit
     wcs_dict = {"CTYPE1": "RA---TAN", "CTYPE2": "DEC--TAN", "CTYPE3": "WAVE-LOG",
                 "CRVAL1": 205, "CRVAL2": 27, "CRVAL3": 4.622e-7,

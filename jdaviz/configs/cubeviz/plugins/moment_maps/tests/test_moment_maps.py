@@ -52,7 +52,9 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
     cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'moment 0')
 
     result = dc[1].get_object(cls=CCDData)
-    assert result.shape == (4, 2)  # Cube shape is (2, 2, 4)
+    # This is (ny, nx), see _create_spectrum1d_cube_with_fluxunit for explanation
+    # about what goes where.
+    assert result.shape == (2, 4)
 
     # FIXME: Need spatial WCS, see https://github.com/spacetelescope/jdaviz/issues/1025
     assert dc[1].coords is None

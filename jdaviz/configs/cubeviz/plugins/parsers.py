@@ -36,9 +36,9 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
     data_label : str, optional
         The label to be applied to the Glue data component.
     """
-    if data_type is not None and data_type.lower() not in ['flux', 'mask', 'uncert']:
-        msg = f"Data type must be one of 'flux', 'mask', or 'uncert' but got '{data_type}'"
-        raise TypeError(msg)
+    if data_type is not None and data_type.lower() not in ('flux', 'mask', 'uncert'):
+        raise TypeError("Data type must be one of 'flux', 'mask', or 'uncert' but got "
+                        f"'{data_type}'")
 
     # If the file object is an hdulist or a string, use the generic parser for
     #  fits files.
@@ -47,7 +47,11 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
     #  supports MaNGA and JWST data.
     if isinstance(file_obj, fits.hdu.hdulist.HDUList):
         _parse_hdulist(app, file_obj, file_name=data_label)
-    elif isinstance(file_obj, str) and os.path.exists(file_obj):
+    elif isinstance(file_obj, str):
+        if file_obj.lower().endswith('.gif'):  # pragma: no cover
+            _parse_gif(app, file_obj, data_label)
+            return
+
         file_name = os.path.basename(file_obj)
 
         with fits.open(file_obj) as hdulist:
@@ -79,11 +83,13 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
     # If the data types are custom data objects, use explicit parsers. Note
     #  that this relies on the glue-astronomy machinery to turn the data object
     #  into something glue can understand.
-    elif isinstance(file_obj, Spectrum1D):
+    elif isinstance(file_obj, Spectrum1D) and file_obj.flux.ndim in (1, 3):
         if file_obj.flux.ndim == 3:
             _parse_spectrum1d_3d(app, file_obj, data_label=data_label)
         else:
             _parse_spectrum1d(app, file_obj, data_label=data_label)
+    elif isinstance(file_obj, np.ndarray) and file_obj.ndim == 3:
+        _parse_ndarray(app, file_obj, data_label=data_label, data_type=data_type)
     else:
         raise NotImplementedError(f'Unsupported data format: {file_obj}')
 
@@ -298,8 +304,6 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None):
         else:
             flux = val
 
-        flux = np.moveaxis(flux, 1, 0)
-
         with warnings.catch_warnings():
             warnings.filterwarnings(
                 'ignore', message='Input WCS indicates that the spectral axis is not last',
@@ -313,11 +317,9 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None):
         if attr == 'flux':
             app.add_data_to_viewer('flux-viewer', cur_data_label)
             app.add_data_to_viewer('spectrum-viewer', cur_data_label)
-        elif attr == 'mask':
-            # We no longer auto-populate the mask cube into a viewer
-            pass
-        else:  # 'uncertainty'
+        elif attr == 'uncertainty':
             app.add_data_to_viewer('uncert-viewer', cur_data_label)
+        # We no longer auto-populate the mask cube into a viewer
 
 
 def _parse_spectrum1d(app, file_obj, data_label=None):
@@ -329,6 +331,45 @@ def _parse_spectrum1d(app, file_obj, data_label=None):
 
     app.add_data(file_obj, f"{data_label}[FLUX]")
     app.add_data_to_viewer('spectrum-viewer', f"{data_label}[FLUX]")
+
+
+def _parse_ndarray(app, file_obj, data_label=None, data_type=None):
+    if data_label is None:
+        data_label = 'Unknown array'
+
+    if data_type is None:
+        data_type = 'flux'
+
+    flux = np.fliplr(np.rot90(np.moveaxis(file_obj, 0, 2), k=-1, axes=(0, 1)))
+    if not hasattr(flux, 'unit'):
+        flux = flux << u.count
+    s3d = Spectrum1D(flux=flux)
+    app.add_data(s3d, data_label)
+
+    if data_type == 'flux':
+        app.add_data_to_viewer('flux-viewer', data_label)
+        app.add_data_to_viewer('spectrum-viewer', data_label)
+    elif data_type == 'uncert':
+        app.add_data_to_viewer('uncert-viewer', data_label)
+
+
+def _parse_gif(app, file_obj, data_label=None):  # pragma: no cover
+    # NOTE: Parsing GIF needs imageio and Pillow, both are which undeclared
+    # in setup.cfg but might or might not be installed by declared ones.
+    import imageio
+
+    file_name = os.path.basename(file_obj)
+
+    if data_label is None:
+        data_label = f'{os.path.splitext(file_name)[0]}[FLUX]'
+
+    flux = imageio.v3.imread(file_obj, mode='P')  # All frames as gray scale
+    flux = np.rot90(np.moveaxis(flux, 0, 2), k=-1, axes=(0, 1))
+    s3d = Spectrum1D(flux=flux * u.count, meta={'filename': file_name})
+
+    app.add_data(s3d, data_label)
+    app.add_data_to_viewer('flux-viewer', data_label)
+    app.add_data_to_viewer('spectrum-viewer', data_label)
 
 
 def _get_data_type_by_hdu(hdu):
