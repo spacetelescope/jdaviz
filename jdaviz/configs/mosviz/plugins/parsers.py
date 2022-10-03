@@ -755,21 +755,23 @@ def mos_niriss_parser(app, data_dir):
             print(f"Loading: {flabel} sources")
 
             with fits.open(fname, memmap=False) as temp:
-                # treat all HDUs missing SRCTYPE attribute as extended sources
-                # TODO: Remove this once valid SRCTYPE values are present in all headers
+                filtered_hdul = fits.HDUList()
                 for hdu in temp:
-                    if ("SRCTYPE" in hdu.header
-                            and (hdu.header["SRCTYPE"] in ("POINT", "EXTENDED"))):
-                        pass
-                    else:
-                        hdu.header["SRCTYPE"] = "EXTENDED"
+                    # Only load the SOURCEIDs the user specified in the target catalog
+                    if hdu.header.get('SOURCEID', None) in cat_id_dict.keys():
+
+                        # Specutils parser requires SRCTYPE to be either POINT or EXTENDED
+                        # treat all HDUs missing SRCTYPE attribute as extended sources
+                        # TODO: Remove this once valid SRCTYPE values are present in all headers
+                        if hdu.header.get('SRCTYPE', None) not in ("POINT", "EXTENDED"):
+                            hdu.header["SRCTYPE"] = "EXTENDED"
+
+                        filtered_hdul.append(hdu)
 
                 # read all HDUs with SpectrumList, then only keep those that
                 # correspond with sources in catalog
                 # (read() is slow... would also LOVE to do this in one step!)
-                specs = SpectrumList.read(temp, format="JWST x1d multi")
-                specs_cut = [sp for sp in specs if sp.meta['header']['SOURCEID']
-                             in cat_id_dict.keys()]
+                specs = SpectrumList.read(filtered_hdul, format="JWST x1d multi")
 
                 filter_name = fits.getheader(fname, ext=0).get('PUPIL')
 
@@ -777,7 +779,7 @@ def mos_niriss_parser(app, data_dir):
                 orientation = flabel.split()[-1]
 
                 # update 1D labels and standardize metadata for table viewer
-                for sp in specs_cut:
+                for sp in specs:
                     if (
                         sp.meta['header']['SPORDER'] == 1
                         and sp.meta['header']['EXTNAME'] == 'EXTRACT1D'
