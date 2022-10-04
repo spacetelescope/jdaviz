@@ -115,7 +115,7 @@ class Specviz2d(ConfigHelper, LineListMixin):
                 setattr(scales['x'], name, val)
 
     def load_data(self, spectrum_2d=None, spectrum_1d=None, spectrum_1d_label=None,
-                  spectrum_2d_label=None, show_in_viewer=True):
+                  spectrum_2d_label=None, show_in_viewer=True, extension=None):
         """
         Load and parse a pair of corresponding 1D and 2D spectra.
 
