@@ -19,7 +19,7 @@ def test_get_tray_item_from_name():
         app.get_tray_item_from_name('imviz-compass')
 
 
-def test_nonstandard_specviz_viewer_name():
+def test_nonstandard_specviz_viewer_name(spectrum1d):
     config = {'settings': {'configuration': 'nonstandard',
                            'data': {'parser': 'specviz-spectrum1d-parser'},
                            'visible': {'menu_bar': False,
@@ -48,6 +48,10 @@ def test_nonstandard_specviz_viewer_name():
 
     class Customviz(Specviz):
         _default_configuration = config
+        _default_spectrum_viewer_reference_name = 'h'
 
     viz = Customviz()
     assert viz.app.get_viewer_reference_names() == ['h', 'k']
+
+    viz.load_spectrum(spectrum1d, data_label='example label')
+    assert not len(viz.app.get_data_from_viewer("h", "non-existent label"))

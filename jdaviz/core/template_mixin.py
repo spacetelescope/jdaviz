@@ -225,12 +225,6 @@ class BasePluginComponent(HubListener):
         self._plugin = plugin
         self._cached_properties = []
         super().__init__()
-        self._default_spectrum_viewer_reference_name = kwargs.get(
-            "spectrum_viewer_reference_name", "spectrum-viewer"
-        )
-        self._default_spectrum_2d_viewer_reference_name = kwargs.get(
-            "spectrum_2d_viewer_reference_name", "spectrum-2d-viewer"
-        )
 
     def __getattr__(self, attr):
         if attr[0] == '_' or attr not in self._plugin_traitlets.keys():
@@ -302,11 +296,27 @@ class BasePluginComponent(HubListener):
                 for vid, viewer in self.app._viewer_store.items()
                 if viewer.__class__.__name__ != 'MosvizTableViewer']
 
-    @cached_property
+    @property
     def spectrum_viewer(self):
-        return self._plugin.app.get_viewer(
-            self._default_spectrum_viewer_reference_name
-        )
+        if hasattr(self, '_default_spectrum_viewer_reference_name'):
+            viewer_reference = self._default_spectrum_viewer_reference_name
+        else:
+            viewer_reference = self.app.get_first_viewer_reference_name(
+                require_spectrum_viewer=True
+            )
+
+        return self._plugin.app.get_viewer(viewer_reference)
+
+    @property
+    def spectrum_2d_viewer(self):
+        if hasattr(self, '_default_spectrum_2d_viewer_reference_name'):
+            viewer_reference = self._default_spectrum_2d_viewer_reference_name
+        else:
+            viewer_reference = self.app.get_first_viewer_reference_name(
+                require_spectrum_2d_viewer=True
+            )
+
+        return self._plugin.app.get_viewer(viewer_reference)
 
 
 class SelectPluginComponent(BasePluginComponent, HasTraits):
@@ -974,10 +984,6 @@ class SpectralSubsetSelectMixin(VuetifyTemplate, HubListener):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self._default_spectrum_viewer_reference_name = kwargs.get(
-            "spectrum_viewer_reference_name", "spectrum-viewer"
-        )
-
         self.spectral_subset = SubsetSelect(self,
                                             'spectral_subset_items',
                                             'spectral_subset_selected',
@@ -1358,15 +1364,13 @@ class DatasetSelect(SelectPluginComponent):
             if not len(self.app.get_viewer_reference_names()):
                 # then this is a bare Application object, so ignore this filter
                 return True
-            return data.label in [l.layer.label for l in self.spectrum_viewer.layers] # noqa E741
+            return data.label in [l.layer.label for l in self.spectrum_viewer.layers]  # noqa E741
 
         def layer_in_spectrum_2d_viewer(data):
             if not len(self.app.get_viewer_reference_names()):
                 # then this is a bare Application object, so ignore this filter
                 return True
-            return data.label in [l.layer.label for l in self.app.get_viewer(  # noqa E741
-                self._default_spectrum_2d_viewer_reference_name
-            ).layers]
+            return data.label in [l.layer.label for l in self.spectrum_2d_viewer.layers]  # noqa E741
 
         def is_trace(data):
             return hasattr(data, 'meta') and 'Trace' in data.meta

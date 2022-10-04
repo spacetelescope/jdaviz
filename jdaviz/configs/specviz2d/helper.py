@@ -198,9 +198,11 @@ class Specviz2d(ConfigHelper, LineListMixin):
                 self.app.hub.broadcast(msg)
 
         else:
+            allowed_key = "spectrum_viewer_reference_name"
+            kwargs_for_spec1d = {allowed_key: kwargs[allowed_key]}
             self.app.load_data(spectrum_1d, data_label=spectrum_1d_label,
                                parser_reference="specviz-spectrum1d-parser",
-                               show_in_viewer=show_in_viewer, **kwargs)
+                               show_in_viewer=show_in_viewer, **kwargs_for_spec1d)
 
     def load_trace(self, trace, data_label, show_in_viewer=True):
         """

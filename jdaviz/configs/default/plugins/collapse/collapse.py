@@ -17,7 +17,13 @@ from jdaviz.core.user_api import PluginUserApi
 __all__ = ['Collapse']
 
 
-@tray_registry('g-collapse', label="Collapse")
+@tray_registry(
+    'g-collapse', label="Collapse",
+    viewer_reference_name_kwargs={
+        "_default_spectrum_viewer_reference_name":
+            ["spectrum_viewer_reference_name", {"require_spectrum_viewer": True}],
+    }
+)
 class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin, AddResultsMixin):
     """
     See the :ref:`Collapse Plugin Documentation <collapse>` for more details.
@@ -39,6 +45,11 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
     function_selected = Unicode('Sum').tag(sync=True)
 
     def __init__(self, *args, **kwargs):
+
+        self._default_spectrum_viewer_reference_name = kwargs.get(
+            "spectrum_viewer_reference_name", "spectrum-viewer"
+        )
+
         super().__init__(*args, **kwargs)
 
         self._label_counter = 0

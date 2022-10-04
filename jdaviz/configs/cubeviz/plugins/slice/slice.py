@@ -14,7 +14,15 @@ from jdaviz.core.user_api import PluginUserApi
 __all__ = ['Slice']
 
 
-@tray_registry('cubeviz-slice', label="Slice")
+@tray_registry(
+    'cubeviz-slice', label="Slice",
+    viewer_reference_name_kwargs={
+        "_default_spectrum_viewer_reference_name":
+            ["spectrum_viewer_reference_name", {"require_spectrum_viewer": True}],
+        "_default_image_viewer_reference_name":
+            ["image_viewer_reference_name", {"require_image_viewer": True}],
+    }
+)
 class Slice(PluginTemplateMixin):
     """
     See the :ref:`Slice Plugin Documentation <slice>` for more details.
@@ -46,6 +54,12 @@ class Slice(PluginTemplateMixin):
     show_wavelength = Bool(True).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
+        self._default_spectrum_viewer_reference_name = kwargs.get(
+            "spectrum_viewer_reference_name", "spectrum-viewer"
+        )
+        self._default_image_viewer_reference_name = kwargs.get(
+            "image_viewer_reference_name", "image-viewer"
+        )
         super().__init__(*args, **kwargs)
 
         self._watched_viewers = []

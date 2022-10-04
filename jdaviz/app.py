@@ -677,7 +677,8 @@ class Application(VuetifyTemplate, HubListener):
 
         # If a data label was provided, return only the data requested
         if data_label is not None:
-            return data.get(data_label)
+            if data_label in data and len(data_label):
+                return data[data_label]
 
         return data
 
@@ -1372,7 +1373,6 @@ class Application(VuetifyTemplate, HubListener):
         # Include any selected data in the viewer
         for data_id, visibility in selected_items.items():
             label = self._get_data_item_by_id(data_id)['name']
-
             if label is None:
                 warnings.warn(f"No data item with id '{data_id}' found in "
                               f"viewer '{viewer_id}'.")
@@ -1740,9 +1740,14 @@ class Application(VuetifyTemplate, HubListener):
 
             if tray_registry_options is not None:
                 for opt_attr, [opt_kwarg, get_name_kwargs] in tray_registry_options.items():
-                    optional_tray_kwargs[opt_kwarg] = getattr(
+                    opt_value = getattr(
                         self, opt_attr, self.get_first_viewer_reference_name(**get_name_kwargs)
                     )
+
+                    if opt_value is None:
+                        continue
+
+                    optional_tray_kwargs[opt_kwarg] = opt_value
 
             tray_item_instance = tray.get('cls')(
                 app=self, **optional_tray_kwargs

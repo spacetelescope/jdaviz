@@ -120,11 +120,12 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     selected_line_redshift = Float(0).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
-        super().__init__(**kwargs)
 
         self._default_spectrum_viewer_reference_name = kwargs.get(
             "spectrum_viewer_reference_name", "spectrum-viewer"
         )
+
+        super().__init__(**kwargs)
 
         self.update_results(None)
 

@@ -39,20 +39,20 @@ class Specviz(ConfigHelper, LineListMixin):
                                handler=self._redshift_listener)
 
     def load_spectrum(self, data, data_label=None, format=None, show_in_viewer=True,
-                      viewer_reference_name=None):
+                      spectrum_viewer_reference_name=None):
 
-        if viewer_reference_name is None:
-            # If viewer reference name is not specified and
-            # the default viewer is available, use default
+        # If viewer reference name is not specified and
+        # the default viewer is available, use default
+        if spectrum_viewer_reference_name is None:
             if (self._default_spectrum_viewer_reference_name in
                     self.app.get_viewer_reference_names()):
-                viewer_reference_name = self._default_spectrum_viewer_reference_name
+                spectrum_viewer_reference_name = self._default_spectrum_viewer_reference_name
 
             # If viewer reference name is not specified and default is unavailable,
-            # use first viewer without loaded data:
+            # use first spectrum viewer without loaded data:
             else:
-                viewer_reference_name = self.app.get_first_viewer_reference_name(
-                    require_no_selected_data=True
+                spectrum_viewer_reference_name = self.app.get_first_viewer_reference_name(
+                    require_spectrum_viewer=True, require_no_selected_data=True
                 )
 
         super().load_data(data,
@@ -60,7 +60,7 @@ class Specviz(ConfigHelper, LineListMixin):
                           data_label=data_label,
                           format=format,
                           show_in_viewer=show_in_viewer,
-                          viewer_reference_name=viewer_reference_name)
+                          spectrum_viewer_reference_name=spectrum_viewer_reference_name)
 
     def get_spectra(self, data_label=None, apply_slider_redshift="Warn"):
         """Returns the current data loaded into the main viewer

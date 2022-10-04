@@ -53,10 +53,6 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self._default_spectrum_viewer_reference_name = kwargs.get(
-            "spectrum_viewer_reference_name", "spectrum-viewer"
-        )
-
         self._subscribe_to_layers_update()
         self._initialize_toolbar_nested(default_tool_priority=['jdaviz:selectslice'])
         self._offscreen_lines_marks = OffscreenLinesMarks(self)

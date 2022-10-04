@@ -292,5 +292,5 @@ def test_plugin_user_apis(specviz_helper):
 
 def test_data_label_as_posarg(specviz_helper, spectrum1d):
     # Passing in data_label keyword as posarg.
-    specviz_helper.load_data(spectrum1d, 'my_spec')
+    specviz_helper.load_spectrum(spectrum1d, 'my_spec')
     assert specviz_helper.app.data_collection[0].label == 'my_spec'
