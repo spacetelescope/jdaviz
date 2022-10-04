@@ -25,6 +25,8 @@ u.add_enabled_units([spaxel])
     viewer_reference_name_kwargs={
         "_default_spectrum_viewer_reference_name":
             ["spectrum_viewer_reference_name", {"require_spectrum_viewer": True}],
+        "_default_flux_viewer_reference_name":
+            ["flux_viewer_reference_name", {"require_flux_viewer": True}],
     }
 )
 class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):

@@ -1744,27 +1744,16 @@ class Application(VuetifyTemplate, HubListener):
                         self, opt_attr, self.get_first_viewer_reference_name(**get_name_kwargs)
                     )
 
-            # If the plugin constructor call below is not called with the correct kwargs,
-            # we would get a cryptic TypeError because the expected viewer reference
-            # name cannot be found. This `try` warns the user if the plugin can't be
-            # initialized, and continues onto loading the next plugin.
-            try:
-                tray_item_instance = tray.get('cls')(
-                    app=self, **optional_tray_kwargs
-                )
-                tray_item_label = tray.get('label')
+            tray_item_instance = tray.get('cls')(
+                app=self, **optional_tray_kwargs
+            )
+            tray_item_label = tray.get('label')
 
-                self.state.tray_items.append({
-                    'name': name,
-                    'label': tray_item_label,
-                    'widget': "IPY_MODEL_" + tray_item_instance.model_id
-                })
-            except TypeError:
-                warnings.warn(
-                    f'Could not initialize "{tray.get("cls").__name__}" '
-                    f'within plugin "{name}" with keyword arguments: '
-                    f'{optional_tray_kwargs}. Skipping plugin "{name}".'
-                )
+            self.state.tray_items.append({
+                'name': name,
+                'label': tray_item_label,
+                'widget': "IPY_MODEL_" + tray_item_instance.model_id
+            })
 
     def _reset_state(self):
         """ Resets the application state """
