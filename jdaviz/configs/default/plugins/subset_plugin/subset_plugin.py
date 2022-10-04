@@ -71,6 +71,8 @@ class SubsetPlugin(PluginTemplateMixin):
 
     def _on_subset_update(self, *args):
         self._sync_selected_from_state(*args)
+        if self.subset_selected == 'Create New':
+            return
         self._get_subset_definition(*args)
         subset_to_update = self.session.edit_subset_mode.edit_subset[0]
         self.subset_select._update_subset(subset_to_update, attribute="type")
