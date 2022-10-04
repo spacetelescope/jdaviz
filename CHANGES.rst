@@ -125,6 +125,9 @@ Specviz2d
 
 - Fixed parser for Level 2 NIRSpec ``s2d`` files. [#1608]
 
+- Spectral-extraction plugin: support floats for all input trace positions, separations, and widths.
+  [#1652]
+
 Other Changes and Additions
 ---------------------------
 
