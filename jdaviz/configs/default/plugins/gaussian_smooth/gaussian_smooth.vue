@@ -18,8 +18,8 @@
         <v-select
           :menu-props="{ left: true }"
           attach
-          :items="smooth_modes"
-          v-model="selected_mode"
+          :items="mode_items.map(i => i.label)"
+          v-model="mode_selected"
           label="Smoothing Type"
           hint="Smooth data spectrally or spatially."
           persistent-hint

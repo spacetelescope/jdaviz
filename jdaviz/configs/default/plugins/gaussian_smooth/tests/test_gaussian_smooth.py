@@ -16,7 +16,7 @@ def test_linking_after_spectral_smooth(spectrum1d_cube):
 
     gs = GaussianSmooth(app=app)
     gs.dataset_selected = 'test'
-    gs.selected_mode = 'Spectral'
+    gs.mode_selected = 'Spectral'
     gs.stddev = 3.2
     gs.add_to_viewer_selected = 'None'
     assert gs.results_label == 'spectral-smooth stddev-3.2'
@@ -79,7 +79,7 @@ def test_spatial_convolution(spectrum1d_cube):
 
     gs = GaussianSmooth(app=app)
     gs.dataset_selected = 'test'
-    gs.selected_mode = 'Spatial'
+    gs.mode_selected = 'Spatial'
     gs.stddev = 3
     assert gs.results_label == 'spatial-smooth stddev-3.0'
     gs.vue_apply()
