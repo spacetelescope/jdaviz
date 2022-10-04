@@ -29,6 +29,9 @@ Specviz2d
 - Improved logic for initial guess for position of "Manual" background trace in spectral extraction
   plugin. [#1738]
 
+- Spectral extraction plugin now supports visualizing and exporting the 1D spectrum associated
+  with the background region. [#1682]
+
 API Changes
 -----------
 
