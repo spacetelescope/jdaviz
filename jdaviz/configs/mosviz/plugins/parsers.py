@@ -760,7 +760,7 @@ def mos_niriss_parser(app, data_dir):
                 # Manually copy over known extensions if they exist
                 for metahdu in ('PRIMARY', 'ASDF'):
                     if metahdu in temp:
-                        filtered_hdul.append(temp[metahdu])
+                        filtered_hdul.append(temp.pop(metahdu))
 
                 for hdu in temp:
                     # Only load the SOURCEIDs the user specified in the target catalog
