@@ -127,16 +127,6 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
         spec : `~specutils.Spectrum1D`
             The smoothed spectrum or data cube
         """
-        if self.results_label in self.data_collection:
-            # immediately cancel before smoothing
-            snackbar_message = SnackbarMessage(
-                "Data with selected stddev already exists, canceling operation.",
-                color="error",
-                sender=self)
-            self.hub.broadcast(snackbar_message)
-
-            return
-
         if self.mode_selected == 'Spatial':
             if self.config != 'cubeviz':
                 raise NotImplementedError("spatial smoothing only supported for Cubeviz")
