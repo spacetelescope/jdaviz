@@ -114,6 +114,14 @@ class LineListTool(PluginTemplateMixin):
         self._viewer.state.add_callback("x_max",
                                         lambda x_max: self._on_spectrum_viewer_limits_changed())
 
+        self._disable_if_no_data()
+
+    def _disable_if_no_data(self):
+        if len(self.app.data_collection) == 0:
+            self.disabled_msg = 'Line Lists unavailable when no data is loaded'
+        else:
+            self.disabled_msg = ''
+
     def _on_viewer_data_changed(self, msg=None):
         """
         Callback method for when data is added or removed from a viewer, or
@@ -131,6 +139,8 @@ class LineListTool(PluginTemplateMixin):
         msg : `glue.core.Message`
             The glue message passed to this callback method.
         """
+        self._disable_if_no_data()
+
         self._viewer_id = self.app._viewer_item_by_reference(
             'spectrum-viewer').get('id')
 
