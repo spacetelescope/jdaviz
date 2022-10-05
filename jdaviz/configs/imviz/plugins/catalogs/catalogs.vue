@@ -13,6 +13,7 @@
      />
 
      <v-row>
+
        <v-select
          :menu-props="{ left: true }"
          attach
@@ -22,6 +23,18 @@
          hint="Select a catalog to search with."
          persistent-hint
        ></v-select>
+       <v-chip v-if="catalog_selected === 'From File...'"
+         close
+         close-icon="mdi-close"
+         label
+         @click:close="() => from_file = ''"
+         style="margin-top: -50px; width: 100%"
+       >
+          <span style="overflow-x: hidden; whitespace: nowrap; text-overflow: ellipsis; width: 100%">
+            {{from_file.split("/").slice(-1)[0]}}
+          </span>
+       </v-chip>
+
      </v-row>
 
      <v-row class="row-no-outside-padding">
@@ -40,3 +53,9 @@
 
    </j-tray-plugin>
  </template>
+ 
+ <style scoped>
+ .v-chip__content {
+   width: 100%
+ }
+ </style>
