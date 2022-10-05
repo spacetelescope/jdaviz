@@ -38,9 +38,6 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
       Standard deviation of the gaussian to use for smoothing.
     * ``add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
     * :meth:`apply_smooth`
-    * :meth:`spectral_smooth`
-    * :meth:`spatial_smooth`:
-      Only available for Cubeviz.
     """
     template_file = __file__, "gaussian_smooth.vue"
     stddev = FloatHandleEmpty(1).tag(sync=True)
@@ -73,9 +70,9 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
 
     @property
     def user_api(self):
-        expose = ['dataset', 'stddev', 'add_results', 'apply_smooth', 'spectral_smooth']
+        expose = ['dataset', 'stddev', 'add_results', 'apply_smooth']
         if self.config == "cubeviz":
-            expose += ['mode', 'spatial_smooth']
+            expose += ['mode']
         return PluginUserApi(self, expose=expose)
 
     @observe("dataset_selected", "dataset_items", "stddev", "mode_selected")
