@@ -755,29 +755,24 @@ def mos_niriss_parser(app, data_dir):
             print(f"Loading: {flabel} sources")
 
             with fits.open(fname, memmap=False) as temp:
-                filtered_hdul = fits.HDUList()
+                # Filter out HDUs we care about
+                filtered_hdul = fits.HDUList([hdu for hdu in temp if (
+                    (hdu.name in ('PRIMARY', 'ASDF')) or
+                    (hdu.header.get('SOURCEID', None) in cat_id_dict.keys()))])
 
-                # Manually copy over known extensions if they exist
-                for metahdu in ('PRIMARY', 'ASDF'):
-                    if metahdu in temp:
-                        filtered_hdul.append(temp.pop(metahdu))
-
-                for hdu in temp:
-                    # Only load the SOURCEIDs the user specified in the target catalog
-                    if hdu.header.get('SOURCEID', None) in cat_id_dict.keys():
-
-                        # Specutils parser requires SRCTYPE to be either POINT or EXTENDED
-                        # treat all HDUs missing SRCTYPE attribute as extended sources
-                        # TODO: Remove this once valid SRCTYPE values are present in all headers
-                        if hdu.header.get('SRCTYPE', None) not in ("POINT", "EXTENDED"):
-                            hdu.header["SRCTYPE"] = "EXTENDED"
-
-                        filtered_hdul.append(hdu)
-
-                # read all HDUs with SpectrumList, then only keep those that
-                # correspond with sources in catalog
-                # (read() is slow... would also LOVE to do this in one step!)
-                specs = SpectrumList.read(filtered_hdul, format="JWST x1d multi")
+                # SRCTYPE is required for the specutils JWST x1d reader. The reader will
+                # force this to POINT if not set. Under known cases, this field will be set
+                # for NIRISS programs; if it's not, something's gone wrong. Catch this
+                # warning and reraise as an error to warn users.
+                try:
+                    with warnings.catch_warnings():
+                        warnings.filterwarnings("error",
+                                                category=UserWarning,
+                                                message=".*SRCTYPE is missing or UNKNOWN*")
+                        specs = SpectrumList.read(filtered_hdul, format="JWST x1d multi")
+                except UserWarning as e:
+                    raise KeyError(f"The SRCTYPE keyword in the header of file {fname}"
+                                   "is not populated (expected values: EXTENDED or POINT)") from e
 
                 filter_name = fits.getheader(fname, ext=0).get('PUPIL')
 
