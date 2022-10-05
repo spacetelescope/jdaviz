@@ -8,7 +8,6 @@ from astropy.utils.data import download_file
 from jdaviz.utils import PRIHDR_KEY, COMMENTCARD_KEY
 
 
-# This is another version of test_niriss_loader in test_data_loading.py
 @pytest.mark.remote_data
 @pytest.mark.filterwarnings('ignore', match="'(MJy/sr)^2' did not parse as fits unit")
 def test_niriss_parser(mosviz_helper, tmpdir):
@@ -65,3 +64,33 @@ def test_niriss_parser(mosviz_helper, tmpdir):
                     assert COMMENTCARD_KEY in data.meta
                     assert 'header' not in data.meta
                     assert data.meta['FILTER'] == f'GR150{dispersion}'
+
+
+@pytest.mark.remote_data
+@pytest.mark.filterwarnings('ignore', match="Implicitly cleaning up <TemporaryDirectory")
+def test_missing_srctype(mosviz_helper, tmpdir):
+    '''
+    Tests that data missing the SRCTYPE keyword raises a warning to the user.
+    
+    SRCTYPE is required for Mosviz. We do not want to rely on the JWST x1d parser's
+    default behavior of overwriting with "POINT" if it doesn't exist, as all NIRISS data 
+    should have this populated; missing SRCTYPE indicates something went wrong.
+
+    This dataset was our original simulated NIRISS dataset that is missing SRCTYPE.
+
+    NOTE: Under some conditions, a warning is raised when TemporaryDirectory attempts to
+    clean itself up. Most likely a race condition between TempDir and pytest
+    '''
+
+    # Download data
+    test_data = 'https://stsci.box.com/shared/static/l2azhcqd3tvzhybdlpx2j2qlutkaro3z.zip'
+    fn = download_file(test_data, cache=True, timeout=30)
+
+    # Extract to a known, temporary folder
+    data_dir = Path(TemporaryDirectory(dir=tmpdir).name)
+    with ZipFile(fn, 'r') as sample_data_zip:
+        sample_data_zip.extractall(data_dir)
+
+    with pytest.raises(KeyError, match=r".*The SRCTYPE keyword.*is not populated.*"):
+        mosviz_helper.load_data(directory=(data_dir / 'NIRISS_for_parser_p0171'),
+                                           instrument="niriss")
