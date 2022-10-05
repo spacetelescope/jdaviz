@@ -186,7 +186,7 @@ def test_user_api(specviz_helper, spectrum1d):
 def test_fit_gaussian_with_fixed_mean(specviz_helper, spectrum1d):
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        specviz_helper.load_data(spectrum1d)
+        specviz_helper.load_spectrum(spectrum1d)
     modelfit_plugin = specviz_helper.plugins['Model Fitting']
 
     modelfit_plugin.create_model_component('Gaussian1D', 'G')
