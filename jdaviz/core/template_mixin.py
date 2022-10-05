@@ -365,6 +365,13 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
             return f"<selected={self.selected} multiselect={self.multiselect} choices={self.choices}>"  # noqa
         return f"<selected={self.selected} choices={self.choices}>"
 
+    def __eq__(self, other):
+        return self.selected == other
+
+    def __hash__(self):
+        # defining __eq__ without defining __hash__ makes the object unhashable
+        return super().__hash__()
+
     @property
     def choices(self):
         return self.labels
@@ -1453,6 +1460,13 @@ class AutoTextField(BasePluginComponent):
     def __repr__(self):
         return f"<AutoTextField label='{self.value}' auto={self.auto}>"
 
+    def __eq__(self, other):
+        return self.value == other
+
+    def __hash__(self):
+        # defining __eq__ without defining __hash__ makes the object unhashable
+        return super().__hash__()
+
     def _on_set_to_default(self, msg={}):
         if self.auto:
             self.value = self.default
@@ -1743,7 +1757,8 @@ class PlotOptionsSyncState(BasePluginComponent):
 
     Useful API methods/attributes:
 
-    * ``value``
+    * ``value``: the currently set value sent to the underlying ``linked_states`` objects in glue
+    * ``text``: the user-friendly equivalent of the currently set value (only when has ``choices``)
     * :meth:`choices` (only when applicable)
     * :attr:`linked_states`
     * :meth:`unmix_state`
@@ -1775,8 +1790,25 @@ class PlotOptionsSyncState(BasePluginComponent):
     def user_api(self):
         expose = ['value', 'unmix_state', 'linked_states']
         if len(self.choices):
-            expose += ['choices']
+            expose += ['choices', 'text']
         return UserApiWrapper(self, expose=expose)
+
+    def __eq__(self, other):
+        return self.value == other or (len(self.choices) and self.text == other)
+
+    def __hash__(self):
+        # defining __eq__ without defining __hash__ makes the object unhashable
+        return super().__hash__()
+
+    @property
+    def text(self):
+        """
+        The user-friendly text equivalent of the currently set value
+        """
+        value = self.value
+        for choice in self.sync.get('choices', {}):
+            if choice['value'] == value:
+                return choice['text']
 
     @property
     def choices(self):

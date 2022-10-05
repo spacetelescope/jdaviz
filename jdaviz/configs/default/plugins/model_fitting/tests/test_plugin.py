@@ -153,7 +153,9 @@ def test_user_api(specviz_helper, spectrum1d):
 
     # even though the default label is set to C, adding Linear1D should default to its automatic
     # default label of 'L'
+    assert p.model_component == 'Const1D'  # tests SelectPluginComponent's __eq__
     assert p.model_component_label.value == 'C'
+    assert p.model_component_label == 'C'  # tests AutoTextField's __eq__
     p.create_model_component('Linear1D')
     assert p.model_components == ['L']
 

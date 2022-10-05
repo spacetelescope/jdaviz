@@ -96,3 +96,7 @@ def test_user_api(cubeviz_helper, spectrum1d_cube):
     # try setting with both label and value
     po.stretch_preset = 90
     po.stretch_preset = 'Min/Max'
+
+    # try eq on both text and value
+    assert po.image_colormap == 'gray'
+    assert po.image_colormap == 'Gray'
