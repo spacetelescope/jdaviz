@@ -71,9 +71,9 @@ def test_niriss_parser(mosviz_helper, tmpdir):
 def test_missing_srctype(mosviz_helper, tmpdir):
     '''
     Tests that data missing the SRCTYPE keyword raises a warning to the user.
-    
+
     SRCTYPE is required for Mosviz. We do not want to rely on the JWST x1d parser's
-    default behavior of overwriting with "POINT" if it doesn't exist, as all NIRISS data 
+    default behavior of overwriting with "POINT" if it doesn't exist, as all NIRISS data
     should have this populated; missing SRCTYPE indicates something went wrong.
 
     This dataset was our original simulated NIRISS dataset that is missing SRCTYPE.
@@ -93,4 +93,4 @@ def test_missing_srctype(mosviz_helper, tmpdir):
 
     with pytest.raises(KeyError, match=r".*The SRCTYPE keyword.*is not populated.*"):
         mosviz_helper.load_data(directory=(data_dir / 'NIRISS_for_parser_p0171'),
-                                           instrument="niriss")
+                                instrument="niriss")
