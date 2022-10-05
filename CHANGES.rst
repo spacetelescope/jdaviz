@@ -86,6 +86,8 @@ Bug Fixes
 - Fixed crashing of model fitting when a parameter is fixed before fitting
   is done. [#1689]
 
+- Fixed IndexError when editing a subset while subset selection is set to "Create New". [#1700]
+
 Cubeviz
 ^^^^^^^
 
