@@ -35,25 +35,25 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
     * :meth:`collapse`
     """
     template_file = __file__, "collapse.vue"
-    method_items = List().tag(sync=True)
-    method_selected = Unicode('Sum').tag(sync=True)
+    function_items = List().tag(sync=True)
+    function_selected = Unicode('Sum').tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self._label_counter = 0
 
-        self.method = SelectPluginComponent(self,
-                                            items='method_items',
-                                            selected='method_selected',
-                                            manual_options=['Mean', 'Median', 'Min', 'Max', 'Sum'])
+        self.function = SelectPluginComponent(self,
+                                              items='function_items',
+                                              selected='function_selected',
+                                              manual_options=['Mean', 'Median', 'Min', 'Max', 'Sum'])  # noqa
 
         self.dataset.add_filter('is_image')
         self.add_results.viewer.filters = ['is_image_viewer']
 
     @property
     def user_api(self):
-        return PluginUserApi(self, expose=('dataset', 'method', 'spectral_subset',
+        return PluginUserApi(self, expose=('dataset', 'function', 'spectral_subset',
                                            'add_results', 'collapse'))
 
     @observe("dataset_selected", "dataset_items")
@@ -83,7 +83,7 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
             warnings.filterwarnings('ignore', message='No observer defined on WCS')
             spec = spectral_slab(cube, spec_min, spec_max)
             # Spatial-spatial image only.
-            collapsed_spec = spec.collapse(self.method_selected.lower(), axis=-1).T  # Quantity
+            collapsed_spec = spec.collapse(self.function_selected.lower(), axis=-1).T  # Quantity
 
         if add_data:
             data = Data()

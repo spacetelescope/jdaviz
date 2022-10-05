@@ -16,10 +16,10 @@
       <v-select
         :menu-props="{ left: true }"
         attach
-        :items="method_items.map(i => i.label)"
-        v-model="method_selected"
-        label="Method"
-        hint="Method to use in the collapse."
+        :items="function_items.map(i => i.label)"
+        v-model="function_selected"
+        label="Function"
+        hint="Function to use in the collapse."
         persistent-hint
       ></v-select>
     </v-row>
