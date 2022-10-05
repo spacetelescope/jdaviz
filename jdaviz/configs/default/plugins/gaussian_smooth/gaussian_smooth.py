@@ -37,7 +37,7 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
     * :attr:`stddev`:
       Standard deviation of the gaussian to use for smoothing.
     * ``add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
-    * :meth:`apply_smooth`
+    * :meth:`smooth`
     """
     template_file = __file__, "gaussian_smooth.vue"
     stddev = FloatHandleEmpty(1).tag(sync=True)
@@ -70,7 +70,7 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
 
     @property
     def user_api(self):
-        expose = ['dataset', 'stddev', 'add_results', 'apply_smooth']
+        expose = ['dataset', 'stddev', 'add_results', 'smooth']
         if self.config == "cubeviz":
             expose += ['mode']
         return PluginUserApi(self, expose=expose)
@@ -107,9 +107,9 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
             self.add_results.viewer.filters = ['is_spectrum_viewer']
 
     def vue_apply(self, event={}):
-        self.apply_smooth(add_data=True)
+        self.smooth(add_data=True)
 
-    def apply_smooth(self, add_data=True):
+    def smooth(self, add_data=True):
         """
         Smooth according to the settings in the plugin.
 
@@ -155,7 +155,7 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
     def spectral_smooth(self):
         """
         Smooth the input spectrum along the spectral axis.  To add the resulting spectrum into
-        the app, set label options and use :meth:`apply_smooth` instead.
+        the app, set label options and use :meth:`smooth` instead.
 
         Returns
         -------
@@ -179,7 +179,7 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
         """
         Use astropy convolution machinery to smooth the spatial dimensions of
         the data cube.  To add the resulting cube into
-        the app, set label options and use :meth:`apply_smooth` instead.
+        the app, set label options and use :meth:`smooth` instead.
 
         Returns
         -------
