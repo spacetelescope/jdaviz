@@ -297,7 +297,8 @@ The acceptable values are as defined by glue backend::
     viewer.stretch = 'sqrt'
 
 To set the stretch function for all the images at once.
-The acceptable values are the same as the GUI menu options::
+The acceptable values are the same as the GUI menu options
+can be accessed with ``plot_options.stretch_function.choices``::
 
     plot_options.select_all()
     plot_options.stretch_function = 'Square Root'
