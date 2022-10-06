@@ -19,6 +19,9 @@ class UserApiWrapper:
     def __repr__(self):
         return self._obj.__repr__()
 
+    def __eq__(self, other):
+        return self._obj.__eq__(other)
+
     def __getattr__(self, attr):
         if attr in ['_obj', '_expose', '_readonly', '__doc__'] or attr not in self._expose:
             return super().__getattribute__(attr)
