@@ -4,7 +4,7 @@ from glue.core.roi import XRangeROI
 
 @pytest.mark.filterwarnings('ignore')
 def test_plugin(specviz_helper, spectrum1d):
-    specviz_helper.load_data(spectrum1d)
+    specviz_helper.load_spectrum(spectrum1d)
     p = specviz_helper.plugins['Subset Tools']
 
     # regression test for https://github.com/spacetelescope/jdaviz/issues/1693
