@@ -1,5 +1,6 @@
 import numpy as np
 import numpy.ma as ma
+import os
 
 from traitlets import List, Unicode, Bool, Int, observe
 
@@ -7,6 +8,7 @@ from astropy.table import QTable
 from astropy.coordinates import SkyCoord
 from astroquery.sdss import SDSS
 
+from jdaviz.configs.default.plugins.data_tools.file_chooser import FileChooser
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
                                         SelectPluginComponent)
@@ -29,6 +31,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
     catalog_items = List([]).tag(sync=True)
     catalog_selected = Unicode("").tag(sync=True)
     from_file = Unicode().tag(sync=True)
+    valid_path = Bool(True).tag(sync=True)
     results_available = Bool(False).tag(sync=True)
     number_of_results = Int(0).tag(sync=True)
 
@@ -40,14 +43,33 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
                                              selected='catalog_selected',
                                              manual_options=['SDSS', 'From File...'])
 
+        # file chooser for From File
+        start_path = os.environ.get('JDAVIZ_START_DIR', os.path.curdir)
+        self._file_upload = FileChooser(start_path)
+        self.components = {'g-file-import': self._file_upload}
+        self._file_upload.observe(self._on_file_path_changed, names='file_path')
+
+    def _on_file_path_changed(self, event):
+        if (self._file_upload.file_path is not None
+                and not os.path.exists(self._file_upload.file_path)
+                or not os.path.isfile(self._file_upload.file_path)):
+            self.valid_path = False
+        else:
+            self.valid_path = True
+
     @observe('from_file')
     def _from_file_changed(self, event):
         if len(event['new']):
+            if not os.path.exists(event['new']):
+                raise ValueError(f"{event['new']} does not exist")
             self.catalog.selected = 'From File...'
         else:
             # NOTE: select_default will change the value even if the current value is valid
             # (so will change from 'From File...' to the first entry in the dropdown)
             self.catalog.select_default()
+
+    def vue_set_file_from_dialog(self, *args, **kwargs):
+        self.from_file = self._file_upload.file_path
 
     def search(self):
         """

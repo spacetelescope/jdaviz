@@ -29,10 +29,8 @@ class DataTools(TemplateMixin):
         if (self._file_upload.file_path is not None
                 and not os.path.exists(self._file_upload.file_path)
                 or not os.path.isfile(self._file_upload.file_path)):
-            self.error_message = "No file exists at given path"
             self.valid_path = False
         else:
-            self.error_message = ""
             self.valid_path = True
 
     def vue_load_data(self, *args, **kwargs):
