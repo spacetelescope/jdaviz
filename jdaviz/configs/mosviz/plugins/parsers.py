@@ -238,7 +238,7 @@ def mos_spec1d_parser(app, data_obj, data_labels=None,
 
 @data_parser_registry("mosviz-spec2d-parser")
 def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
-                      show_in_viewer=False, extension=None):
+                      show_in_viewer=False, extension=1, transpose=False):
     """
     Attempts to parse a 2D spectrum object.
 
@@ -257,7 +257,9 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
     data_labels : str, optional
         The label applied to the glue data component.
     extension: int, optional
-        The extension in the fits file that contains the data to be loaded. 
+        The extension in the fits file that contains the data to be loaded.
+    transpose: bool, optional
+        Flag to transpose the data array before loading.
     """
     spectrum_2d_viewer_reference_name = (
         app._jdaviz_helper._default_spectrum_2d_viewer_reference_name
@@ -269,9 +271,9 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
     # Note: This is also used by Specviz2D
     def _parse_as_spectrum1d(hdulist, extension):
         # Parse as a FITS file and assume the WCS is correct
-        if extension is None:
-            extension = 1
         data = hdulist[extension].data
+        if transpose:
+            data = data.T
         header = hdulist[extension].header
         metadata = standardize_metadata(header)
         metadata[PRIHDR_KEY] = standardize_metadata(hdulist[0].header)
