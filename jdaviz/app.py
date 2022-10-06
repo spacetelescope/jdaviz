@@ -2,7 +2,6 @@ import os
 import pathlib
 import re
 import uuid
-import warnings
 from inspect import isclass
 
 from ipywidgets import widget_serialization
@@ -1100,34 +1099,24 @@ class Application(VuetifyTemplate, HubListener):
 
         for vid in self._viewer_store:
             viewer_item = self._viewer_item_by_id(vid)
+            is_returnable = (
+                (require_no_selected_data and not len(viewer_item['selected_data_items'])) or
+                (not require_no_selected_data)
+            )
             if require_spectrum_viewer:
-                if isinstance(self._viewer_store[vid], spectral_viewers):
-                    if require_no_selected_data and not len(viewer_item['selected_data_items']):
-                        return viewer_item['reference']
-                    elif not require_no_selected_data:
-                        return viewer_item['reference']
-            elif require_table_viewer:
-                if isinstance(self._viewer_store[vid], table_viewers):
-                    if require_no_selected_data and not len(viewer_item['selected_data_items']):
-                        return viewer_item['reference']
-                    elif not require_no_selected_data:
-                        return viewer_item['reference']
-            elif require_image_viewer:
-                if isinstance(self._viewer_store[vid], image_viewers):
-                    if require_no_selected_data and not len(viewer_item['selected_data_items']):
-                        return viewer_item['reference']
-                    elif not require_no_selected_data:
-                        return viewer_item['reference']
-            elif require_flux_viewer:
-                if isinstance(self._viewer_store[vid], flux_viewers):
-                    if require_no_selected_data and not len(viewer_item['selected_data_items']):
-                        return viewer_item['reference']
-                    elif not require_no_selected_data:
-                        return viewer_item['reference']
-            else:
-                if require_no_selected_data and not len(viewer_item['selected_data_items']):
+                if isinstance(self._viewer_store[vid], spectral_viewers) and is_returnable:
                     return viewer_item['reference']
-                elif not require_no_selected_data:
+            elif require_table_viewer:
+                if isinstance(self._viewer_store[vid], table_viewers) and is_returnable:
+                    return viewer_item['reference']
+            elif require_image_viewer:
+                if isinstance(self._viewer_store[vid], image_viewers) and is_returnable:
+                    return viewer_item['reference']
+            elif require_flux_viewer:
+                if isinstance(self._viewer_store[vid], flux_viewers) and is_returnable:
+                    return viewer_item['reference']
+            else:
+                if is_returnable:
                     return viewer_item['reference']
 
     def _viewer_by_id(self, vid):
@@ -1373,10 +1362,6 @@ class Application(VuetifyTemplate, HubListener):
         # Include any selected data in the viewer
         for data_id, visibility in selected_items.items():
             label = self._get_data_item_by_id(data_id)['name']
-            if label is None:
-                warnings.warn(f"No data item with id '{data_id}' found in "
-                              f"viewer '{viewer_id}'.")
-                continue
 
             active_data_labels.append(label)
 
