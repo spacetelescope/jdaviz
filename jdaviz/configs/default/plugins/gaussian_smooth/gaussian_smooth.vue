@@ -1,6 +1,6 @@
 <template>
   <j-tray-plugin
-    description='Smooth your data in xy or wavelength with a Gaussian kernel.'
+    :description="config==='cubeviz' ? 'Smooth data cube spatially or spectrally with a Gaussian kernel.' : 'Smooth data with a Gaussian kernel.'"
     :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#gaussian-smooth'"
     :popout_button="popout_button">
 
@@ -18,9 +18,9 @@
         <v-select
           :menu-props="{ left: true }"
           attach
-          :items="smooth_modes"
-          v-model="selected_mode"
-          label="Smoothing Type"
+          :items="mode_items.map(i => i.label)"
+          v-model="mode_selected"
+          label="Mode"
           hint="Smooth data spectrally or spatially."
           persistent-hint
         ></v-select>
