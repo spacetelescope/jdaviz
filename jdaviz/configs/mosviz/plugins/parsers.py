@@ -756,10 +756,10 @@ def mos_niriss_parser(app, data_dir):
 
             with fits.open(fname, memmap=False) as temp:
                 # Filter out HDUs we care about
-                source_ids = cat_id_dict.keys()
+                source_ids_to_filter = cat_id_dict.keys()
                 filtered_hdul = fits.HDUList([hdu for hdu in temp if (
                     (hdu.name in ('PRIMARY', 'ASDF')) or
-                    (hdu.header.get('SOURCEID', None) in source_ids))])
+                    (hdu.header.get('SOURCEID', None) in source_ids_to_filter))])
 
                 # SRCTYPE is required for the specutils JWST x1d reader. The reader will
                 # force this to POINT if not set. Under known cases, this field will be set
