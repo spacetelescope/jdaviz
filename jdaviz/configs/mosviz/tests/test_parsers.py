@@ -64,7 +64,6 @@ def test_niriss_parser(mosviz_helper, tmp_path):
 
 
 @pytest.mark.remote_data
-@pytest.mark.filterwarnings('ignore', match="Implicitly cleaning up <TemporaryDirectory")
 def test_missing_srctype(mosviz_helper, tmp_path):
     '''
     Tests that data missing the SRCTYPE keyword raises a warning to the user.
