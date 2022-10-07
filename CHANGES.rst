@@ -29,8 +29,12 @@ Specviz2d
 - Improved logic for initial guess for position of "Manual" background trace in spectral extraction
   plugin. [#1738]
 
+- Now supports loading a specific extension of the 2D spectrum file and 
+  transposing data on load. [#1705]
+
 - Spectral extraction plugin now supports visualizing and exporting the 1D spectrum associated
   with the background region. [#1682]
+
 
 API Changes
 -----------
@@ -188,7 +192,6 @@ Specviz2d
 
 - 2D spectrum viewer now has info panel for pixel coordinates and value. [#1608]
 
-Bug Fixes
 ---------
 
 - Fixed loading data via the Import Data button on top-left of the application.
