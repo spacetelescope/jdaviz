@@ -14,7 +14,7 @@ New Features
 - User-friendly API access to plugins, with exposed functionality for:  line analysis, gaussian
   smooth, moment maps, compass, collapse, metadata, slice, plot options, model fitting, links
   control, export plot, and spectral extraction.
-  [#1401, #1642, #1643, #1636, #1641, #1634, #1635, #1637, #1658, #1640, #1657, #1639, #1699, #1701, #1702]
+  [#1401, #1642, #1643, #1636, #1641, #1634, #1635, #1637, #1658, #1640, #1657, #1639, #1699, #1701, #1702, #1708]
 
 - Line Lists show which medium the catalog wavelengths were measured in,
   in accordance to the metadata entry. Lists without medium information

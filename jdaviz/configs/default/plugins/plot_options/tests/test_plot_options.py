@@ -65,6 +65,13 @@ def test_user_api(cubeviz_helper, spectrum1d_cube):
     assert po.multiselect is False
     assert "multiselect" in po.viewer.__repr__()
 
+    # regression test for https://github.com/spacetelescope/jdaviz/pull/1708
+    # user calls to select_default should revert even if current entry is valid
+    po.viewer = 'spectrum-viewer'
+    assert po.viewer.selected == 'spectrum-viewer'
+    po.viewer.select_default()
+    assert po.viewer.selected == 'flux-viewer'
+
     po.select_all()
     assert po.multiselect is True
     assert len(po.viewer.selected) == 3

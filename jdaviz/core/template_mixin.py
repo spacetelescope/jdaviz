@@ -387,7 +387,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
         """
         Apply and return the default selection.
         """
-        self._apply_default_selection()
+        self._apply_default_selection(skip_if_current_valid=False)
         return self.selected
 
     def select_all(self):
@@ -472,7 +472,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
     def default_mode(self):
         return self._default_mode
 
-    def _apply_default_selection(self):
+    def _apply_default_selection(self, skip_if_current_valid=True):
         # TODO: make this multi-ready
         is_valid = self.selected in self.labels
         if callable(self.default_mode):
@@ -483,7 +483,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
             self.selected = self.default_mode(self, is_valid=is_valid)
             return
 
-        if is_valid:
+        if is_valid and skip_if_current_valid:
             # current selection is valid
             return
 
