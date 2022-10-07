@@ -1,6 +1,4 @@
 from zipfile import ZipFile
-from tempfile import TemporaryDirectory
-from pathlib import Path
 
 import pytest
 from astropy.utils.data import download_file
@@ -10,7 +8,7 @@ from jdaviz.utils import PRIHDR_KEY, COMMENTCARD_KEY
 
 @pytest.mark.remote_data
 @pytest.mark.filterwarnings('ignore', match="'(MJy/sr)^2' did not parse as fits unit")
-def test_niriss_parser(mosviz_helper, tmpdir):
+def test_niriss_parser(mosviz_helper, tmp_path):
     '''
     Tests loading a NIRISS dataset
     This data set is a shortened version of the ERS program GLASS (Program 1324)
@@ -28,11 +26,10 @@ def test_niriss_parser(mosviz_helper, tmpdir):
     fn = download_file(test_data, cache=True, timeout=30)
 
     # Extract to a known, temporary folder
-    data_dir = Path(TemporaryDirectory(dir=tmpdir).name)
     with ZipFile(fn, 'r') as sample_data_zip:
-        sample_data_zip.extractall(data_dir)
+        sample_data_zip.extractall(tmp_path)
 
-    mosviz_helper.load_data(directory=data_dir, instrument="niriss")
+    mosviz_helper.load_data(directory=tmp_path, instrument="niriss")
     assert len(mosviz_helper.app.data_collection) == 10
 
     # The image should be the first in the data collection
@@ -68,7 +65,7 @@ def test_niriss_parser(mosviz_helper, tmpdir):
 
 @pytest.mark.remote_data
 @pytest.mark.filterwarnings('ignore', match="Implicitly cleaning up <TemporaryDirectory")
-def test_missing_srctype(mosviz_helper, tmpdir):
+def test_missing_srctype(mosviz_helper, tmp_path):
     '''
     Tests that data missing the SRCTYPE keyword raises a warning to the user.
 
@@ -87,10 +84,9 @@ def test_missing_srctype(mosviz_helper, tmpdir):
     fn = download_file(test_data, cache=True, timeout=30)
 
     # Extract to a known, temporary folder
-    data_dir = Path(TemporaryDirectory(dir=tmpdir).name)
     with ZipFile(fn, 'r') as sample_data_zip:
-        sample_data_zip.extractall(data_dir)
+        sample_data_zip.extractall(tmp_path)
 
     with pytest.raises(KeyError, match=r".*The SRCTYPE keyword.*is not populated.*"):
-        mosviz_helper.load_data(directory=(data_dir / 'NIRISS_for_parser_p0171'),
+        mosviz_helper.load_data(directory=(tmp_path / 'NIRISS_for_parser_p0171'),
                                 instrument="niriss")
