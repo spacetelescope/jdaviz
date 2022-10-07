@@ -223,6 +223,10 @@ catalog dropdown menu.
     This plugin is still under active development. As a result, the search only uses the SDSS DR17 catalog
     and works best when you only have a single image loaded in a viewer.
 
+To load a catalog from an ecsv file, choose "From File..." and choose a valid file.  The file must be able
+to be parsed by `astropy.table.Table.read` and contain a column labeled 'sky_centroid'.  Clicking
+:guilabel:`SEARCH` will show markers for any entry within the filtered zoom window.
+
 If you have multiple viewers open, you will see another dropdown menu to select the active
 viewer.
 

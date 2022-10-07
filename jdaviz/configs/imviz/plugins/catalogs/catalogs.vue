@@ -50,13 +50,19 @@
                  <g-file-import id="file-uploader"></g-file-import>
                </v-col>
              </v-row>
+             <v-row v-if="from_file_message.length > 0" :style='"color: red"'>
+               {{from_file_message}}
+             </v-row>
+             <v-row v-else>
+               Valid catalog file
+             </v-row>
            </v-container>
          </v-card-text>
 
          <v-card-actions>
            <div class="flex-grow-1"></div>
            <v-btn color="primary" text @click="catalog_selected = catalog_items[0].label">Cancel</v-btn>
-           <v-btn color="primary" text @click="set_file_from_dialog" :disabled="!valid_path">Select</v-btn>
+           <v-btn color="primary" text @click="set_file_from_dialog" :disabled="from_file_message.length > 0">Select</v-btn>
          </v-card-actions>
 
        </v-card>

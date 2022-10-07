@@ -31,7 +31,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
     catalog_items = List([]).tag(sync=True)
     catalog_selected = Unicode("").tag(sync=True)
     from_file = Unicode().tag(sync=True)
-    valid_path = Bool(True).tag(sync=True)
+    from_file_message = Unicode().tag(sync=True)
     results_available = Bool(False).tag(sync=True)
     number_of_results = Int(0).tag(sync=True)
 
@@ -48,14 +48,31 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
         self._file_upload = FileChooser(start_path)
         self.components = {'g-file-import': self._file_upload}
         self._file_upload.observe(self._on_file_path_changed, names='file_path')
+        self._cached_table_from_file = {}
 
     def _on_file_path_changed(self, event):
+        self.from_file_message = 'Checking if file is valid'
         if (self._file_upload.file_path is not None
                 and not os.path.exists(self._file_upload.file_path)
                 or not os.path.isfile(self._file_upload.file_path)):
-            self.valid_path = False
-        else:
-            self.valid_path = True
+            self.from_file_message = 'File path does not exist'
+            return
+
+        try:
+            table = QTable.read(self._file_upload.file_path)
+        except Exception:
+            self.from_file_message = 'Could not parse file with astropy.table.QTable.read'
+            return
+
+        if 'sky_centroid' not in table.keys():
+            self.from_file_message = 'Table does not contain required sky_centroid column'
+            return
+
+        # since we loaded the file already to check if its valid, we might as well cache the table
+        # so we don't have to re-load it when clicking search.  We'll only keep the latest entry
+        # though, but store in a dict so we can catch if the file path was changed from the API
+        self._cached_table_from_file = {self._file_upload.file_path: table}
+        self.from_file_message = ''
 
     @observe('from_file')
     def _from_file_changed(self, event):
@@ -121,7 +138,9 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
                                       unit='deg')
 
         elif self.catalog_selected == 'From File...':
-            table = QTable.read(self.from_file)
+            # all exceptions when going through the UI should have prevented setting this path
+            # but this exceptions might be raised here if setting from_file from the UI
+            table = self._cached_table_from_file.get(self.from_file, QTable.read(self.from_file))
             skycoord_table = table['sky_centroid']
 
         else:
