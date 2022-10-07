@@ -116,6 +116,9 @@ Mosviz
 
 - R-grism 2D spectrum data are now loaded with the correct orientation. [#1619]
 
+- Fixed a bug to skip targets not included in NIRISS source catalog, improving
+  lod times [#1696]
+
 Specviz
 ^^^^^^^
 
