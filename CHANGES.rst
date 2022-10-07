@@ -15,6 +15,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Catalogs plugin now supports loading a JWST catalog from a local ecsv file. [#1707]
+
 Mosviz
 ^^^^^^
 
