@@ -52,14 +52,15 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
 
     def _on_file_path_changed(self, event):
         self.from_file_message = 'Checking if file is valid'
-        if (self._file_upload.file_path is not None
-                and not os.path.exists(self._file_upload.file_path)
-                or not os.path.isfile(self._file_upload.file_path)):
+        path = event['new']
+        if (path is not None
+                and not os.path.exists(path)
+                or not os.path.isfile(path)):
             self.from_file_message = 'File path does not exist'
             return
 
         try:
-            table = QTable.read(self._file_upload.file_path)
+            table = QTable.read(path)
         except Exception:
             self.from_file_message = 'Could not parse file with astropy.table.QTable.read'
             return
@@ -71,7 +72,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
         # since we loaded the file already to check if its valid, we might as well cache the table
         # so we don't have to re-load it when clicking search.  We'll only keep the latest entry
         # though, but store in a dict so we can catch if the file path was changed from the API
-        self._cached_table_from_file = {self._file_upload.file_path: table}
+        self._cached_table_from_file = {path: table}
         self.from_file_message = ''
 
     @observe('from_file')
@@ -130,6 +131,12 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
             # finds all the sources in that region
             query_region_result = SDSS.query_region(skycoord_center, radius=zoom_radius,
                                                     data_release=17)
+            if query_region_result is None:
+                self.results_available = True
+                self.number_of_results = 0
+                self.app._catalog_source_table = None
+                return
+
             # TODO: Filter this table the same way as the actual displayed markers.
             # attach the table to the app for Python extraction
             self.app._catalog_source_table = query_region_result
@@ -141,16 +148,19 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
             # all exceptions when going through the UI should have prevented setting this path
             # but this exceptions might be raised here if setting from_file from the UI
             table = self._cached_table_from_file.get(self.from_file, QTable.read(self.from_file))
+            self.app._catalog_source_table = table
             skycoord_table = table['sky_centroid']
 
         else:
             self.results_available = False
             self.number_of_results = 0
+            self.app._catalog_source_table = None
             raise NotImplementedError(f"{self.catalog_selected} not a supported catalog")
 
         self.results_available = True
         if not len(skycoord_table):
             self.number_of_results = 0
+            self.app._catalog_source_table = None
             return
 
         # coordinates found are converted to pixel coordinates
