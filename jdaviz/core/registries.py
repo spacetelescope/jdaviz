@@ -11,6 +11,13 @@ __all__ = ['convert', 'UniqueDictRegistry', 'ViewerRegistry', 'TrayRegistry',
            'data_parser_registry']
 
 
+def _to_snake(s):
+    """Convert dashes in viewer category names to underscores for
+    use in class attributes, constructor kwargs, requirement kwargs.
+    """
+    return s.replace("-", "_")
+
+
 def convert(name):
     """Converts camel-case strings to snake-case. Used when a user does not define
     a specific name for a registry item.
@@ -80,8 +87,20 @@ class TrayRegistry(UniqueDictRegistry):
     """Registry containing references to plugins that will be added to the sidebar
     tray tabs.
     """
+
+    default_viewer_category = [
+        "spectrum", "table", "image", "spectrum-2d", "flux", "uncert"
+    ]
+    default_viewer_reqs = {
+        category: {
+            "cls_attr": f"_default_{_to_snake(category)}_viewer_reference_name",
+            "init_kwarg": f"{_to_snake(category)}_viewer_reference_name",
+            "require_kwargs": [f"require_{_to_snake(category)}_viewer"]
+        } for category in default_viewer_category
+    }
+
     def __call__(self, name=None, label=None, icon=None,
-                 viewer_reference_name_kwargs=None):
+                 viewer_requirements=None):
         def decorator(cls):
             # The class must inherit from `VuetifyTemplate` in order to be
             # ingestible by the component initialization.
@@ -91,12 +110,12 @@ class TrayRegistry(UniqueDictRegistry):
                     f"registered components must inherit from "
                     f"`ipyvuetify.VuetifyTemplate`.")
 
-            self.add(name, cls, label, icon, viewer_reference_name_kwargs)
+            self.add(name, cls, label, icon, viewer_requirements)
             return cls
         return decorator
 
     def add(self, name, cls, label=None, icon=None,
-            viewer_reference_name_kwargs=None):
+            viewer_requirements=None):
         """Add an item to the registry.
 
         Parameters
@@ -111,33 +130,8 @@ class TrayRegistry(UniqueDictRegistry):
             The label displayed in the tooltip when hovering over the tray tab.
         icon : str, optional
             The name of the icon to render in the tray tab.
-        viewer_reference_name_kwargs : dict
-            Define argument requirements for tray plugins. Keys are plugin names
-            and values are dictionaries containing the class attributes required
-            on the helper, the corresponding constructor argument that defines
-            the default value of that class attribute, and any kwargs needed in
-            the call to `~jdaviz.app.Application.get_first_viewer_reference_name`
-
-        Examples
-        --------
-        Let's take a look at the Specviz line analysis plugin for an example of how the
-        decorator's ``viewer_reference_name_kwargs`` keyword argument works::
-
-            @tray_registry(
-                'specviz-line-analysis', label="Line Analysis",
-                viewer_reference_name_kwargs={
-                    "_default_spectrum_viewer_reference_name":
-                        ["spectrum_viewer_reference_name", {"require_spectrum_viewer": True}],
-                }
-            )
-
-        The ``viewer_reference_name_kwargs`` dictionary contains string keys which
-        correspond to the attribute on the viewer which will be required by the
-        plugin being wrapped by this decorator. The entry associated with this key is
-        a list containing (1) the optional keyword argument to the plugin constructor which
-        specifies the viewer reference name, and (2) a dictionary with the requirements
-        for the type of viewer that should be requested by the constructor. In this example,
-        the line analysis constructor requires a viewer for spectra to be available.
+        viewer_requirements : str, list of str
+            Required viewers for this plugin.
         """
         if name in self.members:
             raise ValueError(f"Viewer with the name {name} already exists, "
@@ -145,6 +139,28 @@ class TrayRegistry(UniqueDictRegistry):
         else:
             # store the registry name/label so we can access them from the instantiated
             # objects (when determining if a specific plugin is open, for example)
+            viewer_reference_name_kwargs = {}
+
+            if viewer_requirements is not None:
+                if not isinstance(viewer_requirements, list):
+                    viewer_requirements = [viewer_requirements]
+
+                for category in viewer_requirements:
+                    if category not in self.default_viewer_reqs:
+                        raise ValueError(f'Viewer requirements not defined '
+                                         f'for viewer category: "{category}" '
+                                         f'in plugin "{cls.__class__.__name__}".')
+
+                    req = self.default_viewer_reqs[category]
+                    viewer_cls_attr = req['cls_attr']
+                    viewer_specific_kwarg = req['init_kwarg']
+                    requirements = req['require_kwargs']
+                    viewer_reference_name_kwargs[viewer_cls_attr] = [
+                        viewer_specific_kwarg, {
+                            k: True for k in requirements
+                        }
+                    ]
+
             cls._registry_name = name
             cls._registry_label = label
             self.members[name] = {'label': label, 'icon': icon, 'cls': cls,

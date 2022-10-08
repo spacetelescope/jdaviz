@@ -29,6 +29,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
 
+
 __all__ = ['LineAnalysis']
 
 FUNCTIONS = {"Line Flux": analysis.line_flux,
@@ -64,13 +65,7 @@ def _coerce_unit(quantity):
     return coerced_quantity
 
 
-@tray_registry(
-    'specviz-line-analysis', label="Line Analysis",
-    viewer_reference_name_kwargs={
-        "_default_spectrum_viewer_reference_name":
-            ["spectrum_viewer_reference_name", {"require_spectrum_viewer": True}],
-    }
-)
+@tray_registry('specviz-line-analysis', label="Line Analysis", viewer_requirements='spectrum')
 class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin):
     """
     The Line Analysis plugin returns specutils analysis for a single spectral line.

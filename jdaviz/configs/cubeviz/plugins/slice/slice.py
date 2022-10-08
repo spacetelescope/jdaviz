@@ -14,15 +14,7 @@ from jdaviz.core.user_api import PluginUserApi
 __all__ = ['Slice']
 
 
-@tray_registry(
-    'cubeviz-slice', label="Slice",
-    viewer_reference_name_kwargs={
-        "_default_spectrum_viewer_reference_name":
-            ["spectrum_viewer_reference_name", {"require_spectrum_viewer": True}],
-        "_default_image_viewer_reference_name":
-            ["image_viewer_reference_name", {"require_image_viewer": True}],
-    }
-)
+@tray_registry('cubeviz-slice', label="Slice", viewer_requirements='spectrum')
 class Slice(PluginTemplateMixin):
     """
     See the :ref:`Slice Plugin Documentation <slice>` for more details.

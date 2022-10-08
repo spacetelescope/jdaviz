@@ -34,13 +34,7 @@ class _EmptyParam:
                                    self.unit if self.unit is not None else u.dimensionless_unscaled)
 
 
-@tray_registry(
-    'g-model-fitting', label="Model Fitting",
-    viewer_reference_name_kwargs={
-        "_default_spectrum_viewer_reference_name":
-            ["spectrum_viewer_reference_name", {"require_spectrum_viewer": True}],
-    }
-)
+@tray_registry('g-model-fitting', label="Model Fitting", viewer_requirements='spectrum')
 class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                    SpectralSubsetSelectMixin, AddResultsMixin):
     """

@@ -21,13 +21,8 @@ unit_exponents = {StdDevUncertainty: 1,
 SPECUTILS_GT_1_7_0 = Version(specutils.__version__) > Version('1.7.0')
 
 
-@tray_registry(
-    'g-unit-conversion', label="Unit Conversion",
-    viewer_reference_name_kwargs={
-        "_default_spectrum_viewer_reference_name":
-            ["spectrum_viewer_reference_name", {"require_spectrum_viewer": True}]
-    }
-)
+@tray_registry('g-unit-conversion', label="Unit Conversion",
+               viewer_requirements='spectrum')
 class UnitConversion(PluginTemplateMixin, DatasetSelectMixin):
 
     template_file = __file__, "unit_conversion.vue"

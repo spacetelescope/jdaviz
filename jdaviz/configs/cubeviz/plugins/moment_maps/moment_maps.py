@@ -23,15 +23,8 @@ spaxel = u.def_unit('spaxel', 1 * u.Unit(""))
 u.add_enabled_units([spaxel])
 
 
-@tray_registry(
-    'cubeviz-moment-maps', label="Moment Maps",
-    viewer_reference_name_kwargs={
-        "_default_spectrum_viewer_reference_name":
-            ["spectrum_viewer_reference_name", {"require_spectrum_viewer": True}],
-        "_default_image_viewer_reference_name":
-            ["image_viewer_reference_name", {"require_image_viewer": True}],
-    }
-)
+@tray_registry('cubeviz-moment-maps', label="Moment Maps",
+               viewer_requirements=['spectrum', 'image'])
 class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin,
                 AddResultsMixin):
     """

@@ -22,15 +22,8 @@ from specreduce import extract
 __all__ = ['SpectralExtraction']
 
 
-@tray_registry(
-    'spectral-extraction', label="Spectral Extraction",
-    viewer_reference_name_kwargs={
-        "_default_spectrum_viewer_reference_name":
-            ["spectrum_viewer_reference_name", {"require_spectrum_viewer": True}],
-        "_default_spectrum_2d_viewer_reference_name":
-            ["spectrum_2d_viewer_reference_name", {"require_spectrum_2d_viewer": True}],
-    }
-)
+@tray_registry('spectral-extraction', label="Spectral Extraction",
+               viewer_requirements=['spectrum', 'spectrum-2d'])
 class SpectralExtraction(PluginTemplateMixin):
     """
     The Spectral Extraction plugin exposes specreduce methods for tracing, background subtraction,

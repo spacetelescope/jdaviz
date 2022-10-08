@@ -983,17 +983,12 @@ class SpectralSubsetSelectMixin(VuetifyTemplate, HubListener):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        if not hasattr(self, '_default_spectrum_viewer_reference_name'):
-            self._default_spectrum_viewer_reference_name = kwargs.get(
-                "spectrum_viewer_reference_name", "spectrum-viewer"
-            )
-
+        spectrum_viewer = kwargs.get('spectrum_viewer_reference_name')
         self.spectral_subset = SubsetSelect(self,
                                             'spectral_subset_items',
                                             'spectral_subset_selected',
                                             'spectral_subset_selected_has_subregions',
-                                            viewers=[self._default_spectrum_viewer_reference_name],
+                                            viewers=[spectrum_viewer],
                                             default_text='Entire Spectrum',
                                             allowed_type='spectral')
 
