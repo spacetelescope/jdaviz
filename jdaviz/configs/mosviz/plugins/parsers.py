@@ -318,9 +318,9 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
                     data = Spectrum1D.read(data)
                 except IORegistryError:
                     with fits.open(data) as hdulist:
-                        data = _parse_as_spectrum1d(hdulist, extension)
+                        data = _parse_as_spectrum1d(hdulist, ext)
             elif isinstance(data, fits.HDUList):
-                data = _parse_as_spectrum1d(data, extension)
+                data = _parse_as_spectrum1d(data, ext)
 
             # Make metadata layout conform with other viz.
             data.meta = standardize_metadata(data.meta)
