@@ -3,8 +3,6 @@ import numpy as np
 
 from astropy.utils.data import download_file
 
-from jdaviz.app import Application
-
 # This file is originally from
 # https://data.sdss.org/sas/dr14/manga/spectro/redux/v2_1_2/7495/stack/manga-7495-12704-LOGCUBE.fits.gz
 URL = 'https://stsci.box.com/shared/static/28a88k1qfipo4yxc4p4d40v4axtlal8y.fits'
@@ -17,6 +15,7 @@ URL = 'https://stsci.box.com/shared/static/28a88k1qfipo4yxc4p4d40v4axtlal8y.fits
 
       return the same spectrum values.
 """
+
 
 @pytest.mark.filterwarnings('ignore')
 @pytest.mark.remote_data
