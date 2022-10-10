@@ -32,6 +32,9 @@ authors:
 - family-names: "Lim"
   given-names: "Pey Lian"
   orcid: "https://orcid.org/0000-0003-0079-4114"
+- family-names: "Morris"
+  given-names: "Brett"
+  orcid: "https://orcid.org/0000-0003-2528-3409"
 - family-names: "Nguyen"
   given-names: "Duy"
   orcid: "https://orcid.org/0000-0002-1534-336X"
@@ -58,9 +61,9 @@ authors:
 - family-names: "Volfman"
   given-names: "Sabrina"
 title: "Jdaviz"
-version: 2.10.0
+version: 3.0.1
 doi: https://doi.org/10.5281/zenodo.5513927
-date-released: 2022-08-26
+date-released: 2022-10-10
 url: "https://github.com/spacetelescope/jdaviz"
 
 # see a full list of contributors here: https://github.com/spacetelescope/jdaviz/graphs/contributors
