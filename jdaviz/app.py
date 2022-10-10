@@ -486,6 +486,10 @@ class Application(VuetifyTemplate, HubListener):
         parser_reference : str or `None`
             The actual data parser to use. It must already be registered
             to glue's data parser registry. This is mainly for internal use.
+
+        **kwargs : dict
+            Additional keywords to be passed into the parser defined by
+            ``parser_reference``.
         """
         self.loading = True
         try:
