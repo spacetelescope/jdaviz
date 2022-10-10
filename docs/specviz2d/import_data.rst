@@ -61,4 +61,4 @@ to the ``extension`` keyword. In case you want to load an uncalibrated spectrum
 that is dispersed vertically, you can also set the ``transpose`` keyword to flip
 the spectrum to be horizontal::
 
-    specviz2d.load_data(fn, extension=7, transpose=True)
+    specviz2d.load_data(fn, ext=7, transpose=True)
