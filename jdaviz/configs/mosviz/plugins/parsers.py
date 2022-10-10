@@ -277,7 +277,7 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
         header = hdulist[ext].header
         metadata = standardize_metadata(header)
         metadata[PRIHDR_KEY] = standardize_metadata(hdulist[0].header)
-        wcs = WCS(header)
+        wcs = WCS(header, hdulist)
 
         try:
             data_unit = u.Unit(header['BUNIT'])
