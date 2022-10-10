@@ -96,7 +96,7 @@ images via `specreduce.background <https://specreduce.readthedocs.io/en/latest/#
 Once you interact with any of the inputs in the background step or hover over that area
 of the plugin, the live visualization in the 2d spectrum viewer will change to show the center 
 (dotted line) and edges (solid lines) of the background region(s).  The 1D representation of the
-background will also be visualized in the 1D spectrum viewer (dotted line).
+background will also be visualized in the 1D spectrum viewer (thin solid line).
 
 Choose between creating the background around the trace defined in the Trace section, or around a "Manual" flat trace.
 

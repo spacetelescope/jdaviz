@@ -464,7 +464,7 @@ class SpectralExtraction(PluginTemplateMixin):
         viewer2d.figure.marks = viewer2d.figure.marks + list(self._marks.values())
 
         self._marks['extract'] = PluginLine(viewer1d, visible=self.plugin_opened)
-        self._marks['bg_spec'] = PluginLine(viewer1d, visible=self.plugin_opened, line_style='dotted')  # noqa
+        self._marks['bg_spec'] = PluginLine(viewer1d, visible=self.plugin_opened, stroke_width=1)  # noqa
 
         # NOTE: += won't trigger the figure to notice new marks
         viewer1d.figure.marks = viewer1d.figure.marks + [self._marks['extract'],
