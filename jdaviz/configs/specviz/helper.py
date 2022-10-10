@@ -51,7 +51,7 @@ class Specviz(ConfigHelper, LineListMixin):
             # If viewer reference name is not specified and default is unavailable,
             # use first spectrum viewer without loaded data:
             else:
-                spectrum_viewer_reference_name = self.app.get_first_viewer_reference_name(
+                spectrum_viewer_reference_name = self.app._get_first_viewer_reference_name(
                     require_spectrum_viewer=True, require_no_selected_data=True
                 )
 

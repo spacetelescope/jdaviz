@@ -674,12 +674,8 @@ class Application(VuetifyTemplate, HubListener):
 
                         data[label] = layer_data
 
-        # If a data label was provided, return only the data requested
-        if data_label is not None:
-            if data_label in data and len(data_label):
-                return data[data_label]
-
-        return data
+        # If a data label was provided, return only the corresponding data, otherwise return all:
+        return data.get(data_label, data)
 
     def get_subsets_from_viewer(self, viewer_reference, data_label=None, subset_type=None):
         """
@@ -1071,7 +1067,7 @@ class Application(VuetifyTemplate, HubListener):
         # Cannot sort because of None
         return [self._viewer_item_by_id(vid).get('reference') for vid in self._viewer_store]
 
-    def get_first_viewer_reference_name(
+    def _get_first_viewer_reference_name(
             self, require_no_selected_data=False,
             require_spectrum_viewer=False,
             require_spectrum_2d_viewer=False,
@@ -1721,18 +1717,23 @@ class Application(VuetifyTemplate, HubListener):
             tray = tray_registry.members.get(name)
             tray_registry_options = tray.get('viewer_reference_name_kwargs', {})
 
+            # Optional keyword arguments are required to initialize some
+            # tray items. These kwargs specify the viewer reference names that are
+            # assumed to be present in the configuration.
             optional_tray_kwargs = dict()
 
-            if tray_registry_options is not None:
-                for opt_attr, [opt_kwarg, get_name_kwargs] in tray_registry_options.items():
-                    opt_value = getattr(
-                        self, opt_attr, self.get_first_viewer_reference_name(**get_name_kwargs)
-                    )
+            # If viewer reference names need to be passed to the tray item
+            # constructor, pass the names into the constructor in the format
+            # that the tray items expect.
+            for opt_attr, [opt_kwarg, get_name_kwargs] in tray_registry_options.items():
+                opt_value = getattr(
+                    self, opt_attr, self._get_first_viewer_reference_name(**get_name_kwargs)
+                )
 
-                    if opt_value is None:
-                        continue
+                if opt_value is None:
+                    continue
 
-                    optional_tray_kwargs[opt_kwarg] = opt_value
+                optional_tray_kwargs[opt_kwarg] = opt_value
 
             tray_item_instance = tray.get('cls')(
                 app=self, **optional_tray_kwargs

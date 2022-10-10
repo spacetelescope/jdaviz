@@ -143,11 +143,14 @@ class Specviz2d(ConfigHelper, LineListMixin):
             Show data in viewer(s).
 
         """
-        kwargs.update({
+        default_kwargs = {
             "spectrum_2d_viewer_reference_name": self._default_spectrum_2d_viewer_reference_name,
             "spectrum_viewer_reference_name": self._default_spectrum_viewer_reference_name,
             "table_viewer_reference_name": self._default_table_viewer_reference_name
-        })
+        }
+        for default_kwarg, default_cls_attr in default_kwargs.items():
+            kwargs.setdefault(default_kwarg, default_cls_attr)
+
         if spectrum_2d_label is None:
             spectrum_2d_label = "Spectrum 2D"
         elif spectrum_2d_label[-2:] != "2D":
@@ -198,11 +201,12 @@ class Specviz2d(ConfigHelper, LineListMixin):
                 self.app.hub.broadcast(msg)
 
         else:
-            allowed_key = "spectrum_viewer_reference_name"
-            kwargs_for_spec1d = {allowed_key: kwargs[allowed_key]}
-            self.app.load_data(spectrum_1d, data_label=spectrum_1d_label,
-                               parser_reference="specviz-spectrum1d-parser",
-                               show_in_viewer=show_in_viewer, **kwargs_for_spec1d)
+            self.app.load_data(
+                spectrum_1d, data_label=spectrum_1d_label,
+                parser_reference="specviz-spectrum1d-parser",
+                show_in_viewer=show_in_viewer,
+                spectrum_viewer_reference_name=kwargs['spectrum_viewer_reference_name']
+            )
 
     def load_trace(self, trace, data_label, show_in_viewer=True):
         """

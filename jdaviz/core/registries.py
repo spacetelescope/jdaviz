@@ -100,7 +100,7 @@ class TrayRegistry(UniqueDictRegistry):
     }
 
     def __call__(self, name=None, label=None, icon=None,
-                 viewer_requirements=None):
+                 viewer_requirements=[]):
         def decorator(cls):
             # The class must inherit from `VuetifyTemplate` in order to be
             # ingestible by the component initialization.
@@ -115,7 +115,7 @@ class TrayRegistry(UniqueDictRegistry):
         return decorator
 
     def add(self, name, cls, label=None, icon=None,
-            viewer_requirements=None):
+            viewer_requirements=[]):
         """Add an item to the registry.
 
         Parameters
@@ -141,25 +141,24 @@ class TrayRegistry(UniqueDictRegistry):
             # objects (when determining if a specific plugin is open, for example)
             viewer_reference_name_kwargs = {}
 
-            if viewer_requirements is not None:
-                if not isinstance(viewer_requirements, list):
-                    viewer_requirements = [viewer_requirements]
+            if not isinstance(viewer_requirements, list):
+                viewer_requirements = [viewer_requirements]
 
-                for category in viewer_requirements:
-                    if category not in self.default_viewer_reqs:
-                        raise ValueError(f'Viewer requirements not defined '
-                                         f'for viewer category: "{category}" '
-                                         f'in plugin "{cls.__class__.__name__}".')
+            for category in viewer_requirements:
+                if category not in self.default_viewer_reqs:
+                    raise ValueError(f'Viewer requirements not defined '
+                                     f'for viewer category: "{category}" '
+                                     f'in plugin "{cls.__class__.__name__}".')
 
-                    req = self.default_viewer_reqs[category]
-                    viewer_cls_attr = req['cls_attr']
-                    viewer_specific_kwarg = req['init_kwarg']
-                    requirements = req['require_kwargs']
-                    viewer_reference_name_kwargs[viewer_cls_attr] = [
-                        viewer_specific_kwarg, {
-                            k: True for k in requirements
-                        }
-                    ]
+                req = self.default_viewer_reqs[category]
+                viewer_cls_attr = req['cls_attr']
+                viewer_specific_kwarg = req['init_kwarg']
+                requirements = req['require_kwargs']
+                viewer_reference_name_kwargs[viewer_cls_attr] = [
+                    viewer_specific_kwarg, {
+                        k: True for k in requirements
+                    }
+                ]
 
             cls._registry_name = name
             cls._registry_label = label

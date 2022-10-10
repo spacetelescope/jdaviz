@@ -296,23 +296,23 @@ class BasePluginComponent(HubListener):
                 for vid, viewer in self.app._viewer_store.items()
                 if viewer.__class__.__name__ != 'MosvizTableViewer']
 
-    @property
+    @cached_property
     def spectrum_viewer(self):
         if hasattr(self, '_default_spectrum_viewer_reference_name'):
             viewer_reference = self._default_spectrum_viewer_reference_name
         else:
-            viewer_reference = self.app.get_first_viewer_reference_name(
+            viewer_reference = self.app._get_first_viewer_reference_name(
                 require_spectrum_viewer=True
             )
 
         return self._plugin.app.get_viewer(viewer_reference)
 
-    @property
+    @cached_property
     def spectrum_2d_viewer(self):
         if hasattr(self, '_default_spectrum_2d_viewer_reference_name'):
             viewer_reference = self._default_spectrum_2d_viewer_reference_name
         else:
-            viewer_reference = self.app.get_first_viewer_reference_name(
+            viewer_reference = self.app._get_first_viewer_reference_name(
                 require_spectrum_2d_viewer=True
             )
 

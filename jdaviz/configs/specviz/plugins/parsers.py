@@ -28,7 +28,7 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
     format : str
         Loader format specification used to indicate data format in
         `~specutils.Spectrum1D.read` io method.
-    viewer_reference_name : str
+    spectrum_viewer_reference_name : str
         Reference name for the viewer
     """
     # If no data label is assigned, give it a unique identifier
