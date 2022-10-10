@@ -1,3 +1,8 @@
+3.0.1 (2022-10-10)
+==================
+
+- Fixed Citations file to accurately reflect release.
+
 3.0 (2022-10-10)
 ================
 
