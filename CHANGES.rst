@@ -4,6 +4,8 @@
 New Features
 ------------
 
+- Add support for nonstandard viewer reference names [#1681]
+
 Cubeviz
 ^^^^^^^
 
@@ -86,8 +88,6 @@ New Features
 - Added ability to set height of application widget using `show` method. [#1646]
 
 - Add Common Galactic line lists, split Atomic/Ionic list with verified medium info [#1656]
-
-- Add support for nonstandard viewer reference names [#1681]
 
 Cubeviz
 ^^^^^^^
