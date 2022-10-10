@@ -1,5 +1,65 @@
-2.11 (unreleased)
-=================
+3.1 (unreleased)
+================
+
+New Features
+------------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+API Changes
+-----------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+Other Changes and Additions
+---------------------------
+
+3.0 (2022-10-10)
+================
 
 New Features
 ------------
@@ -43,12 +103,6 @@ Imviz
 
 - New tool to create a single-pixel spatial region on the image. [#1647]
 
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
 Specviz2d
 ^^^^^^^^^
 
@@ -57,21 +111,6 @@ Specviz2d
 - Support for importing/exporting Trace objects as data entries. [#1556]
 
 - 2D spectrum viewer now has info panel for pixel coordinates and value. [#1608]
-
-API Changes
------------
-
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
 
 Bug Fixes
 ---------
