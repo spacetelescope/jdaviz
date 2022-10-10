@@ -42,7 +42,8 @@ def jwst_header_to_skyregion(header):
     return skyregion
 
 
-@tray_registry('g-slit-overlay', label="Slit Overlay")
+@tray_registry('g-slit-overlay', label="Slit Overlay",
+               viewer_requirements=['table', 'flux', 'spectrum-2d', 'spectrum'])
 class SlitOverlay(PluginTemplateMixin):
     template_file = __file__, "slit_overlay.vue"
     visible = Bool(True).tag(sync=True)
@@ -50,7 +51,19 @@ class SlitOverlay(PluginTemplateMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        table = self.app.get_viewer("table-viewer")
+        self._default_table_viewer_reference_name = kwargs.get(
+            "table_viewer_reference_name", "table-viewer"
+        )
+        self._default_image_viewer_reference_name = kwargs.get(
+            "image_viewer_reference_name", "image-viewer"
+        )
+        self._default_spectrum_2d_viewer_reference_name = kwargs.get(
+            "spectrum_2d_viewer_reference_name", "spectrum-2d-viewer"
+        )
+        self._default_spectrum_viewer_reference_name = kwargs.get(
+            "spectrum_viewer_reference_name", "spectrum-viewer"
+        )
+        table = self.app.get_viewer(self._default_table_viewer_reference_name)
         table.figure_widget.observe(self.place_slit_overlay, names=['highlighted'])
 
         self._slit_overlay_mark = None
@@ -76,8 +89,12 @@ class SlitOverlay(PluginTemplateMixin):
         self.remove_slit_overlay()
 
         # Get data from relevant viewers
-        image_data = self.app.get_viewer("image-viewer").state.reference_data
-        spec2d_data = self.app.get_viewer("spectrum-2d-viewer").data()
+        image_data = self.app.get_viewer(
+            self._default_image_viewer_reference_name
+        ).state.reference_data
+        spec2d_data = self.app.get_viewer(
+            self._default_spectrum_2d_viewer_reference_name
+        ).data()
 
         # 'S_REGION' contains slit information. Bypass in case no images exist.
         if image_data is not None:
@@ -97,10 +114,11 @@ class SlitOverlay(PluginTemplateMixin):
                 x_coords = pix_rec.vertices.x
                 y_coords = pix_rec.vertices.y
 
-                fig_image = self.app.get_viewer("image-viewer").figure
+                image_viewer = self.app.get_viewer(self._default_image_viewer_reference_name)
+                fig_image = image_viewer.figure
 
-                if self.app.get_viewer("image-viewer").toolbar.active_tool is not None:
-                    self.app.get_viewer("image-viewer").toolbar.active_tool = None
+                if image_viewer.toolbar.active_tool is not None:
+                    image_viewer.toolbar.active_tool = None
 
                 # Create LinearScale that is the same size as the image viewer
                 scales = {'x': fig_image.interaction.x_scale, 'y': fig_image.interaction.y_scale}
@@ -128,7 +146,9 @@ class SlitOverlay(PluginTemplateMixin):
 
     def remove_slit_overlay(self):
         if self._slit_overlay_mark is not None:
-            image_figure = self.app.get_viewer("image-viewer").figure
+            image_figure = self.app.get_viewer(
+                self._default_flux_viewer_reference_name
+            ).figure
             # We need to do the following instead of just removing directly on
             # the marks otherwise traitlets doesn't register a change in the
             # marks.

@@ -21,7 +21,8 @@ unit_exponents = {StdDevUncertainty: 1,
 SPECUTILS_GT_1_7_0 = Version(specutils.__version__) > Version('1.7.0')
 
 
-@tray_registry('g-unit-conversion', label="Unit Conversion")
+@tray_registry('g-unit-conversion', label="Unit Conversion",
+               viewer_requirements='spectrum')
 class UnitConversion(PluginTemplateMixin, DatasetSelectMixin):
 
     template_file = __file__, "unit_conversion.vue"
@@ -43,10 +44,14 @@ class UnitConversion(PluginTemplateMixin, DatasetSelectMixin):
         self._redshift = None
         self.app.hub.subscribe(self, RedshiftMessage, handler=self._redshift_listener)
 
+        self._default_spectrum_viewer_reference_name = kwargs.get(
+            "spectrum_viewer_reference_name", "spectrum-viewer"
+        )
+
         # when accessing the selected data, access the spectrum-viewer version
         # TODO: we'll probably want to update unit-conversion to be able to act on cubes directly
         # in the future
-        self.dataset._viewers = ['spectrum-viewer']
+        self.dataset._viewers = [self._default_spectrum_viewer_reference_name]
         # require entries to be in spectrum-viewer (not other cubeviz images, etc)
         self.dataset.add_filter('layer_in_spectrum_viewer')
 
@@ -134,7 +139,10 @@ class UnitConversion(PluginTemplateMixin, DatasetSelectMixin):
             else:
                 # Add spectrum with converted units to app.
                 self.app.add_data(converted_spec, new_label)
-                self.app.add_data_to_viewer("spectrum-viewer", new_label, clear_other_data=True)
+                self.app.add_data_to_viewer(
+                    self.app._default_spectrum_viewer_reference_name,
+                    new_label, clear_other_data=True
+                )
 
         else:
             new_label = self.dataset_selected + label
@@ -153,7 +161,10 @@ class UnitConversion(PluginTemplateMixin, DatasetSelectMixin):
                 # Replace old spectrum with new one with updated units.
                 self.app.add_data(converted_spec, new_label)
 
-        self.app.add_data_to_viewer("spectrum-viewer", new_label, clear_other_data=True)
+        self.app.add_data_to_viewer(
+            self.app._default_spectrum_viewer_reference_name,
+            new_label, clear_other_data=True
+        )
         snackbar_message = SnackbarMessage(
             f"Data set '{label}' units converted successfully.",
             color="success",

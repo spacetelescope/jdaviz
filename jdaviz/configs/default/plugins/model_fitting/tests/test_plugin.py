@@ -14,7 +14,7 @@ from jdaviz.configs.default.plugins.model_fitting.initializers import MODELS
 
 
 def test_default_model_labels(specviz_helper, spectrum1d):
-    specviz_helper.load_data(spectrum1d)
+    specviz_helper.load_spectrum(spectrum1d)
     modelfit_plugin = specviz_helper.plugins['Model Fitting']
     # By default, the spectral region should be the entire spectrum
     assert modelfit_plugin._obj.spectral_subset_selected == "Entire Spectrum"
@@ -40,7 +40,7 @@ def test_default_model_labels(specviz_helper, spectrum1d):
 
 
 def test_custom_model_labels(specviz_helper, spectrum1d):
-    specviz_helper.load_data(spectrum1d)
+    specviz_helper.load_spectrum(spectrum1d)
     modelfit_plugin = specviz_helper.plugins['Model Fitting']
 
     for i, model in enumerate(MODELS):
@@ -62,7 +62,7 @@ def test_register_model_with_uncertainty_weighting(specviz_helper, spectrum1d):
     spectrum1d.uncertainty = StdDevUncertainty(spectrum1d.flux * 0.1)
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        specviz_helper.load_data(spectrum1d)
+        specviz_helper.load_spectrum(spectrum1d)
     modelfit_plugin = specviz_helper.plugins['Model Fitting']
 
     # Test registering a simple linear fit
@@ -96,7 +96,7 @@ def test_register_model_uncertainty_is_none(specviz_helper, spectrum1d):
     spectrum1d.uncertainty = None
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        specviz_helper.load_data(spectrum1d)
+        specviz_helper.load_spectrum(spectrum1d)
     modelfit_plugin = specviz_helper.plugins['Model Fitting']
 
     # Test registering a simple linear fit
@@ -148,7 +148,7 @@ def test_register_cube_model(cubeviz_helper, spectrum1d_cube):
 def test_user_api(specviz_helper, spectrum1d):
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        specviz_helper.load_data(spectrum1d)
+        specviz_helper.load_spectrum(spectrum1d)
     p = specviz_helper.plugins['Model Fitting']
 
     # even though the default label is set to C, adding Linear1D should default to its automatic
@@ -186,7 +186,7 @@ def test_user_api(specviz_helper, spectrum1d):
 def test_fit_gaussian_with_fixed_mean(specviz_helper, spectrum1d):
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        specviz_helper.load_data(spectrum1d)
+        specviz_helper.load_spectrum(spectrum1d)
     modelfit_plugin = specviz_helper.plugins['Model Fitting']
 
     modelfit_plugin.create_model_component('Gaussian1D', 'G')

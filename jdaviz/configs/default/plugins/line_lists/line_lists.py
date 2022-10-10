@@ -27,7 +27,10 @@ from jdaviz.core.validunits import create_spectral_equivalencies_list
 __all__ = ['LineListTool']
 
 
-@tray_registry('g-line-list', label="Line Lists")
+@tray_registry(
+    'g-line-list', label="Line Lists",
+    viewer_requirements=['spectrum', 'image', 'flux']
+)
 class LineListTool(PluginTemplateMixin):
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "line_lists.vue"
@@ -65,7 +68,16 @@ class LineListTool(PluginTemplateMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self._viewer = self.app.get_viewer("spectrum-viewer")
+        self._default_spectrum_viewer_reference_name = kwargs.get(
+            "spectrum_viewer_reference_name", "spectrum-viewer"
+        )
+        self._default_flux_viewer_reference_name = kwargs.get(
+            "flux_viewer_reference_name", "flux-viewer"
+        )
+        self._default_image_viewer_reference_name = kwargs.get(
+            "image_viewer_reference_name", "image-viewer"
+        )
+        self._viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
         self._spectrum1d = None
         self.available_lists = self._viewer.available_linelists()
         self.list_to_load = None
@@ -142,7 +154,7 @@ class LineListTool(PluginTemplateMixin):
         self._disable_if_no_data()
 
         self._viewer_id = self.app._viewer_item_by_reference(
-            'spectrum-viewer').get('id')
+            self._default_spectrum_viewer_reference_name).get('id')
 
         # Subsets are global and are not linked to specific viewer instances,
         # so it's not required that we match any specific ids for that case.
@@ -153,7 +165,9 @@ class LineListTool(PluginTemplateMixin):
 
         label = msg.data.label
         try:
-            viewer_data = self.app.get_data_from_viewer('spectrum-viewer').get(label)
+            viewer_data = self.app.get_data_from_viewer(
+                self._default_spectrum_viewer_reference_name
+            ).get(label)
         except TypeError:
             warn_message = SnackbarMessage("Line list plugin could not retrieve data from viewer",
                                            sender=self, color="error")
@@ -251,7 +265,7 @@ class LineListTool(PluginTemplateMixin):
         # update all lines, self._global_redshift, and emit message back to Specviz helper
         z = u.Quantity(self.rs_redshift)
 
-        for mark in self.app.get_viewer('spectrum-viewer').figure.marks:
+        for mark in self.app.get_viewer(self._default_spectrum_viewer_reference_name).figure.marks:
             # update ALL to this redshift, if adding support for per-line redshift
             # this logic will need to change to not affect ALL lines
             if not isinstance(mark, SpectralLine):
@@ -395,7 +409,7 @@ class LineListTool(PluginTemplateMixin):
         self.vue_unpause_tables()
 
     def _on_spectrum_viewer_limits_changed(self, event=None):
-        sv = self.app.get_viewer('spectrum-viewer')
+        sv = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
         self.spectrum_viewer_min = float(sv.state.x_min)
         self.spectrum_viewer_max = float(sv.state.x_max)
 

@@ -34,7 +34,7 @@ class _EmptyParam:
                                    self.unit if self.unit is not None else u.dimensionless_unscaled)
 
 
-@tray_registry('g-model-fitting', label="Model Fitting")
+@tray_registry('g-model-fitting', label="Model Fitting", viewer_requirements='spectrum')
 class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                    SpectralSubsetSelectMixin, AddResultsMixin):
     """
@@ -97,6 +97,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self._spectrum1d = None
         super().__init__(*args, **kwargs)
 
+        self._default_spectrum_viewer_reference_name = kwargs.get(
+            "spectrum_viewer_reference_name", "spectrum-viewer"
+        )
+
         self._units = {}
         self._fitted_model = None
         self._fitted_spectrum = None
@@ -125,7 +129,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                                                      manual_options=list(MODELS.keys()))
 
         # when accessing the selected data, access the spectrum-viewer version
-        self.dataset._viewers = ['spectrum-viewer']
+        self.dataset._viewers = [self._default_spectrum_viewer_reference_name]
         # require entries to be in spectrum-viewer (not other cubeviz images, etc)
         self.dataset.add_filter('layer_in_spectrum_viewer')
 
@@ -294,8 +298,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             # of a spatial subset.  In the future, we may want to expose on-the-fly
             # collapse options... but right now these will follow the settings of the
             # spectrum-viewer itself
-            selected_spec = self.app.get_data_from_viewer('spectrum-viewer',
-                                                          self.spatial_subset_selected)
+            selected_spec = self.app.get_data_from_viewer(
+                self._default_spectrum_viewer_reference_name,
+                self.spatial_subset_selected
+            )
         else:
             selected_spec = self.dataset.selected_obj
         if selected_spec is None:
@@ -656,8 +662,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         # Apply mask from selected subset
         if self.spectral_subset_selected != "Entire Spectrum":
-            subset_mask = self.app.get_data_from_viewer("spectrum-viewer",
-                                        data_label = self.spectral_subset_selected).mask # noqa
+            subset_mask = self.app.get_data_from_viewer(
+                self._default_spectrum_viewer_reference_name,
+                data_label=self.spectral_subset_selected
+            ).mask # noqa
             if self._spectrum1d.mask is None:
                 self._spectrum1d.mask = subset_mask
             else:

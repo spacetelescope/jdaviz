@@ -29,6 +29,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
 
+
 __all__ = ['LineAnalysis']
 
 FUNCTIONS = {"Line Flux": analysis.line_flux,
@@ -64,7 +65,7 @@ def _coerce_unit(quantity):
     return coerced_quantity
 
 
-@tray_registry('specviz-line-analysis', label="Line Analysis")
+@tray_registry('specviz-line-analysis', label="Line Analysis", viewer_requirements='spectrum')
 class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin):
     """
     The Line Analysis plugin returns specutils analysis for a single spectral line.
@@ -114,6 +115,11 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     selected_line_redshift = Float(0).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
+
+        self._default_spectrum_viewer_reference_name = kwargs.get(
+            "spectrum_viewer_reference_name", "spectrum-viewer"
+        )
+
         super().__init__(**kwargs)
 
         self.update_results(None)
@@ -125,7 +131,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                                       allowed_type='spectral')
 
         # when accessing the selected data, access the spectrum-viewer version
-        self.dataset._viewers = ['spectrum-viewer']
+        self.dataset._viewers = [self._default_spectrum_viewer_reference_name]
         # require entries to be in spectrum-viewer (not other cubeviz images, etc)
         self.dataset.add_filter('layer_in_spectrum_viewer')
 
@@ -159,11 +165,15 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                                            'show_continuum_marks', 'get_results'))
 
     def _on_viewer_data_changed(self, msg):
-        viewer_id = self.app._viewer_item_by_reference('spectrum-viewer').get('id')
+        viewer_id = self.app._viewer_item_by_reference(
+            self._default_spectrum_viewer_reference_name
+        ).get('id')
         if msg is None or msg.viewer_id != viewer_id or msg.data is None:
             return
 
-        viewer_data = self.app.get_data_from_viewer('spectrum-viewer').get(msg.data.label)
+        viewer_data = self.app.get_data_from_viewer(
+            self._default_spectrum_viewer_reference_name
+        ).get(msg.data.label)
 
         # If no data is currently plotted, don't attempt to update
         if viewer_data is None:
@@ -217,7 +227,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     @property
     def marks(self):
         marks = {}
-        viewer = self.app.get_viewer('spectrum-viewer')
+        viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
         for mark in viewer.figure.marks:
             if isinstance(mark, LineAnalysisContinuum):
                 # NOTE: we don't use isinstance anymore because of nested inheritance
@@ -294,8 +304,10 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             # of a spatial subset.  In the future, we may want to expose on-the-fly
             # collapse options... but right now these will follow the settings of the
             # spectrum-viewer itself
-            full_spectrum = self.app.get_data_from_viewer('spectrum-viewer',
-                                                          self.spatial_subset_selected)
+            full_spectrum = self.app.get_data_from_viewer(
+                self._default_spectrum_viewer_reference_name,
+                self.spatial_subset_selected
+            )
         else:
             full_spectrum = self.dataset.selected_obj
 
@@ -312,7 +324,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             self.update_results(None)
             return
 
-        sr = self.app.get_subsets_from_viewer("spectrum-viewer",
+        sr = self.app.get_subsets_from_viewer(self._default_spectrum_viewer_reference_name,
                                               subset_type="spectral").get(self.spectral_subset_selected) # noqa
 
         if self.spectral_subset_selected == "Entire Spectrum":
@@ -362,8 +374,10 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                       'right': np.array([sr.upper.value, max(spectral_axis.value[continuum_mask])])}
 
         else:
-            continuum_mask = ~self.app.get_data_from_viewer("spectrum-viewer",
-                                                            data_label=self.continuum_subset_selected).mask # noqa
+            continuum_mask = ~self.app.get_data_from_viewer(
+                self._default_spectrum_viewer_reference_name,
+                data_label=self.continuum_subset_selected
+            ).mask
             spectral_axis_nanmasked = spectral_axis.value.copy()
             spectral_axis_nanmasked[~continuum_mask] = np.nan
             if self.spectral_subset_selected == "Entire Spectrum":

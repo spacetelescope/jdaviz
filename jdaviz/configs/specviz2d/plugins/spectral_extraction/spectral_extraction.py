@@ -22,7 +22,8 @@ from specreduce import extract
 __all__ = ['SpectralExtraction']
 
 
-@tray_registry('spectral-extraction', label="Spectral Extraction")
+@tray_registry('spectral-extraction', label="Spectral Extraction",
+               viewer_requirements=['spectrum', 'spectrum-2d'])
 class SpectralExtraction(PluginTemplateMixin):
     """
     The Spectral Extraction plugin exposes specreduce methods for tracing, background subtraction,
@@ -171,6 +172,13 @@ class SpectralExtraction(PluginTemplateMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._default_spectrum_viewer_reference_name = kwargs.get(
+            "spectrum_viewer_reference_name", "spectrum-viewer"
+        )
+        self._default_spectrum_2d_viewer_reference_name = kwargs.get(
+            "spectrum_2d_viewer_reference_name", "spectrum-2d-viewer"
+        )
+
         self._marks = {}
         self._do_marks = kwargs.get('interactive', True)
 
@@ -410,9 +418,9 @@ class SpectralExtraction(PluginTemplateMixin):
 
         if not self._do_marks:
             return {}
+        viewer2d = self.app.get_viewer(self._default_spectrum_2d_viewer_reference_name)
+        viewer1d = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
 
-        viewer2d = self.app.get_viewer('spectrum-2d-viewer')
-        viewer1d = self.app.get_viewer('spectrum-viewer')
         if not viewer2d.state.reference_data:
             # we don't have data yet for scales, defer initializing
             return {}

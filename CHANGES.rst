@@ -4,6 +4,8 @@
 New Features
 ------------
 
+- Add support for nonstandard viewer reference names [#1681]
+
 Cubeviz
 ^^^^^^^
 

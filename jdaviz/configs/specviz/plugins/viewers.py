@@ -52,6 +52,7 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         self._subscribe_to_layers_update()
         self._initialize_toolbar_nested(default_tool_priority=['jdaviz:selectslice'])
         self._offscreen_lines_marks = OffscreenLinesMarks(self)

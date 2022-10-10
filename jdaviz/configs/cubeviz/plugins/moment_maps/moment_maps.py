@@ -23,7 +23,8 @@ spaxel = u.def_unit('spaxel', 1 * u.Unit(""))
 u.add_enabled_units([spaxel])
 
 
-@tray_registry('cubeviz-moment-maps', label="Moment Maps")
+@tray_registry('cubeviz-moment-maps', label="Moment Maps",
+               viewer_requirements=['spectrum', 'image'])
 class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin,
                 AddResultsMixin):
     """
@@ -50,6 +51,12 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
     overwrite_warn = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
+        self._default_spectrum_viewer_reference_name = kwargs.get(
+            "spectrum_viewer_reference_name", "spectrum-viewer"
+        )
+        self._default_image_viewer_reference_name = kwargs.get(
+            "image_viewer_reference_name", "image-viewer"
+        )
         super().__init__(*args, **kwargs)
 
         self.moment = None

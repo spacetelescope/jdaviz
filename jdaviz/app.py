@@ -2,7 +2,6 @@ import os
 import pathlib
 import re
 import uuid
-import warnings
 from inspect import isclass
 
 from ipywidgets import widget_serialization
@@ -491,7 +490,6 @@ class Application(VuetifyTemplate, HubListener):
         **kwargs : dict
             Additional keywords to be passed into the parser defined by
             ``parser_reference``.
-
         """
         self.loading = True
         try:
@@ -574,7 +572,7 @@ class Application(VuetifyTemplate, HubListener):
         """Like :meth:`get_viewer` but use ID instead of reference name.
         This is useful when reference name is `None`.
         """
-        return self._viewer_store[vid]
+        return self._viewer_store.get(vid)
 
     def get_data_from_viewer(self, viewer_reference, data_label=None,
                              cls='default', include_subsets=True):
@@ -675,11 +673,8 @@ class Application(VuetifyTemplate, HubListener):
 
                         data[label] = layer_data
 
-        # If a data label was provided, return only the data requested
-        if data_label is not None:
-            return data.get(data_label)
-
-        return data
+        # If a data label was provided, return only the corresponding data, otherwise return all:
+        return data.get(data_label, data)
 
     def get_subsets_from_viewer(self, viewer_reference, data_label=None, subset_type=None):
         """
@@ -969,13 +964,13 @@ class Application(VuetifyTemplate, HubListener):
         data_id = self._data_id_from_label(data_label)
 
         if clear_other_data:
-            self._update_selected_data_items(viewer_item['id'], {})
+            self._update_selected_data_items(viewer_item.get('id'), {})
 
-        selected_data_items = viewer_item['selected_data_items']
+        selected_data_items = viewer_item.get('selected_data_items', {})
 
         if data_id is not None:
             selected_data_items[data_id] = 'visible'
-            self._update_selected_data_items(viewer_item['id'], selected_data_items)
+            self._update_selected_data_items(viewer_item.get('id'), selected_data_items)
         else:
             raise ValueError(
                 f"No data item found with label '{data_label}'. Label must be one "
@@ -1069,7 +1064,55 @@ class Application(VuetifyTemplate, HubListener):
     def get_viewer_reference_names(self):
         """Return a list of available viewer reference names."""
         # Cannot sort because of None
-        return [self._viewer_item_by_id(vid)['reference'] for vid in self._viewer_store]
+        return [self._viewer_item_by_id(vid).get('reference') for vid in self._viewer_store]
+
+    def _get_first_viewer_reference_name(
+            self, require_no_selected_data=False,
+            require_spectrum_viewer=False,
+            require_spectrum_2d_viewer=False,
+            require_table_viewer=False,
+            require_flux_viewer=False,
+            require_image_viewer=False
+    ):
+        """
+        Return the viewer reference name of the first available viewer.
+        Optionally use ``require_no_selected_data`` to require that the
+        viewer has not yet loaded data, or e.g. ``require_spectrum_viewer``
+        to require that the viewer supports spectrum visualization.
+        """
+        from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
+        from jdaviz.configs.specviz2d.plugins import SpectralExtraction
+        from jdaviz.configs.cubeviz.plugins.viewers import CubevizProfileView, CubevizImageView
+        from jdaviz.configs.mosviz.plugins.viewers import (
+            MosvizProfileView, MosvizTableViewer, MosvizProfile2DView
+        )
+
+        spectral_viewers = (SpecvizProfileView, CubevizProfileView, MosvizProfileView)
+        table_viewers = (MosvizTableViewer, )
+        image_viewers = (MosvizProfile2DView, CubevizImageView, SpectralExtraction)
+        flux_viewers = (CubevizImageView, )
+
+        for vid in self._viewer_store:
+            viewer_item = self._viewer_item_by_id(vid)
+            is_returnable = (
+                (require_no_selected_data and not len(viewer_item['selected_data_items'])) or
+                (not require_no_selected_data)
+            )
+            if require_spectrum_viewer:
+                if isinstance(self._viewer_store[vid], spectral_viewers) and is_returnable:
+                    return viewer_item['reference']
+            elif require_table_viewer:
+                if isinstance(self._viewer_store[vid], table_viewers) and is_returnable:
+                    return viewer_item['reference']
+            elif require_image_viewer:
+                if isinstance(self._viewer_store[vid], image_viewers) and is_returnable:
+                    return viewer_item['reference']
+            elif require_flux_viewer:
+                if isinstance(self._viewer_store[vid], flux_viewers) and is_returnable:
+                    return viewer_item['reference']
+            else:
+                if is_returnable:
+                    return viewer_item['reference']
 
     def _viewer_by_id(self, vid):
         """
@@ -1105,7 +1148,7 @@ class Application(VuetifyTemplate, HubListener):
         def find_viewer_item(stack_items):
             for stack_item in stack_items:
                 for viewer_item in stack_item.get('viewers'):
-                    if viewer_item['id'] == vid:
+                    if viewer_item.get('id') == vid:
                         return viewer_item
 
                 if len(stack_item.get('children')) > 0:
@@ -1299,6 +1342,9 @@ class Application(VuetifyTemplate, HubListener):
         viewer_item = self._viewer_item_by_id(viewer_id)
         viewer = self._viewer_by_id(viewer_id)
 
+        if viewer is None:
+            return
+
         if isinstance(selected_items, list):
             selected_items = {si: 'visible' for si in selected_items}
         # Update the stored selected data items
@@ -1311,11 +1357,6 @@ class Application(VuetifyTemplate, HubListener):
         # Include any selected data in the viewer
         for data_id, visibility in selected_items.items():
             label = self._get_data_item_by_id(data_id)['name']
-
-            if label is None:
-                warnings.warn(f"No data item with id '{data_id}' found in "
-                              f"viewer '{viewer_id}'.")
-                continue
 
             active_data_labels.append(label)
 
@@ -1347,7 +1388,7 @@ class Application(VuetifyTemplate, HubListener):
             if data.label not in active_data_labels:
                 viewer.remove_data(data)
                 viewer._layers_with_defaults_applied= [layer_info for layer_info in viewer._layers_with_defaults_applied  # noqa
-                                                       if layer_info['data_label'] != data.label]
+                                                       if layer_info['data_label'] != data.label]  # noqa
                 remove_data_message = RemoveDataMessage(data, viewer,
                                                         viewer_id=viewer_id,
                                                         sender=self)
@@ -1673,7 +1714,29 @@ class Application(VuetifyTemplate, HubListener):
 
         for name in config.get('tray', []):
             tray = tray_registry.members.get(name)
-            tray_item_instance = tray.get('cls')(app=self)
+            tray_registry_options = tray.get('viewer_reference_name_kwargs', {})
+
+            # Optional keyword arguments are required to initialize some
+            # tray items. These kwargs specify the viewer reference names that are
+            # assumed to be present in the configuration.
+            optional_tray_kwargs = dict()
+
+            # If viewer reference names need to be passed to the tray item
+            # constructor, pass the names into the constructor in the format
+            # that the tray items expect.
+            for opt_attr, [opt_kwarg, get_name_kwargs] in tray_registry_options.items():
+                opt_value = getattr(
+                    self, opt_attr, self._get_first_viewer_reference_name(**get_name_kwargs)
+                )
+
+                if opt_value is None:
+                    continue
+
+                optional_tray_kwargs[opt_kwarg] = opt_value
+
+            tray_item_instance = tray.get('cls')(
+                app=self, **optional_tray_kwargs
+            )
             tray_item_label = tray.get('label')
 
             self.state.tray_items.append({

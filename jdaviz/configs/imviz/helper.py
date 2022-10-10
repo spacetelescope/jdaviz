@@ -19,6 +19,7 @@ __all__ = ['Imviz', 'link_image_data']
 class Imviz(ImageConfigHelper):
     """Imviz Helper class."""
     _default_configuration = 'imviz'
+    _default_viewer_reference_name = "image-viewer"
 
     def create_image_viewer(self, viewer_name=None):
         """Create a new image viewer.

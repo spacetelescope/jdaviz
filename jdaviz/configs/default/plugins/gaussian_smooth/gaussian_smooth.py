@@ -20,7 +20,8 @@ spaxel = u.def_unit('spaxel', 1 * u.Unit(""))
 u.add_enabled_units([spaxel])
 
 
-@tray_registry('g-gaussian-smooth', label="Gaussian Smooth")
+@tray_registry('g-gaussian-smooth', label="Gaussian Smooth",
+               viewer_requirements=['spectrum', 'flux'])
 class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
     """
     See the :ref:`Gaussian Smooth Plugin Documentation <gaussian-smooth>` for more details.
@@ -49,15 +50,25 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self._default_spectrum_viewer_reference_name = kwargs.get(
+            "spectrum_viewer_reference_name", "spectrum-viewer"
+        )
+        self._default_flux_viewer_reference_name = kwargs.get(
+            "flux_viewer_reference_name", "flux-viewer"
+        )
+
         if self.config == "cubeviz":
             self.show_modes = True
             # retrieve the data from the cube, not the collapsed 1d spectrum
-            self.dataset._viewers = ['flux-viewer', 'spectrum-viewer']
+            self.dataset._viewers = [
+                self._default_flux_viewer_reference_name,
+                self._default_spectrum_viewer_reference_name
+            ]
             # clear the cache in case the spectrum-viewer selection was already cached
             self.dataset._clear_cache()
         elif self.config == "mosviz":
             # only allow smoothing 1d spectra
-            self.dataset._viewers = ['spectrum-viewer']
+            self.dataset._viewers = [self._default_spectrum_viewer_reference_name]
             self.dataset._clear_cache()
 
         self.mode = SelectPluginComponent(self,

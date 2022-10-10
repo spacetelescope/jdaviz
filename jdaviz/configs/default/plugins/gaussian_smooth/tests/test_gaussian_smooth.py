@@ -70,14 +70,12 @@ def test_linking_after_spectral_smooth(spectrum1d_cube):
 
 
 @pytest.mark.filterwarnings("ignore::UserWarning")
-def test_spatial_convolution(spectrum1d_cube):
+def test_spatial_convolution(cubeviz_helper, spectrum1d_cube):
+    dc = cubeviz_helper.app.data_collection
+    cubeviz_helper.app.add_data(spectrum1d_cube, 'test')
+    cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'test')
 
-    app = Application(configuration="cubeviz")
-    dc = app.data_collection
-    app.add_data(spectrum1d_cube, 'test')
-    app.add_data_to_viewer('flux-viewer', 'test')
-
-    gs = GaussianSmooth(app=app)
+    gs = GaussianSmooth(app=cubeviz_helper.app)
     gs.dataset_selected = 'test'
     gs.mode_selected = 'Spatial'
     gs.stddev = 3

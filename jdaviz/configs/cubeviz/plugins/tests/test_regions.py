@@ -19,7 +19,9 @@ class TestLoadRegions(BaseRegionHandler):
         cubeviz_helper.load_data(image_cube_hdu_obj_microns, data_label='has_microns')
         self.cubeviz = cubeviz_helper
         self.viewer = cubeviz_helper.default_viewer  # This is used in BaseRegionHandler
-        self.spectrum_viewer = cubeviz_helper.app.get_viewer("spectrum-viewer")
+        self.spectrum_viewer = cubeviz_helper.app.get_viewer(
+            cubeviz_helper._default_spectrum_viewer_reference_name
+        )
 
     def teardown_method(self, method):
         """Clear all the subsets for the next test method."""

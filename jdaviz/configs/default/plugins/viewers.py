@@ -134,7 +134,7 @@ class JdavizViewerMixin:
         viewer_item = self.jdaviz_app._viewer_item_by_id(self.reference_id)
         if viewer_item is None:
             return
-        selected_data_items = viewer_item['selected_data_items']
+        selected_data_items = viewer_item.get('selected_data_items', {})
 
         # update selected_data_items
         for data_id, visibility in selected_data_items.items():

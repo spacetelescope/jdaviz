@@ -281,14 +281,14 @@ class BasePluginComponent(HubListener):
     def viewer_dicts(self):
         def _dict_from_viewer(viewer, viewer_item):
             d = {'viewer': viewer,
-                 'id': viewer_item['id'],
-                 'icon': self.app.state.viewer_icons.get(viewer_item['id'])}
+                 'id': viewer_item.get('id'),
+                 'icon': self.app.state.viewer_icons.get(viewer_item.get('id'))}
             if viewer_item.get('reference') is not None:
-                d['reference'] = viewer_item['reference']
-                d['label'] = viewer_item['reference']
+                d['reference'] = viewer_item.get('reference')
+                d['label'] = viewer_item.get('reference')
             else:
                 d['reference'] = None
-                d['label'] = viewer_item['id']
+                d['label'] = viewer_item.get('id')
 
             return d
 
@@ -298,7 +298,25 @@ class BasePluginComponent(HubListener):
 
     @cached_property
     def spectrum_viewer(self):
-        return self._plugin.app.get_viewer("spectrum-viewer")
+        if hasattr(self, '_default_spectrum_viewer_reference_name'):
+            viewer_reference = self._default_spectrum_viewer_reference_name
+        else:
+            viewer_reference = self.app._get_first_viewer_reference_name(
+                require_spectrum_viewer=True
+            )
+
+        return self._plugin.app.get_viewer(viewer_reference)
+
+    @cached_property
+    def spectrum_2d_viewer(self):
+        if hasattr(self, '_default_spectrum_2d_viewer_reference_name'):
+            viewer_reference = self._default_spectrum_2d_viewer_reference_name
+        else:
+            viewer_reference = self.app._get_first_viewer_reference_name(
+                require_spectrum_2d_viewer=True
+            )
+
+        return self._plugin.app.get_viewer(viewer_reference)
 
 
 class SelectPluginComponent(BasePluginComponent, HasTraits):
@@ -663,7 +681,7 @@ class LayerSelect(SelectPluginComponent):
         viewers = [self._get_viewer(viewer) for viewer in viewer_names]
 
         manual_items = [{'label': label} for label in self.manual_options]
-        layers = [layer for viewer in viewers for layer in viewer.layers]
+        layers = [layer for viewer in viewers for layer in getattr(viewer, 'layers', [])]
         # remove duplicates - NOTE: by doing this, any color-mismatch between layers with the
         # same name in different viewers will be randomly assigned within plot_options
         # based on which was found _first.
@@ -965,11 +983,12 @@ class SpectralSubsetSelectMixin(VuetifyTemplate, HubListener):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        spectrum_viewer = kwargs.get('spectrum_viewer_reference_name')
         self.spectral_subset = SubsetSelect(self,
                                             'spectral_subset_items',
                                             'spectral_subset_selected',
                                             'spectral_subset_selected_has_subregions',
-                                            viewers=['spectrum-viewer'],
+                                            viewers=[spectrum_viewer],
                                             default_text='Entire Spectrum',
                                             allowed_type='spectral')
 
@@ -1345,13 +1364,13 @@ class DatasetSelect(SelectPluginComponent):
             if not len(self.app.get_viewer_reference_names()):
                 # then this is a bare Application object, so ignore this filter
                 return True
-            return data.label in [l.layer.label for l in self.spectrum_viewer.layers] # noqa E741
+            return data.label in [l.layer.label for l in self.spectrum_viewer.layers]  # noqa E741
 
         def layer_in_spectrum_2d_viewer(data):
             if not len(self.app.get_viewer_reference_names()):
                 # then this is a bare Application object, so ignore this filter
                 return True
-            return data.label in [l.layer.label for l in self.app.get_viewer('spectrum-2d-viewer').layers]  # noqa
+            return data.label in [l.layer.label for l in self.spectrum_2d_viewer.layers]  # noqa E741
 
         def is_trace(data):
             return hasattr(data, 'meta') and 'Trace' in data.meta
