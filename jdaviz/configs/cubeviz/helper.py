@@ -56,14 +56,6 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
         if data_label:
             kwargs['data_label'] = data_label
 
-        default_kwargs = {
-            "flux_viewer_reference_name": self._default_flux_viewer_reference_name,
-            "uncert_viewer_reference_name": self._default_uncert_viewer_reference_name,
-            "spectrum_viewer_reference_name": self._default_spectrum_viewer_reference_name,
-        }
-        for default_kwarg, default_cls_attr in default_kwargs.items():
-            kwargs.setdefault(default_kwarg, default_cls_attr)
-
         super().load_data(data, parser_reference="cubeviz-data-parser", **kwargs)
 
     def select_slice(self, slice):

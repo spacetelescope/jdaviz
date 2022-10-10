@@ -115,7 +115,7 @@ class Specviz2d(ConfigHelper, LineListMixin):
                 setattr(scales['x'], name, val)
 
     def load_data(self, spectrum_2d=None, spectrum_1d=None, spectrum_1d_label=None,
-                  spectrum_2d_label=None, show_in_viewer=True, **kwargs):
+                  spectrum_2d_label=None, show_in_viewer=True):
         """
         Load and parse a pair of corresponding 1D and 2D spectra.
 
@@ -143,14 +143,6 @@ class Specviz2d(ConfigHelper, LineListMixin):
             Show data in viewer(s).
 
         """
-        default_kwargs = {
-            "spectrum_2d_viewer_reference_name": self._default_spectrum_2d_viewer_reference_name,
-            "spectrum_viewer_reference_name": self._default_spectrum_viewer_reference_name,
-            "table_viewer_reference_name": self._default_table_viewer_reference_name
-        }
-        for default_kwarg, default_cls_attr in default_kwargs.items():
-            kwargs.setdefault(default_kwarg, default_cls_attr)
-
         if spectrum_2d_label is None:
             spectrum_2d_label = "Spectrum 2D"
         elif spectrum_2d_label[-2:] != "2D":
@@ -163,8 +155,7 @@ class Specviz2d(ConfigHelper, LineListMixin):
             self.app.load_data(spectrum_2d, parser_reference="mosviz-spec2d-parser",
                                data_labels=spectrum_2d_label,
                                show_in_viewer=False,
-                               add_to_table=False,
-                               **kwargs)
+                               add_to_table=False)
 
             # Passing show_in_viewer into app.load_data does not work anymore,
             # so we force it to show here.
@@ -178,7 +169,11 @@ class Specviz2d(ConfigHelper, LineListMixin):
                 # plugin-instance created later) instance of the SpectralExtraction plugin,
                 # and use the defaults to generate the initial 1D extracted spectrum
                 spext = SpectralExtraction(
-                    app=self.app, interactive=False, **kwargs
+                    app=self.app, interactive=False,
+                    spectrum_viewer_reference_name=self._default_spectrum_viewer_reference_name,
+                    spectrum_2d_viewer_reference_name=(
+                        self._default_spectrum_2d_viewer_reference_name
+                    )
                 )
                 # for some reason, the trailets are resetting to their default values even
                 # though _trace_dataset_selected was called internally to set them to reasonable
@@ -205,7 +200,6 @@ class Specviz2d(ConfigHelper, LineListMixin):
                 spectrum_1d, data_label=spectrum_1d_label,
                 parser_reference="specviz-spectrum1d-parser",
                 show_in_viewer=show_in_viewer,
-                spectrum_viewer_reference_name=kwargs['spectrum_viewer_reference_name']
             )
 
     def load_trace(self, trace, data_label, show_in_viewer=True):

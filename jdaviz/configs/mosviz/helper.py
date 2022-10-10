@@ -580,7 +580,7 @@ class Mosviz(ConfigHelper, LineListMixin):
                           data_labels=data_labels, **kwargs)
         self._add_redshift_column()
 
-    def load_2d_spectra(self, data_obj, data_labels=None, **kwargs):
+    def load_2d_spectra(self, data_obj, data_labels=None):
         """
         Load and parse a set of 2D spectra objects.
 
@@ -595,15 +595,8 @@ class Mosviz(ConfigHelper, LineListMixin):
             ``data_obj``. Can be a list of strings representing data labels
             for each item in ``data_obj`` if  ``data_obj`` is a list.
         """
-        default_kwargs = {
-            "spectrum_2d_viewer_reference_name": self._default_spectrum_2d_viewer_reference_name,
-            "table_viewer_reference_name": self._default_table_viewer_reference_name,
-        }
-        for default_kwarg, default_cls_attr in default_kwargs.items():
-            kwargs.setdefault(default_kwarg, default_cls_attr)
-
         super().load_data(data_obj, parser_reference="mosviz-spec2d-parser",
-                          data_labels=data_labels, **kwargs)
+                          data_labels=data_labels)
         self._add_redshift_column()
 
     def load_niriss_data(self, data_obj, data_labels=None, **kwargs):

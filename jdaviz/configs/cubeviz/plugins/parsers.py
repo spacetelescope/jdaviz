@@ -20,9 +20,7 @@ EXT_TYPES = dict(flux=['flux', 'sci', 'data'],
 
 
 @data_parser_registry("cubeviz-data-parser")
-def parse_data(app, file_obj, data_type=None, data_label=None,
-               flux_viewer_reference_name=None, uncert_viewer_reference_name=None,
-               spectrum_viewer_reference_name=None):
+def parse_data(app, file_obj, data_type=None, data_label=None):
     """
     Attempts to parse a data file and auto-populate available viewers in
     cubeviz.
@@ -38,6 +36,11 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
     data_label : str, optional
         The label to be applied to the Glue data component.
     """
+
+    flux_viewer_reference_name = app._jdaviz_helper._default_flux_viewer_reference_name
+    uncert_viewer_reference_name = app._jdaviz_helper._default_uncert_viewer_reference_name
+    spectrum_viewer_reference_name = app._jdaviz_helper._default_spectrum_viewer_reference_name
+
     if data_type is not None and data_type.lower() not in ['flux', 'mask', 'uncert']:
         msg = f"Data type must be one of 'flux', 'mask', or 'uncert' but got '{data_type}'"
         raise TypeError(msg)

@@ -59,8 +59,7 @@ class Specviz(ConfigHelper, LineListMixin):
                           parser_reference='specviz-spectrum1d-parser',
                           data_label=data_label,
                           format=format,
-                          show_in_viewer=show_in_viewer,
-                          spectrum_viewer_reference_name=spectrum_viewer_reference_name)
+                          show_in_viewer=show_in_viewer)
 
     def get_spectra(self, data_label=None, apply_slider_redshift="Warn"):
         """Returns the current data loaded into the main viewer

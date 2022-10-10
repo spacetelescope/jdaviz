@@ -238,10 +238,7 @@ def mos_spec1d_parser(app, data_obj, data_labels=None,
 
 @data_parser_registry("mosviz-spec2d-parser")
 def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
-                      show_in_viewer=False,
-                      spectrum_2d_viewer_reference_name="spectrum-2d-viewer",
-                      spectrum_viewer_reference_name="spectrum-viewer",
-                      table_viewer_reference_name="table-viewer"):
+                      show_in_viewer=False):
     """
     Attempts to parse a 2D spectrum object.
 
@@ -260,6 +257,13 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
     data_labels : str, optional
         The label applied to the glue data component.
     """
+    spectrum_2d_viewer_reference_name = (
+        app._jdaviz_helper._default_spectrum_2d_viewer_reference_name
+    )
+    table_viewer_reference_name = (
+        app._jdaviz_helper._default_table_viewer_reference_name
+    )
+
     # Note: This is also used by Specviz2D
     def _parse_as_spectrum1d(path):
         # Parse as a FITS file and assume the WCS is correct

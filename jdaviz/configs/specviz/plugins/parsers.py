@@ -14,8 +14,7 @@ __all__ = ["specviz_spectrum1d_parser"]
 
 
 @data_parser_registry("specviz-spectrum1d-parser")
-def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_viewer=True,
-                              spectrum_viewer_reference_name=None):
+def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_viewer=True):
     """
     Loads a data file or `~specutils.Spectrum1D` object into Specviz.
 
@@ -31,6 +30,7 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
     spectrum_viewer_reference_name : str
         Reference name for the viewer
     """
+    spectrum_viewer_reference_name = app._jdaviz_helper._default_spectrum_viewer_reference_name
     # If no data label is assigned, give it a unique identifier
     if not data_label:
         data_label = "specviz_data|" + str(
