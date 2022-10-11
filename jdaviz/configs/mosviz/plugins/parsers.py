@@ -272,12 +272,13 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
     def _parse_as_spectrum1d(hdulist, ext):
         # Parse as a FITS file and assume the WCS is correct
         data = hdulist[ext].data
-        if transpose:
-            data = data.T
         header = hdulist[ext].header
         metadata = standardize_metadata(header)
         metadata[PRIHDR_KEY] = standardize_metadata(hdulist[0].header)
         wcs = WCS(header, hdulist)
+        if transpose:
+            data = data.T
+            wcs = wcs.swapaxes(0, 1)
 
         try:
             data_unit = u.Unit(header['BUNIT'])
