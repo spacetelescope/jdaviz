@@ -57,36 +57,6 @@ def test_nonstandard_specviz_viewer_name(spectrum1d):
     assert not len(viz.app.get_data_from_viewer("h", "non-existent label"))
 
 
-# This applies to all viz but testing with Imviz should be enough.
-def test_viewer_calling_app(imviz_helper):
-    viewer = imviz_helper.default_viewer
-    assert viewer.session.jdaviz_app is imviz_helper.app
-
-
-def test_get_tray_item_from_name():
-    app = Application(configuration='default')
-    plg = app.get_tray_item_from_name('g-gaussian-smooth')
-    assert isinstance(plg, GaussianSmooth)
-
-    with pytest.raises(KeyError, match='not found in app'):
-        app.get_tray_item_from_name('imviz-compass')
-
-
-# This applies to all viz but testing with Imviz should be enough.
-def test_viewer_calling_app(imviz_helper):
-    viewer = imviz_helper.default_viewer
-    assert viewer.session.jdaviz_app is imviz_helper.app
-
-
-def test_get_tray_item_from_name():
-    app = Application(configuration='default')
-    plg = app.get_tray_item_from_name('g-gaussian-smooth')
-    assert isinstance(plg, GaussianSmooth)
-
-    with pytest.raises(KeyError, match='not found in app'):
-        app.get_tray_item_from_name('imviz-compass')
-
-
 def test_duplicate_data_labels(specviz_helper, spectrum1d):
     specviz_helper.load_spectrum(spectrum1d, data_label="test")
     specviz_helper.load_spectrum(spectrum1d, data_label="test")
