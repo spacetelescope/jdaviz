@@ -76,6 +76,7 @@
             <golden-layout
               style="height: 100%;"
               :has-headers="state.settings.visible.tab_headers"
+              @state="onLayoutChange"
             >
               <gl-row :closable="false">
                 <g-viewer-tab
@@ -178,6 +179,10 @@ export default {
       }
       // simple exact text search match on the plugin title for now.
       return trayItem.label.toLowerCase().indexOf(tray_items_filter.toLowerCase()) !== -1
+    },
+    onLayoutChange() {
+      /* Workaround for #1677, can be removed when bqplot/bqplot#1531 is released */
+      window.dispatchEvent(new Event('resize'));
     }
   },
   created() {

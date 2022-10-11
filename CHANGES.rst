@@ -77,6 +77,8 @@ Bug Fixes
 
 - Fix subset selection tool conflicts caused by a duplicate toolbar. [#1679]
 
+- Fixed blank tabbed viewers. [#1718]
+
 Cubeviz
 ^^^^^^^
 
