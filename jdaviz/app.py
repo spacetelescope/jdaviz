@@ -406,17 +406,16 @@ class Application(VuetifyTemplate, HubListener):
         ref_data = dc[reference_data] if reference_data else dc[0]
         linked_data = dc[data_to_be_linked] if data_to_be_linked else dc[-1]
 
-        if linked_data.meta.get('Plugin', None) == 'SpectralExtraction':
-            if 'Trace' in linked_data.meta:
-                links = [LinkSame(linked_data.components[2], ref_data.components[0]),
-                         LinkSame(linked_data.components[0], ref_data.components[1])]
-                dc.add_link(links)
-                return
-            else:
-                links = [LinkSame(linked_data.components[0], ref_data.components[0]),
-                         LinkSame(linked_data.components[1], ref_data.components[1])]
-                dc.add_link(links)
-                return
+        if 'Trace' in linked_data.meta:
+            links = [LinkSame(linked_data.components[1], ref_data.components[0]),
+                     LinkSame(linked_data.components[0], ref_data.components[1])]
+            dc.add_link(links)
+            return
+        elif linked_data.meta.get('Plugin', None) == 'SpectralExtraction':
+            links = [LinkSame(linked_data.components[0], ref_data.components[0]),
+                     LinkSame(linked_data.components[1], ref_data.components[1])]
+            dc.add_link(links)
+            return
 
         # The glue-astronomy SpectralCoordinates currently seems incompatible with glue
         # WCSLink. This gets around it until there's an upstream fix.
@@ -577,7 +576,7 @@ class Application(VuetifyTemplate, HubListener):
         """Like :meth:`get_viewer` but use ID instead of reference name.
         This is useful when reference name is `None`.
         """
-        return self._viewer_store[vid]
+        return self._viewer_store.get(vid)
 
     def get_data_from_viewer(self, viewer_reference, data_label=None,
                              cls='default', include_subsets=True):
@@ -678,11 +677,8 @@ class Application(VuetifyTemplate, HubListener):
 
                         data[label] = layer_data
 
-        # If a data label was provided, return only the data requested
-        if data_label is not None:
-            return data.get(data_label)
-
-        return data
+        # If a data label was provided, return only the corresponding data, otherwise return all:
+        return data.get(data_label, data)
 
     def get_subsets_from_viewer(self, viewer_reference, data_label=None, subset_type=None):
         """
@@ -1037,11 +1033,11 @@ class Application(VuetifyTemplate, HubListener):
         if clear_other_data:
             self._update_selected_data_items(viewer_item['id'], {})
 
-        selected_data_items = viewer_item['selected_data_items']
+        selected_data_items = viewer_item.get('selected_data_items', {})
 
         if data_id is not None:
             selected_data_items[data_id] = 'visible'
-            self._update_selected_data_items(viewer_item['id'], selected_data_items)
+            self._update_selected_data_items(viewer_item.get('id'), selected_data_items)
         else:
             raise ValueError(
                 f"No data item found with label '{data_label}'. Label must be one "
@@ -1219,7 +1215,7 @@ class Application(VuetifyTemplate, HubListener):
         def find_viewer_item(stack_items):
             for stack_item in stack_items:
                 for viewer_item in stack_item.get('viewers'):
-                    if viewer_item['id'] == vid:
+                    if viewer_item.get('id') == vid:
                         return viewer_item
 
                 if len(stack_item.get('children')) > 0:
@@ -1413,6 +1409,9 @@ class Application(VuetifyTemplate, HubListener):
         viewer_item = self._viewer_item_by_id(viewer_id)
         viewer = self._viewer_by_id(viewer_id)
 
+        if viewer is None:
+            return
+
         if isinstance(selected_items, list):
             selected_items = {si: 'visible' for si in selected_items}
         # Update the stored selected data items
@@ -1462,7 +1461,7 @@ class Application(VuetifyTemplate, HubListener):
             if data.label not in active_data_labels:
                 viewer.remove_data(data)
                 viewer._layers_with_defaults_applied= [layer_info for layer_info in viewer._layers_with_defaults_applied  # noqa
-                                                       if layer_info['data_label'] != data.label]
+                                                       if layer_info['data_label'] != data.label]  # noqa
                 remove_data_message = RemoveDataMessage(data, viewer,
                                                         viewer_id=viewer_id,
                                                         sender=self)
@@ -1788,7 +1787,29 @@ class Application(VuetifyTemplate, HubListener):
 
         for name in config.get('tray', []):
             tray = tray_registry.members.get(name)
-            tray_item_instance = tray.get('cls')(app=self)
+            tray_registry_options = tray.get('viewer_reference_name_kwargs', {})
+
+            # Optional keyword arguments are required to initialize some
+            # tray items. These kwargs specify the viewer reference names that are
+            # assumed to be present in the configuration.
+            optional_tray_kwargs = dict()
+
+            # If viewer reference names need to be passed to the tray item
+            # constructor, pass the names into the constructor in the format
+            # that the tray items expect.
+            for opt_attr, [opt_kwarg, get_name_kwargs] in tray_registry_options.items():
+                opt_value = getattr(
+                    self, opt_attr, self._get_first_viewer_reference_name(**get_name_kwargs)
+                )
+
+                if opt_value is None:
+                    continue
+
+                optional_tray_kwargs[opt_kwarg] = opt_value
+
+            tray_item_instance = tray.get('cls')(
+                app=self, **optional_tray_kwargs
+            )
             tray_item_label = tray.get('label')
 
             self.state.tray_items.append({
