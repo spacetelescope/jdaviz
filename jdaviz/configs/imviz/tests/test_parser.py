@@ -101,7 +101,7 @@ class TestParseImage:
             imviz_helper.load_data(arr, data_label=data_label)
         else:
             for i in range(n_slices):
-                imviz_helper.load_data(arr[i, :, :], data_label='my_slices', do_link=False)
+                imviz_helper.load_data(arr[i, :, :], data_label=data_label, do_link=False)
             imviz_helper.link_data(error_on_fail=True)
 
         assert len(imviz_helper.app.data_collection) == n_slices

@@ -94,7 +94,6 @@ def test_hdulist_with_filename(cubeviz_helper, image_cube_hdu_obj):
     assert data_label == "test[HDU object]"
 
 
-@pytest.mark.filterwarnings('ignore:.* is a low contrast image')
 def test_file_path_not_image(imviz_helper, tmp_path):
     path = tmp_path / "myimage.fits"
     path.touch()

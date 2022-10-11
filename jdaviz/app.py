@@ -931,7 +931,7 @@ class Application(VuetifyTemplate, HubListener):
         -------
         data_label : str
             A unique data label that at its root is either given by the user at load time
-            or created by jdaviz using a description of the loaded file's type.
+            or created by Jdaviz using a description of the loaded filetype.
         """
         data_label = None
 
@@ -1031,7 +1031,7 @@ class Application(VuetifyTemplate, HubListener):
         data_id = self._data_id_from_label(data_label)
 
         if clear_other_data:
-            self._update_selected_data_items(viewer_item['id'], {})
+            self._update_selected_data_items(viewer_item.get('id'), {})
 
         selected_data_items = viewer_item.get('selected_data_items', {})
 
