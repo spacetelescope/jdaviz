@@ -143,6 +143,9 @@ class Specviz2d(ConfigHelper, LineListMixin):
             Show data in viewer(s).
 
         """
+        if spectrum_2d is None and spectrum_1d is None:
+            raise ValueError('Must provide spectrum_2d or spectrum_1d but none given.')
+
         if spectrum_2d_label is None:
             spectrum_2d_label = "Spectrum 2D"
         elif spectrum_2d_label[-2:] != "2D":
