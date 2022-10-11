@@ -62,7 +62,7 @@
          <v-card-actions>
            <div class="flex-grow-1"></div>
            <v-btn color="primary" text @click="catalog_selected = catalog_items[0].label">Cancel</v-btn>
-           <v-btn color="primary" text @click="set_file_from_dialog" :disabled="from_file_message.length > 0">Select</v-btn>
+           <v-btn color="primary" text @click="set_file_from_dialog" :disabled="from_file_message.length > 0">Load</v-btn>
          </v-card-actions>
 
        </v-card>
