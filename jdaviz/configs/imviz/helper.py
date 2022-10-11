@@ -163,7 +163,6 @@ class Imviz(ImageConfigHelper):
 
                 kw = deepcopy(kwargs)
 
-                # This will only append index to data label if provided.
                 if data_label:
                     kw['data_label'] = data_label
 
