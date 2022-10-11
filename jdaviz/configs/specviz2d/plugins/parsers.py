@@ -64,7 +64,11 @@ def spec2d_1d_parser(app, data_obj, data_label=None, show_in_viewer=True):
 
         data_obj = Spectrum1D(flux, spectral_axis=spectral_axis, meta=metadata)
 
-    app.data_collection[data_label] = data_obj
+        data_label = app.return_data_label(data_label, alt_name="specviz2d_data")
+        app.data_collection[data_label] = data_obj
+
+    else:
+        raise NotImplementedError("Spectrum2d parser only takes a filename")
 
     if show_in_viewer:
         app.add_data_to_viewer(

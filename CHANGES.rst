@@ -6,6 +6,9 @@ New Features
 
 - Add support for nonstandard viewer reference names [#1681]
 
+- Centralize data label generation if user does not provide a label with data load. Also
+  prevent duplicate data labels from being added to data collection. [#1672]
+
 Cubeviz
 ^^^^^^^
 

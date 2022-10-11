@@ -2,12 +2,15 @@ import os
 import pathlib
 import re
 import uuid
+import warnings
 from inspect import isclass
 
 from ipywidgets import widget_serialization
 import ipyvue
 
-from astropy.nddata import CCDData
+from astropy.nddata import CCDData, NDData
+from astropy.io import fits
+
 from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
 from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
@@ -490,6 +493,7 @@ class Application(VuetifyTemplate, HubListener):
         **kwargs : dict
             Additional keywords to be passed into the parser defined by
             ``parser_reference``.
+
         """
         self.loading = True
         try:
@@ -896,7 +900,7 @@ class Application(VuetifyTemplate, HubListener):
 
         if not data_label and hasattr(data, "label"):
             data_label = data.label
-        data_label = data_label or "New Data"
+        data_label = self.return_unique_name(data_label)
         self.data_collection[data_label] = data
 
         # Send out a toast message
@@ -905,36 +909,99 @@ class Application(VuetifyTemplate, HubListener):
                 f"Data '{data_label}' successfully added.", sender=self, color="success")
             self.hub.broadcast(snackbar_message)
 
-    @staticmethod
-    def _build_data_label(path, ext=None):
-        """ Build a data label from a filename and data extension
-
-        Builds a data_label out of a filename and data extension.
-        If the input string path already ends with a data
-        extension, the label is returned directly.  Otherwise a valid
-        extension must be specified to append to the file stem.
+    def return_data_label(self, loaded_object, ext=None, alt_name=None, check_unique=True):
+        """
+        Returns a unique data label that can be safely used to load data into data collection.
 
         Parameters
         ----------
-            path : str
-                The data filename to use as a
-            ext : str
-                The data extension to access from the file.
+        loaded_object : str or object
+            The path to a data file or FITS HDUList or image object or Spectrum1D or
+            NDData array or numpy.ndarray.
+        ext : str, optional
+            The extension (or other distinguishing feature) of data used to identify it.
+            For example, "filename[FLUX]" where "FLUX" is the ext value.
+        alt_name : str, optional
+            Alternate names that can be used if none of the options provided are valid.
+        check_unique : bool
+            Included so that this method can be used with data label retrieval in addition
+            to generation.
+
         Returns
         -------
-        A string data label used by Glue
-
+        data_label : str
+            A unique data label that at its root is either given by the user at load time
+            or created by Jdaviz using a description of the loaded filetype.
         """
+        data_label = None
 
-        # if path is not a file or already ends in [ ] extension, assume it is a data-label
-        if not os.path.isfile(path) or re.search(r'(.+)(\[(.*?)\])$', path):
-            return path
-        else:
-            assert ext, 'A data extension must be specified'
-            p = pathlib.Path(path)
-            stem = p.stem.split(os.extsep)[0]
-            label = f'{stem}[{ext}]'
-            return label
+        if loaded_object is None:
+            pass
+        elif isinstance(loaded_object, str):
+            # This is either the full file path or the basename or the user input data label
+            if loaded_object.lower().endswith(('.jpg', '.jpeg', '.png')):
+                file_format = loaded_object.lower().split(".")[-1]
+                loaded_object = os.path.splitext(os.path.basename(loaded_object))[0]
+                data_label = f"{loaded_object}[{file_format}]"
+            elif os.path.isfile(loaded_object) or os.path.isdir(loaded_object):
+                # File that is not an image file
+                data_label = os.path.splitext(os.path.basename(loaded_object))[0]
+            else:
+                # Not a file path so assumed to be a data label
+                data_label = loaded_object
+        elif isinstance(loaded_object, fits.hdu.hdulist.HDUList):
+            if hasattr(loaded_object, 'file_name'):
+                data_label = f"{loaded_object.file_name}[HDU object]"
+            else:
+                data_label = "Unknown HDU object"
+        elif isinstance(loaded_object, Spectrum1D):
+            data_label = "Spectrum1D"
+        elif isinstance(loaded_object, NDData):
+            data_label = "NDData"
+        elif isinstance(loaded_object, np.ndarray):
+            data_label = "Array"
+
+        if data_label is None and alt_name is not None and isinstance(alt_name, str):
+            data_label = alt_name
+        elif data_label is None:
+            data_label = "Unknown"
+
+        if check_unique:
+            data_label = self.return_unique_name(data_label, ext=ext)
+
+        return data_label
+
+    def return_unique_name(self, data_label, ext=None):
+        if data_label is None:
+            data_label = "Unknown"
+
+        # This regex checks for any length of characters that end
+        # with a space followed by parenthesis with a number inside.
+        # If there is a match, the space and parenthesis section will be
+        # removed so that the remainder of the label can be checked
+        # against the data_label.
+        check_if_dup = re.compile(r"(.*)(\s\(\d*\))$")
+        labels = self.data_collection.labels
+        number_of_duplicates = 0
+        for label in labels:
+            # If label is a duplicate of another label
+            if re.fullmatch(check_if_dup, label):
+                label_split = label.split(" ")
+                label_without_dup = " ".join(label_split[:-1])
+                label = label_without_dup
+
+            if ext and f"{data_label}[{ext}]" == label:
+                number_of_duplicates += 1
+            elif ext is None and data_label == label:
+                number_of_duplicates += 1
+
+        if ext:
+            data_label = f"{data_label}[{ext}]"
+
+        if number_of_duplicates > 0:
+            data_label = f"{data_label} ({number_of_duplicates})"
+
+        return data_label
 
     def add_data_to_viewer(self, viewer_reference, data_path,
                            clear_other_data=False, ext=None):
@@ -960,7 +1027,7 @@ class Application(VuetifyTemplate, HubListener):
             viewer_item = self._viewer_item_by_id(viewer_reference)
         if viewer_item is None:
             raise ValueError(f"Could not identify viewer with reference {viewer_reference}")
-        data_label = self._build_data_label(data_path, ext=ext)
+        data_label = self.return_data_label(data_path, ext=ext, check_unique=False)
         data_id = self._data_id_from_label(data_label)
 
         if clear_other_data:
@@ -1006,7 +1073,7 @@ class Application(VuetifyTemplate, HubListener):
             is required.
         """
         viewer_item = self._viewer_item_by_reference(viewer_reference)
-        data_label = self._build_data_label(data_path, ext=ext)
+        data_label = self.return_data_label(data_path, ext=ext, check_unique=False)
         data_id = self._data_id_from_label(data_label)
 
         selected_items = viewer_item['selected_data_items']
@@ -1356,8 +1423,14 @@ class Application(VuetifyTemplate, HubListener):
 
         # Include any selected data in the viewer
         for data_id, visibility in selected_items.items():
-            label = self._get_data_item_by_id(data_id)['name']
+            data_item = self._get_data_item_by_id(data_id)
 
+            if data_item is None or data_item['name'] is None:
+                warnings.warn(f"No data item with id {data_id} found in "
+                              f"viewer {viewer_id}.")
+                continue
+            else:
+                label = self._get_data_item_by_id(data_id)['name']
             active_data_labels.append(label)
 
             [data] = [x for x in self.data_collection if x.label == label]

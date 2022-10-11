@@ -142,7 +142,7 @@ class Imviz(ImageConfigHelper):
 
                 # This will only overwrite if not provided.
                 if not data_label:
-                    kw['data_label'] = cur_data_label
+                    kw['data_label'] = None
                 else:
                     kw['data_label'] = data_label
 
@@ -163,9 +163,8 @@ class Imviz(ImageConfigHelper):
 
                 kw = deepcopy(kwargs)
 
-                # This will only append index to data label if provided.
                 if data_label:
-                    kw['data_label'] = f'{data_label}_{i}'
+                    kw['data_label'] = data_label
 
                 self.app.load_data(data[i, :, :], parser_reference='imviz-data-parser', **kw)
 

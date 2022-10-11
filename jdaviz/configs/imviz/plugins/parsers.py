@@ -1,6 +1,4 @@
-import base64
 import os
-import uuid
 
 import numpy as np
 from asdf.fits_embed import AsdfInFits
@@ -56,8 +54,6 @@ def parse_data(app, file_obj, ext=None, data_label=None):
             with fits.open(file_obj) as pf:
                 _parse_image(app, pf, data_label, ext=ext)
     else:
-        if data_label is None:
-            data_label = f'imviz_data|{str(base64.b85encode(uuid.uuid4().bytes), "utf-8")}'
         _parse_image(app, file_obj, data_label, ext=ext)
 
 
@@ -121,20 +117,14 @@ def get_image_data_iterator(app, file_obj, data_label, ext=None):
 
 
 def _parse_image(app, file_obj, data_label, ext=None):
-    from jdaviz.core.helpers import _next_subset_num
-
+    if app is None:
+        raise ValueError("app is None, cannot proceed")
     if data_label is None:
-        raise NotImplementedError('data_label should be set by now')
-
+        data_label = app.return_data_label(file_obj, ext, alt_name="image_data")
     data_iter = get_image_data_iterator(app, file_obj, data_label, ext=ext)
 
     for data, data_label in data_iter:
-
-        # avoid duplicate data labels in collection
-        if data_label in app.data_collection.labels:
-            i = _next_subset_num(data_label, app.data_collection)
-            data_label = f'{data_label} {i}'
-
+        data_label = app.return_data_label(data_label, alt_name="image_data")
         app.add_data(data, data_label)
 
     # Do not run link_image_data here. We do it at the end in Imviz.load_data()

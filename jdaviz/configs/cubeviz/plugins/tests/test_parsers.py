@@ -14,7 +14,7 @@ def test_fits_image_hdu_parse(image_cube_hdu_obj, cubeviz_helper):
     cubeviz_helper.load_data(image_cube_hdu_obj)
 
     assert len(cubeviz_helper.app.data_collection) == 3
-    assert cubeviz_helper.app.data_collection[0].label.endswith('[FLUX]')
+    assert cubeviz_helper.app.data_collection[0].label == "Unknown HDU object[FLUX]"
 
     # first load should be successful; subsequent attempts should fail
     with pytest.raises(RuntimeError, match=r".?only one (data)?cube.?"):
@@ -88,7 +88,7 @@ def test_fits_image_hdu_parse_from_file(tmpdir, image_cube_hdu_obj, cubeviz_help
     cubeviz_helper.load_data(path)
 
     assert len(cubeviz_helper.app.data_collection) == 3
-    assert cubeviz_helper.app.data_collection[0].label.endswith('[FLUX]')
+    assert cubeviz_helper.app.data_collection[0].label == "test_fits_image.fits[FLUX]"
 
     # This tests the same data as test_fits_image_hdu_parse above.
 
@@ -121,7 +121,7 @@ def test_spectrum3d_parse(image_cube_hdu_obj, cubeviz_helper):
     cubeviz_helper.load_data(sc)
 
     assert len(cubeviz_helper.app.data_collection) == 1
-    assert cubeviz_helper.app.data_collection[0].label.endswith('[FLUX]')
+    assert cubeviz_helper.app.data_collection[0].label == "Unknown spectrum object[FLUX]"
 
     # Same as flux viewer data in test_fits_image_hdu_parse_from_file
     flux_viewer = cubeviz_helper.app.get_viewer(cubeviz_helper._default_flux_viewer_reference_name)
@@ -142,7 +142,7 @@ def test_spectrum1d_parse(spectrum1d, cubeviz_helper):
     cubeviz_helper.load_data(spectrum1d)
 
     assert len(cubeviz_helper.app.data_collection) == 1
-    assert cubeviz_helper.app.data_collection[0].label.endswith('[FLUX]')
+    assert cubeviz_helper.app.data_collection[0].label.endswith('Spectrum1D')
     assert cubeviz_helper.app.data_collection[0].meta['uncertainty_type'] == 'std'
 
     # Coordinate display is only for spatial image, which is missing here.

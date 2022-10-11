@@ -63,7 +63,7 @@ class TestParseImage:
         self.jwst_asdf_url_2 = 'https://stsci.box.com/shared/static/d5k9z5j05dgfv6ljgie483w21kmpevni.fits'  # noqa: E501
 
     def test_no_data_label(self):
-        with pytest.raises(NotImplementedError, match='should be set'):
+        with pytest.raises(ValueError, match='app is None'):
             _parse_image(None, None, None, False)
 
     def test_hdulist_no_image(self, imviz_helper):
@@ -94,13 +94,14 @@ class TestParseImage:
         n_slices = 5
         slice_shape = (2, 3)
         arr = np.stack([np.zeros(slice_shape) + i for i in range(n_slices)])
+        data_label = 'my_slices'
 
         if not manual_loop:
             # We use higher level load_data() here to make sure linking does not crash.
-            imviz_helper.load_data(arr, data_label='my_slices')
+            imviz_helper.load_data(arr, data_label=data_label)
         else:
             for i in range(n_slices):
-                imviz_helper.load_data(arr[i, :, :], data_label=f'my_slices_{i}', do_link=False)
+                imviz_helper.load_data(arr[i, :, :], data_label=data_label, do_link=False)
             imviz_helper.link_data(error_on_fail=True)
 
         assert len(imviz_helper.app.data_collection) == n_slices
@@ -109,7 +110,7 @@ class TestParseImage:
         for i in range(n_slices):
             data = imviz_helper.app.data_collection[i]
             comp = data.get_component('DATA')
-            assert data.label == f'my_slices_{i}'
+            assert data.label == (f'my_slices ({i})' if i > 0 else 'my_slices')
             assert data.shape == slice_shape
             assert_array_equal(comp.data, i)
 
@@ -336,7 +337,7 @@ class TestParseImage:
 
             imviz_helper.load_data(pf, ext='SCI', data_label='TEST', show_in_viewer=False)
             data = imviz_helper.app.data_collection[1]
-            assert data.label.endswith('[DATA] 1')
+            assert data.label.endswith('[DATA] (1)')
 
             # Load all extensions
             imviz_helper.app.data_collection.clear()
@@ -453,14 +454,14 @@ class TestParseImage:
             # Default behavior: Load first image
             imviz_helper.load_data(pf, show_in_viewer=False)
             data = imviz_helper.app.data_collection[3]
-            assert data.label.startswith('imviz_data|') and data.label.endswith('[SCI,1]')
+            assert data.label.startswith('Unknown HDU object') and data.label.endswith('[SCI,1]')
             assert_allclose(data.meta['PHOTFLAM'], 7.8711728E-20)
             assert 'SCI,1' in data.components
 
             # Request specific extension (name only), use given label
             imviz_helper.load_data(pf, ext='CTX', show_in_viewer=False)
             data = imviz_helper.app.data_collection[4]
-            assert data.label.startswith('imviz_data|') and data.label.endswith('[CTX,1]')
+            assert data.label.startswith('Unknown HDU object') and data.label.endswith('[CTX,1]')
             assert data.meta['EXTNAME'] == 'CTX'
             assert 'CTX,1' in data.components
 

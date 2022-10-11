@@ -1,6 +1,4 @@
-import base64
 import pathlib
-import uuid
 
 import numpy as np
 from astropy.io.registry import IORegistryError
@@ -31,18 +29,16 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
         Reference name for the viewer
     """
     spectrum_viewer_reference_name = app._jdaviz_helper._default_spectrum_viewer_reference_name
-    # If no data label is assigned, give it a unique identifier
+    # If no data label is assigned, give it a unique name
     if not data_label:
-        data_label = "specviz_data|" + str(
-            base64.b85encode(uuid.uuid4().bytes), "utf-8"
-        )
+        data_label = app.return_data_label(data, alt_name="specviz_data")
 
     if isinstance(data, SpectrumCollection):
         raise TypeError("SpectrumCollection detected."
                         " Please provide a Spectrum1D or SpectrumList")
     elif isinstance(data, Spectrum1D):
         data = [data]
-        data_label = [data_label]
+        data_label = [app.return_data_label(data_label, alt_name="specviz_data")]
     # No special processing is needed in this case, but we include it for completeness
     elif isinstance(data, SpectrumList):
         pass
@@ -54,7 +50,7 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
         if path.is_file():
             try:
                 data = [Spectrum1D.read(str(path), format=format)]
-                data_label = [data_label]
+                data_label = [app.return_data_label(data_label, alt_name="specviz_data")]
             except IORegistryError:
                 # Multi-extension files may throw a registry error
                 data = SpectrumList.read(str(path), format=format)

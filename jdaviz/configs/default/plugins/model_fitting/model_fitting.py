@@ -760,8 +760,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         count = max(map(lambda s: int(next(iter(re.findall(r"\d$", s)), 0)),
                         self.data_collection.labels)) + 1
 
+        label = self.app.return_data_label(f"{self.results_label}[Cube]", ext=count)
+
         # Create new glue data object
-        output_cube = Data(label=f"{self.results_label} [Cube] {count}",
+        output_cube = Data(label=label,
                            coords=data.coords)
         output_cube['flux'] = fitted_spectrum.flux.value
         output_cube.get_component('flux').units = fitted_spectrum.flux.unit.to_string()
