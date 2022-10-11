@@ -63,3 +63,8 @@ def test_1d_parser(specviz2d_helper, spectrum1d):
     dc_0 = specviz2d_helper.app.data_collection[0]
     assert dc_0.label == 'Spectrum 1D'
     assert dc_0.meta['uncertainty_type'] == 'std'
+
+
+def test_2d_1d_parser(specviz2d_helper, mos_spectrum2d, spectrum1d):
+    specviz2d_helper.load_data(spectrum_2d=mos_spectrum2d, spectrum_1d=spectrum1d)
+    assert specviz2d_helper.app.data_collection.labels == ['Spectrum 2D', 'Spectrum 1D']

@@ -57,6 +57,8 @@ Specviz
 Specviz2d
 ^^^^^^^^^
 
+- Fixed parser not loading x1d when s2d is provided. [#1717]
+
 Other Changes and Additions
 ---------------------------
 
