@@ -1135,7 +1135,55 @@ class Application(VuetifyTemplate, HubListener):
     def get_viewer_reference_names(self):
         """Return a list of available viewer reference names."""
         # Cannot sort because of None
-        return [self._viewer_item_by_id(vid)['reference'] for vid in self._viewer_store]
+        return [self._viewer_item_by_id(vid).get('reference') for vid in self._viewer_store]
+
+    def _get_first_viewer_reference_name(
+            self, require_no_selected_data=False,
+            require_spectrum_viewer=False,
+            require_spectrum_2d_viewer=False,
+            require_table_viewer=False,
+            require_flux_viewer=False,
+            require_image_viewer=False
+    ):
+        """
+        Return the viewer reference name of the first available viewer.
+        Optionally use ``require_no_selected_data`` to require that the
+        viewer has not yet loaded data, or e.g. ``require_spectrum_viewer``
+        to require that the viewer supports spectrum visualization.
+        """
+        from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
+        from jdaviz.configs.specviz2d.plugins import SpectralExtraction
+        from jdaviz.configs.cubeviz.plugins.viewers import CubevizProfileView, CubevizImageView
+        from jdaviz.configs.mosviz.plugins.viewers import (
+            MosvizProfileView, MosvizTableViewer, MosvizProfile2DView
+        )
+
+        spectral_viewers = (SpecvizProfileView, CubevizProfileView, MosvizProfileView)
+        table_viewers = (MosvizTableViewer, )
+        image_viewers = (MosvizProfile2DView, CubevizImageView, SpectralExtraction)
+        flux_viewers = (CubevizImageView, )
+
+        for vid in self._viewer_store:
+            viewer_item = self._viewer_item_by_id(vid)
+            is_returnable = (
+                (require_no_selected_data and not len(viewer_item['selected_data_items'])) or
+                (not require_no_selected_data)
+            )
+            if require_spectrum_viewer:
+                if isinstance(self._viewer_store[vid], spectral_viewers) and is_returnable:
+                    return viewer_item['reference']
+            elif require_table_viewer:
+                if isinstance(self._viewer_store[vid], table_viewers) and is_returnable:
+                    return viewer_item['reference']
+            elif require_image_viewer:
+                if isinstance(self._viewer_store[vid], image_viewers) and is_returnable:
+                    return viewer_item['reference']
+            elif require_flux_viewer:
+                if isinstance(self._viewer_store[vid], flux_viewers) and is_returnable:
+                    return viewer_item['reference']
+            else:
+                if is_returnable:
+                    return viewer_item['reference']
 
     def _viewer_by_id(self, vid):
         """
