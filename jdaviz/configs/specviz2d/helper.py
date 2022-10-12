@@ -143,6 +143,9 @@ class Specviz2d(ConfigHelper, LineListMixin):
             Show data in viewer(s).
 
         """
+        if spectrum_2d is None and spectrum_1d is None:
+            raise ValueError('Must provide spectrum_2d or spectrum_1d but none given.')
+
         if spectrum_2d_label is None:
             spectrum_2d_label = "Spectrum 2D"
         elif spectrum_2d_label[-2:] != "2D":
@@ -150,6 +153,8 @@ class Specviz2d(ConfigHelper, LineListMixin):
 
         if spectrum_1d_label is None:
             spectrum_1d_label = spectrum_2d_label.replace("2D", "1D")
+
+        load_1d = False
 
         if spectrum_2d is not None:
             self.app.load_data(spectrum_2d, parser_reference="mosviz-spec2d-parser",
@@ -195,7 +200,13 @@ class Specviz2d(ConfigHelper, LineListMixin):
                         color='warning', sender=self, timeout=10000)
                 self.app.hub.broadcast(msg)
 
+            else:
+                load_1d = True
+
         else:
+            load_1d = True
+
+        if load_1d:
             self.app.load_data(
                 spectrum_1d, data_label=spectrum_1d_label,
                 parser_reference="specviz-spectrum1d-parser",
