@@ -300,6 +300,7 @@ To set the stretch function for all the images at once.
 The acceptable values are the same as the GUI menu options
 can be accessed with ``plot_options.stretch_function.choices``::
 
+    plot_options = imviz.plugins['Plot Options']
     plot_options.select_all()
     plot_options.stretch_function = 'Square Root'
 
@@ -331,6 +332,7 @@ To set the percentile for just the image being displayed::
 
 To set the percentile for all the images at once::
 
+    plot_options = imviz.plugins['Plot Options']
     plot_options.select_all()
 
     # Preset
@@ -357,6 +359,7 @@ To set the colormap for just the image being displayed::
 
 To set the colormap for all the images at once::
 
+    plot_options = imviz.plugins['Plot Options']
     plot_options.select_all()
     plot_options.image_colormap = 'Viridis'
 
