@@ -222,6 +222,12 @@ To access all of the different display settings for an image viewer, click the
 Changing the display settings DOES NOT change the underlying data, only the
 visualization of that data.
 
+If you wish to access plot options via API
+(also see `~jdaviz.configs.default.plugins.plot_options.plot_options.PlotOptions`),
+you can do the following::
+
+    plot_options = imviz.plugins['Plot Options']
+
 Layer
 -----
 
@@ -280,6 +286,24 @@ Change the equation that is used to convert data values between
 :guilabel:`min` and :guilabel:`max` to the 0 to 1 scale of pixel saturation on the displayed
 image.
 
+From the API
+^^^^^^^^^^^^
+
+To set the stretch function for just the image being displayed.
+The acceptable values are as defined by glue backend::
+
+    viewer = imviz.default_viewer
+    viewer.stretch_options
+    viewer.stretch = 'sqrt'
+
+To set the stretch function for all the images at once.
+The acceptable values are the same as the GUI menu options
+can be accessed with ``plot_options.stretch_function.choices``::
+
+    plot_options = imviz.plugins['Plot Options']
+    plot_options.select_all()
+    plot_options.stretch_function = 'Square Root'
+
 Percentile
 ----------
 
@@ -289,13 +313,35 @@ Min
 ^^^
 
 If the percentile is "custom", then the data value corresponding to the
-minimum of the colormap scale (e.g. black in grayscale) can be set.
+minimum of the colormap scale (e.g., black in grayscale) can be set.
 
 Max
 ^^^
 
 If the percentile is "custom", then the data value corresponding to the
-maximum of the colormap scale (e.g. white in grayscale) can be set.
+maximum of the colormap scale (e.g., white in grayscale) can be set.
+
+From the API
+^^^^^^^^^^^^
+
+To set the percentile for just the image being displayed::
+
+    viewer = imviz.default_viewer
+    viewer.cuts = '95%'  # Preset
+    viewer.cuts = (0, 1000)  # Custom
+
+To set the percentile for all the images at once::
+
+    plot_options = imviz.plugins['Plot Options']
+    plot_options.select_all()
+
+    # Preset
+    plot_options.stretch_preset = '95%'
+
+    # Custom
+    plot_options.stretch_preset = 'Custom'
+    plot_options.stretch_vmin = 0
+    plot_options.stretch_vmax = 1000
 
 Colormap
 --------
@@ -305,12 +351,17 @@ The spectrum of colors used to visualize data can be changed using this drop dow
 From the API
 ^^^^^^^^^^^^
 
-From the API within the Jupyter notebook::
+To set the colormap for just the image being displayed::
 
     viewer = imviz.default_viewer
-    viewer.cuts = '95%'
     viewer.colormap_options
     viewer.set_colormap('Viridis')
+
+To set the colormap for all the images at once::
+
+    plot_options = imviz.plugins['Plot Options']
+    plot_options.select_all()
+    plot_options.image_colormap = 'Viridis'
 
 .. _imviz_custom_colormap:
 
