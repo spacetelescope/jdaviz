@@ -63,6 +63,30 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
+3.0.2 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+- Fixed padding on logger overlay. [#1722]
+
+
 3.0.1 (2022-10-10)
 ==================
 
