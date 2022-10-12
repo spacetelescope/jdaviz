@@ -18,7 +18,7 @@ viewer_registry.add("g-table-viewer", label="Table", cls=TableViewer)
 
 
 class JdavizViewerMixin:
-    toolbar_nested = None
+    toolbar = None
     tools_nested = []
     _prev_limits = None
 
@@ -182,10 +182,15 @@ class JdavizViewerMixin:
         if msg.subset.label not in self._expected_subset_layers and msg.subset.label:
             self._expected_subset_layers.append(msg.subset.label)
 
-    def _initialize_toolbar_nested(self, default_tool_priority=[]):
-        # would be nice to call this from __init__,
-        # but because of inheritance order that isn't simple
-        self.toolbar_nested = NestedJupyterToolbar(self, self.tools_nested, default_tool_priority)
+    def initialize_toolbar(self, default_tool_priority=[]):
+        # NOTE: this overrides glue_jupyter.IPyWidgetView
+        self.toolbar = NestedJupyterToolbar(self, self.tools_nested, default_tool_priority)
+
+    @property
+    def tools(self):
+        # NOTE: this overrides the default list of tools for the BasicJupyterToolbar by
+        # returning a flattened version of self.tools_nested
+        return list(self.toolbar.tools.keys())
 
     @property
     def jdaviz_app(self):

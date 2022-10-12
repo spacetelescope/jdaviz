@@ -19,7 +19,7 @@ __all__ = ['MosvizProfileView', 'MosvizImageView', 'MosvizProfile2DView',
 
 
 @viewer_registry("mosviz-profile-viewer", label="Profile 1D (Mosviz)")
-class MosvizProfileView(BqplotProfileView, JdavizViewerMixin):
+class MosvizProfileView(JdavizViewerMixin, BqplotProfileView):
     default_class = Spectrum1D
 
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
@@ -34,7 +34,6 @@ class MosvizProfileView(BqplotProfileView, JdavizViewerMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._subscribe_to_layers_update()
-        self._initialize_toolbar_nested()
 
     def data(self, cls=None):
         return [layer_state.layer.get_object(cls=cls or self.default_class)
@@ -66,16 +65,7 @@ class MosvizProfileView(BqplotProfileView, JdavizViewerMixin):
 
 
 @viewer_registry("mosviz-image-viewer", label="Image 2D (Mosviz)")
-class MosvizImageView(BqplotImageView, JdavizViewerMixin):
-    # Whether to inherit tools from glue-jupyter automatically. Set this to
-    # False to have full control here over which tools are shown in case new
-    # ones are added in glue-jupyter in future that we don't want here.
-    inherit_tools = False
-
-    tools = ['jdaviz:homezoom', 'jdaviz:boxzoom',
-             'jdaviz:panzoom', 'bqplot:rectangle',
-             'bqplot:circle']
-
+class MosvizImageView(JdavizViewerMixin, BqplotImageView):
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
                     ['jdaviz:homezoom', 'jdaviz:prevzoom'],
@@ -90,7 +80,6 @@ class MosvizImageView(BqplotImageView, JdavizViewerMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._subscribe_to_layers_update()
-        self._initialize_toolbar_nested()
 
     def data(self, cls=None):
         return [layer_state.layer  # .get_object(cls=cls or self.default_class)
@@ -115,16 +104,6 @@ class MosvizProfile2DView(BqplotImageView, JdavizViewerMixin):
     #  axes, the default conversion class must handle cubes
     default_class = Spectrum1D
 
-    # replace the default tools (which include rect and circle region)
-    # with only the tools we want (likely the same as in SpecvizProfileView)
-    inherit_tools = False
-    tools = ['jdaviz:homezoom',
-             'jdaviz:boxzoom',
-             'jdaviz:xrangezoom',
-             'jdaviz:panzoom',
-             'jdaviz:panzoom_x',
-             'bqplot:xrange']
-
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
                     ['jdaviz:homezoom', 'jdaviz:prevzoom'],
@@ -139,7 +118,6 @@ class MosvizProfile2DView(BqplotImageView, JdavizViewerMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._subscribe_to_layers_update()
-        self._initialize_toolbar_nested()
         # Setup viewer option defaults
         self.state.aspect = 'auto'
 

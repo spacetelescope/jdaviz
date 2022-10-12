@@ -69,6 +69,8 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+- Fix subset selection tool conflicts caused by a duplicate toolbar. [#1679]
+
 Cubeviz
 ^^^^^^^
 

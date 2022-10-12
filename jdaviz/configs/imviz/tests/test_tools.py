@@ -10,7 +10,7 @@ class TestPanZoomTools(BaseImviz_WCS_WCS):
         v2 = self.imviz.create_image_viewer()
         self.imviz.app.add_data_to_viewer('imviz-1', 'has_wcs_1[SCI,1]')
 
-        t = v.toolbar_nested.tools['jdaviz:boxzoommatch']
+        t = v.toolbar.tools['jdaviz:boxzoommatch']
         # original limits (x_min, x_max, y_min, y_max): -0.5 9.5 -0.5 9.5
         t.activate()
         t.save_prev_zoom()
@@ -18,26 +18,26 @@ class TestPanZoomTools(BaseImviz_WCS_WCS):
         # second viewer should match these changes
         assert (v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max) == (1, 8, 1, 8)
 
-        v.toolbar_nested.tools['jdaviz:prevzoom'].activate()
+        v.toolbar.tools['jdaviz:prevzoom'].activate()
         # both should revert since they're still linked
         assert (v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max) == (-0.5, 9.5, -0.5, 9.5)  # noqa
         assert (v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max) == (-0.5, 9.5, -0.5, 9.5)  # noqa
 
-        v.toolbar_nested.tools['jdaviz:prevzoom'].activate()
+        v.toolbar.tools['jdaviz:prevzoom'].activate()
         # both should revert since they're still linked
         assert (v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max) == (1, 8, 1, 8)
         assert (v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max) == (1, 8, 1, 8)
 
-        v.toolbar_nested.tools['jdaviz:boxzoommatch'].deactivate()
-        v.toolbar_nested.tools['jdaviz:homezoom'].activate()
+        v.toolbar.tools['jdaviz:boxzoommatch'].deactivate()
+        v.toolbar.tools['jdaviz:homezoom'].activate()
         assert (v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max) == (-0.5, 9.5, -0.5, 9.5)  # noqa
         assert (v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max) == (1, 8, 1, 8)
-        v.toolbar_nested.tools['jdaviz:prevzoom'].activate()
+        v.toolbar.tools['jdaviz:prevzoom'].activate()
         assert (v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max) == (1, 8, 1, 8)
         assert (v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max) == (1, 8, 1, 8)
         t.deactivate()
 
-        t_linkedpan = v.toolbar_nested.tools['jdaviz:panzoommatch']
+        t_linkedpan = v.toolbar.tools['jdaviz:panzoommatch']
         t_linkedpan.activate()
         v.center_on((0, 0))
         # make sure both viewers moved to the new center
@@ -45,7 +45,7 @@ class TestPanZoomTools(BaseImviz_WCS_WCS):
         assert (v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max) == (-3.5, 3.5, -3.5, 3.5)  # noqa
         t_linkedpan.deactivate()
 
-        t_normpan = v.toolbar_nested.tools['jdaviz:imagepanzoom']
+        t_normpan = v.toolbar.tools['jdaviz:imagepanzoom']
         t_normpan.activate()
         t_normpan.on_click({'event': 'click', 'domain': {'x': 1, 'y': 1}})
         # make sure only first viewer re-centered since this mode is not linked mode
@@ -66,7 +66,7 @@ class TestSinglePixelRegion(BaseImviz_WCS_WCS):
     def test_singlepixelregion(self):
         self.imviz.link_data(link_type='wcs')
 
-        t = self.imviz.default_viewer.toolbar_nested.tools['jdaviz:singlepixelregion']
+        t = self.imviz.default_viewer.toolbar.tools['jdaviz:singlepixelregion']
         t.activate()
 
         # Create a region while viewing reference data.

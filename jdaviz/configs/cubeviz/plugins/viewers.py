@@ -14,18 +14,7 @@ __all__ = ['CubevizImageView', 'CubevizProfileView']
 
 
 @viewer_registry("cubeviz-image-viewer", label="Image 2D (Cubeviz)")
-class CubevizImageView(BqplotImageView, JdavizViewerMixin):
-    # Whether to inherit tools from glue-jupyter automatically. Set this to
-    # False to have full control here over which tools are shown in case new
-    # ones are added in glue-jupyter in future that we don't want here.
-    inherit_tools = False
-
-    # TODO: 'jdaviz:boxzoommatch' and 'jdaviz:panzoommatch' would be nice
-    # but they break spectrum collapse in Cubeviz if used as-is from Imviz.
-    tools = ['jdaviz:homezoom', 'jdaviz:boxzoommatch', 'jdaviz:boxzoom',
-             'jdaviz:simplepanzoommatch', 'jdaviz:panzoom', 'bqplot:rectangle',
-             'bqplot:circle', 'bqplot:ellipse', 'jdaviz:spectrumperspaxel']
-
+class CubevizImageView(JdavizViewerMixin, BqplotImageView):
     # categories: zoom resets, (zoom, pan), subset, select tools, shortcuts
     # NOTE: zoom and pan are merged here for space consideration and to avoid
     # overflow to second row when opening the tray
@@ -54,7 +43,6 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
         )
 
         self._subscribe_to_layers_update()
-        self._initialize_toolbar_nested()
         self.state.add_callback('reference_data', self._initial_x_axis)
 
         self.label_mouseover = None
@@ -186,17 +174,6 @@ class CubevizImageView(BqplotImageView, JdavizViewerMixin):
 
 @viewer_registry("cubeviz-profile-viewer", label="Profile 1D (Cubeviz)")
 class CubevizProfileView(SpecvizProfileView):
-    # Whether to inherit tools from glue-jupyter automatically. Set this to
-    # False to have full control here over which tools are shown in case new
-    # ones are added in glue-jupyter in future that we don't want here.
-    inherit_tools = False
-
-    tools = ['jdaviz:homezoom',
-             'jdaviz:boxzoom', 'jdaviz:xrangezoom',
-             'jdaviz:panzoom', 'jdaviz:panzoom_x',
-             'jdaviz:panzoom_y', 'bqplot:xrange',
-             'jdaviz:selectslice', 'jdaviz:selectline']
-
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
                     ['jdaviz:homezoom', 'jdaviz:prevzoom'],
