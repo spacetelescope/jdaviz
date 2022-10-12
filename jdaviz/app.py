@@ -1037,11 +1037,15 @@ class Application(VuetifyTemplate, HubListener):
             selected_data_items[data_id] = 'visible'
             self._update_selected_data_items(viewer_item.get('id'), selected_data_items)
         else:
-            # This block provides backward compatibility for version<=3.0, where the second arg
-            # in `add_to_viewer` was `data_path` instead of `data_label`. When `data_label` is
-            # a file path and that file exists, load its data
+            # This block breaks backward compatibility with version<=3.0, where
+            # the second arg in `add_data_to_viewer` was `data_path` instead of
+            # `data_label`. When `data_label` is a file path and that file exists,
+            # raise an error which asks if user means to *load* data.
             if os.path.exists(data_label):
-                self.load_data(data_label)
+                raise ValueError(f'The data label "{data_label}" is not available '
+                                 f'to add to the viewer, but it does specify a file path. '
+                                 f'If you intended to load the data from that file, use the '
+                                 f'`load_data` method or similar.')
             raise ValueError(
                 f"No data item found with label '{data_label}'. Label must be one "
                 "of:\n\t" + "\n\t".join([
