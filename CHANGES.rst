@@ -92,6 +92,9 @@ Specviz2d
 
 - Fixed padding on logger overlay. [#1722]
 
+- Changing the visibility of a data entry from the data menu no longer re-adds the data to the viewer
+  if it is already present, which avoids resetting defaults on the percentile and/or color or the
+  layer. [#1724]
 
 3.0.1 (2022-10-10)
 ==================
