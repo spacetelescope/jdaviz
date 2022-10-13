@@ -11,7 +11,7 @@ class TestContrastBiasTool(BaseImviz_WCS_NoWCS):
 
     def test_contrast_bias_mousedrag(self):
         # setup_class is already called by parent class, so we do this here.
-        self.cb_tool = self.viewer.toolbar_nested.tools['jdaviz:contrastbias']
+        self.cb_tool = self.viewer.toolbar.tools['jdaviz:contrastbias']
         self.cb_tool.activate()
 
         state = self.viewer.layers[get_top_layer_index(self.viewer)].state

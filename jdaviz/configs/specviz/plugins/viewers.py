@@ -24,18 +24,7 @@ __all__ = ['SpecvizProfileView']
 
 
 @viewer_registry("specviz-profile-viewer", label="Profile 1D (Specviz)")
-class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
-    # Whether to inherit tools from glue-jupyter automatically. Set this to
-    # False to have full control here over which tools are shown in case new
-    # ones are added in glue-jupyter in future that we don't want here.
-    inherit_tools = False
-
-    tools = ['jdaviz:homezoom',
-             'jdaviz:boxzoom', 'jdaviz:xrangezoom',
-             'jdaviz:panzoom', 'jdaviz:panzoom_x',
-             'jdaviz:panzoom_y', 'bqplot:xrange',
-             'jdaviz:selectline']
-
+class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
                     ['jdaviz:homezoom', 'jdaviz:prevzoom'],
@@ -54,7 +43,7 @@ class SpecvizProfileView(BqplotProfileView, JdavizViewerMixin):
         super().__init__(*args, **kwargs)
 
         self._subscribe_to_layers_update()
-        self._initialize_toolbar_nested(default_tool_priority=['jdaviz:selectslice'])
+        self.initialize_toolbar(default_tool_priority=['jdaviz:selectslice'])
         self._offscreen_lines_marks = OffscreenLinesMarks(self)
         self.figure.marks = self.figure.marks + self._offscreen_lines_marks.marks
 

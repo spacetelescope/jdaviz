@@ -38,9 +38,9 @@ class NestedJupyterToolbar(BasicJupyterToolbar):
             if isinstance(subtools, str):
                 subtools = [subtools]
             for i, tool_id in enumerate(subtools):
-                mode_cls = viewer_tool.members[tool_id]
-                mode = mode_cls(viewer)
-                self.add_tool(mode,
+                tool_cls = viewer_tool.members[tool_id]
+                tool = tool_cls(viewer)
+                self.add_tool(tool,
                               menu_ind=menu_ind,
                               has_suboptions=len(subtools) > 1,
                               primary=i == 0)
@@ -97,6 +97,9 @@ class NestedJupyterToolbar(BasicJupyterToolbar):
         }
 
     def vue_select_primary(self, args):
+        """
+        Activate the primary tool from a given menu index
+        """
         menu_ind, tool_id = args
         for search_tool_id, info in self.tools_data.items():
             if info['menu_ind'] == menu_ind and info['primary']:
@@ -121,5 +124,6 @@ class NestedJupyterToolbar(BasicJupyterToolbar):
                 }
             }
 
-        # and finally, set to be the active tool
+        # and finally, set to be the active tool (this triggers _on_change_v_model which in turn
+        # triggers BasicJupyterToolbar._on_change_active_tool)
         self.active_tool_id = tool_id

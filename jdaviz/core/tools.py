@@ -5,7 +5,8 @@ from echo import delay_callback
 from glue.config import viewer_tool
 from glue.core import HubListener
 from glue.viewers.common.tool import Tool
-from glue_jupyter.bqplot.common.tools import (CheckableTool, HomeTool, BqplotPanZoomMode,
+from glue_jupyter.bqplot.common.tools import (CheckableTool,
+                                              HomeTool, BqplotPanZoomMode,
                                               BqplotPanZoomXMode, BqplotPanZoomYMode,
                                               BqplotRectangleMode, BqplotCircleMode,
                                               BqplotEllipseMode, BqplotXRangeMode,
@@ -260,6 +261,12 @@ class SinglePixelRegion(CheckableTool):
     tool_tip = 'Define a single-pixel spatial region of interest'
 
     def activate(self):
+        # This is copied from glue-jupyter's BqplotSelectionTool (but we don't inherit
+        # from that because that in turn inherits from InteractCheckableTool which requires
+        # setting self.interact)
+        if self.viewer.session.application.get_setting('new_subset_on_selection_tool_change'):
+            self.viewer.session.edit_subset_mode.edit_subset = None
+
         self.viewer.add_event_callback(self.on_mouse_event, events=['click'])
 
     def deactivate(self):
