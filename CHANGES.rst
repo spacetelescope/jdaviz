@@ -65,6 +65,8 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
+- Updated example notebooks (except MosvizExample) to use in-flight JWST data. [#1680]
+
 3.0.2 (unreleased)
 ==================
 
