@@ -120,3 +120,12 @@ def test_blink(imviz_helper):
     # Blink backward again.
     viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'B', 'domain': {'x': 0, 'y': 0}})
     assert viewer.label_mouseover.value == '+2.00000e+00 '
+
+
+def test_compass_open_while_load(imviz_helper):
+    plg = imviz_helper.plugins['Compass']
+    plg.open_in_tray()
+
+    # Should not crash even if Compass is open in tray.
+    imviz_helper.load_data(np.ones((2, 2)))
+    assert len(imviz_helper.app.data_collection) == 1
