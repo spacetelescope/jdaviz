@@ -63,9 +63,6 @@ application. A notification will appear to confirm whether the data import
 was successful. Afterward, the new data set can be found in the :guilabel:`Data`
 tab of each viewer's options menu as described in :ref:`cubeviz-selecting-data`.
 
-Due to the limitations of GUI interactions, only filenames are accepted as inputs.
-If you wish to load native Python objects, see :ref:`cubeviz-import-api`.
-
 .. _cubeviz-import-api:
 
 Importing data via the API
@@ -119,6 +116,7 @@ You can create your own `~specutils.Spectrum1D` object by hand to load into Cube
     w = WCS(wcs_dict)
 
     cube = Spectrum1D(flux=flux, wcs=w)
+    cubeviz = Cubeviz()
     cubeviz.load_data(cube, data_label='My Cube')
     cubeviz.show()
 
