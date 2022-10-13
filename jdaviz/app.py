@@ -199,7 +199,8 @@ class Application(VuetifyTemplate, HubListener):
         # The application handler stores the state of the data and the
         #  underlying glue infrastructure
         self._application_handler = JupyterApplication(
-            settings={'new_subset_on_selection_tool_change': True})
+            settings={'new_subset_on_selection_tool_change': True,
+                      'single_global_active_tool': False})
 
         # Add a reference to this application to the Glue session object. This
         # allows the jdaviz Application object to then be accessed via e.g.
@@ -1498,10 +1499,6 @@ class Application(VuetifyTemplate, HubListener):
         dict
             Dictionary containing information for this viewer item.
         """
-        tools = viewer.toolbar_selection_tools
-        tools.borderless = True
-        tools.tile = True
-
         if vid is None:
             pfx = self.state.settings.get('configuration', str(name))
             n = self._next_viewer_num(pfx)
@@ -1518,9 +1515,7 @@ class Application(VuetifyTemplate, HubListener):
             'id': vid,
             'name': name or vid,
             'widget': "IPY_MODEL_" + viewer.figure_widget.model_id,
-            'toolbar_nested': "IPY_MODEL_" + viewer.toolbar_nested.model_id if viewer.toolbar_nested else '',  # noqa
-            'tools': "IPY_MODEL_" + viewer.toolbar_selection_tools.model_id,
-            'tools_open': False,
+            'toolbar': "IPY_MODEL_" + viewer.toolbar.model_id if viewer.toolbar else '',  # noqa
             'layer_options': "IPY_MODEL_" + viewer.layer_options.model_id,
             'viewer_options': "IPY_MODEL_" + viewer.viewer_options.model_id,
             'selected_data_items': {},  # data-label: visibility state (visible, hidden, mixed)

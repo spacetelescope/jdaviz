@@ -1,3 +1,96 @@
+3.1 (unreleased)
+================
+
+New Features
+------------
+
+- Add support for nonstandard viewer reference names [#1681]
+
+- Centralize data label generation if user does not provide a label with data load. Also
+  prevent duplicate data labels from being added to data collection. [#1672]
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+API Changes
+-----------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+- Fixed parser not loading x1d when s2d is provided. [#1717]
+
+Other Changes and Additions
+---------------------------
+
+3.0.2 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+- Fix subset selection tool conflicts caused by a duplicate toolbar. [#1679]
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+- Fixed padding on logger overlay. [#1722]
+
+
 3.0.1 (2022-10-10)
 ==================
 

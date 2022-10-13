@@ -15,18 +15,7 @@ __all__ = ['ImvizImageView']
 
 
 @viewer_registry("imviz-image-viewer", label="Image 2D (Imviz)")
-class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewerMixin):
-
-    # Whether to inherit tools from glue-jupyter automatically. Set this to
-    # False to have full control here over which tools are shown in case new
-    # ones are added in glue-jupyter in future that we don't want here.
-    inherit_tools = False
-
-    tools = ['jdaviz:homezoom', 'jdaviz:boxzoommatch', 'jdaviz:boxzoom',
-             'jdaviz:panzoommatch', 'jdaviz:imagepanzoom',
-             'jdaviz:contrastbias', 'jdaviz:blinkonce',
-             'bqplot:rectangle', 'bqplot:circle', 'bqplot:ellipse', 'jdaviz:singlepixelregion']
-
+class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewerMixin):
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
                     ['jdaviz:homezoom', 'jdaviz:prevzoom'],
@@ -44,7 +33,6 @@ class ImvizImageView(BqplotImageView, AstrowidgetsImageViewerMixin, JdavizViewer
         super().__init__(*args, **kwargs)
         self.init_astrowidgets_api()
         self._subscribe_to_layers_update()
-        self._initialize_toolbar_nested()
 
         self.label_mouseover = None
         self.compass = None

@@ -91,7 +91,7 @@ def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube):
     assert flux_viewer.label_mouseover.world_dec_deg == '27.0001999998'
 
     # Make sure linked pan mode works on all image viewers
-    t_linkedpan = flux_viewer.toolbar_nested.tools['jdaviz:simplepanzoommatch']
+    t_linkedpan = flux_viewer.toolbar.tools['jdaviz:simplepanzoommatch']
     t_linkedpan.activate()
     # TODO: When Cubeviz uses Astrowidgets, can just use center_on() for this part.
     with delay_callback(flux_viewer.state, 'x_min', 'x_max', 'y_min', 'y_max'):
