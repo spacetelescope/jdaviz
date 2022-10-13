@@ -2,7 +2,6 @@ import os
 import pathlib
 import re
 import uuid
-import warnings
 from inspect import isclass
 
 from ipywidgets import widget_serialization
@@ -1002,7 +1001,7 @@ class Application(VuetifyTemplate, HubListener):
         return data_label
 
     def add_data_to_viewer(self, viewer_reference, data_label,
-                           clear_other_data=False):
+                           visible=True, clear_other_data=False):
         """
         Plots a data set from the data collection in the specific viewer.
 
@@ -1013,40 +1012,17 @@ class Application(VuetifyTemplate, HubListener):
             in the yaml configuration file.
         data_label : str
             The Glue data label found in the ``DataCollection``.
+        visible : bool
+            Whether the layer should be initialized as visibile.
         clear_other_data : bool
             Removes all other currently plotted data and only shows the newly
             defined data set.
         """
-        viewer_item = self._viewer_item_by_reference(viewer_reference)
-        if viewer_item is None:  # Maybe they mean the ID
-            viewer_item = self._viewer_item_by_id(viewer_reference)
+        viewer_item = self._get_viewer_item(viewer_reference)
         if viewer_item is None:
             raise ValueError(f"Could not identify viewer with reference {viewer_reference}")
 
-        data_id = self._data_id_from_label(data_label)
-
-        if clear_other_data:
-            self._update_selected_data_items(viewer_item.get('id'), {})
-
-        selected_data_items = viewer_item.get('selected_data_items', {})
-
-        if data_id is not None:
-            selected_data_items[data_id] = 'visible'
-            self._update_selected_data_items(viewer_item.get('id'), selected_data_items)
-        else:
-            # This block breaks backward compatibility with version<=3.0, where
-            # the second arg in `add_data_to_viewer` was `data_path` instead of
-            # `data_label`. When `data_label` is a file path and that file exists,
-            # raise an error which asks if user means to *load* data.
-            if os.path.exists(data_label):
-                raise ValueError(f'The data label "{data_label}" is not available '
-                                 f'to add to the viewer, but it does specify a file path. '
-                                 f'If you intended to load the data from that file, use the '
-                                 f'`load_data` method or similar.')
-            raise ValueError(
-                f"No data item found with label '{data_label}'. Label must be one "
-                "of:\n\t" + "\n\t".join([
-                    data_item['name'] for data_item in self.state.data_items]))
+        self.set_data_visibility(viewer_item, data_label, visible=visible, replace=clear_other_data)
 
     def _set_plot_axes_labels(self, viewer_id):
         """
@@ -1073,16 +1049,25 @@ class Application(VuetifyTemplate, HubListener):
         data_label : str
             The Glue data label found in the ``DataCollection``.
         """
-        viewer_item = self._viewer_item_by_reference(viewer_reference)
-        data_id = self._data_id_from_label(data_label)
+        viewer_item = self._get_viewer_item(viewer_reference)
+        viewer_id = viewer_item['id']
+        viewer = self.get_viewer_by_id(viewer_id)
 
+        [data] = [x for x in self.data_collection if x.label == data_label]
+
+        viewer.remove_data(data)
+        viewer._layers_with_defaults_applied= [layer_info for layer_info in viewer._layers_with_defaults_applied  # noqa
+                                               if layer_info['data_label'] != data.label]  # noqa
+        remove_data_message = RemoveDataMessage(data, viewer,
+                                                viewer_id=viewer_id,
+                                                sender=self)
+        self.hub.broadcast(remove_data_message)
+
+        # update data menu entry
         selected_items = viewer_item['selected_data_items']
-
+        data_id = self._data_id_from_label(data_label)
         if data_id in selected_items:
             _ = selected_items.pop(data_id)
-
-        self._update_selected_data_items(
-            viewer_item['id'], selected_items)
 
     def _data_id_from_label(self, label):
         """
@@ -1278,6 +1263,29 @@ class Application(VuetifyTemplate, HubListener):
 
         return viewer_item
 
+    def _get_viewer_item(self, ref_or_id):
+        """
+        Retrieve a viewer item dictionary by reference or id (trying reference first).
+
+        Parameters
+        ----------
+        ref_or_id : str
+            Reference or ID for viewer defined in the yaml configuration file.
+
+        Returns
+        -------
+        viewer_item : dict
+            The dictionary containing the viewer instances and associated
+            attributes.
+        """
+        if isinstance(ref_or_id, dict):
+            return ref_or_id
+
+        viewer_item = self._viewer_item_by_reference(ref_or_id)
+        if viewer_item is None:  # Maybe they mean the ID
+            viewer_item = self._viewer_item_by_id(ref_or_id)
+        return viewer_item
+
     def vue_destroy_viewer_item(self, cid):
         """
         Callback for when viewer area tabs are destroyed. Finds the viewer item
@@ -1312,51 +1320,88 @@ class Application(VuetifyTemplate, HubListener):
 
         self.hub.broadcast(ViewerRemovedMessage(cid, sender=self))
 
-    def vue_data_item_selected(self, event):
+    def vue_data_item_unload(self, event):
         """
-        Callback for selection events in the front-end data list. Selections
-        mean that the checkbox associated with the list item has been toggled.
-        When the checkbox is toggled off, remove the data from the viewer;
-        when it is toggled on, add the data to the viewer.
+        Callback for selection events in the front-end data list when clicking to unload an entry
+        from the viewer.
+        """
+        data_label = self._get_data_item_by_id(event['item_id'])['name']
+        self.remove_data_from_viewer(event['id'], data_label)
+
+    def vue_data_item_visibility(self, event):
+        self.set_data_visibility(event['id'],
+                                 self._get_data_item_by_id(event['item_id'])['name'],
+                                 visible=event['visible'], replace=event.get('replace', False))
+
+    def set_data_visibility(self, viewer_reference, data_label, visible=True, replace=False):
+        """
+        Set the visibility of the layers corresponding to ``data_label`` in a given viewer.
 
         Parameters
         ----------
-        event : dict
-            Traitlet event provided the 'old' and 'new' values.
+        viewer_reference : str
+            Reference (or ID) of the viewer
+        data_label : str
+            Label of the data to set the visiblity.  If not already loaded in the viewer, the
+            data will automatically be loaded before setting the visibility
+        visible : bool
+            Whether to set the layer(s) to visible.
+        replace : bool
+            Whether to disable the visilility of all other layers in the viewer
         """
-        viewer_id, item_id, checked = event['id'], event['item_id'], event['checked']
-        viewer_item = self._viewer_item_by_id(viewer_id)
-        replace = event.get('replace', False)
+        viewer_item = self._get_viewer_item(viewer_reference)
+        viewer_id = viewer_item['id']
+        viewer = self.get_viewer_by_id(viewer_id)
 
-        if viewer_item is None:
-            raise ValueError(f'viewer {viewer_id} not found')
+        # if the data_label is in the app, but no loaded in the viewer, automatically load it first
+        viewer_data_labels = [layer.layer.label for layer in viewer.layers]
+        if data_label not in viewer_data_labels:
+            # TODO: catch case where not in data_collection?
+            [data] = [x for x in self.data_collection if x.label == data_label]
+            color_cycler = ColorCycler()
+            viewer.add_data(data, percentile=95, color=color_cycler())
 
+            add_data_message = AddDataMessage(data, viewer,
+                                              viewer_id=viewer_id,
+                                              sender=self)
+            self.hub.broadcast(add_data_message)
+
+        # set visibility state of all applicable layers
+        for layer in viewer.layers:
+            if layer.layer.data.label == data_label:
+                if visible and not layer.visible:
+                    layer.visible = True
+                    layer.update()
+                else:
+                    layer.visible = visible
+
+        # if replace, do another loop (we do a second loop to ensure the visible layer is added
+        # first BEFORE other layers are removed)
         if replace:
-            selected_items = {item_id: 'visible'}
-        elif checked:
-            selected_items = {**viewer_item['selected_data_items'], item_id: 'visible'}
-        else:
-            selected_items = {k: v for k, v in viewer_item['selected_data_items'].items() if k != item_id}  # noqa
+            for layer in viewer.layers:
+                if layer.layer.data.label != data_label:
+                    layer.visible = False
 
-        self._update_selected_data_items(viewer_id, selected_items)
-
-    def vue_data_item_visibility(self, event):
-        viewer_id, item_id, visible = event['id'], event['item_id'], event['visible']
-        viewer_item = self._viewer_item_by_id(viewer_id)
-
-        replace = event.get('replace', False)
+        # update data menu - selected_data_items should be READ ONLY, not modified by the user/UI
         selected_items = viewer_item['selected_data_items']
+        data_id = self._data_id_from_label(data_label)
+        selected_items[data_id] = 'visible' if visible else 'hidden'
+        if replace:
+            for id in selected_items:
+                if id != data_id:
+                    selected_items[id] = 'hidden'
 
-        if replace and visible:
-            # trace items remain selected, even if the mode is in replace
-            keep_selected = [k for k, v in viewer_item['selected_data_items'].items()
-                             if v != 'hidden' and
-                             self._get_data_item_by_id(k).get('type') == 'trace']
-            selected_items = {id: 'visible' if id == item_id or id in keep_selected else 'hidden' for id in selected_items.keys()}  # noqa
-        else:
-            selected_items[item_id] = 'visible' if visible else 'hidden'
+        # Sets the plot axes labels to be the units of the most recently
+        # active data.
+        viewer_data_labels = [layer.layer.label for layer in viewer.layers]
+        if len(viewer_data_labels) > 0 and self._jdaviz_helper._in_batch_load == 0:
+            active_data = self.data_collection[viewer_data_labels[0]]
+            if (hasattr(active_data, "_preferred_translation")
+                    and active_data._preferred_translation is not None):
+                self._set_plot_axes_labels(viewer_id)
 
-        self._update_selected_data_items(viewer_id, selected_items)
+            if self.config == 'imviz':
+                viewer.on_limits_change()  # Trigger compass redraw
 
     def vue_data_item_remove(self, event):
         self.data_collection.remove(self.data_collection[event['item_name']])
@@ -1377,82 +1422,6 @@ class Application(VuetifyTemplate, HubListener):
     def _get_data_item_by_id(self, data_id):
         return next((x for x in self.state.data_items
                      if x['id'] == data_id), None)
-
-    def _update_selected_data_items(self, viewer_id, selected_items):
-        # Find the active viewer
-        viewer_item = self._viewer_item_by_id(viewer_id)
-        viewer = self._viewer_by_id(viewer_id)
-
-        if viewer is None:
-            return
-
-        if isinstance(selected_items, list):
-            selected_items = {si: 'visible' for si in selected_items}
-        # Update the stored selected data items
-        viewer_item['selected_data_items'] = selected_items
-
-        active_data_labels = []
-
-        color_cycler = ColorCycler()
-
-        viewer_data_labels = [layer.layer.label for layer in viewer.layers]
-
-        # Include any selected data in the viewer
-        for data_id, visibility in selected_items.items():
-            data_item = self._get_data_item_by_id(data_id)
-
-            if data_item is None or data_item['name'] is None:
-                warnings.warn(f"No data item with id {data_id} found in "
-                              f"viewer {viewer_id}.")
-                continue
-            else:
-                label = self._get_data_item_by_id(data_id)['name']
-            active_data_labels.append(label)
-
-            if label not in viewer_data_labels:
-                [data] = [x for x in self.data_collection if x.label == label]
-                viewer.add_data(data, percentile=95, color=color_cycler())
-
-                add_data_message = AddDataMessage(data, viewer,
-                                                  viewer_id=viewer_id,
-                                                  sender=self)
-                self.hub.broadcast(add_data_message)
-
-            for layer in viewer.layers:
-                if layer.layer.data.label == label:
-                    if visibility == 'visible' and not layer.visible:
-                        layer.visible = True
-                        layer.update()
-
-                    else:
-                        layer.visible = visibility == 'visible'
-
-        # Remove any deselected data objects from viewer
-        viewer_data = [layer_state.layer
-                       for layer_state in viewer.state.layers
-                       if hasattr(layer_state, 'layer') and
-                       isinstance(layer_state.layer, BaseData)]
-
-        for data in viewer_data:
-            if data.label not in active_data_labels:
-                viewer.remove_data(data)
-                viewer._layers_with_defaults_applied= [layer_info for layer_info in viewer._layers_with_defaults_applied  # noqa
-                                                       if layer_info['data_label'] != data.label]
-                remove_data_message = RemoveDataMessage(data, viewer,
-                                                        viewer_id=viewer_id,
-                                                        sender=self)
-                self.hub.broadcast(remove_data_message)
-
-        # Sets the plot axes labels to be the units of the most recently
-        # active data.
-        if len(active_data_labels) > 0:
-            active_data = self.data_collection[active_data_labels[0]]
-            if (hasattr(active_data, "_preferred_translation")
-                    and active_data._preferred_translation is not None):
-                self._set_plot_axes_labels(viewer_id)
-
-            if self.config == 'imviz':
-                viewer.on_limits_change()  # Trigger compass redraw
 
     def _on_data_added(self, msg):
         """
@@ -1607,8 +1576,8 @@ class Application(VuetifyTemplate, HubListener):
             'toolbar': "IPY_MODEL_" + viewer.toolbar.model_id if viewer.toolbar else '',  # noqa
             'layer_options': "IPY_MODEL_" + viewer.layer_options.model_id,
             'viewer_options': "IPY_MODEL_" + viewer.viewer_options.model_id,
-            'selected_data_items': {},  # data-label: visibility state (visible, hidden, mixed)
-            'visible_layers': {},  # label: {color, label_suffix} (read-only access)
+            'selected_data_items': {},  # noqa data_id: visibility state (visible, hidden, mixed), READ-ONLY
+            'visible_layers': {},  # label: {color, label_suffix}, READ-ONLY
             'config': self.config,  # give viewer access to app config/layout
             'data_open': False,
             'collapse': True,

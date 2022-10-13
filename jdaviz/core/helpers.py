@@ -8,6 +8,7 @@ on the motivation behind this concept.
 """
 import re
 import warnings
+from contextlib import contextmanager
 
 import numpy as np
 import astropy.units as u
@@ -63,6 +64,10 @@ class ConfigHelper(HubListener):
         self.app.hub.subscribe(self, SubsetDeleteMessage,
                                handler=lambda msg: self._propagate_callback_to_viewers('_on_subset_delete', msg)) # noqa
 
+        self._in_batch_load = 0
+        self._delayed_link_labels = []
+        self._delayed_show_in_viewer_labels = {}  # label: viewer_reference pairs
+
     def _propagate_callback_to_viewers(self, method, msg):
         # viewers don't have access to the app/hub to subscribe to messages, so we'll
         # catch all messages here and pass them on to each of the viewers that
@@ -70,6 +75,31 @@ class ConfigHelper(HubListener):
         for viewer in self.app._viewer_store.values():
             if hasattr(viewer, method):
                 getattr(viewer, method)(msg)
+
+    @contextmanager
+    def batch_load(self):
+        """
+        Context manager to delay linking and loading data into viewers
+        """
+        # we'll use a counter instead of a boolean to allow the user to nest multiple
+        # context managers.  Once they're all exited, then the linking/showing will
+        # take place.
+        self._in_batch_load += 1
+        with self.app.data_collection.delay_link_manager_update():
+            # user entrypoint (anything within the with-statement will get called here)
+            yield
+
+        self._in_batch_load -= 1
+        if not self._in_batch_load:
+            # TODO: move this logic to the plugin which should listen for new data and link in real-time
+            # unless _in_batch_load.  We should then send a message when batch loading is complete so 
+            # plugins can have their own logic to catchup on delayed actions
+            self.link_data(link_type='pixels', error_on_fail=False)
+
+            for data_label, viewer_ref in self._delayed_show_in_viewer_labels.items():
+                self.app.set_data_visibility(viewer_ref, data_label,
+                                             visible=True, replace=False)
+            self._delayed_show_in_viewer_labels = {}
 
     def load_data(self, data, data_label=None, parser_reference=None, **kwargs):
         if data_label:

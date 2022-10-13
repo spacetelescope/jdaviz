@@ -38,11 +38,9 @@
       <j-tooltip tipid='viewer-data-disable'>
         <v-btn
           icon
-          @click="$emit('data-item-selected', {
+          @click="$emit('data-item-unload', {
             id: viewer.id,
-            item_id: item.id,
-            checked: false,
-            replace: false
+            item_id: item.id
           })"
         ><v-icon>mdi-close</v-icon></v-btn>
       </j-tooltip>
@@ -66,17 +64,6 @@ module.exports = {
   methods: {
     selectClicked() {
       prevVisibleState = this.visibleState
-
-      if (!this.isSelected) {
-        // data currently isn't loaded, so clicking will LOAD the data (and become visible immediately)
-        this.$emit('data-item-selected', {
-          id: this.$props.viewer.id,
-          item_id: this.$props.item.id,
-          checked: true,
-          replace: false
-        })
-      }
-
       // checkboxes control VISIBILITY of layers not loaded state
       // if we just loaded the data, its probably already visible, but we'll still make sure all
       // appropriate layers are visible and properly handle replace for non-multiselect
