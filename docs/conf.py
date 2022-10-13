@@ -260,7 +260,6 @@ for line in open('nitpick-exceptions'):
     nitpick_ignore.append((dtype, target))
 
 # Extra intersphinx in addition to what is already in sphinx-astropy
-intersphinx_mapping['astropy'] = ('https://docs.astropy.org/en/stable/', None)
 intersphinx_mapping['glue'] = ('http://docs.glueviz.org/en/stable/', None)
 intersphinx_mapping['glue_jupyter'] = ('https://glue-jupyter.readthedocs.io/en/stable/', None)
 intersphinx_mapping['regions'] = ('https://astropy-regions.readthedocs.io/en/stable/', None)

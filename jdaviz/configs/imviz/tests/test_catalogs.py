@@ -118,30 +118,31 @@ class TestCatalogs:
         assert catalogs_plugin.results_available
         assert catalogs_plugin.number_of_results == 2473
 
-    def test_from_file_parsing(self, imviz_helper, tmp_path):
-        catalogs_plugin = imviz_helper.app.get_tray_item_from_name('imviz-catalogs')
 
-        # _on_file_path_changed is fired when changing the selection in the file dialog
-        catalogs_plugin._on_file_path_changed({'new': './invalid_path'})
-        assert catalogs_plugin.from_file_message == 'File path does not exist'
+def test_from_file_parsing(imviz_helper, tmp_path):
+    catalogs_plugin = imviz_helper.app.get_tray_item_from_name('imviz-catalogs')
 
-        # observe('from_file') is fired when setting from_file from the API (or after clicking
-        # select in the file dialog)
-        with pytest.raises(ValueError, match='./invalid_path does not exist'):
-            catalogs_plugin.from_file = './invalid_path'
+    # _on_file_path_changed is fired when changing the selection in the file dialog
+    catalogs_plugin._on_file_path_changed({'new': './invalid_path'})
+    assert catalogs_plugin.from_file_message == 'File path does not exist'
 
-        # setting to a blank string from the API resets the catalog selection to the
-        # default/first entry
-        catalogs_plugin.from_file = ''
-        assert catalogs_plugin.catalog.selected == catalogs_plugin.catalog.choices[0]
+    # observe('from_file') is fired when setting from_file from the API (or after clicking
+    # select in the file dialog)
+    with pytest.raises(ValueError, match='./invalid_path does not exist'):
+        catalogs_plugin.from_file = './invalid_path'
 
-        not_table_file = tmp_path / 'not_table.tst'
-        not_table_file.touch()
-        catalogs_plugin._on_file_path_changed({'new': not_table_file})
-        assert catalogs_plugin.from_file_message == 'Could not parse file with astropy.table.QTable.read'  # noqa
+    # setting to a blank string from the API resets the catalog selection to the
+    # default/first entry
+    catalogs_plugin.from_file = ''
+    assert catalogs_plugin.catalog.selected == catalogs_plugin.catalog.choices[0]
 
-        qtable = QTable({'not_sky_centroid': [1, 2, 3]})
-        not_valid_table = tmp_path / 'not_valid_table.ecsv'
-        qtable.write(not_valid_table, overwrite=True)
-        catalogs_plugin._on_file_path_changed({'new': not_valid_table})
-        assert catalogs_plugin.from_file_message == 'Table does not contain required sky_centroid column'  # noqa
+    not_table_file = tmp_path / 'not_table.tst'
+    not_table_file.touch()
+    catalogs_plugin._on_file_path_changed({'new': not_table_file})
+    assert catalogs_plugin.from_file_message == 'Could not parse file with astropy.table.QTable.read'  # noqa
+
+    qtable = QTable({'not_sky_centroid': [1, 2, 3]})
+    not_valid_table = tmp_path / 'not_valid_table.ecsv'
+    qtable.write(not_valid_table, overwrite=True)
+    catalogs_plugin._on_file_path_changed({'new': not_valid_table})
+    assert catalogs_plugin.from_file_message == 'Table does not contain required sky_centroid column'  # noqa

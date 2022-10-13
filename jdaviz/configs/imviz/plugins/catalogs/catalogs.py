@@ -65,7 +65,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
             self.from_file_message = 'Could not parse file with astropy.table.QTable.read'
             return
 
-        if 'sky_centroid' not in table.keys():
+        if 'sky_centroid' not in table.colnames:
             self.from_file_message = 'Table does not contain required sky_centroid column'
             return
 
