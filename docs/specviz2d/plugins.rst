@@ -94,11 +94,12 @@ The background step of the plugin allows for creating background and background-
 images via `specreduce.background <https://specreduce.readthedocs.io/en/latest/#module-specreduce.background>`_.
 
 Once you interact with any of the inputs in the background step or hover over that area
-of the plugin, the live visualization in the 2d spectrum viewer will change to show the center 
+of the plugin, the live visualization in the 2D spectrum viewer will change to show the center 
 (dotted line) and edges (solid lines) of the background region(s).  The 1D representation of the
-background will also be visualized in the 1D spectrum viewer (thin solid line).
+background will also be visualized in the 1D spectrum viewer (thin, solid line).
 
-Choose between creating the background around the trace defined in the Trace section, or around a "Manual" flat trace.
+Backgrounds can either be created around the trace defined in the earlier Trace section or around a new,
+flat trace by selecting "Manual" in the Background Type dropdown.
 
 To visualize the resulting background or background-subtracted image, click on the respective panel,
 and choose a label for the new data entry.  The exported images will now appear in the data dropdown
