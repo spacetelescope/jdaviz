@@ -41,9 +41,9 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
     uncert_viewer_reference_name = app._jdaviz_helper._default_uncert_viewer_reference_name
     spectrum_viewer_reference_name = app._jdaviz_helper._default_spectrum_viewer_reference_name
 
-    if data_type is not None and data_type.lower() not in ['flux', 'mask', 'uncert']:
-        msg = f"Data type must be one of 'flux', 'mask', or 'uncert' but got '{data_type}'"
-        raise TypeError(msg)
+    if data_type is not None and data_type.lower() not in ('flux', 'mask', 'uncert'):
+        raise TypeError("Data type must be one of 'flux', 'mask', or 'uncert' "
+                        f"but got '{data_type}'")
 
     # If the file object is an hdulist or a string, use the generic parser for
     #  fits files.
@@ -57,7 +57,7 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
             spectrum_viewer_reference_name=spectrum_viewer_reference_name,
             uncert_viewer_reference_name=uncert_viewer_reference_name
         )
-    elif isinstance(file_obj, str) and os.path.exists(file_obj):
+    elif isinstance(file_obj, str):
         file_name = os.path.basename(file_obj)
 
         with fits.open(file_obj) as hdulist:
@@ -101,7 +101,7 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
     # If the data types are custom data objects, use explicit parsers. Note
     #  that this relies on the glue-astronomy machinery to turn the data object
     #  into something glue can understand.
-    elif isinstance(file_obj, Spectrum1D):
+    elif isinstance(file_obj, Spectrum1D) and file_obj.flux.ndim in (1, 3):
         if file_obj.flux.ndim == 3:
             _parse_spectrum1d_3d(
                 app, file_obj, data_label=data_label,
@@ -321,7 +321,7 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None,
     if data_label is None:
         data_label = "Unknown spectrum object"
 
-    for attr in ["flux", "mask", "uncertainty"]:
+    for attr in ("flux", "mask", "uncertainty"):
         val = getattr(file_obj, attr)
         if val is None:
             continue
@@ -351,11 +351,9 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None,
         if attr == 'flux':
             app.add_data_to_viewer(flux_viewer_reference_name, cur_data_label)
             app.add_data_to_viewer(spectrum_viewer_reference_name, cur_data_label)
-        elif attr == 'mask':
-            # We no longer auto-populate the mask cube into a viewer
-            pass
-        else:  # 'uncertainty'
+        elif attr == 'uncertainty':
             app.add_data_to_viewer(uncert_viewer_reference_name, cur_data_label)
+        # We no longer auto-populate the mask cube into a viewer
 
 
 def _parse_spectrum1d(app, file_obj, data_label=None, spectrum_viewer_reference_name=None):

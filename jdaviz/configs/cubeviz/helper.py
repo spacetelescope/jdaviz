@@ -38,7 +38,8 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
                         viewer.state.reset_limits()
                     break
             else:
-                viewer.state.x_att_pixel = ref_data.id["Pixel Axis 2 [x]"]
+                viewer.state.x_att = ref_data.id["Pixel Axis 2 [x]"]
+                viewer.state.reset_limits()
 
     def load_data(self, data, data_label=None, **kwargs):
         """
@@ -47,12 +48,18 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
 
         Parameters
         ----------
-        data : str or `~astropy.io.fits.HDUList`
-            A string file path or astropy FITS object pointing to the
-            data cube.
+        data : str, `~astropy.io.fits.HDUList`, or `~specutils.Spectrum1D`
+            A string file path, astropy FITS object pointing to the
+            data cube, or a spectrum object.
+        data_label : str or `None`
+            Data label to go with the given data. If not given,
+            one will be automatically generated.
+        **kwargs : dict
+            Extra keywords accepted by Jdaviz application-level parser.
+
         """
         if len(self.app.state.data_items) != 0:
-            raise RuntimeError('only one cube may be loaded per Cubeviz instance')
+            raise RuntimeError('Only one cube may be loaded per Cubeviz instance')
         if data_label:
             kwargs['data_label'] = data_label
 

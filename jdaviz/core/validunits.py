@@ -32,6 +32,9 @@ def create_spectral_equivalencies_list(spectrum,
                                                 u.lyr, u.AU, u.pc]):
     """Get all possible conversions from current spectral_axis_unit.
     """
+    if spectrum.spectral_axis.unit == u.pix:
+        return []
+
     # Get unit equivalencies.
     curr_spectral_axis_unit_equivalencies = u.Unit(
         spectrum.spectral_axis.unit).find_equivalent_units(
@@ -60,6 +63,9 @@ def create_spectral_equivalencies_list(spectrum,
 def create_flux_equivalencies_list(spectrum):
     """Get all possible conversions for flux from current flux units.
     """
+    if ((spectrum.flux.unit == u.count) or (spectrum.spectral_axis.unit == u.pix)):
+        return []
+
     # Get unit equivalencies.
     curr_flux_unit_equivalencies = u.Unit(
         spectrum.flux.unit).find_equivalent_units(
