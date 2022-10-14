@@ -294,7 +294,8 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
         return Spectrum1D(flux=data * data_unit, meta=metadata, **kw)
 
     # Coerce into list-like object
-    if not isinstance(data_obj, (list, tuple, SpectrumCollection)):
+    if (not isinstance(data_obj, (list, tuple, SpectrumCollection)) or
+            isinstance(data_obj, fits.HDUList)):
         data_obj = [data_obj]
 
     # If we're given a string, repeat it for each object
@@ -325,7 +326,7 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
                     with fits.open(data) as hdulist:
                         data = _parse_as_spectrum1d(hdulist, ext, transpose)
             elif isinstance(data, fits.HDUList):
-                data = _parse_as_spectrum1d(data, ext)
+                data = _parse_as_spectrum1d(data, ext, transpose)
 
             # Make metadata layout conform with other viz.
             data.meta = standardize_metadata(data.meta)

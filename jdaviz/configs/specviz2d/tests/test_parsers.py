@@ -1,5 +1,6 @@
 import pytest
 from asdf.asdf import AsdfWarning
+from astropy.io import fits
 from astropy.utils.data import download_file
 
 from jdaviz.utils import PRIHDR_KEY
@@ -37,11 +38,20 @@ def test_2d_parser_jwst(specviz2d_helper):
 
 
 @pytest.mark.remote_data
-def test_2d_parser_ext_transpose(specviz2d_helper):
+def test_2d_parser_ext_transpose_file(specviz2d_helper):
     fn = download_file('https://stsci.box.com/shared/static/e3n30l8vr7hkpnuy7g0t8c5nbl70632b.fits', cache=True) # noqa
 
     specviz2d_helper.load_data(spectrum_2d=fn, ext=2, transpose=True)
 
+    dc_0 = specviz2d_helper.app.data_collection[0]
+    assert dc_0.get_component('flux').shape == (3416, 29)
+
+
+@pytest.mark.remote_data
+def test_2d_parser_ext_transpose_hdulist(specviz2d_helper):
+    fn = download_file('https://stsci.box.com/shared/static/e3n30l8vr7hkpnuy7g0t8c5nbl70632b.fits', cache=True) # noqa
+    with fits.open(fn) as hdulist:
+        specviz2d_helper.load_data(spectrum_2d=hdulist, ext=2, transpose=True)
     dc_0 = specviz2d_helper.app.data_collection[0]
     assert dc_0.get_component('flux').shape == (3416, 29)
 
