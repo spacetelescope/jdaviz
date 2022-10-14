@@ -318,17 +318,19 @@ class SpectralExtraction(PluginTemplateMixin):
         default_bg_width = int(np.ceil(width / 10))
         default_width = min(default_bg_width, distance_from_edge * 2)
 
+        # sign for one-sided and single trace-pixel depending on whether the brightest pixel is
+        # above or below the middle of the image
+        sign = 1 if (brightest_pixel < width / 2) else -1
+
         if self.trace_pixel == 0:
             self.trace_pixel = brightest_pixel
         if self.trace_window == 0:
             self.trace_window = default_width
         if self.bg_trace_pixel == 0:
-            self.bg_trace_pixel = brightest_pixel
+            self.bg_trace_pixel = brightest_pixel + sign * default_bg_width * 2
         if self.bg_separation == 0:
             if default_bg_width * 2 >= distance_from_edge:
                 self.bg_type_selected = 'OneSided'
-                # we want positive separation if brightest_pixel near bottom
-                sign = 1 if (brightest_pixel < width / 2) else -1
                 self.bg_separation = sign * default_bg_width * 2
             else:
                 self.bg_separation = default_bg_width * 2
