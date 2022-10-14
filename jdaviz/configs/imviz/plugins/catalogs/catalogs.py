@@ -1,12 +1,14 @@
 import numpy as np
 import numpy.ma as ma
+import os
 
-from traitlets import List, Unicode, Bool, Int
+from traitlets import List, Unicode, Bool, Int, observe
 
 from astropy.table import QTable
 from astropy.coordinates import SkyCoord
 from astroquery.sdss import SDSS
 
+from jdaviz.configs.default.plugins.data_tools.file_chooser import FileChooser
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
                                         SelectPluginComponent)
@@ -28,16 +30,64 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
     template_file = __file__, "catalogs.vue"
     catalog_items = List([]).tag(sync=True)
     catalog_selected = Unicode("").tag(sync=True)
+    from_file = Unicode().tag(sync=True)
+    from_file_message = Unicode().tag(sync=True)
     results_available = Bool(False).tag(sync=True)
     number_of_results = Int(0).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # TODO: Add more catalogs.
+
         self.catalog = SelectPluginComponent(self,
                                              items='catalog_items',
                                              selected='catalog_selected',
-                                             manual_options=['SDSS'])
+                                             manual_options=['SDSS', 'From File...'])
+
+        # file chooser for From File
+        start_path = os.environ.get('JDAVIZ_START_DIR', os.path.curdir)
+        self._file_upload = FileChooser(start_path)
+        self.components = {'g-file-import': self._file_upload}
+        self._file_upload.observe(self._on_file_path_changed, names='file_path')
+        self._cached_table_from_file = {}
+
+    def _on_file_path_changed(self, event):
+        self.from_file_message = 'Checking if file is valid'
+        path = event['new']
+        if (path is not None
+                and not os.path.exists(path)
+                or not os.path.isfile(path)):
+            self.from_file_message = 'File path does not exist'
+            return
+
+        try:
+            table = QTable.read(path)
+        except Exception:
+            self.from_file_message = 'Could not parse file with astropy.table.QTable.read'
+            return
+
+        if 'sky_centroid' not in table.colnames:
+            self.from_file_message = 'Table does not contain required sky_centroid column'
+            return
+
+        # since we loaded the file already to check if its valid, we might as well cache the table
+        # so we don't have to re-load it when clicking search.  We'll only keep the latest entry
+        # though, but store in a dict so we can catch if the file path was changed from the API
+        self._cached_table_from_file = {path: table}
+        self.from_file_message = ''
+
+    @observe('from_file')
+    def _from_file_changed(self, event):
+        if len(event['new']):
+            if not os.path.exists(event['new']):
+                raise ValueError(f"{event['new']} does not exist")
+            self.catalog.selected = 'From File...'
+        else:
+            # NOTE: select_default will change the value even if the current value is valid
+            # (so will change from 'From File...' to the first entry in the dropdown)
+            self.catalog.select_default()
+
+    def vue_set_file_from_dialog(self, *args, **kwargs):
+        self.from_file = self._file_upload.file_path
 
     def search(self):
         """
@@ -45,7 +95,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
         if no results available)
         """
         # calling clear in the case the user forgot after searching
-        self.vue_do_clear()
+        self.clear()
 
         # gets the current viewer
         viewer = self.viewer.selected_obj
@@ -81,24 +131,37 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
             # finds all the sources in that region
             query_region_result = SDSS.query_region(skycoord_center, radius=zoom_radius,
                                                     data_release=17)
+            if query_region_result is None:
+                self.results_available = True
+                self.number_of_results = 0
+                self.app._catalog_source_table = None
+                return
+
             # TODO: Filter this table the same way as the actual displayed markers.
             # attach the table to the app for Python extraction
             self.app._catalog_source_table = query_region_result
-            self.results_available = True
+            skycoord_table = SkyCoord(query_region_result['ra'],
+                                      query_region_result['dec'],
+                                      unit='deg')
+
+        elif self.catalog_selected == 'From File...':
+            # all exceptions when going through the UI should have prevented setting this path
+            # but this exceptions might be raised here if setting from_file from the UI
+            table = self._cached_table_from_file.get(self.from_file, QTable.read(self.from_file))
+            self.app._catalog_source_table = table
+            skycoord_table = table['sky_centroid']
 
         else:
             self.results_available = False
             self.number_of_results = 0
+            self.app._catalog_source_table = None
             raise NotImplementedError(f"{self.catalog_selected} not a supported catalog")
 
-        # nothing happens in the case the query returned empty
-        if query_region_result is None:
+        self.results_available = True
+        if not len(skycoord_table):
             self.number_of_results = 0
+            self.app._catalog_source_table = None
             return
-
-        # TODO: Column names are catalog-dependent. Need to consider this when adding new catalogs.
-        # a table is created storing the 'ra' and 'dec' plottable points of each source found
-        skycoord_table = SkyCoord(query_region_result['ra'], query_region_result['dec'], unit='deg')
 
         # coordinates found are converted to pixel coordinates
         pixel_table = viewer.state.reference_data.coords.world_to_pixel(skycoord_table)

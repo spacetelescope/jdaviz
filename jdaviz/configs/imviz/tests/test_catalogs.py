@@ -26,6 +26,8 @@ import pytest
 
 from astropy.io import fits
 from astropy.nddata import NDData
+from astropy.coordinates import SkyCoord
+from astropy.table import QTable
 
 
 @pytest.mark.remote_data
@@ -63,7 +65,7 @@ class TestCatalogs:
     # data used: information based on this image -
     # https://dr12.sdss.org/fields/runCamcolField?field=76&camcol=5&run=7674
     # the z-band FITS image was downloaded and used
-    def test_plugin_image_with_result(self, imviz_helper):
+    def test_plugin_image_with_result(self, imviz_helper, tmp_path):
         arr = np.ones((1489, 2048))
 
         # header is based on the data provided above
@@ -99,3 +101,48 @@ class TestCatalogs:
         catalogs_plugin.vue_do_clear()
 
         assert not catalogs_plugin.results_available
+
+        # test loading from file
+        table = imviz_helper.app._catalog_source_table
+        skycoord_table = SkyCoord(table['ra'],
+                                  table['dec'],
+                                  unit='deg')
+        qtable = QTable({'sky_centroid': skycoord_table})
+        tmp_file = tmp_path / 'test.ecsv'
+        qtable.write(tmp_file, overwrite=True)
+
+        catalogs_plugin.from_file = str(tmp_file)
+        # setting filename from API will automatically set catalog to 'From File...'
+        assert catalogs_plugin.catalog.selected == 'From File...'
+        catalogs_plugin.vue_do_search()
+        assert catalogs_plugin.results_available
+        assert catalogs_plugin.number_of_results == 2473
+
+
+def test_from_file_parsing(imviz_helper, tmp_path):
+    catalogs_plugin = imviz_helper.app.get_tray_item_from_name('imviz-catalogs')
+
+    # _on_file_path_changed is fired when changing the selection in the file dialog
+    catalogs_plugin._on_file_path_changed({'new': './invalid_path'})
+    assert catalogs_plugin.from_file_message == 'File path does not exist'
+
+    # observe('from_file') is fired when setting from_file from the API (or after clicking
+    # select in the file dialog)
+    with pytest.raises(ValueError, match='./invalid_path does not exist'):
+        catalogs_plugin.from_file = './invalid_path'
+
+    # setting to a blank string from the API resets the catalog selection to the
+    # default/first entry
+    catalogs_plugin.from_file = ''
+    assert catalogs_plugin.catalog.selected == catalogs_plugin.catalog.choices[0]
+
+    not_table_file = tmp_path / 'not_table.tst'
+    not_table_file.touch()
+    catalogs_plugin._on_file_path_changed({'new': not_table_file})
+    assert catalogs_plugin.from_file_message == 'Could not parse file with astropy.table.QTable.read'  # noqa
+
+    qtable = QTable({'not_sky_centroid': [1, 2, 3]})
+    not_valid_table = tmp_path / 'not_valid_table.ecsv'
+    qtable.write(not_valid_table, overwrite=True)
+    catalogs_plugin._on_file_path_changed({'new': not_valid_table})
+    assert catalogs_plugin.from_file_message == 'Table does not contain required sky_centroid column'  # noqa
