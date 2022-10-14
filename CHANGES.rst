@@ -85,6 +85,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Fixed Compass crashing while open when loading data. [#1731]
+
 Mosviz
 ^^^^^^
 

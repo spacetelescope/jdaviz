@@ -71,6 +71,9 @@ class Compass(PluginTemplateMixin, ViewerSelectMixin):
         Input is rendered buffer from Matplotlib.
 
         """
-        self.icon = self.app.state.layer_icons.get(data_label)
+        if self.app.loading or (icn := self.app.state.layer_icons.get(data_label)) is None:
+            return
+
+        self.icon = icn
         self.data_label = data_label
         self.img_data = img_data
