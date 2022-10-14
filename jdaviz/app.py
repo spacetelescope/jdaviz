@@ -1422,6 +1422,8 @@ class Application(VuetifyTemplate, HubListener):
 
         color_cycler = ColorCycler()
 
+        viewer_data_labels = [layer.layer.label for layer in viewer.layers]
+
         # Include any selected data in the viewer
         for data_id, visibility in selected_items.items():
             data_item = self._get_data_item_by_id(data_id)
@@ -1434,14 +1436,14 @@ class Application(VuetifyTemplate, HubListener):
                 label = self._get_data_item_by_id(data_id)['name']
             active_data_labels.append(label)
 
-            [data] = [x for x in self.data_collection if x.label == label]
+            if label not in viewer_data_labels:
+                [data] = [x for x in self.data_collection if x.label == label]
+                viewer.add_data(data, percentile=95, color=color_cycler())
 
-            viewer.add_data(data, percentile=95, color=color_cycler())
-
-            add_data_message = AddDataMessage(data, viewer,
-                                              viewer_id=viewer_id,
-                                              sender=self)
-            self.hub.broadcast(add_data_message)
+                add_data_message = AddDataMessage(data, viewer,
+                                                  viewer_id=viewer_id,
+                                                  sender=self)
+                self.hub.broadcast(add_data_message)
 
             for layer in viewer.layers:
                 if layer.layer.data.label == label:
