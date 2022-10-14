@@ -49,3 +49,33 @@ def test_data_menu_toggles(specviz_helper, spectrum1d):
     selected_data_items = app._viewer_item_by_id('specviz-0')['selected_data_items']
     assert selected_data_items[data_ids[0]] == 'visible'
     assert selected_data_items[data_ids[1]] == 'mixed'
+
+
+def test_visibility_toggle(imviz_helper):
+    arr = np.arange(4).reshape((2, 2))
+    imviz_helper.load_data(arr, data_label='no_results_data')
+    app = imviz_helper.app
+    iv = app.get_viewer('imviz-0')
+
+    # regression test for https://github.com/spacetelescope/jdaviz/issues/1723
+    # test to make sure plot options (including percentile) stick when toggling visibility
+    # via the data menu checkboxes
+    selected_data_items = app._viewer_item_by_id('imviz-0')['selected_data_items']
+    data_ids = list(selected_data_items.keys())
+    assert selected_data_items[data_ids[0]] == 'visible'
+    assert iv.layers[0].visible is True
+    po = imviz_helper.plugins['Plot Options']
+    po.stretch_preset = 90
+    assert po.stretch_preset.value == 90
+
+    app.vue_data_item_visibility({'id': 'imviz-0',
+                                  'item_id': data_ids[0],
+                                  'visible': False})
+
+    assert iv.layers[0].visible is False
+
+    app.vue_data_item_visibility({'id': 'imviz-0',
+                                  'item_id': data_ids[0],
+                                  'visible': True})
+    assert iv.layers[0].visible is True
+    assert po.stretch_preset.value == 90
