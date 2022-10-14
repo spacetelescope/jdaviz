@@ -942,8 +942,8 @@ class Application(VuetifyTemplate, HubListener):
             label = f'{stem}[{ext}]'
             return label
 
-    def add_data_to_viewer(self, viewer_reference, data_path,
-                           clear_other_data=False, ext=None):
+    def add_data_to_viewer(self, viewer_reference, data_label,
+                           clear_other_data=False):
         """
         Plots a data set from the data collection in the specific viewer.
 
@@ -952,20 +952,18 @@ class Application(VuetifyTemplate, HubListener):
         viewer_reference : str
             The reference to the viewer defined with the ``reference`` key
             in the yaml configuration file.
-        data_path : str
-            Either the data filename or the Glue data label found in the ``DataCollection``.
+        data_label : str
+            The Glue data label found in the ``DataCollection``.
         clear_other_data : bool
             Removes all other currently plotted data and only shows the newly
             defined data set.
-        ext: str
-            The data extension to access from a file.  If data_path is a filename, ext
-            is required.
         """
         viewer_item = self._viewer_item_by_reference(viewer_reference)
         if viewer_item is None:  # Maybe they mean the ID
             viewer_item = self._viewer_item_by_id(viewer_reference)
         if viewer_item is None:
             raise ValueError(f"Could not identify viewer with reference {viewer_reference}")
+
         data_label = self._build_data_label(data_path, ext=ext)
         data_id = self._data_id_from_label(data_label)
 
@@ -978,6 +976,15 @@ class Application(VuetifyTemplate, HubListener):
             selected_data_items[data_id] = 'visible'
             self._update_selected_data_items(viewer_item['id'], selected_data_items)
         else:
+            # This block breaks backward compatibility with version<=3.0, where
+            # the second arg in `add_data_to_viewer` was `data_path` instead of
+            # `data_label`. When `data_label` is a file path and that file exists,
+            # raise an error which asks if user means to *load* data.
+            if os.path.exists(data_label):
+                raise ValueError(f'The data label "{data_label}" is not available '
+                                 f'to add to the viewer, but it does specify a file path. '
+                                 f'If you intended to load the data from that file, use the '
+                                 f'`load_data` method or similar.')
             raise ValueError(
                 f"No data item found with label '{data_label}'. Label must be one "
                 "of:\n\t" + "\n\t".join([
@@ -996,7 +1003,7 @@ class Application(VuetifyTemplate, HubListener):
 
         viewer.set_plot_axes()
 
-    def remove_data_from_viewer(self, viewer_reference, data_path, ext=None):
+    def remove_data_from_viewer(self, viewer_reference, data_label):
         """
         Removes a data set from the specified viewer.
 
@@ -1005,11 +1012,8 @@ class Application(VuetifyTemplate, HubListener):
         viewer_reference : str
             The reference to the viewer defined with the ``reference`` key
             in the yaml configuration file.
-        data_path : str
-            Either the data filename or the Glue data label found in the ``DataCollection``.
-        ext: str
-            The data extension to access from a file.  If data_path is a filename, ext
-            is required.
+        data_label : str
+            The Glue data label found in the ``DataCollection``.
         """
         viewer_item = self._viewer_item_by_reference(viewer_reference)
         data_label = self._build_data_label(data_path, ext=ext)

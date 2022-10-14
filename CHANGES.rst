@@ -75,6 +75,8 @@ Bug Fixes
 
 - Fixed blank tabbed viewers. [#1718]
 
+- Prevent `app.add_data_to_viewer` from loading data from disk [#1725]
+
 Cubeviz
 ^^^^^^^
 
