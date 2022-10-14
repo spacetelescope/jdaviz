@@ -269,7 +269,7 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
     )
 
     # Note: This is also used by Specviz2D
-    def _parse_as_spectrum1d(hdulist, ext):
+    def _parse_as_spectrum1d(hdulist, ext, transpose):
         # Parse as a FITS file and assume the WCS is correct
         data = hdulist[ext].data
         header = hdulist[ext].header
@@ -316,10 +316,14 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
             # FITS file.
             if _check_is_file(data):
                 try:
-                    data = Spectrum1D.read(data)
+                    if ext != 1 or transpose:
+                        with fits.open(data) as hdulist:
+                            data = _parse_as_spectrum1d(hdulist, ext, transpose)
+                    else:
+                        data = Spectrum1D.read(data)
                 except IORegistryError:
                     with fits.open(data) as hdulist:
-                        data = _parse_as_spectrum1d(hdulist, ext)
+                        data = _parse_as_spectrum1d(hdulist, ext, transpose)
             elif isinstance(data, fits.HDUList):
                 data = _parse_as_spectrum1d(data, ext)
 
