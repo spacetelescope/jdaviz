@@ -58,6 +58,8 @@ Specviz2d
 - Changing the visibility of a data entry from the data menu no longer re-adds the data to the viewer
   if it is already present, which avoids resetting defaults on the percentile and/or color or the
   layer. [#1724]
+  
+- Fixed handling of "Manual" background type in spectral extraction plugin. [#1737]
 
 3.0.1 (2022-10-10)
 ==================
