@@ -35,6 +35,14 @@ def test_2d_parser_jwst(specviz2d_helper):
     assert viewer_2d.label_mouseover.world_ra_deg == ''
     assert viewer_2d.label_mouseover.world_dec_deg == ''
 
+@pytest.mark.remote_data
+def test_2d_parser_jwst(specviz2d_helper):
+    fn = download_file('https://stsci.box.com/shared/static/exnkul627fcuhy5akf2gswytud5tazmw.fits', cache=True)  #    noqa
+
+    specviz2d_helper.load_data(spectrum_2d=fn, ext=2, transpose=True)
+
+    dc_0 = specviz2d_helper.app.data_collection[0]
+    assert dc_0.get_component('flux').shape == (387, 44)
 
 def test_2d_parser_no_unit(specviz2d_helper, mos_spectrum2d):
     specviz2d_helper.load_data(mos_spectrum2d, spectrum_2d_label='my_2d_spec')
