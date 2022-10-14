@@ -20,7 +20,7 @@ from glue.core.subset import Subset, MaskSubsetState
 from ipywidgets.widgets import widget_serialization
 
 from jdaviz.app import Application
-from jdaviz.core.events import SnackbarMessage
+from jdaviz.core.events import SnackbarMessage, ExitBatchLoadMessage
 from jdaviz.core.template_mixin import show_widget
 
 __all__ = ['ConfigHelper', 'ImageConfigHelper']
@@ -91,11 +91,9 @@ class ConfigHelper(HubListener):
 
         self._in_batch_load -= 1
         if not self._in_batch_load:
-            # TODO: move this logic to the plugin which should listen for new data and link in real-time
-            # unless _in_batch_load.  We should then send a message when batch loading is complete so 
-            # plugins can have their own logic to catchup on delayed actions
-            self.link_data(link_type='pixels', error_on_fail=False)
+            self.app.hub.broadcast(ExitBatchLoadMessage(sender=self.app))
 
+            # add any data to viewers that were requested but deferred
             for data_label, viewer_ref in self._delayed_show_in_viewer_labels.items():
                 self.app.set_data_visibility(viewer_ref, data_label,
                                              visible=True, replace=False)
