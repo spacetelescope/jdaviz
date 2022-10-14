@@ -707,7 +707,7 @@ class SpectralExtraction(PluginTemplateMixin):
 
         if self.bg_type_selected == 'Manual':
             bg = background.Background(self.bg_dataset.selected_obj.data,
-                                       trace, width=self.bg_width)
+                                       [trace], width=self.bg_width)
         elif self.bg_type_selected == 'OneSided':
             bg = background.Background.one_sided(self.bg_dataset.selected_obj.data,
                                                  trace,
