@@ -17,6 +17,8 @@ Imviz
 
 - Catalogs plugin now supports loading a JWST catalog from a local ECSV file. [#1707]
 
+- New "bulk_load" context manager to optimize loading multiple images. [#1742]
+
 Mosviz
 ^^^^^^
 
@@ -58,6 +60,8 @@ Bug Fixes
 
 - Disable unit conversion if spectral axis is in pixels or if flux
   is in counts, respectively. [#1734]
+
+- Improved performance when toggling visibility of data layers in data menu. [#1742]
 
 Cubeviz
 ^^^^^^^
