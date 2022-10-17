@@ -69,6 +69,7 @@ Other Changes and Additions
 
 - Updated example notebooks (except MosvizExample) to use in-flight JWST data. [#1680]
 
+
 3.0.2 (unreleased)
 ==================
 
@@ -82,6 +83,8 @@ Bug Fixes
 - Prevent `app.add_data_to_viewer` from loading data from disk [#1725]
 
 - Fix bug in creating and removing new image viewers from Imviz [#1741]
+
+- Updated Zenodo link in docs to resolve to latest version. [#1743]
 
 Cubeviz
 ^^^^^^^
