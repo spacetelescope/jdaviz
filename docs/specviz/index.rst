@@ -7,7 +7,7 @@
 Specviz
 #######
 
-.. image:: ../img/landing_gifs/Specviz_landing.gif
+.. image:: https://stsci.box.com/shared/static/qlrlsf12fl9v9wjy321hwrjk8d9jf5h8.gif
     :alt: Introductory video tour of the Specviz configuration and its features
 
 Specviz is a tool for visualization and quick-look analysis of 1D astronomical spectra.
