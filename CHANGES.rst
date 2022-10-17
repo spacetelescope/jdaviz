@@ -77,6 +77,8 @@ Bug Fixes
 
 - Prevent `app.add_data_to_viewer` from loading data from disk [#1725]
 
+- Fix bug in creating and removing new image viewers from Imviz [#1741]
+
 Cubeviz
 ^^^^^^^
 

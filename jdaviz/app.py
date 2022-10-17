@@ -1563,7 +1563,9 @@ class Application(VuetifyTemplate, HubListener):
         # Create the viewer item dictionary
         if name is None:
             name = viewer.__class__.__name__
-        new_viewer_item = self._create_viewer_item(viewer=viewer, vid=vid, name=name)
+        new_viewer_item = self._create_viewer_item(
+            viewer=viewer, vid=vid, name=name, reference=name
+        )
 
         new_stack_item = self._create_stack_item(
             container='gl-stack',
