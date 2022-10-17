@@ -20,7 +20,8 @@ def test_data_menu_toggles(specviz_helper, spectrum1d):
     assert np.all([layer.visible for layer in sv.layers])
 
     # disable (hide layer) for second entry
-    app.set_data_visibility('specviz-0', data_ids[-1], visible=False)
+    app.set_data_visibility('specviz-0', app._get_data_item_by_id(data_ids[-1])['name'],
+                            visible=False)
 
     selected_data_items = app._viewer_item_by_id('specviz-0')['selected_data_items']
     assert selected_data_items[data_ids[0]] == 'visible'
@@ -36,7 +37,8 @@ def test_data_menu_toggles(specviz_helper, spectrum1d):
     assert sv.layers[3].visible is False  # subset corresponding to second (hidden) data entry
 
     # enable data layer from menu and subset should also become visible
-    app.set_data_visibility('specviz-0', data_ids[-1], visible=True)
+    app.set_data_visibility('specviz-0', app._get_data_item_by_id(data_ids[-1])['name'],
+                            visible=True)
     assert np.all([layer.visible for layer in sv.layers])
 
     # manually hide just the data layer, and the visiblity state in the menu should show as mixed
@@ -64,10 +66,12 @@ def test_visibility_toggle(imviz_helper):
     po.stretch_preset = 90
     assert po.stretch_preset.value == 90
 
-    app.set_data_visibility('imviz-0', data_ids[0], visible=False)
+    app.set_data_visibility('imviz-0', app._get_data_item_by_id(data_ids[0])['name'],
+                            visible=False)
 
     assert iv.layers[0].visible is False
 
-    app.set_data_visibility('imviz-0', data_ids[0], visible=True)
+    app.set_data_visibility('imviz-0', app._get_data_item_by_id(data_ids[0])['name'],
+                            visible=True)
     assert iv.layers[0].visible is True
     assert po.stretch_preset.value == 90

@@ -189,6 +189,7 @@ class Application(VuetifyTemplate, HubListener):
 
     def __init__(self, configuration=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._jdaviz_helper = None
         self._verbosity = 'warning'
         self._history_verbosity = 'info'
         self.popout_button = PopoutButton(self)
@@ -1353,10 +1354,20 @@ class Application(VuetifyTemplate, HubListener):
         viewer_id = viewer_item['id']
         viewer = self.get_viewer_by_id(viewer_id)
 
-        # if the data_label is in the app, but no loaded in the viewer, automatically load it first
+        # if the data_label is in the app, but not loaded in the viewer, automatically load it first
         viewer_data_labels = [layer.layer.label for layer in viewer.layers]
         if data_label not in viewer_data_labels:
-            # TODO: catch case where not in data_collection?
+            dc_labels = [data.label for data in self.data_collection]
+            if data_label not in dc_labels:
+                if os.path.exists(data_label):
+                    raise ValueError(f'The data label "{data_label}" is not available '
+                                     f'to add to the viewer, but it does specify a file path. '
+                                     f'If you intended to load the data from that file, use the '
+                                     f'`load_data` method or similar.')
+                raise ValueError(
+                    f"No data item found with label '{data_label}'. Label must be one "
+                    "of:\n\t" + "\n\t".join(dc_labels))
+
             [data] = [x for x in self.data_collection if x.label == data_label]
             color_cycler = ColorCycler()
             viewer.add_data(data, percentile=95, color=color_cycler())
@@ -1394,7 +1405,7 @@ class Application(VuetifyTemplate, HubListener):
         # Sets the plot axes labels to be the units of the most recently
         # active data.
         viewer_data_labels = [layer.layer.label for layer in viewer.layers]
-        if len(viewer_data_labels) > 0 and self._jdaviz_helper._in_batch_load == 0:
+        if len(viewer_data_labels) > 0 and getattr(self._jdaviz_helper, '_in_batch_load', 0) == 0:
             active_data = self.data_collection[viewer_data_labels[0]]
             if (hasattr(active_data, "_preferred_translation")
                     and active_data._preferred_translation is not None):

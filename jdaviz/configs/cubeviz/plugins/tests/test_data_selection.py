@@ -21,15 +21,16 @@ def test_data_selection(cubeviz_helper, spectrum1d_cube, tmpdir):
     app.set_data_visibility('cubeviz-0', app.state.data_items[1]['name'],
                             visible=True, replace=True)
 
-    assert len(fv.data()) == 1
-    assert fv.data()[0].label == app.state.data_items[1]['name']
+    assert len(fv.layers) == 2
+    assert len([layer for layer in fv.layers if layer.visible]) == 1
 
     # but also has the option to display multiple layers
     app.set_data_visibility('cubeviz-0', app.state.data_items[0]['name'],
                             visible=True, replace=False)
 
-    assert len(fv.data()) == 2
+    assert len(fv.layers) == 2
+    assert len([layer for layer in fv.layers if layer.visible]) == 2
 
     app.vue_data_item_remove({'item_name': app.state.data_items[1]['name']})
 
-    assert len(fv.data()) == 1
+    assert len(fv.layers) == 1
