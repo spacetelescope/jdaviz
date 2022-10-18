@@ -210,4 +210,4 @@ which is licensed under the BSD 3-clause licence. See the
 `licenses <https://github.com/spacetelescope/jdaviz/tree/main/licenses>`_
 folder for more information.
 
-Cite ``jdaviz`` via our Zenodo record: https://doi.org/10.5281/zenodo.6824713.
+Cite ``jdaviz`` via our Zenodo record: https://doi.org/10.5281/zenodo.5513927.
