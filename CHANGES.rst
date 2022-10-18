@@ -22,6 +22,8 @@ Specviz
 
 - Spectrum viewer now shows X and Y values under cursor. [#1759]
 
+- Switch to opt-in concatenation for multi-order x1d spectra [#1659]
+
 Specviz2d
 ^^^^^^^^^
 
@@ -76,6 +78,7 @@ Bug Fixes
 ---------
 
 - Change box zoom to always maintain aspect ratio. [#1726]
+
 
 Cubeviz
 ^^^^^^^
