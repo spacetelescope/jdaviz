@@ -79,6 +79,8 @@ Bug Fixes
 
 - Fix bug in creating and removing new image viewers from Imviz [#1741]
 
+- Updated Zenodo link in docs to resolve to latest version. [#1743]
+
 Cubeviz
 ^^^^^^^
 
