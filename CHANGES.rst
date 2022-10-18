@@ -69,8 +69,28 @@ Other Changes and Additions
 
 - Updated example notebooks (except MosvizExample) to use in-flight JWST data. [#1680]
 
+3.0.3 (unreleased)
+==================
 
-3.0.2 (unreleased)
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+3.0.2 (2022-10-18)
 ==================
 
 Bug Fixes
@@ -86,19 +106,10 @@ Bug Fixes
 
 - Updated Zenodo link in docs to resolve to latest version. [#1743]
 
-Cubeviz
-^^^^^^^
-
 Imviz
 ^^^^^
 
 - Fixed Compass crashing while open when loading data. [#1731]
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
 
 Specviz2d
 ^^^^^^^^^
