@@ -125,7 +125,7 @@ def get_image_data_iterator(app, file_obj, data_label, ext=None):
 
     # Roman 2-D datamodels
     elif rdd is not None and issubclass(file_obj.__class__, rdd.DataModel):
-        data_iter = _roman_2d_asdf_to_glue_data(file_obj, data_label)
+        data_iter = _roman_2d_asdf_to_glue_data(file_obj, data_label, ext=ext)
 
     elif isinstance(file_obj, NDData):
         data_iter = _nddata_to_glue_data(file_obj, data_label)
@@ -288,8 +288,14 @@ def _jwst2data(file_obj, ext, data_label):
 # ---- Functions that handle input from Roman ASDF files -----
 
 
-def _roman_2d_asdf_to_glue_data(file_obj, data_label):
-    ext_list = ['data', 'dq', 'err', 'var_poisson', 'var_rnoise']
+def _roman_2d_asdf_to_glue_data(file_obj, data_label, ext=None):
+
+    if ext == '*':
+        ext_list = ['data', 'dq', 'err', 'var_poisson', 'var_rnoise']
+    elif isinstance(ext, list):
+        ext_list = ext
+    else:
+        ext_list = [ext]
 
     for ext in ext_list:
         comp_label = ext.lower()
