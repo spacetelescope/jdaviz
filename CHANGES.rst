@@ -14,43 +14,10 @@ Bug Fixes
 
 - Updated Zenodo link in docs to resolve to latest version. [#1743]
 
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
-
-- Fixed padding on logger overlay. [#1722]
-
-
-3.0.2 (unreleased)
-==================
-
-Bug Fixes
----------
-
-Cubeviz
-^^^^^^^
-
 Imviz
 ^^^^^
 
 - Fixed Compass crashing while open when loading data. [#1731]
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
 
 Specviz2d
 ^^^^^^^^^
