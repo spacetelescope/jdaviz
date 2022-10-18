@@ -32,7 +32,7 @@ Choose your adventure:
 
 * :ref:`release-feature`
 * :ref:`release-bugfix`
-* :ref:`release-long`
+* :ref:`release-old`
 
 
 .. _release-feature:
@@ -42,8 +42,8 @@ Releasing a minor or major version
 
 The automated release infrastructure has proven to be reliable for a good number
 of releases now, so we've been using this faster version as the default release
-procedure. If you are new to releasing, you may want to follow the longer
-procedure laid out in the :ref:`release-long` section.
+procedure. The longer procedure we previously used is still available in the
+:ref:`release-old` section.
 
 You can do a release from your fork directly without a clean code check-out.
 
@@ -70,7 +70,7 @@ You can do a release from your fork directly without a clean code check-out.
 
 #. Update the ``CITATION.cff`` file's ``date-released`` and ``version`` fields.
    If there are new contributors to the project, add them in the ``authors``
-   section. 
+   section.
 
 #. Update .github/workflows/ci_workflows.yml to add specific version branch to the
    push/pull request specs. The relevant entries should look like::
@@ -119,8 +119,9 @@ You can do a release from your fork directly without a clean code check-out.
    using your admin power. If you do not have sufficient access to do that,
    you will have to update it via a pull request from your fork. Make sure the
    section for the version just released matches the finalized change log from
-   the release branch you creates, and add a new section to the top of
-   ``CHANGES.rst`` as follows, replacing ``A.B`` with the next non-bugfix version::
+   the release branch you created, and add a new section to the top of
+   ``CHANGES.rst`` as follows, replacing ``A.B`` with the next non-bugfix version,
+   and ``A.C`` with the version you just released::
 
      A.B (unreleased)
      ================
@@ -182,6 +183,12 @@ You can do a release from your fork directly without a clean code check-out.
      Other Changes and Additions
      ---------------------------
 
+     A.C.1 (unreleased)
+     ==================
+
+     Bug Fixes
+     ---------
+
 #. Commit your changes of the, uh, change log with a message, "Back to development: A.B.dev"
 
 #. Follow procedures for :ref:`release-milestones`.
@@ -197,6 +204,110 @@ Congratulations, you have just released a new version of Jdaviz!
 Releasing a bugfix version
 ==========================
 
+The procedure for a bugfix release is a little different from a feature release - you will
+be cherry-picking bugfixes into an existing release branch, and will also need to do some
+cleanup on the ``main`` branch.
+
+#. Lock down the ``main`` branch of the repository by setting the
+   `branch protection <https://github.com/spacetelescope/jdaviz/settings/branches>`_
+   rule for ``main`` to some high number required to merge, so that more PRs don't
+   get merged while you're releasing.
+
+#. Review the ``CHANGES.rst`` file on ``main`` to see which PRs were listed in the unreleased
+   bugfix version section (this should be immediately below the unreleased feature section).
+   For example, if the top section is for 3.1, there should be an unreleased 3.0.X section
+   below that, where X is a number greater than 0.
+
+#. Checkout the ``vX.Y.x`` branch corresponding to the last feature release.
+
+#. For any PRs to be released in this bugfix version, find the corresponding
+   `merge commit <https://github.com/spacetelescope/jdaviz/commits/main>`_ in main, copy the
+   full SHA of that commit, and use git's cherry-pick command to add those commits to the
+   ``vX.Y.x`` branch, resolving any conflicts::
+
+       git cherry-pick -x -m1 [commit hash]
+
+#. The ``CHANGES.rst`` should now have all of the bug fixes to be released. Delete the
+   unreleased feature version section at the top of the changelog (if that was pulled in
+   while cherry-picking) and update the release date of the bugfix release section
+   from ``unreleased`` to current date in the ``yyyy-mm-dd`` format. Remove any empty
+   subsections.
+
+#. Update the ``CITATION.cff`` file's ``date-released`` and ``version`` fields.
+   If there are new contributors to the project, add them in the ``authors``
+   section.
+
+#. Do not forget to commit your changes from the last two steps::
+
+     git add CHANGES.rst
+     git add CITATION.cff
+     git commit -m "Preparing release vX.Y.0"
+
+#. Push the ``vX.Y.x`` branch to upstream.
+   Make sure the CI passes. If any of the CI fails, especially the job that
+   says "Release", abandon this way. Stop here; do not continue! Otherwise,
+   go to the next step.
+
+#. Go to `Releases on GitHub <https://github.com/spacetelescope/jdaviz/releases>`_
+   and `create a new GitHub release <https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository>`_
+   targeting the release branch ``vX.Y.x`` (not ``main``!), and give it a new ``vX.Y.Z``
+   tag (do not choose any existing tags). Copy the relevant section from CHANGES.rst
+   into the release notes section and clean up any formatting problems.
+
+#. The most important step: Click the ``Publish Release`` button!
+
+#. Check `Release on Actions <https://github.com/spacetelescope/jdaviz/actions/workflows/publish.yml>`_
+   to make sure that the new GitHub release triggered PyPI upload successfully.
+   Also check that `files on PyPI <https://pypi.org/project/jdaviz/#files>`_ contain
+   both the source tarball and the wheel for that release.
+
+#. Check `RTD builds <https://readthedocs.org/projects/jdaviz/builds/>`_ to make sure
+   that documentation built successfully for both ``latest`` and the new ``vX.Y.Z`` tag.
+
+#. Check `Zenodo page for Jdaviz <https://doi.org/10.5281/zenodo.5513927>`_.
+   It should have picked up the GitHub Release automatically.
+
+#. The release is basically done, but now you have to set it up for the
+   *next* release cycle. Checkout the ``main`` branch and update ``CHANGES.rst``
+   using your admin power. If you do not have sufficient access to do that,
+   you will have to update it via a pull request from your fork. Make sure the
+   section for the version just released matches the finalized change log from
+   the release branch (be sure to change ``unreleased`` to the appropriate date),
+   and add a new bugfix release section below the next feature
+   release section as follows, replacing ``X.Y.Z`` with the next minor release
+   number. For example, if you just released ``3.0.2``, a section for ``3.0.3``
+   would go below the section for ``3.1``::
+
+     X.Y.Z (unreleased)
+     ==================
+
+     Bug Fixes
+     ---------
+
+     Cubeviz
+     ^^^^^^^
+
+     Imviz
+     ^^^^^
+
+     Mosviz
+     ^^^^^^
+
+     Specviz
+     ^^^^^^^
+
+     Specviz2d
+     ^^^^^^^^^
+
+#. Commit your changes of the, uh, change log with a message, "Back to development: A.B.dev"
+
+#. Follow procedures for :ref:`release-milestones`.
+
+#. For your own sanity unrelated to the release, grab the new tag for your fork::
+
+     git fetch upstream --tags
+
+Congratulations, you have just released a new version of Jdaviz!
 
 .. _release-milestones:
 
@@ -205,10 +316,13 @@ Milestones bookkeeping
 
 #. Go to `Milestones <https://github.com/spacetelescope/jdaviz/milestones>`_.
 
-#. Create a new milestone for the next release.
+#. Create a new milestone for the next release and the next bugfix release, if
+   doing a feature release, or for just the next bugfix release if you just did
+   one.
 
 #. For the milestone of this release, if there are any open issues or pull requests
-   still milestoned to it, move their milestones to the next release.
+   still milestoned to it, move their milestones to the next feature or bugfix
+   milestone as appropriate.
 
 #. Make sure the milestone of this release ends up with "0 open" and then close it.
 
@@ -217,10 +331,15 @@ Milestones bookkeeping
    have created in ``CHANGES.rst`` during the release process.
 
 
-.. _release-long:
+.. _release-old:
 
-The long way
-============
+The old, long way
+=================
+
+.. note::
+   This section is kept mainly for historical purposes, and to show how many of the
+   things that are now automated can be done manually. Note that it is not up-to-date
+   with the change to a branched release strategy.
 
 This way is recommended if you are new to the process or wish to manually run
 some automated steps locally. It takes longer but has a smaller risk factor.
