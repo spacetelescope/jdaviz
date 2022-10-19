@@ -2,6 +2,7 @@ import os
 import pathlib
 import re
 import uuid
+import warnings
 from inspect import isclass
 
 from ipywidgets import widget_serialization
@@ -899,6 +900,9 @@ class Application(VuetifyTemplate, HubListener):
         if not data_label and hasattr(data, "label"):
             data_label = data.label
         data_label = self.return_unique_name(data_label)
+        if data_label in self.data_collection.labels:
+            warnings.warn(f"Overwriting existing data entry with label '{data_label}'")
+
         self.data_collection[data_label] = data
 
         # Send out a toast message
