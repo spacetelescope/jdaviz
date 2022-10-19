@@ -94,9 +94,12 @@ The background step of the plugin allows for creating background and background-
 images via `specreduce.background <https://specreduce.readthedocs.io/en/latest/#module-specreduce.background>`_.
 
 Once you interact with any of the inputs in the background step or hover over that area
-of the plugin, the live visualization will change to show the center (dotted line) and edges
-(solid lines) of the background region(s).  Choose between creating the background
-around the trace defined in the Trace section, or around a "Manual" flat trace.
+of the plugin, the live visualization in the 2D spectrum viewer will change to show the center 
+(dotted line) and edges (solid lines) of the background region(s).  The 1D representation of the
+background will also be visualized in the 1D spectrum viewer (thin, solid line).
+
+Backgrounds can either be created around the trace defined in the earlier Trace section or around a new,
+flat trace by selecting "Manual" in the Background Type dropdown.
 
 To visualize the resulting background or background-subtracted image, click on the respective panel,
 and choose a label for the new data entry.  The exported images will now appear in the data dropdown
@@ -108,7 +111,10 @@ To export and access the specreduce Background object defined in the plugin, cal
 
   bg = sp_ext.export_bg()
 
-To access the background image or background-subtracted image as a :class:`~specutils.Spectrum1D` object, call :meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.export_bg_img` or :meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.export_bg_img`, respectively.
+To access the background image, background spectrum, or background-subtracted image as a :class:`~specutils.Spectrum1D` object,
+call :meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.export_bg_img`,
+:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.export_bg_spectrum`,
+or :meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.export_bg_sub`, respectively.
 
 To import the parameters from a specreduce Background object into the plugin, whether it's new or was exported and modified in the notebook, call :meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.import_bg`::
 
