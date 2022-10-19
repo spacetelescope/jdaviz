@@ -456,8 +456,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin):
                                     'aperture_sum_counts', 'aperture_sum_mag')):
                     tmp.append({'function': key, 'result': f'{x:.4e}'})
                 elif key == 'sky_centroid' and x is not None:
-                    tmp.append({'function': 'RA centroid', 'result': f'{x.ra.deg:.4f} deg'})
-                    tmp.append({'function': 'Dec centroid', 'result': f'{x.dec.deg:.4f} deg'})
+                    tmp.append({'function': 'RA centroid', 'result': f'{x.ra.deg:.6f} deg'})
+                    tmp.append({'function': 'Dec centroid', 'result': f'{x.dec.deg:.6f} deg'})
                 elif key in ('xcentroid', 'ycentroid', 'sum_aper_area'):
                     tmp.append({'function': key, 'result': f'{x:.1f}'})
                 elif key == 'aperture_sum_counts' and x is not None:
