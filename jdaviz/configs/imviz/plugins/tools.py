@@ -1,4 +1,5 @@
 import os
+import time
 
 from echo import delay_callback
 
@@ -152,6 +153,7 @@ class ContrastBias(CheckableTool):
     tool_tip = 'Click and drag to adjust contrast and bias, double-click to reset'
 
     def __init__(self, viewer, **kwargs):
+        self._time_last = 0
         super().__init__(viewer, **kwargs)
 
     def activate(self):
@@ -183,6 +185,10 @@ class ContrastBias(CheckableTool):
             self._layer_state.contrast = contrast
 
     def on_mouse_or_key_event(self, data):
+        if (time.time() - self._time_last) <= 0.15:
+            # throttle to 150ms
+            return
+
         from jdaviz.configs.imviz.helper import get_top_layer_index
 
         event = data['event']
@@ -205,3 +211,5 @@ class ContrastBias(CheckableTool):
             with delay_callback(state, 'bias', 'contrast'):
                 state.bias = 0.5
                 state.contrast = 1
+
+        self._time_last = time.time()
