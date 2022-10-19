@@ -26,6 +26,9 @@ Specviz
 Specviz2d
 ^^^^^^^^^
 
+- Improved logic for initial guess for position of "Manual" background trace in spectral extraction
+  plugin. [#1738]
+
 API Changes
 -----------
 
