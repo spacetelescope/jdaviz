@@ -1,8 +1,11 @@
+import gwcs
 import pytest
 from astropy.utils.data import download_file
-
+from packaging.version import Version
 from specreduce import tracing, background, extract
 from specutils import Spectrum1D
+
+GWCS_LT_0_18_1 = Version(gwcs.__version__) < Version('0.18.1')
 
 
 @pytest.mark.remote_data
@@ -167,6 +170,7 @@ def test_user_api(specviz2d_helper):
 
 
 @pytest.mark.remote_data
+@pytest.mark.skipif(GWCS_LT_0_18_1, reason='Needs GWCS 0.18.1 or later')
 def test_spectrum_on_top(specviz2d_helper):
     fn = download_file('https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:jwst/product/jw01529-o004_t002_miri_p750l_s2d.fits', cache=True)  # noqa
 
