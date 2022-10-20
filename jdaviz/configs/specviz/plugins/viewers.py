@@ -47,12 +47,47 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
         self._offscreen_lines_marks = OffscreenLinesMarks(self)
         self.figure.marks = self.figure.marks + self._offscreen_lines_marks.marks
 
+        self.label_mouseover = None
+        self.add_event_callback(self.on_mouse_or_key_event, events=['mousemove', 'mouseenter',
+                                                                    'mouseleave'])
         self.state.add_callback('show_uncertainty', self._show_uncertainty_changed)
 
         self.display_mask = False
 
         # Change collapse function to sum
         self.state.function = 'sum'
+
+    def on_mouse_or_key_event(self, data):
+
+        if self.label_mouseover is None:
+            if 'g-coords-info' in self.session.application._tools:
+                self.label_mouseover = self.session.application._tools['g-coords-info']
+            else:
+                return
+
+        if data['event'] == 'mousemove':
+            # Extract data coordinates - these are pixels in the reference image
+            x = data['domain']['x']
+            y = data['domain']['y']
+
+            if x is None or y is None:  # Out of bounds
+                self.label_mouseover.pixel = ""
+                self.label_mouseover.reset_coords_display()
+                self.label_mouseover.value = ""
+                return
+
+            fmt = 'x={:+10.5e} y={:+10.5e}'
+            self.label_mouseover.pixel = fmt.format(x, y)
+
+            # We just want cursor position, so these are not used.
+            self.label_mouseover.reset_coords_display()
+            self.label_mouseover.value = ''
+
+        elif data['event'] == 'mouseleave' or data['event'] == 'mouseenter':
+
+            self.label_mouseover.pixel = ""
+            self.label_mouseover.reset_coords_display()
+            self.label_mouseover.value = ""
 
     def _expected_subset_layer_default(self, layer_state):
         super()._expected_subset_layer_default(layer_state)

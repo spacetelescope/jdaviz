@@ -200,6 +200,11 @@ def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
     # check that the region's units convert too
     specviz_helper.load_spectrum(spectrum1d)
 
+    # Also check coordinates info panel
+    spec_viewer = specviz_helper.app.get_viewer('spectrum-viewer')
+    spec_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 6100, 'y': 12.5}})
+    assert spec_viewer.label_mouseover.pixel == 'x=+6.10000e+03 y=+1.25000e+01'
+
     # Convert the wavelength axis to microns
     new_spectral_axis = "micron"
     conv_func = uc.UnitConversion.process_unit_conversion
@@ -220,6 +225,10 @@ def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
 
     assert reg.lower.unit == u.Unit(new_spectral_axis)
     assert reg.upper.unit == u.Unit(new_spectral_axis)
+
+    # Coordinates info panel should show new unit
+    spec_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0.61, 'y': 12.5}})
+    assert spec_viewer.label_mouseover.pixel == 'x=+6.10000e-01 y=+1.25000e+01'
 
 
 def test_subset_default_thickness(specviz_helper, spectrum1d):
