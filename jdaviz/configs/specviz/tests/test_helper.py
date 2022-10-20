@@ -1,7 +1,5 @@
 from zipfile import ZipFile
-from packaging.version import Version
 
-import specutils
 import pytest
 from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose
@@ -277,8 +275,7 @@ def test_load_spectrum_list_directory(tmpdir, specviz_helper):
         specviz_helper.load_spectrum(data_path)
 
     # NOTE: the length was 3 before specutils 1.9 (https://github.com/astropy/specutils/pull/982)
-    SPECUTILS_LT_1_9 = Version(specutils.__version__) < Version('1.9.0')
-    expected_len = 39 if not SPECUTILS_LT_1_9 else 3
+    expected_len = 39
     assert len(specviz_helper.app.data_collection) == expected_len
 
     for data in specviz_helper.app.data_collection:
