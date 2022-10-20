@@ -39,7 +39,7 @@ class Specviz(ConfigHelper, LineListMixin):
                                handler=self._redshift_listener)
 
     def load_spectrum(self, data, data_label=None, format=None, show_in_viewer=True,
-                      spectrum_viewer_reference_name=None):
+                      spectrum_viewer_reference_name=None, concat_by_file=False):
 
         # If viewer reference name is not specified and
         # the default viewer is available, use default
@@ -59,7 +59,8 @@ class Specviz(ConfigHelper, LineListMixin):
                           parser_reference='specviz-spectrum1d-parser',
                           data_label=data_label,
                           format=format,
-                          show_in_viewer=show_in_viewer)
+                          show_in_viewer=show_in_viewer,
+                          concat_by_file=concat_by_file)
 
     def get_spectra(self, data_label=None, apply_slider_redshift="Warn"):
         """Returns the current data loaded into the main viewer

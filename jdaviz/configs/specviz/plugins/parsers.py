@@ -12,7 +12,8 @@ __all__ = ["specviz_spectrum1d_parser"]
 
 
 @data_parser_registry("specviz-spectrum1d-parser")
-def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_viewer=True):
+def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_viewer=True,
+                              concat_by_file=False):
     """
     Loads a data file or `~specutils.Spectrum1D` object into Specviz.
 
@@ -27,6 +28,10 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
         `~specutils.Spectrum1D.read` io method.
     spectrum_viewer_reference_name : str
         Reference name for the viewer
+    concat_by_file : bool
+        If True, concatenate the extensions within each spectrum file
+        passed to the parser and add a concatenated spectrum to the
+        data collection.
     """
     spectrum_viewer_reference_name = app._jdaviz_helper._default_spectrum_viewer_reference_name
     # If no data label is assigned, give it a unique name
@@ -116,7 +121,7 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
                 elif i == 0:
                     app.add_data_to_viewer(spectrum_viewer_reference_name, data_label[i])
 
-        if isinstance(data, SpectrumList):
+        if concat_by_file and isinstance(data, SpectrumList):
             # If >1 spectra in the list were opened from the same FITS file,
             # group them by their original FITS filenames and add their combined
             # 1D spectrum to the DataCollection.
