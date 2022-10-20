@@ -146,3 +146,24 @@ def test_from_file_parsing(imviz_helper, tmp_path):
     qtable.write(not_valid_table, overwrite=True)
     catalogs_plugin._on_file_path_changed({'new': not_valid_table})
     assert catalogs_plugin.from_file_message == 'Table does not contain required sky_centroid column'  # noqa
+
+
+def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
+    sky = SkyCoord(ra=[337.5202807, 337.51909197, 337.51760596],
+                   dec=[-20.83305528, -20.83222194, -20.83083304], unit='deg')
+    tbl = QTable({'sky_centroid': sky})
+    tbl_file = str(tmp_path / 'sky_centroid.ecsv')
+    tbl.write(tbl_file, overwrite=True)
+    n_entries = len(tbl)
+
+    ndd = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
+    imviz_helper.load_data(ndd, data_label='data_with_wcs')
+    assert len(imviz_helper.app.data_collection) == 1
+
+    catalogs_plugin = imviz_helper.plugins['Catalog Search']
+    catalogs_plugin._obj.from_file = tbl_file
+    catalogs_plugin._obj.catalog_selected = 'From File...'
+    out_tbl = catalogs_plugin._obj.search()
+    assert len(out_tbl) == n_entries
+    assert catalogs_plugin._obj.number_of_results == n_entries
+    assert len(imviz_helper.app.data_collection) == 2  # image + markers
