@@ -7,7 +7,10 @@ PyPI. Currently, these do not cover submitting package updates to other
 distribution outlets, such as ``astroconda`` or ``conda-forge``.
 
 This process currently requires you (the release manager) to have sufficient GitHub
-permissions to tag, push, and create a GitHub release on Jdaviz repository.
+permissions to tag, push, and create a GitHub release on Jdaviz repository. These
+instructions assume that the ``origin`` remote points to your personal fork,
+and that ``upstream`` points to the
+`STScI repository <https://github.com/spacetelescope/jdaviz.git>`_.
 
 It is recommended that you lock the ``main`` branch after the "feature freeze"
 for the release and only unlock it when release is out on PyPI. Any urgent
@@ -27,14 +30,318 @@ be "vX.YrcN" (also see `PEP 440 <https://www.python.org/dev/peps/pep-0440/>`_).
 
 Choose your adventure:
 
-* :ref:`release-long`
-* :ref:`release-short`
+* :ref:`release-feature`
+* :ref:`release-bugfix`
+* :ref:`release-old`
 
 
-.. _release-long:
+.. _release-feature:
 
-The long way
-============
+Releasing a minor or major version
+==================================
+
+The automated release infrastructure has proven to be reliable for a good number
+of releases now, so we've been using this faster version as the default release
+procedure. The longer procedure we previously used is still available in the
+:ref:`release-old` section.
+
+You can do a release from your fork directly without a clean code check-out.
+
+#. Ensure `CI on Actions for main <https://github.com/spacetelescope/jdaviz/actions/workflows/ci_workflows.yml?query=branch%3Amain>`_
+   and `RTD build for latest <https://readthedocs.org/projects/jdaviz/builds/>`_
+   are passing.
+
+#. Lock down the ``main`` branch of the repository by setting the
+   `branch protection <https://github.com/spacetelescope/jdaviz/settings/branches>`_
+   rule for ``main`` to some high number required to merge, so that more PRs don't
+   get merged while you're releasing.
+
+#. Create a new local branch and make sure you have updated tags too. Note
+   that the "x" here should actually be the letter "x", whereas the upper case "X"
+   and "Y" should be replace by your major and minor version numbers::
+
+     git fetch upstream main
+     git fetch upstream --tags
+     git checkout upstream/main -b vX.Y.x
+
+#. Update the ``CHANGES.rst`` file to make sure that all the user-facing changes are listed,
+   and update the release date from ``unreleased`` to current date in the ``yyyy-mm-dd`` format.
+   Remove any empty subsections.
+
+#. Update the ``CITATION.cff`` file's ``date-released`` and ``version`` fields.
+   If there are new contributors to the project, add them in the ``authors``
+   section.
+
+#. Do not forget to commit your changes from the last two steps::
+
+     git add CHANGES.rst
+     git add CITATION.cff
+     git add .github/workflows/ci_workflows.yml
+     git commit -m "Preparing release vX.Y.0"
+
+#. Push the ``vX.Y.x`` branch to upstream.
+   Make sure the CI passes. If any of the CI fails, especially the job that
+   says "Release", abandon this way. Stop here; do not continue! Otherwise,
+   go to the next step.
+
+#. Go to `Releases on GitHub <https://github.com/spacetelescope/jdaviz/releases>`_
+   and `create a new GitHub release <https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository>`_
+   targeting the new branch you created (not ``main``!), and give it a new ``vX.Y.Z``
+   tag (do not choose any existing tags). Copy the relevant section from CHANGES.rst
+   into the release notes section and clean up any formatting problems.
+
+#. The most important step: Click the ``Publish Release`` button!
+
+#. Check `Release on Actions <https://github.com/spacetelescope/jdaviz/actions/workflows/publish.yml>`_
+   to make sure that the new GitHub release triggered PyPI upload successfully.
+   Also check that `files on PyPI <https://pypi.org/project/jdaviz/#files>`_ contain
+   both the source tarball and the wheel for that release.
+
+#. Check `RTD builds <https://readthedocs.org/projects/jdaviz/builds/>`_ to make sure
+   that documentation built successfully for both ``latest`` and the new ``vX.Y.Z`` tag.
+
+#. Check `Zenodo page for Jdaviz <https://doi.org/10.5281/zenodo.5513927>`_.
+   It should have picked up the GitHub Release automatically.
+
+#. The release is basically done, but now you have to set it up for the
+   *next* release cycle. Update ``CHANGES.rst`` directly in the ``main`` branch
+   using your admin power. If you do not have sufficient access to do that,
+   you will have to update it via a pull request from your fork. Make sure the
+   section for the version just released matches the finalized change log from
+   the release branch you created, and add a new section to the top of
+   ``CHANGES.rst`` as follows, replacing ``A.B`` with the next non-bugfix version,
+   and ``A.C`` with the version you just released::
+
+     A.B (unreleased)
+     ================
+
+     New Features
+     ------------
+
+     Cubeviz
+     ^^^^^^^
+
+     Imviz
+     ^^^^^
+
+     Mosviz
+     ^^^^^^
+
+     Specviz
+     ^^^^^^^
+
+     Specviz2d
+     ^^^^^^^^^
+
+     API Changes
+     -----------
+
+     Cubeviz
+     ^^^^^^^
+
+     Imviz
+     ^^^^^
+
+     Mosviz
+     ^^^^^^
+
+     Specviz
+     ^^^^^^^
+
+     Specviz2d
+     ^^^^^^^^^
+
+     Bug Fixes
+     ---------
+
+     Cubeviz
+     ^^^^^^^
+
+     Imviz
+     ^^^^^
+
+     Mosviz
+     ^^^^^^
+
+     Specviz
+     ^^^^^^^
+
+     Specviz2d
+     ^^^^^^^^^
+
+     Other Changes and Additions
+     ---------------------------
+
+     A.C.1 (unreleased)
+     ==================
+
+     Bug Fixes
+     ---------
+
+     Cubeviz
+     ^^^^^^^
+
+     Imviz
+     ^^^^^
+
+     Mosviz
+     ^^^^^^
+
+     Specviz
+     ^^^^^^^
+
+     Specviz2d
+     ^^^^^^^^^
+
+#. Commit your changes of the, uh, change log with a message, "Back to development: A.B.dev"
+
+#. Follow procedures for :ref:`release-milestones`.
+
+#. For your own sanity unrelated to the release, grab the new tag for your fork::
+
+     git fetch upstream --tags
+
+Congratulations, you have just released a new version of Jdaviz!
+
+.. _release-bugfix:
+
+Releasing a bugfix version
+==========================
+
+The procedure for a bugfix release is a little different from a feature release - you will
+be cherry-picking bugfixes into an existing release branch, and will also need to do some
+cleanup on the ``main`` branch.
+
+#. Lock down the ``main`` branch of the repository by setting the
+   `branch protection <https://github.com/spacetelescope/jdaviz/settings/branches>`_
+   rule for ``main`` to some high number required to merge, so that more PRs don't
+   get merged while you're releasing.
+
+#. Review the appropriate `Milestone <https://github.com/spacetelescope/jdaviz/milestones>`_
+   to see which PRs should be released in this version.
+
+#. Checkout the ``vX.Y.x`` branch corresponding to the last feature release.
+
+#. For any PRs to be released in this bugfix version, find the corresponding
+   `merge commit <https://github.com/spacetelescope/jdaviz/commits/main>`_ in main, copy the
+   full SHA of that commit, and use git's cherry-pick command to add those commits to the
+   ``vX.Y.x`` branch, resolving any conflicts::
+
+       git cherry-pick -x -m1 [commit hash]
+
+#. The ``CHANGES.rst`` should now have all of the bug fixes to be released. Delete the
+   unreleased feature version section at the top of the changelog (if that was pulled in
+   while cherry-picking) and update the release date of the bugfix release section
+   from ``unreleased`` to current date in the ``yyyy-mm-dd`` format. Remove any empty
+   subsections.
+
+#. Update the ``CITATION.cff`` file's ``date-released`` and ``version`` fields.
+   If there are new contributors to the project, add them in the ``authors``
+   section.
+
+#. Do not forget to commit your changes from the last two steps::
+
+     git add CHANGES.rst
+     git add CITATION.cff
+     git commit -m "Preparing release vX.Y.Z"
+
+#. Push the ``vX.Y.x`` branch to upstream.
+   Make sure the CI passes. If any of the CI fails, especially the job that
+   says "Release", abandon this way. Stop here; do not continue! Otherwise,
+   go to the next step.
+
+#. Go to `Releases on GitHub <https://github.com/spacetelescope/jdaviz/releases>`_
+   and `create a new GitHub release <https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository>`_
+   targeting the release branch ``vX.Y.x`` (not ``main``!), and give it a new ``vX.Y.Z``
+   tag (do not choose any existing tags). Copy the relevant section from CHANGES.rst
+   into the release notes section and clean up any formatting problems.
+
+#. The most important step: Click the ``Publish Release`` button!
+
+#. Check `Release on Actions <https://github.com/spacetelescope/jdaviz/actions/workflows/publish.yml>`_
+   to make sure that the new GitHub release triggered PyPI upload successfully.
+   Also check that `files on PyPI <https://pypi.org/project/jdaviz/#files>`_ contain
+   both the source tarball and the wheel for that release.
+
+#. Check `RTD builds <https://readthedocs.org/projects/jdaviz/builds/>`_ to make sure
+   that documentation built successfully for both ``latest`` and the new ``vX.Y.Z`` tag.
+
+#. Check `Zenodo page for Jdaviz <https://doi.org/10.5281/zenodo.5513927>`_.
+   It should have picked up the GitHub Release automatically.
+
+#. The release is basically done, but now you have to set it up for the
+   *next* release cycle. Checkout the ``main`` branch and update ``CHANGES.rst``
+   using your admin power. If you do not have sufficient access to do that,
+   you will have to update it via a pull request from your fork. Make sure the
+   section for the version just released matches the finalized change log from
+   the release branch (be sure to change ``unreleased`` to the appropriate date),
+   and add a new bugfix release section below the next feature
+   release section as follows, replacing ``X.Y.Z`` with the next minor release
+   number. For example, if you just released ``3.0.2``, a section for ``3.0.3``
+   would go below the section for ``3.1``::
+
+     X.Y.Z (unreleased)
+     ==================
+
+     Bug Fixes
+     ---------
+
+     Cubeviz
+     ^^^^^^^
+
+     Imviz
+     ^^^^^
+
+     Mosviz
+     ^^^^^^
+
+     Specviz
+     ^^^^^^^
+
+     Specviz2d
+     ^^^^^^^^^
+
+#. Commit your changes of the, uh, change log with a message, "Back to development: A.B.dev"
+
+#. Follow procedures for :ref:`release-milestones`.
+
+#. For your own sanity unrelated to the release, grab the new tag for your fork::
+
+     git fetch upstream --tags
+
+Congratulations, you have just released a new version of Jdaviz!
+
+.. _release-milestones:
+
+Milestones bookkeeping
+======================
+
+#. Go to `Milestones <https://github.com/spacetelescope/jdaviz/milestones>`_.
+
+#. Create a new milestone for the next release and the next bugfix release, if
+   doing a feature release, or for just the next bugfix release if you just did
+   one.
+
+#. For the milestone of this release, if there are any open issues or pull requests
+   still milestoned to it, move their milestones to the next feature or bugfix
+   milestone as appropriate.
+
+#. Make sure the milestone of this release ends up with "0 open" and then close it.
+
+#. Remind the other devs of the open pull requests with milestone moved that they
+   will need to move their change log entries to the new release section that you
+   have created in ``CHANGES.rst`` during the release process.
+
+
+.. _release-old:
+
+The old, long way
+=================
+
+.. note::
+   This section is kept mainly for historical purposes, and to show how many of the
+   things that are now automated can be done manually. Note that it is not up-to-date
+   with the change to a branched release strategy.
 
 This way is recommended if you are new to the process or wish to manually run
 some automated steps locally. It takes longer but has a smaller risk factor.
@@ -218,155 +525,3 @@ You can create a clean checkout as follows (requires
 
 Congratulations, you have just released a new version of Jdaviz!
 
-
-.. _release-short:
-
-The short way
-=============
-
-This way is for when you are in a rush, are very familiar with the process already,
-and are deploying on a proven automated process. It is faster but also has a higher
-risk factor. If you choose this way wrongly, you will end up doing hotfix releases
-anyway, which will not save you any time in the end. Only go this way if you know
-what you are doing.
-
-You can do a release from your fork directly without a clean code check-out.
-
-#. Ensure `CI on Actions for main <https://github.com/spacetelescope/jdaviz/actions/workflows/ci_workflows.yml?query=branch%3Amain>`_
-   and `RTD build for latest <https://readthedocs.org/projects/jdaviz/builds/>`_
-   are passing.
-
-#. Create a new branch on your fork and make sure you have updated tags too::
-
-     git fetch upstream main
-     git fetch upstream --tags
-     git checkout upstream/main -b release-vX.Y.Z
-
-#. Update the ``CHANGES.rst`` file to make sure that all the user-facing changes are listed,
-   and update the release date from ``unreleased`` to current date in the ``yyyy-mm-dd`` format.
-   Remove any empty subsections.
-
-#. Update the ``CITATION.cff`` file's ``date-released`` and ``version`` fields.
-   If there are new contributors to the project, add them in the ``authors``
-   section. Do not forget to commit your changes from the last two steps::
-
-     git add CHANGES.rst
-     git add CITATION.cff
-     git commit -m "Preparing release vX.Y.Z"
-
-#. Push the ``release-vX.Y.Z`` branch out and create a new pull request with it.
-   Make sure the CI passes, then merge. If review is required for merge to happen,
-   ask for a review, though you can override that requirement if you have admin access.
-
-#. If any of the CI fails, especially the job that says "Release", abandon this way.
-   Stop here; do not continue! Otherwise, go to the next step.
-
-#. Go to `Releases on GitHub <https://github.com/spacetelescope/jdaviz/releases>`_
-   and `create a new GitHub release <https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository>`_
-   by giving it a new ``vX.Y.Z`` tag (do not choose any existing tags).
-
-#. Check `Release on Actions <https://github.com/spacetelescope/jdaviz/actions/workflows/publish.yml>`_
-   to make sure that the new GitHub release triggered PyPI upload successfully.
-   Also check that `files on PyPI <https://pypi.org/project/jdaviz/#files>`_ contain
-   both the source tarball and the wheel for that release.
-
-#. Check `RTD builds <https://readthedocs.org/projects/jdaviz/builds/>`_ to make sure
-   that documentation built successfully for both ``latest`` and the new ``vX.Y.Z`` tag.
-
-#. Check `Zenodo page for Jdaviz <https://doi.org/10.5281/zenodo.5513927>`_.
-   It should have picked up the GitHub Release automatically.
-
-#. The release is basically done, but now you have to set it up for the
-   *next* release cycle. Update ``CHANGES.rst`` directly in the ``main`` branch
-   using your admin power. If you do not have sufficient access to do that,
-   you will have to update it via a pull request from your fork.
-   Add a new section to the top of ``CHANGES.rst`` as follows, replacing ``A.B``
-   with the next non-bugfix version::
-
-     A.B (unreleased)
-     ================
-
-     New Features
-     ------------
-
-     Cubeviz
-     ^^^^^^^
-
-     Imviz
-     ^^^^^
-
-     Mosviz
-     ^^^^^^
-
-     Specviz
-     ^^^^^^^
-
-     Specviz2d
-     ^^^^^^^^^
-
-     API Changes
-     -----------
-
-     Cubeviz
-     ^^^^^^^
-
-     Imviz
-     ^^^^^
-
-     Mosviz
-     ^^^^^^
-
-     Specviz
-     ^^^^^^^
-
-     Specviz2d
-     ^^^^^^^^^
-
-     Bug Fixes
-     ---------
-
-     Cubeviz
-     ^^^^^^^
-
-     Imviz
-     ^^^^^
-
-     Mosviz
-     ^^^^^^
-
-     Specviz
-     ^^^^^^^
-
-     Specviz2d
-     ^^^^^^^^^
-
-     Other Changes and Additions
-     ---------------------------
-
-#. Commit your changes of the, uh, change log with a message, "Back to development: A.B.dev"
-
-#. Follow procedures for :ref:`release-milestones`.
-
-#. For your own sanity unrelated to the release, grab the new tag for your fork::
-
-     git fetch upstream --tags
-
-Congratulations, you have just released a new version of Jdaviz!
-
-.. _release-milestones:
-
-Milestones bookkeeping
-======================
-
-#. Go to `Milestones <https://github.com/spacetelescope/jdaviz/milestones>`_.
-
-#. Create a new milestone for the next release.
-
-#. For the milestone of this release, if there are any open issues or pull requests
-   still milestoned to it, move their milestones to the next release.
-
-#. Make sure the milestone of this release ends up with "0 open" and then close it.
-
-#. Remind the other devs of the open pull requests with milestone moved that they
-   will need to move their change log entries to the new release section that you
-   have created in ``CHANGES.rst`` during the release process.
