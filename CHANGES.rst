@@ -17,7 +17,7 @@ Imviz
 
 - Catalogs plugin now supports loading a JWST catalog from a local ECSV file. [#1707]
 
-- New "bulk_load" context manager to optimize loading multiple images. [#1742]
+- New "batch_load" context manager to optimize loading multiple images. [#1742]
 
 Mosviz
 ^^^^^^

@@ -301,6 +301,6 @@ class LinkUpdatedMessage(Message):
 
 
 class ExitBatchLoadMessage(Message):
-    '''Message generated when exiting the outermost batch_load contextmanager'''
+    '''Message generated when exiting the outermost batch_load context manager'''
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -1061,8 +1061,8 @@ class Application(VuetifyTemplate, HubListener):
         [data] = [x for x in self.data_collection if x.label == data_label]
 
         viewer.remove_data(data)
-        viewer._layers_with_defaults_applied= [layer_info for layer_info in viewer._layers_with_defaults_applied  # noqa
-                                               if layer_info['data_label'] != data.label]  # noqa
+        viewer._layers_with_defaults_applied = [layer_info for layer_info in viewer._layers_with_defaults_applied  # noqa
+                                                if layer_info['data_label'] != data.label]  # noqa
         remove_data_message = RemoveDataMessage(data, viewer,
                                                 viewer_id=viewer_id,
                                                 sender=self)

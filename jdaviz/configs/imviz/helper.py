@@ -197,8 +197,8 @@ class Imviz(ImageConfigHelper):
             if show_in_viewer:
                 self.app.add_data_to_viewer(show_in_viewer, applied_label)
         else:
-            warnings.warn(AstropyDeprecationWarning("do_link=False is deprecated and will be "
-                                                    "removed in a future release.  Use with "
+            warnings.warn(AstropyDeprecationWarning("do_link=False is deprecated in v3.1 and will "
+                                                    "be removed in a future release.  Use with "
                                                     "viz.batch_load() instead."))
 
     def link_data(self, **kwargs):
