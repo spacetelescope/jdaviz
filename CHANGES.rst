@@ -82,6 +82,8 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+- Fix ASDF-related warning by pinning minimum version for asdf-transform-schemas [#1763]
+
 Cubeviz
 ^^^^^^^
 
@@ -112,8 +114,6 @@ Bug Fixes
 - Fix bug in creating and removing new image viewers from Imviz [#1741]
 
 - Updated Zenodo link in docs to resolve to latest version. [#1743]
-
-- Fix ASDF-related warning by pinning minimum version for asdf-transform-schemas [#1763]
 
 Imviz
 ^^^^^
