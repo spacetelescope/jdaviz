@@ -97,6 +97,22 @@ is separated from the ``jwst`` pipeline package.
 
 .. _imviz-import-catalogs-api:
 
+Batch Loading Multiple Images
+-----------------------------
+
+To save on performance while loading multiple images into Imviz, you can optionally use
+:meth:`~jdaviz.core.helpers.ConfigHelper.batch_load` to parse all of the data first (within a for
+loop or multiple calls to ``load_data``, for example), and defer the linking and loading of the new
+data entries into the viewer until after the parsing is complete::
+
+    from jdaviz import Imviz
+    imviz = Imviz()
+    with imviz.batch_load():
+        for filepath in filepaths:
+            imviz.load_data(filepaths)
+    imviz.show()
+
+
 Importing catalogs via the API
 ==============================
 
