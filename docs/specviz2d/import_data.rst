@@ -57,7 +57,7 @@ method, which takes as input a :class:`~specutils.Spectrum1D` object or filename
 
 By default, extension 1 of the 2D
 file is loaded, but you can specify another extension by providing an integer
-to the ``extension`` keyword. In case you want to load an uncalibrated spectrum
+to the ``ext`` keyword. In case you want to load an uncalibrated spectrum
 that is dispersed vertically, you can also set the ``transpose`` keyword to flip
 the spectrum to be horizontal::
 

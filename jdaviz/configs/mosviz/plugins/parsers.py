@@ -244,7 +244,7 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
 
     Notes
     -----
-    This assumes that the data is in the second HDU of the FITS file unless
+    Default arguments assume that the data is in the second HDU of the FITS file unless
     otherwise specified with the ``ext`` parameter.
 
     Parameters
