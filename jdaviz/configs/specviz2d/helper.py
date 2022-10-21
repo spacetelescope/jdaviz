@@ -115,7 +115,8 @@ class Specviz2d(ConfigHelper, LineListMixin):
                 setattr(scales['x'], name, val)
 
     def load_data(self, spectrum_2d=None, spectrum_1d=None, spectrum_1d_label=None,
-                  spectrum_2d_label=None, show_in_viewer=True):
+                  spectrum_2d_label=None, show_in_viewer=True, ext=1,
+                  transpose=False):
         """
         Load and parse a pair of corresponding 1D and 2D spectra.
 
@@ -142,6 +143,12 @@ class Specviz2d(ConfigHelper, LineListMixin):
         show_in_viewer : bool
             Show data in viewer(s).
 
+        ext : int, optional
+            Extension of the input ``spectrum_2d`` file to load. Defaults to 1.
+
+        transpose : bool, optional
+            Flag to transpose the 2D data array before loading. Useful for uncalibrated
+            data that is dispersed vertically, to change it to horizontal dispersion.
         """
         if spectrum_2d is None and spectrum_1d is None:
             raise ValueError('Must provide spectrum_2d or spectrum_1d but none given.')
@@ -159,8 +166,8 @@ class Specviz2d(ConfigHelper, LineListMixin):
         if spectrum_2d is not None:
             self.app.load_data(spectrum_2d, parser_reference="mosviz-spec2d-parser",
                                data_labels=spectrum_2d_label,
-                               show_in_viewer=False,
-                               add_to_table=False)
+                               show_in_viewer=False, add_to_table=False,
+                               ext=ext, transpose=transpose)
 
             # Passing show_in_viewer into app.load_data does not work anymore,
             # so we force it to show here.

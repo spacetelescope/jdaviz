@@ -238,14 +238,14 @@ def mos_spec1d_parser(app, data_obj, data_labels=None,
 
 @data_parser_registry("mosviz-spec2d-parser")
 def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
-                      show_in_viewer=False):
+                      show_in_viewer=False, ext=1, transpose=False):
     """
     Attempts to parse a 2D spectrum object.
 
     Notes
     -----
-    This currently only works with JWST-type data in which the data is in the
-    second hdu of the fits file.
+    Default arguments assume that the data is in the second HDU of the FITS file unless
+    otherwise specified with the ``ext`` parameter.
 
     Parameters
     ----------
@@ -256,6 +256,10 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
         the mosviz table.
     data_labels : str, optional
         The label applied to the glue data component.
+    ext : int, optional
+        The extension in the FITS file that contains the data to be loaded.
+    transpose : bool, optional
+        Flag to transpose the data array before loading.
     """
     spectrum_2d_viewer_reference_name = (
         app._jdaviz_helper._default_spectrum_2d_viewer_reference_name
@@ -265,30 +269,33 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
     )
 
     # Note: This is also used by Specviz2D
-    def _parse_as_spectrum1d(path):
+    def _parse_as_spectrum1d(hdulist, ext, transpose):
         # Parse as a FITS file and assume the WCS is correct
-        with fits.open(path) as hdulist:
-            data = hdulist[1].data
-            header = hdulist[1].header
-            metadata = standardize_metadata(header)
-            metadata[PRIHDR_KEY] = standardize_metadata(hdulist[0].header)
-            wcs = WCS(header)
+        data = hdulist[ext].data
+        header = hdulist[ext].header
+        metadata = standardize_metadata(header)
+        metadata[PRIHDR_KEY] = standardize_metadata(hdulist[0].header)
+        wcs = WCS(header, hdulist)
+        if transpose:
+            data = data.T
+            wcs = wcs.swapaxes(0, 1)
 
-            try:
-                data_unit = u.Unit(header['BUNIT'])
-            except Exception:
-                data_unit = u.count
+        try:
+            data_unit = u.Unit(header['BUNIT'])
+        except Exception:
+            data_unit = u.count
 
-            # FITS WCS is invalid, so ignore it.
-            if wcs.spectral.naxis == 0:
-                kw = {}
-            else:
-                kw = {'wcs': wcs}
+        # FITS WCS is invalid, so ignore it.
+        if wcs.spectral.naxis == 0:
+            kw = {}
+        else:
+            kw = {'wcs': wcs}
 
         return Spectrum1D(flux=data * data_unit, meta=metadata, **kw)
 
     # Coerce into list-like object
-    if not isinstance(data_obj, (list, tuple, SpectrumCollection)):
+    if (not isinstance(data_obj, (list, tuple, SpectrumCollection)) or
+            isinstance(data_obj, fits.HDUList)):
         data_obj = [data_obj]
 
     # If we're given a string, repeat it for each object
@@ -310,9 +317,17 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
             # FITS file.
             if _check_is_file(data):
                 try:
-                    data = Spectrum1D.read(data)
+                    if ext != 1 or transpose:
+                        with fits.open(data) as hdulist:
+                            data = _parse_as_spectrum1d(hdulist, ext, transpose)
+                    else:
+                        data = Spectrum1D.read(data)
                 except IORegistryError:
-                    data = _parse_as_spectrum1d(data)
+                    with fits.open(data) as hdulist:
+                        data = _parse_as_spectrum1d(hdulist, ext, transpose)
+            elif isinstance(data, fits.HDUList):
+                data = _parse_as_spectrum1d(data, ext, transpose)
+
             # Make metadata layout conform with other viz.
             data.meta = standardize_metadata(data.meta)
 
