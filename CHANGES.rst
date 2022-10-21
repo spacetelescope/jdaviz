@@ -35,7 +35,6 @@ Specviz2d
 - Spectral extraction plugin now supports visualizing and exporting the 1D spectrum associated
   with the background region. [#1682]
 
-
 API Changes
 -----------
 
@@ -192,6 +191,7 @@ Specviz2d
 
 - 2D spectrum viewer now has info panel for pixel coordinates and value. [#1608]
 
+Bug Fixes
 ---------
 
 - Fixed loading data via the Import Data button on top-left of the application.
