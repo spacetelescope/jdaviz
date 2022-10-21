@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - v3.0.x
+    tags:
+      - 'v*'
   pull_request:
     branches:
       - v3.0.x
