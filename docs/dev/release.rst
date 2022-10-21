@@ -56,7 +56,7 @@ You can do a release from your fork directly without a clean code check-out.
    rule for ``main`` to some high number required to merge, so that more PRs don't
    get merged while you're releasing.
 
-#. Create a new branch on your fork and make sure you have updated tags too. Note
+#. Create a new local branch and make sure you have updated tags too. Note
    that the "x" here should actually be the letter "x", whereas the upper case "X"
    and "Y" should be replace by your major and minor version numbers::
 
@@ -72,18 +72,7 @@ You can do a release from your fork directly without a clean code check-out.
    If there are new contributors to the project, add them in the ``authors``
    section.
 
-#. Update .github/workflows/ci_workflows.yml to add specific version branch to the
-   push/pull request specs. The relevant entries should look like::
-
-     on:
-       push:
-         branches:
-           - v3.1.x
-       pull_request:
-         branches:
-           - v3.1.x
-
-#. Do not forget to commit your changes from the last three steps::
+#. Do not forget to commit your changes from the last two steps::
 
      git add CHANGES.rst
      git add CITATION.cff
@@ -189,6 +178,21 @@ You can do a release from your fork directly without a clean code check-out.
      Bug Fixes
      ---------
 
+     Cubeviz
+     ^^^^^^^
+
+     Imviz
+     ^^^^^
+
+     Mosviz
+     ^^^^^^
+
+     Specviz
+     ^^^^^^^
+
+     Specviz2d
+     ^^^^^^^^^
+
 #. Commit your changes of the, uh, change log with a message, "Back to development: A.B.dev"
 
 #. Follow procedures for :ref:`release-milestones`.
@@ -213,10 +217,8 @@ cleanup on the ``main`` branch.
    rule for ``main`` to some high number required to merge, so that more PRs don't
    get merged while you're releasing.
 
-#. Review the ``CHANGES.rst`` file on ``main`` to see which PRs were listed in the unreleased
-   bugfix version section (this should be immediately below the unreleased feature section).
-   For example, if the top section is for 3.1, there should be an unreleased 3.0.X section
-   below that, where X is a number greater than 0.
+#. Review the appropriate `Milestone <https://github.com/spacetelescope/jdaviz/milestones>`_
+   to see which PRs should be released in this version.
 
 #. Checkout the ``vX.Y.x`` branch corresponding to the last feature release.
 
@@ -241,7 +243,7 @@ cleanup on the ``main`` branch.
 
      git add CHANGES.rst
      git add CITATION.cff
-     git commit -m "Preparing release vX.Y.0"
+     git commit -m "Preparing release vX.Y.Z"
 
 #. Push the ``vX.Y.x`` branch to upstream.
    Make sure the CI passes. If any of the CI fails, especially the job that
