@@ -147,7 +147,8 @@ class Specviz2d(ConfigHelper, LineListMixin):
             Extension of the input ``spectrum_2d`` file to load. Defaults to 1.
 
         transpose : bool, optional
-            Flag to transpose the 2D data array before loading.
+            Flag to transpose the 2D data array before loading. Useful for uncalibrated
+            data that is dispersed vertically, to change it to horizontal dispersion.
         """
         if spectrum_2d is None and spectrum_1d is None:
             raise ValueError('Must provide spectrum_2d or spectrum_1d but none given.')
