@@ -144,7 +144,7 @@ class Specviz2d(ConfigHelper, LineListMixin):
             Show data in viewer(s).
 
         ext : int, optional
-            Extension of the input spectrum_2d file to load. Defaults to 1.
+            Extension of the input ``spectrum_2d`` file to load. Defaults to 1.
 
         transpose : bool, optional
             Flag to transpose the 2D data array before loading.
