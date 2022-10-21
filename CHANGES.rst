@@ -113,6 +113,8 @@ Bug Fixes
 
 - Updated Zenodo link in docs to resolve to latest version. [#1743]
 
+- Fix ASDF-related warning by pinning minimum version for asdf-transform-schemas [#1763]
+
 Imviz
 ^^^^^
 
