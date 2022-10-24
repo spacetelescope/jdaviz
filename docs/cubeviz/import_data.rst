@@ -70,7 +70,7 @@ Importing data via the API
 
 Alternatively, users who work in a coding environment like a Jupyter
 notebook can access the Cubeviz helper class API. Using this API, users can
-load data into the application through code with the :meth:`~jdaviz.configs.specviz.helper.Specviz.load_spectrum`
+load data into the application through code with the :py:meth:`~jdaviz.configs.specviz.helper.Specviz.load_spectrum`
 method, which takes as input a :class:`~specutils.Spectrum1D` object.
 
 FITS Files
@@ -88,7 +88,7 @@ Spectrum1D (from file)
 
 For cases where the built-in parser is unable to understand your file format,
 you can try the `~specutils.Spectrum1D` parser directly and then pass the object to the
-:meth:`~jdaviz.core.helpers.ConfigHelper.load_data` method::
+:py:meth:`~jdaviz.core.helpers.ConfigHelper.load_data` method::
 
     from specutils import Spectrum1D
     from jdaviz import Cubeviz
@@ -100,7 +100,7 @@ you can try the `~specutils.Spectrum1D` parser directly and then pass the object
 Spectrum1D (from array)
 -----------------------
 
-You can create your own `~specutils.Spectrum1D` object by hand to load into Cubeviz::
+You can create your own :class:`~specutils.Spectrum1D` object by hand to load into Cubeviz::
 
     import numpy as np
     from astropy import units as u
@@ -175,6 +175,6 @@ form ``(region, reason)``::
 .. note:: Sky regions are currently unsupported in Cubeviz, unlike Imviz.
 
 For more details on the API, please see
-:meth:`~jdaviz.core.helpers.ImageConfigHelper.load_regions_from_file`
-and :meth:`~jdaviz.core.helpers.ImageConfigHelper.load_regions` methods
+:py:meth:`~jdaviz.core.helpers.ImageConfigHelper.load_regions_from_file`
+and :py:meth:`~jdaviz.core.helpers.ImageConfigHelper.load_regions` methods
 in Cubeviz.

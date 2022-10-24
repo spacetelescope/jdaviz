@@ -98,7 +98,7 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
     @property
     def specviz(self):
         """
-        A Specviz helper (`~jdaviz.configs.specviz.helper.Specviz`) for the Jdaviz
+        A Specviz helper (:class:`~jdaviz.configs.specviz.helper.Specviz`) for the Jdaviz
         application that is wrapped by Cubeviz.
         """
         if not hasattr(self, '_specviz'):

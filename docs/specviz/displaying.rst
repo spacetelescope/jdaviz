@@ -110,8 +110,8 @@ The Specviz helper contains a set of convenience methods to programmatically def
 
 Limit methods
 ^^^^^^^^^^^^^
-You can use the methods :meth:`jdaviz.configs.specviz.helper.Specviz.x_limits` and
-:meth:`jdaviz.configs.specviz.helper.Specviz.y_limits` to modify the field of
+You can use the methods :py:meth:`~jdaviz.configs.specviz.helper.Specviz.x_limits` and
+:py:meth:`~jdaviz.configs.specviz.helper.Specviz.y_limits` to modify the field of
 view of Specviz. You can provide a scalar (which assumes the units of the loaded spectra),
 a `~astropy.units.Quantity`, or ``'auto'`` to automatically scale::
 
@@ -129,14 +129,14 @@ Additionally, you can provide the limit methods with a `~specutils.SpectralRegio
 Autoscale methods
 ^^^^^^^^^^^^^^^^^
 You can also quickly return to the default zoom using
-:meth:`jdaviz.configs.specviz.helper.Specviz.autoscale_x` and
-:meth:`jdaviz.configs.specviz.helper.Specviz.autoscale_y`.
+:py:meth:`~jdaviz.configs.specviz.helper.Specviz.autoscale_x` and
+:py:meth:`~jdaviz.configs.specviz.helper.Specviz.autoscale_y`.
 
 Axis Orientation methods
 ^^^^^^^^^^^^^^^^^^^^^^^^
 To quickly flip an axis to change to and from ascending/descending, use
-:meth:`jdaviz.configs.specviz.helper.Specviz.flip_x` and
-:meth:`jdaviz.configs.specviz.helper.Specviz.flip_y`.
+:py:meth:`~jdaviz.configs.specviz.helper.Specviz.flip_x` and
+:py:meth:`~jdaviz.configs.specviz.helper.Specviz.flip_y`.
 
 .. _spectral-regions:
 
@@ -153,7 +153,7 @@ and the spectral trace in color, coded to subset number and listed under the sub
 
 Clicking on that selector, you can add more regions by selecting the "create new" entry.
 
-From the API, you can use the :meth:`~jdaviz.configs.specviz.helper.Specviz.get_spectral_regions` method:
+From the API, you can use the :py:meth:`~jdaviz.configs.specviz.helper.Specviz.get_spectral_regions` method:
 
 .. image:: img/spectral_region_5.png
 

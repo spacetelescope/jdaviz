@@ -14,10 +14,10 @@ From the notebook
 =================
 
 In the notebook, the value of the Redshift column can be changed for all rows or a single row
-using :meth:`~jdaviz.configs.mosviz.helper.Mosviz.update_column`.
+using :py:meth:`~jdaviz.configs.mosviz.helper.Mosviz.update_column`.
 
 The 1D and 2D spectrum objects can be retrieved (with redshift optionally applied) using
-:meth:`~jdaviz.configs.mosviz.helper.Mosviz.get_spectrum_1d` and :meth:`~jdaviz.configs.mosviz.helper.Mosviz.get_spectrum_2d`,
+:py:meth:`~jdaviz.configs.mosviz.helper.Mosviz.get_spectrum_1d` and :py:meth:`~jdaviz.configs.mosviz.helper.Mosviz.get_spectrum_2d`,
 respectively.
 
 See the ``notebooks/MosvizNIRISSExample.ipynb`` notebook in the 

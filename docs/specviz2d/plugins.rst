@@ -69,7 +69,7 @@ adjust plotting options), open the "Export Trace" panel, choose a label for the 
 and click "Create".  Note that this step is not required to create an extraction with simple
 workflows.
 
-Trace objects created outside of jdaviz can be loaded into the app via :meth:`~jdaviz.configs.specviz2d.helper.Specviz2d.load_trace`:
+Trace objects created outside of jdaviz can be loaded into the app via :py:meth:`~jdaviz.configs.specviz2d.helper.Specviz2d.load_trace`:
 
   viz.load_trace(my_trace, data_label="my trace")
 
@@ -79,11 +79,11 @@ Once trace objects are loaded into the app, they can be offset (in the cross-dis
 by selecting the trace label, entering an offset, and overwriting the existing data entry (or
 creating a new one) with the modified trace.
 
-To export and access the specreduce Trace object defined in the plugin, call :meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.export_trace`::
+To export and access the specreduce Trace object defined in the plugin, call :py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.export_trace`::
 
   trace = sp_ext.export_trace()
 
-To import the parameters from a specreduce Trace object, whether it's new or was exported and modified in the notebook, call :meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.import_trace`::
+To import the parameters from a specreduce Trace object, whether it's new or was exported and modified in the notebook, call :py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.import_trace`::
 
   sp_ext.import_trace(trace)
 
@@ -107,16 +107,16 @@ menu in the 2D spectrum viewer, and can be :ref:`exported into the notebook via 
 To refine the trace based on the background-subtracted image, return
 to the Trace step and select the exported background-subtracted image as input. 
 
-To export and access the specreduce Background object defined in the plugin, call :meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.export_bg`::
+To export and access the specreduce Background object defined in the plugin, call :py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.export_bg`::
 
   bg = sp_ext.export_bg()
 
 To access the background image, background spectrum, or background-subtracted image as a :class:`~specutils.Spectrum1D` object,
-call :meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.export_bg_img`,
-:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.export_bg_spectrum`,
-or :meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.export_bg_sub`, respectively.
+call :py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.export_bg_img`,
+:py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.export_bg_spectrum`,
+or :py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.export_bg_sub`, respectively.
 
-To import the parameters from a specreduce Background object into the plugin, whether it's new or was exported and modified in the notebook, call :meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.import_bg`::
+To import the parameters from a specreduce Background object into the plugin, whether it's new or was exported and modified in the notebook, call :py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.import_bg`::
 
   sp_ext.import_bg(bg)
 
@@ -140,13 +140,13 @@ To visualize or export the resulting 2D spectrum, provide a data label and click
 resulting spectrum object can be :ref:`accessed from the API <specviz2d-export-data-1d>` in the same
 way as any other data product in the spectrum viewer.
 
-To export and access the specreduce extraction object defined in the plugin, call :meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.export_extract`::
+To export and access the specreduce extraction object defined in the plugin, call :py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.export_extract`::
 
   ext = sp_ext.export_extract()
 
-To access the extracted spectrum as a :class:`~specutils.Spectrum1D` object, call :meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.export_extract_spectrum`.
+To access the extracted spectrum as a :class:`~specutils.Spectrum1D` object, call :py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.export_extract_spectrum`.
 
-To import the parameters from a specreduce extraction object (either a new object, or an exported one modified in the notebook) into the plugin, call :meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.import_extract`::
+To import the parameters from a specreduce extraction object (either a new object, or an exported one modified in the notebook) into the plugin, call :py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.import_extract`::
 
   sp_ext.import_extract(ext)
 

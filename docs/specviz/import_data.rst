@@ -49,7 +49,7 @@ Importing data via the API
 Alternatively, users who work in a coding environment like a Jupyter
 notebook can access the Specviz helper class API. Using this API, users can
 load data into the application through code with the
-:meth:`~jdaviz.configs.specviz.helper.Specviz.load_spectrum`
+:py:meth:`~jdaviz.configs.specviz.helper.Specviz.load_spectrum`
 method, which takes as input a :class:`~specutils.Spectrum1D` object.
 
 FITS Files
@@ -66,7 +66,7 @@ The example below loads a FITS file into Specviz:
     specviz.show()
 
 You can also pass the path to a file that `~specutils.Spectrum1D` understands directly to the
-:meth:`jdaviz.configs.specviz.helper.Specviz.load_spectrum` method::
+:py:meth:`~jdaviz.configs.specviz.helper.Specviz.load_spectrum` method::
 
     specviz.load_spectrum("path/to/data/file")
 
@@ -118,7 +118,7 @@ is separated from the ``jwst`` pipeline package.
 Importing a SpectrumList
 ------------------------
 
-The :meth:`jdaviz.configs.specviz.helper.Specviz.load_spectrum` also accepts
+The :py:meth:`~jdaviz.configs.specviz.helper.Specviz.load_spectrum` also accepts
 a `~specutils.SpectrumList` object, in which case it will both load the
 individual `~specutils.Spectrum1D` objects in the list and additionally attempt
 to stitch together the spectra into a single data object so that
@@ -141,7 +141,7 @@ end of the red region in the screenshot below:
 .. image:: img/spectrumlist_combined.png
 
 This functionality is also available in limited instances by providing a directory path
-to the :meth:`jdaviz.configs.specviz.helper.Specviz.load_spectrum` method. Note
+to the :py:meth:`~jdaviz.configs.specviz.helper.Specviz.load_spectrum` method. Note
 that the ``read`` method of :class:`~specutils.SpectrumList` is only set up to handle
 directory input in limited cases, for example JWST MIRI MRS data, and will throw an error
 in other cases. In cases that it does work, only files in the directory level specified
