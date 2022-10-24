@@ -37,7 +37,6 @@ This checklist is meant to remind the package maintainer(s) who will review this
 - [ ] Do the proposed changes follow the [STScI Style Guides](https://github.com/spacetelescope/style-guides)?
 - [ ] Are tests added/updated as required? If so, do they follow the [STScI Style Guides](https://github.com/spacetelescope/style-guides)?
 - [ ] Are docs added/updated as required? If so, do they follow the [STScI Style Guides](https://github.com/spacetelescope/style-guides)?
-- [ ] Do the commits need to be squashed or rebased? This is only important if the milestone is for bugfix because we need a clean merge commit for the backport (no "Squash and merge").
 - [ ] Did the CI pass? If not, are the failures related?
 - [ ] Is a milestone set? Set this to bugfix milestone if this is a bug fix and needs to be released ASAP; otherwise, set this to the next major release milestone.
 - [ ] After merge, any internal documentations need updating (e.g., JIRA, Innerspace)?
