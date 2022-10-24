@@ -36,7 +36,9 @@ up with the first (32,32) pixels of the larger dataset, starting at the origin.
 This is equivalent to the "match image" mode in DS9.
 
 An example of setting up an identity link in pixel coordinates between two
-n-dimensional datasets where n is the same for both datasets would look like::
+n-dimensional datasets where n is the same for both datasets would look like:
+
+.. code-block:: python
 
     from glue.core.link_helpers import LinkSame
 
@@ -52,7 +54,9 @@ n-dimensional datasets where n is the same for both datasets would look like::
 This can also be used to link, for example, the two spatial dimensions of a
 collapsed cube with the original cube, as done in the `cube collapse
 functionality <https://github.com/spacetelescope/jdaviz/blob/0553aca6c2e9530d8dff74088e877fc9593c2d3c/jdaviz/configs/default/plugins/collapse/collapse.py>`_
-in Jdaviz::
+in Jdaviz:
+
+.. code-block:: python
 
     pix_id_1 = self._selected_data.pixel_component_ids[i1]
     pix_id_1c = self.data_collection[label].pixel_component_ids[i1c]
@@ -89,7 +93,9 @@ The more robust approach for linking datasets by WCS is to use the
 :class:`~glue.plugins.wcs_autolinking.wcs_autolinking.WCSLink` class. Given two
 datasets, and a list of pixel component IDs to link in each dataset, this class
 will set up links between the pixel components by internally representing the
-chain of WCS transformations required. As an example::
+chain of WCS transformations required. As an example:
+
+.. code-block:: python
 
     from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink
 
@@ -107,7 +113,9 @@ both a FITS WCS to a GWCS instance, and vice versa.
 Using LinkSame (not recommended)
 --------------------------------
 
-The first is to do something similar to how pixel coordinates are linked in :ref:`link_by_pixel`::
+The first is to do something similar to how pixel coordinates are linked in :ref:`link_by_pixel`:
+
+.. code-block:: python
 
     from glue.core.link_helpers import LinkSame
 
@@ -121,7 +129,9 @@ The first is to do something similar to how pixel coordinates are linked in :ref
     data_collection.add_link(links)
 
 or see the `following example in app.py <https://github.com/spacetelescope/jdaviz/blob/d296c6312b020897034e9dd1fc58c84a2559efa5/jdaviz/app.py>`_
-from Jdaviz::
+from Jdaviz:
+
+.. code-block:: python
 
     def _link_new_data(self):
         """
@@ -163,7 +173,9 @@ necessary if the two datasets are close to each other and have a similar WCS.
 For the best performance, it is possible to approximate the
 :class:`~glue.plugins.wcs_autolinking.wcs_autolinking.WCSLink` by a simple affine
 transformation between the datasets. This can be done with the
-:meth:`~glue.plugins.wcs_autolinking.wcs_autolinking.WCSLink.as_affine_link` method::
+:meth:`~glue.plugins.wcs_autolinking.wcs_autolinking.WCSLink.as_affine_link` method:
+
+.. code-block:: python
 
     link = WCSLink(data1=data1, data2=data2,
                    cids1=data1.pixel_component_ids,
@@ -194,7 +206,9 @@ using the
 :meth:`~glue.core.data_collection.DataCollection.delay_link_manager_update`
 context manager. Use this around any block that adds multiple datasets to the
 data collection, components/attributes to datasets, or links to the data
-collection, e.g.::
+collection, e.g.:
+
+.. code-block:: python
 
     with data_collection.delay_link_manager_update():
         for i in range(10):
@@ -208,7 +222,9 @@ Setting or resetting all links in one go
 
 If you want to prepare and set all links in one go, discarding any previous links,
 you can make use of the :meth:`~glue.core.data_collection.DataCollection.set_links`
-method, which takes a list of links::
+method, which takes a list of links:
+
+.. code-block:: python
 
     data_collection.set_links([link1, link2, link3])
 

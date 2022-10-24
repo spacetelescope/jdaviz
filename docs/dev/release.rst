@@ -58,7 +58,9 @@ You can do a release from your fork directly without a clean code check-out.
 
 #. Create a new local branch and make sure you have updated tags too. Note
    that the "x" here should actually be the letter "x", whereas the upper case "X"
-   and "Y" should be replace by your major and minor version numbers::
+   and "Y" should be replace by your major and minor version numbers:
+
+.. code-block:: bash
 
      git fetch upstream main
      git fetch upstream --tags
@@ -72,7 +74,9 @@ You can do a release from your fork directly without a clean code check-out.
    If there are new contributors to the project, add them in the ``authors``
    section.
 
-#. Do not forget to commit your changes from the last two steps::
+#. Do not forget to commit your changes from the last two steps:
+
+.. code-block:: bash
 
      git add CHANGES.rst
      git add CITATION.cff
@@ -197,7 +201,9 @@ You can do a release from your fork directly without a clean code check-out.
 
 #. Follow procedures for :ref:`release-milestones`.
 
-#. For your own sanity unrelated to the release, grab the new tag for your fork::
+#. For your own sanity unrelated to the release, grab the new tag for your fork:
+
+.. code-block:: bash
 
      git fetch upstream --tags
 
@@ -225,7 +231,9 @@ cleanup on the ``main`` branch.
 #. For any PRs to be released in this bugfix version, find the corresponding
    `merge commit <https://github.com/spacetelescope/jdaviz/commits/main>`_ in main, copy the
    full SHA of that commit, and use git's cherry-pick command to add those commits to the
-   ``vX.Y.x`` branch, resolving any conflicts::
+   ``vX.Y.x`` branch, resolving any conflicts:
+
+.. code-block:: bash
 
        git cherry-pick -x -m1 [commit hash]
 
@@ -239,7 +247,9 @@ cleanup on the ``main`` branch.
    If there are new contributors to the project, add them in the ``authors``
    section.
 
-#. Do not forget to commit your changes from the last two steps::
+#. Do not forget to commit your changes from the last two steps:
+
+.. code-block:: bash
 
      git add CHANGES.rst
      git add CITATION.cff
@@ -351,7 +361,9 @@ from the one used for deployment on GitHub Actions.
 It is recommended for you to have a clean checkout of the Jdaviz repository
 (not the fork), especially if you also do a lot of development work.
 You can create a clean checkout as follows (requires
-`SSH setup <https://docs.github.com/en/github/authenticating-to-github/connecting-to-github-with-ssh>`_)::
+`SSH setup <https://docs.github.com/en/github/authenticating-to-github/connecting-to-github-with-ssh>`_):
+
+.. code-block:: bash
 
     mkdir jdaviz_for_release
     cd jdaviz_for_release
@@ -368,7 +380,9 @@ You can create a clean checkout as follows (requires
 
 #. Update the ``CITATION.cff`` file's ``date-released`` and ``version`` fields.
    If there are new contributors to the project, add them in the ``authors``
-   section. Do not forget to commit your changes from the last two steps::
+   section. Do not forget to commit your changes from the last two steps:
+
+.. code-block:: bash
 
      git add CHANGES.rst
      git add CITATION.cff
@@ -377,26 +391,36 @@ You can create a clean checkout as follows (requires
 #. Remove any untracked files. (WARNING: This will
    permanently remove any files that have not been previously committed, so
    make sure that you don't need to keep any of these files.)
-   This step is not needed if you have a fresh code checkout, but does not hurt either::
+   This step is not needed if you have a fresh code checkout, but does not hurt either:
+
+.. code-block:: bash
 
      git clean -xdf
 
 #. Tag the version you are about to release and sign it (optional but it is a good practice).
    Signing requires
-   `GPG setup <https://docs.github.com/en/github/authenticating-to-github/managing-commit-signature-verification/adding-a-new-gpg-key-to-your-github-account>`_::
+   `GPG setup <https://docs.github.com/en/github/authenticating-to-github/managing-commit-signature-verification/adding-a-new-gpg-key-to-your-github-account>`_:
+
+.. code-block:: bash
 
      git tag -s "vX.Y.Z" -m "Tagging version vX.Y.Z"
 
 #. Generate the package distribution files by first making sure the
-   following packages are installed and up-to-date::
+   following packages are installed and up-to-date:
+
+.. code-block:: bash
 
      pip install build twine -U
 
-#. Creating the source distribution and its wheel with::
+#. Creating the source distribution and its wheel with:
+
+.. code-block:: bash
 
      python -m build --sdist --wheel .
 
-#. Do a preliminary check of the generated files::
+#. Do a preliminary check of the generated files:
+
+.. code-block:: bash
 
      python -m twine check --strict dist/*
 
@@ -405,7 +429,9 @@ You can create a clean checkout as follows (requires
 #. Run unit tests using package you are about to release. It is recommended that you
    do this in a fresh Python environment. The following example uses ``conda``,
    so if you use a non-``conda`` Python environment manager, replace the ``conda``
-   commands accordingly::
+   commands accordingly:
+
+.. code-block:: bash
 
      conda create -n testenv python=3.9
      conda activate testenv
@@ -422,11 +448,15 @@ You can create a clean checkout as follows (requires
    the ``main`` branch. If there are no fixes (yay) or if you can justify pushing
    the fixes as part of this release (not recommended), continue on.
 
-#. Remove files generated by above steps::
+#. Remove files generated by above steps:
+
+.. code-block:: bash
 
      git clean -xdf
 
-#. Make sure code checkout state is clean and history is correct. If not, fix accordingly::
+#. Make sure code checkout state is clean and history is correct. If not, fix accordingly:
+
+.. code-block:: bash
 
      git status
      git log
@@ -495,13 +525,17 @@ You can create a clean checkout as follows (requires
      Other Changes and Additions
      ---------------------------
 
-#. Commit your changes of the, uh, change log::
+#. Commit your changes of the, uh, change log:
+
+.. code-block:: bash
 
      git add CHANGES.rst
      git commit -m "Back to development: A.B.dev"
 
 #. Push out the updated code and tag. If applicable, change ``origin`` to point to
-   the remote that points to the repository being released::
+   the remote that points to the repository being released:
+
+.. code-block:: bash
 
      git push origin main
      git push origin vX.Y.Z

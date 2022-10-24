@@ -20,7 +20,9 @@ Importing data through the Command Line
 =======================================
 
 When running the Imviz application via the command line, you must provide a path
-to a compatible file, which will be loaded into the app on initialization::
+to a compatible file, which will be loaded into the app on initialization:
+
+.. code-block:: bash
 
     jdaviz imviz /my/image/data.fits
 
@@ -56,7 +58,9 @@ or :class:`~astropy.io.fits.ImageHDU` object.
 FITS Files
 ----------
 
-The example below loads the first science extension of the given FITS file into Imviz::
+The example below loads the first science extension of the given FITS file into Imviz:
+
+.. code-block:: python
 
     from jdaviz import Imviz
     imviz = Imviz()
@@ -66,7 +70,9 @@ The example below loads the first science extension of the given FITS file into 
 Creating Your Own Array
 -----------------------
 
-You can create your own array to load into Imviz::
+You can create your own array to load into Imviz:
+
+.. code-block:: python
 
     import numpy as np
     from jdaviz import Imviz
@@ -80,7 +86,9 @@ JWST datamodels
 ---------------
 
 If you have a `jwst.datamodels <https://jwst-pipeline.readthedocs.io/en/latest/jwst/datamodels/index.html>`_
-object, you can load it into Imviz as follows::
+object, you can load it into Imviz as follows:
+
+.. code-block:: python
 
     import numpy as np
     from astropy.nddata import NDData
@@ -104,7 +112,9 @@ If you have a catalog file supported by `astropy.table.Table`, you
 can load the catalog into Imviz and add markers to Imviz viewers to show
 positions from the catalog. These markers are different than Imviz
 :ref:`spatial regions <imviz_defining_spatial_regions>` as they are only meant to mark catalog positions.
-Loading markers can be done with the following commands::
+Loading markers can be done with the following commands:
+
+.. code-block:: python
 
     viewer.marker = {'color': 'green', 'alpha': 0.8, 'markersize': 10, 'fill': False}
     my_markers = Table.read('my_catalog.ecsv')
@@ -120,7 +130,9 @@ image has FITS WCS, you could use `astropy.wcs.WCS.footprint_contains` if you
 only want the marks within a footprint. Alternately, you could filter by
 relevant columns in your catalogs, such as brightness, distance, etc.
 
-And to remove those markers::
+And to remove those markers:
+
+.. code-block:: python
 
     viewer.remove_markers(marker_name='my_markers')
 
@@ -130,13 +142,17 @@ Importing regions via the API
 =============================
 
 If you have a region file supported by :ref:`regions:regions_io`, you
-can load the regions into Imviz as follows::
+can load the regions into Imviz as follows:
+
+.. code-block:: python
 
     imviz.load_regions_from_file("/path/to/data/myregions.reg")
 
 Unsupported regions will be skipped and trigger a warning. Those that
 failed to load, if any, can be returned as a list of tuples of the
-form ``(region, reason)``::
+form ``(region, reason)``:
+
+.. code-block:: python
 
     bad_regions = imviz.load_regions_from_file("/path/to/data/myregions.reg", return_bad_regions=True)
 

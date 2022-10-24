@@ -20,7 +20,9 @@ and hence should address most astronomical spectrum use cases.
 Importing data through the Command Line
 =======================================
 
-You can load your data into the Specviz application through the command line::
+You can load your data into the Specviz application through the command line:
+
+.. code-block:: bash
 
     jdaviz specviz /my/directory/spectrum.fits
 
@@ -53,7 +55,9 @@ method, which takes as input a :class:`~specutils.Spectrum1D` object.
 FITS Files
 ----------
 
-The example below loads a FITS file into Specviz::
+The example below loads a FITS file into Specviz:
+
+.. code-block:: python
 
     from specutils import Spectrum1D
     spec1d = Spectrum1D.read("/path/to/data/file")
@@ -69,7 +73,9 @@ You can also pass the path to a file that `~specutils.Spectrum1D` understands di
 Creating Your Own Array
 -----------------------
 
-You can create your own array to load into Specviz::
+You can create your own array to load into Specviz:
+
+.. code-block:: python
 
     import numpy as np
     import astropy.units as u
@@ -87,7 +93,9 @@ JWST datamodels
 ---------------
 
 If you have a `jwst.datamodels <https://jwst-pipeline.readthedocs.io/en/latest/jwst/datamodels/index.html>`_
-object, you can load it into Specviz as follows::
+object, you can load it into Specviz as follows:
+
+.. code-block:: python
 
     from specutils import Spectrum1D
     from jdaviz import Specviz
@@ -114,7 +122,9 @@ The :meth:`jdaviz.configs.specviz.helper.Specviz.load_spectrum` also accepts
 a `~specutils.SpectrumList` object, in which case it will both load the
 individual `~specutils.Spectrum1D` objects in the list and additionally attempt
 to stitch together the spectra into a single data object so that
-they can be manipulated and analyzed in the application as a single entity::
+they can be manipulated and analyzed in the application as a single entity:
+
+.. code-block:: python
 
     from specutils import SpectrumList
     spec_list = SpectrumList([spec1d_1, spec1d_2])

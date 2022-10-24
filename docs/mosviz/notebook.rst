@@ -5,7 +5,9 @@ Using Mosviz in a Jupyter Notebook
 ***********************************
 
 To initialize an instance of the Mosviz app in a Jupyter notebook, simply run
-the following code in a cell of the notebook::
+the following code in a cell of the notebook:
+
+.. code-block:: python
 
     from jdaviz import Mosviz
     mosviz = Mosviz()
@@ -27,7 +29,9 @@ The viewers in Mosviz that can be used that way are ``image-viewer``, ``spectrum
 and ``spectrum-2d-viewer``.
 
 It is also possible to extract the contents of the table viewer using
-`~jdaviz.configs.mosviz.helper.Mosviz.to_csv`::
+`~jdaviz.configs.mosviz.helper.Mosviz.to_csv`:
+
+.. code-block:: python
 
     mosviz.to_csv(filename="MOS_data.csv", selected=False)
 
@@ -36,6 +40,8 @@ If the ``selected`` keyword is set to `True`, only the checked
 rows in the table will be output. A previous CSV file of the same name can
 be overwritten by setting the ``overwrite`` keyword to `True`.
 The contents of ``table-viewer`` can also be extracted to a notebook cell by
-running `~jdaviz.configs.mosviz.helper.Mosviz.to_table`::
+running `~jdaviz.configs.mosviz.helper.Mosviz.to_table`:
+
+.. code-block:: python
 
     mosviz.to_table()

@@ -22,7 +22,9 @@ Installation
 On MacOS versions 10.13 and older, install fails due to scikit-image
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This can be fixed by reinstalling scikit-image::
+This can be fixed by reinstalling scikit-image:
+
+.. code-block:: bash
 
     pip uninstall scikit-image
     conda install scikit-image
@@ -30,7 +32,9 @@ This can be fixed by reinstalling scikit-image::
 The reason for this issue is that prebuilt binaries for scikit-image don't
 work on Mac versions of 10.13 or older and conda installs an older
 version of scikit-image that works with those versions.
-Another way to get the up-to-date scikit-image version is::
+Another way to get the up-to-date scikit-image version is:
+
+.. code-block:: bash
 
     pip install -U --no-binary scikit-image scikit-image.
 
@@ -43,7 +47,9 @@ On some platforms, install fails due to vispy
 The 0.6.4 version of vispy fails to build for some combinations of
 platform/OS and Python versions. vispy 0.6.5 has resolved this, but a
 workaround if you have an older version of vispy is to ensure you have a
-compatible version::
+compatible version:
+
+.. code-block:: bash
 
     conda create -n jdaviz python=3.8
     conda activate jdaviz
@@ -101,7 +107,9 @@ When running Jdaviz on a Linux virtual machine (VM), the spectrum may not appear
 in the spectrum viewer. This is a 
 `known bug <https://github.com/glue-viz/bqplot-image-gl/issues/94>`_ in an underlying
 package. Until it is fixed, the workaround is to run the following in a Jupyter
-notebook cell *before* importing ``jdaviz``::
+notebook cell *before* importing ``jdaviz``:
+
+.. code-block:: python
 
     from glue_jupyter.bqplot.profile import layer_artist
     layer_artist.USE_GL = False

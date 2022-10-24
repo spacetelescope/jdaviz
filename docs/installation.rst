@@ -23,7 +23,9 @@ to easily manage a compatible Python environment for ``jdaviz``; it should work
 with most modern shells, except CSH/TCSH.
 
 You may want to consider installing ``jdaviz`` in a new virtual or conda environment
-to avoid version conflicts with other packages you may have installed, for example::
+to avoid version conflicts with other packages you may have installed, for example:
+
+.. code-block:: bash
 
     conda create -n jdaviz-env python=3.9
     conda activate jdaviz-env
@@ -31,11 +33,15 @@ to avoid version conflicts with other packages you may have installed, for examp
 Pip Install
 ^^^^^^^^^^^
 
-As noted above, we typically recommend installing the latest development version::
+As noted above, we typically recommend installing the latest development version:
+
+.. code-block:: bash
 
     pip install git+https://github.com/spacetelescope/jdaviz --upgrade
 
-A normal install will also work by installing the latest release version::
+A normal install will also work by installing the latest release version:
+
+.. code-block:: bash
 
     pip install jdaviz --upgrade
 
@@ -50,14 +56,18 @@ Python, it will raise an error that it cannot find a valid package.
 
 Users occasionally encounter problems running the pure ``pip`` install above. For those
 using ``conda``, some problems may be resolved by pulling the following from ``conda``
-instead of ``pip``::
+instead of ``pip``:
+
+.. code-block:: bash
 
     conda install bottleneck
     conda install -c conda-forge notebook
     conda install -c conda-forge jupyterlab
     conda install -c conda-forge voila
 
-You might also want to enable the ``ipywidgets`` notebook extension, as follows::
+You might also want to enable the ``ipywidgets`` notebook extension, as follows:
+
+.. code-block:: bash
 
     jupyter nbextension enable --py widgetsnbextension
 
@@ -68,7 +78,9 @@ If you wish to contribute to Jdaviz, please fork the project to your
 own GitHub account. The following instructions assume your have forked
 the project and have connected
 `your GitHub to SSH <https://docs.github.com/en/authentication/connecting-to-github-with-ssh>`_
-and ``username`` is your GitHub username. This is a one-setup setup::
+and ``username`` is your GitHub username. This is a one-setup setup:
+
+.. code-block:: bash
 
     git clone git@github.com:username/jdaviz.git
     cd jdaviz
@@ -78,7 +90,9 @@ and ``username`` is your GitHub username. This is a one-setup setup::
 
 To work on a new feature or bug-fix, it is recommended that you build upon
 the latest dev code in a new branch (e.g., ``my-new-feature``).
-You also need the up-to-date tags for proper software versioning::
+You also need the up-to-date tags for proper software versioning:
+
+.. code-block:: bash
 
     git checkout -b my-new-feature
     git fetch upstream --tags
@@ -92,17 +106,23 @@ If your patch requires a change log, see ``CHANGES.rst`` for examples.
 
 To install ``jdaviz`` for development or from source in an editable mode
 (i.e., changes to the locally checked out code would reflect in runtime
-after you restarted the Python kernel)::
+after you restarted the Python kernel):
+
+.. code-block:: bash
 
     pip install -e .
 
 Optionally, to enable the hot reloading of Vue.js templates, install
-``watchdog``::
+``watchdog``:
+
+.. code-block:: bash
 
     pip install watchdog
 
 After installing ``watchdog``, to use it, add the following to the top
-of a notebook::
+of a notebook:
+
+.. code-block:: python
 
     from jdaviz import enable_hot_reloading
     enable_hot_reloading()
