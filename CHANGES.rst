@@ -56,8 +56,13 @@ Specviz2d
 Bug Fixes
 ---------
 
+- Disable unit conversion if spectral axis is in pixels or if flux
+  is in counts, respectively. [#1734]
+
 Cubeviz
 ^^^^^^^
+
+- Fixed parsing of data cube without WCS. [#1734]
 
 Imviz
 ^^^^^

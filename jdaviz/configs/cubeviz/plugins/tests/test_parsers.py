@@ -4,7 +4,8 @@ from astropy import units as u
 from astropy.wcs import WCS
 from specutils import Spectrum1D
 from glue.core.roi import XRangeROI
-from numpy.testing import assert_allclose
+from glue_astronomy.translators.spectrum1d import PaddedSpectrumWCS
+from numpy.testing import assert_allclose, assert_array_equal
 
 from jdaviz.utils import PRIHDR_KEY
 
@@ -17,7 +18,7 @@ def test_fits_image_hdu_parse(image_cube_hdu_obj, cubeviz_helper):
     assert cubeviz_helper.app.data_collection[0].label == "Unknown HDU object[FLUX]"
 
     # first load should be successful; subsequent attempts should fail
-    with pytest.raises(RuntimeError, match=r".?only one (data)?cube.?"):
+    with pytest.raises(RuntimeError, match="Only one cube"):
         cubeviz_helper.load_data(image_cube_hdu_obj)
 
 
@@ -120,8 +121,10 @@ def test_spectrum3d_parse(image_cube_hdu_obj, cubeviz_helper):
     sc = Spectrum1D(flux=flux, wcs=wcs)
     cubeviz_helper.load_data(sc)
 
+    data = cubeviz_helper.app.data_collection[0]
     assert len(cubeviz_helper.app.data_collection) == 1
-    assert cubeviz_helper.app.data_collection[0].label == "Unknown spectrum object[FLUX]"
+    assert data.label == "Unknown spectrum object[FLUX]"
+    assert data.shape == flux.shape
 
     # Same as flux viewer data in test_fits_image_hdu_parse_from_file
     flux_viewer = cubeviz_helper.app.get_viewer(cubeviz_helper._default_flux_viewer_reference_name)
@@ -136,6 +139,20 @@ def test_spectrum3d_parse(image_cube_hdu_obj, cubeviz_helper):
     unc_viewer = cubeviz_helper.app.get_viewer(cubeviz_helper._default_uncert_viewer_reference_name)
     unc_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': -1, 'y': 0}})
     assert unc_viewer.label_mouseover is None
+
+
+def test_spectrum3d_no_wcs_parse(cubeviz_helper):
+    sc = Spectrum1D(flux=np.ones(24).reshape((2, 3, 4)) * u.nJy)  # x, y, z
+    cubeviz_helper.load_data(sc)
+    assert sc.spectral_axis.unit == u.pix
+
+    data = cubeviz_helper.app.data_collection[0]
+    flux = data.get_component('flux')
+    assert data.label.endswith('[FLUX]')
+    assert data.shape == (3, 2, 4)  # y, x, z
+    assert isinstance(data.coords, PaddedSpectrumWCS)
+    assert_array_equal(flux.data, 1)
+    assert flux.units == 'nJy'
 
 
 def test_spectrum1d_parse(spectrum1d, cubeviz_helper):
@@ -153,3 +170,20 @@ def test_spectrum1d_parse(spectrum1d, cubeviz_helper):
 def test_numpy_cube(cubeviz_helper):
     with pytest.raises(NotImplementedError, match='Unsupported data format'):
         cubeviz_helper.load_data(np.ones(27).reshape((3, 3, 3)))
+
+
+def test_invalid_data_types(cubeviz_helper):
+    with pytest.raises(FileNotFoundError, match='Could not locate file'):
+        cubeviz_helper.load_data('does_not_exist.fits')
+
+    with pytest.raises(NotImplementedError, match='Unsupported data format'):
+        cubeviz_helper.load_data(WCS(naxis=3))
+
+    with pytest.raises(NotImplementedError, match='Unsupported data format'):
+        cubeviz_helper.load_data(Spectrum1D(flux=np.ones((2, 2)) * u.nJy))
+
+    with pytest.raises(NotImplementedError, match='Unsupported data format'):
+        cubeviz_helper.load_data(np.ones((2, 2)))
+
+    with pytest.raises(NotImplementedError, match='Unsupported data format'):
+        cubeviz_helper.load_data(np.ones((2, )))
