@@ -10,6 +10,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Fixed Simple Aperture Photometry plugin compatibility with astropy v5.1.1. [#1769]
+
 Mosviz
 ^^^^^^
 
