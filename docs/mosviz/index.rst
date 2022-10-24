@@ -8,7 +8,7 @@
 Mosviz
 ######
 
-.. image:: ../img/landing_gifs/Mosviz_landing.gif
+.. image:: https://stsci.box.com/shared/static/sbstzr702zqghc40x49g6zxsik6ayg6u.gif
     :alt: Introductory video tour of the Mosviz configuration and its features
 
 Mosviz is a quick-look analysis and visualization tool for multi-object spectroscopy (MOS).
