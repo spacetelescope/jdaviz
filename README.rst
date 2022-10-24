@@ -1,10 +1,10 @@
 .. image:: docs/logos/jdaviz.svg
-   :width: 400
-   :alt: Jdaviz logo
+    :width: 400
+    :alt: Jdaviz logo
 
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.5513927.svg
-   :target: https://doi.org/10.5281/zenodo.5513927
-   :alt: Zenodo DOI
+    :target: https://doi.org/10.5281/zenodo.5513927
+    :alt: Zenodo DOI
 
 .. image:: https://github.com/spacetelescope/jdaviz/workflows/CI/badge.svg
     :target: https://github.com/spacetelescope/jdaviz/actions
@@ -49,12 +49,16 @@ Installing
 ----------
 
 You may want to consider installing ``jdaviz`` in a new virtual or conda environment to avoid 
-version conflicts with other packages you may have installed, for example::
+version conflicts with other packages you may have installed, for example:
+
+.. code-block:: bash
 
    conda create -n jdaviz-env python=3.9
    conda activate jdaviz-env
 
-Installing the released version can be done using pip::
+Installing the released version can be done using pip:
+
+.. code-block:: bash
 
    pip install jdaviz --upgrade
 
@@ -70,7 +74,9 @@ As a Web Application
 ++++++++++++++++++++
 
 ``jdaviz`` provides a command-line tool to start the web application. To see the syntax and usage,
-from a terminal, type::
+from a terminal, type:
+
+.. code-block:: bash
 
     jdaviz --help
     jdaviz specviz /path/to/data/spectral_file
@@ -82,7 +88,9 @@ For more information on the command line interface, see the
 In a Jupyter Notebook
 +++++++++++++++++++++
 
-The power of ``jdaviz`` is that it can integrated into your Jupyter notebook workflow::
+The power of ``jdaviz`` is that it can integrated into your Jupyter notebook workflow:
+
+.. code-block:: python
 
     from jdaviz import Specviz
 
@@ -94,7 +102,9 @@ To learn more about the various ``jdaviz`` application configurations and loadin
 
 ``jdaviz`` also provides a directory of `sample notebooks <https://jdaviz.readthedocs.io/en/latest/sample_notebooks.html>`_ to test the application, located in the ``notebooks`` sub-directory
 of the git repository.  ``CubevizExample.ipynb`` is provided as an example that loads a SDSS MaNGA IFU data cube with the
-``Cubeviz`` configuration.  To run the provided example, start the jupyter kernel with the notebook path::
+``Cubeviz`` configuration.  To run the provided example, start the jupyter kernel with the notebook path:
+
+.. code-block:: bash
 
     jupyter notebook /path/to/jdaviz/notebooks/CubevizExample.ipynb
 
