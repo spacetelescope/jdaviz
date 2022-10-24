@@ -439,6 +439,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin):
             self._fig.marks = bqplot_marks
 
         except Exception as e:  # pragma: no cover
+            raise
             self.reset_results()
             self.hub.broadcast(SnackbarMessage(
                 f"Aperture photometry failed: {repr(e)}", color='error', sender=self))
