@@ -1,6 +1,7 @@
 .. image:: docs/logos/jdaviz.svg
     :width: 400
     :alt: Jdaviz logo
+    :align: center
 
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.5513927.svg
     :target: https://doi.org/10.5281/zenodo.5513927
@@ -81,8 +82,8 @@ from a terminal, type:
     jdaviz --help
     jdaviz specviz /path/to/data/spectral_file
 
-For more information on the command line interface, see the
-`Jdaviz Quickstart <https://jdaviz.readthedocs.io/en/latest/quickstart.html>`_.
+For more information on the command line interfaces for each tool, see the
+`Jdaviz docs <https://jdaviz.readthedocs.io/en/latest/index.html>`_.
 
 
 In a Jupyter Notebook
