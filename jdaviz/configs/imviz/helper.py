@@ -189,7 +189,9 @@ class Imviz(ImageConfigHelper):
                 self._delayed_show_in_viewer_labels[applied_label] = show_in_viewer
 
         elif do_link:
-            self.link_data(link_type='pixels', error_on_fail=False)
+            if 'Links Control' not in self.plugins.keys():
+                # otherwise plugin will handle linking automatically with DataCollectionAddMessage
+                self.link_data(link_type='pixels', error_on_fail=False)
 
             # One input might load into multiple Data objects.
             # NOTE: this will not add entries that were skipped with do_link=False
