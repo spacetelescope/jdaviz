@@ -29,9 +29,9 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
     spectrum_viewer_reference_name : str
         Reference name for the viewer
     concat_by_file : bool
-        If True, concatenate the extensions within each spectrum file
-        passed to the parser and add a concatenated spectrum to the
-        data collection.
+        If True and there is more than one available extension, concatenate
+        the extensions within each spectrum file passed to the parser and
+        add a concatenated spectrum to the data collection.
     """
     spectrum_viewer_reference_name = app._jdaviz_helper._default_spectrum_viewer_reference_name
     # If no data label is assigned, give it a unique name
