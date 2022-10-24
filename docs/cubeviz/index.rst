@@ -8,7 +8,7 @@
 Cubeviz
 #######
 
-.. image:: ../img/landing_gifs/Cubeviz_landing.gif
+.. image:: https://stsci.box.com/shared/static/esod50xtbn07wvls1ia07urnr65tv2bj.gif
     :alt: Introductory video tour of the Cubeviz configuration and its features
 
 Cubeviz is a visualization and analysis toolbox for data cubes from

@@ -7,7 +7,7 @@
 Imviz
 #####
 
-.. image:: ../img/landing_gifs/Imviz_landing.gif
+.. image:: https://stsci.box.com/shared/static/56jhed2cqr3nr2w5a3e5gwwkvytmc00n.gif
     :alt: Introductory video tour of the Imviz configuration and its features
 
 Imviz is a tool for visualization and analysis of 2D astronomical images.
