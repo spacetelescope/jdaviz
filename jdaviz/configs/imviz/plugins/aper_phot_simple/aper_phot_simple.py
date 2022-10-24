@@ -417,7 +417,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin):
                     gs = Gaussian1D(amplitude=y_max, mean=0, stddev=std,
                                     fixed={'mean': True, 'amplitude': True},
                                     bounds={'amplitude': (y_max * 0.5, y_max)})
-                    if Version(astropy.__version__) <= Version('5.1'):
+                    if Version(astropy.__version__) < Version('5.2'):
                         fitter_kw = {}
                     else:
                         fitter_kw = {'filter_non_finite': True}
