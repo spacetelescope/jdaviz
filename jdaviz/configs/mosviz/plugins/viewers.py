@@ -99,7 +99,7 @@ class MosvizImageView(JdavizViewerMixin, BqplotImageView):
 
 
 @viewer_registry("mosviz-profile-2d-viewer", label="Spectrum 2D (Mosviz)")
-class MosvizProfile2DView(BqplotImageView, JdavizViewerMixin):
+class MosvizProfile2DView(JdavizViewerMixin, BqplotImageView):
     # Due to limitations in CCDData and 2D data that has spectral and spatial
     #  axes, the default conversion class must handle cubes
     default_class = Spectrum1D
