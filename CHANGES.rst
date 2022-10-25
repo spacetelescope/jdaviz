@@ -101,11 +101,15 @@ Imviz
 Mosviz
 ^^^^^^
 
+- Fixed toolbar on 2d profile viewer. [#1778]
+
 Specviz
 ^^^^^^^
 
 Specviz2d
 ^^^^^^^^^
+
+- Fixed toolbar on 2d spectrum viewer. [#1778]
 
 3.0.2 (2022-10-18)
 ==================
