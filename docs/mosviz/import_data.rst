@@ -40,7 +40,7 @@ or for NIRISS:
 
 Similarly, an instrument keyword can be specified by the command line. For NIRSpec:
 
-.. code-block:: python
+.. code-block:: bash
 
     jdaviz mosviz /path/to/my/data --instrument=nirspec
 
