@@ -44,7 +44,9 @@ To then extract your data from Cubeviz, please see the :ref:`cubeviz-notebook` s
 Importing data through the Command Line
 =======================================
 
-You can load your data into the Cubeviz application through the command line::
+You can load your data into the Cubeviz application through the command line:
+
+.. code-block:: bash
 
     jdaviz cubeviz /my/directory/cube.fits
 
@@ -76,7 +78,9 @@ method, which takes as input a :class:`~specutils.Spectrum1D` object.
 FITS Files
 ----------
 
-The example below loads a FITS file into Cubeviz::
+The example below loads a FITS file into Cubeviz:
+
+.. code-block:: python
 
     from jdaviz import Cubeviz
     cubeviz = Cubeviz()
@@ -88,7 +92,9 @@ Spectrum1D (from file)
 
 For cases where the built-in parser is unable to understand your file format,
 you can try the `~specutils.Spectrum1D` parser directly and then pass the object to the
-:py:meth:`~jdaviz.core.helpers.ConfigHelper.load_data` method::
+:py:meth:`~jdaviz.core.helpers.ConfigHelper.load_data` method:
+
+.. code-block:: python
 
     from specutils import Spectrum1D
     from jdaviz import Cubeviz
@@ -100,7 +106,9 @@ you can try the `~specutils.Spectrum1D` parser directly and then pass the object
 Spectrum1D (from array)
 -----------------------
 
-You can create your own :class:`~specutils.Spectrum1D` object by hand to load into Cubeviz::
+You can create your own :class:`~specutils.Spectrum1D` object by hand to load into Cubeviz:
+
+.. code-block:: python
 
     import numpy as np
     from astropy import units as u
@@ -124,7 +132,9 @@ JWST datamodels
 ---------------
 
 If you have a `jwst.datamodels <https://jwst-pipeline.readthedocs.io/en/latest/jwst/datamodels/index.html>`_
-object, you can load it into Cubeviz as follows::
+object, you can load it into Cubeviz as follows:
+
+.. code-block:: python
 
     import numpy as np
     import astropy.wcs as fitswcs
@@ -162,13 +172,17 @@ Importing regions via the API
 =============================
 
 If you have a region file supported by :ref:`regions:regions_io`, you
-can load the regions into Cubeviz as follows::
+can load the regions into Cubeviz as follows:
+
+.. code-block:: python
 
     cubeviz.load_regions_from_file("/path/to/data/myregions.reg")
 
 Unsupported regions will be skipped and trigger a warning. Those that
 failed to load, if any, can be returned as a list of tuples of the
-form ``(region, reason)``::
+form ``(region, reason)``:
+
+.. code-block:: python
 
     bad_regions = cubeviz.load_regions_from_file("/path/to/data/myregions.reg", return_bad_regions=True)
 

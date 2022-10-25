@@ -113,14 +113,18 @@ Limit methods
 You can use the methods :py:meth:`~jdaviz.configs.specviz.helper.Specviz.x_limits` and
 :py:meth:`~jdaviz.configs.specviz.helper.Specviz.y_limits` to modify the field of
 view of Specviz. You can provide a scalar (which assumes the units of the loaded spectra),
-a `~astropy.units.Quantity`, or ``'auto'`` to automatically scale::
+a `~astropy.units.Quantity`, or ``'auto'`` to automatically scale:
+
+.. code-block:: python
 
     from astropy import units as u
     specviz.x_limits()
     specviz.x_limits(650*u.nm,750*u.nm)
     specviz.y_limits('auto', 110.0)
 
-Additionally, you can provide the limit methods with a `~specutils.SpectralRegion`. Specviz shall set the bounds the upper and lower bounds of the SpectralRegion::
+Additionally, you can provide the limit methods with a `~specutils.SpectralRegion`. Specviz shall set the bounds the upper and lower bounds of the SpectralRegion:
+
+.. code-block:: python
 
     from specutils import SpectralRegion
     bounds = SpectralRegion(0.45*u.nm, 0.6*u.nm)

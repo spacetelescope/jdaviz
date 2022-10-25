@@ -8,7 +8,9 @@ Exporting Data From Specviz
 ==========
 
 After data have been manipulated or analyzed, it is possible to export
-those data currently back into your Jupyter notebook::
+those data currently back into your Jupyter notebook:
+
+.. code-block:: python
 
     specviz.get_spectra()
 

@@ -164,7 +164,9 @@ Importing Custom Line Lists
 
 Jdaviz comes with curated line lists built by the scientific community.
 If you cannot find the lines you need, you can add your own by constructing
-an :ref:`astropy table <astropy:construct_table>`; For example::
+an :ref:`astropy table <astropy:construct_table>`; For example:
+
+.. code-block:: python
 
     from astropy.table import QTable
     from astropy import units as u
