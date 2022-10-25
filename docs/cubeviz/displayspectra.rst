@@ -16,4 +16,4 @@ below.
 
 There is one important difference when using the API to access Specviz from within Cubeviz.
 The functionality of the :class:`jdaviz.configs.specviz.helper.Specviz` API can be accessed in Cubeviz via
-the :py:meth:`~jdaviz.configs.cubeviz.helper.Cubeviz.specviz` attribute, e.g. ``cubeviz.specviz.get_spectra()``.
+the `~jdaviz.configs.cubeviz.helper.Cubeviz.specviz` attribute, e.g. ``cubeviz.specviz.get_spectra()``.
