@@ -103,7 +103,7 @@ To learn more about the various ``jdaviz`` application configurations and loadin
 
 ``jdaviz`` also provides a directory of `sample notebooks <https://jdaviz.readthedocs.io/en/latest/sample_notebooks.html>`_ to test the application, located in the ``notebooks`` sub-directory
 of the git repository.  ``CubevizExample.ipynb`` is provided as an example that loads a JWST data cube with the
-``Cubeviz`` configuration.  To run the provided example, start the jupyter kernel with the notebook path:
+``Cubeviz`` configuration.  To run the provided example, start the Jupyter kernel with the notebook path:
 
 .. code-block:: bash
 
