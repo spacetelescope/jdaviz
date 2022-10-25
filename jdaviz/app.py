@@ -254,9 +254,6 @@ class Application(VuetifyTemplate, HubListener):
         self.hub.subscribe(self, SnackbarMessage,
                            handler=self._on_snackbar_message)
 
-        # Add callback that updates the layout when the data item array changes
-        self.state.add_callback('stack_items', self.vue_relayout)
-
         # Add a fitted_models dictionary that the helpers (or user) can access
         self.fitted_models = {}
 
@@ -1281,32 +1278,6 @@ class Application(VuetifyTemplate, HubListener):
 
         return viewer_item
 
-    def vue_relayout(self, *args, **kwargs):
-        """
-        Forces any rendered ``Bqplot`` instances to resize themselves.
-        """
-        def resize(stack_items):
-            for stack in stack_items:
-                for viewer_item in stack.get('viewers'):
-                    viewer = self._viewer_by_id(viewer_item['id'])
-
-                    if viewer is not None:
-                        viewer.figure_widget.layout.height = '99.9%'
-                        viewer.figure_widget.layout.height = '100%'
-
-                if len(stack.get('children')) > 0:
-                    resize(stack.get('children'))
-
-        resize(self.state.stack_items)
-
-        # resize tray items
-        for tray_item in self.state.tray_items:
-            # access the actual plugin object (there is no store for plugins)
-            tray_obj = widget_serialization['from_json'](tray_item['widget'], None)
-            for bqplot_fig in tray_obj.bqplot_figs_resize:
-                bqplot_fig.layout.height = '99.9%'
-                bqplot_fig.layout.height = '100%'
-
     def vue_destroy_viewer_item(self, cid):
         """
         Callback for when viewer area tabs are destroyed. Finds the viewer item
@@ -1669,6 +1640,7 @@ class Application(VuetifyTemplate, HubListener):
         """
         viewer = self._application_handler.new_data_viewer(
             msg.cls, data=msg.data, show=False)
+        viewer.figure_widget.layout.height = '100%'
 
         if msg.x_attr is not None:
             x = msg.data.id[msg.x_attr]
@@ -1754,6 +1726,7 @@ class Application(VuetifyTemplate, HubListener):
                     viewer = self._application_handler.new_data_viewer(
                         viewer_registry.members.get(view['plot'])['cls'],
                         data=None, show=False)
+                    viewer.figure_widget.layout.height = '100%'
 
                     viewer_item = self._create_viewer_item(
                         name=view.get('name'),
@@ -1822,7 +1795,6 @@ class Application(VuetifyTemplate, HubListener):
     def _reset_state(self):
         """ Resets the application state """
         self.state = ApplicationState()
-        self.state.add_callback('stack_items', self.vue_relayout)
         self._application_handler._tools = {}
 
     def get_configuration(self, path=None, section=None):

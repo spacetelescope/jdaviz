@@ -71,7 +71,7 @@
       :class="checkNotebookContext() ? '' : 'jdaviz__content--not-in-notebook'"
     >
       <v-container class="fill-height pa-0" fluid>
-        <splitpanes @resize="relayout">
+        <splitpanes>
           <pane size="75">
             <golden-layout
               style="height: 100%;"
@@ -88,7 +88,6 @@
                   :icons="state.icons"
                   :viewer_icons="state.viewer_icons"
                   :layer_icons="state.layer_icons"
-                  @resize="relayout"
                   :closefn="destroy_viewer_item"
                   @data-item-selected="data_item_selected($event)"
                   @data-item-visibility="data_item_visibility($event)"
