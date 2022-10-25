@@ -439,6 +439,10 @@ def layer_is_image_data(layer):
     return isinstance(layer, BaseData) and layer.ndim == 2
 
 
+def layer_is_table_data(layer):
+    return isinstance(layer, BaseData) and layer.ndim == 1
+
+
 def get_top_layer_index(viewer):
     """Get index of the top visible image layer in Imviz.
     This is because when blinked, first layer might not be top visible layer.

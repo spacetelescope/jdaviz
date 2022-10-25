@@ -1,12 +1,10 @@
-import numpy as np
-import numpy.ma as ma
 import os
 
-from traitlets import List, Unicode, Bool, Int, observe
-
+import numpy as np
+import numpy.ma as ma
 from astropy.table import QTable
 from astropy.coordinates import SkyCoord
-from astroquery.sdss import SDSS
+from traitlets import List, Unicode, Bool, Int, observe
 
 from jdaviz.configs.default.plugins.data_tools.file_chooser import FileChooser
 from jdaviz.core.registries import tray_registry
@@ -49,6 +47,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
         self.components = {'g-file-import': self._file_upload}
         self._file_upload.observe(self._on_file_path_changed, names='file_path')
         self._cached_table_from_file = {}
+        self._marker_name = 'catalog_results'
 
     def _on_file_path_changed(self, event):
         self.from_file_message = 'Checking if file is valid'
@@ -127,6 +126,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
 
         # conducts search based on SDSS
         if self.catalog_selected == "SDSS":
+            from astroquery.sdss import SDSS
+
             # queries the region (based on the provided center point and radius)
             # finds all the sources in that region
             query_region_result = SDSS.query_region(skycoord_center, radius=zoom_radius,
@@ -186,7 +187,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
 
         # markers are added to the viewer based on the table
         viewer.marker = {'color': 'red', 'alpha': 0.8, 'markersize': 5, 'fill': False}
-        viewer.add_markers(table=catalog_results, use_skycoord=True, marker_name='catalog_results')
+        viewer.add_markers(table=catalog_results, use_skycoord=True, marker_name=self._marker_name)
 
         return skycoord_table
 
@@ -194,16 +195,29 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
         # calls self.search() which handles all of the searching logic
         self.search()
 
-    def clear(self):
-        if self.results_available:
+    def clear(self, hide_only=True):
+        # gets the current viewer
+        viewer = self.viewer.selected_obj
+
+        if not hide_only and self._marker_name in self.app.data_collection.labels:
             # resetting values
             self.results_available = False
             self.number_of_results = 0
-            # gets the current viewer
-            viewer = self.viewer.selected_obj
 
             # all markers are removed from the viewer
-            viewer.reset_markers()
+            viewer.remove_markers(marker_name=self._marker_name)
+
+        elif self.results_available:
+            from jdaviz.configs.imviz.helper import layer_is_table_data
+
+            # resetting values
+            self.results_available = False
+            self.number_of_results = 0
+
+            # markers still there, just hidden
+            for lyr in viewer.layers:
+                if layer_is_table_data(lyr.layer) and lyr.layer.label == self._marker_name:
+                    lyr.visible = False
 
     def vue_do_clear(self, *args, **kwargs):
         self.clear()
