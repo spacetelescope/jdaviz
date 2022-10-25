@@ -17,9 +17,9 @@ Windows-Specific Dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Some of our dependencies require C++ compilers to install properly. These are usually
 included with macOS and most Linux distributions, but are not included by default in
-Windows. Microsoft provides these tools as part of their "Build Tools for Visual Studio"
-which can be downloaded `here <https://visualstudio.microsoft.com/downloads>`_ under
-"Tools for Visual Studio" towards the bottom of the page.
+Windows. Microsoft provides these tools as part of their
+`Build Tools for Visual Studio <https://visualstudio.microsoft.com/downloads>`_, 
+which can be found under "Tools for Visual Studio" towards the bottom of the page.
 
 Create Your Local Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
