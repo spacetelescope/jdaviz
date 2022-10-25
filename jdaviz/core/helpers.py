@@ -65,7 +65,6 @@ class ConfigHelper(HubListener):
                                handler=lambda msg: self._propagate_callback_to_viewers('_on_subset_delete', msg)) # noqa
 
         self._in_batch_load = 0
-        self._delayed_link_labels = []
         self._delayed_show_in_viewer_labels = {}  # label: viewer_reference pairs
 
     def _propagate_callback_to_viewers(self, method, msg):

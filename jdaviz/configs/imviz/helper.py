@@ -173,19 +173,15 @@ class Imviz(ImageConfigHelper):
                 kwargs['data_label'] = data_label
             self.app.load_data(data, parser_reference='imviz-data-parser', **kwargs)
 
-        # find the current label - TODO: replace this by calling default label functionality above
-        # instead of having to refind it
-        for label in self.app.data_collection.labels:
-            if label not in prev_data_labels:
-                applied_label = label
-                break
+        # find the current label(s) - TODO: replace this by calling default label functionality
+        # above instead of having to refind it
+        applied_labels = [label for label in self.app.data_collection.labels if label not in prev_data_labels]  # noqa
 
         if show_in_viewer is True:
             show_in_viewer = f"{self.app.config}-0"
 
-        if self._in_batch_load:
-            self._delayed_link_labels += [applied_label]
-            if show_in_viewer:
+        if self._in_batch_load and show_in_viewer:
+            for applied_label in applied_labels:
                 self._delayed_show_in_viewer_labels[applied_label] = show_in_viewer
 
         elif do_link:
@@ -197,7 +193,8 @@ class Imviz(ImageConfigHelper):
             # NOTE: this will not add entries that were skipped with do_link=False
             # but the batch_load context manager will handle that logic
             if show_in_viewer:
-                self.app.add_data_to_viewer(show_in_viewer, applied_label)
+                for applied_label in applied_labels:
+                    self.app.add_data_to_viewer(show_in_viewer, applied_label)
         else:
             warnings.warn(AstropyDeprecationWarning("do_link=False is deprecated in v3.1 and will "
                                                     "be removed in a future release.  Use with "
