@@ -11,7 +11,7 @@ with 2d spectra populating the top right viewer, and 1d spectra populating the v
         Specviz documentation on displaying spectra.
 
 The functionality of the Specviz API can be accessed in Mosviz via
-the :py:meth:`~jdaviz.configs.mosviz.helper.Mosviz.specviz` attribute, e.g.,
+the `~jdaviz.configs.mosviz.helper.Mosviz.specviz` attribute, e.g.,
 ``mosviz.specviz.get_spectra()``.
 
 Pan/Zoom
