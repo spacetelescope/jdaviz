@@ -772,7 +772,7 @@ def mos_niriss_parser(app, data_dir):
                                                 message=".*SRCTYPE is missing or UNKNOWN*")
                         specs = SpectrumList.read(filtered_hdul, format="JWST x1d multi")
                 except UserWarning as e:
-                    raise KeyError(f"The SRCTYPE keyword in the header of file {fname}"
+                    raise KeyError(f"The SRCTYPE keyword in the header of file {fname} "
                                    "is not populated (expected values: EXTENDED or POINT)") from e
 
                 filter_name = fits.getheader(fname, ext=0).get('PUPIL')
