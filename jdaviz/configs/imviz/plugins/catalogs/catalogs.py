@@ -136,6 +136,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
                 self.results_available = True
                 self.number_of_results = 0
                 self.app._catalog_source_table = None
+                viewer.remove_markers(marker_name=self._marker_name)
                 return
 
             # TODO: Filter this table the same way as the actual displayed markers.
