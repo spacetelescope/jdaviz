@@ -1,7 +1,9 @@
 from traitlets import List, Unicode, Bool, observe
 
+from glue.core.message import DataCollectionAddMessage
+
 from jdaviz.configs.imviz.helper import link_image_data
-from jdaviz.core.events import LinkUpdatedMessage
+from jdaviz.core.events import LinkUpdatedMessage, ExitBatchLoadMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, SelectPluginComponent
 from jdaviz.core.user_api import PluginUserApi
@@ -42,6 +44,12 @@ class LinksControl(PluginTemplateMixin):
         self.hub.subscribe(self, LinkUpdatedMessage,
                            handler=self._on_link_updated)
 
+        self.hub.subscribe(self, DataCollectionAddMessage,
+                           handler=self._on_new_app_data)
+
+        self.hub.subscribe(self, ExitBatchLoadMessage,
+                           handler=self._on_new_app_data)
+
     @property
     def user_api(self):
         return PluginUserApi(self, expose=('link_type', 'wcs_use_affine'))
@@ -52,8 +60,22 @@ class LinksControl(PluginTemplateMixin):
         self.wcs_use_fallback = msg.wcs_use_fallback
         self.wcs_use_affine = msg.wcs_use_affine
 
+    def _on_new_app_data(self, msg):
+        if self.app._jdaviz_helper._in_batch_load > 0:
+            return
+        if isinstance(msg, DataCollectionAddMessage):
+            components = [str(comp) for comp in msg.data.main_components]
+            if "ra" in components or "Lon" in components:
+                # linking currently removes any markers, so we want to skip
+                # linking immediately after new markers are added
+                # (see imviz.helper.link_image_data).
+                # Eventually we'll probably want to support linking WITH markers,
+                # at which point this if-statement should be removed.
+                return
+        self._update_link()
+
     @observe('link_type_selected', 'wcs_use_fallback', 'wcs_use_affine')
-    def _update_link(self, msg):
+    def _update_link(self, msg={}):
         """Run :func:`jdaviz.configs.imviz.helper.link_image_data`
         with the selected parameters.
         """

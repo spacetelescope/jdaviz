@@ -105,8 +105,8 @@ class Imviz(ImageConfigHelper):
             load multiple data back-to-back but you must remember to run
             :meth:`link_data` manually at the end.
 
-        show_in_viewer : bool
-            If `True`, show the data in default viewer if ``do_link`` is also `True`.
+        show_in_viewer : str or bool
+            If `True`, show the data in default viewer.  If a string, show in that viewer.
 
         kwargs : dict
             Extra keywords to be passed into app-level parser.
@@ -173,14 +173,32 @@ class Imviz(ImageConfigHelper):
                 kwargs['data_label'] = data_label
             self.app.load_data(data, parser_reference='imviz-data-parser', **kwargs)
 
-        if do_link:
-            self.link_data(link_type='pixels', error_on_fail=False)
+        # find the current label(s) - TODO: replace this by calling default label functionality
+        # above instead of having to refind it
+        applied_labels = [label for label in self.app.data_collection.labels if label not in prev_data_labels]  # noqa
+
+        if show_in_viewer is True:
+            show_in_viewer = f"{self.app.config}-0"
+
+        if self._in_batch_load and show_in_viewer:
+            for applied_label in applied_labels:
+                self._delayed_show_in_viewer_labels[applied_label] = show_in_viewer
+
+        elif do_link:
+            if 'Links Control' not in self.plugins.keys():
+                # otherwise plugin will handle linking automatically with DataCollectionAddMessage
+                self.link_data(link_type='pixels', error_on_fail=False)
 
             # One input might load into multiple Data objects.
+            # NOTE: this will not add entries that were skipped with do_link=False
+            # but the batch_load context manager will handle that logic
             if show_in_viewer:
-                for cur_label in self.app.data_collection.labels:
-                    if cur_label not in prev_data_labels:
-                        self.app.add_data_to_viewer(f"{self.app.config}-0", cur_label)
+                for applied_label in applied_labels:
+                    self.app.add_data_to_viewer(show_in_viewer, applied_label)
+        else:
+            warnings.warn(AstropyDeprecationWarning("do_link=False is deprecated in v3.1 and will "
+                                                    "be removed in a future release.  Use with "
+                                                    "viz.batch_load() instead."))
 
     def link_data(self, **kwargs):
         """(Re)link loaded data in Imviz with the desired link type.

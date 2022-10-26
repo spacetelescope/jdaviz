@@ -5,7 +5,7 @@ __all__ = ['NewViewerMessage', 'ViewerAddedMessage', 'ViewerRemovedMessage', 'Lo
            'AddLineListMessage', 'RowLockMessage',
            'SliceSelectSliceMessage',
            'SliceToolStateMessage',
-           'TableClickMessage', 'LinkUpdatedMessage']
+           'TableClickMessage', 'LinkUpdatedMessage', 'ExitBatchLoadMessage']
 
 
 class NewViewerMessage(Message):
@@ -298,3 +298,9 @@ class LinkUpdatedMessage(Message):
     @property
     def wcs_use_affine(self):
         return self._wcs_use_affine
+
+
+class ExitBatchLoadMessage(Message):
+    '''Message generated when exiting the outermost batch_load context manager'''
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)

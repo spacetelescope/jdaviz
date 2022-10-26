@@ -100,9 +100,9 @@ class TestParseImage:
             # We use higher level load_data() here to make sure linking does not crash.
             imviz_helper.load_data(arr, data_label=data_label)
         else:
-            for i in range(n_slices):
-                imviz_helper.load_data(arr[i, :, :], data_label=data_label, do_link=False)
-            imviz_helper.link_data(error_on_fail=True)
+            with imviz_helper.batch_load():
+                for i in range(n_slices):
+                    imviz_helper.load_data(arr[i, :, :], data_label=data_label)
 
         assert len(imviz_helper.app.data_collection) == n_slices
         assert len(imviz_helper.app.data_collection.links) == 8

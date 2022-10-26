@@ -89,8 +89,8 @@
                   :viewer_icons="state.viewer_icons"
                   :layer_icons="state.layer_icons"
                   :closefn="destroy_viewer_item"
-                  @data-item-selected="data_item_selected($event)"
                   @data-item-visibility="data_item_visibility($event)"
+                  @data-item-unload="data_item_unload($event)"
                   @data-item-remove="data_item_remove($event)"
                   @call-viewer-method="call_viewer_method($event)"
                 ></g-viewer-tab>

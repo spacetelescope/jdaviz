@@ -50,8 +50,8 @@
             :icon="layer_icons[item.name]"
             :viewer="viewer"
             :multi_select="multi_select"
-            @data-item-selected="$emit('data-item-selected', $event)"
             @data-item-visibility="$emit('data-item-visibility', $event)"
+            @data-item-unload="$emit('data-item-unload', $event)"
             @data-item-remove="$emit('data-item-remove', $event)"
           ></j-viewer-data-select-item>
         </v-row>
@@ -79,7 +79,7 @@
               :icon="layer_icons[item.name]"
               :viewer="viewer"
               :multi_select="multi_select"
-              @data-item-selected="$emit('data-item-selected', $event)"
+              @data-item-visibility="$emit('data-item-visibility', $event)"
               @data-item-remove="$emit('data-item-remove', $event)"
             ></j-viewer-data-select-item>
           </v-row>

@@ -136,5 +136,5 @@ def test_edge_cases(specviz_helper, spectrum1d, data_label):
 
 def test_case_that_breaks_return_label(specviz_helper, spectrum1d):
     specviz_helper.load_spectrum(spectrum1d, data_label="this will break (1)")
-    with pytest.raises(UserWarning, match='No data item'):
+    with pytest.warns(match='Overwriting existing data entry'):
         specviz_helper.load_spectrum(spectrum1d, data_label="this will break")
