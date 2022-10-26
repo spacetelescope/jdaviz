@@ -9,21 +9,12 @@ New Features
 - Centralize data label generation if user does not provide a label with data load. Also
   prevent duplicate data labels from being added to data collection. [#1672]
 
-Cubeviz
-^^^^^^^
-
 Imviz
 ^^^^^
 
 - Catalogs plugin now supports loading a JWST catalog from a local ECSV file. [#1707]
 
 - New "batch_load" context manager to optimize loading multiple images. [#1742]
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
 
 Specviz2d
 ^^^^^^^^^
@@ -36,24 +27,6 @@ Specviz2d
 
 - Spectral extraction plugin now supports visualizing and exporting the 1D spectrum associated
   with the background region. [#1682]
-
-API Changes
------------
-
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
 
 Bug Fixes
 ---------
@@ -77,9 +50,6 @@ Mosviz
 ^^^^^^
 
 - Fixed toolbar on 2d profile viewer. [#1778]
-
-Specviz
-^^^^^^^
 
 Specviz2d
 ^^^^^^^^^
