@@ -66,7 +66,9 @@ The example below loads a FITS file into Specviz:
     specviz.show()
 
 You can also pass the path to a file that `~specutils.Spectrum1D` understands directly to the
-:py:meth:`~jdaviz.configs.specviz.helper.Specviz.load_spectrum` method::
+:py:meth:`~jdaviz.configs.specviz.helper.Specviz.load_spectrum` method:
+
+.. code-block:: python
 
     specviz.load_spectrum("path/to/data/file")
 

@@ -917,8 +917,8 @@ class Mosviz(ConfigHelper, LineListMixin):
     @property
     def specviz2d(self):
         """
-        A specviz2d helper (:class:`~jdaviz.configs.specviz2d.helper.Specviz2d`) for the Jdaviz
-        application that is wrapped by mosviz
+        A Specviz2d helper (:class:`~jdaviz.configs.specviz2d.helper.Specviz2d`) for the Jdaviz
+        application that is wrapped by Mosviz.
         """
         if not hasattr(self, '_specviz2d'):
             self._specviz2d = Specviz2d(app=self.app)
