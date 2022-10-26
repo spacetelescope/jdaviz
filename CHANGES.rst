@@ -71,35 +71,6 @@ Cubeviz
 Imviz
 ^^^^^
 
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
-
-- Fixed parser not loading x1d when s2d is provided. [#1717]
-
-Other Changes and Additions
----------------------------
-
-- Updated example notebooks (except MosvizExample) to use in-flight JWST data. [#1680]
-- Change RA/Dec significant figures from 4 to 6 in aperture photometry plugin. [#1750]
-
-3.0.3 (unreleased)
-==================
-
-Bug Fixes
----------
-
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
 - Fixed Simple Aperture Photometry plugin compatibility with astropy v5.1.1. [#1769]
 
 Mosviz
@@ -113,7 +84,15 @@ Specviz
 Specviz2d
 ^^^^^^^^^
 
+- Fixed parser not loading x1d when s2d is provided. [#1717]
+
 - Fixed toolbar on 2d spectrum viewer. [#1778]
+
+Other Changes and Additions
+---------------------------
+
+- Updated example notebooks (except MosvizExample) to use in-flight JWST data. [#1680]
+- Change RA/Dec significant figures from 4 to 6 in aperture photometry plugin. [#1750]
 
 3.0.2 (2022-10-18)
 ==================
