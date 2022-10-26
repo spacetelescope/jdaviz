@@ -5,7 +5,9 @@ Customizing Notebook Display Layout
 ***********************************
 
 By default, calling ``show()`` will display your visualization tool *inline* in your notebook,
-that is the tool will show underneath the notebook cell it was called from::
+that is the tool will show underneath the notebook cell it was called from:
+
+.. code-block:: python
 
     from jdaviz import Imviz
 
@@ -14,12 +16,16 @@ that is the tool will show underneath the notebook cell it was called from::
     imviz.load_data('filename.fits')
 
 The height of the application in the notebook can be changed by passing an integer
-specifying the height in pixels to the ``height`` argument of ``show``, for example::
+specifying the height in pixels to the ``height`` argument of ``show``, for example:
+
+.. code-block:: python
 
     imviz.show(height=800)
 
 You can additionally specify the location with the ``loc`` argument.
-For example, ``inline`` can be specified manually with::
+For example, ``inline`` can be specified manually with:
+
+.. code-block:: python
 
     imviz.show(loc='inline')
 
@@ -29,15 +35,21 @@ Jdaviz can also be displayed in a detached window, separate from your working Ju
 
 .. note:: Popups must be allowed in your browser to display properly.
 
-The following shows ``jdaviz`` in a new popout window::
+The following shows ``jdaviz`` in a new popout window:
+
+.. code-block:: python
 
     imviz.show(loc='popout')
 
-To manually specify the anchor location, append the anchor to popout, separated by a colon::
+To manually specify the anchor location, append the anchor to popout, separated by a colon:
+
+.. code-block:: python
     
     imviz.show(loc='popout:window')
 
-You can also popout to a new browser tab by specifying a ``tab`` anchor::
+You can also popout to a new browser tab by specifying a ``tab`` anchor:
+
+.. code-block:: python
 
     imviz.show(loc='popout:tab')
 
@@ -47,12 +59,16 @@ Sidecar (Jupyter Lab)
 
 In Jupyter Lab, ``sidecar`` provides additional methods to customize where to show the viewer
 in your workspace. The following shows ``jdaviz`` in the default sidecar location,
-to the right of the notebook::
+to the right of the notebook:
+
+.. code-block:: python
 
     imviz.show(loc='sidecar')
 
-To manually specify the anchor location, append the anchor to sidecar, separated by a colon::
-    
+To manually specify the anchor location, append the anchor to sidecar, separated by a colon:
+
+.. code-block:: python
+
     imviz.show(loc='sidecar:right')
 
 Other anchors include: ``split-right``, ``split-left``, ``split-top``, ``split-bottom``,

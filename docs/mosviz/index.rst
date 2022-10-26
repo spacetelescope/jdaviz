@@ -27,7 +27,9 @@ measurements of quantities such as wavelengths, velocities, line fluxes, widths.
 Quickstart
 ==========
 
-To load a sample `NIRISS Nirspec Data Set <https://stsci.box.com/shared/static/ovyxi5eund92yoadvv01mynwt8t5n7jv.zip>`_ into ``Mosviz`` in the standalone app, unzip the downloaded zip file and run::
+To load a sample `NIRISS Nirspec Data Set <https://stsci.box.com/shared/static/ovyxi5eund92yoadvv01mynwt8t5n7jv.zip>`_ into ``Mosviz`` in the standalone app, unzip the downloaded zip file and run:
+
+.. code-block:: bash
 
     jdaviz mosviz /path/to/mosviz_nirspec_data_0.3/level3
 

@@ -20,7 +20,9 @@ and hence should address most astronomical spectrum use cases.
 Importing data through the Command Line
 =======================================
 
-You can load your data into the Specviz application through the command line::
+You can load your data into the Specviz application through the command line:
+
+.. code-block:: bash
 
     jdaviz specviz /my/directory/spectrum.fits
 
@@ -47,13 +49,15 @@ Importing data via the API
 Alternatively, users who work in a coding environment like a Jupyter
 notebook can access the Specviz helper class API. Using this API, users can
 load data into the application through code with the
-:meth:`~jdaviz.configs.specviz.helper.Specviz.load_spectrum`
+:py:meth:`~jdaviz.configs.specviz.helper.Specviz.load_spectrum`
 method, which takes as input a :class:`~specutils.Spectrum1D` object.
 
 FITS Files
 ----------
 
-The example below loads a FITS file into Specviz::
+The example below loads a FITS file into Specviz:
+
+.. code-block:: python
 
     from specutils import Spectrum1D
     spec1d = Spectrum1D.read("/path/to/data/file")
@@ -62,14 +66,18 @@ The example below loads a FITS file into Specviz::
     specviz.show()
 
 You can also pass the path to a file that `~specutils.Spectrum1D` understands directly to the
-:meth:`jdaviz.configs.specviz.helper.Specviz.load_spectrum` method::
+:py:meth:`~jdaviz.configs.specviz.helper.Specviz.load_spectrum` method:
+
+.. code-block:: python
 
     specviz.load_spectrum("path/to/data/file")
 
 Creating Your Own Array
 -----------------------
 
-You can create your own array to load into Specviz::
+You can create your own array to load into Specviz:
+
+.. code-block:: python
 
     import numpy as np
     import astropy.units as u
@@ -87,7 +95,9 @@ JWST datamodels
 ---------------
 
 If you have a `jwst.datamodels <https://jwst-pipeline.readthedocs.io/en/latest/jwst/datamodels/index.html>`_
-object, you can load it into Specviz as follows::
+object, you can load it into Specviz as follows:
+
+.. code-block:: python
 
     from specutils import Spectrum1D
     from jdaviz import Specviz
@@ -110,11 +120,13 @@ is separated from the ``jwst`` pipeline package.
 Importing a SpectrumList
 ------------------------
 
-The :meth:`jdaviz.configs.specviz.helper.Specviz.load_spectrum` also accepts
+The :py:meth:`~jdaviz.configs.specviz.helper.Specviz.load_spectrum` also accepts
 a `~specutils.SpectrumList` object, in which case it will both load the
 individual `~specutils.Spectrum1D` objects in the list and additionally attempt
 to stitch together the spectra into a single data object so that
-they can be manipulated and analyzed in the application as a single entity::
+they can be manipulated and analyzed in the application as a single entity:
+
+.. code-block:: python
 
     from specutils import SpectrumList
     spec_list = SpectrumList([spec1d_1, spec1d_2])
@@ -131,7 +143,7 @@ end of the red region in the screenshot below:
 .. image:: img/spectrumlist_combined.png
 
 This functionality is also available in limited instances by providing a directory path
-to the :meth:`jdaviz.configs.specviz.helper.Specviz.load_spectrum` method. Note
+to the :py:meth:`~jdaviz.configs.specviz.helper.Specviz.load_spectrum` method. Note
 that the ``read`` method of :class:`~specutils.SpectrumList` is only set up to handle
 directory input in limited cases, for example JWST MIRI MRS data, and will throw an error
 in other cases. In cases that it does work, only files in the directory level specified

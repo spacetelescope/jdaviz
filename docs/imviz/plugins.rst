@@ -84,7 +84,9 @@ For more details on linking, see :ref:`dev_glue_linking`.
 From the API
 ------------
 
-From the API within the Jupyter notebook (if linking by WCS)::
+From the API within the Jupyter notebook (if linking by WCS):
+
+.. code-block:: python
 
     imviz.link_data(link_type='wcs')
 
@@ -231,7 +233,9 @@ If you have multiple viewers open, you will see another dropdown menu to select 
 viewer.
 
 Additionally, the query starts anew every time :guilabel:`SEARCH` is clicked, so previous results and marks
-are not stored. To save the current result before submitting a new query, you can save the table to a variable::
+are not stored. To save the current result before submitting a new query, you can save the table to a variable:
+
+.. code-block:: python
 
     results = imviz.get_catalog_source_results()
 

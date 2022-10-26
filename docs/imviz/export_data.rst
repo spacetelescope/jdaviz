@@ -9,7 +9,9 @@ Exporting Data from Imviz
 Spatial Regions
 ===============
 
-You can extract supported spatial regions as follows::
+You can extract supported spatial regions as follows:
+
+.. code-block:: python
 
     regions = imviz.get_interactive_regions()
     regions
@@ -22,12 +24,16 @@ Aperture Photometry
 If you opted to fit a `~astropy.modeling.functional_models.Gaussian1D`
 to the radial profile, the last fitted model parameters will be displayed
 under the radial profile plot. The model itself can be obtained as follows.
-See :ref:`astropy:astropy-modeling` on how to manipulate the model::
+See :ref:`astropy:astropy-modeling` on how to manipulate the model:
+
+.. code-block:: python
 
     my_gaussian1d = imviz.app.fitted_models['phot_radial_profile']
 
 You can also retrieve the photometry results as `~astropy.table.QTable` as follows,
-assuming ``imviz`` is the instance of your Imviz application::
+assuming ``imviz`` is the instance of your Imviz application:
+
+.. code-block:: python
 
     results = imviz.get_aperture_photometry_results()
 

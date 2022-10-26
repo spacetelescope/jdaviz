@@ -25,7 +25,9 @@ Importing data through the Command Line
 =======================================
 
 You can load your data into the Specviz2D application through the command line (NOTE: this currently
-only supports passing a 2D spectrum object and will automatically extract the 1D spectrum)::
+only supports passing a 2D spectrum object and will automatically extract the 1D spectrum):
+
+.. code-block:: bash
 
     jdaviz specviz2d /my/directory/spectrum.fits
 
@@ -59,6 +61,8 @@ By default, extension 1 of the 2D
 file is loaded, but you can specify another extension by providing an integer
 to the ``ext`` keyword. In case you want to load an uncalibrated spectrum
 that is dispersed vertically, you can also set the ``transpose`` keyword to flip
-the spectrum to be horizontal::
+the spectrum to be horizontal:
+
+.. code-block:: python
 
     specviz2d.load_data(fn, ext=7, transpose=True)
