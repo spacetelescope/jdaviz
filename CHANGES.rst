@@ -4,6 +4,8 @@
 New Features
 ------------
 
+- New rainbow, reversed rainbow, and seismic (blue-red) colormaps for images. [#1785]
+
 Cubeviz
 ^^^^^^^
 
@@ -103,7 +105,7 @@ Specviz2d
 - Improved logic for initial guess for position of "Manual" background trace in spectral extraction
   plugin. [#1738]
 
-- Now supports loading a specific extension of the 2D spectrum file and 
+- Now supports loading a specific extension of the 2D spectrum file and
   transposing data on load. [#1705]
 
 - Spectral extraction plugin now supports visualizing and exporting the 1D spectrum associated

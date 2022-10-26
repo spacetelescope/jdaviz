@@ -258,14 +258,17 @@ class Application(VuetifyTemplate, HubListener):
         # Add a fitted_models dictionary that the helpers (or user) can access
         self.fitted_models = {}
 
-        # Add inverse colormaps to Glue global state. Also see ColormapRegistry in
+        # Add new and inverse colormaps to Glue global state. Also see ColormapRegistry in
         # https://github.com/glue-viz/glue/blob/main/glue/config.py
-        new_cms = (['Reversed: Gray', cm.gray_r],
+        new_cms = (['Rainbow', cm.rainbow],
+                   ['Seismic', cm.seismic],
+                   ['Reversed: Gray', cm.gray_r],
                    ['Reversed: Viridis', cm.viridis_r],
                    ['Reversed: Plasma', cm.plasma_r],
                    ['Reversed: Inferno', cm.inferno_r],
                    ['Reversed: Magma', cm.magma_r],
-                   ['Reversed: Hot', cm.hot_r])
+                   ['Reversed: Hot', cm.hot_r],
+                   ['Reversed: Rainbow', cm.rainbow_r])
         for cur_cm in new_cms:
             if cur_cm not in colormaps.members:
                 colormaps.add(*cur_cm)
