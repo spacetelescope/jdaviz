@@ -108,15 +108,40 @@ You can do a release from your fork directly without a clean code check-out.
    It should have picked up the GitHub Release automatically.
 
 #. The release is basically done, but now you have to set it up for the
-   *next* release cycle. Update ``CHANGES.rst`` directly in the ``main`` branch
-   using your admin power. If you do not have sufficient access to do that,
-   you will have to update it via a pull request from your fork. Make sure the
-   section for the version just released matches the finalized change log from
-   the release branch you created, and add a new section to the top of
-   ``CHANGES.rst`` as follows, replacing ``A.B`` with the next non-bugfix version,
-   and ``A.C`` with the version you just released::
+   *next* release cycle. In your release branch, add a new section above the
+   current release section for the next bugfix release and push it to the
+   new release branch::
 
-     A.B (unreleased)
+     A.B.1 (unreleased)
+     ==================
+
+     Bug Fixes
+     ---------
+
+     Cubeviz
+     ^^^^^^^
+
+     Imviz
+     ^^^^^
+
+     Mosviz
+     ^^^^^^
+
+     Specviz
+     ^^^^^^^
+
+     Specviz2d
+     ^^^^^^^^^
+
+#. Checkout ``main`` and update ``CHANGES.rst`` and ``CITATIONS.cff`` directly
+   in that branch using your admin power. If you do not have sufficient access to
+   do that, you will have to update it via a pull request from your fork. Make
+   sure the section for the version just released matches the finalized change
+   log from the release branch you created, and add a new section to the top of
+   ``CHANGES.rst`` as follows, replacing ``A.C`` with the next non-bugfix version,
+   and ``A.B`` with the version you just released::
+
+     A.C (unreleased)
      ================
 
      New Features
@@ -176,7 +201,7 @@ You can do a release from your fork directly without a clean code check-out.
      Other Changes and Additions
      ---------------------------
 
-     A.C.1 (unreleased)
+     A.B.1 (unreleased)
      ==================
 
      Bug Fixes
@@ -198,6 +223,7 @@ You can do a release from your fork directly without a clean code check-out.
      ^^^^^^^^^
 
 #. Commit your changes of the, uh, change log with a message, "Back to development: A.B.dev"
+   and push directly to ``main``.
 
 #. Follow procedures for :ref:`release-milestones`.
 
@@ -206,6 +232,12 @@ You can do a release from your fork directly without a clean code check-out.
 .. code-block:: bash
 
      git fetch upstream --tags
+
+#. In ``main``, you can create a new tag ``vA.B.dev`` to mark the start of
+   development on the next version::
+
+    git tag -m "Tagging dev for next version" vA.B.dev
+    git push upstream --tags
 
 Congratulations, you have just released a new version of Jdaviz!
 
