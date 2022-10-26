@@ -1,23 +1,14 @@
-3.1 (unreleased)
+3.2 (unreleased)
 ================
 
 New Features
 ------------
-
-- Add support for nonstandard viewer reference names [#1681]
-
-- Centralize data label generation if user does not provide a label with data load. Also
-  prevent duplicate data labels from being added to data collection. [#1672]
 
 Cubeviz
 ^^^^^^^
 
 Imviz
 ^^^^^
-
-- Catalogs plugin now supports loading a JWST catalog from a local ECSV file. [#1707]
-
-- New "batch_load" context manager to optimize loading multiple images. [#1742]
 
 Mosviz
 ^^^^^^
@@ -27,15 +18,6 @@ Specviz
 
 Specviz2d
 ^^^^^^^^^
-
-- Improved logic for initial guess for position of "Manual" background trace in spectral extraction
-  plugin. [#1738]
-
-- Now supports loading a specific extension of the 2D spectrum file and 
-  transposing data on load. [#1705]
-
-- Spectral extraction plugin now supports visualizing and exporting the 1D spectrum associated
-  with the background region. [#1682]
 
 API Changes
 -----------
@@ -54,6 +36,78 @@ Specviz
 
 Specviz2d
 ^^^^^^^^^
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+Other Changes and Additions
+---------------------------
+
+3.1.1 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+3.1 (2022-10-26)
+================
+
+New Features
+------------
+
+- Add support for nonstandard viewer reference names [#1681]
+
+- Centralize data label generation if user does not provide a label with data load. Also
+  prevent duplicate data labels from being added to data collection. [#1672]
+
+Imviz
+^^^^^
+
+- Catalogs plugin now supports loading a JWST catalog from a local ECSV file. [#1707]
+
+- New "batch_load" context manager to optimize loading multiple images. [#1742]
+
+Specviz2d
+^^^^^^^^^
+
+- Improved logic for initial guess for position of "Manual" background trace in spectral extraction
+  plugin. [#1738]
+
+- Now supports loading a specific extension of the 2D spectrum file and 
+  transposing data on load. [#1705]
+
+- Spectral extraction plugin now supports visualizing and exporting the 1D spectrum associated
+  with the background region. [#1682]
 
 Bug Fixes
 ---------
@@ -77,9 +131,6 @@ Mosviz
 ^^^^^^
 
 - Fixed toolbar on 2d profile viewer. [#1778]
-
-Specviz
-^^^^^^^
 
 Specviz2d
 ^^^^^^^^^
