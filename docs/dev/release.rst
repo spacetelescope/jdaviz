@@ -380,7 +380,7 @@ the new release:
 #. Go to `Labels <https://github.com/spacetelescope/jdaviz/labels>`_.
 
 #. Find the old ``backport-vA.B.x`` label. Click its "Edit" button and
-   add ``:zzz: `` in front of it. This would send it all the way to the
+   add ``:zzz:`` in front of it. This would send it all the way to the
    end of labels listing and indicate that it has been retired from usage.
 
 #. Click "New label" (big green button on top right). Enter ``backport-vA.C.x``
