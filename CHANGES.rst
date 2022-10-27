@@ -48,6 +48,9 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Clearing markers in Catalog Search will only hide them, which improves
+  "Clear" performance. [#1774]
+
 Mosviz
 ^^^^^^
 

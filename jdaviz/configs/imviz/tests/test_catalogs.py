@@ -167,3 +167,11 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     assert len(out_tbl) == n_entries
     assert catalogs_plugin._obj.number_of_results == n_entries
     assert len(imviz_helper.app.data_collection) == 2  # image + markers
+
+    catalogs_plugin._obj.clear()
+    assert not catalogs_plugin._obj.results_available
+    assert len(imviz_helper.app.data_collection) == 2  # markers still there, just hidden
+
+    catalogs_plugin._obj.clear(hide_only=False)
+    assert not catalogs_plugin._obj.results_available
+    assert len(imviz_helper.app.data_collection) == 1  # markers gone for good
