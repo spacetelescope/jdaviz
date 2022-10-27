@@ -225,19 +225,13 @@ You can do a release from your fork directly without a clean code check-out.
 #. Commit your changes of the, uh, change log with a message, "Back to development: A.B.dev"
    and push directly to ``main``.
 
-#. Follow procedures for :ref:`release-milestones`.
+#. Follow procedures for :ref:`release-milestones` and :ref:`release-labels`.
 
 #. For your own sanity unrelated to the release, grab the new tag for your fork:
 
 .. code-block:: bash
 
      git fetch upstream --tags
-
-#. In ``main``, you can create a new tag ``vA.B.dev`` to mark the start of
-   development on the next version::
-
-    git tag -m "Tagging dev for next version" vA.B.dev
-    git push upstream --tags
 
 Congratulations, you have just released a new version of Jdaviz!
 
@@ -374,6 +368,28 @@ Milestones bookkeeping
    will need to move their change log entries to the new release section that you
    have created in ``CHANGES.rst`` during the release process.
 
+.. _release-labels:
+
+Labels bookkeeping
+==================
+
+This is only applicable if you are doing a new branched release.
+In the instructions below, ``A.B`` is the old release and ``A.C`` is
+the new release:
+
+#. Go to `Labels <https://github.com/spacetelescope/jdaviz/labels>`_.
+
+#. Find the old ``backport-vA.B.x`` label. Click its "Edit" button and
+   add ``:zzz: `` in front of it. This would send it all the way to the
+   end of labels listing and indicate that it has been retired from usage.
+
+#. Click "New label" (big green button on top right). Enter ``backport-vA.C.x``
+   as the label name, ``on-merge: backport to vA.C.x`` as the description, and
+   ``#5319E7`` as the color. Then click "Create label".
+
+Going forward, any PR that needs backporting to the ``vA.C.x`` branch can
+have this label applied *before* merge to trigger the auto-backport bot on merge.
+For more info on the bot, see https://meeseeksbox.github.io/ .
 
 .. _release-old:
 
@@ -590,4 +606,3 @@ You can create a clean checkout as follows (requires
 #. Follow procedures for :ref:`release-milestones`.
 
 Congratulations, you have just released a new version of Jdaviz!
-
