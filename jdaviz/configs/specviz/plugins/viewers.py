@@ -80,6 +80,7 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
             self.label_mouseover.pixel = fmt.format(x, y)
 
             # We just want cursor position, so these are not used.
+            self.label_mouseover.icon = ''
             self.label_mouseover.reset_coords_display()
             self.label_mouseover.value = ''
 
