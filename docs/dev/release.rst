@@ -108,15 +108,40 @@ You can do a release from your fork directly without a clean code check-out.
    It should have picked up the GitHub Release automatically.
 
 #. The release is basically done, but now you have to set it up for the
-   *next* release cycle. Update ``CHANGES.rst`` directly in the ``main`` branch
-   using your admin power. If you do not have sufficient access to do that,
-   you will have to update it via a pull request from your fork. Make sure the
-   section for the version just released matches the finalized change log from
-   the release branch you created, and add a new section to the top of
-   ``CHANGES.rst`` as follows, replacing ``A.B`` with the next non-bugfix version,
-   and ``A.C`` with the version you just released::
+   *next* release cycle. In your release branch, add a new section above the
+   current release section for the next bugfix release and push it to the
+   new release branch::
 
-     A.B (unreleased)
+     A.B.1 (unreleased)
+     ==================
+
+     Bug Fixes
+     ---------
+
+     Cubeviz
+     ^^^^^^^
+
+     Imviz
+     ^^^^^
+
+     Mosviz
+     ^^^^^^
+
+     Specviz
+     ^^^^^^^
+
+     Specviz2d
+     ^^^^^^^^^
+
+#. Checkout ``main`` and update ``CHANGES.rst`` and ``CITATIONS.cff`` directly
+   in that branch using your admin power. If you do not have sufficient access to
+   do that, you will have to update it via a pull request from your fork. Make
+   sure the section for the version just released matches the finalized change
+   log from the release branch you created, and add a new section to the top of
+   ``CHANGES.rst`` as follows, replacing ``A.C`` with the next non-bugfix version,
+   and ``A.B`` with the version you just released::
+
+     A.C (unreleased)
      ================
 
      New Features
@@ -176,7 +201,7 @@ You can do a release from your fork directly without a clean code check-out.
      Other Changes and Additions
      ---------------------------
 
-     A.C.1 (unreleased)
+     A.B.1 (unreleased)
      ==================
 
      Bug Fixes
@@ -198,8 +223,9 @@ You can do a release from your fork directly without a clean code check-out.
      ^^^^^^^^^
 
 #. Commit your changes of the, uh, change log with a message, "Back to development: A.B.dev"
+   and push directly to ``main``.
 
-#. Follow procedures for :ref:`release-milestones`.
+#. Follow procedures for :ref:`release-milestones` and :ref:`release-labels`.
 
 #. For your own sanity unrelated to the release, grab the new tag for your fork:
 
@@ -342,6 +368,28 @@ Milestones bookkeeping
    will need to move their change log entries to the new release section that you
    have created in ``CHANGES.rst`` during the release process.
 
+.. _release-labels:
+
+Labels bookkeeping
+==================
+
+This is only applicable if you are doing a new branched release.
+In the instructions below, ``A.B`` is the old release and ``A.C`` is
+the new release:
+
+#. Go to `Labels <https://github.com/spacetelescope/jdaviz/labels>`_.
+
+#. Find the old ``backport-vA.B.x`` label. Click its "Edit" button and
+   add ``:zzz:`` in front of it. This would send it all the way to the
+   end of labels listing and indicate that it has been retired from usage.
+
+#. Click "New label" (big green button on top right). Enter ``backport-vA.C.x``
+   as the label name, ``on-merge: backport to vA.C.x`` as the description, and
+   ``#5319E7`` as the color. Then click "Create label".
+
+Going forward, any PR that needs backporting to the ``vA.C.x`` branch can
+have this label applied *before* merge to trigger the auto-backport bot on merge.
+For more info on the bot, see https://meeseeksbox.github.io/ .
 
 .. _release-old:
 
@@ -558,4 +606,3 @@ You can create a clean checkout as follows (requires
 #. Follow procedures for :ref:`release-milestones`.
 
 Congratulations, you have just released a new version of Jdaviz!
-
