@@ -3,7 +3,7 @@
     <v-overlay v-if="state.logger_overlay"
       absolute
       opacity="0.7">
-      <div :style="['imviz', 'cubeviz', 'specviz2d'].indexOf(config) !== -1 ? 'position: absolute; top: 14px; right: 55px' : 'position: absolute; top: 6px; right: 55px'">
+      <div :style="!state.settings.dense_toolbar ? 'position: absolute; top: 14px; right: 55px' : 'position: absolute; top: 6px; right: 55px'">
         <j-tooltip tipid="app-snackbar-history">
           <v-btn icon @click="state.logger_overlay = !state.logger_overlay" :class="{active : state.logger_overlay}">
             <v-icon medium style="padding-top: 2px">mdi-message-reply</v-icon>
@@ -11,10 +11,10 @@
         </j-tooltip>
       </div>
       <div :style="{'position': 'absolute',
-                    'top': ['imviz', 'cubeviz', 'specviz2d'].indexOf(config) !== -1 ? '64px' : '48px',
+                    'top': !state.settings.dense_toolbar ? '64px' : '48px',
                     'left': '0px',
                     'width': '100%',
-                    'height': ['imviz', 'cubeviz', 'specviz2d'].indexOf(config) !== -1 ? 'calc(100% - 64px)' : 'calc(100% - 48px)',
+                    'height': !state.settings.dense_toolbar ? 'calc(100% - 64px)' : 'calc(100% - 48px)',
                     'overflow-y': 'scroll',
                     'border-top': '6px solid #C75109',
                     'padding-left': '15%',
