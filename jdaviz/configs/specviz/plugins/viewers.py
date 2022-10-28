@@ -62,7 +62,7 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
         if self.label_mouseover is None:
             if 'g-coords-info' in self.session.application._tools:
                 self.label_mouseover = self.session.application._tools['g-coords-info']
-            else:
+            else:  # pragma: no cover
                 return
 
         if data['event'] == 'mousemove':

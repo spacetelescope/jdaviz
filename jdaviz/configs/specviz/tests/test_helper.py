@@ -204,6 +204,8 @@ def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
     spec_viewer = specviz_helper.app.get_viewer('spectrum-viewer')
     spec_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 6100, 'y': 12.5}})
     assert spec_viewer.label_mouseover.pixel == 'x=+6.10000e+03 y=+1.25000e+01'
+    spec_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': None, 'y': 12.5}})
+    assert spec_viewer.label_mouseover.pixel == ''
 
     # Convert the wavelength axis to microns
     new_spectral_axis = "micron"
@@ -229,6 +231,8 @@ def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
     # Coordinates info panel should show new unit
     spec_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0.61, 'y': 12.5}})
     assert spec_viewer.label_mouseover.pixel == 'x=+6.10000e-01 y=+1.25000e+01'
+    spec_viewer.on_mouse_or_key_event({'event': 'mouseleave'})
+    assert spec_viewer.label_mouseover.pixel == ''
 
 
 def test_subset_default_thickness(specviz_helper, spectrum1d):
