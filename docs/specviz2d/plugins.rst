@@ -98,7 +98,7 @@ Background
 ----------
 
 The background step of the plugin allows for creating background and background-subtracted
-images via `specreduce.background <https://specreduce.readthedocs.io/en/latest/#module-specreduce.background>`_.
+images via :py:mod:`specreduce.background`.
 
 Once you interact with any of the inputs in the background step or hover over that area
 of the plugin, the live visualization in the 2D spectrum viewer will change to show the center 
@@ -135,7 +135,7 @@ Extract
 -------
 
 The extraction step of the plugin extracts a 1D spectrum from an input 2D spectrum via
-`specreduce.extract <https://specreduce.readthedocs.io/en/latest/#module-specreduce.extract>`_.
+:py:mod:`specreduce.extract`.
 
 Once you interact with any of the inputs in the extract step or hover over that area
 of the plugin, the live visualization will change to show the center (dotted line) and
