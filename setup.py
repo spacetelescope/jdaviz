@@ -5,12 +5,12 @@
 # other information are set in the setup.cfg file.
 
 import os
-import shutil
 import sys
+import shutil
+from pathlib import Path
 
 from setuptools import setup
-from setuptools.command.develop import develop
-
+from setuptools.command import install, develop
 
 # First provide helpful messages if contributors try and run legacy commands
 # for tests or docs.
@@ -70,16 +70,26 @@ except Exception:
 """.lstrip()
 
 
+# WARNING: all files generated during setup.py will not end up in the source
+# distribution
+data_files = []
+# Add the jdaviz voila template files for installations via either
+# `python setup.py install` or `pip install .` (but not `pip install -e .`)
+for (dirpath, dirnames, filenames) in os.walk('share/jupyter/'):
+    if filenames:
+        data_files.append((dirpath, [os.path.join(dirpath, filename)
+                                     for filename in filenames]))
+
+
 # These are based on jupyter_core.paths
 def jupyter_config_dir():
     """Get the Jupyter config directory for this platform and user.
     Returns JUPYTER_CONFIG_DIR if defined, else ~/.jupyter
     """
-    import pathlib
     from tempfile import mkdtemp
 
     env = os.environ
-    home_dir = pathlib.Path.home().as_posix()
+    home_dir = Path.home().as_posix()
 
     if env.get('JUPYTER_NO_CONFIG'):
         return mkdtemp(suffix='jupyter-clean-cfg')
@@ -105,75 +115,112 @@ def user_dir():
             return os.path.join(jupyter_config_dir(), 'data')
     else:
         # Linux, non-OS X Unix, AIX, etc.
-        import pathlib
         env = os.environ
-        home = pathlib.Path.home().as_posix()
+        home = Path.home().as_posix()
         xdg = env.get("XDG_DATA_HOME", None)
         if not xdg:
             xdg = os.path.join(home, '.local', 'share')
         return os.path.join(xdg, 'jupyter')
 
 
-class DevelopCmd(develop):
-    prefix_targets = [
-        (os.path.join("nbconvert", "templates"), 'jdaviz-default'),
-        (os.path.join("voila", "templates"), 'jdaviz-default')
+def get_existing_template_dirs(app_names, template_name):
+    # to do this import, voila must be required in pyproject.toml
+    from voila.paths import collect_template_paths
+
+    return [
+        d for d in collect_template_paths(app_names, template_name)
+        if os.path.exists(d) and template_name in d
     ]
 
-    def run(self):
-        target_dir = os.path.join(sys.prefix, 'share', 'jupyter')
-        if '--user' in sys.prefix:  # TODO: is there a better way to find out?
-            target_dir = user_dir()
-        target_dir = os.path.join(target_dir)
 
-        for prefix_target, name in self.prefix_targets:
-            source = os.path.join('share', 'jupyter', prefix_target, name)
-            target = os.path.join(target_dir, prefix_target, name)
-            target_subdir = os.path.dirname(target)
-            if not os.path.exists(target_subdir):
-                os.makedirs(target_subdir)
-            abs_source = os.path.abspath(source)
+def install_jdaviz_voila_template(
+    template_name='jdaviz-default', reference_template_name='lab', overwrite=False
+):
+    """
+    Make the ``jdaviz-default`` template available for use with voila.
 
+    Generate copies of/symbolic links pointing towards the jdaviz template files
+    in the directories where voila expects them.
+    """
+    # search for existing "jdaviz-default" and "lab" (default) template paths
+    # already installed on this machine:
+    app_names = ['nbconvert', 'voila']
+    jdaviz_template_dirs = get_existing_template_dirs(app_names, template_name)
+    reference_template_dirs = get_existing_template_dirs(app_names, reference_template_name)
+
+    # if there are existing jdaviz template dirs but overwrite=False, raise error:
+    if not overwrite and len(jdaviz_template_dirs):
+        raise FileExistsError(
+            f"Existing files found at {jdaviz_template_dirs} which "
+            f"would be overwritten, but overwrite=False."
+        )
+
+    prefix_targets = [
+        os.path.join("nbconvert", "templates"),
+        os.path.join("voila", "templates")
+    ]
+
+    repo_top_level_dir = Path(__file__)
+
+    if len(reference_template_dirs):
+        target_dir = Path(reference_template_dirs[0]).absolute().parents[2]
+    else:
+        raise FileNotFoundError(f"No {reference_template_name} template found for voila.")
+
+    for prefix_target in prefix_targets:
+        source = os.path.join(repo_top_level_dir, 'share', 'jupyter', prefix_target, template_name)
+        parent_dir_of_target = os.path.join(target_dir, prefix_target)
+        target = os.path.join(parent_dir_of_target, template_name)
+        abs_source = os.path.abspath(source)
+        try:
+            rel_source = os.path.relpath(abs_source, parent_dir_of_target)
+        except Exception:
+            # relpath does not work if source/target on different Windows disks.
+            do_symlink = False
+        else:
+            do_symlink = True
+
+        try:
+            os.remove(target)
+        except Exception:
             try:
-                rel_source = os.path.relpath(abs_source, os.path.abspath(target_subdir))
+                shutil.rmtree(target)  # Maybe not a symlink
             except Exception:
-                # relpath does not work if source/target on different Windows disks.
-                do_symlink = False
+                pass
+
+        # Cannot symlink without relpath or Windows admin priv in some OS versions.
+        try:
+            if do_symlink:
+                print('making symlink:', rel_source, '->', target)
+                os.symlink(rel_source, target)
             else:
-                do_symlink = True
-
-            try:
-                os.remove(target)
-            except Exception:
-                try:
-                    shutil.rmtree(target)  # Maybe not a symlink
-                except Exception:
-                    pass
-
-            # Cannot symlink without relpath or Windows admin priv in some OS versions.
-            try:
-                if do_symlink:
-                    print(rel_source, '->', target)
-                    os.symlink(rel_source, target)
-                else:
-                    raise OSError('just make copies')
-            except Exception:
-                print(abs_source, '->', target)
-                shutil.copytree(abs_source, target)
-
-        super(DevelopCmd, self).run()
+                raise OSError('just make copies')
+        except Exception:
+            print('making copy:', abs_source, '->', target)
+            shutil.copytree(abs_source, target)
 
 
-# WARNING: all files generated during setup.py will not end up in the source
-# distribution
-data_files = []
-# Add all the templates
-for (dirpath, dirnames, filenames) in os.walk('share/jupyter/'):
-    if filenames:
-        data_files.append((dirpath, [os.path.join(dirpath, filename)
-                                     for filename in filenames]))
+class CmdMixin:
+    """
+    If you pip install from source with `pip install .` or with
+    `python setup.py install` (deprecated) or `python setup.py develop`,
+    this will try to symlink or copy the voila template files to the
+    correct locations. Warning: if you run editable install with
+    `pip install -e .`, this will not be called.
+    """
+    def run(self):
+        install_jdaviz_voila_template(overwrite=True)
+        super().run()
 
 
-setup(data_files=data_files, cmdclass={'develop': DevelopCmd},
+class InstallCmd(CmdMixin, install.install):
+    pass
+
+
+class DevelopCmd(CmdMixin, develop.develop):
+    pass
+
+
+setup(data_files=data_files, cmdclass={'install': InstallCmd, 'develop': DevelopCmd},
       use_scm_version={'write_to': os.path.join('jdaviz', 'version.py'),
                        'write_to_template': VERSION_TEMPLATE})

@@ -2,6 +2,7 @@
 
 requires = ["setuptools",
             "setuptools_scm",
-            "wheel"]
+            "wheel",
+            "voila"]
 
 build-backend = 'setuptools.build_meta'
