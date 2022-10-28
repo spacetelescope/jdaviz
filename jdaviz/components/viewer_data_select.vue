@@ -120,7 +120,7 @@ module.exports = {
   },
   methods: {
     menuButtonAvailable() {
-      if (this.$props.viewer.reference === 'table-viewer') {
+      if (this.$props.viewer.reference === 'table-viewer' || this.$props.viewer.config === 'mosviz') {
         return false
       }
       return true
