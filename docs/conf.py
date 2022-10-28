@@ -267,3 +267,6 @@ intersphinx_mapping['skimage'] = ('https://scikit-image.org/docs/stable/', None)
 intersphinx_mapping['specutils'] = ('https://specutils.readthedocs.io/en/stable/', None)
 intersphinx_mapping['photutils'] = ('https://photutils.readthedocs.io/en/stable/', None)
 intersphinx_mapping['traitlets'] = ('https://traitlets.readthedocs.io/en/stable/', None)
+
+# Options for linkcheck
+linkcheck_ignore = ['https://github.com/spacetelescope/jdaviz/settings/branches']
