@@ -57,8 +57,7 @@ Trace
 -----
 
 The first section of the plugin allows for creating and visualizing 
-`specreduce Trace <https://specreduce.readthedocs.io/en/latest/#module-specreduce.tracing>`_
-objects.
+:py:class:`specreduce.tracing.Trace` objects.
 
 Once you interact with any of the inputs in the extract step or hover over that area
 of the plugin, the live visualization will change to show the trace as a solid line.
