@@ -41,10 +41,10 @@ jobs:
             toxenv: securityaudit
             allow_failure: false
 
-          - name: Python 3.9 with coverage checking, all deps, and remote data
+          - name: Python 3.10 with coverage checking, all deps, and remote data
             os: ubuntu-latest
-            python: 3.9
-            toxenv: py39-test-alldeps-cov
+            python: '3.10'
+            toxenv: py310-test-alldeps-cov
             toxposargs: --remote-data
             allow_failure: false
 
