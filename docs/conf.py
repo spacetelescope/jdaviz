@@ -265,6 +265,7 @@ intersphinx_mapping['glue_jupyter'] = ('https://glue-jupyter.readthedocs.io/en/s
 intersphinx_mapping['regions'] = ('https://astropy-regions.readthedocs.io/en/stable/', None)
 intersphinx_mapping['skimage'] = ('https://scikit-image.org/docs/stable/', None)
 intersphinx_mapping['specutils'] = ('https://specutils.readthedocs.io/en/stable/', None)
+intersphinx_mapping['specreduce'] = ('https://specreduce.readthedocs.io/en/stable/', None)
 intersphinx_mapping['photutils'] = ('https://photutils.readthedocs.io/en/stable/', None)
 intersphinx_mapping['traitlets'] = ('https://traitlets.readthedocs.io/en/stable/', None)
 
