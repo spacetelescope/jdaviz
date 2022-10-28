@@ -17,6 +17,8 @@ Imviz
 Mosviz
 ^^^^^^
 
+- Disable Data Dropdowns and 1D linking in Mosviz to substantially decrease load times [#1790]
+
 - Added coordinates display panels for Mosviz viewers. [#1795]
 
 Specviz
