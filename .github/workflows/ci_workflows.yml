@@ -62,10 +62,10 @@ jobs:
 
           # This also runs on cron but we want to make sure new changes
           # won't break this job at the PR stage.
-          - name: Python 3.10 with latest dev versions of key dependencies, and remote data
+          - name: Python 3.11 with latest dev versions of key dependencies, and remote data
             os: ubuntu-latest
-            python: '3.10'
-            toxenv: py310-test-devdeps
+            python: '3.11'
+            toxenv: py311-test-devdeps
             toxposargs: --remote-data
             allow_failure: true
 
