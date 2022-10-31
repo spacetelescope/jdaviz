@@ -159,6 +159,8 @@ class PlotOptions(PluginTemplateMixin):
     image_bias_value = Float().tag(sync=True)
     image_bias_sync = Dict().tag(sync=True)
 
+    contour_spinner = Bool().tag(sync=True)
+
     contour_visible_value = Bool().tag(sync=True)
     contour_visible_sync = Dict().tag(sync=True)
 
@@ -275,17 +277,23 @@ class PlotOptions(PluginTemplateMixin):
                                                'image_bias_value', 'image_bias_sync')
 
         self.contour_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'contour_visible',  # noqa
-                                                    'contour_visible_value', 'contour_visible_sync')
+                                                    'contour_visible_value', 'contour_visible_sync',
+                                                    spinner='contour_spinner')
         self.contour_mode = PlotOptionsSyncState(self, self.viewer, self.layer, 'level_mode',
-                                                 'contour_mode_value', 'contour_mode_sync')
+                                                 'contour_mode_value', 'contour_mode_sync',
+                                                 spinner='contour_spinner')
         self.contour_min = PlotOptionsSyncState(self, self.viewer, self.layer, 'c_min',
-                                                'contour_min_value', 'contour_min_sync')
+                                                'contour_min_value', 'contour_min_sync',
+                                                spinner='contour_spinner')
         self.contour_max = PlotOptionsSyncState(self, self.viewer, self.layer, 'c_max',
-                                                'contour_max_value', 'contour_max_sync')
+                                                'contour_max_value', 'contour_max_sync',
+                                                spinner='contour_spinner')
         self.contour_nlevels = PlotOptionsSyncState(self, self.viewer, self.layer, 'n_levels',
-                                                    'contour_nlevels_value', 'contour_nlevels_sync')
+                                                    'contour_nlevels_value', 'contour_nlevels_sync',
+                                                    spinner='contour_spinner')
         self.contour_custom_levels = PlotOptionsSyncState(self, self.viewer, self.layer, 'levels',
-                                                          'contour_custom_levels_value', 'contour_custom_levels_sync')  # noqa
+                                                          'contour_custom_levels_value', 'contour_custom_levels_sync',   # noqa
+                                                          spinner='contour_spinner')
 
         # Axes options:
         # axes_visible hidden for imviz in plot_options.vue

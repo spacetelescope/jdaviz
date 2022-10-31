@@ -6,6 +6,8 @@ New Features
 
 - New rainbow, reversed rainbow, and seismic (blue-red) colormaps for images. [#1785]
 
+- Spinner in plot options while processing changes to contour settings. [#1794]
+
 Cubeviz
 ^^^^^^^
 

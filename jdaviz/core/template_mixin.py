@@ -1776,10 +1776,11 @@ class PlotOptionsSyncState(BasePluginComponent):
     * :meth:`unmix_state`
     """
     def __init__(self, plugin, viewer_select, layer_select, glue_name,
-                 value, sync, state_filter=None):
+                 value, sync, spinner=None, state_filter=None):
         super().__init__(plugin, value=value, sync=sync)
         self._state_filter = state_filter
         self._linked_states = []
+        self._spinner = spinner
         self._processing_change_from_glue = False
         self._processing_change_to_glue = False
         self._cached_properties = ["subscribed_states", "subscribed_icons"]
@@ -1977,6 +1978,9 @@ class PlotOptionsSyncState(BasePluginComponent):
         if self._processing_change_from_glue:
             return
 
+        if self._spinner is not None:
+            setattr(self.plugin, self._spinner, True)
+
         self._processing_change_to_glue = True
         for glue_state in self.linked_states:
             if self._glue_name == 'cmap':
@@ -1991,11 +1995,15 @@ class PlotOptionsSyncState(BasePluginComponent):
 
             if self._glue_name in ['bitmap_visible', 'contour_visible'] and msg['new'] is True:
                 # ensure that the layer is also visible
-                setattr(glue_state, 'visible', msg['new'])
+                if not glue_state.visible:
+                    setattr(glue_state, 'visible', msg['new'])
 
         # need to recompute mixed state
         self._update_mixed_state()
         self._processing_change_to_glue = False
+
+        if self._spinner is not None:
+            setattr(self.plugin, self._spinner, False)
 
     def _on_glue_layer_visible_changed(self, value):
         # this is only triggered for glue_name contour_visible or bitmap_visible
