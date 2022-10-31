@@ -10,7 +10,7 @@ import shutil
 from pathlib import Path
 
 from setuptools import setup
-from setuptools.command import install, develop
+from setuptools.command import develop
 
 # First provide helpful messages if contributors try and run legacy commands
 # for tests or docs.
@@ -134,7 +134,8 @@ def get_existing_template_dirs(app_names, template_name):
 
 
 def install_jdaviz_voila_template(
-    template_name='jdaviz-default', reference_template_name='lab', overwrite=False
+    template_name='jdaviz-default', reference_template_name='base',
+    try_symlink=True, overwrite=False
 ):
     """
     Make the ``jdaviz-default`` template available for use with voila.
@@ -176,9 +177,7 @@ def install_jdaviz_voila_template(
             rel_source = os.path.relpath(abs_source, parent_dir_of_target)
         except Exception:
             # relpath does not work if source/target on different Windows disks.
-            do_symlink = False
-        else:
-            do_symlink = True
+            try_symlink = False
 
         try:
             os.remove(target)
@@ -190,7 +189,7 @@ def install_jdaviz_voila_template(
 
         # Cannot symlink without relpath or Windows admin priv in some OS versions.
         try:
-            if do_symlink:
+            if try_symlink:
                 print('making symlink:', rel_source, '->', target)
                 os.symlink(rel_source, target)
             else:
@@ -200,10 +199,10 @@ def install_jdaviz_voila_template(
             shutil.copytree(abs_source, target)
 
 
-class CmdMixin:
+class DevelopCmd(develop.develop):
     """
-    If you pip install from source with `pip install .` or with
-    `python setup.py install` (deprecated) or `python setup.py develop`,
+    If you pip install from source with
+    `python setup.py develop` (deprecated),
     this will try to symlink or copy the voila template files to the
     correct locations. Warning: if you run editable install with
     `pip install -e .`, this will not be called.
@@ -213,14 +212,6 @@ class CmdMixin:
         super().run()
 
 
-class InstallCmd(CmdMixin, install.install):
-    pass
-
-
-class DevelopCmd(CmdMixin, develop.develop):
-    pass
-
-
-setup(data_files=data_files, cmdclass={'install': InstallCmd, 'develop': DevelopCmd},
+setup(data_files=data_files, cmdclass={'develop': DevelopCmd},
       use_scm_version={'write_to': os.path.join('jdaviz', 'version.py'),
                        'write_to_template': VERSION_TEMPLATE})
