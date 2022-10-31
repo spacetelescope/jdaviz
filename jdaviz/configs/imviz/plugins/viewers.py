@@ -5,9 +5,10 @@ from glue.core.link_helpers import LinkSame
 from glue_jupyter.bqplot.image import BqplotImageView
 
 from jdaviz.configs.imviz import wcs_utils
-from jdaviz.configs.imviz.helper import data_has_valid_wcs, layer_is_image_data, get_top_layer_index
+from jdaviz.configs.imviz.helper import layer_is_image_data, get_top_layer_index
 from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
 from jdaviz.core.events import SnackbarMessage
+from jdaviz.core.helpers import data_has_valid_wcs
 from jdaviz.core.registries import viewer_registry
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
 
