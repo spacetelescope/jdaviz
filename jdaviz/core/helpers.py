@@ -119,12 +119,12 @@ class ConfigHelper(HubListener):
     @property
     def fitted_models(self):
         """
-        Returns the fitted model parameters.
+        Returns the fitted models.
 
         Returns
         -------
         parameters : dict
-            dict of Quantity arrays, or None.
+            dict of `astropy.modeling.Model` objects, or None.
         """
 
         return self.app.fitted_models
