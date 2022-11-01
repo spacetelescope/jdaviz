@@ -8,6 +8,7 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import QTable
+from astropy.utils.decorators import deprecated
 from echo import delay_callback
 from glue.core.exceptions import IncompatibleAttribute
 
@@ -19,7 +20,7 @@ from jdaviz.configs.specviz2d import Specviz2d
 from jdaviz.configs.mosviz.plugins import jwst_header_to_skyregion
 from jdaviz.configs.default.plugins.line_lists.line_list_mixin import LineListMixin
 
-__all__ = ['Mosviz', 'MosViz']
+__all__ = ['Mosviz']
 
 
 class Mosviz(ConfigHelper, LineListMixin):
@@ -989,8 +990,7 @@ class Mosviz(ConfigHelper, LineListMixin):
         return self._get_spectrum('2D Spectra', row, apply_slider_redshift)
 
 
-# TODO: Officially deprecate this with coordination with JDAT notebooks team.
-# For backward compatibility only.
+@deprecated('3.2', alternative='Mosviz')
 class MosViz(Mosviz):
     """This class is pending deprecation. Please use `Mosviz` instead."""
     pass

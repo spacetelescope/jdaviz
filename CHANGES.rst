@@ -29,6 +29,8 @@ API Changes
 Cubeviz
 ^^^^^^^
 
+- ``CubeViz`` is deprecated, use ``Cubeviz``. [#1809]
+
 Imviz
 ^^^^^
 
@@ -37,8 +39,12 @@ Mosviz
 
 - Removed unused ``MosvizProfileView`` viewer class. [#1797]
 
+- ``MosViz`` is deprecated, use ``Mosviz``. [#1809]
+
 Specviz
 ^^^^^^^
+
+- ``SpecViz`` is deprecated, use ``Specviz``. [#1809]
 
 Specviz2d
 ^^^^^^^^^
