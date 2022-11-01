@@ -1144,10 +1144,10 @@ class Application(VuetifyTemplate, HubListener):
         from jdaviz.configs.specviz2d.plugins import SpectralExtraction
         from jdaviz.configs.cubeviz.plugins.viewers import CubevizProfileView, CubevizImageView
         from jdaviz.configs.mosviz.plugins.viewers import (
-            MosvizProfileView, MosvizTableViewer, MosvizProfile2DView
+            MosvizTableViewer, MosvizProfile2DView
         )
 
-        spectral_viewers = (SpecvizProfileView, CubevizProfileView, MosvizProfileView)
+        spectral_viewers = (SpecvizProfileView, CubevizProfileView)
         table_viewers = (MosvizTableViewer, )
         image_viewers = (MosvizProfile2DView, CubevizImageView, SpectralExtraction)
         flux_viewers = (CubevizImageView, )

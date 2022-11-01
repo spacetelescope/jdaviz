@@ -35,6 +35,8 @@ Imviz
 Mosviz
 ^^^^^^
 
+- Removed unused ``MosvizProfileView`` viewer class. [#1797]
+
 Specviz
 ^^^^^^^
 

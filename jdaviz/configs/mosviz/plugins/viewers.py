@@ -1,8 +1,6 @@
 import numpy as np
-from astropy import units as u
 from glue.core import BaseData
 from glue_jupyter.bqplot.image import BqplotImageView
-from glue_jupyter.bqplot.profile import BqplotProfileView
 from glue_jupyter.table import TableViewer
 from specutils import Spectrum1D
 
@@ -14,54 +12,8 @@ from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
 from jdaviz.configs.imviz.helper import layer_is_image_data
 
-__all__ = ['MosvizProfileView', 'MosvizImageView', 'MosvizProfile2DView',
+__all__ = ['MosvizImageView', 'MosvizProfile2DView',
            'MosvizTableViewer']
-
-
-@viewer_registry("mosviz-profile-viewer", label="Profile 1D (Mosviz)")
-class MosvizProfileView(JdavizViewerMixin, BqplotProfileView):
-    default_class = Spectrum1D
-
-    # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
-    tools_nested = [
-                    ['jdaviz:homezoom', 'jdaviz:prevzoom'],
-                    ['jdaviz:boxzoom', 'jdaviz:xrangezoom'],
-                    ['jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
-                    ['bqplot:xrange'],
-                    ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
-                ]
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._subscribe_to_layers_update()
-
-    def data(self, cls=None):
-        return [layer_state.layer.get_object(cls=cls or self.default_class)
-                for layer_state in self.state.layers
-                if hasattr(layer_state, 'layer') and
-                isinstance(layer_state.layer, BaseData)]
-
-    def set_plot_axes(self):
-        data = self.data()[0]
-        # Set axes labels for the spectrum viewer
-        spectral_axis_unit_type = str(data.spectral_axis.unit.physical_type).title()
-        # flux_unit_type = data.flux.unit.physical_type.title()
-        flux_unit_type = "Flux density"
-
-        if data.spectral_axis.unit.is_equivalent(u.m):
-            spectral_axis_unit_type = "Wavelength"
-        elif data.spectral_axis.unit.is_equivalent(u.pixel):
-            spectral_axis_unit_type = "pixel"
-
-        label_0 = f"{spectral_axis_unit_type} [{data.spectral_axis.unit.to_string()}]"
-        self.figure.axes[0].label = label_0
-        self.figure.axes[1].label = f"{flux_unit_type} [{data.flux.unit.to_string()}]"
-
-        # Make it so y axis label is not covering tick numbers.
-        self.figure.axes[1].label_offset = "-50"
-
-        # Set Y-axis to scientific notation
-        self.figure.axes[1].tick_format = '0.1e'
 
 
 @viewer_registry("mosviz-image-viewer", label="Image 2D (Mosviz)")
@@ -129,7 +81,6 @@ class MosvizProfile2DView(JdavizViewerMixin, BqplotImageView):
         )
 
         if self.jdaviz_app.config == 'specviz2d':
-            # pass
             self.label_mouseover = None
             self.add_event_callback(self.on_mouse_or_key_event,
                                     events=['mousemove', 'mouseenter', 'mouseleave'])
