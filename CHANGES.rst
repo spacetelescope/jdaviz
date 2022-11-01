@@ -71,6 +71,8 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+- Change box zoom to always maintain aspect ratio. [#1726]
+
 Cubeviz
 ^^^^^^^
 
