@@ -145,8 +145,30 @@ class BoxZoom(_BaseSelectZoom):
             # let's ignore and reset the tool
             return
 
-        self.viewer.state.x_min, self.viewer.state.x_max = self.interact.selected_x
+        new_interact_x = self.get_x_axis_with_aspect_ratio()
         self.viewer.state.y_min, self.viewer.state.y_max = self.interact.selected_y
+
+        # Change the x axis to make sure all y axis values from the box zoom are included
+        self.viewer.state.x_min, self.viewer.state.x_max = new_interact_x
+
+    def get_x_axis_with_aspect_ratio(self):
+        new_interact_x = self.interact.selected_x
+        # If aspect is equal, then we need to preserve that aspect ratio
+        # even if the box zoom area does not.
+        if self.viewer.state.aspect == "equal":
+            fig_axes_ratio = ((self.viewer.state.x_max - self.viewer.state.x_min) /
+                              (self.viewer.state.y_max - self.viewer.state.y_min))
+
+            # The value at index of 1 will always be the larger of the two numbers
+            x_diff = self.interact.selected_x[1] - self.interact.selected_x[0]
+            y_diff = self.interact.selected_y[1] - self.interact.selected_y[0]
+
+            if x_diff < y_diff * fig_axes_ratio:
+                x_with_aspect = y_diff * fig_axes_ratio
+                x_centre = (self.interact.selected_x[0] + self.interact.selected_x[1]) / 2
+                new_interact_x = (x_centre - x_with_aspect / 2, x_centre + x_with_aspect / 2)
+
+        return new_interact_x
 
 
 @viewer_tool
