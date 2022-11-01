@@ -12,6 +12,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Warnings in aperture photometry plugin when using raw profile with large subsets. [#1801]
+
 Mosviz
 ^^^^^^
 

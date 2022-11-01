@@ -18,7 +18,7 @@ from photutils.aperture import (ApertureStats, CircularAperture, EllipticalApert
                                 RectangularAperture)
 from regions import (CircleAnnulusPixelRegion, CirclePixelRegion, EllipsePixelRegion,
                      RectanglePixelRegion)
-from traitlets import Any, Bool, List, Unicode, observe
+from traitlets import Any, Bool, Integer, List, Unicode, observe
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import SnackbarMessage, LinkUpdatedMessage
@@ -35,6 +35,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin):
     template_file = __file__, "aper_phot_simple.vue"
     subset_items = List([]).tag(sync=True)
     subset_selected = Unicode("").tag(sync=True)
+    subset_area = Integer().tag(sync=True)
     bg_subset_items = List().tag(sync=True)
     bg_subset_selected = Unicode("").tag(sync=True)
     background_value = Any(0).tag(sync=True)
@@ -201,6 +202,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin):
                                                   self._selected_subset.height ** 2) * 0.5
             else:  # pragma: no cover
                 raise TypeError(f'Unsupported region shape: {self._selected_subset.__class__}')
+
+            self.subset_area = int(np.ceil(self._selected_subset.area))
 
         except Exception as e:
             self._selected_subset = None
