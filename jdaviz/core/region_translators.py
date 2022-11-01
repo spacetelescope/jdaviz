@@ -211,7 +211,7 @@ def aperture2regions(aperture):
     --------
     Translate a `photutils.aperture.CircularAperture` to `regions.CirclePixelRegion`:
 
-    >>> from photutils import CircularAperture
+    >>> from photutils.aperture import CircularAperture
     >>> from jdaviz.core.region_translators import aperture2regions
     >>> aperture = CircularAperture((42, 43), 4.2)
     >>> aperture2regions(aperture)
