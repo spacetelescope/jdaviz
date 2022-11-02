@@ -77,6 +77,8 @@ Bug Fixes
 
 - Change box zoom to always maintain aspect ratio. [#1726]
 
+- Fixed removing image data from viewer when changing row. [#1812]
+
 Cubeviz
 ^^^^^^^
 

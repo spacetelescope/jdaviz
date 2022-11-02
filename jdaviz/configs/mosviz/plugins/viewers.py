@@ -316,7 +316,7 @@ class MosvizTableViewer(TableViewer, JdavizViewerMixin):
                     ] = selected_data
 
             if component.label == 'Images':
-                prev_data = self._selected_data.get(self._default_table_viewer_reference_name)
+                prev_data = self._selected_data.get(self._default_image_viewer_reference_name)
                 if prev_data != selected_data:
                     if prev_data:
                         remove_data_from_viewer_message = RemoveDataFromViewerMessage(
