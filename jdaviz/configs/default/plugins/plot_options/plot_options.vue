@@ -263,62 +263,81 @@
 
     <!-- IMAGE:CONTOUR -->
     <j-plugin-section-header v-if="contour_visible_sync.in_subscribed_states">Contours</j-plugin-section-header>
-    <glue-state-sync-wrapper :sync="contour_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('contour_visible')">
-      <span>
-        <v-btn icon @click.stop="contour_visible_value = !contour_visible_value">
-          <v-icon>mdi-eye{{ contour_visible_value ? '' : '-off' }}</v-icon>
-        </v-btn>
-        Show Contours
-      </span>
-    </glue-state-sync-wrapper>
-
-    <div v-if="contour_visible_sync.in_subscribed_states && contour_visible_value">
-      <glue-state-sync-wrapper :sync="contour_mode_sync" :multiselect="multiselect" @unmix-state="unmix_state('contour_mode')">
-        <v-btn-toggle dense v-model="contour_mode_value" style="margin-right: 8px; margin-top: 8px">
-            <v-tooltip bottom>
-                <template v-slot:activator="{ on }">
-                    <v-btn v-on="on" small value="Linear">
-                        <v-icon>mdi-call-made</v-icon>
-                    </v-btn>
-                </template>
-                <span>linear</span>
-            </v-tooltip>
-
-            <v-tooltip bottom>
-                <template v-slot:activator="{ on }">
-                    <v-btn v-on="on" small value="Custom">
-                        <v-icon>mdi-wrench</v-icon>
-                    </v-btn>
-                </template>
-                <span>custom</span>
-            </v-tooltip>
-        </v-btn-toggle>
-      </glue-state-sync-wrapper>
-
-      <div v-if="contour_mode_value === 'Linear'">
-        <glue-state-sync-wrapper :sync="contour_min_sync" :multiselect="multiselect" @unmix-state="unmix_state('contour_min')">
-          <glue-float-field label="Contour Min" :value.sync="contour_min_value" />
+    <div style="display: grid"> <!-- overlay container -->
+      <div style="grid-area: 1/1">        
+        <glue-state-sync-wrapper :sync="contour_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('contour_visible')">
+          <span>
+            <v-btn icon @click.stop="contour_visible_value = !contour_visible_value">
+              <v-icon>mdi-eye{{ contour_visible_value ? '' : '-off' }}</v-icon>
+            </v-btn>
+            Show Contours
+          </span>
         </glue-state-sync-wrapper>
 
-        <glue-state-sync-wrapper :sync="contour_max_sync" :multiselect="multiselect" @unmix-state="unmix_state('contour_max')">
-          <glue-float-field label="Contour Max" :value.sync="contour_max_value" />
-        </glue-state-sync-wrapper>
+        <div v-if="contour_visible_sync.in_subscribed_states && contour_visible_value">
+          <glue-state-sync-wrapper :sync="contour_mode_sync" :multiselect="multiselect" @unmix-state="unmix_state('contour_mode')">
+            <v-btn-toggle dense v-model="contour_mode_value" style="margin-right: 8px; margin-top: 8px">
+                <v-tooltip bottom>
+                    <template v-slot:activator="{ on }">
+                        <v-btn v-on="on" small value="Linear">
+                            <v-icon>mdi-call-made</v-icon>
+                        </v-btn>
+                    </template>
+                    <span>linear</span>
+                </v-tooltip>
 
-        <glue-state-sync-wrapper :sync="contour_nlevels_sync" :multiselect="multiselect" @unmix-state="unmix_state('contour_nlevels')">
-          <glue-float-field label="Number of Contour Levels" :value.sync="contour_nlevels_value" />
-        </glue-state-sync-wrapper>
+                <v-tooltip bottom>
+                    <template v-slot:activator="{ on }">
+                        <v-btn v-on="on" small value="Custom">
+                            <v-icon>mdi-wrench</v-icon>
+                        </v-btn>
+                    </template>
+                    <span>custom</span>
+                </v-tooltip>
+            </v-btn-toggle>
+          </glue-state-sync-wrapper>
+
+          <div v-if="contour_mode_value === 'Linear'">
+            <glue-state-sync-wrapper :sync="contour_min_sync" :multiselect="multiselect" @unmix-state="unmix_state('contour_min')">
+              <glue-float-field label="Contour Min" :value.sync="contour_min_value" />
+            </glue-state-sync-wrapper>
+
+            <glue-state-sync-wrapper :sync="contour_max_sync" :multiselect="multiselect" @unmix-state="unmix_state('contour_max')">
+              <glue-float-field label="Contour Max" :value.sync="contour_max_value" />
+            </glue-state-sync-wrapper>
+
+            <glue-state-sync-wrapper :sync="contour_nlevels_sync" :multiselect="multiselect" @unmix-state="unmix_state('contour_nlevels')">
+              <glue-float-field label="Number of Contour Levels" :value.sync="contour_nlevels_value" />
+            </glue-state-sync-wrapper>
+          </div>
+          <div v-else>
+            <glue-state-sync-wrapper :sync="contour_custom_levels_sync" :multiselect="multiselect" @unmix-state="unmix_state('contour_levels')">
+              <v-text-field 
+                label="Contour Levels"
+                :value="contour_custom_levels_txt"
+                @focus="contour_custom_levels_focus"
+                @blur="contour_custom_levels_blur"
+                @input="contour_custom_levels_set_value"/>
+            </glue-state-sync-wrapper>
+          </div>
+        </div>
+
       </div>
-      <div v-else>
-        <glue-state-sync-wrapper :sync="contour_custom_levels_sync" :multiselect="multiselect" @unmix-state="unmix_state('contour_levels')">
-          <v-text-field 
-            label="Contour Levels"
-            :value="contour_custom_levels_txt"
-            @focus="contour_custom_levels_focus"
-            @blur="contour_custom_levels_blur"
-            @input="contour_custom_levels_set_value"/>
-        </glue-state-sync-wrapper>
+      <div v-if="contour_spinner"
+           class="text-center"
+           style="grid-area: 1/1; 
+                  z-index:2;
+                  margin-left: -24px;
+                  margin-right: -24px;
+                  padding-top: 60px;
+                  background-color: rgb(0 0 0 / 20%)">
+        <v-progress-circular
+          indeterminate
+          color="spinner"
+          size="50"
+          width="6"
+        ></v-progress-circular>
       </div>
-    </div>
 
     <!-- GENERAL:AXES -->
     <j-plugin-section-header v-if="axes_visible_sync.in_subscribed_states && config !== 'imviz'">Axes</j-plugin-section-header>
