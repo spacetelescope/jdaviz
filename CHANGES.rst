@@ -17,6 +17,8 @@ Imviz
 Mosviz
 ^^^^^^
 
+- Added coordinates display panels for Mosviz viewers. [#1795]
+
 Specviz
 ^^^^^^^
 

@@ -127,18 +127,24 @@ def test_load_multi_image_spec(mosviz_helper, mos_image, spectrum1d, mos_spectru
         assert qtable["Images"][0] == "Test Label 0"
 
 
-@pytest.mark.filterwarnings('ignore')
 @pytest.mark.parametrize('label', [None, "Test Label"])
 def test_load_single_image_multi_spec(mosviz_helper, mos_image, spectrum1d, mos_spectrum2d, label):
     spectra1d = [spectrum1d] * 3
     spectra2d = [mos_spectrum2d] * 3
+
+    image_viewer = mosviz_helper.app.get_viewer('image-viewer')
+
+    # Coordinates info panel should not crash even when nothing is loaded.
+    image_viewer.on_mouse_or_key_event({'event': 'mouseover'})
+    assert image_viewer.label_mouseover is None
 
     # Test that loading is still possible after previous crash:
     # https://github.com/spacetelescope/jdaviz/issues/364
     with pytest.raises(ValueError, match='The dimensions of component 2D Spectra are incompatible'):
         mosviz_helper.load_data(spectra1d, spectra2d, images=[])
 
-    mosviz_helper.load_data(spectra1d, spectra2d, images=mos_image, images_label=label)
+    with pytest.warns(UserWarning, match='Could not parse metadata from input images'):
+        mosviz_helper.load_data(spectra1d, spectra2d, images=mos_image, images_label=label)
 
     assert mosviz_helper.app.get_viewer("table-viewer").figure_widget.highlighted == 0
     assert len(mosviz_helper.app.data_collection) == 8
@@ -149,6 +155,34 @@ def test_load_single_image_multi_spec(mosviz_helper, mos_image, spectrum1d, mos_
     else:
         assert np.all(qtable["Images"] == "Test Label")
     assert len(qtable) == 3
+
+    # Also check coordinates info panels for Mosviz image viewer.
+    # 1D spectrum viewer panel is already tested in Specviz.
+    # 2D spectrum viewer panel is already tested in Specviz2d.
+
+    image_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
+    assert image_viewer.label_mouseover.pixel == 'x=000.0 y=000.0'
+    assert image_viewer.label_mouseover.value == '+3.74540e-01 Jy'
+    assert image_viewer.label_mouseover.world_ra_deg == '5.0297844783'
+    assert image_viewer.label_mouseover.world_dec_deg == '4.9918991917'
+
+    image_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': None, 'y': 0}})
+    assert image_viewer.label_mouseover.pixel == ''
+    assert image_viewer.label_mouseover.value == ''
+    assert image_viewer.label_mouseover.world_ra_deg == ''
+    assert image_viewer.label_mouseover.world_dec_deg == ''
+
+    image_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': -1, 'y': 0}})
+    assert image_viewer.label_mouseover.pixel == 'x=-01.0 y=000.0'
+    assert image_viewer.label_mouseover.value == ''
+    assert image_viewer.label_mouseover.world_ra_deg == '5.0297997183'
+    assert image_viewer.label_mouseover.world_dec_deg == '4.9918991914'
+
+    image_viewer.on_mouse_or_key_event({'event': 'mouseleave'})
+    assert image_viewer.label_mouseover.pixel == ''
+    assert image_viewer.label_mouseover.value == ''
+    assert image_viewer.label_mouseover.world_ra_deg == ''
+    assert image_viewer.label_mouseover.world_dec_deg == ''
 
 
 @pytest.mark.filterwarnings('ignore')
