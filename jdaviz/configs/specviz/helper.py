@@ -39,22 +39,26 @@ class Specviz(ConfigHelper, LineListMixin):
                                handler=self._redshift_listener)
 
     def load_spectrum(self, data, data_label=None, format=None, show_in_viewer=True,
-                      spectrum_viewer_reference_name=None, concat_by_file=False):
+                      concat_by_file=False):
+        """
+        Loads a data file or `~specutils.Spectrum1D` object into Specviz.
 
-        # If viewer reference name is not specified and
-        # the default viewer is available, use default
-        if spectrum_viewer_reference_name is None:
-            if (self._default_spectrum_viewer_reference_name in
-                    self.app.get_viewer_reference_names()):
-                spectrum_viewer_reference_name = self._default_spectrum_viewer_reference_name
-
-            # If viewer reference name is not specified and default is unavailable,
-            # use first spectrum viewer without loaded data:
-            else:
-                spectrum_viewer_reference_name = self.app._get_first_viewer_reference_name(
-                    require_spectrum_viewer=True, require_no_selected_data=True
-                )
-
+        Parameters
+        ----------
+        data : str, `~specutils.Spectrum1D`, or `~specutils.SpectrumList`
+            Spectrum1D, SpectrumList, or path to compatible data file.
+        data_label : str
+            The Glue data label found in the ``DataCollection``.
+        format : str
+            Loader format specification used to indicate data format in
+            `~specutils.Spectrum1D.read` io method.
+        show_in_viewer : bool
+            Show data in viewer(s).
+        concat_by_file : bool
+            If True and there is more than one available extension, concatenate
+            the extensions within each spectrum file passed to the parser and
+            add a concatenated spectrum to the data collection.
+        """
         super().load_data(data,
                           parser_reference='specviz-spectrum1d-parser',
                           data_label=data_label,

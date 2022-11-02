@@ -26,8 +26,6 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
     format : str
         Loader format specification used to indicate data format in
         `~specutils.Spectrum1D.read` io method.
-    spectrum_viewer_reference_name : str
-        Reference name for the viewer
     concat_by_file : bool
         If True and there is more than one available extension, concatenate
         the extensions within each spectrum file passed to the parser and
