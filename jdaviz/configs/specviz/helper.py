@@ -1,13 +1,14 @@
 import warnings
 
 from astropy import units as u
+from astropy.utils.decorators import deprecated
 from specutils import SpectralRegion, Spectrum1D
 
 from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import RedshiftMessage
 from jdaviz.configs.default.plugins.line_lists.line_list_mixin import LineListMixin
 
-__all__ = ['Specviz', 'SpecViz']
+__all__ = ['Specviz']
 
 
 def _apply_redshift_to_spectra(spectra, redshift):
@@ -235,8 +236,7 @@ class Specviz(ConfigHelper, LineListMixin):
         ).figure.axes[axis].tick_format = fmt
 
 
-# TODO: Officially deprecate this with coordination with JDAT notebooks team.
-# For backward compatibility only.
+@deprecated('3.2', alternative='Specviz')
 class SpecViz(Specviz):
     """This class is pending deprecation. Please use `Specviz` instead."""
     pass

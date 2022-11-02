@@ -1,14 +1,14 @@
 import numpy as np
-
+from astropy.utils.decorators import deprecated
 from glue.core import BaseData
+
 from jdaviz.core.helpers import ImageConfigHelper
 from jdaviz.configs.default.plugins.line_lists.line_list_mixin import LineListMixin
 from jdaviz.configs.specviz import Specviz
 from jdaviz.core.events import (AddDataMessage,
                                 SliceSelectSliceMessage)
 
-
-__all__ = ['Cubeviz', 'CubeViz']
+__all__ = ['Cubeviz']
 
 
 class Cubeviz(ImageConfigHelper, LineListMixin):
@@ -113,8 +113,7 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
         return self._specviz
 
 
-# TODO: Officially deprecate this with coordination with JDAT notebooks team.
-# For backward compatibility only.
+@deprecated('3.2', alternative='Cubeviz')
 class CubeViz(Cubeviz):
     """This class is pending deprecation. Please use `Cubeviz` instead."""
     pass
