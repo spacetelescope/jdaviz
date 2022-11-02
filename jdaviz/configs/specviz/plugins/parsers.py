@@ -1,4 +1,5 @@
 import pathlib
+from collections import defaultdict
 
 import numpy as np
 from astropy.io.registry import IORegistryError
@@ -146,22 +147,18 @@ def group_spectra_by_filename(datasets):
 
     Parameters
     ----------
-    dataset : `~glue.core.data_collection.DataCollection`
-        Collection of datasets
+    datasets : `~glue.core.data_collection.DataCollection`
+        Collection of datasets.
 
     Returns
     -------
     spectra_to_combine : dict
         Datasets of spectra organized by their filename.
     """
-    spectra_to_combine = dict()
+    spectra_to_combine = defaultdict(list)
 
     for data in datasets:
         filename = data.meta.get("FILENAME")
-
-        if filename not in spectra_to_combine:
-            spectra_to_combine[filename] = []
-
         spectra_to_combine[filename].append(data)
 
     return spectra_to_combine
