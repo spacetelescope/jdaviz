@@ -120,7 +120,7 @@ module.exports = {
   },
   methods: {
     menuButtonAvailable() {
-      if (this.$props.viewer.reference === 'table-viewer' || this.$props.viewer.config === 'mosviz') {
+      if (this.$props.viewer.reference === 'table-viewer') {
         return false
       }
       return true
@@ -142,6 +142,8 @@ module.exports = {
           return false
         } else if (this.$props.viewer.reference === 'image-viewer' && item.type !== 'image') {
           return false
+        } else if (item.meta.mosviz_row === this.$props.app_settings.mosviz_row) {
+          return true
         } else {
           return this.dataItemInViewer(item, returnExtraItems)
         }
@@ -194,6 +196,9 @@ module.exports = {
       return this.$props.data_items.filter((item) => this.itemIsVisible(item, false))
     },
     extraDataItems() {
+      if (this.$props.viewer.config === 'mosviz') {
+        return []
+      }
       return this.$props.data_items.filter((item) => this.itemIsVisible(item, true))
     },
   }
