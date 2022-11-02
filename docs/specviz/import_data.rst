@@ -148,3 +148,8 @@ that the ``read`` method of :class:`~specutils.SpectrumList` is only set up to h
 directory input in limited cases, for example JWST MIRI MRS data, and will throw an error
 in other cases. In cases that it does work, only files in the directory level specified
 will be read, with no recursion into deeper folders.
+
+The :py:meth:`~jdaviz.configs.specviz.helper.Specviz.load_spectrum` method also takes
+an optional keyword argument ``concat_by_file``. When set to ``True``, the spectra
+loaded in the :class:`~specutils.SpectrumList` will be concatenated together into one
+combined spectrum per loaded file, which may be useful for MIRI observations, for example.
