@@ -294,11 +294,10 @@ def test_load_spectrum_list_directory_concat(tmpdir, specviz_helper):
         sample_data_zip.extractall(tmpdir.strpath)
     data_path = str(tmpdir.join('NIRISS_for_parser_p0171'))
 
-    # Load two NIRISS x1d files from FITS. They have 19 and 20 EXTRACT1D
+    # Load two x1d files from FITS. They have 19 and 20 EXTRACT1D
     # extensions per file, for a total of 39 spectra to load. Also concatenate
     # spectra common to each file into one "Combined" spectrum to load per file.
     # Now the total is (19 EXTRACT 1D + 1 Combined) + (20 EXTRACT 1D + 1 Combined) = 41.
-    # This feature is intended for MIRI spectra, but is tested on NIRISS spectra here:
     with pytest.warns(UserWarning, match='SRCTYPE is missing or UNKNOWN in JWST x1d loader'):
         specviz_helper.load_spectrum(data_path, concat_by_file=True)
     assert len(specviz_helper.app.data_collection) == 41
