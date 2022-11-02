@@ -86,7 +86,7 @@ Imviz
 Mosviz
 ^^^^^^
 
-- Data unassigned a row is hidden under the subdropdown in the data dropdown. [#1798]
+- Data unassigned a row is hidden under the subdropdown in the data dropdown. [#1798, #1808]
 
 Specviz
 ^^^^^^^
