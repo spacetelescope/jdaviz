@@ -161,9 +161,9 @@ def spectrum_collection(spectrum1d):
 @pytest.fixture
 def multi_order_spectrum_list(spectrum1d, spectral_orders=10):
     sc = []
+    np.random.seed(42)
 
     for i in range(spectral_orders):
-        np.random.seed(42)
 
         spec_axis = (np.arange(SPECTRUM_SIZE) + 6000 + i * SPECTRUM_SIZE) * u.AA
         flux = (np.random.randn(len(spec_axis.value)) +
@@ -176,10 +176,7 @@ def multi_order_spectrum_list(spectrum1d, spectral_orders=10):
 
         sc.append(spectrum1d)
 
-    with warnings.catch_warnings():
-        warnings.simplefilter('ignore')
-        result = SpectrumList(sc)
-    return result
+    return SpectrumList(sc)
 
 
 def _create_spectrum1d_cube_with_fluxunit(fluxunit=u.Jy):
