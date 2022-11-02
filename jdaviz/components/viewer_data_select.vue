@@ -142,10 +142,9 @@ module.exports = {
           return false
         } else if (this.$props.viewer.reference === 'image-viewer' && item.type !== 'image') {
           return false
-        } else if ((item.meta.mosviz_row !== undefined) && (item.meta.mosviz_row !== null)) {
+        } else {
           return this.dataItemInViewer(item, returnExtraItems)
         }
-        return !returnExtraItems
       } else if (this.$props.viewer.config === 'cubeviz') {
         if (this.$props.viewer.reference === 'spectrum-viewer') {
           if (item.meta.Plugin === undefined) {
