@@ -11,7 +11,10 @@ GWCS_LT_0_18_1 = Version(gwcs.__version__) < Version('0.18.1')
 @pytest.mark.remote_data
 @pytest.mark.filterwarnings('ignore')
 def test_plugin(specviz2d_helper):
-    fn = download_file('https://stsci.box.com/shared/static/exnkul627fcuhy5akf2gswytud5tazmw.fits', cache=True)  # noqa
+    # TODO: Change back to smaller number (30?) when ITSD is convinced it is them and not us.
+    #       Help desk ticket INC0183598, J. Quick.
+    fn = download_file('https://stsci.box.com/shared/static/exnkul627fcuhy5akf2gswytud5tazmw.fits',
+                       cache=True, timeout=100)
 
     specviz2d_helper.load_data(spectrum_2d=fn)
 
