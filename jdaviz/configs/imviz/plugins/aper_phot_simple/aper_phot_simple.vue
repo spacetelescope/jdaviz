@@ -117,6 +117,12 @@
               <b>WARNING</b>: Computing and displaying raw profile of an aperture containing ~{{subset_area}} pixels may be slow or unresponsive.
           </span>
         </v-row>
+        <v-row v-if="current_plot_type==='Radial Profile (Raw)'">
+          <span class="v-messages v-messages__message text--secondary">
+              Estimated remaining memory usage: {{predictedMemoryUsagePerc(subset_area).toPrecision(2)}}%
+          </span>
+        </v-row>
+
 
         <v-row v-if="current_plot_type.indexOf('Radial Profile') != -1">
 
@@ -176,3 +182,16 @@
     </div>
   </j-tray-plugin>
 </template>
+
+<script>
+
+module.exports = {
+  methods: {
+    predictedMemoryUsagePerc(npoints) {
+      const slope = 8500
+      const memory = performance.memory
+      return slope * npoints / (memory.jsHeapSizeLimit - memory.totalJSHeapSize) * 100
+    },
+  },
+};
+</script>
