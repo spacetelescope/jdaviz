@@ -235,7 +235,8 @@ def test_nirspec_loader(mosviz_helper, tmpdir):
 
     # Check to make sure our test case isn't from the same row
     table = mosviz_helper.app.get_viewer('table-viewer')
-    data_label = mosviz_helper.app.data_collection[1].label
+    table.select_row(0)
+    data_label = "1D Spectrum 4"
     assert mosviz_helper.app.data_collection[data_label].meta['mosviz_row'] != table.current_row
 
     print(mosviz_helper.app.data_collection)
