@@ -241,7 +241,7 @@ def test_nirspec_loader(mosviz_helper, tmpdir):
     print(mosviz_helper.app.data_collection)
     with pytest.raises(NotImplementedError, match='Intra-row plotting not supported'):
         mosviz_helper.app.add_data_to_viewer(viewer_reference='spectrum-viewer',
-                                             data_label=data_label)  
+                                             data_label=data_label)
 
 
 @pytest.mark.remote_data
