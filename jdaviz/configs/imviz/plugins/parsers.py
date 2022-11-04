@@ -74,7 +74,12 @@ def parse_data(app, file_obj, ext=None, data_label=None):
             pf = pf[::-1, :]  # Flip it
             _parse_image(app, pf, data_label, ext=ext)
         elif file_obj_lower.endswith('.asdf'):
-            if rdd is not None:
+            # First check if file might be a Roman data product:
+            with asdf.open(file_obj) as asdf_file:
+                # This is a convention of roman data products:
+                is_roman_data_prod = 'roman' in asdf_file
+
+            if is_roman_data_prod and rdd is not None:
                 pf = rdd.open(file_obj)
                 _parse_image(app, pf, data_label, ext=ext)
             else:
