@@ -1027,11 +1027,11 @@ class Application(VuetifyTemplate, HubListener):
             defined data set.
         """
         if 'mosviz_row' in self.state.settings:
-            if not ((self.get_viewer("table-viewer").row_selection_in_progress) and
-                    (self.data_collection[data_label].meta['mosviz_row'] !=
-                        self.state.settings['mosviz_row'])):
-                raise NotImplementedError("Intra-row plotting not supported. "
-                                          "Please use the table viewer to change rows")
+            if not (self.get_viewer("table-viewer").row_selection_in_progress):
+                if (self.data_collection[data_label].meta['mosviz_row'] !=
+                        self.state.settings['mosviz_row']):
+                    raise NotImplementedError("Intra-row plotting not supported. "
+                                              "Please use the table viewer to change rows")
 
         viewer_item = self._get_viewer_item(viewer_reference)
         if viewer_item is None:
