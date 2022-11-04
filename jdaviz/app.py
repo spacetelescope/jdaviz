@@ -973,16 +973,6 @@ class Application(VuetifyTemplate, HubListener):
 
         if check_unique:
             data_label = self.return_unique_name(data_label, ext=ext)
-            # It is possible to add data named "test (1)" and then
-            # add another data named "test" and return_unique_name will see the
-            # first test and assume the second is the duplicate, appending
-            # "(1)" to the end. This overwrites the original data and
-            # causes issues. This block appends a timestamp if a duplicate
-            # is still found in data_collection.
-            if data_label in self.data_collection.labels:
-                import time
-                ts = time.time()
-                data_label = f"{data_label} timestamp: {ts}"
 
         return data_label
 
@@ -1015,6 +1005,17 @@ class Application(VuetifyTemplate, HubListener):
 
         if number_of_duplicates > 0:
             data_label = f"{data_label} ({number_of_duplicates})"
+
+        # It is possible to add data named "test (1)" and then
+        # add another data named "test" and return_unique_name will see the
+        # first test and assume the second is the duplicate, appending
+        # "(1)" to the end. This overwrites the original data and
+        # causes issues. This block appends a timestamp if a duplicate
+        # is still found in data_collection.
+        if data_label in self.data_collection.labels:
+            import time
+            ts = time.time()
+            data_label = f"{data_label} timestamp: {ts}"
 
         return data_label
 
