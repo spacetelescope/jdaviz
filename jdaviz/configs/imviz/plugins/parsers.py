@@ -85,7 +85,7 @@ def parse_data(app, file_obj, ext=None, data_label=None):
             else:
                 with asdf.open(file_obj) as pf:
                     _parse_image(app, pf, data_label, ext=ext)
-        else:  # Assume fits:
+        else:  # Assume FITS
             with fits.open(file_obj) as pf:
                 _parse_image(app, pf, data_label, ext=ext)
     else:
