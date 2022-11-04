@@ -104,8 +104,8 @@ object, you can load it into Imviz as follows:
 Roman datamodels
 ----------------
 
-You can also load Nancy Grace Roman Space Telescope data products, which are
-provided as ASDF files. If an ASDF file has a ``roman`` attribute, jdaviz will
+You can also load Nancy Grace Roman Space Telescope (hereafter, Roman) data products, which are
+provided as ASDF files. If an ASDF file has a ``roman`` attribute, Jdaviz will
 open it with `roman-datamodels <https://github.com/spacetelescope/roman_datamodels>`_.
 If ``roman-datamodels`` is not available, jdaviz falls back on the
 `asdf package <https://github.com/asdf-format/asdf>`_.
