@@ -134,7 +134,9 @@ def test_edge_cases(specviz_helper, spectrum1d, data_label):
     assert dc[2].label == f"{data_label} (2)"
 
 
-def test_case_that_breaks_return_label(specviz_helper, spectrum1d):
-    specviz_helper.load_spectrum(spectrum1d, data_label="this will break (1)")
-    with pytest.warns(match='Overwriting existing data entry'):
-        specviz_helper.load_spectrum(spectrum1d, data_label="this will break")
+def test_case_that_used_to_break_return_label(specviz_helper, spectrum1d):
+    specviz_helper.load_spectrum(spectrum1d, data_label="this used to break (1)")
+    specviz_helper.load_spectrum(spectrum1d, data_label="this used to break")
+    dc = specviz_helper.app.data_collection
+    assert dc[0].label == "this used to break (1)"
+    assert dc[1].label.startswith("this used to break (1)")
