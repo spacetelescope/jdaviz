@@ -73,9 +73,6 @@ def parse_data(app, file_obj, ext=None, data_label=None):
                 pf = rgb2gray(im)
             pf = pf[::-1, :]  # Flip it
             _parse_image(app, pf, data_label, ext=ext)
-        elif file_obj_lower.endswith('.fits'):
-            with fits.open(file_obj) as pf:
-                _parse_image(app, pf, data_label, ext=ext)
         elif file_obj_lower.endswith('.asdf'):
             if rdd is not None:
                 pf = rdd.open(file_obj)
@@ -83,8 +80,9 @@ def parse_data(app, file_obj, ext=None, data_label=None):
             else:
                 with asdf.open(file_obj) as pf:
                     _parse_image(app, pf, data_label, ext=ext)
-        else:
-            raise NotImplementedError(f'File extension is not implemented: {file_obj}')
+        else:  # Assume fits:
+            with fits.open(file_obj) as pf:
+                _parse_image(app, pf, data_label, ext=ext)
     else:
         _parse_image(app, file_obj, data_label, ext=ext)
 
