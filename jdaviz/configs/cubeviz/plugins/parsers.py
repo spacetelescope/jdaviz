@@ -387,7 +387,7 @@ def _parse_ndarray(app, file_obj, data_label=None, data_type=None,
     if data_type is None:
         data_type = 'flux'
 
-    flux = np.fliplr(np.rot90(np.moveaxis(file_obj, 0, 2), k=-1, axes=(0, 1)))
+    flux = np.moveaxis(file_obj, 1, 0)
     if not hasattr(flux, 'unit'):
         flux = flux << u.count
     s3d = Spectrum1D(flux=flux)
