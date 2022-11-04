@@ -116,7 +116,7 @@ If ``roman-datamodels`` is not available, jdaviz falls back on the
 
     path = "WFI01_cal.asdf"
     imviz = Imviz()
-    imviz.load_data(ndd, data_label='roman_wfi_01')
+    imviz.load_data(path, data_label='roman_wfi_01')
     imviz.show()
 
 
