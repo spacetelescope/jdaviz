@@ -7,6 +7,8 @@ from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import NDData
 from astropy.wcs import WCS
+from astropy.utils.data import cache_contents
+
 from glue.core.data import Component, Data
 from gwcs.wcs import WCS as GWCS
 from stdatamodels import asdf_in_fits
@@ -49,6 +51,18 @@ def parse_data(app, file_obj, ext=None, data_label=None):
         file_obj_lower = file_obj.lower()
         if data_label is None:
             data_label = os.path.splitext(os.path.basename(file_obj))[0]
+
+        # If file_obj is a path to a cached file from
+        # astropy.utils.data.download_file, the path has no file extension.
+        # Here we check if the file is in the download cache, and if it is,
+        # we look up the file extension from the source URL:
+        path_to_url_mapping = {v: k for k, v in cache_contents().items()}
+        if file_obj in path_to_url_mapping:
+            source_url = path_to_url_mapping[file_obj]
+            # file_obj_lower is only used for checking extensions,
+            # file_obj is passed for parsing and is not modified here:
+            file_obj_lower = source_url.split('/')[-1].lower()
+
         if file_obj_lower.endswith(('.jpg', '.jpeg', '.png')):
             from skimage.io import imread
             from skimage.color import rgb2gray, rgba2rgb
