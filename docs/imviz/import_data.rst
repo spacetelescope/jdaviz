@@ -101,8 +101,24 @@ object, you can load it into Imviz as follows:
     imviz.load_data(ndd, data_label='my_data_model')
     imviz.show()
 
-There is no plan to natively load such objects until ``datamodels``
-is separated from the ``jwst`` pipeline package.
+Roman datamodels
+----------------
+
+You can also load Nancy Grace Roman Space Telescope data products, which are
+provided as ASDF files. If an ASDF file has a ``roman`` attribute, jdaviz will
+open it with `roman-datamodels <https://github.com/spacetelescope/roman_datamodels>`_.
+If ``roman-datamodels`` is not available, jdaviz falls back on the
+`asdf package <https://github.com/asdf-format/asdf>`_.
+
+.. code-block:: python
+
+    from jdaviz import Imviz
+
+    path = "WFI01_cal.asdf"
+    imviz = Imviz()
+    imviz.load_data(ndd, data_label='roman_wfi_01')
+    imviz.show()
+
 
 .. _imviz-import-catalogs-api:
 
