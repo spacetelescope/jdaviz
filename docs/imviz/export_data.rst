@@ -109,7 +109,8 @@ The columns are as follow:
 
     Aperture sum and statistics are done on the originally drawn aperture only.
     Even though centroid is calculated, it is not used to move the aperture
-    to the new center.
+    to the new center. However, radial profiles (including Gaussian fitting, if any)
+    and curve of growth do use the centroid as zero-point on the X-axis.
 
 Once you have the results in a table, you can further manipulated them as
 documented in :ref:`astropy:astropy-table`.
