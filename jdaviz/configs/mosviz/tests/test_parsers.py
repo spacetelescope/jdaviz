@@ -20,10 +20,11 @@ def test_niriss_parser(mosviz_helper, tmp_path):
 
     The dataset was uploaded to box by Duy Nguyen
     '''
-
+    # TODO: Change back to smaller number (30?) when ITSD is convinced it is them and not us.
+    #       Help desk ticket INC0183598, J. Quick.
     # Download data
     test_data = 'https://stsci.box.com/shared/static/cr14xijcg572dglacochctr1kblsr89a.zip'
-    fn = download_file(test_data, cache=True, timeout=30)
+    fn = download_file(test_data, cache=True, timeout=100)
 
     # Extract to a known, temporary folder
     with ZipFile(fn, 'r') as sample_data_zip:
