@@ -239,7 +239,6 @@ def test_nirspec_loader(mosviz_helper, tmpdir):
     data_label = "1D Spectrum 4"
     assert mosviz_helper.app.data_collection[data_label].meta['mosviz_row'] != table.current_row
 
-    print(mosviz_helper.app.data_collection)
     with pytest.raises(NotImplementedError, match='Intra-row plotting not supported'):
         mosviz_helper.app.add_data_to_viewer(viewer_reference='spectrum-viewer',
                                              data_label=data_label)
