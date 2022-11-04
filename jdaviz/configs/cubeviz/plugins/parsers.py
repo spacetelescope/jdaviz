@@ -387,7 +387,10 @@ def _parse_ndarray(app, file_obj, data_label=None, data_type=None,
     if data_type is None:
         data_type = 'flux'
 
-    flux = np.moveaxis(file_obj, 1, 0)
+    # Cannot change axis to ensure roundtripping within Cubeviz.
+    # Axes must already be (x, y, z) at this point.
+    flux = file_obj
+
     if not hasattr(flux, 'unit'):
         flux = flux << u.count
     s3d = Spectrum1D(flux=flux)

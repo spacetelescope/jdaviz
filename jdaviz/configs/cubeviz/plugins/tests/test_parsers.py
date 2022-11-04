@@ -168,7 +168,7 @@ def test_spectrum1d_parse(spectrum1d, cubeviz_helper):
 
 
 def test_numpy_cube(cubeviz_helper):
-    arr = np.ones(24).reshape((2, 3, 4))  # z, y, x
+    arr = np.ones(24).reshape((4, 3, 2))  # x, y, z
 
     with pytest.raises(TypeError, match='Data type must be one of'):
         cubeviz_helper.load_data(arr, data_type='foo')

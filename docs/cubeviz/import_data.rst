@@ -175,7 +175,7 @@ To load a plain Numpy array without WCS:
 
     import numpy as np
     from jdaviz import Cubeviz
-    flux = np.arange(16).reshape((4, 2, 2))  # z, y, x
+    flux = np.arange(16).reshape((2, 2, 4))  # x, y, z
     cubeviz.load_data(flux, data_label='My Cube')
     cubeviz.show()
 
