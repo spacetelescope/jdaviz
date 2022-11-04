@@ -17,6 +17,9 @@ Imviz
 Mosviz
 ^^^^^^
 
+- Disable simultaneous row plotting and 1D linking in Mosviz
+  to substantially decrease load times. [#1790]
+
 - Added coordinates display panels for Mosviz viewers. [#1795]
 
 Specviz

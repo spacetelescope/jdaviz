@@ -57,13 +57,14 @@ def test_load_spectrum_collection(mosviz_helper, spectrum_collection):
     labels = [f"Test Spectrum Collection {i}" for i in range(5)]
     mosviz_helper.load_1d_spectra(spectrum_collection, data_labels=labels)
 
-    assert len(mosviz_helper.app.data_collection) == 6
+    # +1 for the table viewer
+    assert len(mosviz_helper.app.data_collection) == len(spectrum_collection) + 1
     dc_0 = mosviz_helper.app.data_collection[0]
     assert dc_0.label == labels[0]
     assert dc_0.meta['uncertainty_type'] == 'std'
 
     table = mosviz_helper.app.get_viewer('table-viewer')
-    table.widget_table.vue_on_row_clicked(0)
+    table.select_row(0)
 
     data = mosviz_helper.app.get_data_from_viewer('spectrum-viewer')
 
@@ -190,6 +191,7 @@ def test_load_single_image_multi_spec(mosviz_helper, mos_image, spectrum1d, mos_
 def test_nirspec_loader(mosviz_helper, tmpdir):
     '''
     Tests loading our default MosvizExample notebook data
+    Also tests IntraRow linking
     '''
 
     test_data = 'https://stsci.box.com/shared/static/ovyxi5eund92yoadvv01mynwt8t5n7jv.zip'
@@ -225,6 +227,21 @@ def test_nirspec_loader(mosviz_helper, tmpdir):
     assert PRIHDR_KEY not in dc_15.meta
     assert 'header' not in dc_15.meta
     assert dc_15.meta['SOURCEID'] == 2315
+
+    # Test IntraRow linking:
+    # Attempts to add the spectrum of another row into the current row's viewers
+    # Currently, intrarow linking is disabled. Attemps to load another spectrum into
+    # the current spectrum viewer should result in an error
+
+    # Check to make sure our test case isn't from the same row
+    table = mosviz_helper.app.get_viewer('table-viewer')
+    table.select_row(0)
+    data_label = "1D Spectrum 4"
+    assert mosviz_helper.app.data_collection[data_label].meta['mosviz_row'] != table.current_row
+
+    with pytest.raises(NotImplementedError, match='Intra-row plotting not supported'):
+        mosviz_helper.app.add_data_to_viewer(viewer_reference='spectrum-viewer',
+                                             data_label=data_label)
 
 
 @pytest.mark.remote_data

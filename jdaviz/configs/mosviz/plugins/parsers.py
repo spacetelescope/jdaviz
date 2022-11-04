@@ -133,15 +133,6 @@ def link_data_in_table(app, data_obj=None):
 
             wc_spec_ids.append(LinkSame(wc_spec_1d[0], wc_spec_2d[1]))
 
-        # Link each 1D spectrum to all other 1D spectra
-        first_spec_1d = spectra_1d[0]
-        wc_first_spec_1d = app.session.data_collection[first_spec_1d].world_component_ids
-
-        for index in range(1, len(spectra_1d)):
-            spec_1d = spectra_1d[index]
-            wc_spec_1d = app.session.data_collection[spec_1d].world_component_ids
-            wc_spec_ids.append(LinkSame(wc_spec_1d[0], wc_first_spec_1d[0]))
-
     app.session.data_collection.add_link(wc_spec_ids)
 
 
