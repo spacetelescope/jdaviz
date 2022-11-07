@@ -168,8 +168,35 @@ def test_spectrum1d_parse(spectrum1d, cubeviz_helper):
 
 
 def test_numpy_cube(cubeviz_helper):
-    with pytest.raises(NotImplementedError, match='Unsupported data format'):
-        cubeviz_helper.load_data(np.ones(27).reshape((3, 3, 3)))
+    arr = np.ones(24).reshape((4, 3, 2))  # x, y, z
+
+    with pytest.raises(TypeError, match='Data type must be one of'):
+        cubeviz_helper.load_data(arr, data_type='foo')
+
+    cubeviz_helper.load_data(arr)
+    cubeviz_helper.load_data(arr << u.nJy, data_label='uncert_array', data_type='uncert',
+                             override_cube_limit=True)
+
+    with pytest.raises(RuntimeError, match='Only one cube'):
+        cubeviz_helper.load_data(arr, data_type='mask')
+
+    assert len(cubeviz_helper.app.data_collection) == 2
+
+    # Check context of first cube.
+    data = cubeviz_helper.app.data_collection[0]
+    flux = data.get_component('flux')
+    assert data.label == 'Array'
+    assert data.shape == (4, 3, 2)  # x, y, z
+    assert isinstance(data.coords, PaddedSpectrumWCS)
+    assert flux.units == 'ct'
+
+    # Check context of second cube.
+    data = cubeviz_helper.app.data_collection[1]
+    flux = data.get_component('flux')
+    assert data.label == 'uncert_array'
+    assert data.shape == (4, 3, 2)  # x, y, z
+    assert isinstance(data.coords, PaddedSpectrumWCS)
+    assert flux.units == 'nJy'
 
 
 def test_invalid_data_types(cubeviz_helper):

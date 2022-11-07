@@ -11,6 +11,8 @@ New Features
 Cubeviz
 ^^^^^^^
 
+- Added ability to load plain Numpy array cube. [#1773]
+
 Imviz
 ^^^^^
 
