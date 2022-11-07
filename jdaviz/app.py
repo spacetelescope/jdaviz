@@ -988,12 +988,20 @@ class Application(VuetifyTemplate, HubListener):
         check_if_dup = re.compile(r"(.*)(\s\(\d*\))$")
         labels = self.data_collection.labels
         number_of_duplicates = 0
+        max_number = 0
         for label in labels:
             # If label is a duplicate of another label
             if re.fullmatch(check_if_dup, label):
                 label_split = label.split(" ")
                 label_without_dup = " ".join(label_split[:-1])
                 label = label_without_dup
+                # Remove parentheses and cast to float
+                number_dup = int(label_split[-1][1:-1])
+                # Used to keep track the max number of duplicates,
+                # even if not all duplicates are loaded (or some
+                # are renamed)
+                if number_dup > max_number:
+                    max_number = number_dup
 
             if ext and f"{data_label}[{ext}]" == label:
                 number_of_duplicates += 1
@@ -1005,6 +1013,18 @@ class Application(VuetifyTemplate, HubListener):
 
         if number_of_duplicates > 0:
             data_label = f"{data_label} ({number_of_duplicates})"
+
+        # It is possible to add data named "test (1)" and then
+        # add another data named "test" and return_unique_name will see the
+        # first test and assume the second is the duplicate, appending
+        # "(1)" to the end. This overwrites the original data and
+        # causes issues. This block alters the duplicate number to be something unique
+        # (one more than the max number duplicate found)
+        # if a duplicate is still found in data_collection.
+        if data_label in self.data_collection.labels:
+            label_split = data_label.split(" ")
+            label_without_dup = " ".join(label_split[:-1])
+            data_label = f"{label_without_dup} ({max_number + 1})"
 
         return data_label
 

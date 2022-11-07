@@ -96,6 +96,9 @@ Bug Fixes
 
 - Fixed removing image data from viewer when changing row. [#1812]
 
+- Prevent duplicate labels by changing duplicate number appended
+  to label to max number (of duplicates) plus 1. [#1824]
+
 Cubeviz
 ^^^^^^^
 
