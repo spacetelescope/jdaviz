@@ -139,4 +139,4 @@ def test_case_that_used_to_break_return_label(specviz_helper, spectrum1d):
     specviz_helper.load_spectrum(spectrum1d, data_label="this used to break")
     dc = specviz_helper.app.data_collection
     assert dc[0].label == "this used to break (1)"
-    assert dc[1].label.startswith("this used to break (1)")
+    assert dc[1].label == "this used to break (2)"
