@@ -331,6 +331,7 @@ def _roman_2d_asdf_to_glue_data(file_obj, data_label, ext=None):
 
 # ---- Functions that handle input from non-JWST, non-Roman FITS files -----
 
+
 def _hdu_to_glue_data(hdu, data_label, hdulist=None):
     data, data_label = _hdu2data(hdu, data_label, hdulist)
     yield data, data_label
