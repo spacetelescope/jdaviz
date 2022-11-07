@@ -1,7 +1,5 @@
 from zipfile import ZipFile
-from packaging.version import Version
 
-import specutils
 import pytest
 from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose
@@ -18,15 +16,17 @@ from jdaviz import Specviz
 
 class TestSpecvizHelper:
     @pytest.fixture(autouse=True)
-    def setup_class(self, specviz_helper, spectrum1d):
+    def setup_class(self, specviz_helper, spectrum1d, multi_order_spectrum_list):
         self.spec_app = specviz_helper
         self.spec = spectrum1d
         self.spec_list = SpectrumList([spectrum1d] * 3)
+        self.multi_order_spectrum_list = multi_order_spectrum_list
 
         self.label = "Test 1D Spectrum"
         self.spec_app.load_spectrum(spectrum1d, data_label=self.label)
 
     def test_load_spectrum1d(self):
+        # starts with a single loaded spectrum1d object:
         assert len(self.spec_app.app.data_collection) == 1
         dc_0 = self.spec_app.app.data_collection[0]
         assert dc_0.label == self.label
@@ -38,15 +38,23 @@ class TestSpecvizHelper:
         assert list(data.keys())[0] == self.label
 
     def test_load_spectrum_list_no_labels(self):
+        # now load three more spectra from a SpectrumList, without labels
         self.spec_app.load_spectrum(self.spec_list)
-        assert len(self.spec_app.app.data_collection) == 5
+        assert len(self.spec_app.app.data_collection) == 4
         for i in (1, 2, 3):
             assert "specviz_data" in self.spec_app.app.data_collection[i].label
 
     def test_load_spectrum_list_with_labels(self):
+        # now load three more spectra from a SpectrumList, with labels:
         labels = ["List test 1", "List test 2", "List test 3"]
         self.spec_app.load_spectrum(self.spec_list, data_label=labels)
-        assert len(self.spec_app.app.data_collection) == 5
+        assert len(self.spec_app.app.data_collection) == 4
+
+    def test_load_multi_order_spectrum_list(self):
+        assert len(self.spec_app.app.data_collection) == 1
+        # now load ten spectral orders from a SpectrumList:
+        self.spec_app.load_spectrum(self.multi_order_spectrum_list)
+        assert len(self.spec_app.app.data_collection) == 11
 
     def test_mismatched_label_length(self):
         with pytest.raises(ValueError, match='Length'):
@@ -261,18 +269,38 @@ def test_load_spectrum_list_directory(tmpdir, specviz_helper):
         sample_data_zip.extractall(tmpdir.strpath)
     data_path = str(tmpdir.join('NIRISS_for_parser_p0171'))
 
+    # Load two NIRISS x1d files from FITS. They have 19 and 20 EXTRACT1D
+    # extensions per file, for a total of 39 spectra to load:
     with pytest.warns(UserWarning, match='SRCTYPE is missing or UNKNOWN in JWST x1d loader'):
         specviz_helper.load_spectrum(data_path)
+
     # NOTE: the length was 3 before specutils 1.9 (https://github.com/astropy/specutils/pull/982)
-    SPECUTILS_LT_1_9 = Version(specutils.__version__) < Version('1.9.0')
-    expected_len = 40 if not SPECUTILS_LT_1_9 else 3
+    expected_len = 39
     assert len(specviz_helper.app.data_collection) == expected_len
+
     for data in specviz_helper.app.data_collection:
         assert data.main_components[:2] == ['flux', 'uncertainty']
 
     dc_0 = specviz_helper.app.data_collection[0]
     assert 'header' not in dc_0.meta
     assert dc_0.meta['SPORDER'] == 1
+
+
+@pytest.mark.remote_data
+def test_load_spectrum_list_directory_concat(tmpdir, specviz_helper):
+    test_data = 'https://stsci.box.com/shared/static/l2azhcqd3tvzhybdlpx2j2qlutkaro3z.zip'
+    fn = download_file(test_data, cache=True, timeout=30)
+    with ZipFile(fn, 'r') as sample_data_zip:
+        sample_data_zip.extractall(tmpdir.strpath)
+    data_path = str(tmpdir.join('NIRISS_for_parser_p0171'))
+
+    # Load two x1d files from FITS. They have 19 and 20 EXTRACT1D
+    # extensions per file, for a total of 39 spectra to load. Also concatenate
+    # spectra common to each file into one "Combined" spectrum to load per file.
+    # Now the total is (19 EXTRACT 1D + 1 Combined) + (20 EXTRACT 1D + 1 Combined) = 41.
+    with pytest.warns(UserWarning, match='SRCTYPE is missing or UNKNOWN in JWST x1d loader'):
+        specviz_helper.load_spectrum(data_path, concat_by_file=True)
+    assert len(specviz_helper.app.data_collection) == 41
 
 
 def test_plot_uncertainties(specviz_helper, spectrum1d):

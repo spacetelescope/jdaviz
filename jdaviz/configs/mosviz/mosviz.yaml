@@ -5,6 +5,7 @@ settings:
     toolbar: true
     tray: true
     tab_headers: false
+  dense_toolbar: false
   context:
     notebook:
       max_height: 860px
@@ -12,6 +13,7 @@ toolbar:
   - g-data-tools
   - g-subset-tools
   - g-row-lock
+  - g-coords-info
 tray:
   - g-metadata-viewer
   - g-plot-options

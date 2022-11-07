@@ -65,7 +65,7 @@
             >
               <v-icon class='invert-if-dark'>{{showExtraItems ? 'mdi-chevron-double-up' : 'mdi-chevron-double-down'}}</v-icon>
               <span v-if="viewer.config === 'mosviz'">
-                {{showExtraItems ? 'hide data not in viewer (incl other MOS rows)' : 'show data not in viewer (incl other MOS rows)'}}
+                {{showExtraItems ? 'hide other row data not in viewer' : 'show other row data not in viewer'}}
               </span>
               <span v-else>
                 {{showExtraItems ? 'hide data not in viewer' : 'show data not in viewer'}}                
@@ -129,7 +129,7 @@ module.exports = {
       const inViewer = Object.keys(this.$props.viewer.selected_data_items).includes(item.id)
       //console.log(item.name+"  "+inViewer)
       if (returnExtraItems) {
-        return !inViewer
+        return (!inViewer && (item.meta.mosviz_row === this.$props.app_settings.mosviz_row))
       }
       return inViewer
     },
@@ -142,10 +142,9 @@ module.exports = {
           return false
         } else if (this.$props.viewer.reference === 'image-viewer' && item.type !== 'image') {
           return false
-        } else if ((item.meta.mosviz_row !== undefined) && (item.meta.mosviz_row !== null)) {
+        } else {
           return this.dataItemInViewer(item, returnExtraItems)
         }
-        return !returnExtraItems
       } else if (this.$props.viewer.config === 'cubeviz') {
         if (this.$props.viewer.reference === 'spectrum-viewer') {
           if (item.meta.Plugin === undefined) {

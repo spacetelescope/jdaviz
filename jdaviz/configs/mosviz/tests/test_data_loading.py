@@ -57,13 +57,14 @@ def test_load_spectrum_collection(mosviz_helper, spectrum_collection):
     labels = [f"Test Spectrum Collection {i}" for i in range(5)]
     mosviz_helper.load_1d_spectra(spectrum_collection, data_labels=labels)
 
-    assert len(mosviz_helper.app.data_collection) == 6
+    # +1 for the table viewer
+    assert len(mosviz_helper.app.data_collection) == len(spectrum_collection) + 1
     dc_0 = mosviz_helper.app.data_collection[0]
     assert dc_0.label == labels[0]
     assert dc_0.meta['uncertainty_type'] == 'std'
 
     table = mosviz_helper.app.get_viewer('table-viewer')
-    table.widget_table.vue_on_row_clicked(0)
+    table.select_row(0)
 
     data = mosviz_helper.app.get_data_from_viewer('spectrum-viewer')
 
@@ -127,18 +128,24 @@ def test_load_multi_image_spec(mosviz_helper, mos_image, spectrum1d, mos_spectru
         assert qtable["Images"][0] == "Test Label 0"
 
 
-@pytest.mark.filterwarnings('ignore')
 @pytest.mark.parametrize('label', [None, "Test Label"])
 def test_load_single_image_multi_spec(mosviz_helper, mos_image, spectrum1d, mos_spectrum2d, label):
     spectra1d = [spectrum1d] * 3
     spectra2d = [mos_spectrum2d] * 3
+
+    image_viewer = mosviz_helper.app.get_viewer('image-viewer')
+
+    # Coordinates info panel should not crash even when nothing is loaded.
+    image_viewer.on_mouse_or_key_event({'event': 'mouseover'})
+    assert image_viewer.label_mouseover is None
 
     # Test that loading is still possible after previous crash:
     # https://github.com/spacetelescope/jdaviz/issues/364
     with pytest.raises(ValueError, match='The dimensions of component 2D Spectra are incompatible'):
         mosviz_helper.load_data(spectra1d, spectra2d, images=[])
 
-    mosviz_helper.load_data(spectra1d, spectra2d, images=mos_image, images_label=label)
+    with pytest.warns(UserWarning, match='Could not parse metadata from input images'):
+        mosviz_helper.load_data(spectra1d, spectra2d, images=mos_image, images_label=label)
 
     assert mosviz_helper.app.get_viewer("table-viewer").figure_widget.highlighted == 0
     assert len(mosviz_helper.app.data_collection) == 8
@@ -150,12 +157,41 @@ def test_load_single_image_multi_spec(mosviz_helper, mos_image, spectrum1d, mos_
         assert np.all(qtable["Images"] == "Test Label")
     assert len(qtable) == 3
 
+    # Also check coordinates info panels for Mosviz image viewer.
+    # 1D spectrum viewer panel is already tested in Specviz.
+    # 2D spectrum viewer panel is already tested in Specviz2d.
+
+    image_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
+    assert image_viewer.label_mouseover.pixel == 'x=000.0 y=000.0'
+    assert image_viewer.label_mouseover.value == '+3.74540e-01 Jy'
+    assert image_viewer.label_mouseover.world_ra_deg == '5.0297844783'
+    assert image_viewer.label_mouseover.world_dec_deg == '4.9918991917'
+
+    image_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': None, 'y': 0}})
+    assert image_viewer.label_mouseover.pixel == ''
+    assert image_viewer.label_mouseover.value == ''
+    assert image_viewer.label_mouseover.world_ra_deg == ''
+    assert image_viewer.label_mouseover.world_dec_deg == ''
+
+    image_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': -1, 'y': 0}})
+    assert image_viewer.label_mouseover.pixel == 'x=-01.0 y=000.0'
+    assert image_viewer.label_mouseover.value == ''
+    assert image_viewer.label_mouseover.world_ra_deg == '5.0297997183'
+    assert image_viewer.label_mouseover.world_dec_deg == '4.9918991914'
+
+    image_viewer.on_mouse_or_key_event({'event': 'mouseleave'})
+    assert image_viewer.label_mouseover.pixel == ''
+    assert image_viewer.label_mouseover.value == ''
+    assert image_viewer.label_mouseover.world_ra_deg == ''
+    assert image_viewer.label_mouseover.world_dec_deg == ''
+
 
 @pytest.mark.filterwarnings('ignore')
 @pytest.mark.remote_data
 def test_nirspec_loader(mosviz_helper, tmpdir):
     '''
     Tests loading our default MosvizExample notebook data
+    Also tests IntraRow linking
     '''
 
     test_data = 'https://stsci.box.com/shared/static/ovyxi5eund92yoadvv01mynwt8t5n7jv.zip'
@@ -191,6 +227,21 @@ def test_nirspec_loader(mosviz_helper, tmpdir):
     assert PRIHDR_KEY not in dc_15.meta
     assert 'header' not in dc_15.meta
     assert dc_15.meta['SOURCEID'] == 2315
+
+    # Test IntraRow linking:
+    # Attempts to add the spectrum of another row into the current row's viewers
+    # Currently, intrarow linking is disabled. Attemps to load another spectrum into
+    # the current spectrum viewer should result in an error
+
+    # Check to make sure our test case isn't from the same row
+    table = mosviz_helper.app.get_viewer('table-viewer')
+    table.select_row(0)
+    data_label = "1D Spectrum 4"
+    assert mosviz_helper.app.data_collection[data_label].meta['mosviz_row'] != table.current_row
+
+    with pytest.raises(NotImplementedError, match='Intra-row plotting not supported'):
+        mosviz_helper.app.add_data_to_viewer(viewer_reference='spectrum-viewer',
+                                             data_label=data_label)
 
 
 @pytest.mark.remote_data

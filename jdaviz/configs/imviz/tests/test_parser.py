@@ -235,7 +235,9 @@ class TestParseImage:
 
     @pytest.mark.remote_data
     def test_parse_jwst_nircam_level2(self, imviz_helper):
-        filename = download_file(self.jwst_asdf_url_1, cache=True)
+        # TODO: Change back to smaller number (30?) when ITSD is convinced it is them and not us.
+        #       Help desk ticket INC0183598, J. Quick.
+        filename = download_file(self.jwst_asdf_url_1, cache=True, timeout=100)
 
         # Default behavior: Science image
         imviz_helper.load_data(filename)

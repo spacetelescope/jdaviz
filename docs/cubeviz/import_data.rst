@@ -166,6 +166,19 @@ object, you can load it into Cubeviz as follows:
 There is no plan to natively load such objects until ``datamodels``
 is separated from the ``jwst`` pipeline package.
 
+Numpy array
+-----------
+
+To load a plain Numpy array without WCS:
+
+.. code-block:: python
+
+    import numpy as np
+    from jdaviz import Cubeviz
+    flux = np.arange(16).reshape((2, 2, 4))  # x, y, z
+    cubeviz.load_data(flux, data_label='My Cube')
+    cubeviz.show()
+
 .. _cubeviz-import-regions-api:
 
 Importing regions via the API

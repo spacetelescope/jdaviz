@@ -58,6 +58,12 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
             uncert_viewer_reference_name=uncert_viewer_reference_name
         )
     elif isinstance(file_obj, str):
+        if file_obj.lower().endswith('.gif'):  # pragma: no cover
+            _parse_gif(app, file_obj, data_label,
+                       flux_viewer_reference_name=flux_viewer_reference_name,
+                       spectrum_viewer_reference_name=spectrum_viewer_reference_name)
+            return
+
         file_name = os.path.basename(file_obj)
 
         with fits.open(file_obj) as hdulist:
@@ -114,6 +120,11 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
                 app, file_obj, data_label=data_label,
                 spectrum_viewer_reference_name=spectrum_viewer_reference_name
             )
+    elif isinstance(file_obj, np.ndarray) and file_obj.ndim == 3:
+        _parse_ndarray(app, file_obj, data_label=data_label, data_type=data_type,
+                       flux_viewer_reference_name=flux_viewer_reference_name,
+                       spectrum_viewer_reference_name=spectrum_viewer_reference_name,
+                       uncert_viewer_reference_name=uncert_viewer_reference_name)
     else:
         raise NotImplementedError(f'Unsupported data format: {file_obj}')
 
@@ -364,6 +375,51 @@ def _parse_spectrum1d(app, file_obj, data_label=None, spectrum_viewer_reference_
     #  specutils Spectrum1D objects. Fix to support uncertainties and masks.
 
     app.add_data(file_obj, data_label)
+    app.add_data_to_viewer(spectrum_viewer_reference_name, data_label)
+
+
+def _parse_ndarray(app, file_obj, data_label=None, data_type=None,
+                   flux_viewer_reference_name=None, spectrum_viewer_reference_name=None,
+                   uncert_viewer_reference_name=None):
+    if data_label is None:
+        data_label = app.return_data_label(file_obj)
+
+    if data_type is None:
+        data_type = 'flux'
+
+    # Cannot change axis to ensure roundtripping within Cubeviz.
+    # Axes must already be (x, y, z) at this point.
+    flux = file_obj
+
+    if not hasattr(flux, 'unit'):
+        flux = flux << u.count
+    s3d = Spectrum1D(flux=flux)
+    app.add_data(s3d, data_label)
+
+    if data_type == 'flux':
+        app.add_data_to_viewer(flux_viewer_reference_name, data_label)
+        app.add_data_to_viewer(spectrum_viewer_reference_name, data_label)
+    elif data_type == 'uncert':
+        app.add_data_to_viewer(uncert_viewer_reference_name, data_label)
+
+
+def _parse_gif(app, file_obj, data_label=None, flux_viewer_reference_name=None,
+               spectrum_viewer_reference_name=None):  # pragma: no cover
+    # NOTE: Parsing GIF needs imageio and Pillow, both are which undeclared
+    # in setup.cfg but might or might not be installed by declared ones.
+    import imageio
+
+    file_name = os.path.basename(file_obj)
+
+    if data_label is None:
+        data_label = app.return_data_label(file_obj)
+
+    flux = imageio.v3.imread(file_obj, mode='P')  # All frames as gray scale
+    flux = np.rot90(np.moveaxis(flux, 0, 2), k=-1, axes=(0, 1))
+    s3d = Spectrum1D(flux=flux * u.count, meta={'filename': file_name})
+
+    app.add_data(s3d, data_label)
+    app.add_data_to_viewer(flux_viewer_reference_name, data_label)
     app.add_data_to_viewer(spectrum_viewer_reference_name, data_label)
 
 

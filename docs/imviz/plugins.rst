@@ -204,7 +204,7 @@ results are displayed under the :guilabel:`CALCULATE` button.
 
 .. seealso::
 
-    :ref:`Export Photometry <imviz_export_photomtery>`
+    :ref:`Export Photometry <imviz_export_photometry>`
         Documentation on exporting photometry results.
 
 .. _imviz-catalogs:
