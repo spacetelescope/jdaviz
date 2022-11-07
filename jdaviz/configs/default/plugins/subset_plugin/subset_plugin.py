@@ -226,6 +226,47 @@ class SubsetPlugin(PluginTemplateMixin):
             self.hub.broadcast(SnackbarMessage(
                 f"Failed to update Subset: {repr(err)}", color='error', sender=self))
 
+    def get_center(self):
+        # Composite region cannot be edited, so just grab first element.
+        if not self.is_editable or self.subset_types[0] == "Range":  # no-op
+            return
+
+        subset_state = self.subset_select.selected_subset_state
+        sbst_obj = subset_state.roi
+
+        if isinstance(sbst_obj, (CircularROI, EllipticalROI)):
+            cx, cy = sbst_obj.get_center()
+        elif isinstance(sbst_obj, RectangularROI):
+            cx, cy = sbst_obj.center()
+        else:  # pragma: no cover
+            raise NotImplementedError(f'Getting center of {sbst_obj.__class__} is not supported')
+
+        return cx, cy
+
+    def set_center(self, x, y):
+        # Composite region cannot be edited, so just grab first element.
+        if not self.is_editable or self.subset_types[0] == "Range":  # no-op
+            return
+
+        subset_state = self.subset_select.selected_subset_state
+        sbst_obj = subset_state.roi
+
+        if isinstance(sbst_obj, (CircularROI, EllipticalROI)):
+            self._set_value_in_subset_definition(0, "X Center", "value", x)
+            self._set_value_in_subset_definition(0, "Y Center", "value", y)
+        elif isinstance(sbst_obj, RectangularROI):
+            cx, cy = sbst_obj.center()
+            dx = x - cx
+            dy = y - cy
+            self._set_value_in_subset_definition(0, "Xmin", "value", sbst_obj.xmin + dx)
+            self._set_value_in_subset_definition(0, "Xmax", "value", sbst_obj.xmax + dx)
+            self._set_value_in_subset_definition(0, "Ymin", "value", sbst_obj.ymin + dy)
+            self._set_value_in_subset_definition(0, "Ymax", "value", sbst_obj.ymax + dy)
+        else:  # pragma: no cover
+            raise NotImplementedError(f'Recentering of {sbst_obj.__class__} is not supported')
+
+        self.vue_update_subset()
+
     # List of JSON-like dict is nice for front-end but a pain to look up,
     # so we use these helper functions.
 

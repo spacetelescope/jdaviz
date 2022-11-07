@@ -8,6 +8,8 @@ New Features
 
 - Spinner in plot options while processing changes to contour settings. [#1794]
 
+- Subset Tools plugin now allows recentering of spatial subset. [#1823]
+
 Cubeviz
 ^^^^^^^
 
