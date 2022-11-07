@@ -11,16 +11,27 @@ New Features
 Cubeviz
 ^^^^^^^
 
+- Added ability to load plain Numpy array cube. [#1773]
+
 Imviz
 ^^^^^
 
+- Warnings in aperture photometry plugin when using raw profile with large subsets. [#1801]
+
 Mosviz
 ^^^^^^
+
+- Disable simultaneous row plotting and 1D linking in Mosviz
+  to substantially decrease load times. [#1790]
+
+- Added coordinates display panels for Mosviz viewers. [#1795]
 
 Specviz
 ^^^^^^^
 
 - Spectrum viewer now shows X and Y values under cursor. [#1759]
+
+- Switch to opt-in concatenation for multi-order x1d spectra. [#1659]
 
 Specviz2d
 ^^^^^^^^^
@@ -31,6 +42,8 @@ API Changes
 Cubeviz
 ^^^^^^^
 
+- ``CubeViz`` is deprecated, use ``Cubeviz``. [#1809]
+
 Imviz
 ^^^^^
 
@@ -39,8 +52,12 @@ Mosviz
 
 - Removed unused ``MosvizProfileView`` viewer class. [#1797]
 
+- ``MosViz`` is deprecated, use ``Mosviz``. [#1809]
+
 Specviz
 ^^^^^^^
+
+- ``SpecViz`` is deprecated, use ``Specviz``. [#1809]
 
 Specviz2d
 ^^^^^^^^^
@@ -77,6 +94,11 @@ Bug Fixes
 
 - Change box zoom to always maintain aspect ratio. [#1726]
 
+- Fixed removing image data from viewer when changing row. [#1812]
+
+- Prevent duplicate labels by changing duplicate number appended
+  to label to max number (of duplicates) plus 1. [#1824]
+
 Cubeviz
 ^^^^^^^
 
@@ -86,7 +108,7 @@ Imviz
 Mosviz
 ^^^^^^
 
-- Data unassigned a row is hidden under the subdropdown in the data dropdown. [#1798]
+- Data unassigned a row is hidden under the subdropdown in the data dropdown. [#1798, #1808]
 
 Specviz
 ^^^^^^^
