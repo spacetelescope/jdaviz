@@ -112,6 +112,12 @@
           ></v-select>
         </v-row>
 
+        <v-row v-if="current_plot_type==='Radial Profile (Raw)' && subset_area > 5000">
+          <span class="v-messages v-messages__message text--secondary">
+              <b>WARNING</b>: Computing and displaying raw profile of an aperture containing ~{{subset_area}} pixels may be slow or unresponsive.
+          </span>
+        </v-row>
+
         <v-row v-if="current_plot_type.indexOf('Radial Profile') != -1">
 
           <v-switch
