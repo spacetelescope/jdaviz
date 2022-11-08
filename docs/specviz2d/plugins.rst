@@ -60,7 +60,8 @@ The first section of the plugin allows for creating and visualizing
 :py:class:`specreduce.tracing.Trace` objects.
 
 Once you interact with any of the inputs in the extract step or hover over that area
-of the plugin, the live visualization will change to show the trace as a solid line.
+of the plugin, the live visualization will change to show the trace as a solid line
+in the 2D spectrum viewer.
 
 To create a new trace in the plugin, choose the desired "Trace Type" and edit any input arguments.
 A preview of the trace will update in real time in the 2D spectrum viewer.
@@ -78,11 +79,16 @@ Trace objects created outside of jdaviz can be loaded into the app via :py:meth:
 
 and then added to the viewer through the data menu.
 
-Once trace objects are loaded into the app, they can be offset (in the cross-dispersion direction)
-by selecting the trace label, entering an offset, and overwriting the existing data entry (or
-creating a new one) with the modified trace.
+Suppose you have 2D spectra of an extended source, and you have already created a trace that follows the
+bright central region of the source. It is possible to create a new trace, with the same 2D
+shape as the trace of the central region, but offset in the spatial direction. This might be useful
+for extracting spectra from the faint outer regions of the extended source, while using a trace computed from the
+brighter inner region. You can create a new trace based on the existing trace by clicking
+the "Trace" dropdown and selecting the existing trace. Then, offset it in the spatial direction by clicking or entering
+the spatial offset, and save it by creating a new trace or overwriting the existing trace entry.
 
-To export and access the specreduce Trace object defined in the plugin, call :py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.export_trace`:
+To export and access the specreduce Trace object defined in the plugin, call
+:py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.export_trace`:
 
 .. code-block:: python
 
