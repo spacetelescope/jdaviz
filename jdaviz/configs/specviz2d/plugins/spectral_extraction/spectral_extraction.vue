@@ -95,7 +95,7 @@
             type="number"
             v-model.number="trace_pixel"
             :rules="[() => trace_pixel!=='' || 'This field is required']"
-            :hint="trace_type_selected === 'Flat' ? 'Pixel row for flat trace.' : 'Pixel row initial guess for auto trace.'"
+            :hint="trace_type_selected === 'Flat' ? 'Pixel row for flat trace.' : 'Pixel row initial guess for fitting the trace.'"
             persistent-hint
           >
           </v-text-field>
@@ -113,19 +113,20 @@
           </v-text-field>
         </v-row>
 
-        <v-row v-if="trace_type_selected==='Auto'">
+        <v-row v-if="trace_type_selected!=='Flat'">
           <v-text-field
             label="Window Width"
             type="number"
             v-model.number="trace_window"
-            :rules="[() => trace_window!=='' || 'This field is required']"
+            :rules="[() => trace_window!=='' || 'This field is required',
+                     () => trace_window > 0 || 'Window must be positive']"
             hint="Width in rows to consider for peak finding."
             persistent-hint
           >
           </v-text-field>
         </v-row>
 
-        <v-row v-if="trace_type_selected==='Auto'">
+        <v-row v-if="trace_type_selected!=='Flat'">
           <v-select
             attach
             :menu-props="{ left: true }"
