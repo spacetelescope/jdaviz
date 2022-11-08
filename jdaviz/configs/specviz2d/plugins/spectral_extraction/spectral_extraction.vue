@@ -81,7 +81,7 @@
             type="number"
             v-model.number="trace_pixel"
             :rules="[() => trace_pixel!=='' || 'This field is required']"
-            :hint="trace_type_selected === 'Flat' ? 'Pixel number/column for the trace.' : 'Pixel number/column guess'"
+            :hint="trace_type_selected === 'Flat' ? 'Pixel row for flat trace.' : 'Pixel row initial guess for auto trace.'"
             persistent-hint
           >
           </v-text-field>
@@ -105,7 +105,7 @@
             type="number"
             v-model.number="trace_window"
             :rules="[() => trace_window!=='' || 'This field is required']"
-            hint="Width of window to consider for peak finding."
+            hint="Width in rows to consider for peak finding."
             persistent-hint
           >
           </v-text-field>
