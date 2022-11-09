@@ -476,6 +476,9 @@ class AstrowidgetsImageViewerMixin:
                     for key, val in self.marker.items():
                         setattr(lyr, {'markersize': 'size'}.get(key, key), val)
 
+            self.jdaviz_app.set_data_visibility(self.reference_id, marker_name,
+                                                visible=True, replace=False)
+
             self._marktags.add(marker_name)
 
     def remove_markers(self, marker_name=None):
