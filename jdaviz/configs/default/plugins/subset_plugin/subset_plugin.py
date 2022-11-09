@@ -234,20 +234,28 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         from photutils.aperture import ApertureStats
         from jdaviz.core.region_translators import regions2aperture, _get_region_from_spatial_subset
 
-        reg = _get_region_from_spatial_subset(self, self.subset_selected)
-        aperture = regions2aperture(reg)
-        data = self.dataset.selected_dc_item
-        comp = data.get_component(data.main_components[0])
-        comp_data = comp.data
-        phot_aperstats = ApertureStats(comp_data, aperture)
+        try:
+            reg = _get_region_from_spatial_subset(self, self.subset_selected)
+            aperture = regions2aperture(reg)
+            data = self.dataset.selected_dc_item
+            comp = data.get_component(data.main_components[0])
+            comp_data = comp.data
+            phot_aperstats = ApertureStats(comp_data, aperture)
 
-        # Centroid was calculated in selected data, which might or might not be
-        # the reference data. However, Subset is always defined w.r.t.
-        # the reference data, so we need to convert back.
-        viewer = self.app._jdaviz_helper.default_viewer
-        x, y, _ = viewer._get_real_xy(
-            data, phot_aperstats.xcentroid, phot_aperstats.ycentroid, reverse=True)
-        self.set_center((x, y), update=False)
+            # Centroid was calculated in selected data, which might or might not be
+            # the reference data. However, Subset is always defined w.r.t.
+            # the reference data, so we need to convert back.
+            viewer = self.app._jdaviz_helper.default_viewer
+            x, y, _ = viewer._get_real_xy(
+                data, phot_aperstats.xcentroid, phot_aperstats.ycentroid, reverse=True)
+            if not np.all(np.isfinite((x, y))):
+                raise ValueError(f'Invalid centroid ({x}, {y})')
+        except Exception as err:
+            self.set_center(self.get_center(), update=False)
+            self.hub.broadcast(SnackbarMessage(
+                f"Failed to calculate centroid: {repr(err)}", color='error', sender=self))
+        else:
+            self.set_center((x, y), update=False)
 
     def get_center(self):
         # Composite region cannot be edited.

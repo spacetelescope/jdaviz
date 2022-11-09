@@ -43,6 +43,15 @@ def test_region_from_subset_2d(cubeviz_helper):
         assert subset_plugin._get_value_from_subset_definition(0, "Y Radius", key) == 3.3
         assert subset_plugin._get_value_from_subset_definition(0, "Angle", key) == 0
 
+    # Recenter GUI should not be exposed, but API call should also not crash.
+    subset_plugin.vue_recenter_subset()
+    for key in ("orig", "value"):
+        assert subset_plugin._get_value_from_subset_definition(0, "X Center", key) == 1
+        assert subset_plugin._get_value_from_subset_definition(0, "Y Center", key) == 3.5
+        assert subset_plugin._get_value_from_subset_definition(0, "X Radius", key) == 1.2
+        assert subset_plugin._get_value_from_subset_definition(0, "Y Radius", key) == 3.3
+        assert subset_plugin._get_value_from_subset_definition(0, "Angle", key) == 0
+
 
 def test_region_from_subset_3d(cubeviz_helper):
     data = Data(flux=np.ones((128, 128, 256)), label='Test 3D Flux')
@@ -70,6 +79,7 @@ def test_region_from_subset_3d(cubeviz_helper):
     assert subset_plugin.subset_selected == "Subset 1"
     assert subset_plugin.subset_types == ["RectangularROI"]
     assert subset_plugin.is_editable
+    assert subset_plugin.get_center() == (2.25, 1.55)
     for key in ("orig", "value"):
         assert subset_plugin._get_value_from_subset_definition(0, "Xmin", key) == 1
         assert subset_plugin._get_value_from_subset_definition(0, "Xmax", key) == 3.5
@@ -98,6 +108,16 @@ def test_region_from_subset_3d(cubeviz_helper):
 
     assert_allclose(reg.center.x, 2.75)
     assert_allclose(reg.center.y, 1.65)
+    assert_allclose(reg.width, 1.5)
+    assert_allclose(reg.height, 3.3)
+    assert_allclose(reg.angle.to_value(u.deg), 45)  # Might be stored in radians
+
+    # Move the rectangle
+    subset_plugin.set_center((3, 2), update=True)
+    subsets = cubeviz_helper.app.get_subsets_from_viewer('flux-viewer')
+    reg = subsets.get('Subset 1')
+    assert_allclose(reg.center.x, 3)
+    assert_allclose(reg.center.y, 2)
     assert_allclose(reg.width, 1.5)
     assert_allclose(reg.height, 3.3)
     assert_allclose(reg.angle.to_value(u.deg), 45)  # Might be stored in radians
@@ -137,6 +157,7 @@ def test_region_from_subset_profile(cubeviz_helper, spectral_cube_wcs):
     assert subset_plugin.subset_selected == "Subset 1"
     assert subset_plugin.subset_types == ["Range"]
     assert subset_plugin.is_editable
+    assert_allclose(subset_plugin.get_center(), 10.25)
     for key in ("orig", "value"):
         assert subset_plugin._get_value_from_subset_definition(0, "Lower bound", key) == 5
         assert subset_plugin._get_value_from_subset_definition(0, "Upper bound", key) == 15.5
@@ -155,6 +176,13 @@ def test_region_from_subset_profile(cubeviz_helper, spectral_cube_wcs):
 
     assert_quantity_allclose(reg.lower, 10.0 * u.Hz)
     assert_quantity_allclose(reg.upper, 15.0 * u.Hz)
+
+    # Move the Subset.
+    subset_plugin.set_center(10, update=True)
+    subsets = cubeviz_helper.app.get_subsets_from_viewer('spectrum-viewer', subset_type='spectral')
+    reg = subsets.get('Subset 1')
+    assert_quantity_allclose(reg.lower, 8 * u.Hz)
+    assert_quantity_allclose(reg.upper, 12 * u.Hz)
 
 
 def test_region_spectral_spatial(cubeviz_helper, spectral_cube_wcs):
@@ -233,6 +261,8 @@ def test_disjoint_spectral_subset(cubeviz_helper, spectral_cube_wcs):
     assert subset_plugin.subset_selected == "Subset 1"
     assert subset_plugin.subset_types == ["Range", "Range"]
     assert not subset_plugin.is_editable
+    assert subset_plugin.get_center() is None
+    subset_plugin.set_center(99, update=True)   # This is no-op
     for key in ("orig", "value"):
         assert subset_plugin._get_value_from_subset_definition(0, "Lower bound", key) == 30
         assert subset_plugin._get_value_from_subset_definition(0, "Upper bound", key) == 35
