@@ -475,6 +475,7 @@ class AstrowidgetsImageViewerMixin:
                 if isinstance(lyr, BqplotScatterLayerState) and lyr.layer.label == marker_name:
                     for key, val in self.marker.items():
                         setattr(lyr, {'markersize': 'size'}.get(key, key), val)
+                    break
 
             self.jdaviz_app.set_data_visibility(self.reference_id, marker_name,
                                                 visible=True, replace=False)
