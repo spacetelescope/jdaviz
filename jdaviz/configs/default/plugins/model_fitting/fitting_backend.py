@@ -110,7 +110,8 @@ def _fit_1D(initial_model, spectrum, run_fitter, window=None):
 
     # Build return spectrum
     output_spectrum = Spectrum1D(spectral_axis=spectrum.spectral_axis,
-                                 flux=output_values)
+                                 flux=output_values,
+                                 mask=spectrum.mask)
 
     return output_model, output_spectrum
 
@@ -259,7 +260,7 @@ class SpaxelWorker:
                 mask = self.mask[x, y, :]
             else:
                 # If no mask is provided:
-                mask = np.zeros_like(flux).astype(bool)
+                mask = np.zeros_like(flux.value).astype(bool)
 
             sp = Spectrum1D(spectral_axis=self.wave, flux=flux, mask=mask)
 
@@ -353,7 +354,8 @@ def _handle_parameter_units(model, fitted_parameters_cube, param_units):
 def _generate_spaxel_list(spectrum):
     """
     Generates a list with tuples, each one addressing the (x,y)
-    coordinates of a spaxel in a 3-D spectrum cube.
+    coordinates of a spaxel in a 3-D spectrum cube. If a mask is available,
+    skip masked indices.
 
     Parameters
     ----------
@@ -365,8 +367,19 @@ def _generate_spaxel_list(spectrum):
     spaxels : list
         List with spaxels
     """
-    spx = [[(x, y) for x in range(spectrum.flux.shape[0])]
-           for y in range(spectrum.flux.shape[1])]
+    if spectrum.mask is None:
+        # If there is no mask, make one:
+        mask = np.zeros(spectrum.shape).astype(bool)
+    elif spectrum.mask.shape != spectrum.flux.shape:
+        # If the mask isn't the right shape, broadcast it:
+        mask = np.broadcast_to(spectrum.mask, spectrum.flux.shape)
+    else:
+        mask = spectrum.mask
+
+    # return only non-masked spaxels
+    n_x, n_y, _ = spectrum.flux.shape
+    spx = [[(x, y) for x in range(n_x) if np.any(mask[x, y])]
+           for y in range(n_y) if np.any(mask[:, y])]
 
     spaxels = [item for sublist in spx for item in sublist]
 

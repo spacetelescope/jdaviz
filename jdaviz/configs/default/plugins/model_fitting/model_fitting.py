@@ -100,7 +100,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self._default_spectrum_viewer_reference_name = kwargs.get(
             "spectrum_viewer_reference_name", "spectrum-viewer"
         )
-
+        self._default_flux_viewer_reference_name = kwargs.get(
+            "flux_viewer_reference_name", "flux-viewer"
+        )
         self._units = {}
         self._fitted_model = None
         self._fitted_spectrum = None
@@ -660,8 +662,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             return
         models_to_fit = self._reinitialize_with_fixed()
 
-        # Apply mask from selected spectral subset
-        self._apply_subset_mask(self._spectrum1d)
+        # Apply masks from selected spectral, spatial subsets
+        self._apply_subset_masks(self._spectrum1d)
 
         try:
             fitted_model, fitted_spectrum = fit_model_to_spectrum(
@@ -720,7 +722,13 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             return
 
         # Get the primary data component
-        spec = data.get_object(Spectrum1D, statistic=None)
+        if not self.spatial_subset_selected.startswith("Entire"):
+            # get_subset_object supports masking but get_object does not
+            spec = data.get_subset_object(
+                self.spatial_subset_selected, cls=Spectrum1D, statistic=None
+            )
+        else:
+            spec = data.get_object(Spectrum1D, statistic=None)
 
         snackbar_message = SnackbarMessage(
             "Fitting model to cube...",
@@ -730,8 +738,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # Retrieve copy of the models with proper "fixed" dictionaries
         models_to_fit = self._reinitialize_with_fixed()
 
-        # Apply mask from selected spectral subset
-        self._apply_subset_mask(spec)
+        # Apply masks from selected spectral, spatial subsets
+        self._apply_subset_masks(spec)
 
         try:
             fitted_model, fitted_spectrum = fit_model_to_spectrum(
@@ -800,23 +808,41 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self.add_results.add_results_from_plugin(spectrum)
         self._set_default_results_label()
 
-    def _apply_subset_mask(self, spectrum):
-        """"
-        Apply mask from selected subset to ``spectrum``
+    def _apply_subset_masks(self, spectrum, dimensions=['spectral', 'spatial']):
         """
-        if self.spectral_subset_selected != "Entire Spectrum":
-            subset_mask = self.app.get_data_from_viewer(
-                self._default_spectrum_viewer_reference_name,
-                data_label=self.spectral_subset_selected
-            ).mask
-
-            if subset_mask.shape != spectrum.shape:
-                # broadcast to the dimensions of the full cube:
-                subset_mask = np.broadcast_to(
-                    subset_mask[None, None, :], spectrum.shape
-                )
-
-            if spectrum.mask is None:
-                spectrum.mask = subset_mask
+        Iterate over dimensions of a spectral cube and mask out the
+        subsets along each axis
+        """
+        for dimension in dimensions:
+            if dimension == 'spectral' and hasattr(self, '_default_spectrum_viewer_reference_name'):
+                viewer_ref = self._default_spectrum_viewer_reference_name
+                data_label = self.spectral_subset_selected
+            elif dimension == 'spatial' and hasattr(self, '_default_flux_viewer_reference_name'):
+                viewer_ref = self._default_flux_viewer_reference_name
+                data_label = self.spatial_subset_selected
             else:
-                spectrum.mask += subset_mask
+                # If this viewer isn't available, don't try to apply the subset mask
+                continue
+
+            if (not getattr(self, dimension + '_subset_selected').startswith("Entire") and
+                    viewer_ref in self.app.get_viewer_reference_names()):
+                subset = self.app.get_data_from_viewer(
+                    viewer_ref, data_label=data_label
+                )
+                if hasattr(subset, 'mask'):
+                    # the mask attr is available for spectral subsets:
+                    subset_mask = subset.mask
+                else:
+                    # otherwise, `subset` is a GroupedSubset:
+                    subset_mask = subset.to_mask()
+
+                if subset_mask.shape != spectrum.shape:
+                    # broadcast to the dimensions of the full cube:
+                    subset_mask = np.broadcast_to(
+                        subset_mask[None, None, :], spectrum.shape
+                    )
+
+                if spectrum.mask is None:
+                    spectrum.mask = subset_mask
+                else:
+                    spectrum.mask += subset_mask
