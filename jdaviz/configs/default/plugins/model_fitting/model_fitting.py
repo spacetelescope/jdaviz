@@ -661,15 +661,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         models_to_fit = self._reinitialize_with_fixed()
 
         # Apply mask from selected subset
-        if self.spectral_subset_selected != "Entire Spectrum":
-            subset_mask = self.app.get_data_from_viewer(
-                self._default_spectrum_viewer_reference_name,
-                data_label=self.spectral_subset_selected
-            ).mask
-            if self._spectrum1d.mask is None:
-                self._spectrum1d.mask = subset_mask
-            else:
-                self._spectrum1d.mask += subset_mask
+        self._apply_subset_mask(self._spectrum1d)
 
         try:
             fitted_model, fitted_spectrum = fit_model_to_spectrum(
@@ -739,22 +731,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         models_to_fit = self._reinitialize_with_fixed()
 
         # Apply mask from selected subset
-        if self.spectral_subset_selected != "Entire Spectrum":
-            subset_mask = self.app.get_data_from_viewer(
-                self._default_spectrum_viewer_reference_name,
-                data_label=self.spectral_subset_selected
-            ).mask
-
-            if subset_mask.shape != spec.shape:
-                # broadcast to the dimensions of the full cube:
-                subset_mask = np.broadcast_to(
-                    subset_mask[None, None, :], spec.shape
-                )
-
-            if spec.mask is None:
-                spec.mask = subset_mask
-            else:
-                spec.mask += subset_mask
+        self._apply_subset_mask(spec)
 
         try:
             fitted_model, fitted_spectrum = fit_model_to_spectrum(
@@ -822,3 +799,24 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         self.add_results.add_results_from_plugin(spectrum)
         self._set_default_results_label()
+
+    def _apply_subset_mask(self, spectrum):
+        """"
+        Apply mask from selected subset to ``spectrum``
+        """
+        if self.spectral_subset_selected != "Entire Spectrum":
+            subset_mask = self.app.get_data_from_viewer(
+                self._default_spectrum_viewer_reference_name,
+                data_label=self.spectral_subset_selected
+            ).mask
+
+            if subset_mask.shape != spectrum.shape:
+                # broadcast to the dimensions of the full cube:
+                subset_mask = np.broadcast_to(
+                    subset_mask[None, None, :], spectrum.shape
+                )
+
+            if spectrum.mask is None:
+                spectrum.mask = subset_mask
+            else:
+                spectrum.mask += subset_mask
