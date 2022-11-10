@@ -422,6 +422,7 @@ class Mosviz(ConfigHelper, LineListMixin):
         """
         # Link data after everything is loaded
         self.app.auto_link = False
+        allow_link_table = True
 
         directory = kwargs.pop('directory', None)
         instrument = kwargs.pop('instrument', None)
@@ -465,9 +466,11 @@ class Mosviz(ConfigHelper, LineListMixin):
 
         elif spectra_1d:
             self.load_1d_spectra(spectra_1d, spectra_1d_label)
+            allow_link_table = False
 
         elif spectra_2d:
             self.load_2d_spectra(spectra_2d, spectra_2d_label)
+            allow_link_table = False
 
         else:
             msg = "Warning: Please set valid values for the load_data() method"
@@ -479,7 +482,8 @@ class Mosviz(ConfigHelper, LineListMixin):
             msg = SnackbarMessage(msg, color='warning', sender=self)
             self.app.hub.broadcast(msg)
 
-        self.link_table_data(None)
+        if allow_link_table:
+            self.link_table_data(None)
 
         self._add_redshift_column()
 
