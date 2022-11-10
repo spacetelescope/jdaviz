@@ -24,9 +24,9 @@
 
     <!-- Sub-plugin for recentering of spatial subset (Imviz only) -->
     <v-row v-if="config=='imviz' && is_editable">
-      <v-expansion-panels accordion>
+      <v-expansion-panels accordion v-model="subplugins_opened">
         <v-expansion-panel>
-          <v-expansion-panel-header v-slot="{ open }">
+          <v-expansion-panel-header >
             <span style="padding: 6px">Recenter</span>
           </v-expansion-panel-header>
           <v-expansion-panel-content>

@@ -5,7 +5,7 @@ from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
 from glue.core.roi import CircularROI, EllipticalROI, RectangularROI
 from glue.core.subset import RoiSubsetState, RangeSubsetState, CompositeSubsetState
 from glue_jupyter.widgets.subset_mode_vuetify import SelectionModeMenu
-from traitlets import List, Unicode, Bool, observe
+from traitlets import Integer, List, Unicode, Bool, observe
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
@@ -33,6 +33,8 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
     subset_types = List([]).tag(sync=True)
     subset_definitions = List([]).tag(sync=True)
     has_subset_details = Bool(False).tag(sync=True)
+
+    subplugins_opened = Integer().tag(sync=True)
 
     is_editable = Bool(False).tag(sync=True)
 
