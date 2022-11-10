@@ -665,7 +665,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             subset_mask = self.app.get_data_from_viewer(
                 self._default_spectrum_viewer_reference_name,
                 data_label=self.spectral_subset_selected
-            ).mask # noqa
+            ).mask
             if self._spectrum1d.mask is None:
                 self._spectrum1d.mask = subset_mask
             else:
@@ -676,7 +676,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 self._spectrum1d,
                 models_to_fit,
                 self.model_equation,
-                run_fitter=True)
+                run_fitter=True,
+                window=self._window
+            )
         except AttributeError:
             msg = SnackbarMessage("Unable to fit: model equation may be invalid",
                                   color="error", sender=self)
@@ -736,13 +738,32 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # Retrieve copy of the models with proper "fixed" dictionaries
         models_to_fit = self._reinitialize_with_fixed()
 
+        # Apply mask from selected subset
+        if self.spectral_subset_selected != "Entire Spectrum":
+            subset_mask = self.app.get_data_from_viewer(
+                self._default_spectrum_viewer_reference_name,
+                data_label=self.spectral_subset_selected
+            ).mask
+
+            if subset_mask.shape != spec.shape:
+                # broadcast to the dimensions of the full cube:
+                subset_mask = np.broadcast_to(
+                    subset_mask[None, None, :], spec.shape
+                )
+
+            if spec.mask is None:
+                spec.mask = subset_mask
+            else:
+                spec.mask += subset_mask
+
         try:
             fitted_model, fitted_spectrum = fit_model_to_spectrum(
                 spec,
                 models_to_fit,
                 self.model_equation,
                 run_fitter=True,
-                window=self._window)
+                window=self._window
+            )
         except ValueError:
             snackbar_message = SnackbarMessage(
                 "Cube fitting failed",

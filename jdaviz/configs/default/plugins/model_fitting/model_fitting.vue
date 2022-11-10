@@ -196,7 +196,7 @@
 
       <v-row>
         <span class="v-messages v-messages__message text--secondary">
-            If fit is not sufficiently converged, try clicking fitting again to complete additional iterations.
+            If fit is not sufficiently converged, click Fit Model again to run additional iterations.
         </span>
       </v-row>
     </div>

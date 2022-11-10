@@ -134,7 +134,11 @@ def test_cube_fitting_backend():
     # Transpose so it can be packed in a Spectrum1D instance.
     flux_cube = flux_cube.transpose(1, 2, 0)
 
-    spectrum = Spectrum1D(flux=flux_cube*u.Jy, spectral_axis=x*u.um)
+    # Mask part of the spectral axis to later ensure that it gets propagated through:
+    mask = np.zeros_like(flux_cube).astype(bool)
+    mask[..., :SPECTRUM_SIZE // 10] = True
+
+    spectrum = Spectrum1D(flux=flux_cube*u.Jy, spectral_axis=x*u.um, mask=mask)
 
     # Initial model for fit.
     g1f = models.Gaussian1D(0.7*u.Jy, 4.65*u.um, 0.3*u.um, name='g1')
@@ -192,3 +196,6 @@ def test_cube_fitting_backend():
     assert np.allclose(fitted_model[2].stddev.value, 0.1, atol=TOL)
 
     assert np.allclose(fitted_model[3].amplitude.value, 4.0, atol=TOL)
+
+    # Check that the fitted spectrum is masked correctly:
+    assert np.all(fitted_spectrum.mask == mask)

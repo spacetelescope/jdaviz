@@ -177,7 +177,7 @@ def _fit_3D(initial_model, spectrum, window=None, n_cpu=None):
         results = []
         pool = Pool(n_cpu)
 
-        # The communicate overhead of spawning a process for each *individual*
+        # The communication overhead of spawning a process for each *individual*
         # parameter set is prohibitively high (it's actually faster to run things
         # sequentially). Instead, chunk the spaxel list based on the number of
         # available processors, and have each processor do the model fitting
@@ -188,7 +188,8 @@ def _fit_3D(initial_model, spectrum, window=None, n_cpu=None):
                                   spectrum.spectral_axis,
                                   initial_model,
                                   param_set=spx,
-                                  window=window)
+                                  window=window,
+                                  mask=spectrum.mask)
             r = pool.apply_async(worker, callback=collect_result)
             results.append(r)
         for r in results:
@@ -203,13 +204,15 @@ def _fit_3D(initial_model, spectrum, window=None, n_cpu=None):
                               spectrum.spectral_axis,
                               initial_model,
                               param_set=spaxels,
-                              window=window)
+                              window=window,
+                              mask=spectrum.mask)
         collect_result(worker())
 
     # Build output 3D spectrum
     funit = spectrum.flux.unit
     output_spectrum = Spectrum1D(wcs=spectrum.wcs,
-                                 flux=output_flux_cube * funit)
+                                 flux=output_flux_cube * funit,
+                                 mask=spectrum.mask)
 
     return fitted_models, output_spectrum
 
@@ -228,12 +231,13 @@ class SpaxelWorker:
     instance. We need to use the current model instance while
     it still exists.
     """
-    def __init__(self, flux_cube, wave_array, initial_model, param_set, window=None):
+    def __init__(self, flux_cube, wave_array, initial_model, param_set, window=None, mask=None):
         self.cube = flux_cube
         self.wave = wave_array
         self.model = initial_model
         self.param_set = param_set
         self.window = window
+        self.mask = mask
 
     def __call__(self):
         results = {'x': [], 'y': [], 'fitted_model': [], 'fitted_values': []}
@@ -251,7 +255,13 @@ class SpaxelWorker:
             # to execute. This behavior was seen also with other functions
             # passed to the callable.
             flux = self.cube[x, y, :]
-            sp = Spectrum1D(spectral_axis=self.wave, flux=flux)
+            if self.mask is not None:
+                mask = self.mask[x, y, :]
+            else:
+                # If no mask is provided:
+                mask = np.zeros_like(flux).astype(bool)
+
+            sp = Spectrum1D(spectral_axis=self.wave, flux=flux, mask=mask)
 
             weights = 'unc' if sp.uncertainty else None
             fitted_model = fit_lines(sp, self.model, window=self.window, weights=weights)
