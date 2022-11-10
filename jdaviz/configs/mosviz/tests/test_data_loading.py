@@ -14,7 +14,7 @@ from jdaviz.utils import PRIHDR_KEY
 
 def test_load_spectrum1d(mosviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    mosviz_helper.load_1d_spectra(spectrum1d, data_labels=label)
+    mosviz_helper.load_data(spectra_1d=spectrum1d, spectra_1d_label=label)
 
     assert len(mosviz_helper.app.data_collection) == 2
     dc_0 = mosviz_helper.app.data_collection[0]
@@ -94,7 +94,7 @@ def test_load_list_of_spectrum1d(mosviz_helper, spectrum1d):
 def test_load_mos_spectrum2d(mosviz_helper, mos_spectrum2d):
 
     label = "Test 2D Spectrum"
-    mosviz_helper.load_2d_spectra(mos_spectrum2d, data_labels=label)
+    mosviz_helper.load_data(spectra_2d=mos_spectrum2d, spectra_2d_label=label)
 
     assert len(mosviz_helper.app.data_collection) == 2
     dc_0 = mosviz_helper.app.data_collection[0]
