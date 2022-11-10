@@ -463,8 +463,17 @@ class Mosviz(ConfigHelper, LineListMixin):
             self.load_metadata(spectra_2d, spectra=True)
             self.load_metadata(spectra_1d, spectra=True, sp1d=True, ids=spectra_1d)
 
+        elif spectra_1d is not None:
+            self.load_1d_spectra(spectra_1d, spectra_1d_label)
+
+        elif spectra_2d is not None:
+            self.load_2d_spectra(spectra_2d, spectra_2d_label)
+
         else:
             msg = "Warning: Please set valid values for the load_data() method"
+            msg = SnackbarMessage(msg, color='warning', sender=self)
+            self.app.hub.broadcast(msg)
+            return
 
         if msg:
             msg = SnackbarMessage(msg, color='warning', sender=self)
