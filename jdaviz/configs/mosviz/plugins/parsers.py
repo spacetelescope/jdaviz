@@ -13,6 +13,8 @@ from astropy.wcs import WCS
 from glue.core.data import Data
 from glue.core.link_helpers import LinkSame
 from specutils import Spectrum1D, SpectrumList, SpectrumCollection
+from specutils.io.default_loaders.jwst_reader import (identify_jwst_s2d_fits,
+                                                      identify_jwst_s2d_multi_fits)
 
 from jdaviz.configs.imviz.plugins.parsers import get_image_data_iterator
 from jdaviz.core.registries import data_parser_registry
@@ -175,10 +177,18 @@ def mos_nirspec_directory_parser(app, data_obj, data_labels=None):
 
     spectra_1d.sort()
     spectra_2d.sort()
-    mos_spec1d_parser(app, spectra_1d)
-    mos_spec2d_parser(app, spectra_2d)
-    mos_meta_parser(app, spectra_2d, spectra=True)
-    mos_meta_parser(app, spectra_1d, spectra=True, sp1d=True)
+    n_1d_loaded = mos_spec1d_parser(app, spectra_1d)
+    n_2d_loaded = mos_spec2d_parser(app, spectra_2d)
+    # Handle applying metadata to multiple rows, for multi-object files
+    print(n_1d_loaded, n_2d_loaded)
+    repeat_1d = 1
+    repeat_2d = 1
+    if len(spectra_1d) == 1 and n_1d_loaded > 1:
+        repeat_1d = n_1d_loaded
+    if len(spectra_2d) == 1 and n_2d_loaded > 1:
+        repeat_2d = n_2d_loaded
+    mos_meta_parser(app, spectra_2d, spectra=True, repeat=repeat_2d)
+    mos_meta_parser(app, spectra_1d, spectra=True, sp1d=True, repeat=repeat_1d)
 
 
 @data_parser_registry("mosviz-spec1d-parser")
@@ -205,7 +215,12 @@ def mos_spec1d_parser(app, data_obj, data_labels=None,
     if not isinstance(data_obj, (list, tuple, SpectrumCollection)):
         data_obj = [data_obj]
 
-    data_obj = [Spectrum1D.read(x) if _check_is_file(x) else x for x in data_obj]
+    try:
+        data_obj = [Spectrum1D.read(x) if _check_is_file(x) else x for x in data_obj]
+    except IORegistryError:
+        if len(data_obj) == 1:
+            if _check_is_file(data_obj[0]):
+                data_obj = SpectrumList.read(data_obj[0])
 
     if data_labels is None:
         data_labels = [f"1D Spectrum {i}" for i in range(len(data_obj))]
@@ -225,6 +240,8 @@ def mos_spec1d_parser(app, data_obj, data_labels=None,
 
         _add_to_table(app, data_labels, '1D Spectra',
                       table_viewer_reference_name=table_viewer_reference_name)
+
+    return len(data_obj)
 
 
 @data_parser_registry("mosviz-spec2d-parser")
@@ -283,6 +300,12 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
             kw = {'wcs': wcs}
 
         return Spectrum1D(flux=data * data_unit, meta=metadata, **kw)
+
+    # See if this is a multi s2d file
+    print(data_obj)
+    if len(data_obj) == 1 and _check_is_file(data_obj[0]):
+        if identify_jwst_s2d_multi_fits("test", data_obj[0]):
+            data_obj = SpectrumList.read(data_obj[0])
 
     # Coerce into list-like object
     if (not isinstance(data_obj, (list, tuple, SpectrumCollection)) or
@@ -343,6 +366,7 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
                              "which to show in viewer")
         app.add_data_to_viewer(spectrum_2d_viewer_reference_name, data_labels[0])
 
+    return len(data_obj)
 
 def _load_fits_image_from_filename(filename, app):
     with fits.open(filename) as hdulist:
@@ -429,7 +453,7 @@ def mos_image_parser(app, data_obj, data_labels=None, share_image=0,
 
 
 @data_parser_registry("mosviz-metadata-parser")
-def mos_meta_parser(app, data_obj, ids=None, spectra=False, sp1d=False):
+def mos_meta_parser(app, data_obj, ids=None, spectra=False, sp1d=False, repeat=1):
     """
     Attempts to parse MOS FITS header metadata.
 
@@ -442,8 +466,13 @@ def mos_meta_parser(app, data_obj, ids=None, spectra=False, sp1d=False):
     ids : list of str
         A list with identification strings to be used to label mosviz
         table rows. Typically, a list with file names.
-    spectra : Boolean
+    spectra : bool, optional
         In case the FITS objects are related to spectral data.
+    sp1d: bool, optional
+        Indicates if the input data_obj is a 1d rather than 2d spectrum.
+    repeat: int, optional
+        If greater than 1, indicates that the input file metadata applies
+        to multiple table rows.
     """
 
     if data_obj is None:
@@ -462,19 +491,19 @@ def mos_meta_parser(app, data_obj, ids=None, spectra=False, sp1d=False):
             filters = [x[0].header.get("FILTER", FALLBACK_NAME) for x in data_obj]
             gratings = [x[0].header.get("GRATING", FALLBACK_NAME) for x in data_obj]
 
-            filters_gratings = [(f+'/'+g) for f, g in zip(filters, gratings)]
+            filters_gratings = [(f+'/'+g) for f, g in zip(filters, gratings)]*repeat
 
             [x.close() for x in data_obj]
 
         # source name can be taken from 1d spectra
         elif spectra and sp1d:
-            names = _get_source_identifiers_by_hdu([x[0] for x in data_obj], ids)
+            names = _get_source_identifiers_by_hdu([x[0] for x in data_obj], ids)*repeat
 
         # source name and coordinates are taken from image headers, if present
         else:
-            ra = [x[0].header.get("OBJ_RA", float("nan")) for x in data_obj]
-            dec = [x[0].header.get("OBJ_DEC", float("nan")) for x in data_obj]
-            names = _get_source_identifiers_by_hdu([x[0] for x in data_obj], ids)
+            ra = [x[0].header.get("OBJ_RA", float("nan")) for x in data_obj]*repeat
+            dec = [x[0].header.get("OBJ_DEC", float("nan")) for x in data_obj]*repeat
+            names = _get_source_identifiers_by_hdu([x[0] for x in data_obj], ids)*repeat
 
         [x.close() for x in data_obj]
 
