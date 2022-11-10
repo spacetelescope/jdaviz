@@ -231,7 +231,8 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
     def vue_recenter_subset(self, *args):
         # Composite region cannot be edited. This only works for Imviz.
         if not self.is_editable or self.config != 'imviz':  # no-op
-            return
+            raise NotImplementedError(
+                f'Cannot recenter: is_editable={self.is_editable}, config={self.config}')
 
         from photutils.aperture import ApertureStats
         from jdaviz.core.region_translators import regions2aperture, _get_region_from_spatial_subset
@@ -260,6 +261,22 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             self.set_center((x, y), update=False)
 
     def get_center(self):
+        """Return the center of the Subset.
+        This may or may not be the centroid obtain from data.
+
+        Returns
+        -------
+        cen : number, tuple of numbers, or `None`
+            The center of the Subset in ``x`` or ``(x, y)``,
+            depending on the Subset type, if applicable.
+            If Subset is not editable, this returns `None`.
+
+        Raises
+        ------
+        NotImplementedError
+            Subset type is not supported.
+
+        """
         # Composite region cannot be edited.
         if not self.is_editable:  # no-op
             return
@@ -286,6 +303,26 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         return cen
 
     def set_center(self, new_cen, update=False):
+        """Set the desired center for the selected Subset, if applicable.
+        If Subset is not editable, nothing is done.
+
+        Parameters
+        ----------
+        new_cen : number or tuple of numbers
+            The new center defined either as ``x`` or ``(x, y)``,
+            depending on the Subset type.
+
+        update : bool
+            If `True`, the Subset is also moved to the new center.
+            Otherwise, only the relevant editable fields are updated but the
+            Subset is not moved.
+
+        Raises
+        ------
+        NotImplementedError
+            Subset type is not supported.
+
+        """
         # Composite region cannot be edited, so just grab first element.
         if not self.is_editable:  # no-op
             return

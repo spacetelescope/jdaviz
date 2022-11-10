@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose
 from glue.core import Data
@@ -43,14 +44,9 @@ def test_region_from_subset_2d(cubeviz_helper):
         assert subset_plugin._get_value_from_subset_definition(0, "Y Radius", key) == 3.3
         assert subset_plugin._get_value_from_subset_definition(0, "Angle", key) == 0
 
-    # Recenter GUI should not be exposed, but API call should also not crash.
-    subset_plugin.vue_recenter_subset()
-    for key in ("orig", "value"):
-        assert subset_plugin._get_value_from_subset_definition(0, "X Center", key) == 1
-        assert subset_plugin._get_value_from_subset_definition(0, "Y Center", key) == 3.5
-        assert subset_plugin._get_value_from_subset_definition(0, "X Radius", key) == 1.2
-        assert subset_plugin._get_value_from_subset_definition(0, "Y Radius", key) == 3.3
-        assert subset_plugin._get_value_from_subset_definition(0, "Angle", key) == 0
+    # Recenter GUI should not be exposed, but API call would raise exception.
+    with pytest.raises(NotImplementedError, match='Cannot recenter'):
+        subset_plugin.vue_recenter_subset()
 
 
 def test_region_from_subset_3d(cubeviz_helper):
