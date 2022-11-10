@@ -660,7 +660,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             return
         models_to_fit = self._reinitialize_with_fixed()
 
-        # Apply mask from selected subset
+        # Apply mask from selected spectral subset
         self._apply_subset_mask(self._spectrum1d)
 
         try:
@@ -730,7 +730,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # Retrieve copy of the models with proper "fixed" dictionaries
         models_to_fit = self._reinitialize_with_fixed()
 
-        # Apply mask from selected subset
+        # Apply mask from selected spectral subset
         self._apply_subset_mask(spec)
 
         try:
