@@ -1,10 +1,8 @@
 # Tests data loading in the Mosviz Jdaviz configuration
 
-import pathlib
 from zipfile import ZipFile
 
 from astropy.nddata import CCDData
-from astropy.utils.data import download_file
 import numpy as np
 import pytest
 from specutils import Spectrum1D

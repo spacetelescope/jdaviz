@@ -40,7 +40,7 @@ def test_nirspec_parser(mosviz_helper, tmpdir, instrument_arg):
 
     # Check that the data was loaded in the same order we expect:
     assert mosviz_helper.app.data_collection[15].meta['SOURCEID'] == 2315
-    for i in range(0,5):
+    for i in range(0, 5):
         assert mosviz_helper.app.data_collection[i+1].label == f"Image {i}"
 
         spec1d = mosviz_helper.app.data_collection[i+6]
@@ -50,6 +50,7 @@ def test_nirspec_parser(mosviz_helper, tmpdir, instrument_arg):
         assert int(spec1d.meta['SOURCEID']) == int(spec2d.meta['SOURCEID'])
         assert int(spec1d.meta['mosviz_row']) == int(spec2d.meta['mosviz_row'])
 
+    # Check for expected metadata values
     for data in mosviz_helper.app.data_collection:
         assert PRIHDR_KEY not in data.meta
         assert 'header' not in data.meta
@@ -58,7 +59,6 @@ def test_nirspec_parser(mosviz_helper, tmpdir, instrument_arg):
             assert data.meta['WCSAXES'] == 2
         elif 'Spectrum' in data.label:
             assert data.meta['TARGNAME'] == 'FOO'
-
 
     # Test IntraRow linking:
     # Attempts to add the spectrum of another row into the current row's viewers
@@ -118,8 +118,10 @@ def test_niriss_parser(mosviz_helper, tmp_path):
     # Test all the spectra exist
     for dispersion in ('R', 'C'):
         for sourceid in (243, 249):
-            spec2d = mosviz_helper.app.data_collection[f"F200W Source {sourceid} spec2d {dispersion}"]
-            spec1d = mosviz_helper.app.data_collection[f"F200W Source {sourceid} spec1d {dispersion}"]
+            spec2d = mosviz_helper.app.data_collection[
+                f"F200W Source {sourceid} spec2d {dispersion}"]
+            spec1d = mosviz_helper.app.data_collection[
+                f"F200W Source {sourceid} spec1d {dispersion}"]
 
             # Header should be imported from the spec2d files
             assert PRIHDR_KEY in spec2d.meta
