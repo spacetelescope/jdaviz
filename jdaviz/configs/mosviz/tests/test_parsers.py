@@ -9,10 +9,11 @@ from jdaviz.utils import PRIHDR_KEY, COMMENTCARD_KEY
 
 @pytest.mark.filterwarnings('ignore')
 @pytest.mark.remote_data
-def test_nirspec_parser(mosviz_helper, tmpdir):
+@pytest.mark.parametrize('instrument_arg', ('nirspec', None))
+def test_nirspec_parser(mosviz_helper, tmpdir, instrument_arg):
     '''
     Tests loading our default MosvizExample notebook data
-    Also tests IntraRow linking
+    Also tests no instrument keyword fallback, and IntraRow linking
     '''
 
     test_data = 'https://stsci.box.com/shared/static/ovyxi5eund92yoadvv01mynwt8t5n7jv.zip'
@@ -24,7 +25,13 @@ def test_nirspec_parser(mosviz_helper, tmpdir):
 
     data_dir = level3_path
 
-    mosviz_helper.load_data(directory=data_dir, instrument='nirspec')
+    if instrument_arg:
+        mosviz_helper.load_data(directory=data_dir, instrument=instrument_arg)
+    else:
+        # When no instrument is provided, mosviz.load_data should fallback to the nirspec loader.
+        # Naturally, the nirspec dataset should then work without any instrument keyword
+        with pytest.warns(UserWarning, match="Ambiguous MOS Instrument"):
+            mosviz_helper.load_data(directory=data_dir)
 
     assert len(mosviz_helper.app.data_collection) == 16
 
@@ -67,31 +74,6 @@ def test_nirspec_parser(mosviz_helper, tmpdir):
     with pytest.raises(NotImplementedError, match='Intra-row plotting not supported'):
         mosviz_helper.app.add_data_to_viewer(viewer_reference='spectrum-viewer',
                                              data_label=data_label)
-
-
-@pytest.mark.remote_data
-def test_nirspec_fallback(mosviz_helper, tmpdir):
-    '''
-    When no instrument is provided, mosviz.load_data is expected to fallback to the nirspec loader.
-    Naturally, the nirspec dataset should then work without any instrument keyword
-    '''
-
-    test_data = 'https://stsci.box.com/shared/static/ovyxi5eund92yoadvv01mynwt8t5n7jv.zip'
-    fn = download_file(test_data, cache=True, timeout=30)
-    with ZipFile(fn, 'r') as sample_data_zip:
-        sample_data_zip.extractall(tmpdir)
-
-    level3_path = (pathlib.Path(tmpdir) / 'mosviz_nirspec_data_0.3' / 'level3')
-
-    data_dir = level3_path
-    with pytest.warns(UserWarning, match="Ambiguous MOS Instrument"):
-        mosviz_helper.load_data(directory=data_dir)
-
-    assert len(mosviz_helper.app.data_collection) == 16
-    assert "MOS Table" in mosviz_helper.app.data_collection
-    assert "Image 4" in mosviz_helper.app.data_collection
-    assert "1D Spectrum 4" in mosviz_helper.app.data_collection
-    assert "2D Spectrum 4" in mosviz_helper.app.data_collection
 
 
 @pytest.mark.remote_data
