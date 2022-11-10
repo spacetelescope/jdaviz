@@ -1,9 +1,96 @@
+import pathlib
 from zipfile import ZipFile
 
 import pytest
 from astropy.utils.data import download_file
 
 from jdaviz.utils import PRIHDR_KEY, COMMENTCARD_KEY
+
+
+@pytest.mark.filterwarnings('ignore')
+@pytest.mark.remote_data
+def test_nirspec_parser(mosviz_helper, tmpdir):
+    '''
+    Tests loading our default MosvizExample notebook data
+    Also tests IntraRow linking
+    '''
+
+    test_data = 'https://stsci.box.com/shared/static/ovyxi5eund92yoadvv01mynwt8t5n7jv.zip'
+    fn = download_file(test_data, cache=True, timeout=30)
+    with ZipFile(fn, 'r') as sample_data_zip:
+        sample_data_zip.extractall(tmpdir)
+
+    level3_path = (pathlib.Path(tmpdir) / 'mosviz_nirspec_data_0.3' / 'level3')
+
+    data_dir = level3_path
+
+    mosviz_helper.load_data(directory=data_dir, instrument='nirspec')
+
+    assert len(mosviz_helper.app.data_collection) == 16
+
+    # MOS Table meta should be empty:
+    assert len(mosviz_helper.app.data_collection["MOS Table"].meta) == 0
+
+    # Check that the data was loaded in the same order we expect:
+    assert mosviz_helper.app.data_collection[15].meta['SOURCEID'] == 2315
+    for i in range(0,5):
+        assert mosviz_helper.app.data_collection[i+1].label == f"Image {i}"
+
+        spec1d = mosviz_helper.app.data_collection[i+6]
+        assert spec1d.label == f"1D Spectrum {i}"
+        spec2d = mosviz_helper.app.data_collection[i+11]
+        assert spec2d.label == f"2D Spectrum {i}"
+        assert int(spec1d.meta['SOURCEID']) == int(spec2d.meta['SOURCEID'])
+
+    for data in mosviz_helper.app.data_collection:
+        assert PRIHDR_KEY not in data.meta
+        assert 'header' not in data.meta
+
+        if 'IMAGE' in data.label:
+            assert data.meta['WCSAXES'] == 2
+        elif 'Spectrum' in data.label:
+            assert data.meta['TARGNAME'] == 'FOO'
+
+
+    # Test IntraRow linking:
+    # Attempts to add the spectrum of another row into the current row's viewers
+    # Currently, intrarow linking is disabled. Attemps to load another spectrum into
+    # the current spectrum viewer should result in an error
+
+    # Check to make sure our test case isn't from the same row to avoid false positive
+    table = mosviz_helper.app.get_viewer('table-viewer')
+    table.select_row(0)
+    data_label = "1D Spectrum 4"
+    assert mosviz_helper.app.data_collection[data_label].meta['mosviz_row'] != table.current_row
+
+    with pytest.raises(NotImplementedError, match='Intra-row plotting not supported'):
+        mosviz_helper.app.add_data_to_viewer(viewer_reference='spectrum-viewer',
+                                             data_label=data_label)
+
+
+@pytest.mark.remote_data
+def test_nirspec_fallback(mosviz_helper, tmpdir):
+    '''
+    When no instrument is provided, mosviz.load_data is expected to fallback to the nirspec loader.
+    Naturally, the nirspec dataset should then work without any instrument keyword
+    '''
+
+    test_data = 'https://stsci.box.com/shared/static/ovyxi5eund92yoadvv01mynwt8t5n7jv.zip'
+    fn = download_file(test_data, cache=True, timeout=30)
+    with ZipFile(fn, 'r') as sample_data_zip:
+        sample_data_zip.extractall(tmpdir)
+
+    level3_path = (pathlib.Path(tmpdir) / 'mosviz_nirspec_data_0.3' / 'level3')
+
+    data_dir = level3_path
+    with pytest.warns(UserWarning, match="Ambiguous MOS Instrument"):
+        mosviz_helper.load_data(directory=data_dir)
+
+    assert len(mosviz_helper.app.data_collection) == 16
+    assert "MOS Table" in mosviz_helper.app.data_collection
+    assert "Image 4" in mosviz_helper.app.data_collection
+    assert "1D Spectrum 4" in mosviz_helper.app.data_collection
+    assert "2D Spectrum 4" in mosviz_helper.app.data_collection
 
 
 @pytest.mark.remote_data
