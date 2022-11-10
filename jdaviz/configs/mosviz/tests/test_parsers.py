@@ -41,6 +41,7 @@ def test_nirspec_parser(mosviz_helper, tmpdir):
         spec2d = mosviz_helper.app.data_collection[i+11]
         assert spec2d.label == f"2D Spectrum {i}"
         assert int(spec1d.meta['SOURCEID']) == int(spec2d.meta['SOURCEID'])
+        assert int(spec1d.meta['mosviz_row']) == int(spec2d.meta['mosviz_row'])
 
     for data in mosviz_helper.app.data_collection:
         assert PRIHDR_KEY not in data.meta
@@ -135,20 +136,24 @@ def test_niriss_parser(mosviz_helper, tmp_path):
     # Test all the spectra exist
     for dispersion in ('R', 'C'):
         for sourceid in (243, 249):
-            for spec_type in ('spec2d', 'spec1d'):
-                data_label = f"F200W Source {sourceid} {spec_type} {dispersion}"
-                data = mosviz_helper.app.data_collection[data_label]
-                assert data.meta['SOURCEID'] == sourceid
+            spec2d = mosviz_helper.app.data_collection[f"F200W Source {sourceid} spec2d {dispersion}"]
+            spec1d = mosviz_helper.app.data_collection[f"F200W Source {sourceid} spec1d {dispersion}"]
 
-                # Header should be imported from the spec2d files, not spec1d
-                if spec_type == 'spec2d':
-                    assert PRIHDR_KEY in data.meta
-                    assert COMMENTCARD_KEY in data.meta
-                else:
-                    assert PRIHDR_KEY not in data.meta
-                    assert COMMENTCARD_KEY in data.meta
-                    assert 'header' not in data.meta
-                    assert data.meta['FILTER'] == f'GR150{dispersion}'
+            # Header should be imported from the spec2d files
+            assert PRIHDR_KEY in spec2d.meta
+            assert COMMENTCARD_KEY in spec2d.meta
+
+            # Header should NOT be imported from spec1d files:
+            assert PRIHDR_KEY not in spec1d.meta
+            assert COMMENTCARD_KEY in spec1d.meta
+            assert 'header' not in spec1d.meta
+
+            # Other Metadata Checks:
+            assert spec1d.meta['FILTER'] == f'GR150{dispersion}'
+            assert int(spec1d.meta['mosviz_row']) == int(spec2d.meta['mosviz_row'])
+
+            for spec in (spec1d, spec2d):
+                assert spec.meta['SOURCEID'] == sourceid
 
 
 @pytest.mark.remote_data
