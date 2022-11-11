@@ -37,7 +37,9 @@ def test_nirspec_parser(mosviz_helper, tmp_path, instrument_arg):
     # MOS Table meta should be empty:
     assert len(mosviz_helper.app.data_collection["MOS Table"].meta) == 0
 
-    # Check that the data was loaded in the same order we expect:
+    # Check that the data was loaded in the same order we expect.
+    # MOS table always loads first, followed by 5 sets of Images, 1D, then 2D spectra
+    #   which results in Images beginning at index 1, 1D at index 6, 2D at index 11
     assert mosviz_helper.app.data_collection[15].meta['SOURCEID'] == 2315
     for i in range(0, 5):
         assert mosviz_helper.app.data_collection[i+1].label == f"Image {i}"
