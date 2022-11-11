@@ -80,6 +80,7 @@ class LinksControl(PluginTemplateMixin):
         with the selected parameters.
         """
         if not hasattr(self, 'link_type'):
+            # could happen before plugin is fully initialized
             return
 
         if msg.get('name', None) == 'wcs_use_affine' and self.link_type.selected == 'Pixels':
