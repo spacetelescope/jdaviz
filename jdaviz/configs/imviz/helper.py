@@ -21,6 +21,11 @@ class Imviz(ImageConfigHelper):
     _default_configuration = 'imviz'
     _default_viewer_reference_name = "image-viewer"
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.app._link_type = None
+        self.app._wcs_use_affine = None
+
     def create_image_viewer(self, viewer_name=None):
         """Create a new image viewer.
 
@@ -528,19 +533,17 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_u
         link_plugin = app.get_tray_item_from_name('imviz-links-control')
         if update_plugin:
             link_plugin.linking_in_progress = True
-        prev_link_type = link_plugin.link_type.selected.lower()
-        prev_use_affine = link_plugin.wcs_use_affine
     else:
         link_plugin = None
-        prev_link_type = None
-        prev_use_affine = None
 
-    if link_type == prev_link_type and wcs_use_affine == prev_use_affine:
+    if link_type == app._link_type and wcs_use_affine == app._wcs_use_affine:
         data_already_linked = [link.data2 for link in app.data_collection.external_links]
     else:
         for viewer in app._viewer_store.values():
             if len(viewer._marktags):
-                raise ValueError(f"cannot change link-type (from '{prev_link_type}' to '{link_type}') when markers are present.  Clear markers with viewer.reset_markers() first")
+                raise ValueError(f"cannot change link-type (from '{app._link_type}' to "
+                                 f"'{link_type}') when markers are present. "
+                                 f" Clear markers with viewer.reset_markers() first")
         data_already_linked = []
 
     refdata, iref = get_reference_image_data(app)
@@ -606,6 +609,9 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_u
 
         app.hub.broadcast(SnackbarMessage(
             'Images successfully relinked', color='success', timeout=8000, sender=app))
+
+    app._link_type = link_type
+    app._wcs_use_affine = wcs_use_affine
 
     if link_plugin is not None:
         # Only broadcast after success.

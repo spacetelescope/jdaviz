@@ -31,10 +31,13 @@ class LinksControl(PluginTemplateMixin):
     wcs_use_fallback = Bool(True).tag(sync=True)
     wcs_use_affine = Bool(True).tag(sync=True)
 
+    need_clear_markers = Bool(False).tag(sync=True)
     linking_in_progress = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.cancel_revert = {}
 
         self.link_type = SelectPluginComponent(self,
                                                items='link_type_items',
@@ -60,6 +63,15 @@ class LinksControl(PluginTemplateMixin):
         self.wcs_use_fallback = msg.wcs_use_fallback
         self.wcs_use_affine = msg.wcs_use_affine
 
+    def _link_image_data(self):
+        link_image_data(
+            self.app,
+            link_type=self.link_type.selected.lower(),
+            wcs_fallback_scheme='pixels' if self.wcs_use_fallback else None,
+            wcs_use_affine=self.wcs_use_affine,
+            error_on_fail=False,
+            update_plugin=False)
+
     def _on_new_app_data(self, msg):
         if self.app._jdaviz_helper._in_batch_load > 0:
             return
@@ -72,7 +84,7 @@ class LinksControl(PluginTemplateMixin):
                 # Eventually we'll probably want to support linking WITH markers,
                 # at which point this if-statement should be removed.
                 return
-        self._update_link()
+        self._link_image_data()
 
     @observe('link_type_selected', 'wcs_use_fallback', 'wcs_use_affine')
     def _update_link(self, msg={}):
@@ -90,18 +102,36 @@ class LinksControl(PluginTemplateMixin):
         if self.linking_in_progress:
             return
 
+        for viewer in self.app._viewer_store.values():
+            if len(viewer._marktags):
+                if self.need_clear_markers:
+                    viewer.remove_markers()
+                else:
+                    # show an overlay requiring the user to either clear markers first or cancel
+                    # if the user clicks to clear, this method will be retriggered and the previous
+                    # if statement will be triggered
+                    self.cancel_revert[msg.get('name')] = msg.get('old')
+                    self.need_clear_markers = True
+                    return
+
+        self.need_clear_markers = False
         self.linking_in_progress = True
 
         if self.link_type.selected == 'Pixels':
             # reset wcs_use_affine to be True
             self.wcs_use_affine = True
 
-        link_image_data(
-            self.app,
-            link_type=self.link_type.selected.lower(),
-            wcs_fallback_scheme='pixels' if self.wcs_use_fallback else None,
-            wcs_use_affine=self.wcs_use_affine,
-            error_on_fail=False,
-            update_plugin=False)
+        self._link_image_data()
 
+        self.linking_in_progress = False
+
+    def vue_clear_markers_and_link(self, *args):
+        self._update_link()
+
+    def vue_cancel_link(self, *args):
+        self.linking_in_progress = True  # just set the traitlet, don't actually link
+        for k, v in self.cancel_revert.items():
+            setattr(self, k, v)
+        self.cancel_revert = {}
+        self.need_clear_markers = False
         self.linking_in_progress = False
