@@ -110,6 +110,8 @@ Mosviz
 
 - Data unassigned a row is hidden under the subdropdown in the data dropdown. [#1798, #1808]
 
+- Allow Mosviz `load_data` method to load only 1d or 2d spectra. [#1833]
+
 Specviz
 ^^^^^^^
 
