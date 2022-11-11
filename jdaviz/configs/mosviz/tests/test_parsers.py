@@ -20,7 +20,7 @@ def test_nirspec_parser(mosviz_helper, tmp_path, instrument_arg):
     with ZipFile(fn, 'r') as sample_data_zip:
         sample_data_zip.extractall(tmp_path)
 
-    level3_path = (pathlib.Path(tmpdir) / 'mosviz_nirspec_data_0.3' / 'level3')
+    level3_path = tmp_path / 'mosviz_nirspec_data_0.3' / 'level3'
 
     data_dir = level3_path
 
