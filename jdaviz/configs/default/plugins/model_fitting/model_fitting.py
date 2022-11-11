@@ -810,33 +810,29 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self.add_results.add_results_from_plugin(spectrum)
         self._set_default_results_label()
 
-    def _apply_subset_masks(self, spectrum, dimensions=['spectral', 'spatial']):
+    def _apply_subset_masks(self, spectrum):
         """
         Iterate over dimensions of a spectral cube ``spectrum``, add a mask attribute
         if none exists. Mask excludes non-selected spectral and/or spatial subsets.
         """
-        for dimension in dimensions:
+        for subset_component in [self.spatial_subset, self.spectral_subset]:
+            if subset_component is None:
+                # spatial_subset only exists for cubeviz
+                continue
+
             # only look for a mask if there is a selected subset:
-            default_subset = getattr(self, dimension + '_subset').default_text
-            selected_subset = getattr(self, dimension + '_subset_selected')
+            if subset_component.selected == subset_component.default_text:
+                continue
 
-            if selected_subset != default_subset:
-                # if the selected subset is not the default, i.e.
-                # "Entire Spectrum" or "Entire Cube", retrieve masks:
-                if dimension == 'spectral':
-                    subset_mask = self.spectral_subset.selected_subset_mask
-                elif self.spatial_subset is not None:
-                    subset_mask = self.spatial_subset.selected_subset_mask
-                else:
-                    continue
+            subset_mask = subset_component.selected_subset_mask
 
-                if subset_mask.shape != spectrum.shape:
-                    # broadcast to the dimensions of the full cube:
-                    subset_mask = np.broadcast_to(
-                        subset_mask[None, None, :], spectrum.shape
-                    )
+            if subset_mask.shape != spectrum.shape:
+                # broadcast to the dimensions of the full cube:
+                subset_mask = np.broadcast_to(
+                    subset_mask[None, None, :], spectrum.shape
+                )
 
-                if spectrum.mask is None:
-                    spectrum.mask = subset_mask
-                else:
-                    spectrum.mask |= subset_mask
+            if spectrum.mask is None:
+                spectrum.mask = subset_mask
+            else:
+                spectrum.mask |= subset_mask
