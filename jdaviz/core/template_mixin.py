@@ -946,9 +946,16 @@ class SubsetSelect(SelectPluginComponent):
 
     @property
     def selected_subset_mask(self):
-        viewer_ref = getattr(self.plugin,
-                             '_default_flux_viewer_reference_name',
-                             self.viewers[0].reference_id)
+        if self._allowed_type == 'spatial':
+            viewer_ref = getattr(self.plugin,
+                                 '_default_flux_viewer_reference_name',
+                                 self.viewers[0].reference_id)
+        elif self._allowed_type == 'spectral':
+            viewer_ref = getattr(self.plugin,
+                                 '_default_spectrum_viewer_reference_name',
+                                 self.viewers[0].reference_id)
+        else:
+            viewer_ref = self.viewers[0].reference_id
 
         subset = self.app.get_data_from_viewer(
             viewer_ref, data_label=self.selected
