@@ -14,7 +14,8 @@ from regions import (CirclePixelRegion, EllipsePixelRegion, RectanglePixelRegion
                      CircleAnnulusPixelRegion, EllipseAnnulusPixelRegion,
                      RectangleAnnulusPixelRegion, PolygonPixelRegion, PixCoord)
 
-from jdaviz.core.region_translators import regions2roi, regions2aperture, aperture2regions
+from jdaviz.core.region_translators import (
+    regions2roi, regions2aperture, aperture2regions, _get_region_from_spatial_subset)
 
 
 # TODO: Use proper method from upstream when that is available.
@@ -332,3 +333,9 @@ def test_translation_polygon():
         regions2aperture(region_shape)
     with pytest.raises(NotImplementedError, match='is not supported'):
         regions2roi(region_shape)
+
+
+def test_get_region_invalid(imviz_helper):
+    plugin_obj = imviz_helper.plugins['Subset Tools']
+    with pytest.raises(ValueError, match='not found'):
+        _get_region_from_spatial_subset(plugin_obj._obj, 'Subset 99')

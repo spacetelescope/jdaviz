@@ -258,7 +258,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             self.hub.broadcast(SnackbarMessage(
                 f"Failed to calculate centroid: {repr(err)}", color='error', sender=self))
         else:
-            self.set_center((x, y), update=False)
+            self.set_center((x, y), update=True)
 
     def get_center(self):
         """Return the center of the Subset.

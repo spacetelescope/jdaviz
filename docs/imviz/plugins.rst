@@ -57,9 +57,7 @@ on the selected Data. The centroid is calculated by
 :attr:`photutils.aperture.ApertureStats.centroid`, which is the
 center-of-mass of the data within the aperture.
 No background subtraction is performed. Click :guilabel:`Recenter`
-to change its parameters to the calculated centroid. However, the subset
-will not be moved to the new center until :guilabel:`Update` is also clicked
-(see below).
+to change its parameters and move it to the calculated centroid.
 
 For a simple subset, you can edit its parameters by changing the values
 in the corresponding editable text fields. Once you have entered the new
