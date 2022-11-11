@@ -541,7 +541,7 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_u
     else:
         for viewer in app._viewer_store.values():
             if len(viewer._marktags):
-                raise ValueError(f"cannot change link-type (from '{app._link_type}' to "
+                raise ValueError(f"cannot change link_type (from '{app._link_type}' to "
                                  f"'{link_type}') when markers are present. "
                                  f" Clear markers with viewer.remove_markers() first")
         data_already_linked = []
