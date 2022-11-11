@@ -722,8 +722,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             return
 
         # Get the primary data component
-        if not self.spatial_subset_selected.startswith("Entire"):
-            # get_subset_object supports masking but get_object does not
+        if self.spatial_subset_selected != self.spatial_subset.default_text:
+            # This condition is met when spatial subsets are selected
+            # (other than "Entire Cube"). `get_subset_object` returns
+            # the subset mask, while `get_object` does not.
             spec = data.get_subset_object(
                 self.spatial_subset_selected, cls=Spectrum1D, statistic=None
             )
@@ -814,11 +816,19 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         if none exists. Mask excludes non-selected spectral and/or spatial subsets.
         """
         for dimension in dimensions:
-            if not getattr(self, dimension + '_subset_selected').startswith("Entire"):
+            # only look for a mask if there is a selected subset:
+            default_subset = getattr(self, dimension + '_subset').default_text
+            selected_subset = getattr(self, dimension + '_subset_selected')
+
+            if selected_subset != default_subset:
+                # if the selected subset is not the default, i.e.
+                # "Entire Spectrum" or "Entire Cube", retrieve masks:
                 if dimension == 'spectral':
                     subset_mask = self.spectral_subset.selected_subset_mask
-                else:
+                elif self.spatial_subset is not None:
                     subset_mask = self.spatial_subset.selected_subset_mask
+                else:
+                    continue
 
                 if subset_mask.shape != spectrum.shape:
                     # broadcast to the dimensions of the full cube:
