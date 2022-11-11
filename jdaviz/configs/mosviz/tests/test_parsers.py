@@ -1,4 +1,3 @@
-import pathlib
 from zipfile import ZipFile
 
 import pytest
@@ -10,7 +9,7 @@ from jdaviz.utils import PRIHDR_KEY, COMMENTCARD_KEY
 @pytest.mark.filterwarnings('ignore')
 @pytest.mark.remote_data
 @pytest.mark.parametrize('instrument_arg', ('nirspec', None))
-def test_nirspec_parser(mosviz_helper, tmpdir, instrument_arg):
+def test_nirspec_parser(mosviz_helper, tmp_path, instrument_arg):
     '''
     Tests loading our default MosvizExample notebook data
     Also tests no instrument keyword fallback, and IntraRow linking
@@ -19,7 +18,7 @@ def test_nirspec_parser(mosviz_helper, tmpdir, instrument_arg):
     test_data = 'https://stsci.box.com/shared/static/ovyxi5eund92yoadvv01mynwt8t5n7jv.zip'
     fn = download_file(test_data, cache=True, timeout=30)
     with ZipFile(fn, 'r') as sample_data_zip:
-        sample_data_zip.extractall(tmpdir)
+        sample_data_zip.extractall(tmp_path)
 
     level3_path = (pathlib.Path(tmpdir) / 'mosviz_nirspec_data_0.3' / 'level3')
 
