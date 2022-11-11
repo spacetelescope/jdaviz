@@ -728,7 +728,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 self.spatial_subset_selected, cls=Spectrum1D, statistic=None
             )
         else:
-            spec = data.get_object(Spectrum1D, statistic=None)
+            spec = data.get_object(cls=Spectrum1D, statistic=None)
 
         snackbar_message = SnackbarMessage(
             "Fitting model to cube...",
