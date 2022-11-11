@@ -944,6 +944,25 @@ class SubsetSelect(SelectPluginComponent):
                         s.label == self.selected][0]
         return subset_group.subset_state
 
+    @property
+    def selected_subset_mask(self):
+        viewer_ref = getattr(self.plugin,
+                             '_default_flux_viewer_reference_name',
+                             self.viewers[0].reference_id)
+
+        subset = self.app.get_data_from_viewer(
+            viewer_ref, data_label=self.selected
+        )
+
+        if hasattr(subset, 'mask'):
+            # the mask attr is available for spectral subsets:
+            subset_mask = subset.mask
+        else:
+            # otherwise, `subset` is a GroupedSubset:
+            subset_mask = subset.to_mask()
+
+        return subset_mask
+
     def selected_min_max(self, spectrum1d):
         if self.selected_obj is None:
             return np.nanmin(spectrum1d.spectral_axis), np.nanmax(spectrum1d.spectral_axis)
@@ -991,45 +1010,6 @@ class SpectralSubsetSelectMixin(VuetifyTemplate, HubListener):
                                             viewers=[spectrum_viewer],
                                             default_text='Entire Spectrum',
                                             allowed_type='spectral')
-
-    def _apply_subset_masks(self, spectrum, dimensions=['spectral', 'spatial']):
-        """
-        Iterate over dimensions of a spectral cube ``spectrum``, add a mask attribute
-        if none exists. Mask excludes non-selected spectral and/or spatial subsets.
-        """
-        for dimension in dimensions:
-            if dimension == 'spectral' and hasattr(self, '_default_spectrum_viewer_reference_name'):
-                viewer_ref = self._default_spectrum_viewer_reference_name
-                data_label = self.spectral_subset_selected
-            elif dimension == 'spatial' and hasattr(self, '_default_flux_viewer_reference_name'):
-                viewer_ref = self._default_flux_viewer_reference_name
-                data_label = self.spatial_subset_selected
-            else:
-                # If this viewer isn't available, don't try to apply the subset mask
-                continue
-
-            if (not getattr(self, dimension + '_subset_selected').startswith("Entire") and
-                    viewer_ref in self.app.get_viewer_reference_names()):
-                subset = self.app.get_data_from_viewer(
-                    viewer_ref, data_label=data_label
-                )
-                if hasattr(subset, 'mask'):
-                    # the mask attr is available for spectral subsets:
-                    subset_mask = subset.mask
-                else:
-                    # otherwise, `subset` is a GroupedSubset:
-                    subset_mask = subset.to_mask()
-
-                if subset_mask.shape != spectrum.shape:
-                    # broadcast to the dimensions of the full cube:
-                    subset_mask = np.broadcast_to(
-                        subset_mask[None, None, :], spectrum.shape
-                    )
-
-                if spectrum.mask is None:
-                    spectrum.mask = subset_mask
-                else:
-                    spectrum.mask |= subset_mask
 
 
 class SpatialSubsetSelectMixin(VuetifyTemplate, HubListener):

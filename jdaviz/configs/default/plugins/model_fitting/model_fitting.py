@@ -807,3 +807,26 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         self.add_results.add_results_from_plugin(spectrum)
         self._set_default_results_label()
+
+    def _apply_subset_masks(self, spectrum, dimensions=['spectral', 'spatial']):
+        """
+        Iterate over dimensions of a spectral cube ``spectrum``, add a mask attribute
+        if none exists. Mask excludes non-selected spectral and/or spatial subsets.
+        """
+        for dimension in dimensions:
+            if not getattr(self, dimension + '_subset_selected').startswith("Entire"):
+                if dimension == 'spectral':
+                    subset_mask = self.spectral_subset.selected_subset_mask
+                else:
+                    subset_mask = self.spatial_subset.selected_subset_mask
+
+                if subset_mask.shape != spectrum.shape:
+                    # broadcast to the dimensions of the full cube:
+                    subset_mask = np.broadcast_to(
+                        subset_mask[None, None, :], spectrum.shape
+                    )
+
+                if spectrum.mask is None:
+                    spectrum.mask = subset_mask
+                else:
+                    spectrum.mask |= subset_mask
