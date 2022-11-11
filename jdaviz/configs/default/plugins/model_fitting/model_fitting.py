@@ -722,15 +722,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             return
 
         # Get the primary data component
-        if self.spatial_subset_selected != self.spatial_subset.default_text:
-            # This condition is met when spatial subsets are selected
-            # (other than "Entire Cube"). `get_subset_object` returns
-            # the subset mask, while `get_object` does not.
-            spec = data.get_subset_object(
-                self.spatial_subset_selected, cls=Spectrum1D, statistic=None
-            )
-        else:
-            spec = data.get_object(cls=Spectrum1D, statistic=None)
+        spec = data.get_object(cls=Spectrum1D, statistic=None)
 
         snackbar_message = SnackbarMessage(
             "Fitting model to cube...",
