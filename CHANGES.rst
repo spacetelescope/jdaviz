@@ -20,6 +20,9 @@ Imviz
 
 - Subset Tools plugin now allows recentering of editable spatial subset. [#1823]
 
+- Links control plugin shows a confirmation overlay to clear markers when changing linking type. 
+  [#1838]
+
 Mosviz
 ^^^^^^
 
@@ -75,6 +78,8 @@ Imviz
 
 - Clearing markers in Catalog Search will only hide them, which improves
   "Clear" performance. [#1774]
+
+- Adding data will not result in clearing existing markers. [#1848]
 
 Mosviz
 ^^^^^^
