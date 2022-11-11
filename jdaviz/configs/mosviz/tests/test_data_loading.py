@@ -128,6 +128,26 @@ def test_load_multi_image_spec(mosviz_helper, mos_image, spectrum1d, mos_spectru
         assert qtable["Images"][0] == "Test Label 0"
 
 
+def test_load_multi_image_and_spec1d_only(mosviz_helper, mos_image, spectrum1d):
+    spectra1d = [spectrum1d] * 3
+    images = [mos_image] * 3
+
+    mosviz_helper.load_data(spectra_1d=spectra1d, images=images)
+
+    assert mosviz_helper.app.get_viewer("table-viewer").figure_widget.highlighted == 0
+    assert len(mosviz_helper.app.data_collection) == 7
+
+
+def test_load_multi_image_and_spec2d_only(mosviz_helper, mos_image, mos_spectrum2d):
+    spectra2d = [mos_spectrum2d] * 3
+    images = [mos_image] * 3
+
+    mosviz_helper.load_data(spectra_2d=spectra2d, images=images)
+
+    assert mosviz_helper.app.get_viewer("table-viewer").figure_widget.highlighted == 0
+    assert len(mosviz_helper.app.data_collection) == 7
+
+
 @pytest.mark.parametrize('label', [None, "Test Label"])
 def test_load_single_image_multi_spec(mosviz_helper, mos_image, spectrum1d, mos_spectrum2d, label):
     spectra1d = [spectrum1d] * 3
