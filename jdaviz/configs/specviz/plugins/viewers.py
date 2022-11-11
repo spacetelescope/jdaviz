@@ -510,7 +510,7 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
 
     def set_plot_axes(self):
         # Get data to be used for axes labels
-        data = self.data()[0]
+        data = self.data()[-1]
 
         # Set axes labels for the spectrum viewer
         spectral_axis_unit_type = str(data.spectral_axis.unit.physical_type).title()
@@ -531,3 +531,11 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
 
         # Set Y-axis to scientific notation
         self.figure.axes[1].tick_format = '0.1e'
+
+        # Make sure X-axis pans to data.
+        if self.jdaviz_app.config == 'specviz':
+            self.jdaviz_helper.x_limits(x_min=data.spectral_axis.min().value,
+                                        x_max=data.spectral_axis.max().value)
+        else:
+            self.jdaviz_helper.specviz.x_limits(x_min=data.spectral_axis.min().value,
+                                                x_max=data.spectral_axis.max().value)
