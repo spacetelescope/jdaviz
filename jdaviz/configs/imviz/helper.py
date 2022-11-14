@@ -21,6 +21,11 @@ class Imviz(ImageConfigHelper):
     _default_configuration = 'imviz'
     _default_viewer_reference_name = "image-viewer"
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.app._link_type = None
+        self.app._wcs_use_affine = None
+
     def create_image_viewer(self, viewer_name=None):
         """Create a new image viewer.
 
@@ -471,12 +476,12 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_u
     """(Re)link loaded data in Imviz with the desired link type.
     All existing links will be replaced.
 
-    .. warning::
+    .. note::
 
-        Any markers added in Imviz would be removed automatically.
+        Any markers added in Imviz will need to be removed manually before changing linking type.
         You can add back the markers using
         :meth:`~jdaviz.core.astrowidgets_api.AstrowidgetsImageViewerMixin.add_markers`
-        for the relevant viewer(s). During the markers removal, pan/zoom will also reset.
+        for the relevant viewer(s).
 
     Parameters
     ----------
@@ -524,20 +529,22 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_u
 
     # if the plugin exists, send a message so that the plugin's state is updated and spinner
     # is shown (the plugin will make a call back here)
-    if update_plugin and 'imviz-links-control' in [item['name'] for item in app.state.tray_items]:
+    if 'imviz-links-control' in [item['name'] for item in app.state.tray_items]:
         link_plugin = app.get_tray_item_from_name('imviz-links-control')
-        link_plugin.linking_in_progress = True
+        if update_plugin:
+            link_plugin.linking_in_progress = True
     else:
         link_plugin = None
 
-    # TODO: If different viewers have the same _marktags key, the key actually
-    #       points to the same Data table. Subsequent attempt to remove the
-    #       same key in this loop will emit warning.
-    # Clear any existing markers. Otherwise, re-linking will crash.
-    # Imviz can have multiple viewers open at the same time and each
-    # tracks their own markers.
-    for viewer in app._viewer_store.values():
-        viewer.reset_markers()
+    if link_type == app._link_type and wcs_use_affine == app._wcs_use_affine:
+        data_already_linked = [link.data2 for link in app.data_collection.external_links]
+    else:
+        for viewer in app._viewer_store.values():
+            if len(viewer._marktags):
+                raise ValueError(f"cannot change link_type (from '{app._link_type}' to "
+                                 f"'{link_type}') when markers are present. "
+                                 f" Clear markers with viewer.reset_markers() first")
+        data_already_linked = []
 
     refdata, iref = get_reference_image_data(app)
     links_list = []
@@ -551,6 +558,10 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_u
 
         # We are not touching any existing Subsets. They keep their own links.
         if not layer_is_image_data(data):
+            continue
+
+        if data in data_already_linked:
+            # links already exist for this entry and we're not changing the type
             continue
 
         ids1 = data.pixel_component_ids
@@ -590,10 +601,16 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_u
 
     if len(links_list) > 0:
         with app.data_collection.delay_link_manager_update():
-            app.data_collection.set_links(links_list)
+            if len(data_already_linked):
+                app.data_collection.add_link(links_list)
+            else:
+                app.data_collection.set_links(links_list)
 
         app.hub.broadcast(SnackbarMessage(
             'Images successfully relinked', color='success', timeout=8000, sender=app))
+
+    app._link_type = link_type
+    app._wcs_use_affine = wcs_use_affine
 
     if link_plugin is not None:
         # Only broadcast after success.

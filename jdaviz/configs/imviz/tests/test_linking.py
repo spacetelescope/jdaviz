@@ -111,7 +111,8 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
         self.viewer.add_markers(tbl, marker_name='xy_markers')
         assert 'xy_markers' in self.imviz.app.data_collection.labels
 
-        # Run linking again, does not matter what kind.
+        # Run linking again with the same options as before (otherwise would fail with an error
+        # since markers now exist)
         self.imviz.link_data(link_type='wcs', wcs_fallback_scheme=None, error_on_fail=True)
 
         # Ensure display is still customized.
@@ -126,10 +127,10 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
         assert 'MaskedSubset 1' in all_labels
         assert 'MaskedSubset 2' in all_labels
 
-        # Ensure markers are deleted.
+        # Markers should still exist since the type has not changed
         # Zoom and pan will reset in this case, so we do not check those.
-        assert 'xy_markers' not in self.imviz.app.data_collection.labels
-        assert len(self.viewer._marktags) == 0
+        assert 'xy_markers' in self.imviz.app.data_collection.labels
+        assert len(self.viewer._marktags) == 1
 
         # Pan/zoom.
         self.viewer.center_on((5, 5))
@@ -160,6 +161,15 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
         assert self.viewer.label_mouseover.value == '+1.00000e+00 '
         assert self.viewer.label_mouseover.world_ra_deg == '337.5202808000'
         assert self.viewer.label_mouseover.world_dec_deg == '-20.8333330600'
+
+        # Changing link type will raise an error
+        with pytest.raises(ValueError, match="cannot change link_type"):
+            self.imviz.link_data(link_type='pixels', wcs_fallback_scheme=None, error_on_fail=True)
+
+        self.viewer.reset_markers()
+        self.imviz.link_data(link_type='pixels', wcs_fallback_scheme=None, error_on_fail=True)
+        assert 'xy_markers' not in self.imviz.app.data_collection.labels
+        assert len(self.viewer._marktags) == 0
 
     def test_wcslink_fullblown(self):
         self.imviz.link_data(link_type='wcs', wcs_fallback_scheme=None, wcs_use_affine=False,

@@ -10,7 +10,7 @@ from glue.config import colormaps
 from glue.core import Data
 
 from jdaviz.configs.imviz.helper import data_has_valid_wcs, get_top_layer_index
-from jdaviz.core.events import SnackbarMessage
+from jdaviz.core.events import SnackbarMessage, MarkersChangedMessage
 
 __all__ = ['AstrowidgetsImageViewerMixin']
 
@@ -396,6 +396,10 @@ class AstrowidgetsImageViewerMixin:
 
         .. note:: Use `marker` to change marker appearance.
 
+        .. note::
+           Once markers are added, linking cannot be changed.  To change linking options,
+           remove and re-add the markers manually.
+
         Parameters
         ----------
         table : `~astropy.table.Table`
@@ -475,8 +479,14 @@ class AstrowidgetsImageViewerMixin:
                 if isinstance(lyr, BqplotScatterLayerState) and lyr.layer.label == marker_name:
                     for key, val in self.marker.items():
                         setattr(lyr, {'markersize': 'size'}.get(key, key), val)
+                    break
+
+            self.jdaviz_app.set_data_visibility(self.reference_id, marker_name,
+                                                visible=True, replace=False)
 
             self._marktags.add(marker_name)
+
+            self.session.hub.broadcast(MarkersChangedMessage(True, sender=self))
 
     def remove_markers(self, marker_name=None):
         """Remove some but not all of the markers by name used when
@@ -510,6 +520,8 @@ class AstrowidgetsImageViewerMixin:
         data = self.session.application.data_collection[i]
         self.session.application.data_collection.remove(data)
         self._marktags.remove(marker_name)
+
+        self.session.hub.broadcast(MarkersChangedMessage(len(self._marktags) > 0, sender=self))
 
     def reset_markers(self):
         """Delete all markers."""
