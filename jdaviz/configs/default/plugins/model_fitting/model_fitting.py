@@ -818,7 +818,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
             subset_mask = subset_component.selected_subset_mask
 
-            if subset_mask.ndim == 1:
+            if subset_mask.ndim == 1 and spectrum.flux.ndim == 3:
                 # broadcast to the dimensions of the full cube:
                 subset_mask = np.broadcast_to(
                     subset_mask[None, None, :], spectrum.shape
