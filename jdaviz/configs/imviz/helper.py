@@ -543,7 +543,7 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_u
             if len(viewer._marktags):
                 raise ValueError(f"cannot change link_type (from '{app._link_type}' to "
                                  f"'{link_type}') when markers are present. "
-                                 f" Clear markers with viewer.remove_markers() first")
+                                 f" Clear markers with viewer.reset_markers() first")
         data_already_linked = []
 
     refdata, iref = get_reference_image_data(app)

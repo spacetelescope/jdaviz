@@ -3,7 +3,7 @@ from traitlets import List, Unicode, Bool, observe
 from glue.core.message import DataCollectionAddMessage
 
 from jdaviz.configs.imviz.helper import link_image_data
-from jdaviz.core.events import LinkUpdatedMessage, ExitBatchLoadMessage
+from jdaviz.core.events import LinkUpdatedMessage, ExitBatchLoadMessage, MarkersChangedMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, SelectPluginComponent
 from jdaviz.core.user_api import PluginUserApi
@@ -37,8 +37,6 @@ class LinksControl(PluginTemplateMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.cancel_revert = {}
-
         self.link_type = SelectPluginComponent(self,
                                                items='link_type_items',
                                                selected='link_type_selected',
@@ -52,6 +50,9 @@ class LinksControl(PluginTemplateMixin):
 
         self.hub.subscribe(self, ExitBatchLoadMessage,
                            handler=self._on_new_app_data)
+
+        self.hub.subscribe(self, MarkersChangedMessage,
+                           handler=self._on_markers_changed)
 
     @property
     def user_api(self):
@@ -86,6 +87,9 @@ class LinksControl(PluginTemplateMixin):
                 return
         self._link_image_data()
 
+    def _on_markers_changed(self, msg):
+        self.need_clear_markers = msg.has_markers
+
     @observe('link_type_selected', 'wcs_use_fallback', 'wcs_use_affine')
     def _update_link(self, msg={}):
         """Run :func:`jdaviz.configs.imviz.helper.link_image_data`
@@ -102,20 +106,13 @@ class LinksControl(PluginTemplateMixin):
         if self.linking_in_progress:
             return
 
-        for viewer in self.app._viewer_store.values():
-            if len(viewer._marktags):
-                if self.need_clear_markers:
-                    viewer.remove_markers()
-                else:
-                    # show an overlay requiring the user to either clear markers first or cancel
-                    # if the user clicks to clear, this method will be retriggered and the previous
-                    # if statement will be triggered
-                    self.cancel_revert[msg.get('name')] = msg.get('old')
-                    self.need_clear_markers = True
-                    return
-
-        self.need_clear_markers = False
         self.linking_in_progress = True
+
+        if self.need_clear_markers:
+            setattr(self, msg.get('name'), msg.get('old'))
+            self.linking_in_progress = False
+            raise ValueError(f"cannot change linking with markers present (value reverted to "
+                             f"'{msg.get('old')}'), call viewer.reset_markers()")
 
         if self.link_type.selected == 'Pixels':
             # reset wcs_use_affine to be True
@@ -125,13 +122,6 @@ class LinksControl(PluginTemplateMixin):
 
         self.linking_in_progress = False
 
-    def vue_clear_markers_and_link(self, *args):
-        self._update_link()
-
-    def vue_cancel_link(self, *args):
-        self.linking_in_progress = True  # just set the traitlet, don't actually link
-        for k, v in self.cancel_revert.items():
-            setattr(self, k, v)
-        self.cancel_revert = {}
-        self.need_clear_markers = False
-        self.linking_in_progress = False
+    def vue_reset_markers(self, *args):
+        for viewer in self.app._viewer_store.values():
+            viewer.reset_markers()

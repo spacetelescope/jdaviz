@@ -165,7 +165,7 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
         with pytest.raises(ValueError, match="cannot change link_type"):
             self.imviz.link_data(link_type='pixels', wcs_fallback_scheme=None, error_on_fail=True)
 
-        self.viewer.remove_markers()
+        self.viewer.reset_markers()
         self.imviz.link_data(link_type='pixels', wcs_fallback_scheme=None, error_on_fail=True)
         assert 'xy_markers' not in self.imviz.app.data_collection.labels
         assert len(self.viewer._marktags) == 0

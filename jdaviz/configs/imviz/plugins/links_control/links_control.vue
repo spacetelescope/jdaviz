@@ -57,8 +57,7 @@
 
            <v-card-actions>
              <v-row justify="end">
-               <v-btn tile small color="primary" class="mr-2" @click="cancel_link">Cancel</v-btn>
-               <v-btn tile small color="accent" class="mr-4" @click="clear_markers_and_link" >Clear Markers</v-btn>
+               <v-btn tile small color="accent" class="mr-4" @click="reset_markers" >Clear Markers</v-btn>
              </v-row>
            </v-card-actions>
          </v-card>
