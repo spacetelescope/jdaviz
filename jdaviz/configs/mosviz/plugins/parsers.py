@@ -180,7 +180,6 @@ def mos_nirspec_directory_parser(app, data_obj, data_labels=None):
     n_1d_loaded = mos_spec1d_parser(app, spectra_1d)
     n_2d_loaded = mos_spec2d_parser(app, spectra_2d)
     # Handle applying metadata to multiple rows, for multi-object files
-    print(n_1d_loaded, n_2d_loaded)
     repeat_1d = 1
     repeat_2d = 1
     if len(spectra_1d) == 1 and n_1d_loaded > 1:
@@ -302,7 +301,6 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
         return Spectrum1D(flux=data * data_unit, meta=metadata, **kw)
 
     # See if this is a multi s2d file
-    print(data_obj)
     if len(data_obj) == 1 and _check_is_file(data_obj[0]):
         if identify_jwst_s2d_multi_fits("test", data_obj[0]):
             data_obj = SpectrumList.read(data_obj[0])
