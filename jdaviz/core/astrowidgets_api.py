@@ -396,6 +396,10 @@ class AstrowidgetsImageViewerMixin:
 
         .. note:: Use `marker` to change marker appearance.
 
+        .. note::
+           Once markers are added, linking cannot be changed.  To change linking options,
+           remove and re-add the markers manually.
+
         Parameters
         ----------
         table : `~astropy.table.Table`

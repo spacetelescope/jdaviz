@@ -16,6 +16,13 @@ class LinksControl(PluginTemplateMixin):
     """
     See the :ref:`Links Control Plugin Documentation <imviz-link-control>` for more details.
 
+    .. note::
+       Changing linking after adding markers via
+       `~jdaviz.core.astrowidgets_api.AstrowidgetsImageViewerMixin.add_markers` is unsupported and
+       will raise an error requiring resetting the markers manually via
+       `~jdaviz.core.astrowidgets_api.AstrowidgetsImageViewerMixin.add_markers`
+       or clicking a button in the plugin first.
+
     Only the following attributes and methods are available through the
     :ref:`public plugin API <plugin-apis>`:
 

@@ -476,12 +476,12 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_u
     """(Re)link loaded data in Imviz with the desired link type.
     All existing links will be replaced.
 
-    .. warning::
+    .. note::
 
-        Any markers added in Imviz would be removed automatically.
+        Any markers added in Imviz will need to be removed manually before changing linking type.
         You can add back the markers using
         :meth:`~jdaviz.core.astrowidgets_api.AstrowidgetsImageViewerMixin.add_markers`
-        for the relevant viewer(s). During the markers removal, pan/zoom will also reset.
+        for the relevant viewer(s).
 
     Parameters
     ----------
