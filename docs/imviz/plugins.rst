@@ -44,13 +44,20 @@ This plugin allows you to select an existing subset to modify, or to select
 :guilabel:`Create new` to create a new subset by selecting and using the region selector
 in the spectrum viewer toolbar. You can also choose the operation that will be
 applied by the selector tool. Note that these are synched with the subset tools
-in the app-level toolbar. It does not show static regions loaded
+in the app-level toolbar. It might not show some static regions loaded
 via the API unless an interactive region is drawn after.
 
 If an existing subset is selected, the parameters of the subset will also be
 shown. Note that while parameters for compound regions (e.g., a subset with
 multiple disjoint regions) are displayed, the logical operations joining them
 (``OR``, ``AND``, etc.) are not shown.
+
+For a simple subset in Imviz only, you can choose to recenter it based
+on the selected Data. The centroid is calculated by
+:attr:`photutils.aperture.ApertureStats.centroid`, which is the
+center-of-mass of the data within the aperture.
+No background subtraction is performed. Click :guilabel:`Recenter`
+to change its parameters and move it to the calculated centroid.
 
 For a simple subset, you can edit its parameters by changing the values
 in the corresponding editable text fields. Once you have entered the new

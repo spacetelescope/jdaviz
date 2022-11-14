@@ -22,6 +22,29 @@
       </v-col>
     </v-row>
 
+    <!-- Sub-plugin for recentering of spatial subset (Imviz only) -->
+    <v-row v-if="config=='imviz' && is_editable">
+      <v-expansion-panels accordion v-model="subplugins_opened">
+        <v-expansion-panel>
+          <v-expansion-panel-header >
+            <span style="padding: 6px">Recenter</span>
+          </v-expansion-panel-header>
+          <v-expansion-panel-content>
+            <plugin-dataset-select
+             :items="dataset_items"
+             :selected.sync="dataset_selected"
+             :show_if_single_entry="true"
+             label="Data"
+             hint="Select the data for centroiding."
+            />
+            <v-row justify="end" no-gutters>
+              <v-btn color="primary" text @click="recenter_subset">Recenter</v-btn>
+            </v-row>
+          </v-expansion-panel-content>
+        </v-expansion-panel>
+      </v-expansion-panels>
+    </v-row>
+
     <!-- Composite region cannot be edited, so just grab first element. -->
     <div v-if="is_editable">
       <v-row v-for="(item, index2) in subset_definitions[0]"
