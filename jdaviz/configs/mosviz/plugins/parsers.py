@@ -803,6 +803,7 @@ def mos_niriss_parser(app, data_dir, table_viewer_reference_name='table-viewer')
                         and sp.meta['header']['EXTNAME'] == 'EXTRACT1D'
                     ):
                         sp.meta = standardize_metadata(sp.meta)
+                        sp.meta['mosviz_row'] = len(spec_labels_1d)
                         label = (f"{filter_name} Source "
                                  f"{sp.meta['SOURCEID']} spec1d "
                                  f"{orientation}")
