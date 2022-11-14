@@ -562,7 +562,6 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_u
 
         if data in data_already_linked:
             # links already exist for this entry and we're not changing the type
-            # TODO: account for toggling wcs_use_affine
             continue
 
         ids1 = data.pixel_component_ids

@@ -111,7 +111,8 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
         self.viewer.add_markers(tbl, marker_name='xy_markers')
         assert 'xy_markers' in self.imviz.app.data_collection.labels
 
-        # Run linking again, does not matter what kind.
+        # Run linking again with the same options as before (otherwise would fail with an error
+        # since markers now exist)
         self.imviz.link_data(link_type='wcs', wcs_fallback_scheme=None, error_on_fail=True)
 
         # Ensure display is still customized.
