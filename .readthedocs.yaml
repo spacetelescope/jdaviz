@@ -10,7 +10,7 @@ build:
     post_checkout:
       # Use `git log` to check if the latest commit contains "skip rtd" or "rtd skip",
       # in that case exit the command with 183 to skip the build
-      - (git --no-pager log --pretty="tformat:%s -- %b" -1 | grep -vqE "skip rtd|rtd skip") || exit 183
+      - MSG=`git --no-pager log --pretty="tformat:%s -- %b" -1`; case $MSG in *"skip rtd"*|*"rtd skip"*) exit 183;; *);; esac
 
 sphinx:
   builder: html
