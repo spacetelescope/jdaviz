@@ -587,7 +587,12 @@ def _id_files_by_datamodl(label_dict, filepaths, catalog_key=None):
 
     for fp in filepaths:
         if fp.is_dir():
-            continue
+            # Potential names of subdirectories where images are stored
+            if fp.name in ["cutouts", "mosviz_cutouts", "images"]:
+                images = sorted([file_path for file_path in glob.iglob(str(fp / '*'))])
+                label_dict['Direct Image'] = images
+            else:
+                continue
 
         if fp.suffix in ('.fits', '.fits.gz', '.fit', '.fit.gz'):
             # eligible files will have a DATAMODL value in their primary headers
@@ -621,6 +626,10 @@ def _id_files_by_datamodl(label_dict, filepaths, catalog_key=None):
                 label_dict['2D Spectra R'].append(fp)
             elif datamodl == 'ImageModel' and s_wcs is not None:
                 label_dict['Direct Image'].append(fp)
+            elif datamodl == 'MultiSpecModel' and dispersion is None:
+                label_dict['1D Spectra'].append(fp)
+            elif datamodl == 'SlitModel' and dispersion is None:
+                label_dict['2D Spectra'].append(fp)
             else:
                 continue
 
@@ -665,13 +674,13 @@ def mos_niriss_parser(app, data_dir, table_viewer_reference_name='table-viewer')
         raise ValueError(f"{data_dir} is not a valid directory path")
 
     # create dict for mapping expected file types to their DATAMODL identifiers
-    expected_labels = ['1D Spectra C', '1D Spectra R',
-                       '2D Spectra C', '2D Spectra R', 'Direct Image']
-    files_by_labels = {k: [] for k in expected_labels}
+    possible_labels = ['1D Spectra C', '1D Spectra R',
+                       '2D Spectra C', '2D Spectra R',
+                       '1D Spectra', '2D Spectra', 'Direct Image']
+    files_by_labels = {k: [] for k in possible_labels}
 
     # there should only be one source catalog, so that key gets a string
     cat_key = 'Source Catalog'
-    expected_labels += [cat_key]
     files_by_labels[cat_key] = ''
 
     # use FITS header keywords to sort the directory's files
@@ -681,20 +690,23 @@ def mos_niriss_parser(app, data_dir, table_viewer_reference_name='table-viewer')
     # validate that all expected files are present in proper amounts
     _warn_if_not_found(app, files_by_labels)
 
-    # parse relevant information from source catalog
-    cat_id_dict = {}
-    cat_file = files_by_labels[cat_key]
-    try:
-        cat_fields = ['label', 'sky_centroid.ra', 'sky_centroid.dec']
-        parsed_cat_fields = _fields_from_ecsv(cat_file, cat_fields,
-                                              delimiter=" ")
-    except KeyError:
-        # Older pipeline builds use different colname to distinguish sources
-        cat_fields[0] = 'id'
-        parsed_cat_fields = _fields_from_ecsv(cat_file, cat_fields,
-                                              delimiter=" ")
-    for row in parsed_cat_fields:
-        cat_id_dict[int(row[0])] = (row[1], row[2])
+    # parse relevant information from source catalog if it exists
+    cat_id_dict = None
+    if files_by_labels[cat_key] != '':
+        cat_id_dict = {}
+        cat_file = files_by_labels[cat_key]
+        try:
+            cat_fields = ['label', 'sky_centroid.ra', 'sky_centroid.dec']
+            parsed_cat_fields = _fields_from_ecsv(cat_file, cat_fields,
+                                                  delimiter=" ")
+        except KeyError:
+            # Older pipeline builds use different colname to distinguish sources
+            cat_fields[0] = 'id'
+            parsed_cat_fields = _fields_from_ecsv(cat_file, cat_fields,
+                                                  delimiter=" ")
+        for row in parsed_cat_fields:
+            cat_id_dict[int(row[0])] = (row[1], row[2])
+
 
     # set up a dictionary of datasets to add to glue
     add_to_glue = {}
@@ -736,10 +748,11 @@ def mos_niriss_parser(app, data_dir, table_viewer_reference_name='table-viewer')
     for flabel in file_labels_2d:
         for fname in files_by_labels[flabel]:
             print(f"Loading: {flabel} sources")
-            filter_name = fits.getheader(fname, ext=0).get('PUPIL')
+            if flabel in ('2D Spectra R', '2D Spectra C'):
+                filter_name = fits.getheader(fname, ext=0).get('PUPIL')
 
-            # Orientation denoted by "C", "R", or "C+R" for combined spectra
-            orientation = flabel.split()[-1]
+                # Orientation denoted by "C", "R", or "C+R" for combined spectra
+                orientation = flabel.split()[-1]
 
             # save HDUs in file that correspond with sources in catalog
             with fits.open(fname, memmap=False) as temp:
