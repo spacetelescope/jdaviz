@@ -600,6 +600,10 @@ def _id_files_by_datamodl(label_dict, filepaths, catalog_key=None):
             # letter of their filter values (e.g., "C" from "GR150C")
             try:
                 dispersion = header.get('FILTER')[-1]
+                if dispersion not in ('R', 'C'):
+                    dispersion = header.get('PUPIL')[-1]
+                    if dispersion not in ('R', 'C'):
+                        dispersion = None
             except TypeError:
                 dispersion = None
 
