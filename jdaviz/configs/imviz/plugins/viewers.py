@@ -220,11 +220,14 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
             return
         self.set_compass(self.state.layers[i].layer)
 
-    def _get_real_xy(self, image, x, y):
+    def _get_real_xy(self, image, x, y, reverse=False):
         """Return real (X, Y) position and status in case of dithering.
 
         ``coords_status`` is for ``self.label_mouseover`` coords handling only.
         When `True`, it sets the coords, otherwise it resets.
+
+        ``reverse=True`` is only for internal roundtripping (e.g., centroiding
+        in Subset Tools plugin). Never use this for coordinates display panel.
 
         """
         if data_has_valid_wcs(image):
@@ -235,8 +238,12 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
                 # Convert X,Y from reference data to the one we are actually seeing.
                 # world_to_pixel return scalar ndarray that we need to convert to float.
                 if self.get_link_type(image.label) == 'wcs':
-                    x, y = list(map(float, image.coords.world_to_pixel(
-                        self.state.reference_data.coords.pixel_to_world(x, y))))
+                    if not reverse:
+                        x, y = list(map(float, image.coords.world_to_pixel(
+                            self.state.reference_data.coords.pixel_to_world(x, y))))
+                    else:
+                        x, y = list(map(float, self.state.reference_data.coords.world_to_pixel(
+                            image.coords.pixel_to_world(x, y))))
                 coords_status = True
             except Exception:
                 coords_status = False

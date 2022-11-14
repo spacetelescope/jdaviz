@@ -18,6 +18,8 @@ Imviz
 
 - Warnings in aperture photometry plugin when using raw profile with large subsets. [#1801]
 
+- Subset Tools plugin now allows recentering of editable spatial subset. [#1823]
+
 Mosviz
 ^^^^^^
 

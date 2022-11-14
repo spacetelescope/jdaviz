@@ -5,11 +5,11 @@ from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
 from glue.core.roi import CircularROI, EllipticalROI, RectangularROI
 from glue.core.subset import RoiSubsetState, RangeSubsetState, CompositeSubsetState
 from glue_jupyter.widgets.subset_mode_vuetify import SelectionModeMenu
-from traitlets import List, Unicode, Bool, observe
+from traitlets import Any, List, Unicode, Bool, observe
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin, SubsetSelect
+from jdaviz.core.template_mixin import PluginTemplateMixin, DatasetSelectMixin, SubsetSelect
 
 __all__ = ['SubsetPlugin']
 
@@ -23,7 +23,7 @@ SUBSET_MODES = {
 
 
 @tray_registry('g-subset-plugin', label="Subset Tools")
-class SubsetPlugin(PluginTemplateMixin):
+class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
     template_file = __file__, "subset_plugin.vue"
     select = List([]).tag(sync=True)
     subset_items = List([]).tag(sync=True)
@@ -33,6 +33,8 @@ class SubsetPlugin(PluginTemplateMixin):
     subset_types = List([]).tag(sync=True)
     subset_definitions = List([]).tag(sync=True)
     has_subset_details = Bool(False).tag(sync=True)
+
+    subplugins_opened = Any().tag(sync=True)
 
     is_editable = Bool(False).tag(sync=True)
 
@@ -225,6 +227,141 @@ class SubsetPlugin(PluginTemplateMixin):
         except Exception as err:  # pragma: no cover
             self.hub.broadcast(SnackbarMessage(
                 f"Failed to update Subset: {repr(err)}", color='error', sender=self))
+
+    def vue_recenter_subset(self, *args):
+        # Composite region cannot be edited. This only works for Imviz.
+        if not self.is_editable or self.config != 'imviz':  # no-op
+            raise NotImplementedError(
+                f'Cannot recenter: is_editable={self.is_editable}, config={self.config}')
+
+        from photutils.aperture import ApertureStats
+        from jdaviz.core.region_translators import regions2aperture, _get_region_from_spatial_subset
+
+        try:
+            reg = _get_region_from_spatial_subset(self, self.subset_selected)
+            aperture = regions2aperture(reg)
+            data = self.dataset.selected_dc_item
+            comp = data.get_component(data.main_components[0])
+            comp_data = comp.data
+            phot_aperstats = ApertureStats(comp_data, aperture)
+
+            # Centroid was calculated in selected data, which might or might not be
+            # the reference data. However, Subset is always defined w.r.t.
+            # the reference data, so we need to convert back.
+            viewer = self.app._jdaviz_helper.default_viewer
+            x, y, _ = viewer._get_real_xy(
+                data, phot_aperstats.xcentroid, phot_aperstats.ycentroid, reverse=True)
+            if not np.all(np.isfinite((x, y))):
+                raise ValueError(f'Invalid centroid ({x}, {y})')
+        except Exception as err:
+            self.set_center(self.get_center(), update=False)
+            self.hub.broadcast(SnackbarMessage(
+                f"Failed to calculate centroid: {repr(err)}", color='error', sender=self))
+        else:
+            self.set_center((x, y), update=True)
+
+    def get_center(self):
+        """Return the center of the Subset.
+        This may or may not be the centroid obtain from data.
+
+        Returns
+        -------
+        cen : number, tuple of numbers, or `None`
+            The center of the Subset in ``x`` or ``(x, y)``,
+            depending on the Subset type, if applicable.
+            If Subset is not editable, this returns `None`.
+
+        Raises
+        ------
+        NotImplementedError
+            Subset type is not supported.
+
+        """
+        # Composite region cannot be edited.
+        if not self.is_editable:  # no-op
+            return
+
+        subset_state = self.subset_select.selected_subset_state
+
+        if isinstance(subset_state, RoiSubsetState):
+            sbst_obj = subset_state.roi
+            if isinstance(sbst_obj, (CircularROI, EllipticalROI)):
+                cen = sbst_obj.get_center()
+            elif isinstance(sbst_obj, RectangularROI):
+                cen = sbst_obj.center()
+            else:  # pragma: no cover
+                raise NotImplementedError(
+                    f'Getting center of {sbst_obj.__class__} is not supported')
+
+        elif isinstance(subset_state, RangeSubsetState):
+            cen = (subset_state.hi - subset_state.lo) * 0.5 + subset_state.lo
+
+        else:  # pragma: no cover
+            raise NotImplementedError(
+                f'Getting center of {subset_state.__class__} is not supported')
+
+        return cen
+
+    def set_center(self, new_cen, update=False):
+        """Set the desired center for the selected Subset, if applicable.
+        If Subset is not editable, nothing is done.
+
+        Parameters
+        ----------
+        new_cen : number or tuple of numbers
+            The new center defined either as ``x`` or ``(x, y)``,
+            depending on the Subset type.
+
+        update : bool
+            If `True`, the Subset is also moved to the new center.
+            Otherwise, only the relevant editable fields are updated but the
+            Subset is not moved.
+
+        Raises
+        ------
+        NotImplementedError
+            Subset type is not supported.
+
+        """
+        # Composite region cannot be edited, so just grab first element.
+        if not self.is_editable:  # no-op
+            return
+
+        subset_state = self.subset_select.selected_subset_state
+
+        if isinstance(subset_state, RoiSubsetState):
+            x, y = new_cen
+            sbst_obj = subset_state.roi
+            if isinstance(sbst_obj, (CircularROI, EllipticalROI)):
+                self._set_value_in_subset_definition(0, "X Center", "value", x)
+                self._set_value_in_subset_definition(0, "Y Center", "value", y)
+            elif isinstance(sbst_obj, RectangularROI):
+                cx, cy = sbst_obj.center()
+                dx = x - cx
+                dy = y - cy
+                self._set_value_in_subset_definition(0, "Xmin", "value", sbst_obj.xmin + dx)
+                self._set_value_in_subset_definition(0, "Xmax", "value", sbst_obj.xmax + dx)
+                self._set_value_in_subset_definition(0, "Ymin", "value", sbst_obj.ymin + dy)
+                self._set_value_in_subset_definition(0, "Ymax", "value", sbst_obj.ymax + dy)
+            else:  # pragma: no cover
+                raise NotImplementedError(f'Recentering of {sbst_obj.__class__} is not supported')
+
+        elif isinstance(subset_state, RangeSubsetState):
+            dx = new_cen - ((subset_state.hi - subset_state.lo) * 0.5 + subset_state.lo)
+            self._set_value_in_subset_definition(0, "Lower bound", "value", subset_state.lo + dx)
+            self._set_value_in_subset_definition(0, "Upper bound", "value", subset_state.hi + dx)
+
+        else:  # pragma: no cover
+            raise NotImplementedError(
+                f'Getting center of {subset_state.__class__} is not supported')
+
+        if update:
+            self.vue_update_subset()
+        else:
+            # Force UI to update on browser without changing the subset.
+            tmp = self.subset_definitions
+            self.subset_definitions = []
+            self.subset_definitions = tmp
 
     # List of JSON-like dict is nice for front-end but a pain to look up,
     # so we use these helper functions.

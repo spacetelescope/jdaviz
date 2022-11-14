@@ -20,6 +20,61 @@ from regions import (CirclePixelRegion, CircleSkyRegion,
 __all__ = ['regions2roi', 'regions2aperture', 'aperture2regions']
 
 
+def _get_region_from_spatial_subset(plugin_obj, subset_label):
+    """Convert a ``glue`` ROI in the given subset to ``regions`` shape.
+
+    .. note:: This is for internal use only in Imviz plugins.
+
+    Parameters
+    ----------
+    plugin_obj : obj
+        Plugin instance that needs this translation.
+        The plugin is assumed to have a special setup that gives
+        it access to these attributes: ``app`` and ``dataset_selected``.
+        The ``app._jdaviz_helper.default_viewer`` attribute must also
+        exist and point to an image viewer that has a ``_get_real_xy``
+        method.
+
+    subset_label : str
+        Label of selected subset in the plugin.
+
+    Returns
+    -------
+    reg : `regions.Region`
+        An equivalent ``regions`` shape.
+
+    Raises
+    ------
+    ValueError
+        Subset is not found.
+
+    See Also
+    --------
+    regions2roi
+
+    """
+    for subset_grp in plugin_obj.app.data_collection.subset_groups:
+        if subset_grp.label == subset_label:
+            for sbst in subset_grp.subsets:
+                if sbst.data.label == plugin_obj.dataset_selected:
+                    reg = sbst.data.get_selection_definition(
+                        subset_id=subset_label, format='astropy-regions')
+                    # Works around https://github.com/glue-viz/glue-astronomy/issues/52
+                    # Assume it is always pixel region, not sky region. Even with multiple
+                    # viewers, they all seem to share the same reference image even when it is
+                    # not loaded in all the viewers, so use default viewer.
+                    viewer = plugin_obj.app._jdaviz_helper.default_viewer
+
+                    x, y, _ = viewer._get_real_xy(
+                        plugin_obj.app.data_collection[plugin_obj.dataset_selected],
+                        reg.center.x, reg.center.y)
+                    reg.center.x = x
+                    reg.center.y = y
+                    return reg
+    else:
+        raise ValueError(f'Subset "{subset_label}" not found')
+
+
 def regions2roi(region_shape, wcs=None):
     """Convert a given ``regions`` shape to ``glue`` ROI.
 

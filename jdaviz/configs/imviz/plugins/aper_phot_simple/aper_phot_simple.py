@@ -22,7 +22,7 @@ from traitlets import Any, Bool, Integer, List, Unicode, observe
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import SnackbarMessage, LinkUpdatedMessage
-from jdaviz.core.region_translators import regions2aperture
+from jdaviz.core.region_translators import regions2aperture, _get_region_from_spatial_subset
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, DatasetSelectMixin, SubsetSelect
 from jdaviz.utils import bqplot_clear_figure, PRIHDR_KEY
@@ -142,28 +142,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin):
         # and auto-populate background, if applicable.
         self._subset_selected_changed()
 
-    def _get_region_from_subset(self, subset):
-        for subset_grp in self.app.data_collection.subset_groups:
-            if subset_grp.label == subset:
-                for sbst in subset_grp.subsets:
-                    if sbst.data.label == self.dataset_selected:
-                        reg = sbst.data.get_selection_definition(
-                            subset_id=subset, format='astropy-regions')
-                        # Works around https://github.com/glue-viz/glue-astronomy/issues/52
-                        # Assume it is always pixel region, not sky region. Even with multiple
-                        # viewers, they all seem to share the same reference image even when it is
-                        # not loaded in all the viewers, so use default viewer.
-                        viewer = self.app._jdaviz_helper.default_viewer
-
-                        x, y, _ = viewer._get_real_xy(
-                            self.app.data_collection[self.dataset_selected],
-                            reg.center.x, reg.center.y)
-                        reg.center.x = x
-                        reg.center.y = y
-                        return reg
-        else:
-            raise ValueError(f'Subset "{subset}" not found')
-
     def _on_subset_update(self, msg):
         if self.dataset_selected == '' or self.subset_selected == '':
             return
@@ -189,7 +167,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin):
             return
 
         try:
-            self._selected_subset = self._get_region_from_subset(subset_selected)
+            self._selected_subset = _get_region_from_spatial_subset(self, subset_selected)
             self._selected_subset.meta['label'] = subset_selected
 
             if isinstance(self._selected_subset, CirclePixelRegion):
@@ -251,7 +229,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin):
             return
 
         try:
-            reg = self._get_region_from_subset(bg_subset_selected)
+            reg = _get_region_from_spatial_subset(self, bg_subset_selected)
             self.background_value = self._calc_bg_subset_median(reg)
         except Exception as e:
             self.background_value = 0
