@@ -26,7 +26,7 @@ Mosviz
 
 - Added coordinates display panels for Mosviz viewers. [#1795]
 
-- mosviz_row metadata now included in in NIRISS-parsed 1D spectra. [#1836]
+- ``mosviz_row`` metadata now included in NIRISS-parsed 1D spectra. [#1836]
 
 Specviz
 ^^^^^^^
