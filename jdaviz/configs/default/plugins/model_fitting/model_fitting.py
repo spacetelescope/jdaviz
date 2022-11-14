@@ -818,11 +818,13 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
             subset_mask = subset_component.selected_subset_mask
 
-            if subset_mask.shape != spectrum.shape:
+            if subset_mask.ndim == 1:
                 # broadcast to the dimensions of the full cube:
                 subset_mask = np.broadcast_to(
                     subset_mask[None, None, :], spectrum.shape
                 )
+            elif subset_mask.shape != spectrum.flux.shape:
+                subset_mask = np.swapaxes(subset_mask, 1, 0)
 
             if spectrum.mask is None:
                 spectrum.mask = subset_mask

@@ -10,6 +10,8 @@ from astropy.nddata import StdDevUncertainty
 from astropy.utils.exceptions import AstropyUserWarning
 from numpy.testing import assert_allclose
 
+from glue.core.roi import CircularROI
+
 from jdaviz.configs.default.plugins.model_fitting.initializers import MODELS
 
 
@@ -202,3 +204,22 @@ def test_fit_gaussian_with_fixed_mean(specviz_helper, spectrum1d):
     # Make sure mean is really fixed.
     assert_allclose(result.mean.value, old_mean)
     assert not np.allclose((result.amplitude.value, result.stddev.value), (old_amp, old_std))
+
+
+def test_subset_masks(cubeviz_helper, spectrum1d_cube):
+    cubeviz_helper.load_data(spectrum1d_cube)
+    assert spectrum1d_cube.mask is None
+
+    # create an (arbitrary) mask which
+    expected_mask = np.zeros_like(spectrum1d_cube.flux.value).astype(bool)
+    expected_mask[:2, :2, :] = True
+
+    fv = cubeviz_helper.app.get_viewer('flux-viewer')
+    # create a "Subset 1" entry in spatial dimension, selected "interactively"
+    fv.apply_roi(CircularROI(0.5, 0.5, 1))
+
+    # apply the mask, check that interactive mask is accessible:
+    p = cubeviz_helper.app.get_tray_item_from_name('g-model-fitting')
+    p.spatial_subset_selected = "Subset 1"
+    p._apply_subset_masks(spectrum1d_cube)
+    assert np.all(spectrum1d_cube.mask == expected_mask)
