@@ -110,6 +110,8 @@ Mosviz
 
 - Data unassigned a row is hidden under the subdropdown in the data dropdown. [#1798, #1808]
 
+- Missing mosviz_row metadata in NIRISS-parsed 1D spectra now added. [#1836]
+
 Specviz
 ^^^^^^^
 
