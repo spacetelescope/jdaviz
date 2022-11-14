@@ -277,11 +277,11 @@ class TestParseImage:
         assert_allclose(phot_plugin.flux_scaling, 0.003631)
         phot_plugin.vue_do_aper_phot()
         tbl = imviz_helper.get_aperture_photometry_results()
-        assert_quantity_allclose(tbl[0]['xcentroid'], 970.935492 * u.pix)
-        assert_quantity_allclose(tbl[0]['ycentroid'], 1116.967619 * u.pix)
-        sky = tbl[0]['sky_centroid']
+        assert_quantity_allclose(tbl[0]['xcenter'], 970.95 * u.pix)
+        assert_quantity_allclose(tbl[0]['ycenter'], 1116.05 * u.pix)
+        sky = tbl[0]['sky_center']
         assert_allclose(sky.ra.deg, 80.48419863)
-        assert_allclose(sky.dec.deg, -69.494592)
+        assert_allclose(sky.dec.deg, -69.494608)
         data_unit = u.MJy / u.sr
         assert_quantity_allclose(tbl[0]['background'], 0.1741226315498352 * data_unit)
         assert_quantity_allclose(tbl[0]['sum'], 4.486487e-11 * u.MJy, rtol=1e-6)
@@ -402,9 +402,9 @@ class TestParseImage:
         assert_allclose(phot_plugin.pixel_area, 0.0025)  # Not used but still auto-populated
         phot_plugin.vue_do_aper_phot()
         tbl = imviz_helper.get_aperture_photometry_results()
-        assert_quantity_allclose(tbl[0]['xcentroid'], 1487.60825422 * u.pix, atol=2 * u.pix)
-        assert_quantity_allclose(tbl[0]['ycentroid'], 2573.83983184 * u.pix, atol=2 * u.pix)
-        sky = tbl[0]['sky_centroid']
+        assert_quantity_allclose(tbl[0]['xcenter'], 1488.5 * u.pix, atol=2 * u.pix)
+        assert_quantity_allclose(tbl[0]['ycenter'], 2576 * u.pix, atol=2 * u.pix)
+        sky = tbl[0]['sky_center']
         assert_allclose(sky.ra.deg, 3.684062989070131, rtol=1e-3)
         assert_allclose(sky.dec.deg, 10.802045612042956, rtol=1e-3)
         data_unit = u.electron / u.s

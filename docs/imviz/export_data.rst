@@ -51,11 +51,8 @@ The columns are as follow:
 
 * :attr:`~photutils.aperture.ApertureStats.id`: ID number assigned to the row,
   starting from 1.
-* :attr:`~photutils.aperture.ApertureStats.xcentroid`,
-  :attr:`~photutils.aperture.ApertureStats.ycentroid`: Pixel centroids
-  calculated using moments. This might differ from center of the aperture.
-* :attr:`~photutils.aperture.ApertureStats.sky_centroid`:
-  `~astropy.coordinates.SkyCoord` associated with the centroid.
+* ``xcenter``, ``ycenter``: Center of the aperture (0-indexed).
+* ``sky_center``: `~astropy.coordinates.SkyCoord` associated with the center.
   If WCS is not available, this field is `None`.
 * ``background``: The value from :guilabel:`Background value`, with unit attached.
 * :attr:`~photutils.aperture.ApertureStats.sum`: Sum of flux in the aperture.
@@ -108,9 +105,8 @@ The columns are as follow:
 .. note::
 
     Aperture sum and statistics are done on the originally drawn aperture only.
-    Even though centroid is calculated, it is not used to move the aperture
-    to the new center. However, radial profiles (including Gaussian fitting, if any)
-    and curve of growth do use the centroid as zero-point on the X-axis.
+    You can use the :ref:`imviz-subset-plugin` plugin to center it first on the
+    object of interest, if you wish.
 
 Once you have the results in a table, you can further manipulated them as
 documented in :ref:`astropy:astropy-table`.

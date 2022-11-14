@@ -141,7 +141,7 @@
       <jupyter-widget :widget="radial_plot" style="width: 100%; height: 480px" />
     </v-row>
 
-    <div v-if="plot_available && fit_radial_profile">
+    <div v-if="plot_available && fit_radial_profile && current_plot_type != 'Curve of Growth'">
       <j-plugin-section-header>Gaussian Fit Results</j-plugin-section-header>
       <v-row no-gutters>
         <v-col cols=6><U>Result</U></v-col>

@@ -52,6 +52,11 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Simple Aperture Photometry plugin no longer performs centroiding.
+  For radial profile, curve of growth, and table reporting, the aperture
+  center is used instead. For centroiding, use "Recenter" feature in
+  the Subset Tools plugin. [#1841]
+
 Mosviz
 ^^^^^^
 
