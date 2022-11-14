@@ -1,9 +1,15 @@
 import pytest
+import numpy as np
+import astropy.units as u
 
-from glue.core.roi import XRangeROI
+from glue.core.roi import XRangeROI, CircularROI
 
 
 def test_spectralsubsetselect(specviz_helper, spectrum1d):
+    # apply mask to spectrum to check selected subset is masked:
+    mask = spectrum1d.flux < spectrum1d.flux.mean()
+    spectrum1d.mask = mask
+
     specviz_helper.load_spectrum(spectrum1d)
     sv = specviz_helper.app.get_viewer('spectrum-viewer')
     # create a "Subset 1" entry
@@ -23,6 +29,15 @@ def test_spectralsubsetselect(specviz_helper, spectrum1d):
     expected_max = spectrum1d.spectral_axis[spectrum1d.spectral_axis.value <= 7400][-1]
     assert p.spectral_subset.selected_min_max(spectrum1d) == (expected_min, expected_max)
 
+    # check selected subset mask available via API:
+    expected_mask_with_spectral_subset = (
+        (spectrum1d.wavelength.to(u.AA).value < 6500) |
+        (spectrum1d.wavelength.to(u.AA).value > 7400)
+    )
+    assert np.all(
+        expected_mask_with_spectral_subset == p.spectral_subset.selected_subset_mask
+    )
+
     assert p.spectral_subset.app == p.app
     assert p.spectral_subset.spectrum_viewer == sv
 
@@ -34,6 +49,30 @@ def test_spectralsubsetselect(specviz_helper, spectrum1d):
     assert p.spectral_subset.selected_obj is None
     p.spectral_subset_selected = 'Subset 1'
     assert p.spectral_subset.selected_obj is not None
+
+
+def test_spatialsubsetselect(cubeviz_helper, spectrum1d_cube):
+    cubeviz_helper.load_data(spectrum1d_cube)
+    fv = cubeviz_helper.app.get_viewer('flux-viewer')
+    # create a "Subset 1" entry in spatial dimension
+    fv.apply_roi(CircularROI(0.5, 0.5, 1))
+
+    # model fitting uses the mixin
+    p = cubeviz_helper.app.get_tray_item_from_name('g-model-fitting')
+    assert len(p.spatial_subset.labels) == 2  # Entire Cube, Subset 1
+    assert len(p.spatial_subset_items) == 2
+    assert p.spatial_subset_selected == 'Entire Cube'
+    assert p.spatial_subset.selected_obj is None
+    p.spatial_subset_selected = 'Subset 1'
+    assert p.spatial_subset.selected_obj is not None
+
+    # put selected subset mask in same shape as expected mask, check it is preserved
+    selected_mask = np.swapaxes(p.spatial_subset.selected_subset_mask, 1, 0)
+
+    expected_mask = np.zeros_like(spectrum1d_cube.flux.value).astype(bool)
+    expected_mask[:2, :2, :] = True
+
+    assert np.all(selected_mask == expected_mask)
 
 
 @pytest.mark.filterwarnings('ignore:No observer defined on WCS')
