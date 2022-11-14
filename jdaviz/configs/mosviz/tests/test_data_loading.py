@@ -12,7 +12,7 @@ from jdaviz.utils import PRIHDR_KEY
 
 def test_load_spectrum1d(mosviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    mosviz_helper.load_1d_spectra(spectrum1d, data_labels=label)
+    mosviz_helper.load_data(spectra_1d=spectrum1d, spectra_1d_label=label)
 
     assert len(mosviz_helper.app.data_collection) == 2
     dc_0 = mosviz_helper.app.data_collection[0]
@@ -92,7 +92,7 @@ def test_load_list_of_spectrum1d(mosviz_helper, spectrum1d):
 def test_load_mos_spectrum2d(mosviz_helper, mos_spectrum2d):
 
     label = "Test 2D Spectrum"
-    mosviz_helper.load_2d_spectra(mos_spectrum2d, data_labels=label)
+    mosviz_helper.load_data(spectra_2d=mos_spectrum2d, spectra_2d_label=label)
 
     assert len(mosviz_helper.app.data_collection) == 2
     dc_0 = mosviz_helper.app.data_collection[0]
@@ -124,6 +124,26 @@ def test_load_multi_image_spec(mosviz_helper, mos_image, spectrum1d, mos_spectru
         assert qtable["Images"][0] == "Image 0"
     else:
         assert qtable["Images"][0] == "Test Label 0"
+
+
+def test_load_multi_image_and_spec1d_only(mosviz_helper, mos_image, spectrum1d):
+    spectra1d = [spectrum1d] * 3
+    images = [mos_image] * 3
+
+    mosviz_helper.load_data(spectra_1d=spectra1d, images=images)
+
+    assert mosviz_helper.app.get_viewer("table-viewer").figure_widget.highlighted == 0
+    assert len(mosviz_helper.app.data_collection) == 7
+
+
+def test_load_multi_image_and_spec2d_only(mosviz_helper, mos_image, mos_spectrum2d):
+    spectra2d = [mos_spectrum2d] * 3
+    images = [mos_image] * 3
+
+    mosviz_helper.load_data(spectra_2d=spectra2d, images=images)
+
+    assert mosviz_helper.app.get_viewer("table-viewer").figure_widget.highlighted == 0
+    assert len(mosviz_helper.app.data_collection) == 7
 
 
 @pytest.mark.parametrize('label', [None, "Test Label"])

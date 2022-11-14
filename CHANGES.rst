@@ -119,6 +119,10 @@ Mosviz
 
 - Data unassigned a row is hidden under the subdropdown in the data dropdown. [#1798, #1808]
 
+- Missing mosviz_row metadata in NIRISS-parsed 1D spectra now added. [#1836]
+
+- Allow Mosviz ``load_data`` method to load only 1D or 2D spectra. [#1833]
+
 Specviz
 ^^^^^^^
 
