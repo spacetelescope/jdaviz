@@ -240,6 +240,12 @@ Congratulations, you have just released a new version of Jdaviz!
 Releasing a bugfix version
 ==========================
 
+.. note::
+
+    Make sure all necessary backports to ``vX.Y.x`` are done before releasing.
+    Most should have been automatically backported. If you need to manually
+    backport something still, see :ref:`manual-backport`.
+
 The procedure for a bugfix release is a little different from a feature release - you will
 be cherry-picking bugfixes into an existing release branch, and will also need to do some
 cleanup on the ``main`` branch.
@@ -390,6 +396,46 @@ the new release:
 Going forward, any PR that needs backporting to the ``vA.C.x`` branch can
 have this label applied *before* merge to trigger the auto-backport bot on merge.
 For more info on the bot, see https://meeseeksbox.github.io/ .
+
+.. _manual-backport:
+
+Manual backport
+===============
+
+Situations where a pull request might need to be manually backported
+after being merged into ``main`` branch:
+
+* Auto-backport failed.
+* Maintainer forgot to apply relevant label to trigger auto-backport
+  (see :ref:`release-labels`) *before* merging the pull request.
+
+To manually backport pull request ``NNNN`` to a ``vX.Y.x`` branch;
+``abcdef`` should be replaced by the actual *merge commit hash*
+of that pull request that you can copy from ``main`` branch history:
+
+.. code-block:: bash
+
+    git fetch upstream vX.Y.x
+    git checkout upstream/vX.Y.x -b backport-of-pr-NNNN-on-vX.Y.x
+    git cherry-pick -x -m1 abcdef
+
+You will likely have some merge/cherry-pick conflict here, fix them and commit.
+Then push the branch out to your fork:
+
+.. code-block:: bash
+
+    git commit -am "Backport PR #NNNN: Original PR title"
+    git push origin backport-of-pr-NNNN-on-vX.Y.x
+
+Create a backport pull request from that ``backport-of-pr-NNNN-on-vX.Y.x``
+branch you just pushed against ``upstream/vX.Y.x`` (not ``upstream/main``).
+Title it::
+
+    Backport PR #NNNN on branch vX.Y.x (Original PR title)
+
+Also apply the correct label(s) and milestone. If the original pull request
+has a ``Still Needs Manual Backport`` label attached to it, you can also
+remove that label now.
 
 .. _release-old:
 
