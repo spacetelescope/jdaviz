@@ -13,8 +13,7 @@ from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.custom_traitlets import IntHandleEmpty, FloatHandleEmpty
 from jdaviz.core.marks import PluginLine
 
-from astropy.nddata import NDData, StdDevUncertainty, VarianceUncertainty, UnknownUncertainty
-from specutils import Spectrum1D
+from astropy.nddata import UnknownUncertainty
 from specreduce import tracing
 from specreduce import background
 from specreduce import extract
@@ -644,18 +643,18 @@ class SpectralExtraction(PluginTemplateMixin):
             # being able to load back into the plugin)
             orig_trace = self.trace_trace.selected_obj
             if isinstance(orig_trace, tracing.FlatTrace):
-                trace = tracing.FlatTrace(self.trace_dataset.selected_obj.data,
+                trace = tracing.FlatTrace(self.trace_dataset.selected_obj,
                                           orig_trace.trace_pos+self.trace_offset)
             else:
-                trace = tracing.ArrayTrace(self.trace_dataset.selected_obj.data,
+                trace = tracing.ArrayTrace(self.trace_dataset.selected_obj,
                                            self.trace_trace.selected_obj.trace+self.trace_offset)
 
         elif self.trace_type_selected == 'Flat':
-            trace = tracing.FlatTrace(self.trace_dataset.selected_obj.data,
+            trace = tracing.FlatTrace(self.trace_dataset.selected_obj,
                                       self.trace_pixel)
 
         elif self.trace_type_selected == 'Auto':
-            trace = tracing.KosmosTrace(self.trace_dataset.selected_obj.data,
+            trace = tracing.KosmosTrace(self.trace_dataset.selected_obj,
                                         guess=self.trace_pixel,
                                         bins=int(self.trace_bins),
                                         window=self.trace_window,
@@ -674,7 +673,7 @@ class SpectralExtraction(PluginTemplateMixin):
 
     def _get_bg_trace(self):
         if self.bg_type_selected == 'Manual':
-            trace = tracing.FlatTrace(self.trace_dataset.selected_obj.data,
+            trace = tracing.FlatTrace(self.trace_dataset.selected_obj,
                                       self.bg_trace_pixel)
         elif self.bg_trace_selected == 'From Plugin':
             trace = self.export_trace(add_data=False)
@@ -736,15 +735,15 @@ class SpectralExtraction(PluginTemplateMixin):
         trace = self._get_bg_trace()
 
         if self.bg_type_selected == 'Manual':
-            bg = background.Background(self.bg_dataset.selected_obj.data,
+            bg = background.Background(self.bg_dataset.selected_obj,
                                        [trace], width=self.bg_width)
         elif self.bg_type_selected == 'OneSided':
-            bg = background.Background.one_sided(self.bg_dataset.selected_obj.data,
+            bg = background.Background.one_sided(self.bg_dataset.selected_obj,
                                                  trace,
                                                  self.bg_separation,
                                                  width=self.bg_width)
         elif self.bg_type_selected == 'TwoSided':
-            bg = background.Background.two_sided(self.bg_dataset.selected_obj.data,
+            bg = background.Background.two_sided(self.bg_dataset.selected_obj,
                                                  trace,
                                                  self.bg_separation,
                                                  width=self.bg_width)
@@ -763,10 +762,7 @@ class SpectralExtraction(PluginTemplateMixin):
             Whether to add the resulting image to the application, according to the options
             defined in the plugin.
         """
-        bg = self.export_bg(**kwargs)
-
-        bg_spec = Spectrum1D(spectral_axis=self.bg_dataset.selected_obj.spectral_axis,
-                             flux=bg.bkg_image()*self.bg_dataset.selected_obj.flux.unit)
+        bg_spec = self.export_bg(**kwargs).bkg_image()
 
         if add_data:
             self.bg_add_results.add_results_from_plugin(bg_spec, replace=True)
@@ -792,8 +788,7 @@ class SpectralExtraction(PluginTemplateMixin):
             Whether to add the resulting spectrum to the application, according to the options
             defined in the plugin.
         """
-        bg = self.export_bg(**kwargs)
-        spec = bg.bkg_spectrum()
+        spec = self.export_bg(**kwargs).bkg_spectrum()
 
         if add_data:
             self.bg_spec_add_results.add_results_from_plugin(spec, replace=False)
@@ -813,10 +808,7 @@ class SpectralExtraction(PluginTemplateMixin):
             Whether to add the resulting image to the application, according to the options
             defined in the plugin.
         """
-        bg = self.export_bg(**kwargs)
-
-        bg_sub_spec = Spectrum1D(spectral_axis=self.bg_dataset.selected_obj.spectral_axis,
-                                 flux=bg.sub_image()*self.bg_dataset.selected_obj.flux.unit)
+        bg_sub_spec = self.export_bg(**kwargs).sub_image()
 
         if add_data:
             self.bg_sub_add_results.add_results_from_plugin(bg_sub_spec, replace=True)
@@ -867,13 +859,9 @@ class SpectralExtraction(PluginTemplateMixin):
         inp_sp2d = self._get_ext_input_spectrum()
 
         if self.ext_type_selected == 'Boxcar':
-            ext = extract.BoxcarExtract(inp_sp2d.data, trace, width=self.ext_width)
+            ext = extract.BoxcarExtract(inp_sp2d, trace, width=self.ext_width)
         elif self.ext_type_selected == 'Horne':
-            uncert = inp_sp2d.uncertainty if inp_sp2d.uncertainty is not None else VarianceUncertainty(np.ones_like(inp_sp2d.data))  # noqa
-            if not hasattr(uncert, 'uncertainty_type'):
-                uncert = StdDevUncertainty(uncert)
-            image = NDData(inp_sp2d.data, uncertainty=uncert)
-            ext = extract.HorneExtract(image, trace)
+            ext = extract.HorneExtract(inp_sp2d, trace)
         else:
             raise NotImplementedError(f"extraction type '{self.ext_type_selected}' not supported")  # noqa
 
@@ -891,13 +879,6 @@ class SpectralExtraction(PluginTemplateMixin):
         """
         extract = self.export_extract(**kwargs)
         spectrum = extract.spectrum
-
-        # Specreduce returns a spectral axis in pixels, so we'll replace with input spectral_axis
-        # NOTE: this is currently disabled until proper handling of axes-limit linking between
-        # the 2D spectrum image (plotted in pixels) and a 1D spectrum (plotted in freq or
-        # wavelength) is implemented.
-
-        # spectrum = Spectrum1D(spectral_axis=inp_sp2d.spectral_axis, flux=spectrum.flux)
 
         if add_data:
             self.ext_add_results.add_results_from_plugin(spectrum, replace=False)
