@@ -24,6 +24,12 @@ from jdaviz.utils import standardize_metadata, PRIHDR_KEY
 __all__ = ['mos_spec1d_parser', 'mos_spec2d_parser', 'mos_image_parser']
 
 FALLBACK_NAME = "Unspecified"
+EXPECTED_FILES = {"niriss": ['1D Spectra C', '1D Spectra R',
+                             '2D Spectra C', '2D Spectra R',
+                             'Direct Image'],
+                  "nircam": ['1D Spectra C', '1D Spectra R',
+                             '2D Spectra C', '2D Spectra R'],
+                  "nirspec": ['1D Spectra', '2D Spectra']}
 
 
 def _add_to_table(app, data, comp_label, table_viewer_reference_name='table-viewer'):
@@ -41,6 +47,9 @@ def _add_to_table(app, data, comp_label, table_viewer_reference_name='table-view
         The label used to describe the data. Also used as the column header.
     """
     # Add data to the mos viz table object
+    if data is None or len(data) == 0:
+        return
+
     if 'MOS Table' not in app.data_collection:
         table_data = Data(label='MOS Table')
         app.add_data(table_data, notify_done=False)
@@ -647,7 +656,8 @@ def _id_files_by_datamodl(label_dict, filepaths, catalog_key=None):
 
 
 @data_parser_registry("mosviz-niriss-parser")
-def mos_niriss_parser(app, data_dir, table_viewer_reference_name='table-viewer'):
+def mos_niriss_parser(app, data_dir, instrument=None,
+                      table_viewer_reference_name='table-viewer'):
     """
     Attempts to parse all data for a NIRISS dataset in a single
     directory, which should include:
@@ -674,9 +684,7 @@ def mos_niriss_parser(app, data_dir, table_viewer_reference_name='table-viewer')
         raise ValueError(f"{data_dir} is not a valid directory path")
 
     # create dict for mapping expected file types to their DATAMODL identifiers
-    possible_labels = ['1D Spectra C', '1D Spectra R',
-                       '2D Spectra C', '2D Spectra R',
-                       '1D Spectra', '2D Spectra', 'Direct Image']
+    possible_labels = EXPECTED_FILES[instrument]
     files_by_labels = {k: [] for k in possible_labels}
 
     # there should only be one source catalog, so that key gets a string
@@ -715,23 +723,24 @@ def mos_niriss_parser(app, data_dir, table_viewer_reference_name='table-viewer')
     image_dict = {}
 
     print("Loading: Images")
-    for image_file in files_by_labels["Direct Image"]:
-        # save label for table viewer
-        im_split = image_file.stem.split("_")[0]
-        pupil = fits.getheader(image_file, ext=0).get('PUPIL')
+    if "Direct Image" in files_by_labels:
+        for image_file in files_by_labels["Direct Image"]:
+            # save label for table viewer
+            im_split = image_file.stem.split("_")[0]
+            pupil = fits.getheader(image_file, ext=0).get('PUPIL')
 
-        image_label = f"Image {im_split} {pupil}"
-        image_dict[pupil] = image_label
+            image_label = f"Image {im_split} {pupil}"
+            image_dict[pupil] = image_label
 
-        # save information from data file
-        with fits.open(image_file) as temp:
-            data_iter = get_image_data_iterator(app, temp, "Image", ext=None)
-            data_obj = [d[0] for d in data_iter]  # We do not use the generated labels
-            image_data = data_obj[0]  # Grab the first one.
-            # TODO: Error if multiple found?
+            # save information from data file
+            with fits.open(image_file) as temp:
+                data_iter = get_image_data_iterator(app, temp, "Image", ext=None)
+                data_obj = [d[0] for d in data_iter]  # We do not use the generated labels
+                image_data = data_obj[0]  # Grab the first one.
+                # TODO: Error if multiple found?
 
-        image_data.label = image_label
-        add_to_glue[image_label] = image_data
+            image_data.label = image_label
+            add_to_glue[image_label] = image_data
 
     # initialize lists of data to be shown in table viewer
     source_ids = []

@@ -429,15 +429,14 @@ class Mosviz(ConfigHelper, LineListMixin):
         msg = ""
 
         if directory is not None and Path(directory).is_dir():
-            if instrument not in ('nirspec', 'niriss'):
-                msg = ("Ambiguous MOS Instrument: Only JWST NIRSpec and "
-                       "NIRISS folder parsing is fully supported; falling back to NIRSpec parsing.")
-                warnings.warn(msg)
-                instrument = "nirspec"
+            if instrument not in ('nirspec', 'niriss', 'nircam'):
+                msg = ("Ambiguous MOS Instrument: Only JWST NIRSpec, NIRCam, and "
+                       "NIRISS folder parsing are currently supported")
+                raise ValueError(msg)
             if instrument.lower() == "nirspec":
                 super().load_data(directory, parser_reference="mosviz-nirspec-directory-parser")
             elif instrument.lower() in ("niriss", "nircam"):
-                self.load_niriss_data(directory)
+                self.load_jwst_directory(directory, instrument=instrument)
         elif directory is not None and is_zipfile(str(directory)):
             raise TypeError("Please extract your data first and provide the directory")
 
@@ -617,9 +616,10 @@ class Mosviz(ConfigHelper, LineListMixin):
                           data_labels=data_labels)
         self._add_redshift_column()
 
-    def load_niriss_data(self, data_obj, data_labels=None):
+    def load_jwst_directory(self, data_obj, data_labels=None, instrument=None):
         self.app.auto_link = False
-        super().load_data(data_obj, parser_reference="mosviz-niriss-parser")
+        super().load_data(data_obj, parser_reference="mosviz-niriss-parser",
+                          instrument=instrument)
 
         self.link_table_data(data_obj)
         self._add_redshift_column()
