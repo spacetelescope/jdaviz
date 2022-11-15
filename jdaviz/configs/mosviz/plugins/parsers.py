@@ -762,12 +762,12 @@ def mos_niriss_parser(app, data_dir, table_viewer_reference_name='table-viewer')
                     if i == 0:
                         filter = temp[0].header["FILTER"]
                     if "EXTNAME" in temp[i].header:
-                        if (temp[i].header["EXTNAME"] == "SCI"
-                                and (temp[i].header["SOURCEID"]
-                                     in cat_id_dict.keys())):
+                        if temp[i].header["EXTNAME"] == "SCI":
+                            if cat_id_dict is not None:
+                                if (temp[i].header["SOURCEID"] not in cat_id_dict.keys()):
+                                    continue
                             sci_hdus.append(i)
-                            wav_hdus[i] = ('WAVELENGTH',
-                                           temp[i].header['EXTVER'])
+                            wav_hdus[i] = ('WAVELENGTH', temp[i].header['EXTVER'])
 
                 # Now get a Spectrum1D object for each matching SCI HDU
                 source_ids.extend(_get_source_identifiers_by_hdu([temp[sci] for sci in sci_hdus]))
@@ -800,10 +800,12 @@ def mos_niriss_parser(app, data_dir, table_viewer_reference_name='table-viewer')
                         add_to_glue[label] = spec2d
 
                         # update labels for table viewer
-                        ra, dec = cat_id_dict[temp[sci].header["SOURCEID"]]
-                        ras.append(ra)
-                        decs.append(dec)
-                        image_add.append(image_dict[filter_name])
+                        if cat_id_dict is not None:
+                            ra, dec = cat_id_dict[temp[sci].header["SOURCEID"]]
+                            ras.append(ra)
+                            decs.append(dec)
+                        if filter_name in image_dict:
+                            image_add.append(image_dict[filter_name])
                         spec_labels_2d.append(label)
                         filters.append(filter)
 
@@ -816,10 +818,13 @@ def mos_niriss_parser(app, data_dir, table_viewer_reference_name='table-viewer')
 
             with fits.open(fname, memmap=False) as temp:
                 # Filter out HDUs we care about
-                source_ids_to_filter = cat_id_dict.keys()
-                filtered_hdul = fits.HDUList([hdu for hdu in temp if (
-                    (hdu.name in ('PRIMARY', 'ASDF')) or
-                    (hdu.header.get('SOURCEID', None) in source_ids_to_filter))])
+                if cat_id_dict is not None:
+                    source_ids_to_filter = cat_id_dict.keys()
+                    filtered_hdul = fits.HDUList([hdu for hdu in temp if (
+                        (hdu.name in ('PRIMARY', 'ASDF')) or
+                        (hdu.header.get('SOURCEID', None) in source_ids_to_filter))])
+                else:
+                    filtered_hdul = temp
 
                 # SRCTYPE is required for the specutils JWST x1d reader. The reader will
                 # force this to POINT if not set. Under known cases, this field will be set

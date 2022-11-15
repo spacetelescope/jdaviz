@@ -436,7 +436,7 @@ class Mosviz(ConfigHelper, LineListMixin):
                 instrument = "nirspec"
             if instrument.lower() == "nirspec":
                 super().load_data(directory, parser_reference="mosviz-nirspec-directory-parser")
-            elif instrument.lower() == "niriss":
+            elif instrument.lower() in ("niriss", "nircam"):
                 self.load_niriss_data(directory)
         elif directory is not None and is_zipfile(str(directory)):
             raise TypeError("Please extract your data first and provide the directory")
