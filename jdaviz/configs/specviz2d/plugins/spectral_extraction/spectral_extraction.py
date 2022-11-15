@@ -14,6 +14,7 @@ from jdaviz.core.custom_traitlets import IntHandleEmpty, FloatHandleEmpty
 from jdaviz.core.marks import PluginLine
 
 from astropy.nddata import UnknownUncertainty
+from astropy import units
 from specreduce import tracing
 from specreduce import background
 from specreduce import extract
@@ -879,6 +880,10 @@ class SpectralExtraction(PluginTemplateMixin):
         """
         extract = self.export_extract(**kwargs)
         spectrum = extract.spectrum
+
+        # TEMPORARY: override spectral axis to be in pixels until properly supporting plotting
+        # in wavelength/frequency
+        spectrum._spectral_axis = np.arange(len(spectrum.spectral_axis)) * units.pix
 
         if add_data:
             self.ext_add_results.add_results_from_plugin(spectrum, replace=False)
