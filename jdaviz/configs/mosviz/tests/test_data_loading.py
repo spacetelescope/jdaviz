@@ -15,9 +15,10 @@ def test_load_spectrum1d(mosviz_helper, spectrum1d):
     mosviz_helper.load_data(spectra_1d=spectrum1d, spectra_1d_label=label)
 
     assert len(mosviz_helper.app.data_collection) == 2
-    dc_0 = mosviz_helper.app.data_collection[0]
-    assert dc_0.label == label
-    assert dc_0.meta['uncertainty_type'] == 'std'
+    assert mosviz_helper.app.data_collection[0].label == "MOS Table"
+    dc_1 = mosviz_helper.app.data_collection[1]
+    assert dc_1.label == label
+    assert dc_1.meta['uncertainty_type'] == 'std'
 
     table = mosviz_helper.app.get_viewer('table-viewer')
     table.widget_table.vue_on_row_clicked(0)
@@ -36,10 +37,11 @@ def test_load_image(mosviz_helper, mos_image):
     mosviz_helper.load_images(mos_image, data_labels=label)
 
     assert len(mosviz_helper.app.data_collection) == 2
-    dc_0 = mosviz_helper.app.data_collection[0]
-    assert dc_0.label == f"{label} 0"
-    assert PRIHDR_KEY not in dc_0.meta
-    assert dc_0.meta['RADESYS'] == 'ICRS'
+    assert mosviz_helper.app.data_collection[0].label == "MOS Table"
+    dc_1 = mosviz_helper.app.data_collection[1]
+    assert dc_1.label == f"{label} 0"
+    assert PRIHDR_KEY not in dc_1.meta
+    assert dc_1.meta['RADESYS'] == 'ICRS'
 
     table = mosviz_helper.app.get_viewer('table-viewer')
     table.widget_table.vue_on_row_clicked(0)
@@ -57,9 +59,10 @@ def test_load_spectrum_collection(mosviz_helper, spectrum_collection):
 
     # +1 for the table viewer
     assert len(mosviz_helper.app.data_collection) == len(spectrum_collection) + 1
-    dc_0 = mosviz_helper.app.data_collection[0]
-    assert dc_0.label == labels[0]
-    assert dc_0.meta['uncertainty_type'] == 'std'
+    assert mosviz_helper.app.data_collection[0].label == "MOS Table"
+    dc_1 = mosviz_helper.app.data_collection[1]
+    assert dc_1.label == labels[0]
+    assert dc_1.meta['uncertainty_type'] == 'std'
 
     table = mosviz_helper.app.get_viewer('table-viewer')
     table.select_row(0)
@@ -76,9 +79,10 @@ def test_load_list_of_spectrum1d(mosviz_helper, spectrum1d):
     mosviz_helper.load_1d_spectra(spectra, data_labels=labels)
 
     assert len(mosviz_helper.app.data_collection) == 4
-    dc_0 = mosviz_helper.app.data_collection[0]
-    assert dc_0.label == labels[0]
-    assert dc_0.meta['uncertainty_type'] == 'std'
+    assert mosviz_helper.app.data_collection[0].label == "MOS Table"
+    dc_1 = mosviz_helper.app.data_collection[1]
+    assert dc_1.label == labels[0]
+    assert dc_1.meta['uncertainty_type'] == 'std'
 
     table = mosviz_helper.app.get_viewer('table-viewer')
     table.widget_table.vue_on_row_clicked(0)
@@ -95,9 +99,10 @@ def test_load_mos_spectrum2d(mosviz_helper, mos_spectrum2d):
     mosviz_helper.load_data(spectra_2d=mos_spectrum2d, spectra_2d_label=label)
 
     assert len(mosviz_helper.app.data_collection) == 2
-    dc_0 = mosviz_helper.app.data_collection[0]
-    assert dc_0.label == label
-    assert dc_0.meta['INSTRUME'] == 'nirspec'
+    assert mosviz_helper.app.data_collection[0].label == "MOS Table"
+    dc_1 = mosviz_helper.app.data_collection[1]
+    assert dc_1.label == label
+    assert dc_1.meta['INSTRUME'] == 'nirspec'
 
     table = mosviz_helper.app.get_viewer('table-viewer')
     table.widget_table.vue_on_row_clicked(0)
@@ -159,11 +164,10 @@ def test_load_single_image_multi_spec(mosviz_helper, mos_image, spectrum1d, mos_
 
     # Test that loading is still possible after previous crash:
     # https://github.com/spacetelescope/jdaviz/issues/364
-    with pytest.raises(ValueError, match="No data found with the label 'MOS Table'"):
+    with pytest.raises(ValueError, match="incompatible with the dimensions of this data:"):
         mosviz_helper.load_data(spectra1d, spectra2d, images=[])
 
-    with pytest.warns(UserWarning, match='Could not parse metadata from input images'):
-        mosviz_helper.load_data(spectra1d, spectra2d, images=mos_image, images_label=label)
+    mosviz_helper.load_data(spectra1d, spectra2d, images=mos_image, images_label=label)
 
     assert mosviz_helper.app.get_viewer("table-viewer").figure_widget.highlighted == 0
     assert len(mosviz_helper.app.data_collection) == 8

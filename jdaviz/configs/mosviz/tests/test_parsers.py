@@ -41,18 +41,20 @@ def test_nirspec_parser(mosviz_helper, tmp_path, instrument_arg):
     assert len(mosviz_helper.app.data_collection["MOS Table"].meta) == 0
 
     # Check that the data was loaded in the same order we expect.
-    # MOS table always loads first, followed by 5 sets of Images, 1D, then 2D spectra
-    #   which results in Images beginning at index 1, 1D at index 6, 2D at index 11
-    assert mosviz_helper.app.data_collection[15].meta['SOURCEID'] == 2315
+    # MOS table always loads first, followed by 5 sets of 1D Spectra, 2D Spectra, then Images
+    #   which results in 1D beginning at index 1, 2D at index 6, and Images at index 11
+    assert mosviz_helper.app.data_collection[5].meta['SOURCEID'] == 2315
     for i in range(0, 5):
-        assert mosviz_helper.app.data_collection[i+1].label == f"Image {i}"
-
-        spec1d = mosviz_helper.app.data_collection[i+6]
+        # Check 1D spectra
+        spec1d = mosviz_helper.app.data_collection[i+1]
         assert spec1d.label == f"1D Spectrum {i}"
-        spec2d = mosviz_helper.app.data_collection[i+11]
+        # Check 2D spectra
+        spec2d = mosviz_helper.app.data_collection[i+6]
         assert spec2d.label == f"2D Spectrum {i}"
         assert int(spec1d.meta['SOURCEID']) == int(spec2d.meta['SOURCEID'])
         assert int(spec1d.meta['mosviz_row']) == int(spec2d.meta['mosviz_row'])
+        # Check images
+        assert mosviz_helper.app.data_collection[i+11].label == f"Image {i}"
 
     # Check for expected metadata values
     for data in mosviz_helper.app.data_collection:
@@ -128,17 +130,17 @@ def test_niriss_parser(mosviz_helper, tmp_path):
     mosviz_helper.load_data(directory=tmp_path, instrument="niriss")
     assert len(mosviz_helper.app.data_collection) == 10
 
-    # The image should be the first in the data collection
-    dc_0 = mosviz_helper.app.data_collection[0]
-    assert dc_0.label == "Image jw01324-o001 F200W"
-    assert PRIHDR_KEY not in dc_0.meta
-    assert COMMENTCARD_KEY not in dc_0.meta
-    assert dc_0.meta['bunit_data'] == 'MJy/sr'  # ASDF metadata
-
-    # The MOS Table should be last in the data collection
-    dc_tab = mosviz_helper.app.data_collection[-1]
+    # The MOS Table should be first in the data collection
+    dc_tab = mosviz_helper.app.data_collection[0]
     assert dc_tab.label == "MOS Table"
     assert len(dc_tab.meta) == 0
+
+    # The image should be the first "real data" in the data collection
+    dc_1 = mosviz_helper.app.data_collection[1]
+    assert dc_1.label == "Image jw01324-o001 F200W"
+    assert PRIHDR_KEY not in dc_1.meta
+    assert COMMENTCARD_KEY not in dc_1.meta
+    assert dc_1.meta['bunit_data'] == 'MJy/sr'  # ASDF metadata
 
     # Test all the spectra exist
     for dispersion in ('R', 'C'):
@@ -182,16 +184,16 @@ def test_nircam_parser(mosviz_helper, tmp_path):
 
     mosviz_helper.load_data(directory=tmp_path / "trimmed_nircam_data", instrument="nircam")
 
-    # The MOS Table should be last in the data collection
-    dc_tab = mosviz_helper.app.data_collection[-1]
+    # The MOS Table should be first in the data collection
+    dc_tab = mosviz_helper.app.data_collection[0]
     assert dc_tab.label == "MOS Table"
     assert len(dc_tab.meta) == 0
 
     # Check that the correct amount of spectra got loaded in the correct order
     assert len(mosviz_helper.app.data_collection) == 31
     assert mosviz_helper.app.data_collection['MOS Table']['Identifier'][0] == 1112
-    assert mosviz_helper.app.data_collection[0].label == 'F322W2 Source 1112 spec2d R'
-    assert mosviz_helper.app.data_collection[15].label == 'F322W2 Source 1112 spec1d R'
+    assert mosviz_helper.app.data_collection[1].label == 'F322W2 Source 1112 spec2d R'
+    assert mosviz_helper.app.data_collection[16].label == 'F322W2 Source 1112 spec1d R'
 
 
 @pytest.mark.remote_data
