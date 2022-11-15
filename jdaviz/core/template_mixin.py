@@ -954,8 +954,6 @@ class SubsetSelect(SelectPluginComponent):
             viewer_ref = getattr(self.plugin,
                                  '_default_spectrum_viewer_reference_name',
                                  self.viewers[0].reference_id)
-        else:
-            viewer_ref = self.viewers[0].reference_id
 
         subset = self.app.get_data_from_viewer(
             viewer_ref, data_label=self.selected
@@ -964,12 +962,9 @@ class SubsetSelect(SelectPluginComponent):
         if hasattr(subset, 'mask'):
             # the mask attr is available for spectral subsets:
             subset_mask = subset.mask
-        elif hasattr(subset, 'to_mask'):
+        else:
             # `subset` is a GroupedSubset:
             subset_mask = subset.to_mask()
-        else:
-            # pass no fluxes masked:
-            subset_mask = np.zeros_like(subset.flux.value).astype(bool)
 
         return subset_mask
 
