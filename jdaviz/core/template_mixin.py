@@ -964,9 +964,12 @@ class SubsetSelect(SelectPluginComponent):
         if hasattr(subset, 'mask'):
             # the mask attr is available for spectral subsets:
             subset_mask = subset.mask
-        else:
-            # otherwise, `subset` is a GroupedSubset:
+        elif hasattr(subset, 'to_mask'):
+            # `subset` is a GroupedSubset:
             subset_mask = subset.to_mask()
+        else:
+            # pass no fluxes masked:
+            subset_mask = np.zeros_like(subset.flux.value).astype(bool)
 
         return subset_mask
 

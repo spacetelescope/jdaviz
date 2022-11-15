@@ -662,8 +662,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             return
         models_to_fit = self._reinitialize_with_fixed()
 
-        # Apply masks from selected spectral, spatial subsets
-        self._apply_subset_masks(self._spectrum1d)
+        # Apply masks from selected spectral subsets
+        self._apply_subset_masks(self._spectrum1d, self.spectral_subset)
 
         try:
             fitted_model, fitted_spectrum = fit_model_to_spectrum(
@@ -732,8 +732,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # Retrieve copy of the models with proper "fixed" dictionaries
         models_to_fit = self._reinitialize_with_fixed()
 
-        # Apply masks from selected spectral, spatial subsets
-        self._apply_subset_masks(spec)
+        # Apply masks from selected spatial subsets
+        self._apply_subset_masks(spec, self.spatial_subset)
 
         try:
             fitted_model, fitted_spectrum = fit_model_to_spectrum(
@@ -802,31 +802,34 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self.add_results.add_results_from_plugin(spectrum)
         self._set_default_results_label()
 
-    def _apply_subset_masks(self, spectrum):
+    def _apply_subset_masks(self, spectrum, subset_component):
         """
-        Iterate over dimensions of a spectral cube ``spectrum``, add a mask attribute
-        if none exists. Mask excludes non-selected spectral and/or spatial subsets.
+        For a spectrum/spectral cube ``spectrum``, add a mask attribute
+        if none exists. Mask excludes non-selected spectral and/or
+        spatial subsets.
         """
-        for subset_component in [self.spatial_subset, self.spectral_subset]:
-            if subset_component is None:
-                # spatial_subset only exists for cubeviz
-                continue
+        if subset_component is None:
+            # spatial_subset only exists for cubeviz
+            return
 
-            # only look for a mask if there is a selected subset:
-            if subset_component.selected == subset_component.default_text:
-                continue
+        # only look for a mask if there is a selected subset:
+        if subset_component.selected == subset_component.default_text:
+            return
 
-            subset_mask = subset_component.selected_subset_mask
+        subset_mask = subset_component.selected_subset_mask
 
-            if subset_mask.ndim == 1 and spectrum.flux.ndim == 3:
-                # broadcast to the dimensions of the full cube:
-                subset_mask = np.broadcast_to(
-                    subset_mask[None, None, :], spectrum.shape
-                )
-            elif subset_mask.shape != spectrum.flux.shape:
+        if spectrum.mask is not None:
+            if subset_mask.ndim == 3:
+                if spectrum.mask.ndim == 1:
+                    # if subset mask is 3D and the `spectrum` mask is 1D, which
+                    # happens when `spectrum` has been collapsed from 3D->1D,
+                    # then also collapse the 3D mask in the spatial
+                    # dimensions (0, 1) so that slices in the spectral axis that
+                    # are masked in all pixels become masked in the spectral subset:
+                    subset_mask = np.all(subset_mask, axis=(0, 1))
+            spectrum.mask |= subset_mask
+        else:
+            if subset_mask.shape != spectrum.flux.shape:
+                # correct the order of spectral/spatial axes when they're swapped
                 subset_mask = np.swapaxes(subset_mask, 1, 0)
-
-            if spectrum.mask is None:
-                spectrum.mask = subset_mask
-            else:
-                spectrum.mask |= subset_mask
+            spectrum.mask = subset_mask

@@ -221,5 +221,5 @@ def test_subset_masks(cubeviz_helper, spectrum1d_cube):
     # apply the mask, check that interactive mask is accessible:
     p = cubeviz_helper.app.get_tray_item_from_name('g-model-fitting')
     p.spatial_subset_selected = "Subset 1"
-    p._apply_subset_masks(spectrum1d_cube)
+    p._apply_subset_masks(spectrum1d_cube, p.spatial_subset)
     assert np.all(spectrum1d_cube.mask == expected_mask)
