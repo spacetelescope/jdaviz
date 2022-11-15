@@ -129,6 +129,8 @@ Specviz
 Specviz2d
 ^^^^^^^^^
 
+- Fixed options for peak method in spectral extraction plugin. [#1844]
+
 3.1 (2022-10-26)
 ================
 
