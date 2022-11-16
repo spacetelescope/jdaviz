@@ -210,7 +210,7 @@ class SpectralExtraction(PluginTemplateMixin):
         self.trace_peak_method = SelectPluginComponent(self,
                                                        items='trace_peak_method_items',
                                                        selected='trace_peak_method_selected',
-                                                       manual_options=['Gaussian', 'Centroid' 'Max'])  # noqa
+                                                       manual_options=['Gaussian', 'Centroid', 'Max'])  # noqa
 
         self.trace_add_results = AddResults(self, 'trace_results_label',
                                             'trace_results_label_default',
