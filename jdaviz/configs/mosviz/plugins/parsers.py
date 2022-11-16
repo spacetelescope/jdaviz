@@ -13,8 +13,7 @@ from astropy.wcs import WCS
 from glue.core.data import Data
 from glue.core.link_helpers import LinkSame
 from specutils import Spectrum1D, SpectrumList, SpectrumCollection
-from specutils.io.default_loaders.jwst_reader import (identify_jwst_s2d_fits,
-                                                      identify_jwst_s2d_multi_fits)
+from specutils.io.default_loaders.jwst_reader import identify_jwst_s2d_multi_fits
 
 from jdaviz.configs.imviz.plugins.parsers import get_image_data_iterator
 from jdaviz.core.registries import data_parser_registry
@@ -309,15 +308,15 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
 
         return Spectrum1D(flux=data * data_unit, meta=metadata, **kw)
 
-    # See if this is a multi s2d file
-    if len(data_obj) == 1 and _check_is_file(data_obj[0]):
-        if identify_jwst_s2d_multi_fits("test", data_obj[0]):
-            data_obj = SpectrumList.read(data_obj[0])
-
     # Coerce into list-like object
     if (not isinstance(data_obj, (list, tuple, SpectrumCollection)) or
             isinstance(data_obj, fits.HDUList)):
         data_obj = [data_obj]
+
+    # See if this is a multi s2d file
+    if len(data_obj) == 1 and _check_is_file(data_obj[0]):
+        if identify_jwst_s2d_multi_fits("test", data_obj[0]):
+            data_obj = SpectrumList.read(data_obj[0])
 
     # If we're given a string, repeat it for each object
     if isinstance(data_labels, str):
@@ -374,6 +373,7 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
         app.add_data_to_viewer(spectrum_2d_viewer_reference_name, data_labels[0])
 
     return len(data_obj)
+
 
 def _load_fits_image_from_filename(filename, app):
     with fits.open(filename) as hdulist:
@@ -577,6 +577,8 @@ def _get_source_identifiers_by_hdu(hdus, filepaths=None,
                     os.path.basename(filepaths) if type(filepaths) is str
                     else os.path.basename(filepaths[indx]) if type(filepaths) is list
                     else FALLBACK_NAME)
+            if not allow_duplicates and src_name != FALLBACK_NAME and src_name in src_names:
+               continue
             src_names.append(src_name)
         except Exception:
             # Source ID lookup shouldn't ever prevent target from loading. Downgrade all errors to
@@ -584,9 +586,6 @@ def _get_source_identifiers_by_hdu(hdus, filepaths=None,
             warnings.warn("Source name lookup failed for Target " + str(indx) +
                           ". Using fallback ID", RuntimeWarning)
             src_names.append(FALLBACK_NAME)
-
-    if not allow_duplicates:
-        src_names = [*set(src_names)]
 
     return src_names
 
@@ -723,7 +722,6 @@ def mos_niriss_parser(app, data_dir, instrument=None,
                                                   delimiter=" ")
         for row in parsed_cat_fields:
             cat_id_dict[int(row[0])] = (row[1], row[2])
-
 
     # set up a dictionary of datasets to add to glue
     add_to_glue = {}
@@ -878,7 +876,6 @@ def mos_niriss_parser(app, data_dir, instrument=None,
                                  f"{orientation}")
                         spec_labels_1d.append(label)
                         add_to_glue[label] = sp
-
 
     # Add the datasets to glue - we do this in one step so that we can easily
     # optimize by avoiding recomputing the full link graph at every add
