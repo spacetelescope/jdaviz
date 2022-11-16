@@ -419,6 +419,14 @@ class Mosviz(ConfigHelper, LineListMixin):
             String representing the label for the data item loaded via
             ``images``. Can be a list of strings representing data labels
             for each item in ``images`` if  ``images`` is a list.
+
+        directory: str, optional
+            Instead of loading lists of spectra and images, the path to a directory
+            containing all files for a single JWST observation may be given.
+
+        instrument: str, optional
+            Required if ``directory`` is specified. Currently accepts values
+            ``NIRISS``, ``NIRCam`` or ``NIRSpec`` (not case sensitive).
         """
         # Link data after everything is loaded
         self.app.auto_link = False

@@ -27,10 +27,13 @@ def test_nirspec_parser(mosviz_helper, tmp_path, instrument_arg):
     if instrument_arg:
         mosviz_helper.load_data(directory=data_dir, instrument=instrument_arg)
     else:
-        # When no instrument is provided, mosviz.load_data should fallback to the nirspec loader.
-        # Naturally, the nirspec dataset should then work without any instrument keyword
-        with pytest.warns(UserWarning, match="Ambiguous MOS Instrument"):
+        # When no instrument is provided, Mosviz now raises an error
+        match = ('Ambiguous MOS Instrument: Only JWST NIRSpec, NIRCam, and NIRISS folder parsing'
+                 ' are currently supported')
+        with pytest.raises(ValueError, match=match):
             mosviz_helper.load_data(directory=data_dir)
+
+        return
 
     assert len(mosviz_helper.app.data_collection) == 16
 
@@ -139,6 +142,35 @@ def test_niriss_parser(mosviz_helper, tmp_path):
 
             for spec in (spec1d, spec2d):
                 assert spec.meta['SOURCEID'] == sourceid
+
+
+@pytest.mark.remote_data
+@pytest.mark.filterwarnings('ignore', match="'(MJy/sr)^2' did not parse as fits unit")
+def test_nircam_parser(mosviz_helper, tmp_path):
+    '''
+    Tests loading a NIRCam dataset
+    '''
+
+    # Download data
+    test_data = 'https://stsci.box.com/shared/static/itk7pav073nubwn58pig002m9796qzpw.zip'
+    fn = download_file(test_data, cache=True, timeout=100)
+
+    # Extract to a known, temporary folder
+    with ZipFile(fn, 'r') as sample_data_zip:
+        sample_data_zip.extractall(tmp_path)
+
+    mosviz_helper.load_data(directory=tmp_path / "trimmed_nircam_data", instrument="nircam")
+
+    # The MOS Table should be last in the data collection
+    dc_tab = mosviz_helper.app.data_collection[-1]
+    assert dc_tab.label == "MOS Table"
+    assert len(dc_tab.meta) == 0
+
+    # Check that the correct amount of spectra got loaded in the correct order
+    assert len(mosviz_helper.app.data_collection) == 31
+    assert mosviz_helper.app.data_collection['MOS Table']['Identifier'][0] == 1112
+    assert mosviz_helper.app.data_collection[0].label == 'GRISMR Source 1112 spec2d R'
+    assert mosviz_helper.app.data_collection[15].label == 'GRISMR Source 1112 spec1d R'
 
 
 @pytest.mark.remote_data
