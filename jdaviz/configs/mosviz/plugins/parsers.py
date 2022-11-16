@@ -534,7 +534,8 @@ def mos_meta_parser(app, data_obj, ids=None, spectra=False, sp1d=False, repeat=1
 
 
 def _get_source_identifiers_by_hdu(hdus, filepaths=None,
-                                   header_keys=['SOURCEID', 'OBJECT']):
+                                   header_keys=['SOURCEID', 'OBJECT'],
+                                   allow_duplicates=False):
     """
     Attempts to extract a list of source identifiers via different header values.
 
@@ -549,6 +550,10 @@ def _get_source_identifiers_by_hdu(hdus, filepaths=None,
         The header value (or values) to search an HDU for to extract the source id.
         List order is assumed to be priority order (i.e. will return first successful
         lookup)
+    allow_duplicates: bool
+        Flag to allow repeat identifiers. Mostly future proofing in case we eventually
+        want to load spectral order 2 as well as 1, and to remind us that we currently
+        don't allow that.
     """
     src_names = list()
     # If the user only provided a key that's not already in a container or list, put it in
@@ -579,6 +584,10 @@ def _get_source_identifiers_by_hdu(hdus, filepaths=None,
             warnings.warn("Source name lookup failed for Target " + str(indx) +
                           ". Using fallback ID", RuntimeWarning)
             src_names.append(FALLBACK_NAME)
+
+    if not allow_duplicates:
+        src_names = [*set(src_names)]
+
     return src_names
 
 
@@ -722,8 +731,8 @@ def mos_niriss_parser(app, data_dir, instrument=None,
     # Parse images
     image_dict = {}
 
-    print("Loading: Images")
     if "Direct Image" in files_by_labels:
+        print("Loading: Images")
         for image_file in files_by_labels["Direct Image"]:
             # save label for table viewer
             im_split = image_file.stem.split("_")[0]
@@ -813,8 +822,10 @@ def mos_niriss_parser(app, data_dir, instrument=None,
                             ra, dec = cat_id_dict[temp[sci].header["SOURCEID"]]
                             ras.append(ra)
                             decs.append(dec)
+
                         if filter_name in image_dict:
                             image_add.append(image_dict[filter_name])
+
                         spec_labels_2d.append(label)
                         filters.append(filter)
 
@@ -865,9 +876,9 @@ def mos_niriss_parser(app, data_dir, instrument=None,
                         label = (f"{filter_name} Source "
                                  f"{sp.meta['SOURCEID']} spec1d "
                                  f"{orientation}")
-
                         spec_labels_1d.append(label)
                         add_to_glue[label] = sp
+
 
     # Add the datasets to glue - we do this in one step so that we can easily
     # optimize by avoiding recomputing the full link graph at every add
