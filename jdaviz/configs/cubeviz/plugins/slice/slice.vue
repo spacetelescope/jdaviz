@@ -72,17 +72,48 @@
       </v-col>
     </v-row>
 
-    <v-row>
+    <v-row class="row-no-outside-padding row-min-bottom-padding">
       <v-col>
-        <button @click="next">Next</button>
-      </v-col>
-      <v-col>
-        <!-- FIXME: Does not work -->
-        <button @click="start">Play</button>
-      </v-col>
-      <v-col>
-        <!-- FIXME: Does not work -->
-        <button @click="stop">Stop</button>
+        <v-tooltip top>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn color="primary" icon @click="goto_first" v-bind="attrs" v-on="on">
+              <v-icon>skip_previous</v-icon>
+            </v-btn>
+          </template>
+          <span>Jump to first</span>
+        </v-tooltip>
+        <v-tooltip top>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn color="primary" icon @click="play_start" v-bind="attrs" v-on="on">
+              <v-icon>play_arrow</v-icon>
+            </v-btn>
+          </template>
+          <span>Play</span>
+        </v-tooltip>
+        <v-tooltip top>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn color="primary" icon @click="play_stop" v-bind="attrs" v-on="on">
+              <v-icon>pause</v-icon>
+            </v-btn>
+          </template>
+          <span>Pause</span>
+        </v-tooltip>
+        <v-tooltip top>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn color="primary" icon @click="play_next" v-bind="attrs" v-on="on">
+              <v-icon>exposure_plus_1</v-icon>
+            </v-btn>
+          </template>
+          <span>Next slice</span>
+        </v-tooltip>
+        <v-tooltip top>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn color="primary" icon @click="goto_last" v-bind="attrs" v-on="on">
+              <v-icon>skip_next</v-icon>
+            </v-btn>
+          </template>
+          <span>Jump to last</span>
+        </v-tooltip>
       </v-col>
     </v-row>
   </j-tray-plugin>
@@ -95,23 +126,6 @@
         (v) => { this.slice = v; },
         this.wait);
     },
-    play() {
-      while (this.is_playing) {
-        setTimeout(() => {this.slice = (this.slice + 1) % (this.max_value + 1);}, this.play_interval);
-      }
-    },
-    methods: {
-      next(event) {
-        this.slice = (this.slice + 1) % (this.max_value + 1);
-      },
-      start(event) {
-        this.is_playing = true;
-        module.exports.play();  // FIXME: module not defined
-      },
-      stop(event) {
-        this.is_playing = false;
-      }
-    }
   }
 </script>
 

@@ -75,6 +75,15 @@ When the slice tool is active, clicking anywhere on the spectrum viewer
 will select the nearest slice across all viewers, even if the indicator
 is off-screen.
 
+For your convenience, there are also five player-style buttons with
+the following functionality:
+
+* Jump to first
+* Play
+* Pause
+* Next slice
+* Jump to last
+
 Gaussian Smooth
 ===============
 

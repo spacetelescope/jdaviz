@@ -1,6 +1,9 @@
+import threading
+import time
 import warnings
-from astropy.units import UnitsWarning
+
 import numpy as np
+from astropy.units import UnitsWarning
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from traitlets import Bool, Float, observe, Any, Int
@@ -46,7 +49,7 @@ class Slice(PluginTemplateMixin):
     show_wavelength = Bool(True).tag(sync=True)
 
     is_playing = Bool(False).tag(sync=True)
-    play_interval = Int(200).tag(sync=True)  # TODO: milliseconds?
+    play_interval = Int(200).tag(sync=True)  # milliseconds
 
     def __init__(self, *args, **kwargs):
         self._default_spectrum_viewer_reference_name = kwargs.get(
@@ -60,6 +63,7 @@ class Slice(PluginTemplateMixin):
         self._watched_viewers = []
         self._indicator_viewers = []
         self._x_all = None
+        self._player = None
 
         # initialize watching existing viewers WITH data (if initializing the plugin after data
         # already exists - otherwise the AddDataMessage will handle watching image viewers once
@@ -176,7 +180,10 @@ class Slice(PluginTemplateMixin):
 
     @observe('slice')
     def _on_slider_updated(self, event):
-        value = int(event.get('new', int(len(self._x_all)/2)))
+        if self._x_all is None:
+            return
+
+        value = int(event.get('new', int(len(self._x_all)/2))) % (int(self.max_value) + 1)
 
         self.wavelength = self._x_all[value]
 
@@ -184,3 +191,33 @@ class Slice(PluginTemplateMixin):
             viewer.state.slices = (0, 0, value)
         for viewer in self._indicator_viewers:
             viewer._update_slice_indicator(value)
+
+    def vue_goto_first(self, *args):
+        self._on_slider_updated({'new': self.min_value})
+
+    def vue_goto_last(self, *args):
+        self._on_slider_updated({'new': self.max_value})
+
+    def vue_play_next(self, *args):
+        self._on_slider_updated({'new': self.slice + 1})
+
+    def _player_worker(self):
+        ts = float(self.play_interval) * 1e-3  # ms to s
+        while self.is_playing:
+            self.vue_play_next()
+            time.sleep(ts)
+
+    def vue_play_start(self, *args):
+        if self._x_all is None:
+            return
+
+        self.vue_play_stop()  # Stop any active player.
+        self.is_playing = True
+        self._player = threading.Thread(target=self._player_worker)
+        self._player.start()
+
+    def vue_play_stop(self, *args):
+        if self._player and self._player.is_alive():
+            self._player.join(timeout=0)
+            self._player = None
+            self.is_playing = False
