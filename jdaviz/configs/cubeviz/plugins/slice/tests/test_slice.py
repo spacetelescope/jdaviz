@@ -13,7 +13,7 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
     # Make sure nothing crashes if plugin used without data
     sl.vue_play_next()
     assert sl.slice == 0
-    sl.vue_play_start()
+    sl.vue_play_start_stop()
     assert not sl.is_playing
     assert not sl._player
 
@@ -80,11 +80,14 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
     sl.vue_play_next()  # Should automatically wrap to beginning
     assert sl.slice == 0
 
-    sl.vue_play_start()
+    sl.vue_play_start_stop()  # Start
     assert sl.is_playing
     assert sl._player.is_alive()
     time.sleep(1)  # Give it time to play something
-    sl.vue_play_stop()
+    sl.vue_play_next()  # Should be no-op
+    sl.vue_goto_last()  # Should be no-op
+    sl.vue_goto_first()  # Should be no-op
+    sl.vue_play_start_stop()  # Stop
     assert not sl.is_playing
     assert not sl._player
     assert sl.slice > 0  # Not sure where it is at but sure not the starting point

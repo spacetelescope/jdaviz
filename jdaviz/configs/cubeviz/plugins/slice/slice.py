@@ -193,31 +193,39 @@ class Slice(PluginTemplateMixin):
             viewer._update_slice_indicator(value)
 
     def vue_goto_first(self, *args):
+        if self.is_playing:
+            return
         self._on_slider_updated({'new': self.min_value})
 
     def vue_goto_last(self, *args):
+        if self.is_playing:
+            return
         self._on_slider_updated({'new': self.max_value})
 
     def vue_play_next(self, *args):
+        if self.is_playing:
+            return
         self._on_slider_updated({'new': self.slice + 1})
 
     def _player_worker(self):
         ts = float(self.play_interval) * 1e-3  # ms to s
         while self.is_playing:
-            self.vue_play_next()
+            self._on_slider_updated({'new': self.slice + 1})
             time.sleep(ts)
 
-    def vue_play_start(self, *args):
+    def vue_play_start_stop(self, *args):
+        if self.is_playing:  # Stop
+            if self._player:
+                if self._player.is_alive():
+                    self._player.join(timeout=0)
+                self._player = None
+            self.is_playing = False
+            return
+
         if self._x_all is None:
             return
 
-        self.vue_play_stop()  # Stop any active player.
+        # Start
         self.is_playing = True
         self._player = threading.Thread(target=self._player_worker)
         self._player.start()
-
-    def vue_play_stop(self, *args):
-        if self._player and self._player.is_alive():
-            self._player.join(timeout=0)
-            self._player = None
-            self.is_playing = False

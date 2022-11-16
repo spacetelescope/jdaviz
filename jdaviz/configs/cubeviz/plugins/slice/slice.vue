@@ -76,7 +76,7 @@
       <v-col>
         <v-tooltip top>
           <template v-slot:activator="{ on, attrs }">
-            <v-btn color="primary" icon @click="goto_first" v-bind="attrs" v-on="on">
+            <v-btn color="primary" icon @click="goto_first" v-bind="attrs" v-on="on" :disabled="is_playing">
               <v-icon>skip_previous</v-icon>
             </v-btn>
           </template>
@@ -84,23 +84,15 @@
         </v-tooltip>
         <v-tooltip top>
           <template v-slot:activator="{ on, attrs }">
-            <v-btn color="primary" icon @click="play_start" v-bind="attrs" v-on="on">
-              <v-icon>play_arrow</v-icon>
+            <v-btn color="primary" icon @click="play_start_stop" v-bind="attrs" v-on="on">
+              <v-icon>mdi-play-pause</v-icon>
             </v-btn>
           </template>
-          <span>Play</span>
+          <span>Play/Pause</span>
         </v-tooltip>
         <v-tooltip top>
           <template v-slot:activator="{ on, attrs }">
-            <v-btn color="primary" icon @click="play_stop" v-bind="attrs" v-on="on">
-              <v-icon>pause</v-icon>
-            </v-btn>
-          </template>
-          <span>Pause</span>
-        </v-tooltip>
-        <v-tooltip top>
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn color="primary" icon @click="play_next" v-bind="attrs" v-on="on">
+            <v-btn color="primary" icon @click="play_next" v-bind="attrs" v-on="on" :disabled="is_playing">
               <v-icon>exposure_plus_1</v-icon>
             </v-btn>
           </template>
@@ -108,7 +100,7 @@
         </v-tooltip>
         <v-tooltip top>
           <template v-slot:activator="{ on, attrs }">
-            <v-btn color="primary" icon @click="goto_last" v-bind="attrs" v-on="on">
+            <v-btn color="primary" icon @click="goto_last" v-bind="attrs" v-on="on" :disabled="is_playing">
               <v-icon>skip_next</v-icon>
             </v-btn>
           </template>
