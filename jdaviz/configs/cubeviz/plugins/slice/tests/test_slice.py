@@ -83,7 +83,7 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
     sl.vue_play_start()
     assert sl.is_playing
     assert sl._player.is_alive()
-    time.sleep(sl.play_interval * 5e-3)  # Give it time to play something
+    time.sleep(1)  # Give it time to play something
     sl.vue_play_stop()
     assert not sl.is_playing
     assert not sl._player
