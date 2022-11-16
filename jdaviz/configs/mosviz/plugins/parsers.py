@@ -577,8 +577,10 @@ def _get_source_identifiers_by_hdu(hdus, filepaths=None,
                     os.path.basename(filepaths) if type(filepaths) is str
                     else os.path.basename(filepaths[indx]) if type(filepaths) is list
                     else FALLBACK_NAME)
-            if not allow_duplicates and src_name != FALLBACK_NAME and src_name in src_names:
-               continue
+                src_names.append(src_name)
+                continue
+            if not allow_duplicates and src_name in src_names:
+                continue
             src_names.append(src_name)
         except Exception:
             # Source ID lookup shouldn't ever prevent target from loading. Downgrade all errors to
