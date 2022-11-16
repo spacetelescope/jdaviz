@@ -45,6 +45,9 @@ class Slice(PluginTemplateMixin):
     show_indicator = Bool(True).tag(sync=True)
     show_wavelength = Bool(True).tag(sync=True)
 
+    is_playing = Bool(False).tag(sync=True)
+    play_interval = Int(200).tag(sync=True)  # TODO: milliseconds?
+
     def __init__(self, *args, **kwargs):
         self._default_spectrum_viewer_reference_name = kwargs.get(
             "spectrum_viewer_reference_name", "spectrum-viewer"

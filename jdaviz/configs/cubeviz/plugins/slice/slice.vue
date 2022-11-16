@@ -71,6 +71,20 @@
         <span>{{ wavelength_unit }}</span>
       </v-col>
     </v-row>
+
+    <v-row>
+      <v-col>
+        <button @click="next">Next</button>
+      </v-col>
+      <v-col>
+        <!-- FIXME: Does not work -->
+        <button @click="start">Play</button>
+      </v-col>
+      <v-col>
+        <!-- FIXME: Does not work -->
+        <button @click="stop">Stop</button>
+      </v-col>
+    </v-row>
   </j-tray-plugin>
 </template>
 
@@ -81,6 +95,23 @@
         (v) => { this.slice = v; },
         this.wait);
     },
+    play() {
+      while (this.is_playing) {
+        setTimeout(() => {this.slice = (this.slice + 1) % (this.max_value + 1);}, this.play_interval);
+      }
+    },
+    methods: {
+      next(event) {
+        this.slice = (this.slice + 1) % (this.max_value + 1);
+      },
+      start(event) {
+        this.is_playing = true;
+        module.exports.play();  // FIXME: module not defined
+      },
+      stop(event) {
+        this.is_playing = false;
+      }
+    }
   }
 </script>
 
