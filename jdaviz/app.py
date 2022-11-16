@@ -47,7 +47,7 @@ from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessag
 from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registry,
                                     data_parser_registry)
 from jdaviz.core.tools import ICON_DIR
-from jdaviz.utils import SnackbarQueue, ColorCycler
+from jdaviz.utils import SnackbarQueue, ColorCycler, alpha_index
 from ipypopout import PopoutButton
 
 __all__ = ['Application']
@@ -381,21 +381,9 @@ class Application(VuetifyTemplate, HubListener):
         else:
             raise NotImplementedError(f"cannot recognize new layer from {msg}")
 
-        def _new_layer_name(index):
-            if index <= 25:
-                # A-Z
-                return chr(97 + index)
-            elif index <= 701:
-                # AA-ZZ
-                return chr(97 + index//26 - 1) + chr(97 + index % 26)
-            else:
-                # if we ever want to support more than 702 layers, then we'll need a third
-                # "digit" and will need to account for the horizontal space in the legends
-                raise NotImplementedError
-
         if layer_name not in self.state.layer_icons:
             self.state.layer_icons = {**self.state.layer_icons,
-                                      layer_name: _new_layer_name(len(self.state.layer_icons))}
+                                      layer_name: alpha_index(len(self.state.layer_icons))}
 
     def _link_new_data(self, reference_data=None, data_to_be_linked=None):
         """
