@@ -108,6 +108,8 @@ Bug Fixes
 - Prevent duplicate labels by changing duplicate number appended
   to label to max number (of duplicates) plus 1. [#1824]
 
+- Layer lettering now supports up to 700 layers. [#1850]
+
 Cubeviz
 ^^^^^^^
 
