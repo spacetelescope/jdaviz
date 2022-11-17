@@ -59,6 +59,14 @@ center-of-mass of the data within the aperture.
 No background subtraction is performed. Click :guilabel:`Recenter`
 to change its parameters and move it to the calculated centroid.
 
+.. note::
+
+    If you want accurate centroid calculations, it is recommended that you
+    use a background subtracted image. Alternately, you could calculate
+    the centroid outside of Jdaviz (e.g., using ``photutils``) and then
+    manually edit the subset (see below) or load your own aperture object
+    (:ref:`imviz-import-regions-api`).
+
 For a simple subset, you can edit its parameters by changing the values
 in the corresponding editable text fields. Once you have entered the new
 value(s), click :guilabel:`Update` to apply. You should see the subset
