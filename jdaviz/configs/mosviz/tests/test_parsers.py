@@ -80,6 +80,27 @@ def test_nirspec_parser(mosviz_helper, tmp_path, instrument_arg):
                                              data_label=data_label)
 
 
+@pytest.mark.filterwarnings('ignore')
+@pytest.mark.remote_data
+def test_nirspec_level2_parser(mosviz_helper, tmp_path):
+    '''
+    Tests loading our default MosvizExample notebook data
+    Also tests no instrument keyword fallback, and IntraRow linking
+    '''
+
+    test_data = 'https://stsci.box.com/shared/static/mytqf082lpbfia7wlwjq6p1h5cggd9h6.zip'
+    fn = download_file(test_data, cache=True, timeout=30)
+    with ZipFile(fn, 'r') as sample_data_zip:
+        sample_data_zip.extractall(tmp_path)
+
+    level3_path = tmp_path / 'jw02756001001_03103_00003_nrs1'
+
+    data_dir = level3_path
+    mosviz_helper.load_data(directory=data_dir, instrument='nircam')
+
+    assert len(mosviz_helper.app.data_collection) == 75
+
+
 @pytest.mark.remote_data
 @pytest.mark.filterwarnings('ignore', match="'(MJy/sr)^2' did not parse as fits unit")
 def test_niriss_parser(mosviz_helper, tmp_path):
