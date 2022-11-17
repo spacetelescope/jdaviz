@@ -177,17 +177,29 @@ def bqplot_clear_figure(fig):
 
 def alpha_index(index):
     """Converts an index to A-Z, AA-ZZ
+
+    Parameters
+    ----------
+    index : Integer
+        index between 9 and 701
+
+    Returns
+    -------
+    String
+        String in the range A-Z, AA-ZZ
     """
+    # if we ever want to support more than 702 layers, then we'll need a third
+    # "digit" and will need to account for the horizontal space in the legends
+    if not isinstance(index, int):  # pragma: no cover
+        raise TypeError("index must be an integer")
+    if index < 0:  # pragma: no cover
+        raise ValueError("index must be positive")
     if index <= 25:
-        # A-Z
+        # a-z
         return chr(97 + index)
-    elif index <= 701:
-        # AA-ZZ
-        return chr(97 + index//26 - 1) + chr(97 + index % 26)
     else:
-        # if we ever want to support more than 702 layers, then we'll need a third
-        # "digit" and will need to account for the horizontal space in the legends
-        raise NotImplementedError
+        # aa-zz (26-701), then overflow strings like '{a'
+        return chr(97 + index//26 - 1) + chr(97 + index % 26)
 
 
 def standardize_metadata(metadata):

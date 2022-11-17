@@ -3,11 +3,7 @@ import pytest
 from jdaviz import utils
 
 
-def test_alpha_index():
-    assert utils.alpha_index(0) == 'a'
-    assert utils.alpha_index(1) == 'b'
-    assert utils.alpha_index(25) == 'z'
-    assert utils.alpha_index(26) == 'aa'
-    assert utils.alpha_index(701) == 'zz'
-    with pytest.raises(NotImplementedError):
-        utils.alpha_index(702)
+@pytest.mark.parametrize("test_input,expected", [(0, 'a'), (1, 'b'), (25, 'z'), (26, 'aa'),
+                                                 (701, 'zz'), (702, '{a')])
+def test_alpha_index(test_input, expected):
+    assert utils.alpha_index(test_input) == expected
