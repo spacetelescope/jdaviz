@@ -281,3 +281,14 @@ def test_disjoint_spectral_subset(cubeviz_helper, spectral_cube_wcs):
     subset_plugin.subset_selected = "Create New"
     subset_plugin.subset_selected = "Subset 1"
     assert subset_plugin._get_value_from_subset_definition(0, "Lower bound", "value") == 30
+
+
+def test_subset_applied_to_multiple_spectra(specviz_helper, spectrum1d):
+    specviz_helper.load_spectrum(spectrum1d)
+    specviz_helper.load_spectrum(spectrum1d)
+
+    specviz_helper.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(6200, 7000))
+
+    specs = specviz_helper.app.get_data_from_viewer("spectrum-viewer")
+    assert isinstance(specs['Subset 1'], dict)
+    assert 'Spectrum1D (1)' in specs['Subset 1'].keys()

@@ -581,7 +581,7 @@ class Application(VuetifyTemplate, HubListener):
         return self._viewer_store.get(vid)
 
     def get_data_from_viewer(self, viewer_reference, data_label=None,
-                             cls='default', include_subsets=True):
+                             cls='default', include_subsets=True, subsets_as_dict=True):
         """
         Returns each data component currently rendered within a viewer
         instance. Viewers themselves store a default data type to which the
@@ -668,6 +668,7 @@ class Application(VuetifyTemplate, HubListener):
                 elif isinstance(layer_state.layer, Subset):
                     if include_subsets:
                         layer_data = layer_state.layer
+                        original_data_label = layer_data.data.label
 
                         if cls is not None:
                             handler, _ = data_translator.get_handler_for(cls)
@@ -677,7 +678,21 @@ class Application(VuetifyTemplate, HubListener):
                             except IncompatibleAttribute:
                                 continue
 
-                        data[label] = layer_data
+                        if subsets_as_dict:
+                            # A dictionary is used to track all spectra that a subset
+                            # is applied to.
+                            if label in data:
+                                data[label][original_data_label] = layer_data
+                            else:
+                                data[label] = {original_data_label: layer_data}
+                        else:
+                            data[f"{label}:{original_data_label}"] = layer_data
+
+        # If the dictionary that tracks how many spectra a subset is applied to is of size one,
+        # the dictionary is removed and the only value is set as the value of data['Subset']
+        for l in data:
+            if isinstance(data[l], dict) and len(data[l].keys()) < 2:
+                data[l] = list(data[l].values())[0]
 
         # If a data label was provided, return only the corresponding data, otherwise return all:
         return data.get(data_label, data)
@@ -718,7 +733,8 @@ class Application(VuetifyTemplate, HubListener):
         viewer = self.get_viewer(viewer_reference)
         data = self.get_data_from_viewer(viewer_reference,
                                          data_label,
-                                         cls=None)
+                                         cls=None,
+                                         subsets_as_dict=False)
         regions = {}
 
         def _get_all_subregions(mask, spec_axis_data):
@@ -811,7 +827,6 @@ class Application(VuetifyTemplate, HubListener):
                         data_wcs = value.data.meta['_orig_spec']
                     else:
                         data_wcs = value.data.coords
-
                     subregions_in_subset = _get_all_subregions(
                             np.where(value.to_mask() == True)[0], # noqa
                             data_wcs.spectral_axis)
