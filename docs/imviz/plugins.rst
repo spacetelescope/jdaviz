@@ -137,8 +137,8 @@ an interactively selected region. A typical workflow is as follows:
 4. Select the desired region using the :guilabel:`Subset` dropdown menu.
    You can use the :ref:`imviz-subset-plugin` plugin to center it first on the
    object of interest using its center of mass, if you wish.
-   Depending on the object, that may take several interations for recentering
-   to converge; or it may never converge at all.
+   Depending on the object, it may take several iterations for re-centering
+   to converge, or it may never converge at all.
 5. If you want to subtract background before performing photometry,
    you have the following 3 options. Otherwise if your image is already
    background subtracted, choose "Manual" and leave the background set at 0:
