@@ -96,7 +96,7 @@ def test_nirspec_level2_parser(mosviz_helper, tmp_path):
     level3_path = tmp_path / 'jw02756001001_03103_00003_nrs1'
 
     data_dir = level3_path
-    mosviz_helper.load_data(directory=data_dir, instrument='nircam')
+    mosviz_helper.load_data(directory=data_dir, instrument='nirspec')
 
     assert len(mosviz_helper.app.data_collection) == 75
 
