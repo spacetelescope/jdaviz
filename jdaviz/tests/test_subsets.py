@@ -188,6 +188,10 @@ def test_region_spectral_spatial(cubeviz_helper, spectral_cube_wcs):
     cubeviz_helper.app.add_data_to_viewer('spectrum-viewer', 'Test Flux')
     cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'Test Flux')
 
+    # use gaussian smooth plugin as a regression test for
+    # https://github.com/spacetelescope/jdaviz/issues/1853
+    cubeviz_helper.plugins['Gaussian Smooth'].smooth(add_data=True)
+
     spectrum_viewer = cubeviz_helper.app.get_viewer("spectrum-viewer")
     spectrum_viewer.apply_roi(XRangeROI(5, 15.5))
 

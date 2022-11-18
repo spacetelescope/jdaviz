@@ -193,13 +193,22 @@ class CubevizProfileView(SpecvizProfileView):
             "flux_viewer_reference_name", "flux-viewer"
         )
 
+    def _is_spatial_subset(self, layer):
+        # spatial subset layers will have the same data-label as the collapsed flux cube
+        ref_data_label = self.layers[0].layer.data.label
+        return (isinstance(getattr(layer.layer, 'subset_state', None), RoiSubsetState)
+                and layer.layer.data.label == ref_data_label)
+
     def _get_spatial_subset_layers(self):
-        return [ls for ls in self.state.layers
-                if isinstance(getattr(ls.layer, 'subset_state', None), RoiSubsetState)]
+        return [ls for ls in self.state.layers if self._is_spatial_subset(ls)]
+
+    def _is_spectral_subset(self, layer):
+        ref_data_label = self.layers[0].layer.data.label
+        return (isinstance(getattr(layer.layer, 'subset_state', None), RangeSubsetState)
+                and layer.layer.data.label == ref_data_label)
 
     def _get_spectral_subset_layers(self):
-        return [ls for ls in self.state.layers
-                if isinstance(getattr(ls.layer, 'subset_state', None), RangeSubsetState)]
+        return [ls for ls in self.state.layers if self._is_spectral_subset(ls)]
 
     def _get_marks_for_layers(self, layers):
         layers_list = list(self.state.layers)
@@ -207,10 +216,9 @@ class CubevizProfileView(SpecvizProfileView):
         # use Lines/LinesGL (so an isinstance check won't be sufficient here)
         layer_marks = self.native_marks
         # and now we'll assume that the marks are in the same order as the layers, this should
-        # be the case as long as the order isn't manually resorted.  One exception: when adding
-        # a new data layer, the layer for the automatic highlighting can be added BEFORE it is
-        # accessible from self.native_markers, in which case the returned index from layers_list
-        # will be one too large.
+        # be the case as long as the order isn't manually resorted.  If for any reason the layer
+        # is added but the mark has not yet been created, this will ignore that entry rather than
+        # raising an IndexError.
         inds = [layers_list.index(layer) for layer in layers]
         return [layer_marks[ind] for ind in inds if ind < len(layer_marks)]
 
@@ -232,13 +240,10 @@ class CubevizProfileView(SpecvizProfileView):
         """
         super()._expected_subset_layer_default(layer_state)
 
-        try:
-            this_mark = self._get_marks_for_layers([layer_state])[0]
-        except IndexError:
-            # _get_marks_for_layers will return an empty list when non-spatial-subset layers
-            # are initially created.  In this case, we do not need to add any shadowing marks,
-            # so can safely return
+        if not (self._is_spatial_subset(layer_state) or self._is_spectral_subset(layer_state)):
             return
+
+        this_mark = self._get_marks_for_layers([layer_state])[0]
 
         new_marks = []
 
