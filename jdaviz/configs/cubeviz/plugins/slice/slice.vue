@@ -71,6 +71,43 @@
         <span>{{ wavelength_unit }}</span>
       </v-col>
     </v-row>
+
+    <v-row class="row-no-outside-padding row-min-bottom-padding">
+      <v-col>
+        <v-tooltip top>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn color="primary" icon @click="goto_first" v-bind="attrs" v-on="on" :disabled="is_playing">
+              <v-icon>skip_previous</v-icon>
+            </v-btn>
+          </template>
+          <span>Jump to first</span>
+        </v-tooltip>
+        <v-tooltip top>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn color="primary" icon @click="play_start_stop" v-bind="attrs" v-on="on">
+              <v-icon>mdi-play-pause</v-icon>
+            </v-btn>
+          </template>
+          <span>Play/Pause</span>
+        </v-tooltip>
+        <v-tooltip top>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn color="primary" icon @click="play_next" v-bind="attrs" v-on="on" :disabled="is_playing">
+              <v-icon>exposure_plus_1</v-icon>
+            </v-btn>
+          </template>
+          <span>Next slice</span>
+        </v-tooltip>
+        <v-tooltip top>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn color="primary" icon @click="goto_last" v-bind="attrs" v-on="on" :disabled="is_playing">
+              <v-icon>skip_next</v-icon>
+            </v-btn>
+          </template>
+          <span>Jump to last</span>
+        </v-tooltip>
+      </v-col>
+    </v-row>
   </j-tray-plugin>
 </template>
 

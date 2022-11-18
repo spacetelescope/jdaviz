@@ -4,10 +4,17 @@ import numpy as np
 from jdaviz.configs.cubeviz.plugins.slice.slice import Slice
 
 
-@pytest.mark.filterwarnings('ignore:No observer defined on WCS')
 def test_slice(cubeviz_helper, spectrum1d_cube):
     app = cubeviz_helper.app
     sl = Slice(app=app)
+
+    # Make sure nothing crashes if plugin used without data
+    sl.vue_play_next()
+    assert sl.slice == 0
+    sl.vue_play_start_stop()
+    assert not sl.is_playing
+    assert not sl._player
+
     app.add_data(spectrum1d_cube, 'test')
     app.add_data_to_viewer("spectrum-viewer", "test")
     app.add_data_to_viewer("flux-viewer", "test")
@@ -47,7 +54,8 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
     # test setting a static 2d image to the "watched" flux viewer to make sure it disconnects
     mm = app.get_tray_item_from_name('cubeviz-moment-maps')
     mm.add_to_viewer_selected = 'flux-viewer'
-    mm.vue_calculate_moment()
+    with pytest.warns(UserWarning, match='No observer defined on WCS'):
+        mm.vue_calculate_moment()
 
     assert len(sl._watched_viewers) == 1
     assert len(sl._indicator_viewers) == 1
@@ -62,8 +70,29 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
     cubeviz_helper.select_wavelength(4.62360028e-07)
     assert sl.slice == 1
 
+    # Test player buttons API
 
-@pytest.mark.filterwarnings('ignore:No observer defined on WCS')
+    sl.vue_goto_last()
+    assert sl.slice == sl.max_value
+
+    sl.vue_play_next()  # Should automatically wrap to beginning
+    assert sl.slice == 0
+
+    sl.vue_play_start_stop()  # Start
+    assert sl.is_playing
+    assert sl._player.is_alive()
+    sl.vue_play_next()  # Should be no-op
+    sl.vue_goto_last()  # Should be no-op
+    sl.vue_goto_first()  # Should be no-op
+    sl.vue_play_start_stop()  # Stop
+    assert not sl.is_playing
+    assert not sl._player
+    # NOTE: Hard to check sl.slice here because it is non-deterministic.
+
+    sl.vue_goto_first()
+    assert sl.slice == 0
+
+
 def test_indicator_settings(cubeviz_helper, spectrum1d_cube):
     app = cubeviz_helper.app
     app.add_data(spectrum1d_cube, 'test')

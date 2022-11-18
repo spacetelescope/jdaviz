@@ -13,6 +13,8 @@ Cubeviz
 
 - Added ability to load plain Numpy array cube. [#1773]
 
+- Added Slice plugin player control buttons. [#1848]
+
 Imviz
 ^^^^^
 
