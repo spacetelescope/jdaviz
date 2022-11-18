@@ -10,7 +10,7 @@ from ipyvue import watch
 from glue.config import settings
 
 __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
-           'standardize_metadata', 'ColorCycler']
+           'standardize_metadata', 'ColorCycler', 'alpha_index']
 
 # For Metadata Viewer plugin internal use only.
 PRIHDR_KEY = '_primary_header'
@@ -173,6 +173,42 @@ def bqplot_clear_figure(fig):
     fig.marks = []
     fig.axes = []
     setattr(fig, 'axis_registry', {})
+
+
+def alpha_index(index):
+    """Converts an index to label (A-Z, AA-ZZ).
+
+    Parameters
+    ----------
+    index : int
+        Index between 0 and 701, inclusive. Higher number is accepted but
+        will have special characters.
+
+    Returns
+    -------
+    label : str
+        String in the range A-Z, AA-ZZ if index is within 0-701 range, inclusive.
+
+    Raises
+    ------
+    TypeError
+        Index is not integer.
+
+    ValueError
+        Index is negative.
+    """
+    # if we ever want to support more than 702 layers, then we'll need a third
+    # "digit" and will need to account for the horizontal space in the legends
+    if not isinstance(index, int):
+        raise TypeError("index must be an integer")
+    if index < 0:
+        raise ValueError("index must be positive")
+    if index <= 25:
+        # a-z
+        return chr(97 + index)
+    else:
+        # aa-zz (26-701), then overflow strings like '{a'
+        return chr(97 + index//26 - 1) + chr(97 + index % 26)
 
 
 def standardize_metadata(metadata):
