@@ -62,7 +62,7 @@ to change its parameters and move it to the calculated centroid.
 .. note::
 
     If you want accurate centroid calculations, it is recommended that you
-    use a background subtracted image. Alternately, you could calculate
+    use a background-subtracted image. Alternately, you could calculate
     the centroid outside of Jdaviz (e.g., using ``photutils``) and then
     manually edit the subset (see below) or load your own aperture object
     (:ref:`imviz-import-regions-api`).
