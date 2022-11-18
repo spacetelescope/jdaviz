@@ -47,7 +47,7 @@ from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessag
 from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registry,
                                     data_parser_registry)
 from jdaviz.core.tools import ICON_DIR
-from jdaviz.utils import SnackbarQueue, ColorCycler
+from jdaviz.utils import SnackbarQueue, ColorCycler, alpha_index
 from ipypopout import PopoutButton
 
 __all__ = ['Application']
@@ -380,7 +380,7 @@ class Application(VuetifyTemplate, HubListener):
 
         if layer_name not in self.state.layer_icons:
             self.state.layer_icons = {**self.state.layer_icons,
-                                      layer_name: chr(97 + len(self.state.layer_icons))}
+                                      layer_name: alpha_index(len(self.state.layer_icons))}
 
     def _link_new_data(self, reference_data=None, data_to_be_linked=None):
         """
