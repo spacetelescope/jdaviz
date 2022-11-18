@@ -245,6 +245,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin):
 
         data = self._selected_data
         reg = self._selected_subset
+        xcenter = reg.center.x
+        ycenter = reg.center.y
 
         # Reset last fitted model
         fit_model = None
@@ -257,6 +259,10 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin):
                 bg = float(self.background_value)
             except ValueError:  # Clearer error message
                 raise ValueError('Missing or invalid background value')
+            if data.coords is not None:
+                sky_center = data.coords.pixel_to_world(xcenter, ycenter)
+            else:
+                sky_center = None
             aperture = regions2aperture(reg)
             include_pixarea_fac = False
             include_counts_fac = False
@@ -289,12 +295,10 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin):
                     include_flux_scale = True
             phot_aperstats = ApertureStats(comp_data, aperture, wcs=data.coords, local_bkg=bg)
             phot_table = phot_aperstats.to_table(columns=(
-                'id', 'xcentroid', 'ycentroid', 'sky_centroid', 'sum', 'sum_aper_area',
+                'id', 'sum', 'sum_aper_area',
                 'min', 'max', 'mean', 'median', 'mode', 'std', 'mad_std', 'var',
                 'biweight_location', 'biweight_midvariance', 'fwhm', 'semimajor_sigma',
                 'semiminor_sigma', 'orientation', 'eccentricity'))  # Some cols excluded, add back as needed.  # noqa
-            phot_table['xcentroid'].unit = u.pix  # photutils only assumes, we make it real
-            phot_table['ycentroid'].unit = u.pix
             rawsum = phot_table['sum'][0]
 
             if include_pixarea_fac:
@@ -323,12 +327,14 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin):
 
             # Extra info beyond photutils.
             phot_table.add_columns(
-                [bg, pixarea_fac, sum_ct, sum_ct_err, ctfac, sum_mag, flux_scale, data.label,
+                [xcenter * u.pix, ycenter * u.pix, sky_center,
+                 bg, pixarea_fac, sum_ct, sum_ct_err, ctfac, sum_mag, flux_scale, data.label,
                  reg.meta.get('label', ''), Time(datetime.utcnow())],
-                names=['background', 'pixarea_tot', 'aperture_sum_counts',
-                       'aperture_sum_counts_err', 'counts_fac', 'aperture_sum_mag', 'flux_scaling',
+                names=['xcenter', 'ycenter', 'sky_center', 'background', 'pixarea_tot',
+                       'aperture_sum_counts', 'aperture_sum_counts_err', 'counts_fac',
+                       'aperture_sum_mag', 'flux_scaling',
                        'data_label', 'subset_label', 'timestamp'],
-                indexes=[4, 6, 6, 6, 6, 6, 6, 21, 21, 21])
+                indexes=[1, 1, 1, 1, 3, 3, 3, 3, 3, 3, 18, 18, 18])
 
             # Attach to app for Python extraction.
             if (not hasattr(self.app, '_aper_phot_results') or
@@ -352,9 +358,9 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin):
             line_y_sc = bqplot.LinearScale()
 
             if self.current_plot_type == "Curve of Growth":
-                self._fig.title = 'Curve of growth from source centroid'
+                self._fig.title = 'Curve of growth from aperture center'
                 x_arr, sum_arr, x_label, y_label = _curve_of_growth(
-                    comp_data, phot_aperstats.centroid, aperture, phot_table['sum'][0],
+                    comp_data, (xcenter, ycenter), aperture, phot_table['sum'][0],
                     wcs=data.coords, background=bg, pixarea_fac=pixarea_fac)
                 self._fig.axes = [bqplot.Axis(scale=line_x_sc, label=x_label),
                                   bqplot.Axis(scale=line_y_sc, orientation='vertical',
@@ -370,33 +376,33 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin):
                                               label=comp.units or 'Value')]
 
                 if self.current_plot_type == "Radial Profile":
-                    self._fig.title = 'Radial profile from source centroid'
+                    self._fig.title = 'Radial profile from aperture center'
                     x_data, y_data = _radial_profile(
-                        phot_aperstats.data_cutout, phot_aperstats.bbox, phot_aperstats.centroid,
+                        phot_aperstats.data_cutout, phot_aperstats.bbox, (xcenter, ycenter),
                         raw=False)
                     bqplot_line = bqplot.Lines(x=x_data, y=y_data, marker='circle',
                                                scales={'x': line_x_sc, 'y': line_y_sc},
                                                marker_size=32, colors='gray')
                 else:  # Radial Profile (Raw)
-                    self._fig.title = 'Raw radial profile from source centroid'
+                    self._fig.title = 'Raw radial profile from aperture center'
                     x_data, y_data = _radial_profile(
-                        phot_aperstats.data_cutout, phot_aperstats.bbox, phot_aperstats.centroid,
+                        phot_aperstats.data_cutout, phot_aperstats.bbox, (xcenter, ycenter),
                         raw=True)
                     bqplot_line = bqplot.Scatter(x=x_data, y=y_data, marker='circle',
                                                  scales={'x': line_x_sc, 'y': line_y_sc},
                                                  default_size=1, colors='gray')
 
                 # Fit Gaussian1D to radial profile data.
-                # mean is fixed at 0 because we recentered to centroid.
                 if self.fit_radial_profile:
                     fitter = LevMarLSQFitter()
                     y_max = y_data.max()
+                    x_mean = x_data[np.where(y_data == y_max)].mean()
                     std = 0.5 * (phot_table['semimajor_sigma'][0] +
                                  phot_table['semiminor_sigma'][0])
                     if isinstance(std, u.Quantity):
                         std = std.value
-                    gs = Gaussian1D(amplitude=y_max, mean=0, stddev=std,
-                                    fixed={'mean': True, 'amplitude': True},
+                    gs = Gaussian1D(amplitude=y_max, mean=x_mean, stddev=std,
+                                    fixed={'amplitude': True},
                                     bounds={'amplitude': (y_max * 0.5, y_max)})
                     if Version(astropy.__version__) < Version('5.2'):
                         fitter_kw = {}
@@ -433,13 +439,13 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin):
                     continue
                 x = phot_table[key][0]
                 if (isinstance(x, (int, float, u.Quantity)) and
-                        key not in ('xcentroid', 'ycentroid', 'sky_centroid', 'sum_aper_area',
+                        key not in ('xcenter', 'ycenter', 'sky_center', 'sum_aper_area',
                                     'aperture_sum_counts', 'aperture_sum_mag')):
                     tmp.append({'function': key, 'result': f'{x:.4e}'})
-                elif key == 'sky_centroid' and x is not None:
-                    tmp.append({'function': 'RA centroid', 'result': f'{x.ra.deg:.6f} deg'})
-                    tmp.append({'function': 'Dec centroid', 'result': f'{x.dec.deg:.6f} deg'})
-                elif key in ('xcentroid', 'ycentroid', 'sum_aper_area'):
+                elif key == 'sky_center' and x is not None:
+                    tmp.append({'function': 'RA center', 'result': f'{x.ra.deg:.6f} deg'})
+                    tmp.append({'function': 'Dec center', 'result': f'{x.dec.deg:.6f} deg'})
+                elif key in ('xcenter', 'ycenter', 'sum_aper_area'):
                     tmp.append({'function': key, 'result': f'{x:.1f}'})
                 elif key == 'aperture_sum_counts' and x is not None:
                     tmp.append({'function': key, 'result':
@@ -452,7 +458,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin):
             # Also display fit results
             fit_tmp = []
             if fit_model is not None and isinstance(fit_model, Gaussian1D):
-                for param in ('fwhm', 'amplitude'):  # mean is fixed at 0
+                for param in ('mean', 'fwhm', 'amplitude'):
                     p_val = getattr(fit_model, param)
                     if isinstance(p_val, Parameter):
                         p_val = p_val.value

@@ -65,7 +65,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
 
         # Check photometry results.
         assert tbl.colnames == [
-            'id', 'xcentroid', 'ycentroid', 'sky_centroid', 'background', 'sum',
+            'id', 'xcenter', 'ycenter', 'sky_center', 'background', 'sum',
             'sum_aper_area', 'pixarea_tot', 'aperture_sum_counts', 'aperture_sum_counts_err',
             'counts_fac', 'aperture_sum_mag', 'flux_scaling', 'min', 'max', 'mean', 'median',
             'mode', 'std', 'mad_std', 'var', 'biweight_location', 'biweight_midvariance',
@@ -99,11 +99,11 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert_array_equal(tbl['subset_label'], ['Subset 1', 'Subset 1'])
         assert tbl['timestamp'].scale == 'utc'
 
-        # Sky is the same but xcentroid different due to dithering.
+        # Sky is the same but xcenter different due to dithering.
         # The aperture sum is different too because mask is a little off limit in second image.
-        assert_quantity_allclose(tbl['xcentroid'], [4.5, 5.5] * u.pix)
-        assert_quantity_allclose(tbl['ycentroid'], 4.5 * u.pix)
-        sky = tbl['sky_centroid']
+        assert_quantity_allclose(tbl['xcenter'], [4.5, 5.5] * u.pix)
+        assert_quantity_allclose(tbl['ycenter'], 4.5 * u.pix)
+        sky = tbl['sky_center']
         assert_allclose(sky.ra.deg, 337.518943)
         assert_allclose(sky.dec.deg, -20.832083)
         assert_allclose(tbl['sum'], [63.617251, 62.22684693104279])
@@ -117,9 +117,9 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         tbl = self.imviz.get_aperture_photometry_results()
         assert len(tbl) == 3  # New result is appended
         assert tbl[-1]['id'] == 3
-        assert_quantity_allclose(tbl[-1]['xcentroid'], 4.5 * u.pix)
-        assert_quantity_allclose(tbl[-1]['ycentroid'], 2 * u.pix)
-        sky = tbl[-1]['sky_centroid']
+        assert_quantity_allclose(tbl[-1]['xcenter'], 4.5 * u.pix)
+        assert_quantity_allclose(tbl[-1]['ycenter'], 2 * u.pix)
+        sky = tbl[-1]['sky_center']
         assert_allclose(sky.ra.deg, 337.51894336144454)
         assert_allclose(sky.dec.deg, -20.832777499255897)
         assert_quantity_allclose(tbl[-1]['sum_aper_area'], 28.274334 * (u.pix * u.pix))
@@ -139,11 +139,11 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         tbl = self.imviz.get_aperture_photometry_results()
         assert len(tbl) == 4  # New result is appended
         assert tbl[-1]['id'] == 4
-        assert np.isnan(tbl[-1]['xcentroid'])
-        assert np.isnan(tbl[-1]['ycentroid'])
-        sky = tbl[-1]['sky_centroid']
-        assert np.isnan(sky.ra.deg)
-        assert np.isnan(sky.dec.deg)
+        assert_quantity_allclose(tbl[-1]['xcenter'], 4.5 * u.pix)
+        assert_quantity_allclose(tbl[-1]['ycenter'], 4.5 * u.pix)
+        sky = tbl[-1]['sky_center']
+        assert_allclose(sky.ra.deg, 337.51894336144454)
+        assert_allclose(sky.dec.deg, -20.832083)
         assert_quantity_allclose(tbl[-1]['sum_aper_area'], 81 * (u.pix * u.pix))
         assert_allclose(tbl[-1]['sum'], 0)
         assert_allclose(tbl[-1]['mean'], 0)
@@ -168,7 +168,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         # Curve of growth
         phot_plugin.current_plot_type = 'Curve of Growth'
         phot_plugin.vue_do_aper_phot()
-        assert phot_plugin._fig.title == 'Curve of growth from source centroid'
+        assert phot_plugin._fig.title == 'Curve of growth from aperture center'
 
 
 class TestSimpleAperPhot_NoWCS(BaseImviz_WCS_NoWCS):
@@ -187,7 +187,7 @@ class TestSimpleAperPhot_NoWCS(BaseImviz_WCS_NoWCS):
         phot_plugin.vue_do_aper_phot()
         tbl = self.imviz.get_aperture_photometry_results()
         assert len(tbl) == 1  # Old table discarded due to incompatible column
-        assert_array_equal(tbl['sky_centroid'], None)
+        assert_array_equal(tbl['sky_center'], None)
 
 
 def test_annulus_background(imviz_helper):
@@ -263,6 +263,8 @@ def test_annulus_background(imviz_helper):
 
 # NOTE: Extracting the cutout for radial profile is aperture
 #       shape agnostic, so we use ellipse as representative case.
+# NOTE: This test only tests the radial profile algorithm and does
+#       not care if the actual plugin use centroid or not.
 class TestRadialProfile():
     def setup_class(self):
         data = np.ones((51, 51)) * u.nJy
@@ -286,6 +288,8 @@ class TestRadialProfile():
         assert_allclose(y_arr, 1)
 
 
+# NOTE: This test only tests the curve of growth algorithm and does
+#       not care if the actual plugin use centroid or not.
 @pytest.mark.parametrize('with_unit', (False, True))
 def test_curve_of_growth(with_unit):
     data = np.ones((51, 51))

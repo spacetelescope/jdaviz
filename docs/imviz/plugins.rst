@@ -143,6 +143,10 @@ an interactively selected region. A typical workflow is as follows:
 2. Draw a region over the object of interest (see :ref:`imviz_defining_spatial_regions`).
 3. Select the desired image using the :guilabel:`Data` dropdown menu.
 4. Select the desired region using the :guilabel:`Subset` dropdown menu.
+   You can use the :ref:`imviz-subset-plugin` plugin to center it first on the
+   object of interest using its center of mass, if you wish.
+   Depending on the object, it may take several iterations for re-centering
+   to converge, or it may never converge at all.
 5. If you want to subtract background before performing photometry,
    you have the following 3 options. Otherwise if your image is already
    background subtracted, choose "Manual" and leave the background set at 0:
@@ -240,7 +244,7 @@ catalog dropdown menu.
     This plugin is still under active development. As a result, the search only uses the SDSS DR17 catalog
     and works best when you only have a single image loaded in a viewer.
 
-To load a catalog from a supported `JWST ECSV catalog file <https://jwst-pipeline.readthedocs.io/en/latest/jwst/source_catalog/main.html#output-products>`_, choose "From File...".  
+To load a catalog from a supported `JWST ECSV catalog file <https://jwst-pipeline.readthedocs.io/en/latest/jwst/source_catalog/main.html#output-products>`_, choose "From File...".
 The file must be able to be parsed by `astropy.table.Table.read` and contain a column labeled 'sky_centroid'.
 Clicking :guilabel:`SEARCH` will show markers for any entry within the filtered zoom window.
 
