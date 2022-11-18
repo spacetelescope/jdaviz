@@ -236,7 +236,7 @@ def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
     #  0" error.
     with pytest.raises(ValueError, match="Mask has length 0"):
         # Retrieve the Subset
-        subsets = specviz_helper.get_spectral_regions()
+        specviz_helper.get_spectral_regions()
     # reg = subsets.get("Subset 1:Spectrum1D")
     #
     # assert reg.lower.unit == u.Unit(new_spectral_axis)

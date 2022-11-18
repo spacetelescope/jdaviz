@@ -690,9 +690,9 @@ class Application(VuetifyTemplate, HubListener):
 
         # If the dictionary that tracks how many spectra a subset is applied to is of size one,
         # the dictionary is removed and the only value is set as the value of data['Subset']
-        for l in data:
-            if isinstance(data[l], dict) and len(data[l].keys()) < 2:
-                data[l] = list(data[l].values())[0]
+        for label in data:
+            if isinstance(data[label], dict) and len(data[label].keys()) < 2:
+                data[label] = list(data[label].values())[0]
 
         # If a data label was provided, return only the corresponding data, otherwise return all:
         return data.get(data_label, data)
