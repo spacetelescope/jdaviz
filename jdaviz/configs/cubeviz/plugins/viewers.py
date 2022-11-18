@@ -207,8 +207,12 @@ class CubevizProfileView(SpecvizProfileView):
         # use Lines/LinesGL (so an isinstance check won't be sufficient here)
         layer_marks = self.native_marks
         # and now we'll assume that the marks are in the same order as the layers, this should
-        # be the case as long as the order isn't manually resorted
-        return [layer_marks[layers_list.index(layer)] for layer in layers]
+        # be the case as long as the order isn't manually resorted.  One exception: when adding
+        # a new data layer, the layer for the automatic highlighting can be added BEFORE it is
+        # accessible from self.native_markers, in which case the returned index from layers_list
+        # will be one too large.
+        inds = [layers_list.index(layer) for layer in layers]
+        return [layer_marks[ind] for ind in inds if ind < len(layer_marks)]
 
     def _on_subset_delete(self, msg):
         # delete any ShadowSpatialSpectral mark for which either of the spectral or spatial marks
@@ -228,7 +232,14 @@ class CubevizProfileView(SpecvizProfileView):
         """
         super()._expected_subset_layer_default(layer_state)
 
-        this_mark = self._get_marks_for_layers([layer_state])[0]
+        try:
+            this_mark = self._get_marks_for_layers([layer_state])[0]
+        except IndexError:
+            # _get_marks_for_layers will return an empty list when non-spatial-subset layers
+            # are initially created.  In this case, we do not need to add any shadowing marks,
+            # so can safely return
+            return
+
         new_marks = []
 
         if isinstance(layer_state.layer.subset_state, RoiSubsetState):
