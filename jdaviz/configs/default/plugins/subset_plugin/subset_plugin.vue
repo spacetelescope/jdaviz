@@ -37,6 +37,14 @@
              label="Data"
              hint="Select the data for centroiding."
             />
+            <v-row v-if="subset_sky_center_ra" no-gutters>
+              <v-col>RA center:</v-col>
+              <v-col>{{ subset_sky_center_ra }}</v-col>
+            </v-row>
+            <v-row v-if="subset_sky_center_dec" no-gutters>
+              <v-col>DEC center:</v-col>
+              <v-col>{{ subset_sky_center_dec }}</v-col>
+            </v-row>
             <v-row justify="end" no-gutters>
               <v-btn color="primary" text @click="recenter_subset">Recenter</v-btn>
             </v-row>

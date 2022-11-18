@@ -38,6 +38,9 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
 
     is_editable = Bool(False).tag(sync=True)
 
+    subset_sky_center_ra = Unicode("").tag(sync=True)
+    subset_sky_center_dec = Unicode("").tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -79,6 +82,8 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         subset_to_update = self.session.edit_subset_mode.edit_subset[0]
         self.subset_select._update_subset(subset_to_update, attribute="type")
 
+        self._dataset_selected_changed()  # Populate sky center info, if applicable
+
     def _sync_available_from_state(self, *args):
         if not hasattr(self, 'subset_select'):
             # during initial init, this can trigger before the component is initialized
@@ -99,6 +104,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
 
         if change['new'] != self.subset_select.default_text:
             self._get_subset_definition(change['new'])
+            self._dataset_selected_changed()  # Populate sky center info, if applicable
         self.show_region_info = change['new'] != self.subset_select.default_text
         m = [s for s in self.app.data_collection.subset_groups if s.label == change['new']]
         if m != self.session.edit_subset_mode.edit_subset:
@@ -228,9 +234,33 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             self.hub.broadcast(SnackbarMessage(
                 f"Failed to update Subset: {repr(err)}", color='error', sender=self))
 
+    @observe('dataset_selected')
+    def _dataset_selected_changed(self, event={}):
+        # This only works for Imviz with non-composite region.
+        if not self.is_editable or self.config != 'imviz':
+            self.subset_sky_center_ra = ''
+            self.subset_sky_center_dec = ''
+            return
+
+        data = self.dataset.selected_dc_item
+        x_roi, y_roi = self.get_center()
+
+        # The selected data might or might not be the reference data.
+        # However, Subset is always defined w.r.t. the reference data,
+        # so we need to convert back.
+        viewer = self.app._jdaviz_helper.default_viewer
+        x, y, coords_status = viewer._get_real_xy(data, x_roi, y_roi)
+        if coords_status:
+            sky = data.coords.pixel_to_world(x, y)
+            self.subset_sky_center_ra = f'{sky.ra.deg:.6f} deg'
+            self.subset_sky_center_dec = f'{sky.dec.deg:.6f} deg'
+        else:
+            self.subset_sky_center_ra = ''
+            self.subset_sky_center_dec = ''
+
     def vue_recenter_subset(self, *args):
         # Composite region cannot be edited. This only works for Imviz.
-        if not self.is_editable or self.config != 'imviz':  # no-op
+        if not self.is_editable or self.config != 'imviz':
             raise NotImplementedError(
                 f'Cannot recenter: is_editable={self.is_editable}, config={self.config}')
 
