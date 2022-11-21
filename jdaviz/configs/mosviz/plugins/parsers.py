@@ -748,7 +748,6 @@ def mos_niriss_parser(app, data_dir, instrument=None,
                 if len(data_obj) > 1:
                     raise ValueError(f"Found {len(data_obj)} direct images, expected 1.")
                 image_data = data_obj[0]
-                
 
             image_data.label = image_label
             add_to_glue[image_label] = image_data
