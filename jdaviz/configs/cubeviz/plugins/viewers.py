@@ -195,7 +195,7 @@ class CubevizProfileView(SpecvizProfileView):
 
     def _is_spatial_subset(self, layer):
         # spatial subset layers will have the same data-label as the collapsed flux cube
-        ref_data_label = self.layers[0].layer.data.label
+        ref_data_label = self.state.reference_data.label
         return (isinstance(getattr(layer.layer, 'subset_state', None), RoiSubsetState)
                 and layer.layer.data.label == ref_data_label)
 
