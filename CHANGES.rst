@@ -33,6 +33,8 @@ Mosviz
 
 - Added coordinates display panels for Mosviz viewers. [#1795]
 
+- ``load_data`` method can now load JWST NIRCam and NIRSpec level 2 data. [#1835]
+
 Specviz
 ^^^^^^^
 
