@@ -31,8 +31,8 @@ def test_spectralsubsetselect(specviz_helper, spectrum1d):
 
     # check selected subset mask available via API:
     expected_mask_with_spectral_subset = (
-        (spectrum1d.wavelength.to(u.AA).value < 6500) |
-        (spectrum1d.wavelength.to(u.AA).value > 7400)
+        (spectrum1d.wavelength.to(u.AA).value > 6500) &
+        (spectrum1d.wavelength.to(u.AA).value < 7400)
     )
     assert np.all(
         expected_mask_with_spectral_subset == p.spectral_subset.selected_subset_mask
@@ -69,8 +69,8 @@ def test_spatialsubsetselect(cubeviz_helper, spectrum1d_cube):
     # put selected subset mask in same shape as expected mask, check it is preserved
     selected_mask = np.swapaxes(p.spatial_subset.selected_subset_mask, 1, 0)
 
-    expected_mask = np.zeros_like(spectrum1d_cube.flux.value).astype(bool)
-    expected_mask[:2, :2, :] = True
+    expected_mask = np.ones_like(spectrum1d_cube.flux.value).astype(bool)
+    expected_mask[:2, :2, :] = False
 
     assert np.all(selected_mask == expected_mask)
 
