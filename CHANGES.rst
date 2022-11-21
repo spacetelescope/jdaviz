@@ -120,6 +120,10 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- Fix spatial-spectral highlighting after adding spectral data set (either manually or by loading
+  and results from plugins into the spectral-viewer) which had prevented new subsets from being
+  created. [#1856]
+
 Imviz
 ^^^^^
 

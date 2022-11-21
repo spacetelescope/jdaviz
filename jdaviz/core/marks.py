@@ -406,9 +406,11 @@ class ShadowSpatialSpectral(Lines, HubListener, ShadowMixin):
     def _on_shadowing_changed(self, change):
         if hasattr(self, '_spectral_mark_id'):
             if change['name'] == 'y':
-                # force a copy or else we'll overwrite the mask to the spatial mark!
-                change['new'] = deepcopy(self.spatial_spectrum_mark.y)
-                change['new'][np.isnan(self.spectral_subset_mark.y)] = np.nan
+                # at initial setup, the arrays may not be populated yet
+                if self.spatial_spectrum_mark.y.shape == self.spectral_subset_mark.y.shape:
+                    # force a copy or else we'll overwrite the mask to the spatial mark!
+                    change['new'] = deepcopy(self.spatial_spectrum_mark.y)
+                    change['new'][np.isnan(self.spectral_subset_mark.y)] = np.nan
 
             elif change['name'] == 'visible':
                 # only show if BOTH shadowing marks are set to visible
