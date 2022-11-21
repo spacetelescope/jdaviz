@@ -89,7 +89,7 @@ def test_nirspec_level2_parser(mosviz_helper, tmp_path):
     '''
 
     test_data = 'https://stsci.box.com/shared/static/mytqf082lpbfia7wlwjq6p1h5cggd9h6.zip'
-    fn = download_file(test_data, cache=True, timeout=30)
+    fn = download_file(test_data, cache=True, timeout=100)
     with ZipFile(fn, 'r') as sample_data_zip:
         sample_data_zip.extractall(tmp_path)
 

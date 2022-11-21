@@ -420,13 +420,12 @@ class Mosviz(ConfigHelper, LineListMixin):
             ``images``. Can be a list of strings representing data labels
             for each item in ``images`` if  ``images`` is a list.
 
-        directory: str, optional
+        directory : str, optional
             Instead of loading lists of spectra and images, the path to a directory
             containing all files for a single JWST observation may be given.
 
-        instrument: str, optional
-            Required if ``directory`` is specified. Currently accepts values
-            ``NIRISS``, ``NIRCam`` or ``NIRSpec`` (not case sensitive).
+        instrument : {'niriss', 'nircam', 'nirspec'}, optional
+            Required if ``directory`` is specified. Value is not case sensitive.
         """
         # Link data after everything is loaded
         self.app.auto_link = False
@@ -438,12 +437,12 @@ class Mosviz(ConfigHelper, LineListMixin):
 
         if directory is not None and Path(directory).is_dir():
             if instrument not in ('nirspec', 'niriss', 'nircam'):
-                msg = ("Ambiguous MOS Instrument: Only JWST NIRSpec, NIRCam, and "
-                       "NIRISS folder parsing are currently supported")
-                raise ValueError(msg)
+                raise ValueError(
+                    "Ambiguous MOS Instrument: Only JWST NIRSpec, NIRCam, and "
+                    f"NIRISS folder parsing are currently supported but got '{instrument}'")
             if instrument.lower() == "nirspec":
                 super().load_data(directory, parser_reference="mosviz-nirspec-directory-parser")
-            elif instrument.lower() in ("niriss", "nircam"):
+            else:  # niriss or nircam
                 self.load_jwst_directory(directory, instrument=instrument)
         elif directory is not None and is_zipfile(str(directory)):
             raise TypeError("Please extract your data first and provide the directory")

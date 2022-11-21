@@ -475,9 +475,9 @@ def mos_meta_parser(app, data_obj, ids=None, spectra=False, sp1d=False, repeat=1
         table rows. Typically, a list with file names.
     spectra : bool, optional
         In case the FITS objects are related to spectral data.
-    sp1d: bool, optional
-        Indicates if the input data_obj is a 1d rather than 2d spectrum.
-    repeat: int, optional
+    sp1d : bool, optional
+        Indicates if the input ``data_obj`` is a 1D rather than 2D spectrum.
+    repeat : int, optional
         If greater than 1, indicates that the input file metadata applies
         to multiple table rows.
     """
@@ -498,7 +498,7 @@ def mos_meta_parser(app, data_obj, ids=None, spectra=False, sp1d=False, repeat=1
             filters = [x[0].header.get("FILTER", FALLBACK_NAME) for x in data_obj]
             gratings = [x[0].header.get("GRATING", FALLBACK_NAME) for x in data_obj]
 
-            filters_gratings = [(f+'/'+g) for f, g in zip(filters, gratings)]*repeat
+            filters_gratings = [(f+'/'+g) for f, g in zip(filters, gratings)] * repeat
 
             [x.close() for x in data_obj]
 
@@ -550,7 +550,7 @@ def _get_source_identifiers_by_hdu(hdus, filepaths=None,
         The header value (or values) to search an HDU for to extract the source id.
         List order is assumed to be priority order (i.e. will return first successful
         lookup)
-    allow_duplicates: bool
+    allow_duplicates : bool
         Flag to allow repeat identifiers. Mostly future proofing in case we eventually
         want to load spectral order 2 as well as 1, and to remind us that we currently
         don't allow that.
@@ -607,7 +607,7 @@ def _id_files_by_datamodl(label_dict, filepaths, catalog_key=None):
     for fp in filepaths:
         if fp.is_dir():
             # Potential names of subdirectories where images are stored
-            if fp.name in ["cutouts", "mosviz_cutouts", "images"]:
+            if fp.name in ("cutouts", "mosviz_cutouts", "images"):
                 images = sorted([file_path for file_path in glob.iglob(str(fp / '*'))])
                 label_dict['Direct Image'] = images
             else:
@@ -839,10 +839,9 @@ def mos_niriss_parser(app, data_dir, instrument=None,
             with fits.open(fname, memmap=False) as temp:
                 # Filter out HDUs we care about
                 if cat_id_dict is not None:
-                    source_ids_to_filter = cat_id_dict.keys()
                     filtered_hdul = fits.HDUList([hdu for hdu in temp if (
                         (hdu.name in ('PRIMARY', 'ASDF')) or
-                        (hdu.header.get('SOURCEID', None) in source_ids_to_filter))])
+                        (hdu.header.get('SOURCEID', None) in cat_id_dict.keys()))])
                 else:
                     filtered_hdul = temp
 
