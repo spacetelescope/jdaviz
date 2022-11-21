@@ -211,8 +211,8 @@ def test_subset_masks(cubeviz_helper, spectrum1d_cube):
     assert spectrum1d_cube.mask is None
 
     # create an (arbitrary) mask which
-    expected_mask = np.zeros_like(spectrum1d_cube.flux.value).astype(bool)
-    expected_mask[:2, :2, :] = True
+    expected_mask = np.ones_like(spectrum1d_cube.flux.value).astype(bool)
+    expected_mask[:2, :2, :] = False
 
     fv = cubeviz_helper.app.get_viewer('flux-viewer')
     # create a "Subset 1" entry in spatial dimension, selected "interactively"

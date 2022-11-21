@@ -808,10 +808,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         if none exists. Mask excludes non-selected spectral and/or
         spatial subsets.
         """
-        if subset_component is None:
-            # spatial_subset only exists for cubeviz
-            return
-
         # only look for a mask if there is a selected subset:
         if subset_component.selected == subset_component.default_text:
             return
