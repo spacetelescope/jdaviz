@@ -9,6 +9,7 @@ from specutils.spectra import Spectrum1D
 from jdaviz.configs.default.plugins.model_fitting import fitting_backend as fb
 from jdaviz.configs.default.plugins.model_fitting import initializers
 from jdaviz.configs.default.plugins.model_fitting.model_fitting import ModelFitting
+from jdaviz.configs.default.plugins.model_fitting.fitting_backend import _generate_spaxel_list
 
 SPECTRUM_SIZE = 200  # length of spectrum
 

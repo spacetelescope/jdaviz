@@ -370,9 +370,6 @@ def _generate_spaxel_list(spectrum):
     if spectrum.mask is None:
         # If there is no mask, make one:
         mask = np.zeros(spectrum.shape).astype(bool)
-    elif spectrum.mask.shape != spectrum.flux.shape:
-        # If the mask isn't the right shape, broadcast it:
-        mask = np.broadcast_to(spectrum.mask, spectrum.flux.shape)
     else:
         mask = spectrum.mask
 

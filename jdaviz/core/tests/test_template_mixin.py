@@ -3,6 +3,7 @@ import numpy as np
 import astropy.units as u
 
 from glue.core.roi import XRangeROI, CircularROI
+from specutils import Spectrum1D
 
 
 def test_spectralsubsetselect(specviz_helper, spectrum1d):
@@ -73,6 +74,29 @@ def test_spatialsubsetselect(cubeviz_helper, spectrum1d_cube):
     expected_mask[:2, :2, :] = False
 
     assert np.all(selected_mask == expected_mask)
+
+
+def test_spectral_subsetselect_collapsed(cubeviz_helper, spectrum1d_cube):
+    cubeviz_helper.load_data(spectrum1d_cube)
+    sv = cubeviz_helper.app.get_viewer('spectrum-viewer')
+    # create a "Subset 1" entry
+    sv.apply_roi(XRangeROI(6500, 7400))
+
+    # model fitting uses the mixin
+    p = cubeviz_helper.app.get_tray_item_from_name('g-model-fitting')
+
+    # Should work when dimensions of mask match the flux:
+    spectrum1d_cube.mask = np.zeros_like(spectrum1d_cube.flux.value).astype(bool)
+    p._apply_subset_masks(spectrum1d_cube, p.spatial_subset)
+    assert spectrum1d_cube.mask.shape == spectrum1d_cube.flux.shape
+
+    # and when dimensions of mask match a collapsed spectrum:
+    data = cubeviz_helper.app.data_collection[0]
+    collapsed_spectrum = data.get_object(cls=Spectrum1D)
+
+    collapsed_spectrum.mask = np.zeros_like(collapsed_spectrum.spectral_axis.value).astype(bool)
+    p._apply_subset_masks(collapsed_spectrum, p.spectral_subset)
+    assert collapsed_spectrum.mask.shape == collapsed_spectrum.spectral_axis.shape
 
 
 @pytest.mark.filterwarnings('ignore:No observer defined on WCS')
