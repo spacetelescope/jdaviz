@@ -732,7 +732,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # Retrieve copy of the models with proper "fixed" dictionaries
         models_to_fit = self._reinitialize_with_fixed()
 
-        # Apply masks from selected spatial subsets
+        # Apply masks from selected subsets
         for subset in [self.spatial_subset, self.spectral_subset]:
             self._apply_subset_masks(spec, subset)
 
