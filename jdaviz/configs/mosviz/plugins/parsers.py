@@ -504,13 +504,13 @@ def mos_meta_parser(app, data_obj, ids=None, spectra=False, sp1d=False, repeat=1
 
         # source name can be taken from 1d spectra
         elif spectra and sp1d:
-            names = _get_source_identifiers_by_hdu([x[0] for x in data_obj], ids)*repeat
+            names = _get_source_identifiers_by_hdu([x[0] for x in data_obj], ids) * repeat
 
         # source name and coordinates are taken from image headers, if present
         else:
-            ra = [x[0].header.get("OBJ_RA", float("nan")) for x in data_obj]*repeat
-            dec = [x[0].header.get("OBJ_DEC", float("nan")) for x in data_obj]*repeat
-            names = _get_source_identifiers_by_hdu([x[0] for x in data_obj], ids)*repeat
+            ra = [x[0].header.get("OBJ_RA", float("nan")) for x in data_obj] * repeat
+            dec = [x[0].header.get("OBJ_DEC", float("nan")) for x in data_obj] * repeat
+            names = _get_source_identifiers_by_hdu([x[0] for x in data_obj], ids) * repeat
 
         [x.close() for x in data_obj]
 
@@ -745,8 +745,10 @@ def mos_niriss_parser(app, data_dir, instrument=None,
             with fits.open(image_file) as temp:
                 data_iter = get_image_data_iterator(app, temp, "Image", ext=None)
                 data_obj = [d[0] for d in data_iter]  # We do not use the generated labels
-                image_data = data_obj[0]  # Grab the first one.
-                # TODO: Error if multiple found?
+                if len(data_obj) > 1:
+                    raise ValueError(f"Found {len(data_obj)} direct images, expected 1.")
+                image_data = data_obj[0]
+                
 
             image_data.label = image_label
             add_to_glue[image_label] = image_data

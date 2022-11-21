@@ -433,7 +433,6 @@ class Mosviz(ConfigHelper, LineListMixin):
 
         directory = kwargs.pop('directory', None)
         instrument = kwargs.pop('instrument', None)
-        msg = ""
 
         if directory is not None and Path(directory).is_dir():
             if instrument not in ('nirspec', 'niriss', 'nircam'):
