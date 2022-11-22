@@ -827,6 +827,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             spectrum.mask |= subset_mask
         else:
             if subset_mask.shape != spectrum.flux.shape:
-                # correct the order of spectral/spatial axes when they're swapped
-                subset_mask = np.swapaxes(subset_mask, 1, 0)
+                # correct the order of spectral/spatial axes when they're different
+                subset_mask = np.broadcast_to(subset_mask, spectrum.flux.shape)
             spectrum.mask = subset_mask
