@@ -19,12 +19,12 @@ time, Mosviz supports automatic parsing for the following instruments:
 The NIRSpec parser expects a directory with either level 2 files:
 
 * ``*_cal.fits`` : Single file containing level 2 2D spectra for all objects.
-* ``*_x1d`` : Single file containing level 2 1D spectra for all objects.
+* ``*_x1d.fits`` : Single file containing level 2 1D spectra for all objects.
 
 or level 3 files:
 
 * ``*_s2d.fits`` : N files containing level 3 2D spectra, where N is the number of objects.
-* ``*_x2d.fits`` : N files containing level 3 1D spectra, where N is the number of objects.
+* ``*_x1d.fits`` : N files containing level 3 1D spectra, where N is the number of objects.
 
 In either the level 2 or 3 case, the NIRSpec data directory may contain a sub-directory
 named ``images``, ``cutouts``, or ``mosviz_cutouts``. This sub-directory should contain FITS files
