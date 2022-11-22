@@ -367,16 +367,14 @@ def _generate_spaxel_list(spectrum):
     spaxels : list
         List with spaxels
     """
-    if spectrum.mask is None:
-        # If there is no mask, make one:
-        mask = np.zeros(spectrum.shape).astype(bool)
-    else:
-        mask = spectrum.mask
-
-    # return only non-masked spaxels
     n_x, n_y, _ = spectrum.flux.shape
-    spx = [[(x, y) for x in range(n_x) if np.any(~mask[x, y])]
-           for y in range(n_y) if np.any(~mask[:, y])]
+
+    if spectrum.mask is None:
+        spx = [[(x, y) for x in range(n_x)] for y in range(n_y)]
+    else:
+        # return only non-masked spaxels
+        spx = [[(x, y) for x in range(n_x) if np.any(~spectrum.mask[x, y])]
+               for y in range(n_y) if np.any(~spectrum.mask[:, y])]
 
     spaxels = [item for sublist in spx for item in sublist]
 
