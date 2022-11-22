@@ -47,7 +47,7 @@ from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessag
 from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registry,
                                     data_parser_registry)
 from jdaviz.core.tools import ICON_DIR
-from jdaviz.utils import SnackbarQueue, ColorCycler, alpha_index
+from jdaviz.utils import SnackbarQueue, alpha_index
 from ipypopout import PopoutButton
 
 __all__ = ['Application']
