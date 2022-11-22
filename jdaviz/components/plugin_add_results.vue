@@ -40,6 +40,8 @@
       </v-switch>
     </v-row>
 
+    <slot></slot>
+
     <v-row justify="end">
       <j-tooltip :tooltipcontent="label_overwrite ? action_tooltip+' and replace existing entry' : action_tooltip">
         <v-btn :disabled="label_invalid_msg.length > 0 || action_disabled"

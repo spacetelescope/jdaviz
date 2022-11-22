@@ -192,7 +192,29 @@
         action_tooltip="Fit the model to the data"
         :action_disabled="model_equation_invalid_msg.length > 0"
         @click:action="apply"
-      ></plugin-add-results>
+      >
+        <div v-if="config!=='cubeviz' || !cube_fit">
+          <v-row>
+            <v-switch
+              v-model="residuals_expose"
+              label="Expose residuals"
+              hint="Whether to compute and export residuals (data-model)."
+              persistent-hint
+            ></v-switch>
+          </v-row>
+
+          <plugin-auto-label
+            v-if="residuals_expose"
+            :value.sync="residuals_label"
+            :default="residuals_label_default"
+            :auto.sync="residuals_label_auto"
+            :invalid_msg="residuals_label_invalid_msg"
+            label="Residuals Data Label"
+            hint="Label for the residuals.  Data entry will not be loaded into the viewer automatically."
+          ></plugin-auto-label>
+
+        </div>
+      </plugin-add-results>
 
       <v-row>
         <span class="v-messages v-messages__message text--secondary">
