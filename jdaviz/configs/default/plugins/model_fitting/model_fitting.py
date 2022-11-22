@@ -657,6 +657,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         -------
         fitted model
         fitted spectrum/cube
+        residuals (if ``residuals_expose`` is set to ``True``)
         """
         if self.cube_fit:
             return self._fit_model_to_cube(add_data=add_data)
@@ -698,7 +699,16 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         if add_data:
             self.app.fitted_models[self.results_label] = fitted_model
-            self._register_spectrum({"spectrum": fitted_spectrum})
+            self.add_results.add_results_from_plugin(fitted_spectrum)
+
+            if self.residuals_expose:
+                # NOTE: this will NOT load into the viewer since we have already called
+                # add_results_from_plugin above.
+                self.add_results.add_results_from_plugin(self._spectrum1d-fitted_spectrum,
+                                                         label=self.residuals.value,
+                                                         replace=False)
+
+        self._set_default_results_label()
 
         # Update component model parameters with fitted values
         if isinstance(self._fitted_model, QuantityModel):
@@ -713,6 +723,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # Reset the data mask in case we use a different subset next time
         self._spectrum1d.mask = self._original_mask
 
+        if self.residuals_expose:
+            return fitted_model, fitted_spectrum, self._spectrum1d-fitted_spectrum
         return fitted_model, fitted_spectrum
 
     def _fit_model_to_cube(self, add_data):
@@ -793,37 +805,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self.hub.broadcast(snackbar_message)
 
         return fitted_model, output_cube
-
-    def _register_spectrum(self, event):
-        """
-        Add a spectrum to the data collection based on the currently displayed
-        parameters (these could be user input or fit values).
-        """
-        if self._warn_if_no_equation():
-            return
-        # Make sure the initialized models are updated with any user-specified
-        # parameters
-        self._update_initialized_parameters()
-
-        # Need to run the model fitter with run_fitter=False to get spectrum
-        if "spectrum" in event:
-            spectrum = event["spectrum"]
-        else:
-            model, spectrum = fit_model_to_spectrum(self._spectrum1d,
-                                                    self._initialized_models.values(),
-                                                    self.model_equation,
-                                                    window=self._window)
-
-        self.add_results.add_results_from_plugin(spectrum)
-
-        if self.residuals_expose:
-            # NOTE: this will NOT load into the viewer since we have already called
-            # add_results_from_plugin above.
-            self.add_results.add_results_from_plugin(self._spectrum1d-spectrum,
-                                                     label=self.residuals.value,
-                                                     replace=False)
-
-        self._set_default_results_label()
 
     def _apply_subset_masks(self, spectrum, subset_component):
         """
