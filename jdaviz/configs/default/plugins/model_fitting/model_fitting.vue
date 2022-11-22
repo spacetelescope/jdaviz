@@ -198,7 +198,7 @@
             <v-switch
               v-model="residuals_expose"
               label="Expose residuals"
-              hint="Whether to compute and export residuals (data-model)."
+              hint="Whether to compute and export residuals (data minus model)."
               persistent-hint
             ></v-switch>
           </v-row>
