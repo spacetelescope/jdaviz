@@ -222,6 +222,8 @@ def mos_spec1d_parser(app, data_obj, data_labels=None,
     if not isinstance(data_obj, (list, tuple, SpectrumCollection)):
         data_obj = [data_obj]
 
+    # If the file has multiple objects in it, the Spectrum1D read machinery
+    # will fail to find a reader for it, and we fall back on SpectrumList
     try:
         data_obj = [Spectrum1D.read(x) if _check_is_file(x) else x for x in data_obj]
     except IORegistryError:
