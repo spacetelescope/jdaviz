@@ -826,7 +826,13 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                     subset_mask = np.all(subset_mask, axis=(0, 1))
             spectrum.mask |= subset_mask
         else:
-            if subset_mask.shape != spectrum.flux.shape:
-                # correct the order of spectral/spatial axes when they're different
+            if subset_mask.ndim > spectrum.flux.ndim:
+                # correct the shape of spectral/spatial axes when they're different:
                 subset_mask = np.broadcast_to(subset_mask, spectrum.flux.shape)
+
+            elif subset_mask.ndim == spectrum.flux.ndim and subset_mask.shape != spectrum.flux.shape:
+                # if the number of dimensions is correct but shape is
+                # different, rearrange the arrays for specutils:
+                subset_mask = np.swapaxes(subset_mask, 1, 0)
+
             spectrum.mask = subset_mask
