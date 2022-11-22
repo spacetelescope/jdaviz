@@ -67,6 +67,9 @@ and for NIRISS:
 
     jdaviz mosviz /path/to/my/data --instrument=niriss
 
+If a directory is input in either case without specifying an instrument, Mosviz will
+raise an error.
+
 Manual Loading
 --------------
 
