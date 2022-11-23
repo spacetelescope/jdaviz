@@ -47,7 +47,7 @@ from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessag
 from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registry,
                                     data_parser_registry)
 from jdaviz.core.tools import ICON_DIR
-from jdaviz.utils import SnackbarQueue, ColorCycler, alpha_index
+from jdaviz.utils import SnackbarQueue, alpha_index
 from ipypopout import PopoutButton
 
 __all__ = ['Application']
@@ -1403,8 +1403,7 @@ class Application(VuetifyTemplate, HubListener):
                     "of:\n\t" + "\n\t".join(dc_labels))
 
             [data] = [x for x in self.data_collection if x.label == data_label]
-            color_cycler = ColorCycler()
-            viewer.add_data(data, percentile=95, color=color_cycler())
+            viewer.add_data(data, percentile=95, color=viewer.color_cycler())
 
             add_data_message = AddDataMessage(data, viewer,
                                               viewer_id=viewer_id,
