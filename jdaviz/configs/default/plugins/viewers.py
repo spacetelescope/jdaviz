@@ -8,7 +8,7 @@ from glue_jupyter.table import TableViewer
 
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.core.registries import viewer_registry
-
+from jdaviz.utils import ColorCycler
 
 __all__ = ['JdavizViewerMixin']
 
@@ -25,6 +25,9 @@ class JdavizViewerMixin:
     def __init__(self, *args, **kwargs):
         # NOTE: anything here most likely won't be called by viewers because of inheritance order
         super().__init__(*args, **kwargs)
+
+        # Allow each viewer to cycle through colors for each new addition to the viewer:
+        self.color_cycler = ColorCycler()
 
     @property
     def native_marks(self):
