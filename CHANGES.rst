@@ -1,4 +1,4 @@
-3.1.1 (unreleased)
+3.1.1 (2022-11-23)
 ==================
 
 Bug Fixes
@@ -22,9 +22,6 @@ Cubeviz
   and results from plugins into the spectral-viewer) which had prevented new subsets from being
   created. [#1856]
 
-Imviz
-^^^^^
-
 Mosviz
 ^^^^^^
 
@@ -33,9 +30,6 @@ Mosviz
 - Missing mosviz_row metadata in NIRISS-parsed 1D spectra now added. [#1836]
 
 - Allow Mosviz ``load_data`` method to load only 1D or 2D spectra. [#1833]
-
-Specviz
-^^^^^^^
 
 Specviz2d
 ^^^^^^^^^
