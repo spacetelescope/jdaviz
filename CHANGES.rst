@@ -13,6 +13,8 @@ Bug Fixes
 
 - Layer lettering now supports up to 702 layers. Beyond that, special characters are used. [#1850]
 
+- Fix cycler so new data added have different colors [#1866]
+
 Cubeviz
 ^^^^^^^
 
