@@ -80,6 +80,8 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- Support for fitting spectral subsets with Cubeviz [#1834]
+
 Imviz
 ^^^^^
 
