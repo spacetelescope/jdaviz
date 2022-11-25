@@ -179,9 +179,9 @@ def multi_order_spectrum_list(spectrum1d, spectral_orders=10):
     return SpectrumList(sc)
 
 
-def _create_spectrum1d_cube_with_fluxunit(fluxunit=u.Jy):
+def _create_spectrum1d_cube_with_fluxunit(fluxunit=u.Jy, shape=(2, 2, 4)):
 
-    flux = np.arange(16).reshape((2, 2, 4)) * fluxunit
+    flux = np.arange(np.prod(shape)).reshape(shape) * fluxunit
     wcs_dict = {"CTYPE1": "RA---TAN", "CTYPE2": "DEC--TAN", "CTYPE3": "WAVE-LOG",
                 "CRVAL1": 205, "CRVAL2": 27, "CRVAL3": 4.622e-7,
                 "CDELT1": -0.0001, "CDELT2": 0.0001, "CDELT3": 8e-11,
@@ -193,7 +193,12 @@ def _create_spectrum1d_cube_with_fluxunit(fluxunit=u.Jy):
 
 @pytest.fixture
 def spectrum1d_cube():
-    return _create_spectrum1d_cube_with_fluxunit(u.Jy)
+    return _create_spectrum1d_cube_with_fluxunit(fluxunit=u.Jy)
+
+
+@pytest.fixture
+def spectrum1d_cube_larger():
+    return _create_spectrum1d_cube_with_fluxunit(fluxunit=u.Jy, shape=(SPECTRUM_SIZE, 2, 4))
 
 
 @pytest.fixture

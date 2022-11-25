@@ -959,14 +959,14 @@ class SubsetSelect(SelectPluginComponent):
             viewer_ref, data_label=self.selected
         )
 
-        # Take the logical-not of the mask here, since the glue subset masks
-        # are True in selected regions and False outside. This is the opposite of
-        # the numpy/astropy convention where True is masked-out.
         if hasattr(subset, 'mask'):
             # the mask attr is available for spectral subsets:
-            subset_mask = ~subset.mask
+            subset_mask = subset.mask
         else:
-            # `subset` is a GroupedSubset:
+            # `subset` is a GroupedSubset.
+            # We take the logical-not of the mask here, since the glue subset masks
+            # are True in selected regions and False outside. This is the opposite of
+            # the numpy/astropy/specutils convention where True is masked-out.
             subset_mask = ~subset.to_mask()
 
         return subset_mask

@@ -32,8 +32,8 @@ def test_spectralsubsetselect(specviz_helper, spectrum1d):
 
     # check selected subset mask available via API:
     expected_mask_with_spectral_subset = (
-        (spectrum1d.wavelength.to(u.AA).value > 6500) &
-        (spectrum1d.wavelength.to(u.AA).value < 7400)
+        (spectrum1d.wavelength.to(u.AA).value < 6500) |
+        (spectrum1d.wavelength.to(u.AA).value > 7400)
     )
     assert np.all(
         expected_mask_with_spectral_subset == p.spectral_subset.selected_subset_mask
