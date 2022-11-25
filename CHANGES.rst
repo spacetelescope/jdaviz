@@ -149,8 +149,6 @@ Cubeviz
   and results from plugins into the spectral-viewer) which had prevented new subsets from being
   created. [#1856]
 
-- Support for fitting spectral subsets with Cubeviz. [#1834]
-
 Imviz
 ^^^^^
 
