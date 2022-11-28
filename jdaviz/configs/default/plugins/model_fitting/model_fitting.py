@@ -59,10 +59,15 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     * :meth:`get_model_component`
     * :meth:`set_model_component`
     * ``equation`` (:class:`~jdaviz.core.template_mixin.AutoTextField`)
-    * ``add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
     * ``cube_fit``
       Only exposed for Cubeviz.  Whether to fit the model to the cube instead of to the
       collapsed spectrum.
+    * ``add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
+    * ``residuals_expose`` (bool)
+      Whether to calculate and expose the residuals (model minus data).
+    * ``residuals`` (:class:`~jdaviz.core.template_mixin.AutoTextField`)
+      Label of the residuals to apply when calling :meth:`calculate_fit` if ``residuals_expose``
+      is ``True``.
     * :meth:`calculate_fit`
     """
     dialog = Bool(False).tag(sync=True)
