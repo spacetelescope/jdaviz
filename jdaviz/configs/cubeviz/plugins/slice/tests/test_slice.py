@@ -72,6 +72,9 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
 
     # Test player buttons API
 
+    sl.vue_goto_first()
+    assert sl.slice == 0
+
     sl.vue_goto_last()
     assert sl.slice == sl.max_value
 
@@ -88,9 +91,6 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
     assert not sl.is_playing
     assert not sl._player
     # NOTE: Hard to check sl.slice here because it is non-deterministic.
-
-    sl.vue_goto_first()
-    assert sl.slice == 0
 
 
 def test_indicator_settings(cubeviz_helper, spectrum1d_cube):

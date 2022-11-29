@@ -17,8 +17,8 @@ __all__ = ['SlitOverlay', 'jwst_header_to_skyregion']
 def jwst_header_to_skyregion(header):
     s_region = header['S_REGION']
     footprint = s_region.split("POLYGON ICRS")[1].split()
-    ra = np.array(footprint[::2], dtype=np.float)
-    dec = np.array(footprint[1::2], dtype=np.float)
+    ra = np.array(footprint[::2], dtype=float)
+    dec = np.array(footprint[1::2], dtype=float)
 
     # Find center of slit
     cra = (max(ra) + min(ra)) / 2
