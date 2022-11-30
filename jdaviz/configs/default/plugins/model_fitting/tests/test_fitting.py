@@ -1,5 +1,6 @@
 import astropy.modeling.models as models
 import astropy.modeling.parameters as params
+from astropy.nddata import StdDevUncertainty
 import astropy.units as u
 import numpy as np
 import pytest
@@ -77,7 +78,9 @@ def test_fitting_backend():
 
     x, y = build_spectrum()
 
-    spectrum = Spectrum1D(flux=y*u.Jy, spectral_axis=x*u.um)
+    # The uncertainty array of all zero should be ignored when fitting
+    uncertainties = StdDevUncertainty(np.zeros(y.shape)*u.Jy)
+    spectrum = Spectrum1D(flux=y*u.Jy, spectral_axis=x*u.um, uncertainty=uncertainties)
 
     g1f = models.Gaussian1D(0.7*u.Jy, 4.65*u.um, 0.3*u.um, name='g1')
     g2f = models.Gaussian1D(2.0*u.Jy, 5.55*u.um, 0.3*u.um, name='g2')
@@ -138,7 +141,11 @@ def test_cube_fitting_backend():
     mask = np.zeros_like(flux_cube).astype(bool)
     mask[..., :SPECTRUM_SIZE // 10] = True
 
-    spectrum = Spectrum1D(flux=flux_cube*u.Jy, spectral_axis=x*u.um, mask=mask)
+    # The uncertainty array of all zero should be ignored when fitting
+    uncertainties = StdDevUncertainty(np.zeros(flux_cube.shape)*u.Jy)
+
+    spectrum = Spectrum1D(flux=flux_cube*u.Jy, spectral_axis=x*u.um,
+                          uncertainty=uncertainties, mask=mask)
 
     # Initial model for fit.
     g1f = models.Gaussian1D(0.7*u.Jy, 4.65*u.um, 0.3*u.um, name='g1')
