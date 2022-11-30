@@ -100,7 +100,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self._default_spectrum_viewer_reference_name = kwargs.get(
             "spectrum_viewer_reference_name", "spectrum-viewer"
         )
-
+        self._default_flux_viewer_reference_name = kwargs.get(
+            "flux_viewer_reference_name", "flux-viewer"
+        )
         self._units = {}
         self._fitted_model = None
         self._fitted_spectrum = None
@@ -660,23 +662,17 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             return
         models_to_fit = self._reinitialize_with_fixed()
 
-        # Apply mask from selected subset
-        if self.spectral_subset_selected != "Entire Spectrum":
-            subset_mask = self.app.get_data_from_viewer(
-                self._default_spectrum_viewer_reference_name,
-                data_label=self.spectral_subset_selected
-            ).mask # noqa
-            if self._spectrum1d.mask is None:
-                self._spectrum1d.mask = subset_mask
-            else:
-                self._spectrum1d.mask += subset_mask
+        # Apply masks from selected spectral subsets
+        self._apply_subset_masks(self._spectrum1d, self.spectral_subset)
 
         try:
             fitted_model, fitted_spectrum = fit_model_to_spectrum(
                 self._spectrum1d,
                 models_to_fit,
                 self.model_equation,
-                run_fitter=True)
+                run_fitter=True,
+                window=self._window
+            )
         except AttributeError:
             msg = SnackbarMessage("Unable to fit: model equation may be invalid",
                                   color="error", sender=self)
@@ -726,7 +722,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             return
 
         # Get the primary data component
-        spec = data.get_object(Spectrum1D, statistic=None)
+        spec = data.get_object(cls=Spectrum1D, statistic=None)
 
         snackbar_message = SnackbarMessage(
             "Fitting model to cube...",
@@ -736,13 +732,18 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # Retrieve copy of the models with proper "fixed" dictionaries
         models_to_fit = self._reinitialize_with_fixed()
 
+        # Apply masks from selected subsets
+        for subset in [self.spatial_subset, self.spectral_subset]:
+            self._apply_subset_masks(spec, subset)
+
         try:
             fitted_model, fitted_spectrum = fit_model_to_spectrum(
                 spec,
                 models_to_fit,
                 self.model_equation,
                 run_fitter=True,
-                window=self._window)
+                window=self._window
+            )
         except ValueError:
             snackbar_message = SnackbarMessage(
                 "Cube fitting failed",
@@ -801,3 +802,38 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         self.add_results.add_results_from_plugin(spectrum)
         self._set_default_results_label()
+
+    def _apply_subset_masks(self, spectrum, subset_component):
+        """
+        For a spectrum/spectral cube ``spectrum``, add a mask attribute
+        if none exists. Mask excludes non-selected spectral and/or
+        spatial subsets.
+        """
+        # only look for a mask if there is a selected subset:
+        if subset_component.selected == subset_component.default_text:
+            return
+
+        subset_mask = subset_component.selected_subset_mask
+
+        if spectrum.mask is not None:
+            if subset_mask.ndim == 3:
+                if spectrum.mask.ndim == 1:
+                    # if subset mask is 3D and the `spectrum` mask is 1D, which
+                    # happens when `spectrum` has been collapsed from 3D->1D,
+                    # then also collapse the 3D mask in the spatial
+                    # dimensions (0, 1) so that slices in the spectral axis that
+                    # are masked in all pixels become masked in the spectral subset:
+                    subset_mask = np.all(subset_mask, axis=(0, 1))
+            spectrum.mask |= subset_mask
+        else:
+            if subset_mask.ndim < spectrum.flux.ndim:
+                # correct the shape of spectral/spatial axes when they're different:
+                subset_mask = np.broadcast_to(subset_mask, spectrum.flux.shape)
+
+            elif (subset_mask.ndim == spectrum.flux.ndim and
+                  subset_mask.shape != spectrum.flux.shape):
+                # if the number of dimensions is correct but shape is
+                # different, rearrange the arrays for specutils:
+                subset_mask = np.swapaxes(subset_mask, 1, 0)
+
+            spectrum.mask = subset_mask

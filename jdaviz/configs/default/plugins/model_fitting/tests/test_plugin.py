@@ -3,12 +3,17 @@ Tests the features of the Model Fitting Plugin (Selecting model parameters, addi
 This does NOT test the actual fitting self (see test_fitting.py for that)
 """
 import warnings
+import pytest
 
 import numpy as np
-import pytest
+from numpy.testing import assert_allclose
+
 from astropy.nddata import StdDevUncertainty
 from astropy.utils.exceptions import AstropyUserWarning
-from numpy.testing import assert_allclose
+import astropy.units as u
+
+from glue.core.roi import CircularROI, XRangeROI
+from specutils import Spectrum1D
 
 from jdaviz.configs.default.plugins.model_fitting.initializers import MODELS
 
@@ -202,3 +207,85 @@ def test_fit_gaussian_with_fixed_mean(specviz_helper, spectrum1d):
     # Make sure mean is really fixed.
     assert_allclose(result.mean.value, old_mean)
     assert not np.allclose((result.amplitude.value, result.stddev.value), (old_amp, old_std))
+
+
+def test_subset_masks(cubeviz_helper, spectrum1d_cube_larger):
+    cubeviz_helper.load_data(spectrum1d_cube_larger)
+    assert spectrum1d_cube_larger.mask is None
+
+    fv = cubeviz_helper.app.get_viewer('flux-viewer')
+    # create a "Subset 1" entry in spatial dimension, selected "interactively"
+    fv.apply_roi(CircularROI(0.5, 0.5, 1))
+
+    # check that when no subset is selected, the spectral cube has no mask:
+    p = cubeviz_helper.app.get_tray_item_from_name('g-model-fitting')
+
+    # Get the data object without collapsing the spectrum:
+    data = cubeviz_helper.app.data_collection[0].get_object(cls=Spectrum1D, statistic=None)
+    p._apply_subset_masks(data, p.spatial_subset)
+
+    assert data.mask is None
+
+    # select the spatial subset, then show that mask is correct:
+    assert "Subset 1" in p.spatial_subset.choices
+    p.spatial_subset_selected = "Subset 1"
+
+    # Get the data object again (ensures mask == None)
+    data = cubeviz_helper.app.data_collection[0].get_object(
+        cls=Spectrum1D, statistic=None
+    )
+    subset = cubeviz_helper.app.data_collection[0].get_subset_object(
+        p.spatial_subset_selected, cls=Spectrum1D, statistic=None
+    )
+    p._apply_subset_masks(data, p.spatial_subset)
+    expected_spatial_mask = np.ones(data.flux.shape).astype(bool)
+    expected_spatial_mask[:, :2, :] = False
+
+    assert np.all(data.mask == expected_spatial_mask)
+    assert np.all(subset.mask == expected_spatial_mask)
+
+    sv = cubeviz_helper.app.get_viewer('spectrum-viewer')
+    # create a "Subset 2" entry in spectral dimension, selected "interactively"
+    min_wavelength = 4625 * u.AA
+    max_wavelength = spectrum1d_cube_larger.wavelength.max()
+
+    # This toolbar selection allows the XRangeROI call below to create a
+    # new subset, rather than replacing the previous subset:
+    sv.toolbar_active_subset.selected = []
+
+    # Now create the new spectral subset:
+    sv.apply_roi(XRangeROI(
+        min=min_wavelength.to(u.m).value,
+        max=max_wavelength.to(u.m).value
+    ))
+    assert "Subset 2" in p.spectral_subset.choices
+
+    # Select the spectral subset
+    p.spectral_subset_selected = "Subset 2"
+
+    # Get the data object again (ensures mask == None)
+    data = cubeviz_helper.app.data_collection[0].get_object(
+        cls=Spectrum1D, statistic=None
+    )
+    subset = cubeviz_helper.app.data_collection[0].get_subset_object(
+        p.spectral_subset_selected, cls=Spectrum1D, statistic=None
+    )
+    p._apply_subset_masks(data, p.spectral_subset)
+
+    expected_spectral_mask = np.ones(data.flux.shape).astype(bool)
+    expected_spectral_mask[:, :, 3:] = False
+
+    assert np.all(data.mask == expected_spectral_mask)
+    assert np.all(subset.mask == expected_spectral_mask)
+
+    # Get the data object again (ensures mask == None)
+    data = cubeviz_helper.app.data_collection[0].get_object(
+        cls=Spectrum1D, statistic=None
+    )
+
+    # apply both spectral+spatial masks:
+    for subset in [p.spatial_subset, p.spectral_subset]:
+        p._apply_subset_masks(data, subset)
+
+    # Check that both masks are applied correctly
+    assert np.all(data.mask == (expected_spectral_mask | expected_spatial_mask))

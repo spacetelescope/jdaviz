@@ -944,6 +944,33 @@ class SubsetSelect(SelectPluginComponent):
                         s.label == self.selected][0]
         return subset_group.subset_state
 
+    @property
+    def selected_subset_mask(self):
+        if self._allowed_type == 'spatial':
+            viewer_ref = getattr(self.plugin,
+                                 '_default_flux_viewer_reference_name',
+                                 self.viewers[0].reference_id)
+        elif self._allowed_type == 'spectral':
+            viewer_ref = getattr(self.plugin,
+                                 '_default_spectrum_viewer_reference_name',
+                                 self.viewers[0].reference_id)
+
+        subset = self.app.get_data_from_viewer(
+            viewer_ref, data_label=self.selected
+        )
+
+        if hasattr(subset, 'mask'):
+            # the mask attr is available for spectral subsets:
+            subset_mask = subset.mask
+        else:
+            # `subset` is a GroupedSubset.
+            # We take the logical-not of the mask here, since the glue subset masks
+            # are True in selected regions and False outside. This is the opposite of
+            # the numpy/astropy/specutils convention where True is masked-out.
+            subset_mask = ~subset.to_mask()
+
+        return subset_mask
+
     def selected_min_max(self, spectrum1d):
         if self.selected_obj is None:
             return np.nanmin(spectrum1d.spectral_axis), np.nanmax(spectrum1d.spectral_axis)

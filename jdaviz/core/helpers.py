@@ -479,7 +479,7 @@ class ImageConfigHelper(ConfigHelper):
             * Astropy ``regions`` object
             * ``photutils`` apertures (limited support until ``photutils``
               fully supports ``regions``)
-            * Numpy boolean array (shape must match data)
+            * Numpy boolean array (shape must match data, dtype should be ``np.bool_``)
 
         max_num_regions : int or `None`
             Maximum number of regions to load, starting from top of the list.
