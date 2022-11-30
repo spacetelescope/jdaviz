@@ -110,6 +110,9 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+- Avoid a non-finite error in model fitting by not passing spectrum uncertainties as
+  weights if there are uncertainty values of 0. [#1880]
+
 Cubeviz
 ^^^^^^^
 
