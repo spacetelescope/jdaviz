@@ -258,3 +258,29 @@ class ColorCycler:
         color = self.default_color_palette[cycle_index]
 
         return color
+
+
+def _unpack_nested_subset(subset_state, result=[]):
+    '''Return a list of ``subset_state`` object(s)
+    by navigating through the tree of subset states for composite
+    subsets made up of multiple regions.
+
+    Examples
+    --------
+    In this example, ``result`` will be updated in-place
+    with subset state object(s) for the given ``subset_state``.
+    If the subset is a compound subset, the list will have multiple
+    entries, otherwise only one:
+
+    >>> from jdaviz.utils import _unpack_nested_subset
+    >>> result = []
+    >>> _unpack_nested_subset(subset_state, result=result)
+
+    '''
+    from glue.core.subset import CompositeSubsetState
+
+    if isinstance(subset_state, CompositeSubsetState):
+        _unpack_nested_subset(subset_state.state1, result=result)
+        _unpack_nested_subset(subset_state.state2, result=result)
+    elif subset_state is not None:
+        result.append(subset_state)
