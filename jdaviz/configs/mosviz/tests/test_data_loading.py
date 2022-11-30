@@ -159,7 +159,7 @@ def test_load_single_image_multi_spec(mosviz_helper, mos_image, spectrum1d, mos_
 
     # Test that loading is still possible after previous crash:
     # https://github.com/spacetelescope/jdaviz/issues/364
-    with pytest.raises(ValueError, match='The dimensions of component 2D Spectra are incompatible'):
+    with pytest.raises(ValueError, match="No data found with the label 'MOS Table'"):
         mosviz_helper.load_data(spectra1d, spectra2d, images=[])
 
     with pytest.warns(UserWarning, match='Could not parse metadata from input images'):

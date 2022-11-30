@@ -13,6 +13,7 @@ from astropy.wcs import WCS
 from glue.core.data import Data
 from glue.core.link_helpers import LinkSame
 from specutils import Spectrum1D, SpectrumList, SpectrumCollection
+from specutils.io.default_loaders.jwst_reader import identify_jwst_s2d_multi_fits
 
 from jdaviz.configs.imviz.plugins.parsers import get_image_data_iterator
 from jdaviz.core.registries import data_parser_registry
@@ -22,6 +23,12 @@ from jdaviz.utils import standardize_metadata, PRIHDR_KEY
 __all__ = ['mos_spec1d_parser', 'mos_spec2d_parser', 'mos_image_parser']
 
 FALLBACK_NAME = "Unspecified"
+EXPECTED_FILES = {"niriss": ['1D Spectra C', '1D Spectra R',
+                             '2D Spectra C', '2D Spectra R',
+                             'Direct Image'],
+                  "nircam": ['1D Spectra C', '1D Spectra R',
+                             '2D Spectra C', '2D Spectra R'],
+                  "nirspec": ['1D Spectra', '2D Spectra']}
 
 
 def _add_to_table(app, data, comp_label, table_viewer_reference_name='table-viewer'):
@@ -39,6 +46,9 @@ def _add_to_table(app, data, comp_label, table_viewer_reference_name='table-view
         The label used to describe the data. Also used as the column header.
     """
     # Add data to the mos viz table object
+    if data is None or len(data) == 0:
+        return
+
     if 'MOS Table' not in app.data_collection:
         table_data = Data(label='MOS Table')
         app.add_data(table_data, notify_done=False)
@@ -175,10 +185,17 @@ def mos_nirspec_directory_parser(app, data_obj, data_labels=None):
 
     spectra_1d.sort()
     spectra_2d.sort()
-    mos_spec1d_parser(app, spectra_1d)
-    mos_spec2d_parser(app, spectra_2d)
-    mos_meta_parser(app, spectra_2d, spectra=True)
-    mos_meta_parser(app, spectra_1d, spectra=True, sp1d=True)
+    n_1d_loaded = mos_spec1d_parser(app, spectra_1d)
+    n_2d_loaded = mos_spec2d_parser(app, spectra_2d)
+    # Handle applying metadata to multiple rows, for multi-object files
+    repeat_1d = 1
+    repeat_2d = 1
+    if len(spectra_1d) == 1 and n_1d_loaded > 1:
+        repeat_1d = n_1d_loaded
+    if len(spectra_2d) == 1 and n_2d_loaded > 1:
+        repeat_2d = n_2d_loaded
+    mos_meta_parser(app, spectra_2d, spectra=True, repeat=repeat_2d)
+    mos_meta_parser(app, spectra_1d, spectra=True, sp1d=True, repeat=repeat_1d)
 
 
 @data_parser_registry("mosviz-spec1d-parser")
@@ -205,7 +222,14 @@ def mos_spec1d_parser(app, data_obj, data_labels=None,
     if not isinstance(data_obj, (list, tuple, SpectrumCollection)):
         data_obj = [data_obj]
 
-    data_obj = [Spectrum1D.read(x) if _check_is_file(x) else x for x in data_obj]
+    # If the file has multiple objects in it, the Spectrum1D read machinery
+    # will fail to find a reader for it, and we fall back on SpectrumList
+    try:
+        data_obj = [Spectrum1D.read(x) if _check_is_file(x) else x for x in data_obj]
+    except IORegistryError:
+        if len(data_obj) == 1:
+            if _check_is_file(data_obj[0]):
+                data_obj = SpectrumList.read(data_obj[0])
 
     if data_labels is None:
         data_labels = [f"1D Spectrum {i}" for i in range(len(data_obj))]
@@ -225,6 +249,8 @@ def mos_spec1d_parser(app, data_obj, data_labels=None,
 
         _add_to_table(app, data_labels, '1D Spectra',
                       table_viewer_reference_name=table_viewer_reference_name)
+
+    return len(data_obj)
 
 
 @data_parser_registry("mosviz-spec2d-parser")
@@ -289,6 +315,11 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
             isinstance(data_obj, fits.HDUList)):
         data_obj = [data_obj]
 
+    # See if this is a multi s2d file
+    if len(data_obj) == 1 and _check_is_file(data_obj[0]):
+        if identify_jwst_s2d_multi_fits("test", data_obj[0]):
+            data_obj = SpectrumList.read(data_obj[0])
+
     # If we're given a string, repeat it for each object
     if isinstance(data_labels, str):
         if len(data_obj) > 1:
@@ -342,6 +373,8 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
             raise ValueError("More than one data label provided, unclear " +
                              "which to show in viewer")
         app.add_data_to_viewer(spectrum_2d_viewer_reference_name, data_labels[0])
+
+    return len(data_obj)
 
 
 def _load_fits_image_from_filename(filename, app):
@@ -429,7 +462,7 @@ def mos_image_parser(app, data_obj, data_labels=None, share_image=0,
 
 
 @data_parser_registry("mosviz-metadata-parser")
-def mos_meta_parser(app, data_obj, ids=None, spectra=False, sp1d=False):
+def mos_meta_parser(app, data_obj, ids=None, spectra=False, sp1d=False, repeat=1):
     """
     Attempts to parse MOS FITS header metadata.
 
@@ -442,8 +475,13 @@ def mos_meta_parser(app, data_obj, ids=None, spectra=False, sp1d=False):
     ids : list of str
         A list with identification strings to be used to label mosviz
         table rows. Typically, a list with file names.
-    spectra : Boolean
+    spectra : bool, optional
         In case the FITS objects are related to spectral data.
+    sp1d : bool, optional
+        Indicates if the input ``data_obj`` is a 1D rather than 2D spectrum.
+    repeat : int, optional
+        If greater than 1, indicates that the input file metadata applies
+        to multiple table rows.
     """
 
     if data_obj is None:
@@ -462,19 +500,19 @@ def mos_meta_parser(app, data_obj, ids=None, spectra=False, sp1d=False):
             filters = [x[0].header.get("FILTER", FALLBACK_NAME) for x in data_obj]
             gratings = [x[0].header.get("GRATING", FALLBACK_NAME) for x in data_obj]
 
-            filters_gratings = [(f+'/'+g) for f, g in zip(filters, gratings)]
+            filters_gratings = [(f+'/'+g) for f, g in zip(filters, gratings)] * repeat
 
             [x.close() for x in data_obj]
 
         # source name can be taken from 1d spectra
         elif spectra and sp1d:
-            names = _get_source_identifiers_by_hdu([x[0] for x in data_obj], ids)
+            names = _get_source_identifiers_by_hdu([x[0] for x in data_obj], ids) * repeat
 
         # source name and coordinates are taken from image headers, if present
         else:
-            ra = [x[0].header.get("OBJ_RA", float("nan")) for x in data_obj]
-            dec = [x[0].header.get("OBJ_DEC", float("nan")) for x in data_obj]
-            names = _get_source_identifiers_by_hdu([x[0] for x in data_obj], ids)
+            ra = [x[0].header.get("OBJ_RA", float("nan")) for x in data_obj] * repeat
+            dec = [x[0].header.get("OBJ_DEC", float("nan")) for x in data_obj] * repeat
+            names = _get_source_identifiers_by_hdu([x[0] for x in data_obj], ids) * repeat
 
         [x.close() for x in data_obj]
 
@@ -498,7 +536,8 @@ def mos_meta_parser(app, data_obj, ids=None, spectra=False, sp1d=False):
 
 
 def _get_source_identifiers_by_hdu(hdus, filepaths=None,
-                                   header_keys=['SOURCEID', 'OBJECT']):
+                                   header_keys=['SOURCEID', 'OBJECT'],
+                                   allow_duplicates=False):
     """
     Attempts to extract a list of source identifiers via different header values.
 
@@ -513,6 +552,10 @@ def _get_source_identifiers_by_hdu(hdus, filepaths=None,
         The header value (or values) to search an HDU for to extract the source id.
         List order is assumed to be priority order (i.e. will return first successful
         lookup)
+    allow_duplicates : bool
+        Flag to allow repeat identifiers. Mostly future proofing in case we eventually
+        want to load spectral order 2 as well as 1, and to remind us that we currently
+        don't allow that.
     """
     src_names = list()
     # If the user only provided a key that's not already in a container or list, put it in
@@ -536,6 +579,10 @@ def _get_source_identifiers_by_hdu(hdus, filepaths=None,
                     os.path.basename(filepaths) if type(filepaths) is str
                     else os.path.basename(filepaths[indx]) if type(filepaths) is list
                     else FALLBACK_NAME)
+                src_names.append(src_name)
+                continue
+            if not allow_duplicates and src_name in src_names:
+                continue
             src_names.append(src_name)
         except Exception:
             # Source ID lookup shouldn't ever prevent target from loading. Downgrade all errors to
@@ -543,6 +590,7 @@ def _get_source_identifiers_by_hdu(hdus, filepaths=None,
             warnings.warn("Source name lookup failed for Target " + str(indx) +
                           ". Using fallback ID", RuntimeWarning)
             src_names.append(FALLBACK_NAME)
+
     return src_names
 
 
@@ -560,7 +608,12 @@ def _id_files_by_datamodl(label_dict, filepaths, catalog_key=None):
 
     for fp in filepaths:
         if fp.is_dir():
-            continue
+            # Potential names of subdirectories where images are stored
+            if fp.name in ("cutouts", "mosviz_cutouts", "images"):
+                images = sorted([file_path for file_path in glob.iglob(str(fp / '*'))])
+                label_dict['Direct Image'] = images
+            else:
+                continue
 
         if fp.suffix in ('.fits', '.fits.gz', '.fit', '.fit.gz'):
             # eligible files will have a DATAMODL value in their primary headers
@@ -571,6 +624,10 @@ def _id_files_by_datamodl(label_dict, filepaths, catalog_key=None):
             # letter of their filter values (e.g., "C" from "GR150C")
             try:
                 dispersion = header.get('FILTER')[-1]
+                if dispersion not in ('R', 'C'):
+                    dispersion = header.get('PUPIL')[-1]
+                    if dispersion not in ('R', 'C'):
+                        dispersion = None
             except TypeError:
                 dispersion = None
 
@@ -590,6 +647,10 @@ def _id_files_by_datamodl(label_dict, filepaths, catalog_key=None):
                 label_dict['2D Spectra R'].append(fp)
             elif datamodl == 'ImageModel' and s_wcs is not None:
                 label_dict['Direct Image'].append(fp)
+            elif datamodl == 'MultiSpecModel' and dispersion is None:
+                label_dict['1D Spectra'].append(fp)
+            elif datamodl == 'SlitModel' and dispersion is None:
+                label_dict['2D Spectra'].append(fp)
             else:
                 continue
 
@@ -607,7 +668,8 @@ def _id_files_by_datamodl(label_dict, filepaths, catalog_key=None):
 
 
 @data_parser_registry("mosviz-niriss-parser")
-def mos_niriss_parser(app, data_dir, table_viewer_reference_name='table-viewer'):
+def mos_niriss_parser(app, data_dir, instrument=None,
+                      table_viewer_reference_name='table-viewer'):
     """
     Attempts to parse all data for a NIRISS dataset in a single
     directory, which should include:
@@ -634,13 +696,11 @@ def mos_niriss_parser(app, data_dir, table_viewer_reference_name='table-viewer')
         raise ValueError(f"{data_dir} is not a valid directory path")
 
     # create dict for mapping expected file types to their DATAMODL identifiers
-    expected_labels = ['1D Spectra C', '1D Spectra R',
-                       '2D Spectra C', '2D Spectra R', 'Direct Image']
-    files_by_labels = {k: [] for k in expected_labels}
+    possible_labels = EXPECTED_FILES[instrument]
+    files_by_labels = {k: [] for k in possible_labels}
 
     # there should only be one source catalog, so that key gets a string
     cat_key = 'Source Catalog'
-    expected_labels += [cat_key]
     files_by_labels[cat_key] = ''
 
     # use FITS header keywords to sort the directory's files
@@ -650,20 +710,22 @@ def mos_niriss_parser(app, data_dir, table_viewer_reference_name='table-viewer')
     # validate that all expected files are present in proper amounts
     _warn_if_not_found(app, files_by_labels)
 
-    # parse relevant information from source catalog
-    cat_id_dict = {}
-    cat_file = files_by_labels[cat_key]
-    try:
-        cat_fields = ['label', 'sky_centroid.ra', 'sky_centroid.dec']
-        parsed_cat_fields = _fields_from_ecsv(cat_file, cat_fields,
-                                              delimiter=" ")
-    except KeyError:
-        # Older pipeline builds use different colname to distinguish sources
-        cat_fields[0] = 'id'
-        parsed_cat_fields = _fields_from_ecsv(cat_file, cat_fields,
-                                              delimiter=" ")
-    for row in parsed_cat_fields:
-        cat_id_dict[int(row[0])] = (row[1], row[2])
+    # parse relevant information from source catalog if it exists
+    cat_id_dict = None
+    if files_by_labels[cat_key] != '':
+        cat_id_dict = {}
+        cat_file = files_by_labels[cat_key]
+        try:
+            cat_fields = ['label', 'sky_centroid.ra', 'sky_centroid.dec']
+            parsed_cat_fields = _fields_from_ecsv(cat_file, cat_fields,
+                                                  delimiter=" ")
+        except KeyError:
+            # Older pipeline builds use different colname to distinguish sources
+            cat_fields[0] = 'id'
+            parsed_cat_fields = _fields_from_ecsv(cat_file, cat_fields,
+                                                  delimiter=" ")
+        for row in parsed_cat_fields:
+            cat_id_dict[int(row[0])] = (row[1], row[2])
 
     # set up a dictionary of datasets to add to glue
     add_to_glue = {}
@@ -671,24 +733,26 @@ def mos_niriss_parser(app, data_dir, table_viewer_reference_name='table-viewer')
     # Parse images
     image_dict = {}
 
-    print("Loading: Images")
-    for image_file in files_by_labels["Direct Image"]:
-        # save label for table viewer
-        im_split = image_file.stem.split("_")[0]
-        pupil = fits.getheader(image_file, ext=0).get('PUPIL')
+    if "Direct Image" in files_by_labels:
+        print("Loading: Images")
+        for image_file in files_by_labels["Direct Image"]:
+            # save label for table viewer
+            im_split = image_file.stem.split("_")[0]
+            pupil = fits.getheader(image_file, ext=0).get('PUPIL')
 
-        image_label = f"Image {im_split} {pupil}"
-        image_dict[pupil] = image_label
+            image_label = f"Image {im_split} {pupil}"
+            image_dict[pupil] = image_label
 
-        # save information from data file
-        with fits.open(image_file) as temp:
-            data_iter = get_image_data_iterator(app, temp, "Image", ext=None)
-            data_obj = [d[0] for d in data_iter]  # We do not use the generated labels
-            image_data = data_obj[0]  # Grab the first one.
-            # TODO: Error if multiple found?
+            # save information from data file
+            with fits.open(image_file) as temp:
+                data_iter = get_image_data_iterator(app, temp, "Image", ext=None)
+                data_obj = [d[0] for d in data_iter]  # We do not use the generated labels
+                if len(data_obj) > 1:
+                    raise ValueError(f"Found {len(data_obj)} direct images, expected 1.")
+                image_data = data_obj[0]
 
-        image_data.label = image_label
-        add_to_glue[image_label] = image_data
+            image_data.label = image_label
+            add_to_glue[image_label] = image_data
 
     # initialize lists of data to be shown in table viewer
     source_ids = []
@@ -705,10 +769,11 @@ def mos_niriss_parser(app, data_dir, table_viewer_reference_name='table-viewer')
     for flabel in file_labels_2d:
         for fname in files_by_labels[flabel]:
             print(f"Loading: {flabel} sources")
-            filter_name = fits.getheader(fname, ext=0).get('PUPIL')
+            if flabel in ('2D Spectra R', '2D Spectra C'):
+                filter_name = fits.getheader(fname, ext=0).get('PUPIL')
 
-            # Orientation denoted by "C", "R", or "C+R" for combined spectra
-            orientation = flabel.split()[-1]
+                # Orientation denoted by "C", "R", or "C+R" for combined spectra
+                orientation = flabel.split()[-1]
 
             # save HDUs in file that correspond with sources in catalog
             with fits.open(fname, memmap=False) as temp:
@@ -718,12 +783,12 @@ def mos_niriss_parser(app, data_dir, table_viewer_reference_name='table-viewer')
                     if i == 0:
                         filter = temp[0].header["FILTER"]
                     if "EXTNAME" in temp[i].header:
-                        if (temp[i].header["EXTNAME"] == "SCI"
-                                and (temp[i].header["SOURCEID"]
-                                     in cat_id_dict.keys())):
+                        if temp[i].header["EXTNAME"] == "SCI":
+                            if cat_id_dict is not None:
+                                if (temp[i].header["SOURCEID"] not in cat_id_dict.keys()):
+                                    continue
                             sci_hdus.append(i)
-                            wav_hdus[i] = ('WAVELENGTH',
-                                           temp[i].header['EXTVER'])
+                            wav_hdus[i] = ('WAVELENGTH', temp[i].header['EXTVER'])
 
                 # Now get a Spectrum1D object for each matching SCI HDU
                 source_ids.extend(_get_source_identifiers_by_hdu([temp[sci] for sci in sci_hdus]))
@@ -756,10 +821,14 @@ def mos_niriss_parser(app, data_dir, table_viewer_reference_name='table-viewer')
                         add_to_glue[label] = spec2d
 
                         # update labels for table viewer
-                        ra, dec = cat_id_dict[temp[sci].header["SOURCEID"]]
-                        ras.append(ra)
-                        decs.append(dec)
-                        image_add.append(image_dict[filter_name])
+                        if cat_id_dict is not None:
+                            ra, dec = cat_id_dict[temp[sci].header["SOURCEID"]]
+                            ras.append(ra)
+                            decs.append(dec)
+
+                        if filter_name in image_dict:
+                            image_add.append(image_dict[filter_name])
+
                         spec_labels_2d.append(label)
                         filters.append(filter)
 
@@ -772,10 +841,12 @@ def mos_niriss_parser(app, data_dir, table_viewer_reference_name='table-viewer')
 
             with fits.open(fname, memmap=False) as temp:
                 # Filter out HDUs we care about
-                source_ids_to_filter = cat_id_dict.keys()
-                filtered_hdul = fits.HDUList([hdu for hdu in temp if (
-                    (hdu.name in ('PRIMARY', 'ASDF')) or
-                    (hdu.header.get('SOURCEID', None) in source_ids_to_filter))])
+                if cat_id_dict is not None:
+                    filtered_hdul = fits.HDUList([hdu for hdu in temp if (
+                        (hdu.name in ('PRIMARY', 'ASDF')) or
+                        (hdu.header.get('SOURCEID', None) in cat_id_dict.keys()))])
+                else:
+                    filtered_hdul = temp
 
                 # SRCTYPE is required for the specutils JWST x1d reader. The reader will
                 # force this to POINT if not set. Under known cases, this field will be set
@@ -807,7 +878,6 @@ def mos_niriss_parser(app, data_dir, table_viewer_reference_name='table-viewer')
                         label = (f"{filter_name} Source "
                                  f"{sp.meta['SOURCEID']} spec1d "
                                  f"{orientation}")
-
                         spec_labels_1d.append(label)
                         add_to_glue[label] = sp
 

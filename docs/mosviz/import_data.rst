@@ -12,8 +12,23 @@ Automatic Directory Loading
 Mosviz provides instrument-specific directory parsers for select instruments. At this
 time, Mosviz supports automatic parsing for the following instruments:
 
-* JWST NIRSpec
+* JWST NIRSpec (levels 2 and 3)
 * JWST NIRISS
+* JWST NIRCam
+
+The NIRSpec parser expects a directory with either level 2 files:
+
+* ``*_cal.fits`` : Single file containing level 2 2D spectra for all objects.
+* ``*_x1d.fits`` : Single file containing level 2 1D spectra for all objects.
+
+or level 3 files:
+
+* ``*_s2d.fits`` : N files containing level 3 2D spectra, where N is the number of objects.
+* ``*_x1d.fits`` : N files containing level 3 1D spectra, where N is the number of objects.
+
+In either the level 2 or 3 case, the NIRSpec data directory may contain a sub-directory
+named ``images``, ``cutouts``, or ``mosviz_cutouts``. This sub-directory should contain FITS files
+containing images corresponding to each target, which may be sourced from a non-JWST telescope.
 
 The NIRISS parser expects a directory with the following types of files:
 
@@ -22,7 +37,9 @@ The NIRISS parser expects a directory with the following types of files:
 * ``*_cal.fits`` : Level 2 2D spectra in vertical (R) and horizontal (C) orientations from the ``calwebb_spec2`` spectroscopic pipeline *(C spectra are shown first in 2D viewer by default.)*
 * ``*_x1d.fits`` : Level 2 1D spectra in vertical (R) and horizontal (C) orientations from the ``calwebb_spec2`` spectroscopic pipeline *(C spectra are shown first in 1D viewer by default.)*
 
-In a Jupyter context (notebook or Lab), you can specify the instrument with a directory
+The NIRCam parser expects ``*_cal.fits`` and ``*_x1d`` files in the same format as the NIRISS parser.
+
+In a Jupyter context (notebook or Lab), you must specify the instrument with a directory
 as such:
 
 .. code-block:: python
@@ -50,7 +67,8 @@ and for NIRISS:
 
     jdaviz mosviz /path/to/my/data --instrument=niriss
 
-If an instrument is not specified in either case, Mosviz will default to NIRSpec parsing.
+If a directory is input in either case without specifying an instrument, Mosviz will
+raise an error.
 
 Manual Loading
 --------------

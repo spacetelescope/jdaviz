@@ -419,6 +419,13 @@ class Mosviz(ConfigHelper, LineListMixin):
             String representing the label for the data item loaded via
             ``images``. Can be a list of strings representing data labels
             for each item in ``images`` if  ``images`` is a list.
+
+        directory : str, optional
+            Instead of loading lists of spectra and images, the path to a directory
+            containing all files for a single JWST observation may be given.
+
+        instrument : {'niriss', 'nircam', 'nirspec'}, optional
+            Required if ``directory`` is specified. Value is not case sensitive.
         """
         # Link data after everything is loaded
         self.app.auto_link = False
@@ -426,18 +433,16 @@ class Mosviz(ConfigHelper, LineListMixin):
 
         directory = kwargs.pop('directory', None)
         instrument = kwargs.pop('instrument', None)
-        msg = ""
 
         if directory is not None and Path(directory).is_dir():
-            if instrument not in ('nirspec', 'niriss'):
-                msg = ("Ambiguous MOS Instrument: Only JWST NIRSpec and "
-                       "NIRISS folder parsing is fully supported; falling back to NIRSpec parsing.")
-                warnings.warn(msg)
-                instrument = "nirspec"
+            if instrument not in ('nirspec', 'niriss', 'nircam'):
+                raise ValueError(
+                    "Ambiguous MOS Instrument: Only JWST NIRSpec, NIRCam, and "
+                    f"NIRISS folder parsing are currently supported but got '{instrument}'")
             if instrument.lower() == "nirspec":
                 super().load_data(directory, parser_reference="mosviz-nirspec-directory-parser")
-            elif instrument.lower() == "niriss":
-                self.load_niriss_data(directory)
+            else:  # niriss or nircam
+                self.load_jwst_directory(directory, instrument=instrument)
         elif directory is not None and is_zipfile(str(directory)):
             raise TypeError("Please extract your data first and provide the directory")
 
@@ -617,9 +622,10 @@ class Mosviz(ConfigHelper, LineListMixin):
                           data_labels=data_labels)
         self._add_redshift_column()
 
-    def load_niriss_data(self, data_obj, data_labels=None):
+    def load_jwst_directory(self, data_obj, data_labels=None, instrument=None):
         self.app.auto_link = False
-        super().load_data(data_obj, parser_reference="mosviz-niriss-parser")
+        super().load_data(data_obj, parser_reference="mosviz-niriss-parser",
+                          instrument=instrument)
 
         self.link_table_data(data_obj)
         self._add_redshift_column()
