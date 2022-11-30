@@ -100,8 +100,11 @@ def _fit_1D(initial_model, spectrum, run_fitter, window=None):
 
     """
     if run_fitter:
-        if spectrum.uncertainty and np.all(spectrum.uncertainty.array != 0):
-            weights = 'unc'
+        if spectrum.uncertainty:
+            if np.all(spectrum.uncertainty.array == 0):
+                weights = None
+            else:
+                weights = 'unc'
         else:
             weights = None
         output_model = fit_lines(spectrum, initial_model, weights=weights, window=window)
@@ -267,8 +270,11 @@ class SpaxelWorker:
 
             sp = Spectrum1D(spectral_axis=self.wave, flux=flux, mask=mask)
 
-            if sp.uncertainty and np.all(sp.uncertainty.array != 0):
-                weights = 'unc'
+            if sp.uncertainty:
+                if np.all(sp.uncertainty.array == 0):
+                    weights = None
+                else:
+                    weights = 'unc'
             else:
                 weights = None
             fitted_model = fit_lines(sp, self.model, window=self.window, weights=weights)
