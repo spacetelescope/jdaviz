@@ -73,13 +73,17 @@ def test_model_ids(cubeviz_helper, spectral_cube_wcs):
         plugin.vue_add_model({})
 
 
-def test_fitting_backend():
+@pytest.mark.parametrize('unc', ('zeros', None))
+def test_fitting_backend(unc):
     np.random.seed(42)
 
     x, y = build_spectrum()
 
     # The uncertainty array of all zero should be ignored when fitting
-    uncertainties = StdDevUncertainty(np.zeros(y.shape)*u.Jy)
+    if unc == "zeros":
+        uncertainties = StdDevUncertainty(np.zeros(y.shape)*u.Jy)
+    elif unc is None:
+        uncertainties = None
     spectrum = Spectrum1D(flux=y*u.Jy, spectral_axis=x*u.um, uncertainty=uncertainties)
 
     g1f = models.Gaussian1D(0.7*u.Jy, 4.65*u.um, 0.3*u.um, name='g1')
@@ -111,7 +115,8 @@ def test_fitting_backend():
 # When pytest turns warnings into errors, this silently fails with
 # len(fitted_parameters) == 0
 @pytest.mark.filterwarnings('ignore')
-def test_cube_fitting_backend():
+@pytest.mark.parametrize('unc', ('zeros', None))
+def test_cube_fitting_backend(unc):
     np.random.seed(42)
 
     SIGMA = 0.1  # noise in data
@@ -142,7 +147,10 @@ def test_cube_fitting_backend():
     mask[..., :SPECTRUM_SIZE // 10] = True
 
     # The uncertainty array of all zero should be ignored when fitting
-    uncertainties = StdDevUncertainty(np.zeros(flux_cube.shape)*u.Jy)
+    if unc == "zeros":
+        uncertainties = StdDevUncertainty(np.zeros(flux_cube.shape)*u.Jy)
+    elif unc is None:
+        uncertainties = None
 
     spectrum = Spectrum1D(flux=flux_cube*u.Jy, spectral_axis=x*u.um,
                           uncertainty=uncertainties, mask=mask)
