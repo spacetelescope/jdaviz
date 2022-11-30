@@ -1,5 +1,6 @@
 import astropy.modeling.models as models
 import astropy.modeling.parameters as params
+from astropy.nddata import StdDevUncertainty
 import astropy.units as u
 import numpy as np
 import pytest
@@ -72,12 +73,18 @@ def test_model_ids(cubeviz_helper, spectral_cube_wcs):
         plugin.vue_add_model({})
 
 
-def test_fitting_backend():
+@pytest.mark.parametrize('unc', ('zeros', None))
+def test_fitting_backend(unc):
     np.random.seed(42)
 
     x, y = build_spectrum()
 
-    spectrum = Spectrum1D(flux=y*u.Jy, spectral_axis=x*u.um)
+    # The uncertainty array of all zero should be ignored when fitting
+    if unc == "zeros":
+        uncertainties = StdDevUncertainty(np.zeros(y.shape)*u.Jy)
+    elif unc is None:
+        uncertainties = None
+    spectrum = Spectrum1D(flux=y*u.Jy, spectral_axis=x*u.um, uncertainty=uncertainties)
 
     g1f = models.Gaussian1D(0.7*u.Jy, 4.65*u.um, 0.3*u.um, name='g1')
     g2f = models.Gaussian1D(2.0*u.Jy, 5.55*u.um, 0.3*u.um, name='g2')
@@ -108,7 +115,8 @@ def test_fitting_backend():
 # When pytest turns warnings into errors, this silently fails with
 # len(fitted_parameters) == 0
 @pytest.mark.filterwarnings('ignore')
-def test_cube_fitting_backend():
+@pytest.mark.parametrize('unc', ('zeros', None))
+def test_cube_fitting_backend(unc):
     np.random.seed(42)
 
     SIGMA = 0.1  # noise in data
@@ -134,7 +142,18 @@ def test_cube_fitting_backend():
     # Transpose so it can be packed in a Spectrum1D instance.
     flux_cube = flux_cube.transpose(1, 2, 0)
 
-    spectrum = Spectrum1D(flux=flux_cube*u.Jy, spectral_axis=x*u.um)
+    # Mask part of the spectral axis to later ensure that it gets propagated through:
+    mask = np.zeros_like(flux_cube).astype(bool)
+    mask[..., :SPECTRUM_SIZE // 10] = True
+
+    # The uncertainty array of all zero should be ignored when fitting
+    if unc == "zeros":
+        uncertainties = StdDevUncertainty(np.zeros(flux_cube.shape)*u.Jy)
+    elif unc is None:
+        uncertainties = None
+
+    spectrum = Spectrum1D(flux=flux_cube*u.Jy, spectral_axis=x*u.um,
+                          uncertainty=uncertainties, mask=mask)
 
     # Initial model for fit.
     g1f = models.Gaussian1D(0.7*u.Jy, 4.65*u.um, 0.3*u.um, name='g1')

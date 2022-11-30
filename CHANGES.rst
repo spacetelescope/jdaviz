@@ -6,6 +6,9 @@ Bug Fixes
 
 - Redshift is no longer reset to zero when adding results from plugins to app. [#1915]
 
+- Avoid a non-finite error in model fitting by not passing spectrum uncertainties as
+  weights if the uncertainty values are all 0. [#1880]
+
 Cubeviz
 ^^^^^^^
 
