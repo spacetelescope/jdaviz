@@ -198,13 +198,25 @@ Line Width
 
 Width of the line for the spectrum in pixels. Larger values are thicker lines on the plot.
 
-Vmin and Vmax
--------------
+Line Opacity
+------------
 
-Minimum and maximum values of the Y axis.
+Opacity of the line. Maximum (1) is fully opaque and minimum (0) is fully transparent.
 
-Percentile
-----------
+Plot profile as steps
+---------------------
 
-Sets the bounds of the plot (Vmin and Vmax) such that the selected percentage of the
-data is shown in the viewer. Editing either bound manually changes the "Percentile" selection to "Custom."
+Toggle on to view the spectrum as a continuous line or a step function.
+
+Plot uncertainties
+------------------
+
+Toggle on to view uncertainties attached to the spectrum, if any.
+
+From the API
+^^^^^^^^^^^^
+
+.. code-block:: python
+
+    plot_options = specviz.plugins['Plot Options']
+    plot_options.uncertainty_visible = True
