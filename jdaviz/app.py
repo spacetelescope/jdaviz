@@ -721,52 +721,18 @@ class Application(VuetifyTemplate, HubListener):
                                          cls=None)
         regions = {}
 
-        def _get_all_subregions(mask, spec_axis_data):
-            """
-            Return all subregions within a subset.
-
-            Parameters
-            ----------
-            mask : list
-                List of indices in spec_axis_data that are part of the subset.
-            spec_axis_data : list
-                List of spectral axis values.
-            Returns
-            -------
-            combined_spec_region : `~specutils.SpectralRegion`
-                SpectralRegion object containing all subregions of the subset.
-            """
-            if len(mask) == 0:
-                # Mask should only be 0 if ApplyROI is used to incorrectly
-                # create subsets via the API
-                raise ValueError("Mask has length 0, ApplyROI may have been used incorrectly")
-
-            current_edge = 0
+        def _get_all_subregions(spectral_axis_units, subset_label):
             combined_spec_region = None
-            for index in range(1, len(mask)):
-                # Find spot where mask == True is for a different region of the subset
-                # i.e. mask = [0, 1, 4, 5]
-                # mask[2] != mask[1] + 1
-                if mask[index] != mask[index - 1] + 1:
-                    subset_region = spec_axis_data[mask[current_edge]: mask[index - 1] + 1]
-                    if not combined_spec_region:
-                        combined_spec_region = SpectralRegion(min(subset_region),
-                                                              max(subset_region))
+            subset_plugin = self._jdaviz_helper.plugins['Subset Tools']
+            all_subregions = subset_plugin.get_all_subsets_with_subregions()
+            if subset_label in all_subregions:
+                for subregion in all_subregions[subset_label]:
+                    if combined_spec_region is None:
+                        combined_spec_region = SpectralRegion(subregion[0] * spectral_axis_units,
+                                                              subregion[1] * spectral_axis_units)
                     else:
-                        combined_spec_region += SpectralRegion(min(subset_region),
-                                                               max(subset_region))
-                    current_edge = index
-
-            # Get last region within the subset
-            if current_edge != index:
-                subset_region = spec_axis_data[mask[current_edge]: mask[index] + 1]
-                # No if check here because len(mask) must be greater than 1
-                # so combined_spec_region will have been instantiated in the for loop
-                if combined_spec_region is None:
-                    combined_spec_region = SpectralRegion(min(subset_region), max(subset_region))
-                else:
-                    combined_spec_region += SpectralRegion(min(subset_region), max(subset_region))
-
+                        combined_spec_region += SpectralRegion(subregion[0] * spectral_axis_units,
+                                                               subregion[1] * spectral_axis_units)
             return combined_spec_region
 
         if data_label is not None:
@@ -812,20 +778,13 @@ class Application(VuetifyTemplate, HubListener):
                     else:
                         data_wcs = value.data.coords
 
-                    subregions_in_subset = _get_all_subregions(
-                            np.where(value.to_mask() == True)[0], # noqa
-                            data_wcs.spectral_axis)
-
+                    subregions_in_subset = _get_all_subregions(data_wcs.spectral_axis.unit, key)
                     regions[key] = subregions_in_subset
                     continue
 
                 temp_data = self.get_data_from_viewer(viewer_reference, value.label)
                 if isinstance(temp_data, Spectrum1D):
-                    # Note that we look for mask == False here, rather than True above,
-                    # because specutils masks are the reverse of Glue (of course)
-                    subregions_in_subset = _get_all_subregions(
-                             np.where(~temp_data.mask)[0], # noqa
-                             temp_data.spectral_axis)
+                    subregions_in_subset = _get_all_subregions(temp_data.spectral_axis.unit, key)
                     regions[key] = subregions_in_subset
                     continue
 

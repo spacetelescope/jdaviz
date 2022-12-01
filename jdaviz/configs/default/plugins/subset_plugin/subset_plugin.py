@@ -10,6 +10,8 @@ from traitlets import Any, List, Unicode, Bool, observe
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, DatasetSelectMixin, SubsetSelect
+from jdaviz.core.user_api import PluginUserApi
+
 
 __all__ = ['SubsetPlugin']
 
@@ -54,6 +56,19 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                                           'subset_items',
                                           'subset_selected',
                                           default_text="Create New")
+        self.all_subsets_with_subregions = {}
+        self.all_subset_types = {}
+
+    @property
+    def user_api(self):
+        return PluginUserApi(self, expose=('subset_select', 'subset_definitions',
+                                           'get_all_subsets_with_subregions'))
+
+    def get_all_subsets_with_subregions(self):
+        for subset in self.app.data_collection.subset_groups:
+            self._unpack_nested_subset(subset.subset_state, subset.label)
+
+        return self.all_subsets_with_subregions
 
     def _sync_selected_from_state(self, *args):
         if not hasattr(self, 'subset_select'):
@@ -113,20 +128,26 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             self.session.edit_subset_mode = self.mode_selected
     '''
 
-    def _unpack_nested_subset(self, subset_state):
+    def _unpack_nested_subset(self, subset_state, subset_label=None):
         '''
         Navigate through the tree of subset states for composite
         subsets made up of multiple regions.
         '''
         if isinstance(subset_state, CompositeSubsetState):
-            self._unpack_nested_subset(subset_state.state1)
-            self._unpack_nested_subset(subset_state.state2)
+            self._unpack_nested_subset(subset_state.state1, subset_label)
+            self._unpack_nested_subset(subset_state.state2, subset_label)
             self.is_editable = False
         else:
             if subset_state is not None:
-                self._get_subset_subregion_definition(subset_state)
+                self._get_subset_subregion_definition(subset_state, subset_label)
 
-    def _get_subset_subregion_definition(self, subset_state):
+    def _add_subset_info(self, subset_label, info):
+        if subset_label and subset_label not in self.all_subsets_with_subregions:
+            self.all_subsets_with_subregions[subset_label] = [info]
+        elif subset_label and info not in self.all_subsets_with_subregions[subset_label]:
+            self.all_subsets_with_subregions[subset_label].append(info)
+
+    def _get_subset_subregion_definition(self, subset_state, subset_label=None):
         """
         Get the type and parameters for a single region in the subset. Note that
         the string type and operation (if in a composite subset) need to be stored
@@ -180,6 +201,9 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                                  {"name": "Upper bound", "att": "hi", "value": hi, "orig": hi}]
             self.is_editable = True
             subset_type = "Range"
+            #############################################
+            self._add_subset_info(subset_label, (lo, hi))
+            #############################################
 
         if len(subset_definition) > 0 and subset_definition not in self.subset_definitions:
             # Note: .append() does not work for List traitlet.
