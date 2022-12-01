@@ -206,7 +206,7 @@ Opacity of the line. Maximum (1) is fully opaque and minimum (0) is fully transp
 Plot profile as steps
 ---------------------
 
-Toggle on to view the spectrum as continuous line or step function.
+Toggle on to view the spectrum as a continuous line or a step function.
 
 Plot uncertainties
 ------------------
