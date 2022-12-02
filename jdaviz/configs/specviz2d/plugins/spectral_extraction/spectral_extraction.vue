@@ -102,11 +102,17 @@
         </v-row>
 
         <v-row v-if="trace_type_selected!=='Flat'">
+          <v-switch
+            v-model="trace_do_binning"
+            label="Bin input spectrum"
+          ></v-switch>
           <v-text-field
+            v-if="trace_do_binning"
             label="Bins"
             type="number"
             v-model.number="trace_bins"
-            :rules="[() => trace_bins!=='' || 'This field is required']"
+            :rules="[() => trace_bins!=='' || 'This field is required',
+                     () => trace_bins>=4 || 'Bins must be >= 4']"
             hint="Number of bins in the dispersion direction."
             persistent-hint
           >

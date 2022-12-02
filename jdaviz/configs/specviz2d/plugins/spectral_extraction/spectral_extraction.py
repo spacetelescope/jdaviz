@@ -51,8 +51,11 @@ class SpectralExtraction(PluginTemplateMixin):
     * :attr:`trace_pixel` :
       pixel of the trace.  If ``trace_type`` is not ``Flat``, then this
       is the "guess" for the automated trace.
+    * :attr:`trace_do_binning` :
+      only applicable if ``trace_type`` is not ``Flat``.  Bin the input data when fitting the
+      trace.
     * :attr:`trace_bins` :
-      only applicable if ``trace_type`` is not ``Flat``.
+      only applicable if ``trace_type`` is not ``Flat`` and ``trace_do_binning``.
     * :attr:`trace_window` :
       full width of the trace.
     * :meth:`import_trace`
@@ -111,6 +114,7 @@ class SpectralExtraction(PluginTemplateMixin):
     trace_peak_method_items = List().tag(sync=True)
     trace_peak_method_selected = Unicode().tag(sync=True)
 
+    trace_do_binning = Bool(True).tag(sync=True)
     trace_bins = IntHandleEmpty(20).tag(sync=True)
     trace_window = IntHandleEmpty(0).tag(sync=True)
 
@@ -311,7 +315,8 @@ class SpectralExtraction(PluginTemplateMixin):
         return PluginUserApi(self, expose=('interactive_extract',
                                            'trace_dataset', 'trace_type',
                                            'trace_order', 'trace_peak_method',
-                                           'trace_pixel', 'trace_bins', 'trace_window',
+                                           'trace_pixel',
+                                           'trace_do_binning', 'trace_bins', 'trace_window',
                                            'import_trace',
                                            'export_trace',
                                            'bg_dataset', 'bg_type',
@@ -483,7 +488,7 @@ class SpectralExtraction(PluginTemplateMixin):
     @observe('trace_dataset_selected', 'trace_type_selected',
              'trace_trace_selected', 'trace_offset', 'trace_order',
              'trace_pixel', 'trace_peak_method_selected',
-             'trace_bins', 'trace_window', 'active_step')
+             'trace_do_binning', 'trace_bins', 'trace_window', 'active_step')
     def _interaction_in_trace_step(self, event={}):
         if not self.plugin_opened or not self._do_marks:
             return
@@ -626,6 +631,7 @@ class SpectralExtraction(PluginTemplateMixin):
             self.trace_pixel = trace.guess
             self.trace_window = trace.window
             self.trace_bins = trace.bins
+            self.trace_do_binning = True
             if hasattr(trace.trace_model, 'degree'):
                 self.trace_order = trace.trace_model.degree
         elif isinstance(trace, tracing.ArrayTrace):  # pragma: no cover
@@ -668,7 +674,7 @@ class SpectralExtraction(PluginTemplateMixin):
             trace_model = _model_cls[self.trace_type_selected](degree=self.trace_order)
             trace = tracing.FitTrace(self.trace_dataset.selected_obj,
                                      guess=self.trace_pixel,
-                                     bins=int(self.trace_bins),
+                                     bins=int(self.trace_bins) if self.trace_do_binning else None,
                                      window=self.trace_window,
                                      peak_method=self.trace_peak_method_selected.lower(),
                                      trace_model=trace_model)
