@@ -1,0 +1,75 @@
+name: Build standalone
+
+on:
+  push:
+    branches:
+    - main
+    - 'v*'
+    tags:
+    - 'v*'
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-standalone
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash {0}
+
+
+jobs:
+  build_binary:
+    runs-on: ${{ matrix.os }}-latest
+    strategy:
+      matrix:
+        os: [ubuntu, windows, macos]
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
+
+    - name: Install jdaviz
+      run: pip install .
+
+    - name: Install pyinstaller
+      run: pip install pyinstaller
+
+    - name: Create standalone binary
+      run: (cd standalone; pyinstaller ./jdaviz.spec)
+
+    - name: Run jdaviz cmd in background
+      run: ./standalone/dist/jdaviz-cli/jdaviz-cli imviz&
+
+    - name: Install playwright
+      run: (pip install playwright; playwright install chromium)
+
+    - name: Install pytest
+      run: pip install pytest-playwright
+
+    - name: Wait for Voila to get online
+      uses: ifaxity/wait-on-action@v1
+      with:
+        resource: tcp:8866
+        timeout: 60000
+
+    - name: Test standalone
+      run: (cd standalone; touch pytest.ini; JUPYTER_PLATFORM_DIRS=1 pytest test.py --video=on)
+
+    - name: Upload Test artifacts
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results-${{ matrix.os }}
+        path: standalone/test-results
+
+    - name: Upload jdaviz standalone
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: jdaviz-standlone-${{ matrix.os }}
+        path: standalone/dist/jdaviz-cli
