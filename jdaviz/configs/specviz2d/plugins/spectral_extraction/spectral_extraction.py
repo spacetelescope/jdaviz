@@ -47,12 +47,12 @@ class SpectralExtraction(PluginTemplateMixin):
     * ``trace_type`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
       controls the type of trace to be generated.
     * ``trace_peak_method`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
-      only applicable if ``trace_type`` is set to ``Auto``.
+      only applicable if ``trace_type`` is not ``Flat``.
     * :attr:`trace_pixel` :
-      pixel of the trace.  If ``trace_type`` is set to ``Auto``, then this
+      pixel of the trace.  If ``trace_type`` is not ``Flat``, then this
       is the "guess" for the automated trace.
     * :attr:`trace_bins` :
-      only applicable if ``trace_type`` is set to ``Auto``.
+      only applicable if ``trace_type`` is not ``Flat``.
     * :attr:`trace_window` :
       full width of the trace.
     * :meth:`import_trace`
@@ -415,7 +415,7 @@ class SpectralExtraction(PluginTemplateMixin):
                 sp1d = self.export_extract_spectrum(add_data=False)
             except Exception as e:
                 # NOTE: ignore error, but will be raised when clicking ANY of the export buttons
-                # NOTE: AutoTrace or manual background are often giving a
+                # NOTE: FitTrace or manual background are often giving a
                 # "background regions overlapped" error from specreduce
                 self.ext_specreduce_err = repr(e)
                 self.marks['extract'].clear()
@@ -621,11 +621,13 @@ class SpectralExtraction(PluginTemplateMixin):
         if isinstance(trace, tracing.FlatTrace):
             self.trace_type_selected = 'Flat'
             self.trace_pixel = trace.trace_pos
-        elif isinstance(trace, tracing.AutoTrace):
-            self.trace_type_selected = 'Auto'
+        elif isinstance(trace, tracing.FitTrace):
+            self.trace_type_selected = trace.trace_model.__class__.__name__.strip('1D')
             self.trace_pixel = trace.guess
             self.trace_window = trace.window
             self.trace_bins = trace.bins
+            if hasattr(trace.trace_model, 'degree'):
+                self.trace_order = trace.trace_model.degree
         elif isinstance(trace, tracing.ArrayTrace):  # pragma: no cover
             raise NotImplementedError(f"cannot import ArrayTrace into plugin.  Use viz.load_trace instead")  # noqa
         else:  # pragma: no cover
@@ -664,12 +666,12 @@ class SpectralExtraction(PluginTemplateMixin):
 
         elif self.trace_type_selected in _model_cls:
             trace_model = _model_cls[self.trace_type_selected](degree=self.trace_order)
-            trace = tracing.AutoTrace(self.trace_dataset.selected_obj,
-                                      guess=self.trace_pixel,
-                                      bins=int(self.trace_bins),
-                                      window=self.trace_window,
-                                      peak_method=self.trace_peak_method_selected.lower(),
-                                      trace_model=trace_model)
+            trace = tracing.FitTrace(self.trace_dataset.selected_obj,
+                                     guess=self.trace_pixel,
+                                     bins=int(self.trace_bins),
+                                     window=self.trace_window,
+                                     peak_method=self.trace_peak_method_selected.lower(),
+                                     trace_model=trace_model)
 
         else:
             raise NotImplementedError(f"trace_type={self.trace_type_selected} not implemented")
