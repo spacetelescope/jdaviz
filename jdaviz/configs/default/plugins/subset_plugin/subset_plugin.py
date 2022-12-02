@@ -57,7 +57,6 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                                           'subset_selected',
                                           default_text="Create New")
         self.all_subsets_with_subregions = {}
-        self.all_subset_types = {}
 
     @property
     def user_api(self):
@@ -141,11 +140,12 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             if subset_state is not None:
                 self._get_subset_subregion_definition(subset_state, subset_label)
 
-    def _add_subset_info(self, subset_label, info):
-        if subset_label and subset_label not in self.all_subsets_with_subregions:
-            self.all_subsets_with_subregions[subset_label] = [info]
-        elif subset_label and info not in self.all_subsets_with_subregions[subset_label]:
-            self.all_subsets_with_subregions[subset_label].append(info)
+    def _add_subset_info(self, label, subset_type, dimensions):
+        if label and label not in self.all_subsets_with_subregions:
+            self.all_subsets_with_subregions[label] = {"type": subset_type,
+                                                       "dimensions": [dimensions]}
+        elif label and dimensions not in self.all_subsets_with_subregions[label]["dimensions"]:
+            self.all_subsets_with_subregions[label]["dimensions"].append(dimensions)
 
     def _get_subset_subregion_definition(self, subset_state, subset_label=None):
         """
@@ -155,6 +155,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         """
         subset_type = ''
         subset_definition = []
+        subset_dimensions = {}
         self.is_editable = False
         _around_decimals = 6  # Avoid 30 degrees from coming back as 29.999999999999996
 
@@ -166,6 +167,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                                      {"name": "Y Center", "att": "yc", "value": y, "orig": y},
                                      {"name": "Radius", "att": "radius", "value": r, "orig": r}]
                 self.is_editable = True
+                subset_dimensions = {"x": x, "y": y, "radius": r}
 
             elif isinstance(subset_state.roi, RectangularROI):
                 for att in ("Xmin", "Xmax", "Ymin", "Ymax"):
@@ -173,9 +175,11 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                     val = getattr(subset_state.roi, real_att)
                     subset_definition.append(
                         {"name": att, "att": real_att, "value": val, "orig": val})
+                    subset_dimensions[real_att] = val
                 theta = np.around(np.degrees(subset_state.roi.theta), decimals=_around_decimals)
                 subset_definition.append(
                     {"name": "Angle", "att": "theta", "value": theta, "orig": theta})
+                subset_dimensions["theta"] = theta
                 self.is_editable = True
 
             elif isinstance(subset_state.roi, EllipticalROI):
@@ -190,6 +194,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                     {"name": "X Radius", "att": "radius_x", "value": rx, "orig": rx},
                     {"name": "Y Radius", "att": "radius_y", "value": ry, "orig": ry},
                     {"name": "Angle", "att": "theta", "value": theta, "orig": theta}]
+                subset_dimensions = {"xc": xc, "yc": yc, "rx": rx, "ry": ry, "theta": theta}
                 self.is_editable = True
 
             subset_type = subset_state.roi.__class__.__name__
@@ -201,9 +206,10 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                                  {"name": "Upper bound", "att": "hi", "value": hi, "orig": hi}]
             self.is_editable = True
             subset_type = "Range"
-            #############################################
-            self._add_subset_info(subset_label, (lo, hi))
-            #############################################
+            subset_dimensions = {"lo": lo, "hi": hi}
+
+        # Add all relevant subset information to user_api
+        self._add_subset_info(subset_label, subset_type, subset_dimensions)
 
         if len(subset_definition) > 0 and subset_definition not in self.subset_definitions:
             # Note: .append() does not work for List traitlet.
