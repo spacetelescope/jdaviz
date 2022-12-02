@@ -10,6 +10,9 @@ New Features
 
 - Model fitting plugin can optionally expose the residuals as an additional data collection entry.
   [#1864]
+- CLI launchers no longer require data to be specified [#1890]
+
+- Added direct launchers for each config (e.g. ``specviz``) [#1890]
 
 Cubeviz
 ^^^^^^^
