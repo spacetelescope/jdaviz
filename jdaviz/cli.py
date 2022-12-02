@@ -88,14 +88,15 @@ def main(filename=None, layout='default', instrument=None, browser='default',
         os.chdir(start_dir)
 
 
-def _main(force_layout=None):
+def _main(config=None):
     import argparse
     import sys
 
     parser = argparse.ArgumentParser(description='Start a Jdaviz application instance with data '
                                      'loaded from FILENAME.')
-    if force_layout == None:
-        parser.add_argument('layout', choices=['cubeviz', 'specviz', 'specviz2d', 'mosviz', 'imviz'],
+    if config is None:
+        parser.add_argument('layout', choices=['cubeviz', 'specviz', 'specviz2d',
+                                               'mosviz', 'imviz'],
                             help='Configuration to use.')
     parser.add_argument('--filename', type=str, default=None,
                         help='The path to the file to be loaded into the Jdaviz application.')
@@ -119,30 +120,31 @@ def _main(force_layout=None):
     parser.add_argument('--version', action='version', version=f'%(prog)s {__version__}')
     args = parser.parse_args()
 
-    if force_layout == None:
+    if config is None:
         layout = args.layout
     else:
-        layout = force_layout
+        layout = config
 
     main(filename=args.filename, layout=layout, instrument=args.instrument, browser=args.browser,
          theme=args.theme, verbosity=args.verbosity, history_verbosity=args.history_verbosity,
          hotreload=args.hotreload)
 
+
 def _specviz():
-    _main(force_layout='specviz')
+    _main(config='specviz')
 
 
 def _specviz2d():
-    _main(force_layout='specviz2d')
+    _main(config='specviz2d')
 
 
 def _imviz():
-    _main(force_layout='imviz')
+    _main(config='imviz')
 
 
 def _cubeviz():
-    _main(force_layout='cubeviz')
+    _main(config='cubeviz')
 
 
 def _mosviz():
-    _main(force_layout='mosviz')
+    _main(config='mosviz')
