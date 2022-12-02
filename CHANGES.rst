@@ -4,6 +4,8 @@
 New Features
 ------------
 
+- CLI launchers no longer require data to be specified [#1890]
+
 Cubeviz
 ^^^^^^^
 
