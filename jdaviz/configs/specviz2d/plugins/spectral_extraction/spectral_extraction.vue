@@ -112,7 +112,7 @@
             type="number"
             v-model.number="trace_bins"
             :rules="[() => trace_bins!=='' || 'This field is required',
-                     () => trace_bins>=4 || 'Bins must be >= 4']"
+                     () => trace_bins>=Math.max(4, trace_order+1) || 'Bins must be >= '+Math.max(4, trace_order+1)]"
             hint="Number of bins in the dispersion direction."
             persistent-hint
           >
