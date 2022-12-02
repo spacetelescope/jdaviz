@@ -16,7 +16,7 @@ __all__ = ['main']
 CONFIGS_DIR = os.path.join(os.path.dirname(__file__), 'configs')
 
 
-def main(filename, layout='default', instrument=None, browser='default',
+def main(filename=None, layout='default', instrument=None, browser='default',
          theme='light', verbosity='warning', history_verbosity='info',
          hotreload=False):
     """
@@ -24,7 +24,7 @@ def main(filename, layout='default', instrument=None, browser='default',
 
     Parameters
     ----------
-    filename : str
+    filename : str, optional
         The path to the file to be loaded into the Jdaviz application.
     layout : str, optional
         Optional specification for which configuration to use on startup.
@@ -49,8 +49,11 @@ def main(filename, layout='default', instrument=None, browser='default',
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
     # Support comma-separate file list
-    filepath = ','.join([str(pathlib.Path(f).absolute()).replace('\\', '/')
-                         for f in filename.split(',')])
+    if filename:
+        filepath = ','.join([str(pathlib.Path(f).absolute()).replace('\\', '/')
+                            for f in filename.split(',')])
+    else:
+        filepath = ''
 
     with open(os.path.join(CONFIGS_DIR, layout, layout + '.ipynb')) as f:
         notebook_template = f.read()
@@ -94,7 +97,7 @@ def _main(force_layout=None):
     if force_layout == None:
         parser.add_argument('layout', choices=['cubeviz', 'specviz', 'specviz2d', 'mosviz', 'imviz'],
                             help='Configuration to use.')
-    parser.add_argument('filename', type=str,
+    parser.add_argument('--filename', type=str, default=None,
                         help='The path to the file to be loaded into the Jdaviz application.')
     parser.add_argument('--instrument', type=str, default='nirspec',
                         help='Manually specifies which instrument parser to use, for Mosviz')
@@ -121,7 +124,7 @@ def _main(force_layout=None):
     else:
         layout = force_layout
 
-    main(args.filename, layout=layout, instrument=args.instrument, browser=args.browser,
+    main(filename=args.filename, layout=layout, instrument=args.instrument, browser=args.browser,
          theme=args.theme, verbosity=args.verbosity, history_verbosity=args.history_verbosity,
          hotreload=args.hotreload)
 
