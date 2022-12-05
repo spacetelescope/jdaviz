@@ -98,7 +98,7 @@ def _main(config=None):
         parser.add_argument('layout', choices=['cubeviz', 'specviz', 'specviz2d',
                                                'mosviz', 'imviz'],
                             help='Configuration to use.')
-    parser.add_argument('--filename', type=str, default=None,
+    parser.add_argument('filename', type=str, nargs='?', default=None,
                         help='The path to the file to be loaded into the Jdaviz application.')
     parser.add_argument('--instrument', type=str, default='nirspec',
                         help='Manually specifies which instrument parser to use, for Mosviz')
