@@ -59,10 +59,15 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     * :meth:`get_model_component`
     * :meth:`set_model_component`
     * ``equation`` (:class:`~jdaviz.core.template_mixin.AutoTextField`)
-    * ``add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
     * ``cube_fit``
       Only exposed for Cubeviz.  Whether to fit the model to the cube instead of to the
       collapsed spectrum.
+    * ``add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
+    * ``residuals_expose`` (bool)
+      Whether to calculate and expose the residuals (model minus data).
+    * ``residuals`` (:class:`~jdaviz.core.template_mixin.AutoTextField`)
+      Label of the residuals to apply when calling :meth:`calculate_fit` if ``residuals_expose``
+      is ``True``.
     * :meth:`calculate_fit`
     """
     dialog = Bool(False).tag(sync=True)
@@ -92,6 +97,13 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     display_order = Bool(False).tag(sync=True)
 
     cube_fit = Bool(False).tag(sync=True)
+
+    # residuals (non-cube fit only)
+    residuals_expose = Bool(False).tag(sync=True)
+    residuals_label = Unicode().tag(sync=True)
+    residuals_label_default = Unicode().tag(sync=True)
+    residuals_label_auto = Bool(True).tag(sync=True)
+    residuals_label_invalid_msg = Unicode('').tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         self._spectrum1d = None
@@ -138,6 +150,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self.equation = AutoTextField(self, 'model_equation', 'model_equation_default',
                                       'model_equation_auto', 'model_equation_invalid_msg')
 
+        self.residuals = AutoTextField(self, 'residuals_label', 'residuals_label_default',
+                                       'residuals_label_auto', 'residuals_label_invalid_msg')
+
         # set the filter on the viewer options
         self._update_viewer_filters()
 
@@ -149,7 +164,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         expose += ['spectral_subset', 'model_component', 'poly_order', 'model_component_label',
                    'model_components', 'create_model_component', 'remove_model_component',
                    'get_model_component', 'set_model_component',
-                   'equation', 'add_results']
+                   'equation', 'add_results', 'residuals_expose', 'residuals']
         if self.config == "cubeviz":
             expose += ['cube_fit']
         expose += ['calculate_fit']
@@ -620,6 +635,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         label_comps += ["model"]
         self.results_label_default = " ".join(label_comps)
 
+    @observe("results_label")
+    def _set_residuals_label_default(self, event={}):
+        self.residuals_label_default = self.results_label+" residuals"
+
     @observe("cube_fit")
     def _update_viewer_filters(self, event={}):
         if event.get('new', self.cube_fit):
@@ -643,6 +662,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         -------
         fitted model
         fitted spectrum/cube
+        residuals (if ``residuals_expose`` is set to ``True``)
         """
         if self.cube_fit:
             return self._fit_model_to_cube(add_data=add_data)
@@ -684,7 +704,16 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         if add_data:
             self.app.fitted_models[self.results_label] = fitted_model
-            self._register_spectrum({"spectrum": fitted_spectrum})
+            self.add_results.add_results_from_plugin(fitted_spectrum)
+
+            if self.residuals_expose:
+                # NOTE: this will NOT load into the viewer since we have already called
+                # add_results_from_plugin above.
+                self.add_results.add_results_from_plugin(self._spectrum1d-fitted_spectrum,
+                                                         label=self.residuals.value,
+                                                         replace=False)
+
+        self._set_default_results_label()
 
         # Update component model parameters with fitted values
         if isinstance(self._fitted_model, QuantityModel):
@@ -699,6 +728,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # Reset the data mask in case we use a different subset next time
         self._spectrum1d.mask = self._original_mask
 
+        if self.residuals_expose:
+            return fitted_model, fitted_spectrum, self._spectrum1d-fitted_spectrum
         return fitted_model, fitted_spectrum
 
     def _fit_model_to_cube(self, add_data):
@@ -779,29 +810,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self.hub.broadcast(snackbar_message)
 
         return fitted_model, output_cube
-
-    def _register_spectrum(self, event):
-        """
-        Add a spectrum to the data collection based on the currently displayed
-        parameters (these could be user input or fit values).
-        """
-        if self._warn_if_no_equation():
-            return
-        # Make sure the initialized models are updated with any user-specified
-        # parameters
-        self._update_initialized_parameters()
-
-        # Need to run the model fitter with run_fitter=False to get spectrum
-        if "spectrum" in event:
-            spectrum = event["spectrum"]
-        else:
-            model, spectrum = fit_model_to_spectrum(self._spectrum1d,
-                                                    self._initialized_models.values(),
-                                                    self.model_equation,
-                                                    window=self._window)
-
-        self.add_results.add_results_from_plugin(spectrum)
-        self._set_default_results_label()
 
     def _apply_subset_masks(self, spectrum, subset_component):
         """

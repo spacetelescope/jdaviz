@@ -1696,13 +1696,16 @@ class AddResults(BasePluginComponent):
         self.label_invalid_msg = ''
         self.label_overwrite = False
 
-    def add_results_from_plugin(self, data_item, replace=None):
+    def add_results_from_plugin(self, data_item, replace=None, label=None):
         """
         Add ``data_item`` to the app's data_collection according to the default or user-provided
         label and adds to any requested viewers.
         """
         if self.label_invalid_msg:
             raise ValueError(self.label_invalid_msg)
+
+        if label is None:
+            label = self.label
 
         if replace is None:
             replace = self.viewer.selected_reference != 'spectrum-viewer'
@@ -1714,29 +1717,29 @@ class AddResults(BasePluginComponent):
             viewer_item = self.app._viewer_item_by_reference(viewer_reference)
             viewer = self.app.get_viewer(viewer_reference)
             viewer_loaded_labels = [layer.layer.label for layer in viewer.layers]
-            add_to_viewer_selected = viewer_reference if self.label in viewer_loaded_labels else 'None'  # noqa
-            visible = self.label in viewer_item['visible_layers']
+            add_to_viewer_selected = viewer_reference if label in viewer_loaded_labels else 'None'  # noqa
+            visible = label in viewer_item['visible_layers']
         else:
             add_to_viewer_selected = self.add_to_viewer_selected
             visible = True
 
-        if self.label in self.app.data_collection:
+        if label in self.app.data_collection:
             if add_to_viewer_selected != 'None':
-                self.app.remove_data_from_viewer(self.viewer.selected_reference, self.label)
-            self.app.data_collection.remove(self.app.data_collection[self.label])
+                self.app.remove_data_from_viewer(self.viewer.selected_reference, label)
+            self.app.data_collection.remove(self.app.data_collection[label])
 
         if not hasattr(data_item, 'meta'):
             data_item.meta = {}
         data_item.meta['Plugin'] = self._plugin.__class__.__name__
         if self.app.config == 'mosviz':
             data_item.meta['mosviz_row'] = self.app.state.settings['mosviz_row']
-        self.app.add_data(data_item, self.label)
+        self.app.add_data(data_item, label)
 
         if add_to_viewer_selected != 'None':
             # replace the contents in the selected viewer with the results from this plugin
             # TODO: switch to an instance/classname check?
             self.app.add_data_to_viewer(self.viewer.selected_id,
-                                        self.label,
+                                        label,
                                         visible=visible, clear_other_data=replace)
 
         # update overwrite warnings, etc
