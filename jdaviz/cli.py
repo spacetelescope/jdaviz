@@ -94,11 +94,14 @@ def _main(config=None):
 
     parser = argparse.ArgumentParser(description='Start a Jdaviz application instance with data '
                                      'loaded from FILENAME.')
+    filename_nargs = '?'
     if config is None:
         parser.add_argument('layout', choices=['cubeviz', 'specviz', 'specviz2d',
                                                'mosviz', 'imviz'],
                             help='Configuration to use.')
-    parser.add_argument('filename', type=str, nargs='?', default=None,
+    if (config == "mosviz") or ("mosviz" in sys.argv):
+        filename_nargs = 1
+    parser.add_argument('filename', type=str, nargs=filename_nargs, default=None,
                         help='The path to the file to be loaded into the Jdaviz application.')
     parser.add_argument('--instrument', type=str, default='nirspec',
                         help='Manually specifies which instrument parser to use, for Mosviz')
