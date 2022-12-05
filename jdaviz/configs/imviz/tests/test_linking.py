@@ -271,6 +271,7 @@ class TestLink_WCS_GWCS(BaseImviz_WCS_GWCS):
         # but cursor is outside GWCS bounding box
         assert self.viewer.label_mouseover.unreliable_world
         assert self.viewer.label_mouseover.unreliable_pixel
+        assert self.viewer.label_mouseover.world_label_prefix_2 == '(est.)'
 
 
 class TestLink_GWCS_GWCS(BaseImviz_GWCS_GWCS):

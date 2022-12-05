@@ -1,17 +1,16 @@
-import numpy as np
+import math
 import warnings
 
+import numpy as np
+from astropy import table
+from astropy import units as u
 from glue.core import BaseData
 from glue.core.subset import Subset
 from glue.config import data_translator
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from glue.core.exceptions import IncompatibleAttribute
-
-from astropy import table
-from specutils import Spectrum1D
 from matplotlib.colors import cnames
-from astropy import units as u
-
+from specutils import Spectrum1D
 
 from jdaviz.core.events import SpectralMarksChangedMessage, LineIdentifyMessage
 from jdaviz.core.registries import viewer_registry
@@ -66,6 +65,9 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
                 return
 
         if data['event'] == 'mousemove':
+            if len(self.jdaviz_app.data_collection) < 1:
+                return
+
             # Extract data coordinates - these are pixels in the reference image
             x = data['domain']['x']
             y = data['domain']['y']
@@ -76,16 +78,61 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
                 self.label_mouseover.value = ""
                 return
 
-            fmt = 'x={:+10.5e} y={:+10.5e}'
-            self.label_mouseover.pixel = fmt.format(x, y)
+            # Snap to the closest data point, not the actual mouse location.
+            sp = None
+            closest_i = 0
+            closest_wave = 0
+            closest_flux = 0
+            closest_maxsize = 0
+            closest_label = ''
+            closest_distance = None
+            for lyr in self.state.layers:
+                if ((not isinstance(lyr.layer, BaseData)) or (lyr.layer.ndim not in (1, 3))
+                        or (not lyr.visible)):
+                    continue
 
-            # We just want cursor position, so these are not used.
-            self.label_mouseover.icon = ''
-            self.label_mouseover.reset_coords_display()
-            self.label_mouseover.value = ''
+                try:
+                    # TODO: Is there a way to cache this?
+                    sp = lyr.layer.get_object(
+                        cls=Spectrum1D, statistic=getattr(self.state, 'function', None))
+
+                    cur_i = np.argmin(abs(sp.spectral_axis.value - x))
+                    cur_wave = sp.spectral_axis[cur_i]
+                    cur_flux = sp.flux[cur_i]
+
+                    dx = cur_wave.value - x
+                    dy = cur_flux.value - y
+                    cur_distance = math.sqrt(dx * dx + dy * dy)
+                    if (closest_distance is None) or (cur_distance < closest_distance):
+                        closest_distance = cur_distance
+                        closest_i = cur_i
+                        closest_wave = cur_wave
+                        closest_flux = cur_flux
+                        closest_maxsize = int(np.ceil(np.log10(sp.spectral_axis.size))) + 3
+                        closest_label = self.jdaviz_app.state.layer_icons.get(lyr.layer.label)
+                except Exception:
+                    sp = None
+
+            if sp is None:  # Something is loaded but not the right thing
+                self.label_mouseover.icon = ""
+                self.label_mouseover.pixel = ""
+                self.label_mouseover.reset_coords_display()
+                self.label_mouseover.value = ""
+                return
+
+            fmt = 'x={:0' + str(closest_maxsize) + '.1f}'
+            self.label_mouseover.pixel = fmt.format(closest_i)
+            self.label_mouseover.world_label_prefix = 'Wave'
+            self.label_mouseover.world_ra = f'{closest_wave.value:10.5e}'
+            self.label_mouseover.world_dec = closest_wave.unit.to_string()
+            self.label_mouseover.world_label_prefix_2 = 'Flux'
+            self.label_mouseover.world_ra_deg = f'{closest_flux.value:10.5e}'
+            self.label_mouseover.world_dec_deg = closest_flux.unit.to_string()
+            self.label_mouseover.icon = closest_label
+            self.label_mouseover.value = ""  # Not used
 
         elif data['event'] == 'mouseleave' or data['event'] == 'mouseenter':
-
+            self.label_mouseover.icon = ""
             self.label_mouseover.pixel = ""
             self.label_mouseover.reset_coords_display()
             self.label_mouseover.value = ""

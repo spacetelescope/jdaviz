@@ -204,16 +204,43 @@ def test_get_spectral_regions_unit(specviz_helper, spectrum1d):
 
 
 def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
+    spec_viewer = specviz_helper.app.get_viewer('spectrum-viewer')
+
+    # Mouseover without data should not crash.
+    spec_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 6100, 'y': 12.5}})
+    assert spec_viewer.label_mouseover.pixel == ''
+    assert spec_viewer.label_mouseover.world_label_prefix == '\xa0'
+    assert spec_viewer.label_mouseover.world_ra == ''
+    assert spec_viewer.label_mouseover.world_dec == ''
+    assert spec_viewer.label_mouseover.world_label_prefix_2 == '\xa0'
+    assert spec_viewer.label_mouseover.world_ra_deg == ''
+    assert spec_viewer.label_mouseover.world_dec_deg == ''
+    assert spec_viewer.label_mouseover.icon == ''
+
     # If the reference (visible) data changes via unit conversion,
     # check that the region's units convert too
     specviz_helper.load_spectrum(spectrum1d)
 
-    # Also check coordinates info panel
-    spec_viewer = specviz_helper.app.get_viewer('spectrum-viewer')
+    # Also check coordinates info panel.
+    # x=0 -> 6000 A, x=1 -> 6222.222 A
     spec_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 6100, 'y': 12.5}})
-    assert spec_viewer.label_mouseover.pixel == 'x=+6.10000e+03 y=+1.25000e+01'
+    assert spec_viewer.label_mouseover.pixel == 'x=00.0'  # Actual: x=00.4
+    assert spec_viewer.label_mouseover.world_label_prefix == 'Wave'
+    assert spec_viewer.label_mouseover.world_ra == '6.00000e+03'
+    assert spec_viewer.label_mouseover.world_dec == 'Angstrom'
+    assert spec_viewer.label_mouseover.world_label_prefix_2 == 'Flux'
+    assert spec_viewer.label_mouseover.world_ra_deg == '1.24967e+01'
+    assert spec_viewer.label_mouseover.world_dec_deg == 'Jy'
+    assert spec_viewer.label_mouseover.icon == 'a'
     spec_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': None, 'y': 12.5}})
     assert spec_viewer.label_mouseover.pixel == ''
+    assert spec_viewer.label_mouseover.world_label_prefix == '\xa0'
+    assert spec_viewer.label_mouseover.world_ra == ''
+    assert spec_viewer.label_mouseover.world_dec == ''
+    assert spec_viewer.label_mouseover.world_label_prefix_2 == '\xa0'
+    assert spec_viewer.label_mouseover.world_ra_deg == ''
+    assert spec_viewer.label_mouseover.world_dec_deg == ''
+    assert spec_viewer.label_mouseover.icon == 'a'
 
     # Convert the wavelength axis to microns
     new_spectral_axis = "micron"
@@ -238,9 +265,23 @@ def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
 
     # Coordinates info panel should show new unit
     spec_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0.61, 'y': 12.5}})
-    assert spec_viewer.label_mouseover.pixel == 'x=+6.10000e-01 y=+1.25000e+01'
+    assert spec_viewer.label_mouseover.pixel == 'x=00.0'
+    assert spec_viewer.label_mouseover.world_label_prefix == 'Wave'
+    assert spec_viewer.label_mouseover.world_ra == '6.00000e-01'
+    assert spec_viewer.label_mouseover.world_dec == 'micron'
+    assert spec_viewer.label_mouseover.world_label_prefix_2 == 'Flux'
+    assert spec_viewer.label_mouseover.world_ra_deg == '1.24967e+01'
+    assert spec_viewer.label_mouseover.world_dec_deg == 'Jy'
+    assert spec_viewer.label_mouseover.icon == 'b'
     spec_viewer.on_mouse_or_key_event({'event': 'mouseleave'})
     assert spec_viewer.label_mouseover.pixel == ''
+    assert spec_viewer.label_mouseover.world_label_prefix == '\xa0'
+    assert spec_viewer.label_mouseover.world_ra == ''
+    assert spec_viewer.label_mouseover.world_dec == ''
+    assert spec_viewer.label_mouseover.world_label_prefix_2 == '\xa0'
+    assert spec_viewer.label_mouseover.world_ra_deg == ''
+    assert spec_viewer.label_mouseover.world_dec_deg == ''
+    assert spec_viewer.label_mouseover.icon == ''
 
 
 def test_subset_default_thickness(specviz_helper, spectrum1d):

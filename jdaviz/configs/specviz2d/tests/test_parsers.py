@@ -68,13 +68,26 @@ def test_2d_parser_no_unit(specviz2d_helper, mos_spectrum2d):
     assert dc_1.label == 'Spectrum 1D'
     assert dc_1.get_component('flux').units == dc_0.get_component('flux').units
 
-    # Also check the coordinates info panel.
+    # Also check the coordinates info panels.
+
     viewer_2d = specviz2d_helper.app.get_viewer('spectrum-2d-viewer')
     viewer_2d.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
     assert viewer_2d.label_mouseover.pixel == 'x=00000.0 y=00000.0'
     assert viewer_2d.label_mouseover.value == '+3.74540e-01 '
     assert viewer_2d.label_mouseover.world_ra_deg == ''
     assert viewer_2d.label_mouseover.world_dec_deg == ''
+    assert viewer_2d.label_mouseover.icon == 'a'
+
+    viewer_1d = specviz2d_helper.app.get_viewer('spectrum-viewer')
+    viewer_1d.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 6.5, 'y': 3}})
+    assert viewer_1d.label_mouseover.pixel == 'x=006.0'
+    assert viewer_1d.label_mouseover.world_label_prefix == 'Wave'
+    assert viewer_1d.label_mouseover.world_ra == '6.00000e+00'
+    assert viewer_1d.label_mouseover.world_dec == 'pix'
+    assert viewer_1d.label_mouseover.world_label_prefix_2 == 'Flux'
+    assert viewer_1d.label_mouseover.world_ra_deg == '-3.59571e+00'
+    assert viewer_1d.label_mouseover.world_dec_deg == ''
+    assert viewer_1d.label_mouseover.icon == 'b'
 
 
 def test_1d_parser(specviz2d_helper, spectrum1d):

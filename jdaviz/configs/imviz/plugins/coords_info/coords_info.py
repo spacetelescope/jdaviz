@@ -13,6 +13,7 @@ class CoordsInfo(TemplateMixin):
     pixel = Unicode("").tag(sync=True)
     value = Unicode("").tag(sync=True)
     world_label_prefix = Unicode("\u00A0").tag(sync=True)
+    world_label_prefix_2 = Unicode("\u00A0").tag(sync=True)
     world_label_icrs = Unicode("\u00A0").tag(sync=True)
     world_label_deg = Unicode("\u00A0").tag(sync=True)
     world_ra = Unicode("").tag(sync=True)
@@ -24,6 +25,7 @@ class CoordsInfo(TemplateMixin):
 
     def reset_coords_display(self):
         self.world_label_prefix = '\u00A0'
+        self.world_label_prefix_2 = '\u00A0'
         self.world_label_icrs = '\u00A0'
         self.world_label_deg = '\u00A0'
         self.world_ra = ''
@@ -53,3 +55,7 @@ class CoordsInfo(TemplateMixin):
             self.world_dec_deg = world_dec_deg
             self.unreliable_world = unreliable_world
             self.unreliable_pixel = unreliable_pixel
+            if unreliable_world:
+                self.world_label_prefix_2 = '(est.)'
+            else:
+                self.world_label_prefix_2 = '\u00A0'
