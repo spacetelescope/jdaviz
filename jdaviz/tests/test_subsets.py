@@ -148,7 +148,7 @@ def test_region_from_subset_profile(cubeviz_helper, spectral_cube_wcs):
     assert len(subsets) == 1
     assert isinstance(reg, SpectralRegion)
     assert_quantity_allclose(reg.lower, 5.0 * u.Hz)
-    assert_quantity_allclose(reg.upper, 15.0 * u.Hz)
+    assert_quantity_allclose(reg.upper, 15.5 * u.Hz)
 
     assert subset_plugin.subset_selected == "Subset 1"
     assert subset_plugin.subset_types == ["Range"]
@@ -170,15 +170,15 @@ def test_region_from_subset_profile(cubeviz_helper, spectral_cube_wcs):
     subsets = cubeviz_helper.app.get_subsets_from_viewer('spectrum-viewer', subset_type='spectral')
     reg = subsets.get('Subset 1')
 
-    assert_quantity_allclose(reg.lower, 10.0 * u.Hz)
-    assert_quantity_allclose(reg.upper, 15.0 * u.Hz)
+    assert_quantity_allclose(reg.lower, 5.0 * u.Hz)
+    assert_quantity_allclose(reg.upper, 15.5 * u.Hz)
 
     # Move the Subset.
     subset_plugin.set_center(10, update=True)
     subsets = cubeviz_helper.app.get_subsets_from_viewer('spectrum-viewer', subset_type='spectral')
     reg = subsets.get('Subset 1')
-    assert_quantity_allclose(reg.lower, 8 * u.Hz)
-    assert_quantity_allclose(reg.upper, 12 * u.Hz)
+    assert_quantity_allclose(reg.lower, 5 * u.Hz)
+    assert_quantity_allclose(reg.upper, 15.5 * u.Hz)
 
 
 def test_region_spectral_spatial(cubeviz_helper, spectral_cube_wcs):
@@ -212,7 +212,7 @@ def test_region_spectral_spatial(cubeviz_helper, spectral_cube_wcs):
     assert isinstance(reg, SpectralRegion)
 
     assert_quantity_allclose(reg.lower, 5.0 * u.Hz)
-    assert_quantity_allclose(reg.upper, 15 * u.Hz)
+    assert_quantity_allclose(reg.upper, 15.5 * u.Hz)
 
     subsets = cubeviz_helper.app.get_subsets_from_viewer('flux-viewer', subset_type='spatial')
     reg = subsets.get('Subset 2')
@@ -254,7 +254,7 @@ def test_disjoint_spectral_subset(cubeviz_helper, spectral_cube_wcs):
     assert len(reg) == 2
     assert isinstance(reg, SpectralRegion)
     assert_quantity_allclose(reg[0].lower, 5.0*u.Hz)
-    assert_quantity_allclose(reg[0].upper, 15.0*u.Hz)
+    assert_quantity_allclose(reg[0].upper, 15.5*u.Hz)
     assert_quantity_allclose(reg[1].lower, 30.0*u.Hz)
     assert_quantity_allclose(reg[1].upper, 35.0*u.Hz)
 

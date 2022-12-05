@@ -731,6 +731,9 @@ class Application(VuetifyTemplate, HubListener):
             all_subregions = subset_plugin.get_all_subsets_with_subregions()
             if subset_label in all_subregions:
                 for subregion in all_subregions[subset_label]["dimensions"]:
+                    if subregion is {} or "lo" not in subregion or "hi" not in subregion:
+                        continue
+
                     if combined_spec_region is None:
                         combined_spec_region = SpectralRegion(subregion["lo"] * spectral_axis_units,
                                                               subregion["hi"] * spectral_axis_units)

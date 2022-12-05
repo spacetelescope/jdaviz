@@ -132,31 +132,34 @@ class TestSpecvizHelper:
 
         assert len(spec_region['Subset 1'].subregions) == 3
         # Assert correct values for test with 3 subregions
+        print(spec_region['Subset 1'])
         assert_quantity_allclose(spec_region['Subset 1'].subregions[0][0].value,
                                  6000., atol=1e-5)
         assert_quantity_allclose(spec_region['Subset 1'].subregions[0][1].value,
-                                 6222.22222222, atol=1e-5)
+                                 6400., atol=1e-5)
 
         assert_quantity_allclose(spec_region['Subset 1'].subregions[1][0].value,
-                                 6666.66666667, atol=1e-5)
+                                 6600., atol=1e-5)
         assert_quantity_allclose(spec_region['Subset 1'].subregions[1][1].value,
-                                 6888.88888889, atol=1e-5)
+                                 7000., atol=1e-5)
 
         assert_quantity_allclose(spec_region['Subset 1'].subregions[2][0].value,
-                                 7333.33333333, atol=1e-5)
+                                 7300., atol=1e-5)
         assert_quantity_allclose(spec_region['Subset 1'].subregions[2][1].value,
-                                 7777.77777778, atol=1e-5)
+                                 7800., atol=1e-5)
 
-    def test_get_spectral_regions_raise_value_error(self):
-        with pytest.raises(ValueError):
-            spectrum_viewer = self.spec_app.app.get_viewer("spectrum-viewer")
+    def test_get_spectral_regions_outside_bounds(self):
+        spectrum_viewer = self.spec_app.app.get_viewer("spectrum-viewer")
 
-            spectrum_viewer.session.edit_subset_mode._mode = OrMode
-            # Selecting ROIs that are not part of the actual spectrum raises an error
-            self.spec_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(1, 3))
-            self.spec_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(4, 6))
+        spectrum_viewer.session.edit_subset_mode._mode = OrMode
+        # Selecting ROIs that are not part of the actual spectrum
+        # used to raise an error. We have now changed how subset boundaries
+        # are returned in the API so this no longer fails.
+        self.spec_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(1, 3))
+        self.spec_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(4, 6))
 
-            self.spec_app.get_spectral_regions()
+        spec_regions = self.spec_app.get_spectral_regions()
+        assert len(spec_regions['Subset 1']) == 2
 
 
 def test_get_spectra_no_spectra(specviz_helper, spectrum1d):

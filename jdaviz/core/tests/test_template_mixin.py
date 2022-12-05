@@ -7,7 +7,9 @@ def test_spectralsubsetselect(specviz_helper, spectrum1d):
     specviz_helper.load_spectrum(spectrum1d)
     sv = specviz_helper.app.get_viewer('spectrum-viewer')
     # create a "Subset 1" entry
-    sv.apply_roi(XRangeROI(6500, 7400))
+    range_min = 6500
+    range_max = 7400
+    sv.apply_roi(XRangeROI(range_min, range_max))
 
     # model fitting uses the mixin
     p = specviz_helper.app.get_tray_item_from_name('g-model-fitting')
@@ -19,8 +21,8 @@ def test_spectralsubsetselect(specviz_helper, spectrum1d):
     p.spectral_subset_selected = 'Subset 1'
     assert p.spectral_subset_selected_has_subregions is False
     assert p.spectral_subset.selected_obj is not None
-    expected_min = spectrum1d.spectral_axis[spectrum1d.spectral_axis.value >= 6500][0]
-    expected_max = spectrum1d.spectral_axis[spectrum1d.spectral_axis.value <= 7400][-1]
+    expected_min = range_min * spectrum1d.spectral_axis.unit
+    expected_max = range_max * spectrum1d.spectral_axis.unit
     assert p.spectral_subset.selected_min_max(spectrum1d) == (expected_min, expected_max)
 
     assert p.spectral_subset.app == p.app
