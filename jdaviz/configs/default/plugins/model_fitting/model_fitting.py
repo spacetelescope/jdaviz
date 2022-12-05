@@ -63,10 +63,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
       Only exposed for Cubeviz.  Whether to fit the model to the cube instead of to the
       collapsed spectrum.
     * ``add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
-    * ``residuals_expose`` (bool)
+    * ``residuals_calculate`` (bool)
       Whether to calculate and expose the residuals (model minus data).
     * ``residuals`` (:class:`~jdaviz.core.template_mixin.AutoTextField`)
-      Label of the residuals to apply when calling :meth:`calculate_fit` if ``residuals_expose``
+      Label of the residuals to apply when calling :meth:`calculate_fit` if ``residuals_calculate``
       is ``True``.
     * :meth:`calculate_fit`
     """
@@ -99,7 +99,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     cube_fit = Bool(False).tag(sync=True)
 
     # residuals (non-cube fit only)
-    residuals_expose = Bool(False).tag(sync=True)
+    residuals_calculate = Bool(False).tag(sync=True)
     residuals_label = Unicode().tag(sync=True)
     residuals_label_default = Unicode().tag(sync=True)
     residuals_label_auto = Bool(True).tag(sync=True)
@@ -164,7 +164,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         expose += ['spectral_subset', 'model_component', 'poly_order', 'model_component_label',
                    'model_components', 'create_model_component', 'remove_model_component',
                    'get_model_component', 'set_model_component',
-                   'equation', 'add_results', 'residuals_expose', 'residuals']
+                   'equation', 'add_results', 'residuals_calculate', 'residuals']
         if self.config == "cubeviz":
             expose += ['cube_fit']
         expose += ['calculate_fit']
@@ -662,7 +662,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         -------
         fitted model
         fitted spectrum/cube
-        residuals (if ``residuals_expose`` is set to ``True``)
+        residuals (if ``residuals_calculate`` is set to ``True``)
         """
         if self.cube_fit:
             return self._fit_model_to_cube(add_data=add_data)
@@ -706,7 +706,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             self.app.fitted_models[self.results_label] = fitted_model
             self.add_results.add_results_from_plugin(fitted_spectrum)
 
-            if self.residuals_expose:
+            if self.residuals_calculate:
                 # NOTE: this will NOT load into the viewer since we have already called
                 # add_results_from_plugin above.
                 self.add_results.add_results_from_plugin(self._spectrum1d-fitted_spectrum,
@@ -728,7 +728,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # Reset the data mask in case we use a different subset next time
         self._spectrum1d.mask = self._original_mask
 
-        if self.residuals_expose:
+        if self.residuals_calculate:
             return fitted_model, fitted_spectrum, self._spectrum1d-fitted_spectrum
         return fitted_model, fitted_spectrum
 

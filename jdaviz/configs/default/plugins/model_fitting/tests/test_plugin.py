@@ -202,7 +202,7 @@ def test_fit_gaussian_with_fixed_mean(specviz_helper, spectrum1d):
     old_mean = params[1]['value']
     old_std = params[2]['value']
 
-    modelfit_plugin.residuals_expose = True
+    modelfit_plugin.residuals_calculate = True
     result, spectrum, resids = modelfit_plugin.calculate_fit()
 
     # Make sure mean is really fixed.
