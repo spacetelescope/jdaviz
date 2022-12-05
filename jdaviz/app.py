@@ -725,7 +725,8 @@ class Application(VuetifyTemplate, HubListener):
             combined_spec_region = None
             try:
                 subset_plugin = self._jdaviz_helper.plugins['Subset Tools']
-            except Exception as e:
+            except ValueError as e:
+                print(e)
                 return None
 
             all_subregions = subset_plugin.get_all_subsets_with_subregions()
@@ -735,11 +736,13 @@ class Application(VuetifyTemplate, HubListener):
                         continue
 
                     if combined_spec_region is None:
-                        combined_spec_region = SpectralRegion(subregion["lo"] * spectral_axis_units,
-                                                              subregion["hi"] * spectral_axis_units)
+                        combined_spec_region = SpectralRegion(
+                            subregion["lo"] * spectral_axis_units,
+                            subregion["hi"] * spectral_axis_units)
                     else:
-                        combined_spec_region += SpectralRegion(subregion["lo"] * spectral_axis_units,
-                                                               subregion["hi"] * spectral_axis_units)
+                        combined_spec_region += SpectralRegion(
+                            subregion["lo"] * spectral_axis_units,
+                            subregion["hi"] * spectral_axis_units)
             return combined_spec_region
 
         if data_label is not None:
