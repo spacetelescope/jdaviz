@@ -400,4 +400,4 @@ def test_subset_changed(specviz_helper, spectrum1d):
     specviz_helper.app.state.drawer = True
 
     # Values have not yet been validated
-    np.testing.assert_allclose(float(plugin.results[0]['result']), 7.570859e-14, atol=1e-15)
+    np.testing.assert_allclose(float(plugin.results[0]['result']), 7.570859e-14, atol=1e-13)

@@ -132,7 +132,6 @@ class TestSpecvizHelper:
 
         assert len(spec_region['Subset 1'].subregions) == 3
         # Assert correct values for test with 3 subregions
-        print(spec_region['Subset 1'])
         assert_quantity_allclose(spec_region['Subset 1'].subregions[0][0].value,
                                  6000., atol=1e-5)
         assert_quantity_allclose(spec_region['Subset 1'].subregions[0][1].value,

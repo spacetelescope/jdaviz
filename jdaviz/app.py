@@ -5,6 +5,7 @@ import uuid
 import warnings
 from inspect import isclass
 
+from functools import cached_property
 from ipywidgets import widget_serialization
 import ipyvue
 
@@ -682,6 +683,19 @@ class Application(VuetifyTemplate, HubListener):
         # If a data label was provided, return only the corresponding data, otherwise return all:
         return data.get(data_label, data)
 
+    @cached_property
+    def _subset_tools_plugin(self):
+        """
+        This returns an instance of the Subset Tools plugin. This can be
+        removed once the recursive subregion code is moved from Subset Tools
+        to utils or TemplateMixin.
+        """
+        subset_plugin = self._jdaviz_helper.plugins.get('Subset Tools', None)
+        if not subset_plugin:
+            from jdaviz.configs.default.plugins import SubsetPlugin
+            subset_plugin = SubsetPlugin(app=self)
+        return subset_plugin
+
     def get_subsets_from_viewer(self, viewer_reference, data_label=None, subset_type=None):
         """
         Returns the subsets of a specified viewer converted to astropy regions
@@ -723,11 +737,9 @@ class Application(VuetifyTemplate, HubListener):
 
         def _get_all_subregions(spectral_axis_units, subset_label):
             combined_spec_region = None
-            try:
-                subset_plugin = self._jdaviz_helper.plugins['Subset Tools']
-            except ValueError as e:
-                print(e)
-                return None
+            # subset_plugin = self._jdaviz_helper.plugins.get('Subset Tools',
+            #                                                 SubsetPlugin(app=self))
+            subset_plugin = self._subset_tools_plugin
 
             all_subregions = subset_plugin.get_all_subsets_with_subregions()
             if subset_label in all_subregions:
