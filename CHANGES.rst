@@ -82,6 +82,8 @@ Specviz2d
 Bug Fixes
 ---------
 
+- Console logging is restored for "Desktop Mode" Windows users. [#1887]
+
 Cubeviz
 ^^^^^^^
 
@@ -117,8 +119,6 @@ Bug Fixes
 
 - Avoid a non-finite error in model fitting by not passing spectrum uncertainties as
   weights if the uncertainty values are all 0. [#1880]
-
-- Console logging is restored for "Desktop Mode" Windows users. [#1887]
 
 Cubeviz
 ^^^^^^^
