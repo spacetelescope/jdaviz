@@ -1,6 +1,5 @@
 import pytest
 from glue.core.roi import XRangeROI
-from jdaviz.configs.default.plugins import SubsetPlugin
 
 
 @pytest.mark.filterwarnings('ignore')
