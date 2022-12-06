@@ -5,6 +5,7 @@
 # other information are set in the setup.cfg file.
 
 import os
+import pathlib
 import shutil
 import sys
 
@@ -75,7 +76,6 @@ def jupyter_config_dir():
     """Get the Jupyter config directory for this platform and user.
     Returns JUPYTER_CONFIG_DIR if defined, else ~/.jupyter
     """
-    import pathlib
     from tempfile import mkdtemp
 
     env = os.environ
@@ -105,7 +105,6 @@ def user_dir():
             return os.path.join(jupyter_config_dir(), 'data')
     else:
         # Linux, non-OS X Unix, AIX, etc.
-        import pathlib
         env = os.environ
         home = pathlib.Path.home().as_posix()
         xdg = env.get("XDG_DATA_HOME", None)
@@ -113,6 +112,18 @@ def user_dir():
             xdg = os.path.join(home, '.local', 'share')
         return os.path.join(xdg, 'jupyter')
 
+
+def create_shortcuts():
+    from pyshortcuts import make_shortcut
+    from sysconfig import get_path, get_platform
+    script_dir = pathlib.Path(get_path('scripts'))
+    # Mosviz excluded because empty config is not supported
+    configs = ['specviz', 'imviz', 'cubeviz', 'specviz2d']
+    for config in configs:
+        make_shortcut(str(script_dir / (config + '.exe' if get_platform().startswith('win')
+                                        else config)),
+                      name=config)
+    
 
 class DevelopCmd(develop):
     prefix_targets = [
@@ -177,3 +188,5 @@ for (dirpath, dirnames, filenames) in os.walk('share/jupyter/'):
 setup(data_files=data_files, cmdclass={'develop': DevelopCmd},
       use_scm_version={'write_to': os.path.join('jdaviz', 'version.py'),
                        'write_to_template': VERSION_TEMPLATE})
+
+create_shortcuts()
