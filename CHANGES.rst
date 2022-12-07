@@ -129,6 +129,8 @@ Imviz
 Mosviz
 ^^^^^^
 
+- Prevent color cycling when selecting different objects/rows [#1900]
+
 Specviz
 ^^^^^^^
 
