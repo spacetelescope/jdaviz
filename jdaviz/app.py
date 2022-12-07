@@ -1403,7 +1403,16 @@ class Application(VuetifyTemplate, HubListener):
                     "of:\n\t" + "\n\t".join(dc_labels))
 
             [data] = [x for x in self.data_collection if x.label == data_label]
-            viewer.add_data(data, percentile=95, color=viewer.color_cycler())
+
+            data_kwargs = dict(percentile=95)
+            if self.config == 'mosviz':
+                # for mosviz, only use gray:
+                data_kwargs['color'] = viewer.color_cycler.default_dark_gray
+            else:
+                # for others, iterate through the color cycler:
+                data_kwargs['color'] = viewer.color_cycler()
+
+            viewer.add_data(data, **data_kwargs)
 
             add_data_message = AddDataMessage(data, viewer,
                                               viewer_id=viewer_id,
