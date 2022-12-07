@@ -55,6 +55,7 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
         super().__init__(*args, **kwargs)
 
     def reset_limits(self, *event):
+        wcs_success = False
         if self.linked_by_wcs:
             x_min, x_max = np.inf, -np.inf
             y_min, y_max = np.inf, -np.inf
@@ -63,7 +64,11 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
                 if not layer.visible:
                     continue
                 data = next((x for x in self.data_collection if x.label == layer.layer.data.label))
-                bounds = data.coords.pixel_bounds
+                bounds = getattr(data.coords, 'pixel_bounds', None)
+                if bounds is None:
+                    # if no layers have bounds defined, then wcs_success will remain
+                    # false and limits will fallback based on pixel limit
+                    continue
 
                 world_bottom_left = data.coords.pixel_to_world(0, 0)
                 world_top_right = data.coords.pixel_to_world(bounds[0][1], bounds[1][1])
@@ -75,7 +80,9 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
                 x_max = max(x_max, pixel_top_right[0])
                 y_min = min(y_min, pixel_bottom_left[1])
                 y_max = max(y_max, pixel_top_right[1])
-        else:
+                wcs_success = True
+
+        if not wcs_success:
             x_min, x_max = -0.5, -np.inf
             y_min, y_max = -0.5, -np.inf
             for layer in self.layers:
