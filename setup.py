@@ -122,7 +122,7 @@ def create_shortcuts():
     for config in configs:
         make_shortcut(str(script_dir / (config + '.exe' if get_platform().startswith('win')
                                         else config)),
-                      name=config)
+                      name=config.capitalize())
     
 
 class DevelopCmd(develop):
