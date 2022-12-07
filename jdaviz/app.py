@@ -737,8 +737,6 @@ class Application(VuetifyTemplate, HubListener):
 
         def _get_all_subregions(spectral_axis_units, subset_label):
             combined_spec_region = None
-            # subset_plugin = self._jdaviz_helper.plugins.get('Subset Tools',
-            #                                                 SubsetPlugin(app=self))
             subset_plugin = self._subset_tools_plugin
 
             all_subregions = subset_plugin.get_all_subsets_with_subregions()
