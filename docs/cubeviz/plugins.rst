@@ -167,6 +167,13 @@ Line Analysis
     :ref:`Line Analysis <line-analysis>`
         Specviz documentation on line analysis.
 
+Currently the Line Analysis plugin in Cubeviz will calculate statistics
+for spectral features in the collapsed spectrum, which is visualized in
+the spectrum viewer. The propagation of uncertainties from the uncertainty
+cube to the collapsed spectrum is still work in progress. As a result,
+uncertainties on values provided by the Line Analysis plugin are
+not provided.
+
 
 .. _moment-maps:
 
