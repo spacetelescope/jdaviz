@@ -63,23 +63,25 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
             for layer in self.layers:
                 if not layer.visible:
                     continue
+
                 data = next((x for x in self.data_collection if x.label == layer.layer.data.label))
-                bounds = getattr(data.coords, 'pixel_bounds', None)
-                if bounds is None:
-                    # if no layers have bounds defined, then wcs_success will remain
+                if data.coords is None:
+                    # if no layers have coords, then wcs_success will remain
                     # false and limits will fallback based on pixel limit
                     continue
 
+                pixel_ids = layer.layer.pixel_component_ids
                 world_bottom_left = data.coords.pixel_to_world(0, 0)
-                world_top_right = data.coords.pixel_to_world(bounds[0][1], bounds[1][1])
+                world_top_right = data.coords.pixel_to_world(layer.layer.data[pixel_ids[1]].max(),
+                                                             layer.layer.data[pixel_ids[0]].max())
 
                 pixel_bottom_left = self.reference_data.coords.world_to_pixel(world_bottom_left)
                 pixel_top_right = self.reference_data.coords.world_to_pixel(world_top_right)
 
-                x_min = min(x_min, pixel_bottom_left[0])
-                x_max = max(x_max, pixel_top_right[0])
-                y_min = min(y_min, pixel_bottom_left[1])
-                y_max = max(y_max, pixel_top_right[1])
+                x_min = min(x_min, pixel_bottom_left[0] - 0.5)
+                x_max = max(x_max, pixel_top_right[0] + 0.5)
+                y_min = min(y_min, pixel_bottom_left[1] - 0.5)
+                y_max = max(y_max, pixel_top_right[1] + 0.5)
                 wcs_success = True
 
         if not wcs_success:
