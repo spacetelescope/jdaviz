@@ -140,6 +140,8 @@ Imviz
 
 - Viewer options in some plugins no longer displaying the wrong names. [#1920]
 
+- Fixes cropped image layer with WCS-linking without fast-approximation. [#1908]
+
 Mosviz
 ^^^^^^
 

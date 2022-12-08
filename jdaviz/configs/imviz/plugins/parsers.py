@@ -124,6 +124,8 @@ def _parse_image(app, file_obj, data_label, ext=None):
     data_iter = get_image_data_iterator(app, file_obj, data_label, ext=ext)
 
     for data, data_label in data_iter:
+        if data.coords is not None:
+            data.coords.bounding_box = None
         data_label = app.return_data_label(data_label, alt_name="image_data")
         app.add_data(data, data_label)
 
