@@ -7,6 +7,9 @@ on:
     # run at 9am UTC on Mondays
     - cron: '0 9 * * 1'
 
+permissions:
+  contents: read
+
 jobs:
   # The linkcheck job tests that the links in the docs point to real places
   # The if statement is to prevent cron from running on forks.

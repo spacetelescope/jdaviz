@@ -10,6 +10,9 @@ on:
     # run every Monday at 3am UTC
     - cron: '0 3 * * 1'
 
+permissions:
+  contents: read
+
 jobs:
   analyze:
     name: Analyze
