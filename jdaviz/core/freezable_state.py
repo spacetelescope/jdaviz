@@ -49,14 +49,14 @@ class FreezableProfileViewerState(ProfileViewerState, FreezableState):
 
 
 class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
-    linked_by_wcs = True
+    linked_by_wcs = False
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     def reset_limits(self, *event):
         wcs_success = False
-        if self.linked_by_wcs:
+        if self.linked_by_wcs and self.reference_data.coords is not None:
             x_min, x_max = np.inf, -np.inf
             y_min, y_max = np.inf, -np.inf
 
