@@ -14,7 +14,7 @@ from jdaviz.core.custom_traitlets import IntHandleEmpty, FloatHandleEmpty
 from jdaviz.core.marks import PluginLine
 
 from astropy.modeling import models
-from astropy.nddata import UnknownUncertainty
+from astropy.nddata import StdDevUncertainty, VarianceUncertainty, UnknownUncertainty
 from astropy import units
 from specreduce import tracing
 from specreduce import background
@@ -884,6 +884,10 @@ class SpectralExtraction(PluginTemplateMixin):
         if self.ext_type_selected == 'Boxcar':
             ext = extract.BoxcarExtract(inp_sp2d, trace, width=self.ext_width)
         elif self.ext_type_selected == 'Horne':
+            if inp_sp2d.uncertainty is None:
+                inp_sp2d.uncertainty = VarianceUncertainty(np.ones_like(inp_sp2d.data))
+            if not hasattr(inp_sp2d.uncertainty, 'uncertainty_type'):
+                inp_sp2d.uncertainty = StdDevUncertainty(inp_sp2d.uncert)
             ext = extract.HorneExtract(inp_sp2d, trace)
         else:
             raise NotImplementedError(f"extraction type '{self.ext_type_selected}' not supported")  # noqa
