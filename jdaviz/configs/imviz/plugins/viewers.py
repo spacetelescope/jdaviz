@@ -3,6 +3,7 @@ import numpy as np
 from astropy.visualization import ImageNormalize, LinearStretch, PercentileInterval
 from glue.core.link_helpers import LinkSame
 from glue_jupyter.bqplot.image import BqplotImageView
+from glue.core import Data
 
 from jdaviz.configs.imviz import wcs_utils
 from jdaviz.configs.imviz.helper import layer_is_image_data, get_top_layer_index
@@ -92,7 +93,9 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
             # Extract first dataset from visible layers and use this for coordinates - the choice
             # of dataset shouldn't matter if the datasets are linked correctly
             image = active_layer.layer
-            self.label_mouseover.icon = self.jdaviz_app.state.layer_icons.get(active_layer.layer.label)  # noqa
+            icon = self.jdaviz_app.state.layer_icons.get(active_layer.layer.label)
+            if icon is not None:
+                self.label_mouseover.icon = icon
 
             # Extract data coordinates - these are pixels in the reference image
             x = data['domain']['x']
@@ -126,8 +129,11 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
                     and x < image.shape[1] - 0.5 and y < image.shape[0] - 0.5
                     and hasattr(active_layer, 'attribute')):
                 attribute = active_layer.attribute
-                value = image.get_data(attribute)[int(round(y)), int(round(x))]
-                unit = image.get_component(attribute).units
+                value = image.get_data(attribute, view=[np.atleast_1d(y), np.atleast_1d(x)])[0]
+                if isinstance(image, Data):
+                    unit = image.get_component(attribute).units
+                else:
+                    unit = ''
                 self.label_mouseover.value = f'{value:+10.5e} {unit}'
             else:
                 self.label_mouseover.value = ''
