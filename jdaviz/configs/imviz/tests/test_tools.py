@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.testing import assert_allclose
 from regions import RectanglePixelRegion
 
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS
@@ -12,6 +13,8 @@ class TestPanZoomTools(BaseImviz_WCS_WCS):
 
         t = v.toolbar.tools['jdaviz:boxzoommatch']
         # original limits (x_min, x_max, y_min, y_max): -0.5 9.5 -0.5 9.5
+        original_limits = (v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max)
+        assert_allclose(original_limits, (-0.5, 9.5, -0.5, 9.5))
         t.activate()
         t.save_prev_zoom()
         v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max = (1, 8, 1, 8)
@@ -20,8 +23,8 @@ class TestPanZoomTools(BaseImviz_WCS_WCS):
 
         v.toolbar.tools['jdaviz:prevzoom'].activate()
         # both should revert since they're still linked
-        assert (v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max) == (-0.5, 9.5, -0.5, 9.5)  # noqa
-        assert (v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max) == (-0.5, 9.5, -0.5, 9.5)  # noqa
+        assert_allclose((v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max), original_limits)  # noqa
+        assert_allclose((v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max), original_limits)  # noqa
 
         v.toolbar.tools['jdaviz:prevzoom'].activate()
         # both should revert since they're still linked
@@ -30,34 +33,34 @@ class TestPanZoomTools(BaseImviz_WCS_WCS):
 
         v.toolbar.tools['jdaviz:boxzoommatch'].deactivate()
         v.toolbar.tools['jdaviz:homezoom'].activate()
-        assert (v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max) == (-0.5, 9.5, -0.5, 9.5)  # noqa
-        assert (v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max) == (1, 8, 1, 8)
+        assert_allclose((v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max), original_limits)  # noqa
+        assert_allclose((v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max), (1, 8, 1, 8))  # noqa
         v.toolbar.tools['jdaviz:prevzoom'].activate()
-        assert (v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max) == (1, 8, 1, 8)
-        assert (v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max) == (1, 8, 1, 8)
+        assert_allclose((v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max), (1, 8, 1, 8))
+        assert_allclose((v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max), (1, 8, 1, 8))  # noqa
         t.deactivate()
 
         t_linkedpan = v.toolbar.tools['jdaviz:panzoommatch']
         t_linkedpan.activate()
         v.center_on((0, 0))
         # make sure both viewers moved to the new center
-        assert (v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max) == (-3.5, 3.5, -3.5, 3.5)  # noqa
-        assert (v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max) == (-3.5, 3.5, -3.5, 3.5)  # noqa
+        assert_allclose((v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max), (-3.5, 3.5, -3.5, 3.5))  # noqa
+        assert_allclose((v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max), (-3.5, 3.5, -3.5, 3.5))  # noqa
         t_linkedpan.deactivate()
 
         t_normpan = v.toolbar.tools['jdaviz:imagepanzoom']
         t_normpan.activate()
         t_normpan.on_click({'event': 'click', 'domain': {'x': 1, 'y': 1}})
         # make sure only first viewer re-centered since this mode is not linked mode
-        assert (v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max) == (-2.5, 4.5, -2.5, 4.5)  # noqa
-        assert (v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max) == (-3.5, 3.5, -3.5, 3.5)  # noqa
+        assert_allclose((v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max), (-2.5, 4.5, -2.5, 4.5))  # noqa
+        assert_allclose((v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max), (-3.5, 3.5, -3.5, 3.5))  # noqa
         t_normpan.deactivate()
 
         t_linkedpan.activate()
         t_linkedpan.on_click({'event': 'click', 'domain': {'x': 2, 'y': 2}})
         # make sure both viewers moved to the new center
-        assert (v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max) == (-1.5, 5.5, -1.5, 5.5)  # noqa
-        assert (v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max) == (-1.5, 5.5, -1.5, 5.5)  # noqa
+        assert_allclose((v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max), (-1.5, 5.5, -1.5, 5.5))  # noqa
+        assert_allclose((v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max), (-1.5, 5.5, -1.5, 5.5))  # noqa
         t_linkedpan.deactivate()
 
 
