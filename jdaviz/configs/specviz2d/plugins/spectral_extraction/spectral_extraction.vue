@@ -334,7 +334,7 @@
         :selected.sync="ext_dataset_selected"
         :show_if_single_entry="false"
         label="2D Spectrum"
-        hint="Select the data used to extract the spectrum.  'From Plugin' uses background-subtraced image defined in Background section above."
+        hint="Select the data used to extract the spectrum.  'From Plugin' uses background-subtracted image defined in Background section above."
       />
 
       <plugin-dataset-select
