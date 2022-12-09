@@ -22,6 +22,13 @@ class BaseLinkHandler:
         self.imviz.link_data(link_type='pixels', error_on_fail=True)
         self.check_all_pixel_links()
 
+    @property
+    def default_viewer_limits(self):
+        return (self.imviz.default_viewer.state.x_min,
+                self.imviz.default_viewer.state.x_max,
+                self.imviz.default_viewer.state.y_min,
+                self.imviz.default_viewer.state.y_max)
+
 
 class TestLink_WCS_NoWCS(BaseImviz_WCS_NoWCS, BaseLinkHandler):
 
@@ -88,12 +95,20 @@ class TestLink_WCS_FakeWCS(BaseImviz_WCS_NoWCS, BaseLinkHandler):
 class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
 
     def test_wcslink_affine_with_extras(self):
+        orig_pixel_limits = self.default_viewer_limits
+        assert_allclose(orig_pixel_limits, (-0.5, 9.5, -0.5, 9.5))
+
         self.imviz.link_data(link_type='wcs', wcs_fallback_scheme=None, error_on_fail=True)
         links = self.imviz.app.data_collection.external_links
         assert len(links) == 1
         assert isinstance(links[0], OffsetLink)
 
         assert self.viewer.get_link_type('has_wcs_2[SCI,1]') == 'wcs'
+
+        # linking should not change axes limits, but should when resetting
+        assert_allclose(self.default_viewer_limits, orig_pixel_limits)
+        self.imviz.default_viewer.state.reset_limits()
+        assert_allclose(self.default_viewer_limits, (-1.5, 9.5, -1, 10))
 
         # Customize display on second image (last loaded).
         self.viewer.set_colormap('Viridis')
