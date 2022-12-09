@@ -9,7 +9,7 @@ New Features
 - Spinner in plot options while processing changes to contour settings. [#1794]
 
 - Model fitting plugin can optionally expose the residuals as an additional data collection entry.
-  [#1864]
+  [#1864, #1891]
 
 Cubeviz
 ^^^^^^^

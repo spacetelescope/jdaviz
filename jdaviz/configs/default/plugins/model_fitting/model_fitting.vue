@@ -196,15 +196,15 @@
         <div v-if="config!=='cubeviz' || !cube_fit">
           <v-row>
             <v-switch
-              v-model="residuals_expose"
-              label="Expose residuals"
+              v-model="residuals_calculate"
+              label="Calculate residuals"
               hint="Whether to compute and export residuals (data minus model)."
               persistent-hint
             ></v-switch>
           </v-row>
 
           <plugin-auto-label
-            v-if="residuals_expose"
+            v-if="residuals_calculate"
             :value.sync="residuals_label"
             :default="residuals_label_default"
             :auto.sync="residuals_label_auto"
