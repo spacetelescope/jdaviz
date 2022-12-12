@@ -1403,6 +1403,7 @@ class Application(VuetifyTemplate, HubListener):
                     "of:\n\t" + "\n\t".join(dc_labels))
 
             [data] = [x for x in self.data_collection if x.label == data_label]
+
             viewer.add_data(data, percentile=95, color=viewer.color_cycler())
 
             add_data_message = AddDataMessage(data, viewer,

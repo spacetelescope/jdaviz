@@ -358,6 +358,14 @@ class MosvizTableViewer(TableViewer, JdavizViewerMixin):
                                     self._default_spectrum_viewer_reference_name,
                                     modified_prev_data, sender=self
                                 )
+                                # reset the counter in the spectrum viewer's color cycler
+                                # so that the newly selected row is displayed in gray and
+                                # future additions will have other colors:
+                                spectrum_viewer = self.jdaviz_app.get_viewer(
+                                    self._default_spectrum_viewer_reference_name
+                                )
+                                spectrum_viewer.color_cycler.reset()
+
                                 self.session.hub.broadcast(remove_data_from_viewer_message)
 
                     add_data_to_viewer_message = AddDataToViewerMessage(
