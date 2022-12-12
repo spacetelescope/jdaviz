@@ -193,9 +193,10 @@ class LineListTool(PluginTemplateMixin):
         self._bounds["max"] = viewer_data.spectral_axis[-1]
 
         # set redshift slider to redshift stored in Spectrum1D object
-        self.rs_redshift = (viewer_data.redshift.value
-                            if hasattr(viewer_data.redshift, 'value')
-                            else viewer_data.redshift)
+        if viewer_data.meta.get('plugin', None) is not None:
+            self.rs_redshift = (viewer_data.redshift.value
+                                if hasattr(viewer_data.redshift, 'value')
+                                else viewer_data.redshift)
         self._on_spectrum_viewer_limits_changed()  # will also trigger _auto_slider_step
 
         # set the choices (and default) for the units for new custom lines
