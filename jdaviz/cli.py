@@ -1,5 +1,6 @@
 # Command-line interface for jdaviz
 
+import inspect
 import os
 import pathlib
 import sys
@@ -13,10 +14,11 @@ from jdaviz.app import _verbosity_levels
 
 __all__ = ['main']
 
-CONFIGS_DIR = os.path.join(os.path.dirname(__file__), 'configs')
+from jdaviz import configs
+CONFIGS_DIR = str(pathlib.Path(inspect.getfile(configs)).parent)
 
 
-def main(filename=None, layout='default', instrument=None, browser='default',
+def main(filename='', layout='default', instrument='', browser='default',
          theme='light', verbosity='warning', history_verbosity='info',
          hotreload=False):
     """
@@ -151,3 +153,7 @@ def _cubeviz():
 
 def _mosviz():
     _main(config='mosviz')
+
+
+if __name__ == "__main__":
+    main()
