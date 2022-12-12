@@ -247,9 +247,8 @@ class ColorCycler:
         [default_dark_gray] + plt.rcParams['axes.prop_cycle'].by_key()['color']
     )
 
-    def __init__(self, counter=-1, complement=False):
+    def __init__(self, counter=-1):
         self.counter = counter
-        self.complement = complement
 
     def __call__(self):
         self.counter += 1
@@ -258,3 +257,6 @@ class ColorCycler:
         color = self.default_color_palette[cycle_index]
 
         return color
+
+    def reset(self):
+        self.counter = -1
