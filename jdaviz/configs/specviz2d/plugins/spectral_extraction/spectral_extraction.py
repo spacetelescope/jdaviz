@@ -24,7 +24,8 @@ __all__ = ['SpectralExtraction']
 
 _model_cls = {'Spline': models.Spline1D,
               'Polynomial': models.Polynomial1D,
-              'Legendre': models.Legendre1D}
+              'Legendre': models.Legendre1D,
+              'Chebyshev': models.Chebyshev1D}
 
 
 @tray_registry('spectral-extraction', label="Spectral Extraction",
@@ -216,7 +217,8 @@ class SpectralExtraction(PluginTemplateMixin):
                                                 items='trace_type_items',
                                                 selected='trace_type_selected',
                                                 manual_options=['Flat', 'Polynomial',
-                                                                'Legendre', 'Spline'])
+                                                                'Legendre', 'Chebyshev',
+                                                                'Spline'])
 
         self.trace_peak_method = SelectPluginComponent(self,
                                                        items='trace_peak_method_items',
