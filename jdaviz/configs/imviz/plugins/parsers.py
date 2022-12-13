@@ -125,6 +125,10 @@ def _parse_image(app, file_obj, data_label, ext=None):
 
     for data, data_label in data_iter:
         if data.coords is not None:
+            # keep a copy of the original bounding box so we can detect
+            # when extrapolating beyond, but then remove the bounding box
+            # so that image layers are not cropped.
+            data.coords._orig_bounding_box = getattr(data.coords, 'bounding_box', None)
             data.coords.bounding_box = None
         data_label = app.return_data_label(data_label, alt_name="image_data")
         app.add_data(data, data_label)

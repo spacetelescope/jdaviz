@@ -65,7 +65,7 @@ def _get_region_from_spatial_subset(plugin_obj, subset_label):
                     # not loaded in all the viewers, so use default viewer.
                     viewer = plugin_obj.app._jdaviz_helper.default_viewer
 
-                    x, y, _ = viewer._get_real_xy(
+                    x, y, _, _ = viewer._get_real_xy(
                         plugin_obj.app.data_collection[plugin_obj.dataset_selected],
                         reg.center.x, reg.center.y)
                     reg.center.x = x

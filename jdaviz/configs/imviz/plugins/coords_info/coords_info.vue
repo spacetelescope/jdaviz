@@ -10,14 +10,14 @@
             <b v-if="pixel">Pixel </b>{{ pixel }}&nbsp;&nbsp;<b v-if="value">Value </b>{{ value }}
           </td>
         </tr>
-        <tr>
+        <tr :style="within_bounding_box ? '' : 'color: gray'">
           <td width="42"><b>{{ world_label_prefix }}</b></td>
           <td width="115">{{ world_ra }}</td>
           <td width="120">{{ world_dec }}</td>
           <td>{{ world_label_icrs }}</td>
         </tr>
-        <tr>
-          <td width="42"></td>
+        <tr :style="within_bounding_box ? '' : 'color: gray'">
+          <td width="42">{{ within_bounding_box ? '' : '(est.)' }}</td>
           <td width="115">{{ world_ra_deg }}</td>
           <td width="120">{{ world_dec_deg }}</td>
           <td>{{ world_label_deg }}</td>

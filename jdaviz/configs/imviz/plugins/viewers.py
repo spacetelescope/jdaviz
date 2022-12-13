@@ -108,7 +108,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
 
             maxsize = int(np.ceil(np.log10(np.max(image.shape)))) + 3
             fmt = 'x={0:0' + str(maxsize) + '.1f} y={1:0' + str(maxsize) + '.1f}'
-            x, y, coords_status = self._get_real_xy(image, x, y)
+            x, y, coords_status, within_bounding_box = self._get_real_xy(image, x, y)
             self.label_mouseover.pixel = (fmt.format(x, y))
 
             if coords_status:
@@ -117,7 +117,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
                 except Exception:  # WCS might not be celestial
                     self.label_mouseover.reset_coords_display()
                 else:
-                    self.label_mouseover.set_coords(coo)
+                    self.label_mouseover.set_coords(coo, within_bounding_box=within_bounding_box)
             else:
                 self.label_mouseover.reset_coords_display()
 
@@ -157,7 +157,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
                 y = data['domain']['y']
                 if x is None or y is None:  # Out of bounds
                     return
-                x, y, _ = self._get_real_xy(image, x, y)
+                x, y, _, _ = self._get_real_xy(image, x, y)
                 self.line_profile_xy.selected_x = x
                 self.line_profile_xy.selected_y = y
                 self.line_profile_xy.selected_viewer = self.reference_id
@@ -234,7 +234,9 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         return data_label
 
     def _get_real_xy(self, image, x, y, reverse=False):
-        """Return real (X, Y) position and status in case of dithering.
+        """Return real (X, Y) position and status in case of dithering as well as whether the
+        results were within the bounding box of the reference data or required possibly inaccurate
+        extrapolation.
 
         ``coords_status`` is for ``self.label_mouseover`` coords handling only.
         When `True`, it sets the coords, otherwise it resets.
@@ -243,6 +245,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         in Subset Tools plugin). Never use this for coordinates display panel.
 
         """
+        within_bounding_box = True
         if data_has_valid_wcs(image):
             # Convert these to a SkyCoord via WCS - note that for other datasets
             # we aren't actually guaranteed to get a SkyCoord out, just for images
@@ -251,6 +254,11 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
                 # Convert X,Y from reference data to the one we are actually seeing.
                 # world_to_pixel return scalar ndarray that we need to convert to float.
                 if self.get_link_type(image.label) == 'wcs':
+                    bb = self.state.reference_data.coords._orig_bounding_box
+                    if hasattr(bb, 'intervals'):
+                        ints = bb.intervals
+                        within_bounding_box = (ints[0].lower <= x <= ints[0].upper and
+                                               ints[1].lower <= y <= ints[1].upper)
                     if not reverse:
                         x, y = list(map(float, image.coords.world_to_pixel(
                             self.state.reference_data.coords.pixel_to_world(x, y))))
@@ -263,7 +271,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         else:
             coords_status = False
 
-        return x, y, coords_status
+        return x, y, coords_status, within_bounding_box
 
     def _get_zoom_limits(self, image):
         """Return a list of ``(x, y)`` that defines four corners of
