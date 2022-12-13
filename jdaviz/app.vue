@@ -313,6 +313,18 @@ div.output_wrapper {
   display: none;
 }
 
+.imviz .lm_close {
+  /* hide the close button on the right to prevent closing the default viewer
+     since we cannot easily discriminate between different viewers in the filter here */
+  display: none !important;
+}
+
+.imviz .lm_tab[title="imviz-0"] > .lm_close_tab {
+  /* hide the close button on the tab for imviz-0 only to
+     prevent closing the default viewer */
+  display: none;
+}
+
 .v-toolbar__items .v-btn {
   /* allow v-toolbar-items styling to pass through tooltip wrapping span */
   /* css is copied from .v-toolbar__items>.v-btn */
