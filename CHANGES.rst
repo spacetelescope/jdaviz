@@ -48,6 +48,9 @@ Specviz
 Specviz2d
 ^^^^^^^^^
 
+- Update to be compatible with changes in specreduce 1.3, including FitTrace
+  with Polynomial, Spline, and Legendre options. [#1889]
+
 API Changes
 -----------
 

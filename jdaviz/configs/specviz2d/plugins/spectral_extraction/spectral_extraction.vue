@@ -75,43 +75,77 @@
           ></v-select>
         </v-row>
 
+        <v-row v-if="trace_type_selected!=='Flat'">
+          <v-text-field
+            label="Order"
+            type="number"
+            v-model.number="trace_order"
+            :rules="[() => trace_order!=='' || 'This field is required',
+                     () => trace_order>=0 || 'Order must be positive',
+                     () => (trace_type_selected!=='Spline' || (trace_order > 0 && trace_order <= 5)) || 'Spline order must be between 1 and 5']"
+            hint="Order of the trace model."
+            persistent-hint
+          >
+          </v-text-field>
+        </v-row>
+
         <v-row>
           <v-text-field
             label="Pixel"
             type="number"
             v-model.number="trace_pixel"
             :rules="[() => trace_pixel!=='' || 'This field is required']"
-            :hint="trace_type_selected === 'Flat' ? 'Pixel row for flat trace.' : 'Pixel row initial guess for auto trace.'"
+            :hint="trace_type_selected === 'Flat' ? 'Pixel row for flat trace.' : 'Pixel row initial guess for fitting the trace.'"
             persistent-hint
           >
           </v-text-field>
         </v-row>
 
-        <v-row v-if="trace_type_selected==='Auto'">
+        <v-row v-if="trace_type_selected!=='Flat'">
+          <v-switch
+            v-model="trace_do_binning"
+            label="Bin input spectrum"
+          ></v-switch>
           <v-text-field
+            v-if="trace_do_binning"
             label="Bins"
             type="number"
             v-model.number="trace_bins"
-            :rules="[() => trace_bins!=='' || 'This field is required']"
+            :rules="[() => trace_bins!=='' || 'This field is required',
+                     () => trace_bins>=Math.max(4, trace_order+1) || 'Bins must be >= '+Math.max(4, trace_order+1)]"
             hint="Number of bins in the dispersion direction."
             persistent-hint
           >
           </v-text-field>
         </v-row>
 
-        <v-row v-if="trace_type_selected==='Auto'">
+        <v-row v-if="trace_type_selected!=='Flat' && !trace_do_binning">
+          <span class="v-messages v-messages__message text--secondary">
+            <b style="color: red !important">WARNING:</b> Trace fitting may be slow without binning.
+          </span>
+        </v-row>
+
+        <v-row v-if="trace_type_selected!=='Flat' && trace_do_binning && trace_bins > 20">
+          <span class="v-messages v-messages__message text--secondary">
+            <b style="color: red !important">WARNING:</b> Trace fitting may be slow with a large number of bins.
+          </span>
+        </v-row>
+
+
+        <v-row v-if="trace_type_selected!=='Flat'">
           <v-text-field
             label="Window Width"
             type="number"
             v-model.number="trace_window"
-            :rules="[() => trace_window!=='' || 'This field is required']"
+            :rules="[() => trace_window!=='' || 'This field is required',
+                     () => trace_window > 0 || 'Window must be positive']"
             hint="Width in rows to consider for peak finding."
             persistent-hint
           >
           </v-text-field>
         </v-row>
 
-        <v-row v-if="trace_type_selected==='Auto'">
+        <v-row v-if="trace_type_selected!=='Flat'">
           <v-select
             attach
             :menu-props="{ left: true }"
@@ -313,7 +347,7 @@
         :selected.sync="ext_dataset_selected"
         :show_if_single_entry="false"
         label="2D Spectrum"
-        hint="Select the data used to extract the spectrum.  'From Plugin' uses background-subtraced image defined in Background section above."
+        hint="Select the data used to extract the spectrum.  'From Plugin' uses background-subtracted image defined in Background section above."
       />
 
       <plugin-dataset-select

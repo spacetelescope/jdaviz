@@ -45,11 +45,11 @@ def test_plugin(specviz2d_helper):
     trace = pext.export_trace(add_data=True)  # overwrite
     assert isinstance(trace, tracing.FlatTrace)
 
-    # create KosmosTrace
+    # create FitTrace
     pext.trace_trace_selected = 'New Trace'
-    pext.trace_type_selected = 'Auto'
+    pext.trace_type_selected = 'Polynomial'
     trace = pext.export_trace(add_data=True)
-    assert isinstance(trace, tracing.KosmosTrace)
+    assert isinstance(trace, tracing.FitTrace)
     assert trace.guess == 27
     trace = pext.export_trace(trace_pixel=26, add_data=False)
     assert trace.guess == 26
@@ -135,7 +135,7 @@ def test_plugin(specviz2d_helper):
         pext.update_marks(step)
 
     # test exception handling
-    pext.trace_type = 'Auto'
+    pext.trace_type = 'Polynomial'
     pext.bg_type_selected = 'TwoSided'
     pext.bg_separation = 1
     pext.bg_width = 5

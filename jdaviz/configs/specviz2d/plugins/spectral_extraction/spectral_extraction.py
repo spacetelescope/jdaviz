@@ -13,13 +13,19 @@ from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.custom_traitlets import IntHandleEmpty, FloatHandleEmpty
 from jdaviz.core.marks import PluginLine
 
-from astropy.nddata import NDData, StdDevUncertainty, VarianceUncertainty, UnknownUncertainty
-from specutils import Spectrum1D
+from astropy.modeling import models
+from astropy.nddata import StdDevUncertainty, VarianceUncertainty, UnknownUncertainty
+from astropy import units
 from specreduce import tracing
 from specreduce import background
 from specreduce import extract
 
 __all__ = ['SpectralExtraction']
+
+_model_cls = {'Spline': models.Spline1D,
+              'Polynomial': models.Polynomial1D,
+              'Legendre': models.Legendre1D,
+              'Chebyshev': models.Chebyshev1D}
 
 
 @tray_registry('spectral-extraction', label="Spectral Extraction",
@@ -42,12 +48,15 @@ class SpectralExtraction(PluginTemplateMixin):
     * ``trace_type`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
       controls the type of trace to be generated.
     * ``trace_peak_method`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
-      only applicable if ``trace_type`` is set to ``Auto``.
+      only applicable if ``trace_type`` is not ``Flat``.
     * :attr:`trace_pixel` :
-      pixel of the trace.  If ``trace_type`` is set to ``Auto``, then this
+      pixel of the trace.  If ``trace_type`` is not ``Flat``, then this
       is the "guess" for the automated trace.
+    * :attr:`trace_do_binning` :
+      only applicable if ``trace_type`` is not ``Flat``.  Bin the input data when fitting the
+      trace.
     * :attr:`trace_bins` :
-      only applicable if ``trace_type`` is set to ``Auto``.
+      only applicable if ``trace_type`` is not ``Flat`` and ``trace_do_binning``.
     * :attr:`trace_window` :
       full width of the trace.
     * :meth:`import_trace`
@@ -101,10 +110,12 @@ class SpectralExtraction(PluginTemplateMixin):
     trace_type_selected = Unicode().tag(sync=True)
 
     trace_pixel = FloatHandleEmpty(0).tag(sync=True)
+    trace_order = IntHandleEmpty(3).tag(sync=True)
 
     trace_peak_method_items = List().tag(sync=True)
     trace_peak_method_selected = Unicode().tag(sync=True)
 
+    trace_do_binning = Bool(True).tag(sync=True)
     trace_bins = IntHandleEmpty(20).tag(sync=True)
     trace_window = IntHandleEmpty(0).tag(sync=True)
 
@@ -205,7 +216,9 @@ class SpectralExtraction(PluginTemplateMixin):
         self.trace_type = SelectPluginComponent(self,
                                                 items='trace_type_items',
                                                 selected='trace_type_selected',
-                                                manual_options=['Flat', 'Auto'])
+                                                manual_options=['Flat', 'Polynomial',
+                                                                'Legendre', 'Chebyshev',
+                                                                'Spline'])
 
         self.trace_peak_method = SelectPluginComponent(self,
                                                        items='trace_peak_method_items',
@@ -302,8 +315,10 @@ class SpectralExtraction(PluginTemplateMixin):
     @property
     def user_api(self):
         return PluginUserApi(self, expose=('interactive_extract',
-                                           'trace_dataset', 'trace_type', 'trace_peak_method',
-                                           'trace_pixel', 'trace_bins', 'trace_window',
+                                           'trace_dataset', 'trace_type',
+                                           'trace_order', 'trace_peak_method',
+                                           'trace_pixel',
+                                           'trace_do_binning', 'trace_bins', 'trace_window',
                                            'import_trace',
                                            'export_trace',
                                            'bg_dataset', 'bg_type',
@@ -407,7 +422,7 @@ class SpectralExtraction(PluginTemplateMixin):
                 sp1d = self.export_extract_spectrum(add_data=False)
             except Exception as e:
                 # NOTE: ignore error, but will be raised when clicking ANY of the export buttons
-                # NOTE: KosmosTrace or manual background are often giving a
+                # NOTE: FitTrace or manual background are often giving a
                 # "background regions overlapped" error from specreduce
                 self.ext_specreduce_err = repr(e)
                 self.marks['extract'].clear()
@@ -473,9 +488,9 @@ class SpectralExtraction(PluginTemplateMixin):
         return self._marks
 
     @observe('trace_dataset_selected', 'trace_type_selected',
-             'trace_trace_selected', 'trace_offset',
+             'trace_trace_selected', 'trace_offset', 'trace_order',
              'trace_pixel', 'trace_peak_method_selected',
-             'trace_bins', 'trace_window', 'active_step')
+             'trace_do_binning', 'trace_bins', 'trace_window', 'active_step')
     def _interaction_in_trace_step(self, event={}):
         if not self.plugin_opened or not self._do_marks:
             return
@@ -613,11 +628,14 @@ class SpectralExtraction(PluginTemplateMixin):
         if isinstance(trace, tracing.FlatTrace):
             self.trace_type_selected = 'Flat'
             self.trace_pixel = trace.trace_pos
-        elif isinstance(trace, tracing.KosmosTrace):
-            self.trace_type_selected = 'Auto'
+        elif isinstance(trace, tracing.FitTrace):
+            self.trace_type_selected = trace.trace_model.__class__.__name__.strip('1D')
             self.trace_pixel = trace.guess
             self.trace_window = trace.window
             self.trace_bins = trace.bins
+            self.trace_do_binning = True
+            if hasattr(trace.trace_model, 'degree'):
+                self.trace_order = trace.trace_model.degree
         elif isinstance(trace, tracing.ArrayTrace):  # pragma: no cover
             raise NotImplementedError(f"cannot import ArrayTrace into plugin.  Use viz.load_trace instead")  # noqa
         else:  # pragma: no cover
@@ -644,22 +662,24 @@ class SpectralExtraction(PluginTemplateMixin):
             # being able to load back into the plugin)
             orig_trace = self.trace_trace.selected_obj
             if isinstance(orig_trace, tracing.FlatTrace):
-                trace = tracing.FlatTrace(self.trace_dataset.selected_obj.data,
+                trace = tracing.FlatTrace(self.trace_dataset.selected_obj,
                                           orig_trace.trace_pos+self.trace_offset)
             else:
-                trace = tracing.ArrayTrace(self.trace_dataset.selected_obj.data,
+                trace = tracing.ArrayTrace(self.trace_dataset.selected_obj,
                                            self.trace_trace.selected_obj.trace+self.trace_offset)
 
         elif self.trace_type_selected == 'Flat':
-            trace = tracing.FlatTrace(self.trace_dataset.selected_obj.data,
+            trace = tracing.FlatTrace(self.trace_dataset.selected_obj,
                                       self.trace_pixel)
 
-        elif self.trace_type_selected == 'Auto':
-            trace = tracing.KosmosTrace(self.trace_dataset.selected_obj.data,
-                                        guess=self.trace_pixel,
-                                        bins=int(self.trace_bins),
-                                        window=self.trace_window,
-                                        peak_method=self.trace_peak_method_selected.lower())
+        elif self.trace_type_selected in _model_cls:
+            trace_model = _model_cls[self.trace_type_selected](degree=self.trace_order)
+            trace = tracing.FitTrace(self.trace_dataset.selected_obj,
+                                     guess=self.trace_pixel,
+                                     bins=int(self.trace_bins) if self.trace_do_binning else None,
+                                     window=self.trace_window,
+                                     peak_method=self.trace_peak_method_selected.lower(),
+                                     trace_model=trace_model)
 
         else:
             raise NotImplementedError(f"trace_type={self.trace_type_selected} not implemented")
@@ -674,7 +694,7 @@ class SpectralExtraction(PluginTemplateMixin):
 
     def _get_bg_trace(self):
         if self.bg_type_selected == 'Manual':
-            trace = tracing.FlatTrace(self.trace_dataset.selected_obj.data,
+            trace = tracing.FlatTrace(self.trace_dataset.selected_obj,
                                       self.bg_trace_pixel)
         elif self.bg_trace_selected == 'From Plugin':
             trace = self.export_trace(add_data=False)
@@ -736,15 +756,15 @@ class SpectralExtraction(PluginTemplateMixin):
         trace = self._get_bg_trace()
 
         if self.bg_type_selected == 'Manual':
-            bg = background.Background(self.bg_dataset.selected_obj.data,
+            bg = background.Background(self.bg_dataset.selected_obj,
                                        [trace], width=self.bg_width)
         elif self.bg_type_selected == 'OneSided':
-            bg = background.Background.one_sided(self.bg_dataset.selected_obj.data,
+            bg = background.Background.one_sided(self.bg_dataset.selected_obj,
                                                  trace,
                                                  self.bg_separation,
                                                  width=self.bg_width)
         elif self.bg_type_selected == 'TwoSided':
-            bg = background.Background.two_sided(self.bg_dataset.selected_obj.data,
+            bg = background.Background.two_sided(self.bg_dataset.selected_obj,
                                                  trace,
                                                  self.bg_separation,
                                                  width=self.bg_width)
@@ -763,10 +783,7 @@ class SpectralExtraction(PluginTemplateMixin):
             Whether to add the resulting image to the application, according to the options
             defined in the plugin.
         """
-        bg = self.export_bg(**kwargs)
-
-        bg_spec = Spectrum1D(spectral_axis=self.bg_dataset.selected_obj.spectral_axis,
-                             flux=bg.bkg_image()*self.bg_dataset.selected_obj.flux.unit)
+        bg_spec = self.export_bg(**kwargs).bkg_image()
 
         if add_data:
             self.bg_add_results.add_results_from_plugin(bg_spec, replace=True)
@@ -792,11 +809,14 @@ class SpectralExtraction(PluginTemplateMixin):
             Whether to add the resulting spectrum to the application, according to the options
             defined in the plugin.
         """
-        bg = self.export_bg(**kwargs)
-        spec = bg.bkg_spectrum()
+        spec = self.export_bg(**kwargs).bkg_spectrum()
 
         if add_data:
             self.bg_spec_add_results.add_results_from_plugin(spec, replace=False)
+
+        # TEMPORARY: override spectral axis to be in pixels until properly supporting plotting
+        # in wavelength/frequency
+        spec._spectral_axis = np.arange(len(spec.spectral_axis)) * units.pix
 
         return spec
 
@@ -813,10 +833,7 @@ class SpectralExtraction(PluginTemplateMixin):
             Whether to add the resulting image to the application, according to the options
             defined in the plugin.
         """
-        bg = self.export_bg(**kwargs)
-
-        bg_sub_spec = Spectrum1D(spectral_axis=self.bg_dataset.selected_obj.spectral_axis,
-                                 flux=bg.sub_image()*self.bg_dataset.selected_obj.flux.unit)
+        bg_sub_spec = self.export_bg(**kwargs).sub_image()
 
         if add_data:
             self.bg_sub_add_results.add_results_from_plugin(bg_sub_spec, replace=True)
@@ -867,13 +884,13 @@ class SpectralExtraction(PluginTemplateMixin):
         inp_sp2d = self._get_ext_input_spectrum()
 
         if self.ext_type_selected == 'Boxcar':
-            ext = extract.BoxcarExtract(inp_sp2d.data, trace, width=self.ext_width)
+            ext = extract.BoxcarExtract(inp_sp2d, trace, width=self.ext_width)
         elif self.ext_type_selected == 'Horne':
-            uncert = inp_sp2d.uncertainty if inp_sp2d.uncertainty is not None else VarianceUncertainty(np.ones_like(inp_sp2d.data))  # noqa
-            if not hasattr(uncert, 'uncertainty_type'):
-                uncert = StdDevUncertainty(uncert)
-            image = NDData(inp_sp2d.data, uncertainty=uncert)
-            ext = extract.HorneExtract(image, trace)
+            if inp_sp2d.uncertainty is None:
+                inp_sp2d.uncertainty = VarianceUncertainty(np.ones_like(inp_sp2d.data))
+            if not hasattr(inp_sp2d.uncertainty, 'uncertainty_type'):
+                inp_sp2d.uncertainty = StdDevUncertainty(inp_sp2d.uncert)
+            ext = extract.HorneExtract(inp_sp2d, trace)
         else:
             raise NotImplementedError(f"extraction type '{self.ext_type_selected}' not supported")  # noqa
 
@@ -892,12 +909,9 @@ class SpectralExtraction(PluginTemplateMixin):
         extract = self.export_extract(**kwargs)
         spectrum = extract.spectrum
 
-        # Specreduce returns a spectral axis in pixels, so we'll replace with input spectral_axis
-        # NOTE: this is currently disabled until proper handling of axes-limit linking between
-        # the 2D spectrum image (plotted in pixels) and a 1D spectrum (plotted in freq or
-        # wavelength) is implemented.
-
-        # spectrum = Spectrum1D(spectral_axis=inp_sp2d.spectral_axis, flux=spectrum.flux)
+        # TEMPORARY: override spectral axis to be in pixels until properly supporting plotting
+        # in wavelength/frequency
+        spectrum._spectral_axis = np.arange(len(spectrum.spectral_axis)) * units.pix
 
         if add_data:
             self.ext_add_results.add_results_from_plugin(spectrum, replace=False)

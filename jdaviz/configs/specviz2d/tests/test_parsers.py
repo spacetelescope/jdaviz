@@ -25,8 +25,8 @@ def test_2d_parser_jwst(specviz2d_helper):
     assert dc_1.label == 'Spectrum 1D'
     assert 'header' not in dc_1.meta
 
-    # TODO: Update this when specreduce is fixed.
-    assert dc_1.get_component('flux').units == 'DN'
+    # extracted 1D spectrum should have same flux units as 2d spectrum
+    assert dc_1.get_component('flux').units == dc_0.get_component('flux').units
 
     # Also check the coordinates info panel.
     viewer_2d = specviz2d_helper.app.get_viewer('spectrum-2d-viewer')
@@ -66,7 +66,7 @@ def test_2d_parser_no_unit(specviz2d_helper, mos_spectrum2d):
 
     dc_1 = specviz2d_helper.app.data_collection[1]
     assert dc_1.label == 'Spectrum 1D'
-    assert dc_1.get_component('flux').units == 'DN'
+    assert dc_1.get_component('flux').units == dc_0.get_component('flux').units
 
     # Also check the coordinates info panel.
     viewer_2d = specviz2d_helper.app.get_viewer('spectrum-2d-viewer')
