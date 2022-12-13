@@ -620,3 +620,7 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_u
                                              sender=app))
         # reset the progress spinner
         link_plugin.linking_in_progress = False
+
+    for viewer in app._viewer_store.values():
+        # viewer-state needs to know link type for reset_limits behavior
+        viewer.state.linked_by_wcs = link_type == 'wcs'

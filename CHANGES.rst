@@ -11,6 +11,9 @@ New Features
 - Model fitting plugin can optionally expose the residuals as an additional data collection entry.
   [#1864, #1891]
 
+- Resetting viewer limits (via ``reset_limits`` or the zoom home button) now accounts for all visible
+  data layers instead of just the reference data. [#1897]
+
 Cubeviz
 ^^^^^^^
 
