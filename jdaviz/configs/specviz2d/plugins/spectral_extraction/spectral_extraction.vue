@@ -119,6 +119,19 @@
           </v-text-field>
         </v-row>
 
+        <v-row v-if="trace_type_selected!=='Flat' && !trace_do_binning">
+          <span class="v-messages v-messages__message text--secondary">
+            <b style="color: red !important">WARNING:</b> Trace fitting may be slow without binning.
+          </span>
+        </v-row>
+
+        <v-row v-if="trace_type_selected!=='Flat' && trace_do_binning && trace_bins > 20">
+          <span class="v-messages v-messages__message text--secondary">
+            <b style="color: red !important">WARNING:</b> Trace fitting may be slow with a large number of bins.
+          </span>
+        </v-row>
+
+
         <v-row v-if="trace_type_selected!=='Flat'">
           <v-text-field
             label="Window Width"
