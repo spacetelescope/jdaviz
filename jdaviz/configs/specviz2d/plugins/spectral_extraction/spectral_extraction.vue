@@ -261,6 +261,18 @@
       </v-row>
 
       <v-row>
+        <v-select
+          attach
+          :menu-props="{ left: true }"
+          :items="bg_statistic_items.map(i => i.label)"
+          v-model="bg_statistic_selected"
+          label="Statistic"
+          hint="Statistic to use over the background window."
+          persistent-hint
+        ></v-select>
+      </v-row>
+
+      <v-row>
         <v-expansion-panels popout>
           <v-expansion-panel>
             <v-expansion-panel-header v-slot="{ open }">
