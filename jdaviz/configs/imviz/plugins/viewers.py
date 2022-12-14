@@ -254,9 +254,10 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
                 # Convert X,Y from reference data to the one we are actually seeing.
                 # world_to_pixel return scalar ndarray that we need to convert to float.
                 if self.get_link_type(image.label) == 'wcs':
-                    bb = self.state.reference_data.coords._orig_bounding_box
-                    if hasattr(bb, 'intervals'):
-                        ints = bb.intervals
+                    if hasattr(self.state.reference_data.coords, '_orig_bounding_box'):
+                        # then coords is a GWCS object and had its bounding box cleared
+                        # by the imviz parser
+                        ints = self.state.reference_data.coords._orig_bounding_box.intervals
                         within_bounding_box = (ints[0].lower <= x <= ints[0].upper and
                                                ints[1].lower <= y <= ints[1].upper)
                     if not reverse:
