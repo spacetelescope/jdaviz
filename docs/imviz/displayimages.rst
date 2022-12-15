@@ -35,9 +35,10 @@ cursor's location in pixel space (X and Y), the RA and Dec at that point, and th
 of the data there. This information is displayed in the top bar of the UI, on the
 middle-right side.
 
-If the mouse is outside the original bounding-box of the reference data, the transformation
+For GWCS, if the mouse is outside the original bounding box of the reference data, the transformation
 from pixels to sky coordinates is less reliable.  This is indicated by "(est.)" and the sky
-coordinates becoming gray.
+coordinates becoming gray. Note that FITS WCS has no similar concept of bounding box,
+thus its mouseover will not distinguish between inside or outside in display.
 
 Home
 ====
