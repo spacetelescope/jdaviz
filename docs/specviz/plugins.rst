@@ -174,7 +174,6 @@ an :ref:`astropy table <astropy:construct_table>`; For example:
     my_line_list = QTable()
     my_line_list['linename'] = ['Hbeta','Halpha']
     my_line_list['rest'] = [4851.3, 6563]*u.AA
-    my_line_list['redshift'] = u.Quantity(0.046) # Optional
 
     viz.load_line_list(my_line_list)
     # Show all imported line lists
