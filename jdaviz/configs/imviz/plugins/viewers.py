@@ -1,5 +1,6 @@
 import numpy as np
 
+from astropy import units as u
 from astropy.visualization import ImageNormalize, LinearStretch, PercentileInterval
 from glue.core.link_helpers import LinkSame
 from glue_jupyter.bqplot.image import BqplotImageView
@@ -251,17 +252,14 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
             # we aren't actually guaranteed to get a SkyCoord out, just for images
             # with valid celestial WCS
             try:
+                link_type = self.get_link_type(image.label)
+                if link_type in ('wcs', 'self'):
+                    within_bounding_box = wcs_utils.data_within_gwcs_bounding_box(
+                        self.state.reference_data, x, y)
+
                 # Convert X,Y from reference data to the one we are actually seeing.
                 # world_to_pixel return scalar ndarray that we need to convert to float.
-                if self.get_link_type(image.label) == 'wcs':
-                    if hasattr(self.state.reference_data.coords, '_orig_bounding_box'):
-                        # then coords is a GWCS object and had its bounding box cleared
-                        # by the Imviz parser
-                        ints = self.state.reference_data.coords._orig_bounding_box.intervals
-                        if not ((ints[0].lower.value <= x <= ints[0].upper.value and
-                                 ints[1].lower.value <= y <= ints[1].upper.value)):
-                            within_bounding_box = False  # Has to be Python bool, not Numpy bool_
-
+                if link_type == 'wcs':
                     if not reverse:
                         x, y = list(map(float, image.coords.world_to_pixel(
                             self.state.reference_data.coords.pixel_to_world(x, y))))
@@ -350,7 +348,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
             Link look-up failed.
 
         """
-        if self.state.reference_data is None:
+        if len(self.session.application.data_collection) == 0:
             raise ValueError('No reference data for link look-up')
 
         # the original links were created against data_collection[0], not necessarily

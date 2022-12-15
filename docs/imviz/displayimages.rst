@@ -38,7 +38,7 @@ middle-right side.
 Notes on GWCS
 -------------
 
-If you *reference data* has GWCS with bounding box, any coordinates transformation
+If your *reference data* has GWCS with a bounding box, any coordinates transformation
 outside that bounding box is less reliable. This still applies even when you are
 looking at some other data that is not the reference data if they are linked by WCS
 because all transformations in glue go through the reference data. Such a situation

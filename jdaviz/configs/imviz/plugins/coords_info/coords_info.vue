@@ -5,7 +5,7 @@
     </span>
     <div style="display: inline-block; white-space: nowrap; line-height: 14pt; margin: 0; position: absolute; margin-left: 26px; top: 50%; transform: translateY(-50%); -ms-transform: translateY(-50%);">
       <table>
-        <tr>
+        <tr :style="within_bounding_box ? '' : 'color: gray'">
           <td colspan="4">
             <b v-if="pixel">Pixel </b>{{ pixel }}&nbsp;&nbsp;<b v-if="value">Value </b>{{ value }}
           </td>
