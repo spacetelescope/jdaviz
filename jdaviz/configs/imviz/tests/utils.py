@@ -133,6 +133,7 @@ class BaseImviz_WCS_GWCS:
         sky_frame = cf.CelestialFrame(reference_frame=ICRS(), name='icrs', unit=(u.deg, u.deg))
         pipeline = [(detector_frame, det2sky), (sky_frame, None)]
         w_gwcs = gwcs.WCS(pipeline)
+        w_gwcs.bounding_box = ((0, 8), (0, 10)) * u.pix  # x, y
 
         # Load data into Imviz:
         # 1. Data with FITS WCS and unit.

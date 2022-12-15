@@ -251,15 +251,17 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
             # we aren't actually guaranteed to get a SkyCoord out, just for images
             # with valid celestial WCS
             try:
+                if hasattr(image.coords, '_orig_bounding_box'):
+                    # then coords is a GWCS object and had its bounding box cleared
+                    # by the Imviz parser
+                    ints = image.coords._orig_bounding_box.intervals
+                    if not ((ints[0].lower.value <= x <= ints[0].upper.value and
+                             ints[1].lower.value <= y <= ints[1].upper.value)):
+                        within_bounding_box = False  # Has to be Python bool, not Numpy bool_
+
                 # Convert X,Y from reference data to the one we are actually seeing.
                 # world_to_pixel return scalar ndarray that we need to convert to float.
                 if self.get_link_type(image.label) == 'wcs':
-                    if hasattr(self.state.reference_data.coords, '_orig_bounding_box'):
-                        # then coords is a GWCS object and had its bounding box cleared
-                        # by the imviz parser
-                        ints = self.state.reference_data.coords._orig_bounding_box.intervals
-                        within_bounding_box = (ints[0].lower <= x <= ints[0].upper and
-                                               ints[1].lower <= y <= ints[1].upper)
                     if not reverse:
                         x, y = list(map(float, image.coords.world_to_pixel(
                             self.state.reference_data.coords.pixel_to_world(x, y))))

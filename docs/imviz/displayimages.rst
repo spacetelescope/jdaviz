@@ -40,6 +40,14 @@ from pixels to sky coordinates is less reliable.  This is indicated by "(est.)" 
 coordinates becoming gray. Note that FITS WCS has no similar concept of bounding box,
 thus its mouseover will not distinguish between inside or outside in display.
 
+.. warning::
+
+    If you rely on the GWCS bounding box, it will be set to None, but
+    the original bounding box is now in a hidden ``_orig_bounding_box``
+    attribute of the GWCS object. You can restore the bounding box by
+    assigning the value of ``_orig_bounding_box`` back to its
+    ``bounding_box`` attribute.
+
 Home
 ====
 

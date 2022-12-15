@@ -29,6 +29,7 @@ class CoordsInfo(TemplateMixin):
         self.world_dec = ''
         self.world_ra_deg = ''
         self.world_dec_deg = ''
+        self.within_bounding_box = True
 
     def set_coords(self, sky, within_bounding_box=True):
         celestial_coordinates = sky.to_string('hmsdms', precision=4, pad=True).split()

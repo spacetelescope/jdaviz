@@ -237,6 +237,7 @@ class TestLink_WCS_GWCS(BaseImviz_WCS_GWCS):
         assert self.viewer.label_mouseover.value == '+1.00000e+00 '
         assert self.viewer.label_mouseover.world_ra_deg == ''
         assert self.viewer.label_mouseover.world_dec_deg == ''
+        assert self.viewer.label_mouseover.within_bounding_box
 
         self.viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'b',
                                            'domain': {'x': 0, 'y': 0}})
@@ -244,6 +245,7 @@ class TestLink_WCS_GWCS(BaseImviz_WCS_GWCS):
         assert self.viewer.label_mouseover.value == '+1.00000e+00 electron / s'
         assert self.viewer.label_mouseover.world_ra_deg == '3.5817255823'
         assert self.viewer.label_mouseover.world_dec_deg == '-30.3920580740'
+        assert self.viewer.label_mouseover.within_bounding_box
 
         self.viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'b',
                                            'domain': {'x': 0, 'y': 0}})
@@ -251,6 +253,18 @@ class TestLink_WCS_GWCS(BaseImviz_WCS_GWCS):
         assert self.viewer.label_mouseover.value == ''
         assert self.viewer.label_mouseover.world_ra_deg == '3.5817255823'
         assert self.viewer.label_mouseover.world_dec_deg == '-30.3920580740'
+        assert self.viewer.label_mouseover.within_bounding_box
+
+        # Make sure GWCS now can extrapolate. Domain x,y is for FITS WCS data
+        # but they are linked by WCS.
+        self.viewer.on_mouse_or_key_event({'event': 'mousemove',
+                                           'domain': {'x': 11.281551269520731,
+                                                      'y': 2.480347927198246}})
+        assert self.viewer.label_mouseover.pixel == 'x=-1.0 y=-1.0'
+        assert self.viewer.label_mouseover.value == ''
+        assert self.viewer.label_mouseover.world_ra_deg == '3.5815955408'
+        assert self.viewer.label_mouseover.world_dec_deg == '-30.3919405616'
+        assert not self.viewer.label_mouseover.within_bounding_box
 
 
 def test_imviz_no_data(imviz_helper):
