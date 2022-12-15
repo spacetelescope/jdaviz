@@ -35,18 +35,36 @@ cursor's location in pixel space (X and Y), the RA and Dec at that point, and th
 of the data there. This information is displayed in the top bar of the UI, on the
 middle-right side.
 
-For GWCS, if the mouse is outside the original bounding box of the reference data, the transformation
-from pixels to sky coordinates is less reliable.  This is indicated by "(est.)" and the sky
-coordinates becoming gray. Note that FITS WCS has no similar concept of bounding box,
-thus its mouseover will not distinguish between inside or outside in display.
+Notes on GWCS
+-------------
+
+If you *reference data* has GWCS with bounding box, any coordinates transformation
+outside that bounding box is less reliable. This still applies even when you are
+looking at some other data that is not the reference data if they are linked by WCS
+because all transformations in glue go through the reference data. Such a situation
+is indicated by "(est.)" and the coordinates becoming gray.
+
+The "(est.)" and gray indicators do not apply in the situation where you are
+outside the bounding box of a non-reference data but still within the bounding box
+of the reference data. In such a situation, note that while the pixel coordinates
+are reliable, the sky coordinates might not be.
+
+To avoid inaccurate transforms, consider one of the following workflows:
+
+* Make sure your reference data's GWCS has a bounding box that encompasses all
+  the other data you are trying to visualize together.
+* If the above is not possible, avoid overlaying different data with GWCS that
+  do not overlap.
 
 .. warning::
 
-    If you rely on the GWCS bounding box, it will be set to None, but
+    If you rely on the GWCS bounding box, it will be set to None by Imviz, but
     the original bounding box is now in a hidden ``_orig_bounding_box``
     attribute of the GWCS object. You can restore the bounding box by
     assigning the value of ``_orig_bounding_box`` back to its
     ``bounding_box`` attribute.
+
+Note that FITS WCS has no similar concept of bounding box.
 
 Home
 ====

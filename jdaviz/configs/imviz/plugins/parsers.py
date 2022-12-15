@@ -126,7 +126,7 @@ def _parse_image(app, file_obj, data_label, ext=None):
 
     for data, data_label in data_iter:
         if data.coords is not None:
-            if isinstance(data.coords, GWCS):
+            if isinstance(data.coords, GWCS) and (data.coords.bounding_box is not None):
                 # keep a copy of the original bounding box so we can detect
                 # when extrapolating beyond, but then remove the bounding box
                 # so that image layers are not cropped.

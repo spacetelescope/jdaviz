@@ -264,7 +264,8 @@ class TestLink_WCS_GWCS(BaseImviz_WCS_GWCS):
         assert self.viewer.label_mouseover.value == ''
         assert self.viewer.label_mouseover.world_ra_deg == '3.5815955408'
         assert self.viewer.label_mouseover.world_dec_deg == '-30.3919405616'
-        assert not self.viewer.label_mouseover.within_bounding_box
+        # FITS WCS is reference data and has no concept of bounding box.
+        assert self.viewer.label_mouseover.within_bounding_box
 
 
 def test_imviz_no_data(imviz_helper):
