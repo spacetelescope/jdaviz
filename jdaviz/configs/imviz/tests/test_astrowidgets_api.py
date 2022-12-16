@@ -11,7 +11,7 @@ from astropy.utils.data import get_pkg_data_filename
 from astropy.visualization import AsinhStretch, LinearStretch, LogStretch, SqrtStretch
 from numpy.testing import assert_allclose
 
-from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS
+from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS, BaseImviz_WCS_WCS
 
 
 # TODO: Remove skip when https://github.com/bqplot/bqplot/issues/1393 is resolved.
@@ -30,36 +30,32 @@ class TestCenterOffset(BaseImviz_WCS_NoWCS):
 
     def test_center_offset_pixel(self):
         self.viewer.center_on((0, 1))
-        assert_allclose(self.viewer.state.x_min, -5)
-        assert_allclose(self.viewer.state.y_min, -4)
-        assert_allclose(self.viewer.state.x_max, 5)
-        assert_allclose(self.viewer.state.y_max, 6)
+        assert_allclose((self.viewer.state.x_min, self.viewer.state.x_max,
+                         self.viewer.state.y_min, self.viewer.state.y_max),
+                        (-5, 5, -4, 6))
 
         self.viewer.offset_by(1 * u.pix, -1 * u.dimensionless_unscaled)
-        assert_allclose(self.viewer.state.x_min, -4)
-        assert_allclose(self.viewer.state.y_min, -5)
-        assert_allclose(self.viewer.state.x_max, 6)
-        assert_allclose(self.viewer.state.y_max, 5)
+        assert_allclose((self.viewer.state.x_min, self.viewer.state.x_max,
+                         self.viewer.state.y_min, self.viewer.state.y_max),
+                        (-4, 6, -5, 5))
 
         self.viewer.offset_by(1, 0)
-        assert_allclose(self.viewer.state.x_min, -3)
-        assert_allclose(self.viewer.state.y_min, -5)
-        assert_allclose(self.viewer.state.x_max, 7)
-        assert_allclose(self.viewer.state.y_max, 5)
+        assert_allclose((self.viewer.state.x_min, self.viewer.state.x_max,
+                         self.viewer.state.y_min, self.viewer.state.y_max),
+                        (-3, 7, -5, 5))
 
-        # Out-of-bounds centering should be no-op
+        # Out-of-bounds centering is now allowed because it is needed
+        # for dithering use case.
         self.viewer.center_on((-1, 99999))
-        assert_allclose(self.viewer.state.x_min, -3)
-        assert_allclose(self.viewer.state.y_min, -5)
-        assert_allclose(self.viewer.state.x_max, 7)
-        assert_allclose(self.viewer.state.y_max, 5)
+        assert_allclose((self.viewer.state.x_min, self.viewer.state.x_max,
+                         self.viewer.state.y_min, self.viewer.state.y_max),
+                        (-6, 4, 9.99940e+04, 1.00004e+05))
 
         # Sometimes invalid WCS also gives such output, should be no-op
         self.viewer.center_on((np.array(np.nan), np.array(np.nan)))
-        assert_allclose(self.viewer.state.x_min, -3)
-        assert_allclose(self.viewer.state.y_min, -5)
-        assert_allclose(self.viewer.state.x_max, 7)
-        assert_allclose(self.viewer.state.y_max, 5)
+        assert_allclose((self.viewer.state.x_min, self.viewer.state.x_max,
+                         self.viewer.state.y_min, self.viewer.state.y_max),
+                        (-6, 4, 9.99940e+04, 1.00004e+05))
 
     def test_center_offset_sky(self):
         # Blink to the one with WCS because the last loaded data is shown.
@@ -67,17 +63,15 @@ class TestCenterOffset(BaseImviz_WCS_NoWCS):
 
         sky = self.wcs.pixel_to_world(0, 1)
         self.viewer.center_on(sky)
-        assert_allclose(self.viewer.state.x_min, -5)
-        assert_allclose(self.viewer.state.y_min, -4)
-        assert_allclose(self.viewer.state.x_max, 5)
-        assert_allclose(self.viewer.state.y_max, 6)
+        assert_allclose((self.viewer.state.x_min, self.viewer.state.x_max,
+                         self.viewer.state.y_min, self.viewer.state.y_max),
+                        (-5, 5, -4, 6))
 
         dsky = 0.1 * u.arcsec
         self.viewer.offset_by(-dsky, dsky)
-        assert_allclose(self.viewer.state.x_min, -4.9)
-        assert_allclose(self.viewer.state.y_min, -3.90000000002971)
-        assert_allclose(self.viewer.state.x_max, 5.1)
-        assert_allclose(self.viewer.state.y_max, 6.09999999997029)
+        assert_allclose((self.viewer.state.x_min, self.viewer.state.x_max,
+                         self.viewer.state.y_min, self.viewer.state.y_max),
+                        (-4.9, 5.1, -3.90000000002971, 6.09999999997029))
 
         # Cannot mix pixel with sky
         with pytest.raises(ValueError, match='but dy is of type'):
@@ -97,6 +91,33 @@ class TestCenterOffset(BaseImviz_WCS_NoWCS):
 
         with pytest.raises(AttributeError, match='does not have a valid WCS'):
             self.viewer.offset_by(dsky, dsky)
+
+
+class TestCenter(BaseImviz_WCS_WCS):
+
+    def test_center_on_pix(self):
+        self.imviz.link_data(link_type='wcs', error_on_fail=True)
+
+        # This is the second loaded data that is dithered by 1-pix.
+        self.viewer.center_on((0, 0))
+        assert_allclose((self.viewer.state.x_min, self.viewer.state.x_max,
+                         self.viewer.state.y_min, self.viewer.state.y_max),
+                        (-6, 4, -5, 5))
+
+        # This is the first data.
+        self.viewer.blink_once()
+        self.viewer.center_on((0, 0))
+        assert_allclose((self.viewer.state.x_min, self.viewer.state.x_max,
+                         self.viewer.state.y_min, self.viewer.state.y_max),
+                        (-5, 5, -5, 5))
+
+        # Centering by sky on second data.
+        self.viewer.blink_once()
+        sky = self.wcs_2.pixel_to_world(0, 0)
+        self.viewer.center_on(sky)
+        assert_allclose((self.viewer.state.x_min, self.viewer.state.x_max,
+                         self.viewer.state.y_min, self.viewer.state.y_max),
+                        (-6, 4, -5, 5))
 
 
 class TestZoom(BaseImviz_WCS_NoWCS):

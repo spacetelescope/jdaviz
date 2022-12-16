@@ -70,7 +70,6 @@ class BaseImviz_WCS_WCS:
         imviz_helper.load_data(hdu1, data_label='has_wcs_1')
 
         # Second data with WCS, similar to above but dithered by 1 pixel in X.
-        # TODO: Use GWCS when https://github.com/spacetelescope/gwcs/issues/99 is possible.
         hdu2 = fits.ImageHDU(arr, name='SCI')
         hdu2.header.update({'CTYPE1': 'RA---TAN',
                             'CUNIT1': 'deg',
