@@ -17,6 +17,8 @@ Imviz
 
 - Viewer options in some plugins no longer displaying the wrong names. [#1920]
 
+- ``viewer.center_on()`` now behaves correctly on non-reference data. [#1928]
+
 Mosviz
 ^^^^^^
 

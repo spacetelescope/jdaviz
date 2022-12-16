@@ -17,6 +17,7 @@ def test_create_destroy_viewer(imviz_helper, desired_name, actual_name):
 
     viewer = imviz_helper.create_image_viewer(viewer_name=desired_name)
     viewer_names = sorted(['imviz-0', actual_name])
+    assert viewer.top_visible_data_label == ''
     assert isinstance(viewer, ImvizImageView)
     assert viewer is imviz_helper.app._viewer_store.get(actual_name), list(imviz_helper.app._viewer_store.keys())  # noqa
     assert imviz_helper.app.get_viewer_ids() == viewer_names

@@ -1,5 +1,3 @@
-import sys
-
 import gwcs
 import numpy as np
 from astropy import units as u
@@ -44,7 +42,10 @@ class AstrowidgetsImageViewerMixin:
         self.figure.save_png(filename=filename)
 
     def center_on(self, point):
-        """Centers the view on a particular point.
+        """Centers the view on a particular point on the top visible layer.
+        The data label of the top visible layer can be queried using the viewer's
+        `~jdaviz.configs.imviz.plugins.viewers.ImvizImageView.top_visible_data_label`
+        property.
 
         Parameters
         ----------
@@ -64,7 +65,7 @@ class AstrowidgetsImageViewerMixin:
         if isinstance(point, SkyCoord):
             if data_has_valid_wcs(image):
                 try:
-                    pix = image.coords.world_to_pixel(point)  # 0-indexed X, Y
+                    point = image.coords.world_to_pixel(point)  # 0-indexed X, Y
                 except NoConvergence as e:  # pragma: no cover
                     self.session.hub.broadcast(SnackbarMessage(
                         f'{point} is likely out of bounds: {repr(e)}',
@@ -72,17 +73,14 @@ class AstrowidgetsImageViewerMixin:
                     return
             else:
                 raise AttributeError(f'{getattr(image, "label", None)} does not have a valid WCS')
-        else:
-            pix = point
 
-        # Disallow centering outside of display; image.shape is (Y, X)
-        eps = sys.float_info.epsilon
-        if (not np.all(np.isfinite(pix))
-                or pix[0] < -eps or pix[0] >= (image.shape[1] + eps)
-                or pix[1] < -eps or pix[1] >= (image.shape[0] + eps)):
-            self.session.hub.broadcast(SnackbarMessage(
-                f'{pix} is out of bounds', color="warning", sender=self))
+        if not np.all(np.isfinite(point)):
             return
+        elif hasattr(self, '_get_real_xy'):
+            # User gives pixel wrt top layer but we want reference data location.
+            pix = self._get_real_xy(image, point[0], point[1], reverse=True)
+        else:  # pragma: no cover
+            pix = point
 
         width = self.state.x_max - self.state.x_min
         height = self.state.y_max - self.state.y_min
@@ -179,9 +177,8 @@ class AstrowidgetsImageViewerMixin:
 
         # Zoom on X and Y will auto-adjust.
         if val == 'fit':
-            # Similar to ImageViewerState.reset_limits() in Glue.
-            new_x_min = 0
-            new_x_max = image.shape[self.state.x_att.axis]
+            self.state.reset_limits()
+            return
         else:
             cur_xcen = (self.state.x_min + self.state.x_max) * 0.5
             new_dx = self.shape[1] * 0.5 / val
