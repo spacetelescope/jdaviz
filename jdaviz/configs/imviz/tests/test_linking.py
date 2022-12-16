@@ -275,7 +275,7 @@ class TestLink_GWCS_GWCS(BaseImviz_GWCS_GWCS):
         # Check the coordinates display: Last loaded is on top.
         # Within bounds of non-reference image but out of bounds of reference image.
         self.viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 10, 'y': 3}})
-        assert self.viewer.label_mouseover.pixel == 'x=07.0 y=00.0'
+        assert self.viewer.label_mouseover.pixel in ('x=07.0 y=00.0', 'x=07.0 y=-0.0')
         assert self.viewer.label_mouseover.value == '+0.00000e+00 '
         assert self.viewer.label_mouseover.world_ra_deg == '3.5817877198'
         assert self.viewer.label_mouseover.world_dec_deg == '-30.3919358920'
