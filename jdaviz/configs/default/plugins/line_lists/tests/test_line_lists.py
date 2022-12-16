@@ -79,10 +79,17 @@ def test_redshift(specviz_helper, spectrum1d):
     ll_plugin.rs_rv = 30000
     assert ll_plugin.rs_redshift == 0.10561890816244568
 
+    # https://github.com/spacetelescope/jdaviz/issues/1692
+    # adding new data entry from a plugin should not reset redshift
+    specviz_helper.plugins['Gaussian Smooth'].smooth()
+    assert ll_plugin.rs_redshift == 0.10561890816244568
+
+    # test that setting observed wavelength works
     ll_plugin.vue_change_line_obs({'list_name': 'Test List',
                                    'line_ind': 0,
                                    'obs_new': 5508})
     assert_allclose(line['obs'], 5508)
+    assert ll_plugin.rs_redshift == 0.10005991611743559
 
     # https://github.com/spacetelescope/jdaviz/issues/1168
     ll_plugin.vue_set_identify(('Test List', line, 0))
