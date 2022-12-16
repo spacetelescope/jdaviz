@@ -4,6 +4,8 @@
 Bug Fixes
 ---------
 
+- Redshift is no longer reset to zero when adding results from plugins to app. [#1915]
+
 Cubeviz
 ^^^^^^^
 
