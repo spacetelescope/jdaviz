@@ -1,6 +1,5 @@
 import numpy as np
 
-from astropy import units as u
 from astropy.visualization import ImageNormalize, LinearStretch, PercentileInterval
 from glue.core.link_helpers import LinkSame
 from glue_jupyter.bqplot.image import BqplotImageView
