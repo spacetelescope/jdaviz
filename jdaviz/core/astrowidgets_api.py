@@ -42,7 +42,10 @@ class AstrowidgetsImageViewerMixin:
         self.figure.save_png(filename=filename)
 
     def center_on(self, point):
-        """Centers the view on a particular point.
+        """Centers the view on a particular point on the top visible layer.
+        The data label of the top visible layer can be queried using the viewer's
+        `~jdaviz.configs.imviz.plugins.viewers.ImvizImageView.top_visible_data_label`
+        property.
 
         Parameters
         ----------

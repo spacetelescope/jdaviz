@@ -222,6 +222,17 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
             return
         self.set_compass(self.state.layers[i].layer)
 
+    @property
+    def top_visible_data_label(self):
+        """Data label of the top visible layer in the viewer."""
+        try:
+            i = get_top_layer_index(self)
+        except IndexError:
+            data_label = ''
+        else:
+            data_label = self.state.layers[i].layer.label
+        return data_label
+
     def _get_real_xy(self, image, x, y, reverse=False):
         """Return real (X, Y) position and status in case of dithering.
 

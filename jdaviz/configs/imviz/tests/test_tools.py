@@ -109,20 +109,24 @@ def test_blink(imviz_helper):
 
     viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'b', 'domain': {'x': 0, 'y': 0}})
     assert viewer.label_mouseover.value == '+0.00000e+00 '
+    assert viewer.top_visible_data_label == 'image_0'
 
     # Blink forward and update coordinates info panel.
     viewer.blink_once()
     viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
     assert viewer.label_mouseover.value == '+1.00000e+00 '
+    assert viewer.top_visible_data_label == 'image_1'
 
     # Blink backward.
     viewer.blink_once(reversed=True)
     viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
     assert viewer.label_mouseover.value == '+0.00000e+00 '
+    assert viewer.top_visible_data_label == 'image_0'
 
     # Blink backward again.
     viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'B', 'domain': {'x': 0, 'y': 0}})
     assert viewer.label_mouseover.value == '+2.00000e+00 '
+    assert viewer.top_visible_data_label == 'image_2'
 
 
 def test_compass_open_while_load(imviz_helper):
