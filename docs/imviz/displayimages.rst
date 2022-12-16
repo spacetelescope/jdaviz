@@ -42,12 +42,7 @@ If your *reference data* has GWCS with a bounding box, any coordinates transform
 outside that bounding box is less reliable. This still applies even when you are
 looking at some other data that is not the reference data if they are linked by WCS
 because all transformations in glue go through the reference data. Such a situation
-is indicated by "(est.)" and the coordinates becoming gray.
-
-The "(est.)" and gray indicators do not apply in the situation where you are
-outside the bounding box of a non-reference data but still within the bounding box
-of the reference data. In such a situation, note that while the pixel coordinates
-are reliable, the sky coordinates might not be.
+is indicated by "(est.)" and the affected coordinates becoming gray.
 
 To avoid inaccurate transforms, consider one of the following workflows:
 

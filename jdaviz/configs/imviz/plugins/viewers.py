@@ -108,7 +108,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
 
             maxsize = int(np.ceil(np.log10(np.max(image.shape)))) + 3
             fmt = 'x={0:0' + str(maxsize) + '.1f} y={1:0' + str(maxsize) + '.1f}'
-            x, y, coords_status, within_bounding_box = self._get_real_xy(image, x, y)
+            x, y, coords_status, (unreliable_world, unreliable_pixel) = self._get_real_xy(image, x, y)  # noqa
             self.label_mouseover.pixel = (fmt.format(x, y))
 
             if coords_status:
@@ -117,7 +117,9 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
                 except Exception:  # WCS might not be celestial
                     self.label_mouseover.reset_coords_display()
                 else:
-                    self.label_mouseover.set_coords(coo, within_bounding_box=within_bounding_box)
+                    self.label_mouseover.set_coords(coo,
+                                                    unreliable_world=unreliable_world,
+                                                    unreliable_pixel=unreliable_pixel)  # noqa
             else:
                 self.label_mouseover.reset_coords_display()
 
@@ -245,7 +247,10 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         in Subset Tools plugin). Never use this for coordinates display panel.
 
         """
-        within_bounding_box = True
+        # by default we'll assume the coordinates are valid and within any applicable bounding
+        # box and only set outside_*_bounding_box if we can determine that assumption to be False
+        unreliable_world = False
+        unreliable_pixel = False
         if data_has_valid_wcs(image):
             # Convert these to a SkyCoord via WCS - note that for other datasets
             # we aren't actually guaranteed to get a SkyCoord out, just for images
@@ -253,8 +258,12 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
             try:
                 link_type = self.get_link_type(image.label)
                 if link_type in ('wcs', 'self'):
-                    within_bounding_box = wcs_utils.data_within_gwcs_bounding_box(
+                    outside_ref_bounding_box = wcs_utils.data_outside_gwcs_bounding_box(
                         self.state.reference_data, x, y)
+                else:
+                    # link_type == 'pixel':
+                    outside_ref_bounding_box = wcs_utils.data_outside_gwcs_bounding_box(
+                        image, x, y)
 
                 # Convert X,Y from reference data to the one we are actually seeing.
                 # world_to_pixel return scalar ndarray that we need to convert to float.
@@ -262,16 +271,23 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
                     if not reverse:
                         x, y = list(map(float, image.coords.world_to_pixel(
                             self.state.reference_data.coords.pixel_to_world(x, y))))
+                        outside_image_bounding_box = wcs_utils.data_outside_gwcs_bounding_box(
+                            image, x, y)
+                        unreliable_pixel = outside_image_bounding_box or outside_ref_bounding_box
                     else:
                         x, y = list(map(float, self.state.reference_data.coords.world_to_pixel(
                             image.coords.pixel_to_world(x, y))))
+                    unreliable_world = outside_ref_bounding_box or outside_image_bounding_box
+                elif link_type == 'pixels':
+                    unreliable_world = outside_ref_bounding_box
+
                 coords_status = True
             except Exception:
                 coords_status = False
         else:
             coords_status = False
 
-        return x, y, coords_status, within_bounding_box
+        return x, y, coords_status, (unreliable_world, unreliable_pixel)
 
     def _get_zoom_limits(self, image):
         """Return a list of ``(x, y)`` that defines four corners of

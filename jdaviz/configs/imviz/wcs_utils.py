@@ -255,9 +255,9 @@ def draw_compass_mpl(image, orig_shape=None, wcs=None, show=True, zoom_limits=No
     return base64.b64encode(buff.getvalue()).decode('utf-8')
 
 
-def data_within_gwcs_bounding_box(data, x, y):
+def data_outside_gwcs_bounding_box(data, x, y):
     """This is for internal use by Imviz coordinates transformation only."""
-    within_bounding_box = True
+    outside_bounding_box = False
     if hasattr(data.coords, '_orig_bounding_box'):
         # then coords is a GWCS object and had its bounding box cleared
         # by the Imviz parser
@@ -273,5 +273,5 @@ def data_within_gwcs_bounding_box(data, x, y):
             bb_ymin = ints[1].lower
             bb_ymax = ints[1].upper
         if not (bb_xmin <= x <= bb_xmax and bb_ymin <= y <= bb_ymax):
-            within_bounding_box = False  # Has to be Python bool, not Numpy bool_
-    return within_bounding_box
+            outside_bounding_box = True  # Has to be Python bool, not Numpy bool_
+    return outside_bounding_box

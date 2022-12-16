@@ -237,7 +237,7 @@ class TestLink_WCS_GWCS(BaseImviz_WCS_GWCS):
         assert self.viewer.label_mouseover.value == '+1.00000e+00 '
         assert self.viewer.label_mouseover.world_ra_deg == ''
         assert self.viewer.label_mouseover.world_dec_deg == ''
-        assert self.viewer.label_mouseover.within_bounding_box
+        assert not self.viewer.label_mouseover.unreliable_world
 
         self.viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'b',
                                            'domain': {'x': 0, 'y': 0}})
@@ -245,7 +245,7 @@ class TestLink_WCS_GWCS(BaseImviz_WCS_GWCS):
         assert self.viewer.label_mouseover.value == '+1.00000e+00 electron / s'
         assert self.viewer.label_mouseover.world_ra_deg == '3.5817255823'
         assert self.viewer.label_mouseover.world_dec_deg == '-30.3920580740'
-        assert self.viewer.label_mouseover.within_bounding_box
+        assert not self.viewer.label_mouseover.unreliable_world
 
         self.viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'b',
                                            'domain': {'x': 0, 'y': 0}})
@@ -253,7 +253,7 @@ class TestLink_WCS_GWCS(BaseImviz_WCS_GWCS):
         assert self.viewer.label_mouseover.value == ''
         assert self.viewer.label_mouseover.world_ra_deg == '3.5817255823'
         assert self.viewer.label_mouseover.world_dec_deg == '-30.3920580740'
-        assert self.viewer.label_mouseover.within_bounding_box
+        assert not self.viewer.label_mouseover.unreliable_world
 
         # Make sure GWCS now can extrapolate. Domain x,y is for FITS WCS data
         # but they are linked by WCS.
@@ -265,7 +265,7 @@ class TestLink_WCS_GWCS(BaseImviz_WCS_GWCS):
         assert self.viewer.label_mouseover.world_ra_deg == '3.5815955408'
         assert self.viewer.label_mouseover.world_dec_deg == '-30.3919405616'
         # FITS WCS is reference data and has no concept of bounding box.
-        assert self.viewer.label_mouseover.within_bounding_box
+        assert not self.viewer.label_mouseover.unreliable_world
 
 
 class TestLink_GWCS_GWCS(BaseImviz_GWCS_GWCS):
@@ -279,7 +279,7 @@ class TestLink_GWCS_GWCS(BaseImviz_GWCS_GWCS):
         assert self.viewer.label_mouseover.value == '+0.00000e+00 '
         assert self.viewer.label_mouseover.world_ra_deg == '3.5817877198'
         assert self.viewer.label_mouseover.world_dec_deg == '-30.3919358920'
-        assert not self.viewer.label_mouseover.within_bounding_box
+        assert self.viewer.label_mouseover.unreliable_world
 
         # Non-reference image out of bounds of its own bounds but not of the
         # reference image's bounds. Head hurting yet?
@@ -288,7 +288,7 @@ class TestLink_GWCS_GWCS(BaseImviz_GWCS_GWCS):
         assert self.viewer.label_mouseover.value == ''
         assert self.viewer.label_mouseover.world_ra_deg == '3.5816283341'
         assert self.viewer.label_mouseover.world_dec_deg == '-30.3919519949'
-        assert self.viewer.label_mouseover.within_bounding_box
+        assert not self.viewer.label_mouseover.unreliable_world
 
         # Back to reference image
         self.viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'b',
@@ -297,7 +297,7 @@ class TestLink_GWCS_GWCS(BaseImviz_GWCS_GWCS):
         assert self.viewer.label_mouseover.value == '+1.00000e+00 electron / s'
         assert self.viewer.label_mouseover.world_ra_deg == '3.5816174030'
         assert self.viewer.label_mouseover.world_dec_deg == '-30.3919481838'
-        assert self.viewer.label_mouseover.within_bounding_box
+        assert not self.viewer.label_mouseover.unreliable_world
 
         # Still reference image but outside its own bounds.
         self.viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 10, 'y': 3}})
@@ -305,7 +305,7 @@ class TestLink_GWCS_GWCS(BaseImviz_GWCS_GWCS):
         assert self.viewer.label_mouseover.value == ''
         assert self.viewer.label_mouseover.world_ra_deg == '3.5817877198'
         assert self.viewer.label_mouseover.world_dec_deg == '-30.3919358920'
-        assert not self.viewer.label_mouseover.within_bounding_box
+        assert self.viewer.label_mouseover.unreliable_world
 
     def test_pixel_linking(self):
         self.imviz.link_data(link_type='pixels')
@@ -317,7 +317,7 @@ class TestLink_GWCS_GWCS(BaseImviz_GWCS_GWCS):
         assert self.viewer.label_mouseover.value == ''
         assert self.viewer.label_mouseover.world_ra_deg == '3.5816611274'
         assert self.viewer.label_mouseover.world_dec_deg == '-30.3919634282'
-        assert self.viewer.label_mouseover.within_bounding_box
+        assert not self.viewer.label_mouseover.unreliable_world
 
         # Back to reference image with bounds check.
         self.viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'b',
@@ -326,7 +326,7 @@ class TestLink_GWCS_GWCS(BaseImviz_GWCS_GWCS):
         assert self.viewer.label_mouseover.value == ''
         assert self.viewer.label_mouseover.world_ra_deg == '3.5815955408'
         assert self.viewer.label_mouseover.world_dec_deg == '-30.3919405616'
-        assert not self.viewer.label_mouseover.within_bounding_box
+        assert self.viewer.label_mouseover.unreliable_world
 
 
 def test_imviz_no_data(imviz_helper):
