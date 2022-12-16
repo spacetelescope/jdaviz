@@ -10,6 +10,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Viewer options in some plugins no longer displaying the wrong names. [#1920]
+
 Mosviz
 ^^^^^^
 
