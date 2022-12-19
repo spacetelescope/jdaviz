@@ -46,7 +46,8 @@ is indicated by "(est.)" and the affected coordinates becoming gray.
 
 If your data of interest also has a GWCS with a bounding box, only
 the mouseover data where it overlaps with the reference data's
-bounding box is completely reliable.
+bounding box is completely reliable. Unreliable coordinates transformation here
+will also gray out in a similar fashion as above.
 
 To avoid inaccurate transforms, consider one of the following workflows:
 
@@ -57,8 +58,9 @@ To avoid inaccurate transforms, consider one of the following workflows:
 
 .. warning::
 
-    If you rely on the GWCS bounding box, it will be set to None by Imviz, but
-    the original bounding box is now in a hidden ``_orig_bounding_box``
+    If you rely on the GWCS bounding box, it will be set to None when
+    you data is loaded into Imviz, but the original bounding box,
+    if available, is now in a hidden ``_orig_bounding_box``
     attribute of the GWCS object. You can restore the bounding box by
     assigning the value of ``_orig_bounding_box`` back to its
     ``bounding_box`` attribute.

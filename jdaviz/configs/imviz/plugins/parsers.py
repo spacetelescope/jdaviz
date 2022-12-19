@@ -131,7 +131,7 @@ def _parse_image(app, file_obj, data_label, ext=None):
                 # when extrapolating beyond, but then remove the bounding box
                 # so that image layers are not cropped.
                 # NOTE: if extending this beyond GWCS, the mouseover logic
-                # for outside_bounding_box should also be updated
+                # for outside_*_bounding_box should also be updated.
                 data.coords._orig_bounding_box = data.coords.bounding_box
                 data.coords.bounding_box = None
         data_label = app.return_data_label(data_label, alt_name="image_data")

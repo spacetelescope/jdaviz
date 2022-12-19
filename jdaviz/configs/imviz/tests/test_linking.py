@@ -237,8 +237,8 @@ class TestLink_WCS_GWCS(BaseImviz_WCS_GWCS):
         assert self.viewer.label_mouseover.value == '+1.00000e+00 '
         assert self.viewer.label_mouseover.world_ra_deg == ''
         assert self.viewer.label_mouseover.world_dec_deg == ''
-        assert self.viewer.label_mouseover.unreliable_world
-        assert self.viewer.label_mouseover.unreliable_pixel
+        assert not self.viewer.label_mouseover.unreliable_world
+        assert not self.viewer.label_mouseover.unreliable_pixel
 
         self.viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'b',
                                            'domain': {'x': 0, 'y': 0}})

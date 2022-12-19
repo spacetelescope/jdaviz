@@ -19,8 +19,8 @@ class CoordsInfo(TemplateMixin):
     world_dec = Unicode("").tag(sync=True)
     world_ra_deg = Unicode("").tag(sync=True)
     world_dec_deg = Unicode("").tag(sync=True)
-    unreliable_world = Bool(True).tag(sync=True)
-    unreliable_pixel = Bool(True).tag(sync=True)
+    unreliable_world = Bool(False).tag(sync=True)
+    unreliable_pixel = Bool(False).tag(sync=True)
 
     def reset_coords_display(self):
         self.world_label_prefix = '\u00A0'
@@ -30,10 +30,10 @@ class CoordsInfo(TemplateMixin):
         self.world_dec = ''
         self.world_ra_deg = ''
         self.world_dec_deg = ''
-        self.unreliable_world = True
-        self.unreliable_pixel = True
+        self.unreliable_world = False
+        self.unreliable_pixel = False
 
-    def set_coords(self, sky, unreliable_world=True, unreliable_pixel=True):
+    def set_coords(self, sky, unreliable_world=False, unreliable_pixel=False):
         celestial_coordinates = sky.to_string('hmsdms', precision=4, pad=True).split()
         celestial_coordinates_deg = sky.to_string('decimal', precision=10, pad=True).split()
         world_ra = celestial_coordinates[0]
