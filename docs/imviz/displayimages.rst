@@ -44,6 +44,10 @@ looking at some other data that is not the reference data if they are linked by 
 because all transformations in glue go through the reference data. Such a situation
 is indicated by "(est.)" and the affected coordinates becoming gray.
 
+If your data of interest also has a GWCS with a bounding box, only
+the mouseover data where it overlaps with the reference data's
+bounding box is completely reliable.
+
 To avoid inaccurate transforms, consider one of the following workflows:
 
 * Make sure your reference data's GWCS has a bounding box that encompasses all

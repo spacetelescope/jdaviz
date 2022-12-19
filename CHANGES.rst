@@ -141,7 +141,7 @@ Imviz
 - Viewer options in some plugins no longer displaying the wrong names. [#1920]
 
 - Fixes cropped image layer with WCS linking without fast-approximation, mouseover display
-  for GWCS now shows when information is outside original reference data bounding box. [#1908]
+  for GWCS now shows when information is outside original bounding box, if applicable. [#1908]
 
 Mosviz
 ^^^^^^
