@@ -16,7 +16,7 @@ __all__ = ['main']
 CONFIGS_DIR = os.path.join(os.path.dirname(__file__), 'configs')
 
 
-def main(filename=None, layout='default', instrument=None, browser='default',
+def main(filename='', layout='default', instrument='', browser='default',
          theme='light', verbosity='warning', history_verbosity='info',
          hotreload=False):
     """
