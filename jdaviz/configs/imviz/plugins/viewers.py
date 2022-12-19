@@ -247,8 +247,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         in Subset Tools plugin). Never use this for coordinates display panel.
 
         """
-        # by default we'll assume the coordinates are valid and within any applicable bounding
-        # box and only set outside_*_bounding_box if we can determine that assumption to be False
+        # by default we'll assume the coordinates are valid and within any applicable bounding box
         unreliable_world = False
         unreliable_pixel = False
         if data_has_valid_wcs(image):
@@ -257,29 +256,28 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
             # with valid celestial WCS
             try:
                 link_type = self.get_link_type(image.label)
-                if link_type in ('wcs', 'self'):
-                    outside_ref_bounding_box = wcs_utils.data_outside_gwcs_bounding_box(
-                        self.state.reference_data, x, y)
-                else:
-                    # link_type == 'pixel':
-                    outside_ref_bounding_box = wcs_utils.data_outside_gwcs_bounding_box(
-                        image, x, y)
 
                 # Convert X,Y from reference data to the one we are actually seeing.
                 # world_to_pixel return scalar ndarray that we need to convert to float.
                 if link_type == 'wcs':
+                    outside_ref_bounding_box = wcs_utils.data_outside_gwcs_bounding_box(
+                        self.state.reference_data, x, y)
                     if not reverse:
                         x, y = list(map(float, image.coords.world_to_pixel(
                             self.state.reference_data.coords.pixel_to_world(x, y))))
                         outside_image_bounding_box = wcs_utils.data_outside_gwcs_bounding_box(
                             image, x, y)
                         unreliable_pixel = outside_image_bounding_box or outside_ref_bounding_box
+                        unreliable_world = outside_ref_bounding_box or outside_image_bounding_box
                     else:
                         x, y = list(map(float, self.state.reference_data.coords.world_to_pixel(
                             image.coords.pixel_to_world(x, y))))
-                    unreliable_world = outside_ref_bounding_box or outside_image_bounding_box
-                elif link_type == 'pixels':
+                else:
+                    # pixel or self
+                    outside_ref_bounding_box = wcs_utils.data_outside_gwcs_bounding_box(
+                        image, x, y)
                     unreliable_world = outside_ref_bounding_box
+                    unreliable_pixel = False
 
                 coords_status = True
             except Exception:
