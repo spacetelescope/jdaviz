@@ -54,6 +54,8 @@ Specviz2d
 - Update to be compatible with changes in specreduce 1.3, including FitTrace
   with Polynomial, Spline, and Legendre options. [#1889]
 
+- Add dropdown for choosing background statistic (average or median). [#1922]
+
 API Changes
 -----------
 

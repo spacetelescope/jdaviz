@@ -72,6 +72,9 @@ class SpectralExtraction(PluginTemplateMixin):
       Separation from the referenced trace for the center of each of the background window(s).
     * :attr:`bg_width` :
       full width of each background window(s).
+    * ``bg_statistic`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
+      statistic to use when computing the background.  'Average' will account for partial pixel
+      weights, 'Median' will include all partial pixels.
     * ``bg_add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
     * ``bg_sub_add_results``
     * :meth:`import_bg`
@@ -138,6 +141,9 @@ class SpectralExtraction(PluginTemplateMixin):
     bg_trace_selected = Unicode().tag(sync=True)
 
     bg_trace_pixel = FloatHandleEmpty(0).tag(sync=True)
+
+    bg_statistic_items = List().tag(sync=True)
+    bg_statistic_selected = Unicode().tag(sync=True)
 
     bg_separation = FloatHandleEmpty(0).tag(sync=True)
     bg_width = FloatHandleEmpty(0).tag(sync=True)
@@ -252,6 +258,11 @@ class SpectralExtraction(PluginTemplateMixin):
                                       default_text='From Plugin',
                                       filters=['is_trace'])
 
+        self.bg_statistic = SelectPluginComponent(self,
+                                                  items='bg_statistic_items',
+                                                  selected='bg_statistic_selected',
+                                                  manual_options=['Average', 'Median'])
+
         self.bg_add_results = AddResults(self, 'bg_results_label',
                                          'bg_results_label_default',
                                          'bg_results_label_auto',
@@ -323,6 +334,7 @@ class SpectralExtraction(PluginTemplateMixin):
                                            'export_trace',
                                            'bg_dataset', 'bg_type',
                                            'bg_trace_pixel', 'bg_separation', 'bg_width',
+                                           'bg_statistic',
                                            'bg_add_results', 'bg_sub_add_results',
                                            'import_bg',
                                            'export_bg', 'export_bg_img', 'export_bg_sub',
@@ -511,7 +523,7 @@ class SpectralExtraction(PluginTemplateMixin):
 
     @observe('bg_dataset_selected', 'bg_type_selected',
              'bg_trace_selected', 'bg_trace_pixel',
-             'bg_separation', 'bg_width', 'active_step')
+             'bg_separation', 'bg_width', 'bg_statistic_selected', 'active_step')
     def _interaction_in_bg_step(self, event={}):
         if not self.plugin_opened or not self._do_marks:
             return
@@ -757,17 +769,20 @@ class SpectralExtraction(PluginTemplateMixin):
 
         if self.bg_type_selected == 'Manual':
             bg = background.Background(self.bg_dataset.selected_obj,
-                                       [trace], width=self.bg_width)
+                                       [trace], width=self.bg_width,
+                                       statistic=self.bg_statistic.selected.lower())
         elif self.bg_type_selected == 'OneSided':
             bg = background.Background.one_sided(self.bg_dataset.selected_obj,
                                                  trace,
                                                  self.bg_separation,
-                                                 width=self.bg_width)
+                                                 width=self.bg_width,
+                                                 statistic=self.bg_statistic.selected.lower())
         elif self.bg_type_selected == 'TwoSided':
             bg = background.Background.two_sided(self.bg_dataset.selected_obj,
                                                  trace,
                                                  self.bg_separation,
-                                                 width=self.bg_width)
+                                                 width=self.bg_width,
+                                                 statistic=self.bg_statistic.selected.lower())
         else:  # pragma: no cover
             raise NotImplementedError(f"bg_type={self.bg_type_selected} not implemented")
 
