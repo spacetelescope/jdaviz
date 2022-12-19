@@ -25,6 +25,7 @@ from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         DatasetSelectMixin,
                                         SpectralSubsetSelectMixin,
+                                        DatasetSpectralSubsetValidMixin,
                                         SubsetSelect)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
@@ -66,7 +67,8 @@ def _coerce_unit(quantity):
 
 
 @tray_registry('specviz-line-analysis', label="Line Analysis", viewer_requirements='spectrum')
-class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin):
+class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin,
+                   DatasetSpectralSubsetValidMixin):
     """
     The Line Analysis plugin returns specutils analysis for a single spectral line.
     See the :ref:`Line Analysis Plugin Documentation <line-analysis>` for more details.
@@ -267,6 +269,10 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     def get_results(self):
         # user-facing API call to force updating and retrieving results, even if the plugin
         # is closed
+
+        if not self.spectral_subset_valid:
+            raise ValueError("spectral subset is outside data range")
+
         self._calculate_statistics(ignore_plugin_closed=True)
         return self.results
 
@@ -296,6 +302,14 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         if not hasattr(self, 'dataset'):
             # during initial init, this can trigger before the component is initialized
             return
+
+        # call directly since this observe may be triggered before the spectral_subset_valid
+        # traitlet is updated
+        if not self._check_dataset_spectral_subset_valid():
+            # skip gracefully, if the user called from get_results, and error would be raised there
+            self.update_results(None)
+            return
+
         # show spinner with overlay
         self.results_computing = True
 

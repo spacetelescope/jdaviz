@@ -26,6 +26,7 @@ from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
 __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'BasePluginComponent', 'SelectPluginComponent',
            'SubsetSelect', 'SpatialSubsetSelectMixin', 'SpectralSubsetSelectMixin',
+           'DatasetSpectralSubsetValidMixin',
            'ViewerSelect', 'ViewerSelectMixin',
            'LayerSelect', 'LayerSelectMixin',
            'DatasetSelect', 'DatasetSelectMixin',
@@ -1055,6 +1056,32 @@ class SpatialSubsetSelectMixin(VuetifyTemplate, HubListener):
                                            'spatial_subset_selected_has_subregions',
                                            default_text='No Subset',
                                            allowed_type='spatial')
+
+
+class DatasetSpectralSubsetValidMixin(VuetifyTemplate, HubListener):
+    """
+    Adds a traitlet tracking whether self.dataset and self.spectral_subset
+    overlap in the spectral axis.
+
+    Note that if using in another method that is also observing dataset_selected
+    or spectral_subset_selected, that that method could be called before the traitlet
+    is updated.  In that case, call self._check_dataset_spectral_subset_valid() itself
+    directly.  The traitlet can still be used for any warning text in the plugin UI.
+    """
+    spectral_subset_valid = Bool(True).tag(sync=True)
+
+    @observe("dataset_selected", "spectral_subset_selected")
+    def _check_dataset_spectral_subset_valid(self, event={}):
+        # TODO: does this window not account for gaps?  Should we add the warning?
+        # or can this be removed (see note above in _dataset_selected_changed)
+        if self.spectral_subset_selected == "Entire Spectrum":
+            self.spectral_subset_valid = True
+        else:
+            spec = self.dataset.selected_obj
+            spec_min, spec_max = np.nanmin(spec.spectral_axis), np.nanmax(spec.spectral_axis)
+            subset_min, subset_max = self.spectral_subset.selected_min_max(spec)
+            self.spectral_subset_valid = bool(subset_min < spec_max and subset_max > spec_min)
+        return self.spectral_subset_valid
 
 
 class ViewerSelect(SelectPluginComponent):

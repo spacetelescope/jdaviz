@@ -37,6 +37,12 @@
       hint="Select spectral region that defines the line."
     />
 
+    <v-row v-if="!spectral_subset_valid">
+      <span class="v-messages v-messages__message text--secondary" style="color: red !important">
+          Selected dataset and spectral subset do not overlap
+      </span>
+    </v-row>
+
     <j-plugin-section-header>Continuum</j-plugin-section-header>
     <v-row>
       <j-docs-link>

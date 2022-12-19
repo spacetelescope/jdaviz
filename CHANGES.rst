@@ -16,6 +16,9 @@ New Features
 
 - Linear1D model component now estimates slope and intercept. [#1947]
 
+- Model fitting and line analysis plugins provide a warning and prohibit calculating results if the
+  selected data entry and spectral subset do not overlap on the spectral axis. [#1935]
+
 - Model fitting: API and UI to re-estimate model parameters based on current data/subset selection.
   [#1952]
 

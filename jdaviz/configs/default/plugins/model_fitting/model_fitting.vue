@@ -31,6 +31,12 @@
       hint="Select spectral region to fit."
     />
 
+    <v-row v-if="!spectral_subset_valid">
+      <span class="v-messages v-messages__message text--secondary" style="color: red !important">
+          Selected dataset and spectral subset do not overlap
+      </span>
+    </v-row>
+
     <j-plugin-section-header>Model Components</j-plugin-section-header>
     <v-form v-model="form_valid_model_component">
       <v-row v-if="model_comp_items">
@@ -212,7 +218,7 @@
           persistent-hint
         ></v-switch>
       </v-row>
-      
+
       <plugin-add-results
         :label.sync="results_label"
         :label_default="results_label_default"
@@ -224,7 +230,7 @@
         :add_to_viewer_selected.sync="add_to_viewer_selected"
         action_label="Fit Model"
         action_tooltip="Fit the model to the data"
-        :action_disabled="model_equation_invalid_msg.length > 0"
+        :action_disabled="model_equation_invalid_msg.length > 0 || !spectral_subset_valid"
         @click:action="apply"
       >
         <div v-if="config!=='cubeviz' || !cube_fit">
@@ -246,6 +252,12 @@
             label="Residuals Data Label"
             hint="Label for the residuals.  Data entry will not be loaded into the viewer automatically."
           ></plugin-auto-label>
+
+          <v-row v-if="!spectral_subset_valid">
+            <span class="v-messages v-messages__message text--secondary" style="color: red !important">
+                Cannot calculate fit: selected dataset and spectral subset do not overlap
+            </span>
+          </v-row>
 
         </div>
       </plugin-add-results>
