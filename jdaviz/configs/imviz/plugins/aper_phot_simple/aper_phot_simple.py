@@ -154,7 +154,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin):
                         # not loaded in all the viewers, so use default viewer.
                         viewer = self.app._jdaviz_helper.default_viewer
 
-                        x, y, _ = viewer._get_real_xy(
+                        x, y, _, _ = viewer._get_real_xy(
                             self.app.data_collection[self.dataset_selected],
                             reg.center.x, reg.center.y)
                         reg.center.x = x
