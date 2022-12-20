@@ -121,7 +121,28 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
-3.1.2 (unreleased)
+3.1.3 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+3.1.2 (2022-12-20)
 ==================
 
 Bug Fixes
@@ -131,9 +152,6 @@ Bug Fixes
   weights if the uncertainty values are all 0. [#1880]
 
 - Redshift is no longer reset to zero when adding results from plugins to app. [#1915]
-
-Cubeviz
-^^^^^^^
 
 Imviz
 ^^^^^
@@ -147,12 +165,6 @@ Mosviz
 ^^^^^^
 
 - Prevent color cycling when selecting different objects/rows [#1900]
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
 
 3.1.1 (2022-11-23)
 ==================
