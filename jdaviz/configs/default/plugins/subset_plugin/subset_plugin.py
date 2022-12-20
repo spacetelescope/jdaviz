@@ -249,7 +249,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             # the reference data. However, Subset is always defined w.r.t.
             # the reference data, so we need to convert back.
             viewer = self.app._jdaviz_helper.default_viewer
-            x, y, _ = viewer._get_real_xy(
+            x, y, _, _ = viewer._get_real_xy(
                 data, phot_aperstats.xcentroid, phot_aperstats.ycentroid, reverse=True)
             if not np.all(np.isfinite((x, y))):
                 raise ValueError(f'Invalid centroid ({x}, {y})')

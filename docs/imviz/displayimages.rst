@@ -35,6 +35,38 @@ cursor's location in pixel space (X and Y), the RA and Dec at that point, and th
 of the data there. This information is displayed in the top bar of the UI, on the
 middle-right side.
 
+Notes on GWCS
+-------------
+
+If your *reference data* has GWCS with a bounding box, any coordinates transformation
+outside that bounding box is less reliable. This still applies even when you are
+looking at some other data that is not the reference data if they are linked by WCS
+because all transformations in glue go through the reference data. Such a situation
+is indicated by "(est.)" and the affected coordinates becoming gray.
+
+If your data of interest also has a GWCS with a bounding box, only
+the mouseover data where it overlaps with the reference data's
+bounding box is completely reliable. Unreliable coordinates transformation here
+will also gray out in a similar fashion as above.
+
+To avoid inaccurate transforms, consider one of the following workflows:
+
+* Make sure your reference data's GWCS has a bounding box that encompasses all
+  the other data you are trying to visualize together.
+* If the above is not possible, avoid overlaying different data with GWCS that
+  do not overlap.
+
+.. warning::
+
+    If you rely on the GWCS bounding box, it will be set to None when
+    you data is loaded into Imviz, but the original bounding box,
+    if available, is now in a hidden ``_orig_bounding_box``
+    attribute of the GWCS object. You can restore the bounding box by
+    assigning the value of ``_orig_bounding_box`` back to its
+    ``bounding_box`` attribute.
+
+Note that FITS WCS has no similar concept of bounding box.
+
 Home
 ====
 

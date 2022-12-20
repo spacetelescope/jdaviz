@@ -9,6 +9,7 @@ from io import BytesIO
 
 import matplotlib.pyplot as plt
 import numpy as np
+from astropy import units as u
 from astropy.coordinates import SkyCoord
 from matplotlib.patches import Polygon
 
@@ -252,3 +253,25 @@ def draw_compass_mpl(image, orig_shape=None, wcs=None, show=True, zoom_limits=No
     plt.close()
 
     return base64.b64encode(buff.getvalue()).decode('utf-8')
+
+
+def data_outside_gwcs_bounding_box(data, x, y):
+    """This is for internal use by Imviz coordinates transformation only."""
+    outside_bounding_box = False
+    if hasattr(data.coords, '_orig_bounding_box'):
+        # then coords is a GWCS object and had its bounding box cleared
+        # by the Imviz parser
+        ints = data.coords._orig_bounding_box.intervals
+        if isinstance(ints[0].lower, u.Quantity):
+            bb_xmin = ints[0].lower.value
+            bb_xmax = ints[0].upper.value
+            bb_ymin = ints[1].lower.value
+            bb_ymax = ints[1].upper.value
+        else:  # pragma: no cover
+            bb_xmin = ints[0].lower
+            bb_xmax = ints[0].upper
+            bb_ymin = ints[1].lower
+            bb_ymax = ints[1].upper
+        if not (bb_xmin <= x <= bb_xmax and bb_ymin <= y <= bb_ymax):
+            outside_bounding_box = True  # Has to be Python bool, not Numpy bool_
+    return outside_bounding_box
