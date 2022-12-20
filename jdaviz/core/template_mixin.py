@@ -1072,8 +1072,6 @@ class DatasetSpectralSubsetValidMixin(VuetifyTemplate, HubListener):
 
     @observe("dataset_selected", "spectral_subset_selected")
     def _check_dataset_spectral_subset_valid(self, event={}):
-        # TODO: does this window not account for gaps?  Should we add the warning?
-        # or can this be removed (see note above in _dataset_selected_changed)
         if self.spectral_subset_selected == "Entire Spectrum":
             self.spectral_subset_valid = True
         else:
