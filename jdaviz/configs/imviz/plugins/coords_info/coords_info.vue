@@ -6,18 +6,19 @@
     <div style="display: inline-block; white-space: nowrap; line-height: 14pt; margin: 0; position: absolute; margin-left: 26px; top: 50%; transform: translateY(-50%); -ms-transform: translateY(-50%);">
       <table>
         <tr>
-          <td colspan="4">
-            <b v-if="pixel">Pixel </b>{{ pixel }}&nbsp;&nbsp;<b v-if="value">Value </b>{{ value }}
+          <td colspan="4" :style="unreliable_pixel ? 'color: #B8B8B8' : ''">
+            <b v-if="pixel">Pixel </b>{{ pixel }}&nbsp;&nbsp;
+            <b v-if="value">Value </b>{{ value }}
           </td>
         </tr>
-        <tr>
+        <tr :style="unreliable_world ? 'color: #B8B8B8' : ''">
           <td width="42"><b>{{ world_label_prefix }}</b></td>
           <td width="115">{{ world_ra }}</td>
           <td width="120">{{ world_dec }}</td>
           <td>{{ world_label_icrs }}</td>
         </tr>
-        <tr>
-          <td width="42"></td>
+        <tr :style="unreliable_world ? 'color: #B8B8B8' : ''">
+          <td width="42">{{ unreliable_world ? '(est.)' : '' }}</td>
           <td width="115">{{ world_ra_deg }}</td>
           <td width="120">{{ world_dec_deg }}</td>
           <td>{{ world_label_deg }}</td>
