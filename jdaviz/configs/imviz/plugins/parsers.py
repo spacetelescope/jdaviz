@@ -125,15 +125,14 @@ def _parse_image(app, file_obj, data_label, ext=None):
     data_iter = get_image_data_iterator(app, file_obj, data_label, ext=ext)
 
     for data, data_label in data_iter:
-        if data.coords is not None:
-            if isinstance(data.coords, GWCS) and (data.coords.bounding_box is not None):
-                # keep a copy of the original bounding box so we can detect
-                # when extrapolating beyond, but then remove the bounding box
-                # so that image layers are not cropped.
-                # NOTE: if extending this beyond GWCS, the mouseover logic
-                # for outside_*_bounding_box should also be updated.
-                data.coords._orig_bounding_box = data.coords.bounding_box
-                data.coords.bounding_box = None
+        if isinstance(data.coords, GWCS) and (data.coords.bounding_box is not None):
+            # keep a copy of the original bounding box so we can detect
+            # when extrapolating beyond, but then remove the bounding box
+            # so that image layers are not cropped.
+            # NOTE: if extending this beyond GWCS, the mouseover logic
+            # for outside_*_bounding_box should also be updated.
+            data.coords._orig_bounding_box = data.coords.bounding_box
+            data.coords.bounding_box = None
         data_label = app.return_data_label(data_label, alt_name="image_data")
         app.add_data(data, data_label)
 
