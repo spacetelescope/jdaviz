@@ -101,7 +101,7 @@ class ImagePanZoom(PanZoom):
         y = data['domain']['y']
         if x is None or y is None:  # Out of bounds
             return
-        x, y, _ = self.viewer._get_real_xy(image, x, y)
+        x, y, _, _ = self.viewer._get_real_xy(image, x, y)
         self.viewer.center_on((x, y))
 
 

@@ -1,4 +1,4 @@
-from traitlets import Unicode
+from traitlets import Bool, Unicode
 
 from jdaviz.core.registries import tool_registry
 from jdaviz.core.template_mixin import TemplateMixin
@@ -19,6 +19,8 @@ class CoordsInfo(TemplateMixin):
     world_dec = Unicode("").tag(sync=True)
     world_ra_deg = Unicode("").tag(sync=True)
     world_dec_deg = Unicode("").tag(sync=True)
+    unreliable_world = Bool(False).tag(sync=True)
+    unreliable_pixel = Bool(False).tag(sync=True)
 
     def reset_coords_display(self):
         self.world_label_prefix = '\u00A0'
@@ -28,8 +30,10 @@ class CoordsInfo(TemplateMixin):
         self.world_dec = ''
         self.world_ra_deg = ''
         self.world_dec_deg = ''
+        self.unreliable_world = False
+        self.unreliable_pixel = False
 
-    def set_coords(self, sky):
+    def set_coords(self, sky, unreliable_world=False, unreliable_pixel=False):
         celestial_coordinates = sky.to_string('hmsdms', precision=4, pad=True).split()
         celestial_coordinates_deg = sky.to_string('decimal', precision=10, pad=True).split()
         world_ra = celestial_coordinates[0]
@@ -47,3 +51,5 @@ class CoordsInfo(TemplateMixin):
             self.world_dec = world_dec
             self.world_ra_deg = world_ra_deg
             self.world_dec_deg = world_dec_deg
+            self.unreliable_world = unreliable_world
+            self.unreliable_pixel = unreliable_pixel
