@@ -3,7 +3,7 @@
     <v-dialog v-model="dialog" height="400" width="600">
       <template v-slot:activator="{ on }">
         <v-btn tile depressed v-on="on" color="turquoise">
-          Import Data
+          <v-icon>mdi-plus</v-icon>
         </v-btn>
       </template>
 
