@@ -14,6 +14,8 @@ New Features
 - Resetting viewer limits (via ``reset_limits`` or the zoom home button) now accounts for all visible
   data layers instead of just the reference data. [#1897]
 
+- Linear1D model component now estimates slope and intercept. [#1947]
+
 Cubeviz
 ^^^^^^^
 

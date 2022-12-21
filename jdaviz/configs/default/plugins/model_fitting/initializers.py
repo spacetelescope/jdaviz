@@ -77,16 +77,10 @@ class _Linear1DInitializer(object):
         instance : `~astropy.modeling.Model`
             The initialized model.
         """
+        slope, intercept = np.polyfit(x.value.flatten(), y.value.flatten(), 1)
 
-        # y_range = np.max(y) - np.min(y)
-        # x_range = x[-1] - x[0]
-        # slope = y_range / x_range
-        # y0 = y[0]
-
-        y_mean = np.mean(y)
-
-        instance.slope.value = 0.0
-        instance.intercept.value = y_mean.value
+        instance.slope.value = slope
+        instance.intercept.value = intercept
 
         return instance
 
