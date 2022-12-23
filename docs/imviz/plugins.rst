@@ -263,6 +263,27 @@ are not stored. To save the current result before submitting a new query, you ca
     The table returned from the API above may cover more sources than shown in the currently zoomed-in
     portion of the image. Additional steps will be needed to filter out these points, if necessary.
 
+.. _imviz-reproject:
+
+Reproject
+=========
+
+.. note:: This plugin requires ``reproject`` to be installed.
+
+.. warning::
+
+    This operation is not recommended if the input image has not been
+    corrected for distortion.
+
+    Reprojecting a large image may be resource intensive.
+
+Use the `reproject <https://reproject.readthedocs.io/>`_ package to create a new image
+that is the input image reprojected to its optimal celestial WCS.
+
+Choose the desired image from the data selection menu, if applicable.
+Then click on the :guilabel:`REPROJECT` button.
+If successful, a new reprojected image will be displayed in Imviz.
+
 .. _imviz-export-plot:
 
 Export Plot

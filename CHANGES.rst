@@ -12,6 +12,8 @@ Imviz
 
 - Table exposing past results in the aperture photometry plugin. [#1985]
 
+- New Reproject plugin. [#1949]
+
 Mosviz
 ^^^^^^
 
@@ -66,7 +68,7 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
-* Auto-label component no longer disables the automatic labeling behavior on any keypress, but only when changing the
+- Auto-label component no longer disables the automatic labeling behavior on any keypress, but only when changing the
   label [#2007].
 
 Cubeviz
