@@ -27,7 +27,8 @@ EXPECTED_FILES = {"niriss": ['1D Spectra C', '1D Spectra R',
                              '2D Spectra C', '2D Spectra R',
                              'Direct Image'],
                   "nircam": ['1D Spectra C', '1D Spectra R',
-                             '2D Spectra C', '2D Spectra R'],
+                             '2D Spectra C', '2D Spectra R',
+                             'Direct Image'],
                   "nirspec": ['1D Spectra', '2D Spectra']}
 
 
