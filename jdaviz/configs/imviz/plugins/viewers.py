@@ -1,5 +1,6 @@
 import numpy as np
 
+from astropy.wcs.utils import pixel_to_pixel
 from astropy.visualization import ImageNormalize, LinearStretch, PercentileInterval
 from glue.core.link_helpers import LinkSame
 from glue_jupyter.bqplot.image import BqplotImageView
@@ -263,8 +264,8 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
                     if not reverse:
                         outside_ref_bounding_box = wcs_utils.data_outside_gwcs_bounding_box(
                             self.state.reference_data, x, y)
-                        x, y = list(map(float, image.coords.world_to_pixel(
-                            self.state.reference_data.coords.pixel_to_world(x, y))))
+                        x, y = list(map(float, pixel_to_pixel(
+                            self.state.reference_data.coords, image.coords, x, y)))
                         outside_image_bounding_box = wcs_utils.data_outside_gwcs_bounding_box(
                             image, x, y)
                         unreliable_pixel = outside_image_bounding_box or outside_ref_bounding_box
@@ -275,8 +276,8 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
                         # to convert it back to the frame of reference layer to pass back to the
                         # viewer. At this point, we no longer know if input (x, y) is accurate
                         # or not.
-                        x, y = list(map(float, self.state.reference_data.coords.world_to_pixel(
-                            image.coords.pixel_to_world(x, y))))
+                        x, y = list(map(float, pixel_to_pixel(
+                            image.coords, self.state.reference_data.coords, x, y)))
                 else:  # pixels or self
                     unreliable_world = wcs_utils.data_outside_gwcs_bounding_box(image, x, y)
 
