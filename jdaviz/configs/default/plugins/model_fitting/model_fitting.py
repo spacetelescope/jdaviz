@@ -471,8 +471,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             MODELS[model_comp](name=comp_label,
                                **initial_values,
                                **new_model.get("model_kwargs", {})),
-            masked_spectrum.spectral_axis[mask] if mask is not None else masked_spectrum.spectral_axis,  # noqa
-            masked_spectrum.flux[mask] if mask is not None else masked_spectrum.flux)
+            masked_spectrum.spectral_axis[~mask] if mask is not None else masked_spectrum.spectral_axis,  # noqa
+            masked_spectrum.flux[~mask] if mask is not None else masked_spectrum.flux)
 
         # need to loop over parameters again as the initializer may have overridden
         # the original default value
