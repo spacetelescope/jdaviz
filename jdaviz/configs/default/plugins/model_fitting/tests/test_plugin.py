@@ -223,9 +223,10 @@ def test_subset_masks(cubeviz_helper, spectrum1d_cube_larger):
 
     # Get the data object without collapsing the spectrum:
     data = cubeviz_helper.app.data_collection[0].get_object(cls=Spectrum1D, statistic=None)
-    p._apply_subset_masks(data, p.spatial_subset)
+    masked_data = p._apply_subset_masks(data, p.spatial_subset)
 
     assert data.mask is None
+    assert masked_data.mask is None
 
     # select the spatial subset, then show that mask is correct:
     assert "Subset 1" in p.spatial_subset.choices
@@ -238,11 +239,11 @@ def test_subset_masks(cubeviz_helper, spectrum1d_cube_larger):
     subset = cubeviz_helper.app.data_collection[0].get_subset_object(
         p.spatial_subset_selected, cls=Spectrum1D, statistic=None
     )
-    p._apply_subset_masks(data, p.spatial_subset)
+    masked_data = p._apply_subset_masks(data, p.spatial_subset)
     expected_spatial_mask = np.ones(data.flux.shape).astype(bool)
     expected_spatial_mask[:, :2, :] = False
 
-    assert np.all(data.mask == expected_spatial_mask)
+    assert np.all(masked_data.mask == expected_spatial_mask)
     assert np.all(subset.mask == expected_spatial_mask)
 
     sv = cubeviz_helper.app.get_viewer('spectrum-viewer')
@@ -271,12 +272,12 @@ def test_subset_masks(cubeviz_helper, spectrum1d_cube_larger):
     subset = cubeviz_helper.app.data_collection[0].get_subset_object(
         p.spectral_subset_selected, cls=Spectrum1D, statistic=None
     )
-    p._apply_subset_masks(data, p.spectral_subset)
+    masked_data = p._apply_subset_masks(data, p.spectral_subset)
 
     expected_spectral_mask = np.ones(data.flux.shape).astype(bool)
     expected_spectral_mask[:, :, 3:] = False
 
-    assert np.all(data.mask == expected_spectral_mask)
+    assert np.all(masked_data.mask == expected_spectral_mask)
     assert np.all(subset.mask == expected_spectral_mask)
 
     # Get the data object again (ensures mask == None)
@@ -285,8 +286,9 @@ def test_subset_masks(cubeviz_helper, spectrum1d_cube_larger):
     )
 
     # apply both spectral+spatial masks:
+    masked_data = data
     for subset in [p.spatial_subset, p.spectral_subset]:
-        p._apply_subset_masks(data, subset)
+        masked_data = p._apply_subset_masks(masked_data, subset)
 
     # Check that both masks are applied correctly
-    assert np.all(data.mask == (expected_spectral_mask | expected_spatial_mask))
+    assert np.all(masked_data.mask == (expected_spectral_mask | expected_spatial_mask))

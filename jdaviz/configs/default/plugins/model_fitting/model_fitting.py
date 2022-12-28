@@ -1,5 +1,6 @@
 import re
 import numpy as np
+from copy import deepcopy
 
 import astropy.units as u
 from specutils import Spectrum1D
@@ -794,6 +795,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         if subset_component.selected == subset_component.default_text:
             return spectrum
 
+        spectrum = deepcopy(spectrum)
         subset_mask = subset_component.selected_subset_mask
 
         if spectrum.mask is not None:
