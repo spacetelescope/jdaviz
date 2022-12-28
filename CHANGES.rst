@@ -107,6 +107,9 @@ Imviz
 
 - ``viewer.center_on()`` now behaves correctly on non-reference data. [#1928]
 
+- Imviz Line Profiles (XY) plugin now treats NaNs as zeros in plotting.
+  However, underlying data is unchanged. [#1951]
+
 Mosviz
 ^^^^^^
 

@@ -9,7 +9,7 @@ from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS
 class TestLineProfileXY(BaseImviz_WCS_NoWCS):
     def test_plugin_linked_by_pixel(self):
         """Go through plugin logic but does not check plot contents."""
-        lp_plugin = self.imviz.app.get_tray_item_from_name('imviz-line-profile-xy')
+        lp_plugin = self.imviz.plugins['Imviz Line Profiles (XY)']._obj
         lp_plugin.plugin_opened = True
 
         lp_plugin._on_viewers_changed()  # Populate plugin menu items.
@@ -64,3 +64,17 @@ class TestLineProfileXY(BaseImviz_WCS_NoWCS):
         assert lp_plugin.line_plot_across_x
         assert lp_plugin.line_plot_across_y
         assert lp_plugin.plot_available
+
+
+def test_line_profile_with_nan(imviz_helper):
+    arr = np.ones((10, 10))
+    arr[5, 5] = np.nan
+    imviz_helper.load_data(arr)
+
+    lp_plugin = imviz_helper.plugins['Imviz Line Profiles (XY)']
+    lp_plugin.open_in_tray()
+    lp_plugin._obj.selected_x = 5
+    lp_plugin._obj.selected_y = 5
+    lp_plugin._obj.vue_draw_plot()
+    assert lp_plugin._obj.plot_available
+    assert np.all(np.isfinite(lp_plugin._obj.line_plot_across_x.marks[0].y))

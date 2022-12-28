@@ -1,4 +1,5 @@
 import bqplot
+import numpy as np
 from ipywidgets import widget_serialization
 from traitlets import Any, Bool, List, Unicode, observe
 
@@ -98,7 +99,8 @@ class LineProfileXY(PluginTemplateMixin):
         fig_x.fig_margin = {'top': 60, 'bottom': 60, 'left': 40, 'right': 10}
         line_x_x_sc = bqplot.LinearScale()
         line_x_y_sc = bqplot.LinearScale()
-        line_x = bqplot.Lines(x=range(comp.data.shape[0]), y=comp.data[:, x],
+        line_y_data = np.nan_to_num(comp.data[:, x])
+        line_x = bqplot.Lines(x=range(comp.data.shape[0]), y=line_y_data,
                               scales={'x': line_x_x_sc, 'y': line_x_y_sc}, colors='gray')
         fig_x.marks = [line_x]
         fig_x.axes = [bqplot.Axis(scale=line_x_x_sc, label='Y (pix)'),
@@ -107,7 +109,7 @@ class LineProfileXY(PluginTemplateMixin):
         line_x.scales['x'].max = y_max
         y_min = max(int(y_min), 0)
         y_max = min(int(y_max), ny)
-        zoomed_data_x = comp.data[y_min:y_max, x]
+        zoomed_data_x = line_y_data[y_min:y_max]
         if zoomed_data_x.size > 0:
             line_x.scales['y'].min = zoomed_data_x.min() * 0.95
             line_x.scales['y'].max = zoomed_data_x.max() * 1.05
@@ -117,7 +119,8 @@ class LineProfileXY(PluginTemplateMixin):
         fig_y.fig_margin = {'top': 60, 'bottom': 60, 'left': 40, 'right': 10}
         line_y_x_sc = bqplot.LinearScale()
         line_y_y_sc = bqplot.LinearScale()
-        line_y = bqplot.Lines(x=range(comp.data.shape[1]), y=comp.data[y, :],
+        line_x_data = np.nan_to_num(comp.data[y, :])
+        line_y = bqplot.Lines(x=range(comp.data.shape[1]), y=line_x_data,
                               scales={'x': line_y_x_sc, 'y': line_y_y_sc}, colors='gray')
         fig_y.marks = [line_y]
         fig_y.axes = [bqplot.Axis(scale=line_y_x_sc, label='X (pix)'),
@@ -126,7 +129,7 @@ class LineProfileXY(PluginTemplateMixin):
         line_y.scales['x'].max = x_max
         x_min = max(int(x_min), 0)
         x_max = min(int(x_max), nx)
-        zoomed_data_y = comp.data[y, x_min:x_max]
+        zoomed_data_y = line_x_data[x_min:x_max]
         if zoomed_data_y.size > 0:
             line_y.scales['y'].min = zoomed_data_y.min() * 0.95
             line_y.scales['y'].max = zoomed_data_y.max() * 1.05
