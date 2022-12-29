@@ -16,6 +16,9 @@ New Features
 
 - Linear1D model component now estimates slope and intercept. [#1947]
 
+- Model fitting: API and UI to re-estimate model parameters based on current data/subset selection.
+  [#1952]
+
 Cubeviz
 ^^^^^^^
 

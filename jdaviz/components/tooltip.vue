@@ -75,6 +75,8 @@ const tooltips = {
   'plugin-plot-options-mixed-state': 'Current values are mixed, click to sync at shown value',
   'plugin-model-fitting-add-model': 'Create model component',
   'plugin-model-fitting-param-fixed': 'Check the box to freeze parameter value',
+  'plugin-model-fitting-reestimate-all': 'Re-estimate initial values based on the current data/subset selection for all free parameters',
+  'plugin-model-fitting-reestimate': 'Re-estimate initial values based on the current data/subset selection for all free parameters in this component',
   'plugin-unit-conversion-apply': 'Apply unit conversion',
   'plugin-line-lists-load': 'Load list into "Loaded Lines" section of plugin',
   'plugin-line-lists-plot-all-in-list': 'Plot all lines in this list',
