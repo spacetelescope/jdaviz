@@ -128,6 +128,7 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
                 self.label_mouseover.pixel = ""
                 self.label_mouseover.reset_coords_display()
                 self.label_mouseover.value = ""
+                self.label_mouseover.marks[self._reference_id].visible = False
                 return
 
             fmt = 'x={:0' + str(closest_maxsize) + '.1f}'
@@ -140,12 +141,15 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
             self.label_mouseover.world_dec_deg = closest_flux.unit.to_string()
             self.label_mouseover.icon = closest_label
             self.label_mouseover.value = ""  # Not used
+            self.label_mouseover.marks[self._reference_id].update_xy([closest_wave.value], [closest_flux.value])
+            self.label_mouseover.marks[self._reference_id].visible = True
 
         elif data['event'] == 'mouseleave' or data['event'] == 'mouseenter':
             self.label_mouseover.icon = ""
             self.label_mouseover.pixel = ""
             self.label_mouseover.reset_coords_display()
             self.label_mouseover.value = ""
+            self.label_mouseover.marks[self._reference_id].visible = False
 
     def _expected_subset_layer_default(self, layer_state):
         super()._expected_subset_layer_default(layer_state)

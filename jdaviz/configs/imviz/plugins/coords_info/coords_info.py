@@ -1,7 +1,9 @@
 from traitlets import Bool, Unicode
 
+from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
 from jdaviz.core.registries import tool_registry
 from jdaviz.core.template_mixin import TemplateMixin
+from jdaviz.core.marks import PluginScatter
 
 __all__ = ['CoordsInfo']
 
@@ -22,6 +24,27 @@ class CoordsInfo(TemplateMixin):
     world_dec_deg = Unicode("").tag(sync=True)
     unreliable_world = Bool(False).tag(sync=True)
     unreliable_pixel = Bool(False).tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._marks = {}
+
+    @property
+    def marks(self):
+        """
+        Access the marks created by this plugin.
+        """
+        if self._marks:
+            # TODO: replace with cache property?
+            return self._marks
+
+        # create marks for each of the spectral viewers (will need a listener event to create marks
+        # for new viewers if dynamic creation of spectral viewers is ever supported)
+        for id, viewer in self.app._viewer_store.items():
+            if isinstance(viewer, SpecvizProfileView):
+                self._marks[id] = PluginScatter(viewer, visible=False)
+                viewer.figure.marks = viewer.figure.marks + [self._marks[id]]
+        return self._marks
 
     def reset_coords_display(self):
         self.world_label_prefix = '\u00A0'
