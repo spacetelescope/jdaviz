@@ -1,5 +1,6 @@
 import re
 import numpy as np
+from copy import deepcopy
 
 import astropy.units as u
 from specutils import Spectrum1D
@@ -106,7 +107,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     residuals_label_invalid_msg = Unicode('').tag(sync=True)
 
     def __init__(self, *args, **kwargs):
-        self._spectrum1d = None
         super().__init__(*args, **kwargs)
 
         self._default_spectrum_viewer_reference_name = kwargs.get(
@@ -121,8 +121,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self.component_models = []
         self._initialized_models = {}
         self._display_order = False
-        self._window = None
-        self._original_mask = None
         if self.config == "cubeviz":
             self.spatial_subset = SubsetSelect(self,
                                                'spatial_subset_items',
@@ -328,30 +326,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # (won't affect calculations because these locations are masked)
         selected_spec.flux[np.isnan(selected_spec.flux)] = 0.0
 
-        # Save original mask so we can reset after applying a subset mask
-        self._original_mask = selected_spec.mask
-
         self._units["x"] = str(
             selected_spec.spectral_axis.unit)
         self._units["y"] = str(
             selected_spec.flux.unit)
-
-        self._spectrum1d = selected_spec
-
-        # Also set the spectral min and max to default to the full range
-        # This is no longer needed for 1D but is preserved for now pending
-        # fixes to Cubeviz for multi-subregion subsets
-        self._window = None
-
-    @observe("spectral_subset_selected")
-    def _on_spectral_subset_selected(self, event):
-        # TODO: does this window not account for gaps?  Should we add the warning?
-        # or can this be removed (see note above in _dataset_selected_changed)
-        if self.spectral_subset_selected == "Entire Spectrum":
-            self._window = None
-        else:
-            spectral_min, spectral_max = self.spectral_subset.selected_min_max(self._spectrum1d)
-            self._window = u.Quantity([spectral_min, spectral_max])
 
     def _default_comp_label(self, model, poly_order=None):
         abbrevs = {'BlackBody': 'BB', 'PowerLaw': 'PL', 'Lorentz1D': 'Lo'}
@@ -432,9 +410,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             Will raise an error if provided and ``model_component`` is not "Polynomial1D".
             If not provided, will default according to ``poly_order``.
         """
-        if not self._spectrum1d:
-            self._dataset_selected_changed()
-
         model_comp = model_component if model_component is not None else self.model_comp_selected
 
         if model_comp != "Polynomial1D" and poly_order is not None:
@@ -490,12 +465,14 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
             initial_values[param_name] = initial_val
 
+        masked_spectrum = self._apply_subset_masks(self.dataset.selected_obj, self.spectral_subset)
+        mask = masked_spectrum.mask
         initialized_model = initialize(
             MODELS[model_comp](name=comp_label,
                                **initial_values,
                                **new_model.get("model_kwargs", {})),
-            self._spectrum1d.spectral_axis,
-            self._spectrum1d.flux)
+            masked_spectrum.spectral_axis[~mask] if mask is not None else masked_spectrum.spectral_axis,  # noqa
+            masked_spectrum.flux[~mask] if mask is not None else masked_spectrum.flux)
 
         # need to loop over parameters again as the initializer may have overridden
         # the original default value
@@ -683,15 +660,15 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         models_to_fit = self._reinitialize_with_fixed()
 
         # Apply masks from selected spectral subsets
-        self._apply_subset_masks(self._spectrum1d, self.spectral_subset)
+        masked_spectrum = self._apply_subset_masks(self.dataset.selected_obj, self.spectral_subset)
 
         try:
             fitted_model, fitted_spectrum = fit_model_to_spectrum(
-                self._spectrum1d,
+                masked_spectrum,
                 models_to_fit,
                 self.model_equation,
                 run_fitter=True,
-                window=self._window
+                window=None
             )
         except AttributeError:
             msg = SnackbarMessage("Unable to fit: model equation may be invalid",
@@ -709,7 +686,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             if self.residuals_calculate:
                 # NOTE: this will NOT load into the viewer since we have already called
                 # add_results_from_plugin above.
-                self.add_results.add_results_from_plugin(self._spectrum1d-fitted_spectrum,
+                self.add_results.add_results_from_plugin(masked_spectrum-fitted_spectrum,
                                                          label=self.residuals.value,
                                                          replace=False)
 
@@ -725,11 +702,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # as the starting point for cube fitting
         self._update_initialized_parameters()
 
-        # Reset the data mask in case we use a different subset next time
-        self._spectrum1d.mask = self._original_mask
-
         if self.residuals_calculate:
-            return fitted_model, fitted_spectrum, self._spectrum1d-fitted_spectrum
+            return fitted_model, fitted_spectrum, masked_spectrum-fitted_spectrum
         return fitted_model, fitted_spectrum
 
     def _fit_model_to_cube(self, add_data):
@@ -765,7 +739,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         # Apply masks from selected subsets
         for subset in [self.spatial_subset, self.spectral_subset]:
-            self._apply_subset_masks(spec, subset)
+            spec = self._apply_subset_masks(spec, subset)
 
         try:
             fitted_model, fitted_spectrum = fit_model_to_spectrum(
@@ -773,7 +747,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 models_to_fit,
                 self.model_equation,
                 run_fitter=True,
-                window=self._window
+                window=None
             )
         except ValueError:
             snackbar_message = SnackbarMessage(
@@ -819,8 +793,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         """
         # only look for a mask if there is a selected subset:
         if subset_component.selected == subset_component.default_text:
-            return
+            return spectrum
 
+        spectrum = deepcopy(spectrum)
         subset_mask = subset_component.selected_subset_mask
 
         if spectrum.mask is not None:
@@ -845,3 +820,4 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 subset_mask = np.swapaxes(subset_mask, 1, 0)
 
             spectrum.mask = subset_mask
+        return spectrum
