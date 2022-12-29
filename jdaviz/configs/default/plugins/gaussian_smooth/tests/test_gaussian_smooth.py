@@ -68,7 +68,7 @@ def test_linking_after_spectral_smooth(cubeviz_helper, spectrum1d_cube):
     # Mouseover should automatically jump from one spectrum
     # to another, depending on which one is closer.
 
-    spec_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 4.633e-7, 'y': 60}})
+    spec_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 4.6236e-7, 'y': 60}})
     assert spec_viewer.label_mouseover.pixel == 'x=01.0'
     assert spec_viewer.label_mouseover.world_label_prefix == 'Wave'
     assert spec_viewer.label_mouseover.world_ra == '4.62360e-07'
@@ -78,7 +78,7 @@ def test_linking_after_spectral_smooth(cubeviz_helper, spectrum1d_cube):
     assert spec_viewer.label_mouseover.world_dec_deg == 'Jy'
     assert spec_viewer.label_mouseover.icon == 'a'
 
-    spec_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 4.633e-7, 'y': 20}})
+    spec_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 4.6236e-7, 'y': 20}})
     assert spec_viewer.label_mouseover.pixel == 'x=01.0'
     assert spec_viewer.label_mouseover.world_label_prefix == 'Wave'
     assert spec_viewer.label_mouseover.world_ra == '4.62360e-07'
@@ -92,7 +92,7 @@ def test_linking_after_spectral_smooth(cubeviz_helper, spectrum1d_cube):
     for lyr in spec_viewer.layers:
         lyr.visible = False
 
-    spec_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 4.633e-7, 'y': 60}})
+    spec_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 4.6236e-7, 'y': 60}})
     assert spec_viewer.label_mouseover.pixel == ''
     assert spec_viewer.label_mouseover.world_label_prefix == '\xa0'
     assert spec_viewer.label_mouseover.world_ra == ''
@@ -161,13 +161,13 @@ def test_spectrum1d_smooth(specviz_helper, spectrum1d):
     assert spec_viewer.label_mouseover.world_dec_deg == 'Jy'
     assert spec_viewer.label_mouseover.icon == 'b'
 
-    # Out-of-bounds should lock to closest edge value.
+    # Out-of-bounds shows nothing.
     spec_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 5500, 'y': 120}})
-    assert spec_viewer.label_mouseover.pixel == 'x=00.0'
-    assert spec_viewer.label_mouseover.world_label_prefix == 'Wave'
-    assert spec_viewer.label_mouseover.world_ra == '6.00000e+03'
-    assert spec_viewer.label_mouseover.world_dec == 'Angstrom'
-    assert spec_viewer.label_mouseover.world_label_prefix_2 == 'Flux'
-    assert spec_viewer.label_mouseover.world_ra_deg == '1.24967e+01'
-    assert spec_viewer.label_mouseover.world_dec_deg == 'Jy'
-    assert spec_viewer.label_mouseover.icon == 'a'
+    assert spec_viewer.label_mouseover.pixel == ''
+    assert spec_viewer.label_mouseover.world_label_prefix == '\xa0'
+    assert spec_viewer.label_mouseover.world_ra == ''
+    assert spec_viewer.label_mouseover.world_dec == ''
+    assert spec_viewer.label_mouseover.world_label_prefix_2 == '\xa0'
+    assert spec_viewer.label_mouseover.world_ra_deg == ''
+    assert spec_viewer.label_mouseover.world_dec_deg == ''
+    assert spec_viewer.label_mouseover.icon == ''

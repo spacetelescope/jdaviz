@@ -80,9 +80,9 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
 
             # Snap to the closest data point, not the actual mouse location.
             sp = None
-            closest_i = 0
-            closest_wave = 0
-            closest_flux = 0
+            closest_i = None
+            closest_wave = None
+            closest_flux = None
             closest_maxsize = 0
             closest_label = ''
             closest_distance = None
@@ -95,6 +95,10 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
                     # TODO: Is there a way to cache this?
                     sp = lyr.layer.get_object(
                         cls=Spectrum1D, statistic=getattr(self.state, 'function', None))
+
+                    # Out of range in spectral axis.
+                    if x < sp.spectral_axis.value.min() or x > sp.spectral_axis.value.max():
+                        continue
 
                     cur_i = np.argmin(abs(sp.spectral_axis.value - x))
                     cur_wave = sp.spectral_axis[cur_i]
@@ -110,10 +114,10 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
                         closest_flux = cur_flux
                         closest_maxsize = int(np.ceil(np.log10(sp.spectral_axis.size))) + 3
                         closest_label = self.jdaviz_app.state.layer_icons.get(lyr.layer.label)
-                except Exception:
+                except Exception:  # Something is loaded but not the right thing # pragma: no cover
                     sp = None
 
-            if sp is None:  # Something is loaded but not the right thing
+            if sp is None or closest_wave is None:
                 self.label_mouseover.icon = ""
                 self.label_mouseover.pixel = ""
                 self.label_mouseover.reset_coords_display()

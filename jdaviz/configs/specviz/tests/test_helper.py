@@ -1,5 +1,6 @@
 from zipfile import ZipFile
 
+import numpy as np
 import pytest
 from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose
@@ -381,3 +382,30 @@ def test_data_label_as_posarg(specviz_helper, spectrum1d):
     # Passing in data_label keyword as posarg.
     specviz_helper.load_spectrum(spectrum1d, 'my_spec')
     assert specviz_helper.app.data_collection[0].label == 'my_spec'
+
+
+def test_spectra_partial_overlap(specviz_helper):
+    spec_viewer = specviz_helper.app.get_viewer('spectrum-viewer')
+
+    wave_1 = np.linspace(6000, 7000, 10) * u.AA
+    flux_1 = ([1200] * wave_1.size) * u.nJy
+    sp_1 = Spectrum1D(flux=flux_1, spectral_axis=wave_1)
+
+    wave_2 = wave_1 + (800 * u.AA)
+    flux_2 = ([60] * wave_2.size) * u.nJy
+    sp_2 = Spectrum1D(flux=flux_2, spectral_axis=wave_2)
+
+    specviz_helper.load_spectrum(sp_1, data_label='left')
+    specviz_helper.load_spectrum(sp_2, data_label='right')
+
+    # Test mouseover outside of left but in range for right.
+    # Should show right spectrum even when mouse is near left flux.
+    spec_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 7022, 'y': 1000}})
+    assert spec_viewer.label_mouseover.pixel == 'x=02.0'
+    assert spec_viewer.label_mouseover.world_label_prefix == 'Wave'
+    assert spec_viewer.label_mouseover.world_ra == '7.02222e+03'
+    assert spec_viewer.label_mouseover.world_dec == 'Angstrom'
+    assert spec_viewer.label_mouseover.world_label_prefix_2 == 'Flux'
+    assert spec_viewer.label_mouseover.world_ra_deg == '6.00000e+01'
+    assert spec_viewer.label_mouseover.world_dec_deg == 'nJy'
+    assert spec_viewer.label_mouseover.icon == 'b'
