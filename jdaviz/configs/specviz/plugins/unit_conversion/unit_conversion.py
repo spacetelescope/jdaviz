@@ -140,7 +140,7 @@ class UnitConversion(PluginTemplateMixin, DatasetSelectMixin):
                 # Add spectrum with converted units to app.
                 self.app.add_data(converted_spec, new_label)
                 self.app.add_data_to_viewer(
-                    self.app._default_spectrum_viewer_reference_name,
+                    self._default_spectrum_viewer_reference_name,
                     new_label, clear_other_data=True
                 )
 
