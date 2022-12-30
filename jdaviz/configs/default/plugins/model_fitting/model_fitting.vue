@@ -91,7 +91,7 @@
             color="turquoise"
             dark
             style="padding-left: 8px; padding-right: 6px;"
-            @click="reestimate_model_parameters">
+            @click="reestimate_model_parameters(null)">
             <v-icon left small dense style="margin-right: 2px">mdi-restart</v-icon>
             Re-estimate free parameters
           </v-btn>
