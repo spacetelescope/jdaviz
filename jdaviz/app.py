@@ -527,15 +527,7 @@ class Application(VuetifyTemplate, HubListener):
                     parser = data_parser_registry.members.get(data_parser)
 
             if parser is not None:
-                # If the parser returns something other than known, assume it's
-                #  a message we want to make the user aware of.
-                msg = parser(self, file_obj, **kwargs)
-
-                if msg is not None:
-                    snackbar_message = SnackbarMessage(
-                        msg, color='error', sender=self)
-                    self.hub.broadcast(snackbar_message)
-                    return
+                parser(self, file_obj, **kwargs)
             else:
                 self._application_handler.load_data(file_obj)
 
