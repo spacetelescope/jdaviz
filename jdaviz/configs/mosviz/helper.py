@@ -433,13 +433,15 @@ class Mosviz(ConfigHelper, LineListMixin):
 
         directory = kwargs.pop('directory', None)
         instrument = kwargs.pop('instrument', None)
+        if instrument is not None:
+            instrument = instrument.lower()
 
         if directory is not None and Path(directory).is_dir():
             if instrument not in ('nirspec', 'niriss', 'nircam'):
                 raise ValueError(
                     "Ambiguous MOS Instrument: Only JWST NIRSpec, NIRCam, and "
                     f"NIRISS folder parsing are currently supported but got '{instrument}'")
-            if instrument.lower() == "nirspec":
+            if instrument == "nirspec":
                 super().load_data(directory, parser_reference="mosviz-nirspec-directory-parser")
             else:  # niriss or nircam
                 self.load_jwst_directory(directory, instrument=instrument)
