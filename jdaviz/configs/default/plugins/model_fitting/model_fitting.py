@@ -605,10 +605,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             components.
         """
         if model_component_label is None:
-            ret = []
-            for model_comp in self.component_models:
-                ret.append(self.reestimate_model_parameters(model_comp["id"]))
-            return ret
+            return [self.reestimate_model_parameters(model_comp["id"])
+                    for model_comp in self.component_models]
 
         try:
             model_index, model_comp = [(i, x) for i, x in enumerate(self.component_models)

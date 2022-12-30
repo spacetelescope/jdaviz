@@ -220,7 +220,7 @@ def test_reestimate_parameters(specviz_helper, spectrum1d):
     mf.set_model_component('G', 'stddev', value=1, fixed=True)
     mc = mf.get_model_component('G')
 
-    assert mc['parameters']['mean']['value'] == 7055.519926198364
+    assert_allclose(mc['parameters']['mean']['value'], 7055.519926198364)
     assert mc['parameters']['stddev']['value'] == 1
     assert mc['parameters']['stddev']['fixed'] is True
 
@@ -232,7 +232,7 @@ def test_reestimate_parameters(specviz_helper, spectrum1d):
     mc = mf.get_model_component('G')
 
     # mean should change, stddev should not
-    assert mc['parameters']['mean']['value'] == 7780.8838070125375
+    assert_allclose(mc['parameters']['mean']['value'], 7780.8838070125375)
     assert mc['parameters']['stddev']['value'] == 1
     assert mc['parameters']['stddev']['fixed'] is True
 
