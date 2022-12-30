@@ -112,6 +112,8 @@ Mosviz
 
 - ``mosviz_row`` metadata now included in NIRISS-parsed 1D spectra. [#1836]
 
+- Now loads NIRCam direct image properly when loading a directory. [#1948]
+
 Specviz
 ^^^^^^^
 
