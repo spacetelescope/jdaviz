@@ -92,9 +92,15 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
                     continue
 
                 try:
-                    # TODO: Is there a way to cache this?
-                    sp = lyr.layer.get_object(
-                        cls=Spectrum1D, statistic=getattr(self.state, 'function', None))
+                    # Cache should have been populated when spectrum was first plotted.
+                    # But if not (maybe user changed statistic), we cache it here too.
+                    statistic = getattr(self.state, 'function', None)
+                    cache_key = (lyr.layer.label, statistic)
+                    if cache_key in self.jdaviz_app._get_object_cache:
+                        sp = self.jdaviz_app._get_object_cache[cache_key]
+                    else:
+                        sp = lyr.layer.get_object(cls=Spectrum1D, statistic=statistic)
+                        self.jdaviz_app._get_object_cache[cache_key] = sp
 
                     # Out of range in spectral axis.
                     if x < sp.spectral_axis.value.min() or x > sp.spectral_axis.value.max():
@@ -148,40 +154,39 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
 
     def data(self, cls=None):
         # Grab the user's chosen statistic for collapsing data
-        if hasattr(self.state, 'function'):
-            statistic = self.state.function
-        else:
-            statistic = None
-
+        statistic = getattr(self.state, 'function', None)
         data = []
 
         for layer_state in self.state.layers:
             if hasattr(layer_state, 'layer'):
+                lyr = layer_state.layer
 
                 # For raw data, just include the data itself
-                if isinstance(layer_state.layer, BaseData):
+                if isinstance(lyr, BaseData):
                     _class = cls or self.default_class
 
                     if _class is not None:
-                        # If spectrum, collapse via the defined statistic
-                        if _class == Spectrum1D:
-                            layer_data = layer_state.layer.get_object(cls=_class,
-                                                                      statistic=statistic)
+                        cache_key = (lyr.label, statistic)
+                        if cache_key in self.jdaviz_app._get_object_cache:
+                            layer_data = self.jdaviz_app._get_object_cache[cache_key]
                         else:
-                            layer_data = layer_state.layer.get_object(cls=_class)
+                            # If spectrum, collapse via the defined statistic
+                            if _class == Spectrum1D:
+                                layer_data = lyr.get_object(cls=_class, statistic=statistic)
+                            else:
+                                layer_data = lyr.get_object(cls=_class)
+                            self.jdaviz_app._get_object_cache[cache_key] = layer_data
 
                         data.append(layer_data)
 
-                # For subsets, make sure to apply the subset mask to the
-                #  layer data first
-                elif isinstance(layer_state.layer, Subset):
-                    layer_data = layer_state.layer
+                # For subsets, make sure to apply the subset mask to the layer data first
+                elif isinstance(lyr, Subset):
+                    layer_data = lyr
 
                     if _class is not None:
                         handler, _ = data_translator.get_handler_for(_class)
                         try:
-                            layer_data = handler.to_object(layer_data,
-                                                           statistic=statistic)
+                            layer_data = handler.to_object(layer_data, statistic=statistic)
                         except IncompatibleAttribute:
                             continue
                     data.append(layer_data)
@@ -465,18 +470,20 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
 
         # Loop through all active data in the viewer
         for index, layer_state in enumerate(self.state.layers):
-            comps = [str(component) for component in layer_state.layer.components]
+            lyr = layer_state.layer
+            comps = [str(component) for component in lyr.components]
 
             # Skip subsets
-            if hasattr(layer_state.layer, "subset_state"):
+            if hasattr(lyr, "subset_state"):
                 continue
 
             # Ignore data that does not have a mask component
             if "mask" in comps:
-                mask = np.array(layer_state.layer['mask'].data)
+                mask = np.array(lyr['mask'].data)
 
-                data_x = layer_state.layer.data.get_object().spectral_axis
-                data_y = layer_state.layer.data.get_object().flux.value
+                data_obj = lyr.data.get_object()
+                data_x = data_obj.spectral_axis.value
+                data_y = data_obj.flux.value
 
                 # For plotting markers only for the masked data
                 # points, erase un-masked data from trace.
@@ -507,24 +514,26 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
 
         # Loop through all active data in the viewer
         for index, layer_state in enumerate(self.state.layers):
+            lyr = layer_state.layer
 
             # Skip subsets
-            if hasattr(layer_state.layer, "subset_state"):
+            if hasattr(lyr, "subset_state"):
                 continue
 
-            comps = [str(component) for component in layer_state.layer.components]
+            comps = [str(component) for component in lyr.components]
 
             # Ignore data that does not have an uncertainty component
             if "uncertainty" in comps:  # noqa
-                error = np.array(layer_state.layer['uncertainty'].data)
+                error = np.array(lyr['uncertainty'].data)
 
-                data_x = layer_state.layer.data.get_object().spectral_axis
-                data_y = layer_state.layer.data.get_object().flux.value
+                data_obj = lyr.data.get_object()
+                data_x = data_obj.spectral_axis.value
+                data_y = data_obj.flux.value
 
                 # The shaded band around the spectrum trace is bounded by
                 # two lines, above and below the spectrum trace itself.
-                x = [np.ndarray.tolist(data_x),
-                     np.ndarray.tolist(data_x)]
+                data_x_list = np.ndarray.tolist(data_x)
+                x = [data_x_list, data_x_list]
                 y = [np.ndarray.tolist(data_y - error),
                      np.ndarray.tolist(data_y + error)]
 

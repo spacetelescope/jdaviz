@@ -258,6 +258,10 @@ class Application(VuetifyTemplate, HubListener):
         # Add a fitted_models dictionary that the helpers (or user) can access
         self.fitted_models = {}
 
+        # Internal cache so we don't have to keep calling get_object for the same Data.
+        # Key should be (data_label, statistic) and value the translated object.
+        self._get_object_cache = {}
+
         # Add new and inverse colormaps to Glue global state. Also see ColormapRegistry in
         # https://github.com/glue-viz/glue/blob/main/glue/config.py
         new_cms = (['Rainbow', cm.rainbow],
@@ -1500,6 +1504,9 @@ class Application(VuetifyTemplate, HubListener):
         for data_item in self.state.data_items:
             if data_item['name'] == msg.data.label:
                 self.state.data_items.remove(data_item)
+
+        # Hard to know what is associated with what, so just clear everything.
+        self._get_object_cache.clear()
 
     @staticmethod
     def _create_data_item(data):
