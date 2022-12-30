@@ -131,18 +131,27 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
                 self.label_mouseover.marks[self._reference_id].visible = False
                 return
 
-            fmt = 'x={:0' + str(closest_maxsize) + '.1f}'
-            self.label_mouseover.pixel = fmt.format(closest_i)
-            self.label_mouseover.world_label_prefix = 'Wave'
-            self.label_mouseover.world_ra = f'{closest_wave.value:10.5e}'
-            self.label_mouseover.world_dec = closest_wave.unit.to_string()
-            self.label_mouseover.world_label_prefix_2 = 'Flux'
-            self.label_mouseover.world_ra_deg = f'{closest_flux.value:10.5e}'
-            self.label_mouseover.world_dec_deg = closest_flux.unit.to_string()
-            self.label_mouseover.icon = closest_label
-            self.label_mouseover.value = ""  # Not used
-            self.label_mouseover.marks[self._reference_id].update_xy([closest_wave.value], [closest_flux.value])
-            self.label_mouseover.marks[self._reference_id].visible = True
+            # show the locked marker/coords only if either no tool or the default tool is active
+            locking_active = self.toolbar.active_tool_id in self.toolbar.default_tool_priority + [None]  # noqa
+            if locking_active:
+                fmt = 'x={:0' + str(closest_maxsize) + '.1f}'
+                self.label_mouseover.pixel = fmt.format(closest_i)
+                self.label_mouseover.world_label_prefix = 'Wave'
+                self.label_mouseover.world_ra = f'{closest_wave.value:10.5e}'
+                self.label_mouseover.world_dec = closest_wave.unit.to_string()
+                self.label_mouseover.world_label_prefix_2 = 'Flux'
+                self.label_mouseover.world_ra_deg = f'{closest_flux.value:10.5e}'
+                self.label_mouseover.world_dec_deg = closest_flux.unit.to_string()
+                self.label_mouseover.icon = closest_label
+                self.label_mouseover.value = ""  # Not used
+                self.label_mouseover.marks[self._reference_id].update_xy([closest_wave.value], [closest_flux.value])  # noqa
+                self.label_mouseover.marks[self._reference_id].visible = True
+            else:
+                # show exact plot coordinates (useful for drawing spectral subsets or zoom ranges)
+                fmt = 'x={:+10.5e} y={:+10.5e}'
+                self.label_mouseover.icon = ""
+                self.label_mouseover.pixel = fmt.format(x, y)
+                self.label_mouseover.marks[self._reference_id].visible = False
 
         elif data['event'] == 'mouseleave' or data['event'] == 'mouseenter':
             self.label_mouseover.icon = ""
