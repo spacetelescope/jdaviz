@@ -190,8 +190,8 @@ def test_nircam_parser(mosviz_helper, tmp_path):
     # Check that the correct amount of spectra got loaded in the correct order
     assert len(mosviz_helper.app.data_collection) == 31
     assert mosviz_helper.app.data_collection['MOS Table']['Identifier'][0] == 1112
-    assert mosviz_helper.app.data_collection[0].label == 'GRISMR Source 1112 spec2d R'
-    assert mosviz_helper.app.data_collection[15].label == 'GRISMR Source 1112 spec1d R'
+    assert mosviz_helper.app.data_collection[0].label == 'F322W2 Source 1112 spec2d R'
+    assert mosviz_helper.app.data_collection[15].label == 'F322W2 Source 1112 spec1d R'
 
 
 @pytest.mark.remote_data

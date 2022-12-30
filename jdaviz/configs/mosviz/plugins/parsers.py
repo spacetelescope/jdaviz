@@ -869,7 +869,10 @@ def mos_niriss_parser(app, data_dir, instrument=None,
                     raise KeyError(f"The SRCTYPE keyword in the header of file {fname} "
                                    "is not populated (expected values: EXTENDED or POINT)") from e
 
-                filter_name = fits.getheader(fname, ext=0).get('PUPIL')
+                if instrument == "niriss":
+                    filter_name = fits.getheader(fname, ext=0).get('PUPIL')
+                elif instrument == "nircam":
+                    filter_name = fits.getheader(fname, ext=0).get('FILTER')
 
                 # Orientation denoted by "C", "R", or "C+R" for combined spectra
                 orientation = flabel.split()[-1]
