@@ -477,7 +477,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
             initial_values[param_name] = initial_val
 
-        masked_spectrum = self._apply_subset_masks(self.dataset.selected_obj, self.spectral_subset)
+        masked_spectrum = self._apply_subset_masks(self._get_1d_spectrum(), self.spectral_subset)
         mask = masked_spectrum.mask
         initialized_model = initialize(
             MODELS[model_comp](name=comp_label,
