@@ -210,6 +210,33 @@ def test_fit_gaussian_with_fixed_mean(specviz_helper, spectrum1d):
     assert not np.allclose((result.amplitude.value, result.stddev.value), (old_amp, old_std))
 
 
+def test_reestimate_parameters(specviz_helper, spectrum1d):
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        specviz_helper.load_spectrum(spectrum1d)
+    mf = specviz_helper.plugins['Model Fitting']
+
+    mf.create_model_component('Gaussian1D', 'G')
+    mf.set_model_component('G', 'stddev', value=1, fixed=True)
+    mc = mf.get_model_component('G')
+
+    assert_allclose(mc['parameters']['mean']['value'], 7055.519926198364)
+    assert mc['parameters']['stddev']['value'] == 1
+    assert mc['parameters']['stddev']['fixed'] is True
+
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+    sv.apply_roi(XRangeROI(7500, 8000))
+
+    mf.spectral_subset = 'Subset 1'
+    mf.reestimate_model_parameters()
+    mc = mf.get_model_component('G')
+
+    # mean should change, stddev should not
+    assert_allclose(mc['parameters']['mean']['value'], 7780.8838070125375)
+    assert mc['parameters']['stddev']['value'] == 1
+    assert mc['parameters']['stddev']['fixed'] is True
+
+
 def test_subset_masks(cubeviz_helper, spectrum1d_cube_larger):
     cubeviz_helper.load_data(spectrum1d_cube_larger)
     assert spectrum1d_cube_larger.mask is None

@@ -81,6 +81,22 @@
 
     <div v-if="component_models.length">
       <j-plugin-section-header>Model Parameters</j-plugin-section-header>
+      <v-row justify="end">
+        <j-tooltip tipid='plugin-model-fitting-reestimate-all'>
+          <v-btn
+            tile
+            :elevation=0
+            x-small
+            dense 
+            color="turquoise"
+            dark
+            style="padding-left: 8px; padding-right: 6px;"
+            @click="reestimate_model_parameters(null)">
+            <v-icon left small dense style="margin-right: 2px">mdi-restart</v-icon>
+            Re-estimate free parameters
+          </v-btn>
+        </j-tooltip>
+      </v-row>
       <v-row>
         <v-expansion-panels accordion>
           <v-expansion-panel
@@ -112,6 +128,24 @@
                 style="padding-top: 12px"
               >
                 <span><b>{{ item.id }}</b> model component not in equation</span>
+              </v-row>
+              <v-row justify="end"
+                style="padding-top: 12px; padding-right: 2px"
+              >
+                <j-tooltip tipid='plugin-model-fitting-reestimate'>
+                  <v-btn
+                    tile
+                    :elevation=0
+                    x-small
+                    dense 
+                    color="turquoise"
+                    dark
+                    style="padding-left: 8px; padding-right: 6px;"
+                    @click="reestimate_model_parameters(item.id)">
+                    <v-icon left small dense style="margin-right: 2px">mdi-restart</v-icon>
+                    Re-estimate free parameters
+                  </v-btn>
+                </j-tooltip>
               </v-row>
               <v-div
                 v-for="param in item.parameters"

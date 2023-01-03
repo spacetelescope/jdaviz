@@ -59,6 +59,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     * :meth:`model_components`
     * :meth:`get_model_component`
     * :meth:`set_model_component`
+    * :meth:`reestimate_model_parameters`
     * ``equation`` (:class:`~jdaviz.core.template_mixin.AutoTextField`)
     * ``cube_fit``
       Only exposed for Cubeviz.  Whether to fit the model to the cube instead of to the
@@ -161,7 +162,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             expose += ['spatial_subset']
         expose += ['spectral_subset', 'model_component', 'poly_order', 'model_component_label',
                    'model_components', 'create_model_component', 'remove_model_component',
-                   'get_model_component', 'set_model_component',
+                   'get_model_component', 'set_model_component', 'reestimate_model_parameters',
                    'equation', 'add_results', 'residuals_calculate', 'residuals']
         if self.config == "cubeviz":
             expose += ['cube_fit']
@@ -437,6 +438,13 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         if comp_label in [cm['id'] for cm in self.component_models]:
             raise ValueError(f"model component label '{comp_label}' already in use")
 
+        new_model = self._initialize_model_component(model_comp, comp_label, poly_order=poly_order)
+        self.component_models = self.component_models + [new_model]
+        # update the default label (likely adding the suffix)
+        self._update_comp_label_default()
+        self._update_model_equation_default()
+
+    def _initialize_model_component(self, model_comp, comp_label, poly_order=None):
         new_model = {"id": comp_label, "model_type": model_comp,
                      "parameters": [], "model_kwargs": {}}
         model_cls = MODELS[model_comp]
@@ -469,7 +477,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
             initial_values[param_name] = initial_val
 
-        masked_spectrum = self._apply_subset_masks(self.dataset.selected_obj, self.spectral_subset)
+        masked_spectrum = self._apply_subset_masks(self._get_1d_spectrum(), self.spectral_subset)
         mask = masked_spectrum.mask
         initialized_model = initialize(
             MODELS[model_comp](name=comp_label,
@@ -490,10 +498,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self._initialized_models[comp_label] = initialized_model
 
         new_model["Initialized"] = True
-        self.component_models = self.component_models + [new_model]
-        # update the default label (likely adding the suffix)
-        self._update_comp_label_default()
-        self._update_model_equation_default()
+        return new_model
 
     def remove_model_component(self, model_component_label):
         """
@@ -584,6 +589,47 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self.component_models = cms
 
         return parameter
+
+    def vue_reestimate_model_parameters(self, model_component_label=None, **kwargs):
+        self.reestimate_model_parameters(model_component_label=model_component_label)
+
+    def reestimate_model_parameters(self, model_component_label=None):
+        """
+        Re-estimate all free parameters in a given model component given the currently selected
+        data and subset selections.
+
+        Parameters
+        ----------
+        model_component_label : str or None.
+            The label given to the existing model component.  If None, will iterate over all model
+            components.
+        """
+        if model_component_label is None:
+            return [self.reestimate_model_parameters(model_comp["id"])
+                    for model_comp in self.component_models]
+
+        try:
+            model_index, model_comp = [(i, x) for i, x in enumerate(self.component_models)
+                                       if x["id"] == model_component_label][0]
+        except IndexError:
+            raise ValueError(f"'{model_component_label}' is not a label of an existing model component")  # noqa
+
+        # store user-fixed parameters so we can revert after re-initializing
+        fixed_params = {p['name']: p for p in model_comp['parameters'] if p['fixed']}
+
+        new_model = self._initialize_model_component(model_comp['model_type'],
+                                                     model_component_label,
+                                                     poly_order=model_comp['model_kwargs'].get('degree', None))  # noqa
+
+        # revert fixed parameters to user-value
+        new_model['parameters'] = [fixed_params.get(p['name'], p) for p in new_model['parameters']]
+
+        self.component_models[model_index] = new_model
+        # length hasn't changed, so we need to force the traitlet to update
+        self.send_state("component_models")
+
+        # return user-friendly info on revised model
+        return self.get_model_component(model_component_label)
 
     @property
     def model_components(self):
