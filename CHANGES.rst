@@ -94,7 +94,7 @@ Bug Fixes
 
 - Console logging is restored for "Desktop Mode" Windows users. [#1887]
 
-- Model fitting initial estimates now respect selected subset. [#1947]
+- Model fitting initial estimates now respect selected subset. [#1947, #1954]
 
 Cubeviz
 ^^^^^^^

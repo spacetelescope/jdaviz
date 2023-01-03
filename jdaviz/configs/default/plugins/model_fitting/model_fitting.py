@@ -289,6 +289,20 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         else:
             return False
 
+    def _get_1d_spectrum(self):
+        # retrieves the 1d spectrum (accounting for spatial subset for cubeviz, if necessary)
+        if self.config == 'cubeviz' and self.spatial_subset_selected != 'Entire Cube':
+            # then we're acting on the auto-collapsed data in the spectrum-viewer
+            # of a spatial subset.  In the future, we may want to expose on-the-fly
+            # collapse options... but right now these will follow the settings of the
+            # spectrum-viewer itself
+            return self.app.get_data_from_viewer(
+                                                 self._default_spectrum_viewer_reference_name,
+                                                 self.spatial_subset_selected
+                                                 )
+        else:
+            return self.dataset.selected_obj
+
     @observe("dataset_selected", "spatial_subset_selected")
     def _dataset_selected_changed(self, event=None):
         """
@@ -308,17 +322,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             # during initial init, this can trigger before the component is initialized
             return
 
-        if self.config == 'cubeviz' and self.spatial_subset_selected != 'Entire Cube':
-            # then we're acting on the auto-collapsed data in the spectrum-viewer
-            # of a spatial subset.  In the future, we may want to expose on-the-fly
-            # collapse options... but right now these will follow the settings of the
-            # spectrum-viewer itself
-            selected_spec = self.app.get_data_from_viewer(
-                self._default_spectrum_viewer_reference_name,
-                self.spatial_subset_selected
-            )
-        else:
-            selected_spec = self.dataset.selected_obj
+        selected_spec = self._get_1d_spectrum()
         if selected_spec is None:
             return
 
@@ -659,8 +663,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             return
         models_to_fit = self._reinitialize_with_fixed()
 
-        # Apply masks from selected spectral subsets
-        masked_spectrum = self._apply_subset_masks(self.dataset.selected_obj, self.spectral_subset)
+        masked_spectrum = self._apply_subset_masks(self._get_1d_spectrum(), self.spectral_subset)
 
         try:
             fitted_model, fitted_spectrum = fit_model_to_spectrum(
