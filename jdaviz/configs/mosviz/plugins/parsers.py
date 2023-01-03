@@ -27,7 +27,8 @@ EXPECTED_FILES = {"niriss": ['1D Spectra C', '1D Spectra R',
                              '2D Spectra C', '2D Spectra R',
                              'Direct Image'],
                   "nircam": ['1D Spectra C', '1D Spectra R',
-                             '2D Spectra C', '2D Spectra R'],
+                             '2D Spectra C', '2D Spectra R',
+                             'Direct Image'],
                   "nirspec": ['1D Spectra', '2D Spectra']}
 
 
@@ -738,7 +739,10 @@ def mos_niriss_parser(app, data_dir, instrument=None,
         for image_file in files_by_labels["Direct Image"]:
             # save label for table viewer
             im_split = image_file.stem.split("_")[0]
-            pupil = fits.getheader(image_file, ext=0).get('PUPIL')
+            if instrument == "niriss":
+                pupil = fits.getheader(image_file, ext=0).get('PUPIL')
+            elif instrument == "nircam":
+                pupil = fits.getheader(image_file, ext=0).get('FILTER')
 
             image_label = f"Image {im_split} {pupil}"
             image_dict[pupil] = image_label
@@ -770,7 +774,10 @@ def mos_niriss_parser(app, data_dir, instrument=None,
         for fname in files_by_labels[flabel]:
             print(f"Loading: {flabel} sources")
             if flabel in ('2D Spectra R', '2D Spectra C'):
-                filter_name = fits.getheader(fname, ext=0).get('PUPIL')
+                if instrument == "niriss":
+                    filter_name = fits.getheader(fname, ext=0).get('PUPIL')
+                elif instrument == "nircam":
+                    filter_name = fits.getheader(fname, ext=0).get('FILTER')
 
                 # Orientation denoted by "C", "R", or "C+R" for combined spectra
                 orientation = flabel.split()[-1]
@@ -812,7 +819,7 @@ def mos_niriss_parser(app, data_dir, instrument=None,
                             wav = temp[wav_hdus[sci]].data.mean(axis=0) * u.micron
 
                         spec2d = Spectrum1D(data * u.one, spectral_axis=wav, meta=meta)
-                        spec2d.meta['INSTRUME'] = 'NIRISS'
+                        spec2d.meta['INSTRUME'] = instrument.upper()
                         spec2d.meta['mosviz_row'] = len(spec_labels_2d)
 
                         label = (f"{filter_name} Source "
@@ -862,7 +869,10 @@ def mos_niriss_parser(app, data_dir, instrument=None,
                     raise KeyError(f"The SRCTYPE keyword in the header of file {fname} "
                                    "is not populated (expected values: EXTENDED or POINT)") from e
 
-                filter_name = fits.getheader(fname, ext=0).get('PUPIL')
+                if instrument == "niriss":
+                    filter_name = fits.getheader(fname, ext=0).get('PUPIL')
+                elif instrument == "nircam":
+                    filter_name = fits.getheader(fname, ext=0).get('FILTER')
 
                 # Orientation denoted by "C", "R", or "C+R" for combined spectra
                 orientation = flabel.split()[-1]
