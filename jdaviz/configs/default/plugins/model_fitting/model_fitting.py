@@ -624,12 +624,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # revert fixed parameters to user-value
         new_model['parameters'] = [fixed_params.get(p['name'], p) for p in new_model['parameters']]
 
-        # reset traitlet so vue picks up on changes by adding (and then removing) an empty entry,
-        # this avoids resetting the open state of the accordion in the UI.
-        component_models = self.component_models
-        component_models[model_index] = new_model
-        self.component_models = self.component_models + [{}]
-        self.component_models = self.component_models[:-1]
+        self.component_models[model_index] = new_model
+        # length hasn't changed, so we need to force the traitlet to update
+        self.send_state("component_models")
 
         # return user-friendly info on revised model
         return self.get_model_component(model_component_label)
