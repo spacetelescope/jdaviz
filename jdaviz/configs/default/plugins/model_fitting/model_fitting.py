@@ -694,7 +694,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         residuals (if ``residuals_calculate`` is set to ``True``)
         """
         if not self.spectral_subset_valid:
-            raise ValueError("spectral subset is outside data range")
+            valid, spec_range, subset_range = self._check_dataset_spectral_subset_valid(return_ranges=True)  # noqa
+            raise ValueError(f"spectral subset '{self.spectral_subset.selected}' {subset_range} is outside data range of '{self.dataset.selected}' {spec_range}")  # noqa
 
         if self.cube_fit:
             return self._fit_model_to_cube(add_data=add_data)

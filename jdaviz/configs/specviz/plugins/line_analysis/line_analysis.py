@@ -271,7 +271,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         # is closed
 
         if not self.spectral_subset_valid:
-            raise ValueError("spectral subset is outside data range")
+            valid, spec_range, subset_range = self._check_dataset_spectral_subset_valid(return_ranges=True)  # noqa
+            raise ValueError(f"spectral subset '{self.spectral_subset.selected}' {subset_range} is outside data range of '{self.dataset.selected}' {spec_range}")  # noqa
 
         self._calculate_statistics(ignore_plugin_closed=True)
         return self.results

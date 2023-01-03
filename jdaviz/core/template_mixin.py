@@ -1071,7 +1071,7 @@ class DatasetSpectralSubsetValidMixin(VuetifyTemplate, HubListener):
     spectral_subset_valid = Bool(True).tag(sync=True)
 
     @observe("dataset_selected", "spectral_subset_selected")
-    def _check_dataset_spectral_subset_valid(self, event={}):
+    def _check_dataset_spectral_subset_valid(self, event={}, return_ranges=False):
         if self.spectral_subset_selected == "Entire Spectrum":
             self.spectral_subset_valid = True
         else:
@@ -1079,7 +1079,12 @@ class DatasetSpectralSubsetValidMixin(VuetifyTemplate, HubListener):
             spec_min, spec_max = np.nanmin(spec.spectral_axis), np.nanmax(spec.spectral_axis)
             subset_min, subset_max = self.spectral_subset.selected_min_max(spec)
             self.spectral_subset_valid = bool(subset_min < spec_max and subset_max > spec_min)
-        return self.spectral_subset_valid
+        if return_ranges:
+            return (self.spectral_subset_valid,
+                    (spec_min.value, spec_max.value),
+                    (subset_min.value, subset_max.value))
+        else:
+            return self.spectral_subset_valid
 
 
 class ViewerSelect(SelectPluginComponent):
