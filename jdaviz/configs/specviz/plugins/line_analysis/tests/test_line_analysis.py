@@ -5,6 +5,7 @@ from astropy.table import QTable
 from glue.core.roi import XRangeROI
 from glue.core.edit_subset_mode import NewMode
 from regions import RectanglePixelRegion, PixCoord
+from specutils import Spectrum1D
 
 from jdaviz.configs.specviz.plugins.line_analysis.line_analysis import _coerce_unit
 from jdaviz.core.events import LineIdentifyMessage
@@ -401,3 +402,33 @@ def test_subset_changed(specviz_helper, spectrum1d):
 
     # Values have not yet been validated
     np.testing.assert_allclose(float(plugin.results[0]['result']), 2.153181e-13, atol=1e-15)
+
+
+def test_invalid_subset(specviz_helper, spectrum1d):
+    # 6000-8000
+    specviz_helper.load_spectrum(spectrum1d, data_label="right_spectrum")
+
+    # 5000-7000
+    sp2 = Spectrum1D(spectral_axis=spectrum1d.spectral_axis - 1000*spectrum1d.spectral_axis.unit,
+                     flux=spectrum1d.flux * 1.25)
+    specviz_helper.load_spectrum(sp2, data_label="left_spectrum")
+
+    # apply subset that overlaps on left_spectrum, but not right_spectrum
+    # NOTE: using a subset that overlaps the right_spectrum (reference) results in errors when
+    # retrieving the subset (https://github.com/spacetelescope/jdaviz/issues/1868)
+    specviz_helper.app.get_viewer('spectrum-viewer').apply_roi(XRangeROI(5000, 6000))
+
+    plugin = specviz_helper.plugins['Line Analysis']
+    plugin.dataset = 'right_spectrum'
+    assert plugin.dataset == 'right_spectrum'
+    assert plugin.spectral_subset == 'Entire Spectrum'
+    assert plugin._obj.spectral_subset_valid
+
+    plugin.spectral_subset = 'Subset 1'
+    assert not plugin._obj.spectral_subset_valid
+
+    with pytest.raises(ValueError, match=r"spectral subset 'Subset 1' \(5000.0, 5888.888888888889\) is outside data range of 'right_spectrum' \(6000.0, 8000.0\)"):  # noqa
+        plugin.get_results()
+
+    plugin.dataset = 'left_spectrum'
+    assert plugin._obj.spectral_subset_valid

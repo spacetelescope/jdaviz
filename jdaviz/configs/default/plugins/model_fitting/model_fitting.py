@@ -15,6 +15,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SpectralSubsetSelectMixin,
                                         SubsetSelect,
                                         DatasetSelectMixin,
+                                        DatasetSpectralSubsetValidMixin,
                                         AutoTextField,
                                         AddResultsMixin)
 from jdaviz.core.custom_traitlets import IntHandleEmpty
@@ -37,7 +38,8 @@ class _EmptyParam:
 
 @tray_registry('g-model-fitting', label="Model Fitting", viewer_requirements='spectrum')
 class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
-                   SpectralSubsetSelectMixin, AddResultsMixin):
+                   SpectralSubsetSelectMixin, DatasetSpectralSubsetValidMixin,
+                   AddResultsMixin):
     """
     See the :ref:`Model Fitting Plugin Documentation <specviz-model-fitting>` for more details.
 
@@ -691,6 +693,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         fitted spectrum/cube
         residuals (if ``residuals_calculate`` is set to ``True``)
         """
+        if not self.spectral_subset_valid:
+            valid, spec_range, subset_range = self._check_dataset_spectral_subset_valid(return_ranges=True)  # noqa
+            raise ValueError(f"spectral subset '{self.spectral_subset.selected}' {subset_range} is outside data range of '{self.dataset.selected}' {spec_range}")  # noqa
+
         if self.cube_fit:
             return self._fit_model_to_cube(add_data=add_data)
         else:
