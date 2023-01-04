@@ -5,7 +5,8 @@ import numpy as np
 from astropy import table
 from astropy import units as u
 from glue.core import BaseData
-from glue.core.subset import Subset
+from glue.core.subset import Subset, RoiSubsetState
+from glue.core.subset_group import GroupedSubset
 from glue.config import data_translator
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from glue.core.exceptions import IncompatibleAttribute
@@ -87,7 +88,13 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
             closest_label = ''
             closest_distance = None
             for lyr in self.state.layers:
-                if ((not isinstance(lyr.layer, BaseData)) or (lyr.layer.ndim not in (1, 3))
+                if not lyr.visible:
+                    continue
+                if isinstance(lyr.layer, GroupedSubset):
+                    if not isinstance(lyr.layer.subset_state, RoiSubsetState):
+                        # then this is a SPECTRAL subset
+                        continue
+                elif ((not isinstance(lyr.layer, BaseData)) or (lyr.layer.ndim not in (1, 3))
                         or (not lyr.visible)):
                     continue
 
@@ -99,7 +106,8 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
                     if cache_key in self.jdaviz_app._get_object_cache:
                         sp = self.jdaviz_app._get_object_cache[cache_key]
                     else:
-                        sp = lyr.layer.get_object(cls=Spectrum1D, statistic=statistic)
+                        sp = self.jdaviz_app.get_data_from_viewer('spectrum-viewer',
+                                                                  lyr.layer.label)
                         self.jdaviz_app._get_object_cache[cache_key] = sp
 
                     # Out of range in spectral axis.
@@ -120,10 +128,11 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
                         closest_flux = cur_flux
                         closest_maxsize = int(np.ceil(np.log10(sp.spectral_axis.size))) + 3
                         closest_label = self.jdaviz_app.state.layer_icons.get(lyr.layer.label)
-                except Exception:  # Something is loaded but not the right thing # pragma: no cover
-                    sp = None
+                except Exception:  # nosec
+                    # Something is loaded but not the right thing
+                    continue
 
-            if sp is None or closest_wave is None:
+            if closest_wave is None:
                 self.label_mouseover.icon = ""
                 self.label_mouseover.pixel = ""
                 self.label_mouseover.reset_coords_display()
