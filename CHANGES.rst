@@ -1,4 +1,85 @@
-3.2 (unreleased)
+3.3 (unreleased)
+================
+
+New Features
+------------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+API Changes
+-----------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+Other Changes and Additions
+---------------------------
+
+3.2.1 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+3.2 (2023-01-04)
 ================
 
 New Features
@@ -92,9 +173,6 @@ Specviz
 
 - ``SpecViz`` is deprecated, use ``Specviz``. [#1809]
 
-Specviz2d
-^^^^^^^^^
-
 Bug Fixes
 ---------
 
@@ -123,36 +201,6 @@ Mosviz
 - ``mosviz_row`` metadata now included in NIRISS-parsed 1D spectra. [#1836]
 
 - Now loads NIRCam direct image properly when loading a directory. [#1948]
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
-
-Other Changes and Additions
----------------------------
-
-3.1.3 (unreleased)
-==================
-
-Bug Fixes
----------
-
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
 
 3.1.2 (2022-12-20)
 ==================
