@@ -12,6 +12,7 @@ __all__ = ['CoordsInfo']
 class CoordsInfo(TemplateMixin):
     template_file = __file__, "coords_info.vue"
     icon = Unicode("").tag(sync=True)
+    pixel_prefix = Unicode("Pixel").tag(sync=True)
     pixel = Unicode("").tag(sync=True)
     value = Unicode("").tag(sync=True)
     world_label_prefix = Unicode("\u00A0").tag(sync=True)
@@ -47,6 +48,7 @@ class CoordsInfo(TemplateMixin):
         return self._marks
 
     def reset_coords_display(self):
+        self.pixel_prefix = "Pixel"
         self.world_label_prefix = '\u00A0'
         self.world_label_prefix_2 = '\u00A0'
         self.world_label_icrs = '\u00A0'
@@ -69,6 +71,7 @@ class CoordsInfo(TemplateMixin):
         if "nan" in (world_ra, world_dec, world_ra_deg, world_dec_deg):
             self.reset_coords_display()
         else:
+            self.pixel_prefix = 'Pixel'
             self.world_label_prefix = 'World'
             self.world_label_icrs = '(ICRS)'
             self.world_label_deg = '(deg)'

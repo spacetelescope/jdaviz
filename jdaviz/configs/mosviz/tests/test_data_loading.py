@@ -218,13 +218,11 @@ def test_load_single_image_multi_spec(mosviz_helper, mos_image, spectrum1d, mos_
     assert spec2d_viewer.label_mouseover.icon == 'b'
 
     spec1d_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 7000, 'y': 170}})
-    assert spec1d_viewer.label_mouseover.pixel == 'x=04.0'
+    assert spec1d_viewer.label_mouseover.pixel == '7.00000e+03, 1.70000e+02'
     assert spec1d_viewer.label_mouseover.world_label_prefix == 'Wave'
-    assert spec1d_viewer.label_mouseover.world_ra == '6.88889e+03'
-    assert spec1d_viewer.label_mouseover.world_dec == 'Angstrom'
+    assert spec1d_viewer.label_mouseover.world_ra == '6.88889e+03 Angstrom (4 pix)'
     assert spec1d_viewer.label_mouseover.world_label_prefix_2 == 'Flux'
-    assert spec1d_viewer.label_mouseover.world_ra_deg == '1.35436e+01'
-    assert spec1d_viewer.label_mouseover.world_dec_deg == 'Jy'
+    assert spec1d_viewer.label_mouseover.world_ra_deg == '1.35436e+01 Jy'
     assert spec1d_viewer.label_mouseover.icon == 'c'
 
 

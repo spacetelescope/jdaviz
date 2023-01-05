@@ -7,7 +7,7 @@
       <table>
         <tr>
           <td colspan="4" :style="unreliable_pixel ? 'color: #B8B8B8' : ''">
-            <b v-if="pixel">Pixel </b>{{ pixel }}&nbsp;&nbsp;
+            <b v-if="pixel">{{ pixel_prefix }} </b>{{ pixel }}&nbsp;&nbsp;
             <b v-if="value">Value </b>{{ value }}
           </td>
         </tr>

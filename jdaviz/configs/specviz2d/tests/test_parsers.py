@@ -80,13 +80,11 @@ def test_2d_parser_no_unit(specviz2d_helper, mos_spectrum2d):
 
     viewer_1d = specviz2d_helper.app.get_viewer('spectrum-viewer')
     viewer_1d.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 6.5, 'y': 3}})
-    assert viewer_1d.label_mouseover.pixel == 'x=006.0'
+    assert viewer_1d.label_mouseover.pixel == '6.50000e+00, 3.00000e+00'
     assert viewer_1d.label_mouseover.world_label_prefix == 'Wave'
-    assert viewer_1d.label_mouseover.world_ra == '6.00000e+00'
-    assert viewer_1d.label_mouseover.world_dec == 'pix'
+    assert viewer_1d.label_mouseover.world_ra == '6.00000e+00 pix'
     assert viewer_1d.label_mouseover.world_label_prefix_2 == 'Flux'
-    assert viewer_1d.label_mouseover.world_ra_deg == '-3.59571e+00'
-    assert viewer_1d.label_mouseover.world_dec_deg == ''
+    assert viewer_1d.label_mouseover.world_ra_deg == '-3.59571e+00 '  # extra space for no unit
     assert viewer_1d.label_mouseover.icon == 'b'
 
 

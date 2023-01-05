@@ -69,23 +69,19 @@ def test_linking_after_spectral_smooth(cubeviz_helper, spectrum1d_cube):
     # to another, depending on which one is closer.
 
     spec_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 4.6236e-7, 'y': 60}})
-    assert spec_viewer.label_mouseover.pixel == 'x=01.0'
+    assert spec_viewer.label_mouseover.pixel == '4.62360e-07, 6.00000e+01'
     assert spec_viewer.label_mouseover.world_label_prefix == 'Wave'
-    assert spec_viewer.label_mouseover.world_ra == '4.62360e-07'
-    assert spec_viewer.label_mouseover.world_dec == 'm'
+    assert spec_viewer.label_mouseover.world_ra == '4.62360e-07 m (1 pix)'
     assert spec_viewer.label_mouseover.world_label_prefix_2 == 'Flux'
-    assert spec_viewer.label_mouseover.world_ra_deg == '9.20000e+01'
-    assert spec_viewer.label_mouseover.world_dec_deg == 'Jy'
+    assert spec_viewer.label_mouseover.world_ra_deg == '9.20000e+01 Jy'
     assert spec_viewer.label_mouseover.icon == 'a'
 
     spec_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 4.6236e-7, 'y': 20}})
-    assert spec_viewer.label_mouseover.pixel == 'x=01.0'
+    assert spec_viewer.label_mouseover.pixel == '4.62360e-07, 2.00000e+01'
     assert spec_viewer.label_mouseover.world_label_prefix == 'Wave'
-    assert spec_viewer.label_mouseover.world_ra == '4.62360e-07'
-    assert spec_viewer.label_mouseover.world_dec == 'm'
+    assert spec_viewer.label_mouseover.world_ra == '4.62360e-07 m (1 pix)'
     assert spec_viewer.label_mouseover.world_label_prefix_2 == 'Flux'
-    assert spec_viewer.label_mouseover.world_ra_deg == '1.47943e+01'
-    assert spec_viewer.label_mouseover.world_dec_deg == 'Jy'
+    assert spec_viewer.label_mouseover.world_ra_deg == '1.47943e+01 Jy'
     assert spec_viewer.label_mouseover.icon == 'b'
 
     # Check mouseover behavior when we hide everything.
@@ -142,23 +138,18 @@ def test_spectrum1d_smooth(specviz_helper, spectrum1d):
     # to another, depending on which one is closer.
 
     spec_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 6400, 'y': 120}})
-    assert spec_viewer.label_mouseover.pixel == 'x=02.0'
+    assert spec_viewer.label_mouseover.pixel == '6.40000e+03, 1.20000e+02'
     assert spec_viewer.label_mouseover.world_label_prefix == 'Wave'
-    assert spec_viewer.label_mouseover.world_ra == '6.44444e+03'
-    assert spec_viewer.label_mouseover.world_dec == 'Angstrom'
+    assert spec_viewer.label_mouseover.world_ra == '6.44444e+03 Angstrom (2 pix)'
     assert spec_viewer.label_mouseover.world_label_prefix_2 == 'Flux'
-    assert spec_viewer.label_mouseover.world_ra_deg == '1.35366e+01'
-    assert spec_viewer.label_mouseover.world_dec_deg == 'Jy'
+    assert spec_viewer.label_mouseover.world_ra_deg == '1.35366e+01 Jy'
     assert spec_viewer.label_mouseover.icon == 'a'
 
     spec_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 6400, 'y': 5}})
-    assert spec_viewer.label_mouseover.pixel == 'x=02.0'
     assert spec_viewer.label_mouseover.world_label_prefix == 'Wave'
-    assert spec_viewer.label_mouseover.world_ra == '6.44444e+03'
-    assert spec_viewer.label_mouseover.world_dec == 'Angstrom'
+    assert spec_viewer.label_mouseover.world_ra == '6.44444e+03 Angstrom (2 pix)'
     assert spec_viewer.label_mouseover.world_label_prefix_2 == 'Flux'
-    assert spec_viewer.label_mouseover.world_ra_deg == '5.34688e+00'
-    assert spec_viewer.label_mouseover.world_dec_deg == 'Jy'
+    assert spec_viewer.label_mouseover.world_ra_deg == '5.34688e+00 Jy'
     assert spec_viewer.label_mouseover.icon == 'b'
 
     # Out-of-bounds shows nothing.
