@@ -43,7 +43,9 @@ class CoordsInfo(TemplateMixin):
         # for new viewers if dynamic creation of spectral viewers is ever supported)
         for id, viewer in self.app._viewer_store.items():
             if isinstance(viewer, SpecvizProfileView):
-                self._marks[id] = PluginScatter(viewer, visible=False)
+                self._marks[id] = PluginScatter(viewer,
+                                                marker='rectangle', stroke_width=1,
+                                                visible=False)
                 viewer.figure.marks = viewer.figure.marks + [self._marks[id]]
         return self._marks
 
