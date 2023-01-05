@@ -29,7 +29,7 @@ __all__ = ['LineListTool']
 
 @tray_registry(
     'g-line-list', label="Line Lists",
-    viewer_requirements=['spectrum', 'image', 'flux']
+    viewer_requirements=['spectrum']
 )
 class LineListTool(PluginTemplateMixin):
     dialog = Bool(False).tag(sync=True)
@@ -73,9 +73,6 @@ class LineListTool(PluginTemplateMixin):
         )
         self._default_flux_viewer_reference_name = kwargs.get(
             "flux_viewer_reference_name", "flux-viewer"
-        )
-        self._default_image_viewer_reference_name = kwargs.get(
-            "image_viewer_reference_name", "image-viewer"
         )
         self._viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
         self._spectrum1d = None

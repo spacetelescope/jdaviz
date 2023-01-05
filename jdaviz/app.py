@@ -1167,6 +1167,7 @@ class Application(VuetifyTemplate, HubListener):
         )
 
         spectral_viewers = (SpecvizProfileView, CubevizProfileView)
+        spectral_2d_viewers = (MosvizProfile2DView, )
         table_viewers = (MosvizTableViewer, )
         image_viewers = (MosvizProfile2DView, CubevizImageView, SpectralExtraction)
         flux_viewers = (CubevizImageView, )
@@ -1179,6 +1180,9 @@ class Application(VuetifyTemplate, HubListener):
             )
             if require_spectrum_viewer:
                 if isinstance(self._viewer_store[vid], spectral_viewers) and is_returnable:
+                    return viewer_item['reference']
+            elif require_spectrum_2d_viewer:
+                if isinstance(self._viewer_store[vid], spectral_2d_viewers) and is_returnable:
                     return viewer_item['reference']
             elif require_table_viewer:
                 if isinstance(self._viewer_store[vid], table_viewers) and is_returnable:
