@@ -7,6 +7,8 @@ New Features
 Cubeviz
 ^^^^^^^
 
+- Improved mouseover info display for spectrum viewer. [#1894]
+
 Imviz
 ^^^^^
 
@@ -14,11 +16,17 @@ Mosviz
 ^^^^^^
 - Reliably retrieves identifier using each datasets' metadata entry. [#1851]
 
+- Improved mouseover info display for spectrum viewer. [#1894]
+
 Specviz
 ^^^^^^^
 
+- Improved mouseover info display for spectrum viewer. [#1894]
+
 Specviz2d
 ^^^^^^^^^
+
+- Improved mouseover info display for spectrum viewer. [#1894]
 
 API Changes
 -----------
@@ -114,8 +122,6 @@ Cubeviz
 
 - Added Slice plugin player control buttons. [#1848]
 
-- Improved mouseover info display for spectrum viewer. [#1894]
-
 Imviz
 ^^^^^
 
@@ -136,16 +142,12 @@ Mosviz
 
 - ``load_data`` method can now load JWST NIRCam and NIRSpec level 2 data. [#1835]
 
-- Improved mouseover info display for spectrum viewer. [#1894]
-
 Specviz
 ^^^^^^^
 
 - Spectrum viewer now shows X and Y values under cursor. [#1759]
 
 - Switch to opt-in concatenation for multi-order x1d spectra. [#1659]
-
-- Improved mouseover info display for spectrum viewer. [#1894]
 
 Specviz2d
 ^^^^^^^^^
@@ -154,8 +156,6 @@ Specviz2d
   with Polynomial, Spline, and Legendre options. [#1889]
 
 - Add dropdown for choosing background statistic (average or median). [#1922]
-
-- Improved mouseover info display for spectrum viewer. [#1894]
 
 API Changes
 -----------
