@@ -492,8 +492,8 @@ def mos_meta_parser(app, data_obj=None, ids=None):
 
         # source name and coordinates are taken from image headers, if present
         if "Images" in current_columns:
-            ra = query_metadata_by_component(app, "OBJ_RA", "Images", float("nan"))
-            dec = query_metadata_by_component(app, "OBJ_DEC", "Images", float("nan"))
+            ra = query_metadata_by_component(app, "OBJ_RA", "Images", FALLBACK_NAME)
+            dec = query_metadata_by_component(app, "OBJ_DEC", "Images", FALLBACK_NAME)
             _add_to_table(app, ra, "R.A.")
             _add_to_table(app, dec, "Dec.")
 
