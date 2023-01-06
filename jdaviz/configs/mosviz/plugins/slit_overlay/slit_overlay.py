@@ -43,7 +43,7 @@ def jwst_header_to_skyregion(header):
 
 
 @tray_registry('g-slit-overlay', label="Slit Overlay",
-               viewer_requirements=['table', 'flux', 'spectrum-2d', 'spectrum'])
+               viewer_requirements=['table', 'image', 'spectrum-2d', 'spectrum'])
 class SlitOverlay(PluginTemplateMixin):
     template_file = __file__, "slit_overlay.vue"
     visible = Bool(True).tag(sync=True)
@@ -147,7 +147,7 @@ class SlitOverlay(PluginTemplateMixin):
     def remove_slit_overlay(self):
         if self._slit_overlay_mark is not None:
             image_figure = self.app.get_viewer(
-                self._default_flux_viewer_reference_name
+                self._default_image_viewer_reference_name
             ).figure
             # We need to do the following instead of just removing directly on
             # the marks otherwise traitlets doesn't register a change in the
