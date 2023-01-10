@@ -12,6 +12,7 @@ Imviz
 
 Mosviz
 ^^^^^^
+- Reliably retrieves identifier using each datasets' metadata entry. [#1851]
 
 Specviz
 ^^^^^^^
