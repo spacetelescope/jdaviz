@@ -573,10 +573,10 @@ def _get_source_identifiers(app, data_type, hdus=None, filepaths=None,
     ids = None
     try:
         ids = query_metadata_by_component(app, keys=header_keys, data_type=data_type)
+        if ids is None or set(ids) == set(FALLBACK_NAME):
+            raise LookupError
     except Exception:
-        pass
-    # If we fellback for ALL sources, try searching by hdu, if provided any
-    if ids is None or set(ids) == set(FALLBACK_NAME):
+        # If we fellback for ALL sources, try searching by hdu, if provided any
         if hdus is not None:
             ids = _get_source_identifiers_by_hdu(hdus, filepaths, header_keys)
         # If we weren't given hdus to fallback on, then just return our Fallback value
