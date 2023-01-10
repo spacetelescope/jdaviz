@@ -90,7 +90,7 @@ class Mosviz(ConfigHelper, LineListMixin):
     def _initialize_table(self, label="MOS Table", table_viewer_reference_name='table-viewer'):
         '''
         Setup the MOS Table data container and add it to the viewer
-        
+
         Parameters
         ----------
         label : str

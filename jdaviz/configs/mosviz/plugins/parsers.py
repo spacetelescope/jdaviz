@@ -483,11 +483,11 @@ def mos_meta_parser(app, data_obj=None, ids=None):
 
         # metadata taken from 2d spectra
         if "2D Spectra" in current_columns:
-            filters = query_metadata_by_component(app, "FILTER", "2D Spectra", FALLBACK_NAME) 
+            filters = query_metadata_by_component(app, "FILTER", "2D Spectra", FALLBACK_NAME)
             gratings = query_metadata_by_component(app, "GRATING", "2D Spectra", FALLBACK_NAME)
 
             filters_gratings = [(f+'/'+g) for f, g in zip(filters, gratings)]
-            
+
             _add_to_table(app, filters_gratings, "Filter/Grating")
 
         # source name and coordinates are taken from image headers, if present
@@ -576,7 +576,7 @@ def _get_source_identifiers(app, data_type, hdus=None, filepaths=None,
     except Exception:
         pass
     # If we fellback for ALL sources, try searching by hdu, if provided any
-    if ids == None or set(ids) == set(FALLBACK_NAME):
+    if ids is None or set(ids) == set(FALLBACK_NAME):
         if hdus is not None:
             ids = _get_source_identifiers_by_hdu(hdus, filepaths, header_keys)
         # If we weren't given hdus to fallback on, then just return our Fallback value
@@ -612,7 +612,7 @@ def _get_source_identifiers_by_hdu(data_obj, filepaths=None,
     # one for the upcoming loop
     if not (isinstance(header_keys, Iterable) and not isinstance(header_keys, (str, dict))):
         header_keys = [header_keys]
- 
+
     # Prepare HDUs:
     # Coerce into list if needed
     if not isinstance(data_obj, (list, tuple, SpectrumCollection)):
