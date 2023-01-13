@@ -10,6 +10,7 @@ from astropy.coordinates import SkyCoord
 from astropy.table import QTable
 from astropy.utils.decorators import deprecated
 from echo import delay_callback
+from glue.core.data import Data
 from glue.core.exceptions import IncompatibleAttribute
 
 from jdaviz.core.helpers import ConfigHelper
@@ -83,7 +84,25 @@ class Mosviz(ConfigHelper, LineListMixin):
 
         self._update_in_progress = False
 
+        self._initialize_table()
         self._default_visible_columns = []
+
+    def _initialize_table(self, label="MOS Table", table_viewer_reference_name='table-viewer'):
+        '''
+        Setup the MOS Table data container and add it to the viewer
+
+        Parameters
+        ----------
+        label : str
+            The Glue Data Label to reference the table data as
+        table_viewer_reference_name : str
+            The reference name of the table viewer to add this data to
+        '''
+        table_data = Data(label=label)
+        self.app.add_data(table_data, notify_done=False)
+
+        # Add the table to the table viewer
+        self.app.get_viewer(table_viewer_reference_name).add_data(table_data)
 
     def _row_lock_changed(self, msg):
         self._freeze_states_on_row_change = msg.is_locked
@@ -378,7 +397,7 @@ class Mosviz(ConfigHelper, LineListMixin):
 
         table_data = self.app.data_collection['MOS Table']
         redshifts = np.asarray([_get_sp_attribute(table_data, row, 'redshift', 0)
-                                for row in range(table_data.size)])
+                                for row in range(int(table_data.size))])
         self._add_or_update_column(column_name='Redshift', data=redshifts,
                                    show=np.any(redshifts != 0))
 
@@ -458,18 +477,14 @@ class Mosviz(ConfigHelper, LineListMixin):
             else:
                 self.load_images(images, images_label)
 
-            if images is not None and not self._shared_image:
-                self.load_metadata(images, ids=images)
-
             self.load_2d_spectra(spectra_2d, spectra_2d_label)
             self.load_1d_spectra(spectra_1d, spectra_1d_label)
-            self.load_metadata(spectra_2d, spectra=True)
+            self.load_metadata()
 
         elif spectra_1d is not None and spectra_2d is not None:
-            self.load_2d_spectra(spectra_2d, spectra_2d_label)
             self.load_1d_spectra(spectra_1d, spectra_1d_label)
-            self.load_metadata(spectra_2d, spectra=True)
-            self.load_metadata(spectra_1d, spectra=True, sp1d=True, ids=spectra_1d)
+            self.load_2d_spectra(spectra_2d, spectra_2d_label)
+            self.load_metadata()
 
         elif spectra_1d and images:
             self.load_1d_spectra(spectra_1d, spectra_1d_label)
@@ -566,25 +581,11 @@ class Mosviz(ConfigHelper, LineListMixin):
         """
         self.load_data(directory=directory, instrument=instrument)
 
-    def load_metadata(self, data_obj, ids=None, spectra=False, sp1d=False):
+    def load_metadata(self):
         """
-        Load and parse a set of FITS objects to extract any relevant metadata.
-
-        Parameters
-        ----------
-        data_obj : list or str
-            A list of FITS objects with parseable headers. Alternatively,
-            can be a string file path.
-        ids : list of str
-            A list with identification strings to be used to label mosviz
-            table rows. Typically, a list with file names.
-        spectra : Boolean
-            In case the FITS objects are related to spectral data.
-        sp1d : Boolean
-            In case the FITS objects are related to 1d spectral data.
+        Parse the internal meta for our expected information
         """
-        self.app.load_data(data_obj, ids=ids, spectra=spectra, sp1d=sp1d,
-                           parser_reference="mosviz-metadata-parser")
+        self.app.load_data(file_obj=None, parser_reference="mosviz-metadata-parser")
 
     def load_1d_spectra(self, data_obj, data_labels=None):
         """

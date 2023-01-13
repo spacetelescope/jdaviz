@@ -405,7 +405,11 @@ class Application(VuetifyTemplate, HubListener):
 
         dc = self.data_collection
         # This will need to be changed for cubeviz to support multiple cubes
-        ref_data = dc[reference_data] if reference_data else dc[0]
+        default_refdata_index = 0
+        if self.config == 'mosviz':
+            # In Mosviz, first data is always MOS Table. Use the next data
+            default_refdata_index = 1
+        ref_data = dc[reference_data] if reference_data else dc[default_refdata_index]
         linked_data = dc[data_to_be_linked] if data_to_be_linked else dc[-1]
 
         if 'Trace' in linked_data.meta:

@@ -5,7 +5,6 @@ import os
 from pathlib import Path
 import warnings
 
-import numpy as np
 from astropy import units as u
 from astropy.io import fits
 from astropy.io.registry import IORegistryError
@@ -161,6 +160,11 @@ def mos_nirspec_directory_parser(app, data_obj, data_labels=None):
         elif 's2d' in file_path:
             spectra_2d.append(file_path)
 
+    spectra_1d.sort()
+    spectra_2d.sort()
+    mos_spec1d_parser(app, spectra_1d)
+    mos_spec2d_parser(app, spectra_2d)
+
     # Load images, if present
     image_path = None
 
@@ -175,7 +179,6 @@ def mos_nirspec_directory_parser(app, data_obj, data_labels=None):
         # The amount of images needs to be equal to the amount of rows
         # of the other columns in the table
         if len(images) == len(spectra_1d):
-            mos_meta_parser(app, images, ids=images)
             mos_image_parser(app, images)
         else:
             msg = ("The number of images in this directory does not match the"
@@ -184,19 +187,7 @@ def mos_nirspec_directory_parser(app, data_obj, data_labels=None):
             msg = SnackbarMessage(msg, color='warning', sender=app)
             app.hub.broadcast(msg)
 
-    spectra_1d.sort()
-    spectra_2d.sort()
-    n_1d_loaded = mos_spec1d_parser(app, spectra_1d)
-    n_2d_loaded = mos_spec2d_parser(app, spectra_2d)
-    # Handle applying metadata to multiple rows, for multi-object files
-    repeat_1d = 1
-    repeat_2d = 1
-    if len(spectra_1d) == 1 and n_1d_loaded > 1:
-        repeat_1d = n_1d_loaded
-    if len(spectra_2d) == 1 and n_2d_loaded > 1:
-        repeat_2d = n_2d_loaded
-    mos_meta_parser(app, spectra_2d, spectra=True, repeat=repeat_2d)
-    mos_meta_parser(app, spectra_1d, spectra=True, sp1d=True, repeat=repeat_1d)
+    mos_meta_parser(app)
 
 
 @data_parser_registry("mosviz-spec1d-parser")
@@ -463,90 +454,148 @@ def mos_image_parser(app, data_obj, data_labels=None, share_image=0,
 
 
 @data_parser_registry("mosviz-metadata-parser")
-def mos_meta_parser(app, data_obj, ids=None, spectra=False, sp1d=False, repeat=1):
+def mos_meta_parser(app, data_obj=None, ids=None):
     """
-    Attempts to parse MOS FITS header metadata.
+    Extracts specific metadata from each data entry's .meta
 
     Parameters
     ----------
     app : `~jdaviz.app.Application`
         The application-level object used to reference the viewers.
     data_obj : str or list or HDUList
-        File path, list, or an HDUList to extract metadata from.
+        Optional fallback arg for Identifier column
+        File path, list, or an HDUList to extract metadata from if
+        metadata isn't found in Data.meta, search for metadata
     ids : list of str
+        Optional fallback arg for Identifier column
         A list with identification strings to be used to label mosviz
-        table rows. Typically, a list with file names.
-    spectra : bool, optional
-        In case the FITS objects are related to spectral data.
-    sp1d : bool, optional
-        Indicates if the input ``data_obj`` is a 1D rather than 2D spectrum.
-    repeat : int, optional
-        If greater than 1, indicates that the input file metadata applies
-        to multiple table rows.
+        table rows. Typically, a list with file names. Used in combination
+        with data_obj for fallback
     """
-
-    if data_obj is None:
-        return
-
-    # Coerce into list if needed
-    if not isinstance(data_obj, (list, tuple, SpectrumCollection)):
-        data_obj = [data_obj]
-
-    data_obj = [fits.open(x) if _check_is_file(x) else x for x in data_obj]
-
-    if np.all([isinstance(x, fits.HDUList) for x in data_obj]):
-
-        # metadata taken from 2d spectra
-        if spectra and not sp1d:
-            filters = [x[0].header.get("FILTER", FALLBACK_NAME) for x in data_obj]
-            gratings = [x[0].header.get("GRATING", FALLBACK_NAME) for x in data_obj]
-
-            filters_gratings = [(f+'/'+g) for f, g in zip(filters, gratings)] * repeat
-
-            [x.close() for x in data_obj]
-
-        # source name can be taken from 1d spectra
-        elif spectra and sp1d:
-            names = _get_source_identifiers_by_hdu([x[0] for x in data_obj], ids) * repeat
-
-        # source name and coordinates are taken from image headers, if present
-        else:
-            ra = [x[0].header.get("OBJ_RA", float("nan")) for x in data_obj] * repeat
-            dec = [x[0].header.get("OBJ_DEC", float("nan")) for x in data_obj] * repeat
-            names = _get_source_identifiers_by_hdu([x[0] for x in data_obj], ids) * repeat
-
-        [x.close() for x in data_obj]
-
-    else:
-        # TODO: Come up with more robust metadata parsing, perhaps from
-        # the spectra files.
-        warnings.warn("Could not parse metadata from input images.")
-        return
 
     with app.data_collection.delay_link_manager_update():
 
-        # this conditional must mirror the one above
-        if spectra and not sp1d:
+        current_columns = [comp.label for comp in app.data_collection['MOS Table'].main_components]
+        # source name can be taken from 1d spectra
+        if "1D Spectra" in current_columns:
+            names = _get_source_identifiers(app, "1D Spectra", data_obj, ids)
+            _add_to_table(app, names, "Identifier")
+
+        # metadata taken from 2d spectra
+        if "2D Spectra" in current_columns:
+            filters = query_metadata_by_component(app, "FILTER", "2D Spectra", FALLBACK_NAME)
+            gratings = query_metadata_by_component(app, "GRATING", "2D Spectra", FALLBACK_NAME)
+
+            filters_gratings = [(f+'/'+g) for f, g in zip(filters, gratings)]
+
             _add_to_table(app, filters_gratings, "Filter/Grating")
-        elif spectra and sp1d:
-            _add_to_table(app, names, "Identifier")
-        else:
-            _add_to_table(app, names, "Identifier")
+
+        # source name and coordinates are taken from image headers, if present
+        if "Images" in current_columns:
+            ra = query_metadata_by_component(app, "OBJ_RA", "Images", float("nan"))
+            dec = query_metadata_by_component(app, "OBJ_DEC", "Images", float("nan"))
             _add_to_table(app, ra, "R.A.")
             _add_to_table(app, dec, "Dec.")
 
 
-def _get_source_identifiers_by_hdu(hdus, filepaths=None,
+def query_metadata_by_component(app, keys, data_type, fallback=FALLBACK_NAME):
+    """
+    Searches and returns metadata values for a specific data component (type)
+
+    If multiple keys are specified, the first found will be returned based on the order
+    keys are provided
+
+    Parameters
+    ----------
+    app : `~jdaviz.app.Application`
+        The application-level object used to reference the viewers.
+    keys : str or list
+        Metadata keywords to search for
+    data_type : str
+        The type of data to search for the Source ID keywords in. Can be one of:
+        "1D Spectra", "2D Spectra", "Images"
+    fallback : str
+        The value to return in the event the keyword could not be found
+    """
+
+    metadata_list = list()
+    # If the user only provided a key that's not already in a container or list, put it in
+    # one for the upcoming loop
+    if not isinstance(keys, Iterable) or isinstance(keys, str):
+        keys = [keys]
+
+    for data in app._jdaviz_helper.get_column(data_type):
+        meta = app.data_collection[data].meta
+
+        # Search all given keys to see if they exist. Return the first hit
+        key_found = False
+        for key in keys:
+            if key in meta:
+                metadata_list.append(meta.get(key))
+                key_found = True
+                break
+            elif key in meta.get(PRIHDR_KEY, ()):
+                metadata_list.append(meta[PRIHDR_KEY].get(key))
+                key_found = True
+                break
+
+        # If none exist, default to fallback
+        if not key_found:
+            metadata_list.append(fallback)
+
+    return metadata_list
+
+
+def _get_source_identifiers(app, data_type, hdus=None, filepaths=None,
+                            header_keys=['SOURCEID', 'OBJECT']):
+    """
+    Helper method to search for the Source Identifier fields.
+    Searches the metadata first, then falls back to manually searching hdus (if given any).
+    Missing Source IDs should not prevent mosviz from loading
+
+    Parameters
+    ----------
+    app : `~jdaviz.app.Application`
+        The application-level object used to reference the viewers.
+    data_type : str
+        The type of data to search for the Source ID keywords in. Can be one of:
+        "1D Spectra", "2D Spectra", "Images"
+    hdus : str or list or HDUList
+        Optional fallback arg
+        File path, list, or an HDUList to extract metadata from if
+        metadata isn't found in Data.meta, search for metadata
+    filepaths : list of str
+        Optional fallback arg
+        A list with identification strings to be used to label mosviz
+        table rows. Typically, a list with file names. Used in combination
+        with data_obj for fallback
+    """
+    ids = None
+    try:
+        ids = query_metadata_by_component(app, keys=header_keys, data_type=data_type)
+        if ids is None or set(ids) == set(FALLBACK_NAME):
+            raise LookupError
+    except Exception:
+        # If we fellback for ALL sources, try searching by hdu, if provided any
+        if hdus is not None:
+            ids = _get_source_identifiers_by_hdu(hdus, filepaths, header_keys)
+        # If we weren't given hdus to fallback on, then just return our Fallback value
+        else:
+            ids = [FALLBACK_NAME] * len(app._jdaviz_helper.get_column(data_type))
+    return ids
+
+
+def _get_source_identifiers_by_hdu(data_obj, filepaths=None,
                                    header_keys=['SOURCEID', 'OBJECT'],
                                    allow_duplicates=False):
     """
     Attempts to extract a list of source identifiers via different header values.
+    Searches HDU 0 for each HDUL provided
 
     Parameters
     ----------
-    hdus : list of HDU
-        A list of HDUs (NOT an HDUList!) to check the header of. Filtering should
-        be done in advance to decide which HDUs to check against (e.g., SCI only).
+    data_obj : str or list or HDUList
+        File path, list, or an HDUList to extract metadata from.
     filepaths : list of str, optional
         A list of filepaths to fallback on if no header values are identified.
     header_keys: str or list of str, optional
@@ -563,28 +612,34 @@ def _get_source_identifiers_by_hdu(hdus, filepaths=None,
     # one for the upcoming loop
     if not (isinstance(header_keys, Iterable) and not isinstance(header_keys, (str, dict))):
         header_keys = [header_keys]
+
+    # Prepare HDUs:
+    # Coerce into list if needed
+    if not isinstance(data_obj, (list, tuple, SpectrumCollection)):
+        data_obj = [data_obj]
+    hdus = [fits.open(x)[0] if _check_is_file(x) else x for x in data_obj]
     for indx, hdu in enumerate(hdus):
         try:
-            src_name = None
             # Search all given keys to see if they exist. Return the first hit
+            key_found = False
             for key in header_keys:
                 if key in hdu.header:
+                    key_found = True
                     src_name = hdu.header.get(key)
+                    if not allow_duplicates and src_name in src_names:
+                        continue
+                    else:
+                        src_names.append(src_name)
                     break
             # If none exist, default to fallback
-            if not src_name:
-                # Fallback 1: filepath if only one is given
-                # Fallback 2: filepath at indx, if list of files given
-                # Fallback 3: If nothing else, just our fallback value
-                src_name = (
+            # Fallback 1: filepath if only one is given
+            # Fallback 2: filepath at indx, if list of files given
+            # Fallback 3: If nothing else, just our fallback value
+            if not key_found:
+                src_names.append(
                     os.path.basename(filepaths) if type(filepaths) is str
                     else os.path.basename(filepaths[indx]) if type(filepaths) is list
                     else FALLBACK_NAME)
-                src_names.append(src_name)
-                continue
-            if not allow_duplicates and src_name in src_names:
-                continue
-            src_names.append(src_name)
         except Exception:
             # Source ID lookup shouldn't ever prevent target from loading. Downgrade all errors to
             # warnings and use fallback
@@ -759,13 +814,11 @@ def mos_niriss_parser(app, data_dir, instrument=None,
             add_to_glue[image_label] = image_data
 
     # initialize lists of data to be shown in table viewer
-    source_ids = []
     ras = []
     decs = []
     image_add = []
     spec_labels_1d = []
     spec_labels_2d = []
-    filters = []
 
     # Parse 2D spectra
     file_labels_2d = [k for k in files_by_labels.keys() if k.startswith("2D")]
@@ -787,8 +840,6 @@ def mos_niriss_parser(app, data_dir, instrument=None,
                 sci_hdus = []
                 wav_hdus = {}
                 for i in range(len(temp)):
-                    if i == 0:
-                        filter = temp[0].header["FILTER"]
                     if "EXTNAME" in temp[i].header:
                         if temp[i].header["EXTNAME"] == "SCI":
                             if cat_id_dict is not None:
@@ -796,9 +847,6 @@ def mos_niriss_parser(app, data_dir, instrument=None,
                                     continue
                             sci_hdus.append(i)
                             wav_hdus[i] = ('WAVELENGTH', temp[i].header['EXTVER'])
-
-                # Now get a Spectrum1D object for each matching SCI HDU
-                source_ids.extend(_get_source_identifiers_by_hdu([temp[sci] for sci in sci_hdus]))
 
                 for sci in sci_hdus:
                     if temp[sci].header["SPORDER"] == 1:
@@ -830,6 +878,9 @@ def mos_niriss_parser(app, data_dir, instrument=None,
                         # update labels for table viewer
                         if cat_id_dict is not None:
                             ra, dec = cat_id_dict[temp[sci].header["SOURCEID"]]
+                            # Store catalog's RA/Dec entry to be available later
+                            spec2d.meta['catalog_ra'] = ra
+                            spec2d.meta['catalog_dec'] = dec
                             ras.append(ra)
                             decs.append(dec)
 
@@ -837,7 +888,6 @@ def mos_niriss_parser(app, data_dir, instrument=None,
                             image_add.append(image_dict[filter_name])
 
                         spec_labels_2d.append(label)
-                        filters.append(filter)
 
     # Parse 1D spectra
     file_labels_1d = [k for k in files_by_labels.keys() if k.startswith("1D")]
@@ -896,15 +946,19 @@ def mos_niriss_parser(app, data_dir, instrument=None,
     with app.data_collection.delay_link_manager_update():
         for label, data in add_to_glue.items():
             app.add_data(data, label, notify_done=False)
+        _add_to_table(app, spec_labels_1d, "1D Spectra")
+        _add_to_table(app, spec_labels_2d, "2D Spectra")
+        _add_to_table(app, image_add, "Images")
 
         # We then populate the table inside this context manager as
         # _add_to_table does operations that also trigger link manager updates.
-        _add_to_table(app, source_ids, "Identifier")
-        _add_to_table(app, ras, "R.A.")
-        _add_to_table(app, decs, "Dec.")
-        _add_to_table(app, image_add, "Images")
-        _add_to_table(app, spec_labels_1d, "1D Spectra")
-        _add_to_table(app, spec_labels_2d, "2D Spectra")
-        _add_to_table(app, filters, "Filter/Grating")
+        meta_names = _get_source_identifiers(app, "2D Spectra")
+        _add_to_table(app, meta_names, "Identifier")
+        meta_filters = query_metadata_by_component(app, 'FILTER', "2D Spectra")
+        _add_to_table(app, meta_filters, "Filter/Grating")
+        meta_ra = query_metadata_by_component(app, 'catalog_ra', "2D Spectra")
+        _add_to_table(app, meta_ra, "R.A.")
+        meta_dec = query_metadata_by_component(app, 'catalog_dec', "2D Spectra")
+        _add_to_table(app, meta_dec, "Dec.")
 
     app.get_viewer(table_viewer_reference_name)._shared_image = True
