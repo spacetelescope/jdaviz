@@ -1,11 +1,11 @@
 from traitlets import Any
 
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import TemplateMixin, ViewerSelectMixin
+from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin
 
 
 @tray_registry('imviz-rotate-image', label="Simple Image Rotation")
-class RotateImageSimple(TemplateMixin, ViewerSelectMixin):
+class RotateImageSimple(PluginTemplateMixin, ViewerSelectMixin):
     template_file = __file__, "rotate_image.vue"
 
     angle = Any(0).tag(sync=True)
