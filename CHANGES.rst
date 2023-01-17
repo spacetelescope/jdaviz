@@ -74,6 +74,9 @@ Imviz
 Mosviz
 ^^^^^^
 
+- Fix broken slit overlay plugin which resulted in a snackbar error being raised complaining about
+  ``S_REGION``. [#1957]
+
 Specviz
 ^^^^^^^
 

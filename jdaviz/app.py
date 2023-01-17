@@ -1163,16 +1163,17 @@ class Application(VuetifyTemplate, HubListener):
         viewer has not yet loaded data, or e.g. ``require_spectrum_viewer``
         to require that the viewer supports spectrum visualization.
         """
+        from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
         from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
-        from jdaviz.configs.specviz2d.plugins import SpectralExtraction
         from jdaviz.configs.cubeviz.plugins.viewers import CubevizProfileView, CubevizImageView
         from jdaviz.configs.mosviz.plugins.viewers import (
             MosvizTableViewer, MosvizProfile2DView
         )
 
         spectral_viewers = (SpecvizProfileView, CubevizProfileView)
+        spectral_2d_viewers = (MosvizProfile2DView, )
         table_viewers = (MosvizTableViewer, )
-        image_viewers = (MosvizProfile2DView, CubevizImageView, SpectralExtraction)
+        image_viewers = (ImvizImageView, CubevizImageView)
         flux_viewers = (CubevizImageView, )
 
         for vid in self._viewer_store:
@@ -1183,6 +1184,9 @@ class Application(VuetifyTemplate, HubListener):
             )
             if require_spectrum_viewer:
                 if isinstance(self._viewer_store[vid], spectral_viewers) and is_returnable:
+                    return viewer_item['reference']
+            elif require_spectrum_2d_viewer:
+                if isinstance(self._viewer_store[vid], spectral_2d_viewers) and is_returnable:
                     return viewer_item['reference']
             elif require_table_viewer:
                 if isinstance(self._viewer_store[vid], table_viewers) and is_returnable:
