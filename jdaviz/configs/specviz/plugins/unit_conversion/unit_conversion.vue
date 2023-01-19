@@ -1,8 +1,9 @@
 <template>
+  <!-- To re-enable plugin, use :disabled_msg="disabled_msg" -->
   <j-tray-plugin
     description='Convert the spectral flux density and spectral axis units.'
     :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#unit-conversion'"
-    :disabled_msg="disabled_msg"
+    disabled_msg="This plugin is temporarily disabled."
     :popout_button="popout_button">
 
     <!-- for mosviz, the entries change on row change, so we want to always show the dropdown
