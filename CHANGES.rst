@@ -7,6 +7,8 @@ New Features
 Cubeviz
 ^^^^^^^
 
+- Improved mouseover info display for spectrum viewer. [#1894]
+
 Imviz
 ^^^^^
 
@@ -14,11 +16,17 @@ Mosviz
 ^^^^^^
 - Reliably retrieves identifier using each datasets' metadata entry. [#1851]
 
+- Improved mouseover info display for spectrum viewer. [#1894]
+
 Specviz
 ^^^^^^^
 
+- Improved mouseover info display for spectrum viewer. [#1894]
+
 Specviz2d
 ^^^^^^^^^
+
+- Improved mouseover info display for spectrum viewer. [#1894]
 
 API Changes
 -----------

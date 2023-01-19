@@ -41,6 +41,16 @@ data menu.
 
 .. image:: img/data_tab.png
 
+.. _specviz_cursor_info:
+
+Cursor Information
+==================
+
+By moving your cursor along the spectrum viewer, you will be able to see information on the
+cursor position as well as the spectral axis value, pixel, and flux of the closest data point
+to the cursor.
+This information is displayed in the top bar of the UI, on the middle-right side.
+
 Home
 ====
 

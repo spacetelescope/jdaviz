@@ -13,7 +13,7 @@ from jdaviz.core.events import (SliceToolStateMessage, LineIdentifyMessage,
 
 __all__ = ['OffscreenLinesMarks', 'BaseSpectrumVerticalLine', 'SpectralLine',
            'SliceIndicatorMarks', 'ShadowMixin', 'ShadowLine', 'ShadowLabelFixedY',
-           'PluginLine',
+           'PluginMark', 'PluginLine', 'PluginScatter',
            'LineAnalysisContinuum', 'LineAnalysisContinuumCenter',
            'LineAnalysisContinuumLeft', 'LineAnalysisContinuumRight',
            'LineUncertainties', 'ScatterMask', 'SelectedSpaxel']
@@ -484,17 +484,29 @@ class ShadowLabelFixedY(Label, ShadowMixin):
             self._update_align()
 
 
-class PluginLine(Lines, HubListener):
-    def __init__(self, viewer, x=[], y=[], **kwargs):
-        # color is same blue as import button
-        super().__init__(x=x, y=y, colors=["#007BA1"], scales=viewer.scales, **kwargs)
-
+class PluginMark():
     def update_xy(self, x, y):
         self.x = np.asarray(x)
         self.y = np.asarray(y)
 
+    def append_xy(self, x, y):
+        self.x = np.append(self.x, x)
+        self.y = np.append(self.y, y)
+
     def clear(self):
         self.update_xy([], [])
+
+
+class PluginLine(Lines, PluginMark, HubListener):
+    def __init__(self, viewer, x=[], y=[], **kwargs):
+        # color is same blue as import button
+        super().__init__(x=x, y=y, colors=["#007BA1"], scales=viewer.scales, **kwargs)
+
+
+class PluginScatter(Scatter, PluginMark, HubListener):
+    def __init__(self, viewer, x=[], y=[], **kwargs):
+        # color is same blue as import button
+        super().__init__(x=x, y=y, colors=["#007BA1"], scales=viewer.scales, **kwargs)
 
 
 class LineAnalysisContinuum(PluginLine):

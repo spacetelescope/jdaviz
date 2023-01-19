@@ -1,17 +1,17 @@
-import numpy as np
+import math
 import warnings
 
+import numpy as np
+from astropy import table
+from astropy import units as u
 from glue.core import BaseData
-from glue.core.subset import Subset
+from glue.core.subset import Subset, RoiSubsetState
+from glue.core.subset_group import GroupedSubset
 from glue.config import data_translator
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from glue.core.exceptions import IncompatibleAttribute
-
-from astropy import table
-from specutils import Spectrum1D
 from matplotlib.colors import cnames
-from astropy import units as u
-
+from specutils import Spectrum1D
 
 from jdaviz.core.events import SpectralMarksChangedMessage, LineIdentifyMessage
 from jdaviz.core.registries import viewer_registry
@@ -66,6 +66,9 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
                 return
 
         if data['event'] == 'mousemove':
+            if len(self.jdaviz_app.data_collection) < 1:
+                return
+
             # Extract data coordinates - these are pixels in the reference image
             x = data['domain']['x']
             y = data['domain']['y']
@@ -76,19 +79,94 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
                 self.label_mouseover.value = ""
                 return
 
-            fmt = 'x={:+10.5e} y={:+10.5e}'
-            self.label_mouseover.pixel = fmt.format(x, y)
+            # Snap to the closest data point, not the actual mouse location.
+            sp = None
+            closest_i = None
+            closest_wave = None
+            closest_flux = None
+            closest_label = ''
+            closest_distance = None
+            for lyr in self.state.layers:
+                if not lyr.visible:
+                    continue
+                if isinstance(lyr.layer, GroupedSubset):
+                    if not isinstance(lyr.layer.subset_state, RoiSubsetState):
+                        # then this is a SPECTRAL subset
+                        continue
+                elif ((not isinstance(lyr.layer, BaseData)) or (lyr.layer.ndim not in (1, 3))
+                        or (not lyr.visible)):
+                    continue
 
-            # We just want cursor position, so these are not used.
-            self.label_mouseover.icon = ''
-            self.label_mouseover.reset_coords_display()
-            self.label_mouseover.value = ''
+                try:
+                    # Cache should have been populated when spectrum was first plotted.
+                    # But if not (maybe user changed statistic), we cache it here too.
+                    statistic = getattr(self.state, 'function', None)
+                    cache_key = (lyr.layer.label, statistic)
+                    if cache_key in self.jdaviz_app._get_object_cache:
+                        sp = self.jdaviz_app._get_object_cache[cache_key]
+                    else:
+                        sp = self.jdaviz_app.get_data_from_viewer(
+                            self.jdaviz_app._default_spectrum_viewer_reference_name,
+                            lyr.layer.label)
+                        self.jdaviz_app._get_object_cache[cache_key] = sp
+
+                    # Out of range in spectral axis.
+                    if x < sp.spectral_axis.value.min() or x > sp.spectral_axis.value.max():
+                        continue
+
+                    cur_i = np.argmin(abs(sp.spectral_axis.value - x))
+                    cur_wave = sp.spectral_axis[cur_i]
+                    cur_flux = sp.flux[cur_i]
+
+                    dx = cur_wave.value - x
+                    dy = cur_flux.value - y
+                    cur_distance = math.sqrt(dx * dx + dy * dy)
+                    if (closest_distance is None) or (cur_distance < closest_distance):
+                        closest_distance = cur_distance
+                        closest_i = cur_i
+                        closest_wave = cur_wave
+                        closest_flux = cur_flux
+                        closest_label = self.jdaviz_app.state.layer_icons.get(lyr.layer.label)
+                except Exception:  # nosec
+                    # Something is loaded but not the right thing
+                    continue
+
+            if closest_wave is None:
+                self.label_mouseover.icon = ""
+                self.label_mouseover.pixel = ""
+                self.label_mouseover.reset_coords_display()
+                self.label_mouseover.value = ""
+                self.label_mouseover.marks[self._reference_id].visible = False
+                return
+
+            # show the locked marker/coords only if either no tool or the default tool is active
+            locking_active = self.toolbar.active_tool_id in self.toolbar.default_tool_priority + [None]  # noqa
+            self.label_mouseover.pixel_prefix = 'Cursor'
+            self.label_mouseover.pixel = f'{x:10.5e}, {y:10.5e}'
+            if locking_active:
+                self.label_mouseover.world_label_prefix = 'Wave'
+                self.label_mouseover.world_ra = f'{closest_wave.value:10.5e} {closest_wave.unit.to_string()}'  # noqa
+                if closest_wave.unit != u.pix:
+                    self.label_mouseover.world_ra += f' ({closest_i} pix)'
+                self.label_mouseover.world_dec = ''
+                self.label_mouseover.world_label_prefix_2 = 'Flux'
+                self.label_mouseover.world_ra_deg = f'{closest_flux.value:10.5e} {closest_flux.unit.to_string()}'  # noqa
+                self.label_mouseover.world_dec_deg = ''
+                self.label_mouseover.icon = closest_label
+                self.label_mouseover.value = ""  # Not used
+                self.label_mouseover.marks[self._reference_id].update_xy([closest_wave.value], [closest_flux.value])  # noqa
+                self.label_mouseover.marks[self._reference_id].visible = True
+            else:
+                # show exact plot coordinates (useful for drawing spectral subsets or zoom ranges)
+                self.label_mouseover.icon = ""
+                self.label_mouseover.marks[self._reference_id].visible = False
 
         elif data['event'] == 'mouseleave' or data['event'] == 'mouseenter':
-
+            self.label_mouseover.icon = ""
             self.label_mouseover.pixel = ""
             self.label_mouseover.reset_coords_display()
             self.label_mouseover.value = ""
+            self.label_mouseover.marks[self._reference_id].visible = False
 
     def _expected_subset_layer_default(self, layer_state):
         super()._expected_subset_layer_default(layer_state)
@@ -97,40 +175,39 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
 
     def data(self, cls=None):
         # Grab the user's chosen statistic for collapsing data
-        if hasattr(self.state, 'function'):
-            statistic = self.state.function
-        else:
-            statistic = None
-
+        statistic = getattr(self.state, 'function', None)
         data = []
 
         for layer_state in self.state.layers:
             if hasattr(layer_state, 'layer'):
+                lyr = layer_state.layer
 
                 # For raw data, just include the data itself
-                if isinstance(layer_state.layer, BaseData):
+                if isinstance(lyr, BaseData):
                     _class = cls or self.default_class
 
                     if _class is not None:
-                        # If spectrum, collapse via the defined statistic
-                        if _class == Spectrum1D:
-                            layer_data = layer_state.layer.get_object(cls=_class,
-                                                                      statistic=statistic)
+                        cache_key = (lyr.label, statistic)
+                        if cache_key in self.jdaviz_app._get_object_cache:
+                            layer_data = self.jdaviz_app._get_object_cache[cache_key]
                         else:
-                            layer_data = layer_state.layer.get_object(cls=_class)
+                            # If spectrum, collapse via the defined statistic
+                            if _class == Spectrum1D:
+                                layer_data = lyr.get_object(cls=_class, statistic=statistic)
+                            else:
+                                layer_data = lyr.get_object(cls=_class)
+                            self.jdaviz_app._get_object_cache[cache_key] = layer_data
 
                         data.append(layer_data)
 
-                # For subsets, make sure to apply the subset mask to the
-                #  layer data first
-                elif isinstance(layer_state.layer, Subset):
-                    layer_data = layer_state.layer
+                # For subsets, make sure to apply the subset mask to the layer data first
+                elif isinstance(lyr, Subset):
+                    layer_data = lyr
 
                     if _class is not None:
                         handler, _ = data_translator.get_handler_for(_class)
                         try:
-                            layer_data = handler.to_object(layer_data,
-                                                           statistic=statistic)
+                            layer_data = handler.to_object(layer_data, statistic=statistic)
                         except IncompatibleAttribute:
                             continue
                     data.append(layer_data)
@@ -414,18 +491,20 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
 
         # Loop through all active data in the viewer
         for index, layer_state in enumerate(self.state.layers):
-            comps = [str(component) for component in layer_state.layer.components]
+            lyr = layer_state.layer
+            comps = [str(component) for component in lyr.components]
 
             # Skip subsets
-            if hasattr(layer_state.layer, "subset_state"):
+            if hasattr(lyr, "subset_state"):
                 continue
 
             # Ignore data that does not have a mask component
             if "mask" in comps:
-                mask = np.array(layer_state.layer['mask'].data)
+                mask = np.array(lyr['mask'].data)
 
-                data_x = layer_state.layer.data.get_object().spectral_axis
-                data_y = layer_state.layer.data.get_object().flux.value
+                data_obj = lyr.data.get_object()
+                data_x = data_obj.spectral_axis.value
+                data_y = data_obj.flux.value
 
                 # For plotting markers only for the masked data
                 # points, erase un-masked data from trace.
@@ -456,24 +535,26 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
 
         # Loop through all active data in the viewer
         for index, layer_state in enumerate(self.state.layers):
+            lyr = layer_state.layer
 
             # Skip subsets
-            if hasattr(layer_state.layer, "subset_state"):
+            if hasattr(lyr, "subset_state"):
                 continue
 
-            comps = [str(component) for component in layer_state.layer.components]
+            comps = [str(component) for component in lyr.components]
 
             # Ignore data that does not have an uncertainty component
             if "uncertainty" in comps:  # noqa
-                error = np.array(layer_state.layer['uncertainty'].data)
+                error = np.array(lyr['uncertainty'].data)
 
-                data_x = layer_state.layer.data.get_object().spectral_axis
-                data_y = layer_state.layer.data.get_object().flux.value
+                data_obj = lyr.data.get_object()
+                data_x = data_obj.spectral_axis.value
+                data_y = data_obj.flux.value
 
                 # The shaded band around the spectrum trace is bounded by
                 # two lines, above and below the spectrum trace itself.
-                x = [np.ndarray.tolist(data_x),
-                     np.ndarray.tolist(data_x)]
+                data_x_list = np.ndarray.tolist(data_x)
+                x = [data_x_list, data_x_list]
                 y = [np.ndarray.tolist(data_y - error),
                      np.ndarray.tolist(data_y + error)]
 

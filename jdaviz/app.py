@@ -28,6 +28,7 @@ from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink, IncompatibleWC
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage,
                                SubsetCreateMessage,
+                               SubsetUpdateMessage,
                                SubsetDeleteMessage)
 from glue.core.state_objects import State
 from glue.core.subset import Subset, RangeSubsetState, RoiSubsetState
@@ -257,6 +258,12 @@ class Application(VuetifyTemplate, HubListener):
 
         # Add a fitted_models dictionary that the helpers (or user) can access
         self.fitted_models = {}
+
+        # Internal cache so we don't have to keep calling get_object for the same Data.
+        # Key should be (data_label, statistic) and value the translated object.
+        self._get_object_cache = {}
+        self.hub.subscribe(self, SubsetUpdateMessage,
+                           handler=lambda msg: self._clear_object_cache(msg.subset.label))
 
         # Add new and inverse colormaps to Glue global state. Also see ColormapRegistry in
         # https://github.com/glue-viz/glue/blob/main/glue/config.py
@@ -1486,6 +1493,14 @@ class Application(VuetifyTemplate, HubListener):
         data_item = self._create_data_item(msg.data)
         self.state.data_items.append(data_item)
 
+    def _clear_object_cache(self, data_label=None):
+        if data_label is None:
+            self._get_object_cache.clear()
+        else:
+            # keys are (data_label, statistic) tuples
+            self._get_object_cache = {k: v for k, v in self._get_object_cache.items()
+                                      if k[0] != data_label}
+
     def _on_data_deleted(self, msg):
         """
         Callback for when data is removed from the internal ``DataCollection``.
@@ -1500,6 +1515,8 @@ class Application(VuetifyTemplate, HubListener):
         for data_item in self.state.data_items:
             if data_item['name'] == msg.data.label:
                 self.state.data_items.remove(data_item)
+
+        self._clear_object_cache(msg.data.label)
 
     @staticmethod
     def _create_data_item(data):
