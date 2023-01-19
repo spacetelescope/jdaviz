@@ -105,8 +105,9 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
                     if cache_key in self.jdaviz_app._get_object_cache:
                         sp = self.jdaviz_app._get_object_cache[cache_key]
                     else:
-                        sp = self.jdaviz_app.get_data_from_viewer('spectrum-viewer',
-                                                                  lyr.layer.label)
+                        sp = self.jdaviz_app.get_data_from_viewer(
+                            self.jdaviz_app._default_spectrum_viewer_reference_name,
+                            lyr.layer.label)
                         self.jdaviz_app._get_object_cache[cache_key] = sp
 
                     # Out of range in spectral axis.
