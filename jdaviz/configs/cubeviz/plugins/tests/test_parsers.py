@@ -42,14 +42,19 @@ def test_fits_image_hdu_with_microns(image_cube_hdu_obj_microns, cubeviz_helper)
         assert cubeviz_helper.app.data_collection[i].meta[PRIHDR_KEY]['BITPIX'] == 8
 
     flux_viewer = cubeviz_helper.app.get_viewer('flux-viewer')
-    flux_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
-    assert flux_viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
-    assert flux_viewer.label_mouseover.value == '+1.00000e+00 1e-17 erg / (Angstrom cm2 s)'
+    label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
+    label_mouseover._viewer_mouse_event(flux_viewer,
+                                        {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
+    assert label_mouseover.as_text() == ('Pixel x=00.0 y=00.0 Value +1.00000e+00 1e-17 erg / (Angstrom cm2 s)',  # noqa
+                                         'World 13h41m45.5759s +27d00m12.3044s (ICRS)',
+                                         '205.4398995981 27.0034178810 (deg)')  # noqa
 
     unc_viewer = cubeviz_helper.app.get_viewer('uncert-viewer')
-    unc_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': -1, 'y': 0}})
-    assert unc_viewer.label_mouseover.pixel == 'x=-1.0 y=00.0'
-    assert unc_viewer.label_mouseover.value == ''  # Out of bounds
+    label_mouseover._viewer_mouse_event(unc_viewer,
+                                        {'event': 'mousemove', 'domain': {'x': -1, 'y': 0}})
+    assert label_mouseover.as_text() == ('Pixel x=-1.0 y=00.0',
+                                         'World 13h41m45.5759s +27d00m12.3044s (ICRS)',
+                                         '205.4398995981 27.0034178810 (deg)')  # noqa
 
 
 def test_spectrum1d_with_fake_fixed_units(spectrum1d, cubeviz_helper):
@@ -100,18 +105,19 @@ def test_fits_image_hdu_parse_from_file(tmpdir, image_cube_hdu_obj, cubeviz_help
         assert cubeviz_helper.app.data_collection[i].meta[PRIHDR_KEY]['BITPIX'] == 8
 
     flux_viewer = cubeviz_helper.app.get_viewer(cubeviz_helper._default_flux_viewer_reference_name)
-    flux_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
-    assert flux_viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
-    assert flux_viewer.label_mouseover.value == '+1.00000e+00 1e-17 erg / (Angstrom cm2 s)'
-    assert flux_viewer.label_mouseover.world_ra_deg == '205.4433848390'
-    assert flux_viewer.label_mouseover.world_dec_deg == '26.9996149270'
+    label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
+    label_mouseover._viewer_mouse_event(flux_viewer,
+                                        {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
+    assert label_mouseover.as_text() == ('Pixel x=00.0 y=00.0 Value +1.00000e+00 1e-17 erg / (Angstrom cm2 s)',  # noqa
+                                         'World 13h41m46.4124s +26d59m58.6137s (ICRS)',
+                                         '205.4433848390 26.9996149270 (deg)')  # noqa
 
     unc_viewer = cubeviz_helper.app.get_viewer(cubeviz_helper._default_uncert_viewer_reference_name)
-    unc_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': -1, 'y': 0}})
-    assert unc_viewer.label_mouseover.pixel == 'x=-1.0 y=00.0'
-    assert unc_viewer.label_mouseover.value == ''  # Out of bounds
-    assert unc_viewer.label_mouseover.world_ra_deg == '205.4441642302'
-    assert unc_viewer.label_mouseover.world_dec_deg == '26.9996148973'
+    label_mouseover._viewer_mouse_event(unc_viewer,
+                                        {'event': 'mousemove', 'domain': {'x': -1, 'y': 0}})
+    assert label_mouseover.as_text() == ('Pixel x=-1.0 y=00.0',
+                                         'World 13h41m46.5994s +26d59m58.6136s (ICRS)',
+                                         '205.4441642302 26.9996148973 (deg)')  # noqa
 
 
 @pytest.mark.filterwarnings('ignore')
@@ -128,17 +134,19 @@ def test_spectrum3d_parse(image_cube_hdu_obj, cubeviz_helper):
 
     # Same as flux viewer data in test_fits_image_hdu_parse_from_file
     flux_viewer = cubeviz_helper.app.get_viewer(cubeviz_helper._default_flux_viewer_reference_name)
-    flux_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
-    assert flux_viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
-    assert flux_viewer.label_mouseover.value == '+1.00000e+00 1e-17 erg / (Angstrom cm2 s)'
-    assert flux_viewer.label_mouseover.world_ra_deg == '205.4433848390'
-    assert flux_viewer.label_mouseover.world_dec_deg == '26.9996149270'
+    label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
+    label_mouseover._viewer_mouse_event(flux_viewer,
+                                        {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
+    assert label_mouseover.as_text() == ('Pixel x=00.0 y=00.0 Value +1.00000e+00 1e-17 erg / (Angstrom cm2 s)',  # noqa
+                                         'World 13h41m46.4124s +26d59m58.6137s (ICRS)',
+                                         '205.4433848390 26.9996149270 (deg)')  # noqa
 
     # These viewers have no data.
 
     unc_viewer = cubeviz_helper.app.get_viewer(cubeviz_helper._default_uncert_viewer_reference_name)
-    unc_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': -1, 'y': 0}})
-    assert unc_viewer.label_mouseover is None
+    label_mouseover._viewer_mouse_event(unc_viewer,
+                                        {'event': 'mousemove', 'domain': {'x': -1, 'y': 0}})
+    assert label_mouseover.as_text() == ('', '', '')
 
 
 def test_spectrum3d_no_wcs_parse(cubeviz_helper):
@@ -163,8 +171,8 @@ def test_spectrum1d_parse(spectrum1d, cubeviz_helper):
     assert cubeviz_helper.app.data_collection[0].meta['uncertainty_type'] == 'std'
 
     # Coordinate display is only for spatial image, which is missing here.
-    flux_viewer = cubeviz_helper.app.get_viewer(cubeviz_helper._default_flux_viewer_reference_name)
-    assert flux_viewer.label_mouseover is None
+    label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
+    assert label_mouseover.as_text() == ('', '', '')
 
 
 def test_numpy_cube(cubeviz_helper):

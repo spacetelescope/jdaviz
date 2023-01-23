@@ -43,12 +43,14 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
     assert mm.results_label_overwrite is True
 
     # Make sure coordinate display works
-    flux_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
+    label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
+    label_mouseover._viewer_mouse_event(flux_viewer, {'event': 'mousemove',
+                                                      'domain': {'x': 0, 'y': 0}})
     assert flux_viewer.state.slices == (0, 0, 1)
-    assert flux_viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
-    assert flux_viewer.label_mouseover.value == '+8.00000e+00 Jy'  # Slice 0 has 8 pixels, this is Slice 1  # noqa
-    assert flux_viewer.label_mouseover.world_ra_deg == '204.9997755346'
-    assert flux_viewer.label_mouseover.world_dec_deg == '27.0000999998'
+    # Slice 0 has 8 pixels, this is Slice 1
+    assert label_mouseover.as_text() == ("Pixel x=00.0 y=00.0 Value +8.00000e+00 Jy",
+                                         "World 13h39m59.9461s +27d00m00.3600s (ICRS)",
+                                         "204.9997755346 27.0000999998 (deg)")  # noqa
 
     # Make sure adding it to viewer does not crash.
     cubeviz_helper.app.add_data_to_viewer(
@@ -62,11 +64,12 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
     assert dc[1].coords is None
 
     # Make sure coordinate display now show moment map info (no WCS)
-    flux_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
-    assert flux_viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
-    assert flux_viewer.label_mouseover.value == '+8.00000e+00 Jy'  # Slice 0 has 8 pixels, this is Slice 1  # noqa
-    assert flux_viewer.label_mouseover.world_ra_deg == '204.9997755346'
-    assert flux_viewer.label_mouseover.world_dec_deg == '27.0000999998'
+    label_mouseover._viewer_mouse_event(flux_viewer, {'event': 'mousemove',
+                                                      'domain': {'x': 0, 'y': 0}})
+    # Slice 0 has 8 pixels, this is Slice 1  # noqa
+    assert label_mouseover.as_text() == ("Pixel x=00.0 y=00.0 Value +8.00000e+00 Jy",
+                                         "World 13h39m59.9461s +27d00m00.3600s (ICRS)",
+                                         "204.9997755346 27.0000999998 (deg)")  # noqa
 
     assert mm.filename == 'moment0_test_FLUX.fits'  # Auto-populated on calculate.
     mm.filename = str(tmpdir.join(mm.filename))  # But we want it in tmpdir for testing.
@@ -96,10 +99,11 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
     assert dc.external_links[3].cids2[0] == dc[-1].pixel_component_ids[0]
 
     # Coordinate display should be unaffected.
-    assert flux_viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
-    assert flux_viewer.label_mouseover.value == '+8.00000e+00 Jy'  # Slice 0 has 8 pixels, this is Slice 1  # noqa
-    assert flux_viewer.label_mouseover.world_ra_deg == '204.9997755346'
-    assert flux_viewer.label_mouseover.world_dec_deg == '27.0000999998'
+    label_mouseover._viewer_mouse_event(flux_viewer, {'event': 'mousemove',
+                                                      'domain': {'x': 0, 'y': 0}})
+    assert label_mouseover.as_text() == ("Pixel x=00.0 y=00.0 Value +8.00000e+00 Jy",
+                                         "World 13h39m59.9461s +27d00m00.3600s (ICRS)",
+                                         "204.9997755346 27.0000999998 (deg)")  # noqa
 
 
 @pytest.mark.filterwarnings('ignore:No observer defined on WCS')

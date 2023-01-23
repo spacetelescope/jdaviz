@@ -50,12 +50,12 @@ def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube):
     assert len(spectrum_viewer.data()) == 1
 
     # Check coordinate info panel
-    flux_viewer.on_mouse_or_key_event(
-        {'event': 'mousemove', 'domain': {'x': 1, 'y': 1}})
-    assert flux_viewer.label_mouseover.pixel == 'x=01.0 y=01.0'
-    assert flux_viewer.label_mouseover.value == '+1.30000e+01 Jy'
-    assert flux_viewer.label_mouseover.world_ra_deg == '204.9997755344'
-    assert flux_viewer.label_mouseover.world_dec_deg == '27.0001999998'
+    label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
+    label_mouseover._viewer_mouse_event(flux_viewer,
+                                        {'event': 'mousemove', 'domain': {'x': 1, 'y': 1}})
+    assert label_mouseover.as_text() == ('Pixel x=01.0 y=01.0 Value +1.30000e+01 Jy',
+                                         'World 13h39m59.9461s +27d00m00.7200s (ICRS)',
+                                         '204.9997755344 27.0001999998 (deg)')
 
     # Click on spaxel location
     flux_viewer.toolbar.active_tool.on_mouse_event(
@@ -83,12 +83,11 @@ def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube):
     assert isinstance(reg2, RectanglePixelRegion)
 
     # Make sure coordinate info panel did not change
-    flux_viewer.on_mouse_or_key_event(
-        {'event': 'mousemove', 'domain': {'x': 1, 'y': 1}})
-    assert flux_viewer.label_mouseover.pixel == 'x=01.0 y=01.0'
-    assert flux_viewer.label_mouseover.value == '+1.30000e+01 Jy'
-    assert flux_viewer.label_mouseover.world_ra_deg == '204.9997755344'
-    assert flux_viewer.label_mouseover.world_dec_deg == '27.0001999998'
+    label_mouseover._viewer_mouse_event(flux_viewer,
+                                        {'event': 'mousemove', 'domain': {'x': 1, 'y': 1}})
+    assert label_mouseover.as_text() == ('Pixel x=01.0 y=01.0 Value +1.30000e+01 Jy',
+                                         'World 13h39m59.9461s +27d00m00.7200s (ICRS)',
+                                         '204.9997755344 27.0001999998 (deg)')
 
     # Make sure linked pan mode works on all image viewers
     t_linkedpan = flux_viewer.toolbar.tools['jdaviz:simplepanzoommatch']

@@ -38,12 +38,10 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         self.init_astrowidgets_api()
         self._subscribe_to_layers_update()
 
-        self.label_mouseover = None
         self.compass = None
         self.line_profile_xy = None
 
-        self.add_event_callback(self.on_mouse_or_key_event, events=['mousemove', 'mouseenter',
-                                                                    'mouseleave', 'keydown'])
+        self.add_event_callback(self.on_mouse_or_key_event, events=['keydown'])
         self.state.add_callback('x_min', self.on_limits_change)
         self.state.add_callback('x_max', self.on_limits_change)
         self.state.add_callback('y_min', self.on_limits_change)
@@ -64,21 +62,9 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         self.state.image_external_padding = 0.5
 
     def on_mouse_or_key_event(self, data):
-
-        # Find visible layers
-        visible_layers = [layer for layer in self.state.layers
-                          if (layer.visible and layer_is_image_data(layer.layer))]
-
-        if len(visible_layers) == 0:
+        active_image_layer = self.active_image_layer
+        if active_image_layer is None:
             return
-
-        active_layer = visible_layers[-1]
-
-        if self.label_mouseover is None:
-            if 'g-coords-info' in self.session.application._tools:
-                self.label_mouseover = self.session.application._tools['g-coords-info']
-            else:
-                return
 
         if self.line_profile_xy is None:
             try:
@@ -87,75 +73,15 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
             except KeyError:  # pragma: no cover
                 return
 
-        if data['event'] == 'mousemove':
-            # Display the current cursor coordinates (both pixel and world) as
-            # well as data values. For now we use the first dataset in the
-            # viewer for the data values.
-
-            # Extract first dataset from visible layers and use this for coordinates - the choice
-            # of dataset shouldn't matter if the datasets are linked correctly
-            image = active_layer.layer
-            self.label_mouseover.icon = self.jdaviz_app.state.layer_icons.get(active_layer.layer.label)  # noqa
-
-            # Extract data coordinates - these are pixels in the reference image
-            x = data['domain']['x']
-            y = data['domain']['y']
-
-            if x is None or y is None:  # Out of bounds
-                self.label_mouseover.pixel = ""
-                self.label_mouseover.reset_coords_display()
-                self.label_mouseover.value = ""
-                return
-
-            maxsize = int(np.ceil(np.log10(np.max(image.shape)))) + 3
-            fmt = 'x={0:0' + str(maxsize) + '.1f} y={1:0' + str(maxsize) + '.1f}'
-            x, y, coords_status, (unreliable_world, unreliable_pixel) = self._get_real_xy(image, x, y)  # noqa
-            self.label_mouseover.pixel = (fmt.format(x, y))
-
-            if coords_status:
-                try:
-                    coo = image.coords.pixel_to_world(x, y).icrs
-                except Exception:  # WCS might not be celestial
-                    self.label_mouseover.reset_coords_display()
-                else:
-                    self.label_mouseover.set_coords(coo,
-                                                    unreliable_world=unreliable_world,
-                                                    unreliable_pixel=unreliable_pixel)  # noqa
-            else:
-                self.label_mouseover.reset_coords_display()
-
-            # Extract data values at this position.
-            # TODO: for now we just use the first visible layer but we should think
-            # of how to display values when multiple datasets are present.
-            if (x > -0.5 and y > -0.5
-                    and x < image.shape[1] - 0.5 and y < image.shape[0] - 0.5
-                    and hasattr(active_layer, 'attribute')):
-                attribute = active_layer.attribute
-                value = image.get_data(attribute)[int(round(y)), int(round(x))]
-                unit = image.get_component(attribute).units
-                self.label_mouseover.value = f'{value:+10.5e} {unit}'
-            else:
-                self.label_mouseover.value = ''
-
-        elif data['event'] == 'mouseleave' or data['event'] == 'mouseenter':
-
-            self.label_mouseover.pixel = ""
-            self.label_mouseover.reset_coords_display()
-            self.label_mouseover.value = ""
-
-        elif data['event'] == 'keydown':
+        if data['event'] == 'keydown':
             key_pressed = data['key']
 
             if key_pressed in ('b', 'B'):
                 self.blink_once(reversed=key_pressed=='B')  # noqa: E225
 
-                # Also update the coordinates display.
-                data['event'] = 'mousemove'
-                self.on_mouse_or_key_event(data)
-
             elif key_pressed == 'l':
                 # Same data as mousemove above.
-                image = active_layer.layer
+                image = self.active_image_layer.layer
                 x = data['domain']['x']
                 y = data['domain']['y']
                 if x is None or y is None:  # Out of bounds
@@ -241,7 +167,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         results were within the bounding box of the reference data or required possibly inaccurate
         extrapolation.
 
-        ``coords_status`` is for ``self.label_mouseover`` coords handling only.
+        ``coords_status`` is for ``CoordsInfo`` coords handling only.
         When `True`, it sets the coords, otherwise it resets.
 
         ``reverse=True`` is only for internal roundtripping (e.g., centroiding
