@@ -9,7 +9,6 @@ from astropy import units as u
 from astropy.modeling.fitting import LevMarLSQFitter
 from astropy.modeling import Parameter
 from astropy.modeling.models import Gaussian1D
-from astropy.table import QTable
 from astropy.time import Time
 from glue.core.message import SubsetUpdateMessage
 from ipywidgets import widget_serialization
@@ -24,14 +23,15 @@ from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import SnackbarMessage, LinkUpdatedMessage
 from jdaviz.core.region_translators import regions2aperture, _get_region_from_spatial_subset
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin, DatasetSelectMixin, SubsetSelect
+from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetSelectMixin,
+                                        SubsetSelect, TableMixin)
 from jdaviz.utils import bqplot_clear_figure, PRIHDR_KEY
 
 __all__ = ['SimpleAperturePhotometry']
 
 
 @tray_registry('imviz-aper-phot-simple', label="Imviz Simple Aperture Photometry")
-class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin):
+class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMixin):
     template_file = __file__, "aper_phot_simple.vue"
     subset_items = List([]).tag(sync=True)
     subset_selected = Unicode("").tag(sync=True)
@@ -68,6 +68,16 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin):
                                       default_text='Manual',
                                       manual_options=['Manual', 'Annulus'],
                                       allowed_type='spatial')
+
+        headers = ['xcenter', 'ycenter', 'sky_center',
+                   'sum', 'sum_aper_area',
+                   'aperture_sum_counts', 'aperture_sum_counts_err',
+                   'min', 'max', 'mean', 'median', 'mode', 'std', 'mad_std', 'var',
+                   'biweight_location', 'biweight_midvariance', 'fwhm',
+                   'semimajor_sigma', 'semiminor_sigma', 'orientation', 'eccentricity',
+                   'data_label', 'subset_label']
+        self.table.headers_avail = headers
+        self.table.headers_visible = headers
 
         self._selected_data = None
         self._selected_subset = None
@@ -336,17 +346,13 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin):
                        'data_label', 'subset_label', 'timestamp'],
                 indexes=[1, 1, 1, 1, 3, 3, 3, 3, 3, 3, 18, 18, 18])
 
-            # Attach to app for Python extraction.
-            if (not hasattr(self.app, '_aper_phot_results') or
-                    not isinstance(self.app._aper_phot_results, QTable)):
-                self.app._aper_phot_results = phot_table
-            else:
-                try:
-                    phot_table['id'][0] = self.app._aper_phot_results['id'].max() + 1
-                    self.app._aper_phot_results.add_row(phot_table[0])
-                except Exception:  # Discard incompatible QTable
-                    phot_table['id'][0] = 1
-                    self.app._aper_phot_results = phot_table
+            try:
+                phot_table['id'][0] = self.table._qtable['id'].max() + 1
+                self.table.add_row(phot_table)
+            except Exception:  # Discard incompatible QTable
+                self.table.clear_table()
+                phot_table['id'][0] = 1
+                self.table.add_row(phot_table)
 
             # Plots.
             # TODO: Jenn wants title at bottom.

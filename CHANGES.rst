@@ -10,6 +10,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Table exposing past results in the aperture photometry plugin. [#1985]
+
 Mosviz
 ^^^^^^
 

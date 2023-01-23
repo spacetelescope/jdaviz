@@ -160,6 +160,7 @@
 
     <div v-if="result_available">
       <j-plugin-section-header>Photometry Results</j-plugin-section-header>
+
       <v-row no-gutters>
         <v-col cols=6><U>Result</U></v-col>
         <v-col cols=6><U>Value</U></v-col>
@@ -173,6 +174,9 @@
         </v-col>
         <v-col cols=6>{{ item.result }}</v-col>
       </v-row>
+
+      <j-plugin-section-header>Results History</j-plugin-section-header>
+      <jupyter-widget :widget="table_widget"></jupyter-widget> 
     </div>
   </j-tray-plugin>
 </template>
