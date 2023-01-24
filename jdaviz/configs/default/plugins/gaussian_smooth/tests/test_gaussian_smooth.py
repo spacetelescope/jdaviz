@@ -6,17 +6,18 @@ from specutils import Spectrum1D
 def test_linking_after_spectral_smooth(cubeviz_helper, spectrum1d_cube):
     app = cubeviz_helper.app
     dc = app.data_collection
-    cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
+    data_label = 'test'
+    cubeviz_helper.load_data(spectrum1d_cube, data_label=data_label)
     spec_viewer = cubeviz_helper.app.get_viewer('spectrum-viewer')
 
     assert len(dc) == 1
 
     gs = cubeviz_helper.plugins['Gaussian Smooth']._obj
-    gs.dataset_selected = 'test[FLUX]'
+    gs.dataset_selected = f'{data_label}[FLUX]'
     gs.mode_selected = 'Spectral'
     gs.stddev = 3.2
     gs.add_to_viewer_selected = 'None'
-    assert gs.results_label == 'spectral-smooth stddev-3.2'
+    assert gs.results_label == f'{data_label}[FLUX] spectral-smooth stddev-3.2'
     gs.vue_apply()
     # when not showing the results, the label will remain the same,
     # so there should be an overwrite warning
@@ -27,22 +28,22 @@ def test_linking_after_spectral_smooth(cubeviz_helper, spectrum1d_cube):
     # so will still be hidden
     assert len(gs.dataset_items) == 1
     # by removing the data entry, the overwrite will no longer apply
-    app.remove_data_from_viewer('spectrum-viewer', 'spectral-smooth stddev-3.2')
-    app.data_collection.remove(app.data_collection['spectral-smooth stddev-3.2'])
+    app.remove_data_from_viewer('spectrum-viewer', f'{data_label}[FLUX] spectral-smooth stddev-3.2')
+    app.data_collection.remove(app.data_collection[f'{data_label}[FLUX] spectral-smooth stddev-3.2'])
 
     gs.add_to_viewer_selected = 'spectrum-viewer'
     gs.vue_apply()
-    # since we now plotted the results, the dataset should be fixed,
-    # but the dataset dropdown contains multiple choices, so the dataset
-    # itself is prepended to the default label, and there is no longer
-    # an overwrite warning.
+    
+    # FOR HISTORICAL CONTEXT:
+    # The data label used to be prepended to the results_label ONLY if there were multiple
+    # smoothed spectra. As of PR#1973, POs requested the data label to always be present
     assert len(gs.dataset_items) == 2
-    assert gs.dataset_selected == 'test[FLUX]'
-    assert gs.results_label == 'test[FLUX] spectral-smooth stddev-3.2'
+    assert gs.dataset_selected == f'{data_label}[FLUX]'
+    assert gs.results_label == f'{data_label}[FLUX] spectral-smooth stddev-3.2'
     assert gs.results_label_overwrite is False
 
     assert len(dc) == 2
-    assert dc[1].label == 'spectral-smooth stddev-3.2'
+    assert dc[1].label == f'{data_label}[FLUX] spectral-smooth stddev-3.2'
     assert len(dc.external_links) == 3
 
     # Link cube 3D x, y, z to plugin 3D x, y, z
@@ -100,39 +101,41 @@ def test_linking_after_spectral_smooth(cubeviz_helper, spectrum1d_cube):
 
 
 def test_spatial_convolution(cubeviz_helper, spectrum1d_cube):
+    data_label = 'test'
     dc = cubeviz_helper.app.data_collection
-    cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
+    cubeviz_helper.load_data(spectrum1d_cube, data_label=data_label)
 
     gs = cubeviz_helper.plugins['Gaussian Smooth']._obj
-    gs.dataset_selected = 'test[FLUX]'
+    gs.dataset_selected = f'{data_label}[FLUX]'
     gs.mode_selected = 'Spatial'
     gs.stddev = 3
-    assert gs.results_label == 'spatial-smooth stddev-3.0'
+    assert gs.results_label == f'{data_label}[FLUX] spatial-smooth stddev-3.0'
     with pytest.warns(
             AstropyUserWarning,
             match='The following attributes were set on the data object, but will be ignored'):
         gs.vue_apply()
 
     assert len(dc) == 2
-    assert dc[1].label == "spatial-smooth stddev-3.0"
+    assert dc[1].label == f'{data_label}[FLUX] spatial-smooth stddev-3.0'
     assert dc[1].shape == (2, 4, 2)  # specutils moved spectral axis to last
-    assert (dc["spatial-smooth stddev-3.0"].get_object(cls=Spectrum1D, statistic=None).shape
+    assert (dc[f'{data_label}[FLUX] spatial-smooth stddev-3.0'].get_object(cls=Spectrum1D, statistic=None).shape
             == (2, 4, 2))
 
 
 def test_spectrum1d_smooth(specviz_helper, spectrum1d):
+    data_label = 'test'
     dc = specviz_helper.app.data_collection
-    specviz_helper.load_data(spectrum1d, data_label='test')
+    specviz_helper.load_data(spectrum1d, data_label=data_label)
     spec_viewer = specviz_helper.app.get_viewer('spectrum-viewer')
 
     gs = specviz_helper.plugins['Gaussian Smooth']._obj
-    gs.dataset_selected = 'test'
+    gs.dataset_selected = data_label
     gs.mode_selected = 'Spectral'
     gs.stddev = 10
     gs.vue_apply()
 
     assert len(dc) == 2
-    assert dc[1].label == 'smooth stddev-10.0'
+    assert dc[1].label == f'{data_label} smooth stddev-10.0'
 
     # Mouseover should automatically jump from one spectrum
     # to another, depending on which one is closer.
