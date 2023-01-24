@@ -91,6 +91,11 @@ Specviz
 Specviz2d
 ^^^^^^^^^
 
+Other Changes and Additions
+---------------------------
+
+- Unit Conversion plugin is temporarily disabled while being reworked. [#1970]
+
 3.2 (2023-01-04)
 ================
 
