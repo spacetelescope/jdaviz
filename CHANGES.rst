@@ -67,6 +67,8 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
+- Gaussian Smooth products are always labeled with the original data [#1973]
+
 3.2.1 (unreleased)
 ==================
 
