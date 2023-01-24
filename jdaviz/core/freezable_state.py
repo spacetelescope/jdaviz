@@ -88,7 +88,7 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
             x_min, x_max = -0.5, -np.inf
             y_min, y_max = -0.5, -np.inf
             for layer in self.layers:
-                if not layer.visible:
+                if not layer.visible or layer.layer.data.ndim == 1:
                     continue
                 pixel_ids = layer.layer.pixel_component_ids
 
