@@ -36,7 +36,8 @@ def test_linking_after_spectral_smooth(cubeviz_helper, spectrum1d_cube):
     
     # FOR HISTORICAL CONTEXT:
     # The data label used to be prepended to the results_label ONLY if there were multiple
-    # smoothed spectra. As of PR#1973, POs requested the data label to always be present
+    # smoothed spectra. As of PR#1973, POs requested the data label to always be present.
+    # As a result, label will overwrite here
     assert len(gs.dataset_items) == 2
     assert gs.dataset_selected == f'{data_label}[FLUX]'
     assert gs.results_label == f'{data_label}[FLUX] spectral-smooth stddev-3.2'
