@@ -40,7 +40,7 @@ def test_linking_after_spectral_smooth(cubeviz_helper, spectrum1d_cube):
     assert len(gs.dataset_items) == 2
     assert gs.dataset_selected == f'{data_label}[FLUX]'
     assert gs.results_label == f'{data_label}[FLUX] spectral-smooth stddev-3.2'
-    assert gs.results_label_overwrite is False
+    assert gs.results_label_overwrite is True
 
     assert len(dc) == 2
     assert dc[1].label == f'{data_label}[FLUX] spectral-smooth stddev-3.2'
