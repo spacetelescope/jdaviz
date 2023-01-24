@@ -29,11 +29,12 @@ def test_linking_after_spectral_smooth(cubeviz_helper, spectrum1d_cube):
     assert len(gs.dataset_items) == 1
     # by removing the data entry, the overwrite will no longer apply
     app.remove_data_from_viewer('spectrum-viewer', f'{data_label}[FLUX] spectral-smooth stddev-3.2')
-    app.data_collection.remove(app.data_collection[f'{data_label}[FLUX] spectral-smooth stddev-3.2'])
+    app.data_collection.remove(
+        app.data_collection[f'{data_label}[FLUX] spectral-smooth stddev-3.2'])
 
     gs.add_to_viewer_selected = 'spectrum-viewer'
     gs.vue_apply()
-    
+
     # FOR HISTORICAL CONTEXT:
     # The data label used to be prepended to the results_label ONLY if there were multiple
     # smoothed spectra. As of PR#1973, POs requested the data label to always be present.
@@ -119,7 +120,8 @@ def test_spatial_convolution(cubeviz_helper, spectrum1d_cube):
     assert len(dc) == 2
     assert dc[1].label == f'{data_label}[FLUX] spatial-smooth stddev-3.0'
     assert dc[1].shape == (2, 4, 2)  # specutils moved spectral axis to last
-    assert (dc[f'{data_label}[FLUX] spatial-smooth stddev-3.0'].get_object(cls=Spectrum1D, statistic=None).shape
+    assert (dc[f'{data_label}[FLUX] spatial-smooth stddev-3.0'].get_object(cls=Spectrum1D,
+                                                                           statistic=None).shape
             == (2, 4, 2))
 
 
