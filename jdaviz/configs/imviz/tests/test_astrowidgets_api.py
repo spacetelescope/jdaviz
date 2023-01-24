@@ -323,6 +323,10 @@ class TestMarkers(BaseImviz_WCS_NoWCS):
         # TODO: How to check imviz.app.data_collection.links is correct?
         assert len(self.imviz.app.data_collection.links) == 14
 
+        # Just want to make sure nothing crashes. Zooming already testing elsewhere.
+        # https://github.com/spacetelescope/jdaviz/pull/1971
+        self.viewer.zoom_level = 'fit'
+
         # Remove markers with default name.
         self.viewer.remove_markers()
         assert self.imviz.app.data_collection.labels == [
