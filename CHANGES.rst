@@ -10,6 +10,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Fixed crashing when clicking Home button after markers are added. [#1971]
+
 Mosviz
 ^^^^^^
 
