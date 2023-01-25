@@ -58,8 +58,6 @@ Imviz
 Mosviz
 ^^^^^^
 
-- RA Dec fallback values changed to "Unspecified" to avoid json serialization warning [#1958]
-
 Specviz
 ^^^^^^^
 
@@ -88,6 +86,8 @@ Mosviz
 
 - Fix broken slit overlay plugin which resulted in a snackbar error being raised complaining about
   ``S_REGION``. [#1957]
+
+- RA Dec fallback values changed to "Unspecified" to avoid json serialization warning [#1958]
 
 Specviz
 ^^^^^^^
