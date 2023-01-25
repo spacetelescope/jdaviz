@@ -90,8 +90,10 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
     def _set_default_results_label(self, event={}):
         '''Generate a label and set the results field to that value'''
         if (hasattr(self, 'dataset') and (len(self.dataset.labels) >= 1) or self.app.config == 'mosviz'):  # noqa
-            dataset = self.dataset_selected
+            dataset = f'{self.dataset_selected} '
         else:
+            # This should only happen at initialization. Will be overwritten with above
+            # once data is loaded
             dataset = ''
 
         smooth_type = (f"{self.mode_selected.lower()}-smooth" if self.config == "cubeviz"
@@ -100,7 +102,7 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
 
         # Overriding is allowed, so do not check for uniqueness
         self.results_label_default = (
-            self.app.return_data_label(f"{dataset} {smooth_type} {stddev}", check_unique=False))
+            self.app.return_data_label(f"{dataset}{smooth_type} {stddev}", check_unique=False))
 
     @observe("dataset_selected")
     def _on_data_selected(self, event={}):
