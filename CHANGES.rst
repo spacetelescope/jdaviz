@@ -58,6 +58,8 @@ Imviz
 Mosviz
 ^^^^^^
 
+- RA Dec fallback values changed to "Unspecified" to avoid json serialization warning [#1958]
+
 Specviz
 ^^^^^^^
 
