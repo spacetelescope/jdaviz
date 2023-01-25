@@ -36,13 +36,20 @@ viewer_area:
   - container: col
     children:
       - container: row
-        viewers:
-          - name: Flux
-            plot: cubeviz-image-viewer
-            reference: flux-viewer
-          - name: Uncertainty
-            plot: cubeviz-image-viewer
-            reference: uncert-viewer
+        children:
+          - container: stack
+            viewers:
+            - name: Flux
+              plot: cubeviz-image-viewer
+              reference: flux-viewer
+          - container: stack
+            viewers:
+            - name: Uncertainty
+              plot: cubeviz-image-viewer
+              reference: uncert-viewer
+            - name: Mask
+              plot: cubeviz-image-viewer
+              reference: mask-viewer
       - container: row
         viewers:
           - name: Spectrum
