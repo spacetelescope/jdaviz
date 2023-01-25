@@ -74,10 +74,15 @@ class UnitConversion(PluginTemplateMixin, DatasetSelectMixin):
         spectrum = self.dataset.selected_obj
         if spectrum is None:
             return
-
+        viewer = self.app.get_viewer(
+            self._default_spectrum_viewer_reference_name)
         # Set UI label to show current flux and spectral axis units.
-        self.current_flux_unit = spectrum.flux.unit.to_string()
-        self.current_spectral_axis_unit = spectrum.spectral_axis.unit.to_string()
+        self.current_flux_unit = str(viewer.state.y_display_unit)
+        self.current_spectral_axis_unit = str(viewer.state.x_display_unit)
+
+        # # Set UI label to show current flux and spectral axis units.
+        # self.current_flux_unit = spectrum.flux.unit.to_string()
+        # self.current_spectral_axis_unit = spectrum.spectral_axis.unit.to_string()
 
         # Populate drop down with all valid options for unit conversion.
         self.spectral_axis_unit_equivalencies = create_spectral_equivalencies_list(spectrum)
