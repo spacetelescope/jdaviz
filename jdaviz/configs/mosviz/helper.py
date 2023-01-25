@@ -19,6 +19,7 @@ from jdaviz.configs.specviz import Specviz
 from jdaviz.configs.specviz.helper import _apply_redshift_to_spectra
 from jdaviz.configs.specviz2d import Specviz2d
 from jdaviz.configs.mosviz.plugins import jwst_header_to_skyregion
+from jdaviz.configs.mosviz.plugins.parsers import FALLBACK_NAME
 from jdaviz.configs.default.plugins.line_lists.line_list_mixin import LineListMixin
 
 __all__ = ['Mosviz']
@@ -333,7 +334,10 @@ class Mosviz(ConfigHelper, LineListMixin):
             return None, None
 
         ra = table_data["R.A."][msg.selected_index]
-        dec = table_data["Dec."][msg.selected_index]
+        dec = table_data["R.A."][msg.selected_index]
+
+        if (ra == FALLBACK_NAME) or (dec == FALLBACK_NAME):
+            return None, None
 
         pixel_height = 0.5*(specview.axis_y.scale.max - specview.axis_y.scale.min)
         point = SkyCoord(ra*u.deg, dec*u.deg)
