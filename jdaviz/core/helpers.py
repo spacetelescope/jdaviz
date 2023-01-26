@@ -438,11 +438,15 @@ class ConfigHelper(HubListener):
         # so we should keep this a list.
         if isinstance(subsets_to_apply, str):
             subsets_to_apply = [subsets_to_apply]
+
         # Previously, this would use viewer.default_class. Do we want to pass
         # a viewer reference in order to enable this? Or move this to the base
         # viewer class?
         cls = Spectrum1D if cls == 'default' else cls
         data = self.app.data_collection[data_label].get_object(cls=cls, statistic=statistic)
+
+        if not subsets_to_apply:
+            return data
 
         # Loop through each subset
         for subsets in self.app.data_collection.subset_groups:
