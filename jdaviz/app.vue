@@ -166,7 +166,7 @@ export default {
       return this.notebook_context;
     },
     getReadTheDocsLink() {
-      if (['specviz', 'cubeviz', 'mosviz', 'imviz'].indexOf(this.config) !== -1) {
+      if (['specviz', 'specviz2d', 'cubeviz', 'mosviz', 'imviz'].indexOf(this.config) !== -1) {
         return 'https://jdaviz.readthedocs.io/en/'+this.vdocs+'/'+this.config+'/index.html'
       } else {
         return 'https://jdaviz.readthedocs.io'
