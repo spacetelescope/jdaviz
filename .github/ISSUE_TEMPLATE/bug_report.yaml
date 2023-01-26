@@ -8,7 +8,10 @@ body:
       value: >-
         Thanks for taking the time to fill out this bug report!
 
-        Please have a search on our GitHub repository to see if a similar issue has already been posted. If a similar issue is closed, have a quick look to see if you are satisfied by the resolution. If not please go ahead and open an issue!
+        Please have a search on our GitHub repository to see if a similar
+        issue has already been posted. If a similar issue is closed, have a
+        quick look to see if you are satisfied by the resolution.
+        If not please go ahead and open an issue!
 
         This is a public repository, please scrub out sensitive information!
   - type: dropdown
@@ -50,7 +53,7 @@ body:
     attributes:
       label: Browser
       placeholder: e.g., Chrome 88
- - type: textarea
+  - type: textarea
     attributes:
       label: Jupyter
       description: Jupyter environment information.
