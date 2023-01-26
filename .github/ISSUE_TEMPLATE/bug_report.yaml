@@ -1,0 +1,96 @@
+name: Bug report
+description: Create a report describing unexpected or incorrect behavior in Jdaviz.
+title: "[BUG]"
+labels: "bug, needs-triage"
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Thanks for taking the time to fill out this bug report!
+
+        Please have a search on our GitHub repository to see if a similar issue has already been posted. If a similar issue is closed, have a quick look to see if you are satisfied by the resolution. If not please go ahead and open an issue!
+
+        This is a public repository, please scrub out sensitive information!
+  - type: dropdown
+    attributes:
+      label: Jdaviz component
+      description: Which Jdaviz component were you using?
+      options:
+        - Cubeviz
+        - Imviz
+        - Mosviz
+        - Specviz
+        - Specviz2d
+        - Other (explain in Description below)
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Description
+      description: >-
+        A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: How to Reproduce
+      description: Please provide steps to reproduce this bug. Include screenshots if they help explain the problem.
+      placeholder: |
+        1. Get package from '...'
+        2. Then run '...'
+        3. An error occurs.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected behavior
+      description: >-
+        A clear and concise description of what you expected to happen.
+  - type: input
+    attributes:
+      label: Browser
+      placeholder: e.g., Chrome 88
+ - type: textarea
+    attributes:
+      label: Jupyter
+      description: Jupyter environment information.
+      placeholder: |
+        jupyter --version
+  - type: textarea
+    attributes:
+      label: Software versions
+      description: Version of relevant packages.
+      placeholder: |
+        import platform; print(platform.platform())
+        import sys; print("Python", sys.version)
+        import numpy; print("Numpy", numpy.__version__)
+        import astropy; print("astropy", astropy.__version__)
+        import matplotlib; print("matplotlib", matplotlib.__version__)
+        import scipy; print("scipy", scipy.__version__)
+        import skimage; print("scikit-image", skimage.__version__)
+        import asdf; print("asdf", asdf.__version__)
+        import gwcs; print("gwcs", gwcs.__version__)
+        import regions; print("regions", regions.__version__)
+        import specutils; print("specutils", specutils.__version__)
+        import specreduce; print("specreduce", specreduce.__version__)
+        import photutils; print("photutils", photutils.__version__)
+        import astroquery; print("astroquery", astroquery.__version__)
+        import yaml; print("pyyaml", yaml.__version__)
+        import asteval; print("asteval", asteval.__version__)
+        import idna; print("idna", idna.__version__)
+        import traitlets; print("traitlets", traitlets.__version__)
+        import bqplot; print("bqplot", bqplot.__version__)
+        import bqplot_image_gl; print("bqplot-image-gl", bqplot_image_gl.__version__)
+        import glue; print("glue-core", glue.__version__)
+        import glue_jupyter; print("glue-jupyter", glue_jupyter.__version__)
+        import glue_astronomy; print("glue-astronomy", glue_astronomy.__version__)
+        import echo; print("echo", echo.__version__)
+        import ipyvue; print("ipyvue", ipyvue.__version__)
+        import ipyvuetify; print("ipyvuetify", ipyvuetify.__version__)
+        import ipysplitpanes; print("ipysplitpanes", ipysplitpanes.__version__)
+        import ipygoldenlayout; print("ipygoldenlayout", ipygoldenlayout.__version__)
+        import jinja2; print("Jinja2", jinja2.__version__)
+        import voila; print("voila", voila.__version__)
+        import vispy; print("vispy", vispy.__version__)
+        import sidecar; print("sidecar", sidecar.__version__)
+        import jdaviz; print("Jdaviz", jdaviz.__version__)
