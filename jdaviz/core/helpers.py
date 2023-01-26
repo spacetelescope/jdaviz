@@ -17,7 +17,10 @@ from glue.core import HubListener
 from glue.core.edit_subset_mode import NewMode
 from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage
 from glue.core.subset import Subset, MaskSubsetState
+from glue.config import data_translator
 from ipywidgets.widgets import widget_serialization
+from specutils import Spectrum1D
+
 
 from jdaviz.app import Application
 from jdaviz.core.events import SnackbarMessage, ExitBatchLoadMessage
@@ -401,6 +404,68 @@ class ConfigHelper(HubListener):
         warnings.warn('show_in_new_tab has been replaced with show(loc="sidecar:tab-after")',
                       DeprecationWarning)
         return self.show(loc="sidecar:tab-after", title=title)
+
+    def get_data(self, data_label, cls='default', subsets_to_apply=None, statistic=None):
+        """
+        Returns data with name equal to `data_label` of type `cls` with subsets applied from
+        `subsets_to_apply`.
+
+        Parameters
+        ----------
+        cls : `~specutils.Spectrum1D`, 'default'
+            The type that data will be returned as.
+        data_label : str
+            Provide a label to retrieve a specific data set from data_collection.
+        subsets_to_apply : str, list, optional
+            Subsets that are to be applied to data before it is returned. If a string
+            is given, it will be turned into a list and looped through. A future implementation
+            will allow applying multiple subsets to data before it is returned.
+        statistic : {'minimum', 'maximum', 'mean', 'median', 'sum', 'percentile'}, optional
+            The statistic to use to collapse the dataset
+
+        Returns
+        -------
+        data : dict
+            A dict of the transformed Glue subset objects, with keys
+            representing the subset name and values as astropy regions
+            objects.
+
+        """
+        if data_label not in self.app.data_collection:
+            return
+
+        # Follow-up effort will be to have multuple subsets apply,
+        # so we should keep this a list.
+        if isinstance(subsets_to_apply, str):
+            subsets_to_apply = [subsets_to_apply]
+        # Previously, this would use viewer.default_class. Do we want to pass
+        # a viewer reference in order to enable this? Or move this to the base
+        # viewer class?
+        cls = Spectrum1D if cls == 'default' else cls
+        data = self.app.data_collection[data_label].get_object(cls=cls, statistic=statistic)
+
+        # Loop through each subset
+        for subsets in self.app.data_collection.subset_groups:
+            # If name matches name from the list subsets_to_apply, continue
+            if subsets.label in subsets_to_apply:
+                # Loop through each data an individual subset applies to
+                for subset in subsets.subsets:
+                    # If the subset applies to data with the same name as data_label, continue
+                    if subset.data.label == data_label:
+
+                        # TODO: If applying multiple subsets to data, convert to
+                        #  mask array and then combine them together using an operator. Then,
+                        #  apply to data.
+                        # print(np.where(subset.data.get_mask(subset.subset_state) == True))
+
+                        if cls is not None:
+                            handler, _ = data_translator.get_handler_for(cls)
+                            try:
+                                data = handler.to_object(subset, statistic=statistic)
+                            except Exception as e:
+                                print(e)
+                                continue
+        return data
 
 
 class ImageConfigHelper(ConfigHelper):
