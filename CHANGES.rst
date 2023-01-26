@@ -21,6 +21,8 @@ Specviz
 Specviz2d
 ^^^^^^^^^
 
+- Fixes link for help button in app toolbar. [#1981]
+
 Other Changes and Additions
 ---------------------------
 
