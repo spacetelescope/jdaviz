@@ -1,7 +1,7 @@
 name: Bug report
 description: Create a report describing unexpected or incorrect behavior in Jdaviz.
 title: "[BUG]"
-labels: "bug, needs-triage"
+labels: "bug,needs-triage"
 body:
   - type: markdown
     attributes:
