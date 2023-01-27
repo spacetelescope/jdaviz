@@ -441,7 +441,7 @@ class ConfigHelper(HubListener):
         cls = Spectrum1D if cls == 'default' else cls
         data = self.app.data_collection[data_label].get_object(cls=cls, statistic=statistic)
 
-        if not subset_to_apply:
+        if not subset_to_apply or not cls:
             return data
 
         # Loop through each subset
@@ -453,15 +453,14 @@ class ConfigHelper(HubListener):
                     # If the subset applies to data with the same name as data_label, continue
                     if subset.data.label == data_label:
 
-                        if cls is not None:
-                            handler, _ = data_translator.get_handler_for(cls)
-                            try:
-                                data = handler.to_object(subset, statistic=statistic)
-                            except Exception as e:
-                                warnings.warn(f"Not able to get {data_label} returned with"
-                                              f" subset {subsets.label} applied of type {cls}."
-                                              f" Exception: {e}")
-                                continue
+                        handler, _ = data_translator.get_handler_for(cls)
+                        try:
+                            data = handler.to_object(subset, statistic=statistic)
+                        except Exception as e:
+                            warnings.warn(f"Not able to get {data_label} returned with"
+                                          f" subset {subsets.label} applied of type {cls}."
+                                          f" Exception: {e}")
+                            continue
         return data
 
 
