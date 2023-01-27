@@ -40,7 +40,9 @@
         </v-select>
       </div>
       <div style="line-height: 64px; width=32px" class="only-show-in-tray">
-        <j-plugin-popout :popout_button="popout_button"></j-plugin-popout>
+        <j-tooltip tipid='plugin-table-send-to-app'>
+          <v-icon @click="send_to_app">mdi-view-grid-plus-outline</v-icon>
+        </j-tooltip>
       </div>
     </v-row>
 
