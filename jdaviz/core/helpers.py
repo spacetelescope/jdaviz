@@ -430,8 +430,8 @@ class ConfigHelper(HubListener):
         if data_label and data_label not in self.app.data_collection.labels:
             raise ValueError(f'{data_label} not in {self.app.data_collection.labels}.')
         elif not data_label and len(self.app.data_collection) > 1:
-            raise ValueError(f'data_label must be set if more than'
-                             f' one data exists in data_collection.')
+            raise ValueError('data_label must be set if more than'
+                             ' one data exists in data_collection.')
         elif not data_label and len(self.app.data_collection) == 1:
             data_label = self.app.data_collection[0].label
 
