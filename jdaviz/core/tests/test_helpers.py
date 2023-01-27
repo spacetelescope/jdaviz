@@ -1,8 +1,11 @@
+import numpy as np
 import pytest
 
 from astropy import units as u
+from astropy.tests.helper import assert_quantity_allclose
 from glue.core.edit_subset_mode import NewMode
 from glue.core.roi import XRangeROI
+from specutils import Spectrum1D
 
 from jdaviz.core.helpers import _next_subset_num
 
@@ -63,6 +66,20 @@ class TestConfigHelper:
     def test_get_data_with_one_subset_per_data(self, specviz_helper, label, subset_name, answer):
 
         results = specviz_helper.get_data(data_label=label,
-                                          subsets_to_apply=subset_name,
+                                          subset_to_apply=subset_name,
                                           statistic=None)
         assert list(results.mask) == answer
+
+    def test_get_data_no_label_multiple_in_dc(self, specviz_helper):
+        with pytest.raises(ValueError, match='data_label must be set if more'):
+            specviz_helper.get_data()
+
+    def test_get_data_label_not_in_dc(self, specviz_helper):
+        with pytest.raises(ValueError, match='Blah not in '):
+            specviz_helper.get_data(data_label="Blah")
+
+    def test_get_data_no_label_one_in_dc(self, specviz_helper):
+        specviz_helper.app.data_collection.remove(specviz_helper.app.data_collection[self.label2])
+        results = specviz_helper.get_data()
+        assert_quantity_allclose(results.flux,
+                                 self.spec.flux, atol=1e-5 * u.Unit(self.spec.flux.unit))

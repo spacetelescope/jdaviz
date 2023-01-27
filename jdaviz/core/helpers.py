@@ -405,70 +405,62 @@ class ConfigHelper(HubListener):
                       DeprecationWarning)
         return self.show(loc="sidecar:tab-after", title=title)
 
-    def get_data(self, data_label, cls='default', subsets_to_apply=None, statistic=None):
+    def get_data(self, data_label=None, cls='default', subset_to_apply=None, statistic=None):
         """
         Returns data with name equal to `data_label` of type `cls` with subsets applied from
         `subsets_to_apply`.
 
         Parameters
         ----------
-        data_label : str
+        data_label : str, optional
             Provide a label to retrieve a specific data set from data_collection.
         cls : `~specutils.Spectrum1D`, 'default'
             The type that data will be returned as.
-        subsets_to_apply : str, list, optional
-            Subsets that are to be applied to data before it is returned. If a string
-            is given, it will be turned into a list and looped through. A future implementation
-            will allow applying multiple subsets to data before it is returned.
+        subset_to_apply : str, optional
+            Subset that is to be applied to data before it is returned.
         statistic : {'minimum', 'maximum', 'mean', 'median', 'sum', 'percentile'}, optional
             The statistic to use to collapse the dataset.
 
         Returns
         -------
-        data : dict
-            A dict of the transformed Glue subset objects, with keys
-            representing the subset name and values as astropy regions
-            objects.
+        data : `cls`
+            Data is returned as type `cls` with subsets applied if applicable.
 
         """
-        if data_label not in self.app.data_collection:
-            raise ValueError(f'data_label must be a valid label'
-                             f' in data_collection but was {data_label}.')
+        if data_label and data_label not in self.app.data_collection.labels:
+            raise ValueError(f'{data_label} not in {self.app.data_collection.labels}.')
+        elif not data_label and len(self.app.data_collection) > 1:
+            raise ValueError(f'data_label must be set if more than'
+                             f' one data exists in data_collection.')
+        elif not data_label and len(self.app.data_collection) == 1:
+            data_label = self.app.data_collection[0].label
 
-        # Follow-up effort will be to have multuple subsets apply,
-        # so we should keep this a list.
-        if isinstance(subsets_to_apply, str):
-            subsets_to_apply = [subsets_to_apply]
-
-        # Previously, this would use viewer.default_class. Do we want to pass
-        # a viewer reference in order to enable this? Or move this to the base
-        # viewer class?
+        # TODO: Previously, this would use viewer.default_class. Do we want to pass
+        #  a viewer reference in order to enable this? Or move this to the base
+        #  viewer class?
         cls = Spectrum1D if cls == 'default' else cls
         data = self.app.data_collection[data_label].get_object(cls=cls, statistic=statistic)
 
-        if not subsets_to_apply:
+        if not subset_to_apply:
             return data
 
         # Loop through each subset
         for subsets in self.app.data_collection.subset_groups:
-            # If name matches name from the list subsets_to_apply, continue
-            if subsets.label in subsets_to_apply:
+            # If name matches the name in subsets_to_apply, continue
+            if subsets.label.lower() == subset_to_apply.lower():
                 # Loop through each data a subset applies to
                 for subset in subsets.subsets:
                     # If the subset applies to data with the same name as data_label, continue
                     if subset.data.label == data_label:
-
-                        # TODO: If applying multiple subsets to data, convert to
-                        #  mask array and then combine them together using an operator. Then,
-                        #  apply to data.
-                        # print(np.where(subset.data.get_mask(subset.subset_state) == True))
 
                         if cls is not None:
                             handler, _ = data_translator.get_handler_for(cls)
                             try:
                                 data = handler.to_object(subset, statistic=statistic)
                             except Exception as e:
-                                print(e)
+                                warnings.warn(f"Not able to get {data_label} returned with"
+                                              f" subset {subsets.label} applied of type {cls}."
+                                              f" Exception: {e}")
                                 continue
         return data
 
