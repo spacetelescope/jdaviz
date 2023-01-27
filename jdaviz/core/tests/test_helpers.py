@@ -1,11 +1,9 @@
-import numpy as np
 import pytest
 
 from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose
 from glue.core.edit_subset_mode import NewMode
 from glue.core.roi import XRangeROI
-from specutils import Spectrum1D
 
 from jdaviz.core.helpers import _next_subset_num
 
