@@ -412,16 +412,16 @@ class ConfigHelper(HubListener):
 
         Parameters
         ----------
-        cls : `~specutils.Spectrum1D`, 'default'
-            The type that data will be returned as.
         data_label : str
             Provide a label to retrieve a specific data set from data_collection.
+        cls : `~specutils.Spectrum1D`, 'default'
+            The type that data will be returned as.
         subsets_to_apply : str, list, optional
             Subsets that are to be applied to data before it is returned. If a string
             is given, it will be turned into a list and looped through. A future implementation
             will allow applying multiple subsets to data before it is returned.
         statistic : {'minimum', 'maximum', 'mean', 'median', 'sum', 'percentile'}, optional
-            The statistic to use to collapse the dataset
+            The statistic to use to collapse the dataset.
 
         Returns
         -------
@@ -432,7 +432,8 @@ class ConfigHelper(HubListener):
 
         """
         if data_label not in self.app.data_collection:
-            return
+            raise ValueError(f'data_label must be a valid label'
+                             f' in data_collection but was {data_label}.')
 
         # Follow-up effort will be to have multuple subsets apply,
         # so we should keep this a list.
@@ -452,7 +453,7 @@ class ConfigHelper(HubListener):
         for subsets in self.app.data_collection.subset_groups:
             # If name matches name from the list subsets_to_apply, continue
             if subsets.label in subsets_to_apply:
-                # Loop through each data an individual subset applies to
+                # Loop through each data a subset applies to
                 for subset in subsets.subsets:
                     # If the subset applies to data with the same name as data_label, continue
                     if subset.data.label == data_label:
