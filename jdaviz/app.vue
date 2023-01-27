@@ -58,24 +58,38 @@
               :has-headers="state.settings.visible.tab_headers"
               @state="onLayoutChange"
             >
-              <gl-row :closable="false">
-                <g-viewer-tab
-                  v-for="(stack, index) in state.stack_items"
-                  :stack="stack"
-                  :key="stack.viewers.map(v => v.id).join('-')"
-                  :data_items="state.data_items"
-                  :app_settings="state.settings"
-                  :icons="state.icons"
-                  :viewer_icons="state.viewer_icons"
-                  :layer_icons="state.layer_icons"
-                  :closefn="destroy_viewer_item"
-                  @data-item-visibility="data_item_visibility($event)"
-                  @data-item-unload="data_item_unload($event)"
-                  @data-item-remove="data_item_remove($event)"
-                  @call-viewer-method="call_viewer_method($event)"
-                  @change-reference-data="change_reference_data($event)"
-                ></g-viewer-tab>
-              </gl-row>
+              <gl-col>
+                <gl-row :closable="false">
+                  <g-viewer-tab
+                    v-for="(stack, index) in state.stack_items"
+                    :stack="stack"
+                    :key="stack.viewers.map(v => v.id).join('-')"
+                    :data_items="state.data_items"
+                    :app_settings="state.settings"
+                    :icons="state.icons"
+                    :viewer_icons="state.viewer_icons"
+                    :layer_icons="state.layer_icons"
+                    :closefn="destroy_viewer_item"
+                    @data-item-visibility="data_item_visibility($event)"
+                    @data-item-unload="data_item_unload($event)"
+                    @data-item-remove="data_item_remove($event)"
+                    @call-viewer-method="call_viewer_method($event)"
+                    @change-reference-data="change_reference_data($event)"
+                  ></g-viewer-tab>
+                </gl-row>
+                <gl-stack v-if="state.plugin_stack_items.length">
+                  <gl-component
+                    v-for="(plugin_item, index) in state.plugin_stack_items"
+                    :key="index"
+                    :title="plugin_item[0]"
+                    @resize="$emit('resize')"
+                    @destroy="on_destroy_plugin_stack_item($event, index)">
+                    <v-container class="plugin-stack-item" style="padding-left: 24px; padding-right: 24px; padding-top: 12px">
+                      <jupyter-widget :widget="plugin_item[1]"></jupyter-widget>
+                    </v-container>
+                  </gl-component>
+                </gl-stack>
+              </gl-col>
             </golden-layout>
           </pane>
           <pane size="25" min-size="25" v-if="state.drawer_content.length > 0" style="background-color: #fafbfc; border-top: 6px solid #C75109; min-width: 250px">
@@ -210,6 +224,14 @@ export default {
     onLayoutChange() {
       /* Workaround for #1677, can be removed when bqplot/bqplot#1531 is released */
       window.dispatchEvent(new Event('resize'));
+    },
+    on_destroy_plugin_stack_item(source, index) {
+      /* There seems to be no close event provided by vue-golden-layout, so we can't distinguish
+       * between a user closing a tab or a re-render. However, when the user closes a tab, the
+       * source of the event is a vue component. We can use that distinction as a close signal. */
+      if (source.$root) {
+        this.destroy_plugin_stack_item(index)
+      };
     }
   },
   mounted() {
@@ -240,4 +262,122 @@ export default {
 .plugin-title.v-list-item:after {
   display: none !important;
 }
+
+.cubeviz .lm_tab[title$="-viewer"] > .lm_close_tab {
+  display: none;
+}
+
+.imviz .lm_close {
+  /* hide the close button on the right to prevent closing the default viewer
+     since we cannot easily discriminate between different viewers in the filter here */
+  display: none !important;
+}
+
+.imviz .lm_tab[title="imviz-0"] > .lm_close_tab {
+  /* hide the close button on the tab for imviz-0 only to
+     prevent closing the default viewer */
+  display: none;
+}
+
+.v-toolbar__items .v-btn {
+  /* allow v-toolbar-items styling to pass through tooltip wrapping span */
+  /* css is copied from .v-toolbar__items>.v-btn */
+  border-radius: 0;
+  height: 100% !important;
+  max-height: none;
+}
+
+.v-tooltip__content {
+  background-color: white !important;
+  border-radius: 2px !important;
+  border: 1px #003B4D solid !important;
+  color: black !important;
+}
+
+.v-expansion-panel-content__wrap {
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+}
+
+a:link {
+  text-decoration: none;
+}
+
+a:visited {
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: none;
+}
+
+a:active {
+  text-decoration: none;
+}
+
+.jdaviz-nested-toolbar {
+  /* height of nested toolbar to match viewer toolbar height */
+  height: 42px;
+  margin-right: 4px;
+}
+
+.jdaviz-nested-toolbar .v-icon, .jdaviz-nested-toolbar img {
+  /* icons from dark to (consistently) light */
+  filter: invert(1) saturate(1) brightness(100);
+}
+
+.invert, .invert-if-dark.theme--dark {
+    filter: invert(1) saturate(1) brightness(100);
+    color: white;
+}
+
+.jdaviz-nested-toolbar .v-btn {
+  height: 42px !important;
+  border: none !important;
+  min-width: 42px !important;
+  /* remove "dimming" since we use orange background for active */
+  color: transparent ! important;
+}
+
+.suboptions-carrot {
+  /* tweak margins for different toolbar size */
+  margin-bottom: -28px !important;
+}
+
+.jdaviz-nested-toolbar .v-btn--active, .jdaviz-nested-toolbar .v-btn:focus, .v-toolbar .active, .jdaviz-viewer-toolbar .active {
+  /* active color (orange) */
+  background-color: #c75109 !important;
+}
+
+.v-divider.theme--dark {
+  /* make the v-divider standout more */
+  border-color: hsla(0,0%,100%,.35) !important;
+}
+
+.no-hint .v-text-field__details {
+  display: none !important;
+}
+
+.color-to-accent {
+  /* https://codepen.io/sosuke/pen/Pjoqqp for #C75109 */
+  filter: brightness(0) saturate(100%) invert(31%) sepia(84%) saturate(1402%) hue-rotate(1deg) brightness(95%) contrast(94%);
+}
+
+.v-overlay__content {
+  position: unset !important;
+}
+
+.jdaviz__content--not-in-notebook {
+  max-height: calc(100% - 48px);
+}
+
+#popout-widget-container .v-application.jdaviz {
+  min-height: 100vh;
+  max-height: 100vh;
+}
+
+#popout-widget-container .jdaviz__content--not-in-notebook {
+  max-height: 100%;
+}
+
 </style>

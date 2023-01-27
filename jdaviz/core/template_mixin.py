@@ -493,6 +493,7 @@ class PluginTemplateMixin(TemplateMixin):
         # <j-tray-plugin> component
         self._ping_delay_ms = 200
 
+
         # _methods_skip_since_last_active: methods that should be skipped when is_active is next
         # set to True because no changes have been made.  This can be used to prevent queuing
         # of expensive method calls, especially when the browser throttles the ping resulting
@@ -4736,6 +4737,11 @@ class PluginSubcomponent(VuetifyTemplate):
     def display_name(self):
         return f'{self._plugin._plugin_name}: {self._component_type}'
 
+    def vue_send_to_app(self, data=None, title=None):
+        title = title if title is not None else self.display_name
+        self._plugin.app.state.plugin_stack_items += [(title,
+                                                       'IPY_MODEL_'+self.model_id)]
+
     def vue_popout(self, data=None):
         self.show(loc='popout')
 
@@ -4787,7 +4793,10 @@ class PluginSubcomponent(VuetifyTemplate):
         inline, as only JupyterLab has a mechanism to have multiple tabs.
         """
         title = title if title is not None else self.display_name
-        show_widget(self, loc=loc, title=title)
+        if loc == 'app':
+            self.vue_send_to_app(title=title)
+        else:
+            show_widget(self, loc=loc, title=title)
 
 
 class Table(PluginSubcomponent):

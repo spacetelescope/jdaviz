@@ -278,6 +278,10 @@ class ApplicationState(State):
         docstring="Nested collection of viewers constructed to support the "
                   "Golden Layout viewer area.")
 
+    plugin_stack_items = ListCallbackProperty(
+        docstring="List of plugin subcomponents to be displayed in the "
+                  "Golden Layout viewer area")
+
     style_widget = CallbackProperty(
         '', docstring="Jupyter widget that won't be displayed but can apply css to the app"
     )
@@ -2289,6 +2293,17 @@ class Application(VuetifyTemplate, HubListener):
             del self.state.viewer_icons[cid]
 
         self.hub.broadcast(ViewerRemovedMessage(cid, sender=self))
+
+    def vue_destroy_plugin_stack_item(self, index):
+        self.state.plugin_stack_items.pop(index)
+
+    def vue_data_item_unload(self, event):
+        """
+        Callback for selection events in the front-end data list when clicking to unload an entry
+        from the viewer.
+        """
+        data_label = self._get_data_item_by_id(event['item_id'])['name']
+        self.remove_data_from_viewer(event['id'], data_label)
 
     def vue_change_reference_data(self, event):
         self._change_reference_data(
