@@ -162,7 +162,7 @@ def test_load_single_image_multi_spec(mosviz_helper, mos_image, spectrum1d, mos_
 
     # Coordinates info panel should not crash even when nothing is loaded.
     label_mouseover = mosviz_helper.app.session.application._tools['g-coords-info']
-    label_mouseover._viewer_mouse_event(image_viewer, {'event': 'mouseover',
+    label_mouseover._viewer_mouse_event(image_viewer, {'event': 'mousemove',
                                                        'domain': {'x': 0, 'y': 0}})
     assert label_mouseover.as_text() == ('', '', '')
 
@@ -214,9 +214,11 @@ def test_load_single_image_multi_spec(mosviz_helper, mos_image, spectrum1d, mos_
     assert label_mouseover.as_text() == ('Pixel x=00010.0 y=00100.0 Value +8.12986e-01', '', '')
     assert label_mouseover.icon == 'b'
 
+    # need to trigger a mouseleave or mouseover to reset the traitlets
+    label_mouseover._viewer_mouse_event(spec1d_viewer, {'event': 'mouseenter'})
     label_mouseover._viewer_mouse_event(spec1d_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 7000, 'y': 170}})
-    assert label_mouseover.as_text() == ('Cursor 7.00000e+03, 1.70000e+02 Value +8.12986e-01',
+    assert label_mouseover.as_text() == ('Cursor 7.00000e+03, 1.70000e+02',
                                          'Wave 6.88889e+03 Angstrom (4 pix)',
                                          'Flux 1.35436e+01 Jy')
     assert label_mouseover.icon == 'c'

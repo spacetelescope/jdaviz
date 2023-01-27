@@ -164,13 +164,11 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
                                             {'event': 'mousemove',
                                              'domain': {'x': 0, 'y': 0}})
 
-#        assert label_mouseover.as_text() == ('Pixel x=00.0 y=00.0 Value +1.00000e+00',
-#                                             'World 22h30m04.8674s -20d49m59.9990s (ICRS)',
-#                                             '337.5202808000 -20.8333330600 (deg)')
-#        for some reason getting:
-#                                            ('Pixel x=01.0 y=-0.0 Value +1.00000e+00',
-#                                             'World 22h30m04.8674s -20d49m59.9990s (ICRS)',
-#                                             '337.5202808000 -20.8333330600 (deg)')
+        lmtext = label_mouseover.as_text()
+        assert lmtext[0] in ('Pixel x=01.0 y=00.0 Value +1.00000e+00',
+                             'Pixel x=01.0 y=-0.0 Value +1.00000e+00')
+        assert lmtext[1:] == ('World 22h30m04.8674s -20d49m59.9990s (ICRS)',
+                              '337.5202808000 -20.8333330600 (deg)')
 
         # blink image through clicking with blink tool
         self.viewer.toolbar.active_tool_id = 'jdaviz:blinkonce'
@@ -286,12 +284,11 @@ class TestLink_GWCS_GWCS(BaseImviz_GWCS_GWCS):
         label_mouseover = self.imviz.app.session.application._tools['g-coords-info']
         label_mouseover._viewer_mouse_event(self.viewer,
                                             {'event': 'mousemove', 'domain': {'x': 10, 'y': 3}})
-        assert label_mouseover.as_text() in [('Pixel x=07.0 y=00.0 Value +0.00000e+00',
-                                              'World 00h14m19.6291s -30d23m30.9692s (ICRS)',
-                                              '3.5817877198 -30.3919358920 (deg)'),
-                                             ('Pixel x=07.0 y=-0.0 Value +0.00000e+00',
-                                              'World 00h14m19.6291s -30d23m30.9692s (ICRS)',
-                                              '3.5817877198 -30.3919358920 (deg)')]
+        lmtext = label_mouseover.as_text()
+        assert lmtext[0] in ('Pixel x=07.0 y=00.0 Value +0.00000e+00',
+                             'Pixel x=07.0 y=-0.0 Value +0.00000e+00')
+        assert lmtext[1:] == ('World 00h14m19.6291s -30d23m30.9692s (ICRS)',
+                              '3.5817877198 -30.3919358920 (deg)')
 
         assert label_mouseover.row1_unreliable
         assert label_mouseover.row2_unreliable
@@ -349,9 +346,11 @@ class TestLink_GWCS_GWCS(BaseImviz_GWCS_GWCS):
         label_mouseover._viewer_mouse_event(self.viewer,
                                             {'event': 'keydown', 'key': 'b',
                                              'domain': {'x': -1, 'y': -1}})
+        self.viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'b',
+                                           'domain': {'x': -1, 'y': -1}})
         assert label_mouseover.as_text() == ('Pixel x=-1.0 y=-1.0',
-                                             'World 00h14m19.5987s -30d23m31.0683s (ICRS)',
-                                             '3.5816611274 -30.3919634282 (deg)')
+                                             'World 00h14m19.5829s -30d23m30.9860s (ICRS)',
+                                             '3.5815955408 -30.3919405616 (deg)')
         assert not label_mouseover.row1_unreliable
         assert label_mouseover.row2_unreliable
         assert label_mouseover.row3_unreliable

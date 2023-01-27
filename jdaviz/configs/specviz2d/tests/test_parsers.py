@@ -78,9 +78,11 @@ def test_2d_parser_no_unit(specviz2d_helper, mos_spectrum2d):
     assert label_mouseover.icon == 'a'
 
     viewer_1d = specviz2d_helper.app.get_viewer('spectrum-viewer')
+    # need to trigger a mouseleave or mouseover to reset the traitlets
+    label_mouseover._viewer_mouse_event(viewer_1d, {'event': 'mouseenter'})
     label_mouseover._viewer_mouse_event(viewer_1d,
                                         {'event': 'mousemove', 'domain': {'x': 6.5, 'y': 3}})
-    assert label_mouseover.as_text() == ('Cursor 6.50000e+00, 3.00000e+00 Value +3.74540e-01',
+    assert label_mouseover.as_text() == ('Cursor 6.50000e+00, 3.00000e+00',
                                          'Wave 6.00000e+00 pix',
                                          'Flux -3.59571e+00')
     assert label_mouseover.icon == 'b'

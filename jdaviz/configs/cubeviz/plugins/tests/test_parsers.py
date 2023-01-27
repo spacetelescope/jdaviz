@@ -52,9 +52,11 @@ def test_fits_image_hdu_with_microns(image_cube_hdu_obj_microns, cubeviz_helper)
     unc_viewer = cubeviz_helper.app.get_viewer('uncert-viewer')
     label_mouseover._viewer_mouse_event(unc_viewer,
                                         {'event': 'mousemove', 'domain': {'x': -1, 'y': 0}})
-    assert label_mouseover.as_text() == ('Pixel x=-1.0 y=00.0',
-                                         'World 13h41m45.5759s +27d00m12.3044s (ICRS)',
-                                         '205.4398995981 27.0034178810 (deg)')  # noqa
+    assert label_mouseover.as_text()[0] == 'Pixel x=-1.0 y=00.0'  # Out of bounds
+    # remaining lines are unvalidated,
+    # see https://github.com/spacetelescope/jdaviz/pull/1976#discussion_r1093199919
+    # 'World 13h41m45.5759s +27d00m12.3044s (ICRS)',
+    # '205.4398995981 27.0034178810 (deg)')  # noqa
 
 
 def test_spectrum1d_with_fake_fixed_units(spectrum1d, cubeviz_helper):
@@ -115,7 +117,7 @@ def test_fits_image_hdu_parse_from_file(tmpdir, image_cube_hdu_obj, cubeviz_help
     unc_viewer = cubeviz_helper.app.get_viewer(cubeviz_helper._default_uncert_viewer_reference_name)
     label_mouseover._viewer_mouse_event(unc_viewer,
                                         {'event': 'mousemove', 'domain': {'x': -1, 'y': 0}})
-    assert label_mouseover.as_text() == ('Pixel x=-1.0 y=00.0',
+    assert label_mouseover.as_text() == ('Pixel x=-1.0 y=00.0',  # Out of bounds
                                          'World 13h41m46.5994s +26d59m58.6136s (ICRS)',
                                          '205.4441642302 26.9996148973 (deg)')  # noqa
 

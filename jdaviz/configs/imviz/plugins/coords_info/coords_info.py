@@ -114,7 +114,7 @@ class CoordsInfo(TemplateMixin):
             marks.visible = False
 
     def _viewer_mouse_event(self, viewer, data):
-        if data['event'] in ['mouseleave', 'mouseenter']:
+        if data['event'] in ('mouseleave', 'mouseenter'):
             return self._viewer_mouse_clear_event(viewer, data)
 
         if len(self.app.data_collection) < 1:
@@ -143,8 +143,6 @@ class CoordsInfo(TemplateMixin):
         self.update_display(viewer, self._x, self._y)
 
     def update_display(self, viewer, x, y):
-        """
-        """
         if isinstance(viewer, SpecvizProfileView):
             self._spectrum_viewer_update(viewer, x, y)
         elif isinstance(viewer,
