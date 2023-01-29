@@ -36,7 +36,7 @@ body:
     attributes:
       label: How to Reproduce
       description: Please provide steps to reproduce this bug. Include screenshots if they help explain the problem.
-      placeholder: |
+      value: |
         1. Get package from '...'
         2. Then run '...'
         3. An error occurs.
@@ -50,18 +50,18 @@ body:
   - type: input
     attributes:
       label: Browser
-      placeholder: e.g., Chrome 88
+      placeholder: Chrome 88
   - type: textarea
     attributes:
       label: Jupyter
       description: Jupyter environment information.
-      placeholder: |
+      value: |
         jupyter --version
   - type: textarea
     attributes:
       label: Software versions
       description: Version of relevant packages.
-      placeholder: |
+      value: |
         import platform; print(platform.platform())
         import sys; print("Python", sys.version)
         import numpy; print("Numpy", numpy.__version__)
