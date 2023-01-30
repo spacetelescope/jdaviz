@@ -42,7 +42,6 @@ class Reproject(PluginTemplateMixin, DatasetSelectMixin):
 
         self.reproject_in_progress = True
         try:
-            # TODO: Support GWCS (https://github.com/astropy/reproject/issues/328)
             # Find WCS where North is pointing up.
             wcs_out, shape_out = find_optimal_celestial_wcs([(data.shape, wcs_in)], frame='icrs')
 
