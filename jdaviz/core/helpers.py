@@ -439,7 +439,7 @@ class ConfigHelper(HubListener):
 
         if cls is not None and not isclass(cls):
             raise TypeError(
-                "cls in get_data_from_viewer must be a class or None.")
+                "cls in get_data must be a class or None.")
         data = self.app.data_collection[data_label]
 
         if not cls:
