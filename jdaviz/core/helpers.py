@@ -439,29 +439,22 @@ class ConfigHelper(HubListener):
 
         if cls is not None and not isclass(cls):
             raise TypeError(
-                "cls in get_data_from_viewer must be a class, None, or "
-                "the 'default' string.")
+                "cls in get_data_from_viewer must be a class or None.")
         data = self.app.data_collection[data_label]
 
-        if cls is not None:
-            # If data is one-dimensional, assume that it can be
-            #  collapsed via the defined statistic
+        if not cls:
+            if len(data.shape) == 2:
+                cls = CCDData
+            elif len(data.shape) in [1, 3]:
+                cls = Spectrum1D
+        if not subset_to_apply:
             if 'Trace' in data.meta:
                 data = data.get_object()
             elif cls == Spectrum1D:
                 data = data.get_object(cls=cls, statistic=statistic)
             else:
                 data = data.get_object(cls=cls)
-        # If the shape of the data is 2d, then use CCDData as the
-        #  output data type
-        elif len(data.shape) == 2:
-            cls = CCDData
-            data = data.get_object(cls=cls)
-        elif len(data.shape) in [1, 3]:
-            cls = Spectrum1D
-            data = data.get_object(cls=cls, statistic=statistic)
 
-        if not subset_to_apply or not cls:
             return data
 
         if not cls and subset_to_apply:
