@@ -65,6 +65,11 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
             else:  # pragma: no cover
                 return
 
+        # only handle mouseover markers if the setting is selected:
+        plot_options_plugin = self.jdaviz_app.get_tray_item_from_name('g-plot-options')
+        if not plot_options_plugin.show_mouseover_marker:
+            return
+
         if data['event'] == 'mousemove':
             if len(self.jdaviz_app.data_collection) < 1:
                 return

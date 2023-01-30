@@ -188,6 +188,8 @@ class PlotOptions(PluginTemplateMixin):
 
     show_viewer_labels = Bool(True).tag(sync=True)
 
+    show_mouseover_marker = Bool(True).tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.viewer = ViewerSelect(self, 'viewer_items', 'viewer_selected', 'multiselect')
@@ -304,6 +306,7 @@ class PlotOptions(PluginTemplateMixin):
         # display_units
 
         self.show_viewer_labels = self.app.state.settings['viewer_labels']
+        self.show_mouseover_marker = self.app.state.settings['mouseover_marker']
         self.app.state.add_callback('settings', self._on_app_settings_changed)
 
     @property
@@ -331,6 +334,7 @@ class PlotOptions(PluginTemplateMixin):
 
     def _on_app_settings_changed(self, value):
         self.show_viewer_labels = value['viewer_labels']
+        self.show_mouseover_marker = value['mouseover_marker']
 
     def select_all(self, viewers=True, layers=True):
         """

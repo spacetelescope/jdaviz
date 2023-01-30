@@ -135,6 +135,7 @@ class ApplicationState(State):
             'tab_headers': True,
         },
         'viewer_labels': True,
+        'mouseover_marker': True,
         'dense_toolbar': True,
         'context': {
             'notebook': {
