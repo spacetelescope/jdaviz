@@ -409,8 +409,8 @@ class ConfigHelper(HubListener):
 
     def get_data(self, data_label=None, cls=None, subset_to_apply=None, statistic=None):
         """
-        Returns data with name equal to `data_label` of type `cls` with subsets applied from
-        `subsets_to_apply`.
+        Returns data with name equal to data_label of type cls with subsets applied from
+        subset_to_apply.
 
         Parameters
         ----------
@@ -425,8 +425,8 @@ class ConfigHelper(HubListener):
 
         Returns
         -------
-        data : `cls`
-            Data is returned as type `cls` with subsets applied if applicable.
+        data : cls
+            Data is returned as type cls with subsets applied.
 
         """
         if data_label and data_label not in self.app.data_collection.labels:
