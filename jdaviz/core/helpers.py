@@ -416,7 +416,7 @@ class ConfigHelper(HubListener):
         ----------
         data_label : str, optional
             Provide a label to retrieve a specific data set from data_collection.
-        cls : `~specutils.Spectrum1D`, 'default', None
+        cls : `~specutils.Spectrum1D`, `~astropy.nddata.CCDData`, optional
             The type that data will be returned as.
         subset_to_apply : str, optional
             Subset that is to be applied to data before it is returned.
@@ -436,11 +436,6 @@ class ConfigHelper(HubListener):
                              ' one data exists in data_collection.')
         elif not data_label and len(self.app.data_collection) == 1:
             data_label = self.app.data_collection[0].label
-
-        # TODO: Previously, this would use viewer.default_class. Do we want to pass
-        #  a viewer reference in order to enable this? Or move this to the base
-        #  viewer class?
-        cls = Spectrum1D if cls == 'default' else cls
 
         if cls is not None and not isclass(cls):
             raise TypeError(
@@ -468,6 +463,10 @@ class ConfigHelper(HubListener):
 
         if not subset_to_apply or not cls:
             return data
+
+        if not cls and subset_to_apply:
+            raise AttributeError(f"cls must be provided to"
+                                 f" apply subset {subset_to_apply} to data")
 
         # Loop through each subset
         for subsets in self.app.data_collection.subset_groups:
