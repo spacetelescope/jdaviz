@@ -9,10 +9,12 @@ on the motivation behind this concept.
 import re
 import warnings
 from contextlib import contextmanager
+from inspect import isclass
 
 import numpy as np
 import astropy.units as u
 from astropy.wcs.wcsapi import BaseHighLevelWCS
+from astropy.nddata import CCDData
 from glue.core import HubListener
 from glue.core.edit_subset_mode import NewMode
 from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage
@@ -405,7 +407,7 @@ class ConfigHelper(HubListener):
                       DeprecationWarning)
         return self.show(loc="sidecar:tab-after", title=title)
 
-    def get_data(self, data_label=None, cls='default', subset_to_apply=None, statistic=None):
+    def get_data(self, data_label=None, cls=None, subset_to_apply=None, statistic=None):
         """
         Returns data with name equal to `data_label` of type `cls` with subsets applied from
         `subsets_to_apply`.
@@ -414,7 +416,7 @@ class ConfigHelper(HubListener):
         ----------
         data_label : str, optional
             Provide a label to retrieve a specific data set from data_collection.
-        cls : `~specutils.Spectrum1D`, 'default'
+        cls : `~specutils.Spectrum1D`, 'default', None
             The type that data will be returned as.
         subset_to_apply : str, optional
             Subset that is to be applied to data before it is returned.
@@ -439,7 +441,30 @@ class ConfigHelper(HubListener):
         #  a viewer reference in order to enable this? Or move this to the base
         #  viewer class?
         cls = Spectrum1D if cls == 'default' else cls
-        data = self.app.data_collection[data_label].get_object(cls=cls, statistic=statistic)
+
+        if cls is not None and not isclass(cls):
+            raise TypeError(
+                "cls in get_data_from_viewer must be a class, None, or "
+                "the 'default' string.")
+        data = self.app.data_collection[data_label]
+
+        if cls is not None:
+            # If data is one-dimensional, assume that it can be
+            #  collapsed via the defined statistic
+            if 'Trace' in data.meta:
+                data = data.get_object()
+            elif cls == Spectrum1D:
+                data = data.get_object(cls=cls, statistic=statistic)
+            else:
+                data = data.get_object(cls=cls)
+        # If the shape of the data is 2d, then use CCDData as the
+        #  output data type
+        elif len(data.shape) == 2:
+            cls = CCDData
+            data = data.get_object(cls=cls)
+        elif len(data.shape) in [1, 3]:
+            cls = Spectrum1D
+            data = data.get_object(cls=cls, statistic=statistic)
 
         if not subset_to_apply or not cls:
             return data
