@@ -1,3 +1,6 @@
+import pytest
+
+
 def test_nested_helper(cubeviz_helper):
     '''Ensures the Cubeviz helper is always returned, even after the Specviz helper is called'''
     # Force Specviz helper to instantiate
@@ -15,3 +18,11 @@ def test_plugin_user_apis(cubeviz_helper):
         plugin = plugin_api._obj
         for attr in plugin_api._expose:
             assert hasattr(plugin, attr)
+
+
+def test_invalid_cls(cubeviz_helper, spectrum1d_cube):
+    cubeviz_helper.load_data(spectrum1d_cube, "test")
+    cubeviz_helper._apply_interactive_region('bqplot:ellipse', (0, 0), (9, 8))
+
+    with pytest.raises(UserWarning, match='Not able to get '):
+        cubeviz_helper.get_data(data_label="test[FLUX]", subset_to_apply='Subset 1', statistic=42)

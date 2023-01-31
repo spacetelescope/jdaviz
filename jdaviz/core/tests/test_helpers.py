@@ -81,7 +81,3 @@ class TestConfigHelper:
         results = specviz_helper.get_data()
         assert_quantity_allclose(results.flux,
                                  self.spec.flux, atol=1e-5 * u.Unit(self.spec.flux.unit))
-
-    def test_invalid_cls(self, specviz_helper):
-        with pytest.raises(TypeError, match='cls in get_data must'):
-            specviz_helper.get_data(data_label=self.label, cls=42)

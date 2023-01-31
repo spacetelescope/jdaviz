@@ -458,8 +458,9 @@ class ConfigHelper(HubListener):
             return data
 
         if not cls and subset_to_apply:
-            raise AttributeError(f"cls must be provided to"
-                                 f" apply subset {subset_to_apply} to data")
+            raise AttributeError(f"A valid cls must be provided to"
+                                 f" apply subset {subset_to_apply} to data. "
+                                 f"Instead, {cls} was given.")
 
         # Loop through each subset
         for subsets in self.app.data_collection.subset_groups:
@@ -477,7 +478,6 @@ class ConfigHelper(HubListener):
                             warnings.warn(f"Not able to get {data_label} returned with"
                                           f" subset {subsets.label} applied of type {cls}."
                                           f" Exception: {e}")
-                            continue
         return data
 
 
