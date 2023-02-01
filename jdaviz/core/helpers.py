@@ -429,6 +429,12 @@ class ConfigHelper(HubListener):
             Data is returned as type cls with subsets applied.
 
         """
+        list_of_valid_statistic_values = ['minimum', 'maximum', 'mean',
+                                          'median', 'sum', 'percentile']
+        if statistic and statistic not in list_of_valid_statistic_values:
+            raise ValueError(f"statistic {statistic} not in list of valid"
+                             f" statistic values {list_of_valid_statistic_values}")
+
         if data_label and data_label not in self.app.data_collection.labels:
             raise ValueError(f'{data_label} not in {self.app.data_collection.labels}.')
         elif not data_label and len(self.app.data_collection) > 1:
