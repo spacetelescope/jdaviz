@@ -69,7 +69,7 @@ Other Changes and Additions
 
 - Gaussian Smooth products are always labeled with the original data [#1973]
 
-3.2.1 (unreleased)
+3.2.2 (unreleased)
 ==================
 
 Bug Fixes
@@ -81,18 +81,25 @@ Cubeviz
 Imviz
 ^^^^^
 
-- Fixed crashing when clicking Home button after markers are added. [#1971]
-
 Mosviz
 ^^^^^^
 
-- Fix broken slit overlay plugin which resulted in a snackbar error being raised complaining about
-  ``S_REGION``. [#1957]
-
-- RA/Dec fallback values changed to "Unspecified" to avoid JSON serialization warning when loading data. [#1958]
-
 Specviz
 ^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+3.2.1 (2023-02-02)
+==================
+
+Bug Fixes
+---------
+
+Imviz
+^^^^^
+
+- Fixed crashing when clicking Home button after markers are added. [#1971]
 
 Specviz2d
 ^^^^^^^^^
