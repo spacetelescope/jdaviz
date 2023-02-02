@@ -479,7 +479,7 @@ class ConfigHelper(HubListener):
 
                         handler, _ = data_translator.get_handler_for(cls)
                         try:
-                            if isinstance(cls, Spectrum1D):
+                            if cls == Spectrum1D:
                                 data = handler.to_object(subset, statistic=statistic)
                             else:
                                 data = handler.to_object(subset)

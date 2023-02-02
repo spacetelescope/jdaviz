@@ -81,3 +81,8 @@ class TestConfigHelper:
         results = specviz_helper.get_data()
         assert_quantity_allclose(results.flux,
                                  self.spec.flux, atol=1e-5 * u.Unit(self.spec.flux.unit))
+
+    def test_get_data_invald_cls_class(self, specviz_helper):
+        specviz_helper.app.data_collection.remove(specviz_helper.app.data_collection[self.label2])
+        with pytest.raises(TypeError, match="cls in get_data must be a class or None."):
+            specviz_helper.get_data('Test 1D Spectrum', cls=42)
