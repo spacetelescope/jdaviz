@@ -479,7 +479,10 @@ class ConfigHelper(HubListener):
 
                         handler, _ = data_translator.get_handler_for(cls)
                         try:
-                            data = handler.to_object(subset, statistic=statistic)
+                            if isinstance(cls, Spectrum1D):
+                                data = handler.to_object(subset, statistic=statistic)
+                            else:
+                                data = handler.to_object(subset)
                         except Exception as e:
                             warnings.warn(f"Not able to get {data_label} returned with"
                                           f" subset {subsets.label} applied of type {cls}."
