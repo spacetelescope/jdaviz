@@ -420,7 +420,7 @@ class ConfigHelper(HubListener):
             The type that data will be returned as.
         subset_to_apply : str, optional
             Subset that is to be applied to data before it is returned.
-        statistic : {'minimum', 'maximum', 'mean', 'median', 'sum', 'percentile'}, optional
+        statistic : {'minimum', 'maximum', 'mean', 'median', 'sum'}, optional
             The statistic to use to collapse the dataset.
 
         Returns
