@@ -430,7 +430,7 @@ class ConfigHelper(HubListener):
 
         """
         list_of_valid_statistic_values = ['minimum', 'maximum', 'mean',
-                                          'median', 'sum', 'percentile']
+                                          'median', 'sum']
         if statistic and statistic not in list_of_valid_statistic_values:
             raise ValueError(f"statistic {statistic} not in list of valid"
                              f" statistic values {list_of_valid_statistic_values}")
