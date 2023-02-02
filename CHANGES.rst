@@ -1,22 +1,13 @@
-3.2.1 (unreleased)
+3.2.1 (2023-02-02)
 ==================
 
 Bug Fixes
 ---------
 
-Cubeviz
-^^^^^^^
-
 Imviz
 ^^^^^
 
 - Fixed crashing when clicking Home button after markers are added. [#1971]
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
 
 Specviz2d
 ^^^^^^^^^
