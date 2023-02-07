@@ -83,6 +83,7 @@ Imviz
 
 Mosviz
 ^^^^^^
+- Fix typo where zoom Dec retrieval used RA instead. [#1992]
 
 Specviz
 ^^^^^^^
