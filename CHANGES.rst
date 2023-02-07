@@ -59,9 +59,7 @@ Imviz
 Mosviz
 ^^^^^^
 
-- Fix typo where zoom Dec retrieval used RA instead. [#1992]
-
-- RA/Dec fallback values changed to "Unspecified" to avoid JSON serialization warning when loading data. [#1958]
+- RA/Dec fallback values changed to "Unspecified" to avoid JSON serialization warning when loading data. [#1958, #1992]
 
 Specviz
 ^^^^^^^
