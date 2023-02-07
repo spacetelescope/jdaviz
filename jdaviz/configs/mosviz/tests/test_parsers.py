@@ -1,7 +1,7 @@
 from zipfile import ZipFile
 
 import pytest
-from astropy.tests.helper import assert_quantity_allclose
+from numpy.testing import assert_allclose
 from astropy.utils.data import download_file
 
 from jdaviz.utils import PRIHDR_KEY, COMMENTCARD_KEY
