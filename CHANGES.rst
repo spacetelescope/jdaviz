@@ -14,6 +14,7 @@ Imviz
 
 Mosviz
 ^^^^^^
+
 - Reliably retrieves identifier using each datasets' metadata entry. [#1851]
 
 - Improved mouseover info display for spectrum viewer. [#1894]
@@ -58,6 +59,10 @@ Imviz
 Mosviz
 ^^^^^^
 
+- Fix typo where zoom Dec retrieval used RA instead. [#1992]
+
+- RA/Dec fallback values changed to "Unspecified" to avoid JSON serialization warning when loading data. [#1958]
+
 Specviz
 ^^^^^^^
 
@@ -83,7 +88,6 @@ Imviz
 
 Mosviz
 ^^^^^^
-- Fix typo where zoom Dec retrieval used RA instead. [#1992]
 
 Specviz
 ^^^^^^^
