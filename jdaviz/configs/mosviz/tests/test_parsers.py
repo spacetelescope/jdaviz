@@ -148,8 +148,8 @@ def test_niriss_parser(mosviz_helper, tmp_path):
     x_pixcenter = (imview.state.x_max + imview.state.x_min)/2.0
     y_pixcenter = (imview.state.y_max + imview.state.y_min)/2.0
     viewer_center_coord = imview.layers[0].layer.coords.pixel_to_world(x_pixcenter, y_pixcenter)
-    assert_quantity_allclose(viewer_center_coord.ra.deg, dc_tab["R.A."][0])
-    assert_quantity_allclose(viewer_center_coord.dec.deg, dc_tab["Dec."][0])
+    assert_allclose(viewer_center_coord.ra.deg, dc_tab["R.A."][0])
+    assert_allclose(viewer_center_coord.dec.deg, dc_tab["Dec."][0])
 
     # Test all the spectra exist
     for dispersion in ('R', 'C'):
