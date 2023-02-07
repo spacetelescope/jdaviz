@@ -115,10 +115,12 @@ class CoordsInfo(TemplateMixin):
 
     def _viewer_mouse_event(self, viewer, data):
         if data['event'] in ('mouseleave', 'mouseenter'):
-            return self._viewer_mouse_clear_event(viewer, data)
+            self._viewer_mouse_clear_event(viewer, data)
+            return
 
         if len(self.app.data_collection) < 1:
-            return self._viewer_mouse_clear_event(viewer)
+            self._viewer_mouse_clear_event(viewer)
+            return
 
         # otherwise a mousemove event, we need to get cursor coordinates and update the display
 
@@ -127,7 +129,8 @@ class CoordsInfo(TemplateMixin):
         y = data['domain']['y']
 
         if x is None or y is None:  # Out of bounds
-            return self._viewer_mouse_clear_event(viewer)
+            self._viewer_mouse_clear_event(viewer)
+            return
 
         # update last known cursor position (so another event like a change in layers can update
         # the coordinates with the last known position)

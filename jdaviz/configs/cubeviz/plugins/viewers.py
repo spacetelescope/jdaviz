@@ -45,6 +45,7 @@ class CubevizImageView(JdavizViewerMixin, BqplotImageView):
 
     @property
     def active_image_layer(self):
+        """Active image layer in the viewer, if available."""
         # Find visible layers
         visible_layers = [layer for layer in self.state.layers
                           if (layer.visible and layer_is_cube_image_data(layer.layer))]

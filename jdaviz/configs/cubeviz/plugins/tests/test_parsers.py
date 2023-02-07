@@ -53,8 +53,8 @@ def test_fits_image_hdu_with_microns(image_cube_hdu_obj_microns, cubeviz_helper)
     label_mouseover._viewer_mouse_event(unc_viewer,
                                         {'event': 'mousemove', 'domain': {'x': -1, 'y': 0}})
     assert label_mouseover.as_text()[0] == 'Pixel x=-1.0 y=00.0'  # Out of bounds
-    # remaining lines are unvalidated,
-    # see https://github.com/spacetelescope/jdaviz/pull/1976#discussion_r1093199919
+    # FIXME: remaining lines are unvalidated,
+    # see https://github.com/spacetelescope/jdaviz/issues/1991
     # 'World 13h41m45.5759s +27d00m12.3044s (ICRS)',
     # '205.4398995981 27.0034178810 (deg)')  # noqa
 
