@@ -1,6 +1,7 @@
 from zipfile import ZipFile
 
 import pytest
+from numpy.testing import assert_allclose
 from astropy.utils.data import download_file
 
 from jdaviz.utils import PRIHDR_KEY, COMMENTCARD_KEY
@@ -141,6 +142,14 @@ def test_niriss_parser(mosviz_helper, tmp_path):
     assert PRIHDR_KEY not in dc_1.meta
     assert COMMENTCARD_KEY not in dc_1.meta
     assert dc_1.meta['bunit_data'] == 'MJy/sr'  # ASDF metadata
+
+    # We should be centered on the coordinates of the first data point
+    imview = mosviz_helper.app.get_viewer(mosviz_helper._default_image_viewer_reference_name)
+    x_pixcenter = (imview.state.x_max + imview.state.x_min)/2.0
+    y_pixcenter = (imview.state.y_max + imview.state.y_min)/2.0
+    viewer_center_coord = imview.layers[0].layer.coords.pixel_to_world(x_pixcenter, y_pixcenter)
+    assert_allclose(viewer_center_coord.ra.deg, dc_tab["R.A."][0])
+    assert_allclose(viewer_center_coord.dec.deg, dc_tab["Dec."][0])
 
     # Test all the spectra exist
     for dispersion in ('R', 'C'):

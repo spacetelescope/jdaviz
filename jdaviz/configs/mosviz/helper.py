@@ -334,7 +334,7 @@ class Mosviz(ConfigHelper, LineListMixin):
             return None, None
 
         ra = table_data["R.A."][msg.selected_index]
-        dec = table_data["R.A."][msg.selected_index]
+        dec = table_data["Dec."][msg.selected_index]
 
         if (ra == FALLBACK_NAME) or (dec == FALLBACK_NAME):
             return None, None
