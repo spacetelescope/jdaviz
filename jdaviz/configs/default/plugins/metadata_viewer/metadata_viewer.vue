@@ -4,6 +4,10 @@
     :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#metadata-viewer'"
     :popout_button="popout_button">
 
+    <v-row no-gutters>
+      <span class="v-messages v-messages__message text--secondary">Jdaviz {{ version }}</span>
+    </v-row>
+
     <!-- for specviz, we'll allow this to hide for a single entry, but since filters are being
          applied on other configs, we'll always show -->
     <plugin-dataset-select

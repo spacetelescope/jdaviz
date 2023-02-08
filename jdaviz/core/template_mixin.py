@@ -82,6 +82,7 @@ def show_widget(widget, loc, title):  # pragma: no cover
 
 class TemplateMixin(VuetifyTemplate, HubListener):
     config = Unicode("").tag(sync=True)
+    version = Unicode("").tag(sync=True)
     vdocs = Unicode("").tag(sync=True)
     popout_button = Any().tag(sync=True, **widget_serialization)
 
@@ -100,6 +101,7 @@ class TemplateMixin(VuetifyTemplate, HubListener):
         obj.config = app.state.settings.get("configuration", "default")
 
         # give the vue templates access to jdaviz version
+        obj.version = __version__
         obj.vdocs = 'latest' if 'dev' in __version__ else 'v'+__version__
 
         # store references to all bqplot widgets that need to handle resizing
