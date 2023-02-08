@@ -24,7 +24,8 @@ class TestReproject_WCS_GWCS(BaseImviz_WCS_GWCS):
                                                          'Reprojected']
         assert self.imviz.app.data_collection['Reprojected'].meta['orig_label'] == 'fits_wcs[DATA]'
         # Original data should not be loaded in the viewer anymore.
-        assert [data.label for data in self.viewer.data()] == ['gwcs[DATA]', 'no_wcs', 'Reprojected']
+        assert [data.label for data in self.viewer.data()] == ['gwcs[DATA]', 'no_wcs',
+                                                               'Reprojected']
         # Reprojected data now is the viewer reference.
         assert self.viewer.state.reference_data.label == 'Reprojected'
 
