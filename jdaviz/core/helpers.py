@@ -627,7 +627,7 @@ class ImageConfigHelper(ConfigHelper):
         This does not return masked regions added via :meth:`load_regions`.
 
         Unsupported region shapes will be skipped. When that happens,
-        a red snackbar message will appear on display.
+        a yellow snackbar message will appear on display.
 
         Returns
         -------
@@ -663,8 +663,8 @@ class ImageConfigHelper(ConfigHelper):
 
         if len(failed_regs) > 0:
             self.app.hub.broadcast(SnackbarMessage(
-                f"Failed to get regions: {', '.join(sorted(failed_regs))}",
-                color="error", timeout=8000, sender=self.app))
+                f"Regions skipped: {', '.join(sorted(failed_regs))}",
+                color="warning", timeout=8000, sender=self.app))
 
         return regions
 
