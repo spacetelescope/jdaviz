@@ -281,8 +281,14 @@ Use the `reproject <https://reproject.readthedocs.io/>`_ package to create a new
 that is the input image reprojected to its optimal celestial WCS.
 
 Choose the desired image from the data selection menu, if applicable.
-Then click on the :guilabel:`REPROJECT` button.
-If successful, a new reprojected image will be displayed in Imviz.
+Then enter the desired data label for the result.
+Next, click on the :guilabel:`REPROJECT` button
+(this might take a while to complete, please be patient).
+
+If successful, a new reprojected image with the given label will be
+displayed in Imviz's default viewer and is now the viewer's reference data.
+The original image before reprojection is also removed from the viewer
+(but still available in the application's underlying data collection).
 
 .. _imviz-export-plot:
 

@@ -1,6 +1,6 @@
 <template>
   <j-tray-plugin
-    description='Perform reprojection for a single image.'
+    description='Perform reprojection for a single image to align display to celestial axes.'
     :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#reproject'"
     :disabled_msg="disabled_msg"
     :popout_button="popout_button">
@@ -14,6 +14,15 @@
     />
 
     <div v-if='dataset_selected'>
+      <v-row>
+        <v-col>
+          <v-text-field
+            v-model='results_label'
+            hint="Data label for reprojected data"
+            persistent-hint
+          ></v-text-field>
+        </v-col>
+      </v-row>
       <v-row justify="end">
         <v-btn color="primary" text @click="do_reproject">Reproject</v-btn>
       </v-row>
