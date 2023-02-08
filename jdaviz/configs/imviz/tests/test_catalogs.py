@@ -92,10 +92,11 @@ class TestCatalogs:
         catalogs_plugin.plugin_opened = True
         catalogs_plugin.vue_do_search()
 
-        # number of results should be > 0
-        # '2473' was determined by running the search with the image in the notebook
+        # number of results should be > 500 or so
+        # Answer was determined by running the search with the image in the notebook.
         assert catalogs_plugin.results_available
-        assert catalogs_plugin.number_of_results == 2473
+        assert catalogs_plugin.number_of_results > 500
+        prev_results = catalogs_plugin.number_of_results
 
         # testing that every variable updates accordingly when markers are cleared
         catalogs_plugin.vue_do_clear()
@@ -116,7 +117,7 @@ class TestCatalogs:
         assert catalogs_plugin.catalog.selected == 'From File...'
         catalogs_plugin.vue_do_search()
         assert catalogs_plugin.results_available
-        assert catalogs_plugin.number_of_results == 2473
+        assert catalogs_plugin.number_of_results == prev_results
 
 
 def test_from_file_parsing(imviz_helper, tmp_path):

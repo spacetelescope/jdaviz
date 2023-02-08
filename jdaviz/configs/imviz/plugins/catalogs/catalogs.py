@@ -2,11 +2,13 @@ import os
 
 import numpy as np
 import numpy.ma as ma
+from astropy import units as u
 from astropy.table import QTable
 from astropy.coordinates import SkyCoord
 from traitlets import List, Unicode, Bool, Int, observe
 
 from jdaviz.configs.default.plugins.data_tools.file_chooser import FileChooser
+from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
                                         SelectPluginComponent)
@@ -127,11 +129,25 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
         # conducts search based on SDSS
         if self.catalog_selected == "SDSS":
             from astroquery.sdss import SDSS
+            r_max = 3 * u.arcmin
 
             # queries the region (based on the provided center point and radius)
             # finds all the sources in that region
-            query_region_result = SDSS.query_region(skycoord_center, radius=zoom_radius,
-                                                    data_release=17)
+            try:
+                if zoom_radius > r_max:  # SDSS now has radius max limit
+                    self.hub.broadcast(SnackbarMessage(
+                        f"Radius for {self.catalog_selected} has max radius of {r_max} but got "
+                        f"{zoom_radius.to(u.arcmin)}, using {r_max}.",
+                        color='warning', sender=self))
+                    zoom_radius = r_max
+                query_region_result = SDSS.query_region(skycoord_center, radius=zoom_radius,
+                                                        data_release=17)
+            except Exception as e:  # nosec
+                self.hub.broadcast(SnackbarMessage(
+                    f"Failed to query {self.catalog_selected} with c={skycoord_center} and "
+                    f"r={zoom_radius}: {repr(e)}", color='error', sender=self))
+                query_region_result = None
+
             if query_region_result is None:
                 self.results_available = True
                 self.number_of_results = 0

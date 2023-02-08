@@ -1,0 +1,54 @@
+name: rc-testing
+
+on:
+  workflow_dispatch:
+  schedule:
+    # run at 9am UTC on Tuesdays
+    - cron: '0 9 * * 2'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # Github Actions supports ubuntu, windows, and macos virtual environments:
+  # https://help.github.com/en/actions/reference/virtual-environments-for-github-hosted-runners
+  ci_tests:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+
+          - name: RC testing on Linux with remote data
+            os: ubuntu-latest
+            python: '3.11'
+            toxenv: py311-test-predeps
+            toxposargs: --remote-data
+
+          - name: RC testing on OSX
+            os: macos-latest
+            python: 3.9
+            toxenv: py39-test-predeps
+
+          - name: RC testing on Windows
+            os: windows-latest
+            python: '3.10'
+            toxenv: py310-test-predeps
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Set up python ${{ matrix.python }} on ${{ matrix.os }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python }}
+    - name: Install base dependencies
+      run: python -m pip install --upgrade pip tox
+    - name: Test/run with tox
+      run: tox -e ${{ matrix.toxenv }} -- ${{ matrix.toxposargs }}
