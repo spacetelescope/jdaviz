@@ -370,12 +370,19 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
         if plot_units is None:
             plot_units = self.data()[0].spectral_axis.unit
 
+        if isinstance(line["colors"], str):
+            line_color = [line["colors"]]
+        # TODO: Figure out why this is sometimes a multi-element table Column
+        # instead of a single value so we can remove (or improve) this workaround.
+        elif isinstance(line["colors"], table.Column):
+            line_color = [line["colors"][0]]
+
         line_mark = SpectralLine(self,
                                  line['rest'].to(plot_units).value,
                                  self.redshift,
                                  name=line["linename"],
                                  table_index=line["name_rest"],
-                                 colors=[line["colors"]], **kwargs)
+                                 colors=line_color, **kwargs)
 
         # Erase this line if it already existed, to avoid duplication
         self.erase_spectral_lines(name_rest=line["name_rest"])
