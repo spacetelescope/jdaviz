@@ -43,6 +43,11 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- Fixed a bug where sky coordinates reported to coordinates info panel
+  might be wrong for "uncert" and "mask" data. This bug only happens when
+  certain parsing conditions were met. When in doubt, always verify with
+  info from "flux" data. [#2002]
+
 Imviz
 ^^^^^
 
