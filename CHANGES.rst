@@ -1,4 +1,4 @@
-3.3 (unreleased)
+3.4 (unreleased)
 ================
 
 New Features
@@ -7,27 +7,17 @@ New Features
 Cubeviz
 ^^^^^^^
 
-- Improved mouseover info display for spectrum viewer. [#1894]
-
 Imviz
 ^^^^^
 
 Mosviz
 ^^^^^^
 
-- Reliably retrieves identifier using each datasets' metadata entry. [#1851]
-
-- Improved mouseover info display for spectrum viewer. [#1894]
-
 Specviz
 ^^^^^^^
 
-- Improved mouseover info display for spectrum viewer. [#1894]
-
 Specviz2d
 ^^^^^^^^^
-
-- Improved mouseover info display for spectrum viewer. [#1894]
 
 API Changes
 -----------
@@ -59,8 +49,6 @@ Imviz
 Mosviz
 ^^^^^^
 
-- RA/Dec fallback values changed to "Unspecified" to avoid JSON serialization warning when loading data. [#1958, #1992]
-
 Specviz
 ^^^^^^^
 
@@ -70,7 +58,68 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
+3.3.1 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+3.3 (2023-02-09)
+================
+
+New Features
+------------
+
+Cubeviz
+^^^^^^^
+
+- Improved mouseover info display for spectrum viewer. [#1894]
+
+Mosviz
+^^^^^^
+
+- Reliably retrieves identifier using each datasets' metadata entry. [#1851]
+
+- Improved mouseover info display for spectrum viewer. [#1894]
+
+Specviz
+^^^^^^^
+
+- Improved mouseover info display for spectrum viewer. [#1894]
+
+Specviz2d
+^^^^^^^^^
+
+- Improved mouseover info display for spectrum viewer. [#1894]
+
+Bug Fixes
+---------
+
+Mosviz
+^^^^^^
+
+- RA/Dec fallback values changed to "Unspecified" to avoid JSON serialization warning when loading data. [#1958, #1992]
+
+Other Changes and Additions
+---------------------------
+
 - Gaussian Smooth products are always labeled with the original data [#1973]
+
 
 3.2.2 (unreleased)
 ==================
