@@ -14,15 +14,13 @@
     />
 
     <div v-if='dataset_selected'>
-      <v-row>
-        <v-col>
-          <v-text-field
-            v-model='results_label'
-            hint="Data label for reprojected data"
-            persistent-hint
-          ></v-text-field>
-        </v-col>
-      </v-row>
+      <plugin-auto-label
+        :value.sync="label"
+        :default="label_default"
+        :auto.sync="label_auto"
+        :invalid_msg="invalid_msg"
+        hint="Data label for reprojected data."
+      ></plugin-auto-label>
       <v-row justify="end">
         <v-btn color="primary" text @click="do_reproject">Reproject</v-btn>
       </v-row>
