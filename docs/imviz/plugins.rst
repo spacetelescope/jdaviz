@@ -285,7 +285,7 @@ Then enter the desired data label for the result.
 Next, click on the :guilabel:`REPROJECT` button
 (this might take a while to complete, please be patient).
 
-If successful, a new reprojected image with the given label will be
+If successful, a new reprojected image (N-up, E-left) with the given label will be
 displayed in Imviz's default viewer and is now the viewer's reference data.
 The original image before reprojection is also removed from the viewer
 (but still available in the application's underlying data collection).

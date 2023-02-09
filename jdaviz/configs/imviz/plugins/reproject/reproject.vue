@@ -1,6 +1,6 @@
 <template>
   <j-tray-plugin
-    description='Perform reprojection for a single image to align display to celestial axes.'
+    description='Perform reprojection for a single image to align X/Y to N-up/E-left.'
     :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#reproject'"
     :disabled_msg="disabled_msg"
     :popout_button="popout_button">
