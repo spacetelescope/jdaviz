@@ -1,4 +1,4 @@
-3.3 (unreleased)
+3.3 (2023-02-09)
 ================
 
 New Features
@@ -8,9 +8,6 @@ Cubeviz
 ^^^^^^^
 
 - Improved mouseover info display for spectrum viewer. [#1894]
-
-Imviz
-^^^^^
 
 Mosviz
 ^^^^^^
@@ -29,69 +26,18 @@ Specviz2d
 
 - Improved mouseover info display for spectrum viewer. [#1894]
 
-API Changes
------------
-
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
-
 Bug Fixes
 ---------
-
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
 
 Mosviz
 ^^^^^^
 
 - RA/Dec fallback values changed to "Unspecified" to avoid JSON serialization warning when loading data. [#1958, #1992]
 
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
-
 Other Changes and Additions
 ---------------------------
 
 - Gaussian Smooth products are always labeled with the original data [#1973]
-
-3.2.2 (unreleased)
-==================
-
-Bug Fixes
----------
-
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
 
 3.2.1 (2023-02-02)
 ==================

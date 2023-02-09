@@ -29,6 +29,8 @@ authors:
   orcid: "https://orcid.org/0000-0003-1509-9966"
 - family-names: "Jones"
   given-names: "Craig"
+- family-names: "Karatay"
+  given-names: "Hatice"
 - family-names: "Kotler"
   given-names: "Jenn"
   orcid: "https://orcid.org/0000-0002-1294-7862"
@@ -64,9 +66,9 @@ authors:
 - family-names: "Volfman"
   given-names: "Sabrina"
 title: "Jdaviz"
-version: 3.2.0
+version: 3.3.0
 doi: https://doi.org/10.5281/zenodo.5513927
-date-released: 2023-01-04
+date-released: 2023-02-09
 url: "https://github.com/spacetelescope/jdaviz"
 
 # see a full list of contributors here: https://github.com/spacetelescope/jdaviz/graphs/contributors
