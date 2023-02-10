@@ -1,7 +1,7 @@
 import numpy as np
 import time
 from glue.core.data import Data
-from traitlets import Bool
+from traitlets import Bool, observe
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
@@ -31,6 +31,22 @@ class Reproject(PluginTemplateMixin, DatasetSelectMixin, AutoTextFieldMixin):
         if not HAS_REPROJECT:
             self.disabled_msg = 'Please install reproject and restart Jdaviz to use this plugin'
             return
+
+    @observe("dataset_selected")
+    def _set_default_results_label(self, event={}):
+        '''Generate a label and set the results field to that value'''
+        self.label_default = f"{self.dataset_selected} (reprojected)"
+
+    @observe('label')
+    def _label_changed(self, event={}):
+        if not len(self.label.strip()):
+            # strip will raise the same error for a label of all spaces
+            self.label_invalid_msg = 'label must be provided'
+            return
+        if self.label.strip() in self.data_collection:
+            self.label_invalid_msg = 'label already in use'
+            return
+        self.label_invalid_msg = ''
 
     def vue_do_reproject(self, *args, **kwargs):
         if (not HAS_REPROJECT or self.dataset_selected not in self.data_collection
