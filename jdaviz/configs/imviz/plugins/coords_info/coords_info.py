@@ -235,6 +235,14 @@ class CoordsInfo(TemplateMixin):
             self.row3_title = ''
             self.row3_text = f'{world_ra_deg} {world_dec_deg} (deg)'
             self.row3_unreliable = unreliable_world
+        else:
+            self.row2_title = '\u00A0'
+            self.row2_text = ""
+            self.row2_unreliable = False
+
+            self.row3_title = '\u00A0'
+            self.row3_text = ""
+            self.row3_unreliable = False
 
         maxsize = int(np.ceil(np.log10(np.max(image.shape)))) + 3
         fmt = 'x={0:0' + str(maxsize) + '.1f} y={1:0' + str(maxsize) + '.1f}'
