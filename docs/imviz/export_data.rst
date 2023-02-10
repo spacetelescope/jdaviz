@@ -30,8 +30,9 @@ See :ref:`astropy:astropy-modeling` on how to manipulate the model:
 
     my_gaussian1d = imviz.app.fitted_models['phot_radial_profile']
 
-You can also retrieve the photometry results as `~astropy.table.QTable` as follows,
-assuming ``imviz`` is the instance of your Imviz application:
+The bottom of the plugin shows a table of past results, along with the subset
+and data used to compute them.  These results can be exported as an `~astropy.table.QTable`
+as follows, assuming ``imviz`` is the instance of your Imviz application:
 
 .. code-block:: python
 

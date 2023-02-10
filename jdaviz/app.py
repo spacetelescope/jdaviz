@@ -77,6 +77,7 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'j-plugin-section-header': 'components/plugin_section_header.vue',
                      'j-number-uncertainty': 'components/number_uncertainty.vue',
                      'j-plugin-popout': 'components/plugin_popout.vue',
+                     'plugin-table': 'components/plugin_table.vue',
                      'plugin-dataset-select': 'components/plugin_dataset_select.vue',
                      'plugin-subset-select': 'components/plugin_subset_select.vue',
                      'plugin-viewer-select': 'components/plugin_viewer_select.vue',
@@ -1827,6 +1828,9 @@ class Application(VuetifyTemplate, HubListener):
                 app=self, **optional_tray_kwargs
             )
             tray_item_label = tray.get('label')
+            # store a copy of the tray name in the instance so it can be accessed by the
+            # plugin itself
+            tray_item_instance._plugin_name = tray_item_label
 
             self.state.tray_items.append({
                 'name': name,

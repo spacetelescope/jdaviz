@@ -1,3 +1,5 @@
+from astropy.table import QTable
+from astropy.table.row import Row as QTableRow
 import numpy as np
 
 from functools import cached_property
@@ -25,11 +27,13 @@ from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
 
 __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'BasePluginComponent', 'SelectPluginComponent',
+           'PluginSubcomponent',
            'SubsetSelect', 'SpatialSubsetSelectMixin', 'SpectralSubsetSelectMixin',
            'DatasetSpectralSubsetValidMixin',
            'ViewerSelect', 'ViewerSelectMixin',
            'LayerSelect', 'LayerSelectMixin',
            'DatasetSelect', 'DatasetSelectMixin',
+           'Table', 'TableMixin',
            'AutoTextField', 'AutoTextFieldMixin',
            'AddResults', 'AddResultsMixin',
            'PlotOptionsSyncState']
@@ -2136,3 +2140,187 @@ class PlotOptionsSyncState(BasePluginComponent):
         self._on_value_changed({'new': self.value})
         self.sync = {**self.sync,
                      'mixed': False}
+
+
+# SUBCOMPONENTS (will not have top-level plugin traitlets but can be rendered on their own in
+# popout windows or in the app)
+
+class PluginSubcomponent(VuetifyTemplate):
+    popout_button = Any().tag(sync=True, **widget_serialization)
+
+    def __init__(self, plugin, component_type='table', *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._plugin = plugin
+        self._component_type = component_type
+        self.popout_button = PopoutButton(self, window_features='popup,width=800,height=300')
+
+    @property
+    def display_name(self):
+        return f'{self._plugin._plugin_name}: {self._component_type}'
+
+    def vue_popout(self, data=None):
+        self.show(loc='popout')
+
+    def show(self, loc="inline", title=None):  # pragma: no cover
+        """Display the component UI.
+
+        Parameters
+        ----------
+        loc : str
+            The display location determines where to present the viz app.
+            Supported locations:
+
+            "inline": Display the component inline in a notebook.
+
+            "app": Display below the viewers in the main app.
+
+            "sidecar": Display the component in a separate JupyterLab window from the
+            notebook, the location of which is decided by the 'anchor.' right is the default
+
+                Other anchors:
+
+                * ``sidecar:right`` (The default, opens a tab to the right of display)
+                * ``sidecar:tab-before`` (Full-width tab before the current notebook)
+                * ``sidecar:tab-after`` (Full-width tab after the current notebook)
+                * ``sidecar:split-right`` (Split-tab in the same window right of the notebook)
+                * ``sidecar:split-left`` (Split-tab in the same window left of the notebook)
+                * ``sidecar:split-top`` (Split-tab in the same window above the notebook)
+                * ``sidecar:split-bottom`` (Split-tab in the same window below the notebook)
+
+                See `jupyterlab-sidecar <https://github.com/jupyter-widgets/jupyterlab-sidecar>`_
+                for the most up-to-date options.
+
+            "popout": Display the component in a detached display. By default, a new
+            window will open. Browser popup permissions required.
+
+                Other anchors:
+
+                * ``popout:window`` (The default, opens Jdaviz in a new, detached popout)
+                * ``popout:tab`` (Opens Jdaviz in a new, detached tab in your browser)
+
+        title : str, optional
+            The title of the sidecar tab.  Defaults to the name of the component.
+
+            NOTE: Only applicable to a "sidecar" display.
+
+        Notes
+        -----
+        If "sidecar" is requested in the "classic" Jupyter notebook, the component will appear
+        inline, as only JupyterLab has a mechanism to have multiple tabs.
+        """
+        title = title if title is not None else self.display_name
+        show_widget(self, loc=loc, title=title)
+
+
+class Table(PluginSubcomponent):
+    """
+    Table subcomponent.  For most cases where a plugin only requires a single table, use the mixin
+    instead.
+
+    To use in a plugin, define ``plugin.table = Table(plugin)``, create a ``table_widget`` Unicode
+    traitlet, and set ``plugin.table_widget = 'IPY_MODEL_'+self.table.model_id``.
+
+    To render in the plugin's vue file::
+
+      <jupyter-widget :widget="table_widget"></jupyter-widget>
+
+    """
+    template_file = __file__, "../components/plugin_table.vue"
+
+    headers_visible = List([]).tag(sync=True)  # list of strings
+    headers_avail = List([]).tag(sync=True)   # list of strings
+    items = List().tag(sync=True)  # list of dictionaries, pass single dict to add_row
+
+    def __init__(self, plugin, *args, **kwargs):
+        self._qtable = None
+        super().__init__(plugin, 'Table', *args, **kwargs)
+
+    def add_item(self, item):
+        """
+        Add an item/row to the table.
+
+        Parameters
+        ----------
+        item : QTable, QTableRow, or dictionary of row-name, value pairs
+        """
+        def json_safe(item):
+            if hasattr(item, 'to_string'):
+                return item.to_string()
+            return item
+
+        if isinstance(item, QTable):
+            for row in item:
+                self.add_item(row)
+            return
+        if isinstance(item, QTableRow):
+            # Row does not have .items() implemented
+            item = {k: v for k, v in zip(item.keys(), item.values())}
+
+        # save original sent values to the cached QTable object
+        if self._qtable is None:
+            self._qtable = QTable([item])
+        else:
+            # NOTE: this does not support adding columns that did not exist in the first
+            # call to add_row since the last call to clear_table
+            self._qtable.add_row(item)
+
+        # clean data to show in the UI
+        self.items = self.items + [{k: json_safe(v) for k, v in item.items()}]
+
+    def clear_table(self):
+        """
+        Clear all entries/markers from the current table.
+        """
+        self.items = []
+        self._qtable = None
+
+    def vue_clear_table(self, data=None):
+        # if the plugin (or via the TableMixin) has its own clear_table implementation,
+        # call that, otherwise call the one defined here
+        getattr(self._plugin, 'clear_table', self.clear_table)()
+
+    def export_table(self):
+        """
+        Export the QTable representation of the table.
+        """
+        # TODO: default to only showing selected columns?
+        return self._qtable
+
+
+class TableMixin(VuetifyTemplate, HubListener):
+    """
+    Table subcomponent mixin.
+
+    In addition to ``table``, this provides the following methods at the plugin-level:
+
+    * :meth:`clear_table`
+    * :meth:`export_table`
+
+    To render in the plugin's vue file::
+
+      <jupyter-widget :widget="table_widget"></jupyter-widget>
+
+    """
+    table_widget = Unicode().tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.table = Table(self)
+        self.table_widget = 'IPY_MODEL_'+self.table.model_id
+
+    def clear_table(self):
+        """
+        Clear all entries/markers from the current table.
+        """
+        self.table.clear_table()
+
+    def vue_clear_table(self, data=None):
+        # call clear_table directly in case the class overloads that method
+        # (to also clear markers, etc)
+        self.clear_table()
+
+    def export_table(self):
+        """
+        Export the QTable representation of the table.
+        """
+        return self.table.export_table()

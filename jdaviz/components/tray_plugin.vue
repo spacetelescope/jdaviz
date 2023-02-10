@@ -1,5 +1,5 @@
 <template>
-  <v-container style="padding-left: 24px; padding-right: 24px; padding-top: 12px">
+  <v-container class="tray-plugin" style="padding-left: 24px; padding-right: 24px; padding-top: 12px">
     <v-row v-if="isDisabled()">
       <span> {{ getDisabledMsg() }}</span>
     </v-row>
