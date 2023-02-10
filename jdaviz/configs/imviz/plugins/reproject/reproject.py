@@ -62,20 +62,22 @@ class Reproject(PluginTemplateMixin, DatasetSelectMixin, AutoTextFieldMixin):
                 or self.reproject_in_progress):
             return
 
-        import reproject
+        from reproject import __version__ as reproject_version
 
         data = self.data_collection[self.dataset_selected]
         wcs_in = data.coords
         if wcs_in is None:
+            self.hub.broadcast(SnackbarMessage(
+                f"Failed to reproject {data.label}: WCS not found",
+                color='error', sender=self))
             return
 
         viewer_reference = f"{self.app.config}-0"
         self.reproject_in_progress = True
         t_start = time.time()
         try:
-            if self.label in self.app.data_collection.labels:
-                raise ValueError(
-                    f'{self.label} is already used, choose another label name.')
+            if self.label_invalid_msg:
+                raise ValueError(f'{self.label}: {self.label_invalid_msg}')
 
             # Find WCS where North is pointing up.
             wcs_out, shape_out = find_optimal_celestial_wcs([(data.shape, wcs_in)], frame='icrs')
@@ -92,7 +94,7 @@ class Reproject(PluginTemplateMixin, DatasetSelectMixin, AutoTextFieldMixin):
                             coords=wcs_out,
                             data=np.nan_to_num(new_arr, copy=False))
             new_data.meta.update({'orig_label': data.label,
-                                  'reproject_version': reproject.__version__})
+                                  'reproject_version': reproject_version})
             self.app.add_data(new_data, self.label)
             self.app.add_data_to_viewer(viewer_reference, self.label)
 

@@ -12,14 +12,16 @@ class TestReproject_WCS_GWCS(BaseImviz_WCS_GWCS):
         plg = self.imviz.plugins["Reproject"]
         assert not plg._obj.disabled_msg
 
-        # Attempt to reproject without WCS should be silent no-op.
-        plg._obj.dataset_selected = "no_wcs"
-        plg._obj.vue_do_reproject()
+        # Attempt to reproject without WCS should be no-op.
+        plg.dataset = "no_wcs"
+        plg.reproject()
         assert self.imviz.app.data_collection.labels == ['fits_wcs[DATA]', 'gwcs[DATA]', 'no_wcs']
 
         # Reproject FITS WCS. We do not test the actual reprojection algorithm.
-        plg._obj.dataset_selected = 'fits_wcs[DATA]'
-        plg._obj.vue_do_reproject()
+        plg.dataset = 'fits_wcs[DATA]'
+        assert plg.label == 'fits_wcs[DATA] (reprojected)'
+        plg.label = 'Reprojected'  # Overwrite default label
+        plg.reproject()
         assert self.imviz.app.data_collection.labels == ['fits_wcs[DATA]', 'gwcs[DATA]', 'no_wcs',
                                                          'Reprojected']
         assert self.imviz.app.data_collection['Reprojected'].meta['orig_label'] == 'fits_wcs[DATA]'
@@ -31,8 +33,9 @@ class TestReproject_WCS_GWCS(BaseImviz_WCS_GWCS):
 
         # Reproject again using existing label is not allowed.
         # Only snackbar message is shown, so that is not tested here. Result should be unchanged.
-        plg._obj.dataset_selected = 'gwcs[DATA]'
-        plg._obj.vue_do_reproject()
+        plg.dataset = 'gwcs[DATA]'
+        plg.label = 'Reprojected'  # Reuse existing label
+        plg.reproject()
         assert self.imviz.app.data_collection.labels == ['fits_wcs[DATA]', 'gwcs[DATA]', 'no_wcs',
                                                          'Reprojected']
         assert self.imviz.app.data_collection['Reprojected'].meta['orig_label'] == 'fits_wcs[DATA]'
@@ -42,7 +45,7 @@ class TestReproject_WCS_GWCS(BaseImviz_WCS_GWCS):
 def test_reproject_no_data(imviz_helper):
     """This should be silent no-op."""
     plg = imviz_helper.plugins["Reproject"]
-    plg._obj.vue_do_reproject()
+    plg.reproject()
     assert len(imviz_helper.app.data_collection) == 0
 
 
