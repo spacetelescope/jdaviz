@@ -161,8 +161,10 @@ def test_load_single_image_multi_spec(mosviz_helper, mos_image, spectrum1d, mos_
     spec2d_viewer = mosviz_helper.app.get_viewer('spectrum-2d-viewer')
 
     # Coordinates info panel should not crash even when nothing is loaded.
-    image_viewer.on_mouse_or_key_event({'event': 'mouseover'})
-    assert image_viewer.label_mouseover is None
+    label_mouseover = mosviz_helper.app.session.application._tools['g-coords-info']
+    label_mouseover._viewer_mouse_event(image_viewer, {'event': 'mousemove',
+                                                       'domain': {'x': 0, 'y': 0}})
+    assert label_mouseover.as_text() == ('', '', '')
 
     # Test that loading is still possible after previous crash:
     # https://github.com/spacetelescope/jdaviz/issues/364
@@ -185,45 +187,41 @@ def test_load_single_image_multi_spec(mosviz_helper, mos_image, spectrum1d, mos_
     # 1D spectrum viewer panel is also tested in Specviz.
     # 2D spectrum viewer panel is also tested in Specviz2d.
 
-    image_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
-    assert image_viewer.label_mouseover.pixel == 'x=000.0 y=000.0'
-    assert image_viewer.label_mouseover.value == '+3.74540e-01 Jy'
-    assert image_viewer.label_mouseover.world_ra_deg == '5.0297844783'
-    assert image_viewer.label_mouseover.world_dec_deg == '4.9918991917'
-    assert image_viewer.label_mouseover.icon == 'a'
+    label_mouseover._viewer_mouse_event(image_viewer,
+                                        {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
+    assert label_mouseover.as_text() == ('Pixel x=000.0 y=000.0 Value +3.74540e-01 Jy',
+                                         'World 00h20m07.1483s +04d59m30.8371s (ICRS)',
+                                         '5.0297844783 4.9918991917 (deg)')
+    assert label_mouseover.icon == 'a'
 
-    image_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': None, 'y': 0}})
-    assert image_viewer.label_mouseover.pixel == ''
-    assert image_viewer.label_mouseover.value == ''
-    assert image_viewer.label_mouseover.world_ra_deg == ''
-    assert image_viewer.label_mouseover.world_dec_deg == ''
+    label_mouseover._viewer_mouse_event(image_viewer,
+                                        {'event': 'mousemove', 'domain': {'x': None, 'y': 0}})
+    assert label_mouseover.as_text() == ('', '', '')
+    assert label_mouseover.icon == ''
 
-    image_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': -1, 'y': 0}})
-    assert image_viewer.label_mouseover.pixel == 'x=-01.0 y=000.0'
-    assert image_viewer.label_mouseover.value == ''
-    assert image_viewer.label_mouseover.world_ra_deg == '5.0297997183'
-    assert image_viewer.label_mouseover.world_dec_deg == '4.9918991914'
+    label_mouseover._viewer_mouse_event(image_viewer,
+                                        {'event': 'mousemove', 'domain': {'x': -1, 'y': 0}})
+    assert label_mouseover.as_text() == ('Pixel x=-01.0 y=000.0',
+                                         'World 00h20m07.1519s +04d59m30.8371s (ICRS)',
+                                         '5.0297997183 4.9918991914 (deg)')
 
-    image_viewer.on_mouse_or_key_event({'event': 'mouseleave'})
-    assert image_viewer.label_mouseover.pixel == ''
-    assert image_viewer.label_mouseover.value == ''
-    assert image_viewer.label_mouseover.world_ra_deg == ''
-    assert image_viewer.label_mouseover.world_dec_deg == ''
+    label_mouseover._viewer_mouse_event(image_viewer, {'event': 'mouseleave'})
+    assert label_mouseover.as_text() == ('', '', '')
+    assert label_mouseover.icon == ''
 
-    spec2d_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 10, 'y': 100}})
-    assert spec2d_viewer.label_mouseover.pixel == 'x=00010.0 y=00100.0'
-    assert spec2d_viewer.label_mouseover.value == '+8.12986e-01 '
-    assert spec2d_viewer.label_mouseover.world_ra_deg == ''
-    assert spec2d_viewer.label_mouseover.world_dec_deg == ''
-    assert spec2d_viewer.label_mouseover.icon == 'b'
+    label_mouseover._viewer_mouse_event(spec2d_viewer,
+                                        {'event': 'mousemove', 'domain': {'x': 10, 'y': 100}})
+    assert label_mouseover.as_text() == ('Pixel x=00010.0 y=00100.0 Value +8.12986e-01', '', '')
+    assert label_mouseover.icon == 'b'
 
-    spec1d_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 7000, 'y': 170}})
-    assert spec1d_viewer.label_mouseover.pixel == '7.00000e+03, 1.70000e+02'
-    assert spec1d_viewer.label_mouseover.world_label_prefix == 'Wave'
-    assert spec1d_viewer.label_mouseover.world_ra == '6.88889e+03 Angstrom (4 pix)'
-    assert spec1d_viewer.label_mouseover.world_label_prefix_2 == 'Flux'
-    assert spec1d_viewer.label_mouseover.world_ra_deg == '1.35436e+01 Jy'
-    assert spec1d_viewer.label_mouseover.icon == 'c'
+    # need to trigger a mouseleave or mouseover to reset the traitlets
+    label_mouseover._viewer_mouse_event(spec1d_viewer, {'event': 'mouseenter'})
+    label_mouseover._viewer_mouse_event(spec1d_viewer,
+                                        {'event': 'mousemove', 'domain': {'x': 7000, 'y': 170}})
+    assert label_mouseover.as_text() == ('Cursor 7.00000e+03, 1.70000e+02',
+                                         'Wave 6.88889e+03 Angstrom (4 pix)',
+                                         'Flux 1.35436e+01 Jy')
+    assert label_mouseover.icon == 'c'
 
 
 def test_zip_error(mosviz_helper, tmp_path):

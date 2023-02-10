@@ -110,6 +110,9 @@ class TemplateMixin(VuetifyTemplate, HubListener):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.popout_button = PopoutButton(self, window_features='popup,width=400,height=600')
+        self._viewer_callbacks = {}
+        self.hub.subscribe(self, ViewerRemovedMessage,
+                           handler=lambda msg: self._remove_viewer_callbacks(msg.viewer_id))
 
     @property
     def app(self):
@@ -131,6 +134,31 @@ class TemplateMixin(VuetifyTemplate, HubListener):
     @property
     def data_collection(self):
         return self._app.session.data_collection
+
+    def _viewer_callback(self, viewer, plugin_method):
+        """
+        Cached access to callbacks to a plugin method to attach to a viewer.
+        To define a callback:
+        def _on_callback(self, viewer, data):
+        To add callback:
+        viewer.add_event_calback(self._viewer_callback(viewer, self._on_callback),
+                                 events=['keydown'])
+        To remove callback:
+        viewer.remove_event_callback(self._viewer_callback(viewer, self._on_callback))
+        """
+        def plugin_viewer_callback(viewer, plugin_method):
+            return lambda data: plugin_method(viewer, data)
+
+        key = f'{viewer.reference_id}:{plugin_method.__name__}'
+        if key not in self._viewer_callbacks.keys():
+            self._viewer_callbacks[key] = plugin_viewer_callback(viewer, plugin_method)
+        return self._viewer_callbacks.get(key)
+
+    def _remove_viewer_callbacks(self, viewer_id):
+        # removes the cache of a callback when a viewer is removed (the viewer object is already
+        # assumed destroyed, so we do not need to remove the event callback itself from the viewer)
+        self._viewer_callbacks = {k: v for k, v in self._viewer_callbacks.items()
+                                  if k.split(':')[0] != viewer_id}
 
 
 class PluginTemplateMixin(TemplateMixin):

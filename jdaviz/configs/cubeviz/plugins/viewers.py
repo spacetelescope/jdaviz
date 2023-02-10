@@ -1,13 +1,11 @@
-import numpy as np
 from glue.core import BaseData
 from glue.core.subset import RoiSubsetState, RangeSubsetState
 from glue_jupyter.bqplot.image import BqplotImageView
 
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.marks import SliceIndicatorMarks, ShadowSpatialSpectral
-from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
 from jdaviz.configs.cubeviz.helper import layer_is_cube_image_data
-from jdaviz.configs.imviz.helper import data_has_valid_wcs
+from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
 
 __all__ = ['CubevizImageView', 'CubevizProfileView']
@@ -45,102 +43,17 @@ class CubevizImageView(JdavizViewerMixin, BqplotImageView):
         self._subscribe_to_layers_update()
         self.state.add_callback('reference_data', self._initial_x_axis)
 
-        self.label_mouseover = None
-        self.add_event_callback(self.on_mouse_or_key_event, events=['mousemove', 'mouseenter',
-                                                                    'mouseleave'])
-
-    def on_mouse_or_key_event(self, data):
-
+    @property
+    def active_image_layer(self):
+        """Active image layer in the viewer, if available."""
         # Find visible layers
         visible_layers = [layer for layer in self.state.layers
                           if (layer.visible and layer_is_cube_image_data(layer.layer))]
 
         if len(visible_layers) == 0:
-            return
+            return None
 
-        if self.label_mouseover is None:
-            if 'g-coords-info' in self.session.application._tools:
-                self.label_mouseover = self.session.application._tools['g-coords-info']
-            else:
-                return
-
-        if data['event'] == 'mousemove':
-            # Display the current cursor coordinates (both pixel and world) as
-            # well as data values. For now we use the first dataset in the
-            # viewer for the data values.
-
-            # Extract first dataset from visible layers and use this for coordinates - the choice
-            # of dataset shouldn't matter if the datasets are linked correctly
-            active_layer = visible_layers[-1]
-            image = active_layer.layer
-            self.label_mouseover.icon = self.jdaviz_app.state.layer_icons.get(active_layer.layer.label)  # noqa
-
-            # Extract data coordinates - these are pixels in the reference image
-            x = data['domain']['x']
-            y = data['domain']['y']
-
-            if x is None or y is None:  # Out of bounds
-                self.label_mouseover.pixel = ""
-                self.label_mouseover.reset_coords_display()
-                self.label_mouseover.value = ""
-                return
-
-            maxsize = int(np.ceil(np.log10(np.max(image.shape[:2])))) + 3
-            fmt = 'x={0:0' + str(maxsize) + '.1f} y={1:0' + str(maxsize) + '.1f}'
-            self.label_mouseover.pixel = (fmt.format(x, y))
-
-            # TODO: This assumes data_collection[0] is the main reference
-            #  data for this application. This section will need to be updated
-            #  when that is no longer true.
-            # Hack to insert WCS for generated 2D and 3D images using FLUX cube WCS.
-            if 'Plugin' in image.meta:
-                coo_data = self.jdaviz_app.data_collection[0]
-            else:
-                coo_data = image
-
-            # Hack around various WCS propagation issues in Cubeviz.
-            if '_orig_wcs' in coo_data.meta:
-                coo = coo_data.meta['_orig_wcs'].pixel_to_world(x, y, self.state.slices[-1])[0].icrs
-                self.label_mouseover.set_coords(coo)
-            elif data_has_valid_wcs(coo_data):
-                try:
-                    coo = coo_data.coords.pixel_to_world(x, y, self.state.slices[-1])[-1].icrs
-                except Exception:
-                    self.label_mouseover.reset_coords_display()
-                else:
-                    self.label_mouseover.set_coords(coo)
-            else:
-                self.label_mouseover.reset_coords_display()
-
-            # Extract data values at this position.
-            # Check if shape is [x, y, z] or [y, x] and show value accordingly.
-            if image.ndim == 3:
-                ix_shape = 0
-                iy_shape = 1
-            elif image.ndim == 2:
-                ix_shape = 1
-                iy_shape = 0
-            else:  # pragma: no cover
-                raise ValueError(f'Cubeviz does not support ndim={image.ndim}')
-
-            if (-0.5 < x < image.shape[ix_shape] - 0.5 and -0.5 < y < image.shape[iy_shape] - 0.5
-                    and hasattr(active_layer, 'attribute')):
-                attribute = active_layer.attribute
-                arr = image.get_component(attribute).data
-                unit = image.get_component(attribute).units
-                if image.ndim == 3:
-                    value = arr[int(round(x)), int(round(y)), self.state.slices[-1]]
-                else:  # 2
-                    value = arr[int(round(y)), int(round(x))]
-                self.label_mouseover.value = f'{value:+10.5e} {unit}'
-            else:
-                self.label_mouseover.value = ''
-
-        elif data['event'] == 'mouseleave' or data['event'] == 'mouseenter':
-
-            self.label_mouseover.pixel = ""
-            self.label_mouseover.reset_coords_display()
-            self.label_mouseover.value = ""
+        return visible_layers[-1]
 
     def _initial_x_axis(self, *args):
         # Make sure that the x_att is correct on data load

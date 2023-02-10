@@ -6,6 +6,7 @@ from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.bqplot.scatter.layer_artist import BqplotScatterLayerState
 from glue_jupyter.table import TableViewer
 
+from jdaviz.configs.imviz.helper import layer_is_image_data
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.core.registries import viewer_registry
 from jdaviz.utils import ColorCycler
@@ -184,6 +185,18 @@ class JdavizViewerMixin:
         # layers are added
         if msg.subset.label not in self._expected_subset_layers and msg.subset.label:
             self._expected_subset_layers.append(msg.subset.label)
+
+    @property
+    def active_image_layer(self):
+        """Active image layer in the viewer, if available."""
+        # Find visible layers
+        visible_layers = [layer for layer in self.state.layers
+                          if (layer.visible and layer_is_image_data(layer.layer))]
+
+        if len(visible_layers) == 0:
+            return None
+
+        return visible_layers[-1]
 
     def initialize_toolbar(self, default_tool_priority=[]):
         # NOTE: this overrides glue_jupyter.IPyWidgetView

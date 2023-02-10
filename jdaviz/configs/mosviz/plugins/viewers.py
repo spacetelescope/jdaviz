@@ -1,4 +1,3 @@
-import numpy as np
 from glue.core import BaseData
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.table import TableViewer
@@ -7,11 +6,9 @@ from specutils import Spectrum1D
 from jdaviz.core.events import (AddDataToViewerMessage,
                                 RemoveDataFromViewerMessage,
                                 TableClickMessage)
-from jdaviz.core.helpers import data_has_valid_wcs
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
-from jdaviz.configs.imviz.helper import layer_is_image_data
 
 __all__ = ['MosvizImageView', 'MosvizProfile2DView',
            'MosvizTableViewer']
@@ -33,81 +30,6 @@ class MosvizImageView(JdavizViewerMixin, BqplotImageView):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._subscribe_to_layers_update()
-
-        self.label_mouseover = None
-        self.add_event_callback(self.on_mouse_or_key_event, events=['mousemove', 'mouseenter',
-                                                                    'mouseleave'])
-
-    def on_mouse_or_key_event(self, data):
-
-        # Find visible layers
-        visible_layers = [layer for layer in self.state.layers
-                          if (layer.visible and layer_is_image_data(layer.layer))]
-
-        if len(visible_layers) == 0:
-            return
-
-        # TODO: mosviz/helper.py just calls imview.layers[0] so will this work?
-        active_layer = visible_layers[-1]
-
-        if self.label_mouseover is None:
-            if 'g-coords-info' in self.session.application._tools:
-                self.label_mouseover = self.session.application._tools['g-coords-info']
-            else:  # pragma: no cover
-                return
-
-        if data['event'] == 'mousemove':
-            # Display the current cursor coordinates (both pixel and world) as
-            # well as data values. For now we use the first dataset in the
-            # viewer for the data values.
-
-            # Extract first dataset from visible layers and use this for coordinates - the choice
-            # of dataset shouldn't matter if the datasets are linked correctly
-            image = active_layer.layer
-            self.label_mouseover.icon = self.jdaviz_app.state.layer_icons.get(active_layer.layer.label)  # noqa
-
-            # Extract data coordinates - these are pixels in the reference image
-            x = data['domain']['x']
-            y = data['domain']['y']
-
-            if x is None or y is None:  # Out of bounds
-                self.label_mouseover.pixel = ""
-                self.label_mouseover.reset_coords_display()
-                self.label_mouseover.value = ""
-                return
-
-            maxsize = int(np.ceil(np.log10(np.max(image.shape)))) + 3
-            fmt = 'x={0:0' + str(maxsize) + '.1f} y={1:0' + str(maxsize) + '.1f}'
-            self.label_mouseover.pixel = (fmt.format(x, y))
-
-            if data_has_valid_wcs(image, ndim=2):
-                try:
-                    coo = image.coords.pixel_to_world(x, y).icrs
-                except Exception:  # WCS might not be celestial  # pragma: no cover
-                    self.label_mouseover.reset_coords_display()
-                else:
-                    self.label_mouseover.set_coords(coo)
-            else:  # pragma: no cover
-                self.label_mouseover.reset_coords_display()
-
-            # Extract data values at this position.
-            # TODO: for now we just use the first visible layer but we should think
-            # of how to display values when multiple datasets are present.
-            if (x > -0.5 and y > -0.5
-                    and x < image.shape[1] - 0.5 and y < image.shape[0] - 0.5
-                    and hasattr(active_layer, 'attribute')):
-                attribute = active_layer.attribute
-                value = image.get_data(attribute)[int(round(y)), int(round(x))]
-                unit = image.get_component(attribute).units
-                self.label_mouseover.value = f'{value:+10.5e} {unit}'
-            else:
-                self.label_mouseover.value = ''
-
-        elif data['event'] == 'mouseleave' or data['event'] == 'mouseenter':
-
-            self.label_mouseover.pixel = ""
-            self.label_mouseover.reset_coords_display()
-            self.label_mouseover.value = ""
 
     def data(self, cls=None):
         return [layer_state.layer  # .get_object(cls=cls or self.default_class)
@@ -155,74 +77,6 @@ class MosvizProfile2DView(JdavizViewerMixin, BqplotImageView):
         self._default_spectrum_viewer_reference_name = kwargs.get(
             "spectrum_2d_viewer_reference_name", "spectrum-2d-viewer"
         )
-
-        self.label_mouseover = None
-        self.add_event_callback(self.on_mouse_or_key_event,
-                                events=['mousemove', 'mouseenter', 'mouseleave'])
-
-    def on_mouse_or_key_event(self, data):
-
-        # Find visible layers
-        visible_layers = [layer for layer in self.state.layers
-                          if (layer.visible and layer_is_image_data(layer.layer))]
-
-        if len(visible_layers) == 0:
-            return
-
-        active_layer = visible_layers[-1]
-
-        if self.label_mouseover is None:
-            if 'g-coords-info' in self.session.application._tools:
-                self.label_mouseover = self.session.application._tools['g-coords-info']
-            else:
-                return
-
-        if data['event'] == 'mousemove':
-            # Display the current cursor coordinates (both pixel and world) as
-            # well as data values. For now we use the first dataset in the
-            # viewer for the data values.
-
-            # Extract first dataset from visible layers and use this for coordinates - the choice
-            # of dataset shouldn't matter if the datasets are linked correctly
-            image = active_layer.layer
-            self.label_mouseover.icon = self.jdaviz_app.state.layer_icons.get(active_layer.layer.label)  # noqa
-
-            # TODO: If this viewer is going to support dithered images link by WCS,
-            #       data coordinates need to be handled like Imviz.
-            # Extract data coordinates - these are pixels in the reference image
-            x = data['domain']['x']
-            y = data['domain']['y']
-
-            if x is None or y is None:  # Out of bounds
-                self.label_mouseover.pixel = ""
-                self.label_mouseover.reset_coords_display()
-                self.label_mouseover.value = ""
-                return
-
-            maxsize = int(np.ceil(np.log10(np.max(image.shape)))) + 3
-            fmt = 'x={0:0' + str(maxsize) + '.1f} y={1:0' + str(maxsize) + '.1f}'
-            self.label_mouseover.pixel = (fmt.format(x, y))
-
-            # TODO: How do display sky coordinates for 2D spectrum?
-            self.label_mouseover.reset_coords_display()
-
-            # Extract data values at this position.
-            # TODO: for now we just use the first visible layer but we should think
-            # of how to display values when multiple datasets are present.
-            if (x > -0.5 and y > -0.5
-                    and x < image.shape[1] - 0.5 and y < image.shape[0] - 0.5
-                    and hasattr(active_layer, 'attribute')):
-                attribute = active_layer.attribute
-                value = image.get_data(attribute)[int(round(y)), int(round(x))]
-                unit = image.get_component(attribute).units
-                self.label_mouseover.value = f'{value:+10.5e} {unit}'
-            else:
-                self.label_mouseover.value = ''
-
-        elif data['event'] == 'mouseleave' or data['event'] == 'mouseenter':
-            self.label_mouseover.pixel = ""
-            self.label_mouseover.reset_coords_display()
-            self.label_mouseover.value = ""
 
     def data(self, cls=None):
         return [layer_state.layer.get_object(cls=cls or self.default_class)

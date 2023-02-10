@@ -1,12 +1,10 @@
-import math
 import warnings
 
 import numpy as np
 from astropy import table
 from astropy import units as u
 from glue.core import BaseData
-from glue.core.subset import Subset, RoiSubsetState
-from glue.core.subset_group import GroupedSubset
+from glue.core.subset import Subset
 from glue.config import data_translator
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from glue.core.exceptions import IncompatibleAttribute
@@ -47,126 +45,12 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
         self._offscreen_lines_marks = OffscreenLinesMarks(self)
         self.figure.marks = self.figure.marks + self._offscreen_lines_marks.marks
 
-        self.label_mouseover = None
-        self.add_event_callback(self.on_mouse_or_key_event, events=['mousemove', 'mouseenter',
-                                                                    'mouseleave'])
         self.state.add_callback('show_uncertainty', self._show_uncertainty_changed)
 
         self.display_mask = False
 
         # Change collapse function to sum
         self.state.function = 'sum'
-
-    def on_mouse_or_key_event(self, data):
-
-        if self.label_mouseover is None:
-            if 'g-coords-info' in self.session.application._tools:
-                self.label_mouseover = self.session.application._tools['g-coords-info']
-            else:  # pragma: no cover
-                return
-
-        if data['event'] == 'mousemove':
-            if len(self.jdaviz_app.data_collection) < 1:
-                return
-
-            # Extract data coordinates - these are pixels in the reference image
-            x = data['domain']['x']
-            y = data['domain']['y']
-
-            if x is None or y is None:  # Out of bounds
-                self.label_mouseover.pixel = ""
-                self.label_mouseover.reset_coords_display()
-                self.label_mouseover.value = ""
-                return
-
-            # Snap to the closest data point, not the actual mouse location.
-            sp = None
-            closest_i = None
-            closest_wave = None
-            closest_flux = None
-            closest_label = ''
-            closest_distance = None
-            for lyr in self.state.layers:
-                if not lyr.visible:
-                    continue
-                if isinstance(lyr.layer, GroupedSubset):
-                    if not isinstance(lyr.layer.subset_state, RoiSubsetState):
-                        # then this is a SPECTRAL subset
-                        continue
-                elif ((not isinstance(lyr.layer, BaseData)) or (lyr.layer.ndim not in (1, 3))
-                        or (not lyr.visible)):
-                    continue
-
-                try:
-                    # Cache should have been populated when spectrum was first plotted.
-                    # But if not (maybe user changed statistic), we cache it here too.
-                    statistic = getattr(self.state, 'function', None)
-                    cache_key = (lyr.layer.label, statistic)
-                    if cache_key in self.jdaviz_app._get_object_cache:
-                        sp = self.jdaviz_app._get_object_cache[cache_key]
-                    else:
-                        sp = self.jdaviz_app.get_data_from_viewer(
-                            self.jdaviz_app._default_spectrum_viewer_reference_name,
-                            lyr.layer.label)
-                        self.jdaviz_app._get_object_cache[cache_key] = sp
-
-                    # Out of range in spectral axis.
-                    if x < sp.spectral_axis.value.min() or x > sp.spectral_axis.value.max():
-                        continue
-
-                    cur_i = np.argmin(abs(sp.spectral_axis.value - x))
-                    cur_wave = sp.spectral_axis[cur_i]
-                    cur_flux = sp.flux[cur_i]
-
-                    dx = cur_wave.value - x
-                    dy = cur_flux.value - y
-                    cur_distance = math.sqrt(dx * dx + dy * dy)
-                    if (closest_distance is None) or (cur_distance < closest_distance):
-                        closest_distance = cur_distance
-                        closest_i = cur_i
-                        closest_wave = cur_wave
-                        closest_flux = cur_flux
-                        closest_label = self.jdaviz_app.state.layer_icons.get(lyr.layer.label)
-                except Exception:  # nosec
-                    # Something is loaded but not the right thing
-                    continue
-
-            if closest_wave is None:
-                self.label_mouseover.icon = ""
-                self.label_mouseover.pixel = ""
-                self.label_mouseover.reset_coords_display()
-                self.label_mouseover.value = ""
-                self.label_mouseover.marks[self._reference_id].visible = False
-                return
-
-            # show the locked marker/coords only if either no tool or the default tool is active
-            locking_active = self.toolbar.active_tool_id in self.toolbar.default_tool_priority + [None]  # noqa
-            self.label_mouseover.pixel_prefix = 'Cursor'
-            self.label_mouseover.pixel = f'{x:10.5e}, {y:10.5e}'
-            if locking_active:
-                self.label_mouseover.world_label_prefix = 'Wave'
-                self.label_mouseover.world_ra = f'{closest_wave.value:10.5e} {closest_wave.unit.to_string()}'  # noqa
-                if closest_wave.unit != u.pix:
-                    self.label_mouseover.world_ra += f' ({closest_i} pix)'
-                self.label_mouseover.world_dec = ''
-                self.label_mouseover.world_label_prefix_2 = 'Flux'
-                self.label_mouseover.world_ra_deg = f'{closest_flux.value:10.5e} {closest_flux.unit.to_string()}'  # noqa
-                self.label_mouseover.world_dec_deg = ''
-                self.label_mouseover.icon = closest_label
-                self.label_mouseover.value = ""  # Not used
-                self.label_mouseover.marks[self._reference_id].update_xy([closest_wave.value], [closest_flux.value])  # noqa
-                self.label_mouseover.marks[self._reference_id].visible = True
-            else:
-                # show exact plot coordinates (useful for drawing spectral subsets or zoom ranges)
-                self.label_mouseover.icon = ""
-                self.label_mouseover.marks[self._reference_id].visible = False
-
-        elif data['event'] == 'mouseleave' or data['event'] == 'mouseenter':
-            self.label_mouseover.icon = ""
-            self.label_mouseover.pixel = ""
-            self.label_mouseover.reset_coords_display()
-            self.label_mouseover.value = ""
-            self.label_mouseover.marks[self._reference_id].visible = False
 
     def _expected_subset_layer_default(self, layer_state):
         super()._expected_subset_layer_default(layer_state)

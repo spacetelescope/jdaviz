@@ -41,19 +41,17 @@ class TestLink_WCS_NoWCS(BaseImviz_WCS_NoWCS, BaseLinkHandler):
 
         # Also check the coordinates display: Last loaded is on top.
 
-        self.viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
-        assert self.viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
-        assert self.viewer.label_mouseover.value == '+0.00000e+00 '
-        assert self.viewer.label_mouseover.world_ra_deg == ''
-        assert self.viewer.label_mouseover.world_dec_deg == ''
+        label_mouseover = self.imviz.app.session.application._tools['g-coords-info']
+        label_mouseover._viewer_mouse_event(self.viewer,
+                                            {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
+        assert label_mouseover.as_text() == ('Pixel x=00.0 y=00.0 Value +0.00000e+00', '', '')
 
         # blink image through keypress
         self.viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'b',
                                            'domain': {'x': 0, 'y': 0}})
-        assert self.viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
-        assert self.viewer.label_mouseover.value == '+0.00000e+00 '
-        assert self.viewer.label_mouseover.world_ra_deg == '337.5202808000'
-        assert self.viewer.label_mouseover.world_dec_deg == '-20.8333330600'
+        assert label_mouseover.as_text() == ('Pixel x=00.0 y=00.0 Value +0.00000e+00',
+                                             'World 22h30m04.8674s -20d49m59.9990s (ICRS)',
+                                             '337.5202808000 -20.8333330600 (deg)')
 
     def test_wcslink_nofallback_noerror(self):
         self.imviz.link_data(link_type='wcs', wcs_fallback_scheme=None)
@@ -77,19 +75,18 @@ class TestLink_WCS_FakeWCS(BaseImviz_WCS_NoWCS, BaseLinkHandler):
 
         # Also check the coordinates display: Last loaded is on top.
 
-        self.viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
-        assert self.viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
-        assert self.viewer.label_mouseover.value == '+0.00000e+00 '
-        assert self.viewer.label_mouseover.world_ra_deg == ''
-        assert self.viewer.label_mouseover.world_dec_deg == ''
+        label_mouseover = self.imviz.app.session.application._tools['g-coords-info']
+        label_mouseover._viewer_mouse_event(self.viewer,
+                                            {'event': 'mousemove',
+                                             'domain': {'x': 0, 'y': 0}})
+        assert label_mouseover.as_text() == ('Pixel x=00.0 y=00.0 Value +0.00000e+00', '', '')
 
         # blink image through keypress
         self.viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'b',
                                            'domain': {'x': 0, 'y': 0}})
-        assert self.viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
-        assert self.viewer.label_mouseover.value == '+0.00000e+00 '
-        assert self.viewer.label_mouseover.world_ra_deg == '337.5202808000'
-        assert self.viewer.label_mouseover.world_dec_deg == '-20.8333330600'
+        assert label_mouseover.as_text() == ('Pixel x=00.0 y=00.0 Value +0.00000e+00',
+                                             'World 22h30m04.8674s -20d49m59.9990s (ICRS)',
+                                             '337.5202808000 -20.8333330600 (deg)')
 
 
 class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
@@ -162,20 +159,23 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
 
         # Also check the coordinates display: Last loaded is on top.
 
-        self.viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
-        assert self.viewer.label_mouseover.pixel == 'x=01.0 y=-0.0'
-        assert self.viewer.label_mouseover.value == '+1.00000e+00 '
-        assert self.viewer.label_mouseover.world_ra_deg == '337.5202808000'
-        assert self.viewer.label_mouseover.world_dec_deg == '-20.8333330600'
+        label_mouseover = self.imviz.app.session.application._tools['g-coords-info']
+        label_mouseover._viewer_mouse_event(self.viewer,
+                                            {'event': 'mousemove',
+                                             'domain': {'x': 0, 'y': 0}})
+
+        lmtext = label_mouseover.as_text()
+        assert lmtext[0] in ('Pixel x=01.0 y=00.0 Value +1.00000e+00',
+                             'Pixel x=01.0 y=-0.0 Value +1.00000e+00')
+        assert lmtext[1:] == ('World 22h30m04.8674s -20d49m59.9990s (ICRS)',
+                              '337.5202808000 -20.8333330600 (deg)')
 
         # blink image through clicking with blink tool
         self.viewer.toolbar.active_tool_id = 'jdaviz:blinkonce'
-        self.viewer.toolbar.active_tool.on_click(
-            {'event': 'click', 'domain': {'x': 0, 'y': 0}})
-        assert self.viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
-        assert self.viewer.label_mouseover.value == '+1.00000e+00 '
-        assert self.viewer.label_mouseover.world_ra_deg == '337.5202808000'
-        assert self.viewer.label_mouseover.world_dec_deg == '-20.8333330600'
+        self.viewer.toolbar.active_tool.on_click({'event': 'click', 'domain': {'x': 0, 'y': 0}})
+        assert label_mouseover.as_text() == ('Pixel x=00.0 y=00.0 Value +1.00000e+00',
+                                             'World 22h30m04.8674s -20d49m59.9990s (ICRS)',
+                                             '337.5202808000 -20.8333330600 (deg)')
 
         # Changing link type will raise an error
         with pytest.raises(ValueError, match="cannot change link_type"):
@@ -232,46 +232,47 @@ class TestLink_WCS_GWCS(BaseImviz_WCS_GWCS):
         # Also check the coordinates display: Last loaded is on top.
         # Cycle order: no_wcs, FITS WCS, GWCS
 
-        self.viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
-        assert self.viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
-        assert self.viewer.label_mouseover.value == '+1.00000e+00 '
-        assert self.viewer.label_mouseover.world_ra_deg == ''
-        assert self.viewer.label_mouseover.world_dec_deg == ''
-        assert not self.viewer.label_mouseover.unreliable_world
-        assert not self.viewer.label_mouseover.unreliable_pixel
+        label_mouseover = self.imviz.app.session.application._tools['g-coords-info']
+        label_mouseover._viewer_mouse_event(self.viewer,
+                                            {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
+        assert label_mouseover.as_text() == ('Pixel x=00.0 y=00.0 Value +1.00000e+00', '', '')
+        assert not label_mouseover.row1_unreliable
+        assert not label_mouseover.row2_unreliable
+        assert not label_mouseover.row3_unreliable
 
         self.viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'b',
                                            'domain': {'x': 0, 'y': 0}})
-        assert self.viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
-        assert self.viewer.label_mouseover.value == '+1.00000e+00 electron / s'
-        assert self.viewer.label_mouseover.world_ra_deg == '3.5817255823'
-        assert self.viewer.label_mouseover.world_dec_deg == '-30.3920580740'
-        assert not self.viewer.label_mouseover.unreliable_world
-        assert not self.viewer.label_mouseover.unreliable_pixel
+        assert label_mouseover.as_text() == ('Pixel x=00.0 y=00.0 Value +1.00000e+00 electron / s',
+                                             'World 00h14m19.6141s -30d23m31.4091s (ICRS)',
+                                             '3.5817255823 -30.3920580740 (deg)')
+        assert not label_mouseover.row1_unreliable
+        assert not label_mouseover.row2_unreliable
+        assert not label_mouseover.row3_unreliable
 
+        # viewer, not label_mouseover event
         self.viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'b',
                                            'domain': {'x': 0, 'y': 0}})
-        assert self.viewer.label_mouseover.pixel == 'x=02.7 y=09.8'
-        assert self.viewer.label_mouseover.value == ''
-        assert self.viewer.label_mouseover.world_ra_deg == '3.5817255823'
-        assert self.viewer.label_mouseover.world_dec_deg == '-30.3920580740'
-        assert not self.viewer.label_mouseover.unreliable_world
-        assert not self.viewer.label_mouseover.unreliable_pixel
+        assert label_mouseover.as_text() == ('Pixel x=02.7 y=09.8',
+                                             'World 00h14m19.6141s -30d23m31.4091s (ICRS)',
+                                             '3.5817255823 -30.3920580740 (deg)')
+        assert not label_mouseover.row1_unreliable
+        assert not label_mouseover.row2_unreliable
+        assert not label_mouseover.row3_unreliable
 
         # Make sure GWCS now can extrapolate. Domain x,y is for FITS WCS data
         # but they are linked by WCS.
-        self.viewer.on_mouse_or_key_event({'event': 'mousemove',
-                                           'domain': {'x': 11.281551269520731,
-                                                      'y': 2.480347927198246}})
-        assert self.viewer.label_mouseover.pixel == 'x=-1.0 y=-1.0'
-        assert self.viewer.label_mouseover.value == ''
-        assert self.viewer.label_mouseover.world_ra_deg == '3.5815955408'
-        assert self.viewer.label_mouseover.world_dec_deg == '-30.3919405616'
+        label_mouseover._viewer_mouse_event(self.viewer,
+                                            {'event': 'mousemove',
+                                             'domain': {'x': 11.281551269520731,
+                                                        'y': 2.480347927198246}})
+        assert label_mouseover.as_text() == ('Pixel x=-1.0 y=-1.0',
+                                             'World 00h14m19.5829s -30d23m30.9860s (ICRS)',
+                                             '3.5815955408 -30.3919405616 (deg)')
         # FITS WCS is reference data and has no concept of bounding box
         # but cursor is outside GWCS bounding box
-        assert self.viewer.label_mouseover.unreliable_world
-        assert self.viewer.label_mouseover.unreliable_pixel
-        assert self.viewer.label_mouseover.world_label_prefix_2 == '(est.)'
+        assert label_mouseover.row1_unreliable
+        assert label_mouseover.row2_unreliable
+        assert label_mouseover.row3_unreliable
 
 
 class TestLink_GWCS_GWCS(BaseImviz_GWCS_GWCS):
@@ -280,64 +281,79 @@ class TestLink_GWCS_GWCS(BaseImviz_GWCS_GWCS):
 
         # Check the coordinates display: Last loaded is on top.
         # Within bounds of non-reference image but out of bounds of reference image.
-        self.viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 10, 'y': 3}})
-        assert self.viewer.label_mouseover.pixel in ('x=07.0 y=00.0', 'x=07.0 y=-0.0')
-        assert self.viewer.label_mouseover.value == '+0.00000e+00 '
-        assert self.viewer.label_mouseover.world_ra_deg == '3.5817877198'
-        assert self.viewer.label_mouseover.world_dec_deg == '-30.3919358920'
-        assert self.viewer.label_mouseover.unreliable_world
-        assert self.viewer.label_mouseover.unreliable_pixel
+        label_mouseover = self.imviz.app.session.application._tools['g-coords-info']
+        label_mouseover._viewer_mouse_event(self.viewer,
+                                            {'event': 'mousemove', 'domain': {'x': 10, 'y': 3}})
+        lmtext = label_mouseover.as_text()
+        assert lmtext[0] in ('Pixel x=07.0 y=00.0 Value +0.00000e+00',
+                             'Pixel x=07.0 y=-0.0 Value +0.00000e+00')
+        assert lmtext[1:] == ('World 00h14m19.6291s -30d23m30.9692s (ICRS)',
+                              '3.5817877198 -30.3919358920 (deg)')
+
+        assert label_mouseover.row1_unreliable
+        assert label_mouseover.row2_unreliable
+        assert label_mouseover.row3_unreliable
 
         # Non-reference image out of bounds of its own bounds but not of the
         # reference image's bounds. Head hurting yet?
-        self.viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0.5, 'y': 0.5}})
-        assert self.viewer.label_mouseover.pixel == 'x=-2.5 y=-2.5'
-        assert self.viewer.label_mouseover.value == ''
-        assert self.viewer.label_mouseover.world_ra_deg == '3.5816283341'
-        assert self.viewer.label_mouseover.world_dec_deg == '-30.3919519949'
-        assert self.viewer.label_mouseover.unreliable_world
-        assert self.viewer.label_mouseover.unreliable_pixel
+        label_mouseover._viewer_mouse_event(self.viewer,
+                                            {'event': 'mousemove', 'domain': {'x': 0.5, 'y': 0.5}})
+        assert label_mouseover.as_text() == ('Pixel x=-2.5 y=-2.5',
+                                             'World 00h14m19.5908s -30d23m31.0272s (ICRS)',
+                                             '3.5816283341 -30.3919519949 (deg)')
+        assert label_mouseover.row1_unreliable
+        assert label_mouseover.row2_unreliable
+        assert label_mouseover.row3_unreliable
 
         # Back to reference image
+        label_mouseover._viewer_mouse_event(self.viewer,
+                                            {'event': 'keydown', 'key': 'b',
+                                             'domain': {'x': 0, 'y': 0}})
         self.viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'b',
                                            'domain': {'x': 0, 'y': 0}})
-        assert self.viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
-        assert self.viewer.label_mouseover.value == '+1.00000e+00 electron / s'
-        assert self.viewer.label_mouseover.world_ra_deg == '3.5816174030'
-        assert self.viewer.label_mouseover.world_dec_deg == '-30.3919481838'
-        assert not self.viewer.label_mouseover.unreliable_world
-        assert not self.viewer.label_mouseover.unreliable_pixel
+        assert label_mouseover.as_text() == ('Pixel x=00.0 y=00.0 Value +1.00000e+00 electron / s',
+                                             'World 00h14m19.5882s -30d23m31.0135s (ICRS)',
+                                             '3.5816174030 -30.3919481838 (deg)')
+        assert not label_mouseover.row1_unreliable
+        assert not label_mouseover.row2_unreliable
+        assert not label_mouseover.row3_unreliable
 
         # Still reference image but outside its own bounds.
-        self.viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 10, 'y': 3}})
-        assert self.viewer.label_mouseover.pixel == 'x=10.0 y=03.0'
-        assert self.viewer.label_mouseover.value == ''
-        assert self.viewer.label_mouseover.world_ra_deg == '3.5817877198'
-        assert self.viewer.label_mouseover.world_dec_deg == '-30.3919358920'
-        assert self.viewer.label_mouseover.unreliable_world
-        assert not self.viewer.label_mouseover.unreliable_pixel
+        label_mouseover._viewer_mouse_event(self.viewer,
+                                            {'event': 'mousemove', 'domain': {'x': 10, 'y': 3}})
+        assert label_mouseover.as_text() == ('Pixel x=10.0 y=03.0',
+                                             'World 00h14m19.6291s -30d23m30.9692s (ICRS)',
+                                             '3.5817877198 -30.3919358920 (deg)')
+        assert not label_mouseover.row1_unreliable
+        assert label_mouseover.row2_unreliable
+        assert label_mouseover.row3_unreliable
 
     def test_pixel_linking(self):
         self.imviz.link_data(link_type='pixels')
 
         # Check the coordinates display: Last loaded is on top.
-        self.viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': -1, 'y': -1}})
-        assert self.viewer.label_mouseover.pixel == 'x=-1.0 y=-1.0'
-        assert self.viewer.label_mouseover.value == ''
-        assert self.viewer.label_mouseover.world_ra_deg == '3.5816611274'
-        assert self.viewer.label_mouseover.world_dec_deg == '-30.3919634282'
-        assert self.viewer.label_mouseover.unreliable_world
-        assert not self.viewer.label_mouseover.unreliable_pixel
+        label_mouseover = self.imviz.app.session.application._tools['g-coords-info']
+        label_mouseover._viewer_mouse_event(self.viewer,
+                                            {'event': 'mousemove', 'domain': {'x': -1, 'y': -1}})
+        assert label_mouseover.as_text() == ('Pixel x=-1.0 y=-1.0',
+                                             'World 00h14m19.5987s -30d23m31.0683s (ICRS)',
+                                             '3.5816611274 -30.3919634282 (deg)')
+        assert not label_mouseover.row1_unreliable
+        assert label_mouseover.row2_unreliable
+        assert label_mouseover.row3_unreliable
 
         # Back to reference image with bounds check.
+        label_mouseover._viewer_mouse_event(self.viewer,
+                                            {'event': 'keydown', 'key': 'b',
+                                             'domain': {'x': -1, 'y': -1}})
         self.viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'b',
                                            'domain': {'x': -1, 'y': -1}})
-        assert self.viewer.label_mouseover.pixel == 'x=-1.0 y=-1.0'
-        assert self.viewer.label_mouseover.value == ''
-        assert self.viewer.label_mouseover.world_ra_deg == '3.5815955408'
-        assert self.viewer.label_mouseover.world_dec_deg == '-30.3919405616'
-        assert self.viewer.label_mouseover.unreliable_world
-        assert not self.viewer.label_mouseover.unreliable_pixel
+        assert label_mouseover.as_text() == ('Pixel x=-1.0 y=-1.0',
+                                             'World 00h14m19.5829s -30d23m30.9860s (ICRS)',
+                                             '3.5815955408 -30.3919405616 (deg)')
+        assert not label_mouseover.row1_unreliable
+        assert label_mouseover.row2_unreliable
+        assert label_mouseover.row3_unreliable
 
 
 def test_imviz_no_data(imviz_helper):

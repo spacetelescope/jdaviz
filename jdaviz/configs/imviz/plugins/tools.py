@@ -122,10 +122,6 @@ class BlinkOnce(CheckableTool):
     def on_click(self, data):
         self.viewer.blink_once(reversed=data['event']=='contextmenu')  # noqa: E225
 
-        # Also update the coordinates display.
-        data['event'] = 'mousemove'
-        self.viewer.on_mouse_or_key_event(data)
-
 
 @viewer_tool
 class MatchBoxZoom(_MatchedZoomMixin, BoxZoom):

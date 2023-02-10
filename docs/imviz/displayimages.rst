@@ -42,7 +42,7 @@ If your *reference data* has GWCS with a bounding box, any coordinates transform
 outside that bounding box is less reliable. This still applies even when you are
 looking at some other data that is not the reference data if they are linked by WCS
 because all transformations in glue go through the reference data. Such a situation
-is indicated by "(est.)" and the affected coordinates becoming gray.
+is indicated by the affected coordinates becoming gray.
 
 If your data of interest also has a GWCS with a bounding box, only
 the mouseover data where it overlaps with the reference data's

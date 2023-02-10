@@ -30,11 +30,11 @@ def test_2d_parser_jwst(specviz2d_helper):
 
     # Also check the coordinates info panel.
     viewer_2d = specviz2d_helper.app.get_viewer('spectrum-2d-viewer')
-    viewer_2d.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 350, 'y': 30}})
-    assert viewer_2d.label_mouseover.pixel == 'x=0350.0 y=0030.0'
-    assert viewer_2d.label_mouseover.value == '+3.22142e+04 MJy / sr'
-    assert viewer_2d.label_mouseover.world_ra_deg == ''
-    assert viewer_2d.label_mouseover.world_dec_deg == ''
+    label_mouseover = specviz2d_helper.app.session.application._tools['g-coords-info']
+    label_mouseover._viewer_mouse_event(viewer_2d,
+                                        {'event': 'mousemove', 'domain': {'x': 350, 'y': 30}})
+    assert label_mouseover.as_text() == ('Pixel x=0350.0 y=0030.0 Value +3.22142e+04 MJy / sr',
+                                         '', '')
 
 
 @pytest.mark.remote_data
@@ -71,21 +71,21 @@ def test_2d_parser_no_unit(specviz2d_helper, mos_spectrum2d):
     # Also check the coordinates info panels.
 
     viewer_2d = specviz2d_helper.app.get_viewer('spectrum-2d-viewer')
-    viewer_2d.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
-    assert viewer_2d.label_mouseover.pixel == 'x=00000.0 y=00000.0'
-    assert viewer_2d.label_mouseover.value == '+3.74540e-01 '
-    assert viewer_2d.label_mouseover.world_ra_deg == ''
-    assert viewer_2d.label_mouseover.world_dec_deg == ''
-    assert viewer_2d.label_mouseover.icon == 'a'
+    label_mouseover = specviz2d_helper.app.session.application._tools['g-coords-info']
+    label_mouseover._viewer_mouse_event(viewer_2d,
+                                        {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
+    assert label_mouseover.as_text() == ('Pixel x=00000.0 y=00000.0 Value +3.74540e-01', '', '')
+    assert label_mouseover.icon == 'a'
 
     viewer_1d = specviz2d_helper.app.get_viewer('spectrum-viewer')
-    viewer_1d.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 6.5, 'y': 3}})
-    assert viewer_1d.label_mouseover.pixel == '6.50000e+00, 3.00000e+00'
-    assert viewer_1d.label_mouseover.world_label_prefix == 'Wave'
-    assert viewer_1d.label_mouseover.world_ra == '6.00000e+00 pix'
-    assert viewer_1d.label_mouseover.world_label_prefix_2 == 'Flux'
-    assert viewer_1d.label_mouseover.world_ra_deg == '-3.59571e+00 '  # extra space for no unit
-    assert viewer_1d.label_mouseover.icon == 'b'
+    # need to trigger a mouseleave or mouseover to reset the traitlets
+    label_mouseover._viewer_mouse_event(viewer_1d, {'event': 'mouseenter'})
+    label_mouseover._viewer_mouse_event(viewer_1d,
+                                        {'event': 'mousemove', 'domain': {'x': 6.5, 'y': 3}})
+    assert label_mouseover.as_text() == ('Cursor 6.50000e+00, 3.00000e+00',
+                                         'Wave 6.00000e+00 pix',
+                                         'Flux -3.59571e+00')
+    assert label_mouseover.icon == 'b'
 
 
 def test_1d_parser(specviz2d_helper, spectrum1d):
