@@ -7,6 +7,8 @@ New Features
 Cubeviz
 ^^^^^^^
 
+- Moment map output now has celestial WCS, when applicable. [#2002]
+
 Imviz
 ^^^^^
 

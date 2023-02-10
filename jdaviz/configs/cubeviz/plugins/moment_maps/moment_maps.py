@@ -3,6 +3,7 @@ from pathlib import Path
 
 from astropy import units as u
 from astropy.nddata import CCDData
+from astropy.wcs import WCS
 
 from traitlets import Unicode, Bool, observe
 from specutils import Spectrum1D, manipulation, analysis
@@ -103,7 +104,14 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         # Need transpose to align JWST mirror shape. Not sure why.
         # TODO: WCS can be grabbed from cube.wcs[:, :, 0] but CCDData will not take it.
         #       But if we use NDData, glue-astronomy translator fails.
-        self.moment = CCDData(analysis.moment(slab, order=n_moment).T)
+        data = self.dataset.selected_dc_item
+        if isinstance(data.coords, WCS):
+            kwargs = {'wcs': data.coords.celestial}
+        elif isinstance(data.meta.get('_orig_wcs', None), WCS):
+            kwargs = {'wcs': data.meta['_orig_wcs'].celestial}
+        else:
+            kwargs = {}
+        self.moment = CCDData(analysis.moment(slab, order=n_moment).T, **kwargs)
 
         fname_label = self.dataset_selected.replace("[", "_").replace("]", "")
         self.filename = f"moment{n_moment}_{fname_label}.fits"

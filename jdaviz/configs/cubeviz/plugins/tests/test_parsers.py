@@ -45,11 +45,13 @@ def test_fits_image_hdu_with_microns(image_cube_hdu_obj_microns, cubeviz_helper)
     flux_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
     assert flux_viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
     assert flux_viewer.label_mouseover.value == '+1.00000e+00 1e-17 erg / (Angstrom cm2 s)'
+    # Sky: 205.4398996, 27.00341788
 
     unc_viewer = cubeviz_helper.app.get_viewer('uncert-viewer')
     unc_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': -1, 'y': 0}})
     assert unc_viewer.label_mouseover.pixel == 'x=-1.0 y=00.0'
     assert unc_viewer.label_mouseover.value == ''  # Out of bounds
+    # Sky: 205.43994013, 27.00341788
 
 
 def test_spectrum1d_with_fake_fixed_units(spectrum1d, cubeviz_helper):
@@ -103,15 +105,15 @@ def test_fits_image_hdu_parse_from_file(tmpdir, image_cube_hdu_obj, cubeviz_help
     flux_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
     assert flux_viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
     assert flux_viewer.label_mouseover.value == '+1.00000e+00 1e-17 erg / (Angstrom cm2 s)'
-    assert flux_viewer.label_mouseover.world_ra_deg == '205.4433848390'
-    assert flux_viewer.label_mouseover.world_dec_deg == '26.9996149270'
+    assert flux_viewer.label_mouseover.world_ra_deg == '205.4441642302'
+    assert flux_viewer.label_mouseover.world_dec_deg == '26.9996148973'
 
     unc_viewer = cubeviz_helper.app.get_viewer(cubeviz_helper._default_uncert_viewer_reference_name)
     unc_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': -1, 'y': 0}})
     assert unc_viewer.label_mouseover.pixel == 'x=-1.0 y=00.0'
     assert unc_viewer.label_mouseover.value == ''  # Out of bounds
-    assert unc_viewer.label_mouseover.world_ra_deg == '205.4441642302'
-    assert unc_viewer.label_mouseover.world_dec_deg == '26.9996148973'
+    assert unc_viewer.label_mouseover.world_ra_deg == '205.4443201084'
+    assert unc_viewer.label_mouseover.world_dec_deg == '26.9996148908'
 
 
 @pytest.mark.filterwarnings('ignore')
@@ -131,8 +133,8 @@ def test_spectrum3d_parse(image_cube_hdu_obj, cubeviz_helper):
     flux_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
     assert flux_viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
     assert flux_viewer.label_mouseover.value == '+1.00000e+00 1e-17 erg / (Angstrom cm2 s)'
-    assert flux_viewer.label_mouseover.world_ra_deg == '205.4433848390'
-    assert flux_viewer.label_mouseover.world_dec_deg == '26.9996149270'
+    assert flux_viewer.label_mouseover.world_ra_deg == '205.4441642302'
+    assert flux_viewer.label_mouseover.world_dec_deg == '26.9996148973'
 
     # These viewers have no data.
 

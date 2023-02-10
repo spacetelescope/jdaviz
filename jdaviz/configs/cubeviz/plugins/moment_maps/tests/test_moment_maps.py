@@ -3,6 +3,7 @@ import os
 import pytest
 from astropy.io import fits
 from astropy.nddata import CCDData
+from astropy.wcs import WCS
 from numpy.testing import assert_allclose
 
 from jdaviz.configs.cubeviz.plugins.moment_maps.moment_maps import MomentMap
@@ -36,7 +37,7 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
     assert len(mv_data) == 1
     assert mv_data[0].label == 'moment 0'
 
-    assert len(dc.links) == 8
+    assert len(dc.links) == 14
 
     # label should remain unchanged but raise overwrite warnings
     assert mm.results_label == 'moment 0'
@@ -47,8 +48,8 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
     assert flux_viewer.state.slices == (0, 0, 1)
     assert flux_viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
     assert flux_viewer.label_mouseover.value == '+8.00000e+00 Jy'  # Slice 0 has 8 pixels, this is Slice 1  # noqa
-    assert flux_viewer.label_mouseover.world_ra_deg == '204.9997755346'
-    assert flux_viewer.label_mouseover.world_dec_deg == '27.0000999998'
+    assert flux_viewer.label_mouseover.world_ra_deg == '204.9998877673'
+    assert flux_viewer.label_mouseover.world_dec_deg == '27.0001000000'
 
     # Make sure adding it to viewer does not crash.
     cubeviz_helper.app.add_data_to_viewer(
@@ -57,16 +58,14 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
 
     result = dc[1].get_object(cls=CCDData)
     assert result.shape == (4, 2)  # Cube shape is (2, 2, 4)
-
-    # FIXME: Need spatial WCS, see https://github.com/spacetelescope/jdaviz/issues/1025
-    assert dc[1].coords is None
+    assert isinstance(dc[1].coords, WCS)
 
     # Make sure coordinate display now show moment map info (no WCS)
     flux_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
     assert flux_viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
     assert flux_viewer.label_mouseover.value == '+8.00000e+00 Jy'  # Slice 0 has 8 pixels, this is Slice 1  # noqa
-    assert flux_viewer.label_mouseover.world_ra_deg == '204.9997755346'
-    assert flux_viewer.label_mouseover.world_dec_deg == '27.0000999998'
+    assert flux_viewer.label_mouseover.world_ra_deg == '204.9998877673'
+    assert flux_viewer.label_mouseover.world_dec_deg == '27.0001000000'
 
     assert mm.filename == 'moment0_test_FLUX.fits'  # Auto-populated on calculate.
     mm.filename = str(tmpdir.join(mm.filename))  # But we want it in tmpdir for testing.
@@ -80,26 +79,15 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
 
     assert dc[2].label == 'moment 1'
 
-    assert len(dc.links) == 10
-    assert len(dc.external_links) == 4
+    assert len(dc.links) == 22
+    assert len(dc.external_links) == 2
     # Link 3D z to 2D x and 3D y to 2D y
-
-    # Link 3:
-    # Pixel Axis 0 [z] from cube.pixel_component_ids[0]
-    # Pixel Axis 1 [x] from plugin.pixel_component_ids[1]
-    assert dc.external_links[2].cids1[0] == dc[0].pixel_component_ids[0]
-    assert dc.external_links[2].cids2[0] == dc[-1].pixel_component_ids[1]
-    # Link 4:
-    # Pixel Axis 1 [y] from cube.pixel_component_ids[1]
-    # Pixel Axis 0 [y] from plugin.pixel_component_ids[0]
-    assert dc.external_links[3].cids1[0] == dc[0].pixel_component_ids[1]
-    assert dc.external_links[3].cids2[0] == dc[-1].pixel_component_ids[0]
 
     # Coordinate display should be unaffected.
     assert flux_viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
     assert flux_viewer.label_mouseover.value == '+8.00000e+00 Jy'  # Slice 0 has 8 pixels, this is Slice 1  # noqa
-    assert flux_viewer.label_mouseover.world_ra_deg == '204.9997755346'
-    assert flux_viewer.label_mouseover.world_dec_deg == '27.0000999998'
+    assert flux_viewer.label_mouseover.world_ra_deg == '204.9998877673'
+    assert flux_viewer.label_mouseover.world_dec_deg == '27.0001000000'
 
 
 @pytest.mark.filterwarnings('ignore:No observer defined on WCS')
@@ -125,11 +113,16 @@ def test_write_momentmap(cubeviz_helper, spectrum1d_cube, tmp_path):
 
     # We should get an overwrite warning
     assert plugin._obj.overwrite_warn is True
-    # and shouldn't have written anything (the file should be in tact)
+    # and shouldn't have written anything (the file should be intact)
     assert test_file.read_text() == existing_sentinel_text
 
     # Force overwrite the existing file
     plugin._obj.vue_overwrite_fits()
 
     # Read back in the file and check that it is equal to the one we calculated
-    assert_allclose(moment.data, fits.getdata(test_file_str))
+    with fits.open(test_file_str) as pf:
+        assert_allclose(pf[0].data, moment.data)
+        w = WCS(pf[0].header)
+        sky = w.pixel_to_world(0, 0)
+        assert_allclose(sky.ra.deg, 204.99988777)
+        assert_allclose(sky.dec.deg, 27.0001)
