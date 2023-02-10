@@ -1,4 +1,6 @@
 import numpy as np
+from astropy.coordinates import SkyCoord
+from astropy.wcs import WCS
 from glue.core import BaseData
 from glue.core.subset import RoiSubsetState, RangeSubsetState
 from glue_jupyter.bqplot.image import BqplotImageView
@@ -48,6 +50,20 @@ class CubevizImageView(JdavizViewerMixin, BqplotImageView):
         self.label_mouseover = None
         self.add_event_callback(self.on_mouse_or_key_event, events=['mousemove', 'mouseenter',
                                                                     'mouseleave'])
+
+    def _get_cube_skycoord(self, w, x, y):
+        if isinstance(w, WCS):
+            # TODO: Is x always RA and y always DEC?
+            if w.celestial.axis_type_names == ['RA', 'DEC']:
+                sky = w.celestial.pixel_to_world(x, y)
+            else:  # ['DEC', 'RA']
+                sky = w.celestial.pixel_to_world(y, x)
+        else:  # The old and possibly incorrect way
+            sky_list = w.pixel_to_world(x, y, self.state.slices[-1])
+            for sky in sky_list:
+                if isinstance(sky, SkyCoord):
+                    break
+        return sky.icrs
 
     def on_mouse_or_key_event(self, data):
 
@@ -100,11 +116,11 @@ class CubevizImageView(JdavizViewerMixin, BqplotImageView):
 
             # Hack around various WCS propagation issues in Cubeviz.
             if '_orig_wcs' in coo_data.meta:
-                coo = coo_data.meta['_orig_wcs'].pixel_to_world(x, y, self.state.slices[-1])[0].icrs
+                coo = self._get_cube_skycoord(coo_data.meta['_orig_wcs'], x, y)
                 self.label_mouseover.set_coords(coo)
             elif data_has_valid_wcs(coo_data):
                 try:
-                    coo = coo_data.coords.pixel_to_world(x, y, self.state.slices[-1])[-1].icrs
+                    coo = self._get_cube_skycoord(coo_data.coords, x, y)
                 except Exception:
                     self.label_mouseover.reset_coords_display()
                 else:

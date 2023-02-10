@@ -150,6 +150,7 @@ def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, target_w
 
     if (data_type == 'flux' and target_wave_unit is not None
             and target_wave_unit != sc.spectral_axis.unit):
+        metadata['_orig_wcs'] = wcs
         metadata['_orig_spec'] = sc
         with warnings.catch_warnings():
             warnings.filterwarnings(
@@ -162,10 +163,6 @@ def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, target_w
     else:
         sc.meta = metadata
         new_sc = sc
-
-    # Always store the input WCS to avoid getting swapped version from Spectrum1D.
-    metadata['_orig_wcs'] = wcs
-
     return new_sc
 
 
