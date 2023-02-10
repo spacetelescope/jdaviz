@@ -2214,6 +2214,16 @@ class PluginSubcomponent(VuetifyTemplate):
 
 class Table(PluginSubcomponent):
     """
+    Table subcomponent.  For most cases where a plugin only requires a single table, use the mixin
+    instead.
+
+    To use in a plugin, define ``plugin.table = Table(plugin)``, create a ``table_widget`` Unicode
+    traitlet, and set ``plugin.table_widget = 'IPY_MODEL_'+self.table.model_id``.
+
+    To render in the plugin's vue file::
+
+      <jupyter-widget :widget="table_widget"></jupyter-widget>
+
     """
     template_file = __file__, "../components/plugin_table.vue"
 
@@ -2226,6 +2236,13 @@ class Table(PluginSubcomponent):
         super().__init__(plugin, 'Table', *args, **kwargs)
 
     def add_item(self, item):
+        """
+        Add an item/row to the table.
+
+        Parameters
+        ----------
+        item : QTable, QTableRow, or dictionary of row-name, value pairs
+        """
         def json_safe(item):
             if hasattr(item, 'to_string'):
                 return item.to_string()
@@ -2264,6 +2281,7 @@ class Table(PluginSubcomponent):
 
     def export_table(self):
         """
+        Export the QTable representation of the table.
         """
         # TODO: default to only showing selected columns?
         return self._qtable
@@ -2271,6 +2289,17 @@ class Table(PluginSubcomponent):
 
 class TableMixin(VuetifyTemplate, HubListener):
     """
+    Table subcomponent mixin.
+
+    In addition to ``table``, this provides the following methods at the plugin-level:
+
+    * :meth:`clear_table`
+    * :meth:`export_table`
+
+    To render in the plugin's vue file::
+
+      <jupyter-widget :widget="table_widget"></jupyter-widget>
+
     """
     table_widget = Unicode().tag(sync=True)
 
@@ -2280,6 +2309,9 @@ class TableMixin(VuetifyTemplate, HubListener):
         self.table_widget = 'IPY_MODEL_'+self.table.model_id
 
     def clear_table(self):
+        """
+        Clear all entries/markers from the current table.
+        """
         self.table.clear_table()
 
     def vue_clear_table(self, data=None):
@@ -2288,4 +2320,7 @@ class TableMixin(VuetifyTemplate, HubListener):
         self.clear_table()
 
     def export_table(self):
+        """
+        Export the QTable representation of the table.
+        """
         return self.table.export_table()
