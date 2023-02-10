@@ -7,6 +7,7 @@ from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetSelectMixin,
                                         AutoTextFieldMixin)
+from jdaviz.core.user_api import PluginUserApi
 
 try:
     from reproject import reproject_interp
@@ -32,6 +33,10 @@ class Reproject(PluginTemplateMixin, DatasetSelectMixin, AutoTextFieldMixin):
             self.disabled_msg = 'Please install reproject and restart Jdaviz to use this plugin'
             return
 
+    @property
+    def user_api(self):
+        return PluginUserApi(self, expose=('dataset', 'label', 'reproject'))
+
     @observe("dataset_selected")
     def _set_default_results_label(self, event={}):
         '''Generate a label and set the results field to that value'''
@@ -48,7 +53,11 @@ class Reproject(PluginTemplateMixin, DatasetSelectMixin, AutoTextFieldMixin):
             return
         self.label_invalid_msg = ''
 
-    def vue_do_reproject(self, *args, **kwargs):
+    def reproject(self):
+        """
+        Reproject ``dataset`` so that North is up in a new entry labeled ``label`` and set as the
+        reference image.
+        """
         if (not HAS_REPROJECT or self.dataset_selected not in self.data_collection
                 or self.reproject_in_progress):
             return
@@ -108,3 +117,6 @@ class Reproject(PluginTemplateMixin, DatasetSelectMixin, AutoTextFieldMixin):
 
         finally:
             self.reproject_in_progress = False
+
+    def vue_do_reproject(self, *args, **kwargs):
+        self.reproject()
