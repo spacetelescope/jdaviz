@@ -5,46 +5,50 @@
     :disabled_msg="disabled_msg"
     :popout_button="popout_button">
 
-    <plugin-dataset-select
-      :items="dataset_items"
-      :selected.sync="dataset_selected"
-      :show_if_single_entry="false"
-      label="Data"
-      hint="Select the data for reprojection."
-    />
+    <div style="display: grid"> <!-- overlay container -->
+      <div style="grid-area: 1/1">
+        <plugin-dataset-select
+          :items="dataset_items"
+          :selected.sync="dataset_selected"
+          :show_if_single_entry="false"
+          label="Data"
+          hint="Select the data for reprojection."
+        />
 
-    <div v-if='dataset_selected'>
-      <plugin-auto-label
-        :value.sync="label"
-        :default="label_default"
-        :auto.sync="label_auto"
-        :invalid_msg="label_invalid_msg"
-        hint="Data label for reprojected data."
-      ></plugin-auto-label>
-      <v-row justify="end">
-        <v-btn color="primary" 
-          text
-          :disabled="label_invalid_msg.length > 0"
-          @click="do_reproject">
-            Reproject
-          </v-btn>
-      </v-row>
-    </div>
+        <div v-if='dataset_selected'>
+          <plugin-auto-label
+            :value.sync="label"
+            :default="label_default"
+            :auto.sync="label_auto"
+            :invalid_msg="label_invalid_msg"
+            hint="Data label for reprojected data."
+          ></plugin-auto-label>
+          <v-row justify="end">
+            <v-btn color="primary" 
+              text
+              :disabled="label_invalid_msg.length > 0"
+              @click="do_reproject">
+                Reproject
+              </v-btn>
+          </v-row>
+        </div>
+      </div>
 
-    <div v-if="reproject_in_progress"
-         class="text-center"
-         style="grid-area: 1/1;
-                z-index:2;
-                margin-left: -24px;
-                margin-right: -24px;
-                padding-top: 60px;
-                background-color: rgb(0 0 0 / 20%)">
-      <v-progress-circular
-        indeterminate
-        color="spinner"
-        size="50"
-        width="6"
-      ></v-progress-circular>
+      <div v-if="reproject_in_progress"
+           class="text-center"
+           style="grid-area: 1/1;
+                  z-index:2;
+                  margin-left: -24px;
+                  margin-right: -24px;
+                  padding-top: 60px;
+                  background-color: rgb(0 0 0 / 20%)">
+        <v-progress-circular
+          indeterminate
+          color="spinner"
+          size="50"
+          width="6"
+        ></v-progress-circular>
+      </div>
     </div>
   </j-tray-plugin>
 </template>
