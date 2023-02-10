@@ -5,16 +5,17 @@
     :disabled_msg="disabled_msg"
     :popout_button="popout_button">
 
+
+    <plugin-dataset-select
+      :items="dataset_items"
+      :selected.sync="dataset_selected"
+      :show_if_single_entry="false"
+      label="Data"
+      hint="Select the data for reprojection."
+    />
+
     <div style="display: grid"> <!-- overlay container -->
       <div style="grid-area: 1/1">
-        <plugin-dataset-select
-          :items="dataset_items"
-          :selected.sync="dataset_selected"
-          :show_if_single_entry="false"
-          label="Data"
-          hint="Select the data for reprojection."
-        />
-
         <div v-if='dataset_selected'>
           <plugin-auto-label
             :value.sync="label"
