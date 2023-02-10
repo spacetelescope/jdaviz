@@ -277,6 +277,9 @@ Reproject
 
     Reprojecting a large image may be resource intensive.
 
+    Compass zoom box might be inaccurate on data linked to the reprojected
+    image.
+
 Use the `reproject <https://reproject.readthedocs.io/>`_ package to create a new image
 that is the input image reprojected to its optimal celestial WCS.
 
