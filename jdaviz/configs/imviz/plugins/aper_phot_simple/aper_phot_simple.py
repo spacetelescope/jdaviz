@@ -348,11 +348,11 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
 
             try:
                 phot_table['id'][0] = self.table._qtable['id'].max() + 1
-                self.table.add_row(phot_table)
+                self.table.add_item(phot_table)
             except Exception:  # Discard incompatible QTable
                 self.table.clear_table()
                 phot_table['id'][0] = 1
-                self.table.add_row(phot_table)
+                self.table.add_item(phot_table)
 
             # Plots.
             # TODO: Jenn wants title at bottom.

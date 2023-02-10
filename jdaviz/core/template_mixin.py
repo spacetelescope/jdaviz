@@ -2225,7 +2225,7 @@ class Table(PluginSubcomponent):
         self._qtable = None
         super().__init__(plugin, 'Table', *args, **kwargs)
 
-    def add_row(self, item):
+    def add_item(self, item):
         def json_safe(item):
             if hasattr(item, 'to_string'):
                 return item.to_string()
@@ -2233,7 +2233,7 @@ class Table(PluginSubcomponent):
 
         if isinstance(item, QTable):
             for row in item:
-                self.add_row(row)
+                self.add_item(row)
             return
         if isinstance(item, QTableRow):
             # Row does not have .items() implemented
