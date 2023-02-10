@@ -1599,7 +1599,7 @@ class AutoTextFieldMixin(VuetifyTemplate, HubListener):
         :value.sync="label"
         :default="label_default"
         :auto.sync="label_auto"
-        :invalid_msg="invalid_msg"
+        :invalid_msg="label_invalid_msg"
         hint="Label hint."
       ></plugin-auto-label>
     """
@@ -1610,9 +1610,9 @@ class AutoTextFieldMixin(VuetifyTemplate, HubListener):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.auto_label = AddResults(self, 'label',
-                                     'label_default', 'label_auto',
-                                     'label_invalid_msg')
+        self.auto_label = AutoTextField(self, 'label',
+                                        'label_default', 'label_auto',
+                                        'label_invalid_msg')
 
 
 class AddResults(BasePluginComponent):
