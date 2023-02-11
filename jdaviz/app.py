@@ -811,7 +811,7 @@ class Application(VuetifyTemplate, HubListener):
                     # TODO: this needs to be much simpler; i.e. data units in
                     #  the glue component objects
                     # Cases where there is a single subset
-                    if '_orig_wcs' in value.data.meta:  # Hack for Cubeviz WCS propagation
+                    if '_orig_spec' in value.data.meta:  # Hack for Cubeviz WCS propagation
                         data_wcs = value.data.meta['_orig_spec']
                     else:
                         data_wcs = value.data.coords
