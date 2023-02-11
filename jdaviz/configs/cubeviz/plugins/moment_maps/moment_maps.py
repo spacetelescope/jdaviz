@@ -103,7 +103,6 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         # Need transpose to align JWST mirror shape: This is because specutils
         # arrange the array shape to be (nx, ny, nz) but 2D visualization
         # assumes (ny, nx) as per row-major convention.
-        # FIXME: Make sure WCS is oriented correctedly.
         data_wcs = getattr(cube.wcs, 'celestial', None)
         if data_wcs:
             data_wcs = data_wcs.swapaxes(0, 1)  # We also transpose WCS to match.
