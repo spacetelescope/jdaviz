@@ -20,6 +20,7 @@ tray:
   - g-metadata-viewer
   - g-plot-options
   - g-subset-plugin
+  - g-markers
   - cubeviz-slice
   - g-gaussian-smooth
   - g-collapse

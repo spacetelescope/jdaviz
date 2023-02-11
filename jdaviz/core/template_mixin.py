@@ -173,6 +173,7 @@ class PluginTemplateMixin(TemplateMixin):
     plugin_opened = Bool(False).tag(sync=True)
 
     def __init__(self, **kwargs):
+        self._viewer_callbacks = {}
         super().__init__(**kwargs)
         self.app.state.add_callback('tray_items_open', self._mxn_update_plugin_opened)
         self.app.state.add_callback('drawer', self._mxn_update_plugin_opened)
@@ -182,6 +183,28 @@ class PluginTemplateMixin(TemplateMixin):
         # plugins should override this to pass their own list of expose functionality, which
         # can even be dependent on config, etc.
         return PluginUserApi(self, expose=[])
+
+    def _viewer_callback(self, viewer, plugin_method):
+        """
+        Cached access to callbacks to a plugin method to attach to a viewer.
+
+        To define a callback:
+        def _on_callback(self, viewer, data):
+
+        To add callback:
+        viewer.add_event_calback(self._viewer_callback(viewer, self._on_callback),
+                                 events=['keydown'])
+
+        To remove callback:
+        viewer.remove_event_callback(self._viewer_callback(viewer, self._on_callback))
+        """
+        def plugin_viewer_callback(viewer, plugin_method):
+            return lambda data: plugin_method(viewer, data)
+
+        key = f'{viewer.reference_id}:{plugin_method.__name__}'
+        if key not in self._viewer_callbacks.keys():
+            self._viewer_callbacks[key] = plugin_viewer_callback(viewer, plugin_method)
+        return self._viewer_callbacks.get(key)
 
     def _mxn_update_plugin_opened(self, new_value):
         app_state = self.app.state

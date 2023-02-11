@@ -74,6 +74,16 @@ parameters, shape, and orientation (if applicable) all update concurrently.
 
 Angle is counter-clockwise rotation around the center in degrees.
 
+.. _markers-plugin:
+
+Markers
+=======
+
+This plugin allows for interactively creating markers in any viewer and logging information about
+the location of that marker into a table, which can then be exported via the API using
+:meth:`~jdaviz.core.template_mixin.TableMixin.export_table`
+(see :ref:`plugin-apis`).
+
 .. _imviz-link-control:
 
 Link Control
