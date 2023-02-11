@@ -42,6 +42,7 @@ class CoordsInfo(TemplateMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._marks = {}
+        self._dict = {}  # dictionary representation of current mouseover info
         self._x, self._y = None, None  # latest known cursor positions
 
         # subscribe/unsubscribe to mouse events across all existing viewers
@@ -90,6 +91,9 @@ class CoordsInfo(TemplateMixin):
                 f"{self.row2_title} {self.row2_text}".strip(),
                 f"{self.row3_title} {self.row3_text}".strip())
 
+    def as_dict(self):
+        return self._dict
+
     def reset_coords_display(self):
         self.row1a_title = '\u00A0'  # to force empty line if no other content
         self.row1a_text = ""
@@ -106,6 +110,7 @@ class CoordsInfo(TemplateMixin):
         self.row3_unreliable = False
 
         self.icon = ""
+        self._dict = {}
 
     def _viewer_mouse_clear_event(self, viewer, data=None):
         self.reset_coords_display()
@@ -166,8 +171,12 @@ class CoordsInfo(TemplateMixin):
 
         image = active_layer.layer
         self.icon = self.app.state.layer_icons.get(image.label, '')  # noqa
+        self._dict['data_label'] = image.label
 
         unreliable_pixel, unreliable_world = False, False
+
+        self._dict['x'] = x
+        self._dict['y'] = y
 
         # Separate logic for each viewer type, ultimately needs to result in extracting sky coords.
         # NOTE: pixel_to_world axes order is opposite of array value axes order, so...
@@ -248,6 +257,10 @@ class CoordsInfo(TemplateMixin):
             self.row3_title = ''
             self.row3_text = f'{world_ra_deg} {world_dec_deg} (deg)'
             self.row3_unreliable = unreliable_world
+            self._dict['RA (ICRS)'] = world_ra
+            self._dict['DEC (ICRS)'] = world_dec
+            self._dict['RA (deg)'] = float(world_ra_deg)
+            self._dict['DEC (deg)'] = float(world_dec_deg)
         else:
             self.row2_title = '\u00A0'
             self.row2_text = ""
@@ -294,6 +307,7 @@ class CoordsInfo(TemplateMixin):
                     value = arr[int(round(y)), int(round(x))]
             self.row1b_title = 'Value'
             self.row1b_text = f'{value:+10.5e} {unit}'
+            self._dict['Value'] = value * u.Unit(unit)
         else:
             self.row1b_title = ''
             self.row1b_text = ''
@@ -301,6 +315,9 @@ class CoordsInfo(TemplateMixin):
     def _spectrum_viewer_update(self, viewer, x, y):
         self.row1a_title = 'Cursor'
         self.row1a_text = f'{x:10.5e}, {y:10.5e}'
+
+        self._dict['x'] = x
+        self._dict['y'] = y
 
         # show the locked marker/coords only if either no tool or the default tool is active
         locking_active = viewer.toolbar.active_tool_id in viewer.toolbar.default_tool_priority + [None]  # noqa
@@ -366,6 +383,7 @@ class CoordsInfo(TemplateMixin):
                     closest_wave = cur_wave
                     closest_flux = cur_flux
                     closest_icon = self.app.state.layer_icons.get(lyr.layer.label)
+                    self._dict['data_label'] = lyr.layer.label
             except Exception:  # nosec
                 # Something is loaded but not the right thing
                 continue
@@ -376,11 +394,14 @@ class CoordsInfo(TemplateMixin):
 
         self.row2_title = 'Wave'
         self.row2_text = f'{closest_wave.value:10.5e} {closest_wave.unit.to_string()}'
+        self._dict['Spectral Axis'] = closest_wave
         if closest_wave.unit != u.pix:
             self.row2_text += f' ({int(closest_i)} pix)'
+            self._dict['Pixel'] = closest_i
 
         self.row3_title = 'Flux'
         self.row3_text = f'{closest_flux.value:10.5e} {closest_flux.unit.to_string()}'
+        self._dict['Flux'] = closest_flux
 
         self.icon = closest_icon
 

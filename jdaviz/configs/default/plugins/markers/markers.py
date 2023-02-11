@@ -33,10 +33,19 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         super().__init__(*args, **kwargs)
         headers = ['x', 'y']
 
-        if self.config in ['imviz', 'cubeviz', 'mosviz', 'specviz2d']:
-            headers += ['viewer']
-        if self.config in ['imviz', 'cubeviz']:
-            headers += ['data_label']
+        if self.config in ['imviz', 'cubeviz', 'mosviz']:
+            # image viewers
+            headers += ['RA (ICRS)', 'DEC (ICRS)',
+                        'RA (deg)', 'DEC (deg)',
+                        'Value', 'viewer']
+        if self.config in ['specviz', 'specviz2d', 'mosviz']:
+            # 1d spectrum viewers
+            headers += ['Spectral Axis', 'Pixel', 'Flux']
+        if self.config in ['specviz2d', 'mosviz']:
+            # 2d spectrum viewers
+            headers += []
+
+        headers += ['data_label']
 
         self.table.headers_avail = headers
         self.table.headers_visible = headers
@@ -77,34 +86,14 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             # TODO: refactor to share code with mouseover display if PR#1976 merged
             # TODO: merge with mouseover display entirely and show mouseover info in table
 
-            x = data['domain']['x']
-            y = data['domain']['y']
-
-            if x is None or y is None:  # Out of bounds
-                return
-
-            row_info = {'x': x, 'y': y}
+            row_info = self.app.session.application._tools['g-coords-info'].as_dict()
 
             if 'viewer' in self.table.headers_avail:
                 row_info['viewer'] = viewer.reference_id
 
-            if isinstance(viewer, BqplotImageView):
-                # TODO: access viewer.active_image_layer if PR#1976 merged
-                visible_layers = [layer for layer in viewer.state.layers
-                                  if (layer.visible and (layer_is_image_data(layer.layer) or layer_is_cube_image_data(layer.layer)))]  # noqa
-
-                if len(visible_layers) == 0:
-                    return
-
-                active_layer = visible_layers[-1]
-
-                row_info['data_label'] = active_layer.layer.label
-            elif 'data_label' in self.table.headers_avail:
-                row_info['data_label'] = ''
-
             self.table.add_item(row_info)
 
-            self._get_mark(viewer).append_xy(x, y)
+            self._get_mark(viewer).append_xy(row_info['x'], row_info['y'])
 
     def clear_table(self):
         """
