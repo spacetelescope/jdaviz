@@ -86,3 +86,7 @@ class TestConfigHelper:
         specviz_helper.app.data_collection.remove(specviz_helper.app.data_collection[self.label2])
         with pytest.raises(TypeError, match="cls in get_data must be a class or None."):
             specviz_helper.get_data('Test 1D Spectrum', cls=42)
+
+    def test_get_data_invald_subset_name(self, specviz_helper):
+        with pytest.raises(ValueError, match="not in list of valid subset names"):
+            specviz_helper.get_data('Test 1D Spectrum', subset_to_apply="Fail")

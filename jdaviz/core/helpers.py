@@ -435,6 +435,11 @@ class ConfigHelper(HubListener):
             raise ValueError(f"statistic {statistic} not in list of valid"
                              f" statistic values {list_of_valid_statistic_values}")
 
+        list_of_valid_subset_names = [x.label for x in self.app.data_collection.subset_groups]
+        if subset_to_apply and subset_to_apply not in list_of_valid_subset_names:
+            raise ValueError(f"Subset {statistic} not in list of valid"
+                             f" subset names {list_of_valid_subset_names}")
+
         if data_label and data_label not in self.app.data_collection.labels:
             raise ValueError(f'{data_label} not in {self.app.data_collection.labels}.')
         elif not data_label and len(self.app.data_collection) > 1:
@@ -449,7 +454,9 @@ class ConfigHelper(HubListener):
         data = self.app.data_collection[data_label]
 
         if not cls:
-            if len(data.shape) == 2:
+            if len(data.shape) == 2 and self.app.config == "specviz2d":
+                cls = Spectrum1D
+            elif len(data.shape) == 2:
                 cls = CCDData
             elif len(data.shape) in [1, 3]:
                 cls = Spectrum1D
