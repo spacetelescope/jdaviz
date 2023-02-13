@@ -43,6 +43,9 @@ class FreezableProfileViewerState(ProfileViewerState, FreezableState):
                     x_min = min(x_min, np.nanmin(x))
                     x_max = max(x_max, np.nanmax(x))
 
+        if not np.all(np.isfinite([x_min, x_max])):
+            return
+
         with delay_callback(self, 'x_min', 'x_max'):
             self.x_min = x_min
             self.x_max = x_max

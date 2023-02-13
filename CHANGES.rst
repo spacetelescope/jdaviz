@@ -69,6 +69,8 @@ Bug Fixes
 * Auto-label component no longer disables the automatic labeling behavior on any keypress, but only when changing the
   label [#2007].
 
+* Loading valid data no longer emits JSON serialization warnings. [#2011]
+
 Cubeviz
 ^^^^^^^
 
