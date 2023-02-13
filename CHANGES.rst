@@ -24,6 +24,8 @@ Specviz2d
 API Changes
 -----------
 
+- Add ``get_data()`` method to base helper class to centralize data retrieval. [#1984]
+
 Cubeviz
 ^^^^^^^
 
