@@ -429,6 +429,9 @@ class ConfigHelper(HubListener):
             Data is returned as type cls with subsets applied.
 
         """
+        if self.app.config != "cubeviz" and statistic:
+            raise AttributeError(f"{self.app.config} does not need the statistic parameter set.")
+
         list_of_valid_statistic_values = ['minimum', 'maximum', 'mean',
                                           'median', 'sum']
         if statistic and statistic not in list_of_valid_statistic_values:
