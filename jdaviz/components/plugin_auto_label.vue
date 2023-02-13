@@ -4,7 +4,7 @@
       <v-text-field
         ref="textField"
         :value="displayValue"
-        @keyup="if(auto) {$emit('update:auto', false)}; $emit('update:value', $event.srcElement._value)"
+        @keyup="if(auto) {if ($event.srcElement._value === displayValue) {return}; $emit('update:auto', false)}; $emit('update:value', $event.srcElement._value)"
         @mouseenter="showIcon = true"
         @mouseleave="showIcon = false"
         :label="label"

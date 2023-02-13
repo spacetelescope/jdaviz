@@ -66,6 +66,9 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+* Auto-label component no longer disables the automatic labeling behavior on any keypress, but only when changing the
+  label [#2007].
+
 Cubeviz
 ^^^^^^^
 
