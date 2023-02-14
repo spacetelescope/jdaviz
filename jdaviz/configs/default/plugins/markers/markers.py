@@ -1,9 +1,5 @@
 from traitlets import observe
 
-from glue_jupyter.bqplot.image import BqplotImageView
-
-from jdaviz.configs.imviz.helper import layer_is_image_data
-from jdaviz.configs.cubeviz.helper import layer_is_cube_image_data
 from jdaviz.core.marks import MarkersMark
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin, TableMixin
@@ -40,7 +36,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                         'Value', 'viewer']
         if self.config in ['specviz', 'specviz2d', 'mosviz']:
             # 1d spectrum viewers
-            headers += ['Spectral Axis', 'Pixel', 'Flux']
+            headers += ['pixel']
         if self.config in ['specviz2d', 'mosviz']:
             # 2d spectrum viewers
             headers += []
@@ -93,7 +89,9 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
 
             self.table.add_item(row_info)
 
-            self._get_mark(viewer).append_xy(row_info['x'], row_info['y'])
+            x, y = row_info['x'], row_info['y']
+            # TODO: will need to test/update when adding support for display units
+            self._get_mark(viewer).append_xy(getattr(x, 'value', x), getattr(y, 'value', y))
 
     def clear_table(self):
         """

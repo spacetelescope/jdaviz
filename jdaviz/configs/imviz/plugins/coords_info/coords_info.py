@@ -1,6 +1,6 @@
 import math
 import numpy as np
-from traitlets import Bool, Unicode
+from traitlets import Bool, Unicode, observe
 
 from astropy import units as u
 from glue.core import BaseData
@@ -14,16 +14,18 @@ from jdaviz.configs.mosviz.plugins.viewers import MosvizImageView, MosvizProfile
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
 from jdaviz.core.events import ViewerAddedMessage
 from jdaviz.core.registries import tool_registry
-from jdaviz.core.template_mixin import TemplateMixin
+from jdaviz.core.template_mixin import TemplateMixin, LayerSelectMultiviewerMixin
 from jdaviz.core.marks import PluginScatter
 
 __all__ = ['CoordsInfo']
 
 
 @tool_registry('g-coords-info')
-class CoordsInfo(TemplateMixin):
+class CoordsInfo(TemplateMixin, LayerSelectMultiviewerMixin):
     template_file = __file__, "coords_info.vue"
-    icon = Unicode("").tag(sync=True)
+
+    layer_icon = Unicode("").tag(sync=True)  # option for layer (auto, none, or specific layer)
+    icon = Unicode("").tag(sync=True)  # currently exposed layer
 
     row1a_title = Unicode("").tag(sync=True)
     row1a_text = Unicode("").tag(sync=True)
@@ -49,6 +51,9 @@ class CoordsInfo(TemplateMixin):
         for viewer in self.app._viewer_store.values():
             self._create_viewer_callbacks(viewer)
 
+        self.layer._manual_options = ['auto', 'none']
+        self.layer.viewer = self.app.get_viewer_reference_names()
+
         # subscribe to mouse events on any new viewers
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
 
@@ -66,6 +71,7 @@ class CoordsInfo(TemplateMixin):
 
     def _on_viewer_added(self, msg):
         self._create_viewer_callbacks(self.app.get_viewer_by_id(msg.viewer_id))
+        self.layer.viewer = self.app.get_viewer_reference_names()
 
     @property
     def marks(self):
@@ -150,6 +156,18 @@ class CoordsInfo(TemplateMixin):
         # cursor position
         self.update_display(viewer, self._x, self._y)
 
+    @observe('layer_selected')
+    def _selected_layer_changed(self, *args):
+        if self.layer_selected == 'auto':
+            self.layer_icon = 'mdi-auto-fix'
+        elif self.layer_selected == 'none':
+            self.layer_icon = 'mdi-cursor-default'
+        else:
+            self.layer_icon = self.app.state.layer_icons.get(self.layer_selected, '')
+
+    def vue_next_layer(self, *args, **kwargs):
+        self.layer.select_next()
+
     def update_display(self, viewer, x, y):
         if isinstance(viewer, SpecvizProfileView):
             self._spectrum_viewer_update(viewer, x, y)
@@ -169,20 +187,45 @@ class CoordsInfo(TemplateMixin):
             self._viewer_mouse_clear_event(viewer)
             return
 
-        image = active_layer.layer
-        self.icon = self.app.state.layer_icons.get(image.label, '')  # noqa
-        self._dict['data_label'] = image.label
+        if self.layer.selected == 'auto':
+            image = active_layer.layer
+        elif self.layer.selected == 'none':
+            active_layer = viewer.layers[0]
+            image = viewer.layers[0].layer
+        else:
+            for layer in viewer.layers:
+                if layer.layer.label == self.layer.selected and layer.visible:
+                    active_layer = layer
+                    image = layer.layer
+                    break
+            else:
+                image = None
 
         unreliable_pixel, unreliable_world = False, False
 
         self._dict['x'] = x
         self._dict['y'] = y
+        # set default empty values
+        self._dict['Value'] = np.nan
+        self._dict['RA (ICRS)'] = ''
+        self._dict['DEC (ICRS)'] = ''
+        self._dict['RA (deg)'] = np.nan
+        self._dict['DEC (deg)'] = np.nan
+
+        if self.layer.selected != 'none' and image is not None:
+            self.icon = self.app.state.layer_icons.get(image.label, '')  # noqa
+            self._dict['data_label'] = image.label
 
         # Separate logic for each viewer type, ultimately needs to result in extracting sky coords.
         # NOTE: pixel_to_world axes order is opposite of array value axes order, so...
         #   3D: pixel_to_world(z, y, x) -> arr[x, y, z]
         #   2D: pixel_to_world(x, y) -> arr[y, x]
-        if isinstance(viewer, ImvizImageView):
+        if self.layer.selected == 'none' or image is None:
+            self.icon = 'mdi-cursor-default'
+            self._dict['data_label'] = ''
+            coords_status = False
+
+        elif isinstance(viewer, ImvizImageView):
             x, y, coords_status, (unreliable_world, unreliable_pixel) = viewer._get_real_xy(image, x, y)  # noqa
             if coords_status:
                 try:
@@ -270,7 +313,7 @@ class CoordsInfo(TemplateMixin):
             self.row3_text = ""
             self.row3_unreliable = False
 
-        maxsize = int(np.ceil(np.log10(np.max(image.shape)))) + 3
+        maxsize = int(np.ceil(np.log10(np.max(active_layer.layer.shape)))) + 3
         fmt = 'x={0:0' + str(maxsize) + '.1f} y={1:0' + str(maxsize) + '.1f}'
         self.row1a_title = 'Pixel'
         self.row1a_text = (fmt.format(x, y))
@@ -279,6 +322,12 @@ class CoordsInfo(TemplateMixin):
         # Extract data values at this position.
         # TODO: for now we just use the first visible layer but we should think
         # of how to display values when multiple datasets are present.
+
+        if self.layer.selected == 'none' or image is None:
+            # no data values to extract
+            self.row1b_title = ''
+            self.row1b_text = ''
+            return
 
         # Extract data values at this position.
         # Check if shape is [x, y, z] or [y, x] and show value accordingly.
@@ -316,18 +365,24 @@ class CoordsInfo(TemplateMixin):
         self.row1a_title = 'Cursor'
         self.row1a_text = f'{x:10.5e}, {y:10.5e}'
 
-        self._dict['x'] = x
-        self._dict['y'] = y
-
         # show the locked marker/coords only if either no tool or the default tool is active
         locking_active = viewer.toolbar.active_tool_id in viewer.toolbar.default_tool_priority + [None]  # noqa
-        if not locking_active:
+        if not locking_active or self.layer.selected == 'none':
             self.row2_title = '\u00A0'
             self.row2_text = ''
             self.row3_title = '\u00A0'
             self.row3_text = ''
-            self.icon = ''
+            self.icon = 'mdi-cursor-default'
             self.marks[viewer._reference_id].visible = False
+            # get the units from the first layer
+            # TODO: replace with display units once implemented
+            statistic = getattr(viewer.state, 'function', None)
+            cache_key = (viewer.state.layers[0].layer.label, statistic)
+            sp = self.app._get_object_cache[cache_key]
+            self._dict['x'] = x * sp.spectral_axis.unit
+            self._dict['y'] = y * sp.flux.unit
+            self._dict['pixel'] = np.nan
+            self._dict['data_label'] = ''
             return
 
         # Snap to the closest data point, not the actual mouse location.
@@ -335,11 +390,14 @@ class CoordsInfo(TemplateMixin):
         closest_i = None
         closest_wave = None
         closest_flux = None
-        closest_icon = ''
+        closest_icon = 'mdi-cursor-default'
         closest_distance = None
         for lyr in viewer.state.layers:
-            if not lyr.visible:
+            if self.layer.selected == 'auto' and not lyr.visible:
                 continue
+            if self.layer.selected != 'auto' and self.layer.selected != lyr.layer.label:
+                continue
+
             if isinstance(lyr.layer, GroupedSubset):
                 if not isinstance(lyr.layer.subset_state, RoiSubsetState):
                     # then this is a SPECTRAL subset
@@ -367,7 +425,8 @@ class CoordsInfo(TemplateMixin):
                     self.app._get_object_cache[cache_key] = sp
 
                 # Out of range in spectral axis.
-                if x < sp.spectral_axis.value.min() or x > sp.spectral_axis.value.max():
+                if (self.layer.selected != lyr.layer.label and
+                        (x < sp.spectral_axis.value.min() or x > sp.spectral_axis.value.max())):
                     continue
 
                 cur_i = np.argmin(abs(sp.spectral_axis.value - x))
@@ -389,19 +448,24 @@ class CoordsInfo(TemplateMixin):
                 continue
 
         if closest_wave is None:
-            self._viewer_mouse_clear_event(viewer)
+            self.row2_title = '\u00A0'
+            self.row2_text = ''
+            self.row3_title = '\u00A0'
+            self.row3_text = ''
+            self.icon = 'mdi-cursor-default'
+            self.marks[viewer._reference_id].visible = False
             return
 
         self.row2_title = 'Wave'
         self.row2_text = f'{closest_wave.value:10.5e} {closest_wave.unit.to_string()}'
-        self._dict['Spectral Axis'] = closest_wave
+        self._dict['x'] = closest_wave
         if closest_wave.unit != u.pix:
             self.row2_text += f' ({int(closest_i)} pix)'
-            self._dict['Pixel'] = closest_i
+            self._dict['pixel'] = float(closest_i)  # float to be compatible with nan
 
         self.row3_title = 'Flux'
         self.row3_text = f'{closest_flux.value:10.5e} {closest_flux.unit.to_string()}'
-        self._dict['Flux'] = closest_flux
+        self._dict['y'] = closest_flux
 
         self.icon = closest_icon
 

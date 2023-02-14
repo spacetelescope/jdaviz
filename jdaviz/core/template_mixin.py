@@ -31,7 +31,7 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'SubsetSelect', 'SpatialSubsetSelectMixin', 'SpectralSubsetSelectMixin',
            'DatasetSpectralSubsetValidMixin',
            'ViewerSelect', 'ViewerSelectMixin',
-           'LayerSelect', 'LayerSelectMixin',
+           'LayerSelect', 'LayerSelectMixin', 'LayerSelectMultiviewerMixin',
            'DatasetSelect', 'DatasetSelectMixin',
            'Table', 'TableMixin',
            'AutoTextField', 'AutoTextFieldMixin',
@@ -482,6 +482,21 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
         self.selected = []
         return self.selected
 
+    def select_next(self):
+        """
+        Select next entry in the choices, wrapping when reaching the end.  Raises an error if 
+        :meth:`is_multiselect`
+        """
+        if self.is_multiselect:
+            raise ValueError("currently in multiselect mode")
+
+        cycle = self.choices
+        curr_ind = cycle.index(self.selected)
+        if curr_ind >= len(cycle) - 1:
+            curr_ind = -1
+        self.selected = cycle[curr_ind + 1]
+        return self.selected
+
     @property
     def default_text(self):
         return self._default_text
@@ -798,6 +813,44 @@ class LayerSelectMixin(VuetifyTemplate, HubListener):
     layer_items = List().tag(sync=True)
     layer_selected = Any().tag(sync=True)
     layer_viewer = Unicode().tag(sync=True)
+    layer_multiselect = Bool(False).tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.layer = LayerSelect(self,
+                                 'layer_items',
+                                 'layer_selected',
+                                 'layer_viewer',
+                                 'layer_multiselect')
+
+
+class LayerSelectMultiviewerMixin(VuetifyTemplate, HubListener):
+    """
+    Applies the LayerSelect component as a mixin in the base plugin.  This
+    automatically adds traitlets as well as new properties to the plugin with minimal
+    extra code.  For multiple instances or custom traitlet names/defaults, use the
+    component instead.
+
+    To use in a plugin:
+
+    * add ``LayerSelectMultiviewerMixin`` as a mixin to the class
+    * use the traitlets available from the plugin or properties/methods available from
+      ``plugin.layer``.
+
+    Example template (label and hint are optional)::
+
+      <plugin-layer-select
+        :items="layer_items"
+        :selected.sync="layer_selected"
+        :show_if_single_entry="true"
+        label="Layer"
+        hint="Select layer."
+      />
+
+    """
+    layer_items = List().tag(sync=True)
+    layer_selected = Any().tag(sync=True)
+    layer_viewer = List().tag(sync=True)
     layer_multiselect = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
@@ -2257,6 +2310,8 @@ class Table(PluginSubcomponent):
         def json_safe(item):
             if hasattr(item, 'to_string'):
                 return item.to_string()
+            if isinstance(item, float) and np.isnan(item):
+                return ''
             return item
 
         if isinstance(item, QTable):
