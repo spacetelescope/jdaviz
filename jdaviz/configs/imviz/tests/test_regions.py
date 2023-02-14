@@ -3,6 +3,7 @@ import pytest
 from astropy import units as u
 from astropy.coordinates import SkyCoord, Angle
 from astropy.utils.data import get_pkg_data_filename
+from astropy.nddata import NDData
 from photutils.aperture import CircularAperture, SkyCircularAperture
 from regions import (PixCoord, CircleSkyRegion, RectanglePixelRegion, CirclePixelRegion,
                      EllipsePixelRegion, PointPixelRegion, PointSkyRegion, PolygonPixelRegion,
@@ -258,6 +259,11 @@ class TestLoadStaticRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
         assert len(bad_regions) == 0
         self.verify_region_loaded('my_aper_sky_1')
         assert self.imviz.get_interactive_regions() == {}
+
+    def test_get_data_with_region(self):
+        self.imviz._apply_interactive_region('bqplot:rectangle', (0, 0), (10, 10))
+        results = self.imviz.get_data('has_wcs[SCI,1]', subset_to_apply='Subset 1')
+        assert isinstance(results, NDData)
 
 
 class TestLoadRegionsFromFile(BaseRegionHandler):
