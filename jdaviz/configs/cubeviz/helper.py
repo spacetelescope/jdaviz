@@ -155,7 +155,7 @@ def jdaviz_cube_fitswriter(spectrum, file_name, **kwargs):
     --------
     To write out a Spectrum1D cube using this writer:
 
-    >>> spec.write("my_output.fits", format="jdaviz-cube-writer", overwrite=True)
+    >>> spec.write("my_output.fits", format="jdaviz-cube-writer", overwrite=True)  # doctest: +SKIP
 
     """
     pri_hdu = fits.PrimaryHDU()
