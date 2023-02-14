@@ -1,6 +1,10 @@
 import numpy as np
+from astropy.io import fits
+from astropy.io import registry as io_registry
 from astropy.utils.decorators import deprecated
 from glue.core import BaseData
+from specutils import Spectrum1D
+from specutils.io.registers import _astropy_has_priorities
 
 from jdaviz.core.helpers import ImageConfigHelper
 from jdaviz.configs.default.plugins.line_lists.line_list_mixin import LineListMixin
@@ -126,3 +130,57 @@ class CubeViz(Cubeviz):
 
 def layer_is_cube_image_data(layer):
     return isinstance(layer, BaseData) and layer.ndim in (2, 3)
+
+
+# TODO: We can remove this when specutils supports it, i.e.,
+#       https://github.com/astropy/specutils/issues/592 and
+#       https://github.com/astropy/specutils/pull/1009
+# NOTE: Cannot use custom_write decorator from specutils because
+#       that involves asking user to manually put something in
+#       their ~/.specutils directory.
+
+def jdaviz_cube_fitswriter(spectrum, file_name, **kwargs):
+    """This is a custom writer for Spectrum1D data cube.
+    This writer is specifically targetting data cube
+    generated from Cubeviz plugins (e.g., cube fitting)
+    with FITS WCS. It writes out data in the following format
+    (with MASK only exist when applicable)::
+
+        No.    Name      Ver    Type
+          0  PRIMARY       1 PrimaryHDU
+          1  SCI           1 ImageHDU (float32)
+          2  MASK          1 ImageHDU (uint16)
+
+    Examples
+    --------
+    To write out a Spectrum1D cube using this writer::
+
+    >>> spec.write("my_output.fits", format="jdaviz-cube-writer", overwrite=True)
+
+    """
+    pri_hdu = fits.PrimaryHDU()
+
+    flux = spectrum.flux
+    sci_hdu = fits.ImageHDU(flux.value.astype(np.float32))
+    sci_hdu.name = "SCI"
+    sci_hdu.header.update(spectrum.meta)
+    sci_hdu.header.update(spectrum.wcs.to_header())
+    sci_hdu.header['BUNIT'] = flux.unit.to_string(format='fits')
+
+    hlist = [pri_hdu, sci_hdu]
+
+    if spectrum.mask is not None:
+        mask_hdu = fits.ImageHDU(spectrum.mask.astype(np.uint16))
+        mask_hdu.name = "MASK"
+        hlist.append(mask_hdu)
+
+    hdulist = fits.HDUList(hlist)
+    hdulist.writeto(file_name, **kwargs)
+
+
+if _astropy_has_priorities():
+    kwargs = {"priority": 0}
+else:
+    kwargs = {}
+io_registry.register_writer(
+    "jdaviz-cube-writer", Spectrum1D, jdaviz_cube_fitswriter, force=False, **kwargs)

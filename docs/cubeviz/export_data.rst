@@ -94,6 +94,13 @@ Alternatively, you can wrap this all into a single command:
 
     mydata = cubeviz.app.get_data_from_viewer("uncert-viewer", "data_name")
 
+To write out a `specutils.Spectrum1D` cube from Cubeviz
+(e.g., a fitted cube from :ref:`model-fitting`):
+
+.. code-block:: python
+
+    mydata.write("mydata.fits", format="jdaviz-cube-writer")
+
 Data can also be accessed directly from ``data_collection`` using the following code:
 
 .. code-block:: python
