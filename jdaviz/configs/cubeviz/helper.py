@@ -153,7 +153,7 @@ def jdaviz_cube_fitswriter(spectrum, file_name, **kwargs):
 
     Examples
     --------
-    To write out a Spectrum1D cube using this writer::
+    To write out a Spectrum1D cube using this writer:
 
     >>> spec.write("my_output.fits", format="jdaviz-cube-writer", overwrite=True)
 
