@@ -95,7 +95,9 @@ Alternatively, you can wrap this all into a single command:
     mydata = cubeviz.app.get_data_from_viewer("uncert-viewer", "data_name")
 
 To write out a `specutils.Spectrum1D` cube from Cubeviz
-(e.g., a fitted cube from :ref:`model-fitting`):
+(e.g., a fitted cube from :ref:`model-fitting`),
+where the mask (if available) is as defined in
+`Spectrum1D masks <https://specutils.readthedocs.io/en/latest/spectrum1d.html#including-masks>`_:
 
 .. code-block:: python
 

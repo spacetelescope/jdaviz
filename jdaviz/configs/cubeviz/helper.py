@@ -169,6 +169,9 @@ def jdaviz_cube_fitswriter(spectrum, file_name, **kwargs):
 
     hlist = [pri_hdu, sci_hdu]
 
+    # https://specutils.readthedocs.io/en/latest/spectrum1d.html#including-masks
+    # Good: False or 0
+    # Bad: True or non-zero
     if spectrum.mask is not None:
         mask_hdu = fits.ImageHDU(spectrum.mask.astype(np.uint16))
         mask_hdu.name = "MASK"
