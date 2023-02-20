@@ -1,4 +1,4 @@
-from traitlets import Any
+from traitlets import Any, observe
 
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin
@@ -14,7 +14,8 @@ class RotateImageSimple(PluginTemplateMixin, ViewerSelectMixin):
         super().__init__(*args, **kwargs)
         self._theta = 0  # degrees, clockwise
 
-    def vue_rotate_image(self, *args, **kwargs):
+    @observe('angle')
+    def _angle_changed(self, *args, **kwargs):
         # We only grab the value here to avoid constantly updating as
         # user is still entering or updating the value.
         try:

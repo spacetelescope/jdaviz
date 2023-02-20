@@ -10,6 +10,21 @@
       label="Viewer"
       hint="Select viewer."
     />
+    
+    <v-row>
+      <v-slider
+        v-model="angle"
+        class="align-center"
+        max="180"
+        min="-180"
+        step="1"
+        color="#00617E"
+        track-color="#00617E"
+        thumb-color="#153A4B"
+        hide-details
+      >
+      </v-slider>
+    </v-row>
 
     <v-row>
       <v-col>
@@ -22,9 +37,7 @@
       </v-col>
     </v-row>
 
-    <v-row justify="end">
-      <v-btn color="primary" text @click="rotate_image">Rotate</v-btn>
-    </v-row>
+    
 
   </j-tray-plugin>
 </template>
