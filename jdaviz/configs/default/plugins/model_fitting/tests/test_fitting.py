@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 from astropy import units as u
 from astropy.io import fits
+from astropy.io.registry.base import IORegistryError
 from astropy.modeling import models, parameters as params
 from astropy.nddata import StdDevUncertainty
 from astropy.wcs import WCS
@@ -116,7 +117,7 @@ def test_fitting_backend(unc):
 
 
 @pytest.mark.parametrize('unc', ('zeros', None))
-def test_cube_fitting_backend(unc, tmp_path):
+def test_cube_fitting_backend(cubeviz_helper, unc, tmp_path):
     np.random.seed(42)
 
     SIGMA = 0.1  # noise in data
@@ -226,13 +227,14 @@ def test_cube_fitting_backend(unc, tmp_path):
 
     # Check I/O roundtrip.
     out_fn = tmp_path / "fitted_cube.fits"
-    fitted_spectrum.write(out_fn, format="jdaviz-cube-writer", overwrite=True)
+    fitted_spectrum.write(out_fn, format="jdaviz-cube", overwrite=True)
+    flux_unit_str = fitted_spectrum.flux.unit.to_string(format="fits")
     coo_expected = fitted_spectrum.wcs.pixel_to_world(1, 0, 2)
     with fits.open(out_fn) as pf:
         assert len(pf) == 3
         assert pf[0].name == "PRIMARY"
         assert pf[1].name == "SCI"
-        assert pf[1].header["BUNIT"] == fitted_spectrum.flux.unit.to_string(format="fits")
+        assert pf[1].header["BUNIT"] == flux_unit_str
         assert_allclose(pf[1].data, fitted_spectrum.flux.value)
         assert pf[2].name == "MASK"
         assert_array_equal(pf[2].data, mask)
@@ -241,3 +243,23 @@ def test_cube_fitting_backend(unc, tmp_path):
         assert_allclose(coo[0].value, coo_expected[0].value)  # SpectralCoord
         assert_allclose([coo[1].ra.deg, coo[1].dec.deg],
                         [coo_expected[1].ra.deg, coo_expected[1].dec.deg])
+
+    # Our custom format is not registered to readers, just writers.
+    # You can read it back in without custom read. See "Cubeviz roundtrip" below.
+    with pytest.raises(IORegistryError, match="No reader defined"):
+        Spectrum1D.read(out_fn, format="jdaviz-cube")
+
+    # Check Cubeviz roundtrip.
+    cubeviz_helper.load_data(out_fn)
+    assert len(cubeviz_helper.app.data_collection) == 2
+    data_sci = cubeviz_helper.app.data_collection["fitted_cube.fits[SCI]"]
+    flux_sci = data_sci.get_component("flux")
+    assert_allclose(flux_sci.data, fitted_spectrum.flux.value)
+    assert flux_sci.units == flux_unit_str
+    coo = data_sci.coords.pixel_to_world(1, 0, 2)
+    assert_allclose(coo[0].value, coo_expected[0].value)  # SpectralCoord
+    assert_allclose([coo[1].ra.deg, coo[1].dec.deg],
+                    [coo_expected[1].ra.deg, coo_expected[1].dec.deg])
+    data_mask = cubeviz_helper.app.data_collection["fitted_cube.fits[MASK]"]
+    flux_mask = data_mask.get_component("flux")
+    assert_array_equal(flux_mask.data, mask)

@@ -101,7 +101,7 @@ where the mask (if available) is as defined in
 
 .. code-block:: python
 
-    mydata.write("mydata.fits", format="jdaviz-cube-writer")
+    mydata.write("mydata.fits", format="jdaviz-cube")
 
 Data can also be accessed directly from ``data_collection`` using the following code:
 

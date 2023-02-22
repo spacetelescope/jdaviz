@@ -152,7 +152,7 @@ def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, target_w
             for cunit_num in (3, 1):
                 cunit_key = f"CUNIT{cunit_num}"
                 ctype_key = f"CTYPE{cunit_num}"
-                if not found_target and cunit_key in hdr and 'WAVE' in hdr[ctype_key]:
+                if cunit_key in hdr and 'WAVE' in hdr[ctype_key]:
                     target_wave_unit = u.Unit(hdr[cunit_key])
                     found_target = True
                     break
