@@ -1,5 +1,6 @@
 from traitlets import observe
 
+from jdaviz.core.events import ViewerAddedMessage
 from jdaviz.core.marks import MarkersMark
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin, TableMixin
@@ -45,6 +46,19 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
 
         self.table.headers_avail = headers
         self.table.headers_visible = headers
+
+        # subscribe to mouse events on any new viewers
+        self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
+
+    def _create_viewer_callbacks(self, viewer):
+        if not self.plugin_opened:
+            return
+
+        callback = self._viewer_callback(viewer, self._on_viewer_key_event)
+        viewer.add_event_callback(callback, events=['keydown'])
+
+    def _on_viewer_added(self, msg):
+        self._create_viewer_callbacks(self.app.get_viewer_by_id(msg.viewer_id))
 
     def _get_mark(self, viewer):
         matches = [mark for mark in viewer.figure.marks if isinstance(mark, MarkersMark)]
