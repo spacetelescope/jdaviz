@@ -16,6 +16,7 @@
       <plugin-subset-select
         :items="subset_items"
         :selected.sync="subset_selected"
+        :rules="[() => subset_selected!==bg_subset_selected || 'Must not match background.']"
         :show_if_single_entry="true"
         label="Aperture"
         hint="Select aperture region for photometry."
