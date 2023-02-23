@@ -232,10 +232,10 @@ def spectrum2d(flux_unit=u.Unit('MJy'), spectral_unit=u.um):
     A simple 2D Spectrum1D with a center "trace" array rising from 0 to 10
     with two "zero array" buffers above and below
     '''
-    data = np.zeros((3, 10))
-    data[1] = np.arange(10)
+    data = np.zeros((5, 10))
+    data[3] = np.arange(10)
 
-    return Spectrum1D(flux=data*flux_unit, spectral_axis=np.arange(10)*spectral_unit)
+    return Spectrum1D(flux=data*flux_unit, spectral_axis=data[3]*spectral_unit)
 
 
 @pytest.fixture
