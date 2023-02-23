@@ -180,6 +180,8 @@ def test_spectrum2d_smooth(specviz2d_helper, spectrum2d):
     # Ensure all marks were created properly (i.e. not in their initialized state)
     # [0,1] is the default (initialization) value for the marks
     marks = specviz2d_helper.app.get_viewer('spectrum-viewer').native_marks
+
+    assert len(marks) == 2
     for mark in marks:
-        assert not np.array_equal(mark.x, np.array([0, 1]))
+        np.testing.assert_allclose(mark.x, spectrum2d.spectral_axis.value)
         assert not np.array_equal(mark.y, np.array([0, 1]))
