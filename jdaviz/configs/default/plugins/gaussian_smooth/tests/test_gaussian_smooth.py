@@ -177,7 +177,7 @@ def test_spectrum2d_smooth(specviz2d_helper, spectrum2d):
     assert len(dc) == 3
     assert dc[2].label == f'{smooth_source_dataset} smooth stddev-{test_stddev_level}'
 
-    # Ensure all marks were initialized properly
+    # Ensure all marks were created properly (i.e. not in their initialized state)
     # [0,1] is the default (initialization) value for the marks
     marks = specviz2d_helper.app.get_viewer('spectrum-viewer').native_marks
     for mark in marks:
