@@ -1,3 +1,4 @@
+import numpy as np
 from traitlets import observe
 
 from jdaviz.core.events import ViewerAddedMessage
@@ -7,6 +8,19 @@ from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin, T
 from jdaviz.core.user_api import PluginUserApi
 
 __all__ = ['Markers']
+
+_default_table_values = {'x': np.nan,
+                         'x:unit': '',
+                         'y': np.nan,
+                         'y:unit': '',
+                         'slice': np.nan,
+                         'value': np.nan,
+                         'value:unit': '',
+                         'RA (ICRS)': '',
+                         'DEC (ICRS)': '',
+                         'RA (deg)': np.nan,
+                         'DEC (deg)': np.nan,
+                         'pixel': np.nan}
 
 
 @tray_registry('g-markers', label="Markers")
@@ -28,13 +42,17 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        headers = ['x', 'y']
+        headers = ['x', 'x:unit', 'y', 'y:unit']
+
+        if self.config == 'cubeviz':
+            headers += ['slice']
 
         if self.config in ['imviz', 'cubeviz', 'mosviz']:
             # image viewers
             headers += ['RA (ICRS)', 'DEC (ICRS)',
                         'RA (deg)', 'DEC (deg)',
-                        'Value', 'viewer']
+                        'value', 'value:unit',
+                        'viewer']
         if self.config in ['specviz', 'specviz2d', 'mosviz']:
             # 1d spectrum viewers
             headers += ['pixel']
@@ -71,7 +89,8 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
     @property
     def marks(self):
         return {viewer_id: self._get_mark(viewer)
-                for viewer_id, viewer in self.app._viewer_store.items()}
+                for viewer_id, viewer in self.app._viewer_store.items()
+                if hasattr(viewer, 'figure')}
 
     @observe('plugin_opened')
     def _on_plugin_opened_changed(self, *args):
@@ -84,6 +103,9 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
 
         # subscribe/unsubscribe to keypress events across all viewers
         for viewer in self.app._viewer_store.values():
+            if not hasattr(viewer, 'figure'):
+                # table viewer, etc
+                continue
             callback = self._viewer_callback(viewer, self._on_viewer_key_event)
 
             if self.plugin_opened:
@@ -101,7 +123,13 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             if 'viewer' in self.table.headers_avail:
                 row_info['viewer'] = viewer.reference_id
 
-            self.table.add_item(row_info)
+            for k in self.table.headers_avail:
+                row_info.setdefault(k, _default_table_values.get(k, ''))
+
+            try:
+                self.table.add_item(row_info)
+            except ValueError:
+                raise ValueError(f'failed to add {row_info} to table')
 
             x, y = row_info['x'], row_info['y']
             # TODO: will need to test/update when adding support for display units

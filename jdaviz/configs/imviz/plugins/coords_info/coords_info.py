@@ -19,6 +19,12 @@ from jdaviz.core.marks import PluginScatter
 
 __all__ = ['CoordsInfo']
 
+_supported_viewer_classes = (SpecvizProfileView,
+                             ImvizImageView,
+                             CubevizImageView,
+                             MosvizImageView,
+                             MosvizProfile2DView)
+
 
 @tool_registry('g-coords-info')
 class CoordsInfo(TemplateMixin, LayerSelectMultiviewerMixin):
@@ -48,22 +54,20 @@ class CoordsInfo(TemplateMixin, LayerSelectMultiviewerMixin):
         self._x, self._y = None, None  # latest known cursor positions
 
         # subscribe/unsubscribe to mouse events across all existing viewers
+        viewer_refs = []
         for viewer in self.app._viewer_store.values():
-            self._create_viewer_callbacks(viewer)
+            if isinstance(viewer, _supported_viewer_classes):
+                self._create_viewer_callbacks(viewer)
+                viewer_refs.append(viewer.reference_id)
 
         self.layer._manual_options = ['auto', 'none']
-        self.layer.viewer = self.app.get_viewer_reference_names()
+        self.layer.viewer = viewer_refs
 
         # subscribe to mouse events on any new viewers
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
 
     def _create_viewer_callbacks(self, viewer):
-        if isinstance(viewer,
-                      (SpecvizProfileView,
-                       ImvizImageView,
-                       CubevizImageView,
-                       MosvizImageView,
-                       MosvizProfile2DView)):
+        if isinstance(viewer, _supported_viewer_classes):
             callback = self._viewer_callback(viewer, self._viewer_mouse_event)
             viewer.add_event_callback(callback, events=['mousemove', 'mouseleave', 'mouseenter'])
 
@@ -204,13 +208,10 @@ class CoordsInfo(TemplateMixin, LayerSelectMultiviewerMixin):
         unreliable_pixel, unreliable_world = False, False
 
         self._dict['x'] = x
+        self._dict['x:unit'] = 'pix'
         self._dict['y'] = y
+        self._dict['y:unit'] = 'pix'
         # set default empty values
-        self._dict['Value'] = np.nan
-        self._dict['RA (ICRS)'] = ''
-        self._dict['DEC (ICRS)'] = ''
-        self._dict['RA (deg)'] = np.nan
-        self._dict['DEC (deg)'] = np.nan
 
         if self.layer.selected != 'none' and image is not None:
             self.icon = self.app.state.layer_icons.get(image.label, '')  # noqa
@@ -267,6 +268,9 @@ class CoordsInfo(TemplateMixin, LayerSelectMultiviewerMixin):
                     coords_status = True
             else:
                 self.reset_coords_display()
+
+            # float to be compatible with default value of nan
+            self._dict['slice'] = float(viewer.state.slices[-1])
 
         elif isinstance(viewer, MosvizImageView):
 
@@ -356,7 +360,8 @@ class CoordsInfo(TemplateMixin, LayerSelectMultiviewerMixin):
                     value = arr[int(round(y)), int(round(x))]
             self.row1b_title = 'Value'
             self.row1b_text = f'{value:+10.5e} {unit}'
-            self._dict['Value'] = value * u.Unit(unit)
+            self._dict['value'] = value
+            self._dict['value:unit'] = unit
         else:
             self.row1b_title = ''
             self.row1b_text = ''
@@ -379,9 +384,10 @@ class CoordsInfo(TemplateMixin, LayerSelectMultiviewerMixin):
             statistic = getattr(viewer.state, 'function', None)
             cache_key = (viewer.state.layers[0].layer.label, statistic)
             sp = self.app._get_object_cache[cache_key]
-            self._dict['x'] = x * sp.spectral_axis.unit
-            self._dict['y'] = y * sp.flux.unit
-            self._dict['pixel'] = np.nan
+            self._dict['x'] = x
+            self._dict['x:unit'] = sp.spectral_axis.unit.to_string()
+            self._dict['y'] = y
+            self._dict['y:unit'] = sp.flux.unit.to_string()
             self._dict['data_label'] = ''
             return
 
@@ -458,14 +464,17 @@ class CoordsInfo(TemplateMixin, LayerSelectMultiviewerMixin):
 
         self.row2_title = 'Wave'
         self.row2_text = f'{closest_wave.value:10.5e} {closest_wave.unit.to_string()}'
-        self._dict['x'] = closest_wave
+        self._dict['x'] = closest_wave.value
+        self._dict['x:unit'] = closest_wave.unit.to_string()
         if closest_wave.unit != u.pix:
             self.row2_text += f' ({int(closest_i)} pix)'
-            self._dict['pixel'] = float(closest_i)  # float to be compatible with nan
+            # float to be compatible with nan
+            self._dict['slice' if self.app.config == 'cubeviz' else 'pixel'] = float(closest_i)
 
         self.row3_title = 'Flux'
         self.row3_text = f'{closest_flux.value:10.5e} {closest_flux.unit.to_string()}'
-        self._dict['y'] = closest_flux
+        self._dict['y'] = closest_flux.value
+        self._dict['y:unit'] = closest_flux.unit.to_string()
 
         self.icon = closest_icon
 
