@@ -227,7 +227,7 @@ def mos_spectrum1d():
 
 
 @pytest.fixture
-def spectrum2d(flux_unit=u.Unit('MJy'), spectral_unit=u.um):
+def spectrum2d():
     '''
     A simple 2D Spectrum1D with a center "trace" array rising from 0 to 10
     with two "zero array" buffers above and below
@@ -235,7 +235,7 @@ def spectrum2d(flux_unit=u.Unit('MJy'), spectral_unit=u.um):
     data = np.zeros((5, 10))
     data[3] = np.arange(10)
 
-    return Spectrum1D(flux=data*flux_unit, spectral_axis=data[3]*spectral_unit)
+    return Spectrum1D(flux=data*u.Unit('MJy'), spectral_axis=data[3]*u.um)
 
 
 @pytest.fixture
