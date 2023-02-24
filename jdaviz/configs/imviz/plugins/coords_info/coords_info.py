@@ -373,8 +373,7 @@ class CoordsInfo(TemplateMixin, LayerSelectMultiviewerMixin):
         self.row1a_text = f'{x:10.5e}, {y:10.5e}'
 
         # show the locked marker/coords only if either no tool or the default tool is active
-        locking_active = viewer.toolbar.active_tool_id in viewer.toolbar.default_tool_priority + [None]  # noqa
-        if not locking_active or self.layer.selected == 'none':
+        if self.layer.selected == 'none':
             self.row2_title = '\u00A0'
             self.row2_text = ''
             self.row3_title = '\u00A0'
