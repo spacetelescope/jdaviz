@@ -80,7 +80,14 @@ Markers
 =======
 
 This plugin allows for interactively creating markers in any viewer and logging information about
-the location of that marker into a table, which can then be exported via the API using
+the location of that marker along with the applicable data and viewer labels into a table.
+
+With the plugin open in the tray, mouse over any viewer and press the "m" key to log the information
+displayed in the app toolbar into the table.  The markers remain at that fixed pixel-position in
+the viewer they were created (regardless of changes to the underlying data or linking) and are only
+visible when the plugin is opened.
+
+To export the table into the notebook via the API, call
 :meth:`~jdaviz.core.template_mixin.TableMixin.export_table`
 (see :ref:`plugin-apis`).
 
