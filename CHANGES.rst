@@ -9,6 +9,10 @@ New Features
 - Configurations that support multiple, simultaneous data files now allow
   multiple data products to be specified in the command line. [#1890]
 
+- Ability to cycle through datasets to expose information during mouseover. [#1953]
+
+- New markers plugin to log mouseover information to a table. [#1953]
+
 Cubeviz
 ^^^^^^^
 
