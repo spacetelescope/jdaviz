@@ -172,6 +172,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         self.dataset.select_next()
 
     def update_display(self, viewer, x, y):
+        self._dict = {}
         if isinstance(viewer, SpecvizProfileView):
             self._spectrum_viewer_update(viewer, x, y)
         elif isinstance(viewer,
