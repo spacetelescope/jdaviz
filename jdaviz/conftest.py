@@ -235,7 +235,7 @@ def spectrum2d():
     data = np.zeros((5, 10))
     data[3] = np.arange(10)
 
-    return Spectrum1D(flux=data*u.Unit('MJy'), spectral_axis=data[3]*u.um)
+    return Spectrum1D(flux=data*u.MJy, spectral_axis=data[3]*u.um)
 
 
 @pytest.fixture

@@ -184,4 +184,4 @@ def test_spectrum2d_smooth(specviz2d_helper, spectrum2d):
     assert len(marks) == 2
     for mark in marks:
         np.testing.assert_allclose(mark.x, spectrum2d.spectral_axis.value)
-        assert not np.array_equal(mark.y, np.array([0, 1]))
+        assert not np.array_equal(mark.y, [0, 1])
