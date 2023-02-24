@@ -221,3 +221,7 @@ class JdavizViewerMixin:
     @property
     def reference_id(self):
         return self._reference_id
+
+    @property
+    def reference(self):
+        return self.jdaviz_app._viewer_item_by_id(self.reference_id).get('reference')
