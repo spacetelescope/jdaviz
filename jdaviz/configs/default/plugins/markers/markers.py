@@ -22,7 +22,7 @@ _default_table_values = {'x': np.nan,
                          'RA (deg)': np.nan,
                          'DEC (deg)': np.nan,
                          'radec:unreliable': False,
-                         'pixel': np.nan}
+                         'index': np.nan}
 
 
 @tray_registry('g-markers', label="Markers")
@@ -59,7 +59,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                         'viewer']
         if self.config in ['specviz', 'specviz2d', 'mosviz']:
             # 1d spectrum viewers
-            headers += ['pixel']
+            headers += ['index']
         if self.config in ['specviz2d', 'mosviz']:
             # 2d spectrum viewers
             headers += []

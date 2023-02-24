@@ -471,7 +471,7 @@ class CoordsInfo(TemplateMixin, LayerSelectMultiviewerMixin):
         if closest_wave.unit != u.pix:
             self.row2_text += f' ({int(closest_i)} pix)'
             # float to be compatible with nan
-            self._dict['slice' if self.app.config == 'cubeviz' else 'pixel'] = float(closest_i)
+            self._dict['slice' if self.app.config == 'cubeviz' else 'index'] = float(closest_i)
 
         self.row3_title = 'Flux'
         self.row3_text = f'{closest_flux.value:10.5e} {closest_flux.unit.to_string()}'
