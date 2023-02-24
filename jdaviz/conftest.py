@@ -227,6 +227,18 @@ def mos_spectrum1d():
 
 
 @pytest.fixture
+def spectrum2d():
+    '''
+    A simple 2D Spectrum1D with a center "trace" array rising from 0 to 10
+    with two "zero array" buffers above and below
+    '''
+    data = np.zeros((5, 10))
+    data[3] = np.arange(10)
+
+    return Spectrum1D(flux=data*u.MJy, spectral_axis=data[3]*u.um)
+
+
+@pytest.fixture
 def mos_spectrum2d():
     '''
     A specially defined 2D (spatial) Spectrum1D whose wavelength range matches the

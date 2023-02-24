@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 from astropy.utils.exceptions import AstropyUserWarning
 from specutils import Spectrum1D
@@ -168,3 +169,30 @@ def test_spectrum1d_smooth(specviz_helper, spectrum1d):
     assert spec_viewer.label_mouseover.world_ra_deg == ''
     assert spec_viewer.label_mouseover.world_dec_deg == ''
     assert spec_viewer.label_mouseover.icon == ''
+
+
+def test_spectrum2d_smooth(specviz2d_helper, spectrum2d):
+    data_label = 'test'
+    dc = specviz2d_helper.app.data_collection
+    specviz2d_helper.load_data(spectrum_2d=spectrum2d, spectrum_2d_label=data_label)
+
+    gs_plugin = specviz2d_helper.plugins['Gaussian Smooth']
+
+    # The Autocollapsed spectrum is given the label of "Spectrum 1D by default"
+    smooth_source_dataset = "Spectrum 1D"
+    gs_plugin.dataset = smooth_source_dataset
+    test_stddev_level = 100.0
+    gs_plugin.stddev = test_stddev_level
+    gs_plugin.smooth()
+
+    assert len(dc) == 3
+    assert dc[2].label == f'{smooth_source_dataset} smooth stddev-{test_stddev_level}'
+
+    # Ensure all marks were created properly (i.e. not in their initialized state)
+    # [0,1] is the default (initialization) value for the marks
+    marks = specviz2d_helper.app.get_viewer('spectrum-viewer').native_marks
+
+    assert len(marks) == 2
+    for mark in marks:
+        np.testing.assert_allclose(mark.x, spectrum2d.spectral_axis.value)
+        assert not np.array_equal(mark.y, [0, 1])
