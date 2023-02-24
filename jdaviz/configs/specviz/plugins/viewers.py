@@ -3,7 +3,7 @@ import warnings
 import numpy as np
 from astropy import table
 from astropy import units as u
-from astropy.nddata import StdDevUncertainty, VarianceUncertainty, InverseVariance
+from astropy.nddata import NDDataArray, StdDevUncertainty, VarianceUncertainty, InverseVariance
 from glue.core import BaseData
 from glue.core.subset import Subset
 from glue.core.subset_group import GroupedSubset
@@ -459,6 +459,7 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
             if "uncertainty" in comps:  # noqa
                 error = np.array(lyr['uncertainty'].data)
 
+<<<<<<< HEAD
                 # ensure that the uncertainties are represented as stddev:
                 uncertainty_type_str = lyr.meta.get('uncertainty_type', 'stddev')
                 uncert_cls = uncertainty_str_to_cls_mapping[uncertainty_type_str]
@@ -467,6 +468,17 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
                 data_obj = lyr.data.get_object()
                 data_x = data_obj.spectral_axis.value
                 data_y = data_obj.flux.value
+=======
+                # Then we assume that last axis is always wavelength.
+                # This may need adjustment after the following
+                # specutils PR is merged: https://github.com/astropy/specutils/pull/999
+                spectral_axis = -1
+                data_obj = lyr.data.get_object(cls=NDDataArray)
+                data_x = lyr.data.coords.spectral_wcs.pixel_to_world(
+                    np.arange(lyr.data.shape[spectral_axis])
+                )
+                data_y = data_obj.data
+>>>>>>> e61a9751 (init nddata collapse functionality)
 
                 # The shaded band around the spectrum trace is bounded by
                 # two lines, above and below the spectrum trace itself.

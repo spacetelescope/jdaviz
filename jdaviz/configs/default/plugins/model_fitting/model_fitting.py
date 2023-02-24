@@ -142,8 +142,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         # when accessing the selected data, access the spectrum-viewer version
         self.dataset._viewers = [self._default_spectrum_viewer_reference_name]
-        # require entries to be in spectrum-viewer (not other cubeviz images, etc)
-        self.dataset.add_filter('layer_in_spectrum_viewer')
 
         self.equation = AutoTextField(self, 'model_equation', 'model_equation_default',
                                       'model_equation_auto', 'model_equation_invalid_msg')

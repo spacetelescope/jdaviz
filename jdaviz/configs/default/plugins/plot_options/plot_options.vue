@@ -157,7 +157,7 @@
         />
     </glue-state-sync-wrapper>
 
-    <glue-state-sync-wrapper v-if="config !== 'cubeviz' && line_visible_value" :sync="uncertainty_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('uncertainty_visible')">
+    <glue-state-sync-wrapper v-if="line_visible_value" :sync="uncertainty_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('uncertainty_visible')">
       <v-switch
         v-model="uncertainty_visible_value"
         label="Plot uncertainties"
