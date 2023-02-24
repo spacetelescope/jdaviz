@@ -125,7 +125,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             row_info = self.app.session.application._tools['g-coords-info'].as_dict()
 
             if 'viewer' in self.table.headers_avail:
-                row_info['viewer'] = viewer.reference
+                row_info['viewer'] = viewer.reference if viewer.reference is not None else viewer.reference_id  # noqa
 
             for k in self.table.headers_avail:
                 row_info.setdefault(k, _default_table_values.get(k, ''))
