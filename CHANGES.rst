@@ -89,6 +89,8 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+* Calling ``cubeviz.specviz.y_limits(...)`` no longer emits irrelevant warning. [#2033]
+
 Imviz
 ^^^^^
 
