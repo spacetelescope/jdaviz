@@ -13,6 +13,7 @@ _default_table_values = {'x': np.nan,
                          'x:unit': '',
                          'y': np.nan,
                          'y:unit': '',
+                         'xy:unreliable': False,
                          'slice': np.nan,
                          'value': np.nan,
                          'value:unit': '',
@@ -20,6 +21,7 @@ _default_table_values = {'x': np.nan,
                          'DEC (ICRS)': '',
                          'RA (deg)': np.nan,
                          'DEC (deg)': np.nan,
+                         'radec:unreliable': False,
                          'pixel': np.nan}
 
 
@@ -49,8 +51,10 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
 
         if self.config in ['imviz', 'cubeviz', 'mosviz']:
             # image viewers
-            headers += ['RA (ICRS)', 'DEC (ICRS)',
+            headers += ['xy:unreliable',
+                        'RA (ICRS)', 'DEC (ICRS)',
                         'RA (deg)', 'DEC (deg)',
+                        'radec:unreliable',
                         'value', 'value:unit',
                         'viewer']
         if self.config in ['specviz', 'specviz2d', 'mosviz']:

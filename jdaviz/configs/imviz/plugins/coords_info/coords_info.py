@@ -308,6 +308,7 @@ class CoordsInfo(TemplateMixin, LayerSelectMultiviewerMixin):
             self._dict['DEC (ICRS)'] = world_dec
             self._dict['RA (deg)'] = float(world_ra_deg)
             self._dict['DEC (deg)'] = float(world_dec_deg)
+            self._dict['radec:unreliable'] = unreliable_world
         else:
             self.row2_title = '\u00A0'
             self.row2_text = ""
@@ -322,6 +323,7 @@ class CoordsInfo(TemplateMixin, LayerSelectMultiviewerMixin):
         self.row1a_title = 'Pixel'
         self.row1a_text = (fmt.format(x, y))
         self.row1_unreliable = unreliable_pixel
+        self._dict['xy:unreliable'] = unreliable_pixel
 
         # Extract data values at this position.
         # TODO: for now we just use the first visible layer but we should think
