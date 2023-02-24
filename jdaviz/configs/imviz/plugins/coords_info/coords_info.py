@@ -194,12 +194,12 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         if self.dataset.selected == 'auto':
             image = active_layer.layer
         elif self.dataset.selected == 'none':
-            active_layer = viewer.layers[0]
+            active_layer = viewer.layers[0].state
             image = viewer.layers[0].layer
         else:
             for layer in viewer.layers:
                 if layer.layer.label == self.dataset.selected and layer.visible:
-                    active_layer = layer
+                    active_layer = layer.state
                     image = layer.layer
                     break
             else:
