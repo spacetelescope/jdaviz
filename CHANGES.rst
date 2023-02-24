@@ -73,6 +73,8 @@ Bug Fixes
 
 * Loading valid data no longer emits JSON serialization warnings. [#2011]
 
+* Fixed linking issue preventing smoothed spectrum from showing in Specviz2D. [#2023]
+
 Cubeviz
 ^^^^^^^
 
