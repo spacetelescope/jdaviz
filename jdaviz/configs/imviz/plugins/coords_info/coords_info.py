@@ -14,7 +14,7 @@ from jdaviz.configs.mosviz.plugins.viewers import MosvizImageView, MosvizProfile
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
 from jdaviz.core.events import ViewerAddedMessage
 from jdaviz.core.registries import tool_registry
-from jdaviz.core.template_mixin import TemplateMixin, LayerSelectMultiviewerMixin
+from jdaviz.core.template_mixin import TemplateMixin, DatasetSelectMixin
 from jdaviz.core.marks import PluginScatter
 
 __all__ = ['CoordsInfo']
@@ -27,10 +27,10 @@ _supported_viewer_classes = (SpecvizProfileView,
 
 
 @tool_registry('g-coords-info')
-class CoordsInfo(TemplateMixin, LayerSelectMultiviewerMixin):
+class CoordsInfo(TemplateMixin, DatasetSelectMixin):
     template_file = __file__, "coords_info.vue"
 
-    layer_icon = Unicode("").tag(sync=True)  # option for layer (auto, none, or specific layer)
+    dataset_icon = Unicode("").tag(sync=True)  # option for layer (auto, none, or specific layer)
     icon = Unicode("").tag(sync=True)  # currently exposed layer
 
     row1a_title = Unicode("").tag(sync=True)
@@ -60,8 +60,8 @@ class CoordsInfo(TemplateMixin, LayerSelectMultiviewerMixin):
                 self._create_viewer_callbacks(viewer)
                 viewer_refs.append(viewer.reference_id)
 
-        self.layer._manual_options = ['auto', 'none']
-        self.layer.viewer = viewer_refs
+        self.dataset._manual_options = ['auto', 'none']
+        self.dataset.filters = ['layer_in_viewers']
 
         # subscribe to mouse events on any new viewers
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
@@ -75,7 +75,6 @@ class CoordsInfo(TemplateMixin, LayerSelectMultiviewerMixin):
 
     def _on_viewer_added(self, msg):
         self._create_viewer_callbacks(self.app.get_viewer_by_id(msg.viewer_id))
-        self.layer.viewer = self.app.get_viewer_reference_names()
 
     @property
     def marks(self):
@@ -160,17 +159,17 @@ class CoordsInfo(TemplateMixin, LayerSelectMultiviewerMixin):
         # cursor position
         self.update_display(viewer, self._x, self._y)
 
-    @observe('layer_selected')
-    def _selected_layer_changed(self, *args):
-        if self.layer_selected == 'auto':
-            self.layer_icon = 'mdi-auto-fix'
-        elif self.layer_selected == 'none':
-            self.layer_icon = 'mdi-cursor-default'
+    @observe('dataset_selected')
+    def _selected_dataset_changed(self, *args):
+        if self.dataset_selected == 'auto':
+            self.dataset_icon = 'mdi-auto-fix'
+        elif self.dataset_selected == 'none':
+            self.dataset_icon = 'mdi-cursor-default'
         else:
-            self.layer_icon = self.app.state.layer_icons.get(self.layer_selected, '')
+            self.dataset_icon = self.app.state.layer_icons.get(self.dataset_selected, '')
 
     def vue_next_layer(self, *args, **kwargs):
-        self.layer.select_next()
+        self.dataset.select_next()
 
     def update_display(self, viewer, x, y):
         if isinstance(viewer, SpecvizProfileView):
@@ -191,14 +190,14 @@ class CoordsInfo(TemplateMixin, LayerSelectMultiviewerMixin):
             self._viewer_mouse_clear_event(viewer)
             return
 
-        if self.layer.selected == 'auto':
+        if self.dataset.selected == 'auto':
             image = active_layer.layer
-        elif self.layer.selected == 'none':
+        elif self.dataset.selected == 'none':
             active_layer = viewer.layers[0]
             image = viewer.layers[0].layer
         else:
             for layer in viewer.layers:
-                if layer.layer.label == self.layer.selected and layer.visible:
+                if layer.layer.label == self.dataset.selected and layer.visible:
                     active_layer = layer
                     image = layer.layer
                     break
@@ -213,7 +212,7 @@ class CoordsInfo(TemplateMixin, LayerSelectMultiviewerMixin):
         self._dict['y:unit'] = 'pix'
         # set default empty values
 
-        if self.layer.selected != 'none' and image is not None:
+        if self.dataset.selected != 'none' and image is not None:
             self.icon = self.app.state.layer_icons.get(image.label, '')  # noqa
             self._dict['data_label'] = image.label
 
@@ -221,7 +220,7 @@ class CoordsInfo(TemplateMixin, LayerSelectMultiviewerMixin):
         # NOTE: pixel_to_world axes order is opposite of array value axes order, so...
         #   3D: pixel_to_world(z, y, x) -> arr[x, y, z]
         #   2D: pixel_to_world(x, y) -> arr[y, x]
-        if self.layer.selected == 'none' or image is None:
+        if self.dataset.selected == 'none' or image is None:
             self.icon = 'mdi-cursor-default'
             self._dict['data_label'] = ''
             coords_status = False
@@ -329,7 +328,7 @@ class CoordsInfo(TemplateMixin, LayerSelectMultiviewerMixin):
         # TODO: for now we just use the first visible layer but we should think
         # of how to display values when multiple datasets are present.
 
-        if self.layer.selected == 'none' or image is None:
+        if self.dataset.selected == 'none' or image is None:
             # no data values to extract
             self.row1b_title = ''
             self.row1b_text = ''
@@ -373,7 +372,7 @@ class CoordsInfo(TemplateMixin, LayerSelectMultiviewerMixin):
         self.row1a_text = f'{x:10.5e}, {y:10.5e}'
 
         # show the locked marker/coords only if either no tool or the default tool is active
-        if self.layer.selected == 'none':
+        if self.dataset.selected == 'none':
             self.row2_title = '\u00A0'
             self.row2_text = ''
             self.row3_title = '\u00A0'
@@ -400,9 +399,9 @@ class CoordsInfo(TemplateMixin, LayerSelectMultiviewerMixin):
         closest_icon = 'mdi-cursor-default'
         closest_distance = None
         for lyr in viewer.state.layers:
-            if self.layer.selected == 'auto' and not lyr.visible:
+            if self.dataset.selected == 'auto' and not lyr.visible:
                 continue
-            if self.layer.selected != 'auto' and self.layer.selected != lyr.layer.label:
+            if self.dataset.selected != 'auto' and self.dataset.selected != lyr.layer.label:
                 continue
 
             if isinstance(lyr.layer, GroupedSubset):
@@ -432,7 +431,7 @@ class CoordsInfo(TemplateMixin, LayerSelectMultiviewerMixin):
                     self.app._get_object_cache[cache_key] = sp
 
                 # Out of range in spectral axis.
-                if (self.layer.selected != lyr.layer.label and
+                if (self.dataset.selected != lyr.layer.label and
                         (x < sp.spectral_axis.value.min() or x > sp.spectral_axis.value.max())):
                     continue
 

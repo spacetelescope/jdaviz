@@ -27,11 +27,11 @@
       <v-toolbar-items>
         <j-tooltip tipid='coords-info-cycle'>
           <v-btn icon tile @click="next_layer()">
-            <j-layer-viewer-icon :icon="layer_icon" color="white" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
+            <j-layer-viewer-icon :icon="dataset_icon" color="white" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
           </v-btn>
         </j-tooltip>
         <span style="padding-top: 22px">
-          {{layer_selected}}
+          {{dataset_selected}}
         </span>
       </v-toolbar-items>
 
