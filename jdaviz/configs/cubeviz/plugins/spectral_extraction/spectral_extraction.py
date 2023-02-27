@@ -102,11 +102,9 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
         spatial_axes = tuple(range(nddata.ndim - 1))
 
         # by default we want to use ignore_masked_data=True in nddata:
-        if "ignore_masked_data" not in kwargs:
-            kwargs["ignore_masked_data"] = True
+        kwargs.setdefault("ignore_masked_data", True)
         # by default we want to propagate uncertainties:
-        if "propagate_uncertainties" not in kwargs:
-            kwargs["propagate_uncertainties"] = True
+        kwargs.setdefault("propagate_uncertainties", True)
 
         collapsed_spec = getattr(nddata, self.function_selected.lower())(
             axis=spatial_axes, **kwargs
