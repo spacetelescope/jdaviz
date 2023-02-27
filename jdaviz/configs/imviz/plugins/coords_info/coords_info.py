@@ -269,8 +269,12 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             else:
                 self.reset_coords_display()
 
-            # float to be compatible with default value of nan
-            self._dict['slice'] = float(viewer.state.slices[-1])
+            slice_plugin = self.app._jdaviz_helper.plugins.get('Slice', None)
+            if slice_plugin is not None:
+                # float to be compatible with default value of nan
+                self._dict['slice index'] = float(slice_plugin.slice)
+                self._dict['slice wavelength'] = slice_plugin.wavelength
+                self._dict['slice wavelength:unit'] = slice_plugin._obj.wavelength_unit
 
         elif isinstance(viewer, MosvizImageView):
 
@@ -469,8 +473,14 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         self._dict['x:unit'] = closest_wave.unit.to_string()
         if closest_wave.unit != u.pix:
             self.row2_text += f' ({int(closest_i)} pix)'
-            # float to be compatible with nan
-            self._dict['slice' if self.app.config == 'cubeviz' else 'index'] = float(closest_i)
+            if self.app.config == 'cubeviz':
+                # float to be compatible with nan
+                self._dict['slice index'] = float(closest_i)
+                self._dict['slice wavelength'] = closest_wave.value
+                self._dict['slice wavelength:unit'] = closest_wave.unit.to_string()
+            else:
+                # float to be compatible with nan
+                self._dict['index'] = float(closest_i)
 
         self.row3_title = 'Flux'
         self.row3_text = f'{closest_flux.value:10.5e} {closest_flux.unit.to_string()}'

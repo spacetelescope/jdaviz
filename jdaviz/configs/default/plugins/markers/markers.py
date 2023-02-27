@@ -14,7 +14,9 @@ _default_table_values = {'x': np.nan,
                          'y': np.nan,
                          'y:unit': '',
                          'xy:unreliable': False,
-                         'slice': np.nan,
+                         'slice index': np.nan,
+                         'slice wavelength': np.nan,
+                         'slice wavelength:unit': '',
                          'value': np.nan,
                          'value:unit': '',
                          'RA (ICRS)': '',
@@ -47,7 +49,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         headers = ['x', 'x:unit', 'y', 'y:unit']
 
         if self.config == 'cubeviz':
-            headers += ['slice']
+            headers += ['slice index', 'slice wavelength', 'slice wavelength:unit']
 
         if self.config in ['imviz', 'cubeviz', 'mosviz']:
             # image viewers
