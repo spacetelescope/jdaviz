@@ -8,4 +8,4 @@ from .compass import *  # noqa
 from .aper_phot_simple import *  # noqa
 from .line_profile_xy import *  # noqa
 from .catalogs import *  # noqa
-from .rotate_image import *  # noqa
+from .rotate_canvas import *  # noqa

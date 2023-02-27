@@ -1,7 +1,7 @@
 <template>
   <j-tray-plugin>
     <v-row>
-      <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#simple-image-rotation'">Rotate image.</j-docs-link>
+      <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#canvas-rotation'">Rotate viewer canvas.</j-docs-link>
     </v-row>
 
     <plugin-viewer-select
