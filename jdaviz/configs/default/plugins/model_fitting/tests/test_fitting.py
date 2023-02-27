@@ -160,7 +160,7 @@ def test_cube_fitting_backend(cubeviz_helper, unc, tmp_path):
     elif unc is None:
         uncertainties = None
 
-    spectrum = Spectrum1D(flux=flux_cube*u.Jy, spectral_axis=x*u.um, wcs=cube_wcs,
+    spectrum = Spectrum1D(flux=flux_cube*u.Jy, wcs=cube_wcs,
                           uncertainty=uncertainties, mask=mask)
 
     # Initial model for fit.
