@@ -1,6 +1,6 @@
-from traitlets import Unicode, observe
+from traitlets import Float, Unicode, observe
 
-from jdaviz.core.events import AddDataMessage, RemoveDataMessage
+from jdaviz.core.events import AddDataMessage, RemoveDataMessage, CanvasRotationChangedMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin
 from jdaviz.core.user_api import PluginUserApi
@@ -26,12 +26,14 @@ class Compass(PluginTemplateMixin, ViewerSelectMixin):
     icon = Unicode("").tag(sync=True)
     data_label = Unicode("").tag(sync=True)
     img_data = Unicode("").tag(sync=True)
+    canvas_angle = Float(0).tag(sync=True)  # set by canvas rotation plugin
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.hub.subscribe(self, AddDataMessage, handler=self._on_viewer_data_changed)
         self.hub.subscribe(self, RemoveDataMessage, handler=self._on_viewer_data_changed)
+        self.hub.subscribe(self, CanvasRotationChangedMessage, handler=self._on_canvas_rotation_changed)  # noqa
 
     @property
     def user_api(self):
@@ -46,6 +48,16 @@ class Compass(PluginTemplateMixin, ViewerSelectMixin):
             viewer = self.viewer.selected_obj
             viewer.on_limits_change()  # Force redraw
 
+    def _on_canvas_rotation_changed(self, msg=None):
+        viewer_id = msg.viewer_id
+        if viewer_id != self.viewer_selected:
+            return
+
+        self._set_compass_rotation()
+
+    def _set_compass_rotation(self):
+        self.canvas_angle = self.app._viewer_item_by_id(self.viewer_selected).get('rotation', 0)  # noqa
+
     @observe("viewer_selected", "plugin_opened")
     def _compass_with_new_viewer(self, *args, **kwargs):
         if not hasattr(self, 'viewer'):
@@ -57,6 +69,8 @@ class Compass(PluginTemplateMixin, ViewerSelectMixin):
             if vid == self.viewer.selected_id and (self.plugin_opened or kwargs.get('from_show')):
                 viewer.compass = self
                 viewer.on_limits_change()  # Force redraw
+
+                self._set_compass_rotation()
             else:
                 viewer.compass = None
 

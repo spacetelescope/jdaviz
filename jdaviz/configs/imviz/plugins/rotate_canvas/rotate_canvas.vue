@@ -1,7 +1,7 @@
 <template>
   <j-tray-plugin>
     <v-row>
-      <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#canvas-rotation'">Rotate viewer canvas.</j-docs-link>
+      <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#canvas-rotation'">Rotate viewer canvas to any orientation (note: this does not affect the underlying data).</j-docs-link>
     </v-row>
 
     <plugin-viewer-select
@@ -29,7 +29,7 @@
     <v-row>
       <v-col>
         <v-text-field
-          v-model="angle"
+          v-model.number="angle"
           type="number"
           label="Angle"
           hint="Rotation angle in degrees clockwise"

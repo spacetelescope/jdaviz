@@ -1,5 +1,7 @@
-from traitlets import Float, observe
+from traitlets import observe
 
+from jdaviz.core.custom_traitlets import FloatHandleEmpty
+from jdaviz.core.events import CanvasRotationChangedMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin
 from jdaviz.core.user_api import PluginUserApi
@@ -9,7 +11,7 @@ from jdaviz.core.user_api import PluginUserApi
 class RotateCanvasSimple(PluginTemplateMixin, ViewerSelectMixin):
     template_file = __file__, "rotate_canvas.vue"
 
-    angle = Float(0).tag(sync=True)  # degrees, clockwise
+    angle = FloatHandleEmpty(0).tag(sync=True)  # degrees, clockwise
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -21,8 +23,13 @@ class RotateCanvasSimple(PluginTemplateMixin, ViewerSelectMixin):
 
     @observe('angle')
     def _angle_changed(self, *args, **kwargs):
-        # Rotate selected viewer canvas. This changes zoom too.
-        self.app._viewer_item_by_id(self.viewer_selected)['rotation'] = float(self.angle)
+        try:
+            angle = float(self.angle)
+        except ValueError:
+            # empty string, etc
+            angle = 0
 
-        # Update Compass plugin.
-        self.viewer.selected_obj.on_limits_change()
+        # Rotate selected viewer canvas. This changes zoom too.
+        self.app._viewer_item_by_id(self.viewer_selected)['rotation'] = angle
+        # broadcast message (used by compass, etc)
+        self.hub.broadcast(CanvasRotationChangedMessage(self.viewer_selected, angle, sender=self))
