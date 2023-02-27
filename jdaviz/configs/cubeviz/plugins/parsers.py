@@ -140,13 +140,22 @@ def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, target_w
             category=UserWarning)
         sc = Spectrum1D(flux=flux, wcs=wcs)
 
-    # TODO: Can the unit be defined in a different keyword, e.g., CUNIT1?
     if target_wave_unit is None and hdulist is not None:
-        cunit_key = 'CUNIT3'
+        found_target = False
         for ext in ('SCI', 'FLUX', 'PRIMARY'):  # In priority order
-            if ext in hdulist and cunit_key in hdulist[ext].header:
-                target_wave_unit = u.Unit(hdulist[ext].header[cunit_key])
+            if found_target:
                 break
+            if ext not in hdulist:
+                continue
+            hdr = hdulist[ext].header
+            # The WCS could be swapped or unswapped.
+            for cunit_num in (3, 1):
+                cunit_key = f"CUNIT{cunit_num}"
+                ctype_key = f"CTYPE{cunit_num}"
+                if cunit_key in hdr and 'WAVE' in hdr[ctype_key]:
+                    target_wave_unit = u.Unit(hdr[cunit_key])
+                    found_target = True
+                    break
 
     if (data_type == 'flux' and target_wave_unit is not None
             and target_wave_unit != sc.spectral_axis.unit):

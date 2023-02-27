@@ -782,7 +782,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             return
 
         # Get the primary data component
-        spec = data.get_object(cls=Spectrum1D, statistic=None)
+        if "_orig_spec" in data.meta:
+            spec = data.meta["_orig_spec"]
+        else:
+            spec = data.get_object(cls=Spectrum1D, statistic=None)
 
         snackbar_message = SnackbarMessage(
             "Fitting model to cube...",
@@ -825,8 +828,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         # Create new glue data object
         output_cube = Data(label=label,
-                           coords=data.coords)
-        output_cube['flux'] = fitted_spectrum.flux.value
+                           coords=fitted_spectrum.wcs,
+                           flux=fitted_spectrum.flux.value)
         output_cube.get_component('flux').units = fitted_spectrum.flux.unit.to_string()
 
         if add_data:

@@ -1,10 +1,14 @@
-import astropy.modeling.models as models
-import astropy.modeling.parameters as params
-from astropy.nddata import StdDevUncertainty
-import astropy.units as u
+import warnings
+
 import numpy as np
 import pytest
-
+from astropy import units as u
+from astropy.io import fits
+from astropy.io.registry.base import IORegistryError
+from astropy.modeling import models, parameters as params
+from astropy.nddata import StdDevUncertainty
+from astropy.wcs import WCS
+from numpy.testing import assert_allclose, assert_array_equal
 from specutils.spectra import Spectrum1D
 
 from jdaviz.configs.default.plugins.model_fitting import fitting_backend as fb
@@ -100,7 +104,7 @@ def test_fitting_backend(unc):
 
     parameters_expected = np.array([0.7, 4.65, 0.3, 2., 5.55, 0.3, -2.,
                                     8.15, 0.2, 1.])
-    assert np.allclose(fm.parameters, parameters_expected, atol=1e-5)
+    assert_allclose(fm.parameters, parameters_expected, atol=1e-5)
 
     # Returns the fitted model
     fm, fitted_spectrum = fb.fit_model_to_spectrum(spectrum, model_list, expression,
@@ -109,14 +113,11 @@ def test_fitting_backend(unc):
     parameters_expected = np.array([1.0104705, 4.58956282, 0.19590464, 2.39892026,
                                     5.49867754, 0.10834472, -1.66902953, 8.19714439,
                                     0.09535613, 3.99125545])
-    assert np.allclose(fm.parameters, parameters_expected, atol=1e-5)
+    assert_allclose(fm.parameters, parameters_expected, atol=1e-5)
 
 
-# When pytest turns warnings into errors, this silently fails with
-# len(fitted_parameters) == 0
-@pytest.mark.filterwarnings('ignore')
 @pytest.mark.parametrize('unc', ('zeros', None))
-def test_cube_fitting_backend(unc):
+def test_cube_fitting_backend(cubeviz_helper, unc, tmp_path):
     np.random.seed(42)
 
     SIGMA = 0.1  # noise in data
@@ -140,7 +141,14 @@ def test_cube_fitting_backend(unc):
         flux_cube[:, spx[0], spx[1]] = build_spectrum(sigma=SIGMA)[1]
 
     # Transpose so it can be packed in a Spectrum1D instance.
-    flux_cube = flux_cube.transpose(1, 2, 0)
+    flux_cube = flux_cube.transpose(1, 2, 0)  # (15, 14, 200)
+    cube_wcs = WCS({
+        'WCSAXES': 3, 'RADESYS': 'ICRS', 'EQUINOX': 2000.0,
+        'CRPIX3': 38.0, 'CRPIX2': 38.0, 'CRPIX1': 1.0,
+        'CRVAL3': 205.4384, 'CRVAL2': 27.004754, 'CRVAL1': 0.0,
+        'CDELT3': 0.01, 'CDELT2': 0.01, 'CDELT1': 0.05,
+        'CUNIT3': 'deg', 'CUNIT2': 'deg', 'CUNIT1': 'um',
+        'CTYPE3': 'RA---TAN', 'CTYPE2': 'DEC--TAN', 'CTYPE1': 'WAVE'})
 
     # Mask part of the spectral axis to later ensure that it gets propagated through:
     mask = np.zeros_like(flux_cube).astype(bool)
@@ -152,7 +160,7 @@ def test_cube_fitting_backend(unc):
     elif unc is None:
         uncertainties = None
 
-    spectrum = Spectrum1D(flux=flux_cube*u.Jy, spectral_axis=x*u.um,
+    spectrum = Spectrum1D(flux=flux_cube*u.Jy, wcs=cube_wcs,
                           uncertainty=uncertainties, mask=mask)
 
     # Initial model for fit.
@@ -168,8 +176,10 @@ def test_cube_fitting_backend(unc):
     # n_cpu = 1  # NOTE: UNCOMMENT TO DEBUG LOCALLY, AS NEEDED
 
     # Fit to all spaxels.
-    fitted_parameters, fitted_spectrum = fb.fit_model_to_spectrum(
-        spectrum, model_list, expression, n_cpu=n_cpu)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message=r"The fit may be unsuccessful.*")
+        fitted_parameters, fitted_spectrum = fb.fit_model_to_spectrum(
+            spectrum, model_list, expression, n_cpu=n_cpu)
 
     # Check that parameter results are formatted as expected.
     assert type(fitted_parameters) == list
@@ -198,19 +208,58 @@ def test_cube_fitting_backend(unc):
     # interested here in checking the correctness of the data
     # packaging into the output products.
 
-    assert np.allclose(fitted_model[0].amplitude.value, 1.09, atol=TOL)
-    assert np.allclose(fitted_model[1].amplitude.value, 2.4, atol=TOL)
-    assert np.allclose(fitted_model[2].amplitude.value, -1.7, atol=TOL)
+    assert_allclose(fitted_model[0].amplitude.value, 1.09, atol=TOL)
+    assert_allclose(fitted_model[1].amplitude.value, 2.4, atol=TOL)
+    assert_allclose(fitted_model[2].amplitude.value, -1.7, atol=TOL)
 
-    assert np.allclose(fitted_model[0].mean.value, 4.6, atol=TOL)
-    assert np.allclose(fitted_model[1].mean.value, 5.5, atol=TOL)
-    assert np.allclose(fitted_model[2].mean.value, 8.2, atol=TOL)
+    assert_allclose(fitted_model[0].mean.value, 4.6, atol=TOL)
+    assert_allclose(fitted_model[1].mean.value, 5.5, atol=TOL)
+    assert_allclose(fitted_model[2].mean.value, 8.2, atol=TOL)
 
-    assert np.allclose(fitted_model[0].stddev.value, 0.2, atol=TOL)
-    assert np.allclose(fitted_model[1].stddev.value, 0.1, atol=TOL)
-    assert np.allclose(fitted_model[2].stddev.value, 0.1, atol=TOL)
+    assert_allclose(fitted_model[0].stddev.value, 0.2, atol=TOL)
+    assert_allclose(fitted_model[1].stddev.value, 0.1, atol=TOL)
+    assert_allclose(fitted_model[2].stddev.value, 0.1, atol=TOL)
 
-    assert np.allclose(fitted_model[3].amplitude.value, 4.0, atol=TOL)
+    assert_allclose(fitted_model[3].amplitude.value, 4.0, atol=TOL)
 
     # Check that the fitted spectrum is masked correctly:
-    assert np.all(fitted_spectrum.mask == mask)
+    assert_array_equal(fitted_spectrum.mask, mask)
+
+    # Check I/O roundtrip.
+    out_fn = tmp_path / "fitted_cube.fits"
+    fitted_spectrum.write(out_fn, format="jdaviz-cube", overwrite=True)
+    flux_unit_str = fitted_spectrum.flux.unit.to_string(format="fits")
+    coo_expected = fitted_spectrum.wcs.pixel_to_world(1, 0, 2)
+    with fits.open(out_fn) as pf:
+        assert len(pf) == 3
+        assert pf[0].name == "PRIMARY"
+        assert pf[1].name == "SCI"
+        assert pf[1].header["BUNIT"] == flux_unit_str
+        assert_allclose(pf[1].data, fitted_spectrum.flux.value)
+        assert pf[2].name == "MASK"
+        assert_array_equal(pf[2].data, mask)
+        w = WCS(pf[1].header)
+        coo = w.pixel_to_world(1, 0, 2)
+        assert_allclose(coo[0].value, coo_expected[0].value)  # SpectralCoord
+        assert_allclose([coo[1].ra.deg, coo[1].dec.deg],
+                        [coo_expected[1].ra.deg, coo_expected[1].dec.deg])
+
+    # Our custom format is not registered to readers, just writers.
+    # You can read it back in without custom read. See "Cubeviz roundtrip" below.
+    with pytest.raises(IORegistryError, match="No reader defined"):
+        Spectrum1D.read(out_fn, format="jdaviz-cube")
+
+    # Check Cubeviz roundtrip.
+    cubeviz_helper.load_data(out_fn)
+    assert len(cubeviz_helper.app.data_collection) == 2
+    data_sci = cubeviz_helper.app.data_collection["fitted_cube.fits[SCI]"]
+    flux_sci = data_sci.get_component("flux")
+    assert_allclose(flux_sci.data, fitted_spectrum.flux.value)
+    assert flux_sci.units == flux_unit_str
+    coo = data_sci.coords.pixel_to_world(1, 0, 2)
+    assert_allclose(coo[0].value, coo_expected[0].value)  # SpectralCoord
+    assert_allclose([coo[1].ra.deg, coo[1].dec.deg],
+                    [coo_expected[1].ra.deg, coo_expected[1].dec.deg])
+    data_mask = cubeviz_helper.app.data_collection["fitted_cube.fits[MASK]"]
+    flux_mask = data_mask.get_component("flux")
+    assert_array_equal(flux_mask.data, mask)
