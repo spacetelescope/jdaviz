@@ -173,9 +173,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         if msg is None or msg.viewer_id != viewer_id or msg.data is None:
             return
 
-        viewer_data = self.app.get_data_from_viewer(
-            self._default_spectrum_viewer_reference_name
-        ).get(msg.data.label)
+        viewer_data = self.app._jdaviz_helper.get_data(data_label=msg.data.label)
 
         # If no data is currently plotted, don't attempt to update
         if viewer_data is None:
@@ -320,10 +318,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             # of a spatial subset.  In the future, we may want to expose on-the-fly
             # collapse options... but right now these will follow the settings of the
             # spectrum-viewer itself
-            full_spectrum = self.app.get_data_from_viewer(
-                self._default_spectrum_viewer_reference_name,
-                self.spatial_subset_selected
-            )
+            full_spectrum = self.app._jdaviz_helper.get_data(
+                subset_to_apply=self.spatial_subset_selected)
         else:
             full_spectrum = self.dataset.selected_obj
 
@@ -390,10 +386,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                       'right': np.array([sr.upper.value, max(spectral_axis.value[continuum_mask])])}
 
         else:
-            continuum_mask = ~self.app.get_data_from_viewer(
-                self._default_spectrum_viewer_reference_name,
-                data_label=self.continuum_subset_selected
-            ).mask
+            continuum_mask = ~self.app._jdaviz_helper.get_data(
+                subset_to_apply=self.continuum_subset_selected).mask
             spectral_axis_nanmasked = spectral_axis.value.copy()
             spectral_axis_nanmasked[~continuum_mask] = np.nan
             if self.spectral_subset_selected == "Entire Spectrum":
