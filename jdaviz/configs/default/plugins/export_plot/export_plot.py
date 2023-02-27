@@ -13,6 +13,8 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
     Only the following attributes and methods are available through the
     :ref:`public plugin API <plugin-apis>`:
 
+    * ``viewer`` (:class:`~jdaviz.core.template_mixin.ViewerSelect`):
+      Viewer to select for exporting the figure image.
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`save_figure`
@@ -21,7 +23,7 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
 
     @property
     def user_api(self):
-        return PluginUserApi(self, expose=('save_figure',))
+        return PluginUserApi(self, expose=('viewer', 'save_figure'))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

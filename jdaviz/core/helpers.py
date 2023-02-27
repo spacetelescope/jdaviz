@@ -9,15 +9,20 @@ on the motivation behind this concept.
 import re
 import warnings
 from contextlib import contextmanager
+from inspect import isclass
 
 import numpy as np
 import astropy.units as u
 from astropy.wcs.wcsapi import BaseHighLevelWCS
+from astropy.nddata import CCDData
 from glue.core import HubListener
 from glue.core.edit_subset_mode import NewMode
 from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage
 from glue.core.subset import Subset, MaskSubsetState
+from glue.config import data_translator
 from ipywidgets.widgets import widget_serialization
+from specutils import Spectrum1D
+
 
 from jdaviz.app import Application
 from jdaviz.core.events import SnackbarMessage, ExitBatchLoadMessage
@@ -401,6 +406,98 @@ class ConfigHelper(HubListener):
         warnings.warn('show_in_new_tab has been replaced with show(loc="sidecar:tab-after")',
                       DeprecationWarning)
         return self.show(loc="sidecar:tab-after", title=title)
+
+    def get_data(self, data_label=None, cls=None, subset_to_apply=None, statistic=None):
+        """
+        Returns data with name equal to data_label of type cls with subsets applied from
+        subset_to_apply.
+
+        Parameters
+        ----------
+        data_label : str, optional
+            Provide a label to retrieve a specific data set from data_collection.
+        cls : `~specutils.Spectrum1D`, `~astropy.nddata.CCDData`, optional
+            The type that data will be returned as.
+        subset_to_apply : str, optional
+            Subset that is to be applied to data before it is returned.
+        statistic : {'minimum', 'maximum', 'mean', 'median', 'sum'}, optional
+            The statistic to use to collapse the dataset.
+
+        Returns
+        -------
+        data : cls
+            Data is returned as type cls with subsets applied.
+
+        """
+        if self.app.config != "cubeviz" and statistic:
+            raise AttributeError(f"{self.app.config} does not need the statistic parameter set.")
+
+        list_of_valid_statistic_values = ['minimum', 'maximum', 'mean',
+                                          'median', 'sum']
+        if statistic and statistic not in list_of_valid_statistic_values:
+            raise ValueError(f"statistic {statistic} not in list of valid"
+                             f" statistic values {list_of_valid_statistic_values}")
+
+        list_of_valid_subset_names = [x.label for x in self.app.data_collection.subset_groups]
+        if subset_to_apply and subset_to_apply not in list_of_valid_subset_names:
+            raise ValueError(f"Subset {statistic} not in list of valid"
+                             f" subset names {list_of_valid_subset_names}")
+
+        if data_label and data_label not in self.app.data_collection.labels:
+            raise ValueError(f'{data_label} not in {self.app.data_collection.labels}.')
+        elif not data_label and len(self.app.data_collection) > 1:
+            raise ValueError('data_label must be set if more than'
+                             ' one data exists in data_collection.')
+        elif not data_label and len(self.app.data_collection) == 1:
+            data_label = self.app.data_collection[0].label
+
+        if cls is not None and not isclass(cls):
+            raise TypeError(
+                "cls in get_data must be a class or None.")
+        data = self.app.data_collection[data_label]
+
+        if not cls:
+            if len(data.shape) == 2 and self.app.config == "specviz2d":
+                cls = Spectrum1D
+            elif len(data.shape) == 2:
+                cls = CCDData
+            elif len(data.shape) in [1, 3]:
+                cls = Spectrum1D
+        if not subset_to_apply:
+            if 'Trace' in data.meta:
+                data = data.get_object()
+            elif cls == Spectrum1D:
+                data = data.get_object(cls=cls, statistic=statistic)
+            else:
+                data = data.get_object(cls=cls)
+
+            return data
+
+        if not cls and subset_to_apply:
+            raise AttributeError(f"A valid cls must be provided to"
+                                 f" apply subset {subset_to_apply} to data. "
+                                 f"Instead, {cls} was given.")
+
+        # Loop through each subset
+        for subsets in self.app.data_collection.subset_groups:
+            # If name matches the name in subsets_to_apply, continue
+            if subsets.label.lower() == subset_to_apply.lower():
+                # Loop through each data a subset applies to
+                for subset in subsets.subsets:
+                    # If the subset applies to data with the same name as data_label, continue
+                    if subset.data.label == data_label:
+
+                        handler, _ = data_translator.get_handler_for(cls)
+                        try:
+                            if cls == Spectrum1D:
+                                data = handler.to_object(subset, statistic=statistic)
+                            else:
+                                data = handler.to_object(subset)
+                        except Exception as e:
+                            warnings.warn(f"Not able to get {data_label} returned with"
+                                          f" subset {subsets.label} applied of type {cls}."
+                                          f" Exception: {e}")
+        return data
 
 
 class ImageConfigHelper(ConfigHelper):

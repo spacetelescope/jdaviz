@@ -18,6 +18,9 @@ def test_create_new_viewer(imviz_helper, image_2d_wcs):
     imviz_helper.load_data(arr, data_label=data_label, show_in_viewer=False)
     imviz_helper.create_image_viewer(viewer_name=viewer_name)
 
+    returned_data = imviz_helper.get_data(data_label)
+    assert len(returned_data.shape) == 2
+
     # new image viewer created
     assert len(imviz_helper.app.get_viewer_ids()) == 2
 

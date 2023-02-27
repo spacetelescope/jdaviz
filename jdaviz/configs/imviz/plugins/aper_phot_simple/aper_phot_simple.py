@@ -72,6 +72,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
         headers = ['xcenter', 'ycenter', 'sky_center',
                    'sum', 'sum_aper_area',
                    'aperture_sum_counts', 'aperture_sum_counts_err',
+                   'aperture_sum_mag',
                    'min', 'max', 'mean', 'median', 'mode', 'std', 'mad_std', 'var',
                    'biweight_location', 'biweight_midvariance', 'fwhm',
                    'semimajor_sigma', 'semiminor_sigma', 'orientation', 'eccentricity',
