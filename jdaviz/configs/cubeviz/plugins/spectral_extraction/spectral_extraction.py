@@ -43,8 +43,6 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
 
         super().__init__(*args, **kwargs)
 
-        self._label_counter = 0
-
         self.function = SelectPluginComponent(self,
                                               items='function_items',
                                               selected='function_selected',
