@@ -4,7 +4,7 @@ import os
 import astropy.units as u
 from astropy import constants as const
 from astropy.table import QTable
-from specutils import Spectrum1D
+
 from glue.core.message import (SubsetCreateMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)

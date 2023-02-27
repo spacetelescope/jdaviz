@@ -5,7 +5,7 @@ import warnings
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
-from astropy.nddata import NDDataArray
+
 from astropy.time import Time
 from astropy.wcs import WCS
 from specutils import Spectrum1D
@@ -123,11 +123,6 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
             )
     elif isinstance(file_obj, np.ndarray) and file_obj.ndim == 3:
         _parse_ndarray(app, file_obj, data_label=data_label, data_type=data_type,
-                       flux_viewer_reference_name=flux_viewer_reference_name,
-                       spectrum_viewer_reference_name=spectrum_viewer_reference_name,
-                       uncert_viewer_reference_name=uncert_viewer_reference_name)
-    elif isinstance(file_obj, NDDataArray) and file_obj.ndim == 3:
-        _parse_nddata(app, file_obj, data_label=data_label, data_type=data_type,
                        flux_viewer_reference_name=flux_viewer_reference_name,
                        spectrum_viewer_reference_name=spectrum_viewer_reference_name,
                        uncert_viewer_reference_name=uncert_viewer_reference_name)

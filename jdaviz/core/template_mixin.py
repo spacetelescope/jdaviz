@@ -1315,7 +1315,10 @@ class SubsetSelect(SelectPluginComponent):
 
     def _update_has_subregions(self):
         if "selected_has_subregions" in self._plugin_traitlets.keys():
-            if self.selected in self._manual_options or not hasattr(self.selected_obj, 'subregions'):
+            if (
+                self.selected in self._manual_options or
+                not hasattr(self.selected_obj, 'subregions')
+            ):
                 self.selected_has_subregions = False
             else:
                 self.selected_has_subregions = len(self.selected_obj.subregions) > 1

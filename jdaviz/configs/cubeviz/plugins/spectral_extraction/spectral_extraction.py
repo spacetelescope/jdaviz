@@ -14,7 +14,9 @@ from jdaviz.core.user_api import PluginUserApi
 __all__ = ['SpectralExtraction']
 
 
-@tray_registry('cubeviz-spectral-extraction', label="Spectral Extraction", viewer_requirements='spectrum')
+@tray_registry(
+    'cubeviz-spectral-extraction', label="Spectral Extraction", viewer_requirements='spectrum'
+)
 class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResultsMixin):
     """
     See the :ref:`Spectral Extraction Plugin Documentation <spex>` for more details.
@@ -123,7 +125,7 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
             self.add_results.add_results_from_plugin(collapsed_spec, label=label)
 
             snackbar_message = SnackbarMessage(
-                f"Spectrum extracted successfully.",
+                "Spectrum extracted successfully.",
                 color="success",
                 sender=self)
             self.hub.broadcast(snackbar_message)
