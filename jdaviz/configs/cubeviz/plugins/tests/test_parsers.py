@@ -48,31 +48,18 @@ def test_fits_image_hdu_with_microns(image_cube_hdu_obj_microns, cubeviz_helper)
     assert label_mouseover.as_text() == ('Pixel x=00.0 y=00.0 Value +1.00000e+00 1e-17 erg / (Angstrom cm2 s)',  # noqa
                                          'World 13h41m45.5759s +27d00m12.3044s (ICRS)',
                                          '205.4398995981 27.0034178810 (deg)')  # noqa
-
     unc_viewer = cubeviz_helper.app.get_viewer('uncert-viewer')
     label_mouseover._viewer_mouse_event(unc_viewer,
                                         {'event': 'mousemove', 'domain': {'x': -1, 'y': 0}})
-    assert label_mouseover.as_text()[0] == 'Pixel x=-1.0 y=00.0'  # Out of bounds
-    # FIXME: remaining lines are unvalidated,
-    # see https://github.com/spacetelescope/jdaviz/issues/1991
-    # 'World 13h41m45.5759s +27d00m12.3044s (ICRS)',
-    # '205.4398995981 27.0034178810 (deg)')  # noqa
+    assert label_mouseover.as_text() == ('Pixel x=-1.0 y=00.0',  # Out of bounds
+                                         'World 13h41m45.5856s +27d00m12.3044s (ICRS)',
+                                         '205.4399401278 27.0034178806 (deg)')
 
 
 def test_spectrum1d_with_fake_fixed_units(spectrum1d, cubeviz_helper):
-    header = {
-        'WCSAXES': 1,
-        'CRPIX1': 0.0,
-        'CDELT1': 1E-06,
-        'CUNIT1': 'm',
-        'CTYPE1': 'WAVE',
-        'CRVAL1': 0.0,
-        'RADESYS': 'ICRS'}
-    wcs = WCS(header)
     cubeviz_helper.app.add_data(spectrum1d, "test")
 
     dc = cubeviz_helper.app.data_collection
-    dc[0].meta["_orig_wcs"] = wcs
     dc[0].meta["_orig_spec"] = spectrum1d
 
     cubeviz_helper.app.add_data_to_viewer('spectrum-viewer', 'test')
@@ -111,15 +98,15 @@ def test_fits_image_hdu_parse_from_file(tmpdir, image_cube_hdu_obj, cubeviz_help
     label_mouseover._viewer_mouse_event(flux_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
     assert label_mouseover.as_text() == ('Pixel x=00.0 y=00.0 Value +1.00000e+00 1e-17 erg / (Angstrom cm2 s)',  # noqa
-                                         'World 13h41m46.4124s +26d59m58.6137s (ICRS)',
-                                         '205.4433848390 26.9996149270 (deg)')  # noqa
+                                         'World 13h41m46.5994s +26d59m58.6136s (ICRS)',
+                                         '205.4441642302 26.9996148973 (deg)')
 
     unc_viewer = cubeviz_helper.app.get_viewer(cubeviz_helper._default_uncert_viewer_reference_name)
     label_mouseover._viewer_mouse_event(unc_viewer,
                                         {'event': 'mousemove', 'domain': {'x': -1, 'y': 0}})
     assert label_mouseover.as_text() == ('Pixel x=-1.0 y=00.0',  # Out of bounds
-                                         'World 13h41m46.5994s +26d59m58.6136s (ICRS)',
-                                         '205.4441642302 26.9996148973 (deg)')  # noqa
+                                         'World 13h41m46.6368s +26d59m58.6136s (ICRS)',
+                                         '205.4443201084 26.9996148908 (deg)')
 
 
 @pytest.mark.filterwarnings('ignore')
@@ -140,8 +127,8 @@ def test_spectrum3d_parse(image_cube_hdu_obj, cubeviz_helper):
     label_mouseover._viewer_mouse_event(flux_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
     assert label_mouseover.as_text() == ('Pixel x=00.0 y=00.0 Value +1.00000e+00 1e-17 erg / (Angstrom cm2 s)',  # noqa
-                                         'World 13h41m46.4124s +26d59m58.6137s (ICRS)',
-                                         '205.4433848390 26.9996149270 (deg)')  # noqa
+                                         'World 13h41m46.5994s +26d59m58.6136s (ICRS)',
+                                         '205.4441642302 26.9996148973 (deg)')
 
     # These viewers have no data.
 

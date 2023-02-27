@@ -100,10 +100,13 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
                 raise ValueError("Moment must be a positive integer")
         except ValueError:
             raise ValueError("Moment must be a positive integer")
-        # Need transpose to align JWST mirror shape. Not sure why.
-        # TODO: WCS can be grabbed from cube.wcs[:, :, 0] but CCDData will not take it.
-        #       But if we use NDData, glue-astronomy translator fails.
-        self.moment = CCDData(analysis.moment(slab, order=n_moment).T)
+        # Need transpose to align JWST mirror shape: This is because specutils
+        # arrange the array shape to be (nx, ny, nz) but 2D visualization
+        # assumes (ny, nx) as per row-major convention.
+        data_wcs = getattr(cube.wcs, 'celestial', None)
+        if data_wcs:
+            data_wcs = data_wcs.swapaxes(0, 1)  # We also transpose WCS to match.
+        self.moment = CCDData(analysis.moment(slab, order=n_moment).T, wcs=data_wcs)
 
         fname_label = self.dataset_selected.replace("[", "_").replace("]", "")
         self.filename = f"moment{n_moment}_{fname_label}.fits"

@@ -169,7 +169,10 @@ class CoordsInfo(TemplateMixin):
 
         unreliable_pixel, unreliable_world = False, False
 
-        # separate logic for each viewer type, ultimately needs to result in extracting sky coords
+        # Separate logic for each viewer type, ultimately needs to result in extracting sky coords.
+        # NOTE: pixel_to_world axes order is opposite of array value axes order, so...
+        #   3D: pixel_to_world(z, y, x) -> arr[x, y, z]
+        #   2D: pixel_to_world(x, y) -> arr[y, x]
         if isinstance(viewer, ImvizImageView):
             x, y, coords_status, (unreliable_world, unreliable_pixel) = viewer._get_real_xy(image, x, y)  # noqa
             if coords_status:
@@ -184,23 +187,33 @@ class CoordsInfo(TemplateMixin):
             #  data for this application. This section will need to be updated
             #  when that is no longer true.
             # Hack to insert WCS for generated 2D and 3D images using FLUX cube WCS.
-            if 'Plugin' in image.meta:
+            if 'Plugin' in image.meta and not image.coords:
                 coo_data = self.app.data_collection[0]
             else:
                 coo_data = image
 
-            # Hack around various WCS propagation issues in Cubeviz.
-            if '_orig_wcs' in coo_data.meta:
-                sky = coo_data.meta['_orig_wcs'].pixel_to_world(x, y, viewer.state.slices[-1])[0].icrs  # noqa
-                coords_status = True
+            if '_orig_spec' in coo_data.meta:
+                # Hack around various WCS propagation issues in Cubeviz, example:
+                # https://github.com/glue-viz/glue-astronomy/issues/75
+                data_wcs = coo_data.meta['_orig_spec'].wcs
+                wcs_ndim = 3
             elif data_has_valid_wcs(coo_data):
+                data_wcs = coo_data.coords
+                wcs_ndim = coo_data.ndim
+            else:
+                data_wcs = None
+
+            if data_wcs:
                 try:
-                    sky = coo_data.coords.pixel_to_world(x, y, viewer.state.slices[-1])[-1].icrs
+                    if wcs_ndim == 3:
+                        sky = data_wcs.pixel_to_world(viewer.state.slices[-1], y, x)[1].icrs
+                    else:  # wcs_ndim == 2
+                        sky = data_wcs.pixel_to_world(x, y).icrs
                 except Exception:
                     coords_status = False
                 else:
                     coords_status = True
-            else:  # pragma: no cover
+            else:
                 self.reset_coords_display()
 
         elif isinstance(viewer, MosvizImageView):
