@@ -314,7 +314,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         # show spinner with overlay
         self.results_computing = True
 
-        if self.config == 'cubeviz' and self.spatial_subset_selected != SPATIAL_DEFAULT_TEXT:
+        if (self.config == 'cubeviz' and self.spatial_subset_selected not in
+                (SPATIAL_DEFAULT_TEXT, "")):
             # then we're acting on the auto-collapsed data in the spectrum-viewer
             # of a spatial subset.  In the future, we may want to expose on-the-fly
             # collapse options... but right now these will follow the settings of the
