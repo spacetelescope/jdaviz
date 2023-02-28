@@ -481,20 +481,25 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
 
         # Set axes labels for the spectrum viewer
         spectral_axis_unit_type = str(data.spectral_axis.unit.physical_type).title()
-        # flux_unit_type = data.flux.unit.physical_type.title()
+        spectral_axis_unit_str = data.spectral_axis.unit.to_string()
         flux_unit_type = "Flux density"
+        flux_unit_str = data.flux.unit.to_string()
 
         if data.spectral_axis.unit.is_equivalent(u.m):
             spectral_axis_unit_type = "Wavelength"
         elif data.spectral_axis.unit.is_equivalent(u.pixel):
             spectral_axis_unit_type = "pixel"
 
-        label_0 = f"{spectral_axis_unit_type} [{data.spectral_axis.unit.to_string()}]"
+        label_0 = f"{spectral_axis_unit_type} [{spectral_axis_unit_str}]"
         self.figure.axes[0].label = label_0
-        self.figure.axes[1].label = f"{flux_unit_type} [{data.flux.unit.to_string()}]"
+        self.figure.axes[1].label = f"{flux_unit_type} [{flux_unit_str}]"
 
         # Make it so y axis label is not covering tick numbers.
         self.figure.axes[1].label_offset = "-50"
 
         # Set Y-axis to scientific notation
         self.figure.axes[1].tick_format = '0.1e'
+
+        # Register display units for Glue unit conversion.
+        self.state.y_display_unit = flux_unit_str
+        self.state.x_display_unit = spectral_axis_unit_str

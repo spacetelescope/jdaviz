@@ -9,9 +9,9 @@ import operator
 from ipywidgets import widget_serialization
 import ipyvue
 
+from astropy import units as u
 from astropy.nddata import CCDData, NDData
 from astropy.io import fits
-from astropy import units as u
 from astropy.coordinates import Angle
 from regions import PixCoord, CirclePixelRegion, RectanglePixelRegion, EllipsePixelRegion
 
@@ -38,6 +38,7 @@ from glue.core.state_objects import State
 from glue.core.subset import (Subset, RangeSubsetState, RoiSubsetState,
                               CompositeSubsetState, InvertState)
 from glue.core.roi import CircularROI, EllipticalROI, RectangularROI
+from glue.core.units import unit_converter
 from glue_astronomy.spectral_coordinates import SpectralCoordinates
 from glue_jupyter.app import JupyterApplication
 from glue_jupyter.common.toolbar_vuetify import read_icon
@@ -68,9 +69,37 @@ EXT_TYPES = dict(flux=['flux', 'sci'],
                  mask=['mask', 'dq'])
 
 
+@unit_converter('custom-jdaviz')
+class UnitConverterWithSpectral:
+
+    def equivalent_units(self, data, cid, units):
+        if cid.label == "flux":
+            eqv = u.spectral_density(1 * u.m)  # Value does not matter here.
+        else:  # spectral axis
+            eqv = u.spectral()
+        return map(str, u.Unit(units).find_equivalent_units(
+            include_prefix_units=True, equivalencies=eqv))
+
+    def to_unit(self, data, cid, values, original_units, target_units):
+        # Given a glue data object (data), a component ID (cid), the values
+        # to convert, and the original and target units of the values, this method
+        # should return the converted values. Note that original_units
+        # gives the units of the values array, which might not be the same
+        # as the original native units of the component in the data.
+        if cid.label == "flux":
+            spec = data.get_object(cls=Spectrum1D)
+            eqv = u.spectral_density(spec.spectral_axis)
+        else:  # spectral axis
+            eqv = u.spectral()
+        return (values * u.Unit(original_units)).to_value(u.Unit(target_units), equivalencies=eqv)
+
+
 # Set default opacity for data layers to 1 instead of 0.8 in
 # some glue-core versions
 glue_settings.DATA_ALPHA = 1
+
+# Enable spectrum unit conversion.
+glue_settings.UNIT_CONVERTER = 'custom-jdaviz'
 
 custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'j-external-link': 'components/external_link.vue',

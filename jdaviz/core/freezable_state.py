@@ -8,7 +8,7 @@ from glue.viewers.matplotlib.state import DeferredDrawCallbackProperty as DDCPro
 __all__ = ['FreezableState', 'FreezableProfileViewerState', 'FreezableBqplotImageViewerState']
 
 
-class FreezableState():
+class FreezableState:
     _frozen_state = []
 
     def __setattr__(self, k, v):

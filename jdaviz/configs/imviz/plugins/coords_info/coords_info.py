@@ -516,7 +516,10 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         self._dict['axes_y'] = closest_flux.value
         self._dict['axes_y:unit'] = closest_flux.unit.to_string()
 
-        self.icon = closest_icon
+        if closest_icon is not None:
+            self.icon = closest_icon
+        else:
+            self.icon = ""
 
         self.marks[viewer._reference_id].update_xy([closest_wave.value], [closest_flux.value])  # noqa
         self.marks[viewer._reference_id].visible = True
