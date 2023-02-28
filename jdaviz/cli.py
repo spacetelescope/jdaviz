@@ -131,23 +131,3 @@ def _main(config=None):
     main(filename=args.filename, layout=layout, instrument=args.instrument, browser=args.browser,
          theme=args.theme, verbosity=args.verbosity, history_verbosity=args.history_verbosity,
          hotreload=args.hotreload)
-
-
-def _specviz():
-    _main(config='specviz')
-
-
-def _specviz2d():
-    _main(config='specviz2d')
-
-
-def _imviz():
-    _main(config='imviz')
-
-
-def _cubeviz():
-    _main(config='cubeviz')
-
-
-def _mosviz():
-    _main(config='mosviz')
