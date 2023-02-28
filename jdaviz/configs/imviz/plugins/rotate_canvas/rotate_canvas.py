@@ -6,9 +6,11 @@ from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin
 from jdaviz.core.user_api import PluginUserApi
 
+__all__ = ['RotateCanvas']
+
 
 @tray_registry('imviz-rotate-canvas', label="Canvas Rotation", viewer_requirements='image')
-class RotateCanvasSimple(PluginTemplateMixin, ViewerSelectMixin):
+class RotateCanvas(PluginTemplateMixin, ViewerSelectMixin):
     template_file = __file__, "rotate_canvas.vue"
 
     angle = FloatHandleEmpty(0).tag(sync=True)  # degrees, clockwise
@@ -20,6 +22,10 @@ class RotateCanvasSimple(PluginTemplateMixin, ViewerSelectMixin):
     @property
     def user_api(self):
         return PluginUserApi(self, expose=('viewer', 'angle'))
+
+    @observe('viewer_selected')
+    def _viewer_selected_changed(self, *args, **kwargs):
+        self.angle = self.app._viewer_item_by_id(self.viewer_selected).get('rotation', 0)
 
     @observe('angle')
     def _angle_changed(self, *args, **kwargs):
