@@ -12,6 +12,10 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Table exposing past results in the aperture photometry plugin. [#1985, #2015]
+
+- New canvas rotation plugin. [#1983]
+
 Mosviz
 ^^^^^^
 
@@ -71,8 +75,6 @@ Cubeviz
 
 Imviz
 ^^^^^
-
-- New Simple Image Rotation plugin to rotate the axes of images. [#1384]
 
 Mosviz
 ^^^^^^
