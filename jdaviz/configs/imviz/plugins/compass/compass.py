@@ -1,4 +1,4 @@
-from traitlets import Float, Unicode, observe
+from traitlets import Float, Integer, Unicode, observe
 
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage, CanvasRotationChangedMessage
 from jdaviz.core.registries import tray_registry
@@ -27,6 +27,7 @@ class Compass(PluginTemplateMixin, ViewerSelectMixin):
     data_label = Unicode("").tag(sync=True)
     img_data = Unicode("").tag(sync=True)
     canvas_angle = Float(0).tag(sync=True)  # set by canvas rotation plugin
+    canvas_rotatey = Integer(1).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -56,7 +57,9 @@ class Compass(PluginTemplateMixin, ViewerSelectMixin):
         self._set_compass_rotation()
 
     def _set_compass_rotation(self):
-        self.canvas_angle = self.app._viewer_item_by_id(self.viewer_selected).get('rotation', 0)  # noqa
+        viewer_item = self.app._viewer_item_by_id(self.viewer_selected)
+        self.canvas_angle = viewer_item.get('rotation', 0)  # noqa
+        self.canvas_rotatey = 180 if viewer_item.get('flip', False) else 0
 
     @observe("viewer_selected", "plugin_opened")
     def _compass_with_new_viewer(self, *args, **kwargs):

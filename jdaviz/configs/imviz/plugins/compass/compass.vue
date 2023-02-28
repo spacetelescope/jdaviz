@@ -20,7 +20,7 @@
       </v-chip>
     </v-row>
 
-    <img class='invert-in-dark' v-if="img_data" :src="`data:image/png;base64,${img_data}`" :style="'width: 100%; max-width: 400px; margin-top: 50px; transform: rotate('+canvas_angle+'deg)'" />
+    <img class='invert-in-dark' v-if="img_data" :src="`data:image/png;base64,${img_data}`" :style="'width: 100%; max-width: 400px; margin-top: 50px; transform: rotateY('+canvas_rotatey+'deg) rotate('+canvas_angle+'deg)'" />
 
   </j-tray-plugin>
 </template>

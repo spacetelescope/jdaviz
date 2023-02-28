@@ -83,7 +83,7 @@
           <jupyter-widget
             :widget="viewer.widget"
             :ref="'viewer-widget-'+viewer.id"
-            :style="'width: 100%; height: 100%; overflow: hidden; transform: rotate('+viewer.rotation+'deg)'"
+            :style="'width: 100%; height: 100%; overflow: hidden; transform: rotateY('+viewer_flip(viewer)+') rotate('+viewer.rotation+'deg)'"
           ></jupyter-widget>
         </v-card>
     </gl-component>
@@ -144,6 +144,13 @@ module.exports = {
        * between a user closing a tab or a re-render. However, when the user closes a tab, the
        * source of the event is a vue component. We can use that distinction as a close signal. */
       source.$root && this.closefn(viewerId);
+    },
+    viewer_flip(viewer) {
+      if (viewer.flip) {
+        return '180deg'
+      } else {
+        return '0deg'
+      }
     }
   },
   computed: {

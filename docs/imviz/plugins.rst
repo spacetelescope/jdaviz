@@ -290,10 +290,15 @@ are not stored. To save the current result before submitting a new query, you ca
 Canvas Rotation
 ===============
 
-The canvas rotation plugin allows rotating the image to any arbitrary rotation by rotating the
-axes canvas itself.  Note that this does not affect the underlying data, and exporting data to
-the notebook via the API will therefore not exhibit the same rotation.  The :ref:`imviz-compass`
-will also rotate accordingly.
+The canvas rotation plugin allows rotating and horizontally flipping the image to any arbitrary 
+value rotating the  axes canvas itself.  Note that this does not affect the underlying data, and
+exporting data to the notebook via the API will therefore not exhibit the same rotation.
+
+The :ref:`imviz-compass` will also rotate (and flip) accordingly.
+
+Presets are provided to set north up and east either to the right or the left, as well as a slider
+and input to set the angle and a switch to set whether the axes should be flipped horizontally
+after applying the rotation.
 
 
 .. _imviz-export-plot:

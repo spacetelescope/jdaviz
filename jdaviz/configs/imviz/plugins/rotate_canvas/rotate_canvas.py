@@ -1,5 +1,6 @@
-from traitlets import observe
+from traitlets import Bool, observe
 
+from jdaviz.configs.imviz.wcs_utils import get_compass_info
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import CanvasRotationChangedMessage
 from jdaviz.core.registries import tray_registry
@@ -14,18 +15,40 @@ class RotateCanvas(PluginTemplateMixin, ViewerSelectMixin):
     template_file = __file__, "rotate_canvas.vue"
 
     angle = FloatHandleEmpty(0).tag(sync=True)  # degrees, clockwise
+    flip = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._theta = 0  # degrees, clockwise
 
     @property
     def user_api(self):
-        return PluginUserApi(self, expose=('viewer', 'angle'))
+        return PluginUserApi(self, expose=('viewer', 'angle', 'flip',
+                                           'set_north_up_east_right', 'set_north_up_east_left'))
 
     @observe('viewer_selected')
     def _viewer_selected_changed(self, *args, **kwargs):
         self.angle = self.app._viewer_item_by_id(self.viewer_selected).get('rotation', 0)
+
+    def _get_wcs_angles(self):
+        ref_data = list(self.app.get_data_from_viewer(self.viewer_selected).values())[0]
+        _, _, _, _, _, _, degn, dege, flip = get_compass_info(ref_data.wcs, ref_data.data.shape)
+        return degn, dege, flip
+
+    def set_north_up_east_left(self):
+        degn, dege, flip = self._get_wcs_angles()
+        self.angle = -degn
+        self.flip = flip
+
+    def set_north_up_east_right(self):
+        degn, dege, flip = self._get_wcs_angles()
+        self.angle = -degn
+        self.flip = not flip
+
+    def vue_set_north_up_east_left(self, *args, **kwargs):
+        self.set_north_up_east_left()
+
+    def vue_set_north_up_east_right(self, *args, **kwargs):
+        self.set_north_up_east_right()
 
     @observe('angle')
     def _angle_changed(self, *args, **kwargs):
@@ -38,4 +61,11 @@ class RotateCanvas(PluginTemplateMixin, ViewerSelectMixin):
         # Rotate selected viewer canvas. This changes zoom too.
         self.app._viewer_item_by_id(self.viewer_selected)['rotation'] = angle
         # broadcast message (used by compass, etc)
-        self.hub.broadcast(CanvasRotationChangedMessage(self.viewer_selected, angle, sender=self))
+        self.hub.broadcast(CanvasRotationChangedMessage(self.viewer_selected,
+                                                        angle, self.flip, sender=self))
+
+    @observe('flip')
+    def _flip_changed(self, *args, **kwargs):
+        self.app._viewer_item_by_id(self.viewer_selected)['flip'] = self.flip
+        self.hub.broadcast(CanvasRotationChangedMessage(self.viewer_selected,
+                                                        self.angle, self.flip, sender=self))
