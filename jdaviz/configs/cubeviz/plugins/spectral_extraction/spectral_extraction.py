@@ -1,7 +1,7 @@
 from astropy.nddata import NDDataArray, StdDevUncertainty
 from astropy.wcs.wcsapi.fitswcs import SlicedFITSWCS
 from glue_astronomy.translators.spectrum1d import PaddedSpectrumWCS
-from traitlets import List, Unicode
+from traitlets import List, Unicode, observe
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
@@ -43,17 +43,24 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
 
         super().__init__(*args, **kwargs)
 
-        self.function = SelectPluginComponent(self,
-                                              items='function_items',
-                                              selected='function_selected',
-                                              manual_options=['Mean', 'Min', 'Max', 'Sum'])  # noqa
+        self.function = SelectPluginComponent(
+            self,
+            items='function_items',
+            selected='function_selected',
+            manual_options=['Mean', 'Min', 'Max', 'Sum']
+        )
 
         self.add_results.viewer.filters = ['is_spectrum_viewer']
 
     @property
     def user_api(self):
-        return PluginUserApi(self, expose=('function', 'spatial_subset',
-                                           'add_results', 'collapse_to_spectrum'))
+        return PluginUserApi(
+            self,
+            expose=(
+                'function', 'spatial_subset',
+                'add_results', 'collapse_to_spectrum'
+            )
+        )
 
     def collapse_to_spectrum(self, add_data=True, **kwargs):
         """
@@ -116,9 +123,12 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
         collapsed_spec.wcs = PaddedSpectrumWCS(
             SlicedFITSWCS(spectral_cube.coords, spatial_axes), 1
         )
+        self._set_default_results_label()
+
         if add_data:
-            label = f"Spectrum extracted from {self._app.data_collection[0].label}"
-            self.add_results.add_results_from_plugin(collapsed_spec, label=label)
+            self.add_results.add_results_from_plugin(
+                collapsed_spec, label=self.results_label, replace=False
+            )
 
             snackbar_message = SnackbarMessage(
                 "Spectrum extracted successfully.",
@@ -130,3 +140,9 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
 
     def vue_spectral_extraction(self, *args, **kwargs):
         self.collapse_to_spectrum(add_data=True)
+
+    @observe("results_label")
+    def _set_default_results_label(self, event={}):
+        self.results_label_default = (
+            self._app.data_collection[0].label + " extracted"
+        )
