@@ -7,7 +7,7 @@ from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin
 from jdaviz.core.user_api import PluginUserApi
 
 
-@tray_registry('imviz-rotate-canvas', label="Canvas Rotation")
+@tray_registry('imviz-rotate-canvas', label="Canvas Rotation", viewer_requirements='image')
 class RotateCanvasSimple(PluginTemplateMixin, ViewerSelectMixin):
     template_file = __file__, "rotate_canvas.vue"
 
