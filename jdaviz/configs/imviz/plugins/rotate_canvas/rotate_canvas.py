@@ -12,6 +12,23 @@ __all__ = ['RotateCanvas']
 
 @tray_registry('imviz-rotate-canvas', label="Canvas Rotation", viewer_requirements='image')
 class RotateCanvas(PluginTemplateMixin, ViewerSelectMixin):
+    """
+    See the :ref:`Canvas Rotation Plugin Documentation <rotate-canvas>` for more details.
+
+    Only the following attributes and methods are available through the
+    :ref:`public plugin API <plugin-apis>`:
+
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
+    * ``viewer`` (:class:`~jdaviz.core.template_mixin.ViewerSelect`):
+      Viewer to show orientation/compass information.
+    * ``angle``:
+      Angle to rotate the axes canvas, clockwise.
+    * ``flip``:
+      Whether to flip the canvas horizontally, after applying rotation.
+    * :meth:`set_north_up_east_left`
+    * :meth:`set_north_up_east_right`
+    """
     template_file = __file__, "rotate_canvas.vue"
 
     angle = FloatHandleEmpty(0).tag(sync=True)  # degrees, clockwise
