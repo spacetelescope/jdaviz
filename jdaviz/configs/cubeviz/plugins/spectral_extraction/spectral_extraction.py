@@ -66,7 +66,7 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
             ``add_results``.
         kwargs : dict
             Additional keyword arguments passed to the NDDataArray collapse operation.
-            Examples include ``propagate_uncertainties`` and ``ignore_masked_data``.
+            Examples include ``propagate_uncertainties`` and ``operation_ignores_mask``.
         """
         # get glue Data objects for the spectral cube and uncertainties
         [spectral_cube] = self._app.get_data_from_viewer(
@@ -101,8 +101,8 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
         # specutils PR is merged: https://github.com/astropy/specutils/pull/999
         spatial_axes = tuple(range(nddata.ndim - 1))
 
-        # by default we want to use ignore_masked_data=True in nddata:
-        kwargs.setdefault("ignore_masked_data", True)
+        # by default we want to use operation_ignores_mask=True in nddata:
+        kwargs.setdefault("operation_ignores_mask", True)
         # by default we want to propagate uncertainties:
         kwargs.setdefault("propagate_uncertainties", True)
 
