@@ -140,8 +140,10 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
                         f"{zoom_radius.to(u.arcmin)}, using {r_max}.",
                         color='warning', sender=self))
                     zoom_radius = r_max
+                # Data release is not the default 17 because of
+                # https://github.com/astropy/astroquery/issues/2673
                 query_region_result = SDSS.query_region(skycoord_center, radius=zoom_radius,
-                                                        data_release=17)
+                                                        data_release=16)
             except Exception as e:  # nosec
                 self.hub.broadcast(SnackbarMessage(
                     f"Failed to query {self.catalog_selected} with c={skycoord_center} and "
