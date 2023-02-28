@@ -285,6 +285,17 @@ are not stored. To save the current result before submitting a new query, you ca
     The table returned from the API above may cover more sources than shown in the currently zoomed-in
     portion of the image. Additional steps will be needed to filter out these points, if necessary.
 
+.. _rotate-canvas:
+
+Canvas Rotation
+===============
+
+The canvas rotation plugin allows rotating the image to any arbitrary rotation by rotating the
+axes canvas itself.  Note that this does not affect the underlying data, and exporting data to
+the notebook via the API will therefore not exhibit the same rotation.  The :ref:`imviz-compass`
+will also rotate accordingly.
+
+
 .. _imviz-export-plot:
 
 Export Plot
