@@ -115,6 +115,10 @@
   border-bottom-left-radius: 4px; 
   border-top-left-radius: 4px;
 }
+.imviz div.v-card.v-card--flat.v-sheet.v-sheet--tile {
+  /* black background beyond edges of canvas for canvas rotation */
+  background-color: black
+}
 </style>
 
 <script>
@@ -128,11 +132,7 @@ module.exports = {
   },
   watch: {
     stack(new_stack, old_stack) {
-      console.log("watch: stack")
-      new_stack.viewers.forEach((viewer) => {
-        console.log("original resize of "+viewer.id)
-        this.resizeViewer(viewer)
-      })
+      this.$emit('resize')
     }
   },
   methods: {
@@ -144,41 +144,6 @@ module.exports = {
        * between a user closing a tab or a re-render. However, when the user closes a tab, the
        * source of the event is a vue component. We can use that distinction as a close signal. */
       source.$root && this.closefn(viewerId);
-    },
-    resizeViewer(viewer) {
-      if (viewer.config !== 'imviz') {
-        this.$emit('resize')
-        return
-      }
-
-      const viewerWidget = this.$refs['viewer-widget-'+viewer.id][0]
-      const cardEl = viewerWidget.$parent
-      const cardHeight = cardEl.$el.clientHeight
-      const cardWidth = cardEl.$el.clientWidth
-
-      // resize width and height to be the diagonal dimension, 
-      // then offset so the center stays in the center
-      // TODO: eventually we may want to make this dynamic to avoid over-resizing
-      // (by using a rectangle and also adjusting as the rotation angle is changed)
-      const diagDim = (cardEl.$el.clientHeight**2+cardEl.$el.clientWidth**2)**0.5;
-      const top = (cardHeight - diagDim) / 2
-      const left = (cardWidth - diagDim) / 2
-
-      viewerWidget.$el.style.height = diagDim+"px"
-      viewerWidget.$el.style.width = diagDim+"px"
-      viewerWidget.$el.style.position = 'absolute'
-      viewerWidget.$el.style.top = top+"px"
-      viewerWidget.$el.style.left = left+"px"
-      //console.log("diagDim: "+diagDim+ " top: "+top+" left: "+left)
-
-      // TODO: "undo" oversizing by adjusting the viewer.zoom_level
-      // TODO: box zoom also needs to account for scale factor to set limits that result in the box
-      // being shown in the viewer, not the oversized canvas
-      this.$emit('resize', {viewer: viewer.id,
-                            height: cardHeight,
-                            width: cardWidth,
-                            canvasHeight: diagDim,
-                            canvasWidth: diagDim})
     }
   },
   computed: {
