@@ -57,7 +57,7 @@ class Compass(PluginTemplateMixin, ViewerSelectMixin):
         self._set_compass_rotation()
 
     def _set_compass_rotation(self):
-        viewer_item = self.app._viewer_item_by_id(self.viewer_selected)
+        viewer_item = self.app._viewer_item_by_id(self.viewer.selected_id)
         self.canvas_angle = viewer_item.get('rotation', 0)  # noqa
         self.canvas_rotatey = 180 if viewer_item.get('flip', False) else 0
 

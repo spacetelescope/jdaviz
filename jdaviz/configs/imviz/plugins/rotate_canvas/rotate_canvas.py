@@ -44,7 +44,9 @@ class RotateCanvas(PluginTemplateMixin, ViewerSelectMixin):
 
     @observe('viewer_selected')
     def _viewer_selected_changed(self, *args, **kwargs):
-        self.angle = self.app._viewer_item_by_id(self.viewer_selected).get('rotation', 0)
+        if not hasattr(self, 'viewer'):
+            return
+        self.angle = self.app._viewer_item_by_id(self.viewer.selected_id).get('rotation', 0)
 
     def _get_wcs_angles(self):
         ref_data = list(self.app.get_data_from_viewer(self.viewer_selected).values())[0]
@@ -76,13 +78,13 @@ class RotateCanvas(PluginTemplateMixin, ViewerSelectMixin):
             angle = 0
 
         # Rotate selected viewer canvas. This changes zoom too.
-        self.app._viewer_item_by_id(self.viewer_selected)['rotation'] = angle
+        self.app._viewer_item_by_id(self.viewer.selected_id)['rotation'] = angle
         # broadcast message (used by compass, etc)
-        self.hub.broadcast(CanvasRotationChangedMessage(self.viewer_selected,
+        self.hub.broadcast(CanvasRotationChangedMessage(self.viewer.selected_id,
                                                         angle, self.flip, sender=self))
 
     @observe('flip')
     def _flip_changed(self, *args, **kwargs):
-        self.app._viewer_item_by_id(self.viewer_selected)['flip'] = self.flip
-        self.hub.broadcast(CanvasRotationChangedMessage(self.viewer_selected,
+        self.app._viewer_item_by_id(self.viewer.selected_id)['flip'] = self.flip
+        self.hub.broadcast(CanvasRotationChangedMessage(self.viewer.selected_id,
                                                         self.angle, self.flip, sender=self))
