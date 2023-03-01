@@ -366,7 +366,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                     value = arr[int(round(y)), int(round(x))]
             self.row1b_title = 'Value'
             self.row1b_text = f'{value:+10.5e} {unit}'
-            self._dict['value'] = value
+            self._dict['value'] = float(value)
             self._dict['value:unit'] = unit
         else:
             self.row1b_title = ''
