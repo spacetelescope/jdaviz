@@ -241,7 +241,7 @@ catalog dropdown menu.
 
 .. note::
 
-    This plugin is still under active development. As a result, the search only uses the SDSS DR16 catalog
+    This plugin is still under active development. As a result, the search only uses the SDSS DR17 catalog
     and works best when you only have a single image loaded in a viewer.
 
 To load a catalog from a supported `JWST ECSV catalog file <https://jwst-pipeline.readthedocs.io/en/latest/jwst/source_catalog/main.html#output-products>`_, choose "From File...".
