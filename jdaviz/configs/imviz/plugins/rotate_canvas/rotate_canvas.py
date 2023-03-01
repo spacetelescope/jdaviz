@@ -51,7 +51,7 @@ class RotateCanvas(PluginTemplateMixin, ViewerSelectMixin):
         return list(self.app.get_data_from_viewer(self.viewer_selected).values())[0]
 
     def _on_viewer_data_changed(self, msg=None):
-        if not self.viewer_selected:
+        if not self.viewer_selected:  # pragma: no cover
             return
         self.has_wcs = getattr(self.ref_data, 'wcs', None) is not None
 
@@ -79,16 +79,16 @@ class RotateCanvas(PluginTemplateMixin, ViewerSelectMixin):
         self.flip = not flip
 
     def vue_set_north_up_east_left(self, *args, **kwargs):
-        self.set_north_up_east_left()
+        self.set_north_up_east_left()  # pragma: no cover
 
     def vue_set_north_up_east_right(self, *args, **kwargs):
-        self.set_north_up_east_right()
+        self.set_north_up_east_right()  # pragma: no cover
 
     @observe('angle')
     def _angle_changed(self, *args, **kwargs):
         try:
             angle = float(self.angle)
-        except ValueError:
+        except ValueError:  # pragma: no cover
             # empty string, etc
             angle = 0
 
