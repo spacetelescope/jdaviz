@@ -11,7 +11,7 @@
       hint="Select viewer."
     />
     
-    <v-row>
+    <v-row v-if="has_wcs">
       <span style="line-height: 36px">Presets:</span>
       <j-tooltip tooltipcontent="north up, east right">
         <v-btn icon @click="set_north_up_east_right">

@@ -2,7 +2,7 @@ from traitlets import Bool, observe
 
 from jdaviz.configs.imviz.wcs_utils import get_compass_info
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
-from jdaviz.core.events import CanvasRotationChangedMessage
+from jdaviz.core.events import AddDataMessage, RemoveDataMessage, CanvasRotationChangedMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin
 from jdaviz.core.user_api import PluginUserApi
@@ -33,14 +33,27 @@ class RotateCanvas(PluginTemplateMixin, ViewerSelectMixin):
 
     angle = FloatHandleEmpty(0).tag(sync=True)  # degrees, clockwise
     flip = Bool(False).tag(sync=True)
+    has_wcs = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.hub.subscribe(self, AddDataMessage, handler=self._on_viewer_data_changed)
+        self.hub.subscribe(self, RemoveDataMessage, handler=self._on_viewer_data_changed)
 
     @property
     def user_api(self):
         return PluginUserApi(self, expose=('viewer', 'angle', 'flip',
                                            'set_north_up_east_right', 'set_north_up_east_left'))
+
+    @property
+    def ref_data(self):
+        return list(self.app.get_data_from_viewer(self.viewer_selected).values())[0]
+
+    def _on_viewer_data_changed(self, msg=None):
+        if not self.viewer_selected:
+            return
+        self.has_wcs = getattr(self.ref_data, 'wcs', None) is not None
 
     @observe('viewer_selected')
     def _viewer_selected_changed(self, *args, **kwargs):
@@ -49,7 +62,9 @@ class RotateCanvas(PluginTemplateMixin, ViewerSelectMixin):
         self.angle = self.app._viewer_item_by_id(self.viewer.selected_id).get('rotation', 0)
 
     def _get_wcs_angles(self):
-        ref_data = list(self.app.get_data_from_viewer(self.viewer_selected).values())[0]
+        if not self.has_wcs:
+            raise ValueError("reference data does not have WCS, cannot determine orientation")
+        ref_data = self.ref_data
         _, _, _, _, _, _, degn, dege, flip = get_compass_info(ref_data.wcs, ref_data.data.shape)
         return degn, dege, flip
 
