@@ -30,13 +30,15 @@ _default_table_values = {'x': np.nan,
 @tray_registry('g-markers', label="Markers")
 class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
     """
-    See the :ref:`Markers Plugin Documentation <imviz-markers>` for more details.
+    See the :ref:`Markers Plugin Documentation <markers-plugin>` for more details.
 
     Only the following attributes and methods are available through the
     :ref:`public plugin API <plugin-apis>`:
 
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
+    * :meth:`clear_table`
+    * :meth:`~jdaviz.core.template_mixin.TableMixin.export_table`
     """
     template_file = __file__, "markers.vue"
 

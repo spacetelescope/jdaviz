@@ -84,6 +84,9 @@ Plugins
 .. automodapi:: jdaviz.configs.default.plugins.line_lists.line_lists
    :no-inheritance-diagram:
 
+.. automodapi:: jdaviz.configs.default.plugins.markers.markers
+  :no-inheritance-diagram:
+
 .. automodapi:: jdaviz.configs.default.plugins.metadata_viewer.metadata_viewer
    :no-inheritance-diagram:
 
