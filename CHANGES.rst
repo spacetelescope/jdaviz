@@ -161,6 +161,9 @@ Cubeviz
 - Added the ability to export cube slices to video. User will need to install
   ``opencv-python`` separately or use ``[all]`` specifier when installing Jdaviz. [#2264]
 
+- Add Spectral Extraction plugin for Cubeviz, which converts spectral cubes
+  to 1D spectra with propagated uncertainties [#2039]
+
 Imviz
 ^^^^^
 
