@@ -49,7 +49,7 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
             selected='function_selected',
             manual_options=['Mean', 'Min', 'Max', 'Sum']
         )
-
+        self._set_default_results_label()
         self.add_results.viewer.filters = ['is_spectrum_viewer']
 
     @property
@@ -123,7 +123,6 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
         collapsed_spec.wcs = PaddedSpectrumWCS(
             SlicedFITSWCS(spectral_cube.coords, spatial_axes), 1
         )
-        self._set_default_results_label()
 
         if add_data:
             self.add_results.add_results_from_plugin(
@@ -141,8 +140,13 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
     def vue_spectral_extraction(self, *args, **kwargs):
         self.collapse_to_spectrum(add_data=True)
 
-    @observe("results_label")
+    @observe('spatial_subset_selected')
     def _set_default_results_label(self, event={}):
-        self.results_label_default = (
-            self._app.data_collection[0].label + " extracted"
-        )
+        label = "Spectral extraction"
+
+        if (
+            hasattr(self, 'spatial_subset') and
+            self.spatial_subset.selected != self.spatial_subset.default_text
+        ):
+            label += f' ({self.spatial_subset_selected})'
+        self.results_label_default = label

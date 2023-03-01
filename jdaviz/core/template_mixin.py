@@ -1439,7 +1439,7 @@ class SpatialSubsetSelectMixin(VuetifyTemplate, HubListener):
                                            'spatial_subset_items',
                                            'spatial_subset_selected',
                                            'spatial_subset_selected_has_subregions',
-                                           default_text='No Subset',
+                                           default_text='Entire Cube',
                                            filters=['is_spatial'])
 
 
