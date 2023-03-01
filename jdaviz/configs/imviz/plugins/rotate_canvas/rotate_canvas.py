@@ -48,7 +48,8 @@ class RotateCanvas(PluginTemplateMixin, ViewerSelectMixin):
 
     @property
     def ref_data(self):
-        return list(self.app.get_data_from_viewer(self.viewer_selected).values())[0]
+        data = list(self.app.get_data_from_viewer(self.viewer_selected).values())
+        return data[0] if len(data) else None
 
     def _on_viewer_data_changed(self, msg=None):
         if not self.viewer_selected:  # pragma: no cover
@@ -65,6 +66,8 @@ class RotateCanvas(PluginTemplateMixin, ViewerSelectMixin):
         if not self.has_wcs:
             raise ValueError("reference data does not have WCS, cannot determine orientation")
         ref_data = self.ref_data
+        if ref_data is None:  # pragma: no cover
+            raise ValueError("no data loaded in viewer, cannot determine orientation")
         _, _, _, _, _, _, degn, dege, flip = get_compass_info(ref_data.wcs, ref_data.data.shape)
         return degn, dege, flip
 
