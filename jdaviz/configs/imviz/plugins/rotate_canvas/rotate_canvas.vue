@@ -1,8 +1,8 @@
 <template>
-  <j-tray-plugin>
-    <v-row>
-      <j-docs-link :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#canvas-rotation'">Rotate viewer canvas to any orientation (note: this does not affect the underlying data).</j-docs-link>
-    </v-row>
+  <j-tray-plugin        
+    description="Rotate viewer canvas to any orientation (note: this does not affect the underlying data)."
+    :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#canvas-rotation'"
+    :popout_button="popout_button">
 
     <plugin-viewer-select
       :items="viewer_items"
