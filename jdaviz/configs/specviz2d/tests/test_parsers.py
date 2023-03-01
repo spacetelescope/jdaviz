@@ -1,5 +1,4 @@
 import pytest
-from asdf.asdf import AsdfWarning
 from astropy.io import fits
 from astropy.utils.data import download_file
 
@@ -10,8 +9,7 @@ from jdaviz.utils import PRIHDR_KEY
 def test_2d_parser_jwst(specviz2d_helper):
     fn = download_file('https://stsci.box.com/shared/static/exnkul627fcuhy5akf2gswytud5tazmw.fits', cache=True)  # noqa
 
-    with pytest.warns(AsdfWarning, match='jwextension'):
-        specviz2d_helper.load_data(spectrum_2d=fn)
+    specviz2d_helper.load_data(spectrum_2d=fn)
     assert len(specviz2d_helper.app.data_collection) == 2
 
     dc_0 = specviz2d_helper.app.data_collection[0]

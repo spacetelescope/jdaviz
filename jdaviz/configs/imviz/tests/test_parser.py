@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-from asdf.fits_embed import AsdfInFits
 from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import NDData, StdDevUncertainty
@@ -11,6 +10,7 @@ from gwcs import WCS as GWCS
 from numpy.testing import assert_allclose, assert_array_equal
 from regions import CirclePixelRegion, RectanglePixelRegion
 from skimage.io import imsave
+from stdatamodels import asdf_in_fits
 
 from jdaviz.configs.imviz.helper import split_filename_with_fits_ext
 from jdaviz.configs.imviz.plugins.parsers import (
@@ -221,14 +221,13 @@ class TestParseImage:
         with pytest.raises(ValueError, match='Do not manually overwrite data_label'):
             imviz_helper.load_data(flist, data_label='foo', show_in_viewer=False)
 
-    def test_parse_asdf_in_fits_4d(self, imviz_helper, tmpdir):
+    def test_parse_asdf_in_fits_4d(self, imviz_helper, tmp_path):
         hdulist = fits.HDUList([
             fits.PrimaryHDU(),
             fits.ImageHDU(np.zeros((1, 2, 5, 5)), name='SCI')])
         tree = {'data': {'data': hdulist['SCI'].data}}
-        filename = str(tmpdir.join('myasdf.fits'))
-        ff = AsdfInFits(hdulist, tree)
-        ff.write_to(filename, overwrite=True)
+        filename = str(tmp_path / 'myasdf.fits')
+        asdf_in_fits.write(filename, tree, hdulist=hdulist, overwrite=True)
 
         with pytest.raises(ValueError, match='Imviz cannot load this HDU'):
             parse_data(imviz_helper.app, filename)
@@ -360,16 +359,15 @@ class TestParseImage:
 
     @pytest.mark.remote_data
     def test_parse_jwst_niriss_grism(self, imviz_helper):
-        """No valid image GWCS for Imviz, will fall back to FITS loading without WCS."""
+        """No valid image GWCS for Imviz, will fall back to loading without WCS."""
         filename = download_file(self.jwst_asdf_url_2, cache=True)
 
         imviz_helper.load_data(filename, show_in_viewer=False)
         data = imviz_helper.app.data_collection[0]
-        comp = data.get_component('SCI,1')
-        assert data.label == 'contents[SCI,1]'  # download_file returns cache loc
+        comp = data.get_component('DATA')
+        assert data.label == 'contents[DATA]'  # download_file returns cache loc
         assert data.shape == (2048, 2048)
         assert data.coords is None
-        assert data.meta['RADESYS'] == 'ICRS'
         assert comp.units == 'DN/s'
         assert comp.data.shape == (2048, 2048)
 

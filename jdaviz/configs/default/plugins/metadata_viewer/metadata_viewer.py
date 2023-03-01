@@ -122,7 +122,8 @@ class MetadataViewer(PluginTemplateMixin, DatasetSelectMixin):
             self.reset()
 
 
-# TODO: If this is natively supported by asdf in the future, replace with native function.
+# TODO: If this generalized in stdatamodels in the future, replace with native function.
+#       See https://github.com/spacetelescope/stdatamodels/issues/131
 # This code below is taken code from stdatamodels/model_base.py, and the method to_flat_dict()
 def flatten_nested_dict(asdfnode, include_arrays=True):
     """
