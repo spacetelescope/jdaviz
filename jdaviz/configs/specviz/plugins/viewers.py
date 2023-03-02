@@ -181,6 +181,8 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
         self.spectral_lines.add_index("linename")
         self.spectral_lines.add_index("listname")
 
+        self._broadcast_plotted_lines()
+
         if return_table:
             return line_table
 
