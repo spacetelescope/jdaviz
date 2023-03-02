@@ -436,6 +436,11 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
 
         temp_results = []
         spec_subtracted = spectrum - continuum
+
+        if spec_subtracted.mask is not None:
+            # temporary fix while mask may contain None:
+            spec_subtracted.mask = spec_subtracted.mask.astype(bool)
+
         for function in FUNCTIONS:
             # TODO: update specutils to allow ALL analysis to take regions and continuum so we
             # don't need these if statements
@@ -499,6 +504,9 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                     continue
                 else:
                     spec_normalized = spectrum / continuum
+                    if spec_normalized.mask is not None:
+                        spec_normalized.mask = spec_normalized.mask.astype(bool)
+
                     temp_result = FUNCTIONS[function](spec_normalized)
             elif function == "Centroid":
                 # TODO: update specutils to be consistent with region vs regions and default to
