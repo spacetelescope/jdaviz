@@ -350,9 +350,20 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
         result : bool
             `True` if successful, `False` otherwise.
         """
+        # If this is the first loaded data, set things up for unit conversion.
+        if len(self.layers) == 0:
+            reset_plot_axes = True
+        else:
+            reset_plot_axes = False
+
         # The base class handles the plotting of the main
         # trace representing the spectrum itself.
         result = super().add_data(data, color, alpha, **layer_state)
+
+        if reset_plot_axes:
+            self.state.x_display_unit = data.get_component(self.state.x_att.label).units
+            self.state.y_display_unit = data.get_component("flux").units
+            self.set_plot_axes()
 
         self._plot_uncertainties()
 
@@ -476,30 +487,21 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
                 self.figure.marks = list(self.figure.marks) + [error_line_mark]
 
     def set_plot_axes(self):
-        # Get data to be used for axes labels
-        data = self.data()[0]
-
         # Set axes labels for the spectrum viewer
-        spectral_axis_unit_type = str(data.spectral_axis.unit.physical_type).title()
-        spectral_axis_unit_str = data.spectral_axis.unit.to_string()
         flux_unit_type = "Flux density"
-        flux_unit_str = data.flux.unit.to_string()
-
-        if data.spectral_axis.unit.is_equivalent(u.m):
+        x_unit = u.Unit(self.state.x_display_unit)
+        if x_unit.is_equivalent(u.m):
             spectral_axis_unit_type = "Wavelength"
-        elif data.spectral_axis.unit.is_equivalent(u.pixel):
-            spectral_axis_unit_type = "pixel"
+        elif x_unit.is_equivalent(u.pixel):
+            spectral_axis_unit_type = "Pixel"
+        else:
+            spectral_axis_unit_type = str(x_unit.physical_type).title()
 
-        label_0 = f"{spectral_axis_unit_type} [{spectral_axis_unit_str}]"
-        self.figure.axes[0].label = label_0
-        self.figure.axes[1].label = f"{flux_unit_type} [{flux_unit_str}]"
+        self.figure.axes[0].label = f"{spectral_axis_unit_type} [{self.state.x_display_unit}]"
+        self.figure.axes[1].label = f"{flux_unit_type} [{self.state.y_display_unit}]"
 
         # Make it so y axis label is not covering tick numbers.
         self.figure.axes[1].label_offset = "-50"
 
         # Set Y-axis to scientific notation
         self.figure.axes[1].tick_format = '0.1e'
-
-        # Register display units for Glue unit conversion.
-        self.state.y_display_unit = flux_unit_str
-        self.state.x_display_unit = spectral_axis_unit_str

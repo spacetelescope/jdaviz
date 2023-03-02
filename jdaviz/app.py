@@ -1233,19 +1233,6 @@ class Application(VuetifyTemplate, HubListener):
 
         self.set_data_visibility(viewer_item, data_label, visible=visible, replace=clear_other_data)
 
-    def _set_plot_axes_labels(self, viewer_id):
-        """
-        Sets the plot axes labels to be the units of the data to be loaded.
-
-        Parameters
-        ----------
-        viewer_id : str
-            The UUID associated with the desired viewer item.
-        """
-        viewer = self._viewer_by_id(viewer_id)
-
-        viewer.set_plot_axes()
-
     def remove_data_from_viewer(self, viewer_reference, data_label):
         """
         Removes a data set from the specified viewer.
@@ -1618,11 +1605,8 @@ class Application(VuetifyTemplate, HubListener):
         # active data.
         viewer_data_labels = [layer.layer.label for layer in viewer.layers]
         if len(viewer_data_labels) > 0 and getattr(self._jdaviz_helper, '_in_batch_load', 0) == 0:
-            active_data = self.data_collection[viewer_data_labels[0]]
-            if (hasattr(active_data, "_preferred_translation")
-                    and active_data._preferred_translation is not None):
-                self._set_plot_axes_labels(viewer_id)
-
+            # This "if" is nested on purpose to make parent "if" available
+            # for other configs in the future, as needed.
             if self.config == 'imviz':
                 viewer.on_limits_change()  # Trigger compass redraw
 
