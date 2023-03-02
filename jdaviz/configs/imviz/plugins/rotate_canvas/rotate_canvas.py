@@ -48,13 +48,12 @@ class RotateCanvas(PluginTemplateMixin, ViewerSelectMixin):
 
     @property
     def ref_data(self):
-        data = list(self.app.get_data_from_viewer(self.viewer_selected).values())
-        return data[0] if len(data) else None
+        return self.app.get_viewer_by_id(self.viewer.selected_id).state.reference_data
 
     def _on_viewer_data_changed(self, msg=None):
         if not self.viewer_selected:  # pragma: no cover
             return
-        self.has_wcs = getattr(self.ref_data, 'wcs', None) is not None
+        self.has_wcs = getattr(self.ref_data, 'coords', None) is not None
 
     @observe('viewer_selected')
     def _viewer_selected_changed(self, *args, **kwargs):
@@ -68,7 +67,7 @@ class RotateCanvas(PluginTemplateMixin, ViewerSelectMixin):
         ref_data = self.ref_data
         if ref_data is None:  # pragma: no cover
             raise ValueError("no data loaded in viewer, cannot determine orientation")
-        _, _, _, _, _, _, degn, dege, flip = get_compass_info(ref_data.wcs, ref_data.data.shape)
+        _, _, _, _, _, _, degn, dege, flip = get_compass_info(ref_data.coords, ref_data.shape)
         return degn, dege, flip
 
     def set_north_up_east_left(self):
