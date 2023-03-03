@@ -13,10 +13,10 @@ from jdaviz.app import _verbosity_levels
 
 __all__ = ['main']
 
-CONFIGS_DIR = os.path.join(os.path.dirname(__file__), 'configs')
+JDAVIZ_DIR = pathlib.Path(__file__).parent.resolve()
 
 
-def main(filename=None, layout='default', instrument=None, browser='default',
+def main(filepaths=None, layout='default', instrument=None, browser='default',
          theme='light', verbosity='warning', history_verbosity='info',
          hotreload=False):
     """
@@ -24,8 +24,8 @@ def main(filename=None, layout='default', instrument=None, browser='default',
 
     Parameters
     ----------
-    filename : str, optional
-        The path to the file to be loaded into the Jdaviz application.
+    filepaths : list of str, optional
+        List of paths to the file(s) to be loaded into the Jdaviz application.
     layout : str, optional
         Optional specification for which configuration to use on startup.
     instrument : str, optional
@@ -48,14 +48,17 @@ def main(filename=None, layout='default', instrument=None, browser='default',
         import asyncio
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
-    # Support comma-separate file list
-    if filename:
-        filepath = ','.join([str(pathlib.Path(f).absolute()).replace('\\', '/')
-                            for f in filename.split(',')])
+    if filepaths:
+        # Convert paths to posix string; windows paths are not JSON compliant
+        file_list = [pathlib.Path(f).absolute().as_posix() for f in filepaths]
+        if layout == "imviz":
+            # Imviz multiloading should be done all at once for batch processing.
+            # Imviz convention is a single string of consecutive, comma-separated file paths
+            file_list = [','.join(file_list)]
     else:
-        filepath = ''
+        file_list = []
 
-    with open(os.path.join(CONFIGS_DIR, layout, layout + '.ipynb')) as f:
+    with open(str(JDAVIZ_DIR / "jdaviz_cli.ipynb")) as f:
         notebook_template = f.read()
 
     start_dir = os.path.abspath('.')
@@ -70,7 +73,17 @@ def main(filename=None, layout='default', instrument=None, browser='default',
         notebook_template = notebook_template.replace("# PREFIX", "from jdaviz import enable_hot_reloading; enable_hot_reloading()")  # noqa: E501
 
     with open(os.path.join(nbdir, 'notebook.ipynb'), 'w') as nbf:
-        nbf.write(notebook_template.replace('DATA_FILENAME', filepath).replace('JDAVIZ_VERBOSITY', verbosity).replace('JDAVIZ_HISTORY_VERBOSITY', history_verbosity).replace('INSTRUMENT', instrument).strip())  # noqa: E501
+        nbf.write(
+            notebook_template
+            .replace('CONFIG', layout.capitalize())
+            .replace('DATA_LIST', str(file_list))
+            .replace('JDAVIZ_VERBOSITY', verbosity)
+            .replace('JDAVIZ_HISTORY_VERBOSITY', history_verbosity)
+            # Mosviz specific changes
+            .replace('load_data(data', 'load_data(directory=data' if layout == 'mosviz' else 'load_data(data')
+            .replace(') #ADDITIONAL_LOAD_DATA_ARGS', f', instrument=\'{instrument}\')' if layout == 'mosviz' else ')')
+            .strip()
+        )
 
     os.chdir(nbdir)
 
@@ -94,15 +107,15 @@ def _main(config=None):
 
     parser = argparse.ArgumentParser(description='Start a Jdaviz application instance with data '
                                      'loaded from FILENAME.')
-    filename_nargs = '?'
+    filepaths_nargs = '*'
     if config is None:
         parser.add_argument('layout', choices=['cubeviz', 'specviz', 'specviz2d',
                                                'mosviz', 'imviz'],
                             help='Configuration to use.')
     if (config == "mosviz") or ("mosviz" in sys.argv):
-        filename_nargs = 1
-    parser.add_argument('filename', type=str, nargs=filename_nargs, default=None,
-                        help='The path to the file to be loaded into the Jdaviz application.')
+        filepaths_nargs = 1
+    parser.add_argument('filepaths', type=str, nargs=filepaths_nargs, default=None,
+                        help='The paths to the files to be loaded into the Jdaviz application.')
     parser.add_argument('--instrument', type=str, default='nirspec',
                         help='Manually specifies which instrument parser to use, for Mosviz')
     parser.add_argument('--browser', type=str, default='default',
@@ -128,6 +141,6 @@ def _main(config=None):
     else:
         layout = config
 
-    main(filename=args.filename, layout=layout, instrument=args.instrument, browser=args.browser,
+    main(filepaths=args.filepaths, layout=layout, instrument=args.instrument, browser=args.browser,
          theme=args.theme, verbosity=args.verbosity, history_verbosity=args.history_verbosity,
          hotreload=args.hotreload)
