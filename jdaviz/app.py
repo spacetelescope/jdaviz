@@ -2307,9 +2307,9 @@ class Application(VuetifyTemplate, HubListener):
 
         for name in config.get('tray', []):
             tray = tray_registry.members.get(name)
-            tray_item_label = tray.get('label')
+            tray_registry_name = tray.get('cls')._registry_name
 
-            if not self._plugin_is_compatible(tray_item_label):
+            if not self._plugin_is_compatible(tray_registry_name):
                 # skip tray item constructor if not compatible
                 continue
 
@@ -2338,6 +2338,7 @@ class Application(VuetifyTemplate, HubListener):
             )
             # store a copy of the tray name in the instance so it can be accessed by the
             # plugin itself
+            tray_item_label = tray.get('label')
             tray_item_instance._plugin_name = tray_item_label
 
             self.state.tray_items.append({
@@ -2347,12 +2348,12 @@ class Application(VuetifyTemplate, HubListener):
             })
 
     @staticmethod
-    def _plugin_is_compatible(plugin_label):
+    def _plugin_is_compatible(tray_registry_name):
         """True if plugin is supported by dependencies"""
 
         # currently Spectral Extraction is the only plugin with
         # version requirements on upstream projects:
-        if plugin_label != 'Spectral Extraction':
+        if tray_registry_name != 'cubeviz-spectral-extraction':
             return True
         return minversion(glue_astronomy, '0.7.0') and minversion('astropy', '5.3.dev')
 
