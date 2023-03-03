@@ -18,7 +18,7 @@ from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
 from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
 from traitlets import Dict, Bool, Unicode, Any
-from specutils import Spectrum1D, SpectralRegion
+from specutils import Spectrum1D, SpectralRegion, SpectralAxis
 import matplotlib.cm as cm
 import numpy as np
 

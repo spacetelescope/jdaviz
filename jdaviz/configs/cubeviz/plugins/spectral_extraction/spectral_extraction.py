@@ -1,6 +1,7 @@
+import numpy as np
 from astropy.nddata import NDDataArray, StdDevUncertainty
-from astropy.wcs.wcsapi.fitswcs import SlicedFITSWCS
-from glue_astronomy.translators.spectrum1d import PaddedSpectrumWCS
+import astropy.units as u
+from specutils import Spectrum1D
 from traitlets import List, Unicode, observe
 
 from jdaviz.core.events import SnackbarMessage
@@ -120,9 +121,16 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
         # Hack to extract the spectral axis with units converted
         # to the wavelength axis in specviz:
         collapsed_spec.wcs = None
-        collapsed_spec.wcs = PaddedSpectrumWCS(
-            SlicedFITSWCS(spectral_cube.coords, spatial_axes), 1
-        )
+        collapsed_spec.wcs = spectral_cube.meta['_orig_spec'].wcs.spectral
+
+        # spec_wcs = spectral_cube.meta['_orig_spec'].wcs.spectral
+        # spectral_axis = spec_wcs.pixel_to_world(
+        #     np.arange(spec_wcs.array_shape[-1])
+        # )
+        # collapsed_spec = Spectrum1D(
+        #     flux=collapsed_spec.data << collapsed_spec.unit,
+        #     spectral_axis=spectral_axis
+        # )
 
         if add_data:
             self.add_results.add_results_from_plugin(

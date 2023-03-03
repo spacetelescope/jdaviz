@@ -473,8 +473,14 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
                 # This may need adjustment after the following
                 # specutils PR is merged: https://github.com/astropy/specutils/pull/999
                 spectral_axis = -1
-                data_obj = lyr.data.get_object(cls=NDDataArray)
-                data_x = lyr.data.coords.spectral_wcs.pixel_to_world(
+                data_obj = lyr.data.get_object(cls=Spectrum1D, statistic=None)
+
+                if hasattr(lyr.data.coords, 'spectral_wcs'):
+                    spectral_wcs = lyr.data.coords.spectral_wcs
+                else:
+                    spectral_wcs = lyr.data.coords.spectral
+
+                data_x = spectral_wcs.pixel_to_world(
                     np.arange(lyr.data.shape[spectral_axis])
                 )
                 data_y = data_obj.data
