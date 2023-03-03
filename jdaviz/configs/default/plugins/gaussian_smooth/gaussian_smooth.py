@@ -86,7 +86,7 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
             expose += ['mode']
         return PluginUserApi(self, expose=expose)
 
-    @observe("dataset_selected", "dataset_items", "stddev", "mode_selected")
+    @observe("dataset_selected", "stddev", "mode_selected")
     def _set_default_results_label(self, event={}):
         '''Generate a label and set the results field to that value'''
         if (hasattr(self, 'dataset') and (len(self.dataset.labels) >= 1) or self.app.config == 'mosviz'):  # noqa

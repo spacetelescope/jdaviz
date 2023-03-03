@@ -114,6 +114,7 @@ class Slice(PluginTemplateMixin):
             if len(msg.data.shape) == 3:
                 self.max_value = msg.data.shape[-1] - 1
                 self._watch_viewer(msg.viewer, True)
+                msg.viewer.state.slices = (0, 0, int(self.slice))
 
         elif isinstance(msg.viewer, BqplotProfileView):
             self._watch_viewer(msg.viewer, True)
