@@ -14,6 +14,8 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+* Fix initial slice of uncertainty viewer. [#2056]
+
 Imviz
 ^^^^^
 

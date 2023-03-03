@@ -110,8 +110,8 @@ def test_fits_image_hdu_parse_from_file(tmpdir, image_cube_hdu_obj, cubeviz_help
     unc_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': -1, 'y': 0}})
     assert unc_viewer.label_mouseover.pixel == 'x=-1.0 y=00.0'
     assert unc_viewer.label_mouseover.value == ''  # Out of bounds
-    assert unc_viewer.label_mouseover.world_ra_deg == '205.4441642302'
-    assert unc_viewer.label_mouseover.world_dec_deg == '26.9996148973'
+    assert unc_viewer.label_mouseover.world_ra_deg == '205.4433848390'
+    assert unc_viewer.label_mouseover.world_dec_deg == '26.9996149270'
 
 
 @pytest.mark.filterwarnings('ignore')

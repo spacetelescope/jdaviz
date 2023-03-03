@@ -18,9 +18,12 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
     app.add_data(spectrum1d_cube, 'test')
     app.add_data_to_viewer("spectrum-viewer", "test")
     app.add_data_to_viewer("flux-viewer", "test")
+    app.add_data_to_viewer("uncert-viewer", "test")
 
     # sample cube only has 2 slices with wavelengths [4.62280007e-07 4.62360028e-07] m
     assert sl.slice == 1
+    assert cubeviz_helper.app.get_viewer("flux-viewer").state.slices[-1] == 1
+    assert cubeviz_helper.app.get_viewer("uncert-viewer").state.slices[-1] == 1
     cubeviz_helper.select_slice(0)
     assert sl.slice == 0
 
@@ -47,9 +50,8 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
     sl._on_wavelength_updated({'new': '1.2.3'})
     assert sl.slice == 0
 
-    # there is only one watched viewer, since the uncertainty/mask viewers are empty
-    assert len(sl._watched_viewers) == 1
-    assert len(sl._indicator_viewers) == 1
+    assert len(sl._watched_viewers) == 2  # flux-viewer, uncert-viewer
+    assert len(sl._indicator_viewers) == 1  # spectrum-viewer
 
     # test setting a static 2d image to the "watched" flux viewer to make sure it disconnects
     mm = app.get_tray_item_from_name('cubeviz-moment-maps')
@@ -57,7 +59,7 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
     with pytest.warns(UserWarning, match='No observer defined on WCS'):
         mm.vue_calculate_moment()
 
-    assert len(sl._watched_viewers) == 1
+    assert len(sl._watched_viewers) == 2
     assert len(sl._indicator_viewers) == 1
 
     # test in conjunction with as_steps
