@@ -1,7 +1,4 @@
-import numpy as np
 from astropy.nddata import NDDataArray, StdDevUncertainty
-import astropy.units as u
-from specutils import Spectrum1D
 from traitlets import List, Unicode, observe
 
 from jdaviz.core.events import SnackbarMessage

@@ -3,8 +3,9 @@ import warnings
 import numpy as np
 from astropy import table
 from astropy import units as u
-from astropy.nddata import NDDataArray, StdDevUncertainty, VarianceUncertainty, InverseVariance
+from astropy.nddata import StdDevUncertainty, VarianceUncertainty, InverseVariance
 from glue.core import BaseData
+from glue_astronomy.spectral_coordinates import SpectralCoordinates
 from glue.core.subset import Subset
 from glue.core.subset_group import GroupedSubset
 from glue.config import data_translator
@@ -457,34 +458,32 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
 
             # Ignore data that does not have an uncertainty component
             if "uncertainty" in comps:  # noqa
-                error = np.array(lyr['uncertainty'].data)
-
-<<<<<<< HEAD
                 # ensure that the uncertainties are represented as stddev:
                 uncertainty_type_str = lyr.meta.get('uncertainty_type', 'stddev')
                 uncert_cls = uncertainty_str_to_cls_mapping[uncertainty_type_str]
                 error = uncert_cls(error).represent_as(StdDevUncertainty).array
 
-                data_obj = lyr.data.get_object()
-                data_x = data_obj.spectral_axis.value
-                data_y = data_obj.flux.value
-=======
                 # Then we assume that last axis is always wavelength.
                 # This may need adjustment after the following
                 # specutils PR is merged: https://github.com/astropy/specutils/pull/999
                 spectral_axis = -1
                 data_obj = lyr.data.get_object(cls=Spectrum1D, statistic=None)
 
-                if hasattr(lyr.data.coords, 'spectral_wcs'):
-                    spectral_wcs = lyr.data.coords.spectral_wcs
+                if isinstance(lyr.data.coords, SpectralCoordinates):
+                    spectral_wcs = lyr.data.coords
+                    data_x = spectral_wcs.pixel_to_world_values(
+                        np.arange(lyr.data.shape[spectral_axis])
+                    )[0]
                 else:
-                    spectral_wcs = lyr.data.coords.spectral
+                    if hasattr(lyr.data.coords, 'spectral_wcs'):
+                        spectral_wcs = lyr.data.coords.spectral_wcs
+                    elif hasattr(lyr.data.coords, 'spectral'):
+                        spectral_wcs = lyr.data.coords.spectral
+                    data_x = spectral_wcs.pixel_to_world(
+                        np.arange(lyr.data.shape[spectral_axis])
+                    )
 
-                data_x = spectral_wcs.pixel_to_world(
-                    np.arange(lyr.data.shape[spectral_axis])
-                )
                 data_y = data_obj.data
->>>>>>> e61a9751 (init nddata collapse functionality)
 
                 # The shaded band around the spectrum trace is bounded by
                 # two lines, above and below the spectrum trace itself.
