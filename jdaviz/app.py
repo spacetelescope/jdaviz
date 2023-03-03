@@ -13,6 +13,7 @@ from astropy import units as u
 from astropy.nddata import CCDData, NDData
 from astropy.io import fits
 from astropy.time import Time
+from astropy.utils import minversion
 from astropy.utils.decorators import deprecated
 from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
 from ipygoldenlayout import GoldenLayout
@@ -36,6 +37,7 @@ from glue.core.state_objects import State
 from glue.core.subset import (Subset, RangeSubsetState, RoiSubsetState,
                               CompositeSubsetState, InvertState)
 from glue.core.units import unit_converter
+import glue_astronomy
 from glue_astronomy.spectral_coordinates import SpectralCoordinates
 from glue_astronomy.translators.regions import roi_subset_state_to_region
 from glue_jupyter.app import JupyterApplication
@@ -2305,6 +2307,12 @@ class Application(VuetifyTemplate, HubListener):
 
         for name in config.get('tray', []):
             tray = tray_registry.members.get(name)
+            tray_item_label = tray.get('label')
+
+            if not self._plugin_is_compatible(tray_item_label):
+                # skip tray item constructor if not compatible
+                continue
+
             tray_registry_options = tray.get('viewer_reference_name_kwargs', {})
 
             # Optional keyword arguments are required to initialize some
@@ -2328,7 +2336,6 @@ class Application(VuetifyTemplate, HubListener):
             tray_item_instance = tray.get('cls')(
                 app=self, **optional_tray_kwargs
             )
-            tray_item_label = tray.get('label')
             # store a copy of the tray name in the instance so it can be accessed by the
             # plugin itself
             tray_item_instance._plugin_name = tray_item_label
@@ -2338,6 +2345,16 @@ class Application(VuetifyTemplate, HubListener):
                 'label': tray_item_label,
                 'widget': "IPY_MODEL_" + tray_item_instance.model_id
             })
+
+    @staticmethod
+    def _plugin_is_compatible(plugin_label):
+        """True if plugin is supported by dependencies"""
+
+        # currently Spectral Extraction is the only plugin with
+        # version requirements on upstream projects:
+        if plugin_label != 'Spectral Extraction':
+            return True
+        return minversion(glue_astronomy, '0.7.0') and minversion('astropy', '5.3.dev')
 
     def _reset_state(self):
         """ Resets the application state """
