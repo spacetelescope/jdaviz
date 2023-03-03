@@ -473,7 +473,9 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
                     spectral_wcs = lyr.data.coords
                     data_x = spectral_wcs.pixel_to_world_values(
                         np.arange(lyr.data.shape[spectral_axis])
-                    )[0]
+                    )
+                    if isinstance(data_x, tuple):
+                        data_x = data_x[0]
                 else:
                     if hasattr(lyr.data.coords, 'spectral_wcs'):
                         spectral_wcs = lyr.data.coords.spectral_wcs
