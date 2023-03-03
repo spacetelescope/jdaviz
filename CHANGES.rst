@@ -86,6 +86,9 @@ Bug Fixes
 
 * Fixed linking issue preventing smoothed spectrum from showing in Specviz2D. [#2023]
 
+* Fixed redshift slider enabling/disabling when calling ``load_line_list``, ``plot_spectral_line``,
+  ``plot_spectral_lines``, or ``erase_spectral_lines``. [#2055] 
+
 Cubeviz
 ^^^^^^^
 
