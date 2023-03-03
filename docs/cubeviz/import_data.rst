@@ -44,7 +44,8 @@ To then extract your data from Cubeviz, please see the :ref:`cubeviz-notebook` s
 Importing data through the Command Line
 =======================================
 
-You can load your data into the Cubeviz application through the command line:
+You can load your data into the Cubeviz application through the command line. Specifying
+a data product is optional:
 
 .. code-block:: bash
 
