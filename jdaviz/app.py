@@ -34,10 +34,8 @@ from glue.core.message import (DataCollectionAddMessage,
                                SubsetUpdateMessage,
                                SubsetDeleteMessage)
 from glue.core.state_objects import State
-from glue.core.subset import (Subset, RangeSubsetState, RoiSubsetState,
-                              CompositeSubsetState, InvertState)
+from glue.core.subset import CompositeSubsetState, InvertState
 from glue.core.units import unit_converter
-import glue_astronomy
 from glue_astronomy.spectral_coordinates import SpectralCoordinates
 from glue_astronomy.translators.regions import roi_subset_state_to_region
 from glue_jupyter.app import JupyterApplication
@@ -2355,7 +2353,7 @@ class Application(VuetifyTemplate, HubListener):
         # version requirements on upstream projects:
         if tray_registry_name != 'cubeviz-spectral-extraction':
             return True
-        return minversion(glue_astronomy, '0.7.0') and minversion('astropy', '5.3.dev')
+        return minversion('astropy', '5.3.dev')
 
     def _reset_state(self):
         """ Resets the application state """
