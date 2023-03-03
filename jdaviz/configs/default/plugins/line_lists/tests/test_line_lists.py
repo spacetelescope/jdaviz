@@ -28,10 +28,11 @@ def test_line_lists(specviz_helper):
     assert len(specviz_helper.spectral_lines) == 2
     assert specviz_helper.spectral_lines.loc["linename", "Halpha"]["listname"] == "Custom"
     assert np.all(specviz_helper.spectral_lines["show"])
+    assert specviz_helper.plugins['Line Lists']._obj.rs_enabled is True
 
     specviz_helper.erase_spectral_lines()
-
     assert np.all(specviz_helper.spectral_lines["show"] == False)  # noqa
+    assert specviz_helper.plugins['Line Lists']._obj.rs_enabled is False
 
     specviz_helper.plot_spectral_line("Halpha")
     specviz_helper.plot_spectral_line("O III 5007.0")

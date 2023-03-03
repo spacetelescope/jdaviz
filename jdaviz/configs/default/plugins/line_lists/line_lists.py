@@ -16,7 +16,8 @@ from jdaviz.core.events import (AddDataMessage,
                                 AddLineListMessage,
                                 LineIdentifyMessage,
                                 SnackbarMessage,
-                                RedshiftMessage)
+                                RedshiftMessage,
+                                SpectralMarksChangedMessage)
 from jdaviz.core.linelists import load_preset_linelist, get_linelist_metadata
 from jdaviz.core.marks import SpectralLine
 from jdaviz.core.registries import tray_registry
@@ -116,6 +117,9 @@ class LineListTool(PluginTemplateMixin):
 
         self.hub.subscribe(self, LineIdentifyMessage,
                            handler=self._process_identify_change)
+
+        self.hub.subscribe(self, SpectralMarksChangedMessage,
+                           handler=lambda x: self.update_line_mark_dict())
 
         # if set to auto (default), update the slider range when zooming on the spectrum viewer
         self._viewer.state.add_callback("x_min",
