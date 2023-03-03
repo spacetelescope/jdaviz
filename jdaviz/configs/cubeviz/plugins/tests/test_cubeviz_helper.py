@@ -31,6 +31,10 @@ def test_invalid_statistic(cubeviz_helper, spectrum1d_cube):
     with pytest.raises(ValueError, match='statistic 42 not in list of valid '):
         cubeviz_helper.get_data(data_label="test[FLUX]", subset_to_apply='Subset 1', statistic=42)
 
+    # Also make sure specviz redshift slider warning does not show up.
+    # https://github.com/spacetelescope/jdaviz/issues/2029
+    cubeviz_helper.specviz.y_limits(0, 3)
+
 
 def test_valid_statistic(cubeviz_helper, spectrum1d_cube):
     cubeviz_helper.load_data(spectrum1d_cube, "test")

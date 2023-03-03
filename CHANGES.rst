@@ -89,6 +89,8 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+* Calling ``cubeviz.specviz.y_limits(...)`` no longer emits irrelevant warning. [#2033]
+
 * Fix initial slice of uncertainty viewer. [#2056]
 
 Imviz
