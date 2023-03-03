@@ -150,7 +150,7 @@ class Specviz(ConfigHelper, LineListMixin):
         ref_index = self.app.get_viewer(
             self._default_spectrum_viewer_reference_name
         ).state.reference_data.label
-        flux_axis = self.get_spectra(ref_index).flux
+        flux_axis = self.get_spectra(ref_index, apply_slider_redshift=False).flux
         self._set_scale(scale, flux_axis, y_min, y_max)
 
     def _set_scale(self, scale, axis, min_val=None, max_val=None):
