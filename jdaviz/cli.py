@@ -80,8 +80,8 @@ def main(filepaths=None, layout='default', instrument=None, browser='default',
             .replace('JDAVIZ_VERBOSITY', verbosity)
             .replace('JDAVIZ_HISTORY_VERBOSITY', history_verbosity)
             # Mosviz specific changes
-            .replace('load_data(data', 'load_data(directory=data' if layout == 'mosviz' else 'load_data(data')
-            .replace(') #ADDITIONAL_LOAD_DATA_ARGS', f', instrument=\'{instrument}\')' if layout == 'mosviz' else ')')
+            .replace('load_data(data', 'load_data(directory=data' if layout == 'mosviz' else 'load_data(data')  # noqa: E501
+            .replace(') #ADDITIONAL_LOAD_DATA_ARGS', f', instrument=\'{instrument}\')' if layout == 'mosviz' else ')')  # noqa: E501
             .strip()
         )
 
