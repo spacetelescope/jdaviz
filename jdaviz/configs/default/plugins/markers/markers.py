@@ -64,10 +64,9 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         if self.config in ('specviz', 'specviz2d', 'mosviz'):
             # 1d spectrum viewers
             headers += ['index']
-        # NOTE: Uncomment when there is something to add.
-        # if self.config in ('specviz2d', 'mosviz'):
-        #     # 2d spectrum viewers
-        #     headers += []
+        if self.config == 'specviz2d':
+            # 2d spectrum viewers (already added for mosviz by image viewer)
+            headers += ['xy:unreliable', 'value', 'value:unit', 'viewer']
 
         headers += ['data_label']
 
