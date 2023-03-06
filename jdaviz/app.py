@@ -13,7 +13,6 @@ from astropy import units as u
 from astropy.nddata import CCDData, NDData
 from astropy.io import fits
 from astropy.time import Time
-from astropy.utils import minversion
 from astropy.utils.decorators import deprecated
 from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
 from ipygoldenlayout import GoldenLayout
@@ -2305,12 +2304,6 @@ class Application(VuetifyTemplate, HubListener):
 
         for name in config.get('tray', []):
             tray = tray_registry.members.get(name)
-            tray_registry_name = tray.get('cls')._registry_name
-
-            if not self._plugin_is_compatible(tray_registry_name):
-                # skip tray item constructor if not compatible
-                continue
-
             tray_registry_options = tray.get('viewer_reference_name_kwargs', {})
 
             # Optional keyword arguments are required to initialize some
@@ -2344,16 +2337,6 @@ class Application(VuetifyTemplate, HubListener):
                 'label': tray_item_label,
                 'widget': "IPY_MODEL_" + tray_item_instance.model_id
             })
-
-    @staticmethod
-    def _plugin_is_compatible(tray_registry_name):
-        """True if plugin is supported by dependencies"""
-
-        # currently Spectral Extraction is the only plugin with
-        # version requirements on upstream projects:
-        if tray_registry_name != 'cubeviz-spectral-extraction':
-            return True
-        return minversion('astropy', '5.3.dev')
 
     def _reset_state(self):
         """ Resets the application state """

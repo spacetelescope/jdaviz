@@ -1,4 +1,5 @@
 from astropy.nddata import NDDataArray, StdDevUncertainty
+from astropy.utils import minversion
 from traitlets import List, Unicode, observe
 
 from jdaviz.core.events import SnackbarMessage
@@ -49,6 +50,9 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
         )
         self._set_default_results_label()
         self.add_results.viewer.filters = ['is_spectrum_viewer']
+
+        if not minversion("astropy", "5.3.dev"):
+            self.disabled_msg = "Spectral Extraction in Cubeviz requires astropy 5.3.dev"
 
     @property
     def user_api(self):
