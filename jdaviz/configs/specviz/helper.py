@@ -1,8 +1,10 @@
 import warnings
+import operator
 
 from astropy import units as u
 from astropy.utils.decorators import deprecated
 from specutils import SpectralRegion, Spectrum1D
+from glue.core.subset import CompositeSubsetState, InvertState
 
 from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import RedshiftMessage
@@ -95,6 +97,62 @@ class Specviz(ConfigHelper, LineListMixin):
 
             return output_spectra
 
+    def _remove_duplicate_bounds(self, spec_regions):
+        regions_no_dups = None
+
+        for region in spec_regions:
+            if not regions_no_dups:
+                regions_no_dups = region
+            elif region.bounds not in regions_no_dups.subregions:
+                regions_no_dups += region
+        return regions_no_dups
+
+    def get_sub_regions(self, subset_state, units):
+        if isinstance(subset_state, CompositeSubsetState):
+            if subset_state and hasattr(subset_state, "state2") and subset_state.state2:
+                one = self.get_sub_regions(subset_state.state1, units)
+                two = self.get_sub_regions(subset_state.state2, units)
+
+                if isinstance(subset_state.state2, InvertState):
+                    # This covers the REMOVE subset mode
+
+                    # As an example for how this works:
+                    # a = SpectralRegion(4 * u.um, 7 * u.um) + SpectralRegion(9 * u.um, 11 * u.um)
+                    # b = SpectralRegion(5 * u.um, 6 * u.um)
+                    # After running the following code with a as one and b as two:
+                    # Spectral Region, 3 sub-regions:
+                    #   (4.0 um, 5.0 um)    (6.0 um, 7.0 um)    (9.0 um, 11.0 um)
+                    new_spec = None
+                    for sub in one:
+                        if not new_spec:
+                            new_spec = two.invert(sub.lower, sub.upper)
+                        else:
+                            new_spec += two.invert(sub.lower, sub.upper)
+                    return new_spec
+                elif subset_state.op is operator.and_:
+                    # This covers the AND subset mode
+
+                    # Example of how this works:
+                    # a = SpectralRegion(4 * u.um, 7 * u.um)
+                    # b = SpectralRegion(5 * u.um, 6 * u.um)
+                    #
+                    # b.invert(a.lower, a.upper)
+                    # Spectral Region, 2 sub-regions:
+                    #   (4.0 um, 5.0 um)   (6.0 um, 7.0 um)
+                    return two.invert(one.lower, one.upper)
+                elif subset_state.op is operator.or_:
+                    # This covers the ADD subset mode
+                    return one + two
+                elif subset_state.op is operator.xor:
+                    # This covers the XOR case which is currently not working
+                    return None
+                else:
+                    return None
+            else:
+                return self.get_sub_regions(subset_state.state1, units)
+        elif subset_state is not None:
+            return SpectralRegion(subset_state.lo * units, subset_state.hi * units)
+
     def get_spectral_regions(self):
         """
         A simple wrapper around the app-level call to retrieve only spectral
@@ -106,9 +164,19 @@ class Specviz(ConfigHelper, LineListMixin):
             Mapping from the names of the subsets to the subsets expressed
             as `specutils.SpectralRegion` objects.
         """
-        return self.app.get_subsets_from_viewer(
-            self._default_spectrum_viewer_reference_name, subset_type="spectral"
-        )
+        dc = self.app.data_collection
+        subsets = dc.subset_groups
+        # TODO: Use global display units
+        units = dc[0].data.coords.spectral_axis.unit
+
+        all_subsets = {}
+
+        for subset in subsets:
+            label = subset.label
+            all_subsets[label] = self._remove_duplicate_bounds(
+                self.get_sub_regions(subset.subset_state, units))
+
+        return all_subsets
 
     def x_limits(self, x_min=None, x_max=None):
         """Sets the limits of the x-axis
