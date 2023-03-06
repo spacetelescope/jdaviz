@@ -1,6 +1,5 @@
 from astropy.nddata import NDDataArray, StdDevUncertainty
 from astropy.utils import minversion
-from specutils import Spectrum1D
 from traitlets import List, Unicode, observe
 
 from jdaviz.core.events import SnackbarMessage
