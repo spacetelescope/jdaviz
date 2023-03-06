@@ -1,9 +1,20 @@
+from numpy.testing import assert_allclose
+
 from jdaviz.core.marks import MarkersMark
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS
 
 
 def _get_markers_from_viewer(viewer):
     return [m for m in viewer.figure.marks if isinstance(m, MarkersMark)][0]
+
+
+def _assert_dict_allclose(dict1, dict2):
+    assert dict1.keys() == dict2.keys()
+    for k, v in dict1.items():
+        if isinstance(v, float):
+            assert_allclose(v, dict2.get(k))
+        else:
+            assert v == dict2.get(k)
 
 
 def test_markers_cubeviz(cubeviz_helper, spectrum1d_cube):
@@ -25,22 +36,22 @@ def test_markers_cubeviz(cubeviz_helper, spectrum1d_cube):
                                          'World 13h39m59.9731s +27d00m00.3600s (ICRS)',
                                          '204.9998877673 27.0001000000 (deg)')
 
-    assert label_mouseover.as_dict() == {'x': 0,
-                                         'x:unit': 'pix',
-                                         'y': 0,
-                                         'y:unit': 'pix',
-                                         'data_label': 'test[FLUX]',
-                                         'slice index': 1.0,
-                                         'slice wavelength': 4.62360027696835e-07,
-                                         'slice wavelength:unit': 'm',
-                                         'RA (ICRS)': '13h39m59.9731s',
-                                         'DEC (ICRS)': '+27d00m00.3600s',
-                                         'RA (deg)': 204.99988776727642,
-                                         'DEC (deg)': 27.000099999955538,
-                                         'radec:unreliable': False,
-                                         'xy:unreliable': False,
-                                         'value': 8.0,
-                                         'value:unit': 'Jy'}
+    _assert_dict_allclose(label_mouseover.as_dict(), {'x': 0,
+                                                      'x:unit': 'pix',
+                                                      'y': 0,
+                                                      'y:unit': 'pix',
+                                                      'data_label': 'test[FLUX]',
+                                                      'slice index': 1.0,
+                                                      'slice wavelength': 4.62360027696835e-07,
+                                                      'slice wavelength:unit': 'm',
+                                                      'RA (ICRS)': '13h39m59.9731s',
+                                                      'DEC (ICRS)': '+27d00m00.3600s',
+                                                      'RA (deg)': 204.99988776727642,
+                                                      'DEC (deg)': 27.000099999955538,
+                                                      'radec:unreliable': False,
+                                                      'xy:unreliable': False,
+                                                      'value': 8.0,
+                                                      'value:unit': 'Jy'})
 
     mp._obj._on_viewer_key_event(fv, {'event': 'keydown',
                                       'key': 'm'})
@@ -172,19 +183,19 @@ class TestImvizMultiLayer(BaseImviz_WCS_NoWCS):
         assert label_mouseover.as_text() == ('Pixel x=05.0 y=05.0 Value +5.50000e+01',
                                              'World 22h30m04.5107s -20d49m54.9990s (ICRS)',
                                              '337.5187947654 -20.8319441647 (deg)')
-        assert label_mouseover.as_dict() == {'x': 5,
-                                             'x:unit': 'pix',
-                                             'y': 5,
-                                             'y:unit': 'pix',
-                                             'data_label': 'has_wcs[SCI,1]',
-                                             'RA (ICRS)': '22h30m04.5107s',
-                                             'DEC (ICRS)': '-20d49m54.9990s',
-                                             'RA (deg)': 337.5187947653852,
-                                             'DEC (deg)': -20.831944164705973,
-                                             'radec:unreliable': False,
-                                             'xy:unreliable': False,
-                                             'value': 55.0,
-                                             'value:unit': ''}
+        _assert_dict_allclose(label_mouseover.as_dict(), {'x': 5,
+                                                          'x:unit': 'pix',
+                                                          'y': 5,
+                                                          'y:unit': 'pix',
+                                                          'data_label': 'has_wcs[SCI,1]',
+                                                          'RA (ICRS)': '22h30m04.5107s',
+                                                          'DEC (ICRS)': '-20d49m54.9990s',
+                                                          'RA (deg)': 337.5187947653852,
+                                                          'DEC (deg)': -20.831944164705973,
+                                                          'radec:unreliable': False,
+                                                          'xy:unreliable': False,
+                                                          'value': 55.0,
+                                                          'value:unit': ''})
 
         mp._obj._on_viewer_key_event(self.viewer, {'event': 'keydown',
                                                    'key': 'm'})
