@@ -124,7 +124,7 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
         if '_orig_spec' in spectral_cube.meta:
             wcs = spectral_cube.meta['_orig_spec'].wcs.spectral
         else:
-            wcs = spectral_cube.coords
+            wcs = spectral_cube.coords.spectral
 
         if hasattr(spectral_cube.coords, 'spectral_wcs'):
             target_wave_unit = spectral_cube.coords.spectral_wcs.world_axis_units[0]
@@ -134,9 +134,10 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
         collapsed_spec = _return_spectrum_with_correct_units(
             collapsed_nddata.data << collapsed_nddata.unit, wcs,
             collapsed_nddata.meta, 'flux',
-            target_wave_unit=target_wave_unit
+            target_wave_unit=target_wave_unit,
+            uncertainty=collapsed_nddata.uncertainty
         )
-
+        print(collapsed_spec)
         if add_data:
             self.add_results.add_results_from_plugin(
                 collapsed_spec, label=self.results_label, replace=False

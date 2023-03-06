@@ -131,7 +131,7 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
 
 
 def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, target_wave_unit=None,
-                                        hdulist=None):
+                                        hdulist=None, uncertainty=None):
     """Upstream issue of WCS not using the correct units for data must be fixed here.
     Issue: https://github.com/astropy/astropy/issues/3658
     """
@@ -139,7 +139,7 @@ def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, target_w
         warnings.filterwarnings(
             'ignore', message='Input WCS indicates that the spectral axis is not last',
             category=UserWarning)
-        sc = Spectrum1D(flux=flux, wcs=wcs)
+        sc = Spectrum1D(flux=flux, wcs=wcs, uncertainty=uncertainty)
 
     if target_wave_unit is None and hdulist is not None:
         found_target = False
@@ -168,7 +168,9 @@ def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, target_w
             new_sc = Spectrum1D(
                 flux=sc.flux,
                 spectral_axis=sc.spectral_axis.to(target_wave_unit, u.spectral()),
-                meta=metadata)
+                meta=metadata,
+                uncertainty=sc.uncertainty
+            )
     else:
         sc.meta = metadata
         new_sc = sc
