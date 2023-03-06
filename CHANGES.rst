@@ -24,6 +24,9 @@ Cubeviz
 Imviz
 ^^^^^
 
+* Fixed aperture and background dropdowns validation for Simple Aperture Photometry
+  plugin. [#2032]
+
 Mosviz
 ^^^^^^
 
