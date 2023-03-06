@@ -89,6 +89,8 @@ Bug Fixes
 * Fixed redshift slider enabling/disabling when calling ``load_line_list``, ``plot_spectral_line``,
   ``plot_spectral_lines``, or ``erase_spectral_lines``. [#2055] 
 
+* Fixed detecting correct type of composite subsets in subset dropdowns in plugins. [#2058]
+
 Cubeviz
 ^^^^^^^
 

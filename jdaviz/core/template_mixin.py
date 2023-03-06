@@ -897,6 +897,11 @@ class SubsetSelect(SelectPluginComponent):
 
     @staticmethod
     def _subset_type(subset):
+        while hasattr(subset.subset_state, 'state1'):
+            # this assumes no mixing between spatial and spectral subsets and just
+            # taking the first component (down the hierarchical tree) to determine the type
+            subset = subset.subset_state.state1
+
         if isinstance(subset.subset_state, RoiSubsetState):
             return 'spatial'
         else:
