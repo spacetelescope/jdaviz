@@ -1,5 +1,6 @@
 from astropy.nddata import NDDataArray, StdDevUncertainty
 from astropy.utils import minversion
+from specutils import Spectrum1D
 from traitlets import List, Unicode, observe
 
 from jdaviz.core.events import SnackbarMessage
@@ -9,6 +10,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SpatialSubsetSelectMixin,
                                         AddResultsMixin)
 from jdaviz.core.user_api import PluginUserApi
+from jdaviz.configs.cubeviz.plugins.parsers import _return_spectrum_with_correct_units
 
 __all__ = ['SpectralExtraction']
 
@@ -96,14 +98,14 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
                 subset_id=self.spatial_subset_selected, cls=NDDataArray
             )
             uncertainties = uncert_cube.get_subset_object(
-                subset_id=self.spatial_subset_selected, cls=NDDataArray
-            ).data
+                subset_id=self.spatial_subset_selected, cls=StdDevUncertainty
+            )
         else:
             nddata = spectral_cube.get_object(cls=NDDataArray)
-            uncertainties = uncert_cube.get_object(cls=NDDataArray).data
+            uncertainties = uncert_cube.get_object(cls=StdDevUncertainty)
 
         # We attach the uncertainties to the NDDataArray with the data:
-        nddata.uncertainty = StdDevUncertainty(uncertainties)
+        nddata.uncertainty = uncertainties
 
         # Collapse an e.g. 3D spectral cube to 1D spectrum, assuming that last axis
         # is always wavelength. This will need adjustment after the following
@@ -115,23 +117,26 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
         # by default we want to propagate uncertainties:
         kwargs.setdefault("propagate_uncertainties", True)
 
-        collapsed_spec = getattr(nddata, self.function_selected.lower())(
+        collapsed_nddata = getattr(nddata, self.function_selected.lower())(
             axis=spatial_axes, **kwargs
         )  # returns an NDDataArray
 
-        # Hack to extract the spectral axis with units converted
-        # to the wavelength axis in specviz:
-        collapsed_spec.wcs = None
-        collapsed_spec.wcs = spectral_cube.meta['_orig_spec'].wcs.spectral
+        # Convert to Spectrum1D, with the spectral axis in correct units:
+        if '_orig_spec' in spectral_cube.meta:
+            wcs = spectral_cube.meta['_orig_spec'].wcs.spectral
+        else:
+            wcs = spectral_cube.coords
 
-        # spec_wcs = spectral_cube.meta['_orig_spec'].wcs.spectral
-        # spectral_axis = spec_wcs.pixel_to_world(
-        #     np.arange(spec_wcs.array_shape[-1])
-        # )
-        # collapsed_spec = Spectrum1D(
-        #     flux=collapsed_spec.data << collapsed_spec.unit,
-        #     spectral_axis=spectral_axis
-        # )
+        if hasattr(spectral_cube.coords, 'spectral_wcs'):
+            target_wave_unit = spectral_cube.coords.spectral_wcs.world_axis_units[0]
+        else:
+            target_wave_unit = spectral_cube.coords.spectral.world_axis_units[0]
+
+        collapsed_spec = _return_spectrum_with_correct_units(
+            collapsed_nddata.data << collapsed_nddata.unit, wcs,
+            collapsed_nddata.meta, 'flux',
+            target_wave_unit=target_wave_unit
+        )
 
         if add_data:
             self.add_results.add_results_from_plugin(
