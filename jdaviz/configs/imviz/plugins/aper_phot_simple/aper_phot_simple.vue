@@ -25,11 +25,16 @@
         <plugin-subset-select
           :items="bg_subset_items"
           :selected.sync="bg_subset_selected"
-          :rules="[() => bg_subset_selected!==subset_selected || 'Must not match aperture.']"
           :show_if_single_entry="true"
           label="Background"
           hint="Select subset region for background calculation."
         />
+
+        <v-row v-if="subset_selected === bg_subset_selected">
+          <span class="v-messages v-messages__message text--secondary" style="color: red !important">
+              Background and aperture cannot be set to the same subset
+          </span>
+        </v-row>
 
         <v-row v-if="bg_subset_selected=='Annulus'">
           <v-text-field
@@ -129,7 +134,7 @@
         </v-row>
 
         <v-row justify="end">
-          <v-btn color="primary" text @click="do_aper_phot">Calculate</v-btn>
+          <v-btn color="primary" text @click="do_aper_phot" :disabled="subset_selected === bg_subset_selected">Calculate</v-btn>
         </v-row>
       </div>
     </div>
