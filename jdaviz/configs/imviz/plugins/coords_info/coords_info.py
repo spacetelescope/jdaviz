@@ -310,8 +310,8 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             self.row3_unreliable = unreliable_world
             self._dict['RA (ICRS)'] = world_ra
             self._dict['DEC (ICRS)'] = world_dec
-            self._dict['RA (deg)'] = float(world_ra_deg)
-            self._dict['DEC (deg)'] = float(world_dec_deg)
+            self._dict['RA (deg)'] = sky.ra.deg
+            self._dict['DEC (deg)'] = sky.dec.deg
             self._dict['radec:unreliable'] = unreliable_world
         else:
             self.row2_title = '\u00A0'

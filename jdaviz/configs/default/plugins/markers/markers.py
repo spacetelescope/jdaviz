@@ -53,7 +53,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         if self.config == 'cubeviz':
             headers += ['slice index', 'slice wavelength', 'slice wavelength:unit']
 
-        if self.config in ['imviz', 'cubeviz', 'mosviz']:
+        if self.config in ('imviz', 'cubeviz', 'mosviz'):
             # image viewers
             headers += ['xy:unreliable',
                         'RA (ICRS)', 'DEC (ICRS)',
@@ -61,12 +61,13 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                         'radec:unreliable',
                         'value', 'value:unit',
                         'viewer']
-        if self.config in ['specviz', 'specviz2d', 'mosviz']:
+        if self.config in ('specviz', 'specviz2d', 'mosviz'):
             # 1d spectrum viewers
             headers += ['index']
-        if self.config in ['specviz2d', 'mosviz']:
-            # 2d spectrum viewers
-            headers += []
+        # NOTE: Uncomment when there is something to add.
+        # if self.config in ('specviz2d', 'mosviz'):
+        #     # 2d spectrum viewers
+        #     headers += []
 
         headers += ['data_label']
 
@@ -122,10 +123,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                 viewer.remove_event_callback(callback)
 
     def _on_viewer_key_event(self, viewer, data):
-        if data['event'] == 'keydown' and data['key'] in ('m', 'M'):
-            # TODO: refactor to share code with mouseover display if PR#1976 merged
-            # TODO: merge with mouseover display entirely and show mouseover info in table
-
+        if data['event'] == 'keydown' and data['key'] == 'm':
             row_info = self.app.session.application._tools['g-coords-info'].as_dict()
 
             if 'viewer' in self.table.headers_avail:
@@ -136,8 +134,8 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
 
             try:
                 self.table.add_item(row_info)
-            except ValueError:
-                raise ValueError(f'failed to add {row_info} to table')
+            except ValueError as err:
+                raise ValueError(f'failed to add {row_info} to table: {repr(err)}')
 
             x, y = row_info['x'], row_info['y']
             # TODO: will need to test/update when adding support for display units
