@@ -6,6 +6,7 @@ from astropy import units as u
 from glue.core import BaseData
 from glue.core.subset import RoiSubsetState
 from glue.core.subset_group import GroupedSubset
+from glue_jupyter.bqplot.image.layer_artist import BqplotImageSubsetLayerArtist
 
 from jdaviz.configs.cubeviz.plugins.viewers import CubevizImageView
 from jdaviz.configs.imviz.helper import data_has_valid_wcs
@@ -62,6 +63,8 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
         self.dataset._manual_options = ['auto', 'none']
         self.dataset.filters = ['layer_in_viewers']
+        # we also want to include auto-collapsed spectra (spatial subsets)
+        self.dataset._cubeviz_include_spatial_subsets()
 
         # subscribe to mouse events on any new viewers
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
@@ -199,6 +202,9 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         else:
             for layer in viewer.layers:
                 if layer.layer.label == self.dataset.selected and layer.visible:
+                    if isinstance(layer, BqplotImageSubsetLayerArtist):
+                        # cannot expose info for spatial subset layers
+                        continue
                     active_layer = layer.state
                     image = layer.layer
                     break
@@ -240,12 +246,12 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             #  data for this application. This section will need to be updated
             #  when that is no longer true.
             # Hack to insert WCS for generated 2D and 3D images using FLUX cube WCS.
-            if 'Plugin' in image.meta and not image.coords:
+            if 'Plugin' in getattr(image, 'meta', {}) and not image.coords:
                 coo_data = self.app.data_collection[0]
             else:
                 coo_data = image
 
-            if '_orig_spec' in coo_data.meta:
+            if '_orig_spec' in getattr(coo_data, 'meta', {}):
                 # Hack around various WCS propagation issues in Cubeviz, example:
                 # https://github.com/glue-viz/glue-astronomy/issues/75
                 data_wcs = coo_data.meta['_orig_spec'].wcs
@@ -268,6 +274,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                     coords_status = True
             else:
                 self.reset_coords_display()
+                coords_status = False
 
             slice_plugin = self.app._jdaviz_helper.plugins.get('Slice', None)
             if slice_plugin is not None:
@@ -287,6 +294,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                     coords_status = True
             else:  # pragma: no cover
                 self.reset_coords_display()
+                coords_status = False
 
         elif isinstance(viewer, MosvizProfile2DView):
             coords_status = False

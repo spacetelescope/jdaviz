@@ -84,6 +84,18 @@ def show_widget(widget, loc, title):  # pragma: no cover
         raise ValueError(f"Unrecognized display location: {loc}")
 
 
+def _subset_type(subset):
+    while hasattr(subset.subset_state, 'state1'):
+        # this assumes no mixing between spatial and spectral subsets and just
+        # taking the first component (down the hierarchical tree) to determine the type
+        subset = subset.subset_state.state1
+
+    if isinstance(subset.subset_state, RoiSubsetState):
+        return 'spatial'
+    else:
+        return 'spectral'
+
+
 class TemplateMixin(VuetifyTemplate, HubListener):
     config = Unicode("").tag(sync=True)
     vdocs = Unicode("").tag(sync=True)
@@ -933,18 +945,6 @@ class SubsetSelect(SelectPluginComponent):
         for lyr in self.app.data_collection.subset_groups:
             self._update_subset(lyr)
 
-    @staticmethod
-    def _subset_type(subset):
-        while hasattr(subset.subset_state, 'state1'):
-            # this assumes no mixing between spatial and spectral subsets and just
-            # taking the first component (down the hierarchical tree) to determine the type
-            subset = subset.subset_state.state1
-
-        if isinstance(subset.subset_state, RoiSubsetState):
-            return 'spatial'
-        else:
-            return 'spectral'
-
     def _selected_changed(self, event):
         super()._selected_changed(event)
         self._update_has_subregions()
@@ -955,7 +955,7 @@ class SubsetSelect(SelectPluginComponent):
             for layer in viewer.layers:
                 if layer.layer.label == subset.label:
                     color = layer.state.color
-                    subset_type = self._subset_type(subset)
+                    subset_type = _subset_type(subset)
                     return {"label": subset.label, "color": color, "type": subset_type}
         return {"label": subset.label, "color": False, "type": False}
 
@@ -967,7 +967,7 @@ class SubsetSelect(SelectPluginComponent):
             self._apply_default_selection()
 
     def _update_subset(self, subset, attribute=None):
-        if self._allowed_type is not None and self._subset_type(subset) != self._allowed_type:
+        if self._allowed_type is not None and _subset_type(subset) != self._allowed_type:
             return
 
         if subset.label not in self.labels:
@@ -1423,6 +1423,24 @@ class DatasetSelect(SelectPluginComponent):
         # initialize items from original viewers
         self._on_data_changed()
 
+    def _cubeviz_include_spatial_subsets(self):
+        """
+        Call this method to prepend spatial subsets to the list of datasets (and listen for newly
+        created spatial subsets).  For a single viewer, consider using LayerSelect instead.
+        """
+        # add additional callback for subsets
+        # We have to use SubsetUpdateMessage instead of SubsetCreateMessage to ensure it has already
+        # been added to data_collection.subset_groups.  To avoid extra calls to _on_data_changed
+        # for changes in style, etc, we'll try to filter out extra messages in advance.
+        def _subset_update(msg):
+            if msg.attribute == 'subset_state':
+                if _subset_type(msg.subset) == 'spatial':
+                    self._on_data_changed()
+
+        self.hub.subscribe(self, SubsetUpdateMessage,
+                           handler=_subset_update)
+        self._include_spatial_subsets = True
+
     @property
     def default_data_cls(self):
         if self.app.config == 'imviz':
@@ -1511,6 +1529,10 @@ class DatasetSelect(SelectPluginComponent):
         manual_items = [{'label': label} for label in self.manual_options]
         self.items = manual_items + [_dc_to_dict(data) for data in self.app.data_collection
                                      if self._is_valid_item(data)]
+        if getattr(self, '_include_spatial_subsets', False):
+            # allow for spatial subsets to be listed
+            self.items = self.items + [_dc_to_dict(subset) for subset in self.app.data_collection.subset_groups  # noqa
+                                       if _subset_type(subset) == 'spatial']
         self._apply_default_selection()
         # future improvement: only clear cache if the selected data entry was changed?
         self._clear_cache(*self._cached_properties)
