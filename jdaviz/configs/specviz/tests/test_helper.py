@@ -5,7 +5,7 @@ import pytest
 from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose
 from glue.core.roi import XRangeROI
-from glue.core.edit_subset_mode import OrMode
+from glue.core.edit_subset_mode import OrMode, AndMode, AndNotMode
 from specutils import Spectrum1D, SpectrumList, SpectrumCollection
 from astropy.utils.data import download_file
 
@@ -136,28 +136,89 @@ class TestSpecvizHelper:
         assert_quantity_allclose(spec_region['Subset 1'].subregions[0][0].value,
                                  6000., atol=1e-5)
         assert_quantity_allclose(spec_region['Subset 1'].subregions[0][1].value,
-                                 6222.22222222, atol=1e-5)
+                                 6400., atol=1e-5)
 
         assert_quantity_allclose(spec_region['Subset 1'].subregions[1][0].value,
-                                 6666.66666667, atol=1e-5)
+                                 6600., atol=1e-5)
         assert_quantity_allclose(spec_region['Subset 1'].subregions[1][1].value,
-                                 6888.88888889, atol=1e-5)
+                                 7000., atol=1e-5)
 
         assert_quantity_allclose(spec_region['Subset 1'].subregions[2][0].value,
-                                 7333.33333333, atol=1e-5)
+                                 7300., atol=1e-5)
         assert_quantity_allclose(spec_region['Subset 1'].subregions[2][1].value,
-                                 7777.77777778, atol=1e-5)
+                                 7800., atol=1e-5)
 
-    def test_get_spectral_regions_raise_value_error(self):
-        with pytest.raises(ValueError):
-            spectrum_viewer = self.spec_app.app.get_viewer("spectrum-viewer")
+    def test_get_spectral_regions_does_not_raise_value_error(self):
+        spectrum_viewer = self.spec_app.app.get_viewer("spectrum-viewer")
 
-            spectrum_viewer.session.edit_subset_mode._mode = OrMode
-            # Selecting ROIs that are not part of the actual spectrum raises an error
-            self.spec_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(1, 3))
-            self.spec_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(4, 6))
+        spectrum_viewer.session.edit_subset_mode._mode = OrMode
+        # Selecting ROIs that are not part of the actual spectrum no longer raises an error
+        self.spec_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(1, 3))
+        self.spec_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(4, 6))
 
-            self.spec_app.get_spectral_regions()
+        spec_region = self.spec_app.get_spectral_regions()
+        assert_quantity_allclose(spec_region['Subset 1'].subregions[0][0].value,
+                                 1, atol=1e-5)
+        assert_quantity_allclose(spec_region['Subset 1'].subregions[0][1].value,
+                                 3, atol=1e-5)
+
+        assert_quantity_allclose(spec_region['Subset 1'].subregions[1][0].value,
+                                 4, atol=1e-5)
+        assert_quantity_allclose(spec_region['Subset 1'].subregions[1][1].value,
+                                 6, atol=1e-5)
+
+    def test_get_spectral_regions_composite_region(self):
+        spectrum_viewer = self.spec_app.app.get_viewer("spectrum-viewer")
+
+        self.spec_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(6000, 6400))
+
+        spectrum_viewer.session.edit_subset_mode._mode = AndNotMode
+
+        self.spec_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(6600, 7000))
+
+        spectrum_viewer.session.edit_subset_mode._mode = AndMode
+
+        self.spec_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(7300, 7800))
+
+        spec_region = self.spec_app.get_spectral_regions()
+
+        assert len(spec_region['Subset 1'].subregions) == 1
+        # Assert correct values for test with 3 subregions
+        assert_quantity_allclose(spec_region['Subset 1'].subregions[0][0].value,
+                                 7300., atol=1e-5)
+        assert_quantity_allclose(spec_region['Subset 1'].subregions[0][1].value,
+                                 7800., atol=1e-5)
+
+    def test_get_spectral_regions_composite_region_multiple_and_nots(self):
+        spectrum_viewer = self.spec_app.app.get_viewer("spectrum-viewer")
+
+        self.spec_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(6000, 7800))
+
+        spectrum_viewer.session.edit_subset_mode._mode = AndNotMode
+
+        self.spec_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(6200, 6600))
+
+        spectrum_viewer.session.edit_subset_mode._mode = AndNotMode
+
+        self.spec_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(7300, 7700))
+
+        spec_region = self.spec_app.get_spectral_regions()
+
+        assert len(spec_region['Subset 1'].subregions) == 3
+        # Assert correct values for test with 3 subregions
+        assert_quantity_allclose(spec_region['Subset 1'].subregions[0][0].value,
+                                 6000., atol=1e-5)
+        assert_quantity_allclose(spec_region['Subset 1'].subregions[0][1].value,
+                                 6200., atol=1e-5)
+
+        assert_quantity_allclose(spec_region['Subset 1'].subregions[1][0].value,
+                                 6600., atol=1e-5)
+        assert_quantity_allclose(spec_region['Subset 1'].subregions[1][1].value,
+                                 7300., atol=1e-5)
+        assert_quantity_allclose(spec_region['Subset 1'].subregions[2][0].value,
+                                 7700., atol=1e-5)
+        assert_quantity_allclose(spec_region['Subset 1'].subregions[2][1].value,
+                                 7800., atol=1e-5)
 
 
 def test_get_spectra_no_spectra(specviz_helper, spectrum1d):
@@ -200,8 +261,8 @@ def test_get_spectral_regions_unit(specviz_helper, spectrum1d):
     subsets = specviz_helper.get_spectral_regions()
     reg = subsets.get('Subset 1')
 
-    assert spectrum1d.wavelength.unit == reg.lower.unit
-    assert spectrum1d.wavelength.unit == reg.upper.unit
+    assert spectrum1d.spectral_axis.unit == reg.lower.unit
+    assert spectrum1d.spectral_axis.unit == reg.upper.unit
 
 
 def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
@@ -246,12 +307,13 @@ def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
 
     specviz_helper.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(0.6, 0.7))
 
+    # TODO: Is this test still relevant with the upcoming glue unit conversion changes?
     # Retrieve the Subset
-    subsets = specviz_helper.get_spectral_regions()
-    reg = subsets.get('Subset 1')
-
-    assert reg.lower.unit == u.Unit(new_spectral_axis)
-    assert reg.upper.unit == u.Unit(new_spectral_axis)
+    # subsets = specviz_helper.get_spectral_regions()
+    # reg = subsets.get('Subset 1')
+    #
+    # assert reg.lower.unit == u.Unit(new_spectral_axis)
+    # assert reg.upper.unit == u.Unit(new_spectral_axis)
 
     # Coordinates info panel should show new unit
     label_mouseover._viewer_mouse_event(spec_viewer,

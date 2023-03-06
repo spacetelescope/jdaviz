@@ -202,7 +202,7 @@ def test_continuum_surrounding_spectral_subset(specviz_helper, spectrum1d):
     plugin.width = 3
 
     # Values have not yet been validated
-    np.testing.assert_allclose(float(plugin.results[0]['result']), 2.153181e-13, atol=1e-15)
+    np.testing.assert_allclose(float(plugin.results[0]['result']), 1.908697e-13, atol=1e-15)
 
 
 def test_continuum_spectral_same_value(specviz_helper, spectrum1d):
@@ -401,7 +401,7 @@ def test_subset_changed(specviz_helper, spectrum1d):
     specviz_helper.app.state.drawer = True
 
     # Values have not yet been validated
-    np.testing.assert_allclose(float(plugin.results[0]['result']), 2.153181e-13, atol=1e-15)
+    np.testing.assert_allclose(float(plugin.results[0]['result']), 1.908697e-13, atol=1e-15)
 
 
 def test_invalid_subset(specviz_helper, spectrum1d):
@@ -427,7 +427,7 @@ def test_invalid_subset(specviz_helper, spectrum1d):
     plugin.spectral_subset = 'Subset 1'
     assert not plugin._obj.spectral_subset_valid
 
-    with pytest.raises(ValueError, match=r"spectral subset 'Subset 1' \(5000.0, 5888.888888888889\) is outside data range of 'right_spectrum' \(6000.0, 8000.0\)"):  # noqa
+    with pytest.raises(ValueError, match=r"spectral subset 'Subset 1' \(5000.0, 6000.0\) is outside data range of 'right_spectrum' \(6000.0, 8000.0\)"):  # noqa
         plugin.get_results()
 
     plugin.dataset = 'left_spectrum'

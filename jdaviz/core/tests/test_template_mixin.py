@@ -28,7 +28,9 @@ def test_spectralsubsetselect(specviz_helper, spectrum1d):
     assert p.spectral_subset.selected_obj is not None
     expected_min = spectrum1d.spectral_axis[spectrum1d.spectral_axis.value >= 6500][0]
     expected_max = spectrum1d.spectral_axis[spectrum1d.spectral_axis.value <= 7400][-1]
-    assert p.spectral_subset.selected_min_max(spectrum1d) == (expected_min, expected_max)
+    np.testing.assert_allclose(expected_min.value, 6666.66666667, atol=1e-5)
+    np.testing.assert_allclose(expected_max.value, 7333.33333333, atol=1e-5)
+    assert p.spectral_subset.selected_min_max(spectrum1d) == (6500 * u.AA, 7400 * u.AA)
 
     # check selected subset mask available via API:
     expected_mask_with_spectral_subset = (

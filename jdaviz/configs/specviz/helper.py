@@ -139,9 +139,7 @@ class Specviz(ConfigHelper, LineListMixin):
             Mapping from the names of the subsets to the subsets expressed
             as `specutils.SpectralRegion` objects.
         """
-        return self.app.get_subsets_from_viewer(
-            self._default_spectrum_viewer_reference_name, subset_type="spectral"
-        )
+        return self.app.get_subsets(spectral_only=True)
 
     def x_limits(self, x_min=None, x_max=None):
         """Sets the limits of the x-axis

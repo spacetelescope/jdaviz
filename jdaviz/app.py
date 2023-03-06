@@ -4,12 +4,16 @@ import re
 import uuid
 import warnings
 from inspect import isclass
+import operator
 
 from ipywidgets import widget_serialization
 import ipyvue
 
 from astropy.nddata import CCDData, NDData
 from astropy.io import fits
+from astropy import units as u
+from astropy.coordinates import Angle
+from regions import PixCoord, CirclePixelRegion, RectanglePixelRegion, EllipsePixelRegion
 
 from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
 from ipygoldenlayout import GoldenLayout
@@ -31,7 +35,9 @@ from glue.core.message import (DataCollectionAddMessage,
                                SubsetUpdateMessage,
                                SubsetDeleteMessage)
 from glue.core.state_objects import State
-from glue.core.subset import Subset, RangeSubsetState, RoiSubsetState
+from glue.core.subset import (Subset, RangeSubsetState, RoiSubsetState,
+                              CompositeSubsetState, InvertState)
+from glue.core.roi import CircularROI, EllipticalROI, RectangularROI
 from glue_astronomy.spectral_coordinates import SpectralCoordinates
 from glue_jupyter.app import JupyterApplication
 from glue_jupyter.common.toolbar_vuetify import read_icon
@@ -729,54 +735,6 @@ class Application(VuetifyTemplate, HubListener):
                                          cls=None)
         regions = {}
 
-        def _get_all_subregions(mask, spec_axis_data):
-            """
-            Return all subregions within a subset.
-
-            Parameters
-            ----------
-            mask : list
-                List of indices in spec_axis_data that are part of the subset.
-            spec_axis_data : list
-                List of spectral axis values.
-            Returns
-            -------
-            combined_spec_region : `~specutils.SpectralRegion`
-                SpectralRegion object containing all subregions of the subset.
-            """
-            if len(mask) == 0:
-                # Mask should only be 0 if ApplyROI is used to incorrectly
-                # create subsets via the API
-                raise ValueError("Mask has length 0, ApplyROI may have been used incorrectly")
-
-            current_edge = 0
-            combined_spec_region = None
-            for index in range(1, len(mask)):
-                # Find spot where mask == True is for a different region of the subset
-                # i.e. mask = [0, 1, 4, 5]
-                # mask[2] != mask[1] + 1
-                if mask[index] != mask[index - 1] + 1:
-                    subset_region = spec_axis_data[mask[current_edge]: mask[index - 1] + 1]
-                    if not combined_spec_region:
-                        combined_spec_region = SpectralRegion(min(subset_region),
-                                                              max(subset_region))
-                    else:
-                        combined_spec_region += SpectralRegion(min(subset_region),
-                                                               max(subset_region))
-                    current_edge = index
-
-            # Get last region within the subset
-            if current_edge != index:
-                subset_region = spec_axis_data[mask[current_edge]: mask[index] + 1]
-                # No if check here because len(mask) must be greater than 1
-                # so combined_spec_region will have been instantiated in the for loop
-                if combined_spec_region is None:
-                    combined_spec_region = SpectralRegion(min(subset_region), max(subset_region))
-                else:
-                    combined_spec_region += SpectralRegion(min(subset_region), max(subset_region))
-
-            return combined_spec_region
-
         if data_label is not None:
             data = {data_label: data}
 
@@ -815,26 +773,29 @@ class Application(VuetifyTemplate, HubListener):
                     # TODO: this needs to be much simpler; i.e. data units in
                     #  the glue component objects
                     # Cases where there is a single subset
-                    if '_orig_spec' in value.data.meta:  # Hack for Cubeviz WCS propagation
-                        data_wcs = value.data.meta['_orig_spec']
-                    else:
-                        data_wcs = value.data.coords
 
-                    subregions_in_subset = _get_all_subregions(
-                            np.where(value.to_mask() == True)[0], # noqa
-                            data_wcs.spectral_axis)
-
-                    regions[key] = subregions_in_subset
+                    # if '_orig_spec' in value.data.meta:  # Hack for Cubeviz WCS propagation
+                    #     data_wcs = value.data.meta['_orig_spec']
+                    # else:
+                    #     data_wcs = value.data.coords
+                    #
+                    # subregions_in_subset = _get_all_subregions(
+                    #         np.where(value.to_mask() == True)[0], # noqa
+                    #         data_wcs.spectral_axis)
+                    #
+                    # # regions[key] = subregions_in_subset
+                    regions[key] = self.get_subsets(key)
                     continue
 
                 temp_data = self.get_data_from_viewer(viewer_reference, value.label)
                 if isinstance(temp_data, Spectrum1D):
-                    # Note that we look for mask == False here, rather than True above,
-                    # because specutils masks are the reverse of Glue (of course)
-                    subregions_in_subset = _get_all_subregions(
-                             np.where(~temp_data.mask)[0], # noqa
-                             temp_data.spectral_axis)
-                    regions[key] = subregions_in_subset
+                    # # Note that we look for mask == False here, rather than True above,
+                    # # because specutils masks are the reverse of Glue (of course)
+                    # subregions_in_subset = _get_all_subregions(
+                    #          np.where(~temp_data.mask)[0], # noqa
+                    #          temp_data.spectral_axis)
+                    # regions[key] = subregions_in_subset
+                    regions[key] = self.get_subsets(key)
                     continue
 
                 # Get the pixel coordinate [z] of the 3D data, repeating the
@@ -886,6 +847,197 @@ class Application(VuetifyTemplate, HubListener):
                 regions[key] = region
 
         return regions
+
+    def get_subsets(self, subset_name=None, spectral_only=False,
+                    spatial_only=False, object_only=False):
+        """
+        Returns all branches of glue subset tree in the form that subset plugin can recognize.
+
+        Parameters
+        ----------
+        subset_name : str
+            The subset name.
+        spectral_only : bool
+            Return only spectral subsets.
+        spatial_only : bool
+            Return only spatial subsets.
+        object_only : bool
+            Return only object relevant information and
+            leave out the region class name and glue_state.
+
+        Returns
+        -------
+        data : dict
+            A dict with keys representing the subset name and values as astropy regions
+            objects
+        """
+
+        dc = self.data_collection
+        subsets = dc.subset_groups
+        # TODO: Use global display units
+        # units = dc[0].data.coords.spectral_axis.unit
+        viewer = self.get_viewer("spectrum-viewer")
+        data = viewer.data()
+        # Set axes labels for the spectrum viewer
+        if viewer and hasattr(viewer.state, "x_display_unit") and viewer.state.x_display_unit:
+            units = u.Unit(viewer.state.x_display_unit)
+        elif data and len(data) > 0:
+            units = data[0].spectral_axis.unit
+        else:
+            units = u.um
+
+        all_subsets = {}
+
+        for subset in subsets:
+            label = subset.label
+            subset_region = None
+            if isinstance(subset.subset_state, CompositeSubsetState):
+                subset_region = self.get_sub_regions(subset.subset_state, units)
+
+            elif isinstance(subset.subset_state, RoiSubsetState):
+                subset_region = self._get_roi_subset_definition(subset.subset_state)
+
+            elif isinstance(subset.subset_state, RangeSubsetState):
+                subset_region = self._get_range_subset_bounds(subset.subset_state, units)
+
+            if isinstance(subset_region, SpectralRegion):
+                subset_region = self._remove_duplicate_bounds(subset_region)
+
+            if spectral_only and isinstance(subset_region, SpectralRegion):
+                all_subsets[label] = subset_region
+            elif spatial_only and not isinstance(subset_region, SpectralRegion):
+                if object_only:
+                    all_subsets[label] = [reg['region'] for reg in subset_region]
+                else:
+                    all_subsets[label] = subset_region
+            elif not spectral_only and not spatial_only:
+                if object_only and not isinstance(subset_region, SpectralRegion):
+                    all_subsets[label] = [reg['region'] for reg in subset_region]
+                else:
+                    all_subsets[label] = subset_region
+
+        all_subset_names = [subset.label for subset in dc.subset_groups]
+        if subset_name and subset_name in all_subset_names:
+            return all_subsets[subset_name]
+        elif subset_name:
+            raise ValueError(f"{subset_name} not in {all_subset_names}")
+        else:
+            return all_subsets
+
+    def _remove_duplicate_bounds(self, spec_regions):
+        regions_no_dups = None
+
+        for region in spec_regions:
+            if not regions_no_dups:
+                regions_no_dups = region
+            elif region.bounds not in regions_no_dups.subregions:
+                regions_no_dups += region
+        return regions_no_dups
+
+    def _get_range_subset_bounds(self, subset_state, units):
+        return SpectralRegion(subset_state.lo * units, subset_state.hi * units)
+
+    def _get_roi_subset_definition(self, subset_state):
+        _around_decimals = 6
+        roi = subset_state.roi
+        roi_as_region = None
+        if isinstance(roi, CircularROI):
+            x, y = roi.get_center()
+            r = roi.radius
+            roi_as_region = CirclePixelRegion(PixCoord(x, y), r)
+
+        elif isinstance(roi, RectangularROI):
+            theta = np.around(np.degrees(roi.theta), decimals=_around_decimals)
+            roi_as_region = RectanglePixelRegion(PixCoord(roi.center()[0], roi.center()[1]),
+                                                 roi.width(), roi.height(), Angle(theta, "deg"))
+
+        elif isinstance(roi, EllipticalROI):
+            xc = roi.xc
+            yc = roi.yc
+            rx = roi.radius_x
+            ry = roi.radius_y
+            theta = np.around(np.degrees(roi.theta), decimals=_around_decimals)
+            roi_as_region = EllipsePixelRegion(PixCoord(xc, yc), rx, ry, Angle(theta, "deg"))
+
+        return [{"name": subset_state.roi.__class__.__name__,
+                 "glue_state": subset_state.__class__.__name__,
+                 "region": roi_as_region}]
+
+    def get_sub_regions(self, subset_state, units):
+
+        if isinstance(subset_state, CompositeSubsetState):
+            if subset_state and hasattr(subset_state, "state2") and subset_state.state2:
+                one = self.get_sub_regions(subset_state.state1, units)
+                two = self.get_sub_regions(subset_state.state2, units)
+
+                if (isinstance(one, list) and "glue_state" in one[0] and
+                        one[0]["glue_state"] == "RoiSubsetState"):
+                    one[0]["glue_state"] = subset_state.__class__.__name__
+
+                if isinstance(subset_state.state2, InvertState):
+                    # This covers the REMOVE subset mode
+
+                    # As an example for how this works:
+                    # a = SpectralRegion(4 * u.um, 7 * u.um) + SpectralRegion(9 * u.um, 11 * u.um)
+                    # b = SpectralRegion(5 * u.um, 6 * u.um)
+                    # After running the following code with a as one and b as two:
+                    # Spectral Region, 3 sub-regions:
+                    #   (4.0 um, 5.0 um)    (6.0 um, 7.0 um)    (9.0 um, 11.0 um)
+                    if isinstance(two, SpectralRegion):
+                        new_spec = None
+                        for sub in one:
+                            if not new_spec:
+                                new_spec = two.invert(sub.lower, sub.upper)
+                            else:
+                                new_spec += two.invert(sub.lower, sub.upper)
+                        return new_spec
+                    else:
+                        if isinstance(two, list):
+                            # two[0]['glue_state'] = subset_state.state2.__class__.__name__
+                            two[0]['glue_state'] = "AndNotState"
+                        # Return two first so that we preserve the chronology of how
+                        # subset regions are applied.
+                        return two + one
+                elif subset_state.op is operator.and_:
+                    # This covers the AND subset mode
+
+                    # Example of how this works:
+                    # a = SpectralRegion(4 * u.um, 7 * u.um)
+                    # b = SpectralRegion(5 * u.um, 6 * u.um)
+                    #
+                    # b.invert(a.lower, a.upper)
+                    # Spectral Region, 2 sub-regions:
+                    #   (4.0 um, 5.0 um)   (6.0 um, 7.0 um)
+                    if isinstance(two, SpectralRegion):
+                        return two.invert(one.lower, one.upper)
+                    else:
+                        return one + two
+                elif subset_state.op is operator.or_:
+                    # This covers the ADD subset mode
+                    # one + two works for both Range and ROI subsets
+                    if one and two:
+                        return one + two
+                    elif one:
+                        return one
+                    elif two:
+                        return two
+                elif subset_state.op is operator.xor:
+                    # This covers the XOR case which is currently not working
+                    return None
+                else:
+                    return None
+            else:
+                # This gets triggered in the InvertState case where state1
+                # is an object and state2 is None
+                return self.get_sub_regions(subset_state.state1, units)
+        elif subset_state is not None:
+            # This is the leaf node of the glue subset state tree where
+            # a subset_state is either ROI or Range.
+            if isinstance(subset_state, RoiSubsetState):
+                return self._get_roi_subset_definition(subset_state)
+
+            elif isinstance(subset_state, RangeSubsetState):
+                return self._get_range_subset_bounds(subset_state, units)
 
     def add_data(self, data, data_label=None, notify_done=True):
         """
