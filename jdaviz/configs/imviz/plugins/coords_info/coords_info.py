@@ -373,6 +373,16 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             self.row1b_text = ''
 
     def _spectrum_viewer_update(self, viewer, x, y):
+        def _cursor_fallback():
+            statistic = getattr(viewer.state, 'function', None)
+            cache_key = (viewer.state.layers[0].layer.label, statistic)
+            sp = self.app._get_object_cache[cache_key]
+            self._dict['x'] = x
+            self._dict['x:unit'] = sp.spectral_axis.unit.to_string()
+            self._dict['y'] = y
+            self._dict['y:unit'] = sp.flux.unit.to_string()
+            self._dict['data_label'] = ''
+
         self.row1a_title = 'Cursor'
         self.row1a_text = f'{x:10.5e}, {y:10.5e}'
 
@@ -386,14 +396,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             self.marks[viewer._reference_id].visible = False
             # get the units from the first layer
             # TODO: replace with display units once implemented
-            statistic = getattr(viewer.state, 'function', None)
-            cache_key = (viewer.state.layers[0].layer.label, statistic)
-            sp = self.app._get_object_cache[cache_key]
-            self._dict['x'] = x
-            self._dict['x:unit'] = sp.spectral_axis.unit.to_string()
-            self._dict['y'] = y
-            self._dict['y:unit'] = sp.flux.unit.to_string()
-            self._dict['data_label'] = ''
+            _cursor_fallback()
             return
 
         # Snap to the closest data point, not the actual mouse location.
@@ -465,6 +468,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             self.row3_text = ''
             self.icon = 'mdi-cursor-default'
             self.marks[viewer._reference_id].visible = False
+            _cursor_fallback()
             return
 
         self.row2_title = 'Wave'
