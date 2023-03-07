@@ -1,6 +1,7 @@
 from astropy.coordinates.sky_coordinate import SkyCoord
 from astropy.table import QTable
 from astropy.table.row import Row as QTableRow
+import astropy.units as u
 import numpy as np
 
 from functools import cached_property
@@ -2292,15 +2293,34 @@ class Table(PluginSubcomponent):
         ----------
         item : QTable, QTableRow, or dictionary of row-name, value pairs
         """
-        def json_safe(item):
+        def json_safe(column, item):
+            def float_precision(column, item):
+                if column in ('slice', 'index'):
+                    # stored in astropy table as a float so we can also store nans,
+                    # but should display in the UI without any decimals
+                    return int(item)
+                elif column in ('pixel'):
+                    return f"{item:0.03f}"
+                else:
+                    return f"{item:0.05f}"
+
             if isinstance(item, SkyCoord):
                 return item.to_string('hmsdms', precision=4)
+            if isinstance(item, u.Quantity) and not np.isnan(item):
+                return (float_precision(column, item.value) * item.unit).to_string()
+
             if hasattr(item, 'to_string'):
                 return item.to_string()
             if isinstance(item, float) and np.isnan(item):
                 return ''
             if isinstance(item, tuple) and np.all([np.isnan(i) for i in item]):
                 return ''
+
+            if isinstance(item, float):
+                return float_precision(column, item)
+            elif isinstance(item, (list, tuple)):
+                return [float_precision(column, i) if isinstance(i, float) else i for i in item]
+
             return item
 
         if isinstance(item, QTable):
@@ -2320,7 +2340,7 @@ class Table(PluginSubcomponent):
             self._qtable.add_row(item)
 
         # clean data to show in the UI
-        self.items = self.items + [{k: json_safe(v) for k, v in item.items()}]
+        self.items = self.items + [{k: json_safe(k, v) for k, v in item.items()}]
 
     def clear_table(self):
         """
