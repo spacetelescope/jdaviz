@@ -291,7 +291,7 @@ Canvas Rotation
 ===============
 
 The canvas rotation plugin allows rotating and horizontally flipping the image to any arbitrary 
-value rotating the  axes canvas itself.  Note that this does not affect the underlying data, and
+value by rotating the canvas axes themselves.  Note that this does not affect the underlying data, and
 exporting data to the notebook via the API will therefore not exhibit the same rotation.
 
 The :ref:`imviz-compass` will also rotate (and flip) accordingly.

@@ -55,7 +55,5 @@
       <v-switch v-model="flip" label="Flip horizontally after rotation"></v-switch>
     </v-row>
 
-    
-
   </j-tray-plugin>
 </template>
