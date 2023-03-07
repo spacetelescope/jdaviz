@@ -63,7 +63,7 @@ def test_subset(
 
     # single pixel region:
     plg.spatial_subset = 'Subset 1'
-    collapsed_spec_1 = plg.collapse_to_spectrum(add_data=False)
+    collapsed_spec_1 = plg.collapse_to_spectrum()
 
     # this single pixel has two wavelengths, and all uncertainties are unity
     # irrespective of which collapse function is applied:
@@ -72,6 +72,6 @@ def test_subset(
 
     # this two-pixel region has four unmasked data points per wavelength:
     plg.spatial_subset = 'Subset 2'
-    collapsed_spec_2 = plg.collapse_to_spectrum(add_data=False)
+    collapsed_spec_2 = plg.collapse_to_spectrum()
 
     assert np.all(np.equal(collapsed_spec_2.uncertainty.array, expected_uncert))

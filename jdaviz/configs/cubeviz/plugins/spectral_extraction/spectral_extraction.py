@@ -6,7 +6,6 @@ from astropy.nddata import (
     NDDataArray, StdDevUncertainty, NDUncertainty
 )
 from traitlets import List, Unicode, observe
-from glue_astronomy.translators.spectrum1d import PaddedSpectrumWCS
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
@@ -111,8 +110,12 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
             nddata = spectral_cube.get_object(cls=NDDataArray)
             uncertainties = uncert_cube.get_object(cls=StdDevUncertainty)
 
-        # We attach the uncertainties to the NDDataArray with the data:
-        wcs = PaddedSpectrumWCS(spectral_cube.coords, 1).spectral_wcs
+        # Use the spectral coordinate from the WCS:
+        if '_orig_spec' in spectral_cube.meta:
+            wcs = spectral_cube.meta['_orig_spec'].wcs.spectral
+        else:
+            wcs = spectral_cube.coords.spectral
+
         flux = nddata.data << nddata.unit
         mask = nddata.mask
         # Here we move the spectral axis to the last axis, to match specutils convention.
@@ -143,7 +146,6 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
         else:
             target_wave_unit = spectral_cube.coords.spectral.world_axis_units[0]
 
-        wcs = PaddedSpectrumWCS(spectral_cube.coords, 1).spectral_wcs
         flux = collapsed_nddata.data << collapsed_nddata.unit
         mask = collapsed_nddata.mask
         uncertainty = collapsed_nddata.uncertainty
@@ -184,8 +186,14 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
 
 
 def _move_spectral_axis(wcs, flux, mask=None, uncertainty=None):
-    """Move spectral axis last to match specutils convention"""
-    if wcs.naxis > 1:
+    """
+    Move spectral axis last to match specutils convention. This
+    function borrows from:
+        https://github.com/astropy/specutils/blob/
+        6eb7f96498072882c97763d4cd10e07cf81b6d33/specutils/spectra/spectrum1d.py#L185-L225
+    """
+    naxis = getattr(wcs, 'naxis', len(wcs.world_axis_physical_types))
+    if naxis > 1:
         temp_axes = []
         phys_axes = wcs.world_axis_physical_types
         for i in range(len(phys_axes)):
