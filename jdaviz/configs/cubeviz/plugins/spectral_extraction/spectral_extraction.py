@@ -1,6 +1,12 @@
-from astropy.nddata import NDDataArray, StdDevUncertainty
-from astropy.utils import minversion
+from packaging.version import Version
+import numpy as np
+import astropy
+import astropy.units as u
+from astropy.nddata import (
+    NDDataArray, StdDevUncertainty, NDUncertainty
+)
 from traitlets import List, Unicode, observe
+from glue_astronomy.translators.spectrum1d import PaddedSpectrumWCS
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
@@ -12,6 +18,8 @@ from jdaviz.core.user_api import PluginUserApi
 from jdaviz.configs.cubeviz.plugins.parsers import _return_spectrum_with_correct_units
 
 __all__ = ['SpectralExtraction']
+
+ASTROPY_LT_5_3_DEV = Version(astropy.__version__) < Version('5.3.dev')
 
 
 @tray_registry(
@@ -52,7 +60,7 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
         self._set_default_results_label()
         self.add_results.viewer.filters = ['is_spectrum_viewer']
 
-        if not minversion("astropy", "5.3.dev"):
+        if ASTROPY_LT_5_3_DEV:
             self.disabled_msg = "Spectral Extraction in Cubeviz requires astropy 5.3.dev"
 
     @property
@@ -104,40 +112,49 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
             uncertainties = uncert_cube.get_object(cls=StdDevUncertainty)
 
         # We attach the uncertainties to the NDDataArray with the data:
-        nddata.uncertainty = uncertainties
+        wcs = PaddedSpectrumWCS(spectral_cube.coords, 1).spectral_wcs
+        flux = nddata.data << nddata.unit
+        mask = nddata.mask
+        # Here we move the spectral axis to the last axis, to match specutils convention.
+        # We'll need to update this after https://github.com/astropy/specutils/pull/999
+        wcs, flux, mask, uncertainties = _move_spectral_axis(wcs, flux, mask, uncertainties)
 
-        # Collapse an e.g. 3D spectral cube to 1D spectrum, assuming that last axis
-        # is always wavelength. This will need adjustment after the following
-        # specutils PR is merged: https://github.com/astropy/specutils/pull/999
-        spatial_axes = tuple(range(nddata.ndim - 1))
+        nddata_reshaped = NDDataArray(
+            flux, mask=mask, uncertainty=uncertainties, wcs=wcs, meta=nddata.meta
+        )
 
         # by default we want to use operation_ignores_mask=True in nddata:
         kwargs.setdefault("operation_ignores_mask", True)
         # by default we want to propagate uncertainties:
         kwargs.setdefault("propagate_uncertainties", True)
 
-        collapsed_nddata = getattr(nddata, self.function_selected.lower())(
+        # Collapse an e.g. 3D spectral cube to 1D spectrum, assuming that last axis
+        # is always wavelength. This may need adjustment after the following
+        # specutils PR is merged: https://github.com/astropy/specutils/pull/999
+        spatial_axes = (0, 1)
+
+        collapsed_nddata = getattr(nddata_reshaped, self.function_selected.lower())(
             axis=spatial_axes, **kwargs
         )  # returns an NDDataArray
 
         # Convert to Spectrum1D, with the spectral axis in correct units:
-        if '_orig_spec' in spectral_cube.meta:
-            wcs = spectral_cube.meta['_orig_spec'].wcs.spectral
-        else:
-            wcs = spectral_cube.coords.spectral
-
         if hasattr(spectral_cube.coords, 'spectral_wcs'):
             target_wave_unit = spectral_cube.coords.spectral_wcs.world_axis_units[0]
         else:
             target_wave_unit = spectral_cube.coords.spectral.world_axis_units[0]
 
+        wcs = PaddedSpectrumWCS(spectral_cube.coords, 1).spectral_wcs
+        flux = collapsed_nddata.data << collapsed_nddata.unit
+        mask = collapsed_nddata.mask
+        uncertainty = collapsed_nddata.uncertainty
+
         collapsed_spec = _return_spectrum_with_correct_units(
-            collapsed_nddata.data << collapsed_nddata.unit, wcs,
-            collapsed_nddata.meta, 'flux',
+            flux, wcs, collapsed_nddata.meta, 'flux',
             target_wave_unit=target_wave_unit,
-            uncertainty=collapsed_nddata.uncertainty
+            uncertainty=uncertainty,
+            mask=mask
         )
-        print(collapsed_spec)
+
         if add_data:
             self.add_results.add_results_from_plugin(
                 collapsed_spec, label=self.results_label, replace=False
@@ -164,3 +181,41 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
         ):
             label += f' ({self.spatial_subset_selected})'
         self.results_label_default = label
+
+
+def _move_spectral_axis(wcs, flux, mask=None, uncertainty=None):
+    """Move spectral axis last to match specutils convention"""
+    if wcs.naxis > 1:
+        temp_axes = []
+        phys_axes = wcs.world_axis_physical_types
+        for i in range(len(phys_axes)):
+            if phys_axes[i] is None:
+                continue
+            if phys_axes[i][0:2] == "em" or phys_axes[i][0:5] == "spect":
+                temp_axes.append(i)
+        if len(temp_axes) != 1:
+            raise ValueError("Input WCS must have exactly one axis with "
+                             "spectral units, found {}".format(len(temp_axes)))
+
+        # Due to FITS conventions, a WCS with spectral axis first corresponds
+        # to a flux array with spectral axis last.
+        if temp_axes[0] != 0:
+            wcs = wcs.swapaxes(0, temp_axes[0])
+            if flux is not None:
+                flux = np.swapaxes(flux, len(flux.shape) - temp_axes[0] - 1, -1)
+            if mask is not None:
+                mask = np.swapaxes(mask, len(mask.shape) - temp_axes[0] - 1, -1)
+            if uncertainty is not None:
+                if isinstance(uncertainty, NDUncertainty):
+                    # Account for Astropy uncertainty types
+                    unc_len = len(uncertainty.array.shape)
+                    temp_unc = np.swapaxes(uncertainty.array,
+                                           unc_len - temp_axes[0] - 1, -1)
+                    if uncertainty.unit is not None:
+                        temp_unc = temp_unc * u.Unit(uncertainty.unit)
+                    uncertainty = type(uncertainty)(temp_unc)
+                else:
+                    uncertainty = np.swapaxes(uncertainty,
+                                              len(uncertainty.shape) -
+                                              temp_axes[0] - 1, -1)
+    return wcs, flux, mask, uncertainty
