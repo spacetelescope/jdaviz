@@ -52,7 +52,7 @@
     </v-row>
 
     <v-row>
-      <v-switch v-model="flip" label="Flip horizontally after rotation"></v-switch>
+      <v-switch v-model="flip_horizontal" label="Flip horizontally after rotation"></v-switch>
     </v-row>
 
   </j-tray-plugin>

@@ -24,7 +24,7 @@ class RotateCanvas(PluginTemplateMixin, ViewerSelectMixin):
       Viewer to show orientation/compass information.
     * ``angle``:
       Angle to rotate the axes canvas, clockwise.
-    * ``flip``:
+    * ``flip_horizontal``:
       Whether to flip the canvas horizontally, after applying rotation.
     * :meth:`set_north_up_east_left`
     * :meth:`set_north_up_east_right`
@@ -32,7 +32,7 @@ class RotateCanvas(PluginTemplateMixin, ViewerSelectMixin):
     template_file = __file__, "rotate_canvas.vue"
 
     angle = FloatHandleEmpty(0).tag(sync=True)  # degrees, clockwise
-    flip = Bool(False).tag(sync=True)
+    flip_horizontal = Bool(False).tag(sync=True)  # horizontal flip applied after rotation
     has_wcs = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
@@ -43,7 +43,7 @@ class RotateCanvas(PluginTemplateMixin, ViewerSelectMixin):
 
     @property
     def user_api(self):
-        return PluginUserApi(self, expose=('viewer', 'angle', 'flip',
+        return PluginUserApi(self, expose=('viewer', 'angle', 'flip_horizontal',
                                            'set_north_up_east_right', 'set_north_up_east_left'))
 
     @property
@@ -73,12 +73,12 @@ class RotateCanvas(PluginTemplateMixin, ViewerSelectMixin):
     def set_north_up_east_left(self):
         degn, dege, flip = self._get_wcs_angles()
         self.angle = -degn
-        self.flip = flip
+        self.flip_horizontal = flip
 
     def set_north_up_east_right(self):
         degn, dege, flip = self._get_wcs_angles()
         self.angle = -degn
-        self.flip = not flip
+        self.flip_horizontal = not flip
 
     def vue_set_north_up_east_left(self, *args, **kwargs):
         self.set_north_up_east_left()  # pragma: no cover
@@ -95,13 +95,14 @@ class RotateCanvas(PluginTemplateMixin, ViewerSelectMixin):
             angle = 0
 
         # Rotate selected viewer canvas. This changes zoom too.
-        self.app._viewer_item_by_id(self.viewer.selected_id)['rotation'] = angle
+        self.app._viewer_item_by_id(self.viewer.selected_id)['canvas_angle'] = angle
         # broadcast message (used by compass, etc)
         self.hub.broadcast(CanvasRotationChangedMessage(self.viewer.selected_id,
-                                                        angle, self.flip, sender=self))
+                                                        angle, self.flip_horizontal, sender=self))
 
-    @observe('flip')
+    @observe('flip_horizontal')
     def _flip_changed(self, *args, **kwargs):
-        self.app._viewer_item_by_id(self.viewer.selected_id)['flip'] = self.flip
+        self.app._viewer_item_by_id(self.viewer.selected_id)['canvas_flip_horizontal'] = self.flip_horizontal  # noqa
         self.hub.broadcast(CanvasRotationChangedMessage(self.viewer.selected_id,
-                                                        self.angle, self.flip, sender=self))
+                                                        self.angle, self.flip_horizontal,
+                                                        sender=self))

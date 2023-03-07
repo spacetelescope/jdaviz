@@ -83,7 +83,7 @@
           <jupyter-widget
             :widget="viewer.widget"
             :ref="'viewer-widget-'+viewer.id"
-            :style="'width: 100%; height: 100%; overflow: hidden; transform: rotateY('+viewer_flip(viewer)+') rotate('+viewer.rotation+'deg)'"
+            :style="'width: 100%; height: 100%; overflow: hidden; transform: rotateY('+viewer_rotateY(viewer.canvas_flip_horizontal)+') rotate('+viewer.canvas_angle+'deg)'"
           ></jupyter-widget>
         </v-card>
     </gl-component>
@@ -145,8 +145,8 @@ module.exports = {
        * source of the event is a vue component. We can use that distinction as a close signal. */
       source.$root && this.closefn(viewerId);
     },
-    viewer_flip(viewer) {
-      if (viewer.flip) {
+    viewer_rotateY(canvas_flip_horizontal) {
+      if (canvas_flip_horizontal) {
         return '180deg'
       } else {
         return '0deg'
