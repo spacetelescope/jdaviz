@@ -76,13 +76,13 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
             raise ValueError(f"Length of data labels list ({len(data_label)}) is different"
                              f" than length of list of data ({len(data)})")
 
-    # If there's already data in the viewer, convert units if needed
+    # If there's already visible data in the viewer, convert units if needed
     current_unit = None
     if spectrum_viewer_reference_name in app.get_viewer_reference_names():
-        current_spec = app.get_data_from_viewer(spectrum_viewer_reference_name)
-        if current_spec != {} and current_spec is not None:
-            spec_key = list(current_spec.keys())[0]
-            current_unit = current_spec[spec_key].spectral_axis.unit
+        sv = app.get_viewer(spectrum_viewer_reference_name)
+        for layer_state in sv.state.layers:
+            if layer_state.visible:
+                current_unit = sv.state.x_display_unit
 
     with app.data_collection.delay_link_manager_update():
         # these are used to build a combined spectrum with all
