@@ -213,12 +213,12 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
         unreliable_pixel, unreliable_world = False, False
 
-        self._dict['x'] = x
-        self._dict['x:unit'] = 'pix'
-        self._dict['y'] = y
-        self._dict['y:unit'] = 'pix'
-        # set default empty values
+        self._dict['axes_x'] = x
+        self._dict['axes_x:unit'] = 'pix'
+        self._dict['axes_y'] = y
+        self._dict['axes_y:unit'] = 'pix'
 
+        # set default empty values
         if self.dataset.selected != 'none' and image is not None:
             self.icon = self.app.state.layer_icons.get(image.label, '')  # noqa
             self._dict['data_label'] = image.label
@@ -279,9 +279,9 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             slice_plugin = self.app._jdaviz_helper.plugins.get('Slice', None)
             if slice_plugin is not None:
                 # float to be compatible with default value of nan
-                self._dict['slice index'] = float(slice_plugin.slice)
-                self._dict['slice wavelength'] = slice_plugin.wavelength
-                self._dict['slice wavelength:unit'] = slice_plugin._obj.wavelength_unit
+                self._dict['slice'] = float(slice_plugin.slice)
+                self._dict['spectral_axis'] = slice_plugin.wavelength
+                self._dict['spectral_axis:unit'] = slice_plugin._obj.wavelength_unit
 
         elif isinstance(viewer, MosvizImageView):
 
@@ -297,6 +297,8 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                 coords_status = False
 
         elif isinstance(viewer, MosvizProfile2DView):
+            self._dict['spectral_axis'] = self._dict['axes_x']
+            self._dict['spectral_axis:unit'] = self._dict['axes_x:unit']
             coords_status = False
 
         if coords_status:
@@ -316,11 +318,9 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             self.row3_title = ''
             self.row3_text = f'{world_ra_deg} {world_dec_deg} (deg)'
             self.row3_unreliable = unreliable_world
-            self._dict['RA (ICRS)'] = world_ra
-            self._dict['DEC (ICRS)'] = world_dec
-            self._dict['RA (deg)'] = sky.ra.deg
-            self._dict['DEC (deg)'] = sky.dec.deg
-            self._dict['radec:unreliable'] = unreliable_world
+            # TODO: use sky directly, but need to figure out how to have a compatible "blank" entry
+            self._dict['world'] = (sky.ra.value, sky.dec.value)
+            self._dict['world:unreliable'] = unreliable_world
         else:
             self.row2_title = '\u00A0'
             self.row2_text = ""
@@ -335,7 +335,8 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         self.row1a_title = 'Pixel'
         self.row1a_text = (fmt.format(x, y))
         self.row1_unreliable = unreliable_pixel
-        self._dict['xy:unreliable'] = unreliable_pixel
+        self._dict['pixel'] = (float(x), float(y))
+        self._dict['pixel:unreliable'] = unreliable_pixel
 
         # Extract data values at this position.
         # TODO: for now we just use the first visible layer but we should think
@@ -385,11 +386,17 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             statistic = getattr(viewer.state, 'function', None)
             cache_key = (viewer.state.layers[0].layer.label, statistic)
             sp = self.app._get_object_cache[cache_key]
-            self._dict['x'] = x
-            self._dict['x:unit'] = sp.spectral_axis.unit.to_string()
-            self._dict['y'] = y
-            self._dict['y:unit'] = sp.flux.unit.to_string()
+            self._dict['axes_x'] = x
+            self._dict['axes_x:unit'] = sp.spectral_axis.unit.to_string()
+            self._dict['axes_y'] = y
+            self._dict['axes_y:unit'] = sp.flux.unit.to_string()
             self._dict['data_label'] = ''
+
+        def _copy_axes_to_spectral():
+            self._dict['spectral_axis'] = self._dict['axes_x']
+            self._dict['spectral_axis:unit'] = self._dict['axes_x:unit']
+            self._dict['value'] = self._dict['axes_y']
+            self._dict['value:unit'] = self._dict['axes_y:unit']
 
         self.row1a_title = 'Cursor'
         self.row1a_text = f'{x:10.5e}, {y:10.5e}'
@@ -405,6 +412,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             # get the units from the first layer
             # TODO: replace with display units once implemented
             _cursor_fallback()
+            _copy_axes_to_spectral()
             return
 
         # Snap to the closest data point, not the actual mouse location.
@@ -477,29 +485,31 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             self.icon = 'mdi-cursor-default'
             self.marks[viewer._reference_id].visible = False
             _cursor_fallback()
+            _copy_axes_to_spectral()
             return
 
         self.row2_title = 'Wave'
         self.row2_text = f'{closest_wave.value:10.5e} {closest_wave.unit.to_string()}'
-        self._dict['x'] = closest_wave.value
-        self._dict['x:unit'] = closest_wave.unit.to_string()
+        self._dict['axes_x'] = closest_wave.value
+        self._dict['axes_x:unit'] = closest_wave.unit.to_string()
         if closest_wave.unit != u.pix:
             self.row2_text += f' ({int(closest_i)} pix)'
             if self.app.config == 'cubeviz':
                 # float to be compatible with nan
-                self._dict['slice index'] = float(closest_i)
-                self._dict['slice wavelength'] = closest_wave.value
-                self._dict['slice wavelength:unit'] = closest_wave.unit.to_string()
+                self._dict['slice'] = float(closest_i)
+                self._dict['spectral_axis'] = closest_wave.value
+                self._dict['spectral_axis:unit'] = closest_wave.unit.to_string()
             else:
                 # float to be compatible with nan
                 self._dict['index'] = float(closest_i)
 
         self.row3_title = 'Flux'
         self.row3_text = f'{closest_flux.value:10.5e} {closest_flux.unit.to_string()}'
-        self._dict['y'] = closest_flux.value
-        self._dict['y:unit'] = closest_flux.unit.to_string()
+        self._dict['axes_y'] = closest_flux.value
+        self._dict['axes_y:unit'] = closest_flux.unit.to_string()
 
         self.icon = closest_icon
 
         self.marks[viewer._reference_id].update_xy([closest_wave.value], [closest_flux.value])  # noqa
         self.marks[viewer._reference_id].visible = True
+        _copy_axes_to_spectral()

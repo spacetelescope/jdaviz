@@ -1,3 +1,4 @@
+from astropy.coordinates.sky_coordinate import SkyCoord
 from astropy.table import QTable
 from astropy.table.row import Row as QTableRow
 import numpy as np
@@ -2292,9 +2293,13 @@ class Table(PluginSubcomponent):
         item : QTable, QTableRow, or dictionary of row-name, value pairs
         """
         def json_safe(item):
+            if isinstance(item, SkyCoord):
+                return item.to_string('hmsdms', precision=4)
             if hasattr(item, 'to_string'):
                 return item.to_string()
             if isinstance(item, float) and np.isnan(item):
+                return ''
+            if isinstance(item, tuple) and np.all([np.isnan(i) for i in item]):
                 return ''
             return item
 

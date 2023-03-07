@@ -9,21 +9,15 @@ from jdaviz.core.user_api import PluginUserApi
 
 __all__ = ['Markers']
 
-_default_table_values = {'x': np.nan,
-                         'x:unit': '',
-                         'y': np.nan,
-                         'y:unit': '',
-                         'xy:unreliable': False,
-                         'slice index': np.nan,
-                         'slice wavelength': np.nan,
-                         'slice wavelength:unit': '',
+_default_table_values = {'spectral_axis': np.nan,
+                         'spectral_axis:unit': '',
+                         'slice': np.nan,
+                         'pixel': (np.nan, np.nan),
+                         'pixel:unreliable': None,
+                         'world': (np.nan, np.nan),
+                         'world:unreliable': None,
                          'value': np.nan,
                          'value:unit': '',
-                         'RA (ICRS)': '',
-                         'DEC (ICRS)': '',
-                         'RA (deg)': np.nan,
-                         'DEC (deg)': np.nan,
-                         'radec:unreliable': False,
                          'index': np.nan}
 
 
@@ -48,25 +42,30 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        headers = ['x', 'x:unit', 'y', 'y:unit']
-
         if self.config == 'cubeviz':
-            headers += ['slice index', 'slice wavelength', 'slice wavelength:unit']
+            headers = ['spectral_axis', 'spectral_axis:unit',
+                       'slice', 'pixel', 'pixel:unreliable',
+                       'world', 'world:unreliable', 'value', 'value:unit', 'viewer']
 
-        if self.config in ('imviz', 'cubeviz', 'mosviz'):
-            # image viewers
-            headers += ['xy:unreliable',
-                        'RA (ICRS)', 'DEC (ICRS)',
-                        'RA (deg)', 'DEC (deg)',
-                        'radec:unreliable',
-                        'value', 'value:unit',
-                        'viewer']
-        if self.config in ('specviz', 'specviz2d', 'mosviz'):
-            # 1d spectrum viewers
-            headers += ['index']
-        if self.config == 'specviz2d':
-            # 2d spectrum viewers (already added for mosviz by image viewer)
-            headers += ['xy:unreliable', 'value', 'value:unit', 'viewer']
+        elif self.config == 'imviz':
+            headers = ['pixel', 'pixel:unreliable',
+                       'world', 'world:unreliable', 'value', 'value:unit', 'viewer']
+
+        elif self.config == 'specviz':
+            headers = ['spectral_axis', 'spectral_axis:unit',
+                       'index', 'value', 'value:unit']
+        elif self.config == 'specviz2d':
+            # TODO: add "index" if/when specviz2d supports plotting spectral_axis
+            headers = ['spectral_axis', 'spectral_axis:unit',
+                       'pixel', 'pixel:unreliable',
+                       'value', 'value:unit', 'viewer']
+        elif self.config == 'mosviz':
+            headers = ['spectral_axis', 'spectral_axis:unit',
+                       'pixel', 'pixel:unreliable',
+                       'world', 'world:unreliable', 'index', 'value', 'value:unit',
+                       'viewer']
+        else:
+            headers = []
 
         headers += ['data_label']
 
@@ -136,7 +135,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             except ValueError as err:
                 raise ValueError(f'failed to add {row_info} to table: {repr(err)}')
 
-            x, y = row_info['x'], row_info['y']
+            x, y = row_info['axes_x'], row_info['axes_y']
             # TODO: will need to test/update when adding support for display units
             self._get_mark(viewer).append_xy(getattr(x, 'value', x), getattr(y, 'value', y))
 
