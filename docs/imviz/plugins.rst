@@ -136,6 +136,10 @@ For an image with a valid WCS, the compass will show directions to North (N)
 and East (E) for ICRS sky coordinates. It also shows the currently displayed
 data label, the X and Y directions, and the zoom box.
 
+Note that when the axes canvas is rotated (by :ref:`rotate-canvas`), the zoom box corresponds
+to the set zoom limits, not the extent of the viewer.  Instead, the compass image itself is
+shown rotated/flipped to the same orientation.
+
 When you have multiple viewers created in Imviz, use the Viewer dropdown menu
 to change the active viewer that it tracks.
 
@@ -294,7 +298,8 @@ The canvas rotation plugin allows rotating and horizontally flipping the image t
 value by rotating the canvas axes themselves.  Note that this does not affect the underlying data, and
 exporting data to the notebook via the API will therefore not exhibit the same rotation.
 
-The :ref:`imviz-compass` will also rotate (and flip) accordingly.
+The :ref:`imviz-compass` will also rotate (and flip) accordingly, but will show the zoom box
+corresponding to the zoom limits, not the region shown in the viewer itself.
 
 Presets are provided to set north up and east either to the right or the left, as well as a slider
 and input to set the angle and a switch to set whether the axes should be flipped horizontally

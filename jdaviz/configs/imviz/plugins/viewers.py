@@ -234,11 +234,6 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
                                     (self.state.x_max, self.state.y_max),
                                     (self.state.x_max, self.state.y_min)))
 
-        # Disable if there is canvas rotation.
-        theta = self.jdaviz_app._viewer_item_by_id(self.reference_id)['canvas_angle']
-        if not np.allclose(theta, 0):
-            zoom_limits = None
-
         return zoom_limits
 
     def set_compass(self, image):
