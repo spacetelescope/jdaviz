@@ -9,8 +9,15 @@ from regions import CirclePixelRegion, PixCoord
 ASTROPY_LT_5_3_DEV = Version(astropy.__version__) < Version('5.3.dev')
 
 
+@pytest.mark.skipif(not ASTROPY_LT_5_3_DEV, reason='Needs astropy 5.2 or earlier')
+def test_version_before_nddata_update(cubeviz_helper, spectrum1d_cube_with_uncert):
+    # Also test that plugin is disabled before data is loaded.
+    plg = cubeviz_helper.plugins['Spectral Extraction']
+    assert plg._obj.disabled_msg != ''
+
+
 @pytest.mark.skipif(ASTROPY_LT_5_3_DEV, reason='Needs astropy 5.3.dev or later')
-def test_version_reqs(cubeviz_helper, spectrum1d_cube_with_uncert):
+def test_version_after_nddata_update(cubeviz_helper, spectrum1d_cube_with_uncert):
     # Also test that plugin is disabled before data is loaded.
     plg = cubeviz_helper.plugins['Spectral Extraction']
     assert plg._obj.disabled_msg == ''
