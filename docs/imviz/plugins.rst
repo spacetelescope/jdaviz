@@ -87,6 +87,11 @@ displayed in the app toolbar into the table.  The markers remain at that fixed p
 the viewer they were created (regardless of changes to the underlying data or linking) and are only
 visible when the plugin is opened.
 
+In Imviz, the table also exposed columns labeled "pixel:unreliable", "world:unreliable", and
+"value:unreliable".  These will be logged as ``True`` in cases where the information is outside
+the bounds of the reference image's WCS (noted in the mouseover display by the information showing
+as grayed).
+
 To export the table into the notebook via the API, call
 :meth:`~jdaviz.core.template_mixin.TableMixin.export_table`
 (see :ref:`plugin-apis`).

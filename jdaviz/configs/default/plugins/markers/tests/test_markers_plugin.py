@@ -53,7 +53,8 @@ def test_markers_cubeviz(cubeviz_helper, spectrum1d_cube):
                                                       'pixel': (0, 0),
                                                       'pixel:unreliable': False,
                                                       'value': 8.0,
-                                                      'value:unit': 'Jy'})
+                                                      'value:unit': 'Jy',
+                                                      'value:unreliable': False})
 
     mp._obj._on_viewer_key_event(fv, {'event': 'keydown',
                                       'key': 'm'})
@@ -157,7 +158,8 @@ class TestImvizMultiLayer(BaseImviz_WCS_NoWCS):
                                              'pixel': (5.0, 5.0),
                                              'pixel:unreliable': False,
                                              'value': 55.0,
-                                             'value:unit': ''}
+                                             'value:unit': '',
+                                             'value:unreliable': False}
 
         mp._obj._on_viewer_key_event(self.viewer, {'event': 'keydown',
                                                    'key': 'm'})
@@ -204,7 +206,8 @@ class TestImvizMultiLayer(BaseImviz_WCS_NoWCS):
                                                           'pixel': (5.0, 5.0),
                                                           'pixel:unreliable': False,
                                                           'value': 55.0,
-                                                          'value:unit': ''})
+                                                          'value:unit': '',
+                                                          'value:unreliable': False})
 
         mp._obj._on_viewer_key_event(self.viewer, {'event': 'keydown',
                                                    'key': 'm'})

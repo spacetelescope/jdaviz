@@ -379,6 +379,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             self.row1b_text = f'{value:+10.5e} {unit}'
             self._dict['value'] = float(value)
             self._dict['value:unit'] = unit
+            self._dict['value:unreliable'] = unreliable_pixel
         else:
             self.row1b_title = ''
             self.row1b_text = ''

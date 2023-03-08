@@ -18,6 +18,7 @@ _default_table_values = {'spectral_axis': np.nan,
                          'world:unreliable': None,
                          'value': np.nan,
                          'value:unit': '',
+                         'value:unreliable': None,
                          'index': np.nan}
 
 
@@ -49,7 +50,9 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
 
         elif self.config == 'imviz':
             headers = ['pixel', 'pixel:unreliable',
-                       'world', 'world:unreliable', 'value', 'value:unit', 'viewer']
+                       'world', 'world:unreliable',
+                       'value', 'value:unit', 'value:unreliable',
+                       'viewer']
 
         elif self.config == 'specviz':
             headers = ['spectral_axis', 'spectral_axis:unit',
