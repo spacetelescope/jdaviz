@@ -106,6 +106,8 @@ class Specviz(ConfigHelper, LineListMixin):
                         spectra[lyr.label] = spectrum
 
         if not apply_slider_redshift:
+            if data_label is not None:
+                return spectra[data_label]
             return spectra
         else:
             output_spectra = {}
