@@ -32,6 +32,9 @@ API Changes
 
 - Export plot plugin now exposes the ``viewer`` dropdown in the user API. [#2037]
 
+- Replaced internal ``get_data_from_viewer()`` calls, ``specviz.get_spectra`` now returns
+  spectra for all data+subset combinations. [#2072]
+
 Cubeviz
 ^^^^^^^
 
