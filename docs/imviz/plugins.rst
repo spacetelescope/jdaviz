@@ -303,7 +303,8 @@ corresponding to the zoom limits, not the region shown in the viewer itself.
 
 Presets are provided to reset the orientation as well as to set north up and east either to the
 right or the left, as well as a slider and input to set the angle and a switch to set whether the
-axes should be flipped horizontally after applying the rotation.
+axes should be flipped horizontally after applying the rotation (a vertical flip can be achieved
+via a 180 deg rotation and a horizontal flip).
 
 
 .. _imviz-export-plot:
