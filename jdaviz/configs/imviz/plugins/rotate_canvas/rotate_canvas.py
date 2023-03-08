@@ -26,6 +26,7 @@ class RotateCanvas(PluginTemplateMixin, ViewerSelectMixin):
       Angle to rotate the axes canvas, clockwise.
     * ``flip_horizontal``:
       Whether to flip the canvas horizontally, after applying rotation.
+    * :meth:`reset`
     * :meth:`set_north_up_east_left`
     * :meth:`set_north_up_east_right`
     """
@@ -43,7 +44,7 @@ class RotateCanvas(PluginTemplateMixin, ViewerSelectMixin):
 
     @property
     def user_api(self):
-        return PluginUserApi(self, expose=('viewer', 'angle', 'flip_horizontal',
+        return PluginUserApi(self, expose=('viewer', 'angle', 'flip_horizontal', 'reset',
                                            'set_north_up_east_right', 'set_north_up_east_left'))
 
     @property
@@ -70,15 +71,33 @@ class RotateCanvas(PluginTemplateMixin, ViewerSelectMixin):
         _, _, _, _, _, _, degn, dege, flip = get_compass_info(ref_data.coords, ref_data.shape)
         return degn, dege, flip
 
+    def reset(self):
+        """
+        Reset the rotation to an angle of 0 and no flip
+        """
+        self.angle = 0
+        self.flip_horizontal = False
+
     def set_north_up_east_left(self):
+        """
+        Set the rotation angle and flip to achieve North up and East left according to the reference
+        image WCS.
+        """
         degn, dege, flip = self._get_wcs_angles()
         self.angle = -degn
         self.flip_horizontal = flip
 
     def set_north_up_east_right(self):
+        """
+        Set the rotation angle and flip to achieve North up and East right according to the
+        reference image WCS.
+        """
         degn, dege, flip = self._get_wcs_angles()
         self.angle = -degn
         self.flip_horizontal = not flip
+
+    def vue_reset(self, *args, **kwargs):
+        self.reset()  # pragma: no cover
 
     def vue_set_north_up_east_left(self, *args, **kwargs):
         self.set_north_up_east_left()  # pragma: no cover

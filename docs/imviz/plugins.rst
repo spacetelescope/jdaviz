@@ -301,9 +301,9 @@ exporting data to the notebook via the API will therefore not exhibit the same r
 The :ref:`imviz-compass` will also rotate (and flip) accordingly, but will show the zoom box
 corresponding to the zoom limits, not the region shown in the viewer itself.
 
-Presets are provided to set north up and east either to the right or the left, as well as a slider
-and input to set the angle and a switch to set whether the axes should be flipped horizontally
-after applying the rotation.
+Presets are provided to reset the orientation as well as to set north up and east either to the
+right or the left, as well as a slider and input to set the angle and a switch to set whether the
+axes should be flipped horizontally after applying the rotation.
 
 
 .. _imviz-export-plot:

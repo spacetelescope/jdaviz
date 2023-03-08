@@ -21,6 +21,10 @@ class TestImvizRotateCanvas(BaseImviz_WCS_NoWCS):
         assert np.allclose(rc.angle, -0.0005285079750789092)
         assert rc.flip_horizontal is True
 
+        rc.reset()
+        assert np.allclose(rc.angle, 0.0)
+        assert rc.flip_horizontal is False
+
         # removing WCS data should disable orientation options
         self.imviz.app.remove_data_from_viewer('imviz-0', 'has_wcs[SCI,1]')
         assert rc._obj.has_wcs is False

@@ -11,14 +11,19 @@
       hint="Select viewer."
     />
     
-    <v-row v-if="has_wcs">
+    <v-row>
       <span style="line-height: 36px">Presets:</span>
-      <j-tooltip tooltipcontent="north up, east right">
+      <j-tooltip tooltipcontent="reset rotation and flip">
+        <v-btn icon @click="reset">
+          <v-icon>mdi-restore</v-icon>
+        </v-btn>
+      </j-tooltip>
+      <j-tooltip v-if="has_wcs" tooltipcontent="north up, east right">
         <v-btn icon @click="set_north_up_east_right">
           <v-icon>mdi-angle-right</v-icon>
         </v-btn>
       </j-tooltip>
-      <j-tooltip tooltipcontent="north up, east left">
+      <j-tooltip v-if="has_wcs" tooltipcontent="north up, east left">
         <v-btn icon @click="set_north_up_east_left">
           <v-icon style="transform: rotateY(180deg)">mdi-angle-right</v-icon>
         </v-btn>
