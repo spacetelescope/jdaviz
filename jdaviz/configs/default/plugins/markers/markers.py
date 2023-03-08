@@ -44,8 +44,8 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         super().__init__(*args, **kwargs)
         if self.config == 'cubeviz':
             headers = ['spectral_axis', 'spectral_axis:unit',
-                       'slice', 'pixel', 'pixel:unreliable',
-                       'world', 'world:unreliable', 'value', 'value:unit', 'viewer']
+                       'slice', 'pixel',
+                       'world', 'value', 'value:unit', 'viewer']
 
         elif self.config == 'imviz':
             headers = ['pixel', 'pixel:unreliable',
@@ -57,12 +57,10 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         elif self.config == 'specviz2d':
             # TODO: add "index" if/when specviz2d supports plotting spectral_axis
             headers = ['spectral_axis', 'spectral_axis:unit',
-                       'pixel', 'pixel:unreliable',
-                       'value', 'value:unit', 'viewer']
+                       'pixel', 'value', 'value:unit', 'viewer']
         elif self.config == 'mosviz':
             headers = ['spectral_axis', 'spectral_axis:unit',
-                       'pixel', 'pixel:unreliable',
-                       'world', 'world:unreliable', 'index', 'value', 'value:unit',
+                       'pixel', 'world', 'index', 'value', 'value:unit',
                        'viewer']
         else:
             headers = []
@@ -131,7 +129,8 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                 row_info.setdefault(k, _default_table_values.get(k, ''))
 
             try:
-                self.table.add_item(row_info)
+                self.table.add_item({k: v for k, v in row_info.items()
+                                     if k in self.table.headers_avail})
             except ValueError as err:
                 raise ValueError(f'failed to add {row_info} to table: {repr(err)}')
 
