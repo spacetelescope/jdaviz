@@ -166,9 +166,7 @@ class LineListTool(PluginTemplateMixin):
 
         label = msg.data.label
         try:
-            viewer_data = self.app.get_data_from_viewer(
-                self._default_spectrum_viewer_reference_name
-            ).get(label)
+            viewer_data = self.app._jdaviz_helper.get_data(data_label=label)
         except TypeError:
             warn_message = SnackbarMessage("Line list plugin could not retrieve data from viewer",
                                            sender=self, color="error")
