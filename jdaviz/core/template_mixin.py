@@ -984,7 +984,7 @@ class SubsetSelect(SelectPluginComponent):
 
     @property
     def selected_subset_mask(self):
-        if self._allowed_type == 'spatial':
+        if self._allowed_type == 'spatial' or self.app.config != 'cubeviz':
             statistic = None
         elif self._allowed_type == 'spectral':
             viewer_ref = getattr(self.plugin,
