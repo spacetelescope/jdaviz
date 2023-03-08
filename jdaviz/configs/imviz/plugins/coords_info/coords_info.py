@@ -327,9 +327,14 @@ class CoordsInfo(TemplateMixin):
                 if not isinstance(lyr.layer.subset_state, RoiSubsetState):
                     # then this is a SPECTRAL subset
                     continue
-            elif ((not isinstance(lyr.layer, BaseData)) or (lyr.layer.ndim not in (1, 3))
-                    or (not lyr.visible)):
+                # For use later in data retrieval
+                subset_label = lyr.layer.label
+                data_label = lyr.layer.data.label
+            elif ((not isinstance(lyr.layer, BaseData)) or (lyr.layer.ndim not in (1, 3))):
                 continue
+            else:
+                subset_label = None
+                data_label = lyr.layer.label
 
             try:
                 # Cache should have been populated when spectrum was first plotted.
@@ -339,7 +344,9 @@ class CoordsInfo(TemplateMixin):
                 if cache_key in self.app._get_object_cache:
                     sp = self.app._get_object_cache[cache_key]
                 else:
-                    sp = self.app.get_data_from_viewer('spectrum-viewer', lyr.layer.label)
+                    sp = self.app._jdaviz_helper.get_data(data_label=data_label,
+                                                          statistic=statistic,
+                                                          subset_to_apply=subset_label)
                     self.app._get_object_cache[cache_key] = sp
 
                 # Out of range in spectral axis.
