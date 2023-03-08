@@ -400,6 +400,9 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             self._dict['value'] = self._dict['axes_y']
             self._dict['value:unit'] = self._dict['axes_y:unit']
 
+        if not len(viewer.state.layers):
+            return
+
         self.row1a_title = 'Cursor'
         self.row1a_text = f'{x:10.5e}, {y:10.5e}'
 
@@ -473,7 +476,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                     closest_i = cur_i
                     closest_wave = cur_wave
                     closest_flux = cur_flux
-                    closest_icon = self.app.state.layer_icons.get(lyr.layer.label)
+                    closest_icon = self.app.state.layer_icons.get(lyr.layer.label, '')
                     self._dict['data_label'] = lyr.layer.label
             except Exception:  # nosec
                 # Something is loaded but not the right thing
