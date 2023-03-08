@@ -1,3 +1,4 @@
+import numpy as np
 from numpy.testing import assert_allclose
 
 from jdaviz.core.marks import MarkersMark
@@ -13,6 +14,8 @@ def _assert_dict_allclose(dict1, dict2):
     for k, v in dict1.items():
         if isinstance(v, float):
             assert_allclose(v, dict2.get(k))
+        elif isinstance(v, (tuple, list)):
+            assert_allclose(np.asarray(v), np.asarray(dict2.get(k)))
         else:
             assert v == dict2.get(k)
 
