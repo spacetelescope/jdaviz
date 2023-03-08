@@ -21,7 +21,7 @@
       :key="viewer.id"
       :title="viewer.config === 'cubeviz' ? viewer.reference : viewer.id"
       :tab-id="viewer.id"
-      @resize="resizeViewer(viewer)"
+      @resize="(e) => $emit('resize', e)"
       @destroy="destroy($event, viewer.id)"
       style="display: flex; flex-flow: column; height: 100%; overflow-y: auto; overflow-x: hidden"
     >
