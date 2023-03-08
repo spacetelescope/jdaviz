@@ -299,6 +299,8 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         elif isinstance(viewer, MosvizProfile2DView):
             self._dict['spectral_axis'] = self._dict['axes_x']
             self._dict['spectral_axis:unit'] = self._dict['axes_x:unit']
+            self._dict['value'] = self._dict['axes_y']
+            self._dict['value:unit'] = self._dict['axes_y:unit']
             coords_status = False
 
         if coords_status:
