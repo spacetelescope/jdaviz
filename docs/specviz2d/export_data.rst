@@ -10,19 +10,11 @@ Exporting Data From Specviz2D
 ==========
 
 Images in the 2D spectrum viewer can be exported as `specutils.Spectrum1D` objects into
-the notebook:
+the notebook (replace "2D data" with the lable of the desired data):
 
 .. code-block:: python
 
-    specviz2d.app.get_data_from_viewer('spectrum-2d-viewer')
-
-which returns a dictionary, with the loaded data labels as keywords and `specutils.Spectrum1D`
-objects as values.  To return only a single `specutils.Spectrum1D` object, pass the data label:
-
-.. code-block:: python
-
-    specviz2d.app.get_data_from_viewer('spectrum-2d-viewer', 'my-data-label')
-
+    specviz2d.get_data(data_label="2D data")
 
 .. _specviz2d-export-data-1d:
 
@@ -33,14 +25,7 @@ Similarly, the 1D spectrum data objects can be exported into the notebook:
 
 .. code-block:: python
 
-    specviz2d.app.get_data_from_viewer('spectrum-viewer')
-
-or:
-
-.. code-block:: python
-
-    specviz2d.app.get_data_from_viewer('spectrum-viewer', 'my-data-label')
-
+    specviz2d.get_data(data_label='1D data')
 
 An instance of Specviz can also be accessed, which exposes some helper methods from Specviz:
 

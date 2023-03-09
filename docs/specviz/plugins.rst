@@ -213,9 +213,8 @@ The redshift itself can be set from the notebook using the ``set_redshift`` meth
 
 Any set redshift values are applied to spectra output using the
 :py:meth:`~jdaviz.configs.specviz.helper.Specviz.get_spectra` helper method.
-Note that using the lower-level app data retrieval (e.g.,
-``specviz.app.get_data_from_viewer()``) will return the data as
-originally loaded, with the redshift unchanged.
+Note that using the lower-level app data retrieval (e.g., ``specviz.get_data()``)
+will return the data as originally loaded, with the redshift unchanged.
 
 .. _line-analysis:
 

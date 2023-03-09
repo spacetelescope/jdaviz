@@ -22,13 +22,19 @@ can be used to extract the *spectrum* of a spatial subset named "Subset 1":
 
 .. code-block:: python
 
-    subset1_spec1d = cubeviz.specviz.get_spectra("Subset 1")
+    subset1_spec1d = cubeviz.specviz.get_spectra(subset_to_apply="Subset 1")
 
 An example without accessing Specviz:
 
 .. code-block:: python
 
-    subset1_spec1d = cubeviz.app.get_data_from_viewer("flux-viewer", data_label="Subset 1")
+    subset1_spec1d = cubeviz.get_data(data_label = flux_data_label, 
+                                      subset_to_apply="Subset 1",
+                                      statistic="mean")
+
+Note that in the above example, the ``statistic`` keyword is used to tell Cubeviz
+how to collapse the flux cube down to a one dimensional spectrum - this does not
+automatically match the collapse function used in the spectrum viewer.
 
 To get all subsets from the spectrum viewer:
 
@@ -57,42 +63,17 @@ The following line of code can be used to extract a spectral subset named "Subse
 
     subset2_spec1d = cubeviz.specviz.get_spectra("Subset 2")
 
-2D Images and 3D Data Cubes
-===========================
+3D Data Cubes
+=============
 
-2D images and 3D data cubes can be extracted from their respective
-:ref:`viewers <cubeviz-viewers>`. The viewer options in the Cubeviz configuration are
-``flux-viewer``, ``uncert-viewer``, and ``mask-viewer``.
-For example, to list the data available in a particular viewer:
+To extract the entire cube, you can run the following code (replace "data_name"
+with the name of the data you want to extract):
 
 .. code-block:: python
 
-    mydata = cubeviz.app.get_data_from_viewer("flux-viewer")
+    mydata = cubeviz.get_data(data_label="data_name")
 
-To extract the data you want (replace "data_name" with the name of your data):
-
-.. code-block:: python
-
-    mydata = cubeviz.app.get_data_from_viewer("uncert-viewer", "data_name")
-
-The data is returned as a ``glue-jupyter`` object.  To convert to a numpy array:
-
-.. code-block:: python
-
-    mydata_flux = mydata["flux"]
-
-To retrieve the data cube as a `specutils.Spectrum1D` object, you can do the following:
-
-.. code-block:: python
-
-    from specutils import Spectrum1D
-    mydata.get_object(cls=Spectrum1D, statistic=None)
-
-Alternatively, you can wrap this all into a single command:
-
-.. code-block:: python
-
-    mydata = cubeviz.app.get_data_from_viewer("uncert-viewer", "data_name")
+The data is returned as a 3D `specutils.Spectrum1D` object.
 
 To write out a `specutils.Spectrum1D` cube from Cubeviz
 (e.g., a fitted cube from :ref:`model-fitting`),

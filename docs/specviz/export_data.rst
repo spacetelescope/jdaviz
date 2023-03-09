@@ -14,28 +14,26 @@ those data currently back into your Jupyter notebook:
 
     specviz.get_spectra()
 
-which yields a `specutils.Spectrum1D` object that you can manipulate however
-you wish.  You can then load the modified spectrum back into the notebook via
-the API described in :ref:`specviz-import-api`.
+which yields a either a single `specutils.Spectrum1D` object or a dictionary of 
+`specutils.Spectrum1D` (if there are multiple displayed spectra) that you can
+manipulate however you wish.  You can then load the modified spectrum back into
+the notebook via the API described in :ref:`specviz-import-api`.
 
 Alternatively, if you want more control over Specviz, you can access it the
-via the lower-level application interface that connects to the ``glue-jupyter``
-application level.  This is accessed via the ``.app`` attribute of the
-:py:class:`~jdaviz.configs.specviz.helper.Specviz` helper class.  For example:
+via the ``get_data`` method of the
+:py:class:`~jdaviz.configs.specviz.helper.Specviz` helper class. This method always
+returns a single spectrum; if there are multiple spectra loaded you must supply a
+label to the ``data_label`` argument. For example:
 
 .. code-block:: python
 
-    specviz.app.get_data_from_viewer('spectrum-viewer')
+    specviz.get_data(data_label='Spectrum 1')
 
-To extract a specific spectral subset:
+To extract a spectrum with a spectral subset applied:
 
 .. code-block:: python
 
-    specviz.app.get_data_from_viewer('spectrum-viewer', 'Subset 1')
-
-For more on what you can do with this lower-level object, see the API sections
-and the
-`glue-jupyter documentation <https://glue-jupyter.readthedocs.io/en/latest/>`_.
+    specviz.get_data(spectrum_to_apply='Subset 1')
 
 .. seealso::
 
