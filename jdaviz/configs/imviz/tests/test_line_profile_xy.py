@@ -64,3 +64,10 @@ class TestLineProfileXY(BaseImviz_WCS_NoWCS):
         assert lp_plugin.line_plot_across_x
         assert lp_plugin.line_plot_across_y
         assert lp_plugin.plot_available
+
+        # Nothing should update on "l" when plugin closed.
+        lp_plugin.plugin_opened = False
+        self.viewer.on_mouse_or_key_event(
+            {'event': 'keydown', 'key': 'l', 'domain': {'x': 5.1, 'y': 5}})
+        lp_plugin.selected_x = '1.1'
+        lp_plugin.selected_y = '9'
