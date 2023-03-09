@@ -1,4 +1,4 @@
-3.3.1 (unreleased)
+3.3.1 (2023-03-09)
 ==================
 
 Bug Fixes
@@ -30,15 +30,6 @@ Imviz
   plugin. [#2032]
 
 * Line Profiles plugin no longer updates when "l" key is pressed while plugin is not opened. [#2073]
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
 
 3.3 (2023-02-09)
 ================
