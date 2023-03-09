@@ -73,7 +73,28 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
-3.3.1 (unreleased)
+3.3.2 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+3.3.1 (2023-03-09)
 ==================
 
 Bug Fixes
