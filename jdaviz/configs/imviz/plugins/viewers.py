@@ -153,7 +153,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
                 data['event'] = 'mousemove'
                 self.on_mouse_or_key_event(data)
 
-            elif key_pressed == 'l':
+            elif key_pressed == 'l' and self.line_profile_xy.plugin_opened:
                 # Same data as mousemove above.
                 image = active_layer.layer
                 x = data['domain']['x']
