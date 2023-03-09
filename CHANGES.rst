@@ -104,6 +104,8 @@ Imviz
 * Fixed aperture and background dropdowns validation for Simple Aperture Photometry
   plugin. [#2032]
 
+* Line Profiles plugin no longer updates when "l" key is pressed while plugin is not opened. [#2073]
+
 Mosviz
 ^^^^^^
 
