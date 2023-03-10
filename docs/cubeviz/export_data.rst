@@ -28,7 +28,7 @@ An example without accessing Specviz:
 
 .. code-block:: python
 
-    subset1_spec1d = cubeviz.get_data(data_label = flux_data_label, 
+    subset1_spec1d = cubeviz.get_data(data_label=flux_data_label, 
                                       subset_to_apply="Subset 1",
                                       statistic="mean")
 
