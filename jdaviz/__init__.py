@@ -13,4 +13,5 @@ from jdaviz.configs.specviz2d import Specviz2d  # noqa
 from jdaviz.configs.mosviz import Mosviz  # noqa
 from jdaviz.configs.cubeviz import Cubeviz  # noqa
 from jdaviz.configs.imviz import Imviz  # noqa
+from jdaviz.configs.default import Freeform  # noqa
 from jdaviz.utils import enable_hot_reloading  # noqa
