@@ -33,11 +33,19 @@ To extract a spectrum with a spectral subset applied:
 
 .. code-block:: python
 
-    specviz.get_data(spectrum_to_apply='Subset 1')
+    specviz.get_data(subset_to_apply='Subset 1')
 
 In this case, the returned `specutils.Spectrum1D` object will have a ``mask``
 attribute, where ``True`` corresponds to the region outside the selected subset
-(i.e., the region that has been masked out).
+(i.e., the region that has been masked out). You could load back in a copy of the
+spectrum containing only your subset by running:
+
+.. code-block:: python
+
+    spec = specviz.get_data(subset_to_apply='Subset 1')
+    subset_spec = Spectrum1D(flux=spec.flux[~spec.mask],
+                             spectral_axis=spec.spectral_axis[~spec.mask])
+    specviz.load_spectrum(subset_spec)
 
 .. seealso::
 
