@@ -33,8 +33,9 @@ An example without accessing Specviz:
                                       statistic="mean")
 
 Note that in the above example, the ``statistic`` keyword is used to tell Cubeviz
-how to collapse the flux cube down to a one dimensional spectrum - this does not
-automatically match the collapse function used in the spectrum viewer.
+how to collapse the flux cube down to a one dimensional spectrum - this is not 
+necessarily equivalent to the collapsed spectrum in the spectrum viewer, which 
+may have used a different collapse statistic.
 
 To get all subsets from the spectrum viewer:
 
