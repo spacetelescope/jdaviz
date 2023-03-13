@@ -2,6 +2,7 @@ import warnings
 
 from astropy import units as u
 from astropy.utils.decorators import deprecated
+from glue.core.subset_group import GroupedSubset
 from specutils import SpectralRegion, Spectrum1D
 
 from jdaviz.core.helpers import ConfigHelper
@@ -67,20 +68,50 @@ class Specviz(ConfigHelper, LineListMixin):
                           show_in_viewer=show_in_viewer,
                           concat_by_file=concat_by_file)
 
-    def get_spectra(self, data_label=None, apply_slider_redshift="Warn"):
+    def get_spectra(self, data_label=None, subset_to_apply=None, apply_slider_redshift="Warn"):
         """Returns the current data loaded into the main viewer
 
         """
-        spectra = self.app.get_data_from_viewer(
-            self._default_spectrum_viewer_reference_name, data_label=data_label
-        )
+        spectra = {}
+        # Just to save line length
+        get_data_method = self.app._jdaviz_helper.get_data
+        viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
+        statistic = getattr(viewer, "function", None)
+
+        if data_label is not None:
+            spectrum = get_data_method(data_label=data_label,
+                                       subset_to_apply=subset_to_apply,
+                                       statistic=statistic)
+            spectra[data_label] = spectrum
+        else:
+            for layer_state in viewer.state.layers:
+                lyr = layer_state.layer
+                if subset_to_apply is not None:
+                    if lyr.label == subset_to_apply:
+                        spectrum = get_data_method(data_label=lyr.data.label,
+                                                   subset_to_apply=subset_to_apply,
+                                                   statistic=statistic)
+                        spectra[lyr.data.label] = spectrum
+                    else:
+                        continue
+                else:
+                    if isinstance(lyr, GroupedSubset):
+                        spectrum = get_data_method(data_label=lyr.data.label,
+                                                   subset_to_apply=lyr.label,
+                                                   statistic=statistic)
+                        spectra[f'{lyr.data.label} ({lyr.label})'] = spectrum
+                    else:
+                        spectrum = get_data_method(data_label=lyr.label,
+                                                   statistic=statistic)
+                        spectra[lyr.label] = spectrum
+
         if not apply_slider_redshift:
+            if data_label is not None:
+                return spectra[data_label]
             return spectra
         else:
             output_spectra = {}
             # We need to create new Spectrum1D outputs with the redshifts set
-            if data_label is not None:
-                spectra = {data_label: spectra}
             for key in spectra.keys():
                 output_spectra[key] = _apply_redshift_to_spectra(spectra[key], self._redshift)
 

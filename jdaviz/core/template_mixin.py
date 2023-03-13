@@ -984,30 +984,21 @@ class SubsetSelect(SelectPluginComponent):
 
     @property
     def selected_subset_mask(self):
-        if self._allowed_type == 'spatial':
-            viewer_ref = getattr(self.plugin,
-                                 '_default_flux_viewer_reference_name',
-                                 self.viewers[0].reference_id)
+        if self._allowed_type == 'spatial' or self.app.config != 'cubeviz':
+            statistic = None
         elif self._allowed_type == 'spectral':
             viewer_ref = getattr(self.plugin,
                                  '_default_spectrum_viewer_reference_name',
                                  self.viewers[0].reference_id)
+            statistic = self.app.get_viewer(viewer_ref).state.function
 
-        subset = self.app.get_data_from_viewer(
-            viewer_ref, data_label=self.selected
-        )
+        data_label = self.plugin.dataset.selected
 
-        if hasattr(subset, 'mask'):
-            # the mask attr is available for spectral subsets:
-            subset_mask = subset.mask
-        else:
-            # `subset` is a GroupedSubset.
-            # We take the logical-not of the mask here, since the glue subset masks
-            # are True in selected regions and False outside. This is the opposite of
-            # the numpy/astropy/specutils convention where True is masked-out.
-            subset_mask = ~subset.to_mask()
+        subset = self.app._jdaviz_helper.get_data(data_label=data_label,
+                                                  subset_to_apply=self.selected,
+                                                  statistic=statistic)
 
-        return subset_mask
+        return subset.mask
 
     def selected_min_max(self, spectrum1d):
         if self.selected_obj is None:
@@ -1420,17 +1411,9 @@ class DatasetSelect(SelectPluginComponent):
         if self.selected not in self.labels:
             # _apply_default_selection will override shortly anyways
             return None
-        for viewer_ref in self.viewer_refs:
-            if viewer_ref is None:
-                # image viewers might not have a reference, but get_data_from_viewer
-                # does not take id
-                continue
-            match = self.app.get_data_from_viewer(viewer_ref, data_label=self.selected)
-            if match is not None:
-                if hasattr(match, 'get_object'):
-                    # cube viewers return the data collection instance from get_data_from_viewer
-                    return match.get_object(cls=self.default_data_cls)
-                return match
+        match = self.app._jdaviz_helper.get_data(data_label=self.selected)
+        if match is not None:
+            return match
         # handle the case of empty Application with no viewer, we'll just pull directly
         # from the data collection
         return self.get_object(cls=self.default_data_cls)

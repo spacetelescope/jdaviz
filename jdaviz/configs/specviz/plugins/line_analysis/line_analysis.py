@@ -173,9 +173,10 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         if msg is None or msg.viewer_id != viewer_id or msg.data is None:
             return
 
-        viewer_data = self.app.get_data_from_viewer(
-            self._default_spectrum_viewer_reference_name
-        ).get(msg.data.label)
+        viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
+        statistic = getattr(viewer, 'function', None)
+        viewer_data = self.app._jdaviz_helper.get_data(data_label=msg.data.label,
+                                                       statistic=statistic)
 
         # If no data is currently plotted, don't attempt to update
         if viewer_data is None:
@@ -300,7 +301,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         Run the line analysis functions on the selected data/subset and
         display the results.
         """
-        if not hasattr(self, 'dataset'):
+        if not hasattr(self, 'dataset') or self.app._jdaviz_helper is None:
             # during initial init, this can trigger before the component is initialized
             return
 
@@ -314,16 +315,25 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         # show spinner with overlay
         self.results_computing = True
 
-        if (self.config == 'cubeviz' and self.spatial_subset_selected not in
-                (SPATIAL_DEFAULT_TEXT, "")):
-            # then we're acting on the auto-collapsed data in the spectrum-viewer
-            # of a spatial subset.  In the future, we may want to expose on-the-fly
-            # collapse options... but right now these will follow the settings of the
-            # spectrum-viewer itself
-            full_spectrum = self.app.get_data_from_viewer(
-                self._default_spectrum_viewer_reference_name,
-                self.spatial_subset_selected
-            )
+        if self.config == 'cubeviz':
+            statistic = None
+            for viewer in self.dataset.viewers:
+                if hasattr(viewer.state, "function"):
+                    statistic = viewer.state.function
+                    break
+            subset_to_apply = None
+            if self.spatial_subset_selected not in (SPATIAL_DEFAULT_TEXT, ""):
+                # then we're acting on the auto-collapsed data in the spectrum-viewer
+                # of a spatial subset.  In the future, we may want to expose on-the-fly
+                # collapse options... but right now these will follow the settings of the
+                # spectrum-viewer itself
+                subset_to_apply = self.spatial_subset_selected
+
+            full_spectrum = self.app._jdaviz_helper.get_data(
+                data_label=self.dataset.selected,
+                subset_to_apply=subset_to_apply,
+                statistic=statistic)
+
         else:
             full_spectrum = self.dataset.selected_obj
 
@@ -390,10 +400,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                       'right': np.array([sr.upper.value, max(spectral_axis.value[continuum_mask])])}
 
         else:
-            continuum_mask = ~self.app.get_data_from_viewer(
-                self._default_spectrum_viewer_reference_name,
-                data_label=self.continuum_subset_selected
-            ).mask
+            continuum_mask = ~self.app._jdaviz_helper.get_data(
+                subset_to_apply=self.continuum_subset_selected).mask
             spectral_axis_nanmasked = spectral_axis.value.copy()
             spectral_axis_nanmasked[~continuum_mask] = np.nan
             if self.spectral_subset_selected == "Entire Spectrum":

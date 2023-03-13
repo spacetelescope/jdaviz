@@ -175,13 +175,13 @@ def test_get_spectra_no_spectra_redshift_error(specviz_helper, spectrum1d):
 
 def test_get_spectra_no_spectra_label(specviz_helper, spectrum1d):
     label = "label"
-    with pytest.raises(AttributeError):
+    with pytest.raises(ValueError):
         specviz_helper.get_spectra(data_label=label)
 
 
 def test_get_spectra_no_spectra_label_redshift_error(specviz_helper, spectrum1d):
     label = "label"
-    with pytest.raises(AttributeError):
+    with pytest.raises(ValueError):
         specviz_helper.get_spectra(data_label=label, apply_slider_redshift=True)
 
 
