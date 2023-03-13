@@ -35,6 +35,10 @@ To extract a spectrum with a spectral subset applied:
 
     specviz.get_data(spectrum_to_apply='Subset 1')
 
+In this case, the returned `specutils.Spectrum1D` object will have a ``mask``
+attribute, where ``True`` corresponds to the region outside the selected subset
+(i.e., the region that has been masked out).
+
 .. seealso::
 
     :ref:`Export From Plugins <specviz-plugins>`
