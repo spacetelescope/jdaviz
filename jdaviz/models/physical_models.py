@@ -17,6 +17,9 @@ from astropy.modeling.parameters import Parameter
 
 __all__ = ["BlackBody"]
 
+# ASTROPY_LT_5_3
+__doctest_requires__ = {"BlackBody": ["astropy<5.3"]}
+
 
 class BlackBody(Fittable1DModel):
     """

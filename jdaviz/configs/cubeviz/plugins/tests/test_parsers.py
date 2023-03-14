@@ -1,6 +1,8 @@
+import astropy
 import numpy as np
 import pytest
 from astropy import units as u
+from astropy.utils.introspection import minversion
 from astropy.wcs import WCS
 from specutils import Spectrum1D
 from glue.core.roi import XRangeROI
@@ -8,6 +10,8 @@ from glue_astronomy.translators.spectrum1d import PaddedSpectrumWCS
 from numpy.testing import assert_allclose, assert_array_equal
 
 from jdaviz.utils import PRIHDR_KEY
+
+ASTROPY_LT_5_3 = not minversion(astropy, "5.3.dev")
 
 
 @pytest.mark.filterwarnings('ignore')
@@ -43,8 +47,12 @@ def test_fits_image_hdu_with_microns(image_cube_hdu_obj_microns, cubeviz_helper)
 
     flux_viewer = cubeviz_helper.app.get_viewer('flux-viewer')
     flux_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
+    if ASTROPY_LT_5_3:
+        flux_unit_str = "erg / (Angstrom cm2 s)"
+    else:
+        flux_unit_str = "erg / (Angstrom s cm2)"
     assert flux_viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
-    assert flux_viewer.label_mouseover.value == '+1.00000e+00 1e-17 erg / (Angstrom cm2 s)'
+    assert flux_viewer.label_mouseover.value == f'+1.00000e+00 1e-17 {flux_unit_str}'
 
     unc_viewer = cubeviz_helper.app.get_viewer('uncert-viewer')
     unc_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': -1, 'y': 0}})
@@ -101,8 +109,12 @@ def test_fits_image_hdu_parse_from_file(tmpdir, image_cube_hdu_obj, cubeviz_help
 
     flux_viewer = cubeviz_helper.app.get_viewer(cubeviz_helper._default_flux_viewer_reference_name)
     flux_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
+    if ASTROPY_LT_5_3:
+        flux_unit_str = "erg / (Angstrom cm2 s)"
+    else:
+        flux_unit_str = "erg / (Angstrom s cm2)"
     assert flux_viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
-    assert flux_viewer.label_mouseover.value == '+1.00000e+00 1e-17 erg / (Angstrom cm2 s)'
+    assert flux_viewer.label_mouseover.value == f'+1.00000e+00 1e-17 {flux_unit_str}'
     assert flux_viewer.label_mouseover.world_ra_deg == '205.4433848390'
     assert flux_viewer.label_mouseover.world_dec_deg == '26.9996149270'
 
@@ -129,8 +141,12 @@ def test_spectrum3d_parse(image_cube_hdu_obj, cubeviz_helper):
     # Same as flux viewer data in test_fits_image_hdu_parse_from_file
     flux_viewer = cubeviz_helper.app.get_viewer(cubeviz_helper._default_flux_viewer_reference_name)
     flux_viewer.on_mouse_or_key_event({'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
+    if ASTROPY_LT_5_3:
+        flux_unit_str = "erg / (Angstrom cm2 s)"
+    else:
+        flux_unit_str = "erg / (Angstrom s cm2)"
     assert flux_viewer.label_mouseover.pixel == 'x=00.0 y=00.0'
-    assert flux_viewer.label_mouseover.value == '+1.00000e+00 1e-17 erg / (Angstrom cm2 s)'
+    assert flux_viewer.label_mouseover.value == f'+1.00000e+00 1e-17 {flux_unit_str}'
     assert flux_viewer.label_mouseover.world_ra_deg == '205.4433848390'
     assert flux_viewer.label_mouseover.world_dec_deg == '26.9996149270'
 
