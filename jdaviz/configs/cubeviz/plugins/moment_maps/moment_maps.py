@@ -61,7 +61,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
         self.moment = None
 
-        self.dataset.add_filter('is_image')
+        self.dataset.add_filter('is_cube')
         self.add_results.viewer.filters = ['is_image_viewer']
 
     @property

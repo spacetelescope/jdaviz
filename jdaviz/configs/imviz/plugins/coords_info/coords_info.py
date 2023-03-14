@@ -63,6 +63,9 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
         self.dataset._manual_options = ['auto', 'none']
         self.dataset.filters = ['layer_in_viewers']
+        if self.app.config == 'imviz':
+            # filter out scatter-plot entries (from add_markers API, for example)
+            self.dataset.add_filter('is_image')
         # we also want to include auto-collapsed spectra (spatial subsets)
         self.dataset._cubeviz_include_spatial_subsets()
 

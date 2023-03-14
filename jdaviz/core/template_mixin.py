@@ -1517,6 +1517,9 @@ class DatasetSelect(SelectPluginComponent):
             return not is_trace(data)
 
         def is_image(data):
+            return len(data.shape) == 2
+
+        def is_cube(data):
             return len(data.shape) == 3
 
         return super()._is_valid_item(data, locals())
