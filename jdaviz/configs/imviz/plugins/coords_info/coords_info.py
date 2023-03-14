@@ -391,7 +391,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         def _cursor_fallback():
             statistic = getattr(viewer.state, 'function', None)
             cache_key = (viewer.state.layers[0].layer.label, statistic)
-            sp = self.app._get_object_cache[cache_key]
+            sp = self.app._get_object_cache.get(cache_key, viewer.data()[0])
             self._dict['axes_x'] = x
             self._dict['axes_x:unit'] = sp.spectral_axis.unit.to_string()
             self._dict['axes_y'] = y
