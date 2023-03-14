@@ -58,7 +58,7 @@
 
         </div>
 
-        <v-card tile flat style="flex: 1; margin-top: -2px; overflow-y: hidden;">
+        <v-card tile flat style="flex: 1; margin-top: -2px; overflow: hidden;">
           <div v-if="app_settings.viewer_labels" class='viewer-label-container'>
             <div v-if="Object.keys(viewer_icons).length > 1" class="viewer-label invert-if-dark">
               <j-tooltip span_style="white-space: nowrap">
