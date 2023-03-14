@@ -1430,6 +1430,9 @@ class DatasetSelect(SelectPluginComponent):
         Call this method to prepend spatial subsets to the list of datasets (and listen for newly
         created spatial subsets).  For a single viewer, consider using LayerSelect instead.
         """
+        if self.app.config != 'cubeviz':
+            return
+
         # add additional callback for subsets
         # We have to use SubsetUpdateMessage instead of SubsetCreateMessage to ensure it has already
         # been added to data_collection.subset_groups.  To avoid extra calls to _on_data_changed
