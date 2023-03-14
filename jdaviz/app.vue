@@ -426,4 +426,11 @@ a:active {
   max-height: 100%;
 }
 
+.jupyter-widgets.bqplot.figure {
+  /* When a viewport is resized, a scrollbar can appear, which will impact the
+   * render size of bqplot and results in unused space when the newly rendered
+   * figure is displayed. Using overflow hidden will prevent the scrollbar from
+   * appearing */
+  overflow: hidden;
+}
 </style>
