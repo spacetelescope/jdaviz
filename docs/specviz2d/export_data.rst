@@ -37,3 +37,11 @@ An instance of Specviz can also be accessed, which exposes some helper methods f
 
     :ref:`Specviz: Export Data <specviz-export-data>`
         Specviz documentation on exporting spectra.
+
+
+Markers Table
+=============
+
+All mouseover information in the :ref:`markers plugin <markers-plugin>` can be exported to an
+:ref:`astropy table <astropy:astropy-table>`
+by calling :meth:`~jdaviz.core.template_mixin.TableMixin.export_table` (see :ref:`plugin-apis`).

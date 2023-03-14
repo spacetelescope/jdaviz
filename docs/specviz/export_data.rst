@@ -96,3 +96,10 @@ To extract all of the model parameters:
     myparams
 
 where the ``model_label`` parameter identifies which model should be returned.
+
+Markers Table
+=============
+
+All mouseover information in the :ref:`markers plugin <markers-plugin>` can be exported to an
+:ref:`astropy table <astropy:astropy-table>`
+by calling :meth:`~jdaviz.core.template_mixin.TableMixin.export_table` (see :ref:`plugin-apis`).
