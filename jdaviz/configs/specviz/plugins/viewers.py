@@ -439,10 +439,9 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
 
                 # The shaded band around the spectrum trace is bounded by
                 # two lines, above and below the spectrum trace itself.
-                data_x_list = np.ndarray.tolist(data_x)
-                x = [data_x_list, data_x_list]
-                y = [np.ndarray.tolist(data_y - error),
-                     np.ndarray.tolist(data_y + error)]
+                x = np.ndarray.tolist(data_x)
+                y = [np.ndarray.tolist(data_y + error),
+                     np.ndarray.tolist(data_y - error)]
 
                 if layer_state.as_steps:
                     for i in (0, 1):
@@ -451,7 +450,7 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
                         edges = (a + b) / 2
                         x[i] = np.concatenate((edges[:1], np.repeat(edges[1:-1], 2), edges[-1:]))
                         y[i] = np.repeat(y[i], 2)
-                x, y = np.asarray(x), np.asarray(y)
+                x, y = np.asarray(x), np.asarray(y).T
 
                 # A subclass of the bqplot Lines object, LineUncertainties keeps
                 # track of uncertainties plotted in the viewer. LineUncertainties
@@ -459,17 +458,14 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
                 color = layer_state.color
                 alpha_shade = layer_state.alpha / 3
                 error_line_mark = LineUncertainties(viewer=self,
-                                                    x=[x],
-                                                    y=[y],
+                                                    x=x,
+                                                    y=y,
                                                     scales=self.scales,
                                                     stroke_width=1,
-                                                    colors=[color, color],
-                                                    fill_colors=[color, color],
-                                                    opacities=[0.0, 0.0],
-                                                    fill_opacities=[alpha_shade,
-                                                                    alpha_shade],
-                                                    fill='between',
-                                                    close_path=False
+                                                    colors=[color],
+                                                    opacities=[alpha_shade],
+                                                    format='hl',
+                                                    marker='bar'
                                                     )
 
                 # Add error lines to viewer
