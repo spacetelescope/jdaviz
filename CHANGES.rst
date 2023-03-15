@@ -4,10 +4,10 @@
 New Features
 ------------
 
-- CLI launchers no longer require data to be specified [#1890]
+- CLI launchers no longer require data to be specified. [#1890]
 
 - Configurations that support multiple, simultaneous data files now allow
-  multiple data products to be specified in the command line [#1890]
+  multiple data products to be specified in the command line. [#1890]
 
 Cubeviz
 ^^^^^^^

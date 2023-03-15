@@ -21,7 +21,7 @@ Importing data through the Command Line
 
 When running the Imviz application via the command line, you may provide a path
 to a compatible file, which will be loaded into the app on initialization.
-Multiple data files can be provided
+Multiple data files may be provided:
 
 .. code-block:: bash
 
