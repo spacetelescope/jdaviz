@@ -67,7 +67,7 @@ and for NIRISS:
 
     jdaviz mosviz /path/to/my/data --instrument=niriss
 
-When loading data from the command line, specifying a data file is optional.
+Specifying a data directory is required to start Mosviz from the command line.
 
 If a directory is input in either case without specifying an instrument, Mosviz will
 raise an error.
