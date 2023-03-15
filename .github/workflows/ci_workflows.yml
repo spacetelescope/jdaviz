@@ -69,7 +69,7 @@ jobs:
             os: ubuntu-latest
             python: '3.11'
             toxenv: py311-test-devdeps
-            toxposargs: --remote-data
+            toxposargs: --remote-data --run-slow
             allow_failure: true
 
     steps:
