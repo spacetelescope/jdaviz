@@ -41,7 +41,7 @@ Cubeviz
 Imviz
 ^^^^^
 
-- ASDF parser for JWST images now uses ``stdatamodels``. [#2052]
+- ASDF-in-FITS parser for JWST images now uses ``stdatamodels``. [#2052]
 
 Mosviz
 ^^^^^^
