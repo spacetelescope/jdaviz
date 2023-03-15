@@ -328,6 +328,11 @@ class TestLink_GWCS_GWCS(BaseImviz_GWCS_GWCS):
         assert label_mouseover.row2_unreliable
         assert label_mouseover.row3_unreliable
 
+        # Regression test for https://github.com/spacetelescope/jdaviz/issues/2079 to
+        # make sure this does not crash.
+        viewer2 = self.imviz.create_image_viewer(viewer_name='second')
+        viewer2.state.reset_limits()
+
     def test_pixel_linking(self):
         self.imviz.link_data(link_type='pixels')
 

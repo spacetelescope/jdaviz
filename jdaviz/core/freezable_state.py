@@ -58,6 +58,9 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
         super().__init__(*args, **kwargs)
 
     def reset_limits(self, *event):
+        if self.reference_data is None:  # Nothing to do
+            return
+
         wcs_success = False
         if self.linked_by_wcs and self.reference_data.coords is not None:
             x_min, x_max = np.inf, -np.inf
