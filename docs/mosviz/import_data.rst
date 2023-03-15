@@ -67,6 +67,8 @@ and for NIRISS:
 
     jdaviz mosviz /path/to/my/data --instrument=niriss
 
+Specifying a data directory is required to start Mosviz from the command line.
+
 If a directory is input in either case without specifying an instrument, Mosviz will
 raise an error.
 

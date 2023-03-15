@@ -20,11 +20,12 @@ and hence should address most astronomical spectrum use cases.
 Importing data through the Command Line
 =======================================
 
-You can load your data into the Specviz application through the command line:
+You can load your data into the Specviz application through the command line. Specifying
+a data file is optional, and multiple data files may be provided:
 
 .. code-block:: bash
 
-    jdaviz specviz /my/directory/spectrum.fits
+    jdaviz specviz /my/directory/spectrum1.fits /my/directory/spectrum2.fits
 
 .. _specviz-import-gui:
 

@@ -19,12 +19,13 @@ See :meth:`jdaviz.configs.imviz.helper.Imviz.load_data` for more information.
 Importing data through the Command Line
 =======================================
 
-When running the Imviz application via the command line, you must provide a path
-to a compatible file, which will be loaded into the app on initialization:
+When running the Imviz application via the command line, you may provide a path
+to a compatible file, which will be loaded into the app on initialization.
+Multiple data files may be provided:
 
 .. code-block:: bash
 
-    jdaviz imviz /my/image/data.fits
+    jdaviz imviz /my/image/data1.fits /my/image/data2.fits
 
 .. _imviz-import-gui:
 

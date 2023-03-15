@@ -24,12 +24,13 @@ extraction, see the :ref:`spectral extraction plugin <specviz2d-spectral-extract
 Importing data through the Command Line
 =======================================
 
-You can load your data into the Specviz2D application through the command line (NOTE: this currently
-only supports passing a 2D spectrum object and will automatically extract the 1D spectrum):
+You can load your data into the Specviz2D application through the command line. Providing a data file
+is optional and multiple data files are supported (NOTE: this currently only supports passing a 2D
+spectrum object and will automatically extract the 1D spectrum):
 
 .. code-block:: bash
 
-    jdaviz specviz2d /my/directory/spectrum.fits
+    jdaviz specviz2d /my/directory/spectrum1.fits /my/directory/spectrum2.fits
 
 
 .. _specviz2d-import-gui:
