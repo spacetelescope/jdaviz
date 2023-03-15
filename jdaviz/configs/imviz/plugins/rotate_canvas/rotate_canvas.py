@@ -60,7 +60,9 @@ class RotateCanvas(PluginTemplateMixin, ViewerSelectMixin):
     def _viewer_selected_changed(self, *args, **kwargs):
         if not hasattr(self, 'viewer'):
             return
-        self.angle = self.app._viewer_item_by_id(self.viewer.selected_id).get('rotation', 0)
+        vid = self.viewer.selected_id
+        self.angle = self.app._viewer_item_by_id(vid).get('canvas_angle', 0)
+        self.flip_horizontal = self.app._viewer_item_by_id(vid).get('canvas_flip_horizontal', False)
 
     def _get_wcs_angles(self):
         if not self.has_wcs:
