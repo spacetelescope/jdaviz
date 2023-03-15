@@ -69,6 +69,9 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Pressing "Home" button on empty additional viewer when images are linked
+  by WCS no longer crashes. [#2082]
+
 Mosviz
 ^^^^^^
 
