@@ -58,7 +58,7 @@ def main(filepaths=None, layout='default', instrument=None, browser='default',
     else:
         file_list = []
 
-    with open(str(JDAVIZ_DIR / "jdaviz_cli.ipynb")) as f:
+    with open(JDAVIZ_DIR / "jdaviz_cli.ipynb") as f:
         notebook_template = f.read()
 
     start_dir = os.path.abspath('.')
