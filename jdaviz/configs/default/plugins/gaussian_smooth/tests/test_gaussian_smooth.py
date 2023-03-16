@@ -93,8 +93,8 @@ def test_linking_after_spectral_smooth(cubeviz_helper, spectrum1d_cube):
 
     label_mouseover._viewer_mouse_event(spec_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 4.6236e-7, 'y': 60}})
-    assert label_mouseover.as_text() == ('', '', '')
-    assert label_mouseover.icon == ''
+    assert label_mouseover.as_text() == ('Cursor 4.62360e-07, 6.00000e+01', '', '')
+    assert label_mouseover.icon == 'mdi-cursor-default'
 
 
 def test_spatial_convolution(cubeviz_helper, spectrum1d_cube):
@@ -153,11 +153,11 @@ def test_spectrum1d_smooth(specviz_helper, spectrum1d):
                                          'Flux 5.34688e+00 Jy')
     assert label_mouseover.icon == 'b'
 
-    # Out-of-bounds shows nothing.
+    # Out-of-bounds shows only cursor info.
     label_mouseover._viewer_mouse_event(spec_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 5500, 'y': 120}})
-    assert label_mouseover.as_text() == ('', '', '')
-    assert label_mouseover.icon == ''
+    assert label_mouseover.as_text() == ('Cursor 5.50000e+03, 1.20000e+02', '', '')
+    assert label_mouseover.icon == 'mdi-cursor-default'
 
 
 def test_spectrum2d_smooth(specviz2d_helper, spectrum2d):

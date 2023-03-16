@@ -1,6 +1,11 @@
 <template>
-  <span v-if="icon !== undefined" :class="prevent_invert_if_dark ? '' : 'invert-if-dark'" :style="span_style+'; color: '+color+'; '+borderStyle">
-        {{String(icon).toUpperCase()}}
+  <span v-if="icon !== undefined">
+    <v-icon v-if="String(icon).startsWith('mdi-')" size="16">
+      {{icon}}
+    </v-icon>
+    <span v-else :class="prevent_invert_if_dark ? 'layer-viewer-icon' : 'invert-if-dark layer-viewer-icon'" :style="span_style+'; color: '+color+'; '+borderStyle">
+      {{String(icon).toUpperCase()}}
+    </span>
   </span>
 </template>
 
@@ -19,7 +24,7 @@ module.exports = {
 </script>
 
 <style scoped>
-span {
+.layer-viewer-icon {
   width: 20px;
   height: 20px;
   line-height: 10px;

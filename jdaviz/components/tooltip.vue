@@ -52,6 +52,7 @@ const tooltips = {
     'Use the same display parameters for all images and spectra',
   'create-image-viewer':
     'Create new image viewer',
+  'coords-info-cycle': 'Cycle selected layer used for mouseover information and markers plugin',
 
   // viewer toolbars
   'viewer-toolbar-data': 'Select dataset(s) to display in this viewer',

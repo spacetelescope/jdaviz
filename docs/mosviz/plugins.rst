@@ -44,6 +44,16 @@ Subset Tools
     :ref:`Subset Tools <imviz-subset-plugin>`
         Imviz documentation describing the concept of subsets in Jdaviz.
 
+.. _imviz_export_markers:
+
+Markers
+=======
+
+.. seealso::
+
+    :ref:`Markers <markers-plugin>`
+        Imviz documentation describing the markers plugin.
+
 Gaussian Smooth
 ===============
 

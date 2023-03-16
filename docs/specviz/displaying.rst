@@ -51,6 +51,10 @@ cursor position as well as the spectral axis value, pixel, and flux of the close
 to the cursor.
 This information is displayed in the top bar of the UI, on the middle-right side.
 
+By default, the cursor information will correspond to the closest data layer to the cursor.
+To change to a specific data-layer, click the layer-icon in the top bar to cycle between
+"auto", "cursor", or specific data layers.
+
 Home
 ====
 

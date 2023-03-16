@@ -1,11 +1,12 @@
 import math
 import numpy as np
-from traitlets import Bool, Unicode
+from traitlets import Bool, Unicode, observe
 
 from astropy import units as u
 from glue.core import BaseData
 from glue.core.subset import RoiSubsetState
 from glue.core.subset_group import GroupedSubset
+from glue_jupyter.bqplot.image.layer_artist import BqplotImageSubsetLayerArtist
 
 from jdaviz.configs.cubeviz.plugins.viewers import CubevizImageView
 from jdaviz.configs.imviz.helper import data_has_valid_wcs
@@ -14,16 +15,24 @@ from jdaviz.configs.mosviz.plugins.viewers import MosvizImageView, MosvizProfile
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
 from jdaviz.core.events import ViewerAddedMessage
 from jdaviz.core.registries import tool_registry
-from jdaviz.core.template_mixin import TemplateMixin
+from jdaviz.core.template_mixin import TemplateMixin, DatasetSelectMixin
 from jdaviz.core.marks import PluginScatter
 
 __all__ = ['CoordsInfo']
 
+_supported_viewer_classes = (SpecvizProfileView,
+                             ImvizImageView,
+                             CubevizImageView,
+                             MosvizImageView,
+                             MosvizProfile2DView)
+
 
 @tool_registry('g-coords-info')
-class CoordsInfo(TemplateMixin):
+class CoordsInfo(TemplateMixin, DatasetSelectMixin):
     template_file = __file__, "coords_info.vue"
-    icon = Unicode("").tag(sync=True)
+
+    dataset_icon = Unicode("").tag(sync=True)  # option for layer (auto, none, or specific layer)
+    icon = Unicode("").tag(sync=True)  # currently exposed layer
 
     row1a_title = Unicode("").tag(sync=True)
     row1a_text = Unicode("").tag(sync=True)
@@ -42,22 +51,29 @@ class CoordsInfo(TemplateMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._marks = {}
+        self._dict = {}  # dictionary representation of current mouseover info
         self._x, self._y = None, None  # latest known cursor positions
 
         # subscribe/unsubscribe to mouse events across all existing viewers
+        viewer_refs = []
         for viewer in self.app._viewer_store.values():
-            self._create_viewer_callbacks(viewer)
+            if isinstance(viewer, _supported_viewer_classes):
+                self._create_viewer_callbacks(viewer)
+                viewer_refs.append(viewer.reference_id)
+
+        self.dataset._manual_options = ['auto', 'none']
+        self.dataset.filters = ['layer_in_viewers']
+        if self.app.config == 'imviz':
+            # filter out scatter-plot entries (from add_markers API, for example)
+            self.dataset.add_filter('is_image')
+        # we also want to include auto-collapsed spectra (spatial subsets)
+        self.dataset._cubeviz_include_spatial_subsets()
 
         # subscribe to mouse events on any new viewers
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
 
     def _create_viewer_callbacks(self, viewer):
-        if isinstance(viewer,
-                      (SpecvizProfileView,
-                       ImvizImageView,
-                       CubevizImageView,
-                       MosvizImageView,
-                       MosvizProfile2DView)):
+        if isinstance(viewer, _supported_viewer_classes):
             callback = self._viewer_callback(viewer, self._viewer_mouse_event)
             viewer.add_event_callback(callback, events=['mousemove', 'mouseleave', 'mouseenter'])
 
@@ -90,6 +106,9 @@ class CoordsInfo(TemplateMixin):
                 f"{self.row2_title} {self.row2_text}".strip(),
                 f"{self.row3_title} {self.row3_text}".strip())
 
+    def as_dict(self):
+        return self._dict
+
     def reset_coords_display(self):
         self.row1a_title = '\u00A0'  # to force empty line if no other content
         self.row1a_text = ""
@@ -106,6 +125,7 @@ class CoordsInfo(TemplateMixin):
         self.row3_unreliable = False
 
         self.icon = ""
+        self._dict = {}
 
     def _viewer_mouse_clear_event(self, viewer, data=None):
         self.reset_coords_display()
@@ -145,7 +165,20 @@ class CoordsInfo(TemplateMixin):
         # cursor position
         self.update_display(viewer, self._x, self._y)
 
+    @observe('dataset_selected')
+    def _selected_dataset_changed(self, *args):
+        if self.dataset_selected == 'auto':
+            self.dataset_icon = 'mdi-auto-fix'
+        elif self.dataset_selected == 'none':
+            self.dataset_icon = 'mdi-cursor-default'
+        else:
+            self.dataset_icon = self.app.state.layer_icons.get(self.dataset_selected, '')
+
+    def vue_next_layer(self, *args, **kwargs):
+        self.dataset.select_next()
+
     def update_display(self, viewer, x, y):
+        self._dict = {}
         if isinstance(viewer, SpecvizProfileView):
             self._spectrum_viewer_update(viewer, x, y)
         elif isinstance(viewer,
@@ -164,16 +197,45 @@ class CoordsInfo(TemplateMixin):
             self._viewer_mouse_clear_event(viewer)
             return
 
-        image = active_layer.layer
-        self.icon = self.app.state.layer_icons.get(image.label, '')  # noqa
+        if self.dataset.selected == 'auto':
+            image = active_layer.layer
+        elif self.dataset.selected == 'none':
+            active_layer = viewer.layers[0].state
+            image = viewer.layers[0].layer
+        else:
+            for layer in viewer.layers:
+                if layer.layer.label == self.dataset.selected and layer.visible:
+                    if isinstance(layer, BqplotImageSubsetLayerArtist):
+                        # cannot expose info for spatial subset layers
+                        continue
+                    active_layer = layer.state
+                    image = layer.layer
+                    break
+            else:
+                image = None
 
         unreliable_pixel, unreliable_world = False, False
+
+        self._dict['axes_x'] = x
+        self._dict['axes_x:unit'] = 'pix'
+        self._dict['axes_y'] = y
+        self._dict['axes_y:unit'] = 'pix'
+
+        # set default empty values
+        if self.dataset.selected != 'none' and image is not None:
+            self.icon = self.app.state.layer_icons.get(image.label, '')  # noqa
+            self._dict['data_label'] = image.label
 
         # Separate logic for each viewer type, ultimately needs to result in extracting sky coords.
         # NOTE: pixel_to_world axes order is opposite of array value axes order, so...
         #   3D: pixel_to_world(z, y, x) -> arr[x, y, z]
         #   2D: pixel_to_world(x, y) -> arr[y, x]
-        if isinstance(viewer, ImvizImageView):
+        if self.dataset.selected == 'none' or image is None:
+            self.icon = 'mdi-cursor-default'
+            self._dict['data_label'] = ''
+            coords_status = False
+
+        elif isinstance(viewer, ImvizImageView):
             x, y, coords_status, (unreliable_world, unreliable_pixel) = viewer._get_real_xy(image, x, y)  # noqa
             if coords_status:
                 try:
@@ -187,12 +249,12 @@ class CoordsInfo(TemplateMixin):
             #  data for this application. This section will need to be updated
             #  when that is no longer true.
             # Hack to insert WCS for generated 2D and 3D images using FLUX cube WCS.
-            if 'Plugin' in image.meta and not image.coords:
+            if 'Plugin' in getattr(image, 'meta', {}) and not image.coords:
                 coo_data = self.app.data_collection[0]
             else:
                 coo_data = image
 
-            if '_orig_spec' in coo_data.meta:
+            if '_orig_spec' in getattr(coo_data, 'meta', {}):
                 # Hack around various WCS propagation issues in Cubeviz, example:
                 # https://github.com/glue-viz/glue-astronomy/issues/75
                 data_wcs = coo_data.meta['_orig_spec'].wcs
@@ -215,6 +277,14 @@ class CoordsInfo(TemplateMixin):
                     coords_status = True
             else:
                 self.reset_coords_display()
+                coords_status = False
+
+            slice_plugin = self.app._jdaviz_helper.plugins.get('Slice', None)
+            if slice_plugin is not None and len(image.shape) == 3:
+                # float to be compatible with default value of nan
+                self._dict['slice'] = float(slice_plugin.slice)
+                self._dict['spectral_axis'] = slice_plugin.wavelength
+                self._dict['spectral_axis:unit'] = slice_plugin._obj.wavelength_unit
 
         elif isinstance(viewer, MosvizImageView):
 
@@ -227,8 +297,13 @@ class CoordsInfo(TemplateMixin):
                     coords_status = True
             else:  # pragma: no cover
                 self.reset_coords_display()
+                coords_status = False
 
         elif isinstance(viewer, MosvizProfile2DView):
+            self._dict['spectral_axis'] = self._dict['axes_x']
+            self._dict['spectral_axis:unit'] = self._dict['axes_x:unit']
+            self._dict['value'] = self._dict['axes_y']
+            self._dict['value:unit'] = self._dict['axes_y:unit']
             coords_status = False
 
         if coords_status:
@@ -248,6 +323,9 @@ class CoordsInfo(TemplateMixin):
             self.row3_title = ''
             self.row3_text = f'{world_ra_deg} {world_dec_deg} (deg)'
             self.row3_unreliable = unreliable_world
+            # TODO: use sky directly, but need to figure out how to have a compatible "blank" entry
+            self._dict['world'] = (sky.ra.value, sky.dec.value)
+            self._dict['world:unreliable'] = unreliable_world
         else:
             self.row2_title = '\u00A0'
             self.row2_text = ""
@@ -257,15 +335,23 @@ class CoordsInfo(TemplateMixin):
             self.row3_text = ""
             self.row3_unreliable = False
 
-        maxsize = int(np.ceil(np.log10(np.max(image.shape)))) + 3
+        maxsize = int(np.ceil(np.log10(np.max(active_layer.layer.shape)))) + 3
         fmt = 'x={0:0' + str(maxsize) + '.1f} y={1:0' + str(maxsize) + '.1f}'
         self.row1a_title = 'Pixel'
         self.row1a_text = (fmt.format(x, y))
         self.row1_unreliable = unreliable_pixel
+        self._dict['pixel'] = (float(x), float(y))
+        self._dict['pixel:unreliable'] = unreliable_pixel
 
         # Extract data values at this position.
         # TODO: for now we just use the first visible layer but we should think
         # of how to display values when multiple datasets are present.
+
+        if self.dataset.selected == 'none' or image is None:
+            # no data values to extract
+            self.row1b_title = ''
+            self.row1b_text = ''
+            return
 
         # Extract data values at this position.
         # Check if shape is [x, y, z] or [y, x] and show value accordingly.
@@ -294,23 +380,48 @@ class CoordsInfo(TemplateMixin):
                     value = arr[int(round(y)), int(round(x))]
             self.row1b_title = 'Value'
             self.row1b_text = f'{value:+10.5e} {unit}'
+            self._dict['value'] = float(value)
+            self._dict['value:unit'] = unit
+            self._dict['value:unreliable'] = unreliable_pixel
         else:
             self.row1b_title = ''
             self.row1b_text = ''
 
     def _spectrum_viewer_update(self, viewer, x, y):
+        def _cursor_fallback():
+            statistic = getattr(viewer.state, 'function', None)
+            cache_key = (viewer.state.layers[0].layer.label, statistic)
+            sp = self.app._get_object_cache.get(cache_key, viewer.data()[0])
+            self._dict['axes_x'] = x
+            self._dict['axes_x:unit'] = sp.spectral_axis.unit.to_string()
+            self._dict['axes_y'] = y
+            self._dict['axes_y:unit'] = sp.flux.unit.to_string()
+            self._dict['data_label'] = ''
+
+        def _copy_axes_to_spectral():
+            self._dict['spectral_axis'] = self._dict['axes_x']
+            self._dict['spectral_axis:unit'] = self._dict['axes_x:unit']
+            self._dict['value'] = self._dict['axes_y']
+            self._dict['value:unit'] = self._dict['axes_y:unit']
+
+        if not len(viewer.state.layers):
+            return
+
         self.row1a_title = 'Cursor'
         self.row1a_text = f'{x:10.5e}, {y:10.5e}'
 
         # show the locked marker/coords only if either no tool or the default tool is active
-        locking_active = viewer.toolbar.active_tool_id in viewer.toolbar.default_tool_priority + [None]  # noqa
-        if not locking_active:
+        if self.dataset.selected == 'none':
             self.row2_title = '\u00A0'
             self.row2_text = ''
             self.row3_title = '\u00A0'
             self.row3_text = ''
-            self.icon = ''
+            self.icon = 'mdi-cursor-default'
             self.marks[viewer._reference_id].visible = False
+            # get the units from the first layer
+            # TODO: replace with display units once implemented
+            _cursor_fallback()
+            _copy_axes_to_spectral()
             return
 
         # Snap to the closest data point, not the actual mouse location.
@@ -318,11 +429,14 @@ class CoordsInfo(TemplateMixin):
         closest_i = None
         closest_wave = None
         closest_flux = None
-        closest_icon = ''
+        closest_icon = 'mdi-cursor-default'
         closest_distance = None
         for lyr in viewer.state.layers:
-            if not lyr.visible:
+            if self.dataset.selected == 'auto' and not lyr.visible:
                 continue
+            if self.dataset.selected != 'auto' and self.dataset.selected != lyr.layer.label:
+                continue
+
             if isinstance(lyr.layer, GroupedSubset):
                 if not isinstance(lyr.layer.subset_state, RoiSubsetState):
                     # then this is a SPECTRAL subset
@@ -350,7 +464,8 @@ class CoordsInfo(TemplateMixin):
                     self.app._get_object_cache[cache_key] = sp
 
                 # Out of range in spectral axis.
-                if x < sp.spectral_axis.value.min() or x > sp.spectral_axis.value.max():
+                if (self.dataset.selected != lyr.layer.label and
+                        (x < sp.spectral_axis.value.min() or x > sp.spectral_axis.value.max())):
                     continue
 
                 cur_i = np.argmin(abs(sp.spectral_axis.value - x))
@@ -365,24 +480,45 @@ class CoordsInfo(TemplateMixin):
                     closest_i = cur_i
                     closest_wave = cur_wave
                     closest_flux = cur_flux
-                    closest_icon = self.app.state.layer_icons.get(lyr.layer.label)
+                    closest_icon = self.app.state.layer_icons.get(lyr.layer.label, '')
+                    self._dict['data_label'] = lyr.layer.label
             except Exception:  # nosec
                 # Something is loaded but not the right thing
                 continue
 
         if closest_wave is None:
-            self._viewer_mouse_clear_event(viewer)
+            self.row2_title = '\u00A0'
+            self.row2_text = ''
+            self.row3_title = '\u00A0'
+            self.row3_text = ''
+            self.icon = 'mdi-cursor-default'
+            self.marks[viewer._reference_id].visible = False
+            _cursor_fallback()
+            _copy_axes_to_spectral()
             return
 
         self.row2_title = 'Wave'
         self.row2_text = f'{closest_wave.value:10.5e} {closest_wave.unit.to_string()}'
+        self._dict['axes_x'] = closest_wave.value
+        self._dict['axes_x:unit'] = closest_wave.unit.to_string()
         if closest_wave.unit != u.pix:
             self.row2_text += f' ({int(closest_i)} pix)'
+            if self.app.config == 'cubeviz':
+                # float to be compatible with nan
+                self._dict['slice'] = float(closest_i)
+                self._dict['spectral_axis'] = closest_wave.value
+                self._dict['spectral_axis:unit'] = closest_wave.unit.to_string()
+            else:
+                # float to be compatible with nan
+                self._dict['index'] = float(closest_i)
 
         self.row3_title = 'Flux'
         self.row3_text = f'{closest_flux.value:10.5e} {closest_flux.unit.to_string()}'
+        self._dict['axes_y'] = closest_flux.value
+        self._dict['axes_y:unit'] = closest_flux.unit.to_string()
 
         self.icon = closest_icon
 
         self.marks[viewer._reference_id].update_xy([closest_wave.value], [closest_flux.value])  # noqa
         self.marks[viewer._reference_id].visible = True
+        _copy_axes_to_spectral()

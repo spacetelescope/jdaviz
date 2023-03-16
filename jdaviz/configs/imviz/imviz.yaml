@@ -21,6 +21,7 @@ tray:
   - g-metadata-viewer
   - g-plot-options
   - g-subset-plugin
+  - g-markers
   - imviz-links-control
   - imviz-compass
   - imviz-line-profile-xy

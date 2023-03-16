@@ -126,3 +126,10 @@ the ``x`` and ``y`` parameters identify specifically which spaxel fits are to be
 for models applied to every spaxel using the :guilabel:`Apply to Cube` button.
 Leaving ``x`` or ``y`` as ``None`` will mean that the models fit to every spaxel
 across that axis will be returned.
+
+Markers Table
+=============
+
+All mouseover information in the :ref:`markers plugin <markers-plugin>` can be exported to an
+:ref:`astropy table <astropy:astropy-table>`
+by calling :meth:`~jdaviz.core.template_mixin.TableMixin.export_table` (see :ref:`plugin-apis`).

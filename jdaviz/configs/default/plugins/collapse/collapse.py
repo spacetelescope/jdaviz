@@ -53,7 +53,7 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
                                               selected='function_selected',
                                               manual_options=['Mean', 'Median', 'Min', 'Max', 'Sum'])  # noqa
 
-        self.dataset.add_filter('is_image')
+        self.dataset.add_filter('is_cube')
         self.add_results.viewer.filters = ['is_image_viewer']
 
     @property

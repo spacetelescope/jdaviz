@@ -10,3 +10,4 @@ from .line_lists.line_lists import *  # noqa
 from .metadata_viewer.metadata_viewer import *  # noqa
 from .export_plot.export_plot import *  # noqa
 from .plot_options.plot_options import *  # noqa
+from .markers.markers import * # noqa

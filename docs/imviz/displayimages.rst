@@ -35,6 +35,10 @@ cursor's location in pixel space (X and Y), the RA and Dec at that point, and th
 of the data there. This information is displayed in the top bar of the UI, on the
 middle-right side.
 
+By default, the cursor information will correspond to the top image layer in the viewer.
+To change to a specific data-layer, click the layer-icon in the top bar to cycle between
+"auto", "cursor", or specific data layers.
+
 Notes on GWCS
 -------------
 

@@ -18,6 +18,7 @@ tray:
   - g-metadata-viewer
   - g-plot-options
   - g-subset-plugin
+  - g-markers
   - g-gaussian-smooth
   - g-slit-overlay
   - g-model-fitting

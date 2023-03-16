@@ -47,7 +47,7 @@
     <v-row style="margin: 0px 0px 8px 0px !important">
       <v-data-table
         dense
-        :headers="headers_visible.map(item => {return {'text': item, 'value': item}})"
+        :headers="headers_visible_sorted.map(item => {return {'text': item, 'value': item}})"
         :items="items"
         class="elevation-1 width-100"
       ></v-data-table>
@@ -63,6 +63,17 @@
     </v-row>
   </div>
 </template>
+
+<script>
+module.exports = {
+  computed: {
+    headers_visible_sorted() {
+      return this.headers_avail.filter(item => this.headers_visible.indexOf(item) !== -1);
+    },
+  }
+};
+</script>
+
 
 <style scoped>
   .v-data-table {

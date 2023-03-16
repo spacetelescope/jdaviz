@@ -17,6 +17,7 @@ tray:
   - g-metadata-viewer
   - g-plot-options
   - g-subset-plugin
+  - g-markers
   - spectral-extraction
   - g-gaussian-smooth
   - g-model-fitting

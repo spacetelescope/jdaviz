@@ -1,5 +1,7 @@
+from astropy.coordinates.sky_coordinate import SkyCoord
 from astropy.table import QTable
 from astropy.table.row import Row as QTableRow
+import astropy.units as u
 import numpy as np
 
 from functools import cached_property
@@ -82,6 +84,18 @@ def show_widget(widget, loc, title):  # pragma: no cover
 
     else:
         raise ValueError(f"Unrecognized display location: {loc}")
+
+
+def _subset_type(subset):
+    while hasattr(subset.subset_state, 'state1'):
+        # this assumes no mixing between spatial and spectral subsets and just
+        # taking the first component (down the hierarchical tree) to determine the type
+        subset = subset.subset_state.state1
+
+    if isinstance(subset.subset_state, RoiSubsetState):
+        return 'spatial'
+    else:
+        return 'spectral'
 
 
 class TemplateMixin(VuetifyTemplate, HubListener):
@@ -173,6 +187,7 @@ class PluginTemplateMixin(TemplateMixin):
     plugin_opened = Bool(False).tag(sync=True)
 
     def __init__(self, **kwargs):
+        self._viewer_callbacks = {}
         super().__init__(**kwargs)
         self.app.state.add_callback('tray_items_open', self._mxn_update_plugin_opened)
         self.app.state.add_callback('drawer', self._mxn_update_plugin_opened)
@@ -182,6 +197,28 @@ class PluginTemplateMixin(TemplateMixin):
         # plugins should override this to pass their own list of expose functionality, which
         # can even be dependent on config, etc.
         return PluginUserApi(self, expose=[])
+
+    def _viewer_callback(self, viewer, plugin_method):
+        """
+        Cached access to callbacks to a plugin method to attach to a viewer.
+
+        To define a callback:
+        def _on_callback(self, viewer, data):
+
+        To add callback:
+        viewer.add_event_calback(self._viewer_callback(viewer, self._on_callback),
+                                 events=['keydown'])
+
+        To remove callback:
+        viewer.remove_event_callback(self._viewer_callback(viewer, self._on_callback))
+        """
+        def plugin_viewer_callback(viewer, plugin_method):
+            return lambda data: plugin_method(viewer, data)
+
+        key = f'{viewer.reference_id}:{plugin_method.__name__}'
+        if key not in self._viewer_callbacks.keys():
+            self._viewer_callbacks[key] = plugin_viewer_callback(viewer, plugin_method)
+        return self._viewer_callbacks.get(key)
 
     def _mxn_update_plugin_opened(self, new_value):
         app_state = self.app.state
@@ -457,6 +494,19 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
         if not self.is_multiselect:
             raise ValueError("not currently in multiselect mode")
         self.selected = []
+        return self.selected
+
+    def select_next(self):
+        """
+        Select next entry in the choices, wrapping when reaching the end.  Raises an error if
+        :meth:`is_multiselect`
+        """
+        if self.is_multiselect:
+            raise ValueError("currently in multiselect mode")
+
+        cycle = self.choices
+        curr_ind = cycle.index(self.selected)
+        self.selected = cycle[(curr_ind + 1) % len(cycle)]
         return self.selected
 
     @property
@@ -895,18 +945,6 @@ class SubsetSelect(SelectPluginComponent):
         for lyr in self.app.data_collection.subset_groups:
             self._update_subset(lyr)
 
-    @staticmethod
-    def _subset_type(subset):
-        while hasattr(subset.subset_state, 'state1'):
-            # this assumes no mixing between spatial and spectral subsets and just
-            # taking the first component (down the hierarchical tree) to determine the type
-            subset = subset.subset_state.state1
-
-        if isinstance(subset.subset_state, RoiSubsetState):
-            return 'spatial'
-        else:
-            return 'spectral'
-
     def _selected_changed(self, event):
         super()._selected_changed(event)
         self._update_has_subregions()
@@ -917,7 +955,7 @@ class SubsetSelect(SelectPluginComponent):
             for layer in viewer.layers:
                 if layer.layer.label == subset.label:
                     color = layer.state.color
-                    subset_type = self._subset_type(subset)
+                    subset_type = _subset_type(subset)
                     return {"label": subset.label, "color": color, "type": subset_type}
         return {"label": subset.label, "color": False, "type": False}
 
@@ -929,7 +967,7 @@ class SubsetSelect(SelectPluginComponent):
             self._apply_default_selection()
 
     def _update_subset(self, subset, attribute=None):
-        if self._allowed_type is not None and self._subset_type(subset) != self._allowed_type:
+        if self._allowed_type is not None and _subset_type(subset) != self._allowed_type:
             return
 
         if subset.label not in self.labels:
@@ -1385,6 +1423,27 @@ class DatasetSelect(SelectPluginComponent):
         # initialize items from original viewers
         self._on_data_changed()
 
+    def _cubeviz_include_spatial_subsets(self):
+        """
+        Call this method to prepend spatial subsets to the list of datasets (and listen for newly
+        created spatial subsets).  For a single viewer, consider using LayerSelect instead.
+        """
+        if self.app.config != 'cubeviz':
+            return
+
+        # add additional callback for subsets
+        # We have to use SubsetUpdateMessage instead of SubsetCreateMessage to ensure it has already
+        # been added to data_collection.subset_groups.  To avoid extra calls to _on_data_changed
+        # for changes in style, etc, we'll try to filter out extra messages in advance.
+        def _subset_update(msg):
+            if msg.attribute == 'subset_state':
+                if _subset_type(msg.subset) == 'spatial':
+                    self._on_data_changed()
+
+        self.hub.subscribe(self, SubsetUpdateMessage,
+                           handler=_subset_update)
+        self._include_spatial_subsets = True
+
     @property
     def default_data_cls(self):
         if self.app.config == 'imviz':
@@ -1456,6 +1515,9 @@ class DatasetSelect(SelectPluginComponent):
             return not is_trace(data)
 
         def is_image(data):
+            return len(data.shape) == 2
+
+        def is_cube(data):
             return len(data.shape) == 3
 
         return super()._is_valid_item(data, locals())
@@ -1473,6 +1535,10 @@ class DatasetSelect(SelectPluginComponent):
         manual_items = [{'label': label} for label in self.manual_options]
         self.items = manual_items + [_dc_to_dict(data) for data in self.app.data_collection
                                      if self._is_valid_item(data)]
+        if getattr(self, '_include_spatial_subsets', False):
+            # allow for spatial subsets to be listed
+            self.items = self.items + [_dc_to_dict(subset) for subset in self.app.data_collection.subset_groups  # noqa
+                                       if _subset_type(subset) == 'spatial']
         self._apply_default_selection()
         # future improvement: only clear cache if the selected data entry was changed?
         self._clear_cache(*self._cached_properties)
@@ -2231,9 +2297,34 @@ class Table(PluginSubcomponent):
         ----------
         item : QTable, QTableRow, or dictionary of row-name, value pairs
         """
-        def json_safe(item):
+        def json_safe(column, item):
+            def float_precision(column, item):
+                if column in ('slice', 'index'):
+                    # stored in astropy table as a float so we can also store nans,
+                    # but should display in the UI without any decimals
+                    return int(item)
+                elif column in ('pixel'):
+                    return f"{item:0.03f}"
+                else:
+                    return f"{item:0.05f}"
+
+            if isinstance(item, SkyCoord):
+                return item.to_string('hmsdms', precision=4)
+            if isinstance(item, u.Quantity) and not np.isnan(item):
+                return (float_precision(column, item.value) * item.unit).to_string()
+
             if hasattr(item, 'to_string'):
                 return item.to_string()
+            if isinstance(item, float) and np.isnan(item):
+                return ''
+            if isinstance(item, tuple) and np.all([np.isnan(i) for i in item]):
+                return ''
+
+            if isinstance(item, float):
+                return float_precision(column, item)
+            elif isinstance(item, (list, tuple)):
+                return [float_precision(column, i) if isinstance(i, float) else i for i in item]
+
             return item
 
         if isinstance(item, QTable):
@@ -2253,7 +2344,7 @@ class Table(PluginSubcomponent):
             self._qtable.add_row(item)
 
         # clean data to show in the UI
-        self.items = self.items + [{k: json_safe(v) for k, v in item.items()}]
+        self.items = self.items + [{k: json_safe(k, v) for k, v in item.items()}]
 
     def clear_table(self):
         """
