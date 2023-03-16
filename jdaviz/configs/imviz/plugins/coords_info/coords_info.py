@@ -280,7 +280,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                 coords_status = False
 
             slice_plugin = self.app._jdaviz_helper.plugins.get('Slice', None)
-            if slice_plugin is not None:
+            if slice_plugin is not None and len(image.shape) == 3:
                 # float to be compatible with default value of nan
                 self._dict['slice'] = float(slice_plugin.slice)
                 self._dict['spectral_axis'] = slice_plugin.wavelength
