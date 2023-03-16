@@ -87,7 +87,7 @@ class Imviz(ImageConfigHelper):
             * ``'filename.fits[SCI,2]'`` (loads the second SCI extension)
             * ``'filename.jpg'`` (requires ``scikit-image``; grayscale only)
             * ``'filename.png'`` (requires ``scikit-image``; grayscale only)
-            * JWST ASDF-in-FITS file (requires ``asdf`` and ``gwcs``; ``data`` or given
+            * JWST ASDF-in-FITS file (requires ``stdatamodels`` and ``gwcs``; ``data`` or given
               ``ext`` + GWCS)
             * `~astropy.io.fits.HDUList` object (first image extension found
               is loaded unless ``ext`` keyword is also given)

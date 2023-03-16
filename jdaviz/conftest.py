@@ -309,5 +309,6 @@ def pytest_configure(config):
     PYTEST_HEADER_MODULES['vispy'] = 'vispy'
     PYTEST_HEADER_MODULES['gwcs'] = 'gwcs'
     PYTEST_HEADER_MODULES['asdf'] = 'asdf'
+    PYTEST_HEADER_MODULES['stdatamodels'] = 'stdatamodels'
 
     TESTED_VERSIONS['jdaviz'] = __version__

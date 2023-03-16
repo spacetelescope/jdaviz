@@ -70,6 +70,7 @@ body:
         import scipy; print("scipy", scipy.__version__)
         import skimage; print("scikit-image", skimage.__version__)
         import asdf; print("asdf", asdf.__version__)
+        import stdatamodels; print("stdatamodels", stdatamodels.__version__)
         import gwcs; print("gwcs", gwcs.__version__)
         import regions; print("regions", regions.__version__)
         import specutils; print("specutils", specutils.__version__)

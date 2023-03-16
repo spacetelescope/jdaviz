@@ -1,13 +1,13 @@
 import os
 
 import numpy as np
-from asdf.fits_embed import AsdfInFits
 from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import NDData
 from astropy.wcs import WCS
 from glue.core.data import Component, Data
 from gwcs.wcs import WCS as GWCS
+from stdatamodels import asdf_in_fits
 
 from jdaviz.core.registries import data_parser_registry
 from jdaviz.core.events import SnackbarMessage
@@ -229,7 +229,7 @@ def _jwst2data(file_obj, ext, data_label):
 
     try:
         # This is very specific to JWST pipeline image output.
-        with AsdfInFits.open(file_obj) as af:
+        with asdf_in_fits.open(file_obj) as af:
             dm = af.tree
             dm_meta = af.tree["meta"]
             data.meta.update(standardize_metadata(dm_meta))
