@@ -44,6 +44,8 @@ Subset Tools
     :ref:`Subset Tools <imviz-subset-plugin>`
         Imviz documentation describing the concept of subsets in Jdaviz.
 
+.. _imviz_export_markers:
+
 Markers
 =======
 

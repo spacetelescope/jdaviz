@@ -506,9 +506,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
         cycle = self.choices
         curr_ind = cycle.index(self.selected)
-        if curr_ind >= len(cycle) - 1:
-            curr_ind = -1
-        self.selected = cycle[curr_ind + 1]
+        self.selected = cycle[(curr_ind + 1) % len(cycle)]
         return self.selected
 
     @property

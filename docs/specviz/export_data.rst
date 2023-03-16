@@ -96,6 +96,7 @@ To extract all of the model parameters:
     myparams
 
 where the ``model_label`` parameter identifies which model should be returned.
+.. _specviz-export-markers:
 
 Markers Table
 =============

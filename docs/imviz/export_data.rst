@@ -117,4 +117,9 @@ Markers Table
 
 All mouseover information in the :ref:`markers plugin <markers-plugin>` can be exported to an
 :ref:`astropy table <astropy:astropy-table>`
-by calling :meth:`~jdaviz.core.template_mixin.TableMixin.export_table` (see :ref:`plugin-apis`).
+by calling :meth:`~jdaviz.core.template_mixin.TableMixin.export_table` (see :ref:`plugin-apis`):
+
+.. code-block:: python
+
+    markers_plugin = imviz.plugins["Markers"]
+    markers_table = markers_plugin.export_table()
