@@ -65,6 +65,8 @@ class TestCatalogs:
     # data used: information based on this image -
     # https://dr12.sdss.org/fields/runCamcolField?field=76&camcol=5&run=7674
     # the z-band FITS image was downloaded and used
+    # NOTE: We mark "slow" so it only runs on the dev job that is allowed to fail.
+    @pytest.mark.slow
     def test_plugin_image_with_result(self, imviz_helper, tmp_path):
         arr = np.ones((1489, 2048))
 
