@@ -15,6 +15,7 @@ import astropy.units as u
 from glue.core.roi import CircularROI, XRangeROI
 from specutils import Spectrum1D
 
+from jdaviz.configs.cubeviz.plugins.tests.test_parsers import ASTROPY_LT_5_3
 from jdaviz.configs.default.plugins.model_fitting.initializers import MODELS
 
 
@@ -90,7 +91,10 @@ def test_register_model_with_uncertainty_weighting(specviz_helper, spectrum1d):
     assert test_label in specviz_helper.app.data_collection
 
     # Test that the parameter uncertainties were updated
-    expected_uncertainties = {'slope': 0.0003657, 'intercept': 2.529}
+    if ASTROPY_LT_5_3:
+        expected_uncertainties = {'slope': 0.0003657, 'intercept': 2.529}
+    else:
+        expected_uncertainties = {'slope': 0.0007063584243707317, 'intercept': 4.885421320000062}
     result_model = modelfit_plugin._obj.component_models[0]
     for param in result_model["parameters"]:
         assert np.allclose(param["std"], expected_uncertainties[param["name"]], rtol=0.01)
