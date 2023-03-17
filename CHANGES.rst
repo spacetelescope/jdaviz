@@ -71,6 +71,9 @@ Cubeviz
 
 - Spectral Extraction: renamed ``collapse_to_spectrum(...)`` to ``extract(...)``. [#2859]
 
+- Custom Spectrum1D writer format ``jdaviz-cube`` is removed. Use ``wcs1d-fits`` from
+  ``specutils`` instead. [#2094]
+
 Imviz
 ^^^^^
 
