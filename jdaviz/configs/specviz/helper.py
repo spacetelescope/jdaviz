@@ -1,7 +1,6 @@
 import warnings
 
 from astropy import units as u
-from astropy.utils.decorators import deprecated
 from glue.core.subset_group import GroupedSubset
 from specutils import SpectralRegion, Spectrum1D
 

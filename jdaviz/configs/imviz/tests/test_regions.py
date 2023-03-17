@@ -1,12 +1,10 @@
 import numpy as np
-import pytest
 from astropy import units as u
 from astropy.coordinates import SkyCoord, Angle
 from astropy.utils.data import get_pkg_data_filename
-from astropy.nddata import NDData
 from photutils.aperture import CircularAperture, SkyCircularAperture
 from regions import (PixCoord, CircleSkyRegion, RectanglePixelRegion, CirclePixelRegion,
-                     EllipsePixelRegion, PointPixelRegion, PointSkyRegion, PolygonPixelRegion,
+                     EllipsePixelRegion, PointSkyRegion, PolygonPixelRegion,
                      CircleAnnulusSkyRegion, Regions)
 
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS

@@ -4,14 +4,13 @@ import warnings
 from copy import deepcopy
 
 import numpy as np
-from astropy.utils.decorators import deprecated
 from astropy.utils.exceptions import AstropyDeprecationWarning
 from glue.core import BaseData
 from glue.core.link_helpers import LinkSame
 from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink, NoAffineApproximation
 
 from jdaviz.core.events import SnackbarMessage, NewViewerMessage, LinkUpdatedMessage
-from jdaviz.core.helpers import ImageConfigHelper, data_has_valid_wcs
+from jdaviz.core.helpers import ImageConfigHelper
 
 __all__ = ['Imviz', 'link_image_data']
 

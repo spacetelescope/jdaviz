@@ -1,7 +1,6 @@
 import numpy as np
 from astropy.io import fits
 from astropy.io import registry as io_registry
-from astropy.utils.decorators import deprecated
 from glue.core import BaseData
 from specutils import Spectrum1D
 from specutils.io.registers import _astropy_has_priorities

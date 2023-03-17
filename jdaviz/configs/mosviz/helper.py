@@ -8,7 +8,6 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import QTable
-from astropy.utils.decorators import deprecated
 from echo import delay_callback
 from glue.core.data import Data
 from glue.core.exceptions import IncompatibleAttribute
