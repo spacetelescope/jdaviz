@@ -310,7 +310,7 @@ def _jwst2data(file_obj, ext, data_label):
 
 def _roman_2d_asdf_to_glue_data(file_obj, data_label, ext=None):
 
-    if ext == '*':
+    if ext == '*' or ext is None:
         ext_list = ['data', 'dq', 'err', 'var_poisson', 'var_rnoise']
     elif isinstance(ext, list):
         ext_list = ext
@@ -327,7 +327,7 @@ def _roman_2d_asdf_to_glue_data(file_obj, data_label, ext=None):
         component = Component.autotyped(np.array(getattr(file_obj, ext)), units=bunit)
         data.add_component(component=component, label=comp_label)
         meta = getattr(file_obj, 'meta')
-        data.coords = getattr(meta, 'wcs')
+        data.coords = getattr(meta, 'wcs', None)
         data.meta.update(dict(meta))
 
         yield data, new_data_label
