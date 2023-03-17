@@ -267,6 +267,9 @@
             If fit is not sufficiently converged, click Fit Model again to run additional iterations.
         </span>
       </v-row>
+
+      <j-plugin-section-header>Results History</j-plugin-section-header>
+      <jupyter-widget :widget="table_widget"></jupyter-widget> 
     </div>
   </j-tray-plugin>
 </template>

@@ -17,7 +17,8 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         DatasetSelectMixin,
                                         DatasetSpectralSubsetValidMixin,
                                         AutoTextField,
-                                        AddResultsMixin)
+                                        AddResultsMixin,
+                                        TableMixin)
 from jdaviz.core.custom_traitlets import IntHandleEmpty
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.configs.default.plugins.model_fitting.fitting_backend import fit_model_to_spectrum
@@ -39,7 +40,7 @@ class _EmptyParam:
 @tray_registry('g-model-fitting', label="Model Fitting", viewer_requirements='spectrum')
 class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                    SpectralSubsetSelectMixin, DatasetSpectralSubsetValidMixin,
-                   AddResultsMixin):
+                   AddResultsMixin, TableMixin):
     """
     See the :ref:`Model Fitting Plugin Documentation <specviz-model-fitting>` for more details.
 
@@ -154,6 +155,13 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self.residuals = AutoTextField(self, 'residuals_label', 'residuals_label_default',
                                        'residuals_label_auto', 'residuals_label_invalid_msg')
 
+        headers = ['model', 'data_label', 'spectral_subset']
+        if self.config == 'cubeviz':
+            headers += ['spatial_subset', 'cube_fit']
+
+        self.table.headers_avail = headers
+        self.table.headers_visible = headers
+
         # set the filter on the viewer options
         self._update_viewer_filters()
 
@@ -168,7 +176,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                    'equation', 'add_results', 'residuals_calculate', 'residuals']
         if self.config == "cubeviz":
             expose += ['cube_fit']
-        expose += ['calculate_fit']
+        expose += ['calculate_fit', 'clear_table', 'export_table']
         return PluginUserApi(self, expose=expose)
 
     def _param_units(self, param, model_type=None):
@@ -688,12 +696,26 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             raise ValueError(f"spectral subset '{self.spectral_subset.selected}' {subset_range} is outside data range of '{self.dataset.selected}' {spec_range}")  # noqa
 
         if self.cube_fit:
-            return self._fit_model_to_cube(add_data=add_data)
+            ret = self._fit_model_to_cube(add_data=add_data)
         else:
-            return self._fit_model_to_spectrum(add_data=add_data)
+            ret = self._fit_model_to_spectrum(add_data=add_data)
+
+        row = {'model': self.results_label if add_data else '',
+               'data_label': self.dataset_selected,
+               'spectral_subset': self.spectral_subset_selected}
+        if self.app.config == 'cubeviz':
+            row['spatial_subset'] = self.spatial_subset_selected
+            row['cube_fit'] = self.cube_fit
+
+        model = ret[0]
+        for k, v in zip(model.param_names, model.parameters):
+            row[k] = v
+        self.table.add_item(row)
+
+        return ret
 
     def vue_apply(self, event):
-        self.calculate_fit()
+        return self.calculate_fit()
 
     def _fit_model_to_spectrum(self, add_data):
         """
