@@ -12,7 +12,6 @@ from astropy.io import fits
 from astropy.nddata import CCDData, StdDevUncertainty
 from astropy.wcs import WCS
 from specutils import Spectrum1D, SpectrumCollection, SpectrumList
-from erfa import ErfaWarning
 
 from jdaviz import __version__, Cubeviz, Imviz, Mosviz, Specviz, Specviz2d
 
@@ -302,28 +301,31 @@ def create_wfi_image(image_shape, **kwargs):
     -------
     roman_datamodels.stnode.WfiImage
     """
-    from roman_datamodels import random_utils, stnode, units as ru
+    from roman_datamodels import stnode, units as ru
+    from roman_datamodels.random_utils import (
+        generate_array_float32, generate_array_uint32, generate_array_uint16
+    )
     from roman_datamodels.testing.factories import (
         create_meta, create_cal_logs, create_photometry
     )
 
     raw = {
-        "data": random_utils.generate_array_float32(image_shape, units=ru.electron / u.s),
-        "dq": random_utils.generate_array_uint32(image_shape),
-        "err": random_utils.generate_array_float32(image_shape, min=0.0, units=ru.electron / u.s),
+        "data": generate_array_float32(image_shape, units=ru.electron / u.s),
+        "dq": generate_array_uint32(image_shape),
+        "err": generate_array_float32(image_shape, min=0.0, units=ru.electron / u.s),
         "meta": create_meta(),
-        "var_flat": random_utils.generate_array_float32(image_shape, units=ru.electron**2 / u.s**2),
-        "var_poisson": random_utils.generate_array_float32(image_shape, units=ru.electron**2 / u.s**2),
-        "var_rnoise": random_utils.generate_array_float32(image_shape, units=ru.electron**2 / u.s**2),
-        "amp33": random_utils.generate_array_uint16((2, image_shape[0] + 8, 128), units=ru.DN),
-        "border_ref_pix_right": random_utils.generate_array_float32((2, image_shape[0] + 8, 4), units=ru.DN),
-        "border_ref_pix_left": random_utils.generate_array_float32((2, image_shape[0] + 8, 4), units=ru.DN),
-        "border_ref_pix_top": random_utils.generate_array_float32((2, 4, image_shape[1] + 8), units=ru.DN),
-        "border_ref_pix_bottom": random_utils.generate_array_float32((2, 4, image_shape[1] + 8), units=ru.DN),
-        "dq_border_ref_pix_right": random_utils.generate_array_uint32((image_shape[0] + 8, 4)),
-        "dq_border_ref_pix_left": random_utils.generate_array_uint32((image_shape[0] + 8, 4)),
-        "dq_border_ref_pix_top": random_utils.generate_array_uint32((4, image_shape[1] + 8)),
-        "dq_border_ref_pix_bottom": random_utils.generate_array_uint32((4, image_shape[1] + 8)),
+        "var_flat": generate_array_float32(image_shape, units=ru.electron**2 / u.s**2),
+        "var_poisson": generate_array_float32(image_shape, units=ru.electron**2 / u.s**2),
+        "var_rnoise": generate_array_float32(image_shape, units=ru.electron**2 / u.s**2),
+        "amp33": generate_array_uint16((2, image_shape[0] + 8, 128), units=ru.DN),
+        "border_ref_pix_right": generate_array_float32((2, image_shape[0] + 8, 4), units=ru.DN),
+        "border_ref_pix_left": generate_array_float32((2, image_shape[0] + 8, 4), units=ru.DN),
+        "border_ref_pix_top": generate_array_float32((2, 4, image_shape[1] + 8), units=ru.DN),
+        "border_ref_pix_bottom": generate_array_float32((2, 4, image_shape[1] + 8), units=ru.DN),
+        "dq_border_ref_pix_right": generate_array_uint32((image_shape[0] + 8, 4)),
+        "dq_border_ref_pix_left": generate_array_uint32((image_shape[0] + 8, 4)),
+        "dq_border_ref_pix_top": generate_array_uint32((4, image_shape[1] + 8)),
+        "dq_border_ref_pix_bottom": generate_array_uint32((4, image_shape[1] + 8)),
         "cal_logs": create_cal_logs(),
     }
     raw.update(kwargs)
@@ -332,7 +334,7 @@ def create_wfi_image(image_shape, **kwargs):
     return stnode.WfiImage(raw)
 
 
-@pytest.mark.filterwarnings('ignore:erfa.core.ErfaWarning: ERFA function "d2dtf" yielded 1 of "dubious year (Note 5)"')
+@pytest.mark.filterwarnings('ignore:erfa.core.ErfaWarning: ERFA function "d2dtf" yielded 1 of "dubious year (Note 5)"')  # noqa
 @pytest.fixture
 def roman_wfi_image(image_shape=(20, 20)):
     # Combining synthetic WFI data generators from roman_datamodels
