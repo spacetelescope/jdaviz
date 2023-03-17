@@ -1,16 +1,25 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import os
 
-# Packages may add whatever they like to this file, but
-# should keep this content at the top.
-# ----------------------------------------------------------------------------
-from ._astropy_init import *   # noqa
-# ----------------------------------------------------------------------------
+from astropy.tests.runner import TestRunner
 
-# top-level API as exposed to users
-from jdaviz.app import *  # noqa
-from jdaviz.configs.specviz import Specviz  # noqa
-from jdaviz.configs.specviz2d import Specviz2d  # noqa
-from jdaviz.configs.mosviz import Mosviz  # noqa
-from jdaviz.configs.cubeviz import Cubeviz  # noqa
-from jdaviz.configs.imviz import Imviz  # noqa
-from jdaviz.utils import enable_hot_reloading  # noqa
+try:
+    from .version import version as __version__
+except ImportError:
+    __version__ = ''
+
+# Create the test function for self test
+test = TestRunner.make_test_runner_in(os.path.dirname(__file__))
+
+# Top-level API as exposed to users.
+from jdaviz.app import *  # noqa: F401, F403
+from jdaviz.configs.specviz import Specviz  # noqa: F401
+from jdaviz.configs.specviz2d import Specviz2d  # noqa: F401
+from jdaviz.configs.mosviz import Mosviz  # noqa: F401
+from jdaviz.configs.cubeviz import Cubeviz  # noqa: F401
+from jdaviz.configs.imviz import Imviz  # noqa: F401
+from jdaviz.utils import enable_hot_reloading  # noqa: F401
+
+# Clean up namespace.
+del os
+del TestRunner
