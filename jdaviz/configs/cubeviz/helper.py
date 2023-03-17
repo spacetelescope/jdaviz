@@ -122,12 +122,6 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
         return self._specviz
 
 
-@deprecated('3.2', alternative='Cubeviz')
-class CubeViz(Cubeviz):
-    """This class is pending deprecation. Please use `Cubeviz` instead."""
-    pass
-
-
 def layer_is_cube_image_data(layer):
     return isinstance(layer, BaseData) and layer.ndim in (2, 3)
 

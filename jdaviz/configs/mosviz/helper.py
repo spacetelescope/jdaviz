@@ -1020,9 +1020,3 @@ class Mosviz(ConfigHelper, LineListMixin):
         `~specutils.Spectrum1D`
         """
         return self._get_spectrum('2D Spectra', row, apply_slider_redshift)
-
-
-@deprecated('3.2', alternative='Mosviz')
-class MosViz(Mosviz):
-    """This class is pending deprecation. Please use `Mosviz` instead."""
-    pass
