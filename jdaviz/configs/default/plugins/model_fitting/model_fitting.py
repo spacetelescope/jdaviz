@@ -64,6 +64,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     * :meth:`set_model_component`
     * :meth:`reestimate_model_parameters`
     * ``equation`` (:class:`~jdaviz.core.template_mixin.AutoTextField`)
+    * :meth:`equation_components`
     * ``cube_fit``
       Only exposed for Cubeviz.  Whether to fit the model to the cube instead of to the
       collapsed spectrum.
@@ -155,7 +156,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self.residuals = AutoTextField(self, 'residuals_label', 'residuals_label_default',
                                        'residuals_label_auto', 'residuals_label_invalid_msg')
 
-        headers = ['model', 'data_label', 'spectral_subset']
+        headers = ['model', 'data_label', 'spectral_subset', 'equation']
         if self.config == 'cubeviz':
             headers += ['spatial_subset', 'cube_fit']
 
@@ -173,7 +174,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         expose += ['spectral_subset', 'model_component', 'poly_order', 'model_component_label',
                    'model_components', 'create_model_component', 'remove_model_component',
                    'get_model_component', 'set_model_component', 'reestimate_model_parameters',
-                   'equation', 'add_results', 'residuals_calculate', 'residuals']
+                   'equation', 'equation_components',
+                   'add_results', 'residuals_calculate', 'residuals']
         if self.config == "cubeviz":
             expose += ['cube_fit']
         expose += ['calculate_fit', 'clear_table', 'export_table']
@@ -637,6 +639,13 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         List of the labels of existing model components
         """
         return [x["id"] for x in self.component_models]
+
+    @property
+    def equation_components(self):
+        """
+        List of the labels of model components in the current equation
+        """
+        return re.split('[+*/-]', self.equation.value)
 
     def vue_add_model(self, event):
         self.create_model_component()
