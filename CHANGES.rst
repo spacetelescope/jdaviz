@@ -21,7 +21,10 @@ Imviz
 
 - Table exposing past results in the aperture photometry plugin. [#1985, #2015]
 
+
 - New canvas rotation plugin to rotate displayed image without affecting actual data. [#1983]
+
+- Preliminary support for Nancy Grace Roman Space Telescope ASDF data products [#1822]
 
 Mosviz
 ^^^^^^

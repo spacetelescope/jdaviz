@@ -2,7 +2,6 @@ import os
 
 import numpy as np
 import asdf
-from asdf.fits_embed import AsdfInFits
 from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import NDData
