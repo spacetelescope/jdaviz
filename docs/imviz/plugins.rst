@@ -35,6 +35,13 @@ This plugin gives access to per-viewer and per-layer plotting options.
     :ref:`Display Settings <imviz-display-settings>`
         Documentation on various display settings in the Jdaviz viewers.
 
+.. _imviz-histogram:
+
+Histogram
+=========
+
+TODO: Write me.
+
 .. _imviz-subset-plugin:
 
 Subset Tools

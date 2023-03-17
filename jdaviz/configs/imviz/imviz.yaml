@@ -20,6 +20,7 @@ toolbar:
 tray:
   - g-metadata-viewer
   - g-plot-options
+  - g-histogram
   - g-subset-plugin
   - g-markers
   - imviz-links-control

@@ -25,6 +25,9 @@ Imviz
 
 - Table exposing past results in the aperture photometry plugin. [#1985, #2015]
 
+- New Histogram plugin to plot histogram for selected data in the selected
+  viewer. Only displayed data is considered. [#2097]
+
 Mosviz
 ^^^^^^
 
