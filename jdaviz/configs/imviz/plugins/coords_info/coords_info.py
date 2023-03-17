@@ -9,14 +9,14 @@ from glue.core.subset_group import GroupedSubset
 from glue_jupyter.bqplot.image.layer_artist import BqplotImageSubsetLayerArtist
 
 from jdaviz.configs.cubeviz.plugins.viewers import CubevizImageView
-from jdaviz.configs.imviz.helper import data_has_valid_wcs
 from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
 from jdaviz.configs.mosviz.plugins.viewers import MosvizImageView, MosvizProfile2DView
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
 from jdaviz.core.events import ViewerAddedMessage
+from jdaviz.core.helpers import data_has_valid_wcs
+from jdaviz.core.marks import PluginScatter
 from jdaviz.core.registries import tool_registry
 from jdaviz.core.template_mixin import TemplateMixin, DatasetSelectMixin
-from jdaviz.core.marks import PluginScatter
 
 __all__ = ['CoordsInfo']
 
