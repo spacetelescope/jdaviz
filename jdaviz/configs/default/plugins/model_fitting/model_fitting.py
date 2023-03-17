@@ -162,6 +162,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         self.table.headers_avail = headers
         self.table.headers_visible = headers
+        # when model parameters are added as columns, only show the value columns by default
+        # (other columns can be show in the dropdown by the user)
+        self.table._new_col_visible = lambda colname: colname.split(':')[-1] not in ('unit', 'fixed', 'uncert')  # noqa
 
         # set the filter on the viewer options
         self._update_viewer_filters()
@@ -709,16 +712,28 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         else:
             ret = self._fit_model_to_spectrum(add_data=add_data)
 
+        if ret is None:
+            # something went wrong in the fitting call and (hopefully) already raised a warning,
+            # but we don't have anything to add to the table
+            return ret
+
         row = {'model': self.results_label if add_data else '',
                'data_label': self.dataset_selected,
-               'spectral_subset': self.spectral_subset_selected}
+               'spectral_subset': self.spectral_subset_selected,
+               'equation': self.equation.value}
         if self.app.config == 'cubeviz':
             row['spatial_subset'] = self.spatial_subset_selected
             row['cube_fit'] = self.cube_fit
 
-        model = ret[0]
-        for k, v in zip(model.param_names, model.parameters):
-            row[k] = v
+        equation_components = self.equation_components
+        for comp_ind, comp in enumerate(equation_components):
+            for param_name, param_dict in self.get_model_component(comp).get('parameters', {}).items():  # noqa
+                colprefix = f"{comp}:{param_name}_{comp_ind}"
+                row[colprefix] = param_dict.get('value')
+                row[f"{colprefix}:unit"] = param_dict.get('unit')
+                row[f"{colprefix}:fixed"] = param_dict.get('fixed')
+#                row[f"{colprefix}:uncert"] = param_dict.get('uncert')
+
         self.table.add_item(row)
 
         return ret

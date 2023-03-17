@@ -2314,6 +2314,10 @@ class Table(PluginSubcomponent):
             return ''
         return None
 
+    @staticmethod
+    def _new_col_visible(colname):
+        return True
+
     def add_item(self, item):
         """
         Add an item/row to the table.
@@ -2377,7 +2381,7 @@ class Table(PluginSubcomponent):
         missing_headers = [k for k in item.keys() if k not in self.headers_avail]
         if len(missing_headers):
             self.headers_avail = self.headers_avail + missing_headers
-            self.headers_visible = self.headers_visible + missing_headers
+            self.headers_visible = self.headers_visible + [m for m in missing_headers if self._new_col_visible(m)]  # noqa
 
         # clean data to show in the UI
         self.items = self.items + [{k: json_safe(k, v) for k, v in item.items()}]
