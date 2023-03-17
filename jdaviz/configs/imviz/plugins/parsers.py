@@ -83,7 +83,11 @@ def parse_data(app, file_obj, ext=None, data_label=None):
                 _parse_image(app, pf, data_label, ext=ext)
             else:
                 with asdf.open(file_obj) as pf:
-                    _parse_image(app, pf, data_label, ext=ext)
+                    try:
+                        _parse_image(app, pf, data_label, ext=ext)
+                    except NotImplementedError:
+                        raise NotImplementedError("Parsing Roman ASDF data products "
+                                                  "requires the `roman_datamodels` package.")
         else:  # Assume FITS
             with fits.open(file_obj) as pf:
                 _parse_image(app, pf, data_label, ext=ext)
