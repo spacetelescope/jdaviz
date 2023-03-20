@@ -81,15 +81,9 @@ class LineProfileXY(PluginTemplateMixin):
         else:
             y_label = 'Value'
 
-        # Clear bqplot figure (copied from bqplot/pyplot.py)
-        for fig in self._figs:
-            fig.marks = []
-            fig.axes = []
-            setattr(fig, 'axis_registry', {})
-
+        # Clear bqplot figures.
         fig_x = self._figs[0]
         bqplot_clear_figure(fig_x)
-
         fig_y = self._figs[1]
         bqplot_clear_figure(fig_y)
 
