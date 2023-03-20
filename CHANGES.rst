@@ -90,6 +90,11 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
+Mosviz
+^^^^^^
+
+- Removed subset selection from the Mosviz image viewer. [#2102]
+
 3.3.2 (unreleased)
 ==================
 
