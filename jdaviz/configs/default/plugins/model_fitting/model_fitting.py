@@ -713,7 +713,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         else:
             ret = self._fit_model_to_spectrum(add_data=add_data)
 
-        if ret is None:
+        if ret is None:  # pragma: no cover
             # something went wrong in the fitting call and (hopefully) already raised a warning,
             # but we don't have anything to add to the table
             return ret
@@ -740,7 +740,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         return ret
 
     def vue_apply(self, event):
-        return self.calculate_fit()
+        self.calculate_fit()
 
     def _fit_model_to_spectrum(self, add_data):
         """
