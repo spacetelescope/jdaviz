@@ -103,6 +103,11 @@ show the fitted value of each parameter rather than the initial value, and
 will additionally show the standard deviation uncertainty of the fitted
 parameter value if the parameter was not set to be fixed to the initial value.
 
+Parameter values for each fitting run are stored in the plugin table.  
+To export the table into the notebook via the API, call
+:meth:`~jdaviz.core.template_mixin.TableMixin.export_table`
+(see :ref:`plugin-apis`).
+
 .. seealso::
 
     :ref:`Export Models <specviz-export-model>`

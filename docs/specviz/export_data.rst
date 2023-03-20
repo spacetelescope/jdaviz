@@ -96,6 +96,17 @@ To extract all of the model parameters:
     myparams
 
 where the ``model_label`` parameter identifies which model should be returned.
+
+Alternatively, the table of logged parameter values in the model fitting plugin can be exported to
+an :ref:`astropy table <astropy:astropy-table>`
+by calling :meth:`~jdaviz.core.template_mixin.TableMixin.export_table` (see :ref:`plugin-apis`):
+
+.. code-block:: python
+
+    model_fitting = specviz.plugins['Model Fitting']
+    model_fitting.export_table()
+
+
 .. _specviz-export-markers:
 
 Markers Table
