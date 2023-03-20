@@ -164,7 +164,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self.table.headers_visible = headers
         # when model parameters are added as columns, only show the value columns by default
         # (other columns can be show in the dropdown by the user)
-        self.table._new_col_visible = lambda colname: colname.split(':')[-1] not in ('unit', 'fixed', 'uncert')  # noqa
+        self.table._new_col_visible = lambda colname: colname.split(':')[-1] not in ('unit', 'fixed', 'uncert', 'std')  # noqa
 
         # set the filter on the viewer options
         self._update_viewer_filters()
@@ -544,6 +544,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         comp = {"model_type": model_component['model_type'],
                 "parameters": {p['name']: {'value': p['value'],
                                            'unit': p['unit'],
+                                           'std': p.get('std', np.nan),
                                            'fixed': p['fixed']} for p in model_component['parameters']}}  # noqa
 
         if parameter is not None:
@@ -732,7 +733,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 row[colprefix] = param_dict.get('value')
                 row[f"{colprefix}:unit"] = param_dict.get('unit')
                 row[f"{colprefix}:fixed"] = param_dict.get('fixed')
-#                row[f"{colprefix}:uncert"] = param_dict.get('uncert')
+                row[f"{colprefix}:std"] = param_dict.get('std')
 
         self.table.add_item(row)
 
