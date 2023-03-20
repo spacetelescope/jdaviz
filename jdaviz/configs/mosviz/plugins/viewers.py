@@ -21,7 +21,6 @@ class MosvizImageView(JdavizViewerMixin, BqplotImageView):
                     ['jdaviz:homezoom', 'jdaviz:prevzoom'],
                     ['jdaviz:boxzoom'],
                     ['jdaviz:panzoom'],
-                    ['bqplot:circle', 'bqplot:rectangle'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
 
