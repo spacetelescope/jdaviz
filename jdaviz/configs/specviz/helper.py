@@ -95,9 +95,7 @@ class Specviz(ConfigHelper, LineListMixin):
                                                    subset_to_apply=subset_to_apply,
                                                    statistic=statistic,
                                                    cls=Spectrum1D)
-                        # Work around get_data returning Data even with cls specified
-                        if isinstance(spectrum, Spectrum1D):
-                            spectra[lyr.data.label] = spectrum
+                        spectra[lyr.data.label] = spectrum
                     else:
                         continue
                 else:
@@ -106,9 +104,7 @@ class Specviz(ConfigHelper, LineListMixin):
                                                    subset_to_apply=lyr.label,
                                                    statistic=statistic,
                                                    cls=Spectrum1D)
-                        # Work around get_data returning Data even with cls specified
-                        if isinstance(spectrum, Spectrum1D):
-                            spectra[f'{lyr.data.label} ({lyr.label})'] = spectrum
+                        spectra[f'{lyr.data.label} ({lyr.label})'] = spectrum
                     else:
                         spectrum = get_data_method(data_label=lyr.label,
                                                    statistic=statistic,
