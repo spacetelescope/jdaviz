@@ -219,6 +219,12 @@
         ></v-switch>
       </v-row>
 
+      <v-row v-if="cube_fit">
+        <span class="v-messages v-messages__message text--secondary">
+            Note: cube fit results are not logged to table.
+        </span>
+      </v-row>
+
       <plugin-add-results
         :label.sync="results_label"
         :label_default="results_label_default"

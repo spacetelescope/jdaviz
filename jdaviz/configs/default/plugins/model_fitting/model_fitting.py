@@ -718,6 +718,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             # but we don't have anything to add to the table
             return ret
 
+        if self.cube_fit:
+            # cube fits are currently unsupported in tables
+            return ret
+
         row = {'model': self.results_label if add_data else '',
                'data_label': self.dataset_selected,
                'spectral_subset': self.spectral_subset_selected,
