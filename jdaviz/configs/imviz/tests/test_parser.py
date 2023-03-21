@@ -1,3 +1,5 @@
+from packaging.version import Version
+
 import numpy as np
 import pytest
 from astropy import units as u
@@ -15,6 +17,14 @@ from stdatamodels import asdf_in_fits
 from jdaviz.configs.imviz.helper import split_filename_with_fits_ext
 from jdaviz.configs.imviz.plugins.parsers import (
     parse_data, _validate_fits_image2d, _validate_bunit, _parse_image)
+
+try:
+    # check for version of roman_datamodels
+    import roman_datamodels
+    RDM_LT_0_14_2 = Version(roman_datamodels.__version__) < Version('0.14.2.dev')
+except ImportError:
+    # If roman_datamodels not installed, assume Roman-specific tests can be skipped
+    RDM_LT_0_14_2 = True
 
 
 @pytest.mark.parametrize(
@@ -505,6 +515,7 @@ def test_load_valid_not_valid(imviz_helper):
     assert_allclose(imviz_helper.app.data_collection[0].get_component('DATA').data, 1)
 
 
+@pytest.mark.skipif(RDM_LT_0_14_2, reason="roman_datamodels not installed or version too old")
 def test_roman_wfi(imviz_helper, roman_wfi_image):
 
     imviz_helper.load_data(roman_wfi_image)
