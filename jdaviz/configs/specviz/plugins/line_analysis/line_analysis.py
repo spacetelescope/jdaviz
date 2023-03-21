@@ -402,6 +402,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
 
         else:
             continuum_mask = ~self.app._jdaviz_helper.get_data(
+                self.dataset.selected,
                 subset_to_apply=self.continuum_subset_selected).mask
             spectral_axis_nanmasked = spectral_axis.value.copy()
             spectral_axis_nanmasked[~continuum_mask] = np.nan
