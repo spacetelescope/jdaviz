@@ -396,6 +396,11 @@ def create_wfi_image_model(image_shape, **kwargs):
     return rdd.ImageModel(stnode.WfiImage(raw))
 
 
+# this filtered warning can be removed after resolution of PR:
+# https://github.com/spacetelescope/roman_datamodels/pull/138
+@pytest.mark.filterwarnings(
+    'ignore:erfa.core.ErfaWarning: ERFA function "d2dtf" yielded 1 of "dubious year (Note 5)"'
+)
 @pytest.fixture
 def roman_wfi_image(image_shape=(20, 20)):
     # Combining synthetic WFI data generators from roman_datamodels

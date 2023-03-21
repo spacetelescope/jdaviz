@@ -72,10 +72,10 @@ jobs:
             toxposargs: --remote-data --run-slow
             allow_failure: true
 
-          - name: Python 3.10 with Roman dependencies
+          - name: Python 3.11 with latest dev versions, and Roman-specific dependencies
             os: ubuntu-latest
-            python: '3.10'
-            toxenv: py310-test-romandeps
+            python: '3.11'
+            toxenv: py311-test-devdeps-romandeps
             toxposargs: --remote-data
             allow_failure: true
 
