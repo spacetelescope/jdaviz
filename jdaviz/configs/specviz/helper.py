@@ -76,12 +76,15 @@ class Specviz(ConfigHelper, LineListMixin):
         # Just to save line length
         get_data_method = self.app._jdaviz_helper.get_data
         viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
-        statistic = getattr(viewer, "function", None)
+        statistic = None
+        if self.app.config == "cubeviz":
+            statistic = getattr(viewer.state, "function")
 
         if data_label is not None:
             spectrum = get_data_method(data_label=data_label,
                                        subset_to_apply=subset_to_apply,
-                                       statistic=statistic)
+                                       statistic=statistic,
+                                       cls=Spectrum1D)
             spectra[data_label] = spectrum
         else:
             for layer_state in viewer.state.layers:
@@ -90,7 +93,8 @@ class Specviz(ConfigHelper, LineListMixin):
                     if lyr.label == subset_to_apply:
                         spectrum = get_data_method(data_label=lyr.data.label,
                                                    subset_to_apply=subset_to_apply,
-                                                   statistic=statistic)
+                                                   statistic=statistic,
+                                                   cls=Spectrum1D)
                         spectra[lyr.data.label] = spectrum
                     else:
                         continue
@@ -98,11 +102,13 @@ class Specviz(ConfigHelper, LineListMixin):
                     if isinstance(lyr, GroupedSubset):
                         spectrum = get_data_method(data_label=lyr.data.label,
                                                    subset_to_apply=lyr.label,
-                                                   statistic=statistic)
+                                                   statistic=statistic,
+                                                   cls=Spectrum1D)
                         spectra[f'{lyr.data.label} ({lyr.label})'] = spectrum
                     else:
                         spectrum = get_data_method(data_label=lyr.label,
-                                                   statistic=statistic)
+                                                   statistic=statistic,
+                                                   cls=Spectrum1D)
                         spectra[lyr.label] = spectrum
 
         if not apply_slider_redshift:
