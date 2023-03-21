@@ -8,10 +8,13 @@ import warnings
 import numpy as np
 import pytest
 from astropy import units as u
+from astropy import coordinates as coord
 from astropy.io import fits
+from astropy.modeling import models
 from astropy.nddata import CCDData, StdDevUncertainty
 from astropy.wcs import WCS
 from specutils import Spectrum1D, SpectrumCollection, SpectrumList
+from gwcs import coordinate_frames as cf, wcs as gwcs_wcs
 
 from jdaviz import __version__, Cubeviz, Imviz, Mosviz, Specviz, Specviz2d
 
@@ -279,10 +282,51 @@ def mos_image():
     return CCDData(data, wcs=wcs, unit='Jy', meta=header)
 
 
-def create_wfi_image(image_shape, **kwargs):
+def create_example_gwcs(shape):
+    # Example adapted from photutils:
+    #   https://github.com/astropy/photutils/blob/
+    #   2825356f1d876cacefb3a03d104a4c563065375f/photutils/datasets/make.py#L821
+    rho = np.pi / 3.0
+    # Roman plate scale:
+    scale = (0.11 * u.arcsec / u.pixel).to_value(u.deg / u.pixel)
+
+    shift_by_crpix = (models.Shift((-shape[1] / 2) + 1)
+                      & models.Shift((-shape[0] / 2) + 1))
+
+    cd_matrix = np.array([[-scale * np.cos(rho), scale * np.sin(rho)],
+                          [scale * np.sin(rho), scale * np.cos(rho)]])
+
+    rotation = models.AffineTransformation2D(cd_matrix, translation=[0, 0])
+    rotation.inverse = models.AffineTransformation2D(
+        np.linalg.inv(cd_matrix), translation=[0, 0])
+
+    tan = models.Pix2Sky_TAN()
+    celestial_rotation = models.RotateNative2Celestial(197.8925, -1.36555556,
+                                                       180.0)
+
+    det2sky = shift_by_crpix | rotation | tan | celestial_rotation
+    det2sky.name = 'linear_transform'
+
+    detector_frame = cf.Frame2D(name='detector', axes_names=('x', 'y'),
+                                unit=(u.pix, u.pix))
+
+    sky_frame = cf.CelestialFrame(reference_frame=coord.ICRS(),
+                                  name='icrs', unit=(u.deg, u.deg))
+
+    pipeline = [(detector_frame, det2sky), (sky_frame, None)]
+
+    return gwcs_wcs.WCS(pipeline)
+
+
+# this filtered warning can be removed after resolution of PR:
+# https://github.com/spacetelescope/roman_datamodels/pull/138
+@pytest.mark.filterwarnings(
+    'ignore:erfa.core.ErfaWarning: ERFA function "d2dtf" yielded 1 of "dubious year (Note 5)"'
+)
+def create_wfi_image_model(image_shape, **kwargs):
     """
-    Create a dummy WfiImage instance with valid values for attributes
-    required by the schema.
+    Create a dummy Roman WFI Image datamodel instance with valid values
+    for attributes required by the schema.
 
     Requires roman_datamodels >= 0.14.2.dev
 
@@ -299,29 +343,47 @@ def create_wfi_image(image_shape, **kwargs):
         Additional or overridden attributes.
     Returns
     -------
-    roman_datamodels.stnode.WfiImage
+    roman_datamodels.datamodel.ImageModel
     """
-    from roman_datamodels import stnode, units as ru
+    from roman_datamodels import datamodels as rdd, stnode
     from roman_datamodels.random_utils import (
         generate_array_float32, generate_array_uint32, generate_array_uint16
     )
     from roman_datamodels.testing.factories import (
         create_meta, create_cal_logs, create_photometry
     )
-
+    count_rate_lims = dict(min=0, max=1e4)
     raw = {
-        "data": generate_array_float32(image_shape, units=ru.electron / u.s),
+        "data": generate_array_float32(
+            image_shape, units=u.electron / u.s, **count_rate_lims
+        ),
         "dq": generate_array_uint32(image_shape),
-        "err": generate_array_float32(image_shape, min=0.0, units=ru.electron / u.s),
+        "err": generate_array_float32(
+            image_shape, units=u.electron / u.s, **count_rate_lims
+        ),
         "meta": create_meta(),
-        "var_flat": generate_array_float32(image_shape, units=ru.electron**2 / u.s**2),
-        "var_poisson": generate_array_float32(image_shape, units=ru.electron**2 / u.s**2),
-        "var_rnoise": generate_array_float32(image_shape, units=ru.electron**2 / u.s**2),
-        "amp33": generate_array_uint16((2, image_shape[0] + 8, 128), units=ru.DN),
-        "border_ref_pix_right": generate_array_float32((2, image_shape[0] + 8, 4), units=ru.DN),
-        "border_ref_pix_left": generate_array_float32((2, image_shape[0] + 8, 4), units=ru.DN),
-        "border_ref_pix_top": generate_array_float32((2, 4, image_shape[1] + 8), units=ru.DN),
-        "border_ref_pix_bottom": generate_array_float32((2, 4, image_shape[1] + 8), units=ru.DN),
+        "var_flat": generate_array_float32(
+            image_shape, units=u.electron**2 / u.s**2, **count_rate_lims
+        ),
+        "var_poisson": generate_array_float32(
+            image_shape, units=u.electron**2 / u.s**2, **count_rate_lims
+        ),
+        "var_rnoise": generate_array_float32(
+            image_shape, units=u.electron**2 / u.s**2, **count_rate_lims
+        ),
+        "amp33": generate_array_uint16((2, image_shape[0] + 8, 128), units=u.DN),
+        "border_ref_pix_right": generate_array_float32(
+            (2, image_shape[0] + 8, 4), units=u.DN, **count_rate_lims
+        ),
+        "border_ref_pix_left": generate_array_float32(
+            (2, image_shape[0] + 8, 4), units=u.DN, **count_rate_lims
+        ),
+        "border_ref_pix_top": generate_array_float32(
+            (2, 4, image_shape[1] + 8), units=u.DN, **count_rate_lims
+        ),
+        "border_ref_pix_bottom": generate_array_float32(
+            (2, 4, image_shape[1] + 8), units=u.DN, **count_rate_lims
+        ),
         "dq_border_ref_pix_right": generate_array_uint32((image_shape[0] + 8, 4)),
         "dq_border_ref_pix_left": generate_array_uint32((image_shape[0] + 8, 4)),
         "dq_border_ref_pix_top": generate_array_uint32((4, image_shape[1] + 8)),
@@ -330,20 +392,17 @@ def create_wfi_image(image_shape, **kwargs):
     }
     raw.update(kwargs)
     raw["meta"]["photometry"] = create_photometry()
+    raw["meta"]["wcs"] = create_example_gwcs(image_shape)
+    return rdd.ImageModel(stnode.WfiImage(raw))
 
-    return stnode.WfiImage(raw)
 
-
-@pytest.mark.filterwarnings('ignore:erfa.core.ErfaWarning: ERFA function "d2dtf" yielded 1 of "dubious year (Note 5)"')  # noqa
 @pytest.fixture
 def roman_wfi_image(image_shape=(20, 20)):
     # Combining synthetic WFI data generators from roman_datamodels
     # with the syntax for constructing a ImageModel:
     #    https://github.com/spacetelescope/romancal/blob/
     #    1908ae5c3f11704246d8aea1f71f637be44fc46b/docs/roman/datamodels/models.rst?plain=1#L48
-    from roman_datamodels import datamodels as rdd
-
-    image_model = rdd.ImageModel(create_wfi_image(image_shape))
+    image_model = create_wfi_image_model(image_shape)
     return image_model
 
 

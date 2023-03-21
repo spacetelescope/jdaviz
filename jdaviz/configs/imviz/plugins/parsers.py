@@ -145,7 +145,7 @@ def get_image_data_iterator(app, file_obj, data_label, ext=None):
 
     # Roman 2-D datamodels
     elif rdd is not None and issubclass(file_obj.__class__, rdd.DataModel):
-        data_iter = _roman_2d_asdf_to_glue_data(file_obj, data_label, ext=ext)
+        data_iter = _roman_2d_to_glue_data(file_obj, data_label, ext=ext)
 
     elif isinstance(file_obj, NDData):
         data_iter = _nddata_to_glue_data(file_obj, data_label)
@@ -308,7 +308,7 @@ def _jwst2data(file_obj, ext, data_label):
 # ---- Functions that handle input from Roman ASDF files -----
 
 
-def _roman_2d_asdf_to_glue_data(file_obj, data_label, ext=None):
+def _roman_2d_to_glue_data(file_obj, data_label, ext=None):
 
     if ext == '*' or ext is None:
         ext_list = ['data', 'dq', 'err', 'var_poisson', 'var_rnoise']
@@ -317,17 +317,19 @@ def _roman_2d_asdf_to_glue_data(file_obj, data_label, ext=None):
     else:
         ext_list = [ext]
 
+    meta = getattr(file_obj, 'meta')
+    coords = getattr(meta, 'wcs', None)
+
     for ext in ext_list:
         comp_label = ext.lower()
         new_data_label = f'{data_label}[{comp_label}]'
-        data = Data(label=new_data_label)
+        data = Data(coords=coords, label=new_data_label)
 
-        # For now, set bunit to a blank string.
-        bunit = ''
-        component = Component.autotyped(np.array(getattr(file_obj, ext)), units=bunit)
+        # This could be a quantity or a ndarray:
+        ext_values = getattr(file_obj, ext)
+        bunit = getattr(ext_values, 'unit', '')
+        component = Component.autotyped(np.array(ext_values), units=bunit)
         data.add_component(component=component, label=comp_label)
-        meta = getattr(file_obj, 'meta')
-        data.coords = getattr(meta, 'wcs', None)
         data.meta.update(dict(meta))
 
         yield data, new_data_label
