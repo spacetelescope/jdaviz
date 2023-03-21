@@ -72,6 +72,13 @@ jobs:
             toxposargs: --remote-data --run-slow
             allow_failure: true
 
+          - name: Python 3.10 with Roman dependencies
+            os: ubuntu-latest
+            python: '3.10'
+            toxenv: py310-test-romandeps
+            toxposargs: --remote-data
+            allow_failure: true
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
