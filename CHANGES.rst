@@ -47,16 +47,25 @@ API Changes
 Cubeviz
 ^^^^^^^
 
+- Removed deprecated ``CubeViz``; use ``Cubeviz``. [#2092]
+
 Imviz
 ^^^^^
 
 - ASDF-in-FITS parser for JWST images now uses ``stdatamodels``. [#2052]
 
+- Removed deprecated ``load_static_regions_from_file`` and ``load_static_regions``;
+  use ``load_regions_from_file`` and ``load_regions``. [#2092]
+
 Mosviz
 ^^^^^^
 
+- Removed deprecated ``MosViz``; use ``Mosviz``. [#2092]
+
 Specviz
 ^^^^^^^
+
+- Removed deprecated ``SpecViz``; use ``Specviz``. [#2092]
 
 Specviz2d
 ^^^^^^^^^

@@ -1,7 +1,6 @@
 import warnings
 
 from astropy import units as u
-from astropy.utils.decorators import deprecated
 from glue.core.subset_group import GroupedSubset
 from specutils import SpectralRegion, Spectrum1D
 
@@ -276,9 +275,3 @@ class Specviz(ConfigHelper, LineListMixin):
         self.app.get_viewer(
             self._default_spectrum_viewer_reference_name
         ).figure.axes[axis].tick_format = fmt
-
-
-@deprecated('3.2', alternative='Specviz')
-class SpecViz(Specviz):
-    """This class is pending deprecation. Please use `Specviz` instead."""
-    pass

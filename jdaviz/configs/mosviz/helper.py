@@ -8,7 +8,6 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import QTable
-from astropy.utils.decorators import deprecated
 from echo import delay_callback
 from glue.core.data import Data
 from glue.core.exceptions import IncompatibleAttribute
@@ -1020,9 +1019,3 @@ class Mosviz(ConfigHelper, LineListMixin):
         `~specutils.Spectrum1D`
         """
         return self._get_spectrum('2D Spectra', row, apply_slider_redshift)
-
-
-@deprecated('3.2', alternative='Mosviz')
-class MosViz(Mosviz):
-    """This class is pending deprecation. Please use `Mosviz` instead."""
-    pass

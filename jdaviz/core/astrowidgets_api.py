@@ -7,8 +7,9 @@ from echo import delay_callback
 from glue.config import colormaps
 from glue.core import Data
 
-from jdaviz.configs.imviz.helper import data_has_valid_wcs, get_top_layer_index
+from jdaviz.configs.imviz.helper import get_top_layer_index
 from jdaviz.core.events import SnackbarMessage, MarkersChangedMessage
+from jdaviz.core.helpers import data_has_valid_wcs
 
 __all__ = ['AstrowidgetsImageViewerMixin']
 
