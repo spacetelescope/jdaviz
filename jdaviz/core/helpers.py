@@ -408,9 +408,6 @@ class ConfigHelper(HubListener):
         return self.show(loc="sidecar:tab-after", title=title)
 
     def _get_data(self, data_label=None, cls=None, subset_to_apply=None, function=None):
-        if self.app.config != "cubeviz" and function:
-            raise AttributeError(f"{self.app.config} does not need the function parameter set.")
-
         list_of_valid_function_values = ['minimum', 'maximum', 'mean',
                                          'median', 'sum']
         if function and function not in list_of_valid_function_values:
@@ -451,7 +448,7 @@ class ConfigHelper(HubListener):
 
         if not subset_to_apply:
             if 'Trace' in data.meta:
-                if cls is not None:
+                if cls is not None:  # pragma: no cover
                     raise ValueError("cls not supported for Trace object")
                 data = data.get_object()
             else:

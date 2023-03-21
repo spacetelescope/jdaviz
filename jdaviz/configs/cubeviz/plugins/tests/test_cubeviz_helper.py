@@ -49,3 +49,8 @@ def test_valid_function(cubeviz_helper, spectrum1d_cube):
                              [6., 14.] * u.Jy, atol=1e-5 * u.Jy)
     assert_quantity_allclose(results_max.flux,
                              [7., 15.] * u.Jy, atol=1e-5 * u.Jy)
+
+    # calling without function gives cube
+    assert len(cubeviz_helper.get_data(data_label="test[FLUX]").shape) == 3
+    # but calling through specviz automatically collapses
+    assert len(cubeviz_helper.specviz.get_data(data_label="test[FLUX]").shape) == 1
