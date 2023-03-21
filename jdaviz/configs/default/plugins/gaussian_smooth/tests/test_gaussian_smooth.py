@@ -116,7 +116,7 @@ def test_spatial_convolution(cubeviz_helper, spectrum1d_cube):
     assert dc[1].label == f'{data_label}[FLUX] spatial-smooth stddev-3.0'
     assert dc[1].shape == (2, 4, 2)  # specutils moved spectral axis to last
     assert (dc[f'{data_label}[FLUX] spatial-smooth stddev-3.0'].get_object(cls=Spectrum1D,
-                                                                           statistic=None).shape
+                                                                           function=None).shape
             == (2, 4, 2))
 
 

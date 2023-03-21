@@ -407,40 +407,19 @@ class ConfigHelper(HubListener):
                       DeprecationWarning)
         return self.show(loc="sidecar:tab-after", title=title)
 
-    def get_data(self, data_label=None, cls=None, subset_to_apply=None, statistic=None):
-        """
-        Returns data with name equal to data_label of type cls with subsets applied from
-        subset_to_apply.
+    def _get_data(self, data_label=None, cls=None, subset_to_apply=None, function=None):
+        if self.app.config != "cubeviz" and function:
+            raise AttributeError(f"{self.app.config} does not need the function parameter set.")
 
-        Parameters
-        ----------
-        data_label : str, optional
-            Provide a label to retrieve a specific data set from data_collection.
-        cls : `~specutils.Spectrum1D`, `~astropy.nddata.CCDData`, optional
-            The type that data will be returned as.
-        subset_to_apply : str, optional
-            Subset that is to be applied to data before it is returned.
-        statistic : {'minimum', 'maximum', 'mean', 'median', 'sum'}, optional
-            The statistic to use to collapse the dataset.
-
-        Returns
-        -------
-        data : cls
-            Data is returned as type cls with subsets applied.
-
-        """
-        if self.app.config != "cubeviz" and statistic:
-            raise AttributeError(f"{self.app.config} does not need the statistic parameter set.")
-
-        list_of_valid_statistic_values = ['minimum', 'maximum', 'mean',
-                                          'median', 'sum']
-        if statistic and statistic not in list_of_valid_statistic_values:
-            raise ValueError(f"statistic {statistic} not in list of valid"
-                             f" statistic values {list_of_valid_statistic_values}")
+        list_of_valid_function_values = ['minimum', 'maximum', 'mean',
+                                         'median', 'sum']
+        if function and function not in list_of_valid_function_values:
+            raise ValueError(f"function {function} not in list of valid"
+                             f" function values {list_of_valid_function_values}")
 
         list_of_valid_subset_names = [x.label for x in self.app.data_collection.subset_groups]
         if subset_to_apply and subset_to_apply not in list_of_valid_subset_names:
-            raise ValueError(f"Subset {statistic} not in list of valid"
+            raise ValueError(f"Subset {subset_to_apply} not in list of valid"
                              f" subset names {list_of_valid_subset_names}")
 
         if data_label and data_label not in self.app.data_collection.labels:
@@ -463,13 +442,18 @@ class ConfigHelper(HubListener):
                 cls = CCDData
             elif len(data.shape) in [1, 3]:
                 cls = Spectrum1D
+
+        object_kwargs = {}
+        if cls == Spectrum1D:
+            object_kwargs['statistic'] = function
+
         if not subset_to_apply:
             if 'Trace' in data.meta:
+                if cls is not None:
+                    raise ValueError("cls not supported for Trace object")
                 data = data.get_object()
-            elif cls == Spectrum1D:
-                data = data.get_object(cls=cls, statistic=statistic)
             else:
-                data = data.get_object(cls=cls)
+                data = data.get_object(cls=cls, **object_kwargs)
 
             return data
 
@@ -489,15 +473,34 @@ class ConfigHelper(HubListener):
 
                         handler, _ = data_translator.get_handler_for(cls)
                         try:
-                            if cls == Spectrum1D:
-                                data = handler.to_object(subset, statistic=statistic)
-                            else:
-                                data = handler.to_object(subset)
+                            data = handler.to_object(subset, **object_kwargs)
                         except Exception as e:
                             warnings.warn(f"Not able to get {data_label} returned with"
                                           f" subset {subsets.label} applied of type {cls}."
                                           f" Exception: {e}")
         return data
+
+    def get_data(self, data_label=None, cls=None, subset_to_apply=None):
+        """
+        Returns data with name equal to data_label of type cls with subsets applied from
+        subset_to_apply.
+
+        Parameters
+        ----------
+        data_label : str, optional
+            Provide a label to retrieve a specific data set from data_collection.
+        cls : `~specutils.Spectrum1D`, `~astropy.nddata.CCDData`, optional
+            The type that data will be returned as.
+        subset_to_apply : str, optional
+            Subset that is to be applied to data before it is returned.
+
+        Returns
+        -------
+        data : cls
+            Data is returned as type cls with subsets applied.
+
+        """
+        return self._get_data(data_label=data_label, cls=cls, subset_to_apply=subset_to_apply)
 
 
 class ImageConfigHelper(ConfigHelper):

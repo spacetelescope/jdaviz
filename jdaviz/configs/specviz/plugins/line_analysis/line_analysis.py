@@ -174,9 +174,10 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             return
 
         viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
-        statistic = getattr(viewer, 'function', None)
-        viewer_data = self.app._jdaviz_helper.get_data(data_label=msg.data.label,
-                                                       statistic=statistic)
+        get_data_kwargs = {'data_label': msg.data.label}
+        if self.config == 'cubeviz':
+            get_data_kwargs['function'] = getattr(viewer, 'function', None)
+        viewer_data = self.app._jdaviz_helper.get_data(**get_data_kwargs)
 
         # If no data is currently plotted, don't attempt to update
         if viewer_data is None:
@@ -316,10 +317,10 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         self.results_computing = True
 
         if self.config == 'cubeviz':
-            statistic = None
+            function = None
             for viewer in self.dataset.viewers:
                 if hasattr(viewer.state, "function"):
-                    statistic = viewer.state.function
+                    function = viewer.state.function
                     break
             subset_to_apply = None
             if self.spatial_subset_selected not in (SPATIAL_DEFAULT_TEXT, ""):
@@ -332,7 +333,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             full_spectrum = self.app._jdaviz_helper.get_data(
                 data_label=self.dataset.selected,
                 subset_to_apply=subset_to_apply,
-                statistic=statistic)
+                function=function)
 
         else:
             full_spectrum = self.dataset.selected_obj

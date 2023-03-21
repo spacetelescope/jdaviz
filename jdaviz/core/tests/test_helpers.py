@@ -64,8 +64,7 @@ class TestConfigHelper:
     def test_get_data_with_one_subset_per_data(self, specviz_helper, label, subset_name, answer):
 
         results = specviz_helper.get_data(data_label=label,
-                                          subset_to_apply=subset_name,
-                                          statistic=None)
+                                          subset_to_apply=subset_name)
         assert list(results.mask) == answer
 
     def test_get_data_no_label_multiple_in_dc(self, specviz_helper):
@@ -90,7 +89,3 @@ class TestConfigHelper:
     def test_get_data_invald_subset_name(self, specviz_helper):
         with pytest.raises(ValueError, match="not in list of valid subset names"):
             specviz_helper.get_data('Test 1D Spectrum', subset_to_apply="Fail")
-
-    def test_get_data_not_needed_statistic(self, specviz_helper):
-        with pytest.raises(AttributeError, match="does not need the statistic parameter set"):
-            specviz_helper.get_data('Test 1D Spectrum', statistic="mean")

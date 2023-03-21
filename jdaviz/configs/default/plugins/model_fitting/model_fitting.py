@@ -298,7 +298,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             stat = self.app.get_viewer(self._default_spectrum_viewer_reference_name).state.function
             if self.spatial_subset_selected == 'Entire Cube':
                 return self.app._jdaviz_helper.get_data(data_label=self.dataset_selected,
-                                                        statistic=stat)
+                                                        function=stat)
             else:
                 # then we're acting on the auto-collapsed data in the spectrum-viewer
                 # of a spatial subset.  In the future, we may want to expose on-the-fly
@@ -306,7 +306,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 # spectrum-viewer itself
                 kwargs = {"data_label": self.dataset_selected,
                           "subset_to_apply": self.spatial_subset_selected,
-                          "statistic": stat}
+                          "function": stat}
                 return self.app._jdaviz_helper.get_data(**kwargs)
         else:
             return self.dataset.selected_obj
