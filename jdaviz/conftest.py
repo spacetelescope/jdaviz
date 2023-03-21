@@ -13,10 +13,6 @@ from astropy.nddata import CCDData, StdDevUncertainty
 from astropy.wcs import WCS
 from specutils import Spectrum1D, SpectrumCollection, SpectrumList
 
-# Registers ipykernel comm implementation, see
-# https://github.com/jupyter-widgets/ipywidgets/issues/3729
-import ipykernel.ipkernel  # noqa
-
 from jdaviz import __version__, Cubeviz, Imviz, Mosviz, Specviz, Specviz2d
 
 SPECTRUM_SIZE = 10  # length of spectrum
