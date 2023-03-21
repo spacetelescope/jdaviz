@@ -275,3 +275,36 @@ class Specviz(ConfigHelper, LineListMixin):
         self.app.get_viewer(
             self._default_spectrum_viewer_reference_name
         ).figure.axes[axis].tick_format = fmt
+
+    def get_data(self, data_label=None, cls=None, subset_to_apply=None):
+        """
+        Returns data with name equal to data_label of type cls with subsets applied from
+        subset_to_apply.
+
+        Parameters
+        ----------
+        data_label : str, optional
+            Provide a label to retrieve a specific data set from data_collection.
+        cls : `~specutils.Spectrum1D`, optional
+            The type that data will be returned as.
+        subset_to_apply : str, optional
+            Subset that is to be applied to data before it is returned.
+
+        Returns
+        -------
+        data : cls
+            Data is returned as type cls with subsets applied.
+
+        """
+        if self.app.config == 'cubeviz':
+            # then this is a specviz instance inside cubeviz and we want to default to the
+            # viewer's collapse function
+            default_sp_viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
+            function = getattr(default_sp_viewer.state, 'function', None)
+            if cls is None:
+                cls = Spectrum1D
+        else:
+            function = None
+
+        return self._get_data(data_label=data_label, cls=cls, subset_to_apply=subset_to_apply,
+                              function=function)
