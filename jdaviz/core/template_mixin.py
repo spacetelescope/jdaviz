@@ -1022,19 +1022,16 @@ class SubsetSelect(SelectPluginComponent):
 
     @property
     def selected_subset_mask(self):
-        if self._allowed_type == 'spatial' or self.app.config != 'cubeviz':
-            function = None
-        elif self._allowed_type == 'spectral':
+        get_data_kwargs = {'data_label': self.plugin.dataset.selected,
+                           'subset_to_apply': self.selected}
+
+        if self.app.config == 'cubeviz' and self._allowed_type == 'spectral':
             viewer_ref = getattr(self.plugin,
                                  '_default_spectrum_viewer_reference_name',
                                  self.viewers[0].reference_id)
-            function = self.app.get_viewer(viewer_ref).state.function
+            get_data_kwargs['function'] = self.app.get_viewer(viewer_ref).state.function
 
-        data_label = self.plugin.dataset.selected
-
-        subset = self.app._jdaviz_helper.get_data(data_label=data_label,
-                                                  subset_to_apply=self.selected,
-                                                  function=function)
+        subset = self.app._jdaviz_helper.get_data(**get_data_kwargs)
 
         return subset.mask
 

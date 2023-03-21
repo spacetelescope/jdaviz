@@ -75,14 +75,11 @@ class Specviz(ConfigHelper, LineListMixin):
         # Just to save line length
         get_data_method = self.app._jdaviz_helper.get_data
         viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
-        function = None
-        if self.app.config == "cubeviz":
-            function = getattr(viewer.state, "function")
+        function_kwargs = {'function': getattr(viewer.state, "function")} if self.app.config == 'cubeviz' else {}  # noqa
 
         if data_label is not None:
             spectrum = get_data_method(data_label=data_label,
                                        subset_to_apply=subset_to_apply,
-                                       function=function,
                                        cls=Spectrum1D)
             spectra[data_label] = spectrum
         else:
@@ -92,8 +89,8 @@ class Specviz(ConfigHelper, LineListMixin):
                     if lyr.label == subset_to_apply:
                         spectrum = get_data_method(data_label=lyr.data.label,
                                                    subset_to_apply=subset_to_apply,
-                                                   function=function,
-                                                   cls=Spectrum1D)
+                                                   cls=Spectrum1D,
+                                                   **function_kwargs)
                         spectra[lyr.data.label] = spectrum
                     else:
                         continue
@@ -101,13 +98,13 @@ class Specviz(ConfigHelper, LineListMixin):
                     if isinstance(lyr, GroupedSubset):
                         spectrum = get_data_method(data_label=lyr.data.label,
                                                    subset_to_apply=lyr.label,
-                                                   function=function,
-                                                   cls=Spectrum1D)
+                                                   cls=Spectrum1D,
+                                                   **function_kwargs)
                         spectra[f'{lyr.data.label} ({lyr.label})'] = spectrum
                     else:
                         spectrum = get_data_method(data_label=lyr.label,
-                                                   function=function,
-                                                   cls=Spectrum1D)
+                                                   cls=Spectrum1D,
+                                                   **function_kwargs)
                         spectra[lyr.label] = spectrum
 
         if not apply_slider_redshift:
