@@ -408,8 +408,8 @@ class ConfigHelper(HubListener):
         return self.show(loc="sidecar:tab-after", title=title)
 
     def _get_data(self, data_label=None, cls=None, subset_to_apply=None, function=None):
-        list_of_valid_function_values = ['minimum', 'maximum', 'mean',
-                                         'median', 'sum']
+        list_of_valid_function_values = ('minimum', 'maximum', 'mean',
+                                         'median', 'sum')
         if function and function not in list_of_valid_function_values:
             raise ValueError(f"function {function} not in list of valid"
                              f" function values {list_of_valid_function_values}")
@@ -435,11 +435,11 @@ class ConfigHelper(HubListener):
         if not cls:
             if 'Trace' in data.meta:
                 cls = None
-            elif len(data.shape) == 2 and self.app.config == "specviz2d":
+            elif data.ndim == 2 and self.app.config == "specviz2d":
                 cls = Spectrum1D
-            elif len(data.shape) == 2:
+            elif data.ndim == 2:
                 cls = CCDData
-            elif len(data.shape) in [1, 3]:
+            elif data.ndim in [1, 3]:
                 cls = Spectrum1D
 
         object_kwargs = {}
