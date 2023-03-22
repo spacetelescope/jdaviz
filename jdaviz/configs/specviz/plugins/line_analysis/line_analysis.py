@@ -330,13 +330,13 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             self.update_results(None)
             return
 
-        sr = self.app.get_subsets_from_viewer(self._default_spectrum_viewer_reference_name,
-                                              subset_type="spectral").get(self.spectral_subset_selected) # noqa
-
+        sr = self.app.get_subsets().get(self.spectral_subset_selected)
         if self.spectral_subset_selected == "Entire Spectrum":
             spectrum = full_spectrum
         else:
             spectrum = extract_region(full_spectrum, sr, return_single_spectrum=True)
+            sr_lower = spectrum.spectral_axis[spectrum.spectral_axis.value >= sr.lower.value][0]
+            sr_upper = spectrum.spectral_axis[spectrum.spectral_axis.value <= sr.upper.value][-1]
 
         # compute continuum
         if self.continuum_subset_selected == "Surrounding" and self.spectral_subset_selected == "Entire Spectrum": # noqa
@@ -355,29 +355,27 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                 self.update_results(None)
                 return
 
-            spectral_region_width = sr.upper - sr.lower
+            spectral_region_width = sr_upper - sr_lower
             # convert width from total relative width, to width per "side"
             width = (self.width - 1) / 2
-            left, = np.where((spectral_axis < sr.lower) &
-                             (spectral_axis > sr.lower - spectral_region_width*width))
-
+            left, = np.where((spectral_axis < sr_lower) &
+                             (spectral_axis > sr_lower - spectral_region_width*width))
             if not len(left):
                 # then no points matching the width are available outside the line region,
                 # so we'll default to the left-most point of the line region.
                 left, = np.where(spectral_axis == min(spectrum.spectral_axis))
 
-            right, = np.where((spectral_axis > sr.upper) &
-                              (spectral_axis < sr.upper + spectral_region_width*width))
-
+            right, = np.where((spectral_axis > sr_upper) &
+                              (spectral_axis < sr_upper + spectral_region_width*width))
             if not len(right):
                 # then no points matching the width are available outside the line region,
                 # so we'll default to the right-most point of the line region.
                 right, = np.where(spectral_axis == max(spectrum.spectral_axis))
 
             continuum_mask = np.concatenate((left, right))
-            mark_x = {'left': np.array([min(spectral_axis.value[continuum_mask]), sr.lower.value]),
-                      'center': np.array([sr.lower.value, sr.upper.value]),
-                      'right': np.array([sr.upper.value, max(spectral_axis.value[continuum_mask])])}
+            mark_x = {'left': np.array([min(spectral_axis.value[continuum_mask]), sr_lower.value]),
+                      'center': np.array([sr_lower.value, sr_upper.value]),
+                      'right': np.array([sr_upper.value, max(spectral_axis.value[continuum_mask])])}
 
         else:
             # we'll access the mask of the continuum and then apply that to the spectrum.  For a
@@ -393,8 +391,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                           'center': spectral_axis.value,
                           'right': []}
             else:
-                mark_x = {'left': spectral_axis_nanmasked[spectral_axis.value < sr.lower.value],
-                          'right': spectral_axis_nanmasked[spectral_axis.value > sr.upper.value]}
+                mark_x = {'left': spectral_axis_nanmasked[spectral_axis.value < sr_lower.value],
+                          'right': spectral_axis_nanmasked[spectral_axis.value > sr_upper.value]}
                 # Center should extend (at least) across the line region between the full
                 # range defined by the continuum subset(s).
                 # OK for mark_x to be all NaNs.
@@ -402,8 +400,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                     warnings.simplefilter('ignore', category=RuntimeWarning)
                     mark_x_min = np.nanmin(mark_x['left'])
                     mark_x_max = np.nanmax(mark_x['right'])
-                left_min = np.nanmin([mark_x_min, sr.lower.value])
-                right_max = np.nanmax([mark_x_max, sr.upper.value])
+                left_min = np.nanmin([mark_x_min, sr_lower.value])
+                right_max = np.nanmax([mark_x_max, sr_upper.value])
                 mark_x['center'] = np.array([left_min, right_max])
 
         continuum_x = spectral_axis[continuum_mask].value
