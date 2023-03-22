@@ -134,7 +134,8 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
         subset_to_apply : str, optional
             Subset that is to be applied to data before it is returned.
         function : {'minimum', 'maximum', 'mean', 'median', 'sum'}, optional
-            The statistic to use to collapse the dataset.
+            If provided and not ``None`` and ``data_label`` points to cube-like data, the cube will
+            be collapsed with the provided function.  Otherwise the entire cube will be returned.
 
         Returns
         -------
