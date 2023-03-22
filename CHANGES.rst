@@ -1,4 +1,4 @@
-3.4 (unreleased)
+3.4 (2023-03-22)
 ================
 
 New Features
@@ -24,15 +24,6 @@ Imviz
 ^^^^^
 
 - Table exposing past results in the aperture photometry plugin. [#1985, #2015]
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
 
 API Changes
 -----------
@@ -67,9 +58,6 @@ Specviz
 
 - Removed deprecated ``SpecViz``; use ``Specviz``. [#2092]
 
-Specviz2d
-^^^^^^^^^
-
 Bug Fixes
 ---------
 
@@ -87,14 +75,6 @@ Imviz
 - Pressing "Home" button on empty additional viewer when images are linked
   by WCS no longer crashes. [#2082]
 
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
 
 Other Changes and Additions
 ---------------------------
@@ -103,27 +83,6 @@ Mosviz
 ^^^^^^
 
 - Removed subset selection from the Mosviz image viewer. [#2102]
-
-3.3.2 (unreleased)
-==================
-
-Bug Fixes
----------
-
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
 
 3.3.1 (2023-03-09)
 ==================
