@@ -769,32 +769,11 @@ class Application(VuetifyTemplate, HubListener):
                 #  translation machinery entirely and construct the astropy
                 #  region ourselves.
                 elif value.data.ndim == 1:
-                    # Grab the data units from the glue-astronomy spectral axis
-                    # TODO: this needs to be much simpler; i.e. data units in
-                    #  the glue component objects
-                    # Cases where there is a single subset
-
-                    # if '_orig_spec' in value.data.meta:  # Hack for Cubeviz WCS propagation
-                    #     data_wcs = value.data.meta['_orig_spec']
-                    # else:
-                    #     data_wcs = value.data.coords
-                    #
-                    # subregions_in_subset = _get_all_subregions(
-                    #         np.where(value.to_mask() == True)[0], # noqa
-                    #         data_wcs.spectral_axis)
-                    #
-                    # # regions[key] = subregions_in_subset
                     regions[key] = self.get_subsets(key)
                     continue
 
                 temp_data = self.get_data_from_viewer(viewer_reference, value.label)
                 if isinstance(temp_data, Spectrum1D):
-                    # # Note that we look for mask == False here, rather than True above,
-                    # # because specutils masks are the reverse of Glue (of course)
-                    # subregions_in_subset = _get_all_subregions(
-                    #          np.where(~temp_data.mask)[0], # noqa
-                    #          temp_data.spectral_axis)
-                    # regions[key] = subregions_in_subset
                     regions[key] = self.get_subsets(key)
                     continue
 
