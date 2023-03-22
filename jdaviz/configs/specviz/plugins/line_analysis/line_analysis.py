@@ -26,7 +26,8 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         DatasetSelectMixin,
                                         SpectralSubsetSelectMixin,
                                         DatasetSpectralSubsetValidMixin,
-                                        SubsetSelect)
+                                        SubsetSelect,
+                                        SPATIAL_DEFAULT_TEXT)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
 
@@ -38,8 +39,6 @@ FUNCTIONS = {"Line Flux": analysis.line_flux,
              "Gaussian Sigma Width": analysis.gaussian_sigma_width,
              "Gaussian FWHM": analysis.gaussian_fwhm,
              "Centroid": analysis.centroid}
-
-SPATIAL_DEFAULT_TEXT = "Entire Cube"
 
 
 def _coerce_unit(quantity):
@@ -302,7 +301,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         Run the line analysis functions on the selected data/subset and
         display the results.
         """
-        if not hasattr(self, 'dataset') or self.app._jdaviz_helper is None:
+        if not hasattr(self, 'dataset') or self.app._jdaviz_helper is None or self.dataset_selected == '':  # noqa
             # during initial init, this can trigger before the component is initialized
             return
 
@@ -316,27 +315,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         # show spinner with overlay
         self.results_computing = True
 
-        if self.config == 'cubeviz':
-            function = None
-            for viewer in self.dataset.viewers:
-                if hasattr(viewer.state, "function"):
-                    function = viewer.state.function
-                    break
-            subset_to_apply = None
-            if self.spatial_subset_selected not in (SPATIAL_DEFAULT_TEXT, ""):
-                # then we're acting on the auto-collapsed data in the spectrum-viewer
-                # of a spatial subset.  In the future, we may want to expose on-the-fly
-                # collapse options... but right now these will follow the settings of the
-                # spectrum-viewer itself
-                subset_to_apply = self.spatial_subset_selected
-
-            full_spectrum = self.app._jdaviz_helper.get_data(
-                data_label=self.dataset.selected,
-                subset_to_apply=subset_to_apply,
-                function=function)
-
-        else:
-            full_spectrum = self.dataset.selected_obj
+        full_spectrum = self.dataset.selected_spectrum_for_spatial_subset(self.spatial_subset_selected)  # noqa
 
         if (full_spectrum is None or self.width == "" or
                 (not self.plugin_opened and not kwargs.get('ignore_plugin_closed'))):
@@ -401,7 +380,10 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                       'right': np.array([sr.upper.value, max(spectral_axis.value[continuum_mask])])}
 
         else:
-            continuum_mask = ~self.app._jdaviz_helper.get_data(
+            # we'll access the mask of the continuum and then apply that to the spectrum.  For a
+            # spatially-collapsed spectrum in cubeviz, this will access the mask from the full
+            # cube, but still apply that to the spatially-collapsed spectrum.
+            continuum_mask = ~self.specviz_helper.get_data(
                 self.dataset.selected,
                 subset_to_apply=self.continuum_subset_selected).mask
             spectral_axis_nanmasked = spectral_axis.value.copy()

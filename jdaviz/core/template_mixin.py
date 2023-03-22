@@ -38,7 +38,10 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'Table', 'TableMixin',
            'AutoTextField', 'AutoTextFieldMixin',
            'AddResults', 'AddResultsMixin',
-           'PlotOptionsSyncState']
+           'PlotOptionsSyncState',
+           'SPATIAL_DEFAULT_TEXT']
+
+SPATIAL_DEFAULT_TEXT = "Entire Cube"
 
 
 def show_widget(widget, loc, title):  # pragma: no cover
@@ -197,6 +200,12 @@ class PluginTemplateMixin(TemplateMixin):
         # plugins should override this to pass their own list of expose functionality, which
         # can even be dependent on config, etc.
         return PluginUserApi(self, expose=[])
+
+    @property
+    def specviz_helper(self):
+        # for helpers that have a .specviz, return that, otherwise the original helper
+        helper = self.app._jdaviz_helper
+        return getattr(helper, 'specviz', helper)
 
     def _viewer_callback(self, viewer, plugin_method):
         """
@@ -1473,6 +1482,12 @@ class DatasetSelect(SelectPluginComponent):
         # handle the case of empty Application with no viewer, we'll just pull directly
         # from the data collection
         return self.get_object(cls=self.default_data_cls)
+
+    def selected_spectrum_for_spatial_subset(self, spatial_subset=SPATIAL_DEFAULT_TEXT):
+        if spatial_subset == SPATIAL_DEFAULT_TEXT:
+            spatial_subset = None
+        return self.plugin.specviz_helper.get_data(data_label=self.selected,
+                                                   subset_to_apply=spatial_subset)
 
     def _is_valid_item(self, data):
         def not_from_plugin(data):
