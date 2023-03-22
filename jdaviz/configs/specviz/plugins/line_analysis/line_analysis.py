@@ -383,7 +383,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             # we'll access the mask of the continuum and then apply that to the spectrum.  For a
             # spatially-collapsed spectrum in cubeviz, this will access the mask from the full
             # cube, but still apply that to the spatially-collapsed spectrum.
-            continuum_mask = ~self.specviz_helper.get_data(
+            continuum_mask = ~self._specviz_helper.get_data(
                 self.dataset.selected,
                 subset_to_apply=self.continuum_subset_selected).mask
             spectral_axis_nanmasked = spectral_axis.value.copy()

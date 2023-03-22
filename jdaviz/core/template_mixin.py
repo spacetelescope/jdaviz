@@ -156,6 +156,12 @@ class TemplateMixin(VuetifyTemplate, HubListener):
     def data_collection(self):
         return self._app.session.data_collection
 
+    @property
+    def _specviz_helper(self):
+        # for helpers that have a .specviz, return that, otherwise the original helper
+        helper = self.app._jdaviz_helper
+        return getattr(helper, 'specviz', helper)
+
     def _viewer_callback(self, viewer, plugin_method):
         """
         Cached access to callbacks to a plugin method to attach to a viewer.
@@ -200,12 +206,6 @@ class PluginTemplateMixin(TemplateMixin):
         # plugins should override this to pass their own list of expose functionality, which
         # can even be dependent on config, etc.
         return PluginUserApi(self, expose=[])
-
-    @property
-    def specviz_helper(self):
-        # for helpers that have a .specviz, return that, otherwise the original helper
-        helper = self.app._jdaviz_helper
-        return getattr(helper, 'specviz', helper)
 
     def _viewer_callback(self, viewer, plugin_method):
         """
@@ -1486,8 +1486,8 @@ class DatasetSelect(SelectPluginComponent):
     def selected_spectrum_for_spatial_subset(self, spatial_subset=SPATIAL_DEFAULT_TEXT):
         if spatial_subset == SPATIAL_DEFAULT_TEXT:
             spatial_subset = None
-        return self.plugin.specviz_helper.get_data(data_label=self.selected,
-                                                   subset_to_apply=spatial_subset)
+        return self.plugin._specviz_helper.get_data(data_label=self.selected,
+                                                    subset_to_apply=spatial_subset)
 
     def _is_valid_item(self, data):
         def not_from_plugin(data):
