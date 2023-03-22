@@ -458,9 +458,8 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                 if cache_key in self.app._get_object_cache:
                     sp = self.app._get_object_cache[cache_key]
                 else:
-                    sp = self.app._jdaviz_helper.get_data(data_label=data_label,
-                                                          statistic=statistic,
-                                                          subset_to_apply=subset_label)
+                    sp = self._specviz_helper.get_data(data_label=data_label,
+                                                       subset_to_apply=subset_label)
                     self.app._get_object_cache[cache_key] = sp
 
                 # Out of range in spectral axis.

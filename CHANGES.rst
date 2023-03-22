@@ -37,12 +37,12 @@ Specviz2d
 API Changes
 -----------
 
-- Add ``get_data()`` method to base helper class to centralize data retrieval. [#1984]
+- Add ``get_data()`` method to base helper class to centralize data retrieval. [#1984, #2106]
 
 - Export plot plugin now exposes the ``viewer`` dropdown in the user API. [#2037]
 
 - Replaced internal ``get_data_from_viewer()`` calls, ``specviz.get_spectra`` now returns
-  spectra for all data+subset combinations. [#2072]
+  spectra for all data+subset combinations. [#2072, #2106]
 
 Cubeviz
 ^^^^^^^

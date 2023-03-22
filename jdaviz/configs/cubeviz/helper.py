@@ -120,6 +120,32 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
             self._specviz = Specviz(app=self.app)
         return self._specviz
 
+    def get_data(self, data_label=None, cls=None, subset_to_apply=None, function=None):
+        """
+        Returns data with name equal to data_label of type cls with subsets applied from
+        subset_to_apply.
+
+        Parameters
+        ----------
+        data_label : str, optional
+            Provide a label to retrieve a specific data set from data_collection.
+        cls : `~specutils.Spectrum1D`, `~astropy.nddata.CCDData`, optional
+            The type that data will be returned as.
+        subset_to_apply : str, optional
+            Subset that is to be applied to data before it is returned.
+        function : {'minimum', 'maximum', 'mean', 'median', 'sum'}, optional
+            If provided and not ``None`` and ``data_label`` points to cube-like data, the cube will
+            be collapsed with the provided function.  Otherwise the entire cube will be returned.
+
+        Returns
+        -------
+        data : cls
+            Data is returned as type cls with subsets applied.
+
+        """
+        return self._get_data(data_label=data_label, cls=cls, subset_to_apply=subset_to_apply,
+                              function=function)
+
 
 def layer_is_cube_image_data(layer):
     return isinstance(layer, BaseData) and layer.ndim in (2, 3)

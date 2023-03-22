@@ -75,14 +75,11 @@ class Specviz(ConfigHelper, LineListMixin):
         # Just to save line length
         get_data_method = self.app._jdaviz_helper.get_data
         viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
-        statistic = None
-        if self.app.config == "cubeviz":
-            statistic = getattr(viewer.state, "function")
+        function_kwargs = {'function': getattr(viewer.state, "function")} if self.app.config == 'cubeviz' else {}  # noqa
 
         if data_label is not None:
             spectrum = get_data_method(data_label=data_label,
                                        subset_to_apply=subset_to_apply,
-                                       statistic=statistic,
                                        cls=Spectrum1D)
             spectra[data_label] = spectrum
         else:
@@ -92,8 +89,8 @@ class Specviz(ConfigHelper, LineListMixin):
                     if lyr.label == subset_to_apply:
                         spectrum = get_data_method(data_label=lyr.data.label,
                                                    subset_to_apply=subset_to_apply,
-                                                   statistic=statistic,
-                                                   cls=Spectrum1D)
+                                                   cls=Spectrum1D,
+                                                   **function_kwargs)
                         spectra[lyr.data.label] = spectrum
                     else:
                         continue
@@ -101,13 +98,13 @@ class Specviz(ConfigHelper, LineListMixin):
                     if isinstance(lyr, GroupedSubset):
                         spectrum = get_data_method(data_label=lyr.data.label,
                                                    subset_to_apply=lyr.label,
-                                                   statistic=statistic,
-                                                   cls=Spectrum1D)
+                                                   cls=Spectrum1D,
+                                                   **function_kwargs)
                         spectra[f'{lyr.data.label} ({lyr.label})'] = spectrum
                     else:
                         spectrum = get_data_method(data_label=lyr.label,
-                                                   statistic=statistic,
-                                                   cls=Spectrum1D)
+                                                   cls=Spectrum1D,
+                                                   **function_kwargs)
                         spectra[lyr.label] = spectrum
 
         if not apply_slider_redshift:
@@ -275,3 +272,36 @@ class Specviz(ConfigHelper, LineListMixin):
         self.app.get_viewer(
             self._default_spectrum_viewer_reference_name
         ).figure.axes[axis].tick_format = fmt
+
+    def get_data(self, data_label=None, cls=None, subset_to_apply=None):
+        """
+        Returns data with name equal to data_label of type cls with subsets applied from
+        subset_to_apply.
+
+        Parameters
+        ----------
+        data_label : str, optional
+            Provide a label to retrieve a specific data set from data_collection.
+        cls : `~specutils.Spectrum1D`, optional
+            The type that data will be returned as.
+        subset_to_apply : str, optional
+            Subset that is to be applied to data before it is returned.
+
+        Returns
+        -------
+        data : cls
+            Data is returned as type cls with subsets applied.
+
+        """
+        if self.app.config == 'cubeviz':
+            # then this is a specviz instance inside cubeviz and we want to default to the
+            # viewer's collapse function
+            default_sp_viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
+            function = getattr(default_sp_viewer.state, 'function', None)
+            if cls is None:
+                cls = Spectrum1D
+        else:
+            function = None
+
+        return self._get_data(data_label=data_label, cls=cls, subset_to_apply=subset_to_apply,
+                              function=function)

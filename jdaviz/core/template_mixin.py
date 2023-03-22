@@ -38,7 +38,10 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'Table', 'TableMixin',
            'AutoTextField', 'AutoTextFieldMixin',
            'AddResults', 'AddResultsMixin',
-           'PlotOptionsSyncState']
+           'PlotOptionsSyncState',
+           'SPATIAL_DEFAULT_TEXT']
+
+SPATIAL_DEFAULT_TEXT = "Entire Cube"
 
 
 def show_widget(widget, loc, title):  # pragma: no cover
@@ -152,6 +155,12 @@ class TemplateMixin(VuetifyTemplate, HubListener):
     @property
     def data_collection(self):
         return self._app.session.data_collection
+
+    @property
+    def _specviz_helper(self):
+        # for helpers that have a .specviz, return that, otherwise the original helper
+        helper = self.app._jdaviz_helper
+        return getattr(helper, 'specviz', helper)
 
     def _viewer_callback(self, viewer, plugin_method):
         """
@@ -1022,19 +1031,16 @@ class SubsetSelect(SelectPluginComponent):
 
     @property
     def selected_subset_mask(self):
-        if self._allowed_type == 'spatial' or self.app.config != 'cubeviz':
-            statistic = None
-        elif self._allowed_type == 'spectral':
+        get_data_kwargs = {'data_label': self.plugin.dataset.selected,
+                           'subset_to_apply': self.selected}
+
+        if self.app.config == 'cubeviz' and self._allowed_type == 'spectral':
             viewer_ref = getattr(self.plugin,
                                  '_default_spectrum_viewer_reference_name',
                                  self.viewers[0].reference_id)
-            statistic = self.app.get_viewer(viewer_ref).state.function
+            get_data_kwargs['function'] = self.app.get_viewer(viewer_ref).state.function
 
-        data_label = self.plugin.dataset.selected
-
-        subset = self.app._jdaviz_helper.get_data(data_label=data_label,
-                                                  subset_to_apply=self.selected,
-                                                  statistic=statistic)
+        subset = self.app._jdaviz_helper.get_data(**get_data_kwargs)
 
         return subset.mask
 
@@ -1476,6 +1482,12 @@ class DatasetSelect(SelectPluginComponent):
         # handle the case of empty Application with no viewer, we'll just pull directly
         # from the data collection
         return self.get_object(cls=self.default_data_cls)
+
+    def selected_spectrum_for_spatial_subset(self, spatial_subset=SPATIAL_DEFAULT_TEXT):
+        if spatial_subset == SPATIAL_DEFAULT_TEXT:
+            spatial_subset = None
+        return self.plugin._specviz_helper.get_data(data_label=self.selected,
+                                                    subset_to_apply=spatial_subset)
 
     def _is_valid_item(self, data):
         def not_from_plugin(data):

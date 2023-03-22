@@ -294,22 +294,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
     def _get_1d_spectrum(self):
         # retrieves the 1d spectrum (accounting for spatial subset for cubeviz, if necessary)
-        if self.config == 'cubeviz':
-            stat = self.app.get_viewer(self._default_spectrum_viewer_reference_name).state.function
-            if self.spatial_subset_selected == 'Entire Cube':
-                return self.app._jdaviz_helper.get_data(data_label=self.dataset_selected,
-                                                        statistic=stat)
-            else:
-                # then we're acting on the auto-collapsed data in the spectrum-viewer
-                # of a spatial subset.  In the future, we may want to expose on-the-fly
-                # collapse options... but right now these will follow the settings of the
-                # spectrum-viewer itself
-                kwargs = {"data_label": self.dataset_selected,
-                          "subset_to_apply": self.spatial_subset_selected,
-                          "statistic": stat}
-                return self.app._jdaviz_helper.get_data(**kwargs)
-        else:
-            return self.dataset.selected_obj
+        return self.dataset.selected_spectrum_for_spatial_subset(self.spatial_subset_selected) # noqa
 
     @observe("dataset_selected", "spatial_subset_selected")
     def _dataset_selected_changed(self, event=None):
@@ -326,7 +311,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             IPyWidget callback event object. In this case, represents the data
             label of the data collection object selected by the user.
         """
-        if not hasattr(self, 'dataset') or self.app._jdaviz_helper is None:
+        if not hasattr(self, 'dataset') or self.app._jdaviz_helper is None or self.dataset_selected == '':  # noqa
             # during initial init, this can trigger before the component is initialized
             return
 
