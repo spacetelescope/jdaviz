@@ -90,19 +90,11 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
         self.session.hub.subscribe(self, SubsetUpdateMessage, handler=self._on_subset_update)
         self.session.hub.subscribe(self, LinkUpdatedMessage, handler=self._on_link_update)
 
-    def reset_results(self):
-        self.result_available = False
-        self.results = []
-        self.plot_available = False
-        self.radial_plot = ''
-        bqplot_clear_figure(self._fig)
-
     @observe('dataset_selected')
     def _dataset_selected_changed(self, event={}):
         try:
             self._selected_data = self.dataset.selected_dc_item
             if self._selected_data is None:
-                self.reset_results()
                 return
             self.counts_factor = 0
             self.pixel_area = 0
@@ -143,7 +135,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
                     self.pixel_area = 0.04 * 0.04
 
         except Exception as e:
-            self.reset_results()
             self._selected_data = None
             self.hub.broadcast(SnackbarMessage(
                 f"Failed to extract {self.dataset_selected}: {repr(e)}",
@@ -174,7 +165,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
     def _subset_selected_changed(self, event={}):
         subset_selected = event.get('new', self.subset_selected)
         if self._selected_data is None or subset_selected == '':
-            self.reset_results()
             return
 
         try:
@@ -196,7 +186,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
 
         except Exception as e:
             self._selected_subset = None
-            self.reset_results()
             self.hub.broadcast(SnackbarMessage(
                 f"Failed to extract {subset_selected}: {repr(e)}", color='error', sender=self))
 
@@ -249,7 +238,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
 
     def vue_do_aper_phot(self, *args, **kwargs):
         if self._selected_data is None or self._selected_subset is None:
-            self.reset_results()
             self.hub.broadcast(SnackbarMessage(
                 "No data for aperture photometry", color='error', sender=self))
             return
@@ -430,14 +418,14 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
                 else:
                     bqplot_marks = [bqplot_line]
 
-            self._fig.marks = bqplot_marks
-
         except Exception as e:  # pragma: no cover
-            self.reset_results()
+            bqplot_clear_figure(self._fig)
             self.hub.broadcast(SnackbarMessage(
                 f"Aperture photometry failed: {repr(e)}", color='error', sender=self))
 
         else:
+            self._fig.marks = bqplot_marks
+
             # Parse results for GUI.
             tmp = []
             for key in phot_table.colnames:
