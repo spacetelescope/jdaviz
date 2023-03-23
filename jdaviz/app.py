@@ -909,7 +909,7 @@ class Application(VuetifyTemplate, HubListener):
         data = viewer.data()
         if viewer:
             units = u.Unit(viewer.state.x_display_unit)
-        elif data and len(data) > 0:
+        elif data and len(data) > 0 and isinstance(data[0], Spectrum1D):
             units = data[0].spectral_axis.unit
         else:
             raise ValueError("Unable to find spectral axis units")
