@@ -853,17 +853,6 @@ class Application(VuetifyTemplate, HubListener):
 
         dc = self.data_collection
         subsets = dc.subset_groups
-        # TODO: Use global display units
-        # units = dc[0].data.coords.spectral_axis.unit
-        viewer = self.get_viewer("spectrum-viewer")
-        data = viewer.data()
-        # Set axes labels for the spectrum viewer
-        if viewer and hasattr(viewer.state, "x_display_unit") and viewer.state.x_display_unit:
-            units = u.Unit(viewer.state.x_display_unit)
-        elif data and len(data) > 0:
-            units = data[0].spectral_axis.unit
-        else:
-            units = u.um
 
         all_subsets = {}
 
@@ -871,13 +860,13 @@ class Application(VuetifyTemplate, HubListener):
             label = subset.label
             subset_region = None
             if isinstance(subset.subset_state, CompositeSubsetState):
-                subset_region = self.get_sub_regions(subset.subset_state, units)
+                subset_region = self.get_sub_regions(subset.subset_state)
 
             elif isinstance(subset.subset_state, RoiSubsetState):
                 subset_region = self._get_roi_subset_definition(subset.subset_state)
 
             elif isinstance(subset.subset_state, RangeSubsetState):
-                subset_region = self._get_range_subset_bounds(subset.subset_state, units)
+                subset_region = self._get_range_subset_bounds(subset.subset_state)
 
             if isinstance(subset_region, SpectralRegion):
                 subset_region = self._remove_duplicate_bounds(subset_region)
@@ -913,7 +902,17 @@ class Application(VuetifyTemplate, HubListener):
                 regions_no_dups += region
         return regions_no_dups
 
-    def _get_range_subset_bounds(self, subset_state, units):
+    def _get_range_subset_bounds(self, subset_state):
+        # TODO: Use global display units
+        # units = dc[0].data.coords.spectral_axis.unit
+        viewer = self.get_viewer(self._jdaviz_helper. _default_spectrum_viewer_reference_name)
+        data = viewer.data()
+        if viewer:
+            units = u.Unit(viewer.state.x_display_unit)
+        elif data and len(data) > 0:
+            units = data[0].spectral_axis.unit
+        else:
+            raise ValueError("Unable to find spectral axis units")
         return SpectralRegion(subset_state.lo * units, subset_state.hi * units)
 
     def _get_roi_subset_definition(self, subset_state):
@@ -942,12 +941,12 @@ class Application(VuetifyTemplate, HubListener):
                  "glue_state": subset_state.__class__.__name__,
                  "region": roi_as_region}]
 
-    def get_sub_regions(self, subset_state, units):
+    def get_sub_regions(self, subset_state):
 
         if isinstance(subset_state, CompositeSubsetState):
             if subset_state and hasattr(subset_state, "state2") and subset_state.state2:
-                one = self.get_sub_regions(subset_state.state1, units)
-                two = self.get_sub_regions(subset_state.state2, units)
+                one = self.get_sub_regions(subset_state.state1)
+                two = self.get_sub_regions(subset_state.state2)
 
                 if (isinstance(one, list) and "glue_state" in one[0] and
                         one[0]["glue_state"] == "RoiSubsetState"):
@@ -1008,7 +1007,7 @@ class Application(VuetifyTemplate, HubListener):
             else:
                 # This gets triggered in the InvertState case where state1
                 # is an object and state2 is None
-                return self.get_sub_regions(subset_state.state1, units)
+                return self.get_sub_regions(subset_state.state1)
         elif subset_state is not None:
             # This is the leaf node of the glue subset state tree where
             # a subset_state is either ROI or Range.
@@ -1016,7 +1015,7 @@ class Application(VuetifyTemplate, HubListener):
                 return self._get_roi_subset_definition(subset_state)
 
             elif isinstance(subset_state, RangeSubsetState):
-                return self._get_range_subset_bounds(subset_state, units)
+                return self._get_range_subset_bounds(subset_state)
 
     def add_data(self, data, data_label=None, notify_done=True):
         """
