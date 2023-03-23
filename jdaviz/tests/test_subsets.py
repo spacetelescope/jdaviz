@@ -313,7 +313,7 @@ def test_disjoint_spectral_subset(cubeviz_helper, spectral_cube_wcs):
 
 
 def test_composite_region_from_subset_3d(cubeviz_helper):
-    data = Data(flux=np.ones((128, 128, 256)), label='Test 3D Flux')
+    data = Data(flux=np.ones((128, 128, 10)), label='Test 3D Flux')
     cubeviz_helper.app.data_collection.append(data)
 
     cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'Test 3D Flux')
@@ -353,7 +353,7 @@ def test_composite_region_from_subset_3d(cubeviz_helper):
 
 
 def test_composite_region_with_consecutive_and_not_states(cubeviz_helper):
-    data = Data(flux=np.ones((128, 128, 256)), label='Test 3D Flux')
+    data = Data(flux=np.ones((128, 128, 10)), label='Test 3D Flux')
     cubeviz_helper.app.data_collection.append(data)
 
     cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'Test 3D Flux')
