@@ -858,15 +858,22 @@ class Application(VuetifyTemplate, HubListener):
 
         for subset in subsets:
             label = subset.label
-            subset_region = None
             if isinstance(subset.subset_state, CompositeSubsetState):
+                # Region composed of multiple ROI or Range subset
+                # objects that must be traversed
                 subset_region = self.get_sub_regions(subset.subset_state)
-
             elif isinstance(subset.subset_state, RoiSubsetState):
+                # 3D regions represented as a dict including an
+                # AstropyRegion object if possible
                 subset_region = self._get_roi_subset_definition(subset.subset_state)
-
             elif isinstance(subset.subset_state, RangeSubsetState):
+                # 2D regions represented as SpectralRegion objects
                 subset_region = self._get_range_subset_bounds(subset.subset_state)
+            else:
+                # subset.subset_state can be an instance of MaskSubsetState
+                # or something else we do not know how to handle
+                all_subsets[label] = None
+                continue
 
             if isinstance(subset_region, SpectralRegion):
                 subset_region = self._remove_duplicate_bounds(subset_region)

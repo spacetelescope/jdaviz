@@ -30,12 +30,12 @@ An example without accessing Specviz:
 
     subset1_spec1d = cubeviz.get_data(data_label=flux_data_label, 
                                       subset_to_apply="Subset 1",
-                                      statistic="mean")
+                                      function="mean")
 
-Note that in the above example, the ``statistic`` keyword is used to tell Cubeviz
+Note that in the above example, the ``function`` keyword is used to tell Cubeviz
 how to collapse the flux cube down to a one dimensional spectrum - this is not 
 necessarily equivalent to the collapsed spectrum in the spectrum viewer, which 
-may have used a different collapse statistic.
+may have used a different collapse function.
 
 To get all subsets from the spectrum viewer:
 
