@@ -96,10 +96,14 @@ The power of ``jdaviz`` is that it can integrated into your Jupyter notebook wor
     from jdaviz import Specviz
 
     specviz = Specviz()
-    specviz.app
+    specviz.show()
 
 To learn more about the various ``jdaviz`` application configurations and loading data, see the
-`specviz <https://jdaviz.readthedocs.io/en/latest/specviz/import_data.html>`_, `cubeviz <https://jdaviz.readthedocs.io/en/latest/cubeviz/import_data.html>`_, `mosviz <https://jdaviz.readthedocs.io/en/latest/mosviz/import_data.html>`_, or `imviz <https://jdaviz.readthedocs.io/en/latest/imviz/import_data.html>`_ tools.
+`Specviz <https://jdaviz.readthedocs.io/en/latest/specviz/import_data.html>`_,
+`Cubeviz <https://jdaviz.readthedocs.io/en/latest/cubeviz/import_data.html>`_,
+`Mosviz <https://jdaviz.readthedocs.io/en/latest/mosviz/import_data.html>`_,
+`Imviz <https://jdaviz.readthedocs.io/en/latest/imviz/import_data.html>`_,
+or `Specviz2D <https://jdaviz.readthedocs.io/en/latest/specviz2d/import_data.html>`_ tools.
 
 ``jdaviz`` also provides a directory of `sample notebooks <https://jdaviz.readthedocs.io/en/latest/sample_notebooks.html>`_ to test the application, located in the ``notebooks`` sub-directory
 of the git repository.  ``CubevizExample.ipynb`` is provided as an example that loads a JWST data cube with the
@@ -132,7 +136,7 @@ Cite ``jdaviz`` via our Zenodo record: https://doi.org/10.5281/zenodo.5513927.
 Contributing
 ------------
 
-We love contributions! jdaviz is open source,
+We love contributions! ``jdaviz`` is open source,
 built on open source, and we'd love to have you hang out in our community.
 
 **Imposter syndrome disclaimer**: We want your help. No, really.
