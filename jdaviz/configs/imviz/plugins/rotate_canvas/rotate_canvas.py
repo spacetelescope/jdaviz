@@ -1,4 +1,7 @@
-from traitlets import Bool, observe
+import os
+from traitlets import Bool, Unicode, observe
+
+from glue_jupyter.common.toolbar_vuetify import read_icon
 
 from jdaviz.configs.imviz.wcs_utils import get_compass_info
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
@@ -6,6 +9,7 @@ from jdaviz.core.events import AddDataMessage, RemoveDataMessage, CanvasRotation
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin
 from jdaviz.core.user_api import PluginUserApi
+from jdaviz.core.tools import ICON_DIR
 
 __all__ = ['RotateCanvas']
 
@@ -35,6 +39,9 @@ class RotateCanvas(PluginTemplateMixin, ViewerSelectMixin):
     angle = FloatHandleEmpty(0).tag(sync=True)  # degrees, clockwise
     flip_horizontal = Bool(False).tag(sync=True)  # horizontal flip applied after rotation
     has_wcs = Bool(False).tag(sync=True)
+
+    icon_nuer = Unicode(read_icon(os.path.join(ICON_DIR, 'right-east.svg'), 'svg+xml')).tag(sync=True)  # noqa
+    icon_nuel = Unicode(read_icon(os.path.join(ICON_DIR, 'left-east.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

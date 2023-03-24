@@ -20,12 +20,12 @@
       </j-tooltip>
       <j-tooltip v-if="has_wcs" tooltipcontent="north up, east right">
         <v-btn icon @click="set_north_up_east_right">
-          <v-icon>mdi-angle-right</v-icon>
+          <img :src="icon_nuer" width="24" class="invert-if-dark" style="opacity: 0.65"/>
         </v-btn>
       </j-tooltip>
       <j-tooltip v-if="has_wcs" tooltipcontent="north up, east left">
         <v-btn icon @click="set_north_up_east_left">
-          <v-icon style="transform: rotateY(180deg)">mdi-angle-right</v-icon>
+          <img :src="icon_nuel" width="24" class="invert-if-dark" style="opacity: 0.65"/>
         </v-btn>
       </j-tooltip>
     </v-row>
