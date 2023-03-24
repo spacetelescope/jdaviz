@@ -96,7 +96,7 @@ The power of ``jdaviz`` is that it can integrated into your Jupyter notebook wor
     from jdaviz import Specviz
 
     specviz = Specviz()
-    specviz.app
+    specviz.show()
 
 To learn more about the various ``jdaviz`` application configurations and loading data, see the
 `specviz <https://jdaviz.readthedocs.io/en/latest/specviz/import_data.html>`_, `cubeviz <https://jdaviz.readthedocs.io/en/latest/cubeviz/import_data.html>`_, `mosviz <https://jdaviz.readthedocs.io/en/latest/mosviz/import_data.html>`_, or `imviz <https://jdaviz.readthedocs.io/en/latest/imviz/import_data.html>`_ tools.
