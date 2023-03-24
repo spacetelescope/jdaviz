@@ -17,7 +17,8 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         DatasetSelectMixin,
                                         DatasetSpectralSubsetValidMixin,
                                         AutoTextField,
-                                        AddResultsMixin)
+                                        AddResultsMixin,
+                                        TableMixin)
 from jdaviz.core.custom_traitlets import IntHandleEmpty
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.configs.default.plugins.model_fitting.fitting_backend import fit_model_to_spectrum
@@ -39,7 +40,7 @@ class _EmptyParam:
 @tray_registry('g-model-fitting', label="Model Fitting", viewer_requirements='spectrum')
 class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                    SpectralSubsetSelectMixin, DatasetSpectralSubsetValidMixin,
-                   AddResultsMixin):
+                   AddResultsMixin, TableMixin):
     """
     See the :ref:`Model Fitting Plugin Documentation <specviz-model-fitting>` for more details.
 
@@ -63,6 +64,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     * :meth:`set_model_component`
     * :meth:`reestimate_model_parameters`
     * ``equation`` (:class:`~jdaviz.core.template_mixin.AutoTextField`)
+    * :meth:`equation_components`
     * ``cube_fit``
       Only exposed for Cubeviz.  Whether to fit the model to the cube instead of to the
       collapsed spectrum.
@@ -154,6 +156,16 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self.residuals = AutoTextField(self, 'residuals_label', 'residuals_label_default',
                                        'residuals_label_auto', 'residuals_label_invalid_msg')
 
+        headers = ['model', 'data_label', 'spectral_subset', 'equation']
+        if self.config == 'cubeviz':
+            headers += ['spatial_subset', 'cube_fit']
+
+        self.table.headers_avail = headers
+        self.table.headers_visible = headers
+        # when model parameters are added as columns, only show the value columns by default
+        # (other columns can be show in the dropdown by the user)
+        self.table._new_col_visible = lambda colname: colname.split(':')[-1] not in ('unit', 'fixed', 'uncert', 'std')  # noqa
+
         # set the filter on the viewer options
         self._update_viewer_filters()
 
@@ -165,10 +177,11 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         expose += ['spectral_subset', 'model_component', 'poly_order', 'model_component_label',
                    'model_components', 'create_model_component', 'remove_model_component',
                    'get_model_component', 'set_model_component', 'reestimate_model_parameters',
-                   'equation', 'add_results', 'residuals_calculate', 'residuals']
+                   'equation', 'equation_components',
+                   'add_results', 'residuals_calculate', 'residuals']
         if self.config == "cubeviz":
             expose += ['cube_fit']
-        expose += ['calculate_fit']
+        expose += ['calculate_fit', 'clear_table', 'export_table']
         return PluginUserApi(self, expose=expose)
 
     def _param_units(self, param, model_type=None):
@@ -531,6 +544,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         comp = {"model_type": model_component['model_type'],
                 "parameters": {p['name']: {'value': p['value'],
                                            'unit': p['unit'],
+                                           'std': p.get('std', np.nan),
                                            'fixed': p['fixed']} for p in model_component['parameters']}}  # noqa
 
         if parameter is not None:
@@ -630,6 +644,13 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         """
         return [x["id"] for x in self.component_models]
 
+    @property
+    def equation_components(self):
+        """
+        List of the labels of model components in the current equation
+        """
+        return re.split('[+*/-]', self.equation.value)
+
     def vue_add_model(self, event):
         self.create_model_component()
 
@@ -688,9 +709,39 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             raise ValueError(f"spectral subset '{self.spectral_subset.selected}' {subset_range} is outside data range of '{self.dataset.selected}' {spec_range}")  # noqa
 
         if self.cube_fit:
-            return self._fit_model_to_cube(add_data=add_data)
+            ret = self._fit_model_to_cube(add_data=add_data)
         else:
-            return self._fit_model_to_spectrum(add_data=add_data)
+            ret = self._fit_model_to_spectrum(add_data=add_data)
+
+        if ret is None:  # pragma: no cover
+            # something went wrong in the fitting call and (hopefully) already raised a warning,
+            # but we don't have anything to add to the table
+            return ret
+
+        if self.cube_fit:
+            # cube fits are currently unsupported in tables
+            return ret
+
+        row = {'model': self.results_label if add_data else '',
+               'data_label': self.dataset_selected,
+               'spectral_subset': self.spectral_subset_selected,
+               'equation': self.equation.value}
+        if self.app.config == 'cubeviz':
+            row['spatial_subset'] = self.spatial_subset_selected
+            row['cube_fit'] = self.cube_fit
+
+        equation_components = self.equation_components
+        for comp_ind, comp in enumerate(equation_components):
+            for param_name, param_dict in self.get_model_component(comp).get('parameters', {}).items():  # noqa
+                colprefix = f"{comp}:{param_name}_{comp_ind}"
+                row[colprefix] = param_dict.get('value')
+                row[f"{colprefix}:unit"] = param_dict.get('unit')
+                row[f"{colprefix}:fixed"] = param_dict.get('fixed')
+                row[f"{colprefix}:std"] = param_dict.get('std')
+
+        self.table.add_item(row)
+
+        return ret
 
     def vue_apply(self, event):
         self.calculate_fit()

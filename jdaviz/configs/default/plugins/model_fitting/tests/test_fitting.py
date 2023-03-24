@@ -263,3 +263,42 @@ def test_cube_fitting_backend(cubeviz_helper, unc, tmp_path):
     data_mask = cubeviz_helper.app.data_collection["fitted_cube.fits[MASK]"]
     flux_mask = data_mask.get_component("flux")
     assert_array_equal(flux_mask.data, mask)
+
+
+@pytest.mark.filterwarnings(r"ignore:Model is linear in parameters.*")
+@pytest.mark.filterwarnings(r"ignore:The fit may be unsuccessful.*")
+def test_results_table(specviz_helper, spectrum1d):
+    data_label = 'test'
+    specviz_helper.load_data(spectrum1d, data_label=data_label)
+
+    mf = specviz_helper.plugins['Model Fitting']
+    mf.create_model_component('Linear1D')
+
+    mf.add_results.label = 'linear model'
+    mf.calculate_fit(add_data=True)
+    mf_table = mf.export_table()
+    assert len(mf_table) == 1
+    assert mf_table['equation'][-1] == 'L'
+    assert mf_table.colnames == ['model', 'data_label', 'spectral_subset', 'equation',
+                                 'L:slope_0', 'L:slope_0:unit',
+                                 'L:slope_0:fixed', 'L:slope_0:std',
+                                 'L:intercept_0', 'L:intercept_0:unit',
+                                 'L:intercept_0:fixed', 'L:intercept_0:std']
+
+    mf.create_model_component('Gaussian1D')
+    mf.add_results.label = 'composite model'
+    mf.calculate_fit(add_data=True)
+    mf_table = mf.export_table()
+    assert len(mf_table) == 2
+    assert mf_table['equation'][-1] == 'L+G'
+    assert mf_table.colnames == ['model', 'data_label', 'spectral_subset', 'equation',
+                                 'L:slope_0', 'L:slope_0:unit',
+                                 'L:slope_0:fixed', 'L:slope_0:std',
+                                 'L:intercept_0', 'L:intercept_0:unit',
+                                 'L:intercept_0:fixed', 'L:intercept_0:std',
+                                 'G:amplitude_1', 'G:amplitude_1:unit',
+                                 'G:amplitude_1:fixed', 'G:amplitude_1:std',
+                                 'G:mean_1', 'G:mean_1:unit',
+                                 'G:mean_1:fixed', 'G:mean_1:std',
+                                 'G:stddev_1', 'G:stddev_1:unit',
+                                 'G:stddev_1:fixed', 'G:stddev_1:std']

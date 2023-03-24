@@ -4,6 +4,8 @@
 New Features
 ------------
 
+* Model fitting results are logged in a table within the plugin [#2093].
+
 Cubeviz
 ^^^^^^^
 

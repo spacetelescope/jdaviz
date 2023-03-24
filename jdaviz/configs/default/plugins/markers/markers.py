@@ -72,6 +72,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
 
         self.table.headers_avail = headers
         self.table.headers_visible = headers
+        self.table._default_values_by_colname = _default_table_values
 
         # subscribe to mouse events on any new viewers
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)

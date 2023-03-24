@@ -2293,6 +2293,8 @@ class Table(PluginSubcomponent):
     """
     template_file = __file__, "../components/plugin_table.vue"
 
+    _default_values_by_colname = {}
+
     headers_visible = List([]).tag(sync=True)  # list of strings
     headers_avail = List([]).tag(sync=True)   # list of strings
     items = List().tag(sync=True)  # list of dictionaries, pass single dict to add_row
@@ -2300,6 +2302,21 @@ class Table(PluginSubcomponent):
     def __init__(self, plugin, *args, **kwargs):
         self._qtable = None
         super().__init__(plugin, 'Table', *args, **kwargs)
+
+    def default_value_for_column(self, colname=None, value=None):
+        if colname in self._default_values_by_colname:
+            return self._default_values_by_colname.get(colname)
+        if isinstance(value, (tuple, list)):
+            return [self.default_value_for_column(value=v) for v in value]
+        if isinstance(value, (float, int)):
+            return np.nan
+        if isinstance(value, str):
+            return ''
+        return None
+
+    @staticmethod
+    def _new_col_visible(colname):
+        return True
 
     def add_item(self, item):
         """
@@ -2351,9 +2368,20 @@ class Table(PluginSubcomponent):
         if self._qtable is None:
             self._qtable = QTable([item])
         else:
-            # NOTE: this does not support adding columns that did not exist in the first
-            # call to add_row since the last call to clear_table
+            # add any missing columns with a default value for all previous rows
+            for colname, value in item.items():
+                if colname in self._qtable.colnames:
+                    continue
+                default_value = self.default_value_for_column(colname=colname,
+                                                              value=value)
+                self._qtable.add_column(default_value, name=colname)
+
             self._qtable.add_row(item)
+
+        missing_headers = [k for k in item.keys() if k not in self.headers_avail]
+        if len(missing_headers):
+            self.headers_avail = self.headers_avail + missing_headers
+            self.headers_visible = self.headers_visible + [m for m in missing_headers if self._new_col_visible(m)]  # noqa
 
         # clean data to show in the UI
         self.items = self.items + [{k: json_safe(k, v) for k, v in item.items()}]
