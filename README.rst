@@ -103,7 +103,7 @@ To learn more about the various ``jdaviz`` application configurations and loadin
 `Cubeviz <https://jdaviz.readthedocs.io/en/latest/cubeviz/import_data.html>`_,
 `Mosviz <https://jdaviz.readthedocs.io/en/latest/mosviz/import_data.html>`_,
 `Imviz <https://jdaviz.readthedocs.io/en/latest/imviz/import_data.html>`_,
-or `Specviz2d <https://jdaviz.readthedocs.io/en/latest/specviz2d/import_data.html>`_ tools.
+or `Specviz2D <https://jdaviz.readthedocs.io/en/latest/specviz2d/import_data.html>`_ tools.
 
 ``jdaviz`` also provides a directory of `sample notebooks <https://jdaviz.readthedocs.io/en/latest/sample_notebooks.html>`_ to test the application, located in the ``notebooks`` sub-directory
 of the git repository.  ``CubevizExample.ipynb`` is provided as an example that loads a JWST data cube with the
