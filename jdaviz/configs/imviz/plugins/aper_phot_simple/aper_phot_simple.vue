@@ -139,6 +139,12 @@
       </div>
     </div>
 
+    <v-row v-if="result_failed_msg.length > 0">
+      <span class="v-messages v-messages__message text--secondary" style="color: red !important">
+          <b>WARNING</b>: {{result_failed_msg}}
+      </span>
+    </v-row>
+
     <v-row v-if="plot_available">
       <!-- NOTE: the internal bqplot widget defaults to 480 pixels, so if choosing something else,
            we will likely need to override that with custom CSS rules in order to avoid the initial
