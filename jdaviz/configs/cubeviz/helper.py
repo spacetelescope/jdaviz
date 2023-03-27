@@ -133,9 +133,11 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
             The type that data will be returned as.
         subset_to_apply : str, optional
             Subset that is to be applied to data before it is returned.
-        function : {'minimum', 'maximum', 'mean', 'median', 'sum'}, optional
-            If provided and not ``None`` and ``data_label`` points to cube-like data, the cube will
-            be collapsed with the provided function.  Otherwise the entire cube will be returned.
+        function : {True, False, 'minimum', 'maximum', 'mean', 'median', 'sum'}, optional
+            Ignored if ``data_label`` does not point to cube-like data.
+            If True, will collapse according to the current collapse function defined in the
+            spectrum viewer.  If provided as a string, the cube will be collapsed with the provided
+            function.  If False, None, or not passed, the entire cube will be returned.
 
         Returns
         -------
@@ -143,6 +145,11 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
             Data is returned as type cls with subsets applied.
 
         """
+        if function is True:
+            return self.specviz.get_data(data_label=data_label, cls=cls,
+                                         subset_to_apply=subset_to_apply)
+        elif function is False:
+            function = None
         return self._get_data(data_label=data_label, cls=cls, subset_to_apply=subset_to_apply,
                               function=function)
 
