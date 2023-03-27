@@ -28,9 +28,10 @@ class DataTools(TemplateMixin):
         self._file_upload.observe(self._on_file_path_changed, names='file_path')
 
     def _on_file_path_changed(self, event):
-        if (self._file_upload.file_path is not None
-                and (not os.path.exists(self._file_upload.file_path)
-                     or not os.path.isfile(self._file_upload.file_path))):
+        if self._file_upload.file_path is None:
+            self.valid_path = False
+        elif (not os.path.exists(self._file_upload.file_path)
+              or not os.path.isfile(self._file_upload.file_path)):
             self.valid_path = False
         else:
             self.valid_path = True
