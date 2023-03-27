@@ -415,3 +415,9 @@ def test_composite_region_with_imviz(imviz_helper, image_2d_wcs):
     ellipse1 = EllipsePixelRegion(center=PixCoord(x=3, y=3),
                                   width=3, height=6, angle=0.0 * u.deg)
     assert reg[0] == {'name': 'EllipticalROI', 'glue_state': 'AndNotState', 'region': ellipse1}
+
+
+def test_with_invalid_subset_name(cubeviz_helper):
+    subset_name = "Test"
+    with pytest.raises(ValueError, match=f'{subset_name} not in '):
+        cubeviz_helper.app.get_subsets(subset_name=subset_name)
