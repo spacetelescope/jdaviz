@@ -45,6 +45,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
     counts_factor = Any(0).tag(sync=True)
     flux_scaling = Any(0).tag(sync=True)
     result_available = Bool(False).tag(sync=True)
+    result_failed_msg = Unicode("").tag(sync=True)
     results = List().tag(sync=True)
     plot_types = List([]).tag(sync=True)
     current_plot_type = Unicode().tag(sync=True)
@@ -420,10 +421,11 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
 
         except Exception as e:  # pragma: no cover
             bqplot_clear_figure(self._fig)
-            self.hub.broadcast(SnackbarMessage(
-                f"Aperture photometry failed: {repr(e)}", color='error', sender=self))
-
+            msg = f"Aperture photometry failed: {repr(e)}"
+            self.hub.broadcast(SnackbarMessage(msg, color='error', sender=self))
+            self.result_failed_msg = msg
         else:
+            self.result_failed_msg = ''
             self._fig.marks = bqplot_marks
 
             # Parse results for GUI.
