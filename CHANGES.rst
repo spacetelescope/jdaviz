@@ -24,6 +24,8 @@ Specviz2d
 API Changes
 -----------
 
+- Add ``get_subsets()`` method to app level to centralize subset information retrieval. [#2087]
+
 Cubeviz
 ^^^^^^^
 

@@ -350,7 +350,7 @@ def test_invalid_subset(specviz_helper, spectrum1d):
     plugin.spectral_subset = 'Subset 1'
     assert not plugin._obj.spectral_subset_valid
 
-    with pytest.raises(ValueError, match=r"spectral subset 'Subset 1' \(5000.0, 5888.888888888889\) is outside data range of 'right_spectrum' \(6000.0, 8000.0\)"):  # noqa
+    with pytest.raises(ValueError, match=r"spectral subset 'Subset 1' \(5000.0, 6000.0\) is outside data range of 'right_spectrum' \(6000.0, 8000.0\)"):  # noqa
         plugin.calculate_fit()
 
     plugin.dataset = 'left_spectrum'

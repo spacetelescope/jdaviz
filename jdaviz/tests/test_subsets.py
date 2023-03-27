@@ -4,9 +4,11 @@ from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose
 from glue.core import Data
 from glue.core.roi import CircularROI, EllipticalROI, RectangularROI, XRangeROI
-from glue.core.edit_subset_mode import OrMode
+
+from glue.core.edit_subset_mode import AndMode, AndNotMode, OrMode
+from regions import PixCoord, CirclePixelRegion, RectanglePixelRegion, EllipsePixelRegion
+
 from numpy.testing import assert_allclose
-from regions import EllipsePixelRegion, RectanglePixelRegion
 from specutils import SpectralRegion
 
 from jdaviz.core.marks import ShadowSpatialSpectral
@@ -148,7 +150,7 @@ def test_region_from_subset_profile(cubeviz_helper, spectral_cube_wcs):
     assert len(subsets) == 1
     assert isinstance(reg, SpectralRegion)
     assert_quantity_allclose(reg.lower, 5.0 * u.Hz)
-    assert_quantity_allclose(reg.upper, 15.0 * u.Hz)
+    assert_quantity_allclose(reg.upper, 15.5 * u.Hz)
 
     assert subset_plugin.subset_selected == "Subset 1"
     assert subset_plugin.subset_types == ["Range"]
@@ -171,14 +173,14 @@ def test_region_from_subset_profile(cubeviz_helper, spectral_cube_wcs):
     reg = subsets.get('Subset 1')
 
     assert_quantity_allclose(reg.lower, 10.0 * u.Hz)
-    assert_quantity_allclose(reg.upper, 15.0 * u.Hz)
+    assert_quantity_allclose(reg.upper, 15.5 * u.Hz)
 
     # Move the Subset.
     subset_plugin.set_center(10, update=True)
     subsets = cubeviz_helper.app.get_subsets_from_viewer('spectrum-viewer', subset_type='spectral')
     reg = subsets.get('Subset 1')
-    assert_quantity_allclose(reg.lower, 8 * u.Hz)
-    assert_quantity_allclose(reg.upper, 12 * u.Hz)
+    assert_quantity_allclose(reg.lower, 7.25 * u.Hz)
+    assert_quantity_allclose(reg.upper, 12.75 * u.Hz)
 
 
 def test_region_spectral_spatial(cubeviz_helper, spectral_cube_wcs):
@@ -212,7 +214,7 @@ def test_region_spectral_spatial(cubeviz_helper, spectral_cube_wcs):
     assert isinstance(reg, SpectralRegion)
 
     assert_quantity_allclose(reg.lower, 5.0 * u.Hz)
-    assert_quantity_allclose(reg.upper, 15 * u.Hz)
+    assert_quantity_allclose(reg.upper, 15.5 * u.Hz)
 
     subsets = cubeviz_helper.app.get_subsets_from_viewer('flux-viewer', subset_type='spatial')
     reg = subsets.get('Subset 2')
@@ -277,7 +279,7 @@ def test_disjoint_spectral_subset(cubeviz_helper, spectral_cube_wcs):
     assert len(reg) == 2
     assert isinstance(reg, SpectralRegion)
     assert_quantity_allclose(reg[0].lower, 5.0*u.Hz)
-    assert_quantity_allclose(reg[0].upper, 15.0*u.Hz)
+    assert_quantity_allclose(reg[0].upper, 15.5*u.Hz)
     assert_quantity_allclose(reg[1].lower, 30.0*u.Hz)
     assert_quantity_allclose(reg[1].upper, 35.0*u.Hz)
 
@@ -308,3 +310,114 @@ def test_disjoint_spectral_subset(cubeviz_helper, spectral_cube_wcs):
     subset_plugin.subset_selected = "Create New"
     subset_plugin.subset_selected = "Subset 1"
     assert subset_plugin._get_value_from_subset_definition(0, "Lower bound", "value") == 30
+
+
+def test_composite_region_from_subset_3d(cubeviz_helper):
+    data = Data(flux=np.ones((128, 128, 10)), label='Test 3D Flux')
+    cubeviz_helper.app.data_collection.append(data)
+
+    cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'Test 3D Flux')
+    viewer = cubeviz_helper.app.get_viewer('flux-viewer')
+
+    viewer.apply_roi(CircularROI(xc=25, yc=25, radius=5))
+    reg = cubeviz_helper.app.get_subsets("Subset 1")
+    circle1 = CirclePixelRegion(center=PixCoord(x=25, y=25), radius=5)
+    assert reg[0] == {'name': 'CircularROI', 'glue_state': 'RoiSubsetState', 'region': circle1}
+
+    cubeviz_helper.app.session.edit_subset_mode.mode = AndNotMode
+    viewer.apply_roi(RectangularROI(25, 30, 25, 30))
+    reg = cubeviz_helper.app.get_subsets("Subset 1")
+    rectangle1 = RectanglePixelRegion(center=PixCoord(x=27.5, y=27.5),
+                                      width=5, height=5, angle=0.0 * u.deg)
+    assert reg[0] == {'name': 'RectangularROI', 'glue_state': 'AndNotState', 'region': rectangle1}
+
+    cubeviz_helper.app.session.edit_subset_mode.mode = OrMode
+    viewer.apply_roi(EllipticalROI(30, 30, 3, 6))
+    reg = cubeviz_helper.app.get_subsets("Subset 1")
+    ellipse1 = EllipsePixelRegion(center=PixCoord(x=30, y=30),
+                                  width=3, height=6, angle=0.0 * u.deg)
+    assert reg[0] == {'name': 'EllipticalROI', 'glue_state': 'OrState', 'region': ellipse1}
+
+    cubeviz_helper.app.session.edit_subset_mode.mode = AndMode
+    viewer.apply_roi(RectangularROI(20, 25, 20, 25))
+    reg = cubeviz_helper.app.get_subsets("Subset 1")
+    rectangle2 = RectanglePixelRegion(center=PixCoord(x=22.5, y=22.5),
+                                      width=5, height=5, angle=0.0 * u.deg)
+    assert reg[0] == {'name': 'RectangularROI', 'glue_state': 'AndState', 'region': rectangle2}
+
+    cubeviz_helper.app.session.edit_subset_mode.mode = AndNotMode
+    viewer.apply_roi(CircularROI(xc=21, yc=24, radius=1))
+    reg = cubeviz_helper.app.get_subsets("Subset 1")
+    circle2 = CirclePixelRegion(center=PixCoord(x=21, y=24), radius=1)
+    assert reg[0] == {'name': 'CircularROI', 'glue_state': 'AndNotState', 'region': circle2}
+
+
+def test_composite_region_with_consecutive_and_not_states(cubeviz_helper):
+    data = Data(flux=np.ones((128, 128, 10)), label='Test 3D Flux')
+    cubeviz_helper.app.data_collection.append(data)
+
+    cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'Test 3D Flux')
+    viewer = cubeviz_helper.app.get_viewer('flux-viewer')
+
+    viewer.apply_roi(CircularROI(xc=25, yc=25, radius=5))
+    reg = cubeviz_helper.app.get_subsets("Subset 1")
+    circle1 = CirclePixelRegion(center=PixCoord(x=25, y=25), radius=5)
+    assert reg[0] == {'name': 'CircularROI', 'glue_state': 'RoiSubsetState', 'region': circle1}
+
+    cubeviz_helper.app.session.edit_subset_mode.mode = AndNotMode
+    viewer.apply_roi(RectangularROI(25, 30, 25, 30))
+    reg = cubeviz_helper.app.get_subsets("Subset 1")
+    rectangle1 = RectanglePixelRegion(center=PixCoord(x=27.5, y=27.5),
+                                      width=5, height=5, angle=0.0 * u.deg)
+    assert reg[0] == {'name': 'RectangularROI', 'glue_state': 'AndNotState', 'region': rectangle1}
+
+    cubeviz_helper.app.session.edit_subset_mode.mode = AndNotMode
+    viewer.apply_roi(EllipticalROI(30, 30, 3, 6))
+    reg = cubeviz_helper.app.get_subsets("Subset 1")
+    ellipse1 = EllipsePixelRegion(center=PixCoord(x=30, y=30),
+                                  width=3, height=6, angle=0.0 * u.deg)
+    assert reg[0] == {'name': 'EllipticalROI', 'glue_state': 'AndNotState', 'region': ellipse1}
+
+    regions_list = cubeviz_helper.app.get_subsets("Subset 1", object_only=True)
+    assert len(regions_list) == 3
+    assert regions_list[0].width == 3
+
+    regions_list = cubeviz_helper.app.get_subsets("Subset 1", spatial_only=True,
+                                                  object_only=True)
+    assert len(regions_list) == 3
+    assert regions_list[0].width == 3
+
+    spatial_list = cubeviz_helper.app.get_subsets("Subset 1", spatial_only=True)
+    assert len(spatial_list) == 3
+
+
+def test_composite_region_with_imviz(imviz_helper, image_2d_wcs):
+    arr = np.ones((10, 10))
+
+    data_label = 'image-data'
+    viewer = imviz_helper.app.get_viewer('imviz-0')
+    imviz_helper.load_data(arr, data_label=data_label, show_in_viewer=True)
+    viewer.apply_roi(CircularROI(xc=5, yc=5, radius=2))
+    reg = imviz_helper.app.get_subsets("Subset 1")
+    circle1 = CirclePixelRegion(center=PixCoord(x=5, y=5), radius=2)
+    assert reg[0] == {'name': 'CircularROI', 'glue_state': 'RoiSubsetState', 'region': circle1}
+
+    imviz_helper.app.session.edit_subset_mode.mode = AndNotMode
+    viewer.apply_roi(RectangularROI(2, 4, 2, 4))
+    reg = imviz_helper.app.get_subsets("Subset 1")
+    rectangle1 = RectanglePixelRegion(center=PixCoord(x=3, y=3),
+                                      width=2, height=2, angle=0.0 * u.deg)
+    assert reg[0] == {'name': 'RectangularROI', 'glue_state': 'AndNotState', 'region': rectangle1}
+
+    imviz_helper.app.session.edit_subset_mode.mode = AndNotMode
+    viewer.apply_roi(EllipticalROI(3, 3, 3, 6))
+    reg = imviz_helper.app.get_subsets("Subset 1")
+    ellipse1 = EllipsePixelRegion(center=PixCoord(x=3, y=3),
+                                  width=3, height=6, angle=0.0 * u.deg)
+    assert reg[0] == {'name': 'EllipticalROI', 'glue_state': 'AndNotState', 'region': ellipse1}
+
+
+def test_with_invalid_subset_name(cubeviz_helper):
+    subset_name = "Test"
+    with pytest.raises(ValueError, match=f'{subset_name} not in '):
+        cubeviz_helper.app.get_subsets(subset_name=subset_name)

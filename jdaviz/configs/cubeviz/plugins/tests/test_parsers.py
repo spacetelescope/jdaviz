@@ -77,8 +77,8 @@ def test_spectrum1d_with_fake_fixed_units(spectrum1d, cubeviz_helper):
     reg = subsets.get('Subset 1')
 
     assert len(subsets) == 1
-    assert_allclose(reg.lower.value, 6666.666666666667)
-    assert_allclose(reg.upper.value, 7333.333333333334)
+    assert_allclose(reg.lower.value, 6600.)
+    assert_allclose(reg.upper.value, 7400.)
     assert reg.lower.unit == 'Angstrom'
     assert reg.upper.unit == 'Angstrom'
 
