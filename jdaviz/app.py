@@ -27,7 +27,7 @@ from glue.core.exceptions import IncompatibleAttribute
 from glue.config import colormaps, data_translator
 from glue.config import settings as glue_settings
 from glue.core import BaseData, HubListener, Data, DataCollection
-from glue.core.link_helpers import LinkSame
+from glue.core.link_helpers import LinkSame, LinkSameWithUnits
 from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink, IncompatibleWCS
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage,
@@ -75,10 +75,23 @@ class UnitConverterWithSpectral:
     def equivalent_units(self, data, cid, units):
         if cid.label == "flux":
             eqv = u.spectral_density(1 * u.m)  # Value does not matter here.
+            list_of_units = set(list(map(str, u.Unit(units).find_equivalent_units(
+                include_prefix_units=True, equivalencies=eqv))) + [
+                    'Jy', 'mJy', 'uJy',
+                    'W / (m2 Hz)', 'W / (Hz m2)',  # Order is different in astropy v5.3
+                    'eV / (s m2 Hz)', 'eV / (Hz s m2)',
+                    'erg / (s cm2)',
+                    'erg / (s cm2 um)', 'erg / (um s cm2)',
+                    'erg / (s cm2 Angstrom)', 'erg / (Angstrom s cm2)',
+                    'erg / (s cm2 Hz)', 'erg / (Hz s cm2)',
+                    'ph / (s cm2 um)', 'ph / (um s cm2)',
+                    'ph / (s cm2 Angstrom)', 'ph / (Angstrom s cm2)',
+                    'ph / (s cm2 Hz)', 'ph / (Hz s cm2)'
+                ])
         else:  # spectral axis
-            eqv = u.spectral()
-        return map(str, u.Unit(units).find_equivalent_units(
-            include_prefix_units=True, equivalencies=eqv))
+            list_of_units = map(str, u.Unit(units).find_equivalent_units(
+                include_prefix_units=True, equivalencies=u.spectral()))
+        return list_of_units
 
     def to_unit(self, data, cid, values, original_units, target_units):
         # Given a glue data object (data), a component ID (cid), the values
@@ -475,7 +488,7 @@ class Application(VuetifyTemplate, HubListener):
         if isinstance(linked_data.coords, SpectralCoordinates):
             wc_old = ref_data.world_component_ids[-1]
             wc_new = linked_data.world_component_ids[0]
-            self.data_collection.add_link(LinkSame(wc_old, wc_new))
+            self.data_collection.add_link(LinkSameWithUnits(wc_old, wc_new))
             return
 
         try:
@@ -521,8 +534,8 @@ class Application(VuetifyTemplate, HubListener):
                 else:
                     continue
 
-                links.append(LinkSame(ref_data.pixel_component_ids[ref_index],
-                                      linked_data.pixel_component_ids[linked_index]))
+                links.append(LinkSameWithUnits(ref_data.pixel_component_ids[ref_index],
+                                               linked_data.pixel_component_ids[linked_index]))
 
             dc.add_link(links)
 

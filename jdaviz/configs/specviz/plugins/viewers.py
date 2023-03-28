@@ -492,6 +492,8 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
         x_unit = u.Unit(self.state.x_display_unit)
         if x_unit.is_equivalent(u.m):
             spectral_axis_unit_type = "Wavelength"
+        elif x_unit.is_equivalent(u.Hz):
+            spectral_axis_unit_type = "Frequency"
         elif x_unit.is_equivalent(u.pixel):
             spectral_axis_unit_type = "Pixel"
         else:
