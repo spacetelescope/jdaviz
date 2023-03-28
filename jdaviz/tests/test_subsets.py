@@ -322,34 +322,34 @@ def test_composite_region_from_subset_3d(cubeviz_helper):
     viewer.apply_roi(CircularROI(xc=25, yc=25, radius=5))
     reg = cubeviz_helper.app.get_subsets("Subset 1")
     circle1 = CirclePixelRegion(center=PixCoord(x=25, y=25), radius=5)
-    assert reg[0] == {'name': 'CircularROI', 'glue_state': 'RoiSubsetState', 'region': circle1}
+    assert reg[-1] == {'name': 'CircularROI', 'glue_state': 'RoiSubsetState', 'region': circle1}
 
     cubeviz_helper.app.session.edit_subset_mode.mode = AndNotMode
     viewer.apply_roi(RectangularROI(25, 30, 25, 30))
     reg = cubeviz_helper.app.get_subsets("Subset 1")
     rectangle1 = RectanglePixelRegion(center=PixCoord(x=27.5, y=27.5),
                                       width=5, height=5, angle=0.0 * u.deg)
-    assert reg[0] == {'name': 'RectangularROI', 'glue_state': 'AndNotState', 'region': rectangle1}
+    assert reg[-1] == {'name': 'RectangularROI', 'glue_state': 'AndNotState', 'region': rectangle1}
 
     cubeviz_helper.app.session.edit_subset_mode.mode = OrMode
     viewer.apply_roi(EllipticalROI(30, 30, 3, 6))
     reg = cubeviz_helper.app.get_subsets("Subset 1")
     ellipse1 = EllipsePixelRegion(center=PixCoord(x=30, y=30),
                                   width=3, height=6, angle=0.0 * u.deg)
-    assert reg[0] == {'name': 'EllipticalROI', 'glue_state': 'OrState', 'region': ellipse1}
+    assert reg[-1] == {'name': 'EllipticalROI', 'glue_state': 'OrState', 'region': ellipse1}
 
     cubeviz_helper.app.session.edit_subset_mode.mode = AndMode
     viewer.apply_roi(RectangularROI(20, 25, 20, 25))
     reg = cubeviz_helper.app.get_subsets("Subset 1")
     rectangle2 = RectanglePixelRegion(center=PixCoord(x=22.5, y=22.5),
                                       width=5, height=5, angle=0.0 * u.deg)
-    assert reg[0] == {'name': 'RectangularROI', 'glue_state': 'AndState', 'region': rectangle2}
+    assert reg[-1] == {'name': 'RectangularROI', 'glue_state': 'AndState', 'region': rectangle2}
 
     cubeviz_helper.app.session.edit_subset_mode.mode = AndNotMode
     viewer.apply_roi(CircularROI(xc=21, yc=24, radius=1))
     reg = cubeviz_helper.app.get_subsets("Subset 1")
     circle2 = CirclePixelRegion(center=PixCoord(x=21, y=24), radius=1)
-    assert reg[0] == {'name': 'CircularROI', 'glue_state': 'AndNotState', 'region': circle2}
+    assert reg[-1] == {'name': 'CircularROI', 'glue_state': 'AndNotState', 'region': circle2}
 
 
 def test_composite_region_with_consecutive_and_not_states(cubeviz_helper):
@@ -362,30 +362,30 @@ def test_composite_region_with_consecutive_and_not_states(cubeviz_helper):
     viewer.apply_roi(CircularROI(xc=25, yc=25, radius=5))
     reg = cubeviz_helper.app.get_subsets("Subset 1")
     circle1 = CirclePixelRegion(center=PixCoord(x=25, y=25), radius=5)
-    assert reg[0] == {'name': 'CircularROI', 'glue_state': 'RoiSubsetState', 'region': circle1}
+    assert reg[-1] == {'name': 'CircularROI', 'glue_state': 'RoiSubsetState', 'region': circle1}
 
     cubeviz_helper.app.session.edit_subset_mode.mode = AndNotMode
     viewer.apply_roi(RectangularROI(25, 30, 25, 30))
     reg = cubeviz_helper.app.get_subsets("Subset 1")
     rectangle1 = RectanglePixelRegion(center=PixCoord(x=27.5, y=27.5),
                                       width=5, height=5, angle=0.0 * u.deg)
-    assert reg[0] == {'name': 'RectangularROI', 'glue_state': 'AndNotState', 'region': rectangle1}
+    assert reg[-1] == {'name': 'RectangularROI', 'glue_state': 'AndNotState', 'region': rectangle1}
 
     cubeviz_helper.app.session.edit_subset_mode.mode = AndNotMode
     viewer.apply_roi(EllipticalROI(30, 30, 3, 6))
     reg = cubeviz_helper.app.get_subsets("Subset 1")
     ellipse1 = EllipsePixelRegion(center=PixCoord(x=30, y=30),
                                   width=3, height=6, angle=0.0 * u.deg)
-    assert reg[0] == {'name': 'EllipticalROI', 'glue_state': 'AndNotState', 'region': ellipse1}
+    assert reg[-1] == {'name': 'EllipticalROI', 'glue_state': 'AndNotState', 'region': ellipse1}
 
     regions_list = cubeviz_helper.app.get_subsets("Subset 1", object_only=True)
     assert len(regions_list) == 3
-    assert regions_list[0].width == 3
+    assert regions_list[-1].width == 3
 
     regions_list = cubeviz_helper.app.get_subsets("Subset 1", spatial_only=True,
                                                   object_only=True)
     assert len(regions_list) == 3
-    assert regions_list[0].width == 3
+    assert regions_list[-1].width == 3
 
     spatial_list = cubeviz_helper.app.get_subsets("Subset 1", spatial_only=True)
     assert len(spatial_list) == 3
@@ -400,21 +400,21 @@ def test_composite_region_with_imviz(imviz_helper, image_2d_wcs):
     viewer.apply_roi(CircularROI(xc=5, yc=5, radius=2))
     reg = imviz_helper.app.get_subsets("Subset 1")
     circle1 = CirclePixelRegion(center=PixCoord(x=5, y=5), radius=2)
-    assert reg[0] == {'name': 'CircularROI', 'glue_state': 'RoiSubsetState', 'region': circle1}
+    assert reg[-1] == {'name': 'CircularROI', 'glue_state': 'RoiSubsetState', 'region': circle1}
 
     imviz_helper.app.session.edit_subset_mode.mode = AndNotMode
     viewer.apply_roi(RectangularROI(2, 4, 2, 4))
     reg = imviz_helper.app.get_subsets("Subset 1")
     rectangle1 = RectanglePixelRegion(center=PixCoord(x=3, y=3),
                                       width=2, height=2, angle=0.0 * u.deg)
-    assert reg[0] == {'name': 'RectangularROI', 'glue_state': 'AndNotState', 'region': rectangle1}
+    assert reg[-1] == {'name': 'RectangularROI', 'glue_state': 'AndNotState', 'region': rectangle1}
 
     imviz_helper.app.session.edit_subset_mode.mode = AndNotMode
     viewer.apply_roi(EllipticalROI(3, 3, 3, 6))
     reg = imviz_helper.app.get_subsets("Subset 1")
     ellipse1 = EllipsePixelRegion(center=PixCoord(x=3, y=3),
                                   width=3, height=6, angle=0.0 * u.deg)
-    assert reg[0] == {'name': 'EllipticalROI', 'glue_state': 'AndNotState', 'region': ellipse1}
+    assert reg[-1] == {'name': 'EllipticalROI', 'glue_state': 'AndNotState', 'region': ellipse1}
 
 
 def test_with_invalid_subset_name(cubeviz_helper):

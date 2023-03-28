@@ -982,7 +982,7 @@ class Application(VuetifyTemplate, HubListener):
                             two[0]['glue_state'] = "AndNotState"
                         # Return two first so that we preserve the chronology of how
                         # subset regions are applied.
-                        return two + one
+                        return one + two
                 elif subset_state.op is operator.and_:
                     # This covers the AND subset mode
 
@@ -996,12 +996,12 @@ class Application(VuetifyTemplate, HubListener):
                     if isinstance(two, SpectralRegion):
                         return two.invert(one.lower, one.upper)
                     else:
-                        return one + two
+                        return two + one
                 elif subset_state.op is operator.or_:
                     # This covers the ADD subset mode
                     # one + two works for both Range and ROI subsets
                     if one and two:
-                        return one + two
+                        return two + one
                     elif one:
                         return one
                     elif two:
