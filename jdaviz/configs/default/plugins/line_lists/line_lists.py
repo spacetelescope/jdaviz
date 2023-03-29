@@ -199,7 +199,8 @@ class LineListTool(PluginTemplateMixin):
         self._on_spectrum_viewer_limits_changed()  # will also trigger _auto_slider_step
 
         # set the choices (and default) for the units for new custom lines
-        self.custom_unit_choices = create_spectral_equivalencies_list(viewer_data)
+        self.custom_unit_choices = create_spectral_equivalencies_list(
+            viewer_data.spectral_axis.unit)
         self.custom_unit = str(viewer_data.spectral_axis.unit)
 
     def _parse_redshift_msg(self, msg):

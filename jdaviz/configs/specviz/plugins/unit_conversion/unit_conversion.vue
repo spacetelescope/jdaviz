@@ -6,16 +6,6 @@
     :disabled_msg="disabled_msg"
     :popout_button="popout_button">
 
-    <!-- for mosviz, the entries change on row change, so we want to always show the dropdown
-         to make sure that is clear -->
-    <plugin-dataset-select
-      :items="dataset_items"
-      :selected.sync="dataset_selected"
-      :show_if_single_entry="config=='mosviz'"
-      label="Data"
-      hint="Select the data to be converted."
-    />
-
     <v-row>
       <v-text-field
         ref="current_spectral_axis_unit"
@@ -38,7 +28,7 @@
       ></v-text-field>
     </v-row>
 
-    <v-row v-if="spectral_axis_unit_equivalencies.length > 0">
+    <v-row>
       <v-combobox
         label="New Spectral Axis Unit"
         :items="spectral_axis_unit_equivalencies"
@@ -51,7 +41,7 @@
       ></v-text-field>
     </v-row>
 
-    <v-row v-if="flux_unit_equivalencies.length > 0">
+    <v-row>
       <v-combobox
         label="New Flux Unit"
         :items="flux_unit_equivalencies"
@@ -63,10 +53,9 @@
       ></v-text-field>
     </v-row>
 
-    <v-row justify="end" v-if="spectral_axis_unit_equivalencies.length > 0 || flux_unit_equivalencies.length > 0">
+    <v-row justify="end">
       <j-tooltip tipid='plugin-unit-conversion-apply'>
-        <v-btn :disabled="dataset_selected == ''"
-        color="accent" text @click="unit_conversion">Apply</v-btn>
+        <v-btn color="accent" text @click="unit_conversion">Apply</v-btn>
       </j-tooltip>
     </v-row>
 
