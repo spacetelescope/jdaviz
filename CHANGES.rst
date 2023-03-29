@@ -4,6 +4,8 @@
 Bug Fixes
 ---------
 
+- Fixed a bug where Import Data button crashes under certain condition. [#2110]
+
 Cubeviz
 ^^^^^^^
 
