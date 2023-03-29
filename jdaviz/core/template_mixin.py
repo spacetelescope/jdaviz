@@ -101,7 +101,32 @@ def _subset_type(subset):
         return 'spectral'
 
 
-class TemplateMixin(VuetifyTemplate, HubListener):
+class ViewerPropertiesMixin:
+    # assumes that self.app is defined by the class
+    @cached_property
+    def spectrum_viewer(self):
+        if hasattr(self, '_default_spectrum_viewer_reference_name'):
+            viewer_reference = self._default_spectrum_viewer_reference_name
+        else:
+            viewer_reference = self.app._get_first_viewer_reference_name(
+                require_spectrum_viewer=True
+            )
+
+        return self.app.get_viewer(viewer_reference)
+
+    @cached_property
+    def spectrum_2d_viewer(self):
+        if hasattr(self, '_default_spectrum_2d_viewer_reference_name'):
+            viewer_reference = self._default_spectrum_2d_viewer_reference_name
+        else:
+            viewer_reference = self.app._get_first_viewer_reference_name(
+                require_spectrum_2d_viewer=True
+            )
+
+        return self.app.get_viewer(viewer_reference)
+
+
+class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin):
     config = Unicode("").tag(sync=True)
     vdocs = Unicode("").tag(sync=True)
     popout_button = Any().tag(sync=True, **widget_serialization)
@@ -293,7 +318,7 @@ class PluginTemplateMixin(TemplateMixin):
         show_widget(self, loc=loc, title=title)
 
 
-class BasePluginComponent(HubListener):
+class BasePluginComponent(HubListener, ViewerPropertiesMixin):
     """
     This base class handles attaching traitlets from the plugin itself to logic
     handled within the component, support for caching and clearing caches on properties,
@@ -375,28 +400,6 @@ class BasePluginComponent(HubListener):
                 for vid, viewer in self.app._viewer_store.items()
                 if viewer.__class__.__name__ != 'MosvizTableViewer']
 
-    @cached_property
-    def spectrum_viewer(self):
-        if hasattr(self, '_default_spectrum_viewer_reference_name'):
-            viewer_reference = self._default_spectrum_viewer_reference_name
-        else:
-            viewer_reference = self.app._get_first_viewer_reference_name(
-                require_spectrum_viewer=True
-            )
-
-        return self._plugin.app.get_viewer(viewer_reference)
-
-    @cached_property
-    def spectrum_2d_viewer(self):
-        if hasattr(self, '_default_spectrum_2d_viewer_reference_name'):
-            viewer_reference = self._default_spectrum_2d_viewer_reference_name
-        else:
-            viewer_reference = self.app._get_first_viewer_reference_name(
-                require_spectrum_2d_viewer=True
-            )
-
-        return self._plugin.app.get_viewer(viewer_reference)
-
 
 class SelectPluginComponent(BasePluginComponent, HasTraits):
     """
@@ -472,6 +475,10 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
     @property
     def choices(self):
         return self.labels
+
+    @choices.setter
+    def choices(self, choices=[]):
+        self.items = [{'label': choice} for choice in choices]
 
     @property
     def is_multiselect(self):

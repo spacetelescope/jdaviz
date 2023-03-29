@@ -7,57 +7,27 @@
     :popout_button="popout_button">
 
     <v-row>
-      <v-text-field
-        ref="current_spectral_axis_unit"
-        label="Current Spectral Axis Unit"
-        v-model="current_spectral_axis_unit"
-        hint="The spectral axis unit of the currently selected data."
+      <v-select
+        :menu-props="{ left: true }"
+        attach
+        :items="spectral_unit_items.map(i => i.label)"
+        v-model="spectral_unit_selected"
+        label="Spectral Unit"
+        hint="Global display unit for spectral axis."
         persistent-hint
-        disabled="True"
-      ></v-text-field>
+      ></v-select>
     </v-row>
 
     <v-row>
-      <v-text-field
-        ref="current_flux_unit"
-        label="Current Flux Unit"
-        v-model="current_flux_unit"
-        hint="The flux unit of the currently selected data."
+      <v-select
+        :menu-props="{ left: true }"
+        attach
+        :items="flux_unit_items.map(i => i.label)"
+        v-model="flux_unit_selected"
+        label="Flux Unit"
+        hint="Global display unit for flux."
         persistent-hint
-        disabled="True"
-      ></v-text-field>
+      ></v-select>
     </v-row>
-
-    <v-row v-if="spectral_axis_unit_equivalencies.length > 0">
-      <v-combobox
-        label="New Spectral Axis Unit"
-        :items="spectral_axis_unit_equivalencies"
-        v-model="new_spectral_axis_unit"
-        @input.native="new_spectral_axis_unit=$event.srcElement.value"
-        return-object
-        hide-no-data="True"
-        hint="The spectral axis unit the currently selected data will be converted to."
-        persistent-hint
-      ></v-text-field>
-    </v-row>
-
-    <v-row v-if="flux_unit_equivalencies.length > 0">
-      <v-combobox
-        label="New Flux Unit"
-        :items="flux_unit_equivalencies"
-        v-model="new_flux_unit"
-        @input.native="new_flux_unit=$event.srcElement.value"
-        return-object
-        hint="The flux unit the currently selected data will be converted to."
-        persistent-hint
-      ></v-text-field>
-    </v-row>
-
-    <v-row justify="end" v-if="spectral_axis_unit_equivalencies.length > 0 || flux_unit_equivalencies.length > 0">
-      <j-tooltip tipid='plugin-unit-conversion-apply'>
-        <v-btn color="accent" text @click="unit_conversion">Apply</v-btn>
-      </j-tooltip>
-    </v-row>
-
   </j-tray-plugin>
 </template>
