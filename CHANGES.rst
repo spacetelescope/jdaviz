@@ -9,6 +9,8 @@ New Features
 Cubeviz
 ^^^^^^^
 
+* Re-enabled unit conversion support. [#2048]
+
 Imviz
 ^^^^^
 
@@ -22,6 +24,8 @@ Specviz
 
 Specviz2d
 ^^^^^^^^^
+
+* Re-enabled unit conversion support. [#2048]
 
 API Changes
 -----------
