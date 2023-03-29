@@ -36,10 +36,16 @@ class UnitConversion(PluginTemplateMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # TODO: support for multiple viewers
-        # TODO: support for sky coordinate axes?
-        # TODO: support for z-axes in image viewers
-        # TODO: slice indicator broken after changing spectral_unit
+        if self.config not in ['specviz']:
+            # TODO [specviz2d, mosviz] x_display_unit is not implemented in glue for image viewer
+            # used by spectrum-2d-viewer
+            # TODO [mosviz]: add to yaml file
+            # TODO [cubeviz, slice]: slice indicator broken after changing spectral_unit
+            # TODO: support for multiple viewers and handling of mixed state from glue (or does
+            # this force all to sync?)
+            self.disabled_msg = f'This plugin is temporarily disabled in {self.config}. Effort to improve it is being tracked at GitHub Issue 1972.'  # noqa
+
+        # TODO [markers]: existing markers need converting
         self.spectrum_viewer.state.add_callback('x_display_unit',
                                                 self._on_glue_x_display_unit_changed)
         self.spectrum_viewer.state.add_callback('y_display_unit',
@@ -54,11 +60,7 @@ class UnitConversion(PluginTemplateMixin):
 
     @property
     def user_api(self):
-        expose = []
-        if self.config in ['specviz', 'specviz2d', 'cubeviz', 'mosviz']:
-            expose += ['spectral_unit']
-        expose += ['flux_unit']
-        return PluginUserApi(self, expose=expose)
+        return PluginUserApi(self, expose=('spectral_unit', 'flux_unit'))
 
     def _on_glue_x_display_unit_changed(self, x_unit):
         if x_unit is None:
