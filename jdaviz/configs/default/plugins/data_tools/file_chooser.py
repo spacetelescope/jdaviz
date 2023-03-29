@@ -324,9 +324,7 @@ class FileChooser(VBox, ValueWidget):
             return self._map_disp_to_name[self._dircontent.value]
 
     def _update_file_path(self):
-        if self._selected_filename is None or self._selected_path is None:
-            self.file_path = None
-        else:
+        if self._selected_filename is not None and self._selected_path is not None:
             self.file_path = os.path.join(self._selected_path,
                                           self._selected_filename)
 
