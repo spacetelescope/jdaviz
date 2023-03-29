@@ -29,8 +29,11 @@ def create_spectral_equivalencies_list(spectral_axis_unit,
         return []
 
     # Get unit equivalencies.
-    curr_spectral_axis_unit_equivalencies = spectral_axis_unit.find_equivalent_units(
-        equivalencies=u.spectral())
+    try:
+        curr_spectral_axis_unit_equivalencies = spectral_axis_unit.find_equivalent_units(
+            equivalencies=u.spectral())
+    except u.core.UnitConversionError:
+        return []
 
     # Get local units.
     locally_defined_spectral_axis_units = ['Angstrom', 'nm',
@@ -56,9 +59,12 @@ def create_flux_equivalencies_list(flux_unit, spectral_axis_unit):
         return []
 
     # Get unit equivalencies. Value passed into u.spectral_density() is irrelevant.
-    curr_flux_unit_equivalencies = flux_unit.find_equivalent_units(
-        equivalencies=u.spectral_density(1 * spectral_axis_unit),
-        include_prefix_units=False)
+    try:
+        curr_flux_unit_equivalencies = flux_unit.find_equivalent_units(
+            equivalencies=u.spectral_density(1 * spectral_axis_unit),
+            include_prefix_units=False)
+    except u.core.UnitConversionError:
+        return []
 
     # Get local units.
     locally_defined_flux_units = ['Jy', 'mJy', 'uJy',

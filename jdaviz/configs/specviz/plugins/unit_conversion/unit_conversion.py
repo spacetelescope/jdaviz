@@ -26,6 +26,8 @@ class UnitConversion(PluginTemplateMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # TODO: Support multiple viewers?
         self._default_spectrum_viewer_reference_name = kwargs.get(
             "spectrum_viewer_reference_name", "spectrum-viewer"
         )
@@ -35,22 +37,23 @@ class UnitConversion(PluginTemplateMixin):
         self.session.hub.subscribe(self, RemoveDataMessage, handler=self._on_viewer_data_update)
 
     def _on_viewer_data_update(self, msg):
-        """Set UI label to show current flux and spectral axis units."""
-        if self._viewer.state.y_display_unit:
-            self.current_flux_unit = self._viewer.state.y_display_unit
-        else:
-            self.current_flux_unit = ""
-
+        """Set UI label to show current flux and spectral axis units.
+        Then, populate drop down with all valid options for unit conversion.
+        """
         if self._viewer.state.x_display_unit:
+            x_u = u.Unit(self._viewer.state.x_display_unit)
             self.current_spectral_axis_unit = self._viewer.state.x_display_unit
+            self.spectral_axis_unit_equivalencies = create_spectral_equivalencies_list(x_u)
         else:
+            x_u = u.micron  # Placeholder for flux look-up below.
             self.current_spectral_axis_unit = ""
 
-        # Populate drop down with all valid options for unit conversion.
-        x_u = u.Unit(self._viewer.state.x_display_unit)
-        y_u = u.Unit(self._viewer.state.y_display_unit)
-        self.flux_unit_equivalencies = create_flux_equivalencies_list(y_u, x_u)
-        self.spectral_axis_unit_equivalencies = create_spectral_equivalencies_list(x_u)
+        if self._viewer.state.y_display_unit:
+            y_u = u.Unit(self._viewer.state.y_display_unit)
+            self.current_flux_unit = self._viewer.state.y_display_unit
+            self.flux_unit_equivalencies = create_flux_equivalencies_list(y_u, x_u)
+        else:
+            self.current_flux_unit = ""
 
     def vue_unit_conversion(self, *args, **kwargs):
         """

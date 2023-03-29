@@ -4,7 +4,7 @@ import pytest
 # On failure, should not crash; essentially a no-op.
 @pytest.mark.parametrize(
     ('new_spectral_axis', 'new_flux', 'expected_spectral_axis', 'expected_flux'),
-    [("fail", "erg / (s cm2 um)", "Angstrom", "erg / (s cm2 um)"),
+    [("fail", "erg / (s cm2 Angstrom)", "Angstrom", "erg / (s cm2 Angstrom)"),
      ("None", "fail", "Angstrom", "Jy"),
      ("micron", "fail", "micron", "Jy")])
 def test_value_error_exception(specviz_helper, spectrum1d, new_spectral_axis, new_flux,
@@ -47,7 +47,7 @@ def test_conv_flux_only(specviz_helper, spectrum1d, uncert):
 
     viewer = specviz_helper.app.get_viewer("spectrum-viewer")
     plg = specviz_helper.plugins["Unit Conversion"]._obj
-    new_flux = "erg / (s cm2 um)"
+    new_flux = "erg / (s cm2 Angstrom)"
     plg.new_flux_unit = new_flux
     plg.vue_unit_conversion()
 
@@ -65,7 +65,7 @@ def test_conv_wave_flux(specviz_helper, spectrum1d, uncert):
     viewer = specviz_helper.app.get_viewer("spectrum-viewer")
     plg = specviz_helper.plugins["Unit Conversion"]._obj
     new_spectral_axis = "micron"
-    new_flux = "erg / (s cm2 um)"
+    new_flux = "erg / (s cm2 Angstrom)"
     plg.new_spectral_axis_unit = new_spectral_axis
     plg.new_flux_unit = new_flux
     plg.vue_unit_conversion()
@@ -79,6 +79,6 @@ def test_conv_no_data(specviz_helper):
     """Should not crash."""
     plg = specviz_helper.plugins["Unit Conversion"]._obj
     plg.new_spectral_axis_unit = "micron"
-    plg.new_flux_unit = "erg / (s cm2 um)"
+    plg.new_flux_unit = "erg / (s cm2 Angstrom)"
     plg.vue_unit_conversion()
     assert len(specviz_helper.app.data_collection) == 0
