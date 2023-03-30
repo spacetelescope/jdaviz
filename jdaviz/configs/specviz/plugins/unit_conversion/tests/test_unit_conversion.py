@@ -1,4 +1,5 @@
 import pytest
+from astropy import units as u
 
 
 # On failure, should not crash; essentially a no-op.
@@ -11,15 +12,22 @@ def test_value_error_exception(specviz_helper, spectrum1d, new_spectral_axis, ne
                                expected_spectral_axis, expected_flux):
     specviz_helper.load_spectrum(spectrum1d, data_label="Test 1D Spectrum")
     viewer = specviz_helper.app.get_viewer("spectrum-viewer")
-    plg = specviz_helper.plugins["Unit Conversion"]._obj
+    plg = specviz_helper.plugins["Unit Conversion"]
 
-    plg.new_spectral_axis_unit = new_spectral_axis
-    plg.new_flux_unit = new_flux
-    plg.vue_unit_conversion()
+    try:
+        plg.spectral_unit = new_spectral_axis
+    except ValueError as e:
+        if "reverting selection to" not in repr(e):
+            raise
+    try:
+        plg.flux_unit = new_flux
+    except ValueError as e:
+        if "reverting selection to" not in repr(e):
+            raise
 
     assert len(specviz_helper.app.data_collection) == 1
-    assert viewer.state.x_display_unit == expected_spectral_axis
-    assert viewer.state.y_display_unit == expected_flux
+    assert u.Unit(viewer.state.x_display_unit) == u.Unit(expected_spectral_axis)
+    assert u.Unit(viewer.state.y_display_unit) == u.Unit(expected_flux)
 
 
 @pytest.mark.parametrize('uncert', (False, True))
@@ -29,14 +37,13 @@ def test_conv_wave_only(specviz_helper, spectrum1d, uncert):
     specviz_helper.load_spectrum(spectrum1d, data_label="Test 1D Spectrum")
 
     viewer = specviz_helper.app.get_viewer("spectrum-viewer")
-    plg = specviz_helper.plugins["Unit Conversion"]._obj
+    plg = specviz_helper.plugins["Unit Conversion"]
     new_spectral_axis = "micron"
-    plg.new_spectral_axis_unit = new_spectral_axis
-    plg.vue_unit_conversion()
+    plg.spectral_unit = new_spectral_axis
 
     assert len(specviz_helper.app.data_collection) == 1
-    assert viewer.state.x_display_unit == new_spectral_axis
-    assert viewer.state.y_display_unit == 'Jy'
+    assert u.Unit(viewer.state.x_display_unit) == u.Unit(new_spectral_axis)
+    assert u.Unit(viewer.state.y_display_unit) == u.Unit('Jy')
 
 
 @pytest.mark.parametrize('uncert', (False, True))
@@ -46,14 +53,13 @@ def test_conv_flux_only(specviz_helper, spectrum1d, uncert):
     specviz_helper.load_spectrum(spectrum1d, data_label="Test 1D Spectrum")
 
     viewer = specviz_helper.app.get_viewer("spectrum-viewer")
-    plg = specviz_helper.plugins["Unit Conversion"]._obj
+    plg = specviz_helper.plugins["Unit Conversion"]
     new_flux = "erg / (s cm2 Angstrom)"
-    plg.new_flux_unit = new_flux
-    plg.vue_unit_conversion()
+    plg.flux_unit = new_flux
 
     assert len(specviz_helper.app.data_collection) == 1
-    assert viewer.state.x_display_unit == 'Angstrom'
-    assert viewer.state.y_display_unit == new_flux
+    assert u.Unit(viewer.state.x_display_unit) == u.Unit('Angstrom')
+    assert u.Unit(viewer.state.y_display_unit) == u.Unit(new_flux)
 
 
 @pytest.mark.parametrize('uncert', (False, True))
@@ -63,22 +69,23 @@ def test_conv_wave_flux(specviz_helper, spectrum1d, uncert):
     specviz_helper.load_spectrum(spectrum1d, data_label="Test 1D Spectrum")
 
     viewer = specviz_helper.app.get_viewer("spectrum-viewer")
-    plg = specviz_helper.plugins["Unit Conversion"]._obj
+    plg = specviz_helper.plugins["Unit Conversion"]
     new_spectral_axis = "micron"
     new_flux = "erg / (s cm2 Angstrom)"
-    plg.new_spectral_axis_unit = new_spectral_axis
-    plg.new_flux_unit = new_flux
-    plg.vue_unit_conversion()
+    plg.spectral_unit = new_spectral_axis
+    plg.flux_unit = new_flux
 
     assert len(specviz_helper.app.data_collection) == 1
-    assert viewer.state.x_display_unit == new_spectral_axis
-    assert viewer.state.y_display_unit == new_flux
+    assert u.Unit(viewer.state.x_display_unit) == u.Unit(new_spectral_axis)
+    assert u.Unit(viewer.state.y_display_unit) == u.Unit(new_flux)
 
 
 def test_conv_no_data(specviz_helper):
-    """Should not crash."""
-    plg = specviz_helper.plugins["Unit Conversion"]._obj
-    plg.new_spectral_axis_unit = "micron"
-    plg.new_flux_unit = "erg / (s cm2 Angstrom)"
-    plg.vue_unit_conversion()
+    """plugin unit selections won't have valid choices yet, preventing
+    attempting to set display units."""
+    plg = specviz_helper.plugins["Unit Conversion"]
+    with pytest.raises(ValueError, match="no valid unit choices"):
+        plg.spectral_unit = "micron"
+    with pytest.raises(ValueError, match="no valid unit choices"):
+        plg.flux_unit = "erg / (s cm2 Angstrom)"
     assert len(specviz_helper.app.data_collection) == 0

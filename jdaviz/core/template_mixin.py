@@ -28,7 +28,7 @@ from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
 
 
 __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
-           'BasePluginComponent', 'SelectPluginComponent',
+           'BasePluginComponent', 'SelectPluginComponent', 'UnitSelectPluginComponent',
            'PluginSubcomponent',
            'SubsetSelect', 'SpatialSubsetSelectMixin', 'SpectralSubsetSelectMixin',
            'DatasetSpectralSubsetValidMixin',
@@ -463,7 +463,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
     def __repr__(self):
         if hasattr(self, 'multiselect'):
             return f"<selected={self.selected} multiselect={self.multiselect} choices={self.choices}>"  # noqa
-        return f"<selected={self.selected} choices={self.choices}>"
+        return f"<selected='{self.selected}' choices={self.choices}>"
 
     def __eq__(self, other):
         return self.selected == other
@@ -646,6 +646,36 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
             if event['new'] not in self.labels + ['']:
                 self.selected = event['old']
                 raise ValueError(f"{event['new']} not one of {self.labels}, reverting selection to {event['old']}")  # noqa
+
+
+class UnitSelectPluginComponent(SelectPluginComponent):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.add_observe('items', lambda _: self._clear_cache('unit_choices'))
+
+    @cached_property
+    def unit_choices(self):
+        return [u.Unit(lbl) for lbl in self.labels]
+
+    def _selected_changed(self, event):
+        self._clear_cache()
+        if event['new'] in self.labels + ['']:
+            # the string is an exact match, no converting necessary
+            return
+        elif not len(self.labels):
+            raise ValueError("no valid unit choices")
+        try:
+            new_u = u.Unit(event['new'])
+        except ValueError:
+            self.selected = event['old']
+            raise ValueError(f"{event['new']} could not be converted to a valid unit, reverting selection to {event['old']}")  # noqa
+        if new_u not in self.unit_choices:
+            self.selected = event['old']
+            raise ValueError(f"{event['new']} not one of {self.labels}, reverting selection to {event['old']}")  # noqa
+
+        # convert to default string representation from the valid choices
+        ind = self.unit_choices.index(new_u)
+        self.selected = self.labels[ind]
 
 
 class LayerSelect(SelectPluginComponent):
