@@ -913,7 +913,8 @@ class Application(VuetifyTemplate, HubListener):
                 subset_region = self._get_roi_subset_definition(subset.subset_state)
             elif isinstance(subset.subset_state, RangeSubsetState):
                 # 2D regions represented as SpectralRegion objects
-                subset_region = self._get_range_subset_bounds(subset.subset_state, use_display_units)
+                subset_region = self._get_range_subset_bounds(subset.subset_state,
+                                                              use_display_units)
             else:
                 # subset.subset_state can be an instance of MaskSubsetState
                 # or something else we do not know how to handle
@@ -1073,10 +1074,11 @@ class Application(VuetifyTemplate, HubListener):
                 return self._get_range_subset_bounds(subset_state)
 
     def _get_display_unit(self, axis):
-        if self._jdaviz_helper is None or self._jdaviz_helper.plugins.get('Unit Conversion') is None:
+        if self._jdaviz_helper is None or self._jdaviz_helper.plugins.get('Unit Conversion') is None:  # noqa
             raise ValueError("cannot detect unit conversion plugin")
         try:
-            return getattr(self._jdaviz_helper.plugins.get('Unit Conversion')._obj, f'{axis}_unit_selected')
+            return getattr(self._jdaviz_helper.plugins.get('Unit Conversion')._obj,
+                           f'{axis}_unit_selected')
         except AttributeError:
             raise ValueError(f"could not find display unit for axis='{axis}'")
 
