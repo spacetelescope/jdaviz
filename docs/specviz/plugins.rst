@@ -128,9 +128,8 @@ Select the frequency, wavelength, or energy unit in the
 Select the flux density unit in the :guilabel:`New Flux Unit` pulldown
 (e.g., Jansky, W/(Hz/m2), ph/(Angstrom cm2 s)).
 
-The :guilabel:`Apply` button will convert the flux density and/or
-spectral axis units being displayed in the spectrum viewer, if applicable.
-This does not affect the underlying data.
+Note that this affects the default units in all viewers and plugins, where applicable,
+but does not affect the underlying data.
 
 .. _line-lists:
 
