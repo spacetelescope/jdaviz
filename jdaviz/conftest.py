@@ -323,7 +323,7 @@ def create_wfi_image_model(image_shape, **kwargs):
     Create a dummy Roman WFI Image datamodel instance with valid values
     for attributes required by the schema.
 
-    Requires roman_datamodels >= 0.14.2.dev
+    Requires roman_datamodels >= 0.14.2
 
     Adapted from:
         https://github.com/spacetelescope/roman_datamodels/blob/

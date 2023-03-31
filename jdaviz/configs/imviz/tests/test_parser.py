@@ -21,7 +21,7 @@ from jdaviz.configs.imviz.plugins.parsers import (
 try:
     # check for version of roman_datamodels
     import roman_datamodels
-    RDM_LT_0_14_2 = Version(roman_datamodels.__version__) < Version('0.14.2.dev')
+    RDM_LT_0_14_2 = Version(roman_datamodels.__version__) < Version('0.14.2')
 except ImportError:
     # If roman_datamodels not installed, assume Roman-specific tests can be skipped
     RDM_LT_0_14_2 = True
