@@ -1,3 +1,5 @@
+import astropy.units as u
+
 __all__ = ['UserApiWrapper', 'PluginUserApi']
 
 
@@ -38,12 +40,15 @@ class UserApiWrapper:
 
         exp_obj = getattr(self._obj, attr)
         from jdaviz.core.template_mixin import (SelectPluginComponent,
+                                                UnitSelectPluginComponent,
                                                 PlotOptionsSyncState,
                                                 AddResults,
                                                 AutoTextField)
         if isinstance(exp_obj, SelectPluginComponent):
             # this allows setting the selection directly without needing to access the underlying
             # .selected traitlet
+            if isinstance(exp_obj, UnitSelectPluginComponent) and isinstance(value, u.Unit):
+                value = value.to_string()
             exp_obj.selected = value
             return
         elif isinstance(exp_obj, AddResults):
