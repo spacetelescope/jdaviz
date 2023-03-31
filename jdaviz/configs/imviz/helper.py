@@ -89,7 +89,7 @@ class Imviz(ImageConfigHelper):
             * JWST ASDF-in-FITS file (requires ``stdatamodels`` and ``gwcs``; ``data`` or given
               ``ext`` + GWCS)
             * Roman ASDF file or `~roman_datamodels.datamodels.ImageModel`
-              (requires `roman_datamodels`)
+              (requires ``roman_datamodels``)
             * `~astropy.io.fits.HDUList` object (first image extension found
               is loaded unless ``ext`` keyword is also given)
             * `~astropy.io.fits.ImageHDU` object
