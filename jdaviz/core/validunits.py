@@ -23,7 +23,7 @@ def units_to_strings(unit_list):
 
 def create_spectral_equivalencies_list(spectral_axis_unit,
                                        exclude=[u.jupiterRad, u.earthRad, u.solRad,
-                                                u.lyr, u.AU, u.pc]):
+                                                u.lyr, u.AU, u.pc, u.Bq, u.micron, u.lsec]):
     """Get all possible conversions from current spectral_axis_unit."""
     if spectral_axis_unit in (u.pix, u.dimensionless_unscaled):
         return []
@@ -37,7 +37,7 @@ def create_spectral_equivalencies_list(spectral_axis_unit,
 
     # Get local units.
     locally_defined_spectral_axis_units = ['Angstrom', 'nm',
-                                           'micron', 'Hz', 'erg']
+                                           'um', 'Hz', 'erg']
     local_units = [u.Unit(unit) for unit in locally_defined_spectral_axis_units]
 
     # Remove overlap units.

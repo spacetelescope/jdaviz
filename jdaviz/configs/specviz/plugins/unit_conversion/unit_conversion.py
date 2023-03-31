@@ -1,3 +1,4 @@
+import numpy as np
 from astropy import units as u
 from traitlets import List, Unicode, observe
 
@@ -85,7 +86,7 @@ class UnitConversion(PluginTemplateMixin):
         if x_unit != self.spectral_unit.selected:
             x_unit = _valid_glue_display_unit(x_unit, self.spectrum_viewer, 'x')
             x_u = u.Unit(x_unit)
-            self.spectral_unit.choices = [x_unit] + create_spectral_equivalencies_list(x_u)
+            self.spectral_unit.choices = create_spectral_equivalencies_list(x_u)
             self.spectral_unit.selected = x_unit
             if not len(self.flux_unit.choices):
                 # in case flux_unit was triggered first (but could not be set because there
@@ -105,7 +106,10 @@ class UnitConversion(PluginTemplateMixin):
             x_u = u.Unit(self.spectral_unit.selected)
             y_unit = _valid_glue_display_unit(y_unit, self.spectrum_viewer, 'y')
             y_u = u.Unit(y_unit)
-            self.flux_unit.choices = [y_unit] + create_flux_equivalencies_list(y_u, x_u)
+            choices = create_flux_equivalencies_list(y_u, x_u)
+            if not np.any([y_u == u.Unit(choice) for choice in choices]):
+                choices = [y_unit] + choices
+            self.flux_unit.choices = choices
             self.flux_unit.selected = y_unit
 
     @observe('spectral_unit_selected')

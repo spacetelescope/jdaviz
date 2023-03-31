@@ -87,8 +87,10 @@ class UnitConverterWithSpectral:
                     'ph / (s cm2 Hz)', 'ph / (Hz s cm2)'
                 ])
         else:  # spectral axis
-            list_of_units = map(str, u.Unit(units).find_equivalent_units(
-                include_prefix_units=True, equivalencies=u.spectral()))
+            # prefer Hz over Bq and um over micron
+            exclude = {'Bq', 'micron'}
+            list_of_units = set(list(map(str, u.Unit(units).find_equivalent_units(
+                include_prefix_units=True, equivalencies=u.spectral())))) - exclude
         return list_of_units
 
     def to_unit(self, data, cid, values, original_units, target_units):
